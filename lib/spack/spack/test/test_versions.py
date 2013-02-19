@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 """\
 This file has a bunch of versions tests taken from the excellent version
 detection in Homebrew.
