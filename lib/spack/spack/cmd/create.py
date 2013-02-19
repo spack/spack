@@ -1,26 +1,29 @@
 import string
+import os
 
 import spack
 import spack.packages as packages
 import spack.tty as tty
 import spack.version
 
-pacakge_tempate = string.Template("""\
+from spack.stage import Stage
+from contextlib import closing
+
+package_template = string.Template("""\
 from spack import *
 
-class $name(Package):
-    homepage = "${homepage}"
+class ${class_name}(Package):
+    homepage = "http://www.example.com"
     url      = "${url}"
     md5      = "${md5}"
 
-    def install(self):
-        # Insert your installation code here.
-        pass
+    def install(self, prefix):
+        # Insert the configure line for your build system here.
+        configure("--prefix=%s" % prefix)
+        # cmake(".", *std_cmake_args)
+        make()
+        make("install")
 """)
-
-def create_template(name):
-    class_name = name.capitalize()
-    return new_pacakge_tempate % class_name
 
 
 def setup_parser(subparser):
@@ -30,28 +33,42 @@ def setup_parser(subparser):
 def create(args):
     url = args.url
 
-    version = spack.version.parse(url)
-    if not version:
-        tty.die("Couldn't figure out a version string from '%s'." % url)
-
-
-
-    # By default open the directory where packages live.
+    # Try to deduce name and version of the new package from the URL
+    name, version = spack.version.parse(url)
     if not name:
-        path = spack.packages_path
-    else:
-        path = packages.filename_for(name)
+        print "Couldn't guess a name for this package."
+        while not name:
+            new_name = raw_input("Name: ")
+            if packages.valid_name(name):
+                name = new_name
+            else:
+                print "Package names must contain letters, numbers, and '_' or '-'"
 
-        if os.path.exists(path):
-            if not os.path.isfile(path):
-                tty.die("Something's wrong.  '%s' is not a file!" % path)
-            if not os.access(path, os.R_OK|os.W_OK):
-                tty.die("Insufficient permissions on '%s'!" % path)
-        else:
-            tty.msg("Editing new file: '%s'." % path)
-            file = open(path, "w")
-            file.write(create_template(name))
-            file.close()
+    if not version:
+        tty.die("Couldn't guess a version string from %s." % url)
+
+    path = packages.filename_for(name)
+    if os.path.exists(path):
+        tty.die("%s already exists." % path)
+
+    # make a stage and fetch the archive.
+    try:
+        stage = Stage(name, url)
+        archive_file = stage.fetch()
+    except spack.FailedDownloadException, e:
+        tty.die(e.message)
+
+    md5 = spack.md5(archive_file)
+    class_name = packages.class_for(name)
+
+    # Write outa template for the file
+    tty.msg("Editing %s." % path)
+    with closing(open(path, "w")) as pkg_file:
+        pkg_file.write(
+            package_template.substitute(
+                class_name=class_name,
+                url=url,
+                md5=md5))
 
     # If everything checks out, go ahead and edit.
     spack.editor(path)

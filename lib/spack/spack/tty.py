@@ -32,6 +32,11 @@ def msg(msg, *args, **kwargs):
     print "{}==>{} {}{}".format(color, white, str(msg), reset)
     for arg in args: print indent + str(arg)
 
+def info(msg, *args, **kwargs):
+    color = kwargs.get("color", blue)
+    print "{}==>{} {}".format(color, reset, str(msg))
+    for arg in args: print indent + str(arg)
+
 def verbose(*args):
     if spack.verbose: msg(*args, color=green)
 
@@ -46,8 +51,8 @@ def warn(msg, *args):
     print "{}Warning{}: {}".format(yellow, reset, str(msg))
     for arg in args: print indent + str(arg)
 
-def die(msg):
-    error(msg)
+def die(msg, *args):
+    error(msg, *args)
     sys.exit(1)
 
 def pkg(msg):

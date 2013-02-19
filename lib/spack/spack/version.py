@@ -1,7 +1,7 @@
 import os
 import re
 
-import fileutils
+import utils
 
 class Version(object):
     """Class to represent versions"""
@@ -48,16 +48,16 @@ def canonical(v):
     return tuple(intify(v) for v in re.split(r'[_.-]+', v))
 
 
-def parse(spec):
-    """Try to extract a version from a filename.  This is taken largely from
-    Homebrew's Version class."""
+def parse_version(spec):
+    """Try to extract a version from a filename or URL.  This is taken
+    largely from Homebrew's Version class."""
 
     if os.path.isdir(spec):
         stem = os.path.basename(spec)
     elif re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', spec):
-        stem = fileutils.stem(os.path.dirname(spec))
+        stem = utils.stem(os.path.dirname(spec))
     else:
-        stem = fileutils.stem(spec)
+        stem = utils.stem(spec)
 
     version_types = [
         # GitHub tarballs, e.g. v1.2.3
@@ -115,12 +115,36 @@ def parse(spec):
         # e.g. http://www.ijg.org/files/jpegsrc.v8d.tar.gz
         (r'\.v(\d+[a-z]?)', stem)]
 
-    for type in version_types:
-        regex, match_string = type[:2]
+    for vtype in version_types:
+        regex, match_string = vtype[:2]
         match = re.search(regex, match_string)
         if match and match.group(1) is not None:
-            if type[2:]:
-                return Version(type[2](match.group(1)))
+            if vtype[2:]:
+                return Version(vtype[2](match.group(1)))
             else:
                 return Version(match.group(1))
     return None
+
+
+def parse_name(spec, ver=None):
+    if ver is None:
+        ver = parse_version(spec)
+
+    ntypes = (r'/sourceforge/([^/]+)/',
+              r'/([^/]+)/(tarball|zipball)/',
+              r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % ver,
+              r'/([^/]+)[_.-]v?%s' % ver,
+              r'/([^/]+)%s' % ver,
+              r'^([^/]+)[_.-]v?%s' % ver,
+              r'^([^/]+)%s' % ver)
+
+    for nt in ntypes:
+        match = re.search(nt, spec)
+        if match:
+            return match.group(1)
+    return None
+
+def parse(spec):
+    ver = parse_version(spec)
+    name = parse_name(spec, ver)
+    return (name, ver)

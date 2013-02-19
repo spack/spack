@@ -1,8 +1,12 @@
 import os
-import subprocess
 import re
+import errno
+import shutil
+import subprocess
+import multiprocessing
 from itertools import product
-from contextlib import closing
+import functools
+from contextlib import closing, contextmanager
 
 import tty
 
@@ -14,17 +18,85 @@ EXTS     = ["gz", "bz2", "xz", "Z", "zip", "tgz"]
 ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(PRE_EXTS, EXTS)] + EXTS
 
 
+def memoized(obj):
+    """Decorator that caches the results of a function, storing them
+       in an attribute of that function."""
+    cache = obj.cache = {}
+    @functools.wraps(obj)
+    def memoizer(*args, **kwargs):
+        if args not in cache:
+            cache[args] = obj(*args, **kwargs)
+            return cache[args]
+    return memoizer
+
+
+def make_make():
+    """Gets a make set up with the proper default arguments."""
+    make = which('make', required=True)
+    if not env_flag("SPACK_NO_PARALLEL_MAKE"):
+        make.add_default_arg("-j%d" % multiprocessing.cpu_count())
+    return make
+
+
+def install(src, dest):
+    tty.info("Installing %s to %s" % (src, dest))
+    shutil.copy(src, dest)
+
+
+@contextmanager
+def working_dir(dirname):
+    orig_dir = os.getcwd()
+    os.chdir(dirname)
+    yield
+    os.chdir(orig_dir)
+
+
+def mkdirp(*paths):
+    for path in paths:
+        if not os.path.exists(path):
+            os.makedirs(path)
+        elif not os.path.isdir(path):
+            raise OSError(errno.EEXIST, "File alredy exists", path)
+
+
+def env_flag(name):
+    if name in os.environ:
+        return os.environ[name].lower() == "true"
+    return False
+
+
+def path_prepend(var_name, *directories):
+    path = os.environ.get(var_name, "")
+    path_str = ":".join(str(dir) for dir in directories)
+    if path == "":
+        os.environ[var_name] = path_str
+    else:
+        os.environ[var_name] = "%s:%s" % (path_str, path)
+
+
+def pop_keys(dictionary, *keys):
+    for key in keys:
+        if key in dictionary:
+            dictionary.pop(key)
+
+
+def remove_items(item_list, *items):
+    for item in items:
+        if item in item_list:
+            item_list.remove(item)
+
+
 def has_whitespace(string):
     return re.search(r'\s', string)
 
 
 def new_path(prefix, *args):
-    path=prefix
+    path=str(prefix)
     for elt in args:
-        path = os.path.join(path, elt)
+        path = os.path.join(path, str(elt))
 
     if has_whitespace(path):
-        tty.die("Invalid path: '%s'.  Use a path without whitespace.")
+        tty.die("Invalid path: '%s'.  Use a path without whitespace." % path)
 
     return path
 
@@ -48,6 +120,7 @@ class Executable(object):
     def __call__(self, *args, **kwargs):
         """Run the executable with subprocess.check_output, return output."""
         return_output = kwargs.get("return_output", False)
+        fail_on_error = kwargs.get("fail_on_error", True)
 
         quoted_args = [arg for arg in args if re.search(r'^"|^\'|"$|\'$', arg)]
         if quoted_args:
@@ -61,24 +134,30 @@ class Executable(object):
 
         if return_output:
             return subprocess.check_output(cmd)
-        else:
+        elif fail_on_error:
             return subprocess.check_call(cmd)
+        else:
+            return subprocess.call(cmd)
 
     def __repr__(self):
         return "<exe: %s>" % self.exe
 
 
-def which(name, path=None):
+def which(name, **kwargs):
     """Finds an executable in the path like command-line which."""
+    path     = kwargs.get('path', os.environ.get('PATH', '').split(os.pathsep))
+    required = kwargs.get('required', False)
+
     if not path:
-        path = os.environ.get('PATH', '').split(os.pathsep)
-    if not path:
-        return None
+        path = []
 
     for dir in path:
         exe = os.path.join(dir, name)
         if os.access(exe, os.X_OK):
             return Executable(exe)
+
+    if required:
+        tty.die("spack requires %s.  Make sure it is in your path." % name)
     return None
 
 
@@ -94,10 +173,9 @@ def stem(path):
 
 def decompressor_for(path):
     """Get the appropriate decompressor for a path."""
-    if which("tar"):
-        return Executable("tar -xf")
-    else:
-        tty.die("spack requires tar.  Make sure it's on your path.")
+    tar = which('tar', required=True)
+    tar.add_default_arg('-xf')
+    return tar
 
 
 def md5(filename, block_size=2**20):

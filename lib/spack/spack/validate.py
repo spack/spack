@@ -1,5 +1,5 @@
 import tty
-from fileutils import ALLOWED_ARCHIVE_TYPES
+from utils import ALLOWED_ARCHIVE_TYPES
 from urlparse import urlparse
 
 ALLOWED_SCHEMES    = ["http", "https", "ftp"]

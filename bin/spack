@@ -19,7 +19,7 @@ import spack
 # Command parsing
 parser = argparse.ArgumentParser(
     description='Spack: the Supercomputing PACKage Manager.')
-parser.add_argument('-V', '--version', action='version', version="%s" % spack.version)
+parser.add_argument('-V', '--version', action='version', version="%s" % spack.spack_version)
 parser.add_argument('-v', '--verbose', action='store_true', dest='verbose')
 
 # each command module implements a parser() function, to which we pass its
