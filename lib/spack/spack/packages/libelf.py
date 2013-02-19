@@ -7,6 +7,7 @@ class Libelf(Package):
 
     def install(self, prefix):
         configure("--prefix=%s" % prefix,
+                  "--enable-shared",
                   "--disable-dependency-tracking",
                   "--disable-debug")
         make()

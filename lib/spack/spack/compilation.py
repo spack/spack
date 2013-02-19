@@ -46,7 +46,7 @@ def parse_rpaths(arguments):
             if os.path.isdir(target):
                 rpaths.append(target)
             else:
-                other_args.extend([arg, target])
+                other_args.extend(['-Wl,' + arg, '-Wl,' + target])
         else:
-            other_args.append(arg)
+            other_args.append('-Wl,' + arg)
     return rpaths, other_args

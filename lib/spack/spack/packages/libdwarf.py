@@ -21,21 +21,22 @@ class Libdwarf(Package):
     def install(self, prefix):
         make.add_default_arg('ARFLAGS=rcs')
 
-        for dir in dwarf_dirs:
-            with working_dir(dir):
-                #configure("--prefix=%s" % prefix, '--enable-shared')
-                configure("--prefix=%s" % prefix)
-                make()
-
-        # Dwarf doesn't provide an install.  Annoying.
+        # Dwarf doesn't provide an install, so we have to do it.
         mkdirp(bin, include, lib, man1)
+
         with working_dir('libdwarf'):
+            configure("--prefix=%s" % prefix, '--enable-shared')
+            make()
+
             install('libdwarf.a',  lib)
-            #install('libdwarf.so', lib)
+            install('libdwarf.so', lib)
             install('libdwarf.h',  include)
             install('dwarf.h',     include)
 
         with working_dir('dwarfdump2'):
+            configure("--prefix=%s" % prefix)
+            make()
+
             install('dwarfdump',     bin)
             install('dwarfdump.conf', lib)
             install('dwarfdump.1',    man1)

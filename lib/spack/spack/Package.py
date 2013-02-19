@@ -111,6 +111,7 @@ class Package(object):
         self.module.install    = install
         self.module.rmtree     = shutil.rmtree
         self.module.move       = shutil.move
+        self.module.remove     = os.remove
 
         # Useful directories within the prefix
         self.module.prefix  = self.prefix
@@ -119,6 +120,7 @@ class Package(object):
         self.module.etc     = new_path(self.prefix, 'etc')
         self.module.include = new_path(self.prefix, 'include')
         self.module.lib     = new_path(self.prefix, 'lib')
+        self.module.lib64   = new_path(self.prefix, 'lib64')
         self.module.libexec = new_path(self.prefix, 'libexec')
         self.module.share   = new_path(self.prefix, 'share')
         self.module.doc     = new_path(self.module.share, 'doc')
@@ -287,6 +289,9 @@ class Package(object):
         # Pass along paths of dependencies here
         for dep in self.dependencies:
             path_prepend("SPACK_DEPENDENCIES", dep.package.prefix)
+
+        # Install location
+        path_prepend("SPACK_PREFIX", self.prefix)
 
 
     def do_install_dependencies(self):

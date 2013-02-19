@@ -60,9 +60,9 @@ def pkg(msg):
     import platform
     from version import Version
 
-    mac_version = platform.mac_ver()[0]
-    if Version(mac_version) >= Version("10.7"):
+    mac_ver = platform.mac_ver()[0]
+    if mac_ver and Version(mac_ver) >= Version('10.7'):
         print u"\U0001F4E6" + indent,
     else:
-        print '[%] ',
+        print '{}[+]{} '.format(green, reset),
     print msg

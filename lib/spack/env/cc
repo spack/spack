@@ -10,6 +10,7 @@ def get_path(name):
 
 # Import spack parameters through the build environment.
 spack_lib      = os.environ.get("SPACK_LIB")
+spack_prefix   = os.environ.get("SPACK_PREFIX")
 spack_deps     = get_path("SPACK_DEPENDENCIES")
 spack_env_path = get_path("SPACK_ENV_PATH")
 if not spack_lib or spack_deps == None:
@@ -62,8 +63,15 @@ arguments += other_args
 arguments += ['-L%s' % path for path in options.lib_path]
 arguments += ['-l%s' % path for path in options.libs]
 
+spack_rpaths = [spack_prefix] + spack_deps
+arguments += ['-Wl,-rpath,%s/lib64' % path for path in spack_rpaths]
+arguments += ['-Wl,-rpath,%s/lib' % path for path in spack_rpaths]
+
 # Unset some pesky environment variables
 pop_keys(os.environ, "LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH")
+
+
+sys.stderr.write(" ".join(arguments))
 
 rcode = cmd(*arguments, fail_on_error=False)
 sys.exit(rcode)
