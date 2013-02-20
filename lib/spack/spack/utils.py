@@ -57,13 +57,23 @@ def env_flag(name):
     return False
 
 
-def path_prepend(var_name, *directories):
-    path = os.environ.get(var_name, "")
+def path_set(var_name, directories):
     path_str = ":".join(str(dir) for dir in directories)
-    if path == "":
-        os.environ[var_name] = path_str
-    else:
-        os.environ[var_name] = "%s:%s" % (path_str, path)
+    os.environ[var_name] = path_str
+
+
+def path_put_first(var_name, directories):
+    """Puts the provided directories first in the path, adding them
+       if they're not already there.
+    """
+    path = os.environ.get(var_name, "").split(':')
+
+    for dir in directories:
+        if dir in path:
+            path.remove(dir)
+
+    new_path = tuple(directories) + tuple(path)
+    path_set(var_name, new_path)
 
 
 def pop_keys(dictionary, *keys):

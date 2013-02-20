@@ -11,4 +11,6 @@ class Libelf(Package):
                   "--disable-dependency-tracking",
                   "--disable-debug")
         make()
-        make("install")
+
+        # The mkdir commands in libelf's intsall can fail in parallel
+        make("install", parallel=False)

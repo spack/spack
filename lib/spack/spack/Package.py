@@ -50,6 +50,29 @@ def depends_on(*args, **kwargs):
         dependencies.append(Dependency(name))
 
 
+class MakeExecutable(Executable):
+    """Special Executable for make so the user can specify parallel or
+       not on a per-invocation basis.  Using 'parallel' as a kwarg will
+       override whatever the package's global setting is, so you can
+       either default to true or false and override particular calls.
+
+       Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
+       everything.
+    """
+    def __init__(self, name, parallel):
+        super(MakeExecutable, self).__init__(name)
+        self.parallel = parallel
+
+    def __call__(self, *args, **kwargs):
+        parallel = kwargs.get('parallel', self.parallel)
+        env_parallel = not env_flag("SPACK_NO_PARALLEL_MAKE")
+
+        if parallel and env_parallel:
+            args += ("-j%d" % multiprocessing.cpu_count(),)
+
+        super(MakeExecutable, self).__call__(*args, **kwargs)
+
+
 class Package(object):
     def __init__(self, arch=arch.sys_type()):
         attr.required(self, 'homepage')
@@ -90,8 +113,6 @@ class Package(object):
     def make_make(self):
         """Create a make command set up with the proper default arguments."""
         make = which('make', required=True)
-        if self.parallel and not env_flag("SPACK_NO_PARALLEL_MAKE"):
-            make.add_default_arg("-j%d" % multiprocessing.cpu_count())
         return make
 
 
@@ -99,7 +120,8 @@ class Package(object):
         """Populate the module scope of install() with some useful functions.
            This makes things easier for package writers.
         """
-        self.module.make  = self.make_make()
+        self.module.make = MakeExecutable('make', self.parallel)
+        self.module.gmake = MakeExecutable('gmake', self.parallel)
 
         # Find the configure script in the archive path
         # Don't use which for this; we want to find it in the current dir.
@@ -270,16 +292,19 @@ class Package(object):
         self.do_stage()
         self.setup_install_environment()
 
+        tty.msg("Building %s." % self.name)
         try:
             self.install(self.prefix)
             if not os.path.isdir(self.prefix):
                 tty.die("Install failed for %s.  No install dir created." % self.name)
-        except Exception, e:
-            # Blow away the install tree if anything goes wrong.
+        except subprocess.CalledProcessError, e:
             if not self.dirty:
                 self.remove_prefix()
             tty.die("Install failed for %s" % self.name, e.message)
-
+        except Exception, e:
+            if not self.dirty:
+                self.remove_prefix()
+            raise
 
         tty.msg("Successfully installed %s" % self.name)
         tty.pkg(self.prefix)
@@ -300,15 +325,15 @@ class Package(object):
             path = new_path(env_path, file)
             if file.startswith("case") and os.path.isdir(path):
                 env_paths.append(path)
-        path_prepend("PATH", *env_paths)
-        path_prepend("SPACK_ENV_PATH", *env_paths)
+        path_put_first("PATH", env_paths)
+        path_set("SPACK_ENV_PATH", env_paths)
 
-        # Pass along paths of dependencies here
-        for dep in self.dependencies:
-            path_prepend("SPACK_DEPENDENCIES", dep.package.prefix)
+        # Pass along prefixes of dependencies here
+        path_set("SPACK_DEPENDENCIES",
+                 [dep.package.prefix for dep in self.dependencies])
 
         # Install location
-        path_prepend("SPACK_PREFIX", self.prefix)
+        os.environ["SPACK_PREFIX"] = self.prefix
 
 
     def do_install_dependencies(self):
@@ -354,7 +379,7 @@ class Package(object):
     def clean(self):
         """By default just runs make clean.  Override if this isn't good."""
         try:
-            make = self.make_make()
+            make = MakeExecutable('make')
             make('clean')
             tty.msg("Successfully cleaned %s" % self.name)
         except subprocess.CalledProcessError, e:

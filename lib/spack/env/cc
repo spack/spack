@@ -73,7 +73,8 @@ for var in ["LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH"]:
         os.environ.pop(var)
 
 if spack_debug:
-    print "{}==>{}: {} {}".format(green, reset, cmd, " ".join(arguments))
+    sys.stderr.write("{}==>{} {} {}\n".format(
+            green, reset, command, " ".join(arguments)))
 
 rcode = subprocess.call([command] + arguments)
 sys.exit(rcode)
