@@ -65,9 +65,9 @@ class MakeExecutable(Executable):
 
     def __call__(self, *args, **kwargs):
         parallel = kwargs.get('parallel', self.parallel)
-        env_parallel = not env_flag(SPACK_NO_PARALLEL_MAKE)
+        disable_parallel = env_flag(SPACK_NO_PARALLEL_MAKE)
 
-        if parallel and env_parallel:
+        if parallel and not disable_parallel:
             args += ("-j%d" % multiprocessing.cpu_count(),)
 
         super(MakeExecutable, self).__call__(*args, **kwargs)
