@@ -9,6 +9,9 @@ class Libdwarf(Package):
     url      = "http://reality.sgiweb.org/davea/libdwarf-20130207.tar.gz"
     md5      = "64b42692e947d5180e162e46c689dfbf"
 
+    # There's some kind of race in the makefile
+    parallel = False
+
     depends_on("libelf")
 
     def clean(self):

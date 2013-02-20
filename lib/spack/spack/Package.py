@@ -55,7 +55,9 @@ class Package(object):
         attr.required(self, 'homepage')
         attr.required(self, 'url')
         attr.required(self, 'md5')
-        attr.setdefault(self, "dependencies", [])
+
+        attr.setdefault(self, 'dependencies', [])
+        attr.setdefault(self, 'parallel', True)
 
         # Architecture for this package.
         self.arch = arch
@@ -81,13 +83,23 @@ class Package(object):
         # Empty at first; only compute dependents if necessary
         self._dependents = None
 
+        # Whether to remove intermediate build/install when things go wrong.
+        self.dirty = False
+
+
+    def make_make(self):
+        """Create a make command set up with the proper default arguments."""
+        make = which('make', required=True)
+        if self.parallel and not env_flag("SPACK_NO_PARALLEL_MAKE"):
+            make.add_default_arg("-j%d" % multiprocessing.cpu_count())
+        return make
 
 
     def add_commands_to_module(self):
         """Populate the module scope of install() with some useful functions.
            This makes things easier for package writers.
         """
-        self.module.make  = make_make()
+        self.module.make  = self.make_make()
 
         # Find the configure script in the archive path
         # Don't use which for this; we want to find it in the current dir.
@@ -203,8 +215,12 @@ class Package(object):
 
     def remove_prefix(self):
         """Removes the prefix for a package along with any empty parent directories."""
-        shutil.rmtree(self.prefix, True)
+        if os.path.exists(self.prefix):
+            shutil.rmtree(self.prefix, True)
+
         for dir in (self.package_path, self.platform_path):
+            if not os.path.isdir(dir):
+                continue
             if not os.listdir(dir):
                 os.rmdir(dir)
             else:
@@ -260,7 +276,8 @@ class Package(object):
                 tty.die("Install failed for %s.  No install dir created." % self.name)
         except Exception, e:
             # Blow away the install tree if anything goes wrong.
-            self.remove_prefix()
+            if not self.dirty:
+                self.remove_prefix()
             tty.die("Install failed for %s" % self.name, e.message)
 
 
@@ -337,7 +354,7 @@ class Package(object):
     def clean(self):
         """By default just runs make clean.  Override if this isn't good."""
         try:
-            make = make_make()
+            make = self.make_make()
             make('clean')
             tty.msg("Successfully cleaned %s" % self.name)
         except subprocess.CalledProcessError, e:

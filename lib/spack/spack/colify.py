@@ -10,14 +10,16 @@
 #
 # Run colify -h for more information.
 #
+import os
+import sys
+import fcntl
+import termios
+import struct
 
 def get_terminal_size():
-    import os
-
     """Get the dimensions of the console."""
     def ioctl_GWINSZ(fd):
         try:
-            import fcntl, termios, struct
             cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
         except:
             return
@@ -89,8 +91,6 @@ def config_uniform_cols(elts, console_cols, padding):
 
 
 def colify(elts, **options):
-    import sys
-
     # Get keyword arguments or set defaults
     output       = options.get("output", sys.stdout)
     indent       = options.get("indent", 0)
@@ -133,8 +133,9 @@ def colify(elts, **options):
         if row == rows_last_col:
             cols -= 1
 
+
 if __name__ == "__main__":
-    import optparse, sys
+    import optparse
 
     cols, rows = get_terminal_size()
     parser = optparse.OptionParser()

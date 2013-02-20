@@ -1,5 +1,25 @@
 import os
 
+def get_env_var(name, required=True):
+    value = os.environ.get(name)
+    if required and value == None:
+        print "%s must be run from spack." % os.path.abspath(sys.argv[0])
+        sys.exit(1)
+    return value
+
+
+def get_env_flag(name, required=False):
+    value = get_env_var(name, required)
+    if value:
+        return value.lower() == "true"
+    return False
+
+
+def get_path(name):
+    path = os.environ.get(name, "")
+    return path.split(":")
+
+
 def parse_rpaths(arguments):
     """argparse, for all its features, cannot understand most compilers'
        rpath arguments.  This handles '-Wl,', '-Xlinker', and '-R'"""

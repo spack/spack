@@ -4,27 +4,28 @@ import os
 import subprocess
 import argparse
 
-def get_path(name):
-    path = os.environ.get(name, "")
-    return path.split(":")
+# reimplement some tty stuff to minimize imports
+blue, green, yellow, reset = [
+    '\033[1;39m', '\033[1;92m', '\033[4;33m', '\033[0m']
 
 # Import spack parameters through the build environment.
 spack_lib      = os.environ.get("SPACK_LIB")
-spack_prefix   = os.environ.get("SPACK_PREFIX")
-spack_deps     = get_path("SPACK_DEPENDENCIES")
-spack_env_path = get_path("SPACK_ENV_PATH")
-if not spack_lib or spack_deps == None:
-    print "%s must be run from spack." % os.path.abspath(sys.argv[0])
+if not spack_lib:
+    print "Spack compiler must be run from spack!"
     sys.exit(1)
-
-# Figure out what type of operation we're doing
-command = os.path.basename(sys.argv[0])
 
 # Grab a minimal set of spack packages
 sys.path.append(spack_lib)
-from spack.utils import *
-from spack.compilation import parse_rpaths
+from spack.compilation import *
 import spack.tty as tty
+
+spack_prefix   = get_env_var("SPACK_PREFIX")
+spack_debug    = get_env_flag("SPACK_DEBUG")
+spack_deps     = get_path("SPACK_DEPENDENCIES")
+spack_env_path = get_path("SPACK_ENV_PATH")
+
+# Figure out what type of operation we're doing
+command = os.path.basename(sys.argv[0])
 
 parser = argparse.ArgumentParser(add_help=False)
 parser.add_argument("-I", action='append', default=[], dest='include_path')
@@ -35,15 +36,15 @@ options, other_args = parser.parse_known_args()
 rpaths, other_args = parse_rpaths(other_args)
 
 if rpaths:
-    tty.warn("Spack stripping non-spack rpaths: ", *rpaths)
+    print "{}Warning{}: Spack stripping non-spack rpaths: ".format(yellow, reset)
+    for rp in rpaths: print "  %s" % rp
 
-# Find the actual command the build is trying to run by removing
-# Spack's env paths from the path.  We use this later for which()
-script_dir = os.path.dirname(os.path.expanduser(__file__))
+# Ensure that the delegated command doesn't just call this script again.
 clean_path = get_path("PATH")
-remove_items(clean_path, '.')
-for path in spack_env_path:
-    remove_items(clean_path, path)
+for item in ['.'] + spack_env_path:
+    if item in clean_path:
+        clean_path.remove(item)
+os.environ["PATH"] = ":".join(clean_path)
 
 # Add dependence's paths to our compiler flags.
 def append_if_dir(path_list, prefix, *dirs):
@@ -57,7 +58,6 @@ for prefix in spack_deps:
     append_if_dir(options.lib_path, prefix, "lib64")
 
 # Add our modified arguments to it.
-cmd = which(command, path=clean_path)
 arguments  = ['-I%s' % path for path in options.include_path]
 arguments += other_args
 arguments += ['-L%s' % path for path in options.lib_path]
@@ -68,10 +68,12 @@ arguments += ['-Wl,-rpath,%s/lib64' % path for path in spack_rpaths]
 arguments += ['-Wl,-rpath,%s/lib' % path for path in spack_rpaths]
 
 # Unset some pesky environment variables
-pop_keys(os.environ, "LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH")
+for var in ["LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH"]:
+    if var in os.environ:
+        os.environ.pop(var)
 
+if spack_debug:
+    print "{}==>{}: {} {}".format(green, reset, cmd, " ".join(arguments))
 
-sys.stderr.write(" ".join(arguments))
-
-rcode = cmd(*arguments, fail_on_error=False)
+rcode = subprocess.call([command] + arguments)
 sys.exit(rcode)

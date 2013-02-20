@@ -9,7 +9,7 @@ import tty
 
 def ensure_access(dir=spack.stage_path):
     if not os.access(dir, os.R_OK|os.W_OK):
-        tty.die("Insufficient permissions on directory '%s'" % dir)
+        tty.die("Insufficient permissions on directory %s" % dir)
 
 
 class Stage(object):
@@ -25,7 +25,7 @@ class Stage(object):
     def setup(self):
         if os.path.exists(self.path):
             if not os.path.isdir(self.path):
-                tty.die("Stage path '%s' is not a directory!" % self.path)
+                tty.die("Stage path %s is not a directory!" % self.path)
         else:
             os.makedirs(self.path)
 
@@ -77,7 +77,7 @@ class Stage(object):
             # output this if we somehow got an HTML file rather than the archive we
             # asked for.
             if re.search(r'Content-Type: text/html', headers):
-                tty.warn("The contents of '%s' look like HTML.  The checksum will "+
+                tty.warn("The contents of %s look like HTML.  The checksum will "+
                          "likely fail.  Use 'spack clean %s' to delete this file. "
                          "The fix the gateway issue and install again." % (self.archive_file, self.name))
 
@@ -107,7 +107,7 @@ class Stage(object):
         else:
             os.chdir(path)
             if not os.listdir(path):
-                tty.die("Archive was empty for '%s'" % self.name)
+                tty.die("Archive was empty for %s" % self.name)
 
 
     def restage(self):

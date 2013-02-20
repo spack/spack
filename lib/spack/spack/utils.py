@@ -30,14 +30,6 @@ def memoized(obj):
     return memoizer
 
 
-def make_make():
-    """Gets a make set up with the proper default arguments."""
-    make = which('make', required=True)
-    if not env_flag("SPACK_NO_PARALLEL_MAKE"):
-        make.add_default_arg("-j%d" % multiprocessing.cpu_count())
-    return make
-
-
 def install(src, dest):
     tty.info("Installing %s to %s" % (src, dest))
     shutil.copy(src, dest)
