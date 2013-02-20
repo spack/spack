@@ -5,7 +5,7 @@ import os
 dwarf_dirs = ['libdwarf', 'dwarfdump2']
 
 class Libdwarf(Package):
-    homepage = "http://www.example.com"
+    homepage = "http://reality.sgiweb.org/davea/dwarf.html"
     url      = "http://reality.sgiweb.org/davea/libdwarf-20130207.tar.gz"
     md5      = "64b42692e947d5180e162e46c689dfbf"
 

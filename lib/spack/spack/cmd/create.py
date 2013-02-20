@@ -28,6 +28,8 @@ class ${class_name}(Package):
 
 def setup_parser(subparser):
     subparser.add_argument('url', nargs='?', help="url of package archive")
+    subparser.add_argument('-f', '--force', action='store_true', dest='force',
+                           help="Remove existing package file.")
 
 
 def create(args):
@@ -48,12 +50,12 @@ def create(args):
         tty.die("Couldn't guess a version string from %s." % url)
 
     path = packages.filename_for(name)
-    if os.path.exists(path):
+    if not args.force and os.path.exists(path):
         tty.die("%s already exists." % path)
 
     # make a stage and fetch the archive.
     try:
-        stage = Stage(name, url)
+        stage = Stage("%s-%s" % (name, version), url)
         archive_file = stage.fetch()
     except spack.FailedDownloadException, e:
         tty.die(e.message)

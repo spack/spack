@@ -65,7 +65,7 @@ class MakeExecutable(Executable):
 
     def __call__(self, *args, **kwargs):
         parallel = kwargs.get('parallel', self.parallel)
-        env_parallel = not env_flag("SPACK_NO_PARALLEL_MAKE")
+        env_parallel = not env_flag(SPACK_NO_PARALLEL_MAKE)
 
         if parallel and env_parallel:
             args += ("-j%d" % multiprocessing.cpu_count(),)
@@ -88,13 +88,17 @@ class Package(object):
         # Name of package is the name of its module (the file that contains it)
         self.name = inspect.getmodulename(self.module.__file__)
 
+        # Don't allow the default homepage.
+        if re.search(r'example.com', self.homepage):
+            tty.die("Bad homepage in %s: %s" % (self.name, self.homepage))
+
         # Make sure URL is an allowed type
         validate.url(self.url)
 
         # Set up version
         attr.setdefault(self, 'version', version.parse_version(self.url))
         if not self.version:
-            tty.die("Couldn't extract version from '%s'. " +
+            tty.die("Couldn't extract version from %s. " +
                     "You must specify it explicitly for this URL." % self.url)
 
         # This adds a bunch of convenient commands to the package's module scope.
@@ -108,6 +112,9 @@ class Package(object):
 
         # Whether to remove intermediate build/install when things go wrong.
         self.dirty = False
+
+        # stage used to build this package.
+        self.stage = Stage(self.stage_name, self.url)
 
 
     def make_make(self):
@@ -202,11 +209,6 @@ class Package(object):
 
 
     @property
-    def stage(self):
-        return Stage(self.stage_name, self.url)
-
-
-    @property
     def stage_name(self):
         return "%s-%s" % (self.name, self.version)
 
@@ -270,7 +272,7 @@ class Package(object):
 
         archive_dir = stage.expanded_archive_path
         if not archive_dir:
-            tty.msg("Staging archive: '%s'" % stage.archive_file)
+            tty.msg("Staging archive: %s" % stage.archive_file)
             stage.expand_archive()
         else:
             tty.msg("Already staged %s" % self.name)
@@ -316,7 +318,7 @@ class Package(object):
 
         # Add spack environment at front of path and pass the
         # lib location along so the compiler script can find spack
-        os.environ["SPACK_LIB"] = lib_path
+        os.environ[SPACK_LIB] = lib_path
 
         # Fix for case-insensitive file systems.  Conflicting links are
         # in directories called "case*" within the env directory.
@@ -326,14 +328,17 @@ class Package(object):
             if file.startswith("case") and os.path.isdir(path):
                 env_paths.append(path)
         path_put_first("PATH", env_paths)
-        path_set("SPACK_ENV_PATH", env_paths)
+        path_set(SPACK_ENV_PATH, env_paths)
 
         # Pass along prefixes of dependencies here
-        path_set("SPACK_DEPENDENCIES",
+        path_set(SPACK_DEPENDENCIES,
                  [dep.package.prefix for dep in self.dependencies])
 
         # Install location
-        os.environ["SPACK_PREFIX"] = self.prefix
+        os.environ[SPACK_PREFIX] = self.prefix
+
+        # Build root for logging.
+        os.environ[SPACK_BUILD_ROOT] = self.stage.expanded_archive_path
 
 
     def do_install_dependencies(self):
@@ -379,7 +384,7 @@ class Package(object):
     def clean(self):
         """By default just runs make clean.  Override if this isn't good."""
         try:
-            make = MakeExecutable('make')
+            make = MakeExecutable('make', self.parallel)
             make('clean')
             tty.msg("Successfully cleaned %s" % self.name)
         except subprocess.CalledProcessError, e:

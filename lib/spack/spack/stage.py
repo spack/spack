@@ -1,6 +1,7 @@
 import os
 import re
 import shutil
+import tempfile
 
 import spack
 import packages
@@ -10,6 +11,12 @@ import tty
 def ensure_access(dir=spack.stage_path):
     if not os.access(dir, os.R_OK|os.W_OK):
         tty.die("Insufficient permissions on directory %s" % dir)
+
+
+def purge():
+    """Remove the entire stage path."""
+    if os.path.isdir(spack.stage_path):
+        shutil.rmtree(spack.stage_path, True)
 
 
 class Stage(object):
@@ -42,8 +49,8 @@ class Stage(object):
 
     @property
     def expanded_archive_path(self):
-        """"Returns the path to the expanded archive directory if it's expanded;
-            None if the archive hasn't been expanded.
+        """Returns the path to the expanded archive directory if it's expanded;
+           None if the archive hasn't been expanded.
         """
         for file in os.listdir(self.path):
             archive_path = spack.new_path(self.path, file)
@@ -72,14 +79,20 @@ class Stage(object):
             tty.msg("Fetching %s" % self.url)
 
             # Run curl but grab the mime type from the http headers
-            headers = spack.curl('-#', '-O', '-D', '-', self.url, return_output=True)
+            headers = spack.curl('-#',        # status bar
+                                 '-O',        # save file to disk
+                                 '-D', '-',   # print out HTML headers
+                                 '-L', self.url, return_output=True)
 
-            # output this if we somehow got an HTML file rather than the archive we
-            # asked for.
-            if re.search(r'Content-Type: text/html', headers):
-                tty.warn("The contents of %s look like HTML.  The checksum will "+
-                         "likely fail.  Use 'spack clean %s' to delete this file. "
-                         "The fix the gateway issue and install again." % (self.archive_file, self.name))
+            # Check if we somehow got an HTML file rather than the archive we
+            # asked for.  We only look at the last content type, to handle
+            # redirects properly.
+            content_types = re.findall(r'Content-Type:[^\r\n]+', headers)
+            if content_types and 'text/html' in content_types[-1]:
+                tty.warn("The contents of " + self.archive_file + " look like HTML.",
+                         "The checksum will likely be bad.  If it is, you can use",
+                         "'spack clean --all' to remove the bad archive, then fix",
+                         "your internet gateway issue and install again.")
 
         if not self.archive_file:
             raise FailedDownloadException(url)

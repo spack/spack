@@ -1,4 +1,6 @@
 import os
+import sys
+
 
 def get_env_var(name, required=True):
     value = os.environ.get(name)
@@ -16,16 +18,16 @@ def get_env_flag(name, required=False):
 
 
 def get_path(name):
-    path = os.environ.get(name, "")
-    return path.split(":")
+    path = os.environ.get(name, "").strip()
+    if path:
+        return path.split(":")
+    else:
+        return []
 
 
 def parse_rpaths(arguments):
     """argparse, for all its features, cannot understand most compilers'
        rpath arguments.  This handles '-Wl,', '-Xlinker', and '-R'"""
-    linker_args = []
-    other_args = []
-
     def get_next(arg, args):
         """Get an expected next value of an iterator, or die if it's not there"""
         try:
@@ -34,23 +36,32 @@ def parse_rpaths(arguments):
             # quietly ignore -rpath and -Xlinker without args.
             return None
 
-    # Separate linker args from non-linker args
-    args = iter(arguments)
-    for arg in args:
-        if arg.startswith('-Wl,'):
-            sub_args = [sub for sub in arg.replace('-Wl,', '', 1).split(',')]
-            linker_args.extend(sub_args)
-        elif arg == '-Xlinker':
-            target = get_next(arg, args)
-            if target != None:
-                linker_args.append(target)
-        else:
-            other_args.append(arg)
+    other_args = []
+    def linker_args():
+        """This generator function allows us to parse the linker args separately
+           from the compiler args, so that we can handle them more naturally.
+        """
+        args = iter(arguments)
+        for arg in args:
+            if arg.startswith('-Wl,'):
+                sub_args = [sub for sub in arg.replace('-Wl,', '', 1).split(',')]
+                for arg in sub_args:
+                    yield arg
+            elif arg == '-Xlinker':
+                target = get_next(arg, args)
+                if target != None:
+                    yield target
+            else:
+                other_args.append(arg)
 
-    # Extract all the possible ways rpath can appear in linker args
-    # and append non-rpaths to other_args
+    # Extract all the possible ways rpath can appear in linker args, then
+    # append non-rpaths to other_args.  This happens in-line as the linker
+    # args are extracted, so we preserve the original order of arguments.
+    # This is important for args like --whole-archive, --no-whole-archive,
+    # and others that tell the linker how to handle the next few libraries
+    # it encounters on the command line.
     rpaths = []
-    largs = iter(linker_args)
+    largs = linker_args()
     for arg in largs:
         if arg == '-rpath':
             target = get_next(arg, largs)

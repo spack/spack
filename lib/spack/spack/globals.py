@@ -35,3 +35,14 @@ curl = which("curl", required=True)
 
 verbose = False
 debug = False
+
+# Whether stage should use tmp filesystem or build in the spack prefix
+use_tmp_stage = True
+
+# Important environment variables
+SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
+SPACK_LIB = 'SPACK_LIB'
+SPACK_ENV_PATH = 'SPACK_ENV_PATH'
+SPACK_DEPENDENCIES = 'SPACK_DEPENDENCIES'
+SPACK_PREFIX = 'SPACK_PREFIX'
+SPACK_BUILD_ROOT = 'SPACK_BUILD_ROOT'
