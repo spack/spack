@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 import tempfile
+import getpass
 
 import spack
 import packages
@@ -30,11 +31,39 @@ class Stage(object):
 
 
     def setup(self):
+        # If the user switched stage types on us, destroy the old one and
+        # start over
+        if spack.use_tmp_stage:
+            if not os.path.islink(self.path):
+                self.destroy()
+        else:
+            if os.path.islink(self.path):
+                self.destroy()
+
         if os.path.exists(self.path):
             if not os.path.isdir(self.path):
                 tty.die("Stage path %s is not a directory!" % self.path)
         else:
-            os.makedirs(self.path)
+            # Now create the stage directory
+            spack.mkdirp(spack.stage_path)
+
+            # And the stage for this build within it
+            if not spack.use_tmp_stage:
+                # non-tmp stage is just a directory in spack.stage_path
+                spack.mkdirp(self.path)
+            else:
+                # tmp stage is created in tmp but linked to spack.stage_path
+                tmp_dir = next((tmp for tmp in spack.tmp_dirs
+                               if os.access(tmp, os.R_OK|os.W_OK)), None)
+
+                username = getpass.getuser()
+                if username:
+                    tmp_dir = spack.new_path(tmp_dir, username)
+                spack.mkdirp(tmp_dir)
+                tmp_dir = tempfile.mkdtemp(
+                    '.stage', self.stage_name + '-', tmp_dir)
+
+                os.symlink(tmp_dir, self.path)
 
         ensure_access(self.path)
 
@@ -136,4 +165,8 @@ class Stage(object):
     def destroy(self):
         """Blows away the stage directory.  Can always call setup() again."""
         if os.path.exists(self.path):
-            shutil.rmtree(self.path, True)
+            if os.path.islink(self.path):
+                shutil.rmtree(os.path.realpath(self.path), True)
+                os.unlink(self.path)
+            else:
+                shutil.rmtree(self.path, True)
