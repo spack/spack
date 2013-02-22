@@ -6,6 +6,7 @@ class Cmake(Package):
     md5       = '097278785da7182ec0aea8769d06860c'
 
     def install(self, prefix):
-        configure('--prefix=%s' % prefix)
+        configure('--prefix=%s'   % prefix,
+                  '--parallel=%s' % make_jobs)
         make()
         make('install')

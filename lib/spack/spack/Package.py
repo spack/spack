@@ -131,6 +131,9 @@ class Package(object):
         self.module.make = MakeExecutable('make', self.parallel)
         self.module.gmake = MakeExecutable('gmake', self.parallel)
 
+        # number of jobs spack prefers to build with.
+        self.module.make_jobs = multiprocessing.cpu_count()
+
         # Find the configure script in the archive path
         # Don't use which for this; we want to find it in the current dir.
         self.module.configure = Executable('./configure')
