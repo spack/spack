@@ -2,6 +2,7 @@ import spack
 import spack.packages as packages
 from spack.colify import colify
 
+description ="List spack packages"
 
 def setup_parser(subparser):
     subparser.add_argument('-i', '--installed', action='store_true', dest='installed',

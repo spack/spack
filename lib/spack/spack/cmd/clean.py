@@ -2,6 +2,8 @@ import spack.packages as packages
 import spack.tty as tty
 import spack.stage as stage
 
+description = "Remove staged files for packages"
+
 def setup_parser(subparser):
     subparser.add_argument('names', nargs='+', help="name(s) of package(s) to clean")
     subparser.add_argument('-c', "--clean", action="store_true", dest='clean',

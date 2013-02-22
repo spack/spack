@@ -1,6 +1,8 @@
 import spack
 import spack.packages as packages
 
+description = "Build and install packages"
+
 def setup_parser(subparser):
     subparser.add_argument('names', nargs='+', help="name(s) of package(s) to install")
     subparser.add_argument('-i', '--ignore-dependencies',

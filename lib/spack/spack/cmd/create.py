@@ -9,6 +9,8 @@ import spack.version
 from spack.stage import Stage
 from contextlib import closing
 
+description = "Create a new package file from an archive URL"
+
 package_template = string.Template("""\
 from spack import *
 

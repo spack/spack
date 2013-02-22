@@ -3,6 +3,7 @@ import spack
 import spack.packages as packages
 import spack.tty as tty
 
+description = "Open package files in $EDITOR"
 
 def setup_parser(subparser):
     subparser.add_argument(

@@ -19,9 +19,12 @@ import spack
 # Command parsing
 parser = argparse.ArgumentParser(
     description='Spack: the Supercomputing PACKage Manager.')
-parser.add_argument('-V', '--version', action='version', version="%s" % spack.spack_version)
-parser.add_argument('-v', '--verbose', action='store_true', dest='verbose')
-parser.add_argument('-d', '--debug', action='store_true', dest='debug')
+parser.add_argument('-V', '--version', action='version',
+                    version="%s" % spack.spack_version)
+parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
+                    help="print additional output during builds")
+parser.add_argument('-d', '--debug', action='store_true', dest='debug',
+                    help="write out debug logs during compile")
 
 # each command module implements a parser() function, to which we pass its
 # subparser for setup.
@@ -29,8 +32,8 @@ subparsers = parser.add_subparsers(title="subcommands", dest="command")
 
 import spack.cmd
 for cmd in spack.cmd.commands:
-    subparser = subparsers.add_parser(cmd)
     module = spack.cmd.get_module(cmd)
+    subparser = subparsers.add_parser(cmd, help=module.description)
     module.setup_parser(subparser)
 args = parser.parse_args()
 

@@ -3,11 +3,14 @@ import re
 
 import spack
 import spack.tty as tty
+import spack.attr as attr
 
 # Patterns to ignore in the commands directory when looking for commands.
 ignore_files = r'^\.|^__init__.py$|^#'
 
-setup_parser = "setup_parser"
+SETUP_PARSER = "setup_parser"
+DESCRIPTION  = "description"
+
 command_path = os.path.join(spack.lib_path, "spack", "cmd")
 
 commands = []
@@ -25,8 +28,12 @@ def null_op(*args):
 def get_module(name):
     """Imports the module for a particular command name and returns it."""
     module_name = "%s.%s" % (__name__, name)
-    module = __import__(module_name, fromlist=[name, setup_parser], level=0)
-    module.setup_parser = getattr(module, setup_parser, null_op)
+    module = __import__(
+        module_name, fromlist=[name, SETUP_PARSER, DESCRIPTION],
+        level=0)
+
+    attr.setdefault(module, SETUP_PARSER, null_op)
+    attr.setdefault(module, DESCRIPTION, "")
 
     if not hasattr(module, name):
         tty.die("Command module %s (%s) must define function '%s'."
