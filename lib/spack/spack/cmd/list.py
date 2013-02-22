@@ -8,7 +8,7 @@ def setup_parser(subparser):
                            help='List installed packages for each platform along with versions.')
 
 
-def list(args):
+def list(parser, args):
     if args.installed:
         pkgs = packages.installed_packages()
         for sys_type in pkgs:

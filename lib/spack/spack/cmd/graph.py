@@ -2,5 +2,5 @@ import spack
 import spack.packages as packages
 
 
-def graph(args):
+def graph(parser, args):
     packages.graph_dependencies()

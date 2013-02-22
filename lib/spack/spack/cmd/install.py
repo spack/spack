@@ -9,7 +9,7 @@ def setup_parser(subparser):
     subparser.add_argument('-d', '--dirty', action='store_true', dest='dirty',
                            help="Don't clean up partially completed build/installation on error.")
 
-def install(args):
+def install(parser, args):
     spack.ignore_dependencies = args.ignore_dependencies
     for name in args.names:
         package = packages.get(name)

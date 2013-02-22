@@ -5,7 +5,7 @@ def setup_parser(subparser):
     subparser.add_argument('-f', '--force', action='store_true', dest='force',
                            help="Ignore installed packages that depend on this one and remove it anyway.")
 
-def uninstall(args):
+def uninstall(parser, args):
     # get packages to uninstall as a list.
     pkgs = [packages.get(name) for name in args.names]
 

@@ -38,4 +38,4 @@ spack.verbose = args.verbose
 
 # Try to load the particular command asked for and run it
 command = spack.cmd.get_command(args.command)
-command(args)
+command(parser, args)

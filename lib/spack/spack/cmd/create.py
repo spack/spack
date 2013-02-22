@@ -32,7 +32,7 @@ def setup_parser(subparser):
                            help="Remove existing package file.")
 
 
-def create(args):
+def create(parser, args):
     url = args.url
 
     # Try to deduce name and version of the new package from the URL

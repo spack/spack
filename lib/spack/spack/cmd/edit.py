@@ -9,7 +9,7 @@ def setup_parser(subparser):
         'name', nargs='?', default=None, help="name of package to edit")
 
 
-def edit(args):
+def edit(parser, args):
     name = args.name
 
     # By default open the directory where packages live.
