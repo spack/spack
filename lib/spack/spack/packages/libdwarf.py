@@ -9,9 +9,6 @@ class Libdwarf(Package):
     url      = "http://reality.sgiweb.org/davea/libdwarf-20130207.tar.gz"
     md5      = "64b42692e947d5180e162e46c689dfbf"
 
-    # There's some kind of race in the makefile
-    parallel = False
-
     depends_on("libelf")
 
     def clean(self):
@@ -38,7 +35,10 @@ class Libdwarf(Package):
 
         with working_dir('dwarfdump2'):
             configure("--prefix=%s" % prefix)
-            make()
+
+            # This makefile has strings of copy commands that
+            # cause a race in parallel
+            make(parallel=False)
 
             install('dwarfdump',     bin)
             install('dwarfdump.conf', lib)

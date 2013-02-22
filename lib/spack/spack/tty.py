@@ -37,8 +37,8 @@ def info(msg, *args, **kwargs):
     print "{}==>{} {}".format(color, reset, str(msg))
     for arg in args: print indent + str(arg)
 
-def verbose(*args):
-    if spack.verbose: msg(*args, color=green)
+def verbose(msg, *args):
+    if spack.verbose: info(msg, *args, color=green)
 
 def debug(*args):
     if spack.debug: msg(*args, color=red)

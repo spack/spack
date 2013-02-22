@@ -68,7 +68,8 @@ class MakeExecutable(Executable):
         disable_parallel = env_flag(SPACK_NO_PARALLEL_MAKE)
 
         if parallel and not disable_parallel:
-            args += ("-j%d" % multiprocessing.cpu_count(),)
+            jobs = "-j%d" % multiprocessing.cpu_count()
+            args = (jobs,) + args
 
         super(MakeExecutable, self).__call__(*args, **kwargs)
 

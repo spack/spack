@@ -132,7 +132,7 @@ class Executable(object):
                      "Quotes aren't needed because spack doesn't use a shell.  Consider removing them")
 
         cmd = self.exe + list(args)
-        tty.verbose(cmd)
+        tty.verbose(" ".join(cmd))
 
         if return_output:
             return subprocess.check_output(cmd)

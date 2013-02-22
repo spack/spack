@@ -21,6 +21,7 @@ parser = argparse.ArgumentParser(
     description='Spack: the Supercomputing PACKage Manager.')
 parser.add_argument('-V', '--version', action='version', version="%s" % spack.spack_version)
 parser.add_argument('-v', '--verbose', action='store_true', dest='verbose')
+parser.add_argument('-d', '--debug', action='store_true', dest='debug')
 
 # each command module implements a parser() function, to which we pass its
 # subparser for setup.
@@ -35,6 +36,7 @@ args = parser.parse_args()
 
 # Set up environment based on args.
 spack.verbose = args.verbose
+spack.debug = args.debug
 
 # Try to load the particular command asked for and run it
 command = spack.cmd.get_command(args.command)

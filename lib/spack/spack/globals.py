@@ -33,9 +33,6 @@ editor = Executable(os.environ.get("EDITOR", ""))
 # Curl tool for fetching files.
 curl = which("curl", required=True)
 
-verbose = False
-debug = False
-
 # Whether to build in tmp space or directly in the stage_path.
 # If this is true, then spack will make stage directories in
 # a tmp filesystem, and it will symlink them into stage_path.
