@@ -315,6 +315,11 @@ class Package(object):
         tty.msg("Successfully installed %s" % self.name)
         tty.pkg(self.prefix)
 
+        # Once the install is done, destroy the stage where we built it,
+        # unless the user wants it kept around.
+        if not self.dirty:
+            self.stage.destroy()
+
 
     def setup_install_environment(self):
         """This ensures a clean install environment when we build packages."""

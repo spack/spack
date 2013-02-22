@@ -14,10 +14,24 @@ def ensure_access(dir=spack.stage_path):
         tty.die("Insufficient permissions on directory %s" % dir)
 
 
+def remove_linked_tree(path):
+    """Removes a directory and its contents.  If the directory is a symlink,
+       follows the link and reamoves the real directory before removing the link.
+    """
+    if os.path.exists(path):
+        if os.path.islink(path):
+            shutil.rmtree(os.path.realpath(path), True)
+            os.unlink(path)
+        else:
+            shutil.rmtree(path, True)
+
+
 def purge():
-    """Remove the entire stage path."""
+    """Remove any build directories in the stage path."""
     if os.path.isdir(spack.stage_path):
-        shutil.rmtree(spack.stage_path, True)
+        for stage_dir in os.listdir(spack.stage_path):
+            stage_path = spack.new_path(spack.stage_path, stage_dir)
+            remove_linked_tree(stage_path)
 
 
 class Stage(object):
@@ -31,8 +45,16 @@ class Stage(object):
 
 
     def setup(self):
-        # If the user switched stage types on us, destroy the old one and
-        # start over
+        # If we're using a stag in tmp that has since been deleted,
+        # remove the stale symbolic link.
+        if os.path.islink(self.path):
+            real_path = os.path.realpath(self.path)
+            if not os.path.exists(real_path):
+                os.unlink(self.path)
+
+        # If the user switched stage modes, destroy the old stage and
+        # start over.  We could move the old archive, but that seems
+        # like a pain when we could just fetch it again.
         if spack.use_tmp_stage:
             if not os.path.islink(self.path):
                 self.destroy()
@@ -40,6 +62,8 @@ class Stage(object):
             if os.path.islink(self.path):
                 self.destroy()
 
+        # Make sure that the stage is actually a directory.  Something
+        # is seriously wrong if it's not.
         if os.path.exists(self.path):
             if not os.path.isdir(self.path):
                 tty.die("Stage path %s is not a directory!" % self.path)
@@ -65,6 +89,7 @@ class Stage(object):
 
                 os.symlink(tmp_dir, self.path)
 
+        # Finally make sure we can actually do something with the stage
         ensure_access(self.path)
 
 
@@ -164,9 +189,4 @@ class Stage(object):
 
     def destroy(self):
         """Blows away the stage directory.  Can always call setup() again."""
-        if os.path.exists(self.path):
-            if os.path.islink(self.path):
-                shutil.rmtree(os.path.realpath(self.path), True)
-                os.unlink(self.path)
-            else:
-                shutil.rmtree(self.path, True)
+        remove_linked_tree(self.path)
