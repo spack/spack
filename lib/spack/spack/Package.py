@@ -1,3 +1,4 @@
+import sys
 import inspect
 import os
 import re
@@ -39,13 +40,11 @@ def depends_on(*args, **kwargs):
     """Adds a depends_on local variable in the locals of
        the calling class, based on args.
     """
-    stack = inspect.stack()
-    try:
-        locals = stack[1][0].f_locals
-    finally:
-        del stack
+    # This gets the calling frame so we can pop variables into it
+    locals = sys._getframe(1).f_locals
 
-        dependencies = locals.setdefault("dependencies", [])
+    # Put deps into the dependencies variable
+    dependencies = locals.setdefault("dependencies", [])
     for name in args:
         dependencies.append(Dependency(name))
 
