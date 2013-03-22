@@ -2,6 +2,7 @@ import os
 import re
 
 import utils
+from exception import *
 
 class Version(object):
     """Class to represent versions"""
@@ -45,12 +46,13 @@ def canonical(v):
             return int(part)
         except:
             return part
+
     return tuple(intify(v) for v in re.split(r'[_.-]+', v))
 
 
-def parse_version(spec):
-    """Try to extract a version from a filename or URL.  This is taken
-    largely from Homebrew's Version class."""
+def parse_version_string_with_indices(spec):
+    """Try to extract a version string from a filename or URL.  This is taken
+       largely from Homebrew's Version class."""
 
     if os.path.isdir(spec):
         stem = os.path.basename(spec)
@@ -76,7 +78,7 @@ def parse_version(spec):
         (r'[-_](R\d+[AB]\d*(-\d+)?)', spec),
 
         # e.g. boost_1_39_0
-        (r'((\d+_)+\d+)$', stem, lambda s: s.replace('_', '.')),
+        (r'((\d+_)+\d+)$', stem),
 
         # e.g. foobar-4.5.1-1
         # e.g. ruby-1.9.1-p243
@@ -119,11 +121,29 @@ def parse_version(spec):
         regex, match_string = vtype[:2]
         match = re.search(regex, match_string)
         if match and match.group(1) is not None:
-            if vtype[2:]:
-                return Version(vtype[2](match.group(1)))
-            else:
-                return Version(match.group(1))
-    return None
+            return match.group(1), match.start(1), match.end(1)
+
+    raise UndetectableVersionException(spec)
+
+
+def parse_version(spec):
+    """Given a URL or archive name, extract a versino from it and return
+       a version object.
+    """
+    ver, start, end = parse_version_string_with_indices(spec)
+    return Version(ver)
+
+
+def create_version_format(spec):
+    """Given a URL or archive name, find the version and create a format string
+       that will allow another version to be substituted.
+    """
+    ver, start, end = parse_version_string_with_indices(spec)
+    return spec[:start] + '%s' + spec[end:]
+
+
+def replace_version(spec, new_version):
+    version = create_version_format(spec)
 
 
 def parse_name(spec, ver=None):
@@ -142,7 +162,7 @@ def parse_name(spec, ver=None):
         match = re.search(nt, spec)
         if match:
             return match.group(1)
-    return None
+    raise UndetectableNameException(spec)
 
 def parse(spec):
     ver = parse_version(spec)

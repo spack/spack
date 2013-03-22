@@ -4,7 +4,7 @@ import spack.packages as packages
 description = "Build and install packages"
 
 def setup_parser(subparser):
-    subparser.add_argument('names', nargs='+', help="name(s) of package(s) to install")
+    subparser.add_argument('names', nargs='+', help="names of packages to install")
     subparser.add_argument('-i', '--ignore-dependencies',
                            action='store_true', dest='ignore_dependencies',
                            help="Do not try to install dependencies of requested packages.")

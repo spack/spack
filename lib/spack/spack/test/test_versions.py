@@ -3,15 +3,15 @@
 This file has a bunch of versions tests taken from the excellent version
 detection in Homebrew.
 """
-import spack.version as version
 import unittest
+import spack.version as version
+from spack.exception import *
 
 
 class VersionTest(unittest.TestCase):
 
     def assert_not_detected(self, string):
-        name, v = version.parse(string)
-        self.assertIsNone(v)
+        self.assertRaises(UndetectableVersionException, version.parse, string)
 
     def assert_detected(self, name, v, string):
         parsed_name, parsed_v = version.parse(string)

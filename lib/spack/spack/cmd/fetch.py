@@ -3,11 +3,10 @@ import spack.packages as packages
 description = "Fetch archives for packages"
 
 def setup_parser(subparser):
-    subparser.add_argument('name', help="name of package to fetch")
-    subparser.add_argument('-f', '--file', dest='file', default=None,
-                           help="supply an archive file instead of fetching from the package's URL.")
+    subparser.add_argument('names', nargs='+', help="names of packages to fetch")
 
 
 def fetch(parser, args):
-    package = packages.get(args.name)
-    package.do_fetch()
+    for name in args.names:
+        package = packages.get(name)
+        package.do_fetch()

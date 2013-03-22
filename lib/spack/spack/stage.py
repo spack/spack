@@ -5,47 +5,53 @@ import tempfile
 import getpass
 
 import spack
-import packages
 import tty
 
 
-def ensure_access(dir=spack.stage_path):
-    if not os.access(dir, os.R_OK|os.W_OK):
-        tty.die("Insufficient permissions on directory %s" % dir)
-
-
-def remove_linked_tree(path):
-    """Removes a directory and its contents.  If the directory is a symlink,
-       follows the link and reamoves the real directory before removing the link.
-    """
-    if os.path.exists(path):
-        if os.path.islink(path):
-            shutil.rmtree(os.path.realpath(path), True)
-            os.unlink(path)
-        else:
-            shutil.rmtree(path, True)
-
-
-def purge():
-    """Remove any build directories in the stage path."""
-    if os.path.isdir(spack.stage_path):
-        for stage_dir in os.listdir(spack.stage_path):
-            stage_path = spack.new_path(spack.stage_path, stage_dir)
-            remove_linked_tree(stage_path)
-
-
 class Stage(object):
+    """A Stage object manaages a directory where an archive is downloaded,
+       expanded, and built before being installed.  A stage's lifecycle looks
+       like this:
+
+       setup()           Create the stage directory.
+       fetch()           Fetch a source archive into the stage.
+       expand_archive()  Expand the source archive.
+       <install>         Build and install the archive.  This is handled
+                         by the Package class.
+       destroy()         Remove the stage once the package has been installed.
+
+       If spack.use_tmp_stage is True, spack will attempt to create stages
+       in a tmp directory.  Otherwise, stages are created directly in
+       spack.stage_path.
+    """
+
     def __init__(self, stage_name, url):
+        """Create a stage object.
+           Parameters:
+             stage_name   Name of the stage directory that will be created.
+             url          URL of the archive to be downloaded into this stage.
+        """
         self.stage_name = stage_name
         self.url = url
 
     @property
     def path(self):
+        """Absolute path to the stage directory."""
         return spack.new_path(spack.stage_path, self.stage_name)
 
 
     def setup(self):
-        # If we're using a stag in tmp that has since been deleted,
+        """Creates the stage directory.
+           If spack.use_tmp_stage is False, the stage directory is created
+           directly under spack.stage_path.
+
+           If spack.use_tmp_stage is True, this will attempt to create a
+           stage in a temporary directory and link it into spack.stage_path.
+           Spack will use the first writable location in spack.tmp_dirs to
+           create a stage.  If there is no valid location in tmp_dirs, fall
+           back to making the stage inside spack.stage_path.
+        """
+        # If we're using a stage in tmp that has since been deleted,
         # remove the stale symbolic link.
         if os.path.islink(self.path):
             real_path = os.path.realpath(self.path)
@@ -68,18 +74,23 @@ class Stage(object):
             if not os.path.isdir(self.path):
                 tty.die("Stage path %s is not a directory!" % self.path)
         else:
-            # Now create the stage directory
+            # Create the top-level stage directory
             spack.mkdirp(spack.stage_path)
 
-            # And the stage for this build within it
-            if not spack.use_tmp_stage:
-                # non-tmp stage is just a directory in spack.stage_path
-                spack.mkdirp(self.path)
-            else:
-                # tmp stage is created in tmp but linked to spack.stage_path
+            # Find a tmp_dir if we're supposed to use one.
+            tmp_dir = None
+            if spack.use_tmp_stage:
                 tmp_dir = next((tmp for tmp in spack.tmp_dirs
-                               if os.access(tmp, os.R_OK|os.W_OK)), None)
+                                if can_access(tmp)), None)
 
+            if not tmp_dir:
+                # If we couldn't find a tmp dir or if we're not using tmp
+                # stages, create the stage directly in spack.stage_path.
+                spack.mkdirp(self.path)
+
+            else:
+                # Otherwise we found a tmp_dir, so create the stage there
+                # and link it back to the prefix.
                 username = getpass.getuser()
                 if username:
                     tmp_dir = spack.new_path(tmp_dir, username)
@@ -89,12 +100,13 @@ class Stage(object):
 
                 os.symlink(tmp_dir, self.path)
 
-        # Finally make sure we can actually do something with the stage
+        # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
 
 
     @property
     def archive_file(self):
+        """Path to the source archive within this stage directory."""
         path = os.path.join(self.path, os.path.basename(self.url))
         if os.path.exists(path):
             return path
@@ -155,6 +167,10 @@ class Stage(object):
 
 
     def expand_archive(self):
+        """Changes to the stage directory and attempt to expand the downloaded
+           archive.  Fail if the stage is not set up or if the archive is not yet
+           downloaded.
+        """
         self.chdir()
 
         if not self.archive_file:
@@ -165,8 +181,8 @@ class Stage(object):
 
 
     def chdir_to_archive(self):
-        """Changes directory to the expanded archive directory if it exists.
-           Dies with an error otherwise.
+        """Changes directory to the expanded archive directory.
+           Dies with an error if there was no expanded archive.
         """
         path = self.expanded_archive_path
         if not path:
@@ -178,7 +194,9 @@ class Stage(object):
 
 
     def restage(self):
-        """Removes the expanded archive path if it exists, then re-expands the archive."""
+        """Removes the expanded archive path if it exists, then re-expands
+           the archive.
+        """
         if not self.archive_file:
             tty.die("Attempt to restage when not staged.")
 
@@ -188,5 +206,38 @@ class Stage(object):
 
 
     def destroy(self):
-        """Blows away the stage directory.  Can always call setup() again."""
+        """Remove this stage directory."""
         remove_linked_tree(self.path)
+
+
+
+def can_access(file=spack.stage_path):
+    """True if we have read/write access to the file."""
+    return os.access(file, os.R_OK|os.W_OK)
+
+
+def ensure_access(file=spack.stage_path):
+    """Ensure we can access a directory and die with an error if we can't."""
+    if not can_access(file):
+        tty.die("Insufficient permissions for %s" % file)
+
+
+def remove_linked_tree(path):
+    """Removes a directory and its contents.  If the directory is a symlink,
+       follows the link and reamoves the real directory before removing the
+       link.
+    """
+    if os.path.exists(path):
+        if os.path.islink(path):
+            shutil.rmtree(os.path.realpath(path), True)
+            os.unlink(path)
+        else:
+            shutil.rmtree(path, True)
+
+
+def purge():
+    """Remove all build directories in the top-level stage path."""
+    if os.path.isdir(spack.stage_path):
+        for stage_dir in os.listdir(spack.stage_path):
+            stage_path = spack.new_path(spack.stage_path, stage_dir)
+            remove_linked_tree(stage_path)

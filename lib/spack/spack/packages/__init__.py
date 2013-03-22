@@ -74,7 +74,7 @@ def class_for(pkg):
     # If a class starts with a number, prefix it with Number_ to make it a valid
     # Python class name.
     if re.match(r'^[0-9]', class_name):
-        class_name = "Number_%s" % class_name
+        class_name = "Num_%s" % class_name
 
     return class_name
 

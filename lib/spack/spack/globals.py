@@ -1,11 +1,6 @@
 import os
-import re
-import multiprocessing
 from version import Version
-
-import tty
 from utils import *
-from spack.exception import *
 
 # This lives in $prefix/lib/spac/spack/__file__
 prefix = ancestor(__file__, 4)

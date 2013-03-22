@@ -21,3 +21,19 @@ class CommandFailedException(SpackException):
     def __init__(self, command):
         super(CommandFailedException, self).__init__("Failed to execute command: " + command)
         self.command = command
+
+
+class VersionParseException(SpackException):
+    def __init__(self, msg, spec):
+        super(VersionParseException, self).__init__(msg)
+        self.spec = spec
+
+
+class UndetectableVersionException(VersionParseException):
+    def __init__(self, spec):
+        super(UndetectableVersionException, self).__init__("Couldn't detect version in: " + spec, spec)
+
+
+class UndetectableNameException(VersionParseException):
+    def __init__(self, spec):
+        super(UndetectableNameException, self).__init__("Couldn't parse package name in: " + spec)
