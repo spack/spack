@@ -54,7 +54,7 @@ class Package(object):
     $prefix/lib/spack/spack/packages/cmake.py:
 
     from spack import *
-    class Cmake(object):
+    class Cmake(Package):
         homepage  = 'https://www.cmake.org'
         url       = 'http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz'
         md5       = '097278785da7182ec0aea8769d06860c'
