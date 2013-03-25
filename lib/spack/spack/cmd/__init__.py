@@ -25,6 +25,10 @@ def null_op(*args):
     pass
 
 
+def get_cmd_function_name(name):
+    return name.replace("-", "_")
+
+
 def get_module(name):
     """Imports the module for a particular command name and returns it."""
     module_name = "%s.%s" % (__name__, name)
@@ -35,13 +39,14 @@ def get_module(name):
     attr.setdefault(module, SETUP_PARSER, null_op)
     attr.setdefault(module, DESCRIPTION, "")
 
-    if not hasattr(module, name):
+    fn_name = get_cmd_function_name(name)
+    if not hasattr(module, fn_name):
         tty.die("Command module %s (%s) must define function '%s'."
-                % (module.__name__, module.__file__, name))
+                % (module.__name__, module.__file__, fn_name))
 
     return module
 
 
 def get_command(name):
     """Imports the command's function from a module and returns it."""
-    return getattr(get_module(name), name)
+    return getattr(get_module(name), get_cmd_function_name(name))
