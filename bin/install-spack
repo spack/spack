@@ -41,8 +41,13 @@ prefix = os.getcwd()
 
 if os.path.exists(".git"):
     error("There already seems to be a git repository here.")
-if os.listdir("."):
-    error("There is already something in this directory.")
+
+files_in_the_way = os.listdir(".")
+if files_in_the_way:
+    msg("There are already some files in this directory:")
+    for file in files_in_the_way:
+        print file
+    error("Delete these files before installing spack.")
 
 msg("This script will install:")
 print "    %s/bin/spack" % prefix
