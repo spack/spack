@@ -1,0 +1,56 @@
+#!/usr/bin/python
+usage="""\
+This script installs spack in a new prefix.
+To use: cd to the prefix and execute this script.
+"""
+import os
+import sys
+import getpass
+from subprocess import check_call
+
+def escape(s):
+    """Returns a TTY escape code if stdout is a tty, otherwise empty string"""
+    if sys.stdout.isatty():
+        return "\033[{}m".format(s)
+    return ''
+
+def bold(n):
+    return escape("1;{}".format(n))
+
+blue   = bold(34)
+red    = bold(31)
+white  = bold(39)
+reset  = escape(0)
+
+def msg(msg):
+    print "{}==>{} {}{}".format(blue, white, str(msg), reset)
+
+def error(msg):
+    print "{}==> ERROR: {} {}{}".format(red, white, str(msg), reset)
+    sys.exit(1)
+
+
+user = getpass.getuser()
+if not user:
+    error("Couldn't determine username!")
+
+spack_repo  = "https://%s@lc.llnl.gov/stash/scm/SCALE/spack.git" % user
+msg("Fetching spack from %s" % spack_repo)
+
+prefix = os.getcwd()
+
+if os.path.exists(".git"):
+    error("There already seems to be a git repository here.")
+if os.listdir("."):
+    error("There is already something in this directory.")
+
+msg("This script will install:")
+print "    %s/bin/spack" % prefix
+print "    %s/lib/spack/..." % prefix
+
+check_call(["git", "init", "--shared", "-q"])
+check_call(["git", "remote", "add", "origin", spack_repo])
+check_call(["git", "fetch", "origin", "master:refs/remotes/origin/master", "-n", "-q"])
+check_call(["git", "reset", "--hard", "origin/master", "-q"])
+
+msg("Successfully installed spack in %s" % prefix)
