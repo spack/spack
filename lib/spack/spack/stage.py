@@ -5,7 +5,15 @@ import tempfile
 import getpass
 
 import spack
+import spack.error as serr
 import tty
+
+class FailedDownloadError(serr.SpackError):
+    """Raised wen a download fails."""
+    def __init__(self, url):
+        super(FailedDownloadError, self).__init__(
+            "Failed to fetch file from URL: " + url)
+        self.url = url
 
 
 class Stage(object):
@@ -161,7 +169,7 @@ class Stage(object):
                          "your internet gateway issue and install again.")
 
         if not self.archive_file:
-            raise FailedDownloadException(url)
+            raise FailedDownloadError(url)
 
         return self.archive_file
 

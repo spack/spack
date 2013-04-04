@@ -1,6 +1,7 @@
 import os
 from version import Version
 from utils import *
+import arch
 
 # This lives in $prefix/lib/spac/spack/__file__
 prefix = ancestor(__file__, 4)
@@ -20,7 +21,7 @@ stage_path    = new_path(var_path, "stage")
 install_path  = new_path(prefix, "opt")
 
 # Version information
-spack_version = Version("0.1")
+spack_version = Version("0.2")
 
 # User's editor from the environment
 editor = Executable(os.environ.get("EDITOR", ""))
@@ -38,6 +39,21 @@ use_tmp_stage = True
 # if one of these tmp_dirs exists.  Otherwise it'll use a default
 # location per the python implementation of tempfile.mkdtemp().
 tmp_dirs = ['/nfs/tmp2', '/var/tmp', '/tmp']
+
+#
+# SYS_TYPE to use for the spack installation.
+# Value of this determines what platform spack thinks it is by
+# default.  You can assign three types of values:
+# 1. None
+#    Spack will try to determine the sys_type automatically.
+#
+# 2. A string
+#    Spack will assume that the sys_type is hardcoded to the value.
+#
+# 3. A function that returns a string:
+#    Spack will use this function to determine the sys_type.
+#
+sys_type = None
 
 # Important environment variables
 SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'

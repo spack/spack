@@ -10,6 +10,7 @@ from spack.utils import *
 import spack.arch as arch
 import spack.version as version
 import spack.attr as attr
+import spack.error as serr
 
 # Valid package names
 valid_package = r'^[a-zA-Z0-9_-]*$'
@@ -19,6 +20,13 @@ invalid_package = r'[_-][_-]+'
 
 instances = {}
 
+class InvalidPackageNameError(serr.SpackError):
+    """Raised when we encounter a bad package name."""
+    def __init__(self, name):
+        super(InvalidPackageNameError, self).__init__(
+            "Invalid package name: " + name)
+        self.name = name
+
 
 def valid_name(pkg):
     return re.match(valid_package, pkg) and not re.search(invalid_package, pkg)
@@ -26,7 +34,7 @@ def valid_name(pkg):
 
 def validate_name(pkg):
     if not valid_name(pkg):
-        raise spack.InvalidPackageNameException(pkg)
+        raise spack.InvalidPackageNameError(pkg)
 
 
 def filename_for(pkg):
@@ -36,7 +44,7 @@ def filename_for(pkg):
 
 
 def installed_packages(**kwargs):
-    """Returns a dict from SysType to lists of Package objects."""
+    """Returns a dict from systype strings to lists of Package objects."""
     list_installed = kwargs.get('installed', False)
 
     pkgs = {}
@@ -44,7 +52,7 @@ def installed_packages(**kwargs):
         return pkgs
 
     for sys_type in os.listdir(spack.install_path):
-        sys_type = arch.SysType(sys_type)
+        sys_type = sys_type
         sys_path = new_path(spack.install_path, sys_type)
         pkgs[sys_type] = [get(pkg) for pkg in os.listdir(sys_path)
                           if os.path.isdir(new_path(sys_path, pkg))]

@@ -2,7 +2,29 @@ import os
 import re
 
 import utils
-from exception import *
+import spack.error as serr
+
+
+class VersionParseError(serr.SpackError):
+    """Raised when the version module can't parse something."""
+    def __init__(self, msg, spec):
+        super(VersionParseError, self).__init__(msg)
+        self.spec = spec
+
+
+class UndetectableVersionError(VersionParseError):
+    """Raised when we can't parse a version from a string."""
+    def __init__(self, spec):
+        super(UndetectableVersionError, self).__init__(
+            "Couldn't detect version in: " + spec, spec)
+
+
+class UndetectableNameError(VersionParseError):
+    """Raised when we can't parse a package name from a string."""
+    def __init__(self, spec):
+        super(UndetectableNameError, self).__init__(
+            "Couldn't parse package name in: " + spec)
+
 
 class Version(object):
     """Class to represent versions"""
@@ -31,6 +53,15 @@ class Version(object):
             return self.version[i]
         else:
             return None
+
+    def up_to(self, index):
+        """Return a version string up to the specified component, exclusive.
+           e.g., if this is 10.8.2, self.up_to(2) will return '10.8'.
+        """
+        return '.'.join(str(x) for x in self[:index])
+
+    def __getitem__(self, idx):
+        return tuple(self.version[idx])
 
     def __repr__(self):
         return self.version_string
@@ -123,7 +154,7 @@ def parse_version_string_with_indices(spec):
         if match and match.group(1) is not None:
             return match.group(1), match.start(1), match.end(1)
 
-    raise UndetectableVersionException(spec)
+    raise UndetectableVersionError(spec)
 
 
 def parse_version(spec):
@@ -162,7 +193,7 @@ def parse_name(spec, ver=None):
         match = re.search(nt, spec)
         if match:
             return match.group(1)
-    raise UndetectableNameException(spec)
+    raise UndetectableNameError(spec)
 
 def parse(spec):
     ver = parse_version(spec)
