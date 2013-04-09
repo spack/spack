@@ -29,7 +29,8 @@ parser.add_argument('-d', '--debug', action='store_true', dest='debug',
 
 # each command module implements a parser() function, to which we pass its
 # subparser for setup.
-subparsers = parser.add_subparsers(title="subcommands", dest="command")
+subparsers = parser.add_subparsers(
+    title="commands", metavar='<command>', dest="command")
 
 import spack.cmd
 for cmd in spack.cmd.commands:
