@@ -15,6 +15,7 @@ sys.path.insert(0, SPACK_LIB_PATH)
 # clean up the scope and start using spack package instead.
 del SPACK_FILE, SPACK_PREFIX, SPACK_LIB_PATH
 import spack
+import spack.tty as tty
 
 # Command parsing
 parser = argparse.ArgumentParser(
@@ -43,4 +44,7 @@ spack.debug = args.debug
 
 # Try to load the particular command asked for and run it
 command = spack.cmd.get_command(args.command)
-command(parser, args)
+try:
+    command(parser, args)
+except KeyboardInterrupt:
+    tty.die("Got a keyboard interrupt from the user.")

@@ -11,6 +11,7 @@ class Libdwarf(Package):
 
     depends_on("libelf")
 
+
     def clean(self):
         for dir in dwarf_dirs:
             with working_dir(dir):
@@ -19,6 +20,7 @@ class Libdwarf(Package):
 
 
     def install(self, prefix):
+        # dwarf build does not set arguments for ar properly
         make.add_default_arg('ARFLAGS=rcs')
 
         # Dwarf doesn't provide an install, so we have to do it.
@@ -43,3 +45,9 @@ class Libdwarf(Package):
             install('dwarfdump',     bin)
             install('dwarfdump.conf', lib)
             install('dwarfdump.1',    man1)
+
+
+    @platform('macosx_10.8_x86_64')
+    def install(self, prefix):
+        raise UnsupportedPlatformError(
+            "libdwarf doesn't currently build on Mac OS X.")

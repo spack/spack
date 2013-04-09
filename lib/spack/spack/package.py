@@ -14,7 +14,7 @@ import inspect
 import os
 import re
 import subprocess
-import platform
+import platform as py_platform
 import shutil
 
 from spack import *
@@ -24,6 +24,8 @@ import attr
 import validate
 import version
 import arch
+
+from multi_function import platform
 from stage import Stage
 
 
@@ -226,7 +228,7 @@ class Package(object):
     clean() (some of them do this), and others to provide custom behavior.
     """
 
-    def __init__(self, arch=arch.sys_type()):
+    def __init__(self, sys_type=arch.sys_type()):
         attr.required(self, 'homepage')
         attr.required(self, 'url')
         attr.required(self, 'md5')
@@ -235,7 +237,7 @@ class Package(object):
         attr.setdefault(self, 'parallel', True)
 
         # Architecture for this package.
-        self.arch = arch
+        self.sys_type = sys_type
 
         # Name of package is the name of its module (the file that contains it)
         self.name = inspect.getmodulename(self.module.__file__)
@@ -266,7 +268,7 @@ class Package(object):
         self.dirty = False
 
         # stage used to build this package.
-        Self.stage = Stage(self.stage_name, self.url)
+        self.stage = Stage(self.stage_name, self.url)
 
 
     def add_commands_to_module(self):
@@ -289,7 +291,7 @@ class Package(object):
         # standard CMake arguments
         m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % self.prefix,
                             '-DCMAKE_BUILD_TYPE=None']
-        if platform.mac_ver()[0]:
+        if py_platform.mac_ver()[0]:
             m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
 
         # Emulate some shell commands for convenience
@@ -361,11 +363,13 @@ class Package(object):
     def stage_name(self):
         return "%s-%s" % (self.name, self.version)
 
-
+    #
+    # Below properties determine the path where this package is installed.
+    #
     @property
     def platform_path(self):
         """Directory for binaries for the current platform."""
-        return new_path(install_path, self.arch)
+        return new_path(install_path, self.sys_type)
 
 
     @property
@@ -388,6 +392,9 @@ class Package(object):
 
     def remove_prefix(self):
         """Removes the prefix for a package along with any empty parent directories."""
+        if self.dirty:
+            return
+
         if os.path.exists(self.prefix):
             shutil.rmtree(self.prefix, True)
 
@@ -448,10 +455,15 @@ class Package(object):
             self.install(self.prefix)
             if not os.path.isdir(self.prefix):
                 tty.die("Install failed for %s.  No install dir created." % self.name)
+
         except subprocess.CalledProcessError, e:
-            if not self.dirty:
-                self.remove_prefix()
+            self.remove_prefix()
             tty.die("Install failed for %s" % self.name, e.message)
+
+        except KeyboardInterrupt, e:
+            self.remove_prefix()
+            raise
+
         except Exception, e:
             if not self.dirty:
                 self.remove_prefix()
@@ -576,7 +588,7 @@ class Dependency(object):
 
 
 def depends_on(*args, **kwargs):
-    """Adds a depends_on local variable in the locals of
+    """Adds a dependencies local variable in the locals of
        the calling class, based on args.
     """
     # This gets the calling frame so we can pop variables into it
