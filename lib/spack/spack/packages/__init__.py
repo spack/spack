@@ -61,10 +61,8 @@ def installed_packages(**kwargs):
 
 def all_package_names():
     """Generator function for all packages."""
-    os.chdir(spack.packages_path)
-    for name in glob.glob("*.py"):
-        if name != '__init__.py':
-            yield re.sub('.py$', '', name)
+    for mod in list_modules(spack.packages_path):
+        yield mod
 
 
 def all_packages():

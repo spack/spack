@@ -5,27 +5,6 @@ import utils
 import spack.error as serr
 
 
-class VersionParseError(serr.SpackError):
-    """Raised when the version module can't parse something."""
-    def __init__(self, msg, spec):
-        super(VersionParseError, self).__init__(msg)
-        self.spec = spec
-
-
-class UndetectableVersionError(VersionParseError):
-    """Raised when we can't parse a version from a string."""
-    def __init__(self, spec):
-        super(UndetectableVersionError, self).__init__(
-            "Couldn't detect version in: " + spec, spec)
-
-
-class UndetectableNameError(VersionParseError):
-    """Raised when we can't parse a package name from a string."""
-    def __init__(self, spec):
-        super(UndetectableNameError, self).__init__(
-            "Couldn't parse package name in: " + spec)
-
-
 class Version(object):
     """Class to represent versions"""
     def __init__(self, version_string):
@@ -79,6 +58,27 @@ def canonical(v):
             return part
 
     return tuple(intify(v) for v in re.split(r'[_.-]+', v))
+
+
+class VersionParseError(serr.SpackError):
+    """Raised when the version module can't parse something."""
+    def __init__(self, msg, spec):
+        super(VersionParseError, self).__init__(msg)
+        self.spec = spec
+
+
+class UndetectableVersionError(VersionParseError):
+    """Raised when we can't parse a version from a string."""
+    def __init__(self, spec):
+        super(UndetectableVersionError, self).__init__(
+            "Couldn't detect version in: " + spec, spec)
+
+
+class UndetectableNameError(VersionParseError):
+    """Raised when we can't parse a package name from a string."""
+    def __init__(self, spec):
+        super(UndetectableNameError, self).__init__(
+            "Couldn't parse package name in: " + spec)
 
 
 def parse_version_string_with_indices(spec):

@@ -14,6 +14,7 @@ lib_path      = new_path(prefix, "lib", "spack")
 env_path      = new_path(lib_path, "env")
 module_path   = new_path(lib_path, "spack")
 packages_path = new_path(module_path, "packages")
+test_path     = new_path(module_path, "test")
 
 var_path      = new_path(prefix, "var", "spack")
 stage_path    = new_path(var_path, "stage")

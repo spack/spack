@@ -1,6 +1,7 @@
 import os
 import re
 import errno
+import glob
 import shutil
 import subprocess
 import multiprocessing
@@ -33,6 +34,15 @@ def memoized(obj):
 def install(src, dest):
     tty.info("Installing %s to %s" % (src, dest))
     shutil.copy(src, dest)
+
+
+def list_modules(directory):
+    """Lists all of the modules, excluding __init__.py, in
+       a particular directory."""
+    os.chdir(directory)
+    for name in glob.glob("*.py"):
+        if name != '__init__.py':
+            yield re.sub('.py$', '', name)
 
 
 @contextmanager
