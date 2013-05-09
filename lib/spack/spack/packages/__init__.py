@@ -12,8 +12,8 @@ import spack.version as version
 import spack.attr as attr
 import spack.error as serr
 
-# Valid package names
-valid_package = r'^[a-zA-Z0-9_-]*$'
+# Valid package names -- can contain - but can't start with it.
+valid_package = r'^\w[\w-]*$'
 
 # Don't allow consecutive [_-] in package names
 invalid_package = r'[_-][_-]+'

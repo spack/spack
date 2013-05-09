@@ -27,6 +27,7 @@ import arch
 
 from multi_function import platform
 from stage import Stage
+from dependency import *
 
 
 class Package(object):
@@ -228,13 +229,23 @@ class Package(object):
     clean() (some of them do this), and others to provide custom behavior.
     """
 
-    def __init__(self, sys_type=arch.sys_type()):
+    """By default a package has no dependencies."""
+    dependencies = []
+
+    """By default we build in parallel.  Subclasses can override this."""
+    parallel = True
+
+    """Remove tarball and build by default.  If this is true, leave them."""
+    dirty = False
+
+    """Controls whether install and uninstall check deps before running."""
+    ignore_dependencies = False
+
+    def __init__(self, sys_type = arch.sys_type()):
+        # Check for attributes that derived classes must set.
         attr.required(self, 'homepage')
         attr.required(self, 'url')
         attr.required(self, 'md5')
-
-        attr.setdefault(self, 'dependencies', [])
-        attr.setdefault(self, 'parallel', True)
 
         # Architecture for this package.
         self.sys_type = sys_type
@@ -258,14 +269,8 @@ class Package(object):
         # This adds a bunch of convenience commands to the package's module scope.
         self.add_commands_to_module()
 
-        # Controls whether install and uninstall check deps before acting.
-        self.ignore_dependencies = False
-
         # Empty at first; only compute dependents if necessary
         self._dependents = None
-
-        # Whether to remove intermediate build/install when things go wrong.
-        self.dirty = False
 
         # stage used to build this package.
         self.stage = Stage(self.stage_name, self.url)
@@ -567,37 +572,6 @@ class Package(object):
         if os.path.exists(self.stage.path):
             self.stage.destroy()
         tty.msg("Successfully cleaned %s" % self.name)
-
-
-class Dependency(object):
-    """Represents a dependency from one package to another."""
-    def __init__(self, name, **kwargs):
-        self.name = name
-        for key in kwargs:
-            setattr(self, key, kwargs[key])
-
-    @property
-    def package(self):
-        return packages.get(self.name)
-
-    def __repr__(self):
-        return "<dep: %s>" % self.name
-
-    def __str__(self):
-        return self.__repr__()
-
-
-def depends_on(*args, **kwargs):
-    """Adds a dependencies local variable in the locals of
-       the calling class, based on args.
-    """
-    # This gets the calling frame so we can pop variables into it
-    locals = sys._getframe(1).f_locals
-
-    # Put deps into the dependencies variable
-    dependencies = locals.setdefault("dependencies", [])
-    for name in args:
-        dependencies.append(Dependency(name))
 
 
 class MakeExecutable(Executable):
