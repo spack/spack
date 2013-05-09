@@ -10,4 +10,4 @@ def run(test_name, verbose=False):
 
     verbosity=1
     if verbose: verbosity = 2
-    unittest.main(module=test_module, argv=sys.argv[:1], verbosity=verbosity)
+    unittest.main(module=test_module, argv=sys.argv[:1], verbosity=verbosity, exit=False)
