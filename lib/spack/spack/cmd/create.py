@@ -4,7 +4,7 @@ import os
 import spack
 import spack.packages as packages
 import spack.tty as tty
-import spack.version
+import spack.url
 
 from spack.stage import Stage
 from contextlib import closing
@@ -38,7 +38,7 @@ def create(parser, args):
     url = args.url
 
     # Try to deduce name and version of the new package from the URL
-    name, version = spack.version.parse(url)
+    name, version = spack.url.parse_name_and_version(url)
     if not name:
         print "Couldn't guess a name for this package."
         while not name:

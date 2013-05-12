@@ -126,6 +126,9 @@ class Stage(object):
         """Returns the path to the expanded archive directory if it's expanded;
            None if the archive hasn't been expanded.
         """
+        if not self.archive_file:
+            return None
+
         for file in os.listdir(self.path):
             archive_path = spack.new_path(self.path, file)
             if os.path.isdir(archive_path):

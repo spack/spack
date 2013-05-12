@@ -7,7 +7,7 @@ import unittest
 from spack.version import *
 
 
-class CompareVersionsTest(unittest.TestCase):
+class VersionsTest(unittest.TestCase):
 
     def assert_ver_lt(self, a, b):
         a, b = ver(a), ver(b)
@@ -129,7 +129,8 @@ class CompareVersionsTest(unittest.TestCase):
         self.assert_ver_lt('1.fc17',  '1g.fc17')
 
 
-    # Stuff below here is not taken from RPM's tests.
+    # Stuff below here is not taken from RPM's tests and is
+    # unique to spack
     def test_version_ranges(self):
         self.assert_ver_lt('1.2:1.4', '1.6')
         self.assert_ver_gt('1.6', '1.2:1.4')

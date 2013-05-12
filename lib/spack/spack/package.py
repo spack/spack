@@ -22,7 +22,7 @@ import packages
 import tty
 import attr
 import validate
-import version
+import url
 import arch
 
 from multi_function import platform
@@ -261,7 +261,7 @@ class Package(object):
         validate.url(self.url)
 
         # Set up version
-        attr.setdefault(self, 'version', version.parse_version(self.url))
+        attr.setdefault(self, 'version', url.parse_version(self.url))
         if not self.version:
             tty.die("Couldn't extract version from %s. " +
                     "You must specify it explicitly for this URL." % self.url)

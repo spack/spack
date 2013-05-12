@@ -3,18 +3,19 @@ This file has a bunch of versions tests taken from the excellent version
 detection in Homebrew.
 """
 import unittest
-import spack.version as ver
+import spack.url as url
 from pprint import pprint
 
 
 class UrlParseTest(unittest.TestCase):
     def assert_not_detected(self, string):
-        self.assertRaises(ver.UndetectableVersionError, ver.parse, string)
+        self.assertRaises(
+            url.UndetectableVersionError, url.parse_name_and_version, string)
 
     def assert_detected(self, name, v, string):
-        parsed_name, parsed_v = ver.parse(string)
+        parsed_name, parsed_v = url.parse_name_and_version(string)
         self.assertEqual(parsed_name, name)
-        self.assertEqual(parsed_v, ver.Version(v))
+        self.assertEqual(parsed_v, url.Version(v))
 
     def test_wwwoffle_version(self):
         self.assert_detected(

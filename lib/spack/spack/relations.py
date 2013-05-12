@@ -44,6 +44,7 @@ provides
         spack install mpileaks ^mvapich
         spack install mpileaks ^mpich
 """
+import sys
 from dependency import Dependency
 
 

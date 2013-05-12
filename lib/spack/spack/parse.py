@@ -1,5 +1,6 @@
 import re
 import spack.error as err
+import spack.tty as tty
 import itertools
 
 
@@ -11,9 +12,7 @@ class ParseError(err.SpackError):
         self.pos = pos
 
     def print_error(self, out):
-        out.write(self.message + ":\n\n")
-        out.write("    " + self.string + "\n")
-        out.write("    " + self.pos * " " + "^\n\n")
+        tty.error(self.message, self.string, self.pos * " " + "^")
 
 
 class LexError(ParseError):
@@ -107,7 +106,7 @@ class Parser(object):
             if self.next:
                 self.unexpected_token()
             else:
-                self.next_token_error("Unexpected end of file")
+                self.next_token_error("Unexpected end of input")
             sys.exit(1)
 
     def parse(self, text):

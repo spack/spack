@@ -1,7 +1,9 @@
 import os
 import re
+import sys
 
 import spack
+import spack.spec
 import spack.tty as tty
 import spack.attr as attr
 
@@ -21,10 +23,6 @@ for file in os.listdir(command_path):
 commands.sort()
 
 
-def null_op(*args):
-    pass
-
-
 def get_cmd_function_name(name):
     return name.replace("-", "_")
 
@@ -36,7 +34,7 @@ def get_module(name):
         module_name, fromlist=[name, SETUP_PARSER, DESCRIPTION],
         level=0)
 
-    attr.setdefault(module, SETUP_PARSER, null_op)
+    attr.setdefault(module, SETUP_PARSER, lambda *args: None) # null-op
     attr.setdefault(module, DESCRIPTION, "")
 
     fn_name = get_cmd_function_name(name)
@@ -50,3 +48,22 @@ def get_module(name):
 def get_command(name):
     """Imports the command's function from a module and returns it."""
     return getattr(get_module(name), get_cmd_function_name(name))
+
+
+def parse_specs(args):
+    """Convenience function for parsing arguments from specs.  Handles common
+       exceptions and dies if there are errors.
+    """
+    if type(args) == list:
+        args = " ".join(args)
+
+    try:
+        return spack.spec.parse(" ".join(args))
+
+    except spack.parse.ParseError, e:
+        e.print_error(sys.stdout)
+        sys.exit(1)
+
+    except spack.spec.SpecError, e:
+        tty.error(e.message)
+        sys.exit(1)
