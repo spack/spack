@@ -2,23 +2,33 @@ import re
 import spack.error as err
 import itertools
 
-class UnlexableInputError(err.SpackError):
-    """Raised when we don't know how to lex something."""
-    def __init__(self, message):
-        super(UnlexableInputError, self).__init__(message)
-
 
 class ParseError(err.SpackError):
     """Raised when we don't hit an error while parsing."""
-    def __init__(self, message):
+    def __init__(self, message, string, pos):
         super(ParseError, self).__init__(message)
+        self.string = string
+        self.pos = pos
+
+    def print_error(self, out):
+        out.write(self.message + ":\n\n")
+        out.write("    " + self.string + "\n")
+        out.write("    " + self.pos * " " + "^\n\n")
+
+
+class LexError(ParseError):
+    """Raised when we don't know how to lex something."""
+    def __init__(self, message, string, pos):
+        super(LexError, self).__init__(message, string, pos)
 
 
 class Token:
     """Represents tokens; generated from input by lexer and fed to parse()."""
-    def __init__(self, type, value=''):
+    def __init__(self, type, value='', start=0, end=0):
         self.type = type
         self.value = value
+        self.start = start
+        self.end = end
 
     def __repr__(self):
         return str(self)
@@ -33,18 +43,19 @@ class Token:
         return cmp((self.type, self.value),
                    (other.type, other.value))
 
+
 class Lexer(object):
     """Base class for Lexers that keep track of line numbers."""
     def __init__(self, lexicon):
         self.scanner = re.Scanner(lexicon)
 
     def token(self, type, value=''):
-        return Token(type, value)
+        return Token(type, value, self.scanner.match.start(0), self.scanner.match.end(0))
 
     def lex(self, text):
         tokens, remainder = self.scanner.scan(text)
         if remainder:
-            raise UnlexableInputError("Unlexable input:\n%s\n" % remainder)
+            raise LexError("Invalid character", text, text.index(remainder))
         return tokens
 
 
@@ -55,6 +66,7 @@ class Parser(object):
         self.token = None      # last accepted token
         self.next = None       # next token
         self.lexer = lexer
+        self.text = None
 
     def gettok(self):
         """Puts the next token in the input stream into self.next."""
@@ -76,8 +88,16 @@ class Parser(object):
             return True
         return False
 
+    def next_token_error(self, message):
+        """Raise an error about the next token in the stream."""
+        raise ParseError(message, self.text, self.token.end)
+
+    def last_token_error(self, message):
+        """Raise an error about the previous token in the stream."""
+        raise ParseError(message, self.text, self.token.start)
+
     def unexpected_token(self):
-        raise ParseError("Unexpected token: %s." % self.next)
+        self.next_token_error("Unexpected token")
 
     def expect(self, id):
         """Like accept(), but fails if we don't like the next token."""
@@ -87,9 +107,10 @@ class Parser(object):
             if self.next:
                 self.unexpected_token()
             else:
-                raise ParseError("Unexpected end of file.")
+                self.next_token_error("Unexpected end of file")
             sys.exit(1)
 
     def parse(self, text):
+        self.text = text
         self.push_tokens(self.lexer.lex(text))
         return self.do_parse()

@@ -48,8 +48,8 @@ class SpecTest(unittest.TestCase):
         if spec == None:
             spec = expected
         output = self.parser.parse(spec)
-        self.assertEqual(len(output), 1)
-        self.assertEqual(str(output[0]), spec)
+        parsed = (" ".join(str(spec) for spec in output))
+        self.assertEqual(expected, parsed)
 
 
     def check_lex(self, tokens, spec):
@@ -85,7 +85,38 @@ class SpecTest(unittest.TestCase):
 
     def test_canonicalize(self):
         self.check_parse(
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 ^stackwalker@8.1_1e")
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 ^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.6,1.2:1.4%intel@12.1:12.6+debug~qt_4 ^stackwalker@8.1_1e")
+
+        self.check_parse(
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 ^stackwalker@8.1_1e",
+            "mvapich_foo ^stackwalker@8.1_1e ^_openmpi@1.6,1.2:1.4%intel@12.1:12.6~qt_4+debug")
+
+        self.check_parse(
+            "x ^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f",
+            "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
+
+    def test_parse_errors(self):
+        self.assertRaises(ParseError, self.check_parse, "x@@1.2")
+        self.assertRaises(ParseError, self.check_parse, "x ^y@@1.2")
+        self.assertRaises(ParseError, self.check_parse, "x@1.2::")
+        self.assertRaises(ParseError, self.check_parse, "x::")
+
+    def test_duplicate_variant(self):
+        self.assertRaises(DuplicateVariantError, self.check_parse, "x@1.2+debug+debug")
+        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2+debug+debug")
+
+    def test_duplicate_depdendence(self):
+        self.assertRaises(DuplicateDependencyError, self.check_parse, "x ^y ^y")
+
+    def test_duplicate_compiler(self):
+        self.assertRaises(DuplicateCompilerError, self.check_parse, "x%intel%intel")
+        self.assertRaises(DuplicateCompilerError, self.check_parse, "x%intel%gnu")
+        self.assertRaises(DuplicateCompilerError, self.check_parse, "x%gnu%intel")
+        self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%intel%intel")
+        self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%intel%gnu")
+        self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%gnu%intel")
+
 
     # ================================================================================
     # Lex checks

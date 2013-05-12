@@ -134,6 +134,9 @@ class VersionRange(object):
         return not (self == other)
 
 
+    def __repr__(self):
+        return self.__str__()
+
     def __str__(self):
         out = ""
         if self.start:

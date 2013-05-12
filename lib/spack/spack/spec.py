@@ -44,17 +44,22 @@ from spack.version import Version, VersionRange
 import spack.error
 
 
-class DuplicateDependenceError(spack.error.SpackError):
-    """Raised when the same dependence occurs in a spec twice."""
+class SpecError(spack.error.SpackError):
+    """Superclass for all errors that occur while constructing specs."""
     def __init__(self, message):
-        super(DuplicateDependenceError, self).__init__(message)
+        super(SpecError, self).__init__(message)
 
-class DuplicateVariantError(spack.error.SpackError):
+class DuplicateDependencyError(SpecError):
+    """Raised when the same dependency occurs in a spec twice."""
+    def __init__(self, message):
+        super(DuplicateDependencyError, self).__init__(message)
+
+class DuplicateVariantError(SpecError):
     """Raised when the same variant occurs in a spec twice."""
     def __init__(self, message):
-        super(VariantVariantError, self).__init__(message)
+        super(DuplicateVariantError, self).__init__(message)
 
-class DuplicateCompilerError(spack.error.SpackError):
+class DuplicateCompilerError(SpecError):
     """Raised when the same compiler occurs in a spec twice."""
     def __init__(self, message):
         super(DuplicateCompilerError, self).__init__(message)
@@ -88,14 +93,18 @@ class Spec(object):
         self.versions.append(version)
 
     def add_variant(self, name, enabled):
+        if name in self.variants: raise DuplicateVariantError(
+                "Cannot specify variant '%s' twice" % name)
         self.variants[name] = enabled
 
     def add_compiler(self, compiler):
+        if self.compiler: raise DuplicateCompilerError(
+                "Spec for '%s' cannot have two compilers." % self.name)
         self.compiler = compiler
 
     def add_dependency(self, dep):
         if dep.name in self.dependencies:
-            raise ValueError("Cannot depend on %s twice" % dep)
+            raise DuplicateDependencyError("Cannot depend on '%s' twice" % dep)
         self.dependencies[dep.name] = dep
 
     def __str__(self):
@@ -140,21 +149,36 @@ class SpecLexer(spack.parse.Lexer):
             (r'\w[\w.-]*', lambda scanner, val: self.token(ID,    val)),
             (r'\s+',       lambda scanner, val: None)])
 
+
 class SpecParser(spack.parse.Parser):
     def __init__(self):
         super(SpecParser, self).__init__(SpecLexer())
 
-    def spec(self):
-        self.expect(ID)
-        self.check_identifier()
 
-        spec = Spec(self.token.value)
+    def do_parse(self):
+        specs = []
         while self.next:
-            if self.accept(DEP):
-                dep = self.spec()
-                spec.add_dependency(dep)
+            if self.accept(ID):
+                specs.append(self.spec())
 
-            elif self.accept(AT):
+            elif self.accept(DEP):
+                if not specs:
+                    self.last_token_error("Dependency has no package")
+                self.expect(ID)
+                specs[-1].add_dependency(self.spec())
+
+            else:
+                self.unexpected_token()
+
+        return specs
+
+
+    def spec(self):
+        self.check_identifier()
+        spec = Spec(self.token.value)
+
+        while self.next:
+            if self.accept(AT):
                 vlist = self.version_list()
                 for version in vlist:
                     spec.add_version(version)
@@ -173,7 +197,7 @@ class SpecParser(spack.parse.Parser):
                 spec.add_compiler(self.compiler())
 
             else:
-                self.unexpected_token()
+                break
 
         return spec
 
@@ -187,11 +211,15 @@ class SpecParser(spack.parse.Parser):
         if self.accept(COLON):
             if self.accept(ID):
                 end = self.token.value
-        else:
+        elif start:
+            # No colon, but there was a version.
             return Version(start)
+        else:
+            # No colon and no id: invalid version.
+            self.next_token_error("Invalid version specifier")
 
         if not start and not end:
-            raise ParseError("Lone colon: version range needs at least one version.")
+            self.next_token_error("Lone colon: version range needs a version")
         else:
             if start: start = Version(start)
             if end: end = Version(end)
@@ -200,10 +228,9 @@ class SpecParser(spack.parse.Parser):
 
     def version_list(self):
         vlist = []
-        while True:
+        vlist.append(self.version())
+        while self.accept(COMMA):
             vlist.append(self.version())
-            if not self.accept(COMMA):
-                break
         return vlist
 
 
@@ -224,12 +251,9 @@ class SpecParser(spack.parse.Parser):
            basis. Call this if we detect a version id where it shouldn't be.
         """
         if '.' in self.token.value:
-            raise spack.parse.ParseError(
-                "Non-version identifier cannot contain '.'")
+            self.last_token_error("Identifier cannot contain '.'")
 
 
-    def do_parse(self):
-        specs = []
-        while self.next:
-            specs.append(self.spec())
-        return specs
+def parse(string):
+    """Returns a list of specs from an input string."""
+    return SpecParser().parse(string)
