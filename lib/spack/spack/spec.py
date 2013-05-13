@@ -36,6 +36,28 @@ line is a spec for a particular installation of the mpileaks package.
    A version list denoted by '@' is associated with the compiler only if
    if it comes immediately after the compiler name.  Otherwise it will be
    associated with the current package spec.
+
+Here is the EBNF grammar for a spec:
+
+  spec-list    = { spec [ dep-list ] }
+  dep_list     = { ^ spec }
+  spec         = id [ options ]
+  options      = { @version-list | +variant | -variant | ~variant | %compiler }
+  variant      = id
+  compiler     = id [ version-list ]
+  version-list = version [ { , version } ]
+  version      = id | id: | :id | id:id
+  id           = [A-Za-z0-9_][A-Za-z0-9_.-]*
+
+There is one context-sensitive part: ids in versions may contain '.', while
+other ids may not.
+
+There is one ambiguity: since '-' is allowed in an id, you need to put
+whitespace space before -variant for it to be tokenized properly.  You can
+either use whitespace, or you can just use ~variant since it means the same
+thing.  Spack uses ~variant in directory names and in the canonical form of
+specs to avoid ambiguity.  Both are provided because ~ can cause shell
+expansion when it is the first character in an id typed on the command line.
 """
 from functools import total_ordering
 
