@@ -1,7 +1,6 @@
 import os
 import re
 import errno
-import glob
 import shutil
 import subprocess
 import multiprocessing
@@ -39,9 +38,17 @@ def install(src, dest):
 def list_modules(directory):
     """Lists all of the modules, excluding __init__.py, in
        a particular directory."""
-    os.chdir(directory)
-    for name in glob.glob("*.py"):
-        if name != '__init__.py':
+    for name in os.listdir(directory):
+        if name == '__init__.py':
+            continue
+
+        path = new_path(directory, name)
+        if os.path.isdir(path):
+            init_py = new_path(path, '__init__.py')
+            if os.path.isfile(init_py):
+                yield name
+
+        elif name.endswith('.py'):
             yield re.sub('.py$', '', name)
 
 
