@@ -5,7 +5,8 @@ import sys
 import argparse
 
 # Find spack's location and its prefix.
-SPACK_FILE = os.environ["SPACK_FILE"] = os.path.expanduser(__file__)
+SPACK_FILE = os.path.realpath(os.path.expanduser(__file__))
+os.environ["SPACK_FILE"] = SPACK_FILE
 SPACK_PREFIX = os.path.dirname(os.path.dirname(SPACK_FILE))
 
 # Allow spack libs to be imported in our scripts
