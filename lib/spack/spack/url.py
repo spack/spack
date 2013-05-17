@@ -27,54 +27,59 @@ import spack.error
 import spack.utils
 from spack.version import Version
 
+#
+# Note: We call the input to most of these functions a "path" but the functions
+# work on paths and URLs.  There's not a good word for both of these, but
+# "path" seemed like the most generic term.
+#
 
 class UrlParseError(spack.error.SpackError):
     """Raised when the URL module can't parse something correctly."""
-    def __init__(self, msg, spec):
+    def __init__(self, msg, path):
         super(UrlParseError, self).__init__(msg)
-        self.spec = spec
+        self.path = path
 
 
 class UndetectableVersionError(UrlParseError):
     """Raised when we can't parse a version from a string."""
-    def __init__(self, spec):
+    def __init__(self, path):
         super(UndetectableVersionError, self).__init__(
-            "Couldn't detect version in: " + spec, spec)
+            "Couldn't detect version in: " + path, path)
 
 
 class UndetectableNameError(UrlParseError):
     """Raised when we can't parse a package name from a string."""
-    def __init__(self, spec):
+    def __init__(self, path):
         super(UndetectableNameError, self).__init__(
-            "Couldn't parse package name in: " + spec)
+            "Couldn't parse package name in: " + path)
 
 
-def parse_version_string_with_indices(spec):
+def parse_version_string_with_indices(path):
     """Try to extract a version string from a filename or URL.  This is taken
        largely from Homebrew's Version class."""
 
-    if os.path.isdir(spec):
-        stem = os.path.basename(spec)
-    elif re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', spec):
-        stem = spack.utils.stem(os.path.dirname(spec))
+    if os.path.isdir(path):
+        stem = os.path.basename(path)
+    elif re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', path):
+        stem = spack.utils.stem(os.path.dirname(path))
     else:
-        stem = spack.utils.stem(spec)
+        stem = spack.utils.stem(path)
 
     version_types = [
         # GitHub tarballs, e.g. v1.2.3
-        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+)$', spec),
+        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+)$', path),
 
         # e.g. https://github.com/sam-github/libnet/tarball/libnet-1.1.4
-        (r'github.com/.+/(?:zip|tar)ball/.*-((\d+\.)+\d+)$', spec),
+        (r'github.com/.+/(?:zip|tar)ball/.*-((\d+\.)+\d+)$', path),
 
         # e.g. https://github.com/isaacs/npm/tarball/v0.2.5-1
-        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+-(\d+))$', spec),
+        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+-(\d+))$', path),
 
         # e.g. https://github.com/petdance/ack/tarball/1.93_02
-        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+_(\d+))$', spec),
+        (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+_(\d+))$', path),
 
         # e.g. https://github.com/erlang/otp/tarball/OTP_R15B01 (erlang style)
-        (r'[-_](R\d+[AB]\d*(-\d+)?)', spec),
+        (r'[-_](R\d+[AB]\d*(-\d+)?)', path),
 
         # e.g. boost_1_39_0
         (r'((\d+_)+\d+)$', stem),
@@ -111,7 +116,7 @@ def parse_version_string_with_indices(spec):
         (r'_([^_]+)', stem),
 
         # e.g. http://mirrors.jenkins-ci.org/war/1.486/jenkins.war
-        (r'\/(\d\.\d+)\/', spec),
+        (r'\/(\d\.\d+)\/', path),
 
         # e.g. http://www.ijg.org/files/jpegsrc.v8d.tar.gz
         (r'\.v(\d+[a-z]?)', stem)]
@@ -122,20 +127,20 @@ def parse_version_string_with_indices(spec):
         if match and match.group(1) is not None:
             return match.group(1), match.start(1), match.end(1)
 
-    raise UndetectableVersionError(spec)
+    raise UndetectableVersionError(path)
 
 
-def parse_version(spec):
+def parse_version(path):
     """Given a URL or archive name, extract a version from it and return
        a version object.
     """
-    ver, start, end = parse_version_string_with_indices(spec)
+    ver, start, end = parse_version_string_with_indices(path)
     return Version(ver)
 
 
-def parse_name(spec, ver=None):
+def parse_name(path, ver=None):
     if ver is None:
-        ver = parse_version(spec)
+        ver = parse_version(path)
 
     ntypes = (r'/sourceforge/([^/]+)/',
               r'/([^/]+)/(tarball|zipball)/',
@@ -146,21 +151,21 @@ def parse_name(spec, ver=None):
               r'^([^/]+)%s' % ver)
 
     for nt in ntypes:
-        match = re.search(nt, spec)
+        match = re.search(nt, path)
         if match:
             return match.group(1)
-    raise UndetectableNameError(spec)
+    raise UndetectableNameError(path)
 
 
-def parse_name_and_version(spec):
-    ver = parse_version(spec)
-    name = parse_name(spec, ver)
+def parse_name_and_version(path):
+    ver = parse_version(path)
+    name = parse_name(path, ver)
     return (name, ver)
 
 
-def create_version_format(spec):
+def version_format(path):
     """Given a URL or archive name, find the version and create a format string
        that will allow another version to be substituted.
     """
-    ver, start, end = parse_version_string_with_indices(spec)
-    return spec[:start] + '%s' + spec[end:]
+    ver, start, end = parse_version_string_with_indices(path)
+    return path[:start] + '%s' + path[end:]
