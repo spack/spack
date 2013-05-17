@@ -1,5 +1,6 @@
 import os
 import re
+from subprocess import CalledProcessError
 
 import spack
 import spack.packages as packages
@@ -32,26 +33,29 @@ def list(parser, args):
     elif args.version_package:
         pkg = packages.get(args.version_package)
 
+        # Run curl but grab the mime type from the http headers
         try:
-            # Run curl but grab the mime type from the http headers
             listing = spack.curl('-s', '-L', pkg.list_url, return_output=True)
-            url_regex = os.path.basename(url.wildcard_version(pkg.url))
-            strings = re.findall(url_regex, listing)
+        except CalledProcessError:
+            tty.die("Fetching %s failed." % pkg.list_url,
+                    "'list -v' requires an internet connection.")
 
-            versions = []
-            wildcard = pkg.version.wildcard()
-            for s in strings:
-                match = re.search(wildcard, s)
-                if match:
-                    versions.append(ver(match.group(0)))
+        url_regex = os.path.basename(url.wildcard_version(pkg.url))
+        strings = re.findall(url_regex, listing)
 
-            colify(str(v) for v in reversed(sorted(set(versions))))
+        versions = []
+        wildcard = pkg.version.wildcard()
+        for s in strings:
+            match = re.search(wildcard, s)
+            if match:
+                versions.append(ver(match.group(0)))
 
-        except:
-            tty.die("Listing versions for %s failed" % pkg.name,
+        if not versions:
+            tty.die("Found no versions for %s" % pkg.name,
                     "Listing versions is experimental.  You may need to add the list_url",
                     "attribute to the package to tell Spack where to look for versions.")
-            raise
+
+        colify(str(v) for v in reversed(sorted(set(versions))))
 
     else:
         colify(packages.all_package_names())
