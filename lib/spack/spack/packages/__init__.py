@@ -6,11 +6,10 @@ import inspect
 import glob
 
 import spack
+import spack.error
 from spack.utils import *
 import spack.arch as arch
-import spack.version as version
-import spack.attr as attr
-import spack.error as serr
+
 
 # Valid package names -- can contain - but can't start with it.
 valid_package = r'^\w[\w-]*$'
@@ -20,7 +19,16 @@ invalid_package = r'[_-][_-]+'
 
 instances = {}
 
-class InvalidPackageNameError(serr.SpackError):
+
+def get(pkg, arch=arch.sys_type()):
+    key = (pkg, arch)
+    if not key in instances:
+        package_class = get_class(pkg)
+        instances[key] = package_class(arch)
+    return instances[key]
+
+
+class InvalidPackageNameError(spack.error.SpackError):
     """Raised when we encounter a bad package name."""
     def __init__(self, name):
         super(InvalidPackageNameError, self).__init__(
@@ -34,7 +42,7 @@ def valid_name(pkg):
 
 def validate_name(pkg):
     if not valid_name(pkg):
-        raise spack.InvalidPackageNameError(pkg)
+        raise InvalidPackageNameError(pkg)
 
 
 def filename_for(pkg):
@@ -45,8 +53,6 @@ def filename_for(pkg):
 
 def installed_packages(**kwargs):
     """Returns a dict from systype strings to lists of Package objects."""
-    list_installed = kwargs.get('installed', False)
-
     pkgs = {}
     if not os.path.isdir(spack.install_path):
         return pkgs
@@ -106,14 +112,6 @@ def get_class(pkg):
         tty.die("%s.%s is not a class" % (pkg, class_name))
 
     return klass
-
-
-def get(pkg, arch=arch.sys_type()):
-    key = (pkg, arch)
-    if not key in instances:
-        package_class = get_class(pkg)
-        instances[key] = package_class(arch)
-    return instances[key]
 
 
 def compute_dependents():

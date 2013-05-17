@@ -163,9 +163,19 @@ def parse_name_and_version(path):
     return (name, ver)
 
 
-def version_format(path):
-    """Given a URL or archive name, find the version and create a format string
-       that will allow another version to be substituted.
+def substitute_version(path, new_version):
+    """Given a URL or archive name, find the version in the path and substitute
+       the new version for it.
     """
     ver, start, end = parse_version_string_with_indices(path)
-    return path[:start] + '%s' + path[end:]
+    return path[:start] + new_version + path[end:]
+
+
+def wildcard_version(path):
+    """Find the version in the supplied path, and return a regular expression
+       that will match this path with any version in its place.
+    """
+    ver, start, end = parse_version_string_with_indices(path)
+    v = Version(ver)
+
+    return re.escape(path[:start]) + v.wildcard() + re.escape(path[end:])

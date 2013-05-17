@@ -41,12 +41,39 @@ class Version(object):
         segments = re.findall(segment_regex, string)
         self.version = tuple(int_if_int(seg) for seg in segments)
 
+        # Store the separators from the original version string as well.
+        # last element of separators is ''
+        self.separators = tuple(re.split(segment_regex, string)[1:-1])
+
 
     def up_to(self, index):
         """Return a version string up to the specified component, exclusive.
            e.g., if this is 10.8.2, self.up_to(2) will return '10.8'.
         """
         return '.'.join(str(x) for x in self[:index])
+
+    def wildcard(self):
+        """Create a regex that will match variants of this version string."""
+        def a_or_n(seg):
+            if type(seg) == int:
+                return r'[0-9]+'
+            else:
+                return r'[a-zA-Z]+'
+
+        version = self.version
+        separators = ('',) + self.separators
+
+        version += (version[-1],) * 2
+        separators += (separators[-1],) * 2
+
+        sep_res = [re.escape(sep) for sep in separators]
+        seg_res = [a_or_n(seg) for seg in version]
+
+        wc = seg_res[0]
+        for i in xrange(1, len(sep_res)):
+            wc += '(?:' + sep_res[i] + seg_res[i]
+        wc += ')?' * (len(seg_res) - 1)
+        return wc
 
     def __iter__(self):
         for v in self.version:
@@ -96,12 +123,15 @@ class Version(object):
 
     def __eq__(self, other):
         """Implemented to match __lt__.  See __lt__."""
-        if type(other) == VersionRange:
+        if type(other) != Version:
             return False
         return self.version == other.version
 
     def __ne__(self, other):
         return not (self == other)
+
+    def __hash__(self):
+        return hash(self.version)
 
 
 @total_ordering

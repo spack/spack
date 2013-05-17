@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # colify
 # By Todd Gamblin, tgamblin@llnl.gov
 #
@@ -99,6 +97,11 @@ def colify(elts, **options):
     # elts needs to be in an array so we can count the elements
     if not type(elts) == list:
         elts = list(elts)
+
+    if not output.isatty():
+        for elt in elts:
+            output.write("%s\n" % elt)
+        return
 
     console_cols = options.get("cols", None)
     if not console_cols:

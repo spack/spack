@@ -25,6 +25,8 @@ import validate
 import url
 import arch
 
+from spec import Compiler
+from version import Version
 from multi_function import platform
 from stage import Stage
 from dependency import *
@@ -241,6 +243,11 @@ class Package(object):
     """Controls whether install and uninstall check deps before running."""
     ignore_dependencies = False
 
+    # TODO: multi-compiler support
+    """Default compiler for this package"""
+    compiler = Compiler('gcc')
+
+
     def __init__(self, sys_type = arch.sys_type()):
         # Check for attributes that derived classes must set.
         attr.required(self, 'homepage')
@@ -261,10 +268,14 @@ class Package(object):
         validate.url(self.url)
 
         # Set up version
-        attr.setdefault(self, 'version', url.parse_version(self.url))
-        if not self.version:
-            tty.die("Couldn't extract version from %s. " +
-                    "You must specify it explicitly for this URL." % self.url)
+        if not hasattr(self, 'version'):
+            try:
+                self.version = url.parse_version(self.url)
+            except UndetectableVersionError:
+                tty.die("Couldn't extract a default version from %s. You " +
+                        "must specify it explicitly in the package." % self.url)
+        elif type(self.version) == string:
+            self.version = Version(self.version)
 
         # This adds a bunch of convenience commands to the package's module scope.
         self.add_commands_to_module()
@@ -274,6 +285,10 @@ class Package(object):
 
         # stage used to build this package.
         self.stage = Stage(self.stage_name, self.url)
+
+        # Set a default list URL (place to find lots of versions)
+        if not hasattr(self, 'list_url'):
+            self.list_url = os.path.dirname(self.url)
 
 
     def add_commands_to_module(self):
@@ -393,6 +408,16 @@ class Package(object):
     def prefix(self):
         """Packages are installed in $spack_prefix/opt/<sys_type>/<name>/<version>"""
         return new_path(self.package_path, self.version)
+
+
+    def url_version(self, version):
+        """Given a version, this returns a string that should be substituted into the
+           package's URL to download that version.
+           By default, this just returns the version string. Subclasses may need to
+           override this, e.g. for boost versions where you need to ensure that there
+           are _'s in the download URL.
+        """
+        return version.string
 
 
     def remove_prefix(self):
