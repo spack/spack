@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 import sys
+if not sys.version_info[:2] >= (2,7):
+    sys.exit("Spack requires Python 2.7.  Version was %s." % sys.version_info)
+
 import os
 import re
 import subprocess
