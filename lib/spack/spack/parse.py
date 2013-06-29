@@ -1,6 +1,5 @@
 import re
 import spack.error as err
-import spack.tty as tty
 import itertools
 
 
@@ -10,9 +9,6 @@ class ParseError(err.SpackError):
         super(ParseError, self).__init__(message)
         self.string = string
         self.pos = pos
-
-    def print_error(self, out):
-        tty.error(self.message, self.string, self.pos * " " + "^")
 
 
 class LexError(ParseError):

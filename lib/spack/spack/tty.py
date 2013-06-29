@@ -1,61 +1,46 @@
 import sys
 import spack
+from spack.color import cprint
 
 indent = "  "
 
-def escape(s):
-    """Returns a TTY escape code if stdout is a tty, otherwise empty string"""
-    if sys.stdout.isatty():
-        return "\033[{}m".format(s)
-    return ''
+def msg(message, *args):
+    cprint("@*b{==>} @*w{%s}" % str(message))
+    for arg in args:
+        print indent + str(arg)
 
-def color(n):
-    return escape("0;{}".format(n))
 
-def bold(n):
-    return escape("1;{}".format(n))
+def info(message, *args, **kwargs):
+    format = kwargs.get('format', '*b')
+    cprint("@%s{==>} %s" % (format, str(message)))
+    for arg in args:
+        print indent + str(arg)
 
-def underline(n):
-    return escape("4;{}".format(n))
 
-blue   = bold(34)
-white  = bold(39)
-red    = bold(31)
-yellow = underline(33)
-green  = bold(92)
-gray   = bold(30)
-em     = underline(39)
-reset  = escape(0)
+def verbose(message, *args):
+    if spack.verbose:
+        info(message, *args, format='*g')
 
-def msg(msg, *args, **kwargs):
-    color = kwargs.get("color", blue)
-    print "{}==>{} {}{}".format(color, white, str(msg), reset)
-    for arg in args: print indent + str(arg)
-
-def info(msg, *args, **kwargs):
-    color = kwargs.get("color", blue)
-    print "{}==>{} {}".format(color, reset, str(msg))
-    for arg in args: print indent + str(arg)
-
-def verbose(msg, *args):
-    if spack.verbose: info(msg, *args, color=green)
 
 def debug(*args):
-    if spack.debug: msg(*args, color=red)
+    if spack.debug:
+        info(message, *args, format='*c')
 
-def error(msg, *args):
-    print "{}Error{}: {}".format(red, reset, str(msg))
-    for arg in args: print indent + str(arg)
 
-def warn(msg, *args):
-    print "{}Warning{}: {}".format(yellow, reset, str(msg))
-    for arg in args: print indent + str(arg)
+def error(message, *args):
+    info(message, *args, format='*r')
 
-def die(msg, *args):
-    error(msg, *args)
+
+def warn(message, *args):
+    info(message, *args, format='*Y')
+
+
+def die(message, *args):
+    error(message, *args)
     sys.exit(1)
 
-def pkg(msg):
+
+def pkg(message):
     """Outputs a message with a package icon."""
     import platform
     from version import Version
@@ -64,5 +49,5 @@ def pkg(msg):
     if mac_ver and Version(mac_ver) >= Version('10.7'):
         print u"\U0001F4E6" + indent,
     else:
-        print '{}[+]{} '.format(green, reset),
-    print msg
+        cprint('@*g{[+]} ')
+    print message

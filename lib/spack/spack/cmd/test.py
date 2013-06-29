@@ -24,9 +24,9 @@ def test(parser, args):
             spack.test.run(name, verbose=args.verbose)
 
     elif not args.names:
-        print parser._subparsers
         print "Available tests:"
         colify(list_modules(spack.test_path))
+
 
     else:
         for name in  args.names:

@@ -61,7 +61,7 @@ def parse_specs(args):
         return spack.spec.parse(" ".join(args))
 
     except spack.parse.ParseError, e:
-        e.print_error(sys.stdout)
+        tty.error(e.message, e.string, e.pos * " " + "^")
         sys.exit(1)
 
     except spack.spec.SpecError, e:
