@@ -155,11 +155,17 @@ class Stage(object):
         else:
             tty.msg("Fetching %s" % self.url)
 
-            # Run curl but grab the mime type from the http headers
-            headers = spack.curl('-#',        # status bar
-                                 '-O',        # save file to disk
-                                 '-D', '-',   # print out HTML headers
-                                 '-L', self.url, return_output=True)
+            try:
+                # Run curl but grab the mime type from the http headers
+                headers = spack.curl('-#',        # status bar
+                                     '-O',        # save file to disk
+                                     '-D', '-',   # print out HTML headers
+                                     '-L', self.url, return_output=True)
+            except:
+                # clean up archive on failure.
+                if self.archive_file:
+                    os.remove(self.archive_file)
+                raise
 
             # Check if we somehow got an HTML file rather than the archive we
             # asked for.  We only look at the last content type, to handle
