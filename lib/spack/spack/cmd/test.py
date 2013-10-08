@@ -1,7 +1,7 @@
 import spack
 import spack.packages as packages
 import spack.test
-from spack.utils import list_modules
+from spack.util import list_modules
 from spack.colify import colify
 from pprint import pprint
 

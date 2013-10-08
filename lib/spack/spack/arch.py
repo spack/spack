@@ -4,7 +4,7 @@ import platform as py_platform
 import spack
 import error as serr
 from version import Version
-from utils import memoized
+from util import memoized
 
 
 class InvalidSysTypeError(serr.SpackError):

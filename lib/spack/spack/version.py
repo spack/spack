@@ -25,8 +25,8 @@ import re
 from bisect import bisect_left
 from functools import total_ordering
 
-import utils
-from none_compare import *
+import spack.util.none_high as none_high
+import spack.util.none_low as none_low
 import spack.error
 
 # Valid version characters
@@ -258,9 +258,9 @@ class VersionRange(object):
         if other is None:
             return False
 
-        return (none_low_lt(self.start, other.start) or
+        return (none_low.lt(self.start, other.start) or
                 (self.start == other.start and
-                 none_high_lt(self.end, other.end)))
+                 none_high.lt(self.end, other.end)))
 
 
     @coerced
@@ -281,8 +281,8 @@ class VersionRange(object):
 
     @coerced
     def __contains__(self, other):
-        return (none_low_ge(other.start, self.start) and
-                none_high_le(other.end, self.end))
+        return (none_low.ge(other.start, self.start) and
+                none_high.le(other.end, self.end))
 
 
     @coerced
@@ -296,8 +296,8 @@ class VersionRange(object):
 
     @coerced
     def merge(self, other):
-        return VersionRange(none_low_min(self.start, other.start),
-                            none_high_max(self.end, other.end))
+        return VersionRange(none_low.min(self.start, other.start),
+                            none_high.max(self.end, other.end))
 
 
     def __hash__(self):

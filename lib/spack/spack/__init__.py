@@ -1,5 +1,5 @@
 from globals import *
-from utils import *
+from util import *
 from error import *
 
 from package import Package

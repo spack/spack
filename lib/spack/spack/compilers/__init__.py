@@ -4,7 +4,7 @@
 
 import spack
 import spack.compilers.gcc
-from spack.utils import list_modules, memoized
+from spack.util import list_modules, memoized
 
 
 @memoized

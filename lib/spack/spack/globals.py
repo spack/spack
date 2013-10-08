@@ -1,6 +1,6 @@
 import os
 from version import Version
-from utils import *
+from util import *
 import arch
 from directory_layout import DefaultDirectoryLayout
 

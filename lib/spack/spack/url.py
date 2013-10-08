@@ -24,7 +24,7 @@ import os
 import re
 
 import spack.error
-import spack.utils
+import spack.util
 from spack.version import Version
 
 #
@@ -61,9 +61,9 @@ def parse_version_string_with_indices(path):
     if os.path.isdir(path):
         stem = os.path.basename(path)
     elif re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', path):
-        stem = spack.utils.stem(os.path.dirname(path))
+        stem = spack.util.stem(os.path.dirname(path))
     else:
-        stem = spack.utils.stem(path)
+        stem = spack.util.stem(path)
 
     version_types = [
         # GitHub tarballs, e.g. v1.2.3

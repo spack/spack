@@ -3,7 +3,7 @@ import re
 import os
 
 import spack.spec as spec
-from spack.utils import *
+from spack.util import *
 from spack.error import SpackError
 
 
