@@ -45,18 +45,19 @@ provides
         spack install mpileaks ^mpich
 """
 import sys
-from dependency import Dependency
+import spack.spec
 
 
-def depends_on(*args):
+def depends_on(*specs):
     """Adds a dependencies local variable in the locals of
        the calling class, based on args.
     """
     # Get the enclosing package's scope and add deps to it.
     locals = sys._getframe(1).f_locals
     dependencies = locals.setdefault("dependencies", [])
-    for name in args:
-        dependencies.append(Dependency(name))
+    for string in specs:
+        for spec in spack.spec.parse(string):
+            dependencies.append(spec)
 
 
 def provides(*args):

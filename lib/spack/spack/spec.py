@@ -68,101 +68,275 @@ from StringIO import StringIO
 import tty
 import spack.parse
 import spack.error
-from spack.version import Version, VersionRange
-from spack.color import ColorStream
+import spack.compilers
+import spack.compilers.gcc
+import spack.packages as packages
+import spack.arch as arch
+from spack.version import *
+from spack.color import *
 
-# Color formats for various parts of specs when using color output.
-compiler_fmt         = '@g'
-version_fmt          = '@c'
-architecture_fmt     = '@m'
-variant_enabled_fmt  = '@B'
-variant_disabled_fmt = '@r'
+"""This map determines the coloring of specs when using color output.
+   We make the fields different colors to enhance readability.
+   See spack.color for descriptions of the color codes.
+"""
+color_formats = {'%' : '@g',   # compiler
+                 '@' : '@c',   # version
+                 '=' : '@m',   # architecture
+                 '+' : '@B',   # enable variant
+                 '~' : '@r',   # disable variant
+                 '^' : '@.'}   # dependency
+
+"""Regex used for splitting by spec field separators."""
+separators = '[%s]' % ''.join(color_formats.keys())
 
 
-class SpecError(spack.error.SpackError):
-    """Superclass for all errors that occur while constructing specs."""
-    def __init__(self, message):
-        super(SpecError, self).__init__(message)
+def colorize_spec(spec):
+    """Returns a spec colorized according to the colors specified in
+       color_formats."""
+    class insert_color:
+        def __init__(self):
+            self.last = None
 
-class DuplicateDependencyError(SpecError):
-    """Raised when the same dependency occurs in a spec twice."""
-    def __init__(self, message):
-        super(DuplicateDependencyError, self).__init__(message)
+        def __call__(self, match):
+            # ignore compiler versions (color same as compiler)
+            sep = match.group(0)
+            if self.last == '%' and sep == '@':
+                return cescape(sep)
+            self.last = sep
 
-class DuplicateVariantError(SpecError):
-    """Raised when the same variant occurs in a spec twice."""
-    def __init__(self, message):
-        super(DuplicateVariantError, self).__init__(message)
+            return '%s%s' % (color_formats[sep], cescape(sep))
 
-class DuplicateCompilerError(SpecError):
-    """Raised when the same compiler occurs in a spec twice."""
-    def __init__(self, message):
-        super(DuplicateCompilerError, self).__init__(message)
-
-class DuplicateArchitectureError(SpecError):
-    """Raised when the same architecture occurs in a spec twice."""
-    def __init__(self, message):
-        super(DuplicateArchitectureError, self).__init__(message)
+    return colorize(re.sub(separators, insert_color(), str(spec)) + '@.')
 
 
 class Compiler(object):
-    def __init__(self, name):
+    """The Compiler field represents the compiler or range of compiler
+       versions that a package should be built with.  Compilers have a
+       name and a version list.
+    """
+    def __init__(self, name, version=None):
+        if name not in spack.compilers.supported_compilers():
+            raise UnknownCompilerError(name)
+
         self.name = name
-        self.versions = []
+        self.versions = VersionList()
+        if version:
+            self.versions.add(version)
 
-    def add_version(self, version):
-        self.versions.append(version)
 
-    def stringify(self, **kwargs):
-        color = kwargs.get("color", False)
+    def _add_version(self, version):
+        self.versions.add(version)
 
-        out = StringIO()
-        out.write("%s{%%%s}" % (compiler_fmt, self.name))
 
-        if self.versions:
-            vlist = ",".join(str(v) for v in sorted(self.versions))
-            out.write("%s{@%s}" % (compiler_fmt, vlist))
-        return out.getvalue()
+    @property
+    def concrete(self):
+        return self.versions.concrete
+
+
+    def _concretize(self):
+        """If this spec could describe more than one version, variant, or build
+           of a package, this will resolve it to be concrete.
+        """
+        # TODO: support compilers other than GCC.
+        if self.concrete:
+            return
+        gcc_version = spack.compilers.gcc.get_version()
+        self.versions = VersionList([gcc_version])
+
+
+    def concretized(self):
+        clone = self.copy()
+        clone._concretize()
+        return clone
+
+
+    @property
+    def version(self):
+        if not self.concrete:
+            raise SpecError("Spec is not concrete: " + str(self))
+        return self.versions[0]
+
+
+    def copy(self):
+        clone = Compiler(self.name)
+        clone.versions = self.versions.copy()
+        return clone
+
+
+    def __eq__(self, other):
+        return (self.name, self.versions) == (other.name, other.versions)
+
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+    def __hash__(self):
+        return hash((self.name, self.versions))
+
 
     def __str__(self):
-        return self.stringify()
+        out = self.name
+        if self.versions:
+            vlist = ",".join(str(v) for v in sorted(self.versions))
+            out += "@%s" % vlist
+        return out
 
 
+@total_ordering
+class Variant(object):
+    """Variants are named, build-time options for a package.  Names depend
+       on the particular package being built, and each named variant can
+       be enabled or disabled.
+    """
+    def __init__(self, name, enabled):
+        self.name = name
+        self.enabled = enabled
+
+
+    def __eq__(self, other):
+        return self.name == other.name and self.enabled == other.enabled
+
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+    @property
+    def tuple(self):
+        return (self.name, self.enabled)
+
+
+    def __hash__(self):
+        return hash(self.tuple)
+
+
+    def __lt__(self, other):
+        return self.tuple < other.tuple
+
+
+    def __str__(self):
+        out = '+' if self.enabled else '~'
+        return out + self.name
+
+
+
+@total_ordering
+class HashableMap(dict):
+    """This is a hashable, comparable dictionary.  Hash is performed on
+       a tuple of the values in the dictionary."""
+    def __eq__(self, other):
+        return (len(self) == len(other) and
+                sorted(self.values()) == sorted(other.values()))
+
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+    def __lt__(self, other):
+        return tuple(sorted(self.values())) < tuple(sorted(other.values()))
+
+
+    def __hash__(self):
+        return hash(tuple(sorted(self.values())))
+
+
+    def copy(self):
+        """Type-agnostic clone method.  Preserves subclass type."""
+        # Construct a new dict of my type
+        T = type(self)
+        clone = T()
+
+        # Copy everything from this dict into it.
+        for key in self:
+            clone[key] = self[key]
+        return clone
+
+
+class VariantMap(HashableMap):
+    def __str__(self):
+        sorted_keys = sorted(self.keys())
+        return ''.join(str(self[key]) for key in sorted_keys)
+
+
+class DependencyMap(HashableMap):
+    """Each spec has a DependencyMap containing specs for its dependencies.
+       The DependencyMap is keyed by name. """
+    @property
+    def concrete(self):
+        return all(d.concrete for d in self.values())
+
+
+    def __str__(self):
+        sorted_keys = sorted(self.keys())
+        return ''.join(
+            ["^" + str(self[name]) for name in sorted_keys])
+
+
+@total_ordering
 class Spec(object):
     def __init__(self, name):
         self.name = name
-        self._package = None
-        self.versions = []
-        self.variants = {}
+        self.versions = VersionList()
+        self.variants = VariantMap()
         self.architecture = None
         self.compiler = None
-        self.dependencies = {}
+        self.dependencies = DependencyMap()
 
-    def add_version(self, version):
-        self.versions.append(version)
+    #
+    # Private routines here are called by the parser when building a spec.
+    #
+    def _add_version(self, version):
+        """Called by the parser to add an allowable version."""
+        self.versions.add(version)
 
-    def add_variant(self, name, enabled):
+
+    def _add_variant(self, name, enabled):
+        """Called by the parser to add a variant."""
         if name in self.variants: raise DuplicateVariantError(
                 "Cannot specify variant '%s' twice" % name)
-        self.variants[name] = enabled
+        self.variants[name] = Variant(name, enabled)
 
-    def add_compiler(self, compiler):
+
+    def _set_compiler(self, compiler):
+        """Called by the parser to set the compiler."""
         if self.compiler: raise DuplicateCompilerError(
                 "Spec for '%s' cannot have two compilers." % self.name)
         self.compiler = compiler
 
-    def add_architecture(self, architecture):
+
+    def _set_architecture(self, architecture):
+        """Called by the parser to set the architecture."""
         if self.architecture: raise DuplicateArchitectureError(
                 "Spec for '%s' cannot have two architectures." % self.name)
         self.architecture = architecture
 
-    def add_dependency(self, dep):
+
+    def _add_dependency(self, dep):
+        """Called by the parser to add another spec as a dependency."""
         if dep.name in self.dependencies:
             raise DuplicateDependencyError("Cannot depend on '%s' twice" % dep)
         self.dependencies[dep.name] = dep
 
-    def canonicalize(self):
-        """Ensures that the spec is in canonical form.
+
+    @property
+    def concrete(self):
+        return (self.versions.concrete
+                # TODO: support variants
+                and self.architecture
+                and self.compiler and self.compiler.concrete
+                and self.dependencies.concrete)
+
+
+    def _concretize(self):
+        """A spec is concrete if it describes one build of a package uniquely.
+           This will ensure that this spec is concrete.
+
+           If this spec could describe more than one version, variant, or build
+           of a package, this will resolve it to be concrete.
+
+           Ensures that the spec is in canonical form.
 
            This means:
            1. All dependencies of this package and of its dependencies are
@@ -173,49 +347,164 @@ class Spec(object):
            that each package exists an that spec criteria don't violate package
            criteria.
         """
-        pass
+        # TODO: modularize the process of selecting concrete versions.
+        # There should be a set of user-configurable policies for these decisions.
+        self.check_sanity()
 
-    @property
-    def package(self):
-        if self._package == None:
-            self._package = packages.get(self.name)
-        return self._package
-
-    def stringify(self, **kwargs):
-        color = kwargs.get("color", False)
-
-        out = ColorStream(StringIO(), color)
-        out.write("%s" % self.name)
-
-        if self.versions:
-            vlist = ",".join(str(v) for v in sorted(self.versions))
-            out.write("%s{@%s}" % (version_fmt, vlist))
+        # take the system's architecture for starters
+        if not self.architecture:
+             self.architecture = arch.sys_type()
 
         if self.compiler:
-            out.write(self.compiler.stringify(color=color))
+            self.compiler._concretize()
 
-        for name in sorted(self.variants.keys()):
-            enabled = self.variants[name]
-            if enabled:
-                out.write('%s{+%s}' % (variant_enabled_fmt, name))
-            else:
-                out.write('%s{~%s}' % (variant_disabled_fmt, name))
+        # TODO: handle variants.
 
-        if self.architecture:
-            out.write("%s{=%s}" % (architecture_fmt, self.architecture))
+        pkg = packages.get(self.name)
 
-        for name in sorted(self.dependencies.keys()):
-            dep = " ^" + self.dependencies[name].stringify(color=color)
-            out.write(dep, raw=True)
+        # Take the highest version in a range
+        if not self.versions.concrete:
+            preferred = self.versions.highest() or pkg.version
+            self.versions = VersionList([preferred])
 
-        return out.getvalue()
+        # Ensure dependencies have right versions
 
-    def write(self, stream=sys.stdout):
-        isatty = stream.isatty()
-        stream.write(self.stringify(color=isatty))
+
+
+    def check_sanity(self):
+        """Check names of packages and dependency validity."""
+        self.check_package_name_sanity()
+        self.check_dependency_sanity()
+        self.check_dependence_constraint_sanity()
+
+
+    def check_package_name_sanity(self):
+        """Ensure that all packages mentioned in the spec exist."""
+        packages.get(self.name)
+        for dep in self.dependencies.values():
+            packages.get(dep.name)
+
+
+    def check_dependency_sanity(self):
+        """Ensure that dependencies specified on the spec are actual
+           dependencies of the package it represents.
+        """
+        pkg = packages.get(self.name)
+        dep_names = set(dep.name for dep in pkg.all_dependencies)
+        invalid_dependencies = [d.name for d in self.dependencies.values()
+                                if d.name not in dep_names]
+        if invalid_dependencies:
+            raise InvalidDependencyException(
+                "The packages (%s) are not dependencies of %s" %
+                (','.join(invalid_dependencies), self.name))
+
+
+    def check_dependence_constraint_sanity(self):
+        """Ensure that package's dependencies have consistent constraints on
+           their dependencies.
+        """
+        pkg = packages.get(self.name)
+        specs = {}
+        for spec in pkg.all_dependencies:
+            if not spec.name in specs:
+                specs[spec.name] = spec
+                continue
+
+            merged = specs[spec.name]
+
+            # Specs in deps can't be disjoint.
+            if not spec.versions.overlaps(merged.versions):
+                raise InvalidConstraintException(
+                    "One package %s, version constraint %s conflicts with %s"
+                    % (pkg.name, spec.versions, merged.versions))
+
+
+    def merge(self, other):
+        """Considering these specs as constraints, attempt to merge.
+           Raise an exception if specs are disjoint.
+        """
+        pass
+
+
+    def concretized(self):
+        clone = self.copy()
+        clone._concretize()
+        return clone
+
+
+    def copy(self):
+        clone = Spec(self.name)
+        clone.versions = self.versions.copy()
+        clone.variants = self.variants.copy()
+        clone.architecture = self.architecture
+        clone.compiler = None
+        if self.compiler:
+            clone.compiler = self.compiler.copy()
+        clone.dependencies = self.dependencies.copy()
+        return clone
+
+
+    @property
+    def version(self):
+        if not self.concrete:
+            raise SpecError("Spec is not concrete: " + str(self))
+        return self.versions[0]
+
+
+    @property
+    def tuple(self):
+        return (self.name, self.versions, self.variants,
+                self.architecture, self.compiler, self.dependencies)
+
+
+    @property
+    def tuple(self):
+        return (self.name, self.versions, self.variants, self.architecture,
+                self.compiler, self.dependencies)
+
+
+    def __eq__(self, other):
+        return self.tuple == other.tuple
+
+
+    def __ne__(self, other):
+        return not (self == other)
+
+
+    def __lt__(self, other):
+        return self.tuple < other.tuple
+
+
+    def __hash__(self):
+        return hash(self.tuple)
+
+
+    def colorized(self):
+        return colorize_spec(self)
+
+
+    def __repr__(self):
+        return str(self)
+
 
     def __str__(self):
-        return self.stringify()
+        out = self.name
+
+        # If the version range is entirely open, omit it
+        if self.versions and self.versions != VersionList([':']):
+            out += "@%s" % self.versions
+
+        if self.compiler:
+            out += "%%%s" % self.compiler
+
+        out += str(self.variants)
+
+        if self.architecture:
+            out += "=%s" % self.architecture
+
+        out += str(self.dependencies)
+        return out
+
 
 #
 # These are possible token types in the spec grammar.
@@ -254,7 +543,7 @@ class SpecParser(spack.parse.Parser):
                 if not specs:
                     self.last_token_error("Dependency has no package")
                 self.expect(ID)
-                specs[-1].add_dependency(self.spec())
+                specs[-1]._add_dependency(self.spec())
 
             else:
                 self.unexpected_token()
@@ -265,27 +554,33 @@ class SpecParser(spack.parse.Parser):
     def spec(self):
         self.check_identifier()
         spec = Spec(self.token.value)
+        added_version = False
 
         while self.next:
             if self.accept(AT):
                 vlist = self.version_list()
                 for version in vlist:
-                    spec.add_version(version)
+                    spec._add_version(version)
+                added_version = True
 
             elif self.accept(ON):
-                spec.add_variant(self.variant(), True)
+                spec._add_variant(self.variant(), True)
 
             elif self.accept(OFF):
-                spec.add_variant(self.variant(), False)
+                spec._add_variant(self.variant(), False)
 
             elif self.accept(PCT):
-                spec.add_compiler(self.compiler())
+                spec._set_compiler(self.compiler())
 
             elif self.accept(EQ):
-                spec.add_architecture(self.architecture())
+                spec._set_architecture(self.architecture())
 
             else:
                 break
+
+        # If there was no version in the spec, consier it an open range
+        if not added_version:
+            spec.versions = VersionList([':'])
 
         return spec
 
@@ -318,12 +613,9 @@ class SpecParser(spack.parse.Parser):
             # No colon and no id: invalid version.
             self.next_token_error("Invalid version specifier")
 
-        if not start and not end:
-            self.next_token_error("Lone colon: version range needs a version")
-        else:
-            if start: start = Version(start)
-            if end: end = Version(end)
-            return VersionRange(start, end)
+        if start: start = Version(start)
+        if end: end = Version(end)
+        return VersionRange(start, end)
 
 
     def version_list(self):
@@ -341,7 +633,7 @@ class SpecParser(spack.parse.Parser):
         if self.accept(AT):
             vlist = self.version_list()
             for version in vlist:
-                compiler.add_version(version)
+                compiler._add_version(version)
         return compiler
 
 
@@ -357,3 +649,79 @@ class SpecParser(spack.parse.Parser):
 def parse(string):
     """Returns a list of specs from an input string."""
     return SpecParser().parse(string)
+
+
+def parse_one(string):
+    """Parses a string containing only one spec, then returns that
+       spec.  If more than one spec is found, raises a ValueError.
+    """
+    spec_list = parse(string)
+    if len(spec_list) > 1:
+        raise ValueError("string contains more than one spec!")
+    elif len(spec_list) < 1:
+        raise ValueError("string contains no specs!")
+    return spec_list[0]
+
+
+def make_spec(spec_like):
+    if type(spec_like) == str:
+        specs = parse(spec_like)
+        if len(specs) != 1:
+            raise ValueError("String contains multiple specs: '%s'" % spec_like)
+        return specs[0]
+
+    elif type(spec_like) == Spec:
+        return spec_like
+
+    else:
+        raise TypeError("Can't make spec out of %s" % type(spec_like))
+
+
+class SpecError(spack.error.SpackError):
+    """Superclass for all errors that occur while constructing specs."""
+    def __init__(self, message):
+        super(SpecError, self).__init__(message)
+
+
+class DuplicateDependencyError(SpecError):
+    """Raised when the same dependency occurs in a spec twice."""
+    def __init__(self, message):
+        super(DuplicateDependencyError, self).__init__(message)
+
+
+class DuplicateVariantError(SpecError):
+    """Raised when the same variant occurs in a spec twice."""
+    def __init__(self, message):
+        super(DuplicateVariantError, self).__init__(message)
+
+
+class DuplicateCompilerError(SpecError):
+    """Raised when the same compiler occurs in a spec twice."""
+    def __init__(self, message):
+        super(DuplicateCompilerError, self).__init__(message)
+
+
+class UnknownCompilerError(SpecError):
+    """Raised when the user asks for a compiler spack doesn't know about."""
+    def __init__(self, compiler_name):
+        super(UnknownCompilerError, self).__init__(
+            "Unknown compiler: %s" % compiler_name)
+
+
+class DuplicateArchitectureError(SpecError):
+    """Raised when the same architecture occurs in a spec twice."""
+    def __init__(self, message):
+        super(DuplicateArchitectureError, self).__init__(message)
+
+
+class InvalidDependencyException(SpecError):
+    """Raised when a dependency in a spec is not actually a dependency
+       of the package."""
+    def __init__(self, message):
+        super(InvalidDependencyException, self).__init__(message)
+
+
+class InvalidConstraintException(SpecError):
+    """Raised when a package dependencies conflict."""
+    def __init__(self, message):
+        super(InvalidConstraintException, self).__init__(message)

@@ -9,7 +9,6 @@ Homebrew makes it very easy to create packages.  For a complete
 rundown on spack and how it differs from homebrew, look at the
 README.
 """
-import sys
 import inspect
 import os
 import re
@@ -18,18 +17,18 @@ import platform as py_platform
 import shutil
 
 from spack import *
+import spack.spec
 import packages
 import tty
 import attr
 import validate
 import url
-import arch
+
 
 from spec import Compiler
-from version import Version
+from version import *
 from multi_function import platform
 from stage import Stage
-from dependency import *
 
 
 class Package(object):
@@ -105,6 +104,21 @@ class Package(object):
 
         install()  This function tells spack how to build and install the
                    software it downloaded.
+
+    Optional Attributes
+    ---------------------
+    You can also optionally add these attributes, if needed:
+        list_url
+            Webpage to scrape for available version strings. Default is the
+            directory containing the tarball; use this if the default isn't
+            correct so that invoking 'spack versions' will work for this
+            package.
+
+        url_version(self, version)
+            When spack downloads packages at particular versions, it just
+            converts version to string with str(version).  Override this if
+            your package needs special version formatting in its URL.  boost
+            is an example of a package that needs this.
 
     Creating Packages
     ===================
@@ -209,7 +223,7 @@ class Package(object):
 
     A package's lifecycle over a run of Spack looks something like this:
 
-        packge p = new Package()  # Done for you by spack
+        p = Package()             # Done for you by spack
 
         p.do_fetch()              # called by spack commands in spack/cmd.
         p.do_stage()              # see spack.stage.Stage docs.
@@ -231,9 +245,15 @@ class Package(object):
     clean() (some of them do this), and others to provide custom behavior.
     """
 
+    #
+    # These variables are per-package metadata will be defined by subclasses.
+    #
     """By default a package has no dependencies."""
     dependencies = []
 
+    #
+    # These are default values for instance variables.
+    #
     """By default we build in parallel.  Subclasses can override this."""
     parallel = True
 
@@ -243,19 +263,14 @@ class Package(object):
     """Controls whether install and uninstall check deps before running."""
     ignore_dependencies = False
 
-    # TODO: multi-compiler support
-    """Default compiler for this package"""
-    compiler = Compiler('gcc')
-
-
-    def __init__(self, sys_type = arch.sys_type()):
-        # Check for attributes that derived classes must set.
+    def __init__(self, spec):
+        # These attributes are required for all packages.
         attr.required(self, 'homepage')
         attr.required(self, 'url')
         attr.required(self, 'md5')
 
-        # Architecture for this package.
-        self.sys_type = sys_type
+        # this determines how the package should be built.
+        self.spec = spec
 
         # Name of package is the name of its module (the file that contains it)
         self.name = inspect.getmodulename(self.module.__file__)
@@ -277,16 +292,16 @@ class Package(object):
         elif type(self.version) == string:
             self.version = Version(self.version)
 
-        # This adds a bunch of convenience commands to the package's module scope.
-        self.add_commands_to_module()
-
-        # Empty at first; only compute dependents if necessary
+        # Empty at first; only compute dependent packages if necessary
         self._dependents = None
 
-        # stage used to build this package.
-        self.stage = Stage(self.stage_name, self.url)
+        # This is set by scraping a web page.
+        self._available_versions = None
 
-        # Set a default list URL (place to find lots of versions)
+        # stage used to build this package.
+        self.stage = Stage("%s-%s" % (self.name, self.version), self.url)
+
+        # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
             self.list_url = os.path.dirname(self.url)
 
@@ -356,6 +371,24 @@ class Package(object):
         return tuple(self._dependents)
 
 
+    def sanity_check(self):
+        """Ensure that this package and its dependencies don't have conflicting
+           requirements."""
+        deps = sorted(self.all_dependencies, key=lambda d: d.name)
+
+
+
+    @property
+    @memoized
+    def all_dependencies(self):
+        """Set of all transitive dependencies of this package."""
+        all_deps = set(self.dependencies)
+        for dep in self.dependencies:
+            dep_pkg = packages.get(dep.name)
+            all_deps = all_deps.union(dep_pkg.all_dependencies)
+        return all_deps
+
+
     @property
     def installed(self):
         return os.path.exists(self.prefix)
@@ -380,34 +413,9 @@ class Package(object):
 
 
     @property
-    def stage_name(self):
-        return "%s-%s" % (self.name, self.version)
-
-    #
-    # Below properties determine the path where this package is installed.
-    #
-    @property
-    def platform_path(self):
-        """Directory for binaries for the current platform."""
-        return new_path(install_path, self.sys_type)
-
-
-    @property
-    def package_path(self):
-        """Directory for different versions of this package.  Lives just above prefix."""
-        return new_path(self.platform_path, self.name)
-
-
-    @property
-    def installed_versions(self):
-        return [ver for ver in os.listdir(self.package_path)
-                if os.path.isdir(new_path(self.package_path, ver))]
-
-
-    @property
     def prefix(self):
-        """Packages are installed in $spack_prefix/opt/<sys_type>/<name>/<version>"""
-        return new_path(self.package_path, self.version)
+        """Get the prefix into which this package should be installed."""
+        return spack.install_layout.path_for_spec(self.spec)
 
 
     def url_version(self, version):
@@ -417,24 +425,14 @@ class Package(object):
            override this, e.g. for boost versions where you need to ensure that there
            are _'s in the download URL.
         """
-        return version.string
+        return str(version)
 
 
     def remove_prefix(self):
         """Removes the prefix for a package along with any empty parent directories."""
         if self.dirty:
             return
-
-        if os.path.exists(self.prefix):
-            shutil.rmtree(self.prefix, True)
-
-        for dir in (self.package_path, self.platform_path):
-            if not os.path.isdir(dir):
-                continue
-            if not os.listdir(dir):
-                os.rmdir(dir)
-            else:
-                break
+        spack.install_layout.remove_path_for_spec(self.spec)
 
 
     def do_fetch(self):
@@ -469,6 +467,9 @@ class Package(object):
         """This class should call this version of the install method.
            Package implementations should override install().
         """
+        if not self.spec.concrete:
+            raise ValueError("Can only install concrete packages.")
+
         if os.path.exists(self.prefix):
             tty.msg("%s is already installed." % self.name)
             tty.pkg(self.prefix)
@@ -479,6 +480,10 @@ class Package(object):
 
         self.do_stage()
         self.setup_install_environment()
+
+        # Add convenience commands to the package's module scope to
+        # make building easier.
+        self.add_commands_to_module()
 
         tty.msg("Building %s." % self.name)
         try:
@@ -597,6 +602,34 @@ class Package(object):
         if os.path.exists(self.stage.path):
             self.stage.destroy()
         tty.msg("Successfully cleaned %s" % self.name)
+
+
+    @property
+    def available_versions(self):
+        if not self._available_versions:
+            self._available_versions = VersionList()
+            try:
+                # Run curl but grab the mime type from the http headers
+                listing = spack.curl('-s', '-L', self.list_url, return_output=True)
+                url_regex = os.path.basename(url.wildcard_version(self.url))
+                strings = re.findall(url_regex, listing)
+                wildcard = self.version.wildcard()
+                for s in strings:
+                    match = re.search(wildcard, s)
+                    if match:
+                        self._available_versions.add(ver(match.group(0)))
+
+            except CalledProcessError:
+                tty.warn("Fetching %s failed." % self.list_url,
+                         "Package.available_versions requires an internet connection.",
+                         "Version list may be incomplete.")
+
+            if not self._available_versions:
+                tty.warn("Found no versions for %s" % self.name,
+                         "Packate.available_versions may require adding the list_url attribute",
+                         "to the package to tell Spack where to look for versions.")
+                self._available_versions = [self.version]
+        return self._available_versions
 
 
 class MakeExecutable(Executable):

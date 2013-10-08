@@ -2,6 +2,7 @@ import os
 from version import Version
 from utils import *
 import arch
+from directory_layout import DefaultDirectoryLayout
 
 # This lives in $prefix/lib/spac/spack/__file__
 prefix = ancestor(__file__, 4)
@@ -10,16 +11,23 @@ prefix = ancestor(__file__, 4)
 spack_file = new_path(prefix, "bin", "spack")
 
 # spack directory hierarchy
-lib_path      = new_path(prefix, "lib", "spack")
-env_path      = new_path(lib_path, "env")
-module_path   = new_path(lib_path, "spack")
-packages_path = new_path(module_path, "packages")
-test_path     = new_path(module_path, "test")
+lib_path       = new_path(prefix, "lib", "spack")
+env_path       = new_path(lib_path, "env")
+module_path    = new_path(lib_path, "spack")
+packages_path  = new_path(module_path, "packages")
+compilers_path = new_path(module_path, "compilers")
+test_path      = new_path(module_path, "test")
 
-var_path      = new_path(prefix, "var", "spack")
-stage_path    = new_path(var_path, "stage")
+var_path       = new_path(prefix, "var", "spack")
+stage_path     = new_path(var_path, "stage")
 
-install_path  = new_path(prefix, "opt")
+install_path   = new_path(prefix, "opt")
+
+#
+# This controls how spack lays out install prefixes and
+# stage directories.
+#
+install_layout = DefaultDirectoryLayout(install_path)
 
 # Version information
 spack_version = Version("0.2")

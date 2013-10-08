@@ -1,6 +1,7 @@
 import unittest
+import spack.spec
 from spack.spec import *
-from spack.parse import *
+from spack.parse import Token, ParseError
 
 # Sample output for a complex lexing.
 complex_lex = [Token(ID, 'mvapich_foo'),
@@ -29,10 +30,6 @@ complex_lex = [Token(ID, 'mvapich_foo'),
 
 
 class SpecTest(unittest.TestCase):
-    def setUp(self):
-        self.parser = SpecParser()
-        self.lexer = SpecLexer()
-
     # ================================================================================
     # Parse checks
     # ================================================================================
@@ -47,14 +44,14 @@ class SpecTest(unittest.TestCase):
         """
         if spec == None:
             spec = expected
-        output = self.parser.parse(spec)
+        output = spack.spec.parse(spec)
         parsed = (" ".join(str(spec) for spec in output))
         self.assertEqual(expected, parsed)
 
 
     def check_lex(self, tokens, spec):
         """Check that the provided spec parses to the provided list of tokens."""
-        lex_output = self.lexer.lex(spec)
+        lex_output = SpecLexer().lex(spec)
         for tok, spec_tok in zip(tokens, lex_output):
             if tok.type == ID:
                 self.assertEqual(tok, spec_tok)
@@ -71,30 +68,32 @@ class SpecTest(unittest.TestCase):
         self.check_parse("_mvapich_foo")
 
     def test_simple_dependence(self):
-        self.check_parse("openmpi ^hwloc")
-        self.check_parse("openmpi ^hwloc ^libunwind")
+        self.check_parse("openmpi^hwloc")
+        self.check_parse("openmpi^hwloc^libunwind")
 
     def test_dependencies_with_versions(self):
-        self.check_parse("openmpi ^hwloc@1.2e6")
-        self.check_parse("openmpi ^hwloc@1.2e6:")
-        self.check_parse("openmpi ^hwloc@:1.4b7-rc3")
-        self.check_parse("openmpi ^hwloc@1.2e6:1.4b7-rc3")
+        self.check_parse("openmpi^hwloc@1.2e6")
+        self.check_parse("openmpi^hwloc@1.2e6:")
+        self.check_parse("openmpi^hwloc@:1.4b7-rc3")
+        self.check_parse("openmpi^hwloc@1.2e6:1.4b7-rc3")
 
     def test_full_specs(self):
-        self.check_parse("mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4 ^stackwalker@8.1_1e")
+        self.check_parse("mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4^stackwalker@8.1_1e")
 
     def test_canonicalize(self):
         self.check_parse(
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 ^stackwalker@8.1_1e",
+            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4^stackwalker@8.1_1e",
             "mvapich_foo ^_openmpi@1.6,1.2:1.4%intel@12.1:12.6+debug~qt_4 ^stackwalker@8.1_1e")
 
         self.check_parse(
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 ^stackwalker@8.1_1e",
+            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4^stackwalker@8.1_1e",
             "mvapich_foo ^stackwalker@8.1_1e ^_openmpi@1.6,1.2:1.4%intel@12.1:12.6~qt_4+debug")
 
         self.check_parse(
-            "x ^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f",
+            "x^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f",
             "x ^y~f+e~d+c~b+a@4,2:3,1%intel@4,3,2,1")
+
+        self.check_parse("x^y", "x@: ^y@:")
 
     def test_parse_errors(self):
         self.assertRaises(ParseError, self.check_parse, "x@@1.2")
@@ -111,11 +110,11 @@ class SpecTest(unittest.TestCase):
 
     def test_duplicate_compiler(self):
         self.assertRaises(DuplicateCompilerError, self.check_parse, "x%intel%intel")
-        self.assertRaises(DuplicateCompilerError, self.check_parse, "x%intel%gnu")
-        self.assertRaises(DuplicateCompilerError, self.check_parse, "x%gnu%intel")
+        self.assertRaises(DuplicateCompilerError, self.check_parse, "x%intel%gcc")
+        self.assertRaises(DuplicateCompilerError, self.check_parse, "x%gcc%intel")
         self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%intel%intel")
-        self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%intel%gnu")
-        self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%gnu%intel")
+        self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%intel%gcc")
+        self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%gcc%intel")
 
 
     # ================================================================================

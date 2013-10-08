@@ -14,7 +14,8 @@ def setup_parser(subparser):
                            help="delete and re-expand the entire stage directory")
     subparser.add_argument('-d', "--dist", action="store_true", dest='dist',
                            help="delete the downloaded archive.")
-    subparser.add_argument('packages', nargs=argparse.REMAINDER, help="specs of packages to clean")
+    subparser.add_argument('packages', nargs=argparse.REMAINDER,
+                           help="specs of packages to clean")
 
 
 def clean(parser, args):

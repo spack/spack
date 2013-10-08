@@ -19,6 +19,7 @@ sys.path.insert(0, SPACK_LIB_PATH)
 del SPACK_FILE, SPACK_PREFIX, SPACK_LIB_PATH
 import spack
 import spack.tty as tty
+from spack.error import SpackError
 
 # Command parsing
 parser = argparse.ArgumentParser(
@@ -50,5 +51,12 @@ spack.debug = args.debug
 command = spack.cmd.get_command(args.command)
 try:
     command(parser, args)
+except SpackError, e:
+    if spack.debug:
+        # In debug mode, raise with a full stack trace.
+        raise
+    else:
+        # Otherwise print a nice simple message.
+        tty.die(e.message)
 except KeyboardInterrupt:
     tty.die("Got a keyboard interrupt from the user.")

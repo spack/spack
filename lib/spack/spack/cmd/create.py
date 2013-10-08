@@ -57,13 +57,13 @@ def create(parser, args):
 
     # make a stage and fetch the archive.
     try:
-        stage = Stage("%s-%s" % (name, version), url)
+        stage = Stage("spack-create/%s-%s" % (name, version), url)
         archive_file = stage.fetch()
     except spack.FailedDownloadException, e:
         tty.die(e.message)
 
     md5 = spack.md5(archive_file)
-    class_name = packages.class_for(name)
+    class_name = packages.class_name_for_package_name(name)
 
     # Write outa template for the file
     tty.msg("Editing %s." % path)

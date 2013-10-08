@@ -18,8 +18,8 @@ class FailedDownloadError(serr.SpackError):
 
 class Stage(object):
     """A Stage object manaages a directory where an archive is downloaded,
-       expanded, and built before being installed.  A stage's lifecycle looks
-       like this:
+       expanded, and built before being installed.  It also handles downloading
+       the archive.  A stage's lifecycle looks like this:
 
        setup()           Create the stage directory.
        fetch()           Fetch a source archive into the stage.
@@ -32,20 +32,15 @@ class Stage(object):
        in a tmp directory.  Otherwise, stages are created directly in
        spack.stage_path.
     """
-
-    def __init__(self, stage_name, url):
+    def __init__(self, path, url):
         """Create a stage object.
            Parameters:
-             stage_name   Name of the stage directory that will be created.
-             url          URL of the archive to be downloaded into this stage.
+             path    Relative path from the stage root to where the stage will
+                     be created.
+             url     URL of the archive to be downloaded into this stage.
         """
-        self.stage_name = stage_name
+        self.path = os.path.join(spack.stage_path, path)
         self.url = url
-
-    @property
-    def path(self):
-        """Absolute path to the stage directory."""
-        return spack.new_path(spack.stage_path, self.stage_name)
 
 
     def setup(self):
@@ -103,8 +98,7 @@ class Stage(object):
                 if username:
                     tmp_dir = spack.new_path(tmp_dir, username)
                 spack.mkdirp(tmp_dir)
-                tmp_dir = tempfile.mkdtemp(
-                    '.stage', self.stage_name + '-', tmp_dir)
+                tmp_dir = tempfile.mkdtemp('.stage', 'spack-stage-', tmp_dir)
 
                 os.symlink(tmp_dir, self.path)
 

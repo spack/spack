@@ -94,9 +94,10 @@ def colify(elts, **options):
     indent       = options.get("indent", 0)
     padding      = options.get("padding", 2)
 
-    # elts needs to be in an array so we can count the elements
-    if not type(elts) == list:
-        elts = list(elts)
+    # elts needs to be an array of strings so we can count the elements
+    elts = [str(elt) for elt in elts]
+    if not elts:
+        return
 
     if not output.isatty():
         for elt in elts:

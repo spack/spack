@@ -97,9 +97,11 @@ class match_to_ansi(object):
         elif m == '@.':
             return self.escape(0)
         elif m == '@' or (style and not color):
-            raise ColorParseError("Incomplete color format: '%s'" % m)
+            raise ColorParseError("Incomplete color format: '%s' in %s"
+                                  % (m, match.string))
         elif color not in colors:
-            raise ColorParseError("invalid color specifier: '%s'" % color)
+            raise ColorParseError("invalid color specifier: '%s' in '%s'"
+                                  % (color, match.string))
 
         colored_text = ''
         if text:
@@ -140,6 +142,10 @@ def cwrite(string, stream=sys.stdout, color=None):
 def cprint(string, stream=sys.stdout, color=None):
     """Same as cwrite, but writes a trailing newline to the stream."""
     cwrite(string + "\n", stream, color)
+
+def cescape(string):
+    """Replace all @ with @@ in the string provided."""
+    return str(string).replace('@', '@@')
 
 
 class ColorStream(object):

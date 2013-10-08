@@ -7,68 +7,51 @@ import glob
 
 import spack
 import spack.error
+import spack.spec
 from spack.utils import *
 import spack.arch as arch
 
-
-# Valid package names -- can contain - but can't start with it.
-valid_package = r'^\w[\w-]*$'
+# Valid package names can contain '-' but can't start with it.
+valid_package_re = r'^\w[\w-]*$'
 
 # Don't allow consecutive [_-] in package names
-invalid_package = r'[_-][_-]+'
+invalid_package_re = r'[_-][_-]+'
 
 instances = {}
 
+def get(spec):
+    spec = spack.spec.make_spec(spec)
+    if not spec in instances:
+        package_class = get_class_for_package_name(spec.name)
+        instances[spec] = package_class(spec)
 
-def get(pkg, arch=arch.sys_type()):
-    key = (pkg, arch)
-    if not key in instances:
-        package_class = get_class(pkg)
-        instances[key] = package_class(arch)
-    return instances[key]
-
-
-class InvalidPackageNameError(spack.error.SpackError):
-    """Raised when we encounter a bad package name."""
-    def __init__(self, name):
-        super(InvalidPackageNameError, self).__init__(
-            "Invalid package name: " + name)
-        self.name = name
+    return instances[spec]
 
 
-def valid_name(pkg):
-    return re.match(valid_package, pkg) and not re.search(invalid_package, pkg)
+def valid_package_name(pkg_name):
+    return (re.match(valid_package_re, pkg_name) and
+            not re.search(invalid_package_re, pkg_name))
 
 
-def validate_name(pkg):
-    if not valid_name(pkg):
-        raise InvalidPackageNameError(pkg)
+def validate_package_name(pkg_name):
+    if not valid_package_name(pkg_name):
+        raise InvalidPackageNameError(pkg_name)
 
 
-def filename_for(pkg):
+def filename_for_package_name(pkg_name):
     """Get the filename where a package name should be stored."""
-    validate_name(pkg)
-    return new_path(spack.packages_path, "%s.py" % pkg)
+    validate_package_name(pkg_name)
+    return new_path(spack.packages_path, "%s.py" % pkg_name)
 
 
-def installed_packages(**kwargs):
-    """Returns a dict from systype strings to lists of Package objects."""
-    pkgs = {}
-    if not os.path.isdir(spack.install_path):
-        return pkgs
-
-    for sys_type in os.listdir(spack.install_path):
-        sys_type = sys_type
-        sys_path = new_path(spack.install_path, sys_type)
-        pkgs[sys_type] = [get(pkg) for pkg in os.listdir(sys_path)
-                          if os.path.isdir(new_path(sys_path, pkg))]
-    return pkgs
+def installed_packages():
+    return spack.install_layout.all_specs()
 
 
 def all_package_names():
     """Generator function for all packages."""
-    for mod in list_modules(spack.packages_path):
-        yield mod
+    for module in list_modules(spack.packages_path):
+        yield module
 
 
 def all_packages():
@@ -76,12 +59,12 @@ def all_packages():
         yield get(name)
 
 
-def class_for(pkg):
+def class_name_for_package_name(pkg_name):
     """Get a name for the class the package file should contain.  Note that
        conflicts don't matter because the classes are in different modules.
     """
-    validate_name(pkg)
-    class_name = string.capwords(pkg.replace('_', '-'), '-')
+    validate_package_name(pkg_name)
+    class_name = string.capwords(pkg_name.replace('_', '-'), '-')
 
     # If a class starts with a number, prefix it with Number_ to make it a valid
     # Python class name.
@@ -91,25 +74,27 @@ def class_for(pkg):
     return class_name
 
 
-def get_class(pkg):
-    file = filename_for(pkg)
+def get_class_for_package_name(pkg_name):
+    file_name = filename_for_package_name(pkg_name)
 
-    if os.path.exists(file):
-        if not os.path.isfile(file):
-            tty.die("Something's wrong. '%s' is not a file!" % file)
-        if not os.access(file, os.R_OK):
-            tty.die("Cannot read '%s'!" % file)
+    if os.path.exists(file_name):
+        if not os.path.isfile(file_name):
+            tty.die("Something's wrong. '%s' is not a file!" % file_name)
+        if not os.access(file_name, os.R_OK):
+            tty.die("Cannot read '%s'!" % file_name)
+    else:
+        raise UnknownPackageError(pkg_name)
 
-    class_name = pkg.capitalize()
+    class_name = pkg_name.capitalize()
     try:
-        module_name = "%s.%s" % (__name__, pkg)
+        module_name = "%s.%s" % (__name__, pkg_name)
         module = __import__(module_name, fromlist=[class_name])
     except ImportError, e:
-        tty.die("Error while importing %s.%s:\n%s" % (pkg, class_name, e.message))
+        tty.die("Error while importing %s.%s:\n%s" % (pkg_name, class_name, e.message))
 
     klass = getattr(module, class_name)
     if not inspect.isclass(klass):
-        tty.die("%s.%s is not a class" % (pkg, class_name))
+        tty.die("%s.%s is not a class" % (pkg_name, class_name))
 
     return klass
 
@@ -152,3 +137,19 @@ def graph_dependencies(out=sys.stdout):
     for pair in deps:
         out.write('  "%s" -> "%s"\n' % pair)
     out.write('}\n')
+
+
+
+class InvalidPackageNameError(spack.error.SpackError):
+    """Raised when we encounter a bad package name."""
+    def __init__(self, name):
+        super(InvalidPackageNameError, self).__init__(
+            "Invalid package name: " + name)
+        self.name = name
+
+
+class UnknownPackageError(spack.error.SpackError):
+    """Raised when we encounter a package spack doesn't have."""
+    def __init__(self, name):
+        super(UnknownPackageError, self).__init__("Package %s not found." % name)
+        self.name = name

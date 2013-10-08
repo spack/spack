@@ -61,6 +61,7 @@ class PlatformMultiFunction(object):
            If none is found, call the default function that this was
            initialized with.  If there is no default, raise an error.
         """
+        # TODO: make this work with specs.
         sys_type = package_self.sys_type
         function = self.function_map.get(sys_type, self.default)
         if function:

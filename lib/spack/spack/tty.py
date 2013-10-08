@@ -1,18 +1,18 @@
 import sys
 import spack
-from spack.color import cprint
+from spack.color import *
 
 indent = "  "
 
 def msg(message, *args):
-    cprint("@*b{==>} @*w{%s}" % str(message))
+    cprint("@*b{==>} @*w{%s}" % cescape(message))
     for arg in args:
         print indent + str(arg)
 
 
 def info(message, *args, **kwargs):
     format = kwargs.get('format', '*b')
-    cprint("@%s{==>} %s" % (format, str(message)))
+    cprint("@%s{==>} %s" % (format, cescape(message)))
     for arg in args:
         print indent + str(arg)
 
