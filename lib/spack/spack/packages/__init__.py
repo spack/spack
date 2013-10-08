@@ -8,7 +8,7 @@ import glob
 import spack
 import spack.error
 import spack.spec
-from spack.util import *
+from spack.util.filesystem import new_path
 import spack.arch as arch
 
 # Valid package names can contain '-' but can't start with it.

@@ -4,8 +4,7 @@
 
 import spack
 import spack.compilers.gcc
-from spack.util import list_modules, memoized
-
+from spack.util.lang import memoized, list_modules
 
 @memoized
 def supported_compilers():

@@ -1,6 +1,7 @@
 import tty
-from util import ALLOWED_ARCHIVE_TYPES
 from urlparse import urlparse
+
+from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
 ALLOWED_SCHEMES    = ["http", "https", "ftp"]
 

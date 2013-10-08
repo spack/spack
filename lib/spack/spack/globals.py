@@ -1,8 +1,10 @@
 import os
-from version import Version
-from util import *
-import arch
-from directory_layout import DefaultDirectoryLayout
+
+import spack.arch as arch
+from spack.version import Version
+from spack.util.filesystem import *
+from spack.util.executable import *
+from spack.directory_layout import DefaultDirectoryLayout
 
 # This lives in $prefix/lib/spac/spack/__file__
 prefix = ancestor(__file__, 4)

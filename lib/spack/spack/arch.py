@@ -2,9 +2,9 @@ import os
 import platform as py_platform
 
 import spack
-import error as serr
-from version import Version
-from util import memoized
+import spack.error as serr
+from spack.version import Version
+from spack.util.lang import memoized
 
 
 class InvalidSysTypeError(serr.SpackError):

@@ -24,11 +24,11 @@ import attr
 import validate
 import url
 
-
 from spec import Compiler
 from version import *
 from multi_function import platform
 from stage import Stage
+from spack.util.lang import memoized, list_modules
 
 
 class Package(object):
