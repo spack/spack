@@ -11,7 +11,7 @@ class Libdwarf(Package):
 
     list_url = "http://reality.sgiweb.org/davea/dwarf.html"
 
-    depends_on("libelf")
+    depends_on("libelf@0:1")
 
 
     def clean(self):

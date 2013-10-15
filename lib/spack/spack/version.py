@@ -13,8 +13,10 @@ be called on any of the types:
 
   __eq__, __ne__, __lt__, __gt__, __ge__, __le__, __hash__
   __contains__
+  satisfies
   overlaps
-  merge
+  union
+  intersection
   concrete
       True if the Version, VersionRange or VersionList represents
       a single version.
@@ -161,6 +163,7 @@ class Version(object):
     def concrete(self):
         return self
 
+
     @coerced
     def __lt__(self, other):
         """Version comparison is designed for consistency with the way RPM
@@ -219,11 +222,19 @@ class Version(object):
 
 
     @coerced
-    def merge(self, other):
+    def union(self, other):
         if self == other:
             return self
         else:
             return VersionList([self, other])
+
+
+    @coerced
+    def intersection(self, other):
+        if self == other:
+            return self
+        else:
+            return VersionList()
 
 
 @total_ordering
@@ -295,9 +306,21 @@ class VersionRange(object):
 
 
     @coerced
-    def merge(self, other):
-        return VersionRange(none_low.min(self.start, other.start),
-                            none_high.max(self.end, other.end))
+    def union(self, other):
+        if self.overlaps(other):
+            return VersionRange(none_low.min(self.start, other.start),
+                                none_high.max(self.end, other.end))
+        else:
+            return VersionList([self, other])
+
+
+    @coerced
+    def intersection(self, other):
+        if self.overlaps(other):
+            return VersionRange(none_low.max(self.start, other.start),
+                                none_high.min(self.end, other.end))
+        else:
+            return VersionList()
 
 
     def __hash__(self):
@@ -338,12 +361,12 @@ class VersionList(object):
             i = bisect_left(self, version)
 
             while i-1 >= 0 and version.overlaps(self[i-1]):
-                version = version.merge(self[i-1])
+                version = version.union(self[i-1])
                 del self.versions[i-1]
                 i -= 1
 
             while i < len(self) and version.overlaps(self[i]):
-                version = version.merge(self[i])
+                version = version.union(self[i])
                 del self.versions[i]
 
             self.versions.insert(i, version)
@@ -384,25 +407,54 @@ class VersionList(object):
             return self[-1].highest()
 
 
+    def satisfies(self, other):
+        """Synonym for overlaps."""
+        return self.overlaps(other)
+
+
     @coerced
     def overlaps(self, other):
         if not other or not self:
             return False
 
-        i = o = 0
-        while i < len(self) and o < len(other):
-            if self[i].overlaps(other[o]):
+        s = o = 0
+        while s < len(self) and o < len(other):
+            if self[s].overlaps(other[o]):
                 return True
-            elif self[i] < other[o]:
-                i += 1
+            elif self[s] < other[o]:
+                s += 1
             else:
                 o += 1
         return False
 
 
     @coerced
-    def merge(self, other):
-        return VersionList(self.versions + other.versions)
+    def update(self, other):
+        for v in other.versions:
+            self.add(v)
+
+
+    @coerced
+    def union(self, other):
+        result = self.copy()
+        result.update(other)
+        return result
+
+
+    @coerced
+    def intersection(self, other):
+        # TODO: make this faster.  This is O(n^2).
+        result = VersionList()
+        for s in self:
+            for o in other:
+                result.add(s.intersection(o))
+        return result
+
+
+    @coerced
+    def intersect(self, other):
+        isection = self.intersection(other)
+        self.versions = isection.versions
 
 
     @coerced

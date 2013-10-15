@@ -59,6 +59,25 @@ class SpecTest(unittest.TestCase):
                 # Only check the type for non-identifiers.
                 self.assertEqual(tok.type, spec_tok.type)
 
+
+    def check_satisfies(self, lspec, rspec):
+        l = spack.spec.parse_one(lspec)
+        r = spack.spec.parse_one(rspec)
+        self.assertTrue(l.satisfies(r) and r.satisfies(l))
+
+        # These should not raise
+        l.constrain(r)
+        r.constrain(l)
+
+
+    def check_constrain(self, expected, constrained, constraint):
+        exp = spack.spec.parse_one(expected)
+        constrained = spack.spec.parse_one(constrained)
+        constraint = spack.spec.parse_one(constraint)
+        constrained.constrain(constraint)
+        self.assertEqual(exp, constrained)
+
+
     # ================================================================================
     # Parse checks
     # ===============================================================================
@@ -115,6 +134,18 @@ class SpecTest(unittest.TestCase):
         self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%intel%intel")
         self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%intel%gcc")
         self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%gcc%intel")
+
+
+    # ================================================================================
+    # Satisfiability and constraints
+    # ================================================================================
+    def test_satisfies(self):
+        self.check_satisfies('libelf@0.8.13', 'libelf@0:1')
+        self.check_satisfies('libdwarf^libelf@0.8.13', 'libdwarf^libelf@0:1')
+
+
+    def test_constrain(self):
+        self.check_constrain('libelf@0:1', 'libelf', 'libelf@0:1')
 
 
     # ================================================================================

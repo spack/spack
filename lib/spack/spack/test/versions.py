@@ -59,6 +59,10 @@ class VersionsTest(unittest.TestCase):
         self.assertFalse(ver(v1).overlaps(ver(v2)))
 
 
+    def check_intersection(self, expected, a, b):
+        self.assertEqual(ver(expected), ver(a).intersection(ver(b)))
+
+
     def test_two_segments(self):
         self.assert_ver_eq('1.0', '1.0')
         self.assert_ver_lt('1.0', '2.0')
@@ -215,6 +219,7 @@ class VersionsTest(unittest.TestCase):
         self.assert_overlaps('1.2:', '1.6:')
         self.assert_overlaps(':', ':')
         self.assert_overlaps(':', '1.6:1.9')
+        self.assert_overlaps('1.6:1.9', ':')
 
 
     def test_lists_overlap(self):
@@ -258,3 +263,17 @@ class VersionsTest(unittest.TestCase):
 
         self.assert_canonical([':'],
                               [':,1.3, 1.3.1,1.3.9,1.4 : 1.5 , 1.3 : 1.4'])
+
+
+    def test_intersection(self):
+        self.check_intersection('2.5',
+                                '1.0:2.5', '2.5:3.0')
+        self.check_intersection('2.5:2.7',
+                                '1.0:2.7', '2.5:3.0')
+        self.check_intersection('0:1', ':', '0:1')
+
+        self.check_intersection(['1.0', '2.5:2.7'],
+                                ['1.0:2.7'], ['2.5:3.0','1.0'])
+        self.check_intersection(['2.5:2.7'],
+                                ['1.1:2.7'], ['2.5:3.0','1.0'])
+        self.check_intersection(['0:1'], [':'], ['0:1'])

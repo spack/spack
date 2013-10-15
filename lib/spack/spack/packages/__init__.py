@@ -9,6 +9,7 @@ import spack
 import spack.error
 import spack.spec
 from spack.util.filesystem import new_path
+from spack.util.lang import list_modules
 import spack.arch as arch
 
 # Valid package names can contain '-' but can't start with it.
@@ -19,13 +20,12 @@ invalid_package_re = r'[_-][_-]+'
 
 instances = {}
 
-def get(spec):
-    spec = spack.spec.make_spec(spec)
-    if not spec in instances:
-        package_class = get_class_for_package_name(spec.name)
-        instances[spec] = package_class(spec)
+def get(pkg_name):
+    if not pkg_name in instances:
+        package_class = get_class_for_package_name(pkg_name)
+        instances[pkg_name] = package_class(pkg_name)
 
-    return instances[spec]
+    return instances[pkg_name]
 
 
 def valid_package_name(pkg_name):

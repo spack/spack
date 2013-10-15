@@ -381,7 +381,7 @@ class Package(object):
     @property
     @memoized
     def all_dependencies(self):
-        """Set of all transitive dependencies of this package."""
+        """Dict(str -> Package) of all transitive dependencies of this package."""
         all_deps = set(self.dependencies)
         for dep in self.dependencies:
             dep_pkg = packages.get(dep.name)

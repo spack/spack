@@ -62,7 +62,6 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import sys
-from functools import total_ordering
 from StringIO import StringIO
 
 import tty
@@ -72,8 +71,11 @@ import spack.compilers
 import spack.compilers.gcc
 import spack.packages as packages
 import spack.arch as arch
+
 from spack.version import *
 from spack.color import *
+from spack.util.lang import *
+from spack.util.string import *
 
 """This map determines the coloring of specs when using color output.
    We make the fields different colors to enhance readability.
@@ -109,6 +111,7 @@ def colorize_spec(spec):
     return colorize(re.sub(separators, insert_color(), str(spec)) + '@.')
 
 
+@key_ordering
 class Compiler(object):
     """The Compiler field represents the compiler or range of compiler
        versions that a package should be built with.  Compilers have a
@@ -126,6 +129,19 @@ class Compiler(object):
 
     def _add_version(self, version):
         self.versions.add(version)
+
+
+    def satisfies(self, other):
+        return (self.name == other.name and
+                self.versions.overlaps(other.versions))
+
+
+    def constrain(self, other):
+        if not self.satisfies(other.compiler):
+            raise UnsatisfiableCompilerSpecError(
+                "%s does not satisfy %s" % (self.compiler, other.compiler))
+
+        self.versions.intersect(other.versions)
 
 
     @property
@@ -163,16 +179,8 @@ class Compiler(object):
         return clone
 
 
-    def __eq__(self, other):
-        return (self.name, self.versions) == (other.name, other.versions)
-
-
-    def __ne__(self, other):
-        return not (self == other)
-
-
-    def __hash__(self):
-        return hash((self.name, self.versions))
+    def _cmp_key(self):
+        return (self.name, self.versions)
 
 
     def __str__(self):
@@ -183,7 +191,7 @@ class Compiler(object):
         return out
 
 
-@total_ordering
+@key_ordering
 class Variant(object):
     """Variants are named, build-time options for a package.  Names depend
        on the particular package being built, and each named variant can
@@ -194,25 +202,8 @@ class Variant(object):
         self.enabled = enabled
 
 
-    def __eq__(self, other):
-        return self.name == other.name and self.enabled == other.enabled
-
-
-    def __ne__(self, other):
-        return not (self == other)
-
-
-    @property
-    def tuple(self):
+    def _cmp_key(self):
         return (self.name, self.enabled)
-
-
-    def __hash__(self):
-        return hash(self.tuple)
-
-
-    def __lt__(self, other):
-        return self.tuple < other.tuple
 
 
     def __str__(self):
@@ -220,41 +211,12 @@ class Variant(object):
         return out + self.name
 
 
-
-@total_ordering
-class HashableMap(dict):
-    """This is a hashable, comparable dictionary.  Hash is performed on
-       a tuple of the values in the dictionary."""
-    def __eq__(self, other):
-        return (len(self) == len(other) and
-                sorted(self.values()) == sorted(other.values()))
-
-
-    def __ne__(self, other):
-        return not (self == other)
-
-
-    def __lt__(self, other):
-        return tuple(sorted(self.values())) < tuple(sorted(other.values()))
-
-
-    def __hash__(self):
-        return hash(tuple(sorted(self.values())))
-
-
-    def copy(self):
-        """Type-agnostic clone method.  Preserves subclass type."""
-        # Construct a new dict of my type
-        T = type(self)
-        clone = T()
-
-        # Copy everything from this dict into it.
-        for key in self:
-            clone[key] = self[key]
-        return clone
-
-
 class VariantMap(HashableMap):
+    def satisfies(self, other):
+        return all(self[key].enabled == other[key].enabled
+                   for key in other if key in self)
+
+
     def __str__(self):
         sorted_keys = sorted(self.keys())
         return ''.join(str(self[key]) for key in sorted_keys)
@@ -268,13 +230,18 @@ class DependencyMap(HashableMap):
         return all(d.concrete for d in self.values())
 
 
+    def satisfies(self, other):
+        return all(self[name].satisfies(other[name]) for name in self
+                   if name in other)
+
+
     def __str__(self):
-        sorted_keys = sorted(self.keys())
+        sorted_dep_names = sorted(self.keys())
         return ''.join(
-            ["^" + str(self[name]) for name in sorted_keys])
+            ["^" + str(self[name]) for name in sorted_dep_names])
 
 
-@total_ordering
+@key_ordering
 class Spec(object):
     def __init__(self, name):
         self.name = name
@@ -322,11 +289,11 @@ class Spec(object):
 
     @property
     def concrete(self):
-        return (self.versions.concrete
-                # TODO: support variants
-                and self.architecture
-                and self.compiler and self.compiler.concrete
-                and self.dependencies.concrete)
+        return bool(self.versions.concrete
+                    # TODO: support variants
+                    and self.architecture
+                    and self.compiler and self.compiler.concrete
+                    and self.dependencies.concrete)
 
 
     def _concretize(self):
@@ -349,7 +316,7 @@ class Spec(object):
         """
         # TODO: modularize the process of selecting concrete versions.
         # There should be a set of user-configurable policies for these decisions.
-        self.check_sanity()
+        self.validate()
 
         # take the system's architecture for starters
         if not self.architecture:
@@ -370,60 +337,118 @@ class Spec(object):
         # Ensure dependencies have right versions
 
 
+    @property
+    def traverse_deps(self, visited=None):
+        """Yields dependencies in depth-first order"""
+        if not visited:
+            visited = set()
 
-    def check_sanity(self):
-        """Check names of packages and dependency validity."""
-        self.check_package_name_sanity()
-        self.check_dependency_sanity()
-        self.check_dependence_constraint_sanity()
-
-
-    def check_package_name_sanity(self):
-        """Ensure that all packages mentioned in the spec exist."""
-        packages.get(self.name)
-        for dep in self.dependencies.values():
-            packages.get(dep.name)
-
-
-    def check_dependency_sanity(self):
-        """Ensure that dependencies specified on the spec are actual
-           dependencies of the package it represents.
-        """
-        pkg = packages.get(self.name)
-        dep_names = set(dep.name for dep in pkg.all_dependencies)
-        invalid_dependencies = [d.name for d in self.dependencies.values()
-                                if d.name not in dep_names]
-        if invalid_dependencies:
-            raise InvalidDependencyException(
-                "The packages (%s) are not dependencies of %s" %
-                (','.join(invalid_dependencies), self.name))
-
-
-    def check_dependence_constraint_sanity(self):
-        """Ensure that package's dependencies have consistent constraints on
-           their dependencies.
-        """
-        pkg = packages.get(self.name)
-        specs = {}
-        for spec in pkg.all_dependencies:
-            if not spec.name in specs:
-                specs[spec.name] = spec
+        for name in sorted(self.dependencies.keys()):
+            dep = dependencies[name]
+            if dep in visited:
                 continue
 
-            merged = specs[spec.name]
-
-            # Specs in deps can't be disjoint.
-            if not spec.versions.overlaps(merged.versions):
-                raise InvalidConstraintException(
-                    "One package %s, version constraint %s conflicts with %s"
-                    % (pkg.name, spec.versions, merged.versions))
+            for d in dep.traverse_deps(seen):
+                yield d
+            yield dep
 
 
-    def merge(self, other):
-        """Considering these specs as constraints, attempt to merge.
-           Raise an exception if specs are disjoint.
-        """
-        pass
+    def _normalize_helper(self, visited, spec_deps):
+        """Recursive helper function for _normalize."""
+        if self.name in visited:
+            return
+        visited.add(self.name)
+
+        # Combine constraints from package dependencies with
+        # information in this spec's dependencies.
+        pkg = packages.get(self.name)
+        for pkg_dep in pkg.dependencies:
+            name = pkg_dep.name
+
+            if name not in spec_deps:
+                # Clone the spec from the package
+                spec_deps[name] = pkg_dep.copy()
+
+            try:
+                # intersect package information with spec info
+                spec_deps[name].constrain(pkg_dep)
+            except UnsatisfiableSpecError, e:
+                error_type = type(e)
+                raise error_type(
+                    "Violated depends_on constraint from package %s: %s"
+                    % (self.name, e.message))
+
+            # Add merged spec to my deps and recurse
+            self.dependencies[name] = spec_deps[name]
+            self.dependencies[name]._normalize_helper(visited, spec_deps)
+
+
+    def normalize(self):
+        if any(dep.dependencies for dep in self.dependencies.values()):
+            raise SpecError("Spec has already been normalized.")
+
+        self.validate_package_names()
+
+        spec_deps = self.dependencies
+        self.dependencies = DependencyMap()
+
+        visited = set()
+        self._normalize_helper(visited, spec_deps)
+
+        # If there are deps specified but not visited, they're not
+        # actually deps of this package.  Raise an error.
+        extra = set(spec_deps.viewkeys()).difference(visited)
+        if extra:
+            raise InvalidDependencyException(
+                self.name + " does not depend on " + comma_or(extra))
+
+
+    def validate_package_names(self):
+        for name in self.dependencies:
+            packages.get(name)
+
+
+    def constrain(self, other):
+        if not self.versions.overlaps(other.versions):
+            raise UnsatisfiableVersionSpecError(
+                "%s does not satisfy %s" % (self.versions, other.versions))
+
+        conflicting_variants = [
+            v for v in other.variants if v in self.variants and
+            self.variants[v].enabled != other.variants[v].enabled]
+
+        if conflicting_variants:
+            raise UnsatisfiableVariantSpecError(comma_and(
+                "%s does not satisfy %s" % (self.variants[v], other.variants[v])
+                for v in conflicting_variants))
+
+        if self.architecture is not None and other.architecture is not None:
+            if self.architecture != other.architecture:
+                raise UnsatisfiableArchitectureSpecError(
+                    "Asked for architecture %s, but required %s"
+                    % (self.architecture, other.architecture))
+
+        if self.compiler is not None and other.compiler is not None:
+            self.compiler.constrain(other.compiler)
+        elif self.compiler is None:
+            self.compiler = other.compiler
+
+        self.versions.intersect(other.versions)
+        self.variants.update(other.variants)
+        self.architecture = self.architecture or other.architecture
+
+
+    def satisfies(self, other):
+        def sat(attribute):
+            s = getattr(self, attribute)
+            o = getattr(other, attribute)
+            return not s or not o or s.satisfies(o)
+
+        return (self.name == other.name and
+                all(sat(attr) for attr in
+                    ('versions', 'variants', 'compiler', 'architecture')) and
+                # TODO: what does it mean to satisfy deps?
+                self.dependencies.satisfies(other.dependencies))
 
 
     def concretized(self):
@@ -451,43 +476,16 @@ class Spec(object):
         return self.versions[0]
 
 
-    @property
-    def tuple(self):
+    def _cmp_key(self):
         return (self.name, self.versions, self.variants,
-                self.architecture, self.compiler, self.dependencies)
-
-
-    @property
-    def tuple(self):
-        return (self.name, self.versions, self.variants, self.architecture,
-                self.compiler, self.dependencies)
-
-
-    def __eq__(self, other):
-        return self.tuple == other.tuple
-
-
-    def __ne__(self, other):
-        return not (self == other)
-
-
-    def __lt__(self, other):
-        return self.tuple < other.tuple
-
-
-    def __hash__(self):
-        return hash(self.tuple)
+                self.architecture, self.compiler)
 
 
     def colorized(self):
         return colorize_spec(self)
 
 
-    def __repr__(self):
-        return str(self)
-
-
-    def __str__(self):
+    def str_without_deps(self):
         out = self.name
 
         # If the version range is entirely open, omit it
@@ -502,8 +500,24 @@ class Spec(object):
         if self.architecture:
             out += "=%s" % self.architecture
 
-        out += str(self.dependencies)
         return out
+
+
+    def tree(self, indent=""):
+        """Prints out this spec and its dependencies, tree-formatted
+           with indentation."""
+        out = indent + self.str_without_deps()
+        for dep in sorted(self.dependencies.keys()):
+            out += "\n" + self.dependencies[dep].tree(indent + "    ")
+        return out
+
+
+    def __repr__(self):
+        return str(self)
+
+
+    def __str__(self):
+        return self.str_without_deps() + str(self.dependencies)
 
 
 #
@@ -580,7 +594,7 @@ class SpecParser(spack.parse.Parser):
 
         # If there was no version in the spec, consier it an open range
         if not added_version:
-            spec.versions = VersionList([':'])
+            spec.versions = VersionList(':')
 
         return spec
 
@@ -721,7 +735,31 @@ class InvalidDependencyException(SpecError):
         super(InvalidDependencyException, self).__init__(message)
 
 
-class InvalidConstraintException(SpecError):
-    """Raised when a package dependencies conflict."""
+class UnsatisfiableSpecError(SpecError):
+    """Raised when a spec conflicts with package constraints."""
     def __init__(self, message):
-        super(InvalidConstraintException, self).__init__(message)
+        super(UnsatisfiableSpecError, self).__init__(message)
+
+
+class UnsatisfiableVersionSpecError(UnsatisfiableSpecError):
+    """Raised when a spec version conflicts with package constraints."""
+    def __init__(self, message):
+        super(UnsatisfiableVersionSpecError, self).__init__(message)
+
+
+class UnsatisfiableCompilerSpecError(UnsatisfiableSpecError):
+    """Raised when a spec comiler conflicts with package constraints."""
+    def __init__(self, message):
+        super(UnsatisfiableCompilerSpecError, self).__init__(message)
+
+
+class UnsatisfiableVariantSpecError(UnsatisfiableSpecError):
+    """Raised when a spec variant conflicts with package constraints."""
+    def __init__(self, message):
+        super(UnsatisfiableVariantSpecError, self).__init__(message)
+
+
+class UnsatisfiableArchitectureSpecError(UnsatisfiableSpecError):
+    """Raised when a spec architecture conflicts with package constraints."""
+    def __init__(self, message):
+        super(UnsatisfiableArchitectureSpecError, self).__init__(message)

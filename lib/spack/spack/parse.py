@@ -1,20 +1,6 @@
 import re
-import spack.error as err
 import itertools
-
-
-class ParseError(err.SpackError):
-    """Raised when we don't hit an error while parsing."""
-    def __init__(self, message, string, pos):
-        super(ParseError, self).__init__(message)
-        self.string = string
-        self.pos = pos
-
-
-class LexError(ParseError):
-    """Raised when we don't know how to lex something."""
-    def __init__(self, message, string, pos):
-        super(LexError, self).__init__(message, string, pos)
+import spack.error
 
 
 class Token:
@@ -109,3 +95,17 @@ class Parser(object):
         self.text = text
         self.push_tokens(self.lexer.lex(text))
         return self.do_parse()
+
+
+class ParseError(spack.error.SpackError):
+    """Raised when we don't hit an error while parsing."""
+    def __init__(self, message, string, pos):
+        super(ParseError, self).__init__(message)
+        self.string = string
+        self.pos = pos
+
+
+class LexError(ParseError):
+    """Raised when we don't know how to lex something."""
+    def __init__(self, message, string, pos):
+        super(LexError, self).__init__(message, string, pos)

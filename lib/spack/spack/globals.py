@@ -32,7 +32,7 @@ install_path   = new_path(prefix, "opt")
 install_layout = DefaultDirectoryLayout(install_path)
 
 # Version information
-spack_version = Version("0.2")
+spack_version = Version("0.5")
 
 # User's editor from the environment
 editor = Executable(os.environ.get("EDITOR", ""))

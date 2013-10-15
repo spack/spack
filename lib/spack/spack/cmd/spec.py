@@ -12,6 +12,5 @@ def setup_parser(subparser):
 def spec(parser, args):
     specs = spack.cmd.parse_specs(args.specs)
     for spec in specs:
-        print spec.colorized()
-        print "  --> ", spec.concretized().colorized()
-        print spec.concretized().concrete()
+        spec.normalize()
+        print spec.tree()
