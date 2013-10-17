@@ -91,10 +91,14 @@ class Parser(object):
                 self.next_token_error("Unexpected end of input")
             sys.exit(1)
 
-    def parse(self, text):
+    def setup(self, text):
         self.text = text
         self.push_tokens(self.lexer.lex(text))
+
+    def parse(self, text):
+        self.setup(text)
         return self.do_parse()
+
 
 
 class ParseError(spack.error.SpackError):

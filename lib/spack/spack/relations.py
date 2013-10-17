@@ -54,10 +54,10 @@ def depends_on(*specs):
     """
     # Get the enclosing package's scope and add deps to it.
     locals = sys._getframe(1).f_locals
-    dependencies = locals.setdefault("dependencies", [])
+    dependencies = locals.setdefault("dependencies", {})
     for string in specs:
         for spec in spack.spec.parse(string):
-            dependencies.append(spec)
+            dependencies[spec.name] = spec
 
 
 def provides(*args):

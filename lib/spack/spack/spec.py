@@ -67,6 +67,7 @@ from StringIO import StringIO
 import tty
 import spack.parse
 import spack.error
+import spack.concretize
 import spack.compilers
 import spack.compilers.gcc
 import spack.packages as packages
@@ -137,9 +138,8 @@ class Compiler(object):
 
 
     def constrain(self, other):
-        if not self.satisfies(other.compiler):
-            raise UnsatisfiableCompilerSpecError(
-                "%s does not satisfy %s" % (self.compiler, other.compiler))
+        if not self.satisfies(other):
+            raise UnsatisfiableCompilerSpecError(self, other)
 
         self.versions.intersect(other.versions)
 
@@ -147,23 +147,6 @@ class Compiler(object):
     @property
     def concrete(self):
         return self.versions.concrete
-
-
-    def _concretize(self):
-        """If this spec could describe more than one version, variant, or build
-           of a package, this will resolve it to be concrete.
-        """
-        # TODO: support compilers other than GCC.
-        if self.concrete:
-            return
-        gcc_version = spack.compilers.gcc.get_version()
-        self.versions = VersionList([gcc_version])
-
-
-    def concretized(self):
-        clone = self.copy()
-        clone._concretize()
-        return clone
 
 
     @property
@@ -243,13 +226,34 @@ class DependencyMap(HashableMap):
 
 @key_ordering
 class Spec(object):
-    def __init__(self, name):
-        self.name = name
-        self.versions = VersionList()
-        self.variants = VariantMap()
-        self.architecture = None
-        self.compiler = None
-        self.dependencies = DependencyMap()
+    def __init__(self, spec_like):
+        # Copy if spec_like is a Spec.
+        if type(spec_like) == Spec:
+            self._dup(spec_like)
+            return
+
+        # Parse if the spec_like is a string.
+        if type(spec_like) != str:
+            raise TypeError("Can't make spec out of %s" % type(spec_like))
+
+        spec_list = SpecParser().parse(spec_like)
+        if len(spec_list) > 1:
+            raise ValueError("More than one spec in string: " + spec_like)
+        if len(spec_list) < 1:
+            raise ValueError("String contains no specs: " + spec_like)
+
+        # Take all the attributes from the first parsed spec without copying
+        # This is a little bit nasty, but it's nastier to make the parser
+        # write directly into this Spec object.
+        other = spec_list[0]
+        self.name = other.name
+        self.parent = other.parent
+        self.versions = other.versions
+        self.variants = other.variants
+        self.architecture = other.architecture
+        self.compiler = other.compiler
+        self.dependencies = other.dependencies
+
 
     #
     # Private routines here are called by the parser when building a spec.
@@ -285,6 +289,21 @@ class Spec(object):
         if dep.name in self.dependencies:
             raise DuplicateDependencyError("Cannot depend on '%s' twice" % dep)
         self.dependencies[dep.name] = dep
+        dep.parent = self
+
+
+    @property
+    def root(self):
+        """Follow parent links and find the root of this spec's DAG."""
+        root = self
+        while root.parent is not None:
+            root = root.parent
+        return root
+
+
+    @property
+    def package(self):
+        return packages.get(self.name)
 
 
     @property
@@ -294,6 +313,20 @@ class Spec(object):
                     and self.architecture
                     and self.compiler and self.compiler.concrete
                     and self.dependencies.concrete)
+
+
+    def preorder_traversal(self, visited=None):
+        if visited is None:
+            visited = set()
+
+        if id(self) in visited:
+            return
+        visited.add(id(self))
+
+        yield self
+        for dep in self.dependencies.itervalues():
+            for spec in dep.preorder_traversal(visited):
+                yield spec
 
 
     def _concretize(self):
@@ -327,30 +360,40 @@ class Spec(object):
 
         # TODO: handle variants.
 
-        pkg = packages.get(self.name)
-
         # Take the highest version in a range
         if not self.versions.concrete:
-            preferred = self.versions.highest() or pkg.version
+            preferred = self.versions.highest() or self.package.version
             self.versions = VersionList([preferred])
 
         # Ensure dependencies have right versions
 
 
-    @property
-    def traverse_deps(self, visited=None):
-        """Yields dependencies in depth-first order"""
-        if not visited:
-            visited = set()
+    def flatten(self):
+        """Pull all dependencies up to the root (this spec).
+           Merge constraints for dependencies with the same name, and if they
+           conflict, throw an exception. """
+        # This ensures that the package descriptions themselves are consistent
+        self.package.validate_dependencies()
 
-        for name in sorted(self.dependencies.keys()):
-            dep = dependencies[name]
-            if dep in visited:
-                continue
+        # Once that is guaranteed, we know any constraint violations are due
+        # to the spec -- so they're the user's fault, not Spack's.
+        flat_deps = DependencyMap()
+        try:
+            for spec in self.preorder_traversal():
+                if spec.name not in flat_deps:
+                    flat_deps[spec.name] = spec
+                else:
+                    flat_deps[spec.name].constrain(spec)
 
-            for d in dep.traverse_deps(seen):
-                yield d
-            yield dep
+        except UnsatisfiableSpecError, e:
+            # This REALLY shouldn't happen unless something is wrong in spack.
+            # It means we got a spec DAG with two instances of the same package
+            # that had inconsistent constraints.  There's no way for a user to
+            # produce a spec like this (the parser adds all deps to the root),
+            # so this means OUR code is not sane!
+            raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
+
+        self.dependencies = flat_deps
 
 
     def _normalize_helper(self, visited, spec_deps):
@@ -362,9 +405,7 @@ class Spec(object):
         # Combine constraints from package dependencies with
         # information in this spec's dependencies.
         pkg = packages.get(self.name)
-        for pkg_dep in pkg.dependencies:
-            name = pkg_dep.name
-
+        for name, pkg_dep in self.package.dependencies.iteritems():
             if name not in spec_deps:
                 # Clone the spec from the package
                 spec_deps[name] = pkg_dep.copy()
@@ -372,23 +413,29 @@ class Spec(object):
             try:
                 # intersect package information with spec info
                 spec_deps[name].constrain(pkg_dep)
+
             except UnsatisfiableSpecError, e:
-                error_type = type(e)
-                raise error_type(
-                    "Violated depends_on constraint from package %s: %s"
-                    % (self.name, e.message))
+                e.message =  "Invalid spec: '%s'. "
+                e.message += "Package %s requires %s %s, but spec asked for %s"
+                e.message %= (spec_deps[name], name, e.constraint_type,
+                              e.required, e.provided)
+                raise e
 
             # Add merged spec to my deps and recurse
-            self.dependencies[name] = spec_deps[name]
+            self._add_dependency(spec_deps[name])
             self.dependencies[name]._normalize_helper(visited, spec_deps)
 
 
     def normalize(self):
-        if any(dep.dependencies for dep in self.dependencies.values()):
-            raise SpecError("Spec has already been normalized.")
-
+        # Ensure first that all packages exist.
         self.validate_package_names()
 
+        # Then ensure that the packages mentioned are sane, that the
+        # provided spec is sane, and that all dependency specs are in the
+        # root node of the spec.  Flatten will do this for us.
+        self.flatten()
+
+        # Now that we're flat we can get all our dependencies at once.
         spec_deps = self.dependencies
         self.dependencies = DependencyMap()
 
@@ -404,29 +451,25 @@ class Spec(object):
 
 
     def validate_package_names(self):
-        for name in self.dependencies:
-            packages.get(name)
+        packages.get(self.name)
+        for name, dep in self.dependencies.iteritems():
+            dep.validate_package_names()
 
 
     def constrain(self, other):
         if not self.versions.overlaps(other.versions):
-            raise UnsatisfiableVersionSpecError(
-                "%s does not satisfy %s" % (self.versions, other.versions))
+            raise UnsatisfiableVersionSpecError(self.versions, other.versions)
 
-        conflicting_variants = [
-            v for v in other.variants if v in self.variants and
-            self.variants[v].enabled != other.variants[v].enabled]
-
-        if conflicting_variants:
-            raise UnsatisfiableVariantSpecError(comma_and(
-                "%s does not satisfy %s" % (self.variants[v], other.variants[v])
-                for v in conflicting_variants))
+        for v in other.variants:
+            if (v in self.variants and
+                self.variants[v].enabled != other.variants[v].enabled):
+                raise UnsatisfiableVariantSpecError(self.variants[v],
+                                                    other.variants[v])
 
         if self.architecture is not None and other.architecture is not None:
             if self.architecture != other.architecture:
-                raise UnsatisfiableArchitectureSpecError(
-                    "Asked for architecture %s, but required %s"
-                    % (self.architecture, other.architecture))
+                raise UnsatisfiableArchitectureSpecError(self.architecture,
+                                                         other.architecture)
 
         if self.compiler is not None and other.compiler is not None:
             self.compiler.constrain(other.compiler)
@@ -457,16 +500,23 @@ class Spec(object):
         return clone
 
 
+    def _dup(self, other):
+        """Copy the spec other into self.  This is a
+           first-party, overwriting copy."""
+        # TODO: this needs to handle DAGs.
+        self.name = other.name
+        self.versions = other.versions.copy()
+        self.variants = other.variants.copy()
+        self.architecture = other.architecture
+        self.compiler = None
+        if other.compiler:
+            self.compiler = other.compiler.copy()
+        self.dependencies = other.dependencies.copy()
+
+
     def copy(self):
-        clone = Spec(self.name)
-        clone.versions = self.versions.copy()
-        clone.variants = self.variants.copy()
-        clone.architecture = self.architecture
-        clone.compiler = None
-        if self.compiler:
-            clone.compiler = self.compiler.copy()
-        clone.dependencies = self.dependencies.copy()
-        return clone
+        """Return a deep copy of this spec."""
+        return Spec(self)
 
 
     @property
@@ -478,7 +528,7 @@ class Spec(object):
 
     def _cmp_key(self):
         return (self.name, self.versions, self.variants,
-                self.architecture, self.compiler)
+                self.architecture, self.compiler, self.dependencies)
 
 
     def colorized(self):
@@ -505,7 +555,7 @@ class Spec(object):
 
     def tree(self, indent=""):
         """Prints out this spec and its dependencies, tree-formatted
-           with indentation."""
+           with indentation.  Each node also has an id."""
         out = indent + self.str_without_deps()
         for dep in sorted(self.dependencies.keys()):
             out += "\n" + self.dependencies[dep].tree(indent + "    ")
@@ -566,8 +616,22 @@ class SpecParser(spack.parse.Parser):
 
 
     def spec(self):
+        """Parse a spec out of the input.  If a spec is supplied, then initialize
+           and return it instead of creating a new one."""
         self.check_identifier()
-        spec = Spec(self.token.value)
+
+        # This will init the spec without calling __init__.
+        spec = Spec.__new__(Spec)
+        spec.name = self.token.value
+        spec.parent = None
+        spec.versions = VersionList()
+        spec.variants = VariantMap()
+        spec.architecture = None
+        spec.compiler = None
+        spec.dependencies = DependencyMap()
+
+        # record this so that we know whether version is
+        # unspecified or not.
         added_version = False
 
         while self.next:
@@ -661,34 +725,10 @@ class SpecParser(spack.parse.Parser):
 
 
 def parse(string):
-    """Returns a list of specs from an input string."""
-    return SpecParser().parse(string)
-
-
-def parse_one(string):
-    """Parses a string containing only one spec, then returns that
-       spec.  If more than one spec is found, raises a ValueError.
+    """Returns a list of specs from an input string.
+       For creating one spec, see Spec() constructor.
     """
-    spec_list = parse(string)
-    if len(spec_list) > 1:
-        raise ValueError("string contains more than one spec!")
-    elif len(spec_list) < 1:
-        raise ValueError("string contains no specs!")
-    return spec_list[0]
-
-
-def make_spec(spec_like):
-    if type(spec_like) == str:
-        specs = parse(spec_like)
-        if len(specs) != 1:
-            raise ValueError("String contains multiple specs: '%s'" % spec_like)
-        return specs[0]
-
-    elif type(spec_like) == Spec:
-        return spec_like
-
-    else:
-        raise TypeError("Can't make spec out of %s" % type(spec_like))
+    return SpecParser().parse(string)
 
 
 class SpecError(spack.error.SpackError):
@@ -728,6 +768,13 @@ class DuplicateArchitectureError(SpecError):
         super(DuplicateArchitectureError, self).__init__(message)
 
 
+class InconsistentSpecError(SpecError):
+    """Raised when two nodes in the same spec DAG have inconsistent
+       constraints."""
+    def __init__(self, message):
+        super(InconsistentSpecError, self).__init__(message)
+
+
 class InvalidDependencyException(SpecError):
     """Raised when a dependency in a spec is not actually a dependency
        of the package."""
@@ -736,30 +783,39 @@ class InvalidDependencyException(SpecError):
 
 
 class UnsatisfiableSpecError(SpecError):
-    """Raised when a spec conflicts with package constraints."""
-    def __init__(self, message):
-        super(UnsatisfiableSpecError, self).__init__(message)
+    """Raised when a spec conflicts with package constraints.
+       Provide the requirement that was violated when raising."""
+    def __init__(self, provided, required, constraint_type):
+        super(UnsatisfiableSpecError, self).__init__(
+            "%s does not satisfy %s" % (provided, required))
+        self.provided = provided
+        self.required = required
+        self.constraint_type = constraint_type
 
 
 class UnsatisfiableVersionSpecError(UnsatisfiableSpecError):
     """Raised when a spec version conflicts with package constraints."""
-    def __init__(self, message):
-        super(UnsatisfiableVersionSpecError, self).__init__(message)
+    def __init__(self, provided, required):
+        super(UnsatisfiableVersionSpecError, self).__init__(
+            provided, required, "version")
 
 
 class UnsatisfiableCompilerSpecError(UnsatisfiableSpecError):
     """Raised when a spec comiler conflicts with package constraints."""
-    def __init__(self, message):
-        super(UnsatisfiableCompilerSpecError, self).__init__(message)
+    def __init__(self, provided, required):
+        super(UnsatisfiableCompilerSpecError, self).__init__(
+            provided, required, "compiler")
 
 
 class UnsatisfiableVariantSpecError(UnsatisfiableSpecError):
     """Raised when a spec variant conflicts with package constraints."""
-    def __init__(self, message):
-        super(UnsatisfiableVariantSpecError, self).__init__(message)
+    def __init__(self, provided, required):
+        super(UnsatisfiableVariantSpecError, self).__init__(
+            provided, required, "variant")
 
 
 class UnsatisfiableArchitectureSpecError(UnsatisfiableSpecError):
     """Raised when a spec architecture conflicts with package constraints."""
-    def __init__(self, message):
-        super(UnsatisfiableArchitectureSpecError, self).__init__(message)
+    def __init__(self, provided, required):
+        super(UnsatisfiableArchitectureSpecError, self).__init__(
+            provided, required, "architecture")

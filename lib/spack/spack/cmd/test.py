@@ -19,14 +19,13 @@ def setup_parser(subparser):
 
 def test(parser, args):
     if args.all:
-        for name in list_modules(spack.test_path):
+        for name in list_modules(spack.test_path, directories=False):
             print "Running Tests: %s" % name
             spack.test.run(name, verbose=args.verbose)
 
     elif not args.names:
         print "Available tests:"
-        colify(list_modules(spack.test_path))
-
+        colify(list_modules(spack.test_path, directories=False))
 
     else:
         for name in  args.names:

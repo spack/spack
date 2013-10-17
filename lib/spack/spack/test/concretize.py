@@ -1,11 +1,11 @@
 import unittest
-import spack.spec
+from spack.spec import Spec
 
 
 class ConcretizeTest(unittest.TestCase):
 
     def check_concretize(self, abstract_spec):
-        abstract = spack.spec.parse_one(abstract_spec)
+        abstract = Spec(abstract_spec)
         print abstract
         print abstract.concretized()
         print abstract.concretized().concrete

@@ -5,6 +5,9 @@ import functools
 import inspect
 from spack.util.filesystem import new_path
 
+# Ignore emacs backups when listing modules
+ignore_modules = [r'^\.#', '~$']
+
 
 def has_method(cls, name):
     for base in inspect.getmro(cls):
@@ -27,21 +30,24 @@ def memoized(obj):
     return memoizer
 
 
-def list_modules(directory):
+def list_modules(directory, **kwargs):
     """Lists all of the modules, excluding __init__.py, in
        a particular directory."""
+    list_directories = kwargs.setdefault('directories', True)
+
     for name in os.listdir(directory):
         if name == '__init__.py':
             continue
 
         path = new_path(directory, name)
-        if os.path.isdir(path):
+        if list_directories and os.path.isdir(path):
             init_py = new_path(path, '__init__.py')
             if os.path.isfile(init_py):
                 yield name
 
         elif name.endswith('.py'):
-            yield re.sub('.py$', '', name)
+            if not any(re.search(pattern, name) for pattern in ignore_modules):
+                yield re.sub('.py$', '', name)
 
 
 def key_ordering(cls):

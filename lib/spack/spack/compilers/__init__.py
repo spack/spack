@@ -11,5 +11,7 @@ def supported_compilers():
     return [c for c in list_modules(spack.compilers_path)]
 
 
-def get_compiler():
-    return Compiler('gcc', spack.compilers.gcc.get_version())
+@memoized
+def default_compiler():
+    from spack.spec import Compiler
+    return Compiler('gcc', gcc.get_version())

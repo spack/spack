@@ -61,21 +61,38 @@ class SpecTest(unittest.TestCase):
 
 
     def check_satisfies(self, lspec, rspec):
-        l = spack.spec.parse_one(lspec)
-        r = spack.spec.parse_one(rspec)
-        self.assertTrue(l.satisfies(r) and r.satisfies(l))
+        l, r = Spec(lspec), Spec(rspec)
+        self.assertTrue(l.satisfies(r))
+        self.assertTrue(r.satisfies(l))
 
-        # These should not raise
-        l.constrain(r)
-        r.constrain(l)
+        try:
+            l.constrain(r)
+            r.constrain(l)
+        except SpecError, e:
+            self.fail("Got a SpecError in constrain!", e.message)
+
+
+    def assert_unsatisfiable(lspec, rspec):
+        l, r = Spec(lspec), Spec(rspec)
+        self.assertFalse(l.satisfies(r))
+        self.assertFalse(r.satisfies(l))
+
+        self.assertRaises(l.constrain, r)
+        self.assertRaises(r.constrain, l)
 
 
     def check_constrain(self, expected, constrained, constraint):
-        exp = spack.spec.parse_one(expected)
-        constrained = spack.spec.parse_one(constrained)
-        constraint = spack.spec.parse_one(constraint)
+        exp = Spec(expected)
+        constrained = Spec(constrained)
+        constraint = Spec(constraint)
         constrained.constrain(constraint)
         self.assertEqual(exp, constrained)
+
+
+    def check_invalid_constraint(self, constrained, constraint):
+        constrained = Spec(constrained)
+        constraint = Spec(constraint)
+        self.assertRaises(UnsatisfiableSpecError, constrained.constrain, constraint)
 
 
     # ================================================================================
@@ -145,7 +162,28 @@ class SpecTest(unittest.TestCase):
 
 
     def test_constrain(self):
-        self.check_constrain('libelf@0:1', 'libelf', 'libelf@0:1')
+        self.check_constrain('libelf@2.1:2.5', 'libelf@0:2.5', 'libelf@2.1:3')
+        self.check_constrain('libelf@2.1:2.5%gcc@4.5:4.6',
+                             'libelf@0:2.5%gcc@2:4.6', 'libelf@2.1:3%gcc@4.5:4.7')
+
+        self.check_constrain('libelf+debug+foo', 'libelf+debug', 'libelf+foo')
+        self.check_constrain('libelf+debug+foo', 'libelf+debug', 'libelf+debug+foo')
+
+        self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf~foo')
+        self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf+debug~foo')
+
+        self.check_constrain('libelf=bgqos_0', 'libelf=bgqos_0', 'libelf=bgqos_0')
+        self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
+
+
+    def test_invalid_constraint(self):
+        self.check_invalid_constraint('libelf@0:2.0', 'libelf@2.1:3')
+        self.check_invalid_constraint('libelf@0:2.5%gcc@4.8:4.9', 'libelf@2.1:3%gcc@4.5:4.7')
+
+        self.check_invalid_constraint('libelf+debug', 'libelf~debug')
+        self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
+
+        self.check_invalid_constraint('libelf=bgqos_0', 'libelf=x86_54')
 
 
     # ================================================================================

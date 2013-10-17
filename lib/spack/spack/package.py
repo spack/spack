@@ -18,13 +18,13 @@ import shutil
 
 from spack import *
 import spack.spec
+import spack.error
 import packages
 import tty
 import attr
 import validate
 import url
 
-from spec import Compiler
 from version import *
 from multi_function import platform
 from stage import Stage
@@ -249,7 +249,7 @@ class Package(object):
     # These variables are per-package metadata will be defined by subclasses.
     #
     """By default a package has no dependencies."""
-    dependencies = []
+    dependencies = {}
 
     #
     # These are default values for instance variables.
@@ -371,21 +371,51 @@ class Package(object):
         return tuple(self._dependents)
 
 
-    def sanity_check(self):
-        """Ensure that this package and its dependencies don't have conflicting
-           requirements."""
-        deps = sorted(self.all_dependencies, key=lambda d: d.name)
+    def preorder_traversal(self, visited=None):
+        if visited is None:
+            visited = set()
 
+        if self.name in visited:
+            return
+        visited.add(self.name)
+
+        yield self
+        for name, spec in self.dependencies.iteritems():
+            for pkg in packages.get(name).preorder_traversal(visited):
+                yield pkg
+
+
+    def validate_dependencies(self):
+        """Ensure that this package and its dependencies all have consistent
+           constraints on them.
+        """
+        # This algorithm just attempts to merge all the constraints on the same
+        # package together, loses information about the source of the conflict.
+        # What we'd really like to know is exactly which two constraints
+        # conflict, but that algorithm is more expensive, so we'll do it
+        # the simple, less informative way for now.
+        merged = spack.spec.DependencyMap()
+
+        try:
+            for pkg in self.preorder_traversal():
+                for name, spec in pkg.dependencies.iteritems():
+                    if name not in merged:
+                        merged[name] = spec.copy()
+                    else:
+                        merged[name].constrain(spec)
+
+        except spack.spec.UnsatisfiableSpecError, e:
+            raise InvalidPackageDependencyError(
+                "Package %s has inconsistent dependency constraints: %s"
+                % (self.name, e.message))
 
 
     @property
     @memoized
     def all_dependencies(self):
         """Dict(str -> Package) of all transitive dependencies of this package."""
-        all_deps = set(self.dependencies)
-        for dep in self.dependencies:
-            dep_pkg = packages.get(dep.name)
-            all_deps = all_deps.union(dep_pkg.all_dependencies)
+        all_deps = {name : dep for dep in self.preorder_traversal}
+        del all_deps[self.name]
         return all_deps
 
 
@@ -533,7 +563,7 @@ class Package(object):
 
         # Pass along prefixes of dependencies here
         path_set(SPACK_DEPENDENCIES,
-                 [dep.package.prefix for dep in self.dependencies])
+                 [dep.package.prefix for dep in self.dependencies.values()])
 
         # Install location
         os.environ[SPACK_PREFIX] = self.prefix
@@ -544,7 +574,7 @@ class Package(object):
 
     def do_install_dependencies(self):
         # Pass along paths of dependencies here
-        for dep in self.dependencies:
+        for dep in self.dependencies.values():
             dep.package.do_install()
 
 
@@ -607,7 +637,7 @@ class Package(object):
     @property
     def available_versions(self):
         if not self._available_versions:
-            self._available_versions = VersionList()
+            self._available_versions = ver([self.version])
             try:
                 # Run curl but grab the mime type from the http headers
                 listing = spack.curl('-s', '-L', self.list_url, return_output=True)
@@ -617,18 +647,18 @@ class Package(object):
                 for s in strings:
                     match = re.search(wildcard, s)
                     if match:
-                        self._available_versions.add(ver(match.group(0)))
+                        self._available_versions.add(Version(match.group(0)))
 
-            except CalledProcessError:
+                if not self._available_versions:
+                    tty.warn("Found no versions for %s" % self.name,
+                             "Packate.available_versions may require adding the list_url attribute",
+                             "to the package to tell Spack where to look for versions.")
+
+            except subprocess.CalledProcessError:
                 tty.warn("Fetching %s failed." % self.list_url,
                          "Package.available_versions requires an internet connection.",
                          "Version list may be incomplete.")
 
-            if not self._available_versions:
-                tty.warn("Found no versions for %s" % self.name,
-                         "Packate.available_versions may require adding the list_url attribute",
-                         "to the package to tell Spack where to look for versions.")
-                self._available_versions = [self.version]
         return self._available_versions
 
 
@@ -654,3 +684,10 @@ class MakeExecutable(Executable):
             args = (jobs,) + args
 
         super(MakeExecutable, self).__call__(*args, **kwargs)
+
+
+class InvalidPackageDependencyError(spack.error.SpackError):
+    """Raised when package specification is inconsistent with requirements of
+       its dependencies."""
+    def __init__(self, message):
+        super(InvalidPackageDependencyError, self).__init__(message)

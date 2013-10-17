@@ -20,6 +20,7 @@ invalid_package_re = r'[_-][_-]+'
 
 instances = {}
 
+
 def get(pkg_name):
     if not pkg_name in instances:
         package_class = get_class_for_package_name(pkg_name)
@@ -85,9 +86,18 @@ def get_class_for_package_name(pkg_name):
     else:
         raise UnknownPackageError(pkg_name)
 
+    # Figure out pacakges module from spack.packages_path
+    # This allows us to change the module path.
+    if not re.match(r'%s' % spack.module_path, spack.packages_path):
+        raise RuntimeError("Packages path is not a submodule of spack.")
+
+    # TODO: replace this with a proper package DB class, instead of this hackiness.
+    packages_path = re.sub(spack.module_path + '\/+', 'spack.', spack.packages_path)
+    packages_module = re.sub(r'\/', '.', packages_path)
+
     class_name = pkg_name.capitalize()
     try:
-        module_name = "%s.%s" % (__name__, pkg_name)
+        module_name = "%s.%s" % (packages_module, pkg_name)
         module = __import__(module_name, fromlist=[class_name])
     except ImportError, e:
         tty.die("Error while importing %s.%s:\n%s" % (pkg_name, class_name, e.message))
@@ -107,8 +117,8 @@ def compute_dependents():
         if pkg._dependents is None:
             pkg._dependents = []
 
-        for dep in pkg.dependencies:
-            dpkg = get(dep.name)
+        for name, dep in pkg.dependencies.iteritems():
+            dpkg = get(name)
             if dpkg._dependents is None:
                 dpkg._dependents = []
             dpkg._dependents.append(pkg.name)
@@ -130,8 +140,8 @@ def graph_dependencies(out=sys.stdout):
     deps = []
     for pkg in all_packages():
         out.write('  %-30s [label="%s"]\n' % (quote(pkg.name), pkg.name))
-        for dep in pkg.dependencies:
-            deps.append((pkg.name, dep.name))
+        for dep_name, dep in pkg.dependencies.iteritems():
+            deps.append((pkg.name, dep_name))
     out.write('\n')
 
     for pair in deps:
