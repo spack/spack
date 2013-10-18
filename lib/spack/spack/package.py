@@ -380,7 +380,8 @@ class Package(object):
         visited.add(self.name)
 
         yield self
-        for name, spec in self.dependencies.iteritems():
+        for name in sorted(self.dependencies.keys()):
+            spec = self.dependencies[name]
             for pkg in packages.get(name).preorder_traversal(visited):
                 yield pkg
 

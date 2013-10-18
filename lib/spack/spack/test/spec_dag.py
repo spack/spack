@@ -115,3 +115,72 @@ class ValidationTest(unittest.TestCase):
         set_pkg_dep('mpileaks', 'mpich=bgqos_0')
         spec = Spec('mpileaks ^mpich=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
+
+
+    def test_invalid_dep(self):
+        spec = Spec('libelf ^mpich')
+        self.assertRaises(spack.spec.InvalidDependencyException, spec.normalize)
+
+        spec = Spec('libelf ^libdwarf')
+        self.assertRaises(spack.spec.InvalidDependencyException, spec.normalize)
+
+        spec = Spec('mpich ^dyninst ^libelf')
+        self.assertRaises(spack.spec.InvalidDependencyException, spec.normalize)
+
+
+    def test_equal(self):
+        spec = Spec('mpileaks ^callpath ^libelf ^libdwarf')
+        self.assertNotEqual(spec, Spec(
+            'mpileaks', Spec('callpath',
+                             Spec('libdwarf',
+                                  Spec('libelf')))))
+        self.assertNotEqual(spec, Spec(
+            'mpileaks', Spec('callpath',
+                             Spec('libelf',
+                                  Spec('libdwarf')))))
+
+        self.assertEqual(spec, Spec(
+            'mpileaks', Spec('callpath'), Spec('libdwarf'), Spec('libelf')))
+
+        self.assertEqual(spec, Spec(
+            'mpileaks', Spec('libelf'), Spec('libdwarf'), Spec('callpath')))
+
+
+    def test_normalize_mpileaks(self):
+        spec = Spec('mpileaks ^mpich ^callpath ^dyninst ^libelf@1.8.11 ^libdwarf')
+
+        expected_flat = Spec(
+            'mpileaks', Spec('mpich'), Spec('callpath'), Spec('dyninst'),
+            Spec('libelf@1.8.11'), Spec('libdwarf'))
+
+        mpich = Spec('mpich')
+        libelf = Spec('libelf@1.8.11')
+        expected_normalized = Spec(
+            'mpileaks',
+            Spec('callpath',
+                 Spec('dyninst', Spec('libdwarf', libelf),
+                      libelf),
+                 mpich), mpich)
+
+        expected_non_dag = Spec(
+            'mpileaks',
+            Spec('callpath',
+                 Spec('dyninst', Spec('libdwarf', Spec('libelf@1.8.11')),
+                      Spec('libelf@1.8.11')),
+                 mpich), Spec('mpich'))
+
+        self.assertEqual(expected_normalized, expected_non_dag)
+
+        self.assertEqual(str(expected_normalized), str(expected_non_dag))
+        self.assertEqual(str(spec), str(expected_non_dag))
+        self.assertEqual(str(expected_normalized), str(spec))
+
+        self.assertEqual(spec, expected_flat)
+        self.assertNotEqual(spec, expected_normalized)
+        self.assertNotEqual(spec, expected_non_dag)
+
+        spec.normalize()
+
+        self.assertNotEqual(spec, expected_flat)
+        self.assertEqual(spec, expected_normalized)
+        self.assertEqual(spec, expected_non_dag)

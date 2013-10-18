@@ -78,6 +78,7 @@ from spack.color import *
 from spack.util.lang import *
 from spack.util.string import *
 
+
 """This map determines the coloring of specs when using color output.
    We make the fields different colors to enhance readability.
    See spack.color for descriptions of the color codes.
@@ -226,7 +227,7 @@ class DependencyMap(HashableMap):
 
 @key_ordering
 class Spec(object):
-    def __init__(self, spec_like):
+    def __init__(self, spec_like, *dep_like):
         # Copy if spec_like is a Spec.
         if type(spec_like) == Spec:
             self._dup(spec_like)
@@ -253,6 +254,16 @@ class Spec(object):
         self.architecture = other.architecture
         self.compiler = other.compiler
         self.dependencies = other.dependencies
+
+        # This allows users to construct a spec DAG with literals.
+        # Note that given two specs a and b, Spec(a) copies a, but
+        # Spec(a, b) will copy a but just add b as a dep.
+        for dep in dep_like:
+            if type(dep) == str:
+                dep_spec = Spec(dep)
+                self.dependencies[dep_spec.name] = dep_spec
+            elif type(dep) == Spec:
+                self.dependencies[dep.name] = dep
 
 
     #
@@ -315,17 +326,27 @@ class Spec(object):
                     and self.dependencies.concrete)
 
 
-    def preorder_traversal(self, visited=None):
+    def preorder_traversal(self, visited=None, d=0, **kwargs):
+        unique = kwargs.setdefault('unique', True)
+        depth  = kwargs.setdefault('depth', False)
+        keyfun = kwargs.setdefault('key', id)
+        noroot = kwargs.setdefault('noroot', False)
+
         if visited is None:
             visited = set()
 
-        if id(self) in visited:
+        if keyfun(self) in visited:
+            if not unique:
+                yield (d, self) if depth else self
             return
-        visited.add(id(self))
+        visited.add(keyfun(self))
 
-        yield self
-        for dep in self.dependencies.itervalues():
-            for spec in dep.preorder_traversal(visited):
+        if d > 0 or not noroot:
+            yield (d, self) if depth else self
+
+        for key in sorted(self.dependencies.keys()):
+            for spec in self.dependencies[key].preorder_traversal(
+                    visited, d+1, **kwargs):
                 yield spec
 
 
@@ -368,10 +389,14 @@ class Spec(object):
         # Ensure dependencies have right versions
 
 
-    def flatten(self):
-        """Pull all dependencies up to the root (this spec).
-           Merge constraints for dependencies with the same name, and if they
-           conflict, throw an exception. """
+    def flat_dependencies(self):
+        """Return a DependencyMap containing all dependencies with their
+           constraints merged.  If there are any conflicts, throw an exception.
+
+           This will work even on specs that are not normalized; i.e. specs
+           that have two instances of the same dependency in the DAG.
+           This is used as the first step of normalization.
+        """
         # This ensures that the package descriptions themselves are consistent
         self.package.validate_dependencies()
 
@@ -393,7 +418,14 @@ class Spec(object):
             # so this means OUR code is not sane!
             raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
 
-        self.dependencies = flat_deps
+        return flat_deps
+
+
+    def flatten(self):
+        """Pull all dependencies up to the root (this spec).
+           Merge constraints for dependencies with the same name, and if they
+           conflict, throw an exception. """
+        self.dependencies = self.flat_dependencies()
 
 
     def _normalize_helper(self, visited, spec_deps):
@@ -432,11 +464,8 @@ class Spec(object):
 
         # Then ensure that the packages mentioned are sane, that the
         # provided spec is sane, and that all dependency specs are in the
-        # root node of the spec.  Flatten will do this for us.
-        self.flatten()
-
-        # Now that we're flat we can get all our dependencies at once.
-        spec_deps = self.dependencies
+        # root node of the spec.  flat_dependencies will do this for us.
+        spec_deps = self.flat_dependencies()
         self.dependencies = DependencyMap()
 
         visited = set()
@@ -535,7 +564,7 @@ class Spec(object):
         return colorize_spec(self)
 
 
-    def str_without_deps(self):
+    def str_no_deps(self):
         out = self.name
 
         # If the version range is entirely open, omit it
@@ -553,12 +582,19 @@ class Spec(object):
         return out
 
 
-    def tree(self, indent=""):
+    def tree(self):
         """Prints out this spec and its dependencies, tree-formatted
-           with indentation.  Each node also has an id."""
-        out = indent + self.str_without_deps()
-        for dep in sorted(self.dependencies.keys()):
-            out += "\n" + self.dependencies[dep].tree(indent + "    ")
+           with indentation."""
+        out = ""
+        cur_id = 0
+        ids = {}
+        for d, node in self.preorder_traversal(unique=False, depth=True):
+            if not id(node) in ids:
+                cur_id += 1
+                ids[id(node)] = cur_id
+            out += str(ids[id(node)])
+            out += " "+ ("    " * d)
+            out += node.str_no_deps() + "\n"
         return out
 
 
@@ -567,7 +603,11 @@ class Spec(object):
 
 
     def __str__(self):
-        return self.str_without_deps() + str(self.dependencies)
+        byname = lambda d: d.name
+        deps = self.preorder_traversal(key=byname, noroot=True)
+        sorted_deps = sorted(deps, key=byname)
+        dep_string = ''.join("^" + dep.str_no_deps() for dep in sorted_deps)
+        return self.str_no_deps() + dep_string
 
 
 #
