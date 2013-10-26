@@ -6,61 +6,18 @@ packages directories that these tests use in:
 
 Each test validates conditions with the packages in those directories.
 """
-import unittest
-
 import spack
 import spack.package
 import spack.packages as packages
 
 from spack.util.lang import new_path, list_modules
 from spack.spec import Spec
+from spack.test.mock_packages_test import *
 
 mock_packages_path = new_path(spack.module_path, 'test', 'mock_packages')
 
 
-def set_pkg_dep(pkg, spec):
-    """Alters dependence information for a pacakge.
-       Use this to mock up constraints.
-    """
-    spec = Spec(spec)
-    packages.get(pkg).dependencies[spec.name] = spec
-
-
-class ValidationTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        # Use a different packages directory for these tests.  We want to use
-        # mocked up packages that don't interfere with the real ones.
-        cls.real_packages_path = spack.packages_path
-        spack.packages_path = mock_packages_path
-
-        # First time through, record original relationships bt/w packages
-        cls.original_deps = {}
-        for name in list_modules(mock_packages_path):
-            pkg = packages.get(name)
-            cls.original_deps[name] = [
-                spec for spec in pkg.dependencies.values()]
-
-
-    @classmethod
-    def restore(cls):
-        # each time through restore original dependencies & constraints
-        for pkg_name, deps in cls.original_deps.iteritems():
-            packages.get(pkg_name).dependencies.clear()
-            for dep in deps:
-                set_pkg_dep(pkg_name, dep)
-
-    @classmethod
-    def tearDownClass(cls):
-        """Restore the real packages path after any test."""
-        cls.restore()
-        spack.packages_path = cls.real_packages_path
-
-
-    def setUp(self):
-        """Before each test, restore deps between packages to original state."""
-        ValidationTest.restore()
-
+class ValidationTest(MockPackagesTest):
 
     def test_conflicting_package_constraints(self):
         set_pkg_dep('mpileaks', 'mpich@1.0')
@@ -85,6 +42,25 @@ class ValidationTest(unittest.TestCase):
         mpileaks.dependencies['callpath'].dependencies['mpich'] = Spec('mpich@2.0')
 
         self.assertRaises(spack.spec.InconsistentSpecError, mpileaks.flatten)
+
+
+    def test_normalize_twice(self):
+        """Make sure normalize can be run twice on the same spec,
+           and that it is idempotent."""
+        spec = Spec('mpileaks')
+        spec.normalize()
+        n1 = spec.copy()
+
+        spec.normalize()
+        self.assertEqual(n1, spec)
+
+
+    def test_normalize_a_lot(self):
+        spec = Spec('mpileaks')
+        spec.normalize()
+        spec.normalize()
+        spec.normalize()
+        spec.normalize()
 
 
     def test_unsatisfiable_version(self):

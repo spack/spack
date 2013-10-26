@@ -347,9 +347,16 @@ class VersionList(object):
     def __init__(self, vlist=None):
         self.versions = []
         if vlist != None:
-            vlist = list(vlist)
-            for v in vlist:
-                self.add(ver(v))
+            if type(vlist) == str:
+                vlist = _string_to_version(vlist)
+                if type(vlist) == VersionList:
+                    self.versions = vlist.versions
+                else:
+                    self.versions = [vlist]
+            else:
+                vlist = list(vlist)
+                for v in vlist:
+                    self.add(ver(v))
 
 
     def add(self, version):
@@ -540,6 +547,8 @@ def ver(obj):
         return VersionList(obj)
     elif t == str:
         return _string_to_version(obj)
+    elif t in (int, float):
+        return _string_to_version(str(obj))
     elif t in (Version, VersionRange, VersionList):
         return obj
     else:

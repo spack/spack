@@ -17,13 +17,21 @@ def setup_parser(subparser):
         help="verbose output")
 
 
+def find_test_modules():
+    """Include all the modules under test, unless they set skip_test=True"""
+    for name in list_modules(spack.test_path):
+        module = __import__('spack.test.' + name, fromlist='skip_test')
+        if not getattr(module, 'skip_test', False):
+            yield name
+
+
 def test(parser, args):
     if args.list:
         print "Available tests:"
-        colify(list_modules(spack.test_path, directories=False))
+        colify(find_test_modules())
 
     elif not args.names:
-        for name in list_modules(spack.test_path, directories=False):
+        for name in find_test_modules():
             print "Running Tests: %s" % name
             spack.test.run(name, verbose=args.verbose)
 

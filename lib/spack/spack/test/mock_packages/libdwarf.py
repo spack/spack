@@ -10,6 +10,7 @@ class Libdwarf(Package):
     md5      = "64b42692e947d5180e162e46c689dfbf"
 
     list_url = "http://reality.sgiweb.org/davea/dwarf.html"
+    versions = '20111030, 20120410, 20130207'
 
     depends_on("libelf")
 

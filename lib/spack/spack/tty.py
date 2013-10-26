@@ -24,15 +24,15 @@ def verbose(message, *args):
 
 def debug(*args):
     if spack.debug:
-        info(message, *args, format='*c')
+        info("Debug: " + message, *args, format='*c')
 
 
 def error(message, *args):
-    info(message, *args, format='*r')
+    info("Error: " + message, *args, format='*r')
 
 
 def warn(message, *args):
-    info(message, *args, format='*Y')
+    info("Warning: " + message, *args, format='*Y')
 
 
 def die(message, *args):

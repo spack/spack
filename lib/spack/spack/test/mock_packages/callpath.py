@@ -5,6 +5,8 @@ class Callpath(Package):
     url      = "http://github.com/tgamblin/callpath-0.2.tar.gz"
     md5      = "foobarbaz"
 
+    versions = [0.8, 0.9, 1.0]
+
     depends_on("dyninst")
     depends_on("mpich")
 

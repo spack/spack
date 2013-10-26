@@ -170,7 +170,7 @@ class Compiler(object):
     def __str__(self):
         out = self.name
         if self.versions:
-            vlist = ",".join(str(v) for v in sorted(self.versions))
+            vlist = ",".join(str(v) for v in self.versions)
             out += "@%s" % vlist
         return out
 
@@ -188,6 +188,10 @@ class Variant(object):
 
     def _cmp_key(self):
         return (self.name, self.enabled)
+
+
+    def copy(self):
+        return Variant(self.name, self.enabled)
 
 
     def __str__(self):
@@ -350,43 +354,58 @@ class Spec(object):
                 yield spec
 
 
-    def _concretize(self):
+    def _concretize_helper(self, presets):
+        for name in sorted(self.dependencies.keys()):
+            self.dependencies[name]._concretize_helper(presets)
+
+        if self.name in presets:
+            self.constrain(presets[self.name])
+        else:
+            spack.concretize.concretize_architecture(self)
+            spack.concretize.concretize_compiler(self)
+            spack.concretize.concretize_version(self)
+            presets[self.name] = self
+
+
+    def concretize(self, *presets):
         """A spec is concrete if it describes one build of a package uniquely.
            This will ensure that this spec is concrete.
 
            If this spec could describe more than one version, variant, or build
-           of a package, this will resolve it to be concrete.
+           of a package, this will add constraints to make it concrete.
 
-           Ensures that the spec is in canonical form.
-
-           This means:
-           1. All dependencies of this package and of its dependencies are
-              in the dependencies list (transitive closure of deps).
-           2. All dependencies in the dependencies list are canonicalized.
-
-           This function also serves to validate the spec, in that it makes sure
-           that each package exists an that spec criteria don't violate package
-           criteria.
+           Some rigorous validation and checks are also performed on the spec.
+           Concretizing ensures that it is self-consistent and that it's consistent
+           with requirements of its pacakges.  See flatten() and normalize() for
+           more details on this.
         """
-        # TODO: modularize the process of selecting concrete versions.
-        # There should be a set of user-configurable policies for these decisions.
-        self.validate()
+        # Build specs out of user-provided presets
+        specs = [Spec(p) for p in presets]
 
-        # take the system's architecture for starters
-        if not self.architecture:
-             self.architecture = arch.sys_type()
+        # Concretize the presets first.  They could be partial specs, like just
+        # a particular version that the caller wants.
+        for spec in specs:
+            if not spec.concrete:
+                try:
+                    spec.concretize()
+                except UnsatisfiableSpecError, e:
+                    e.message = ("Unsatisfiable preset in concretize: %s."
+                                 % e.message)
+                    raise e
 
-        if self.compiler:
-            self.compiler._concretize()
+        # build preset specs into a map
+        preset_dict = {spec.name : spec for spec in specs}
 
-        # TODO: handle variants.
+        # Concretize bottom up, passing in presets to force concretization
+        # for certain specs.
+        self.normalize()
+        self._concretize_helper(preset_dict)
 
-        # Take the highest version in a range
-        if not self.versions.concrete:
-            preferred = self.versions.highest() or self.package.version
-            self.versions = VersionList([preferred])
 
-        # Ensure dependencies have right versions
+    def concretized(self, *presets):
+        clone = self.copy()
+        clone.concretize(*presets)
+        return clone
 
 
     def flat_dependencies(self):
@@ -406,7 +425,9 @@ class Spec(object):
         try:
             for spec in self.preorder_traversal():
                 if spec.name not in flat_deps:
-                    flat_deps[spec.name] = spec
+                    new_spec = spec.copy(dependencies=False)
+                    flat_deps[spec.name] = new_spec
+
                 else:
                     flat_deps[spec.name].constrain(spec)
 
@@ -466,7 +487,7 @@ class Spec(object):
         # provided spec is sane, and that all dependency specs are in the
         # root node of the spec.  flat_dependencies will do this for us.
         spec_deps = self.flat_dependencies()
-        self.dependencies = DependencyMap()
+        self.dependencies.clear()
 
         visited = set()
         self._normalize_helper(visited, spec_deps)
@@ -523,30 +544,37 @@ class Spec(object):
                 self.dependencies.satisfies(other.dependencies))
 
 
-    def concretized(self):
-        clone = self.copy()
-        clone._concretize()
-        return clone
-
-
-    def _dup(self, other):
+    def _dup(self, other, **kwargs):
         """Copy the spec other into self.  This is a
-           first-party, overwriting copy."""
+           first-party, overwriting copy.  This does not copy
+           parent; if the other spec has a parent, this one will not.
+           To duplicate an entire DAG, Duplicate the root of the DAG.
+        """
         # TODO: this needs to handle DAGs.
         self.name = other.name
+        self.parent = None
         self.versions = other.versions.copy()
         self.variants = other.variants.copy()
         self.architecture = other.architecture
         self.compiler = None
         if other.compiler:
             self.compiler = other.compiler.copy()
-        self.dependencies = other.dependencies.copy()
+
+        copy_deps = kwargs.get('dependencies', True)
+        if copy_deps:
+            self.dependencies = other.dependencies.copy()
+        else:
+            self.dependencies = DependencyMap()
 
 
-    def copy(self):
-        """Return a deep copy of this spec."""
-        return Spec(self)
-
+    def copy(self, **kwargs):
+        """Return a copy of this spec.
+           By default, returns a deep copy.  Supply dependencies=False
+           to get a shallow copy.
+        """
+        clone = Spec.__new__(Spec)
+        clone._dup(self, **kwargs)
+        return clone
 
     @property
     def version(self):
@@ -564,7 +592,7 @@ class Spec(object):
         return colorize_spec(self)
 
 
-    def str_no_deps(self):
+    def str_no_deps(self, **kwargs):
         out = self.name
 
         # If the version range is entirely open, omit it
@@ -579,12 +607,17 @@ class Spec(object):
         if self.architecture:
             out += "=%s" % self.architecture
 
-        return out
+        if kwargs.get('color', False):
+            return colorize_spec(out)
+        else:
+            return out
 
 
-    def tree(self):
+    def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
+        color = kwargs.get('color', False)
+
         out = ""
         cur_id = 0
         ids = {}
@@ -594,7 +627,7 @@ class Spec(object):
                 ids[id(node)] = cur_id
             out += str(ids[id(node)])
             out += " "+ ("    " * d)
-            out += node.str_no_deps() + "\n"
+            out += node.str_no_deps(color=color) + "\n"
         return out
 
 

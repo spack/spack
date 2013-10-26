@@ -97,5 +97,5 @@ class HashableMap(dict):
 
         # Copy everything from this dict into it.
         for key in self:
-            clone[key] = self[key]
+            clone[key] = self[key].copy()
         return clone

@@ -298,6 +298,11 @@ class Package(object):
         # This is set by scraping a web page.
         self._available_versions = None
 
+        # This list overrides available_versions if set by the user.
+        attr.setdefault(self, 'versions', None)
+        if self.versions and type(self.versions) != VersionList:
+            self.versions = VersionList(self.versions)
+
         # stage used to build this package.
         self.stage = Stage("%s-%s" % (self.name, self.version), self.url)
 
@@ -637,6 +642,11 @@ class Package(object):
 
     @property
     def available_versions(self):
+        # If the package overrode available_versions, then use that.
+        if self.versions is not None:
+            return self.versions
+
+        # If not, then try to fetch using list_url
         if not self._available_versions:
             self._available_versions = ver([self.version])
             try:
@@ -656,7 +666,7 @@ class Package(object):
                              "to the package to tell Spack where to look for versions.")
 
             except subprocess.CalledProcessError:
-                tty.warn("Fetching %s failed." % self.list_url,
+                tty.warn("Could not connect to %s" % self.list_url,
                          "Package.available_versions requires an internet connection.",
                          "Version list may be incomplete.")
 

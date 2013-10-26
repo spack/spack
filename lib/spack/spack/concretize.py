@@ -24,12 +24,12 @@ def concretize_version(spec):
     if spec.versions.concrete:
         return
 
-    pkg = speck.package
-    available = pkg.available_versions
+    pkg = spec.package
 
     # If there are known avaialble versions, return the most recent
-    if versions:
-        spec.versions = ver([avaialble[-1]])
+    available_versions = pkg.available_versions
+    if available_versions:
+        spec.versions = ver([available_versions[-1]])
     else:
         spec.versions = ver([pkg.version])
 
@@ -73,7 +73,7 @@ def concretize_compiler(spec):
        build with the compiler that will be used by libraries that
        link to this one, to maximize compatibility.
     """
-    if spec.compiler.concrete:
+    if spec.compiler and spec.compiler.concrete:
         if spec.compiler != spack.compilers.default_compiler():
             raise spack.spec.UnknownCompilerError(str(spec.compiler))
     else:

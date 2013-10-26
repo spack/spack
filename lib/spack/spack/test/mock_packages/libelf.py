@@ -5,6 +5,8 @@ class Libelf(Package):
     url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
     md5      = "4136d7b4c04df68b686570afa26988ac"
 
+    versions = '0.8.10, 0.8.12, 0.8.13'
+
     def install(self, prefix):
         configure("--prefix=%s" % prefix,
                   "--enable-shared",

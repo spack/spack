@@ -14,3 +14,6 @@ def spec(parser, args):
     for spec in specs:
         spec.normalize()
         print spec.tree()
+
+        spec.concretize()
+        print spec.tree()
