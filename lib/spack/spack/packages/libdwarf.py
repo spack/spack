@@ -5,11 +5,11 @@ import os
 dwarf_dirs = ['libdwarf', 'dwarfdump2']
 
 class Libdwarf(Package):
-    homepage = "http://reality.sgiweb.org/davea/dwarf.html"
-    url      = "http://reality.sgiweb.org/davea/libdwarf-20130207.tar.gz"
-    md5      = "64b42692e947d5180e162e46c689dfbf"
+    homepage = "http://www.prevanders.net/dwarf.html"
+    url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
+    list_url = homepage
 
-    list_url = "http://reality.sgiweb.org/davea/dwarf.html"
+    md5      = "64b42692e947d5180e162e46c689dfbf"
 
     depends_on("libelf")
 
