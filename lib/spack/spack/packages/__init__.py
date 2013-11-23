@@ -42,7 +42,7 @@ def get_providers(vpkg_name):
 
 def compute_providers():
     for pkg in all_packages():
-        for vpkg in pkg.provided_virtual_packages:
+        for vpkg in pkg.provided:
             if vpkg not in providers:
                 providers[vpkg] = []
             providers[vpkg].append(pkg)

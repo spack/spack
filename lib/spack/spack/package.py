@@ -21,14 +21,13 @@ import spack.spec
 import spack.error
 import packages
 import tty
-import attr
 import validate
 import url
 
-from version import *
-from multi_function import platform
-from stage import Stage
-from spack.util.lang import memoized, list_modules
+from spack.multi_function import platform
+from spack.version import *
+from spack.stage import Stage
+from spack.util.lang import *
 from spack.util.crypto import md5
 from spack.util.web import get_pages
 
@@ -254,7 +253,7 @@ class Package(object):
     dependencies = {}
 
     """List of specs of virtual packages provided by this package."""
-    provided_virtual_packages = {}
+    provided = {}
 
     #
     # These are default values for instance variables.
@@ -270,9 +269,9 @@ class Package(object):
 
     def __init__(self, spec):
         # These attributes are required for all packages.
-        attr.required(self, 'homepage')
-        attr.required(self, 'url')
-        attr.required(self, 'md5')
+        attr_required(self, 'homepage')
+        attr_required(self, 'url')
+        attr_required(self, 'md5')
 
         # this determines how the package should be built.
         self.spec = spec
@@ -304,7 +303,7 @@ class Package(object):
         self._available_versions = None
 
         # This list overrides available_versions if set by the user.
-        attr.setdefault(self, 'versions', None)
+        attr_setdefault(self, 'versions', None)
         if self.versions and type(self.versions) != VersionList:
             self.versions = VersionList(self.versions)
 

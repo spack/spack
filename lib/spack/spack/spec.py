@@ -336,6 +336,10 @@ class Spec(object):
 
     @property
     def concrete(self):
+        """A spec is concrete if it can describe only ONE build of a package.
+           If any of the name, version, architecture, compiler, or depdenencies
+           are ambiguous,then it is not concrete.
+        """
         return bool(not self.virtual
                     and self.versions.concrete
                     and self.architecture
@@ -344,6 +348,27 @@ class Spec(object):
 
 
     def preorder_traversal(self, visited=None, d=0, **kwargs):
+        """Generic preorder traversal of the DAG represented by this spec.
+           This will yield each node in the spec.  Options:
+
+           unique   [=True]
+               When True (default) every node in the DAG is yielded only once.
+               When False, the traversal will yield already visited nodes but
+               not their children.  This lets you see that a node ponts to
+               an already-visited subgraph without descending into it.
+
+           depth    [=False]
+               Defaults to False.  When True, yields not just nodes in the
+               spec, but also their depth from the root in a (depth, node)
+               tuple.
+
+           keyfun   [=id]
+               Allow a custom key function to track the identity of nodes
+               in the traversal.
+
+           noroot   [=False]
+               If true, this won't yield the root node, just its descendents.
+        """
         unique = kwargs.setdefault('unique', True)
         depth  = kwargs.setdefault('depth', False)
         keyfun = kwargs.setdefault('key', id)
@@ -368,6 +393,7 @@ class Spec(object):
 
 
     def _concretize_helper(self, presets):
+        """Recursive helper function for concretize()."""
         for name in sorted(self.dependencies.keys()):
             self.dependencies[name]._concretize_helper(presets)
 
@@ -416,6 +442,9 @@ class Spec(object):
 
 
     def concretized(self, *presets):
+        """This is a non-destructive version of concretize().  First clones,
+           then returns a concrete version of this package without modifying
+           this package. """
         clone = self.copy()
         clone.concretize(*presets)
         return clone

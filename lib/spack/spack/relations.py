@@ -52,7 +52,8 @@ import spack.spec
 def _caller_locals():
     """This will return the locals of the *parent* of the caller.
        This allows a fucntion to insert variables into its caller's
-       scope.
+       scope.  Yes, this is some black magic, and yes it's useful
+       for implementing things like depends_on and provides.
     """
     stack = inspect.stack()
     try:
@@ -78,6 +79,6 @@ def provides(*args):
        can use the providing package to satisfy the dependency.
     """
     # Get the enclosing package's scope and add deps to it.
-    provides = _caller_locals().setdefault("provides", [])
+    provided = _caller_locals().setdefault("provided", [])
     for name in args:
         provides.append(name)

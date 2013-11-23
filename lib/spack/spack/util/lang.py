@@ -9,6 +9,20 @@ from spack.util.filesystem import new_path
 ignore_modules = [r'^\.#', '~$']
 
 
+def attr_required(obj, attr_name):
+    """Ensure that a class has a required attribute."""
+    if not hasattr(obj, attr_name):
+        tty.die("No required attribute '%s' in class '%s'"
+                % (attr_name, obj.__class__.__name__))
+
+
+def attr_setdefault(obj, name, value):
+    """Like dict.setdefault, but for objects."""
+    if not hasattr(obj, name):
+        setattr(obj, name, value)
+    return getattr(obj, name)
+
+
 def has_method(cls, name):
     for base in inspect.getmro(cls):
         if base is object:

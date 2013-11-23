@@ -5,7 +5,7 @@ import sys
 import spack
 import spack.spec
 import spack.tty as tty
-import spack.attr as attr
+from spack.util.lang import attr_setdefault
 
 # Patterns to ignore in the commands directory when looking for commands.
 ignore_files = r'^\.|^__init__.py$|^#'
@@ -34,8 +34,8 @@ def get_module(name):
         module_name, fromlist=[name, SETUP_PARSER, DESCRIPTION],
         level=0)
 
-    attr.setdefault(module, SETUP_PARSER, lambda *args: None) # null-op
-    attr.setdefault(module, DESCRIPTION, "")
+    attr_setdefault(module, SETUP_PARSER, lambda *args: None) # null-op
+    attr_setdefault(module, DESCRIPTION, "")
 
     fn_name = get_cmd_function_name(name)
     if not hasattr(module, fn_name):
