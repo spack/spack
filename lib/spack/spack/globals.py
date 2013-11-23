@@ -5,6 +5,7 @@ from spack.version import Version
 from spack.util.filesystem import *
 from spack.util.executable import *
 from spack.directory_layout import DefaultDirectoryLayout
+from spack.concretize import DefaultConcretizer
 
 # This lives in $prefix/lib/spac/spack/__file__
 prefix = ancestor(__file__, 4)
@@ -30,6 +31,13 @@ install_path   = new_path(prefix, "opt")
 # stage directories.
 #
 install_layout = DefaultDirectoryLayout(install_path)
+
+#
+# This controls how things are concretized in spack.
+# Replace it with a subclass if you want different
+# policies.
+#
+concretizer = DefaultConcretizer()
 
 # Version information
 spack_version = Version("0.5")

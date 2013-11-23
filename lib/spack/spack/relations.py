@@ -81,4 +81,4 @@ def provides(*args):
     # Get the enclosing package's scope and add deps to it.
     provided = _caller_locals().setdefault("provided", [])
     for name in args:
-        provides.append(name)
+        provided.append(name)

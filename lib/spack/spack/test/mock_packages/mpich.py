@@ -10,6 +10,8 @@ class Mpich(Package):
 
     versions = '1.0.3, 1.3.2p1, 1.4.1p1, 3.0.4, 3.1b1'
 
+    provides('mpi')
+
     def install(self, prefix):
         configure("--prefix=%s" % prefix)
         make()

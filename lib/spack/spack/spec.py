@@ -67,7 +67,6 @@ from StringIO import StringIO
 import tty
 import spack.parse
 import spack.error
-import spack.concretize
 import spack.compilers
 import spack.compilers.gcc
 import spack.packages as packages
@@ -330,6 +329,8 @@ class Spec(object):
         """Right now, a spec is virtual if no package exists with its name.
            TODO: revisit this -- might need to use a separate namespace and
                  be more explicit about this.
+                 Possible idea: just use conventin and make virtual deps all
+                 caps, e.g., MPI vs mpi.
         """
         return not packages.exists(self.name)
 
@@ -400,9 +401,9 @@ class Spec(object):
         if self.name in presets:
             self.constrain(presets[self.name])
         else:
-            spack.concretize.concretize_architecture(self)
-            spack.concretize.concretize_compiler(self)
-            spack.concretize.concretize_version(self)
+            spack.concretizer.concretize_architecture(self)
+            spack.concretizer.concretize_compiler(self)
+            spack.concretizer.concretize_version(self)
             presets[self.name] = self
 
 
