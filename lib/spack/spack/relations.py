@@ -62,23 +62,28 @@ def _caller_locals():
         del stack
 
 
-def depends_on(*specs):
-    """Adds a dependencies local variable in the locals of
-       the calling class, based on args.
-    """
-    # Get the enclosing package's scope and add deps to it.
-    dependencies = _caller_locals().setdefault("dependencies", {})
-    for string in specs:
-        for spec in spack.spec.parse(string):
-            dependencies[spec.name] = spec
+def _make_relation(map_name):
+    def relation_fun(*specs):
+        package_map = _caller_locals().setdefault(map_name, {})
+        for string in specs:
+            for spec in spack.spec.parse(string):
+                package_map[spec.name] = spec
+    return relation_fun
 
 
-def provides(*args):
-    """Allows packages to provide a virtual dependency.  If a package provides
-       "mpi", other packages can declare that they depend on "mpi", and spack
-       can use the providing package to satisfy the dependency.
-    """
-    # Get the enclosing package's scope and add deps to it.
-    provided = _caller_locals().setdefault("provided", [])
-    for name in args:
-        provided.append(name)
+"""Adds a dependencies local variable in the locals of
+   the calling class, based on args. """
+depends_on = _make_relation("dependencies")
+
+
+"""Allows packages to provide a virtual dependency.  If a package provides
+   'mpi', other packages can declare that they depend on "mpi", and spack
+   can use the providing package to satisfy the dependency.
+"""
+provides   = _make_relation("provided")
+
+
+"""Packages can declare conflicts with other packages.
+   This can be as specific as you like: use regular spec syntax.
+"""
+conflicts  = _make_relation("conflicted")

@@ -255,6 +255,11 @@ class Package(object):
     """List of specs of virtual packages provided by this package."""
     provided = {}
 
+    """List of specs of conflicting packages.
+       TODO: implement conflicts.
+    """
+    conflicted = {}
+
     #
     # These are default values for instance variables.
     #

@@ -394,7 +394,12 @@ class Spec(object):
 
 
     def _concretize_helper(self, presets):
-        """Recursive helper function for concretize()."""
+        """Recursive helper function for concretize().
+           This concretizes everything bottom-up.  As things are
+           concretized, they're added to the presets, and ancestors
+           will prefer the settings of their children.
+        """
+        # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self.dependencies.keys()):
             self.dependencies[name]._concretize_helper(presets)
 
