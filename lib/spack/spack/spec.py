@@ -147,6 +147,7 @@ class Compiler(object):
 
     @property
     def concrete(self):
+        """A Compiler spec is concrete if its versions are concrete."""
         return self.versions.concrete
 
 
@@ -318,19 +319,25 @@ class Spec(object):
 
     @property
     def package(self):
+        if self.virtual:
+            raise TypeError("Cannot get package for virtual spec '" +
+                            self.name + "'")
         return packages.get(self.name)
 
 
     @property
     def virtual(self):
-        return packages.exists(self.name)
+        """Right now, a spec is virtual if no package exists with its name.
+           TODO: revisit this -- might need to use a separate namespace and
+                 be more explicit about this.
+        """
+        return not packages.exists(self.name)
 
 
     @property
     def concrete(self):
         return bool(not self.virtual
                     and self.versions.concrete
-                    # TODO: support variants
                     and self.architecture
                     and self.compiler and self.compiler.concrete
                     and self.dependencies.concrete)
