@@ -176,6 +176,8 @@ def wildcard_version(path):
        that will match this path with any version in its place.
     """
     ver, start, end = parse_version_string_with_indices(path)
-    v = Version(ver)
 
-    return re.escape(path[:start]) + v.wildcard() + re.escape(path[end:])
+    v = Version(ver)
+    parts = list(re.escape(p) for p in path.split(str(v)))
+
+    return  v.wildcard().join(parts)

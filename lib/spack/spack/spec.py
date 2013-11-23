@@ -322,8 +322,14 @@ class Spec(object):
 
 
     @property
+    def virtual(self):
+        return packages.exists(self.name)
+
+
+    @property
     def concrete(self):
-        return bool(self.versions.concrete
+        return bool(not self.virtual
+                    and self.versions.concrete
                     # TODO: support variants
                     and self.architecture
                     and self.compiler and self.compiler.concrete

@@ -19,6 +19,7 @@ valid_package_re = r'^\w[\w-]*$'
 invalid_package_re = r'[_-][_-]+'
 
 instances = {}
+providers = {}
 
 
 def get(pkg_name):
@@ -27,6 +28,24 @@ def get(pkg_name):
         instances[pkg_name] = package_class(pkg_name)
 
     return instances[pkg_name]
+
+
+def get_providers(vpkg_name):
+    if not providers:
+        compute_providers()
+
+    if not vpkg_name in providers:
+        raise UnknownPackageError("No such virtual package: %s" % vpkg_name)
+
+    return providers[vpkg_name]
+
+
+def compute_providers():
+    for pkg in all_packages():
+        for vpkg in pkg.provided_virtual_packages:
+            if vpkg not in providers:
+                providers[vpkg] = []
+            providers[vpkg].append(pkg)
 
 
 def valid_package_name(pkg_name):
@@ -73,6 +92,11 @@ def class_name_for_package_name(pkg_name):
         class_name = "Num_%s" % class_name
 
     return class_name
+
+
+def exists(pkg_name):
+    """Whether a package is concrete."""
+    return os.path.exists(filename_for_package_name(pkg_name))
 
 
 def get_class_for_package_name(pkg_name):
@@ -147,7 +171,6 @@ def graph_dependencies(out=sys.stdout):
     for pair in deps:
         out.write('  "%s" -> "%s"\n' % pair)
     out.write('}\n')
-
 
 
 class InvalidPackageNameError(spack.error.SpackError):

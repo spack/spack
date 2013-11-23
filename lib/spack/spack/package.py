@@ -29,6 +29,8 @@ from version import *
 from multi_function import platform
 from stage import Stage
 from spack.util.lang import memoized, list_modules
+from spack.util.crypto import md5
+from spack.util.web import get_pages
 
 
 class Package(object):
@@ -251,6 +253,9 @@ class Package(object):
     """By default a package has no dependencies."""
     dependencies = {}
 
+    """List of specs of virtual packages provided by this package."""
+    provided_virtual_packages = {}
+
     #
     # These are default values for instance variables.
     #
@@ -309,6 +314,9 @@ class Package(object):
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
             self.list_url = os.path.dirname(self.url)
+
+        if not hasattr(self, 'list_depth'):
+            self.list_depth = 1
 
 
     def add_commands_to_module(self):
@@ -462,6 +470,11 @@ class Package(object):
            are _'s in the download URL.
         """
         return str(version)
+
+
+    def url_for_version(self, version):
+        """Gives a URL that you can download a new version of this package from."""
+        return url.substitute_version(self.url, self.url_version(version))
 
 
     def remove_prefix(self):
@@ -640,37 +653,42 @@ class Package(object):
         tty.msg("Successfully cleaned %s" % self.name)
 
 
+    def fetch_available_versions(self):
+        # If not, then try to fetch using list_url
+        if not self._available_versions:
+            self._available_versions = VersionList()
+            url_regex = os.path.basename(url.wildcard_version(self.url))
+            wildcard = self.version.wildcard()
+
+            page_map = get_pages(self.list_url, depth=self.list_depth)
+            for site, page in page_map.iteritems():
+                strings = re.findall(url_regex, page)
+
+                for s in strings:
+                    match = re.search(wildcard, s)
+                    if match:
+                        v = match.group(0)
+                        self._available_versions.add(Version(v))
+
+            if not self._available_versions:
+                tty.warn("Found no versions for %s" % self.name,
+                         "Check the list_url and list_depth attribute on the "
+                         + self.name + " package.",
+                         "Use them to tell Spack where to look for versions.")
+
+        return self._available_versions
+
+
     @property
     def available_versions(self):
         # If the package overrode available_versions, then use that.
         if self.versions is not None:
             return self.versions
-
-        # If not, then try to fetch using list_url
-        if not self._available_versions:
-            self._available_versions = ver([self.version])
-            try:
-                # Run curl but grab the mime type from the http headers
-                listing = spack.curl('-s', '-L', self.list_url, return_output=True)
-                url_regex = os.path.basename(url.wildcard_version(self.url))
-                strings = re.findall(url_regex, listing)
-                wildcard = self.version.wildcard()
-                for s in strings:
-                    match = re.search(wildcard, s)
-                    if match:
-                        self._available_versions.add(Version(match.group(0)))
-
-                if not self._available_versions:
-                    tty.warn("Found no versions for %s" % self.name,
-                             "Packate.available_versions may require adding the list_url attribute",
-                             "to the package to tell Spack where to look for versions.")
-
-            except subprocess.CalledProcessError:
-                tty.warn("Could not connect to %s" % self.list_url,
-                         "Package.available_versions requires an internet connection.",
-                         "Version list may be incomplete.")
-
-        return self._available_versions
+        else:
+            vlist = self.fetch_available_versions()
+            if not vlist:
+                vlist = ver([self.version])
+            return vlist
 
 
 class MakeExecutable(Executable):

@@ -2,7 +2,9 @@ import argparse
 import spack.cmd
 
 import spack.tty as tty
+import spack.url as url
 import spack
+
 
 description = "parse specs and print them out to the command line."
 
@@ -13,7 +15,11 @@ def spec(parser, args):
     specs = spack.cmd.parse_specs(args.specs)
     for spec in specs:
         spec.normalize()
-        print spec.tree()
+        print spec.tree(color=True)
 
         spec.concretize()
-        print spec.tree()
+        print spec.tree(color=True)
+
+        pkg = spec.package
+        wc = url.wildcard_version(pkg.url)
+        print wc

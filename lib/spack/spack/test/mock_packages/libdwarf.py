@@ -11,6 +11,8 @@ class Libdwarf(Package):
 
     md5      = "64b42692e947d5180e162e46c689dfbf"
 
+    versions = [20070703, 20111030, 20130207]
+
     depends_on("libelf")
 
 

@@ -45,7 +45,20 @@ provides
         spack install mpileaks ^mpich
 """
 import sys
+import inspect
 import spack.spec
+
+
+def _caller_locals():
+    """This will return the locals of the *parent* of the caller.
+       This allows a fucntion to insert variables into its caller's
+       scope.
+    """
+    stack = inspect.stack()
+    try:
+        return stack[2][0].f_locals
+    finally:
+        del stack
 
 
 def depends_on(*specs):
@@ -53,8 +66,7 @@ def depends_on(*specs):
        the calling class, based on args.
     """
     # Get the enclosing package's scope and add deps to it.
-    locals = sys._getframe(1).f_locals
-    dependencies = locals.setdefault("dependencies", {})
+    dependencies = _caller_locals().setdefault("dependencies", {})
     for string in specs:
         for spec in spack.spec.parse(string):
             dependencies[spec.name] = spec
@@ -66,7 +78,6 @@ def provides(*args):
        can use the providing package to satisfy the dependency.
     """
     # Get the enclosing package's scope and add deps to it.
-    locals = sys._getframe(1).f_locals
-    provides = locals.setdefault("provides", [])
+    provides = _caller_locals().setdefault("provides", [])
     for name in args:
         provides.append(name)
