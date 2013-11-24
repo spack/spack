@@ -6,6 +6,7 @@ from multiprocessing import Pool
 from HTMLParser import HTMLParser
 
 import spack
+import spack.error
 import spack.tty as tty
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
@@ -90,12 +91,10 @@ def _spider(args):
                 for d in dicts:
                     pages.update(d)
 
-    except urllib2.HTTPError, e:
+    except urllib2.URLError, e:
         # Only report it if it's the root page.  We ignore errors when spidering.
         if depth == 1:
-            tty.warn("Could not connect to %s" % url, e.reason,
-                     "Package.available_versions requires an internet connection.",
-                     "Version list may be incomplete.")
+            raise spack.error.NoNetworkConnectionError(e.reason, url)
 
     return pages
 

@@ -664,21 +664,27 @@ class Package(object):
             url_regex = os.path.basename(url.wildcard_version(self.url))
             wildcard = self.version.wildcard()
 
-            page_map = get_pages(self.list_url, depth=self.list_depth)
-            for site, page in page_map.iteritems():
-                strings = re.findall(url_regex, page)
+            try:
+                page_map = get_pages(self.list_url, depth=self.list_depth)
 
-                for s in strings:
-                    match = re.search(wildcard, s)
-                    if match:
-                        v = match.group(0)
-                        self._available_versions.add(Version(v))
+                for site, page in page_map.iteritems():
+                    strings = re.findall(url_regex, page)
 
-            if not self._available_versions:
-                tty.warn("Found no versions for %s" % self.name,
-                         "Check the list_url and list_depth attribute on the "
-                         + self.name + " package.",
-                         "Use them to tell Spack where to look for versions.")
+                    for s in strings:
+                        match = re.search(wildcard, s)
+                        if match:
+                            v = match.group(0)
+                            self._available_versions.add(Version(v))
+
+                if not self._available_versions:
+                    tty.warn("Found no versions for %s" % self.name,
+                             "Check the list_url and list_depth attribute on the "
+                             + self.name + " package.",
+                             "Use them to tell Spack where to look for versions.")
+
+            except spack.error.NoNetworkConnectionError, e:
+                tty.die("Package.fetch_available_versions couldn't connect to:",
+                        e.url, e.message)
 
         return self._available_versions
 
