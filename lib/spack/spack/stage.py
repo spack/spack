@@ -2,18 +2,15 @@ import os
 import re
 import shutil
 import tempfile
-import getpass
 
 import spack
 import spack.error as serr
-import tty
+import spack.tty as tty
 
-class FailedDownloadError(serr.SpackError):
-    """Raised wen a download fails."""
-    def __init__(self, url):
-        super(FailedDownloadError, self).__init__(
-            "Failed to fetch file from URL: " + url)
-        self.url = url
+from spack.util.filesystem import *
+from spack.util.compression import decompressor_for
+
+STAGE_PREFIX = 'spack-stage-'
 
 
 class Stage(object):
@@ -31,16 +28,76 @@ class Stage(object):
        If spack.use_tmp_stage is True, spack will attempt to create stages
        in a tmp directory.  Otherwise, stages are created directly in
        spack.stage_path.
+
+       There are two kinds of stages: named and unnamed.  Named stages can
+       persist between runs of spack, e.g. if you fetched a tarball but
+       didn't finish building it, you won't have to fetch it again.
+
+       Unnamed stages are created using standard mkdtemp mechanisms or
+       similar, and are intended to persist for only one run of spack.
     """
-    def __init__(self, path, url):
+
+    def __init__(self, url, name=None):
         """Create a stage object.
            Parameters:
-             path    Relative path from the stage root to where the stage will
-                     be created.
              url     URL of the archive to be downloaded into this stage.
+
+             name    If a name is provided, then this stage is a named stage
+                     and will persist between runs (or if you construct another
+                     stage object later).  If name is not provided, then this
+                     stage will be given a unique name automatically.
         """
-        self.path = os.path.join(spack.stage_path, path)
+        self.tmp_root = find_tmp_root()
         self.url = url
+        self.name = name
+        self.path = None   # This will be set after setup is called.
+
+
+    def _cleanup_dead_links(self):
+        """Remove any dead links in the stage directory."""
+        for file in os.listdir(spack.stage_path):
+            path = new_path(spack.stage_path, file)
+            if os.path.islink(path):
+                real_path = os.path.realpath(path)
+                if not os.path.exists(path):
+                    os.unlink(path)
+
+
+    def _need_to_create_path(self):
+        """Makes sure nothing weird has happened since the last time we
+           looked at path.  Returns True if path already exists and is ok.
+           Returns False if path needs to be created.
+        """
+        # Path doesn't exist yet.  Will need to create it.
+        if not os.path.exists(self.path):
+            return True
+
+        # Path exists but points at something else.  Blow it away.
+        if not os.path.isdir(self.path):
+            os.unlink(self.path)
+            return True
+
+        # Path looks ok, but need to check the target of the link.
+        if os.path.islink(self.path):
+            real_path = os.path.realpath(self.path)
+
+            if spack.use_tmp_stage:
+                # If we're using a tmp dir, it's a link, and it points at the right spot,
+                # then keep it.
+                if (os.path.commonprefix((real_path, self.tmp_root)) == self.tmp_root
+                    and os.path.exists(real_path)):
+                    return False
+                else:
+                    # otherwise, just unlink it and start over.
+                    os.unlink(self.path)
+                    return True
+
+            else:
+                # If we're not tmp mode, then it's a link and we want a directory.
+                os.unlink(self.path)
+                return True
+
+        return False
 
 
     def setup(self):
@@ -54,53 +111,39 @@ class Stage(object):
            create a stage.  If there is no valid location in tmp_dirs, fall
            back to making the stage inside spack.stage_path.
         """
-        # If we're using a stage in tmp that has since been deleted,
-        # remove the stale symbolic link.
-        if os.path.islink(self.path):
-            real_path = os.path.realpath(self.path)
-            if not os.path.exists(real_path):
-                os.unlink(self.path)
+        # Create the top-level stage directory
+        spack.mkdirp(spack.stage_path)
+        self._cleanup_dead_links()
 
-        # If the user switched stage modes, destroy the old stage and
-        # start over.  We could move the old archive, but that seems
-        # like a pain when we could just fetch it again.
-        if spack.use_tmp_stage:
-            if not os.path.islink(self.path):
-                self.destroy()
-        else:
-            if os.path.islink(self.path):
-                self.destroy()
+        # If this is a named stage, then construct a named path.
+        if self.name is not None:
+            self.path = new_path(spack.stage_path, self.name)
 
-        # Make sure that the stage is actually a directory.  Something
-        # is seriously wrong if it's not.
-        if os.path.exists(self.path):
-            if not os.path.isdir(self.path):
-                tty.die("Stage path %s is not a directory!" % self.path)
-        else:
-            # Create the top-level stage directory
-            spack.mkdirp(spack.stage_path)
-
-            # Find a tmp_dir if we're supposed to use one.
-            tmp_dir = None
-            if spack.use_tmp_stage:
-                tmp_dir = next((tmp for tmp in spack.tmp_dirs
-                                if can_access(tmp)), None)
-
-            if not tmp_dir:
-                # If we couldn't find a tmp dir or if we're not using tmp
-                # stages, create the stage directly in spack.stage_path.
-                spack.mkdirp(self.path)
+        # If this is a temporary stage, them make the temp directory
+        tmp_dir = None
+        if self.tmp_root:
+            if self.name is None:
+                # Unnamed tmp root.  Link the path in
+                tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
+                self.name = os.path.basename(tmp_dir)
+                self.path = new_path(spack.stage_path, self.name)
+                if self._need_to_create_path():
+                    os.symlink(tmp_dir, self.path)
 
             else:
-                # Otherwise we found a tmp_dir, so create the stage there
-                # and link it back to the prefix.
-                username = getpass.getuser()
-                if username:
-                    tmp_dir = spack.new_path(tmp_dir, username)
-                spack.mkdirp(tmp_dir)
-                tmp_dir = tempfile.mkdtemp('.stage', 'spack-stage-', tmp_dir)
+                if self._need_to_create_path():
+                    tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
+                    os.symlink(tmp_dir, self.path)
 
-                os.symlink(tmp_dir, self.path)
+        # if we're not using a tmp dir, create the stage directly in the
+        # stage dir, rather than linking to it.
+        else:
+            if self.name is None:
+                self.path = tempfile.mkdtemp('', STAGE_PREFIX, spack.stage_path)
+                self.name = os.path.basename(self.path)
+            else:
+                if self._need_to_create_path():
+                    mkdirp(self.path)
 
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
@@ -187,7 +230,7 @@ class Stage(object):
         if not self.archive_file:
             tty.die("Attempt to expand archive before fetching.")
 
-        decompress = spack.decompressor_for(self.archive_file)
+        decompress = decompressor_for(self.archive_file)
         decompress(self.archive_file)
 
 
@@ -252,3 +295,22 @@ def purge():
         for stage_dir in os.listdir(spack.stage_path):
             stage_path = spack.new_path(spack.stage_path, stage_dir)
             remove_linked_tree(stage_path)
+
+
+def find_tmp_root():
+    if spack.use_tmp_stage:
+        for tmp in spack.tmp_dirs:
+            try:
+                mkdirp(expand_user(tmp))
+                return tmp
+            except OSError:
+                continue
+    return None
+
+
+class FailedDownloadError(serr.SpackError):
+    """Raised wen a download fails."""
+    def __init__(self, url):
+        super(FailedDownloadError, self).__init__(
+            "Failed to fetch file from URL: " + url)
+        self.url = url

@@ -54,10 +54,12 @@ curl = which("curl", required=True)
 use_tmp_stage = True
 
 # Locations to use for staging and building, in order of preference
-# Spack will try to create stage directories in <tmp_dir>/<username>
-# if one of these tmp_dirs exists.  Otherwise it'll use a default
-# location per the python implementation of tempfile.mkdtemp().
-tmp_dirs = ['/nfs/tmp2', '/var/tmp', '/tmp']
+# Use a %u to add a username to the stage paths here, in case this
+# is a shared filesystem.  Spack will use the first of these paths
+# that it can create.
+tmp_dirs = ['/nfs/tmp2/%u/spack-stage',
+            '/var/tmp/%u/spcak-stage',
+            '/tmp/%u/spack-stage']
 
 #
 # SYS_TYPE to use for the spack installation.

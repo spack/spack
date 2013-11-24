@@ -1,4 +1,5 @@
 from itertools import product
+from spack.util.executable import which
 
 # Supported archvie extensions.
 PRE_EXTS = ["tar"]

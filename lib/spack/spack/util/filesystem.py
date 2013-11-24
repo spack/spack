@@ -2,15 +2,27 @@ import os
 import re
 import shutil
 import errno
+import getpass
 from contextlib import contextmanager, closing
 
 import spack.tty as tty
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
+
 def install(src, dest):
     """Manually install a file to a particular location."""
     tty.info("Installing %s to %s" % (src, dest))
     shutil.copy(src, dest)
+
+
+def expand_user(path):
+    """Find instances of '%u' in a path and replace with the current user's
+       username."""
+    username = getpass.getuser()
+    if not username and '%u' in path:
+        tty.die("Couldn't get username to complete path '%s'" % path)
+
+    return path.replace('%u', username)
 
 
 @contextmanager

@@ -36,8 +36,7 @@ def checksum(parser, args):
     if not versions:
         versions = pkg.fetch_available_versions()[:args.number]
         if not versions:
-            tty.die("Could not fetch any available versions for %s."
-                    % pkg.name)
+            tty.die("Could not fetch any available versions for %s." % pkg.name)
 
     versions.sort()
     versions.reverse()
@@ -48,7 +47,7 @@ def checksum(parser, args):
 
     hashes = []
     for url, version in zip(urls, versions):
-        stage = Stage("checksum-%s-%s" % (pkg.name, version), url)
+        stage = Stage(url)
         try:
             stage.fetch()
             hashes.append(md5(stage.archive_file))

@@ -313,7 +313,8 @@ class Package(object):
             self.versions = VersionList(self.versions)
 
         # stage used to build this package.
-        self.stage = Stage("%s-%s" % (self.name, self.version), self.url)
+        # TODO: hash the concrete spec and use that as the stage name.
+        self.stage = Stage(self.url, "%s-%s" % (self.name, self.version))
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):

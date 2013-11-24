@@ -57,7 +57,7 @@ def create(parser, args):
 
     # make a stage and fetch the archive.
     try:
-        stage = Stage("spack-create/%s-%s" % (name, version), url)
+        stage = Stage(url)
         archive_file = stage.fetch()
     except spack.FailedDownloadException, e:
         tty.die(e.message)
