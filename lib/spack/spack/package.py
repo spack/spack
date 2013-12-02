@@ -247,17 +247,16 @@ class Package(object):
     """
 
     #
-    # These variables are per-package metadata will be defined by subclasses.
+    # These variables are defaults for the various relations defined on
+    # packages.  Subclasses will have their own versions of these.
     #
-    """By default a package has no dependencies."""
+    """Specs of dependency packages, keyed by name."""
     dependencies = {}
 
-    """List of specs of virtual packages provided by this package."""
+    """Specs of virtual packages provided by this package, keyed by name."""
     provided = {}
 
-    """List of specs of conflicting packages.
-       TODO: implement conflicts.
-    """
+    """Specs of conflicting packages, keyed by name. """
     conflicted = {}
 
     #
@@ -271,6 +270,7 @@ class Package(object):
 
     """Controls whether install and uninstall check deps before running."""
     ignore_dependencies = False
+
 
     def __init__(self, spec):
         # These attributes are required for all packages.
@@ -292,17 +292,16 @@ class Package(object):
         validate.url(self.url)
 
         # Set up version
+        # TODO: get rid of version attr and use spec
+        # TODO: roll this into available_versions
         if not hasattr(self, 'version'):
             try:
                 self.version = url.parse_version(self.url)
             except UndetectableVersionError:
                 tty.die("Couldn't extract a default version from %s. You " +
                         "must specify it explicitly in the package." % self.url)
-        elif type(self.version) == string:
+        elif type(self.version) != Version:
             self.version = Version(self.version)
-
-        # Empty at first; only compute dependent packages if necessary
-        self._dependents = None
 
         # This is set by scraping a web page.
         self._available_versions = None
@@ -311,6 +310,9 @@ class Package(object):
         attr_setdefault(self, 'versions', None)
         if self.versions and type(self.versions) != VersionList:
             self.versions = VersionList(self.versions)
+
+        # Empty at first; only compute dependent packages if necessary
+        self._dependents = None
 
         # stage used to build this package.
         # TODO: hash the concrete spec and use that as the stage name.
@@ -390,6 +392,7 @@ class Package(object):
 
 
     def preorder_traversal(self, visited=None):
+        """This does a preorder traversal of the package's dependence DAG."""
         if visited is None:
             visited = set()
 
