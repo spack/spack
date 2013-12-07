@@ -247,12 +247,13 @@ class Spec(object):
         if len(spec_list) < 1:
             raise ValueError("String contains no specs: " + spec_like)
 
-        # Take all the attributes from the first parsed spec without copying
-        # This is a little bit nasty, but it's nastier to make the parser
-        # write directly into this Spec object.
+        # Take all the attributes from the first parsed spec without copying.
+        # This is safe b/c we throw out the parsed spec.  It's a bit nasty,
+        # but it's nastier to implement the constructor so that the parser
+        # writes directly into this Spec object.
         other = spec_list[0]
         self.name = other.name
-        self.parent = other.parent
+        self.dependents = other.dependents
         self.versions = other.versions
         self.variants = other.variants
         self.architecture = other.architecture
@@ -263,11 +264,8 @@ class Spec(object):
         # Note that given two specs a and b, Spec(a) copies a, but
         # Spec(a, b) will copy a but just add b as a dep.
         for dep in dep_like:
-            if type(dep) == str:
-                dep_spec = Spec(dep)
-                self.dependencies[dep_spec.name] = dep_spec
-            elif type(dep) == Spec:
-                self.dependencies[dep.name] = dep
+            spec = dep if type(dep) == Spec else Spec(dep)
+            self._add_dependency(spec)
 
 
     #
@@ -299,21 +297,31 @@ class Spec(object):
         self.architecture = architecture
 
 
-    def _add_dependency(self, dep):
+    def _add_dependency(self, spec):
         """Called by the parser to add another spec as a dependency."""
-        if dep.name in self.dependencies:
-            raise DuplicateDependencyError("Cannot depend on '%s' twice" % dep)
-        self.dependencies[dep.name] = dep
-        dep.parent = self
+        if spec.name in self.dependencies:
+            raise DuplicateDependencyError("Cannot depend on '%s' twice" % spec)
+        self.dependencies[spec.name] = spec
+        spec.dependents[self.name] = self
 
 
     @property
     def root(self):
-        """Follow parent links and find the root of this spec's DAG."""
-        root = self
-        while root.parent is not None:
-            root = root.parent
-        return root
+        """Follow dependent links and find the root of this spec's DAG.
+           In spack specs, there should be a single root (the package being
+           installed).  This will throw an assertion error if that is not
+           the case.
+        """
+        if not self.dependents:
+            return self
+        else:
+            # If the spec has multiple dependents, ensure that they all
+            # lead to the same place.  Spack shouldn't deal with any DAGs
+            # with multiple roots, so something's wrong if we find one.
+            depiter = iter(self.dependents.values())
+            first_root = next(depiter).root
+            assert(all(first_root is d.root for d in depiter))
+            return first_root
 
 
     @property
@@ -353,10 +361,10 @@ class Spec(object):
            This will yield each node in the spec.  Options:
 
            unique   [=True]
-               When True (default) every node in the DAG is yielded only once.
-               When False, the traversal will yield already visited nodes but
-               not their children.  This lets you see that a node ponts to
-               an already-visited subgraph without descending into it.
+               When True (default), every node in the DAG is yielded only once.
+               When False, the traversal will yield already visited
+               nodes but not their children.  This lets you see that a node
+               points to an already-visited subgraph without descending into it.
 
            depth    [=False]
                Defaults to False.  When True, yields not just nodes in the
@@ -388,31 +396,67 @@ class Spec(object):
             yield (d, self) if depth else self
 
         for key in sorted(self.dependencies.keys()):
-            for spec in self.dependencies[key].preorder_traversal(
+            for result in self.dependencies[key].preorder_traversal(
                     visited, d+1, **kwargs):
-                yield spec
+                yield result
 
 
-    def _concretize_helper(self, presets):
+    def _concretize_helper(self, presets=None, visited=None):
         """Recursive helper function for concretize().
            This concretizes everything bottom-up.  As things are
            concretized, they're added to the presets, and ancestors
            will prefer the settings of their children.
         """
+        if presets is None: presets = {}
+        if visited is None: visited = set()
+
+        if self.name in visited:
+            return
+
         # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self.dependencies.keys()):
-            self.dependencies[name]._concretize_helper(presets)
+            self.dependencies[name]._concretize_helper(presets, visited)
 
         if self.name in presets:
             self.constrain(presets[self.name])
         else:
-            spack.concretizer.concretize_architecture(self)
-            spack.concretizer.concretize_compiler(self)
-            spack.concretizer.concretize_version(self)
+            # Concretize virtual dependencies last.  Because they're added
+            # to presets below, their constraints will all be merged, but we'll
+            # still need to select a concrete package later.
+            if not self.virtual:
+                spack.concretizer.concretize_architecture(self)
+                spack.concretizer.concretize_compiler(self)
+                spack.concretizer.concretize_version(self)
             presets[self.name] = self
 
+        visited.add(self.name)
 
-    def concretize(self, *presets):
+
+    def _expand_virtual_packages(self):
+        """Find virtual packages in this spec, replace them with providers,
+           and normalize again to include the provider's (potentially virtual)
+           dependencies.  Repeat until there are no virtual deps.
+        """
+        while True:
+            virtuals =[v for v in self.preorder_traversal() if v.virtual]
+            if not virtuals:
+                return
+
+            for spec in virtuals:
+                providers = packages.providers_for(spec)
+                concrete = spack.concretizer.choose_provider(spec, providers)
+                concrete = concrete.copy()
+
+                for name, dependent in spec.dependents.items():
+                    del dependent.dependencies[spec.name]
+                    dependent._add_dependency(concrete)
+
+            # If there are duplicate providers or duplicate provider deps, this
+            # consolidates them and merges constraints.
+            self.normalize()
+
+
+    def concretize(self):
         """A spec is concrete if it describes one build of a package uniquely.
            This will ensure that this spec is concrete.
 
@@ -424,48 +468,32 @@ class Spec(object):
            with requirements of its pacakges.  See flatten() and normalize() for
            more details on this.
         """
-        # Build specs out of user-provided presets
-        specs = [Spec(p) for p in presets]
-
-        # Concretize the presets first.  They could be partial specs, like just
-        # a particular version that the caller wants.
-        for spec in specs:
-            if not spec.concrete:
-                try:
-                    spec.concretize()
-                except UnsatisfiableSpecError, e:
-                    e.message = ("Unsatisfiable preset in concretize: %s."
-                                 % e.message)
-                    raise e
-
-        # build preset specs into a map
-        preset_dict = {spec.name : spec for spec in specs}
-
-        # Concretize bottom up, passing in presets to force concretization
-        # for certain specs.
         self.normalize()
-        self._concretize_helper(preset_dict)
+        self._expand_virtual_packages()
+        self._concretize_helper()
 
 
-    def concretized(self, *presets):
+    def concretized(self):
         """This is a non-destructive version of concretize().  First clones,
            then returns a concrete version of this package without modifying
            this package. """
         clone = self.copy()
-        clone.concretize(*presets)
+        clone.concretize()
         return clone
 
 
     def flat_dependencies(self):
-        """Return a DependencyMap containing all dependencies with their
-           constraints merged.  If there are any conflicts, throw an exception.
+        """Return a DependencyMap containing all of this spec's dependencies
+           with their constraints merged.  If there are any conflicts, throw
+           an exception.
 
            This will work even on specs that are not normalized; i.e. specs
            that have two instances of the same dependency in the DAG.
            This is used as the first step of normalization.
         """
         # This ensures that the package descriptions themselves are consistent
-        self.package.validate_dependencies()
+        if not self.virtual:
+            self.package.validate_dependencies()
 
         # Once that is guaranteed, we know any constraint violations are due
         # to the spec -- so they're the user's fault, not Spack's.
@@ -497,22 +525,54 @@ class Spec(object):
         self.dependencies = self.flat_dependencies()
 
 
-    def _normalize_helper(self, visited, spec_deps):
+    def _normalize_helper(self, visited, spec_deps, provider_index):
         """Recursive helper function for _normalize."""
         if self.name in visited:
             return
         visited.add(self.name)
 
+        # if we descend into a virtual spec, there's nothing more
+        # to normalize.  Concretize will finish resolving it later.
+        if self.virtual:
+            return
+
         # Combine constraints from package dependencies with
-        # information in this spec's dependencies.
+        # constraints on the spec's dependencies.
         pkg = packages.get(self.name)
-        for name, pkg_dep in self.package.dependencies.iteritems():
+        for name, pkg_dep in self.package.dependencies.items():
+            # If it's a virtual dependency, try to find a provider
+            if pkg_dep.virtual:
+                providers = provider_index.providers_for(pkg_dep)
+
+                # If there is a provider for the vpkg, then use that instead of
+                # the virtual package.  If there isn't a provider, just merge
+                # constraints on the virtual package.
+                if providers:
+                    # Can't have multiple providers for the same thing in one spec.
+                    if len(providers) > 1:
+                        raise MultipleProviderError(pkg_dep, providers)
+
+                    pkg_dep = providers[0]
+                    name    = pkg_dep.name
+
+                else:
+                    # The user might have required something insufficient for
+                    # pkg_dep -- so we'll get a conflict.  e.g., user asked for
+                    # mpi@:1.1 but some package required mpi@2.1:.
+                    providers = provider_index.providers_for(name)
+                    if len(providers) > 1:
+                        raise MultipleProviderError(pkg_dep, providers)
+                    if providers:
+                        raise UnsatisfiableProviderSpecError(providers[0], pkg_dep)
+
+
             if name not in spec_deps:
-                # Clone the spec from the package
+                # If the spec doesn't reference a dependency that this package
+                # needs, then clone it from the package description.
                 spec_deps[name] = pkg_dep.copy()
 
             try:
-                # intersect package information with spec info
+                # Constrain package information with spec info
                 spec_deps[name].constrain(pkg_dep)
 
             except UnsatisfiableSpecError, e:
@@ -523,35 +583,61 @@ class Spec(object):
                 raise e
 
             # Add merged spec to my deps and recurse
-            self._add_dependency(spec_deps[name])
-            self.dependencies[name]._normalize_helper(visited, spec_deps)
+            dependency = spec_deps[name]
+            self._add_dependency(dependency)
+            dependency._normalize_helper(visited, spec_deps, provider_index)
 
 
     def normalize(self):
-        # Ensure first that all packages exist.
+        """When specs are parsed, any dependencies specified are hanging off
+           the root, and ONLY the ones that were explicitly provided are there.
+           Normalization turns a partial flat spec into a DAG, where:
+             1) ALL dependencies of the root package are in the DAG.
+             2) Each node's dependencies dict only contains its direct deps.
+             3) There is only ONE unique spec for each package in the DAG.
+                - This includes virtual packages.  If there a non-virtual
+                  package that provides a virtual package that is in the spec,
+                  then we replace the virtual package with the non-virtual one.
+             4) The spec DAG matches package DAG.
+        """
+        # Ensure first that all packages in the DAG exist.
         self.validate_package_names()
 
-        # Then ensure that the packages mentioned are sane, that the
+        # Then ensure that the packages referenced are sane, that the
         # provided spec is sane, and that all dependency specs are in the
         # root node of the spec.  flat_dependencies will do this for us.
         spec_deps = self.flat_dependencies()
         self.dependencies.clear()
 
+        # Figure out which of the user-provided deps provide virtual deps.
+        # Remove virtual deps that are already provided by something in the spec
+        spec_packages = [d.package for d in spec_deps.values() if not d.virtual]
+
+        index = packages.ProviderIndex(spec_packages)
         visited = set()
-        self._normalize_helper(visited, spec_deps)
+        self._normalize_helper(visited, spec_deps, index)
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.
         extra = set(spec_deps.viewkeys()).difference(visited)
+
+        # Also subtract out all the packags that provide a needed vpkg
+        vdeps = [v for v in self.package.virtual_dependencies()]
+
+        vpkg_providers = index.providers_for(*vdeps)
+        extra.difference_update(p.name for p in vpkg_providers)
+
+        # Anything left over is not a valid part of the spec.
         if extra:
             raise InvalidDependencyException(
                 self.name + " does not depend on " + comma_or(extra))
 
 
     def validate_package_names(self):
-        packages.get(self.name)
-        for name, dep in self.dependencies.iteritems():
-            dep.validate_package_names()
+        for spec in self.preorder_traversal():
+            # Don't get a package for a virtual name.
+            if not spec.virtual:
+                packages.get(spec.name)
 
 
     def constrain(self, other):
@@ -593,14 +679,19 @@ class Spec(object):
 
 
     def _dup(self, other, **kwargs):
-        """Copy the spec other into self.  This is a
-           first-party, overwriting copy.  This does not copy
-           parent; if the other spec has a parent, this one will not.
-           To duplicate an entire DAG, Duplicate the root of the DAG.
+        """Copy the spec other into self.  This is an overwriting
+           copy.  It does not copy any dependents (parents), but by default
+           copies dependencies.
+
+           To duplicate an entire DAG, call _dup() on the root of the DAG.
+
+           Options:
+           dependencies[=True]
+               Whether deps should be copied too.  Set to false to copy a
+               spec but not its dependencies.
         """
         # TODO: this needs to handle DAGs.
         self.name = other.name
-        self.parent = None
         self.versions = other.versions.copy()
         self.variants = other.variants.copy()
         self.architecture = other.architecture
@@ -608,6 +699,7 @@ class Spec(object):
         if other.compiler:
             self.compiler = other.compiler.copy()
 
+        self.dependents = DependencyMap()
         copy_deps = kwargs.get('dependencies', True)
         if copy_deps:
             self.dependencies = other.dependencies.copy()
@@ -744,11 +836,11 @@ class SpecParser(spack.parse.Parser):
         # This will init the spec without calling __init__.
         spec = Spec.__new__(Spec)
         spec.name = self.token.value
-        spec.parent = None
         spec.versions = VersionList()
         spec.variants = VariantMap()
         spec.architecture = None
         spec.compiler = None
+        spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
 
         # record this so that we know whether version is
@@ -903,6 +995,29 @@ class InvalidDependencyException(SpecError):
         super(InvalidDependencyException, self).__init__(message)
 
 
+class NoProviderError(SpecError):
+    """Raised when there is no package that provides a particular
+       virtual dependency.
+    """
+    def __init__(self, vpkg):
+        super(NoProviderError, self).__init__(
+            "No providers found for virtual package: '%s'" % vpkg)
+        self.vpkg = vpkg
+
+
+class MultipleProviderError(SpecError):
+    """Raised when there is no package that provides a particular
+       virtual dependency.
+    """
+    def __init__(self, vpkg, providers):
+        """Takes the name of the vpkg"""
+        super(NoProviderError, self).__init__(
+            "Multiple providers found for vpkg '%s': %s"
+            % (vpkg, [str(s) for s in providers]))
+        self.vpkg = vpkg
+        self.providers = providers
+
+
 class UnsatisfiableSpecError(SpecError):
     """Raised when a spec conflicts with package constraints.
        Provide the requirement that was violated when raising."""
@@ -940,3 +1055,11 @@ class UnsatisfiableArchitectureSpecError(UnsatisfiableSpecError):
     def __init__(self, provided, required):
         super(UnsatisfiableArchitectureSpecError, self).__init__(
             provided, required, "architecture")
+
+
+class UnsatisfiableProviderSpecError(UnsatisfiableSpecError):
+    """Raised when a provider is supplied but constraints don't match
+       a vpkg requirement"""
+    def __init__(self, provided, required):
+        super(UnsatisfiableProviderSpecError, self).__init__(
+            provided, required, "provider")

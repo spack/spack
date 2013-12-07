@@ -28,6 +28,44 @@ class ValidationTest(MockPackagesTest):
                           spec.package.validate_dependencies)
 
 
+    def test_preorder_traversal(self):
+        dag = Spec('mpileaks',
+                   Spec('callpath',
+                        Spec('dyninst',
+                             Spec('libdwarf',
+                                  Spec('libelf')),
+                             Spec('libelf')),
+                        Spec('mpich')),
+                   Spec('mpich'))
+        dag.normalize()
+
+        unique_names = [
+            'mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf', 'mpich']
+        unique_depths = [0,1,2,3,4,2]
+
+        non_unique_names = [
+            'mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf', 'libelf',
+            'mpich', 'mpich']
+        non_unique_depths = [0,1,2,3,4,3,2,1]
+
+        self.assertListEqual(
+            [x.name for x in dag.preorder_traversal()],
+            unique_names)
+
+        self.assertListEqual(
+            [(x, y.name) for x,y in dag.preorder_traversal(depth=True)],
+            zip(unique_depths, unique_names))
+
+        self.assertListEqual(
+            [x.name for x in dag.preorder_traversal(unique=False)],
+            non_unique_names)
+
+        self.assertListEqual(
+            [(x, y.name) for x,y in dag.preorder_traversal(unique=False, depth=True)],
+            zip(non_unique_depths, non_unique_names))
+
+
+
     def test_conflicting_spec_constraints(self):
         mpileaks = Spec('mpileaks ^mpich ^callpath ^dyninst ^libelf ^libdwarf')
         try:
@@ -61,6 +99,56 @@ class ValidationTest(MockPackagesTest):
         spec.normalize()
         spec.normalize()
         spec.normalize()
+
+
+    def test_normalize_with_virtual_spec(self):
+        dag = Spec('mpileaks',
+                   Spec('callpath',
+                        Spec('dyninst',
+                             Spec('libdwarf',
+                                  Spec('libelf')),
+                             Spec('libelf')),
+                        Spec('mpi')),
+                   Spec('mpi'))
+        dag.normalize()
+
+        # make sure nothing with the same name occurs twice
+        counts = {}
+        for spec in dag.preorder_traversal(keyfun=id):
+            if not spec.name in counts:
+                counts[spec.name] = 0
+            counts[spec.name] += 1
+
+        for name in counts:
+            self.assertEqual(counts[name], 1, "Count for %s was not 1!" % name)
+
+
+    def check_links(self, spec_to_check):
+        for spec in spec_to_check.preorder_traversal():
+            for dependent in spec.dependents.values():
+                self.assertIn(
+                    spec.name, dependent.dependencies,
+                    "%s not in dependencies of %s" % (spec.name, dependent.name))
+
+            for dependency in spec.dependencies.values():
+                self.assertIn(
+                    spec.name, dependency.dependents,
+                    "%s not in dependents of %s" % (spec.name, dependency.name))
+
+
+    def test_dependents_and_dependencies_are_correct(self):
+        spec = Spec('mpileaks',
+                   Spec('callpath',
+                        Spec('dyninst',
+                             Spec('libdwarf',
+                                  Spec('libelf')),
+                             Spec('libelf')),
+                        Spec('mpi')),
+                   Spec('mpi'))
+
+        self.check_links(spec)
+        spec.normalize()
+        self.check_links(spec)
 
 
     def test_unsatisfiable_version(self):
@@ -134,29 +222,51 @@ class ValidationTest(MockPackagesTest):
         expected_normalized = Spec(
             'mpileaks',
             Spec('callpath',
-                 Spec('dyninst', Spec('libdwarf', libelf),
+                 Spec('dyninst',
+                      Spec('libdwarf',
+                           libelf),
                       libelf),
-                 mpich), mpich)
+                 mpich),
+            mpich)
 
-        expected_non_dag = Spec(
+        expected_non_unique_nodes = Spec(
             'mpileaks',
             Spec('callpath',
-                 Spec('dyninst', Spec('libdwarf', Spec('libelf@1.8.11')),
+                 Spec('dyninst',
+                      Spec('libdwarf',
+                           Spec('libelf@1.8.11')),
                       Spec('libelf@1.8.11')),
-                 mpich), Spec('mpich'))
+                 mpich),
+            Spec('mpich'))
 
-        self.assertEqual(expected_normalized, expected_non_dag)
+        self.assertEqual(expected_normalized, expected_non_unique_nodes)
 
-        self.assertEqual(str(expected_normalized), str(expected_non_dag))
-        self.assertEqual(str(spec), str(expected_non_dag))
+        self.assertEqual(str(expected_normalized), str(expected_non_unique_nodes))
+        self.assertEqual(str(spec), str(expected_non_unique_nodes))
         self.assertEqual(str(expected_normalized), str(spec))
 
         self.assertEqual(spec, expected_flat)
         self.assertNotEqual(spec, expected_normalized)
-        self.assertNotEqual(spec, expected_non_dag)
+        self.assertNotEqual(spec, expected_non_unique_nodes)
 
         spec.normalize()
 
         self.assertNotEqual(spec, expected_flat)
         self.assertEqual(spec, expected_normalized)
-        self.assertEqual(spec, expected_non_dag)
+        self.assertEqual(spec, expected_non_unique_nodes)
+
+
+    def test_normalize_with_virtual_package(self):
+        spec = Spec('mpileaks ^mpi ^libelf@1.8.11 ^libdwarf')
+        spec.normalize()
+
+        expected_normalized = Spec(
+            'mpileaks',
+            Spec('callpath',
+                 Spec('dyninst',
+                      Spec('libdwarf',
+                           Spec('libelf@1.8.11')),
+                      Spec('libelf@1.8.11')),
+                 Spec('mpi')), Spec('mpi'))
+
+        self.assertEqual(str(spec), str(expected_normalized))

@@ -19,7 +19,3 @@ def spec(parser, args):
 
         spec.concretize()
         print spec.tree(color=True)
-
-        pkg = spec.package
-        wc = url.wildcard_version(pkg.url)
-        print wc

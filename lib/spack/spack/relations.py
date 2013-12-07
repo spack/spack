@@ -44,9 +44,15 @@ provides
         spack install mpileaks ^mvapich
         spack install mpileaks ^mpich
 """
-import sys
+import re
 import inspect
+import importlib
+
+import spack
 import spack.spec
+from spack.spec import Spec
+import spack.error
+from spack.packages import packages_module
 
 
 def _caller_locals():
@@ -62,8 +68,61 @@ def _caller_locals():
         del stack
 
 
+def _ensure_caller_is_spack_package():
+    """Make sure that the caller is a spack package.  If it's not,
+       raise ScopeError.  if it is, return its name."""
+    stack = inspect.stack()
+    try:
+        # get calling function name (the relation)
+        relation = stack[1][3]
+
+        # Make sure locals contain __module__
+        caller_locals = stack[2][0].f_locals
+    finally:
+        del stack
+
+    if not '__module__' in caller_locals:
+        raise ScopeError(relation)
+
+    module_name = caller_locals['__module__']
+    if not module_name.startswith(packages_module()):
+        raise ScopeError(relation)
+
+    base_name = module_name.split('.')[-1]
+    return base_name
+
+
+def _parse_local_spec(spec_like, pkg_name):
+    """Allow the user to omit the package name part of a spec in relations.
+       e.g., provides('mpi@2.1', when='@1.9:') says that this package provides
+       MPI 2.1 when its version is higher than 1.9.
+    """
+    if type(spec_like) not in (str, Spec):
+        raise TypeError('spec must be Spec or spec string.  Found %s'
+                        % type(spec_like))
+
+    if type(spec_like) == str:
+        try:
+            local_spec = Spec(spec_like)
+        except ParseError:
+            local_spec = Spec(pkg_name + spec_like)
+            if local_spec.name != pkg_name: raise ValueError(
+                    "Invalid spec for package %s: %s" % (pkg_name, spec_like))
+    else:
+        local_spec = spec_like
+
+    if local_spec.name != pkg_name:
+        raise ValueError("Spec name '%s' must match package name '%s'"
+                         % (spec_like.name, pkg_name))
+
+    return local_spec
+
+
+
+
 def _make_relation(map_name):
     def relation_fun(*specs):
+        _ensure_caller_is_spack_package()
         package_map = _caller_locals().setdefault(map_name, {})
         for string in specs:
             for spec in spack.spec.parse(string):
@@ -76,14 +135,31 @@ def _make_relation(map_name):
 depends_on = _make_relation("dependencies")
 
 
-"""Allows packages to provide a virtual dependency.  If a package provides
-   'mpi', other packages can declare that they depend on "mpi", and spack
-   can use the providing package to satisfy the dependency.
-"""
-provides   = _make_relation("provided")
+def provides(*specs, **kwargs):
+    """Allows packages to provide a virtual dependency.  If a package provides
+       'mpi', other packages can declare that they depend on "mpi", and spack
+       can use the providing package to satisfy the dependency.
+    """
+    pkg = _ensure_caller_is_spack_package()
+    spec_string = kwargs.get('when', pkg)
+    provider_spec = _parse_local_spec(spec_string, pkg)
+
+    provided = _caller_locals().setdefault("provided", {})
+    for string in specs:
+        for provided_spec in spack.spec.parse(string):
+            provided[provided_spec] = provider_spec
 
 
 """Packages can declare conflicts with other packages.
    This can be as specific as you like: use regular spec syntax.
 """
 conflicts  = _make_relation("conflicted")
+
+
+
+class ScopeError(spack.error.SpackError):
+    """This is raised when a relation is called from outside a spack package."""
+    def __init__(self, relation):
+        super(ScopeError, self).__init__(
+            "Cannot inovke '%s' from outside of a Spack package!" % relation)
+        self.relation = relation

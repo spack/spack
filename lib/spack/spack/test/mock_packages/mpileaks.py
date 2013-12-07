@@ -10,7 +10,7 @@ class Mpileaks(Package):
                  2.2 : None,
                  2.3 : None }
 
-    depends_on("mpich")
+    depends_on("mpi")
     depends_on("callpath")
 
     def install(self, prefix):

@@ -391,8 +391,10 @@ class Package(object):
         return tuple(self._dependents)
 
 
-    def preorder_traversal(self, visited=None):
+    def preorder_traversal(self, visited=None, **kwargs):
         """This does a preorder traversal of the package's dependence DAG."""
+        virtual = kwargs.get("virtual", False)
+
         if visited is None:
             visited = set()
 
@@ -400,16 +402,41 @@ class Package(object):
             return
         visited.add(self.name)
 
-        yield self
+        if not virtual:
+            yield self
+
         for name in sorted(self.dependencies.keys()):
             spec = self.dependencies[name]
-            for pkg in packages.get(name).preorder_traversal(visited):
+
+            # currently, we do not descend into virtual dependencies, as this
+            # makes doing a sensible traversal much harder.  We just assume that
+            # ANY of the virtual deps will work, which might not be true (due to
+            # conflicts or unsatisfiable specs).  For now this is ok but we might
+            # want to reinvestigate if we start using a lot of complicated virtual
+            # dependencies
+            # TODO: reinvestigate this.
+            if spec.virtual:
+                if virtual:
+                    yield spec
+                continue
+
+            for pkg in packages.get(name).preorder_traversal(visited, **kwargs):
                 yield pkg
 
 
     def validate_dependencies(self):
         """Ensure that this package and its dependencies all have consistent
            constraints on them.
+
+           NOTE that this will NOT find sanity problems through a virtual
+           dependency.  Virtual deps complicate the problem because we
+           don't know in advance which ones conflict with others in the
+           dependency DAG. If there's more than one virtual dependency,
+           it's a full-on SAT problem, so hold off on this for now.
+           The vdeps are actually skipped in preorder_traversal, so see
+           that for details.
+
+           TODO: investigate validating virtual dependencies.
         """
         # This algorithm just attempts to merge all the constraints on the same
         # package together, loses information about the source of the conflict.
@@ -432,13 +459,14 @@ class Package(object):
                 % (self.name, e.message))
 
 
-    @property
-    @memoized
-    def all_dependencies(self):
-        """Dict(str -> Package) of all transitive dependencies of this package."""
-        all_deps = {name : dep for dep in self.preorder_traversal}
-        del all_deps[self.name]
-        return all_deps
+    def provides(self, vpkg_name):
+        """True if this package provides a virtual package with the specified name."""
+        return vpkg_name in self.provided
+
+
+    def virtual_dependencies(self, visited=None):
+        for spec in sorted(set(self.preorder_traversal(virtual=True))):
+            yield spec
 
 
     @property

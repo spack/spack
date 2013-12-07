@@ -11,6 +11,7 @@ TODO: make this customizable and allow users to configure
 """
 import spack.arch
 import spack.compilers
+import spack.packages
 from spack.version import *
 from spack.spec import *
 
@@ -84,3 +85,15 @@ class DefaultConcretizer(object):
                 raise spack.spec.UnknownCompilerError(str(spec.compiler))
         else:
             spec.compiler = spack.compilers.default_compiler()
+
+
+    def choose_provider(self, spec, providers):
+        """This is invoked for virtual specs.  Given a spec with a virtual name,
+           say "mpi", and a list of specs of possible providers of that spec,
+           select a provider and return it.
+
+           Default implementation just chooses the last provider in sorted order.
+        """
+        assert(spec.virtual)
+        assert(providers)
+        return sorted(providers)[-1]

@@ -8,6 +8,7 @@ import glob
 import spack
 import spack.error
 import spack.spec
+import spack.tty as tty
 from spack.util.filesystem import new_path
 from spack.util.lang import list_modules
 import spack.arch as arch
@@ -19,7 +20,60 @@ valid_package_re = r'^\w[\w-]*$'
 invalid_package_re = r'[_-][_-]+'
 
 instances = {}
-providers = {}
+
+
+class ProviderIndex(object):
+    """This is a dict of dicts used for finding providers of particular
+       virtual dependencies. The dict of dicts looks like:
+
+       { vpkg name :
+           { full vpkg spec : package providing spec } }
+
+       Callers can use this to first find which packages provide a vpkg,
+       then find a matching full spec.  e.g., in this scenario:
+
+       { 'mpi' :
+           { mpi@:1.1 : mpich,
+             mpi@:2.3 : mpich2@1.9: } }
+
+       Calling find_provider(spec) will find a package that provides a
+       matching implementation of MPI.
+    """
+    def __init__(self, providers):
+        """Takes a list of provider packagse and build an index of the virtual
+           packages they provide."""
+        self.providers = {}
+        self.add(*providers)
+
+
+    def add(self, *providers):
+        """Look at the provided map on the provider packages, invert it and
+           add it to this provider index."""
+        for pkg in providers:
+            for provided_spec, provider_spec in pkg.provided.iteritems():
+                provided_name = provided_spec.name
+                if provided_name not in self.providers:
+                    self.providers[provided_name] = {}
+                self.providers[provided_name][provided_spec] = provider_spec
+
+
+    def providers_for(self, *vpkg_specs):
+        """Gives names of all packages that provide virtual packages
+           with the supplied names."""
+        packages = set()
+        for vspec in vpkg_specs:
+            # Allow string names to be passed as input, as well as specs
+            if type(vspec) == str:
+                vspec = spack.spec.Spec(vspec)
+
+            # Add all the packages that satisfy the vpkg spec.
+            if vspec.name in self.providers:
+                for provider_spec, pkg in self.providers[vspec.name].items():
+                    if provider_spec.satisfies(vspec):
+                        packages.add(pkg)
+
+        # Return packages in order
+        return sorted(packages)
 
 
 def get(pkg_name):
@@ -30,22 +84,15 @@ def get(pkg_name):
     return instances[pkg_name]
 
 
-def get_providers(vpkg_name):
+def providers_for(vpkg_spec):
+    if providers_for.index is None:
+        providers_for.index = ProviderIndex(all_packages())
+
+    providers = providers_for.index.providers_for(vpkg_spec)
     if not providers:
-        compute_providers()
-
-    if not vpkg_name in providers:
-        raise UnknownPackageError("No such virtual package: %s" % vpkg_name)
-
-    return providers[vpkg_name]
-
-
-def compute_providers():
-    for pkg in all_packages():
-        for vpkg in pkg.provided:
-            if vpkg not in providers:
-                providers[vpkg] = []
-            providers[vpkg].append(pkg)
+        raise UnknownPackageError("No such virtual package: %s" % vpkg_spec)
+    return providers
+providers_for.index = None
 
 
 def valid_package_name(pkg_name):
@@ -99,6 +146,13 @@ def exists(pkg_name):
     return os.path.exists(filename_for_package_name(pkg_name))
 
 
+def packages_module():
+    # TODO: replace this with a proper package DB class, instead of this hackiness.
+    packages_path = re.sub(spack.module_path + '\/+', 'spack.', spack.packages_path)
+    packages_module = re.sub(r'\/', '.', packages_path)
+    return packages_module
+
+
 def get_class_for_package_name(pkg_name):
     file_name = filename_for_package_name(pkg_name)
 
@@ -115,22 +169,18 @@ def get_class_for_package_name(pkg_name):
     if not re.match(r'%s' % spack.module_path, spack.packages_path):
         raise RuntimeError("Packages path is not a submodule of spack.")
 
-    # TODO: replace this with a proper package DB class, instead of this hackiness.
-    packages_path = re.sub(spack.module_path + '\/+', 'spack.', spack.packages_path)
-    packages_module = re.sub(r'\/', '.', packages_path)
-
     class_name = pkg_name.capitalize()
     try:
-        module_name = "%s.%s" % (packages_module, pkg_name)
+        module_name = "%s.%s" % (packages_module(), pkg_name)
         module = __import__(module_name, fromlist=[class_name])
     except ImportError, e:
         tty.die("Error while importing %s.%s:\n%s" % (pkg_name, class_name, e.message))
 
-    klass = getattr(module, class_name)
-    if not inspect.isclass(klass):
+    cls = getattr(module, class_name)
+    if not inspect.isclass(cls):
         tty.die("%s.%s is not a class" % (pkg_name, class_name))
 
-    return klass
+    return cls
 
 
 def compute_dependents():

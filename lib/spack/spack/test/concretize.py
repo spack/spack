@@ -18,28 +18,13 @@ class ConcretizeTest(MockPackagesTest):
             self.assertEqual(abstract.architecture, concrete.architecture)
 
 
-    def check_concretize(self, abstract_spec, *presets):
+    def check_concretize(self, abstract_spec):
         abstract = Spec(abstract_spec)
-        concrete = abstract.concretized(*presets)
+        concrete = abstract.concretized()
 
         self.assertFalse(abstract.concrete)
         self.assertTrue(concrete.concrete)
         self.check_spec(abstract, concrete)
-
-        return concrete
-
-
-    def check_presets(self, abstract, *presets):
-        abstract = Spec(abstract)
-        concrete = self.check_concretize(abstract, *presets)
-
-        flat_deps = concrete.flat_dependencies()
-        for preset in presets:
-            preset_spec = Spec(preset)
-            name = preset_spec.name
-
-            self.assertTrue(name in flat_deps)
-            self.check_spec(preset_spec, flat_deps[name])
 
         return concrete
 
@@ -50,11 +35,8 @@ class ConcretizeTest(MockPackagesTest):
 
 
     def test_concretize_dag(self):
-        self.check_concretize('mpileaks')
+        spec = Spec('mpileaks')
+        spec.normalize()
+
         self.check_concretize('callpath')
-
-
-    def test_concretize_with_presets(self):
-        self.check_presets('mpileaks', 'callpath@0.8')
-        self.check_presets('mpileaks', 'callpath@0.9', 'dyninst@8.0+debug')
-        self.check_concretize('callpath', 'libelf@0.8.13+debug~foo', 'mpich@1.0')
+        self.check_concretize('mpileaks')

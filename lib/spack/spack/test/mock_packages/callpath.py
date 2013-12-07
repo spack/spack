@@ -10,7 +10,7 @@ class Callpath(Package):
                  1.0 : 'bf03b33375afa66fe0efa46ce3f4b17a' }
 
     depends_on("dyninst")
-    depends_on("mpich")
+    depends_on("mpi")
 
     def install(self, prefix):
         configure("--prefix=%s" % prefix)
