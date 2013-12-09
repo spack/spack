@@ -127,7 +127,7 @@ def depends_on(*specs):
     for string in specs:
         for spec in spack.spec.parse(string):
             if pkg == spec.name:
-                raise CircularDependencyError('depends_on', pkg)
+                raise CircularReferenceError('depends_on', pkg)
             dependencies[spec.name] = spec
 
 
@@ -143,6 +143,8 @@ def provides(*specs, **kwargs):
     provided = _caller_locals().setdefault("provided", {})
     for string in specs:
         for provided_spec in spack.spec.parse(string):
+            if pkg == provided_spec.name:
+                raise CircularReferenceError('depends_on', pkg)
             provided[provided_spec] = provider_spec
 
 
@@ -171,8 +173,10 @@ class ScopeError(RelationError):
             "Cannot inovke '%s' from outside of a Spack package!" % relation)
 
 
-class CircularDependencyError(RelationError):
+class CircularReferenceError(RelationError):
     """This is raised when something depends on itself."""
     def __init__(self, relation, package):
-        super(CircularDependencyError, self).__init__(
-            relation, "Package %s cannot depend on itself." % package)
+        super(CircularReferenceError, self).__init__(
+            relation,
+            "Package '%s' cannot pass itself to %s." % (package, relation))
+        self.package = package
