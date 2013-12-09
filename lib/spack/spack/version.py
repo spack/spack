@@ -240,9 +240,9 @@ class Version(object):
 @total_ordering
 class VersionRange(object):
     def __init__(self, start, end):
-        if type(start) == str:
+        if isinstance(start, basestring):
             start = Version(start)
-        if type(end) == str:
+        if isinstance(end, basestring):
             end = Version(end)
 
         self.start = start
@@ -347,7 +347,7 @@ class VersionList(object):
     def __init__(self, vlist=None):
         self.versions = []
         if vlist != None:
-            if type(vlist) == str:
+            if isinstance(vlist, basestring):
                 vlist = _string_to_version(vlist)
                 if type(vlist) == VersionList:
                     self.versions = vlist.versions
@@ -542,14 +542,13 @@ def ver(obj):
     """Parses a Version, VersionRange, or VersionList from a string
        or list of strings.
     """
-    t = type(obj)
-    if t == list:
+    if isinstance(obj, (list, tuple)):
         return VersionList(obj)
-    elif t == str:
+    elif isinstance(obj, basestring):
         return _string_to_version(obj)
-    elif t in (int, float):
+    elif isinstance(obj, (int, float)):
         return _string_to_version(str(obj))
-    elif t in (Version, VersionRange, VersionList):
+    elif type(obj) in (Version, VersionRange, VersionList):
         return obj
     else:
-        raise TypeError("ver() can't convert %s to version!" % t)
+        raise TypeError("ver() can't convert %s to version!" % type(obj))

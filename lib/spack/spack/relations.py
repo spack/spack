@@ -97,11 +97,11 @@ def _parse_local_spec(spec_like, pkg_name):
        e.g., provides('mpi@2', when='@1.9:') says that this package provides
        MPI-3 when its version is higher than 1.9.
     """
-    if type(spec_like) not in (str, Spec):
+    if not isinstance(spec_like, (str, Spec)):
         raise TypeError('spec must be Spec or spec string.  Found %s'
                         % type(spec_like))
 
-    if type(spec_like) == str:
+    if isinstance(spec_like, str):
         try:
             local_spec = Spec(spec_like)
         except spack.parse.ParseError:

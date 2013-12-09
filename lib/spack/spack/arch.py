@@ -61,7 +61,7 @@ def sys_type():
     if sys_type == None:
         raise NoSysTypeError()
 
-    if not type(sys_type) == str:
+    if not isinstance(sys_type, basestring):
         raise InvalidSysTypeError(sys_type)
 
     return sys_type

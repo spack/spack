@@ -300,7 +300,7 @@ class Package(object):
             except UndetectableVersionError:
                 tty.die("Couldn't extract a default version from %s. You " +
                         "must specify it explicitly in the package." % self.url)
-        elif type(self.version) != Version:
+        elif not isinstance(self.version, Version):
             self.version = Version(self.version)
 
         # This is set by scraping a web page.
@@ -308,7 +308,7 @@ class Package(object):
 
         # This list overrides available_versions if set by the user.
         attr_setdefault(self, 'versions', None)
-        if self.versions and type(self.versions) != VersionList:
+        if self.versions and not isinstance(self.versions, VersionList):
             self.versions = VersionList(self.versions)
 
         # Empty at first; only compute dependent packages if necessary

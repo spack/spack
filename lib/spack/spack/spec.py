@@ -246,12 +246,12 @@ class DependencyMap(HashableMap):
 class Spec(object):
     def __init__(self, spec_like, *dep_like):
         # Copy if spec_like is a Spec.
-        if type(spec_like) == Spec:
+        if isinstance(spec_like, Spec):
             self._dup(spec_like)
             return
 
         # Parse if the spec_like is a string.
-        if type(spec_like) != str:
+        if not isinstance(spec_like, basestring):
             raise TypeError("Can't make spec out of %s" % type(spec_like))
 
         spec_list = SpecParser().parse(spec_like)
@@ -277,7 +277,7 @@ class Spec(object):
         # Note that given two specs a and b, Spec(a) copies a, but
         # Spec(a, b) will copy a but just add b as a dep.
         for dep in dep_like:
-            spec = dep if type(dep) == Spec else Spec(dep)
+            spec = dep if isinstance(dep, Spec) else Spec(dep)
             self._add_dependency(spec)
 
 
@@ -632,6 +632,9 @@ class Spec(object):
                   package that provides a virtual package that is in the spec,
                   then we replace the virtual package with the non-virtual one.
              4) The spec DAG matches package DAG.
+
+           TODO: normalize should probably implement some form of cycle detection,
+                 to ensure that the spec is actually a DAG.
         """
         # Ensure first that all packages in the DAG exist.
         self.validate_package_names()
@@ -699,7 +702,7 @@ class Spec(object):
 
 
     def satisfies(self, other):
-        if type(other) != Spec:
+        if not isinstance(other, Spec):
             other = Spec(other)
 
         def sat(attribute):
@@ -772,7 +775,7 @@ class Spec(object):
     def __contains__(self, spec):
         """True if this spec has any dependency that satisfies the supplied
            spec."""
-        if type(spec) != Spec:
+        if not isinstance(spec, Spec):
             spec = Spec(spec)
 
         for s in self.preorder_traversal():
