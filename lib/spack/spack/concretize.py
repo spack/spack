@@ -12,8 +12,9 @@ TODO: make this customizable and allow users to configure
 import spack.arch
 import spack.compilers
 import spack.packages
+import spack.spec
 from spack.version import *
-from spack.spec import *
+
 
 
 class DefaultConcretizer(object):
@@ -31,12 +32,12 @@ class DefaultConcretizer(object):
         if spec.versions.concrete:
             return
 
-        pkg = spec.package
-
         # If there are known avaialble versions, return the most recent
-        available_versions = pkg.available_versions
-        if available_versions:
-            spec.versions = ver([available_versions[-1]])
+        # version that satisfies the spec
+        pkg = spec.package
+        valid_versions = pkg.available_versions.intersection(spec.versions)
+        if valid_versions:
+            spec.versions = ver([valid_versions[-1]])
         else:
             spec.versions = ver([pkg.version])
 
@@ -91,9 +92,11 @@ class DefaultConcretizer(object):
         """This is invoked for virtual specs.  Given a spec with a virtual name,
            say "mpi", and a list of specs of possible providers of that spec,
            select a provider and return it.
-
-           Default implementation just chooses the last provider in sorted order.
         """
         assert(spec.virtual)
         assert(providers)
-        return sorted(providers)[-1]
+
+        index = spack.spec.index_specs(providers)
+        first_key = sorted(index.keys())[0]
+        latest_version = sorted(index[first_key])[-1]
+        return latest_version

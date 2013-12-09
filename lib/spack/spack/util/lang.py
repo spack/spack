@@ -113,3 +113,16 @@ class HashableMap(dict):
         for key in self:
             clone[key] = self[key].copy()
         return clone
+
+
+def in_function(function_name):
+    """True if the caller was called from some function with
+       the supplied Name, False otherwise."""
+    stack = inspect.stack()
+    try:
+        for elt in stack[2:]:
+            if elt[3] == function_name:
+                return True
+        return False
+    finally:
+        del stack

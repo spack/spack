@@ -28,42 +28,49 @@ class ValidationTest(MockPackagesTest):
                           spec.package.validate_dependencies)
 
 
-    def test_preorder_traversal(self):
-        dag = Spec('mpileaks',
-                   Spec('callpath',
-                        Spec('dyninst',
-                             Spec('libdwarf',
-                                  Spec('libelf')),
-                             Spec('libelf')),
-                        Spec('mpich')),
-                   Spec('mpich'))
+    def test_unique_node_traversal(self):
+        dag = Spec('mpileaks ^zmpi')
         dag.normalize()
 
-        unique_names = [
-            'mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf', 'mpich']
-        unique_depths = [0,1,2,3,4,2]
+        names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
+                 'zmpi', 'fake']
+        pairs = zip([0,1,2,3,4,2,3], names)
 
-        non_unique_names = [
-            'mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf', 'libelf',
-            'mpich', 'mpich']
-        non_unique_depths = [0,1,2,3,4,3,2,1]
+        traversal = dag.preorder_traversal()
+        self.assertListEqual([x.name for x in traversal], names)
 
-        self.assertListEqual(
-            [x.name for x in dag.preorder_traversal()],
-            unique_names)
+        traversal = dag.preorder_traversal(depth=True)
+        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
 
-        self.assertListEqual(
-            [(x, y.name) for x,y in dag.preorder_traversal(depth=True)],
-            zip(unique_depths, unique_names))
 
-        self.assertListEqual(
-            [x.name for x in dag.preorder_traversal(unique=False)],
-            non_unique_names)
+    def test_unique_edge_traversal(self):
+        dag = Spec('mpileaks ^zmpi')
+        dag.normalize()
 
-        self.assertListEqual(
-            [(x, y.name) for x,y in dag.preorder_traversal(unique=False, depth=True)],
-            zip(non_unique_depths, non_unique_names))
+        names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
+                 'libelf', 'zmpi', 'fake', 'zmpi']
+        pairs = zip([0,1,2,3,4,3,2,3,1], names)
 
+        traversal = dag.preorder_traversal(cover='edges')
+        self.assertListEqual([x.name for x in traversal], names)
+
+        traversal = dag.preorder_traversal(cover='edges', depth=True)
+        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+
+
+    def test_unique_path_traversal(self):
+        dag = Spec('mpileaks ^zmpi')
+        dag.normalize()
+
+        names = ['mpileaks', 'callpath', 'dyninst', 'libdwarf', 'libelf',
+                 'libelf', 'zmpi', 'fake', 'zmpi', 'fake']
+        pairs = zip([0,1,2,3,4,3,2,3,1,2], names)
+
+        traversal = dag.preorder_traversal(cover='paths')
+        self.assertListEqual([x.name for x in traversal], names)
+
+        traversal = dag.preorder_traversal(cover='paths', depth=True)
+        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
 
 
     def test_conflicting_spec_constraints(self):
@@ -270,3 +277,14 @@ class ValidationTest(MockPackagesTest):
                  Spec('mpi')), Spec('mpi'))
 
         self.assertEqual(str(spec), str(expected_normalized))
+
+
+    def test_contains(self):
+        spec = Spec('mpileaks ^mpi ^libelf@1.8.11 ^libdwarf')
+        self.assertIn(Spec('mpi'), spec)
+        self.assertIn(Spec('libelf'), spec)
+        self.assertIn(Spec('libelf@1.8.11'), spec)
+        self.assertNotIn(Spec('libelf@1.8.12'), spec)
+        self.assertIn(Spec('libdwarf'), spec)
+        self.assertNotIn(Spec('libgoblin'), spec)
+        self.assertIn(Spec('mpileaks'), spec)

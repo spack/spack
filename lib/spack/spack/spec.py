@@ -93,6 +93,19 @@ color_formats = {'%' : '@g',   # compiler
 separators = '[%s]' % ''.join(color_formats.keys())
 
 
+def index_specs(specs):
+    """Take a list of specs and return a dict of lists.  Dict is
+       keyed by spec name and lists include all specs with the
+       same name.
+    """
+    spec_dict = {}
+    for spec in specs:
+        if not spec.name in spec_dict:
+            spec_dict[spec.name] = []
+        spec_dict[spec.name].append(spec)
+    return spec_dict
+
+
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
        color_formats."""
@@ -360,11 +373,17 @@ class Spec(object):
         """Generic preorder traversal of the DAG represented by this spec.
            This will yield each node in the spec.  Options:
 
-           unique   [=True]
-               When True (default), every node in the DAG is yielded only once.
-               When False, the traversal will yield already visited
-               nodes but not their children.  This lets you see that a node
-               points to an already-visited subgraph without descending into it.
+           cover    [=nodes|edges|paths]
+               Determines how extensively to cover the dag.  Possible vlaues:
+
+               'nodes': Visit each node in the dag only once.  Every node
+                        yielded by this function will be unique.
+               'edges': If a node has been visited once but is reached along a
+                        new path from the root, yield it but do not descend
+                        into it.  This traverses each 'edge' in the DAG once.
+               'paths': Explore every unique path reachable from the root.
+                        This descends into visited subtrees and will yield
+                        nodes twice if they're reachable by multiple paths.
 
            depth    [=False]
                Defaults to False.  When True, yields not just nodes in the
@@ -375,30 +394,37 @@ class Spec(object):
                Allow a custom key function to track the identity of nodes
                in the traversal.
 
-           noroot   [=False]
-               If true, this won't yield the root node, just its descendents.
+           root     [=True]
+               If false, this won't yield the root node, just its descendents.
         """
-        unique = kwargs.setdefault('unique', True)
-        depth  = kwargs.setdefault('depth', False)
-        keyfun = kwargs.setdefault('key', id)
-        noroot = kwargs.setdefault('noroot', False)
+        depth      = kwargs.setdefault('depth', False)
+        key_fun    = kwargs.setdefault('key', id)
+        yield_root = kwargs.setdefault('root', True)
+        cover      = kwargs.setdefault('cover', 'nodes')
+
+        cover_values = ('nodes', 'edges', 'paths')
+        if cover not in cover_values:
+            raise ValueError("Invalid value for cover: %s.  Choices are %s"
+                             % (cover, ",".join(cover_values)))
 
         if visited is None:
             visited = set()
 
-        if keyfun(self) in visited:
-            if not unique:
-                yield (d, self) if depth else self
-            return
-        visited.add(keyfun(self))
+        result = (d, self) if depth else self
+        key = key_fun(self)
 
-        if d > 0 or not noroot:
-            yield (d, self) if depth else self
+        if key in visited:
+            if cover == 'nodes':    return
+            if yield_root or d > 0: yield result
+            if cover == 'edges':    return
+        else:
+            if yield_root or d > 0: yield result
 
-        for key in sorted(self.dependencies.keys()):
-            for result in self.dependencies[key].preorder_traversal(
-                    visited, d+1, **kwargs):
-                yield result
+        visited.add(key)
+        for name in sorted(self.dependencies):
+            child = self.dependencies[name]
+            for elt in child.preorder_traversal(visited, d+1, **kwargs):
+                yield elt
 
 
     def _concretize_helper(self, presets=None, visited=None):
@@ -436,6 +462,14 @@ class Spec(object):
         """Find virtual packages in this spec, replace them with providers,
            and normalize again to include the provider's (potentially virtual)
            dependencies.  Repeat until there are no virtual deps.
+
+           TODO: If a provider depends on something that conflicts with
+                 other dependencies in the spec being expanded, this can
+                 produce a conflicting spec.  For example, if mpich depends
+                 on hwloc@:1.3 but something in the spec needs hwloc1.4:,
+                 then we should choose an MPI other than mpich.  Cases like
+                 this are infrequent, but should implement this before it is
+                 a problem.
         """
         while True:
             virtuals =[v for v in self.preorder_traversal() if v.virtual]
@@ -545,8 +579,7 @@ class Spec(object):
                 providers = provider_index.providers_for(pkg_dep)
 
                 # If there is a provider for the vpkg, then use that instead of
-                # the virtual package.  If there isn't a provider, just merge
-                # constraints on the virtual package.
+                # the virtual package.
                 if providers:
                     # Can't have multiple providers for the same thing in one spec.
                     if len(providers) > 1:
@@ -613,7 +646,7 @@ class Spec(object):
         # Remove virtual deps that are already provided by something in the spec
         spec_packages = [d.package for d in spec_deps.values() if not d.virtual]
 
-        index = packages.ProviderIndex(spec_packages)
+        index = packages.ProviderIndex(spec_deps.values(), restrict=True)
         visited = set()
         self._normalize_helper(visited, spec_deps, index)
 
@@ -666,6 +699,9 @@ class Spec(object):
 
 
     def satisfies(self, other):
+        if type(other) != Spec:
+            other = Spec(other)
+
         def sat(attribute):
             s = getattr(self, attribute)
             o = getattr(other, attribute)
@@ -716,11 +752,33 @@ class Spec(object):
         clone._dup(self, **kwargs)
         return clone
 
+
     @property
     def version(self):
         if not self.concrete:
             raise SpecError("Spec is not concrete: " + str(self))
         return self.versions[0]
+
+
+    def __getitem__(self, name):
+        """TODO: does the way this is written make sense?"""
+        for spec in self.preorder_traversal():
+            if spec.name == name:
+                return spec
+
+        raise KeyError("No spec with name %s in %s" % (name, self))
+
+
+    def __contains__(self, spec):
+        """True if this spec has any dependency that satisfies the supplied
+           spec."""
+        if type(spec) != Spec:
+            spec = Spec(spec)
+
+        for s in self.preorder_traversal():
+            if s.satisfies(spec):
+                return True
+        return False
 
 
     def _cmp_key(self):
@@ -757,16 +815,20 @@ class Spec(object):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
         color = kwargs.get('color', False)
+        depth = kwargs.get('depth', False)
+        cover = kwargs.get('cover', 'paths')
 
         out = ""
         cur_id = 0
         ids = {}
-        for d, node in self.preorder_traversal(unique=False, depth=True):
+        for d, node in self.preorder_traversal(cover=cover, depth=True):
+            if depth:
+                out += "%-4d" % d
             if not id(node) in ids:
                 cur_id += 1
                 ids[id(node)] = cur_id
-            out += str(ids[id(node)])
-            out += " "+ ("    " * d)
+            out += "%-4d" % ids[id(node)]
+            out += ("    " * d)
             out += node.str_no_deps(color=color) + "\n"
         return out
 
@@ -777,7 +839,7 @@ class Spec(object):
 
     def __str__(self):
         byname = lambda d: d.name
-        deps = self.preorder_traversal(key=byname, noroot=True)
+        deps = self.preorder_traversal(key=byname, root=False)
         sorted_deps = sorted(deps, key=byname)
         dep_string = ''.join("^" + dep.str_no_deps() for dep in sorted_deps)
         return self.str_no_deps() + dep_string
@@ -1011,8 +1073,8 @@ class MultipleProviderError(SpecError):
     """
     def __init__(self, vpkg, providers):
         """Takes the name of the vpkg"""
-        super(NoProviderError, self).__init__(
-            "Multiple providers found for vpkg '%s': %s"
+        super(MultipleProviderError, self).__init__(
+            "Multiple providers found for '%s': %s"
             % (vpkg, [str(s) for s in providers]))
         self.vpkg = vpkg
         self.providers = providers

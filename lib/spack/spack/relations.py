@@ -94,8 +94,8 @@ def _ensure_caller_is_spack_package():
 
 def _parse_local_spec(spec_like, pkg_name):
     """Allow the user to omit the package name part of a spec in relations.
-       e.g., provides('mpi@2.1', when='@1.9:') says that this package provides
-       MPI 2.1 when its version is higher than 1.9.
+       e.g., provides('mpi@2', when='@1.9:') says that this package provides
+       MPI-3 when its version is higher than 1.9.
     """
     if type(spec_like) not in (str, Spec):
         raise TypeError('spec must be Spec or spec string.  Found %s'
@@ -104,7 +104,7 @@ def _parse_local_spec(spec_like, pkg_name):
     if type(spec_like) == str:
         try:
             local_spec = Spec(spec_like)
-        except ParseError:
+        except spack.parse.ParseError:
             local_spec = Spec(pkg_name + spec_like)
             if local_spec.name != pkg_name: raise ValueError(
                     "Invalid spec for package %s: %s" % (pkg_name, spec_like))
@@ -118,21 +118,17 @@ def _parse_local_spec(spec_like, pkg_name):
     return local_spec
 
 
-
-
-def _make_relation(map_name):
-    def relation_fun(*specs):
-        _ensure_caller_is_spack_package()
-        package_map = _caller_locals().setdefault(map_name, {})
-        for string in specs:
-            for spec in spack.spec.parse(string):
-                package_map[spec.name] = spec
-    return relation_fun
-
-
 """Adds a dependencies local variable in the locals of
    the calling class, based on args. """
-depends_on = _make_relation("dependencies")
+def depends_on(*specs):
+    pkg = _ensure_caller_is_spack_package()
+
+    dependencies = _caller_locals().setdefault('dependencies', {})
+    for string in specs:
+        for spec in spack.spec.parse(string):
+            if pkg == spec.name:
+                raise CircularDependencyError('depends_on', pkg)
+            dependencies[spec.name] = spec
 
 
 def provides(*specs, **kwargs):
@@ -153,13 +149,30 @@ def provides(*specs, **kwargs):
 """Packages can declare conflicts with other packages.
    This can be as specific as you like: use regular spec syntax.
 """
-conflicts  = _make_relation("conflicted")
+def conflicts(*specs):
+    # TODO: implement conflicts
+    pass
 
 
 
-class ScopeError(spack.error.SpackError):
+
+class RelationError(spack.error.SpackError):
+    """This is raised when something is wrong with a package relation."""
+    def __init__(self, relation, message):
+        super(RelationError, self).__init__(message)
+        self.relation = relation
+
+
+class ScopeError(RelationError):
     """This is raised when a relation is called from outside a spack package."""
     def __init__(self, relation):
         super(ScopeError, self).__init__(
+            relation,
             "Cannot inovke '%s' from outside of a Spack package!" % relation)
-        self.relation = relation
+
+
+class CircularDependencyError(RelationError):
+    """This is raised when something depends on itself."""
+    def __init__(self, relation, package):
+        super(CircularDependencyError, self).__init__(
+            relation, "Package %s cannot depend on itself." % package)

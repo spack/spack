@@ -39,41 +39,53 @@ class ProviderIndex(object):
        Calling find_provider(spec) will find a package that provides a
        matching implementation of MPI.
     """
-    def __init__(self, providers):
-        """Takes a list of provider packagse and build an index of the virtual
-           packages they provide."""
+    def __init__(self, specs, **kwargs):
+        restrict = kwargs.setdefault('restrict', False)
         self.providers = {}
-        self.add(*providers)
 
+        for spec in specs:
+            if type(spec) != spack.spec.Spec:
+                spec = spack.spec.Spec(spec)
 
-    def add(self, *providers):
-        """Look at the provided map on the provider packages, invert it and
-           add it to this provider index."""
-        for pkg in providers:
+            if spec.virtual:
+                continue
+
+            pkg = spec.package
             for provided_spec, provider_spec in pkg.provided.iteritems():
-                provided_name = provided_spec.name
-                if provided_name not in self.providers:
-                    self.providers[provided_name] = {}
-                self.providers[provided_name][provided_spec] = provider_spec
+                if provider_spec.satisfies(spec):
+                    provided_name = provided_spec.name
+                    if provided_name not in self.providers:
+                        self.providers[provided_name] = {}
+
+                    if restrict:
+                        self.providers[provided_name][provided_spec] = spec
+
+                    else:
+                        # Before putting the spec in the map, constrain it so that
+                        # it provides what was asked for.
+                        constrained = spec.copy()
+                        constrained.constrain(provider_spec)
+                        self.providers[provided_name][provided_spec] = constrained
+
 
 
     def providers_for(self, *vpkg_specs):
         """Gives names of all packages that provide virtual packages
            with the supplied names."""
-        packages = set()
+        providers = set()
         for vspec in vpkg_specs:
             # Allow string names to be passed as input, as well as specs
             if type(vspec) == str:
                 vspec = spack.spec.Spec(vspec)
 
-            # Add all the packages that satisfy the vpkg spec.
+            # Add all the providers that satisfy the vpkg spec.
             if vspec.name in self.providers:
-                for provider_spec, pkg in self.providers[vspec.name].items():
+                for provider_spec, spec in self.providers[vspec.name].items():
                     if provider_spec.satisfies(vspec):
-                        packages.add(pkg)
+                        providers.add(spec)
 
-        # Return packages in order
-        return sorted(packages)
+        # Return providers in order
+        return sorted(providers)
 
 
 def get(pkg_name):
@@ -86,7 +98,7 @@ def get(pkg_name):
 
 def providers_for(vpkg_spec):
     if providers_for.index is None:
-        providers_for.index = ProviderIndex(all_packages())
+        providers_for.index = ProviderIndex(all_package_names())
 
     providers = providers_for.index.providers_for(vpkg_spec)
     if not providers:

@@ -43,9 +43,9 @@ class Lexer(object):
 class Parser(object):
     """Base class for simple recursive descent parsers."""
     def __init__(self, lexer):
-        self.tokens = iter([]) # iterators over tokens, handled in order.  Starts empty.
-        self.token = None      # last accepted token
-        self.next = None       # next token
+        self.tokens = iter([])   # iterators over tokens, handled in order.  Starts empty.
+        self.token = Token(None) # last accepted token starts at beginning of file
+        self.next = None         # next token
         self.lexer = lexer
         self.text = None
 
