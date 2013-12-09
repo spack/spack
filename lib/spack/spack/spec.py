@@ -397,10 +397,10 @@ class Spec(object):
            root     [=True]
                If false, this won't yield the root node, just its descendents.
         """
-        depth      = kwargs.setdefault('depth', False)
-        key_fun    = kwargs.setdefault('key', id)
-        yield_root = kwargs.setdefault('root', True)
-        cover      = kwargs.setdefault('cover', 'nodes')
+        depth      = kwargs.get('depth', False)
+        key_fun    = kwargs.get('key', id)
+        yield_root = kwargs.get('root', True)
+        cover      = kwargs.get('cover', 'nodes')
 
         cover_values = ('nodes', 'edges', 'paths')
         if cover not in cover_values:
