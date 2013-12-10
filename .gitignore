@@ -2,3 +2,4 @@
 /opt/
 /var/
 *~
+.DS_Store
