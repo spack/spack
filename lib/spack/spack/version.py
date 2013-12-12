@@ -1,15 +1,15 @@
 """
 This file implements Version and version-ish objects.  These are:
 
-  Version
-      A single version of a package.
-  VersionRange
-      A range of versions of a package.
-  VersionList
-      A list of Versions and VersionRanges.
+Version
+  A single version of a package.
+VersionRange
+  A range of versions of a package.
+VersionList
+  A list of Versions and VersionRanges.
 
 All of these types support the following operations, which can
-be called on any of the types:
+be called on any of the types::
 
   __eq__, __ne__, __lt__, __gt__, __ge__, __le__, __hash__
   __contains__
@@ -18,8 +18,6 @@ be called on any of the types:
   union
   intersection
   concrete
-      True if the Version, VersionRange or VersionList represents
-      a single version.
 """
 import os
 import sys

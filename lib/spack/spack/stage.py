@@ -18,12 +18,16 @@ class Stage(object):
        expanded, and built before being installed.  It also handles downloading
        the archive.  A stage's lifecycle looks like this:
 
-       setup()           Create the stage directory.
-       fetch()           Fetch a source archive into the stage.
-       expand_archive()  Expand the source archive.
-       <install>         Build and install the archive.  This is handled
-                         by the Package class.
-       destroy()         Remove the stage once the package has been installed.
+       setup()
+         Create the stage directory.
+       fetch()
+         Fetch a source archive into the stage.
+       expand_archive()
+         Expand the source archive.
+       <install>
+         Build and install the archive.  This is handled by the Package class.
+       destroy()
+         Remove the stage once the package has been installed.
 
        If spack.use_tmp_stage is True, spack will attempt to create stages
        in a tmp directory.  Otherwise, stages are created directly in

@@ -6,8 +6,10 @@ package configuration a "spec".
 
 The syntax looks like this:
 
-    spack install mpileaks ^openmpi @1.2:1.4 +debug %intel @12.1
-                  0        1        2        3      4      5
+.. code-block:: sh
+
+    $ spack install mpileaks ^openmpi @1.2:1.4 +debug %intel @12.1 =bgqos_0
+                    0        1        2        3      4      5     6
 
 The first part of this is the command, 'spack install'.  The rest of the
 line is a spec for a particular installation of the mpileaks package.
@@ -37,7 +39,10 @@ line is a spec for a particular installation of the mpileaks package.
    if it comes immediately after the compiler name.  Otherwise it will be
    associated with the current package spec.
 
-Here is the EBNF grammar for a spec:
+6. The architecture to build with.  This is needed on machines where
+   cross-compilation is required
+
+Here is the EBNF grammar for a spec::
 
   spec-list    = { spec [ dep-list ] }
   dep_list     = { ^ spec }
@@ -80,8 +85,7 @@ from spack.util.string import *
 
 """This map determines the coloring of specs when using color output.
    We make the fields different colors to enhance readability.
-   See spack.color for descriptions of the color codes.
-"""
+   See spack.color for descriptions of the color codes. """
 color_formats = {'%' : '@g',   # compiler
                  '@' : '@c',   # version
                  '=' : '@m',   # architecture
@@ -129,8 +133,7 @@ def colorize_spec(spec):
 class Compiler(object):
     """The Compiler field represents the compiler or range of compiler
        versions that a package should be built with.  Compilers have a
-       name and a version list.
-    """
+       name and a version list. """
     def __init__(self, name, version=None):
         if name not in spack.compilers.supported_compilers():
             raise UnknownCompilerError(name)
@@ -348,10 +351,11 @@ class Spec(object):
     @property
     def virtual(self):
         """Right now, a spec is virtual if no package exists with its name.
+
            TODO: revisit this -- might need to use a separate namespace and
-                 be more explicit about this.
-                 Possible idea: just use conventin and make virtual deps all
-                 caps, e.g., MPI vs mpi.
+           be more explicit about this.
+           Possible idea: just use conventin and make virtual deps all
+           caps, e.g., MPI vs mpi.
         """
         return not packages.exists(self.name)
 
@@ -463,13 +467,15 @@ class Spec(object):
            and normalize again to include the provider's (potentially virtual)
            dependencies.  Repeat until there are no virtual deps.
 
-           TODO: If a provider depends on something that conflicts with
-                 other dependencies in the spec being expanded, this can
-                 produce a conflicting spec.  For example, if mpich depends
-                 on hwloc@:1.3 but something in the spec needs hwloc1.4:,
-                 then we should choose an MPI other than mpich.  Cases like
-                 this are infrequent, but should implement this before it is
-                 a problem.
+           .. todo::
+
+              If a provider depends on something that conflicts with
+              other dependencies in the spec being expanded, this can
+              produce a conflicting spec.  For example, if mpich depends
+              on hwloc@:1.3 but something in the spec needs hwloc1.4:,
+              then we should choose an MPI other than mpich.  Cases like
+              this are infrequent, but should implement this before it is
+              a problem.
         """
         while True:
             virtuals =[v for v in self.preorder_traversal() if v.virtual]
@@ -625,16 +631,19 @@ class Spec(object):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
-             1) ALL dependencies of the root package are in the DAG.
-             2) Each node's dependencies dict only contains its direct deps.
-             3) There is only ONE unique spec for each package in the DAG.
-                - This includes virtual packages.  If there a non-virtual
-                  package that provides a virtual package that is in the spec,
-                  then we replace the virtual package with the non-virtual one.
-             4) The spec DAG matches package DAG.
+
+           1. ALL dependencies of the root package are in the DAG.
+           2. Each node's dependencies dict only contains its direct deps.
+           3. There is only ONE unique spec for each package in the DAG.
+
+              * This includes virtual packages.  If there a non-virtual
+                package that provides a virtual package that is in the spec,
+                then we replace the virtual package with the non-virtual one.
+
+           4. The spec DAG matches package DAG.
 
            TODO: normalize should probably implement some form of cycle detection,
-                 to ensure that the spec is actually a DAG.
+           to ensure that the spec is actually a DAG.
         """
         # Ensure first that all packages in the DAG exist.
         self.validate_package_names()

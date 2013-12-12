@@ -35,7 +35,7 @@ parser.add_argument('-m', '--mock', action='store_true', dest='mock',
 
 # each command module implements a parser() function, to which we pass its
 # subparser for setup.
-subparsers = parser.add_subparsers(metavar='COMMAND', dest="command")
+subparsers = parser.add_subparsers(metavar='SUBCOMMAND', dest="command")
 
 import spack.cmd
 for cmd in spack.cmd.commands:

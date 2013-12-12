@@ -35,8 +35,8 @@ from spack.util.web import get_pages
 class Package(object):
     """This is the superclass for all spack packages.
 
-    The Package class
-    ==================
+    ***The Package class***
+
     Package is where the bulk of the work of installing packages is done.
 
     A package defines how to fetch, verfiy (via, e.g., md5), build, and
@@ -53,35 +53,39 @@ class Package(object):
     in this directory.  Spack automatically scans the python files there
     and figures out which one to import when you invoke it.
 
-    An example package
-    ====================
+    **An example package**
+
     Let's look at the cmake package to start with.  This package lives in
     $prefix/lib/spack/spack/packages/cmake.py:
 
-    from spack import *
-    class Cmake(Package):
-        homepage  = 'https://www.cmake.org'
-        url       = 'http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz'
-        md5       = '097278785da7182ec0aea8769d06860c'
+    .. code-block:: python
 
-        def install(self, prefix):
-            configure('--prefix=%s'   % prefix,
-                      '--parallel=%s' % make_jobs)
-            make()
-            make('install')
+       from spack import *
+       class Cmake(Package):
+           homepage  = 'https://www.cmake.org'
+           url       = 'http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz'
+           md5       = '097278785da7182ec0aea8769d06860c'
 
-    Naming conventions
-    ---------------------
+           def install(self, prefix):
+               configure('--prefix=%s'   % prefix,
+                         '--parallel=%s' % make_jobs)
+               make()
+               make('install')
+
+    **Naming conventions**
+
     There are two names you should care about:
 
-    1. The module name, 'cmake'.
-       - User will refers to this name, e.g. 'spack install cmake'.
-       - Corresponds to the name of the file, 'cmake.py', and it can
-         include _, -, and numbers (it can even start with a number).
+    1. The module name, ``cmake``.
 
-    2. The class name, "Cmake".  This is formed by converting -'s or _'s
-       in the module name to camel case.  If the name starts with a number,
-       we prefix the class name with 'Num_'. Examples:
+       * User will refers to this name, e.g. 'spack install cmake'.
+       * Corresponds to the name of the file, 'cmake.py', and it can
+         include ``_``, ``-``, and numbers (it can even start with a
+         number).
+
+    2. The class name, "Cmake".  This is formed by converting `-` or
+       ``_`` in the module name to camel case.  If the name starts with
+       a number, we prefix the class name with ``Num_``. Examples:
 
          Module Name       Class Name
           foo_bar           FooBar
@@ -91,23 +95,28 @@ class Package(object):
 
         The class name is what spack looks for when it loads a package module.
 
-    Required Attributes
-    ---------------------
+    **Required Attributes**
+
     Aside from proper naming, here is the bare minimum set of things you
     need when you make a package:
-        homepage   informational URL, so that users know what they're
-                   installing.
 
-        url        URL of the source archive that spack will fetch.
+    homepage
+      informational URL, so that users know what they're
+      installing.
 
-        md5        md5 hash of the source archive, so that we can
-                   verify that it was downloaded securely and correctly.
+    url
+      URL of the source archive that spack will fetch.
 
-        install()  This function tells spack how to build and install the
-                   software it downloaded.
+    md5
+      md5 hash of the source archive, so that we can
+      verify that it was downloaded securely and correctly.
 
-    Optional Attributes
-    ---------------------
+    install()
+      This function tells spack how to build and install the
+      software it downloaded.
+
+    **Optional Attributes**
+
     You can also optionally add these attributes, if needed:
         list_url
             Webpage to scrape for available version strings. Default is the
@@ -121,8 +130,8 @@ class Package(object):
             your package needs special version formatting in its URL.  boost
             is an example of a package that needs this.
 
-    Creating Packages
-    ===================
+    ***Creating Packages***
+
     As a package creator, you can probably ignore most of the preceding
     information, because you can use the 'spack create' command to do it
     all automatically.
@@ -130,8 +139,8 @@ class Package(object):
     You as the package creator generally only have to worry about writing
     your install function and specifying dependencies.
 
-    spack create
-    ----------------
+    **spack create**
+
     Most software comes in nicely packaged tarballs, like this one:
         http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
 
@@ -147,15 +156,17 @@ class Package(object):
     Once this skeleton code is generated, spack pops up the new package in
     your $EDITOR so that you can modify the parts that need changes.
 
-    Dependencies
-    ---------------
+    **Dependencies**
+
     If your package requires another in order to build, you can specify that
     like this:
 
-    class Stackwalker(Package):
-        ...
-        depends_on("libdwarf")
-        ...
+    .. code-block:: python
+
+       class Stackwalker(Package):
+           ...
+           depends_on("libdwarf")
+           ...
 
     This tells spack that before it builds stackwalker, it needs to build
     the libdwarf package as well.  Note that this is the module name, not
@@ -170,8 +181,8 @@ class Package(object):
     it will find the dependencies automatically.
 
 
-    The Install Function
-    ----------------------
+    **The Install Function**
+
     The install function is designed so that someone not too terribly familiar
     with Python could write a package installer.  For example, we put a number
     of commands in install scope that you can use almost like shell commands.
@@ -195,47 +206,58 @@ class Package(object):
     them are created and set on the module.
 
 
-    Parallel Builds
-    -------------------
+    **Parallel Builds**
+
     By default, Spack will run make in parallel when you run make() in your
     install function.  Spack figures out how many cores are available on
     your system and runs make with -j<cores>.  If you do not want this behavior,
     you can explicitly mark a package not to use parallel make:
 
-    class SomePackage(Package):
-        ...
-        parallel = False
-        ...
+    .. code-block:: python
+
+       class SomePackage(Package):
+           ...
+           parallel = False
+           ...
 
     This changes thd default behavior so that make is sequential.  If you still
     want to build some parts in parallel, you can do this in your install function:
 
-        make(parallel=True)
+    .. code-block:: python
+
+       make(parallel=True)
 
     Likewise, if you do not supply parallel = True in your Package, you can keep
     the default parallel behavior and run make like this when you want a
     sequential build:
 
-        make(parallel=False)
+    .. code-block:: python
 
-    Package Lifecycle
-    ==================
+       make(parallel=False)
+
+    **Package Lifecycle**
+
     This section is really only for developers of new spack commands.
 
     A package's lifecycle over a run of Spack looks something like this:
 
-        p = Package()             # Done for you by spack
+    .. code-block:: python
 
-        p.do_fetch()              # called by spack commands in spack/cmd.
-        p.do_stage()              # see spack.stage.Stage docs.
-        p.do_install()            # calls package's install() function
-        p.do_uninstall()
+       p = Package()             # Done for you by spack
+
+       p.do_fetch()              # called by spack commands in spack/cmd.
+       p.do_stage()              # see spack.stage.Stage docs.
+       p.do_install()            # calls package's install() function
+       p.do_uninstall()
 
     There are also some other commands that clean the build area:
-        p.do_clean()              # runs make clean
-        p.do_clean_work()         # removes the build directory and
+
+    .. code-block:: python
+
+       p.do_clean()              # runs make clean
+       p.do_clean_work()         # removes the build directory and
                                   # re-expands the archive.
-        p.do_clean_dist()         # removes the stage directory entirely
+       p.do_clean_dist()         # removes the stage directory entirely
 
     The convention used here is that a do_* function is intended to be called
     internally by Spack commands (in spack.cmd).  These aren't for package
@@ -244,6 +266,7 @@ class Package(object):
 
     Package creators override functions like install() (all of them do this),
     clean() (some of them do this), and others to provide custom behavior.
+
     """
 
     #

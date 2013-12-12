@@ -68,9 +68,11 @@ def _caller_locals():
         del stack
 
 
-def _ensure_caller_is_spack_package():
-    """Make sure that the caller is a spack package.  If it's not,
-       raise ScopeError.  if it is, return its name."""
+def _get_calling_package_name():
+    """Make sure that the caller is a class definition, and return
+       the module's name.  This is useful for getting the name of
+       spack packages from inside a relation function.
+    """
     stack = inspect.stack()
     try:
         # get calling function name (the relation)
@@ -85,9 +87,6 @@ def _ensure_caller_is_spack_package():
         raise ScopeError(relation)
 
     module_name = caller_locals['__module__']
-    if not module_name.startswith(packages_module()):
-        raise ScopeError(relation)
-
     base_name = module_name.split('.')[-1]
     return base_name
 
@@ -121,7 +120,7 @@ def _parse_local_spec(spec_like, pkg_name):
 """Adds a dependencies local variable in the locals of
    the calling class, based on args. """
 def depends_on(*specs):
-    pkg = _ensure_caller_is_spack_package()
+    pkg = _get_calling_package_name()
 
     dependencies = _caller_locals().setdefault('dependencies', {})
     for string in specs:
@@ -136,7 +135,7 @@ def provides(*specs, **kwargs):
        'mpi', other packages can declare that they depend on "mpi", and spack
        can use the providing package to satisfy the dependency.
     """
-    pkg = _ensure_caller_is_spack_package()
+    pkg = _get_calling_package_name()
     spec_string = kwargs.get('when', pkg)
     provider_spec = _parse_local_spec(spec_string, pkg)
 
@@ -170,7 +169,7 @@ class ScopeError(RelationError):
     def __init__(self, relation):
         super(ScopeError, self).__init__(
             relation,
-            "Cannot inovke '%s' from outside of a Spack package!" % relation)
+            "Must invoke '%s' from inside a class definition!" % relation)
 
 
 class CircularReferenceError(RelationError):

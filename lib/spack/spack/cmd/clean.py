@@ -9,9 +9,9 @@ description = "Remove staged files for packages"
 
 def setup_parser(subparser):
     subparser.add_argument('-c', "--clean", action="store_true", dest='clean',
-                           help="run make clean in the stage directory (default)")
+                           help="run make clean in the build directory (default)")
     subparser.add_argument('-w', "--work", action="store_true", dest='work',
-                           help="delete and re-expand the entire stage directory")
+                           help="delete the build directory and re-expand it from its archive.")
     subparser.add_argument('-d', "--dist", action="store_true", dest='dist',
                            help="delete the downloaded archive.")
     subparser.add_argument('packages', nargs=argparse.REMAINDER,

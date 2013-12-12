@@ -17,7 +17,7 @@ def get_origin_url():
     return origin_url.strip()
 
 
-def install_spack(parser, args):
+def bootstrap(parser, args):
     origin_url = get_origin_url()
     prefix = args.prefix
 
@@ -28,7 +28,7 @@ def install_spack(parser, args):
 
     files_in_the_way = os.listdir(prefix)
     if files_in_the_way:
-        tty.die("There are already files there!  Delete these files before installing spack.",
+        tty.die("There are already files there!  Delete these files before boostrapping spack.",
                 *files_in_the_way)
 
     tty.msg("Installing:",
@@ -41,5 +41,5 @@ def install_spack(parser, args):
     check_call(['git', 'fetch', 'origin', 'master:refs/remotes/origin/master', '-n', '-q'])
     check_call(['git', 'reset', '--hard', 'origin/master', '-q'])
 
-    tty.msg("Successfully installed spack in %s" % prefix,
+    tty.msg("Successfully created a new spack in %s" % prefix,
             "Run %s/bin/spack to use this installation." % prefix)
