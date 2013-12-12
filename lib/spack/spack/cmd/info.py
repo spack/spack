@@ -1,5 +1,9 @@
+import re
+import textwrap
+
 import spack
 import spack.packages as packages
+from spack.colify import colify
 
 description = "Build and install packages"
 
@@ -9,5 +13,31 @@ def setup_parser(subparser):
 
 def info(parser, args):
     package = packages.get(args.name)
+    print "Package:   ", package.name
     print "Homepage:  ", package.homepage
     print "Download:  ", package.url
+
+    print
+    print "Dependencies:"
+    if package.dependencies:
+        colify(package.dependencies, indent=4)
+    else:
+        print "    None"
+
+    print
+    print "Virtual packages: "
+    if package.provided:
+        for spec, when in package.provided.items():
+            print "    %s provides %s" % (when, spec)
+    else:
+        print "    None"
+
+    print
+    print "Description:"
+    if package.__doc__:
+        doc = re.sub(r'\s+', ' ', package.__doc__)
+        lines = textwrap.wrap(doc, 72)
+        for line in lines:
+            print "    " + line
+    else:
+        print "    None"
