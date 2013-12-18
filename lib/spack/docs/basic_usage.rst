@@ -545,7 +545,7 @@ installs accumulate in the staging area.
 
 
 Dirty Installs
---------------------
+~~~~~~~~~~~~~~~~~~~
 
 By default, ``spack install`` will delete the staging area once a
 pacakge has been successfully built and installed, *or* if an error
