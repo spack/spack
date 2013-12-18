@@ -436,6 +436,35 @@ package, e.g. if an application needs MPI-2 functions, it can depend
 on ``mpi@2:`` to indicate that it needs some implementation that
 provides MPI-2 functions.
 
+
+Constraining virtual packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When installing a package that depends on a virtual package, you can
+opt to specify the particular provider you want to use, or you can let
+Spack pick.  For example, if you just type this::
+
+   spack install mpileaks
+
+Then spack will pick a provider for you according to site policies.
+If you really want a particular version, say mpich, then you could
+run this instead::
+
+   spack install mpileaks ^mpich
+
+This forces spack to use some version of ``mpich`` for its
+implementation.  As always, you can be even more specific and require
+a particular ``mpich`` version::
+
+   spack install mpileaks ^mpich@3
+
+In this case, ``mpileaks`` only needs MPI-1 commands, so any MPI
+implementation will do.  If another package depends on ``mpi@2`` and
+you try to give it an insufficient MPI implementation (e.g., one that
+provides only ``mpi@:1``), then Spack will raise an error.  Likewise,
+if you try to plug in some package that doesn't provide MPI, Spack
+will raise an error.
+
 ``spack providers``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
