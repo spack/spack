@@ -9,7 +9,7 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
-import spack.arch
+import spack.architecture
 import spack.compilers
 import spack.packages
 import spack.spec
@@ -62,7 +62,7 @@ class DefaultConcretizer(object):
         if spec.root.architecture:
             spec.architecture = spec.root.architecture
         else:
-            spec.architecture = spack.arch.sys_type()
+            spec.architecture = spack.architecture.sys_type()
 
 
     def concretize_compiler(self, spec):

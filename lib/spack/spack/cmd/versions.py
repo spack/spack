@@ -1,7 +1,4 @@
 import os
-import re
-from subprocess import CalledProcessError
-
 import spack.packages as packages
 from spack.colify import colify
 

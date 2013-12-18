@@ -12,7 +12,7 @@ def setup_parser(subparser):
                            action='store_true', dest='ignore_dependencies',
                            help="Do not try to install dependencies of requested packages.")
     subparser.add_argument('-d', '--dirty', action='store_true', dest='dirty',
-                           help="Don't clean up partially completed build/installation on error.")
+                           help="Don't clean up staging area when install completes.")
     subparser.add_argument('packages', nargs=argparse.REMAINDER, help="specs of packages to install")
 
 

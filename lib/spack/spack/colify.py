@@ -88,6 +88,11 @@ def config_uniform_cols(elts, console_cols, padding):
     return config
 
 
+def isatty(ostream):
+    force = os.environ.get('COLIFY_TTY', 'false').lower() != 'false'
+    return force or ostream.isatty()
+
+
 def colify(elts, **options):
     # Get keyword arguments or set defaults
     output       = options.get("output", sys.stdout)
@@ -99,7 +104,7 @@ def colify(elts, **options):
     if not elts:
         return
 
-    if not output.isatty():
+    if not isatty(output):
         for elt in elts:
             output.write("%s\n" % elt)
         return

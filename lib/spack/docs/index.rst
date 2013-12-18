@@ -6,11 +6,22 @@
 Spack Documentation
 =================================
 
-Spack builds and installs software the way you want it.  Other tools
-let you install the latest version once.  Spack lets you install the
-versions you want, built with the compilers, libraries, and options
-you want.  Spack is non-destructive; installing a new version does not
-break your old installs.  See the :doc:`features` for more highlights.
+Spack is a package management tool designed to support multiple
+versions and configurations of software on a wide variety of platforms
+and environments.  It was designed for large supercomputing centers,
+where many users and application teams share common installations of
+software on clusters with exotic architectures, using libraries that
+do not have a standard ABI.  Spack is non-destructive: installing a
+new version does not break existing installations, so many
+configurations can coexist on the same system.
+
+Most importantly, Spack is *simple*.  It offers a simple *spec* syntax
+so that users can specify versions and configuration options
+concisely.  Spack is also simple for package authors: package files
+are writtin in pure Python, and specs allow package authors to write a
+single build script for many different builds of the same package.
+
+See the :doc:`features` for examples and highlights.
 
 Get spack and install your first package:
 

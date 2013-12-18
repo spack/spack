@@ -1,25 +1,26 @@
 Basic usage
 =====================
 
-Nearly everything you do wtih spack will involve the ``spack``
-command.  Like many well-known tools (``git``, ``cvs``, ``svn``,
-``yum``, ``port``, ``apt-get``, etc.), ``spack`` is generally called
-with a *subcommand* indicating the action you want to perform.
+Spack is implemented as a single command (``spack``) with many
+*subcommands*, much like ``git``, ``svn``, ``yum``, or ``apt-get``.
+Only a small subset of commands are needed for typical usage.
+
+This section covers a small set of subcommands that should cover most
+general use cases for Spack.
 
 Getting Help
 -----------------------
 
-
 ``spack help``
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The first subcommand you should know is ``spack help``.  Run with no
-arguments, it will give a list of all spack options and subcommands:
+The ``help`` subcommand will print out out a list of all of
+``spack``'s options and subcommands:
 
 .. command-output:: spack help
 
-If you want help on the usage of a particular subcommand, you can pass
-it as an argument to ``spack help``:
+Adding an argument, e.g. ``spack help <subcommand>``, will print out
+usage information for a particular subcommand:
 
 .. command-output:: spack help install
 
@@ -38,29 +39,54 @@ this: ``spack list`` and ``spack info``.
 ``spack list``
 ~~~~~~~~~~~~~~~~
 
-The ``spack list`` command does what you might expect. it prints out a
-list of all the available packages you can install.  Use it like
-this:
+The ``spack list`` command prints out a list of all of the packages
+Spack can install:
 
 .. command-output:: spack list
 
-The packages are listed by name in alphabetical order.  If you just
-want to see *installed* packages, you should use ``spack list -i``
+The packages are listed by name in alphabetical order.  To see a list of
+only the *installed* packages, use ``spack list -i``.
 
 
 ``spack info``
 ~~~~~~~~~~~~~~~~
 
-To get information on a particular package from the full list, you can
-run ``spack info <package name>``.  e.g., for ``mpich``:
+To get information on a particular package from the full list, run
+``spack info <package name>``.  For example, for ``mpich`` the output
+looks like this:
 
 .. command-output:: spack info mpich
 
-This gives basic information about the package, such as where it can
-be downloaded, what other packages it depends on, virtual package
-information, and a text description, if one is available.  We'll give
-more details on dependencies and virtual dependencies later in this
-guide.
+This includes basic information about the package: where to download
+it, its dependencies, virtual packages it provides (e.g. an MPI
+implementation will provide the MPI interface), and a text
+description, if one is available.  :ref:`Dependencies
+<sec-specs>` and :ref:`virtual dependencies
+<sec-virtual-dependencies>` are described in more detail later.
+
+
+``spack versions``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+To see available versions of a package, run ``spack versions``, for
+example:
+
+.. command-output:: spack versions libelf
+
+Since it has to manage many different software packages, Spack doesn't
+place many restrictions on what a package version has to look like.
+Packages like ``mpich`` use traditional version numbers like
+``3.0.4``. Other packages, like ``libdwarf`` use date-stamp versions
+like ``20130729``.  Versions can contain numbers, letters, dashes,
+underscores, and periods.
+
+``spack compilers``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can see supported compilers by running ``spack compilers``.  The
+output will depend on the platform you run it on.
+
+.. command-output:: spack compilers
 
 
 Installing and uninstalling
@@ -69,165 +95,433 @@ Installing and uninstalling
 ``spack install``
 ~~~~~~~~~~~~~~~~~~~~~
 
-You can install any package from ``spack list``, using ``spack
-install``.  In the simplest case, if you just want the latest version
-and you don't care about any configuration, you can just run ``spack
-install <package>``:
+``spack install`` will install any package that appears in the output
+of ``spack list``.  To install the latest version of a pacakge and all
+of its dependencies, simply run ``spack install <package>``:
 
 .. code-block:: sh
 
    spack install mpileaks
 
-This will fetch the tarball for ``mpileaks``, expand it, verify that
-it was donwloaded without errors, build the package, and install it in
-its own directory in ``$SPACK_HOME/opt``.  If the requested packages
-depends on other packages in order to build, then they will also be
-fetched and installed.
+Spack will fetch the tarball for ``mpileaks``, expand it, verify that
+it was donwloaded without errors, build it, and install it in its own
+directory under ``$SPACK_HOME/opt``.  If the requested package depends
+on other packages in order to build, Spack fetches them as well, and
+installs them before it installs the requested package. Like the main
+package, each dependency is also installed in its own directory.
 
-Spack also allows you to ask for *specific* configurations of a
-package.  For example, if you want to install something with a
-specific version, you can add ``@`` after the package name, followed
-by the version you want:
+Spack can also build *specific* configurations of a package.  For
+example, to install something with a specific version, add ``@`` after
+the package name, followed by a version string:
 
 .. code-block:: sh
 
    spack install mpich@3.0.4
 
-You can install as many versions of the same pacakge as you want, and
-they will not interfere with each other.  Spack installs each package
-into its own unique prefix.  If you or another user links a library
-against soething you install using Spack, it will continue to work
-until you explicitly uninstall it.
+Any number of configurations of the same package can be installed at
+once without interfering with each other.  This is good for multi-user
+sites, as installing a version that one user needs will not disrupt
+existing installations for other users.
 
-The version isn't all that you can customize on a spack command line.
-Spack can install many configurations, with different versions,
-compilers, compiler versions, compile-time options (variants), and
-even architectures (e.g., on a machine that requires cross-compiling).
-Spack is also unique in that it lets you customize the *dependencies*
-you build a package with.  That is, you could have two configurations
-of the same version of a package: one built with boost 1.39.0, and the
-other version built with version 1.43.0.
+In addition to version configuraitons, Spack can customize the
+compiler, compile-time options (variants), and platform (for cross
+compiles) of an installation.  Spack is unique in that it can also
+configure the *dependencies* a package is built with.  For example,
+two configurations of the same version of a package, one built with
+boost 1.39.0, and the other version built with version 1.43.0, can
+coexist.
 
-Spack calls the descriptor used to refer to a particular package
+This can all be done on the command line using special syntax.  Spack
+calls the descriptor used to refer to a particular package
 configuration a **spec**.  In the command lines above, both
-``mpileaks`` and ``mpileaks@3.0.4`` are specs.  Specs and their syntax
-are covered in more detail in :ref:`sec-specs`.
-
-
+``mpileaks`` and ``mpileaks@3.0.4`` are specs.  To customize
+additional properties, simply add more attributes to the spec.  Specs
+and their syntax are covered in more detail in :ref:`sec-specs`.
 
 
 ``spack uninstall``
 ~~~~~~~~~~~~~~~~~~~~~
 
-To uninstall a package, just type ``spack uninstall <package>``.  This
-will completely remove the directory in which the package was installed.
+To uninstall a package, type ``spack uninstall <package>``.  This will
+completely remove the directory in which the package was installed.
 
 .. code-block:: sh
 
    spack uninstall mpich
 
-If there are other installed packages depend on the package you're
-uninstalling, spack will issue a warning to this effect.  In general,
-you should remove the other packages *before* removing the package
-they depend on, or you risk breaking packages on your system.  If you
-still want to remove the package without regard for its dependencies,
-you can run ``spack uninstall -f <package>`` to override Spack's
-warning.
+If there are other installed packages depend on the package to be
+uninstalled, spack will issue a warning.  In general, it is safer to
+remove dependent packages *before* removing their dependencies.  Not
+doing so risks breaking packages on your system.  To remove a package
+without regard for its dependencies, run ``spack uninstall -f
+<package>`` to override the warning.
 
-If you have more than one version of the same package installed, spack
-may not be able to figure out which on eyou want uninstalled.  For
-example, if you have both ``mpich@3.0.2`` and ``mpich@3.1`` installed,
-and you type ``spack uninstall mpich``, then Spack will not know which
-one you're referring to, and it will ask you to be more specific by
-providing a version to differentiate, For example, ``spack uninstall
-mpich@3.1`` is unambiguous.
+A line like ``spack uninstall mpich`` may be ambiguous, if multiple
+``mpich`` configurations are installed.  For example, if both
+``mpich@3.0.2`` and ``mpich@3.1`` are installed, it could refer to
+either one, and Spack cannot determine which one to uninstall.  Spack
+will ask you to provide a version number to remove any ambiguity.  For
+example, ``spack uninstall mpich@3.1`` is unambiguous in the
+above scenario.
 
 
 .. _sec-specs:
 
-Specs
+Specs & Dependencies
 -------------------------
 
-Dependencies
--------------------------
+We now know that ``spack install`` and ``spack uninstall`` both take a
+package name with an optional version specifier.  In Spack, that
+descriptor is called a *spec*.  Spack uses specs to refer to a
+particular build configuration (or configurations) of a package.
+Specs are more than a package name and a version; you can use them to
+specify the compiler, compiler version, architecture, compile options,
+and dependency options for a build.  In this section, we'll go over
+the full syntax of specs.
+
+Here is an example of a much longer spec than we've seen thus far::
+
+   mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt =bgqos_0 ^callpath @1.1 %gcc@4.7.2
+
+If provided to ``spack install``, this will install the ``mpileaks``
+library at some version between ``1.2`` and ``1.4`` (inclusive),,
+built using ``gcc`` at version 4.7.5 for the Blue Gene/Q architecture,
+with debug options enabled, and without Qt support.  Additionally, it
+says to link it with the ``callpath`` library (which it depends on),
+and to build callpath with ``gcc`` 4.7.2.  Most specs will not be as
+complicated as this one, but this is a good example of what is
+possible with specs.
+
+More formally, a spec consists of the following pieces:
+
+* Package name identifier (``mpileaks`` above)
+* ``@`` Optional version specifier (``@1.2:1.4``)
+* ``%`` Optional compiler specifier, with an optional compiler version
+  (``gcc`` or ``gcc@4.7.3``)
+* ``+`` or ``-`` or ``~`` Optional variant specifiers (``+debug``,
+  ``-qt``, or ``~qt``)
+* ``=`` Optional architecture specifier (``bgqos_0``)
+* ``^`` Dependency specs (``^callpath@1.1``)
+
+There are two things to notice here.  One is that specs are
+recursively defined.  That is, each dependency after ``^`` is a spec
+itself.  The second is that Notice that everything is optional
+*except* for the initial package name identifier.  Users can be as
+vague or as specific as they want about the details of building
+packages, and this makes spack good for beginners and experts alike.
+
+To really understand what's going on above, we need to think about how
+software is structured.  An executable or a library (these are
+generally the artifacts produced by building software) depends on
+other libraries in order to run.  We can represent the relationship
+between a package and its dependencies as a graph.  Here is the full
+dependency graph for ``mpileaks``:
+
+.. graphviz::
+
+   digraph {
+       mpileaks -> mpich
+       mpileaks -> callpath -> mpich
+       callpath -> dyninst
+       dyninst  -> libdwarf -> libelf
+       dyninst  -> libelf
+   }
+
+Each box above is a package and each arrow represents a dependency on
+some other package.  For example, we say that the package ``mpileaks``
+*depends on* ``callpath`` and ``mpich``.  ``mpileaks`` also depends
+*indirectly* on ``dyninst``, ``libdwarf``, and ``libelf``, in that
+these libraries are dependencies of ``callpath``.  To install
+``mpileaks``, Spack has to build all of these packages.  Dependency
+graphs in Spack have to be acyclic, and the *depends on* relationship
+is directional, so this is a *directed, acyclic graph* or *DAG*.
+
+The package name identifier in the spec is the root of some dependency
+DAG, and the DAG itself is implicit.  Spack knows the precise
+dependencies among packages, but users do not need to know the full
+DAG structure. Each ``^`` in the full spec refers to some dependency
+of the root package. Spack will raise an error if you supply a name
+after ``^`` that the root does not actually depend on (e.g. ``mpileaks
+^emacs@23.3``).
+
+Spack further simplifies things by only allowing one configuration of
+each package within any single build.  Above, both ``mpileaks`` and
+``callpath`` depend on ``mpich``, but ``mpich`` appears only once in
+the DAG.  You cannot build an ``mpileaks`` version that depends on one
+version of ``mpich`` *and* on a ``callpath`` version that depends on
+some *other* version of ``mpich``.  In general, such a configuration
+would likely behave unexpectedly at runtime, and Spack enforces this
+to ensure a consistent runtime environment.
+
+
+The point of specs is to abstract this full DAG from Spack users.  If
+a user does not care about the DAG at all, she can refer to mpileaks
+by simply writing ``mpileaks``.  If she knows that ``mpileaks``
+indirectly uses ``dyninst`` and she wants a particular version of
+``dyninst``, then she can refer to ``mpileaks ^dyninst@8.1``.  Spack
+will fill in the rest when it parses the spec; the user only needs to
+know package names and minimal details about their relationship.
+
+When spack prints out specs, it sorts package names alphabetically to
+normalize the way they are displayed, but users do not need to worry
+about this when they write specs.  The only restriction on the order
+of dependencies within a spec is that they appear *after* the root
+package.  For example, these two specs represent exactly the same
+configuration:
+
+.. code-block:: sh
+
+   mpileaks ^callpath@1.0 ^libelf@0.8.3
+   mpileaks ^libelf@0.8.3 ^callpath@1.0
+
+You can put all the same modifiers on dependency specs that you would
+put on the root spec.  That is, you can specify their versions,
+compilers, variants, and architectures just like any other spec.
+Specifiers are associated with the nearest package name to their left.
+For example, above, ``@1.1`` and ``%gcc@4.7.2`` associates with the
+``callpath`` package, while ``@1.2:1.4``, ``%gcc@4.7.5``, ``+debug``,
+``-qt``, and ``=bgqos_0`` all associate with the ``mpileaks`` package.
+
+In the diagram above, ``mpileaks`` depends on ``mpich`` with an
+unspecified version, but packages can depend on other packages with
+*constraints* by adding more specifiers.  For example, ``mpileaks``
+could depend on ``mpich@1.2:`` if it can only build with version
+``1.2`` or higher of ``mpich``.
+
+Below are more details about the specifiers that you can add to specs.
+
+Version specifier
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A version specifier comes somewhere after a package name and starts
+with ``@``.  It can be a single version, e.g. ``@1.0``, ``@3``, or
+``@1.2a7``.  Or, it can be a range of versions, such as ``@1.0:1.5``
+(all versions between ``1.0`` and ``1.5``, inclusive).  Version ranges
+can be open, e.g. ``:3`` means any version up to and including ``3``.
+This would include ``3.4`` and ``3.4.2``.  ``4.2:`` means any version
+above and including ``4.2``.  Finally, a version specifier can be a
+set of arbitrary versions, such as ``@1.0,1.5,1.7`` (``1.0``, ``1.5``,
+or ``1.7``).  When you supply such a specifier to ``spack install``,
+it constrains the set of versions that Spack will install.
+
+If the version spec is not provided, then Spack will choose one
+according to policies set for the particular spack installation.  If
+the spec is ambiguous, i.e. it could match multiple versions, Spack
+will choose a version within the spec's constraints according to
+policies set for the particular Spack installation.
+
+Details about how versions are compared and how Spack determines if
+one version is less than another are discussed in the developer guide.
+
+
+Compiler specifier
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A compiler specifier comes somewhere after a package name and starts
+with ``%``.  It tells Spack what compiler(s) a particular package
+should be built with.  After the ``%`` should come the name of some
+registered Spack compiler.  This might include ``gcc``, or ``intel``,
+but the specific compilers available depend on the site.  You can run
+``spack compilers`` to get a list; more on this below.
+
+The compiler spec can be followed by an optional *compiler version*.
+A compiler version specifier looks exactly like a package version
+specifier.  Version specifiers will associate with the nearest package
+name or compiler specifier to their left in the spec.
+
+If the compiler spec is omitted, Spack will choose a default compiler
+based on site policies.
+
+
+Variants
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Variants are named options associated with a particular package, and
+they can be turned on or off.  For example, above, supplying
+``+debug`` causes ``mpileaks`` to be built with debug flags.  The
+names of particular variants available for a package depend on what
+was provided by the package author.  ``spack info <package>`` will
+provide information on what build variants are available.
+
+Depending on the package a variant may be on or off by default.  For
+``mpileaks`` here, ``debug`` is off by default, and we turned it on
+with ``+debug``.  If a package is on by default you can turn it off by
+either adding ``-name`` or ``~name`` to the spec.
+
+There are two syntaxes here because, depending on context, ``~`` and
+``-`` may mean different things.  In most shells, the following will
+result in the shell performing home directory substitution:
+
+.. code-block:: sh
+
+   mpileaks ~debug   # shell may try to substitute this!
+   mpileaks~debug    # use this instead
+
+If there is a user called ``debug``, the ``~`` will be incorrectly
+expanded.  In this situation, you would want to write ``mpileaks
+-debug``.  However, ``-`` can be ambiguous when included after a
+package name without spaces:
+
+.. code-block:: sh
+
+   mpileaks-debug     # wrong!
+   mpileaks -debug    # right
+
+Spack allows the ``-`` character to be part of package names, so the
+above will be interpreted as a request for the ``mpileaks-debug``
+package, not a request for ``mpileaks`` built without ``debug``
+options.  In this scenario, you should write ``mpileaks~debug`` to
+avoid ambiguity.
+
+When spack normalizes specs, it prints them out with no spaces and
+uses only ``~`` for disabled variants.  We allow ``-`` and spaces on
+the command line is provided for convenience and legibility.
+
+
+Architecture specifier
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The architecture specifier starts with a ``=`` and also comes after
+some package name within a spec.  It allows a user to specify a
+particular architecture for the package to be built.  This is mostly
+used for architectures that need cross-compilation, and in most cases,
+users will not need to specify the architecture when they install a
+package.
+
+
+.. _sec-virtual-dependencies:
 
 Virtual dependencies
 -------------------------
 
-Versions, compilers, and architectures
-----------------------------------------
+The dependence graph for ``mpileaks`` we saw above wasn't *quite*
+accurate.  ``mpileaks`` uses MPI, which is an interface that has many
+different implementations.  Above, we showed ``mpileaks`` and
+``callpath`` depending on ``mpich``, which is one *particular*
+implementation of MPI.  However, we could build either with another
+implementation, such as ``openmpi`` or ``mvapich``.
 
-``spack versions``
-~~~~~~~~~~~~~~~~~~~~~~~~
+Spack represents interfaces like this using *virtual dependencies*.
+The real dependency DAG for ``mpileaks`` looks like this:
 
-``spack compilers``
-~~~~~~~~~~~~~~~~~~~~~~~~
+.. graphviz::
 
-Architectures
-~~~~~~~~~~~~~~~~~~~~~~~~
+   digraph {
+       mpi [color=red]
+       mpileaks -> mpi
+       mpileaks -> callpath -> mpi
+       callpath -> dyninst
+       dyninst  -> libdwarf -> libelf
+       dyninst  -> libelf
+   }
 
-Spack's specs allow insatllations for multiple architectures to coexist
-within the same prefix.  It is also intended to support multiple
-architecutres for cross-compilation.
+Notice that ``mpich`` has now been replaced with ``mpi``. There is no
+*real* MPI package, but some packages *provide* the MPI interface, and
+these packages can be substituted in for ``mpi`` when ``mpileaks`` is
+built.
+
+You can see what virtual packages a particular package provides by
+getting info on it:
+
+.. command-output:: spack info mpich
+   :ellipsis: 10
+
+Spack is unique in that its virtual packages can be versioned, just
+like regular packages.  A particular version of a package may provide
+a particular version of a virtual package, and we can see above that
+``mpich`` versions ``1`` and above provide all interfaces up to ``1``,
+and ``mpich`` versions ``3`` and above provide ``mpi`` versions up to
+``3``.  A package can *depend on* a particular version of a virtual
+package, e.g. if an application needs MPI-2 functions, it can depend
+on ``mpi@2:`` to indicate that it needs some implementation that
+provides MPI-2 functions.
+
+``spack providers``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can see what packages provide a particular virtual package using
+``spack providers``.  If you wanted to see what packages provide
+``mpi``, you would just run:
+
+.. command-output:: spack providers mpi
+
+And if you *only* wanted to see packages that provide MPI-2, you would
+add a version specifier to the spec:
+
+.. command-output:: spack providers mpi@2
+
+Notice that the package versions that provide insufficient MPI
+versions are now filtered out.
 
 
 Package lifecycle
 ------------------------------
 
-The ``spack install`` command performs a number of tasks before it
-finally installs each package.  It downloads an archive, expands it in
-a temporary directory, and only then performs the installation.  Spack
-has several commands that allow finer-grained control over each of
-these stages of the build process.
+``spack install`` command performs a number of tasks before it finally
+installs each package.  It downloads an archive, expands it in a
+temporary directory, and then performs the installation.  Spack has
+several commands that allow finer-grained control over each stage of
+the build process.
 
 
 ``spack fetch``
 ~~~~~~~~~~~~~~~~~
 
-This is the first step of ``spack install``.  It takes a spec and
-determines the correct download URL to use for the requested package
-version.  It then downloads the archive, checks it against an MD5
-checksum, and stores it in a staging directory if the check was
-successful.  The staging directory will be located under
-``$SPACK_HOME/var/spack``.
+The first step of ``spack install``.  Takes a spec and determines the
+correct download URL to use for the requested package version, then
+downloads the archive, checks it against an MD5 checksum, and stores
+it in a staging directory if the check was successful.  The staging
+directory will be located under ``$SPACK_HOME/var/spack``.
 
-If run after the archive has already been downloaded, ``spack fetch``
-is idempotent and will not download the archive again.
+When run after the archive has already been downloaded, ``spack
+fetch`` is idempotent and will not download the archive again.
 
 ``spack stage``
 ~~~~~~~~~~~~~~~~~
 
-This is the second step in installation after ``spack fetch``.  It
-expands the downloaded archive in its temporary directory, where it
-will be built by ``spack install``.  If the archive has already been
-expanded, then this command does nothing.
+The second step in ``spack install`` after ``spack fetch``.  Expands
+the downloaded archive in its temporary directory, where it will be
+built by ``spack install``.  Similar to ``fetch``, if the archive has
+already been expanded,  ``stage`` is idempotent.
 
 ``spack clean``
 ~~~~~~~~~~~~~~~~~
 
-This command has several variations, each undoing one of the
-installation tasks.  They are:
+There are several variations of ``spack clean``.  With no arguments,
+``spack clean`` runs ``make clean`` in the expanded archive directory.
+This is useful if an attempted build failed, and something needs to be
+changed to get a package to build.  If a particular package does not
+have a ``make clean`` target, this will do nothing.
 
-``spack clean``
-  Runs ``make clean`` in the expanded archive directory.  This is useful
-  if an attempted  build failed, and something needs to be changed to get
-  a package to build.  If a particular package does not have a ``make clean``
-  target, this will do nothing.
+``spack clean -w / --work``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Deletes the entire build directory and re-expands it from the downloaded
+archive. This is useful if a package does not support a proper ``make clean``
+target.
 
-``spack clean -w`` or ``spack clean --work``
-  This deletes the entire build directory and re-expands it from the downloaded
-  archive. This is useful if a package does not support a proper ``make clean``
-  target.
-
-``spack clean -d`` or ``spack clean --dist``
-  This deletes the build directory *and* the downloaded archive.  If
-  ``fetch``, ``stage``, or ``install`` are run again after this, the
-  process will start from scratch, and the archive archive will be
-  downloaded again.  Useful if somehow a bad archive is downloaded
-  accidentally and needs to be cleaned out of the staging area.
-
-
-
+``spack clean -d / --dist``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Deletes the build directory *and* the downloaded archive.  If
+``fetch``, ``stage``, or ``install`` are run again after this, the
+process will start from scratch, and the archive archive will be
+downloaded again.  Useful if somehow a bad archive is downloaded
+accidentally and needs to be cleaned out of the staging area.
 
 ``spack purge``
 ~~~~~~~~~~~~~~~~~
+
+Cleans up *everything* in the build directory.  You can use this to
+recover disk space if temporary files from interrupted or failed
+installs accumulate in the staging area.
+
+
+Dirty Installs
+--------------------
+
+By default, ``spack install`` will delete the staging area once a
+pacakge has been successfully built and installed, *or* if an error
+occurs during the build.  Use ``spack install --dirty`` or ``spack
+install -d`` to leave the build directory intact.  This allows you to
+inspect the build directory and potentially fix the build.  You can
+use ``purge`` or ``clean`` later to get rid of the unwanted temporary
+files.

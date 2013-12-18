@@ -17,8 +17,17 @@ import sys, os
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('exts'))
+
+# Add the Spack bin directory to the path so that we can use its output in docs.
 os.environ['PATH'] += os.pathsep + '../../../bin'
 
+# Set an environment variable so that colify will print output like it would to
+# a terminal.
+os.environ['COLIFY_TTY'] = 'true'
+os.environ['COLUMNS']    = '80'
+os.environ['LINES']      = '25'
+
+# Enable todo items
 todo_include_todos = True
 
 # -- General configuration -----------------------------------------------------
@@ -32,6 +41,15 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.graphviz',
               'sphinx.ext.todo',
               'sphinxcontrib.programoutput']
+
+# Set default graphviz options
+graphviz_dot_args = [
+    '-Grankdir=LR', '-Gbgcolor=transparent',
+    '-Nshape=box', '-Nfontname=monaco', '-Nfontsize=10']
+
+# Get nice vector graphics
+graphviz_output_format = "svg"
+
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

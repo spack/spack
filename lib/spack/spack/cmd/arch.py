@@ -1,9 +1,9 @@
 import spack
-import spack.arch as arch
+import spack.architecture as architecture
 
-description = "Print the spack sys_type for this machine"
+description = "Print the architecture for this machine"
 
-def sys_type(parser, args):
+def arch(parser, args):
     configured_sys_type = arch.get_sys_type_from_spack_globals()
     if not configured_sys_type:
         configured_sys_type = "autodetect"

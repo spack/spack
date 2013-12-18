@@ -12,7 +12,7 @@ of the dependencies of the package.
 import sys
 import functools
 
-import arch
+import spack.architecture
 import spack.error as serr
 
 class NoSuchVersionError(serr.SpackError):

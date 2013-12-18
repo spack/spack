@@ -1,6 +1,5 @@
 import os
 
-import spack.arch as arch
 from spack.version import Version
 from spack.util.filesystem import *
 from spack.util.executable import *

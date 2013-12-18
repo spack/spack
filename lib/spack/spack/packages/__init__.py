@@ -11,7 +11,6 @@ import spack.spec
 import spack.tty as tty
 from spack.util.filesystem import new_path
 from spack.util.lang import list_modules
-import spack.arch as arch
 
 # Valid package names can contain '-' but can't start with it.
 valid_package_re = r'^\w[\w-]*$'

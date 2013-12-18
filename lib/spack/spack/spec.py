@@ -75,7 +75,6 @@ import spack.error
 import spack.compilers
 import spack.compilers.gcc
 import spack.packages as packages
-import spack.arch as arch
 
 from spack.version import *
 from spack.color import *

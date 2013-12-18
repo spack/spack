@@ -1,16 +1,16 @@
 Feature Overview
 ==================
 
-This is an overview of features that make Spack different from other
-`package managers <http://en.wikipedia.org/wiki/Package_management_system>`_
-and `port systems <http://en.wikipedia.org/wiki/Ports_collection>`_.
+This is a high-level overview of features that make Spack different
+from other `package managers
+<http://en.wikipedia.org/wiki/Package_management_system>`_ and `port
+systems <http://en.wikipedia.org/wiki/Ports_collection>`_.
 
 Simple package installation
 ----------------------------
 
-Installing packages is easy with Spack when you just want the default
-version.  This installs the latest version of mpileaks and all of its
-dependencies:
+Installing the default version of a package is simple. This will install
+the latest version of the ``mpileaks`` package and all of its dependencies:
 
 .. code-block:: sh
 
@@ -19,29 +19,35 @@ dependencies:
 Custom versions & configurations
 -------------------------------------------
 
-If there's some aspect of your package that you want to customize, you
-can do that too.
+Spack allows installation to be customized.  Users can specify the
+version, build compiler, compile-time options, and cross-compile
+platform, all on the command line.
 
 .. code-block:: sh
 
    # Install a particular version by appending @
    $ spack install mpileaks@1.1.2
 
-   # Or your favorite compiler (and its version), with %
+   # Specify a compiler (and its version), with %
    $ spack install mpileaks@1.1.2 %gcc@4.7.3
 
-   # Add some special compile-time options with +
+   # Add special compile-time options with +
    $ spack install mpileaks@1.1.2 %gcc@4.7.3 +debug
 
    # Cross-compile for a different architecture with =
    $ spack install mpileaks@1.1.2 =bgqos_0
 
+Users can specify as many or few options as they care about.  Spack
+will fill in the unspecified values with sensible defaults.
+
+
 Customize dependencies
 -------------------------------------
 
-You can customize package dependencies with ``^``.  Suppose that
-``mpileaks`` depends indirectly on ``libelf`` and ``libdwarf``.  Using
-``^``, you can add custom configurations for the dependencies, too.
+Spack is unique in that it allows *dependencies* of a particualr
+installation to be customized.  Suppose that ``mpileaks`` depends
+indirectly on ``libelf`` and ``libdwarf``.  Using ``^``, users can add
+custom configurations for the dependencies, as well:
 
 .. code-block:: sh
 
@@ -52,24 +58,24 @@ You can customize package dependencies with ``^``.  Suppose that
 Non-destructive installs
 -------------------------------------
 
-Spack installs every unique package configuration in its own prefix,
-so you can install as many different versions and configurations as
-you want.  New installs will not break existing ones.
-
+Spack installs every unique package/dependency configuration into its
+own prefix, so new installs will not break existing ones.
 
 Packages can peacefully coexist
 -------------------------------------
 
-Spack uses ``RPATH`` everywhere, so users do not need to customize
-``LD_LIBRARY_PATH``.  If you use a library or run a program, it will
-run the way you built it.
-
+Spack avoids library misconfiguration by using ``RPATH`` to link
+dependencies.  When a user links a library or runs a program, it is
+tied to the dependencies it was built with, so there is no need to
+manipulate ``LD_LIBRARY_PATH`` at runtime.
 
 Creating packages is easy
 -------------------------------------
 
-To create your own packages, give spack the tarball URL.  Spack
-creates all the boilerplate for you.
+To create a new packages, all Spack needs is a URL for the source
+archive.  The ``spack create`` command will create a boilerplate
+package file, and the package authors can fill in specific build steps
+in pure Python.
 
 .. code-block:: sh
 
@@ -91,6 +97,6 @@ Creates ``mpileaks.py``:
            make()
            make("install")
 
-Packages are pure python, so you have complete freedom when writing
-build code.  Spack also provides a number of feature that make it
-easier to write packages.
+Spack also provides wrapper functions around common commands like
+``configure``, ``make``, and ``cmake`` to make writing packages
+simple.
