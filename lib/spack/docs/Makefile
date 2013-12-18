@@ -21,6 +21,9 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 all: html
 
+upload:
+	rsync -avz --rsh=ssh --delete _build/html/ cab:/usr/global/web-pages/lc/www/adept/docs/spack
+
 apidoc:
 	sphinx-apidoc -T -o . $(PYTHONPATH)/spack
 
