@@ -3,7 +3,6 @@ from spack import *
 class Callpath(Package):
     homepage = "https://github.com/tgamblin/callpath"
     url      = "http://github.com/tgamblin/callpath-0.2.tar.gz"
-    md5      = "foobarbaz"
 
     depends_on("dyninst")
     depends_on("mpich")

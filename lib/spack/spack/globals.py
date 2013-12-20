@@ -3,7 +3,7 @@ import os
 from spack.version import Version
 from spack.util.filesystem import *
 from spack.util.executable import *
-from spack.directory_layout import DefaultDirectoryLayout
+from spack.directory_layout import SpecHashDirectoryLayout
 from spack.concretize import DefaultConcretizer
 
 # This lives in $prefix/lib/spac/spack/__file__
@@ -29,7 +29,7 @@ install_path   = new_path(prefix, "opt")
 # This controls how spack lays out install prefixes and
 # stage directories.
 #
-install_layout = DefaultDirectoryLayout(install_path)
+install_layout = SpecHashDirectoryLayout(install_path, prefix_size=6)
 
 #
 # This controls how things are concretized in spack.
@@ -39,7 +39,7 @@ install_layout = DefaultDirectoryLayout(install_path)
 concretizer = DefaultConcretizer()
 
 # Version information
-spack_version = Version("0.5")
+spack_version = Version("1.0")
 
 # User's editor from the environment
 editor = Executable(os.environ.get("EDITOR", ""))
@@ -59,6 +59,11 @@ use_tmp_stage = True
 tmp_dirs = ['/nfs/tmp2/%u/spack-stage',
             '/var/tmp/%u/spcak-stage',
             '/tmp/%u/spack-stage']
+
+# Whether spack should allow installation of unsafe versions of
+# software.  "Unsafe" versions are ones it doesn't have a checksum
+# for.
+do_checksum = True
 
 #
 # SYS_TYPE to use for the spack installation.

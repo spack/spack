@@ -23,7 +23,7 @@ import os
 import sys
 import re
 from bisect import bisect_left
-from functools import total_ordering
+from functools import total_ordering, wraps
 
 import spack.util.none_high as none_high
 import spack.util.none_low as none_low
@@ -71,6 +71,7 @@ def coerce_versions(a, b):
 
 def coerced(method):
     """Decorator that ensures that argument types of a method are coerced."""
+    @wraps(method)
     def coercing_method(a, b):
         if type(a) == type(b) or a is None or b is None:
             return method(a, b)
@@ -84,6 +85,8 @@ def coerced(method):
 class Version(object):
     """Class to represent versions"""
     def __init__(self, string):
+        string = str(string)
+
         if not re.match(VALID_VERSION, string):
             raise ValueError("Bad characters in version string: %s" % string)
 

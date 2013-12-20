@@ -1,6 +1,7 @@
 import os
 import re
 import argparse
+import hashlib
 from pprint import pprint
 from subprocess import CalledProcessError
 
@@ -8,17 +9,20 @@ import spack.tty as tty
 import spack.packages as packages
 from spack.stage import Stage
 from spack.colify import colify
-from spack.util.crypto import md5
+from spack.util.crypto import checksum
 from spack.version import *
 
 group='foo'
 description ="Checksum available versions of a package, print out checksums for addition to a package file."
 
 def setup_parser(subparser):
-    subparser.add_argument('package', metavar='PACKAGE', help='Package to list versions for')
-    subparser.add_argument('versions', nargs=argparse.REMAINDER, help='Versions to generate checksums for')
-    subparser.add_argument('-n', '--number', dest='number', type=int,
-                           default=10, help='Number of versions to list')
+    subparser.add_argument(
+        'package', metavar='PACKAGE', help='Package to list versions for')
+    subparser.add_argument(
+        'versions', nargs=argparse.REMAINDER, help='Versions to generate checksums for')
+    subparser.add_argument(
+        '-n', '--number', dest='number', type=int,
+        default=10, help='Number of versions to list')
 
 
 def checksum(parser, args):
@@ -50,7 +54,7 @@ def checksum(parser, args):
         stage = Stage(url)
         try:
             stage.fetch()
-            hashes.append(md5(stage.archive_file))
+            hashes.append(checksum(hashlib.md5, stage.archive_file))
         finally:
             stage.destroy()
 

@@ -21,6 +21,16 @@ invalid_package_re = r'[_-][_-]+'
 instances = {}
 
 
+def autospec(function):
+    """Decorator that automatically converts the argument of a single-arg
+       function to a Spec."""
+    def converter(arg):
+        if not isinstance(arg, spack.spec.Spec):
+            arg = spack.spec.Spec(arg)
+        return function(arg)
+    return converter
+
+
 class ProviderIndex(object):
     """This is a dict of dicts used for finding providers of particular
        virtual dependencies. The dict of dicts looks like:
@@ -87,23 +97,32 @@ class ProviderIndex(object):
         return sorted(providers)
 
 
-def get(pkg_name):
-    if not pkg_name in instances:
-        package_class = get_class_for_package_name(pkg_name)
-        instances[pkg_name] = package_class(pkg_name)
+@autospec
+def get(spec):
+    if spec.virtual:
+        raise UnknownPackageError(spec.name)
 
-    return instances[pkg_name]
+    if not spec in instances:
+        package_class = get_class_for_package_name(spec.name)
+        instances[spec.name] = package_class(spec)
+
+    return instances[spec.name]
 
 
+@autospec
+def get_installed(spec):
+    return [s for s in installed_package_specs() if s.satisfies(spec)]
+
+
+@autospec
 def providers_for(vpkg_spec):
-    if providers_for.index is None:
+    if not hasattr(providers_for, 'index'):
         providers_for.index = ProviderIndex(all_package_names())
 
     providers = providers_for.index.providers_for(vpkg_spec)
     if not providers:
         raise UnknownPackageError("No such virtual package: %s" % vpkg_spec)
     return providers
-providers_for.index = None
 
 
 def valid_package_name(pkg_name):
@@ -122,7 +141,7 @@ def filename_for_package_name(pkg_name):
     return new_path(spack.packages_path, "%s.py" % pkg_name)
 
 
-def installed_packages():
+def installed_package_specs():
     return spack.install_layout.all_specs()
 
 
@@ -198,6 +217,9 @@ def compute_dependents():
     """Reads in all package files and sets dependence information on
        Package objects in memory.
     """
+    if not hasattr(compute_dependents, index):
+        compute_dependents.index = {}
+
     for pkg in all_packages():
         if pkg._dependents is None:
             pkg._dependents = []

@@ -70,6 +70,7 @@ import sys
 from StringIO import StringIO
 
 import tty
+import hashlib
 import spack.parse
 import spack.error
 import spack.compilers
@@ -238,6 +239,12 @@ class DependencyMap(HashableMap):
                    if name in other)
 
 
+    def sha1(self):
+        sha = hashlib.sha1()
+        sha.update(str(self))
+        return sha.hexdigest()
+
+
     def __str__(self):
         sorted_dep_names = sorted(self.keys())
         return ''.join(
@@ -341,10 +348,7 @@ class Spec(object):
 
     @property
     def package(self):
-        if self.virtual:
-            raise TypeError("Cannot get package for virtual spec '" +
-                            self.name + "'")
-        return packages.get(self.name)
+        return packages.get(self)
 
 
     @property
@@ -766,8 +770,8 @@ class Spec(object):
 
     @property
     def version(self):
-        if not self.concrete:
-            raise SpecError("Spec is not concrete: " + str(self))
+        if not self.versions.concrete:
+            raise SpecError("Spec version is not concrete: " + str(self))
         return self.versions[0]
 
 
@@ -825,23 +829,35 @@ class Spec(object):
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
-        color = kwargs.get('color', False)
-        depth = kwargs.get('depth', False)
-        cover = kwargs.get('cover', 'paths')
+        color  = kwargs.get('color', False)
+        depth  = kwargs.get('depth', False)
+        showid = kwargs.get('ids',   False)
+        cover  = kwargs.get('cover', 'nodes')
+        indent = kwargs.get('indent', 0)
 
         out = ""
         cur_id = 0
         ids = {}
         for d, node in self.preorder_traversal(cover=cover, depth=True):
+            out += " " * indent
             if depth:
                 out += "%-4d" % d
             if not id(node) in ids:
                 cur_id += 1
                 ids[id(node)] = cur_id
-            out += "%-4d" % ids[id(node)]
+            if showid:
+                out += "%-4d" % ids[id(node)]
             out += ("    " * d)
+            if d > 0:
+                out += "^"
             out += node.str_no_deps(color=color) + "\n"
         return out
+
+
+    def sha1(self):
+        sha = hashlib.sha1()
+        sha.update(str(self))
+        return sha.hexdigest()
 
 
     def __repr__(self):

@@ -22,8 +22,9 @@ def clean(parser, args):
     if not args.packages:
         tty.die("spack clean requires at least one package argument")
 
-    specs = spack.cmd.parse_specs(args.packages)
+    specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
+        tty.message("Cleaning for spec:", spec)
         package = packages.get(spec.name)
         if args.dist:
             package.do_clean_dist()

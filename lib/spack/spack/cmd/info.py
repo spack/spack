@@ -5,7 +5,7 @@ import spack
 import spack.packages as packages
 from spack.colify import colify
 
-description = "Build and install packages"
+description = "Get detailed information on a particular package"
 
 def setup_parser(subparser):
     subparser.add_argument('name', metavar="PACKAGE", help="name of packages to get info on")

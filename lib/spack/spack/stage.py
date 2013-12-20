@@ -269,11 +269,6 @@ class Stage(object):
 
 
 
-def can_access(file=spack.stage_path):
-    """True if we have read/write access to the file."""
-    return os.access(file, os.R_OK|os.W_OK)
-
-
 def ensure_access(file=spack.stage_path):
     """Ensure we can access a directory and die with an error if we can't."""
     if not can_access(file):
@@ -305,10 +300,18 @@ def find_tmp_root():
     if spack.use_tmp_stage:
         for tmp in spack.tmp_dirs:
             try:
-                mkdirp(expand_user(tmp))
-                return tmp
+                # Replace %u with username
+                expanded = expand_user(tmp)
+
+                # try to create a directory for spack stuff
+                mkdirp(expanded)
+
+                # return it if successful.
+                return expanded
+
             except OSError:
                 continue
+
     return None
 
 

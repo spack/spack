@@ -9,12 +9,12 @@ class Libdwarf(Package):
     url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
     list_url = homepage
 
-    md5      = "64b42692e947d5180e162e46c689dfbf"
-
-    versions = [20070703, 20111030, 20130207]
+    versions = { 20130729 : "64b42692e947d5180e162e46c689dfbf",
+                 20130207 : 'foobarbaz',
+                 20111030 : 'foobarbaz',
+                 20070703 : 'foobarbaz' }
 
     depends_on("libelf")
-
 
     def clean(self):
         for dir in dwarf_dirs:
@@ -49,9 +49,3 @@ class Libdwarf(Package):
             install('dwarfdump',     bin)
             install('dwarfdump.conf', lib)
             install('dwarfdump.1',    man1)
-
-
-    @platform('macosx_10.8_x86_64')
-    def install(self, prefix):
-        raise UnsupportedPlatformError(
-            "libdwarf doesn't currently build on Mac OS X.")

@@ -39,7 +39,7 @@ class DefaultConcretizer(object):
         if valid_versions:
             spec.versions = ver([valid_versions[-1]])
         else:
-            spec.versions = ver([pkg.version])
+            spec.versions = ver([pkg.default_version])
 
 
     def concretize_architecture(self, spec):

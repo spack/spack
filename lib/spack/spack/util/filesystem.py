@@ -68,3 +68,10 @@ def stem(path):
         if re.search(suffix, path):
             return re.sub(suffix, "", path)
     return path
+
+
+def can_access(file_name):
+    """True if we have read/write access to the file."""
+    return os.access(file_name, os.R_OK|os.W_OK)
+
+

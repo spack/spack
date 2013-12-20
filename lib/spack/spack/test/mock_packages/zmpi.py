@@ -5,9 +5,8 @@ class Zmpi(Package):
        with dependencies."""
     homepage = "http://www.spack-fake-zmpi.org"
     url      = "http://www.spack-fake-zmpi.org/downloads/zmpi-1.0.tar.gz"
-    md5      = "foobarbaz"
 
-    versions = '1.0'
+    versions = { '1.0' : 'foobarbaz' }
 
     provides('mpi@10.0:')
     depends_on('fake')

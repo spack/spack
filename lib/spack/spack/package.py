@@ -22,14 +22,16 @@ import spack.error
 import packages
 import tty
 import validate
+import multiprocessing
 import url
 
 from spack.multi_function import platform
+import spack.util.crypto as crypto
 from spack.version import *
 from spack.stage import Stage
 from spack.util.lang import *
-from spack.util.crypto import md5
 from spack.util.web import get_pages
+from spack.util.environment import *
 
 
 class Package(object):
@@ -256,7 +258,7 @@ class Package(object):
 
        p.do_clean()              # runs make clean
        p.do_clean_work()         # removes the build directory and
-                                  # re-expands the archive.
+                                 # re-expands the archive.
        p.do_clean_dist()         # removes the stage directory entirely
 
     The convention used here is that a do_* function is intended to be called
@@ -297,9 +299,8 @@ class Package(object):
 
     def __init__(self, spec):
         # These attributes are required for all packages.
-        attr_required(self, 'homepage')
-        attr_required(self, 'url')
-        attr_required(self, 'md5')
+        attr_required(self.__class__, 'homepage')
+        attr_required(self.__class__, 'url')
 
         # this determines how the package should be built.
         self.spec = spec
@@ -307,39 +308,34 @@ class Package(object):
         # Name of package is the name of its module (the file that contains it)
         self.name = inspect.getmodulename(self.module.__file__)
 
-        # Don't allow the default homepage.
-        if re.search(r'example.com', self.homepage):
-            tty.die("Bad homepage in %s: %s" % (self.name, self.homepage))
-
         # Make sure URL is an allowed type
         validate.url(self.url)
 
-        # Set up version
-        # TODO: get rid of version attr and use spec
-        # TODO: roll this into available_versions
-        if not hasattr(self, 'version'):
-            try:
-                self.version = url.parse_version(self.url)
-            except UndetectableVersionError:
-                tty.die("Couldn't extract a default version from %s. You " +
-                        "must specify it explicitly in the package." % self.url)
-        elif not isinstance(self.version, Version):
-            self.version = Version(self.version)
+        # patch up the URL with a new version if the spec version is concrete
+        if self.spec.versions.concrete:
+            self.url = self.url_for_version(self.spec.version)
 
         # This is set by scraping a web page.
         self._available_versions = None
 
-        # This list overrides available_versions if set by the user.
-        attr_setdefault(self, 'versions', None)
-        if self.versions and not isinstance(self.versions, VersionList):
-            self.versions = VersionList(self.versions)
+        # versions should be a dict from version to checksum, for safe versions
+        # of this package.  If it's not present, make it an empty dict.
+        if not hasattr(self, 'versions'):
+            self.versions = {}
 
-        # Empty at first; only compute dependent packages if necessary
-        self._dependents = None
+        if not isinstance(self.versions, dict):
+            raise ValueError("versions attribute of package %s must be a dict!"
+                             % self.name)
+
+        # Version-ize the keys in versions dict
+        try:
+            self.versions = { Version(v):h for v,h in self.versions.items() }
+        except ValueError:
+            raise ValueError("Keys of versions dict in package %s must be versions!"
+                             % self.name)
 
         # stage used to build this package.
-        # TODO: hash the concrete spec and use that as the stage name.
-        self.stage = Stage(self.url, "%s-%s" % (self.name, self.version))
+        self._stage = None
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -347,6 +343,34 @@ class Package(object):
 
         if not hasattr(self, 'list_depth'):
             self.list_depth = 1
+
+
+    @property
+    def default_version(self):
+        """Get the version in the default URL for this package,
+           or fails."""
+        try:
+            return url.parse_version(self.__class__.url)
+        except UndetectableVersionError:
+            tty.die("Couldn't extract a default version from %s. You " +
+                    "must specify it explicitly in the package." % self.url)
+
+
+    @property
+    def version(self):
+        if not self.spec.concrete:
+            raise ValueError("Can only get version of concrete package.")
+        return self.spec.versions[0]
+
+
+    @property
+    def stage(self):
+        if not self.spec.concrete:
+            raise ValueError("Can only get a stage for a concrete package.")
+
+        if self._stage is None:
+            self._stage = Stage(self.url, str(self.spec))
+        return self._stage
 
 
     def add_commands_to_module(self):
@@ -405,13 +429,6 @@ class Package(object):
         m.man6    = new_path(m.man, 'man6')
         m.man7    = new_path(m.man, 'man7')
         m.man8    = new_path(m.man, 'man8')
-
-    @property
-    def dependents(self):
-        """List of names of packages that depend on this one."""
-        if self._dependents is None:
-            packages.compute_dependents()
-        return tuple(self._dependents)
 
 
     def preorder_traversal(self, visited=None, **kwargs):
@@ -499,20 +516,15 @@ class Package(object):
 
     @property
     def installed_dependents(self):
-        installed = [d for d in self.dependents if packages.get(d).installed]
-        all_deps = []
-        for d in installed:
-            all_deps.append(d)
-            all_deps.extend(packages.get(d).installed_dependents)
-        return tuple(all_deps)
-
-
-    @property
-    def all_dependents(self):
-        all_deps = list(self.dependents)
-        for pkg in self.dependents:
-            all_deps.extend(packages.get(pkg).all_dependents)
-        return tuple(all_deps)
+        """Return a list of the specs of all installed packages that depend
+           on this one."""
+        dependents = []
+        for spec in packages.installed_package_specs():
+            if self.name in spec.dependencies:
+                dep_spec = spec.dependencies[self.name]
+                if self.spec == dep_spec:
+                    dependents.append(dep_spec)
+        return dependents
 
 
     @property
@@ -533,7 +545,7 @@ class Package(object):
 
     def url_for_version(self, version):
         """Gives a URL that you can download a new version of this package from."""
-        return url.substitute_version(self.url, self.url_version(version))
+        return url.substitute_version(self.__class__.url, self.url_version(version))
 
 
     def remove_prefix(self):
@@ -547,28 +559,38 @@ class Package(object):
         """Creates a stage directory and downloads the taball for this package.
            Working directory will be set to the stage directory.
         """
-        stage = self.stage
-        stage.setup()
-        stage.fetch()
+        self.stage.setup()
 
-        archive_md5 = md5(stage.archive_file)
-        if archive_md5 != self.md5:
-            tty.die("MD5 Checksum failed for %s.  Expected %s but got %s."
-                    % (self.name, self.md5, archive_md5))
+        if spack.do_checksum and not self.version in self.versions:
+            tty.die("Cannot fetch %s@%s safely; there is no checksum on file for this "
+                    "version." % (self.name, self.version),
+                    "Add a checksum to the package file, or use --no-checksum to "
+                    "skip this check.")
+
+        self.stage.fetch()
+
+        if self.version in self.versions:
+            digest = self.versions[self.version]
+            checker = crypto.Checker(digest)
+            if checker.check(self.stage.archive_file):
+                tty.msg("Checksum passed for %s" % self.name)
+            else:
+                tty.die("%s checksum failed for %s.  Expected %s but got %s."
+                        % (checker.hash_name, self.name, digest, checker.sum))
 
 
     def do_stage(self):
-        """Unpacks the fetched tarball, then changes into the expanded tarball directory."""
+        """Unpacks the fetched tarball, then changes into the expanded tarball
+           directory."""
         self.do_fetch()
-        stage = self.stage
 
-        archive_dir = stage.expanded_archive_path
+        archive_dir = self.stage.expanded_archive_path
         if not archive_dir:
-            tty.msg("Staging archive: %s" % stage.archive_file)
-            stage.expand_archive()
+            tty.msg("Staging archive: %s" % self.stage.archive_file)
+            self.stage.expand_archive()
         else:
             tty.msg("Already staged %s" % self.name)
-        stage.chdir_to_archive()
+        self.stage.chdir_to_archive()
 
 
     def do_install(self):
@@ -595,17 +617,13 @@ class Package(object):
 
         tty.msg("Building %s." % self.name)
         try:
+            # create the install directory (allow the layout to handle this in
+            # case it needs to add extra files)
+            spack.install_layout.make_path_for_spec(self.spec)
+
             self.install(self.prefix)
             if not os.path.isdir(self.prefix):
                 tty.die("Install failed for %s.  No install dir created." % self.name)
-
-        except subprocess.CalledProcessError, e:
-            self.remove_prefix()
-            tty.die("Install failed for %s" % self.name, e.message)
-
-        except KeyboardInterrupt, e:
-            self.remove_prefix()
-            raise
 
         except Exception, e:
             if not self.dirty:
@@ -640,8 +658,9 @@ class Package(object):
         path_set(SPACK_ENV_PATH, env_paths)
 
         # Pass along prefixes of dependencies here
-        path_set(SPACK_DEPENDENCIES,
-                 [dep.package.prefix for dep in self.dependencies.values()])
+        path_set(
+            SPACK_DEPENDENCIES,
+            [dep.package.prefix for dep in self.spec.dependencies.values()])
 
         # Install location
         os.environ[SPACK_PREFIX] = self.prefix
@@ -652,7 +671,7 @@ class Package(object):
 
     def do_install_dependencies(self):
         # Pass along paths of dependencies here
-        for dep in self.dependencies.values():
+        for dep in self.spec.dependencies.values():
             dep.package.do_install()
 
 
@@ -717,7 +736,7 @@ class Package(object):
         if not self._available_versions:
             self._available_versions = VersionList()
             url_regex = os.path.basename(url.wildcard_version(self.url))
-            wildcard = self.version.wildcard()
+            wildcard = self.default_version.wildcard()
 
             try:
                 page_map = get_pages(self.list_url, depth=self.list_depth)
@@ -748,7 +767,7 @@ class Package(object):
     def available_versions(self):
         # If the package overrode available_versions, then use that.
         if self.versions is not None:
-            return self.versions
+            return VersionList(self.versions.keys())
         else:
             vlist = self.fetch_available_versions()
             if not vlist:
