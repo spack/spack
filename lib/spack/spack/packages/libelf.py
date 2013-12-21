@@ -13,5 +13,5 @@ class Libelf(Package):
                   "--disable-debug")
         make()
 
-        # The mkdir commands in libelf's intsall can fail in parallel
+        # The mkdir commands in libelf's install can fail in parallel
         make("install", parallel=False)

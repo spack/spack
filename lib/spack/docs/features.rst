@@ -79,23 +79,29 @@ in pure Python.
 
 .. code-block:: sh
 
-   $ spack create http://scalability.llnl.gov/mpileaks/downloads/mpileaks-1.0.tar.gz
+   $ spack create http://www.mr511.de/software/libelf-0.8.13.tar.gz
 
-Creates ``mpileaks.py``:
+Creates ``libelf.py``:
 
 .. code-block:: python
 
    from spack import *
 
-   class Mpileaks(Package):
+   class Libelf(Package):
        homepage = "http://www.example.com/"
-       url      = "http://scalability.llnl.gov/mpileaks/downloads/mpileaks-1.0.tar.gz"
-       md5      = "4136d7b4c04df68b686570afa26988ac"
+       url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+
+       versions = { '0.8.13' : '4136d7b4c04df68b686570afa26988ac' }
 
        def install(self, prefix):
            configure("--prefix=%s" % prefix)
            make()
            make("install")
+
+It typically doesn't take much python coding to get from there to a
+working package file:
+
+.. literalinclude:: ../spack/packages/libelf.py
 
 Spack also provides wrapper functions around common commands like
 ``configure``, ``make``, and ``cmake`` to make writing packages
