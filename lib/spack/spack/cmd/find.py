@@ -63,12 +63,7 @@ def find(parser, args):
             specs = index[architecture][compiler]
             specs.sort()
 
-            abbreviated = []
-            for s in specs:
-                abbrv = "%s@%s%s" % (s.name, s.version, s.variants)
-                if s.dependencies:
-                    abbrv += '-' + s.dependencies.sha1()[:6]
-                abbreviated.append(abbrv)
+            abbreviated = [s.format('$_$@$+$#') for s in specs]
 
             if args.paths:
                 # Print one spec per line along with prefix path
@@ -81,7 +76,7 @@ def find(parser, args):
 
             elif args.full_specs:
                 for spec in specs:
-                    print spec.tree(indent=4),
+                    print spec.tree(indent=4, format='$_$@$+'),
             else:
                 for abbrv in abbreviated:
                     print "    %s" % abbrv

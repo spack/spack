@@ -805,25 +805,82 @@ class Spec(object):
         return colorize_spec(self)
 
 
-    def str_no_deps(self, **kwargs):
-        out = self.name
+    def format(self, format_string='$_$@$%@$+$=', **kwargs):
+        """Prints out particular pieces of a spec, depending on what is
+           in the format string.  The format strings you can provide are::
 
-        # If the version range is entirely open, omit it
-        if self.versions and self.versions != VersionList([':']):
-            out += "@%s" % self.versions
+               $_   Package name
+               $@   Version
+               $%   Compiler
+               $%@  Compiler & compiler version
+               $+   Options
+               $=   Architecture
+               $#   Dependencies' 6-char sha1 prefix
+               $$   $
 
-        if self.compiler:
-            out += "%%%s" % self.compiler
+           Anything else is copied verbatim into the output stream.
+           Example:  "$_$@$+" translates to the name, version, and options
+                     of the package, but no dependencies, arch, or compiler.
+           """
+        color = kwargs.get('color', False)
 
-        out += str(self.variants)
+        length = len(format_string)
+        out = StringIO()
+        escape = compiler = False
+        for i, c in enumerate(format_string):
+            if escape:
+                if c == '_':
+                    out.write(self.name)
+                elif c == '@':
+                    if self.versions and self.versions != VersionList([':']):
+                        out.write(c + str(self.versions))
+                elif c == '%':
+                    if self.compiler:
+                        out.write(c + str(self.compiler.name))
+                    compiler = True
+                elif c == '+':
+                    if self.variants:
+                        out.write(str(self.variants))
+                elif c == '=':
+                    if self.architecture:
+                        out.write(c + str(self.architecture))
+                elif c == '#':
+                    if self.dependencies:
+                        out.write('-' + self.dependencies.sha1()[:6])
+                elif c == '$':
+                    out.write('$')
+                escape = False
 
-        if self.architecture:
-            out += "=%s" % self.architecture
+            elif compiler:
+                if c == '@':
+                    if self.compiler and self.compiler.versions:
+                        out.write(c + str(self.compiler.versions))
+                elif c == '$':
+                    escape = True
+                else:
+                    out.write(c)
+                compiler = False
 
-        if kwargs.get('color', False):
-            return colorize_spec(out)
-        else:
-            return out
+            elif c == '$':
+                escape = True
+                if i == length - 1:
+                    raise ValueError("Error: unterminated $ in format: '%s'"
+                                     % format_string)
+            else:
+                out.write(c)
+
+        result = out.getvalue()
+        if color:
+            result = colorize_spec(result)
+        return result
+
+
+    def __str__(self):
+        by_name = lambda d: d.name
+        deps = self.preorder_traversal(key=by_name, root=False)
+        sorted_deps = sorted(deps, key=by_name)
+        dep_string = ''.join("^" + dep.format() for dep in sorted_deps)
+        return self.format() + dep_string
 
 
     def tree(self, **kwargs):
@@ -834,6 +891,7 @@ class Spec(object):
         showid = kwargs.get('ids',   False)
         cover  = kwargs.get('cover', 'nodes')
         indent = kwargs.get('indent', 0)
+        format = kwargs.get('format', '$_$@$%@$+$=')
 
         out = ""
         cur_id = 0
@@ -850,7 +908,7 @@ class Spec(object):
             out += ("    " * d)
             if d > 0:
                 out += "^"
-            out += node.str_no_deps(color=color) + "\n"
+            out += node.format(format, color=color) + "\n"
         return out
 
 
@@ -862,14 +920,6 @@ class Spec(object):
 
     def __repr__(self):
         return str(self)
-
-
-    def __str__(self):
-        byname = lambda d: d.name
-        deps = self.preorder_traversal(key=byname, root=False)
-        sorted_deps = sorted(deps, key=byname)
-        dep_string = ''.join("^" + dep.str_no_deps() for dep in sorted_deps)
-        return self.str_no_deps() + dep_string
 
 
 #
