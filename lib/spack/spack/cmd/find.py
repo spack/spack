@@ -1,9 +1,12 @@
 import collections
 import argparse
+from StringIO import StringIO
 
 import spack
+import spack.spec
 import spack.packages as packages
 import spack.colify
+from spack.color import *
 from spack.colify import colify
 
 description ="Find installed spack packages"
@@ -21,7 +24,7 @@ def setup_parser(subparser):
 
 
 # TODO: move this and colify to tty.
-def hline(label, char):
+def hline(label, char, color=''):
     max_width = 64
     cols, rows = spack.colify.get_terminal_size()
     if not cols:
@@ -31,9 +34,18 @@ def hline(label, char):
     cols = min(max_width, cols)
 
     label = str(label)
-    out =  char * 2 + " " + label + " "
-    out += (cols - len(out)) * char
-    return out
+    prefix = char * 2 + " " + label + " "
+    suffix = (cols - len(prefix)) * char
+
+    out = StringIO()
+    if color:
+        prefix = char * 2 + " " + color + cescape(label) + "@. "
+        cwrite(prefix, stream=out, color=True)
+    else:
+        out.write(prefix)
+    out.write(suffix)
+
+    return out.getvalue()
 
 
 def find(parser, args):
@@ -56,14 +68,14 @@ def find(parser, args):
 
     # Traverse the index and print out each package
     for architecture in index:
-        print hline(architecture, "=")
+        print hline(architecture, "=", spack.spec.architecture_color)
         for compiler in index[architecture]:
-            print hline(compiler, "-")
+            print hline(compiler, "-", spack.spec.compiler_color)
 
             specs = index[architecture][compiler]
             specs.sort()
 
-            abbreviated = [s.format('$_$@$+$#') for s in specs]
+            abbreviated = [s.format('$_$@$+$#', color=True) for s in specs]
 
             if args.paths:
                 # Print one spec per line along with prefix path
@@ -76,7 +88,7 @@ def find(parser, args):
 
             elif args.full_specs:
                 for spec in specs:
-                    print spec.tree(indent=4, format='$_$@$+'),
+                    print spec.tree(indent=4, format='$_$@$+', color=True),
             else:
                 for abbrv in abbreviated:
                     print "    %s" % abbrv

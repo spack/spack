@@ -83,15 +83,23 @@ from spack.util.lang import *
 from spack.util.string import *
 
 
+# Convenient names for color formats so that other things can use them
+compiler_color         = '@g'
+version_color          = '@c'
+architecture_color     = '@m'
+enabled_variant_color  = '@B'
+disabled_variant_color = '@r'
+dependency_color       = '@.'
+
 """This map determines the coloring of specs when using color output.
    We make the fields different colors to enhance readability.
    See spack.color for descriptions of the color codes. """
-color_formats = {'%' : '@g',   # compiler
-                 '@' : '@c',   # version
-                 '=' : '@m',   # architecture
-                 '+' : '@B',   # enable variant
-                 '~' : '@r',   # disable variant
-                 '^' : '@.'}   # dependency
+color_formats = {'%' : compiler_color,
+                 '@' : version_color,
+                 '=' : architecture_color,
+                 '+' : enabled_variant_color,
+                 '~' : disabled_variant_color,
+                 '^' : dependency_color }
 
 """Regex used for splitting by spec field separators."""
 separators = '[%s]' % ''.join(color_formats.keys())
@@ -823,27 +831,34 @@ class Spec(object):
                      of the package, but no dependencies, arch, or compiler.
            """
         color = kwargs.get('color', False)
-
         length = len(format_string)
         out = StringIO()
         escape = compiler = False
+
+        def write(s, c):
+            if color:
+                f = color_formats[c] + cescape(s) + '@.'
+                cwrite(f, stream=out, color=color)
+            else:
+                out.write(s)
+
         for i, c in enumerate(format_string):
             if escape:
                 if c == '_':
                     out.write(self.name)
                 elif c == '@':
                     if self.versions and self.versions != VersionList([':']):
-                        out.write(c + str(self.versions))
+                        write(c + str(self.versions), c)
                 elif c == '%':
                     if self.compiler:
-                        out.write(c + str(self.compiler.name))
+                        write(c + str(self.compiler.name), c)
                     compiler = True
                 elif c == '+':
                     if self.variants:
-                        out.write(str(self.variants))
+                        write(str(self.variants), c)
                 elif c == '=':
                     if self.architecture:
-                        out.write(c + str(self.architecture))
+                        write(c + str(self.architecture), c)
                 elif c == '#':
                     if self.dependencies:
                         out.write('-' + self.dependencies.sha1()[:6])
@@ -854,7 +869,7 @@ class Spec(object):
             elif compiler:
                 if c == '@':
                     if self.compiler and self.compiler.versions:
-                        out.write(c + str(self.compiler.versions))
+                        write(c + str(self.compiler.versions), '%')
                 elif c == '$':
                     escape = True
                 else:
@@ -870,8 +885,6 @@ class Spec(object):
                 out.write(c)
 
         result = out.getvalue()
-        if color:
-            result = colorize_spec(result)
         return result
 
 
