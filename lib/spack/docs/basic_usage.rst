@@ -28,13 +28,11 @@ Alternately, you can use ``spack -h`` in place of ``spack help``, or
 ``spack <subcommand> -h`` to get help on a particular subcommand.
 
 
-Viewing available packages
+Listing available packages
 ------------------------------
 
 The first thing you will likely want to do with spack is find out what
-software is available to install.  There are two main commands for
-this: ``spack list`` and ``spack info``.
-
+software is available to install.  There are a few relevant commands.
 
 ``spack list``
 ~~~~~~~~~~~~~~~~
@@ -44,8 +42,7 @@ Spack can install:
 
 .. command-output:: spack list
 
-The packages are listed by name in alphabetical order.  To see a list of
-only the *installed* packages, use ``spack list -i``.
+The packages are listed by name in alphabetical order.
 
 
 ``spack info``
@@ -63,7 +60,6 @@ implementation will provide the MPI interface), and a text
 description, if one is available.  :ref:`Dependencies
 <sec-specs>` and :ref:`virtual dependencies
 <sec-virtual-dependencies>` are described in more detail later.
-
 
 ``spack versions``
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -87,6 +83,93 @@ You can see supported compilers by running ``spack compilers``.  The
 output will depend on the platform you run it on.
 
 .. command-output:: spack compilers
+
+
+Seeing installed packages
+-----------------------------------
+
+``spack find``
+~~~~~~~~~~~~~~~~~~~~~~
+
+The second thing you're likely to want to do with Spack, and the first
+thing users of your system will likely want to do, is to find what
+software is already installed and ready to use.  You can do that with
+``spack find``.
+
+Running ``spack find`` with no arguments will list all the installed
+packages:
+
+.. code-block:: sh
+
+   $ spack find
+   == chaos_5_x86_64_ib ===========================================
+   -- gcc@4.4.7 ---------------------------------------------------
+       libdwarf@20130207-d9b909
+       libdwarf@20130729-d9b909
+       libdwarf@20130729-b52fac
+       libelf@0.8.11
+       libelf@0.8.12
+       libelf@0.8.13
+
+Packages are grouped by architecture, then by the compiler used to
+build them, and then by their versions and options.  If a package has
+dependencies, there will also be a hash at the end of the name
+indicating the dependency configuration.  Packages with the same hash
+have the same dependency configuration.  If you want ALL information
+about dependencies, as well, then you can supply ``-l`` or ``--long``:
+
+.. code-block:: sh
+
+   $ spack find -l
+   == chaos_5_x86_64_ib ===========================================
+   -- gcc@4.4.7 ---------------------------------------------------
+       libdwarf@20130207
+           ^libelf@0.8.12
+       libdwarf@20130729
+           ^libelf@0.8.12
+       libdwarf@20130729
+           ^libelf@0.8.13
+       libelf@0.8.11
+       libelf@0.8.12
+       libelf@0.8.13
+
+Now you can see which versions of ``libelf`` each version of
+``libdwarf`` was built with.
+
+If you want to know the path where each of these packages is
+installed, do ``spack find -p`` or ``--path``:
+
+.. code-block:: sh
+
+   $ spack find -p
+   == chaos_5_x86_64_ib ===========================================
+   -- gcc@4.4.7 ---------------------------------------------------
+       libdwarf@20130207-d9b909  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libdwarf@20130207-d9b909
+       libdwarf@20130729-d9b909  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libdwarf@20130729-d9b909
+       libdwarf@20130729-b52fac  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libdwarf@20130729-b52fac
+       libelf@0.8.11             /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.11
+       libelf@0.8.12             /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.12
+       libelf@0.8.13             /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.13
+
+
+And, finally, you can restrict your search to a particular package
+by supplying its name:
+
+.. code-block:: sh
+
+   $ spack find -p libelf
+   == chaos_5_x86_64_ib ===========================================
+   -- gcc@4.4.7 ---------------------------------------------------
+       libelf@0.8.11  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.11
+       libelf@0.8.12  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.12
+       libelf@0.8.13  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.13
+
+
+``spack find`` actually does a lot more than this.  You can use
+*specs* to query for specific configurations and builds of each
+package.  The full spec syntax is discussed in detail in
+:ref:`sec-specs`.
+
 
 
 Installing and uninstalling
