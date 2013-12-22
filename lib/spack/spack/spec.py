@@ -1097,6 +1097,34 @@ def parse(string):
     return SpecParser().parse(string)
 
 
+def parse_local_spec(spec_like, pkg_name):
+    """Allow the user to omit the package name part of a spec if they
+       know what it has to be already.
+
+       e.g., provides('mpi@2', when='@1.9:') says that this package
+       provides MPI-3 when its version is higher than 1.9.
+    """
+    if not isinstance(spec_like, (str, Spec)):
+        raise TypeError('spec must be Spec or spec string.  Found %s'
+                        % type(spec_like))
+
+    if isinstance(spec_like, str):
+        try:
+            local_spec = Spec(spec_like)
+        except spack.parse.ParseError:
+            local_spec = Spec(pkg_name + spec_like)
+            if local_spec.name != pkg_name: raise ValueError(
+                    "Invalid spec for package %s: %s" % (pkg_name, spec_like))
+    else:
+        local_spec = spec_like
+
+    if local_spec.name != pkg_name:
+        raise ValueError("Spec name '%s' must match package name '%s'"
+                         % (local_spec.name, pkg_name))
+
+    return local_spec
+
+
 class SpecError(spack.error.SpackError):
     """Superclass for all errors that occur while constructing specs."""
     def __init__(self, message):

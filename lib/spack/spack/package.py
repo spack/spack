@@ -25,7 +25,6 @@ import validate
 import multiprocessing
 import url
 
-from spack.multi_function import platform
 import spack.util.crypto as crypto
 from spack.version import *
 from spack.stage import Stage

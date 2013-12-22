@@ -50,79 +50,18 @@ import importlib
 
 import spack
 import spack.spec
-from spack.spec import Spec
 import spack.error
+from spack.spec import Spec, parse_local_spec
 from spack.packages import packages_module
-
-
-def _caller_locals():
-    """This will return the locals of the *parent* of the caller.
-       This allows a fucntion to insert variables into its caller's
-       scope.  Yes, this is some black magic, and yes it's useful
-       for implementing things like depends_on and provides.
-    """
-    stack = inspect.stack()
-    try:
-        return stack[2][0].f_locals
-    finally:
-        del stack
-
-
-def _get_calling_package_name():
-    """Make sure that the caller is a class definition, and return
-       the module's name.  This is useful for getting the name of
-       spack packages from inside a relation function.
-    """
-    stack = inspect.stack()
-    try:
-        # get calling function name (the relation)
-        relation = stack[1][3]
-
-        # Make sure locals contain __module__
-        caller_locals = stack[2][0].f_locals
-    finally:
-        del stack
-
-    if not '__module__' in caller_locals:
-        raise ScopeError(relation)
-
-    module_name = caller_locals['__module__']
-    base_name = module_name.split('.')[-1]
-    return base_name
-
-
-def _parse_local_spec(spec_like, pkg_name):
-    """Allow the user to omit the package name part of a spec in relations.
-       e.g., provides('mpi@2', when='@1.9:') says that this package provides
-       MPI-3 when its version is higher than 1.9.
-    """
-    if not isinstance(spec_like, (str, Spec)):
-        raise TypeError('spec must be Spec or spec string.  Found %s'
-                        % type(spec_like))
-
-    if isinstance(spec_like, str):
-        try:
-            local_spec = Spec(spec_like)
-        except spack.parse.ParseError:
-            local_spec = Spec(pkg_name + spec_like)
-            if local_spec.name != pkg_name: raise ValueError(
-                    "Invalid spec for package %s: %s" % (pkg_name, spec_like))
-    else:
-        local_spec = spec_like
-
-    if local_spec.name != pkg_name:
-        raise ValueError("Spec name '%s' must match package name '%s'"
-                         % (spec_like.name, pkg_name))
-
-    return local_spec
+from spack.util.lang import *
 
 
 """Adds a dependencies local variable in the locals of
    the calling class, based on args. """
 def depends_on(*specs):
-    pkg = _get_calling_package_name()
+    pkg = get_calling_package_name()
 
-    dependencies = _caller_locals().setdefault('dependencies', {})
+    dependencies = caller_locals().setdefault('dependencies', {})
     for string in specs:
         for spec in spack.spec.parse(string):
             if pkg == spec.name:
@@ -135,11 +74,11 @@ def provides(*specs, **kwargs):
        'mpi', other packages can declare that they depend on "mpi", and spack
        can use the providing package to satisfy the dependency.
     """
-    pkg = _get_calling_package_name()
+    pkg = get_calling_package_name()
     spec_string = kwargs.get('when', pkg)
-    provider_spec = _parse_local_spec(spec_string, pkg)
+    provider_spec = parse_local_spec(spec_string, pkg)
 
-    provided = _caller_locals().setdefault("provided", {})
+    provided = caller_locals().setdefault("provided", {})
     for string in specs:
         for provided_spec in spack.spec.parse(string):
             if pkg == provided_spec.name:

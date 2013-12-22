@@ -9,6 +9,42 @@ from spack.util.filesystem import new_path
 ignore_modules = [r'^\.#', '~$']
 
 
+def caller_locals():
+    """This will return the locals of the *parent* of the caller.
+       This allows a fucntion to insert variables into its caller's
+       scope.  Yes, this is some black magic, and yes it's useful
+       for implementing things like depends_on and provides.
+    """
+    stack = inspect.stack()
+    try:
+        return stack[2][0].f_locals
+    finally:
+        del stack
+
+
+def get_calling_package_name():
+    """Make sure that the caller is a class definition, and return
+       the module's name.  This is useful for getting the name of
+       spack packages from inside a relation function.
+    """
+    stack = inspect.stack()
+    try:
+        # get calling function name (the relation)
+        relation = stack[1][3]
+
+        # Make sure locals contain __module__
+        caller_locals = stack[2][0].f_locals
+    finally:
+        del stack
+
+    if not '__module__' in caller_locals:
+        raise ScopeError(relation)
+
+    module_name = caller_locals['__module__']
+    base_name = module_name.split('.')[-1]
+    return base_name
+
+
 def attr_required(obj, attr_name):
     """Ensure that a class has a required attribute."""
     if not hasattr(obj, attr_name):

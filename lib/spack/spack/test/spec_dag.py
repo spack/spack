@@ -14,8 +14,6 @@ from spack.util.lang import new_path, list_modules
 from spack.spec import Spec
 from spack.test.mock_packages_test import *
 
-mock_packages_path = new_path(spack.module_path, 'test', 'mock_packages')
-
 
 class ValidationTest(MockPackagesTest):
 

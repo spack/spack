@@ -5,19 +5,24 @@ import spack
 from spack.colify import colify
 import spack.tty as tty
 
+"""Names of tests to be included in Spack's test suite"""
 test_names = ['versions',
               'url_parse',
               'stage',
               'spec_syntax',
               'spec_dag',
-              'concretize']
+              'concretize',
+              'multimethod']
 
 
 def list_tests():
+    """Return names of all tests that can be run for Spack."""
     return test_names
 
 
 def run(names, verbose=False):
+    """Run tests with the supplied names.  Names should be a list.  If
+       it's empty, run ALL of Spack's tests."""
     verbosity = 1 if not verbose else 2
 
     if not names:
@@ -35,6 +40,7 @@ def run(names, verbose=False):
     testsRun = errors = failures = skipped = 0
     for test in names:
         module = 'spack.test.' + test
+        print module
         suite = unittest.defaultTestLoader.loadTestsFromName(module)
 
         tty.msg("Running test: %s" % test)
