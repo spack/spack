@@ -76,9 +76,9 @@ class MultiMethodTest(MockPackagesTest):
         self.assertRaises(AmbiguousMethodError, pkg.different_by_dep)
 
 
-    def test_one_dep_match(self):
-        pass
+    def test_virtual_dep_match(self):
+        pkg = packages.get('multimethod^mpich2')
+        self.assertEqual(pkg.different_by_virtual_dep(), 2)
 
-
-    def test_one_dep_match(self):
-        pass
+        pkg = packages.get('multimethod^mpich@1.0')
+        self.assertEqual(pkg.different_by_virtual_dep(), 1)

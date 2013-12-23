@@ -92,10 +92,9 @@ class Multimethod(Package):
     #
     # Make sure we can switch on virtual dependencies
     #
+    def different_by_virtual_dep(self):
+        return 1
+
     @when('^mpi@2:')
     def different_by_virtual_dep(self):
-        return 'mpi@2:'
-
-    @when('^mpi@:1')
-    def different_by_virtual_dep(self):
-        return 'mpi@:1'
+        return 2
