@@ -49,9 +49,3 @@ class Libdwarf(Package):
             install('dwarfdump',     bin)
             install('dwarfdump.conf', lib)
             install('dwarfdump.1',    man1)
-
-
-#    @platform('macosx_10.8_x86_64')
-#    def install(self, prefix):
-#        raise UnsupportedPlatformError(
-#            "libdwarf doesn't currently build on Mac OS X.")

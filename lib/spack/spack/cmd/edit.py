@@ -17,7 +17,7 @@ def edit(parser, args):
     if not name:
         path = spack.packages_path
     else:
-        path = packages.filename_for(name)
+        path = packages.filename_for_package_name(name)
 
         if os.path.exists(path):
             if not os.path.isfile(path):
