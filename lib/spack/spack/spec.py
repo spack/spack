@@ -710,7 +710,10 @@ class Spec(object):
                     raise UnknownCompilerError(compiler_name)
 
 
-    def constrain(self, other):
+    def constrain(self, other, **kwargs):
+        if not self.name == other.name:
+            raise UnsatisfiableSpecNameError(self.name, other.name)
+
         if not self.versions.overlaps(other.versions):
             raise UnsatisfiableVersionSpecError(self.versions, other.versions)
 
@@ -734,7 +737,45 @@ class Spec(object):
         self.variants.update(other.variants)
         self.architecture = self.architecture or other.architecture
 
-        # TODO: constrain dependencies, too.
+        if kwargs.get('deps', True):
+            self.constrain_dependencies(other)
+
+
+    def constrain_dependencies(self, other):
+        """Apply constraints of other spec's dependencies to this spec."""
+        if not self.dependencies or not other.dependencies:
+            return
+
+        # TODO: might want more detail than this, e.g. specific deps
+        # in violation. if this becomes a priority get rid of this
+        # check and be more specici about what's wrong.
+        if not self.satisfies_dependencies(other):
+            raise UnsatisfiableDependencySpecError(self, other)
+
+        # Handle common first-order constraints directly
+        for name in self.common_dependencies(other):
+            self[name].constrain(other[name], deps=False)
+
+        # Update with additional constraints from other spec
+        for name in other.dep_difference(self):
+            self._add_dependency(other[name].copy())
+
+
+    def common_dependencies(self, other):
+        """Return names of dependencies that self an other have in common."""
+        common = set(
+            s.name for s in self.preorder_traversal(root=False))
+        common.intersection_update(
+            s.name for s in other.preorder_traversal(root=False))
+        return common
+
+
+    def dep_difference(self, other):
+        """Returns dependencies in self that are not in other."""
+        mine = set(s.name for s in self.preorder_traversal(root=False))
+        mine.difference_update(
+            s.name for s in other.preorder_traversal(root=False))
+        return mine
 
 
     def satisfies(self, other, **kwargs):
@@ -773,19 +814,33 @@ class Spec(object):
         if not self.dependencies or not other.dependencies:
             return True
 
-        common = set(s.name for s in self.preorder_traversal(root=False))
-        common.intersection_update(s.name for s in other.preorder_traversal(root=False))
-
         # Handle first-order constraints directly
-        for name in common:
+        for name in self.common_dependencies(other):
             if not self[name].satisfies(other[name]):
                 return False
 
         # For virtual dependencies, we need to dig a little deeper.
-        self_index = packages.ProviderIndex(self.preorder_traversal())
-        other_index = packages.ProviderIndex(other.preorder_traversal())
+        self_index = packages.ProviderIndex(
+            self.preorder_traversal(), restrict=True)
+        other_index = packages.ProviderIndex(
+            other.preorder_traversal(), restrict=True)
 
-        return self_index.satisfies(other_index)
+        # This handles cases where there are already providers for both vpkgs
+        if not self_index.satisfies(other_index):
+            return False
+
+        # These two loops handle cases where there is an overly restrictive vpkg
+        # in one spec for a provider in the other (e.g., mpi@3: is not compatible
+        # with mpich2)
+        for spec in self.virtual_dependencies():
+            if spec.name in other_index and not other_index.providers_for(spec):
+                return False
+
+        for spec in other.virtual_dependencies():
+            if spec.name in self_index and not self_index.providers_for(spec):
+                return False
+
+        return True
 
 
     def virtual_dependencies(self):
@@ -840,7 +895,7 @@ class Spec(object):
 
 
     def __getitem__(self, name):
-        """TODO: does the way this is written make sense?"""
+        """TODO: reconcile __getitem__, _add_dependency, __contains__"""
         for spec in self.preorder_traversal():
             if spec.name == name:
                 return spec
@@ -1268,6 +1323,13 @@ class UnsatisfiableSpecError(SpecError):
         self.constraint_type = constraint_type
 
 
+class UnsatisfiableSpecNameError(UnsatisfiableSpecError):
+    """Raised when two specs aren't even for the same package."""
+    def __init__(self, provided, required):
+        super(UnsatisfiableVersionSpecError, self).__init__(
+            provided, required, "name")
+
+
 class UnsatisfiableVersionSpecError(UnsatisfiableSpecError):
     """Raised when a spec version conflicts with package constraints."""
     def __init__(self, provided, required):
@@ -1302,3 +1364,11 @@ class UnsatisfiableProviderSpecError(UnsatisfiableSpecError):
     def __init__(self, provided, required):
         super(UnsatisfiableProviderSpecError, self).__init__(
             provided, required, "provider")
+
+# TODO: get rid of this and be more specific about particular incompatible
+# dep constraints
+class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
+    """Raised when some dependency of constrained specs are incompatible"""
+    def __init__(self, provided, required):
+        super(UnsatisfiableDependencySpecError, self).__init__(
+            provided, required, "dependency")

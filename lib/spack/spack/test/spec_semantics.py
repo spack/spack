@@ -80,13 +80,14 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     def test_satisfies_dependencies(self):
-#        self.check_satisfies('mpileaks^mpich', 'mpileaks^mpich')
-#        self.check_satisfies('mpileaks^zmpi', 'mpileaks^zmpi')
+        self.check_satisfies('mpileaks^mpich', 'mpileaks^mpich')
+        self.check_satisfies('mpileaks^zmpi', 'mpileaks^zmpi')
+
         self.check_unsatisfiable('mpileaks^mpich', 'mpileaks^zmpi')
         self.check_unsatisfiable('mpileaks^zmpi', 'mpileaks^mpich')
 
 
-    def ztest_satisfies_dependency_versions(self):
+    def test_satisfies_dependency_versions(self):
         self.check_satisfies('mpileaks^mpich@2.0', 'mpileaks^mpich@1:3')
         self.check_unsatisfiable('mpileaks^mpich@1.2', 'mpileaks^mpich@2.0')
 
@@ -96,7 +97,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_unsatisfiable('mpileaks^mpich@4.0^callpath@1.7', 'mpileaks^mpich@1:3^callpath@1.4:1.6')
 
 
-    def ztest_satisfies_virtual_dependencies(self):
+    def test_satisfies_virtual_dependencies(self):
         self.check_satisfies('mpileaks^mpi', 'mpileaks^mpi')
         self.check_satisfies('mpileaks^mpi', 'mpileaks^mpich')
 
@@ -104,7 +105,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_unsatisfiable('mpileaks^mpich', 'mpileaks^zmpi')
 
 
-    def ztest_satisfies_virtual_dependency_versions(self):
+    def test_satisfies_virtual_dependency_versions(self):
         self.check_satisfies('mpileaks^mpi@1.5', 'mpileaks^mpi@1.2:1.6')
         self.check_unsatisfiable('mpileaks^mpi@3', 'mpileaks^mpi@1.2:1.6')
 
@@ -112,7 +113,11 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_satisfies('mpileaks^mpi@2:', 'mpileaks^mpich@3.0.4')
         self.check_satisfies('mpileaks^mpi@2:', 'mpileaks^mpich2@1.4')
 
+        self.check_satisfies('mpileaks^mpi@1:', 'mpileaks^mpich2')
+        self.check_satisfies('mpileaks^mpi@2:', 'mpileaks^mpich2')
+
         self.check_unsatisfiable('mpileaks^mpi@3:', 'mpileaks^mpich2@1.4')
+        self.check_unsatisfiable('mpileaks^mpi@3:', 'mpileaks^mpich2')
         self.check_unsatisfiable('mpileaks^mpi@3:', 'mpileaks^mpich@1.0')
 
 

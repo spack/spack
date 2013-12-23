@@ -277,8 +277,6 @@ class SpecDagTest(MockPackagesTest):
 
     def test_contains(self):
         spec = Spec('mpileaks ^mpi ^libelf@1.8.11 ^libdwarf')
-
-        print [s for s in spec.preorder_traversal()]
         self.assertIn(Spec('mpi'), spec)
         self.assertIn(Spec('libelf'), spec)
         self.assertIn(Spec('libelf@1.8.11'), spec)

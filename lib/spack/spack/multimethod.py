@@ -93,17 +93,6 @@ class SpecMultiMethod(object):
         """
         spec = package_self.spec
         matching_specs = [s for s in self.method_map if s.satisfies(spec)]
-
-        # from pprint import pprint
-
-        # print "========"
-        # print "called with " + str(spec)
-        # print spec, matching_specs
-        # pprint(self.method_map)
-        # print "SATISFIES: ", [Spec('multimethod%gcc').satisfies(s) for s in self.method_map]
-        # print [spec.satisfies(s) for s in self.method_map]
-        # print
-
         num_matches = len(matching_specs)
         if num_matches == 0:
             if self.default is None:

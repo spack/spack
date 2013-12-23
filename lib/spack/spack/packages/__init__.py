@@ -49,7 +49,11 @@ class ProviderIndex(object):
        matching implementation of MPI.
     """
     def __init__(self, specs, **kwargs):
+        # TODO: come up with another name for this.  This "restricts" values to
+        # the verbatim impu specs (i.e., it doesn't pre-apply package's constraints, and
+        # keeps things as broad as possible, so it's really the wrong name)
         restrict = kwargs.setdefault('restrict', False)
+
         self.providers = {}
 
         for spec in specs:
@@ -106,17 +110,21 @@ class ProviderIndex(object):
                     constrained = lspec.copy().constrain(rspec)
                     if lmap[lspec].name != rmap[rspec].name:
                         continue
-                    result[constrained] = lmap[lspec].copy().constrain(rmap[rspec])
+                    result[constrained] = lmap[lspec].copy().constrain(
+                        rmap[rspec], deps=False)
                 except spack.spec.UnsatisfiableSpecError:
                     continue
         return result
 
 
+    def __contains__(self, name):
+        """Whether a particular vpkg name is in the index."""
+        return name in self.providers
+
+
     def satisfies(self, other):
         """Check that providers of virtual specs are compatible."""
-        common = set(self.providers.keys())
-        common.intersection_update(other.providers.keys())
-
+        common = set(self.providers) & set(other.providers)
         if not common:
             return True
 
@@ -128,6 +136,7 @@ class ProviderIndex(object):
                 result[name] = crossed
 
         return bool(result)
+
 
 
 @autospec
