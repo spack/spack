@@ -15,7 +15,8 @@ class MultiMethodTest(MockPackagesTest):
 
     def test_no_version_match(self):
         pkg = packages.get('multimethod@2.0')
-        self.assertRaises(NoSuchMethodVersionError, pkg.no_version_2)
+        self.assertRaises(NoSuchMethodError, pkg.no_version_2)
+
 
     def test_one_version_match(self):
         pkg = packages.get('multimethod@1.0')
@@ -28,7 +29,56 @@ class MultiMethodTest(MockPackagesTest):
         self.assertEqual(pkg.no_version_2(), 4)
 
 
-    def test_multiple_matches(self):
+    def test_version_overlap(self):
         pkg = packages.get('multimethod@3.0')
-        self.assertRaises(AmbiguousMethodVersionError, pkg.version_overlap)
+        self.assertRaises(AmbiguousMethodError, pkg.version_overlap)
 
+
+    def test_default_works(self):
+        pkg = packages.get('multimethod%gcc')
+        self.assertEqual(pkg.has_a_default(), 'gcc')
+
+        pkg = packages.get('multimethod%intel')
+        self.assertEqual(pkg.has_a_default(), 'intel')
+
+        pkg = packages.get('multimethod%pgi')
+        self.assertEqual(pkg.has_a_default(), 'default')
+
+
+    def test_architecture_match(self):
+        pkg = packages.get('multimethod=x86_64')
+        self.assertEqual(pkg.different_by_architecture(), 'x86_64')
+
+        pkg = packages.get('multimethod=ppc64')
+        self.assertEqual(pkg.different_by_architecture(), 'ppc64')
+
+        pkg = packages.get('multimethod=ppc32')
+        self.assertEqual(pkg.different_by_architecture(), 'ppc32')
+
+        pkg = packages.get('multimethod=arm64')
+        self.assertEqual(pkg.different_by_architecture(), 'arm64')
+
+        pkg = packages.get('multimethod=macos')
+        self.assertRaises(NoSuchMethodError, pkg.different_by_architecture)
+
+
+    def test_dependency_match(self):
+        pkg = packages.get('multimethod^zmpi')
+        self.assertEqual(pkg.different_by_dep(), 'zmpi')
+
+        pkg = packages.get('multimethod^mpich')
+        self.assertEqual(pkg.different_by_dep(), 'mpich')
+
+
+    def test_ambiguous_dep(self):
+        """If we try to switch on some entirely different dep, it's ambiguous"""
+        pkg = packages.get('multimethod^foobar')
+        self.assertRaises(AmbiguousMethodError, pkg.different_by_dep)
+
+
+    def test_one_dep_match(self):
+        pass
+
+
+    def test_one_dep_match(self):
+        pass

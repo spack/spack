@@ -8,7 +8,7 @@ class Zmpi(Package):
 
     versions = { '1.0' : 'foobarbaz' }
 
-    provides('mpi@10.0:')
+    provides('mpi@:10.0')
     depends_on('fake')
 
     def install(self, prefix):

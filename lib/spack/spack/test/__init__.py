@@ -10,6 +10,7 @@ test_names = ['versions',
               'url_parse',
               'stage',
               'spec_syntax',
+              'spec_semantics',
               'spec_dag',
               'concretize',
               'multimethod']

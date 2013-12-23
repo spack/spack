@@ -1,10 +1,8 @@
 """
-These tests check validation of dummy packages.  You can find the dummy
-packages directories that these tests use in:
+These tests check Spec DAG operations using dummy packages.
+You can find the dummy packages here::
 
     spack/lib/spack/spack/test/mock_packages
-
-Each test validates conditions with the packages in those directories.
 """
 import spack
 import spack.package
@@ -15,7 +13,7 @@ from spack.spec import Spec
 from spack.test.mock_packages_test import *
 
 
-class ValidationTest(MockPackagesTest):
+class SpecDagTest(MockPackagesTest):
 
     def test_conflicting_package_constraints(self):
         set_pkg_dep('mpileaks', 'mpich@1.0')
@@ -279,6 +277,8 @@ class ValidationTest(MockPackagesTest):
 
     def test_contains(self):
         spec = Spec('mpileaks ^mpi ^libelf@1.8.11 ^libdwarf')
+
+        print [s for s in spec.preorder_traversal()]
         self.assertIn(Spec('mpi'), spec)
         self.assertIn(Spec('libelf'), spec)
         self.assertIn(Spec('libelf@1.8.11'), spec)

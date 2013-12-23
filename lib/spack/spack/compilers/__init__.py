@@ -11,6 +11,10 @@ def supported_compilers():
     return [c for c in list_modules(spack.compilers_path)]
 
 
+def supported(compiler):
+    return compiler in supported_compilers()
+
+
 @memoized
 def default_compiler():
     from spack.spec import Compiler

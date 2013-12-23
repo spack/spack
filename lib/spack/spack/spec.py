@@ -67,15 +67,16 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import sys
+import itertools
+import hashlib
 from StringIO import StringIO
 
-import tty
-import hashlib
 import spack.parse
 import spack.error
 import spack.compilers
 import spack.compilers.gcc
 import spack.packages as packages
+import spack.tty as tty
 
 from spack.version import *
 from spack.color import *
@@ -102,7 +103,11 @@ color_formats = {'%' : compiler_color,
                  '^' : dependency_color }
 
 """Regex used for splitting by spec field separators."""
-separators = '[%s]' % ''.join(color_formats.keys())
+_separators = '[%s]' % ''.join(color_formats.keys())
+
+"""Versionlist constant so we don't have to build a list
+   every time we call str()"""
+_any_version = VersionList([':'])
 
 
 def index_specs(specs):
@@ -134,7 +139,7 @@ def colorize_spec(spec):
 
             return '%s%s' % (color_formats[sep], cescape(sep))
 
-    return colorize(re.sub(separators, insert_color(), str(spec)) + '@.')
+    return colorize(re.sub(_separators, insert_color(), str(spec)) + '@.')
 
 
 @key_ordering
@@ -143,9 +148,6 @@ class Compiler(object):
        versions that a package should be built with.  Compilers have a
        name and a version list. """
     def __init__(self, name, version=None):
-        if name not in spack.compilers.supported_compilers():
-            raise UnknownCompilerError(name)
-
         self.name = name
         self.versions = VersionList()
         if version:
@@ -193,7 +195,7 @@ class Compiler(object):
 
     def __str__(self):
         out = self.name
-        if self.versions:
+        if self.versions and self.versions != _any_version:
             vlist = ",".join(str(v) for v in self.versions)
             out += "@%s" % vlist
         return out
@@ -240,11 +242,6 @@ class DependencyMap(HashableMap):
     @property
     def concrete(self):
         return all(d.concrete for d in self.values())
-
-
-    def satisfies(self, other):
-        return all(self[name].satisfies(other[name]) for name in self
-                   if name in other)
 
 
     def sha1(self):
@@ -656,8 +653,8 @@ class Spec(object):
            TODO: normalize should probably implement some form of cycle detection,
            to ensure that the spec is actually a DAG.
         """
-        # Ensure first that all packages in the DAG exist.
-        self.validate_package_names()
+        # Ensure first that all packages & compilers in the DAG exist.
+        self.validate_names()
 
         # Then ensure that the packages referenced are sane, that the
         # provided spec is sane, and that all dependency specs are in the
@@ -689,11 +686,28 @@ class Spec(object):
                 self.name + " does not depend on " + comma_or(extra))
 
 
-    def validate_package_names(self):
+    def normalized(self):
+        """Return a normalized copy of this spec without modifying this spec."""
+        clone = self.copy()
+        clone.normalized()
+        return clone
+
+
+    def validate_names(self):
+        """This checks that names of packages and compilers in this spec are real.
+           If they're not, it will raise either UnknownPackageError or
+           UnknownCompilerError.
+        """
         for spec in self.preorder_traversal():
             # Don't get a package for a virtual name.
             if not spec.virtual:
                 packages.get(spec.name)
+
+            # validate compiler name in addition to the package name.
+            if spec.compiler:
+                compiler_name = spec.compiler.name
+                if not spack.compilers.supported(compiler_name):
+                    raise UnknownCompilerError(compiler_name)
 
 
     def constrain(self, other):
@@ -720,21 +734,63 @@ class Spec(object):
         self.variants.update(other.variants)
         self.architecture = self.architecture or other.architecture
 
+        # TODO: constrain dependencies, too.
 
-    def satisfies(self, other):
+
+    def satisfies(self, other, **kwargs):
         if not isinstance(other, Spec):
             other = Spec(other)
 
-        def sat(attribute):
+        # First thing we care about is whether the name matches
+        if self.name != other.name:
+            return False
+
+        # This function simplifies null checking below
+        def check(attribute, op):
             s = getattr(self, attribute)
             o = getattr(other, attribute)
-            return not s or not o or s.satisfies(o)
+            return not s or not o or op(s,o)
 
-        return (self.name == other.name and
-                all(sat(attr) for attr in
-                    ('versions', 'variants', 'compiler', 'architecture')) and
-                # TODO: what does it mean to satisfy deps?
-                self.dependencies.satisfies(other.dependencies))
+        # All these attrs have satisfies criteria of their own
+        for attr in ('versions', 'variants', 'compiler'):
+            if not check(attr, lambda s, o: s.satisfies(o)):
+                return False
+
+        # Architecture is just a string
+        # TODO: inviestigate making an Architecture class for symmetry
+        if not check('architecture', lambda s,o: s == o):
+            return False
+
+        if kwargs.get('deps', True):
+            return self.satisfies_dependencies(other)
+        else:
+            return True
+
+
+    def satisfies_dependencies(self, other):
+        """This checks constraints on common dependencies against each other."""
+        # if either spec doesn't restrict dependencies then both are compatible.
+        if not self.dependencies or not other.dependencies:
+            return True
+
+        common = set(s.name for s in self.preorder_traversal(root=False))
+        common.intersection_update(s.name for s in other.preorder_traversal(root=False))
+
+        # Handle first-order constraints directly
+        for name in common:
+            if not self[name].satisfies(other[name]):
+                return False
+
+        # For virtual dependencies, we need to dig a little deeper.
+        self_index = packages.ProviderIndex(self.preorder_traversal())
+        other_index = packages.ProviderIndex(other.preorder_traversal())
+
+        return self_index.satisfies(other_index)
+
+
+    def virtual_dependencies(self):
+        """Return list of any virtual deps in this spec."""
+        return [spec for spec in self.preorder_traversal() if spec.virtual]
 
 
     def _dup(self, other, **kwargs):
@@ -848,7 +904,7 @@ class Spec(object):
                 if c == '_':
                     out.write(self.name)
                 elif c == '@':
-                    if self.versions and self.versions != VersionList([':']):
+                    if self.versions and self.versions != _any_version:
                         write(c + str(self.versions), c)
                 elif c == '%':
                     if self.compiler:
@@ -1078,6 +1134,8 @@ class SpecParser(spack.parse.Parser):
             vlist = self.version_list()
             for version in vlist:
                 compiler._add_version(version)
+        else:
+            compiler.versions = VersionList(':')
         return compiler
 
 

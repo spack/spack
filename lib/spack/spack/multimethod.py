@@ -26,7 +26,7 @@ import collections
 import spack.architecture
 import spack.error
 from spack.util.lang import *
-from spack.spec import parse_local_spec
+from spack.spec import parse_local_spec, Spec
 
 
 class SpecMultiMethod(object):
@@ -94,19 +94,37 @@ class SpecMultiMethod(object):
         spec = package_self.spec
         matching_specs = [s for s in self.method_map if s.satisfies(spec)]
 
-        if not matching_specs and self.default is None:
-            raise NoSuchMethodVersionError(type(package_self), self.__name__,
-                                           spec, self.method_map.keys())
-        elif len(matching_specs) > 1:
-            raise AmbiguousMethodVersionError(type(package_self), self.__name__,
+        # from pprint import pprint
+
+        # print "========"
+        # print "called with " + str(spec)
+        # print spec, matching_specs
+        # pprint(self.method_map)
+        # print "SATISFIES: ", [Spec('multimethod%gcc').satisfies(s) for s in self.method_map]
+        # print [spec.satisfies(s) for s in self.method_map]
+        # print
+
+        num_matches = len(matching_specs)
+        if num_matches == 0:
+            if self.default is None:
+                raise NoSuchMethodError(type(package_self), self.__name__,
+                                        spec, self.method_map.keys())
+            else:
+                method = self.default
+
+        elif num_matches == 1:
+            method = self.method_map[matching_specs[0]]
+
+        else:
+            raise AmbiguousMethodError(type(package_self), self.__name__,
                                               spec, matching_specs)
 
-        method = self.method_map[matching_specs[0]]
         return method(package_self, *args, **kwargs)
 
 
     def __str__(self):
-        return "<%s, %s>" % (self.default, self.method_map)
+        return "SpecMultiMethod {\n\tdefault: %s,\n\tspecs: %s\n}" % (
+            self.default, self.method_map)
 
 
 class when(object):
@@ -193,19 +211,19 @@ class MultiMethodError(spack.error.SpackError):
         super(MultiMethodError, self).__init__(message)
 
 
-class NoSuchMethodVersionError(spack.error.SpackError):
+class NoSuchMethodError(spack.error.SpackError):
     """Raised when we can't find a version of a multi-method."""
     def __init__(self, cls, method_name, spec, possible_specs):
-        super(NoSuchMethodVersionError, self).__init__(
+        super(NoSuchMethodError, self).__init__(
             "Package %s does not support %s called with %s.  Options are: %s"
             % (cls.__name__, method_name, spec,
                ", ".join(str(s) for s in possible_specs)))
 
 
-class AmbiguousMethodVersionError(spack.error.SpackError):
+class AmbiguousMethodError(spack.error.SpackError):
     """Raised when we can't find a version of a multi-method."""
     def __init__(self, cls, method_name, spec, matching_specs):
-        super(AmbiguousMethodVersionError, self).__init__(
+        super(AmbiguousMethodError, self).__init__(
             "Package %s has multiple versions of %s that match %s: %s"
             % (cls.__name__, method_name, spec,
                ",".join(str(s) for s in matching_specs)))

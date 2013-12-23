@@ -45,7 +45,7 @@ class ProviderIndex(object):
            { mpi@:1.1 : mpich,
              mpi@:2.3 : mpich2@1.9: } }
 
-       Calling find_provider(spec) will find a package that provides a
+       Calling providers_for(spec) will find specs that provide a
        matching implementation of MPI.
     """
     def __init__(self, specs, **kwargs):
@@ -61,7 +61,7 @@ class ProviderIndex(object):
 
             pkg = spec.package
             for provided_spec, provider_spec in pkg.provided.iteritems():
-                if provider_spec.satisfies(spec):
+                if provider_spec.satisfies(spec, deps=False):
                     provided_name = provided_spec.name
                     if provided_name not in self.providers:
                         self.providers[provided_name] = {}
@@ -79,8 +79,8 @@ class ProviderIndex(object):
 
 
     def providers_for(self, *vpkg_specs):
-        """Gives names of all packages that provide virtual packages
-           with the supplied names."""
+        """Gives specs of all packages that provide virtual packages
+           with the supplied specs."""
         providers = set()
         for vspec in vpkg_specs:
             # Allow string names to be passed as input, as well as specs
@@ -90,11 +90,44 @@ class ProviderIndex(object):
             # Add all the providers that satisfy the vpkg spec.
             if vspec.name in self.providers:
                 for provider_spec, spec in self.providers[vspec.name].items():
-                    if provider_spec.satisfies(vspec):
+                    if provider_spec.satisfies(vspec, deps=False):
                         providers.add(spec)
 
         # Return providers in order
         return sorted(providers)
+
+
+    # TODO: this is pretty darned nasty, and inefficient.
+    def _cross_provider_maps(self, lmap, rmap):
+        result = {}
+        for lspec in lmap:
+            for rspec in rmap:
+                try:
+                    constrained = lspec.copy().constrain(rspec)
+                    if lmap[lspec].name != rmap[rspec].name:
+                        continue
+                    result[constrained] = lmap[lspec].copy().constrain(rmap[rspec])
+                except spack.spec.UnsatisfiableSpecError:
+                    continue
+        return result
+
+
+    def satisfies(self, other):
+        """Check that providers of virtual specs are compatible."""
+        common = set(self.providers.keys())
+        common.intersection_update(other.providers.keys())
+
+        if not common:
+            return True
+
+        result = {}
+        for name in common:
+            crossed = self._cross_provider_maps(self.providers[name],
+                                                other.providers[name])
+            if crossed:
+                result[name] = crossed
+
+        return bool(result)
 
 
 @autospec
