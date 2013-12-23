@@ -18,6 +18,14 @@ def info(parser, args):
     print "Download:  ", package.url
 
     print
+    print "Safe versions:  "
+
+    if package.versions:
+        colify(reversed(sorted(package.versions)), indent=4)
+    else:
+        print "None.  Use spack versions %s to get a list of downloadable versions." % package.name
+
+    print
     print "Dependencies:"
     if package.dependencies:
         colify(package.dependencies, indent=4)

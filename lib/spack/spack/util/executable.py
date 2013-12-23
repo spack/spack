@@ -9,8 +9,15 @@ class Executable(object):
     def __init__(self, name):
         self.exe = name.split(' ')
 
+
     def add_default_arg(self, arg):
         self.exe.append(arg)
+
+
+    @property
+    def command(self):
+        return self.exe[0]
+
 
     def __call__(self, *args, **kwargs):
         """Run the executable with subprocess.check_output, return output."""

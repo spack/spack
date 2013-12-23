@@ -9,6 +9,10 @@ EXTS     = ["gz", "bz2", "xz", "Z", "zip", "tgz"]
 ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(PRE_EXTS, EXTS)] + EXTS
 
 
+def allowed_archive(path):
+    return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
+
+
 def decompressor_for(path):
     """Get the appropriate decompressor for a path."""
     tar = which('tar', required=True)
