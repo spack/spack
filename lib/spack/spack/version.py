@@ -144,8 +144,7 @@ class Version(object):
 
 
     def __iter__(self):
-        for v in self.version:
-            yield v
+        return iter(self.version)
 
 
     def __getitem__(self, idx):
@@ -486,8 +485,11 @@ class VersionList(object):
 
 
     def __iter__(self):
-        for v in self.versions:
-            yield v
+        return iter(self.versions)
+
+
+    def __reversed__(self):
+        return reversed(self.versions)
 
 
     def __len__(self):
