@@ -267,6 +267,11 @@ class Stage(object):
         """Remove this stage directory."""
         remove_linked_tree(self.path)
 
+        # Make sure we don't end up in a removed directory
+        try:
+            os.getcwd()
+        except OSError:
+            os.chdir(os.path.dirname(self.path))
 
 
 def ensure_access(file=spack.stage_path):

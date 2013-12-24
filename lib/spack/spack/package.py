@@ -338,7 +338,7 @@ class Package(object):
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
-            self.list_url = os.path.dirname(self.url)
+            self.list_url = None
 
         if not hasattr(self, 'list_depth'):
             self.list_depth = 1
@@ -733,21 +733,12 @@ class Package(object):
     def fetch_available_versions(self):
         # If not, then try to fetch using list_url
         if not self._available_versions:
-            self._available_versions = VersionList()
-            url_regex = os.path.basename(url.wildcard_version(self.url))
-            wildcard = self.default_version.wildcard()
-
             try:
-                page_map = get_pages(self.list_url, depth=self.list_depth)
-
-                for site, page in page_map.iteritems():
-                    strings = re.findall(url_regex, page)
-
-                    for s in strings:
-                        match = re.search(wildcard, s)
-                        if match:
-                            v = match.group(0)
-                            self._available_versions.add(Version(v))
+                self._available_versions = find_versions_of_archive(
+                    self.url,
+                    list_url=self.list_url,
+                    list_depth=self.list_depth,
+                    wildcard=self.default_version.wildcard())
 
                 if not self._available_versions:
                     tty.warn("Found no versions for %s" % self.name,
@@ -772,6 +763,33 @@ class Package(object):
             if not vlist:
                 vlist = ver([self.version])
             return vlist
+
+
+def find_versions_of_archive(archive_url, **kwargs):
+    list_url   = kwargs.get('list_url', None)
+    list_depth = kwargs.get('list_depth', 1)
+    wildcard   = kwargs.get('wildcard', None)
+
+    if not list_url:
+        list_url = os.path.dirname(archive_url)
+    if not wildcard:
+        wildcard = url.parse_version(archive_url).wildcard()
+
+    versions = VersionList()
+    url_regex = os.path.basename(url.wildcard_version(archive_url))
+
+    page_map = get_pages(list_url, depth=list_depth)
+
+    for site, page in page_map.iteritems():
+        strings = re.findall(url_regex, page)
+
+        for s in strings:
+            match = re.search(wildcard, s)
+            if match:
+                v = match.group(0)
+                versions.add(Version(v))
+
+    return versions
 
 
 class MakeExecutable(Executable):

@@ -12,15 +12,39 @@ from spack.stage import Stage, FailedDownloadError
 from spack.colify import colify
 from spack.version import *
 
-default_number_to_fetch = 10
-
-description ="Checksum available versions of a package, print out checksums for addition to a package file."
+description ="Checksum available versions of a package to update a package file."
 
 def setup_parser(subparser):
     subparser.add_argument(
         'package', metavar='PACKAGE', help='Package to list versions for')
     subparser.add_argument(
         'versions', nargs=argparse.REMAINDER, help='Versions to generate checksums for')
+
+
+def get_checksums(versions, urls, **kwargs):
+    # Allow commands like create() to do some analysis on the first
+    # archive after it is downloaded.
+    first_stage_function = kwargs.get('first_stage_function', None)
+
+    tty.msg("Downloading...")
+    hashes = []
+    for i, (url, version) in enumerate(zip(urls, versions)):
+        stage = Stage(url)
+        try:
+            stage.fetch()
+            if i == 0 and first_stage_function:
+                first_stage_function(stage)
+
+            hashes.append(
+                spack.util.crypto.checksum(hashlib.md5, stage.archive_file))
+        except FailedDownloadError, e:
+            tty.msg("Failed to fetch %s" % url)
+            continue
+
+        finally:
+            stage.destroy()
+
+    return zip(versions, hashes)
 
 
 def checksum(parser, args):
@@ -42,47 +66,24 @@ def checksum(parser, args):
     versions = list(reversed(versions))
     urls = [pkg.url_for_version(v) for v in versions]
 
-    version_listings = ["%-10s%s" % (v,u) for v, u in zip(versions, urls)]
-    tty.msg("Found %s versions to checksum." % len(urls),
-            *version_listings)
 
+    tty.msg("Found %s versions of %s." % (len(urls), pkg.name),
+            *["%-10s%s" % (v,u) for v, u in zip(versions, urls)])
     print
-    while True:
-        ans = raw_input("How many would you like to checksum? (default 10, 0 to abort) ")
-        try:
-            if not ans:
-                to_download = default_number_to_fetch
-            else:
-                to_download = int(ans)
-            break
-        except ValueError:
-            tty.msg("Please enter a valid number.")
-            pass
+    archives_to_fetch = tty.get_number(
+        "How many would you like to checksum?", default=5, abort='q')
 
-    if not to_download:
+    if not archives_to_fetch:
         tty.msg("Aborted.")
         return
-    else:
-        urls = urls[:to_download]
 
-    tty.msg("Downloading...")
-    hashes = []
-    for url, version in zip(urls, versions):
-        stage = Stage(url)
-        try:
-            stage.fetch()
-            hashes.append(spack.util.crypto.checksum(
-                hashlib.md5, stage.archive_file))
-        except FailedDownloadError, e:
-            tty.msg("Failed to fetch %s" % url)
-            continue
+    version_hashes = get_checksums(
+        versions[:archives_to_fetch], urls[:archives_to_fetch])
 
-        finally:
-            stage.destroy()
+    if not version_hashes:
+        tty.die("Could not fetch any available versions for %s." % pkg.name)
 
-    dict_string = ["{"]
-    for i, (v, h) in enumerate(zip(versions, hashes)):
-        comma = "" if i == len(hashes) - 1 else ","
-        dict_string.append("    '%s' : '%s'%s" % (str(v), str(h), comma))
-    dict_string.append("}")
+    dict_string = ["    '%s' : '%s'," % (v, h) for v, h in version_hashes]
+    dict_string = ['{'] + dict_string + ["}"]
+
     tty.msg("Checksummed new versions of %s:" % pkg.name, *dict_string)

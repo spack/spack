@@ -168,7 +168,7 @@ def substitute_version(path, new_version):
        the new version for it.
     """
     ver, start, end = parse_version_string_with_indices(path)
-    return path[:start] + new_version + path[end:]
+    return path[:start] + str(new_version) + path[end:]
 
 
 def wildcard_version(path):
