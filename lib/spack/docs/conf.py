@@ -19,7 +19,8 @@ import sys, os
 sys.path.insert(0, os.path.abspath('exts'))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
-os.environ['PATH'] += os.pathsep + '../../../bin'
+os.environ['SPACK_ROOT'] = '../../..'
+os.environ['PATH'] += os.pathsep + '$SPACK_ROOT/bin'
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
