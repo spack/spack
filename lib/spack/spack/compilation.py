@@ -4,7 +4,7 @@ import sys
 
 def get_env_var(name, required=True):
     value = os.environ.get(name)
-    if required and value == None:
+    if required and value is None:
         print "%s must be run from spack." % os.path.abspath(sys.argv[0])
         sys.exit(1)
     return value
@@ -49,7 +49,7 @@ def parse_rpaths(arguments):
                     yield arg
             elif arg == '-Xlinker':
                 target = get_next(arg, args)
-                if target != None:
+                if target is not None:
                     yield target
             else:
                 other_args.append(arg)
@@ -65,14 +65,14 @@ def parse_rpaths(arguments):
     for arg in largs:
         if arg == '-rpath':
             target = get_next(arg, largs)
-            if target != None:
+            if target is not None:
                 rpaths.append(target)
 
         elif arg.startswith('-R'):
             target = arg.replace('-R', '', 1)
             if not target:
                 target = get_next(arg, largs)
-                if target == None: break
+                if target is None: break
 
             if os.path.isdir(target):
                 rpaths.append(target)

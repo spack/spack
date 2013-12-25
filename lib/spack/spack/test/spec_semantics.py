@@ -18,7 +18,7 @@ class SpecSematicsTest(MockPackagesTest):
             l.constrain(r)
             r.constrain(l)
         except SpecError, e:
-            self.fail("Got a SpecError in constrain!", e.message)
+            self.fail("Got a SpecError in constrain!  " + e.message)
 
 
     def check_unsatisfiable(self, lspec, rspec):

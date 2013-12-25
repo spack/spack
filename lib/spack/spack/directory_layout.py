@@ -151,11 +151,12 @@ class SpecHashDirectoryLayout(DirectoryLayout):
             spec_hash = self.hash_spec(spec)
             installed_hash = self.hash_spec(installed_spec)
             if installed_spec == spec_hash:
-                raise SpecHashCollisionError(installed_hash, spec_hash)
+                raise SpecHashCollisionError(
+                    installed_hash, spec_hash, self.prefix_size)
             else:
                 raise InconsistentInstallDirectoryError(
                     'Spec file in %s does not match SHA-1 hash!'
-                    % (installed_spec, spec_file_path))
+                    % spec_file_path)
 
         mkdirp(path)
         self.write_spec(spec, spec_file_path)

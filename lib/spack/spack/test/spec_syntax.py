@@ -42,7 +42,7 @@ class SpecSyntaxTest(unittest.TestCase):
            If this is called with two arguments, the first argument is the expected
            canonical form and the second is a non-canonical input to be parsed.
         """
-        if spec == None:
+        if spec is None:
             spec = expected
         output = spack.spec.parse(spec)
         parsed = (" ".join(str(spec) for spec in output))

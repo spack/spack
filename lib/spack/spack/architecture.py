@@ -58,7 +58,7 @@ def sys_type():
         if sys_type: break
 
     # Couldn't determine the sys_type for this machine.
-    if sys_type == None:
+    if sys_type is None:
         raise NoSysTypeError()
 
     if not isinstance(sys_type, basestring):

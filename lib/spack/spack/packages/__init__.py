@@ -221,7 +221,7 @@ def exists(pkg_name):
 def packages_module():
     # TODO: replace this with a proper package DB class, instead of this hackiness.
     packages_path = re.sub(spack.module_path + '\/+', 'spack.', spack.packages_path)
-    packages_module = re.sub(r'\/', '.', packages_path)
+    packages_module = re.sub(r'/', '.', packages_path)
     return packages_module
 
 

@@ -134,7 +134,7 @@ def cwrite(string, stream=sys.stdout, color=None):
        then it will always write colored output.  If not supplied,
        then it will be set based on stream.isatty().
     """
-    if color == None:
+    if color is None:
         color = stream.isatty()
     stream.write(colorize(string, color=color))
 

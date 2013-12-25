@@ -299,9 +299,9 @@ class VersionRange(object):
     @coerced
     def overlaps(self, other):
         return (other in self or self in other or
-                ((self.start == None or other.end == None or
+                ((self.start == None or other.end is None or
                   self.start <= other.end) and
-                 (other.start == None or self.end == None or
+                 (other.start is None or self.end == None or
                   other.start <= self.end)))
 
 
@@ -346,7 +346,7 @@ class VersionList(object):
     """Sorted, non-redundant list of Versions and VersionRanges."""
     def __init__(self, vlist=None):
         self.versions = []
-        if vlist != None:
+        if vlist is not None:
             if isinstance(vlist, basestring):
                 vlist = _string_to_version(vlist)
                 if type(vlist) == VersionList:

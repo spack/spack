@@ -53,7 +53,7 @@ class SpecMultiMethod(object):
 
        To register a method, you can do something like this:
            mf = SpecMultiMethod()
-           mf.regsiter("^chaos_5_x86_64_ib", some_method)
+           mf.register("^chaos_5_x86_64_ib", some_method)
 
        The object registered needs to be a Spec or some string that
        will parse to be a valid spec.

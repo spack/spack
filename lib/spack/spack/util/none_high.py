@@ -10,7 +10,7 @@ _builtin_max = max
 
 def lt(lhs, rhs):
     """Less-than comparison.  None is greater than any value."""
-    return lhs != rhs and (rhs == None or (lhs != None and lhs < rhs))
+    return lhs != rhs and (rhs is None or (lhs is not None and lhs < rhs))
 
 
 def le(lhs, rhs):
@@ -30,9 +30,9 @@ def ge(lhs, rhs):
 
 def min(lhs, rhs):
     """Minimum function where None is greater than any value."""
-    if lhs == None:
+    if lhs is None:
         return rhs
-    elif rhs == None:
+    elif rhs is None:
         return lhs
     else:
         return _builtin_min(lhs, rhs)
@@ -40,7 +40,7 @@ def min(lhs, rhs):
 
 def max(lhs, rhs):
     """Maximum function where None is greater than any value."""
-    if lhs == None or rhs == None:
+    if lhs is None or rhs is None:
         return None
     else:
         return _builtin_max(lhs, rhs)

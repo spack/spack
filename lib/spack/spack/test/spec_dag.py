@@ -74,7 +74,8 @@ class SpecDagTest(MockPackagesTest):
         try:
             mpileaks.package.validate_dependencies()
         except spack.package.InvalidPackageDependencyError, e:
-            self.fail("validate_dependencies raised an exception: %s", e.message)
+            self.fail("validate_dependencies raised an exception: %s"
+                      % e.message)
 
         # Normalize then add conflicting constraints to the DAG (this is an
         # extremely unlikely scenario, but we test for it anyway)

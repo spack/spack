@@ -51,7 +51,7 @@ class UndetectableNameError(UrlParseError):
     """Raised when we can't parse a package name from a string."""
     def __init__(self, path):
         super(UndetectableNameError, self).__init__(
-            "Couldn't parse package name in: " + path)
+            "Couldn't parse package name in: " + path, path)
 
 
 def parse_version_string_with_indices(path):
