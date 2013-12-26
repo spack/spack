@@ -5,6 +5,7 @@ import hashlib
 from pprint import pprint
 from subprocess import CalledProcessError
 
+import spack.cmd
 import spack.tty as tty
 import spack.packages as packages
 import spack.util.crypto
@@ -47,6 +48,7 @@ def get_checksums(versions, urls, **kwargs):
     return zip(versions, hashes)
 
 
+
 def checksum(parser, args):
     # get the package we're going to generate checksums for
     pkg = packages.get(args.package)
@@ -68,7 +70,8 @@ def checksum(parser, args):
 
 
     tty.msg("Found %s versions of %s." % (len(urls), pkg.name),
-            *["%-10s%s" % (v,u) for v, u in zip(versions, urls)])
+            *spack.cmd.elide_list(
+            ["%-10s%s" % (v,u) for v, u in zip(versions, urls)]))
     print
     archives_to_fetch = tty.get_number(
         "How many would you like to checksum?", default=5, abort='q')

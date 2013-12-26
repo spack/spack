@@ -108,10 +108,6 @@ class Package(object):
     url
       URL of the source archive that spack will fetch.
 
-    md5
-      md5 hash of the source archive, so that we can
-      verify that it was downloaded securely and correctly.
-
     install()
       This function tells spack how to build and install the
       software it downloaded.
@@ -119,6 +115,7 @@ class Package(object):
     **Optional Attributes**
 
     You can also optionally add these attributes, if needed:
+
         list_url
             Webpage to scrape for available version strings. Default is the
             directory containing the tarball; use this if the default isn't

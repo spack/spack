@@ -5,6 +5,7 @@ import re
 from contextlib import closing
 
 import spack
+import spack.cmd
 import spack.package
 import spack.packages as packages
 import spack.tty as tty
@@ -45,11 +46,11 @@ class ${class_name}(Package):
 
     versions = ${versions}
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         # FIXME: Modify the configure line to suit your build system here.
         ${configure}
 
-        # FIXME:
+        # FIXME: Add logic to build and install here
         make()
         make("install")
 """)
@@ -82,6 +83,15 @@ class ConfigureGuesser(object):
         else:
             # Both, with cmake commented out
             self.configure = '%s\n        # %s' % (autotools, cmake)
+
+
+def make_version_dict(ver_hash_tuples):
+    max_len = max(len(str(v)) for v,hfg in ver_hash_tuples)
+    width = max_len + 2
+    format = "%-" + str(width) + "s : '%s',"
+    sep = '\n                 '
+    return '{ ' + sep.join(format % ("'%s'" % v, h)
+                           for v, h in ver_hash_tuples) + ' }'
 
 
 def create(parser, args):
@@ -118,8 +128,9 @@ def create(parser, args):
     else:
         urls = [spack.url.substitute_version(url, v) for v in versions]
         if len(urls) > 1:
-            tty.msg("Found %s versions of %s to checksum." % (len(urls), name),
-                    *["%-10s%s" % (v,u) for v, u in zip(versions, urls)])
+            tty.msg("Found %s versions of %s." % (len(urls), name),
+                    *spack.cmd.elide_list(
+                    ["%-10s%s" % (v,u) for v, u in zip(versions, urls)]))
             print
             archives_to_fetch = tty.get_number(
                 "Include how many checksums in the package file?",
@@ -130,16 +141,12 @@ def create(parser, args):
                 return
 
     guesser = ConfigureGuesser()
-    version_hashes = spack.cmd.checksum.get_checksums(
+    ver_hash_tuples = spack.cmd.checksum.get_checksums(
         versions[:archives_to_fetch], urls[:archives_to_fetch],
         first_stage_function=guesser)
 
-    if not version_hashes:
+    if not ver_hash_tuples:
         tty.die("Could not fetch any tarballs for %s." % name)
-
-    sep = '\n                 '
-    versions_string = '{ ' + sep.join(
-        "'%s' : '%s'," % (v, h) for v, h in version_hashes) + ' }'
 
     # Write out a template for the file
     with closing(open(pkg_path, "w")) as pkg_file:
@@ -149,7 +156,7 @@ def create(parser, args):
                 configure=guesser.configure,
                 class_name=class_name,
                 url=url,
-                versions=versions_string))
+                versions=make_version_dict(ver_hash_tuples)))
 
     # If everything checks out, go ahead and edit.
     spack.editor(pkg_path)
