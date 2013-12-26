@@ -6,7 +6,7 @@ class Libelf(Package):
 
     versions = { '0.8.13' : '4136d7b4c04df68b686570afa26988ac' }
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,
                   "--enable-shared",
                   "--disable-dependency-tracking",

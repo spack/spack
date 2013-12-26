@@ -67,7 +67,7 @@ class Package(object):
            url       = 'http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz'
            md5       = '097278785da7182ec0aea8769d06860c'
 
-           def install(self, prefix):
+           def install(self, spec, prefix):
                configure('--prefix=%s'   % prefix,
                          '--parallel=%s' % make_jobs)
                make()
@@ -407,27 +407,9 @@ class Package(object):
         m.rmtree     = shutil.rmtree
         m.move       = shutil.move
 
-        # Useful directories within the prefix
+        # Useful directories within the prefix are encapsulated in
+        # a Prefix object.
         m.prefix  = self.prefix
-        m.bin     = new_path(self.prefix, 'bin')
-        m.sbin    = new_path(self.prefix, 'sbin')
-        m.etc     = new_path(self.prefix, 'etc')
-        m.include = new_path(self.prefix, 'include')
-        m.lib     = new_path(self.prefix, 'lib')
-        m.lib64   = new_path(self.prefix, 'lib64')
-        m.libexec = new_path(self.prefix, 'libexec')
-        m.share   = new_path(self.prefix, 'share')
-        m.doc     = new_path(m.share, 'doc')
-        m.info    = new_path(m.share, 'info')
-        m.man     = new_path(m.share, 'man')
-        m.man1    = new_path(m.man, 'man1')
-        m.man2    = new_path(m.man, 'man2')
-        m.man3    = new_path(m.man, 'man3')
-        m.man4    = new_path(m.man, 'man4')
-        m.man5    = new_path(m.man, 'man5')
-        m.man6    = new_path(m.man, 'man6')
-        m.man7    = new_path(m.man, 'man7')
-        m.man8    = new_path(m.man, 'man8')
 
 
     def preorder_traversal(self, visited=None, **kwargs):
@@ -529,7 +511,7 @@ class Package(object):
     @property
     def prefix(self):
         """Get the prefix into which this package should be installed."""
-        return spack.install_layout.path_for_spec(self.spec)
+        return self.spec.prefix
 
 
     def url_version(self, version):
@@ -620,7 +602,7 @@ class Package(object):
             # case it needs to add extra files)
             spack.install_layout.make_path_for_spec(self.spec)
 
-            self.install(self.prefix)
+            self.install(self.spec, self.prefix)
             if not os.path.isdir(self.prefix):
                 tty.die("Install failed for %s.  No install dir created." % self.name)
 
@@ -683,7 +665,7 @@ class Package(object):
                           fromlist=[self.__class__.__name__])
 
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         """Package implementations override this with their own build configuration."""
         tty.die("Packages must provide an install method!")
 

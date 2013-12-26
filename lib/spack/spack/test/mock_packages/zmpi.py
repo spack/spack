@@ -11,7 +11,7 @@ class Zmpi(Package):
     provides('mpi@:10.0')
     depends_on('fake')
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
         make("install")

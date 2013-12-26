@@ -8,7 +8,7 @@ class Libelf(Package):
                   '0.8.12' : 'e21f8273d9f5f6d43a59878dc274fec7',
                   '0.8.10' : '9db4d36c283d9790d8fa7df1f4d7b4d9' }
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,
                   "--enable-shared",
                   "--disable-dependency-tracking",

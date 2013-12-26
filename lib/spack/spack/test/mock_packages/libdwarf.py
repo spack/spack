@@ -23,21 +23,21 @@ class Libdwarf(Package):
                     make('clean')
 
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         # dwarf build does not set arguments for ar properly
         make.add_default_arg('ARFLAGS=rcs')
 
         # Dwarf doesn't provide an install, so we have to do it.
-        mkdirp(bin, include, lib, man1)
+        mkdirp(prefix.bin, prefix.include, prefix.lib, prefix.man1)
 
         with working_dir('libdwarf'):
             configure("--prefix=%s" % prefix, '--enable-shared')
             make()
 
-            install('libdwarf.a',  lib)
-            install('libdwarf.so', lib)
-            install('libdwarf.h',  include)
-            install('dwarf.h',     include)
+            install('libdwarf.a',  prefix.lib)
+            install('libdwarf.so', prefix.lib)
+            install('libdwarf.h',  prefix.include)
+            install('dwarf.h',     prefix.include)
 
         with working_dir('dwarfdump2'):
             configure("--prefix=%s" % prefix)
@@ -46,6 +46,6 @@ class Libdwarf(Package):
             # cause a race in parallel
             make(parallel=False)
 
-            install('dwarfdump',     bin)
-            install('dwarfdump.conf', lib)
-            install('dwarfdump.1',    man1)
+            install('dwarfdump',      prefix.bin)
+            install('dwarfdump.conf', prefix.lib)
+            install('dwarfdump.1',    prefix.man1)

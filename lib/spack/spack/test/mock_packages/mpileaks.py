@@ -12,7 +12,7 @@ class Mpileaks(Package):
     depends_on("mpi")
     depends_on("callpath")
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
         make("install")

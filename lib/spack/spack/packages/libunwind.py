@@ -6,7 +6,7 @@ class Libunwind(Package):
 
     versions = { '1.1' : 'fb4ea2f6fbbe45bf032cd36e586883ce' }
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
         make("install")

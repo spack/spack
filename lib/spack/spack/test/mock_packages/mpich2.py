@@ -17,7 +17,7 @@ class Mpich2(Package):
     provides('mpi@:2.1', when='@1.1:')
     provides('mpi@:2.2', when='@1.2:')
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
         make("install")

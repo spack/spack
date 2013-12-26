@@ -7,7 +7,7 @@ class Callpath(Package):
     depends_on("dyninst")
     depends_on("mpich")
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
         make("install")

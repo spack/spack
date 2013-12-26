@@ -82,6 +82,7 @@ from spack.version import *
 from spack.color import *
 from spack.util.lang import *
 from spack.util.string import *
+from spack.util.prefix import Prefix
 
 
 # Convenient names for color formats so that other things can use them
@@ -437,6 +438,11 @@ class Spec(object):
             child = self.dependencies[name]
             for elt in child.preorder_traversal(visited, d+1, **kwargs):
                 yield elt
+
+
+    @property
+    def prefix(self):
+        return Prefix(spack.install_layout.path_for_spec(self))
 
 
     def _concretize_helper(self, presets=None, visited=None):

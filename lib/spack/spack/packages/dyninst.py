@@ -11,7 +11,7 @@ class Dyninst(Package):
     depends_on("libelf")
     depends_on("libdwarf")
 
-    def install(self, prefix):
+    def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
         make("install")

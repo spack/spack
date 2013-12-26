@@ -9,6 +9,12 @@ from spack.util.filesystem import *
 from spack.error import SpackError
 
 
+def _check_concrete(spec):
+    """If the spec is not concrete, raise a ValueError"""
+    if not spec.concrete:
+        raise ValueError('Specs passed to a DirectoryLayout must be concrete!')
+
+
 class DirectoryLayout(object):
     """A directory layout is used to associate unique paths with specs.
        Different installations are going to want differnet layouts for their
@@ -39,7 +45,8 @@ class DirectoryLayout(object):
 
     def path_for_spec(self, spec):
         """Return an absolute path from the root to a directory for the spec."""
-        assert(spec.concrete)
+        _check_concrete(spec)
+
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
         return os.path.join(self.root, path)
@@ -105,7 +112,7 @@ class SpecHashDirectoryLayout(DirectoryLayout):
 
 
     def relative_path_for_spec(self, spec):
-        assert(spec.concrete)
+        _check_concrete(spec)
 
         path = new_path(
             spec.architecture,
@@ -134,7 +141,7 @@ class SpecHashDirectoryLayout(DirectoryLayout):
 
 
     def make_path_for_spec(self, spec):
-        assert(spec.concrete)
+        _check_concrete(spec)
 
         path = self.path_for_spec(spec)
         spec_file_path = new_path(path, self.spec_file)
@@ -200,5 +207,3 @@ class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
     def __init__(self, path):
         super(InstallDirectoryAlreadyExistsError, self).__init__(
             "Install path %s already exists!")
-
-
