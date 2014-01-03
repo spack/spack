@@ -203,7 +203,10 @@ def class_name_for_package_name(pkg_name):
        conflicts don't matter because the classes are in different modules.
     """
     validate_package_name(pkg_name)
-    class_name = string.capwords(pkg_name.replace('_', '-'), '-')
+
+    class_name = pkg_name.replace('_', '-')
+    class_name = string.capwords(class_name, '-')
+    class_name = class_name.replace('-', '')
 
     # If a class starts with a number, prefix it with Number_ to make it a valid
     # Python class name.
@@ -241,7 +244,7 @@ def get_class_for_package_name(pkg_name):
     if not re.match(r'%s' % spack.module_path, spack.packages_path):
         raise RuntimeError("Packages path is not a submodule of spack.")
 
-    class_name = pkg_name.capitalize()
+    class_name = class_name_for_package_name(pkg_name)
     try:
         module_name = "%s.%s" % (packages_module(), pkg_name)
         module = __import__(module_name, fromlist=[class_name])
