@@ -9,12 +9,14 @@ about :ref:`specs <sec-specs>`.
 
 There are two key parts of Spack:
 
-   #. **specs**: a language for describing builds of software, and
-   #. **packages**: Python modules that build software according to a
+   #. **Specs**: expressions for describing builds of software, and
+   #. **Packages**: Python modules that build software according to a
       spec.
 
-The package allows the developer to encapsulate build logic for
-different versions, compilers, and platforms in one place.
+Package files allow a developer to encapsulate build logic for
+different versions, compilers, and platforms in one place.  Specs
+allow a user to describe a *particular* build in a way that a package
+author can understand.
 
 Packages in Spack are written in pure Python, so you can do anything
 in Spack that you can do in Python.  Python was chosen as the
@@ -70,13 +72,13 @@ Package Names
 This package lives in a file called ``libelf.py``, and it contains a
 class called ``Libelf``.  The ``Libelf`` class extends Spack's
 ``Package`` class (and this is what makes it a Spack package).  The
-*file name* is what users need to provide in their package
+**file name** is what users need to provide in their package
 specs. e.g., if you type any of these:
 
 .. code-block:: sh
 
-   spack install libelf
-   spack install libelf@0.8.13
+   $ spack install libelf
+   $ spack install libelf@0.8.13
 
 Spack sees the package name in the spec and looks for a file called
 ``libelf.py`` in its ``packages`` directory.  Likewise, if you say
@@ -95,11 +97,7 @@ You'll get a syntax error because the identifier doesn't start with a
 letter or underscore.  For more details on why this is still ok, see
 the :ref:`developer guide<developer_guide>`.
 
-.. literalinclude:: ../spack/packages/libelf.py
-   :linenos:
-   :lines: 3
-
-The *class name* is formed by converting words separated by `-` or
+The **class name** is formed by converting words separated by `-` or
 ``_`` in the file name to camel case.  If the name starts with a
 number, we prefix the class name with ``Num_``. Here are some
 examples:
@@ -172,6 +170,7 @@ Install takes a ``spec`` object and a ``prefix`` path:
 
 .. literalinclude:: ../spack/packages/libelf.py
    :start-after: 0.8.12
+   :linenos:
 
 We'll talk about ``spec`` objects and the types of methods you can
 call on them later.  The ``prefix`` is the path to the directory where
@@ -418,16 +417,479 @@ syntax errors, or the ``import`` will fail.  Use this once you've got
 your package in working order.
 
 
+Optional Package Attributes
+------------------------------
+
+In addition to ``homepage``, ``url``, and ``versions``, there are some
+other useful attributes you can add to your package file.
+
+``list_url``
+~~~~~~~~~~~~~~~
+
+When spack tries to find available versions of packages (e.g. in
+``spack checksum``), by default it looks in the parent directory of
+the tarball in the package's ``url``.  For example, for libelf, the
+url is:
+
+.. literalinclude:: ../spack/packages/libelf.py
+   :start-after: homepage
+   :end-before: versions
+
+Spack will try to fetch the URL ``http://www.mr511.de/software/``,
+scrape the page, and use any links that look like the tarball URL to
+find other available versions.  For many packages, the tarball's
+parent directory may be unlistable, or it may not contain any links to
+source code archives.  For these, you can specify a separate
+``list_url`` indicating the page to search for tarballs.  For example,
+``libdwarf`` has the homepage as the ``list_url``:
+
+.. literalinclude:: ../spack/packages/libdwarf.py
+   :start-after: Libdwarf
+   :end-before: versions
+
+``list_depth``
+~~~~~~~~~~~~~~~~~
+
+Some packages may not have a listing of available verisons on a single
+page.  For these, you can specify a ``list_depth`` indicating that
+Spack should follow links from the ``list_url`` up to a particular
+depth.  Spack will follow links and search each page reachable from
+the ``list_url`` for tarball links.  For example, ``mpich`` archives
+are stored in a directory tree of versions, so the package looks like
+this:
+
+.. literalinclude:: ../spack/packages/mpich.py
+   :start-after: homepage
+   :end-before: versions
+
+
 Dependencies
 ------------------------------
+
+We've now covered how to build a simple package, but what if one
+package relies on another package to build?  How do you express that
+in a package file?  And how do you refer to the other package in the
+build script for your own package?
+
+Spack makes this relatively easy.  Let's take a look at the
+``libdwarf`` package to see how it's done:
+
+.. literalinclude:: ../spack/packages/libdwarf.py
+   :linenos:
+   :start-after: dwarf_dirs
+   :end-before: def clean
+   :emphasize-lines: 10
+   :append: ...
+
+``depends_on``
+~~~~~~~~~~~~~~~~~~~~~
+
+The ``depends_on('libelf')`` call on line 10 tells Spack that it needs
+to build and install the ``libelf`` package before it builds
+``libdwarf``.  This means that in your ``install()`` method, you are
+guaranteed that ``libelf`` has been built and installed successfully,
+so you can rely on it for your libdwarf build.
+
+Dependency specs
+~~~~~~~~~~~~~~~~~~~~~~
+
+``depends_on`` doesn't just take the name of another package.  It
+actually takes a full spec.  This means that you can restrict the
+versions or other configuration options of ``libelf`` that
+``libdwarf`` will build with.  Here's an example.  Suppose that in the
+``libdwarf`` package you wrote:
+
+.. code-block:: python
+
+   depends_on("libelf@0.8:")
+
+Now ``libdwarf`` will only ever build with ``libelf`` version ``0.8``
+or higher.  If some versions of ``libelf`` are installed but they are
+all older than this, then Spack will build a new version of ``libelf``
+that satisfies the spec's version constraint, and it will build
+``libdwarf`` with that one.  You could just as easily provide a
+version range (e.g., ``0.8.2:0.8.4``) or a variant constraint
+(e.g.. ``+debug``) to control how dependencies should be built.
+
+Note that both users and package authors can use the same spec syntax
+to refer to different package configurations.  Users use this syntax
+on the command line to find specs or to install specs with particular
+constraints, and package authors can use it to describe relationships
+between packages.
 
 
 Virtual dependencies
 -----------------------------
 
+In some cases, more than one package can satisfy another package's
+dependency.  One way this can happen is if a pacakge depends on a
+particular *interface*, but there are multiple *implementations* of
+the interface, and the package could be built with either.  A *very*
+common interface in HPC is the `Message Passing Interface (MPI)
+<http://www.mcs.anl.gov/research/projects/mpi/>`_, which is used in
+many large-scale parallel applications.
+
+MPI has several different implementations (e.g., `MPICH
+<http://www.mpich.org>`_, `OpenMPI <http://www.open-mpi.org>`_, and
+`MVAPICH <http://mvapich.cse.ohio-state.edu>`_, and scientific
+applicaitons can be built with any one of these.  Complicating
+matters, MPI does not have a standardized ABI, so a package built with
+one implementation cannot be relinked with another implementation.
+Many pacakage managers handle interfaces like this by requiring many
+similar pacakge files, e.g., ``foo``, ``foo-mvapich``, ``foo-mpich``,
+but Spack avoids this explosion of package files by providing support
+for *virtual dependencies*.
+
+
+``provides``
+~~~~~~~~~~~~~~~~~~~~~
+
+In Spack, ``mpi`` is a *virtual package*.  A package can depend on it
+just like any other package, by supplying a ``depends_on`` call in the
+package definition.  In ``mpileaks``, this looks like so:
+
+.. literalinclude:: ../spack/packages/mpileaks.py
+   :start-after: url
+   :end-before: install
+
+Here, ``callpath`` is an actual pacakge, but there is no package file
+for ``mpi``, so we say it is a *virtual* package.  The syntax of
+``depends_on``, however, is the same for both..  If we look inside the
+package file of an MPI implementation, say MPICH, we'll see something
+like this:
+
+.. code-block:: python
+
+   class Mpich(Package):
+       provides('mpi')
+       ...
+
+The ``provides("mpi")`` call tells Spack that the ``mpich`` package
+can be substituted whenever a package says it depends on ``mpi``.
+
+Just as you can pass a spec to ``depends_on``, you can pass a spec to
+``provides`` to add constraints.  This allows Spack to support the
+notion of *versioned interfaces*.  The MPI standard has gone through
+many revisions, each with new functions added.  Some packages may
+require a recent implementation that supports MPI-3 fuctions, but some
+MPI versions may only provide up to MPI-2.  You can indicate this by
+adding a version constraint to the spec passed to ``provides``:
+
+.. code-block:: python
+
+   provides("mpi@:2")
+
+Suppose that the above restriction is in the ``mpich2`` package.  This
+says that ``mpich2`` provides MPI support *up to* version 2, but if aa
+package ``depends_on("mpi@3")``, then Spack will *not* build with ``mpich2``
+for the MPI implementation.
+
+``provides when``
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The same package may provide different versions of an interface
+depending on *its* version.  Above, we simplified the ``provides``
+call in ``mpich`` to make the explanation easier.  In reality, this is
+how ``mpich`` declares the virtual packages it provides:
+
+.. code-block:: python
+
+   provides('mpi@:3', when='@3:')
+   provides('mpi@:1', when='@1:')
+
+The ``when`` argument to ``provides`` (a `keyword argument
+<http://docs.python.org/2/tutorial/controlflow.html#keyword-arguments>`_
+for those not familiar with Python) allows you to specify optional
+constraints on the *calling* package.  The calling package will only
+provide the declared virtual spec when *it* matches the constraints in
+the when clause.  Here, when ``mpich`` is at version 3 or higher, it
+provides MPI up to version 3.  When ``mpich`` is at version 1 or higher,
+it provides the MPI virtual pacakge at version 1.
+
+The ``when`` qualifier will ensure that Spack selects a suitably high
+version of ``mpich`` to match another package that ``depends_on`` a
+particular version of MPI.  It will also prevent a user from building
+with too low a version of ``mpich``.  For example, suppose the package
+``foo`` declares that it ``depends_on('mpi@2')``, and a user invokes
+``spack install`` like this:
+
+.. code-block:: sh
+
+   $ spack install foo ^mpich@1.0
+
+Spack will fail with a constraint violation, because the version of
+MPICH requested is too low for the ``mpi`` requirement in ``foo``.
+
+
+Abstract & concrete specs
+------------------------------------------
+
+Now that we've seen how spec constraints can be specified :ref:`on the
+command line <sec-specs>` and within package definitions, we can talk
+about how Spack puts all of this information together.  When you run
+this:
+
+.. code-block:: sh
+
+   spack install mpileaks ^callpath@1.0+debug ^libelf@0.8.11
+
+Spack parses the command line and builds a spec from the description.
+The spec says that ``mpileaks`` should be built with the ``callpath``
+library at 1.0 and with the debug option enabled, and with ``libelf``
+version 0.8.11.  Spack will also look at the ``depends_on`` calls in
+all of these packags, and it will build a spec from that.  The specs
+from the command line and the specs built from package descriptions
+are then combined, and the constraints are checked against each other
+to make sure they're satisfiable.
+
+What we have after this is done is called an *abstract spec*.  An
+abstract spec is partially specified.  In other words, it could
+describe more than one build of a package.  Spack does this to make
+things easier on the user: they should only have to specify as much of
+the package spec as they care about.  Here's an example partial spec
+DAG, based on the constraints above::
+
+   mpileaks
+       ^callpath@1.0+debug
+           ^dyninst
+               ^libdwarf
+                   ^libelf@0.8.11
+           ^mpi
+
+This diagram shows a spec DAG output as a tree, where successive
+levels of indentation represent a depends-on relationship.  In the
+above DAG, we can see some packages annotated with their constraints,
+and some packages with no annotations at all.  When there are no
+annotations, it means the user doesn't care what configuration of that
+package is built, just so long as it works.
+
+Concretization
+~~~~~~~~~~~~~~~~~~~
+
+An abstract spec is useful for the user, but you can't install an
+abstract spec.  Spack has to take the abstract spec and "fill in" the
+remaining unspecified parts in order to install.  This process is
+called **concretization**.  Concretization happens in between the time
+the user runs ``spack install`` and the time the ``install()`` method
+is called.  The concretized version of the spec above might look like
+this::
+
+   mpileaks@2.3%gcc@4.7.3=macosx_10.8_x86_64
+       ^callpath@1.0%gcc@4.7.3+debug=macosx_10.8_x86_64
+           ^dyninst@8.1.2%gcc@4.7.3=macosx_10.8_x86_64
+               ^libdwarf@20130729%gcc@4.7.3=macosx_10.8_x86_64
+                   ^libelf@0.8.11%gcc@4.7.3=macosx_10.8_x86_64
+           ^mpich@3.0.4%gcc@4.7.3=macosx_10.8_x86_64
+
+Here, all versions, compilers, and platforms are filled in, and there
+is a single version (no version ranges) for each package.  All
+decisions about configuration have been made, and only after this
+point will Spack call the ``install()`` method for your package.
+
+Concretization in Spack is based on certain selection policies that
+tell Spack how to select, e.g., a version, when one is not specified
+explicitly.  Concretization policies are discussed in more detail in
+:ref:`site-configuration`.  Sites using Spack can customize them to
+match the preferences of their own users.
+
+
+``spack spec``
+~~~~~~~~~~~~~~~~~~~~
+
+For an arbitrary spec, you can see the result of concretization by
+running ``spack spec``.  For example:
+
+.. code-block:: sh
+
+   $ spack spec dyninst@8.0.1
+   dyninst@8.0.1
+       ^libdwarf
+           ^libelf
+
+   dyninst@8.0.1%gcc@4.7.3=macosx_10.8_x86_64
+       ^libdwarf@20130729%gcc@4.7.3=macosx_10.8_x86_64
+           ^libelf@0.8.13%gcc@4.7.3=macosx_10.8_x86_64
+
+
+.. _install-environment:
 
 Install environment
------------------------------
+--------------------------
+
+In general, you should not have to do much differently in your install
+method than you would when installing a pacakge on the command line.
+Spack tries to set environment variables and modify compiler calls so
+that it *appears* to the build system that you're building with a
+standard system install of everything.  Obviously that's not going to
+cover *all* build systems, but it should make it easy to port packages
+that use standard build systems to Spack.
+
+There are a couple of things that Spack does that help with this:
+
+
+Compiler interceptors
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spack intercepts the compiler calls that your build makes.  If your
+build invokes ``cc``, then Spack intercepts the ``cc`` call with its
+own wrapper script, and it inserts ``-I``, ``-L``, and ``-Wl,-rpath``
+options for all dependencies before invoking the actual compiler.
+
+An example of this would be the ``libdwarf`` build, which has one
+dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
+build will have ``-I$LIBELF_PREFIX/include``,
+``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath=$LIBELF_PREFIX/lib``
+inserted on the command line.  This is done transparently to the
+project's build system, which will just think it's using a system
+where ``libelf`` is readily available.  Because of this, you **do
+not** have to insert extra ``-I``, ``-L``, etc. on the command line.
+
+An exmaple of this is the ``libdwarf`` package.  You'll notice that it
+never mentions ``libelf`` outside of the ``depends_on('libelf')``
+call, but it still manages to find its dependency library and build.
+This is due to Spack's compiler interceptors.
+
+
+
+Environment variables
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. warning:: Environment variable setting is not fully implemented.
+
+Spack sets a number of standard environment variables so that build
+systems use its compiler wrappers for their builds.  The standard
+enviroment variables are:
+
+  =======================  =============================
+    Variable                Purpose
+  =======================  =============================
+    ``CC``                  C compiler
+    ``CXX``                 C++ compiler
+    ``CPP``                 C Preprocessor
+    ``F77``                 Fortran 77 compiler
+    ``F90``                 Fortran 90 compiler
+    ``F95``                 Fortran 95 compiler
+    ``CMAKE_PREFIX_PATH``   Path to dependency prefixes for CMake
+  =======================  =============================
+
+All of these are standard variables respected by most build systems,
+so if your project uses something like ``autotools`` or ``CMake``,
+then it should pick them up automatically when you run ``configure``
+or ``cmake`` in your ``install()`` function.  Many traditional builds
+using GNU Make and BSD make also respect these variables, so they may
+work with these systems, as well.
+
+If your build systm does *not* pick these variables up from the
+environment automatically, then you can simply pass them on the
+command line or us a patch as part of your build process to get the
+correct compilers into the project's build system.
+
+
+Forked process
+~~~~~~~~~~~~~~~~~~~~~
+
+.. warning:: This is not implemented yet.
+
+To give packages free reign over how they install things, how they
+modify the environemnt, and how they use Spack's internal APIs, we
+fork a new process each time we invoke ``install()``.  This allows
+packages to have their own completely sandboxed build environment,
+without impacting other jobs that the main Spack process runs.
+
+
+Implementing the ``install`` method
+------------------------------------------
+
+Now that the metadata is out of the way, we can move on to the
+``install()`` method.  Recall that the ``install()`` method's
+signature looks like this:
+
+.. code-block:: python
+
+   class Foo(Package):
+       def install(self, spec, prefix):
+           ...
+
+The parameters are as follows:
+
+``self``
+    For those not used to Python instance methods, this is the
+    package itself.  In this case it's an instance of ``Foo``, which
+    extends ``Package``.  For API docs on Package objects, see
+    :py:class:`Package <spack.package.Package>`.
+
+``spec``
+    This is the concrete spec object created by Spack from an
+    abstract spec supplied by the user.  It describes what should be
+    installed.  It will be of type :py:class:`Spec <spack.spec.Spec>`.
+
+``prefix``
+    This is the path that your install method should copy build
+    targets into.  It acts like a string, but it's actually its own
+    special type, :py:class:`Prefix <spack.util.prefix.Prefix>`.
+
+As mentioned in :ref:`install-environment`, you will usually not need
+to refer to most dependencies explicitly in your package file, as
+compiler wrapper take care of most of the heavy lifting here.  There
+will be times, though, when you need to refer to the install locations
+of dependencies, or when you need to do something different depending
+on the version, compiler, dependencies, etc. that your package is
+built with.  These parameters give you access to this type of information.
+
+Prefix objects
+~~~~~~~~~~~~~~~~~~~~
+
+For packages that do not have their own install target, or for those
+that implement it poorly (like ``libdwarf``), Spack provides the
+prefix object so you can manually copy things into the install
+directory. You can refer to the prefix directly, e.g.:
+
+.. code-block:: python
+
+   configure('--prefix=' + prefix)
+
+The Prefix object will act like a string here.  You can also refer to
+standard subdirectories without having to construct paths yourself, e.g.:
+
+.. code-block:: python
+
+   mkdirp(prefix.bin,
+          prefix.include,
+          prefix.lib,
+          prefix.man1)
+
+Most of the standard UNIX directory names are attributes on the
+``prefix`` object.
+
+
+
+
+
+See :py:class:`spack.prefix.Prefix` to see what paths are available.
+
+
+
+
+
+Spec operations
+~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+Multimethods
+~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+Shell commands
+~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
 
 
 

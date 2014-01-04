@@ -1,3 +1,5 @@
+.. _site-configuration:
+
 Site-specific configuration
 ===================================
 
