@@ -5,7 +5,7 @@ class Callpath(Package):
     url      = "http://github.com/tgamblin/callpath-0.2.tar.gz"
 
     depends_on("dyninst")
-    depends_on("mpich")
+    depends_on("mpi")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
