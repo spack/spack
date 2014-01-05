@@ -133,3 +133,13 @@ class ConcretizeTest(MockPackagesTest):
         self.assertIn('fake', spec.dependencies['callpath'].dependencies['zmpi'].dependencies)
 
         self.assertNotIn('mpi', spec)
+
+
+    def test_my_dep_depends_on_provider_of_my_virtual_dep(self):
+        spec = Spec('indirect_mpich')
+        spec.normalize()
+
+        print
+        print spec.tree(color=True)
+
+        spec.concretize()

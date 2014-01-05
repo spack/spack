@@ -52,34 +52,42 @@ class ProviderIndex(object):
         # TODO: come up with another name for this.  This "restricts" values to
         # the verbatim impu specs (i.e., it doesn't pre-apply package's constraints, and
         # keeps things as broad as possible, so it's really the wrong name)
-        restrict = kwargs.setdefault('restrict', False)
+        self.restrict = kwargs.setdefault('restrict', False)
 
         self.providers = {}
 
         for spec in specs:
-            if type(spec) != spack.spec.Spec:
+            if not isinstance(spec, spack.spec.Spec):
                 spec = spack.spec.Spec(spec)
 
             if spec.virtual:
                 continue
 
-            pkg = spec.package
-            for provided_spec, provider_spec in pkg.provided.iteritems():
-                if provider_spec.satisfies(spec, deps=False):
-                    provided_name = provided_spec.name
-                    if provided_name not in self.providers:
-                        self.providers[provided_name] = {}
+            self.update(spec)
 
-                    if restrict:
-                        self.providers[provided_name][provided_spec] = spec
 
-                    else:
-                        # Before putting the spec in the map, constrain it so that
-                        # it provides what was asked for.
-                        constrained = spec.copy()
-                        constrained.constrain(provider_spec)
-                        self.providers[provided_name][provided_spec] = constrained
+    def update(self, spec):
+        if type(spec) != spack.spec.Spec:
+            spec = spack.spec.Spec(spec)
 
+        assert(not spec.virtual)
+
+        pkg = spec.package
+        for provided_spec, provider_spec in pkg.provided.iteritems():
+            if provider_spec.satisfies(spec, deps=False):
+                provided_name = provided_spec.name
+                if provided_name not in self.providers:
+                    self.providers[provided_name] = {}
+
+                if self.restrict:
+                    self.providers[provided_name][provided_spec] = spec
+
+                else:
+                    # Before putting the spec in the map, constrain it so that
+                    # it provides what was asked for.
+                    constrained = spec.copy()
+                    constrained.constrain(provider_spec)
+                    self.providers[provided_name][provided_spec] = constrained
 
 
     def providers_for(self, *vpkg_specs):

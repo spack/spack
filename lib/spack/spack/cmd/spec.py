@@ -5,17 +5,23 @@ import spack.tty as tty
 import spack.url as url
 import spack
 
-
-description = "parse specs and print them out to the command line."
+description = "print out abstract and concrete versions of a spec."
 
 def setup_parser(subparser):
     subparser.add_argument('specs', nargs=argparse.REMAINDER, help="specs of packages")
 
 def spec(parser, args):
-    specs = spack.cmd.parse_specs(args.specs)
-    for spec in specs:
-        spec.normalize()
-        print spec.tree(color=True)
+    for spec in spack.cmd.parse_specs(args.specs):
+        print "Input spec"
+        print "------------------------------"
+        print spec.tree(color=True, indent=2)
 
+        print "Normalized"
+        print "------------------------------"
+        spec.normalize()
+        print spec.tree(color=True, indent=2)
+
+        print "Concretized"
+        print "------------------------------"
         spec.concretize()
-        print spec.tree(color=True)
+        print spec.tree(color=True, indent=2)

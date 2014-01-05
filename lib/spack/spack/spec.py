@@ -476,10 +476,20 @@ class Spec(object):
         visited.add(self.name)
 
 
+    def _replace_with(self, concrete):
+        """Replace this virtual spec with a concrete spec."""
+        assert(self.virtual)
+        for name, dependent in self.dependents.items():
+            del dependent.dependencies[self.name]
+            dependent._add_dependency(concrete)
+
+
     def _expand_virtual_packages(self):
         """Find virtual packages in this spec, replace them with providers,
            and normalize again to include the provider's (potentially virtual)
            dependencies.  Repeat until there are no virtual deps.
+
+           Precondition: spec is normalized.
 
            .. todo::
 
@@ -500,10 +510,7 @@ class Spec(object):
                 providers = packages.providers_for(spec)
                 concrete = spack.concretizer.choose_provider(spec, providers)
                 concrete = concrete.copy()
-
-                for name, dependent in spec.dependents.items():
-                    del dependent.dependencies[spec.name]
-                    dependent._add_dependency(concrete)
+                spec._replace_with(concrete)
 
             # If there are duplicate providers or duplicate provider deps, this
             # consolidates them and merges constraints.
@@ -612,12 +619,26 @@ class Spec(object):
                     # The user might have required something insufficient for
                     # pkg_dep -- so we'll get a conflict.  e.g., user asked for
                     # mpi@:1.1 but some package required mpi@2.1:.
-                    providers = provider_index.providers_for(name)
-                    if len(providers) > 1:
-                        raise MultipleProviderError(pkg_dep, providers)
-                    if providers:
-                        raise UnsatisfiableProviderSpecError(providers[0], pkg_dep)
-
+                    required = provider_index.providers_for(name)
+                    if len(required) > 1:
+                        raise MultipleProviderError(pkg_dep, required)
+                    elif required:
+                        raise UnsatisfiableProviderSpecError(
+                            required[0], pkg_dep)
+            else:
+                # if it's a real dependency, check whether it provides something
+                # already required in the spec.
+                index = packages.ProviderIndex([pkg_dep], restrict=True)
+                for vspec in (v for v in spec_deps.values() if v.virtual):
+                    if index.providers_for(vspec):
+                        vspec._replace_with(pkg_dep)
+                        del spec_deps[vspec.name]
+                    else:
+                        required = index.providers_for(vspec.name)
+                        if required:
+                            raise UnsatisfiableProviderSpecError(
+                                required[0], pkg_dep)
+                provider_index.update(pkg_dep)
 
             if name not in spec_deps:
                 # If the spec doesn't reference a dependency that this package
@@ -673,6 +694,7 @@ class Spec(object):
         spec_packages = [d.package for d in spec_deps.values() if not d.virtual]
 
         index = packages.ProviderIndex(spec_deps.values(), restrict=True)
+
         visited = set()
         self._normalize_helper(visited, spec_deps, index)
 
