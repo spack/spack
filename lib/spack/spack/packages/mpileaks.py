@@ -8,6 +8,6 @@ class Mpileaks(Package):
     depends_on("callpath")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure("--prefix=" + prefix)
         make()
         make("install")

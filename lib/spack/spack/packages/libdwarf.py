@@ -31,7 +31,7 @@ class Libdwarf(Package):
         mkdirp(prefix.bin, prefix.include, prefix.lib, prefix.man1)
 
         with working_dir('libdwarf'):
-            configure("--prefix=%s" % prefix, '--enable-shared')
+            configure("--prefix=" + prefix, "--enable-shared")
             make()
 
             install('libdwarf.a',  prefix.lib)
@@ -40,7 +40,7 @@ class Libdwarf(Package):
             install('dwarf.h',     prefix.include)
 
         with working_dir('dwarfdump2'):
-            configure("--prefix=%s" % prefix)
+            configure("--prefix=" + prefix)
 
             # This makefile has strings of copy commands that
             # cause a race in parallel

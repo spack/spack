@@ -6,7 +6,7 @@ class Cmake(Package):
     versions  = { '2.8.10.2' : '097278785da7182ec0aea8769d06860c' }
 
     def install(self, spec, prefix):
-        configure('--prefix=%s'   % prefix,
-                  '--parallel=%s' % make_jobs)
+        configure('--prefix='   + prefix,
+                  '--parallel=' + make_jobs)
         make()
         make('install')
