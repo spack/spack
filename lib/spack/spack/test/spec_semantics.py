@@ -9,25 +9,34 @@ class SpecSematicsTest(MockPackagesTest):
     # ================================================================================
     # Utility functions to set everything up.
     # ================================================================================
-    def check_satisfies(self, lspec, rspec):
-        l, r = Spec(lspec), Spec(rspec)
-        self.assertTrue(l.satisfies(r))
-        self.assertTrue(r.satisfies(l))
+    def check_satisfies(self, spec, anon_spec):
+        left = Spec(spec)
+        right = parse_anonymous_spec(anon_spec, left.name)
+
+        self.assertTrue(left.satisfies(right))
+        self.assertTrue(left.satisfies(anon_spec))
+        self.assertTrue(right.satisfies(left))
 
         try:
-            l.constrain(r)
-            r.constrain(l)
+            left.copy().constrain(right)
+            left.copy().constrain(anon_spec)
+            right.copy().constrain(left)
         except SpecError, e:
             self.fail("Got a SpecError in constrain!  " + e.message)
 
 
-    def check_unsatisfiable(self, lspec, rspec):
-        l, r = Spec(lspec), Spec(rspec)
-        self.assertFalse(l.satisfies(r))
-        self.assertFalse(r.satisfies(l))
+    def check_unsatisfiable(self, spec, anon_spec):
+        left = Spec(spec)
+        right = parse_anonymous_spec(anon_spec, left.name)
 
-        self.assertRaises(UnsatisfiableSpecError, l.constrain, r)
-        self.assertRaises(UnsatisfiableSpecError, r.constrain, l)
+        self.assertFalse(left.satisfies(right))
+        self.assertFalse(left.satisfies(anon_spec))
+
+        self.assertFalse(right.satisfies(left))
+
+        self.assertRaises(UnsatisfiableSpecError, left.constrain, right)
+        self.assertRaises(UnsatisfiableSpecError, left.constrain, anon_spec)
+        self.assertRaises(UnsatisfiableSpecError, right.constrain, left)
 
 
     def check_constrain(self, expected, constrained, constraint):
@@ -48,77 +57,77 @@ class SpecSematicsTest(MockPackagesTest):
     # Satisfiability and constraints
     # ================================================================================
     def test_satisfies(self):
-        self.check_satisfies('libelf@0.8.13', 'libelf@0:1')
-        self.check_satisfies('libdwarf^libelf@0.8.13', 'libdwarf^libelf@0:1')
+        self.check_satisfies('libelf@0.8.13', '@0:1')
+        self.check_satisfies('libdwarf^libelf@0.8.13', '^libelf@0:1')
 
 
     def test_satisfies_compiler(self):
-        self.check_satisfies('foo%gcc', 'foo%gcc')
-        self.check_satisfies('foo%intel', 'foo%intel')
-        self.check_unsatisfiable('foo%intel', 'foo%gcc')
-        self.check_unsatisfiable('foo%intel', 'foo%pgi')
+        self.check_satisfies('foo%gcc', '%gcc')
+        self.check_satisfies('foo%intel', '%intel')
+        self.check_unsatisfiable('foo%intel', '%gcc')
+        self.check_unsatisfiable('foo%intel', '%pgi')
 
 
     def test_satisfies_compiler_version(self):
-        self.check_satisfies('foo%gcc', 'foo%gcc@4.7.2')
-        self.check_satisfies('foo%intel', 'foo%intel@4.7.2')
+        self.check_satisfies('foo%gcc', '%gcc@4.7.2')
+        self.check_satisfies('foo%intel', '%intel@4.7.2')
 
-        self.check_satisfies('foo%pgi@4.5', 'foo%pgi@4.4:4.6')
-        self.check_satisfies('foo@2.0%pgi@4.5', 'foo@1:3%pgi@4.4:4.6')
+        self.check_satisfies('foo%pgi@4.5', '%pgi@4.4:4.6')
+        self.check_satisfies('foo@2.0%pgi@4.5', '@1:3%pgi@4.4:4.6')
 
-        self.check_unsatisfiable('foo%pgi@4.3', 'foo%pgi@4.4:4.6')
-        self.check_unsatisfiable('foo@4.0%pgi', 'foo@1:3%pgi')
-        self.check_unsatisfiable('foo@4.0%pgi@4.5', 'foo@1:3%pgi@4.4:4.6')
+        self.check_unsatisfiable('foo%pgi@4.3', '%pgi@4.4:4.6')
+        self.check_unsatisfiable('foo@4.0%pgi', '@1:3%pgi')
+        self.check_unsatisfiable('foo@4.0%pgi@4.5', '@1:3%pgi@4.4:4.6')
 
 
     def test_satisfies_architecture(self):
-        self.check_satisfies('foo=chaos_5_x86_64_ib', 'foo=chaos_5_x86_64_ib')
-        self.check_satisfies('foo=bgqos_0', 'foo=bgqos_0')
+        self.check_satisfies('foo=chaos_5_x86_64_ib', '=chaos_5_x86_64_ib')
+        self.check_satisfies('foo=bgqos_0', '=bgqos_0')
 
-        self.check_unsatisfiable('foo=bgqos_0', 'foo=chaos_5_x86_64_ib')
-        self.check_unsatisfiable('foo=chaos_5_x86_64_ib', 'foo=bgqos_0')
+        self.check_unsatisfiable('foo=bgqos_0', '=chaos_5_x86_64_ib')
+        self.check_unsatisfiable('foo=chaos_5_x86_64_ib', '=bgqos_0')
 
 
     def test_satisfies_dependencies(self):
-        self.check_satisfies('mpileaks^mpich', 'mpileaks^mpich')
-        self.check_satisfies('mpileaks^zmpi', 'mpileaks^zmpi')
+        self.check_satisfies('mpileaks^mpich', '^mpich')
+        self.check_satisfies('mpileaks^zmpi', '^zmpi')
 
-        self.check_unsatisfiable('mpileaks^mpich', 'mpileaks^zmpi')
-        self.check_unsatisfiable('mpileaks^zmpi', 'mpileaks^mpich')
+        self.check_unsatisfiable('mpileaks^mpich', '^zmpi')
+        self.check_unsatisfiable('mpileaks^zmpi', '^mpich')
 
 
     def test_satisfies_dependency_versions(self):
-        self.check_satisfies('mpileaks^mpich@2.0', 'mpileaks^mpich@1:3')
-        self.check_unsatisfiable('mpileaks^mpich@1.2', 'mpileaks^mpich@2.0')
+        self.check_satisfies('mpileaks^mpich@2.0', '^mpich@1:3')
+        self.check_unsatisfiable('mpileaks^mpich@1.2', '^mpich@2.0')
 
-        self.check_satisfies('mpileaks^mpich@2.0^callpath@1.5', 'mpileaks^mpich@1:3^callpath@1.4:1.6')
-        self.check_unsatisfiable('mpileaks^mpich@4.0^callpath@1.5', 'mpileaks^mpich@1:3^callpath@1.4:1.6')
-        self.check_unsatisfiable('mpileaks^mpich@2.0^callpath@1.7', 'mpileaks^mpich@1:3^callpath@1.4:1.6')
-        self.check_unsatisfiable('mpileaks^mpich@4.0^callpath@1.7', 'mpileaks^mpich@1:3^callpath@1.4:1.6')
+        self.check_satisfies('mpileaks^mpich@2.0^callpath@1.5', '^mpich@1:3^callpath@1.4:1.6')
+        self.check_unsatisfiable('mpileaks^mpich@4.0^callpath@1.5', '^mpich@1:3^callpath@1.4:1.6')
+        self.check_unsatisfiable('mpileaks^mpich@2.0^callpath@1.7', '^mpich@1:3^callpath@1.4:1.6')
+        self.check_unsatisfiable('mpileaks^mpich@4.0^callpath@1.7', '^mpich@1:3^callpath@1.4:1.6')
 
 
     def test_satisfies_virtual_dependencies(self):
-        self.check_satisfies('mpileaks^mpi', 'mpileaks^mpi')
-        self.check_satisfies('mpileaks^mpi', 'mpileaks^mpich')
+        self.check_satisfies('mpileaks^mpi', '^mpi')
+        self.check_satisfies('mpileaks^mpi', '^mpich')
 
-        self.check_satisfies('mpileaks^mpi', 'mpileaks^zmpi')
-        self.check_unsatisfiable('mpileaks^mpich', 'mpileaks^zmpi')
+        self.check_satisfies('mpileaks^mpi', '^zmpi')
+        self.check_unsatisfiable('mpileaks^mpich', '^zmpi')
 
 
     def test_satisfies_virtual_dependency_versions(self):
-        self.check_satisfies('mpileaks^mpi@1.5', 'mpileaks^mpi@1.2:1.6')
-        self.check_unsatisfiable('mpileaks^mpi@3', 'mpileaks^mpi@1.2:1.6')
+        self.check_satisfies('mpileaks^mpi@1.5', '^mpi@1.2:1.6')
+        self.check_unsatisfiable('mpileaks^mpi@3', '^mpi@1.2:1.6')
 
-        self.check_satisfies('mpileaks^mpi@2:', 'mpileaks^mpich')
-        self.check_satisfies('mpileaks^mpi@2:', 'mpileaks^mpich@3.0.4')
-        self.check_satisfies('mpileaks^mpi@2:', 'mpileaks^mpich2@1.4')
+        self.check_satisfies('mpileaks^mpi@2:', '^mpich')
+        self.check_satisfies('mpileaks^mpi@2:', '^mpich@3.0.4')
+        self.check_satisfies('mpileaks^mpi@2:', '^mpich2@1.4')
 
-        self.check_satisfies('mpileaks^mpi@1:', 'mpileaks^mpich2')
-        self.check_satisfies('mpileaks^mpi@2:', 'mpileaks^mpich2')
+        self.check_satisfies('mpileaks^mpi@1:', '^mpich2')
+        self.check_satisfies('mpileaks^mpi@2:', '^mpich2')
 
-        self.check_unsatisfiable('mpileaks^mpi@3:', 'mpileaks^mpich2@1.4')
-        self.check_unsatisfiable('mpileaks^mpi@3:', 'mpileaks^mpich2')
-        self.check_unsatisfiable('mpileaks^mpi@3:', 'mpileaks^mpich@1.0')
+        self.check_unsatisfiable('mpileaks^mpi@3:', '^mpich2@1.4')
+        self.check_unsatisfiable('mpileaks^mpi@3:', '^mpich2')
+        self.check_unsatisfiable('mpileaks^mpi@3:', '^mpich@1.0')
 
 
     def test_constrain(self):

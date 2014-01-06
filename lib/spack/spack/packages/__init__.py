@@ -21,7 +21,7 @@ invalid_package_re = r'[_-][_-]+'
 instances = {}
 
 
-def autospec(function):
+def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
        function to a Spec."""
     def converter(arg):
@@ -147,7 +147,7 @@ class ProviderIndex(object):
 
 
 
-@autospec
+@_autospec
 def get(spec):
     if spec.virtual:
         raise UnknownPackageError(spec.name)
@@ -159,12 +159,12 @@ def get(spec):
     return instances[spec.name]
 
 
-@autospec
+@_autospec
 def get_installed(spec):
     return [s for s in installed_package_specs() if s.satisfies(spec)]
 
 
-@autospec
+@_autospec
 def providers_for(vpkg_spec):
     if not hasattr(providers_for, 'index'):
         providers_for.index = ProviderIndex(all_package_names())

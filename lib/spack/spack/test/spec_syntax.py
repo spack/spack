@@ -1,7 +1,7 @@
 import unittest
 import spack.spec
 from spack.spec import *
-from spack.parse import Token, ParseError
+from spack.parse import Token
 
 # Sample output for a complex lexing.
 complex_lex = [Token(ID, 'mvapich_foo'),
@@ -96,10 +96,10 @@ class SpecSyntaxTest(unittest.TestCase):
         self.check_parse("x^y", "x@: ^y@:")
 
     def test_parse_errors(self):
-        self.assertRaises(ParseError, self.check_parse, "x@@1.2")
-        self.assertRaises(ParseError, self.check_parse, "x ^y@@1.2")
-        self.assertRaises(ParseError, self.check_parse, "x@1.2::")
-        self.assertRaises(ParseError, self.check_parse, "x::")
+        self.assertRaises(SpecParseError, self.check_parse, "x@@1.2")
+        self.assertRaises(SpecParseError, self.check_parse, "x ^y@@1.2")
+        self.assertRaises(SpecParseError, self.check_parse, "x@1.2::")
+        self.assertRaises(SpecParseError, self.check_parse, "x::")
 
     def test_duplicate_variant(self):
         self.assertRaises(DuplicateVariantError, self.check_parse, "x@1.2+debug+debug")

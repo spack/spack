@@ -26,7 +26,7 @@ import collections
 import spack.architecture
 import spack.error
 from spack.util.lang import *
-from spack.spec import parse_local_spec, Spec
+from spack.spec import parse_anonymous_spec, Spec
 
 
 class SpecMultiMethod(object):
@@ -179,7 +179,7 @@ class when(object):
 class when(object):
     def __init__(self, spec):
         pkg = get_calling_package_name()
-        self.spec = parse_local_spec(spec, pkg)
+        self.spec = parse_anonymous_spec(spec, pkg)
 
     def __call__(self, method):
         # Get the first definition of the method in the calling scope

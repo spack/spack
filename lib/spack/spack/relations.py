@@ -51,7 +51,7 @@ import importlib
 import spack
 import spack.spec
 import spack.error
-from spack.spec import Spec, parse_local_spec
+from spack.spec import Spec, parse_anonymous_spec
 from spack.packages import packages_module
 from spack.util.lang import *
 
@@ -76,7 +76,7 @@ def provides(*specs, **kwargs):
     """
     pkg = get_calling_package_name()
     spec_string = kwargs.get('when', pkg)
-    provider_spec = parse_local_spec(spec_string, pkg)
+    provider_spec = parse_anonymous_spec(spec_string, pkg)
 
     provided = caller_locals().setdefault("provided", {})
     for string in specs:

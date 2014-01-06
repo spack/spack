@@ -739,6 +739,8 @@ class Spec(object):
 
 
     def constrain(self, other, **kwargs):
+        other = self._autospec(other)
+
         if not self.name == other.name:
             raise UnsatisfiableSpecNameError(self.name, other.name)
 
@@ -766,10 +768,10 @@ class Spec(object):
         self.architecture = self.architecture or other.architecture
 
         if kwargs.get('deps', True):
-            self.constrain_dependencies(other)
+            self._constrain_dependencies(other)
 
 
-    def constrain_dependencies(self, other):
+    def _constrain_dependencies(self, other):
         """Apply constraints of other spec's dependencies to this spec."""
         if not self.dependencies or not other.dependencies:
             return
@@ -806,9 +808,22 @@ class Spec(object):
         return mine
 
 
+    def _autospec(self, spec_like):
+        """Used to convert arguments to specs.  If spec_like is a spec, returns it.
+           If it's a string, tries to parse a string.  If that fails, tries to parse
+           a local spec from it (i.e. name is assumed to be self's name).
+        """
+        if isinstance(spec_like, spack.spec.Spec):
+            return spec_like
+
+        try:
+            return spack.spec.Spec(spec_like)
+        except SpecError:
+            return parse_anonymous_spec(spec_like, self.name)
+
+
     def satisfies(self, other, **kwargs):
-        if not isinstance(other, Spec):
-            other = Spec(other)
+        other = self._autospec(other)
 
         # First thing we care about is whether the name matches
         if self.name != other.name:
@@ -934,9 +949,7 @@ class Spec(object):
     def __contains__(self, spec):
         """True if this spec has any dependency that satisfies the supplied
            spec."""
-        if not isinstance(spec, Spec):
-            spec = Spec(spec)
-
+        spec = self._autospec(spec)
         for s in self.preorder_traversal():
             if s.satisfies(spec):
                 return True
@@ -1104,18 +1117,22 @@ class SpecParser(spack.parse.Parser):
 
     def do_parse(self):
         specs = []
-        while self.next:
-            if self.accept(ID):
-                specs.append(self.spec())
 
-            elif self.accept(DEP):
-                if not specs:
-                    self.last_token_error("Dependency has no package")
-                self.expect(ID)
-                specs[-1]._add_dependency(self.spec())
+        try:
+            while self.next:
+                if self.accept(ID):
+                    specs.append(self.spec())
 
-            else:
-                self.unexpected_token()
+                elif self.accept(DEP):
+                    if not specs:
+                        self.last_token_error("Dependency has no package")
+                    self.expect(ID)
+                    specs[-1]._add_dependency(self.spec())
+
+                else:
+                    self.unexpected_token()
+        except spack.parse.ParseError, e:
+            raise SpecParseError(e)
 
         return specs
 
@@ -1238,7 +1255,7 @@ def parse(string):
     return SpecParser().parse(string)
 
 
-def parse_local_spec(spec_like, pkg_name):
+def parse_anonymous_spec(spec_like, pkg_name):
     """Allow the user to omit the package name part of a spec if they
        know what it has to be already.
 
@@ -1251,25 +1268,33 @@ def parse_local_spec(spec_like, pkg_name):
 
     if isinstance(spec_like, str):
         try:
-            local_spec = Spec(spec_like)
-        except spack.parse.ParseError:
-            local_spec = Spec(pkg_name + spec_like)
-            if local_spec.name != pkg_name: raise ValueError(
+            anon_spec = Spec(spec_like)
+        except SpecParseError:
+            anon_spec = Spec(pkg_name + spec_like)
+            if anon_spec.name != pkg_name: raise ValueError(
                     "Invalid spec for package %s: %s" % (pkg_name, spec_like))
     else:
-        local_spec = spec_like
+        anon_spec = spec_like.copy()
 
-    if local_spec.name != pkg_name:
+    if anon_spec.name != pkg_name:
         raise ValueError("Spec name '%s' must match package name '%s'"
-                         % (local_spec.name, pkg_name))
+                         % (anon_spec.name, pkg_name))
 
-    return local_spec
+    return anon_spec
 
 
 class SpecError(spack.error.SpackError):
     """Superclass for all errors that occur while constructing specs."""
     def __init__(self, message):
         super(SpecError, self).__init__(message)
+
+
+class SpecParseError(SpecError):
+    """Wrapper for ParseError for when we're parsing specs."""
+    def __init__(self, parse_error):
+        super(SpecParseError, self).__init__(parse_error.message)
+        self.string = parse_error.string
+        self.pos = parse_error.pos
 
 
 class DuplicateDependencyError(SpecError):
