@@ -35,8 +35,17 @@ This section of the guide goes through the parts of a package, and
 then tells you how to make your own.  If you're impatient, jump ahead
 to :ref:`spack-create`.
 
-Directory Structure
+Package Files
 ---------------------------
+
+It's probably easiest to learn about packages by looking at an
+example.  Let's take a look at ``libelf.py``:
+
+.. literalinclude:: ../spack/packages/libelf.py
+   :linenos:
+
+Directory Structure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A Spack installation directory is structured like a standard UNIX
 install prefix (``bin``, ``lib``, ``include``, ``share``, etc.).  Most
@@ -57,22 +66,13 @@ packages when they're needed for an installation.  All the other files
 in the ``packages`` directory are actual Spack packages used to
 install software.
 
-Parts of a package
----------------------------
-
-It's probably easiest to learn about packages by looking at an
-example.  Let's take a look at ``libelf.py``:
-
-.. literalinclude:: ../spack/packages/libelf.py
-   :linenos:
-
 Package Names
 ~~~~~~~~~~~~~~~~~~
 
-This package lives in a file called ``libelf.py``, and it contains a
-class called ``Libelf``.  The ``Libelf`` class extends Spack's
-``Package`` class (and this is what makes it a Spack package).  The
-**file name** is what users need to provide in their package
+The ``libelf`` package lives in a file called ``libelf.py``, and it
+contains a class called ``Libelf``.  The ``Libelf`` class extends
+Spack's ``Package`` class (and this is what makes it a Spack package).
+The **file name** is what users need to provide in their package
 specs. e.g., if you type any of these:
 
 .. code-block:: sh
@@ -152,55 +152,40 @@ install, but it's better to provide checksums so users don't have to
 install from an unchecked archive.
 
 
-Install function
+Install method
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The last element of the ``libelf`` package is its ``install()``
-function.  This is where the real work of installation happens, and
+method.  This is where the real work of installation happens, and
 it's the main part of the package you'll need to customize for each
 piece of software.
-
-When a user runs ``spack install``, Spack fetches an archive for the
-correct version of the software, expands the archive, and sets the
-current working directory to the root directory of the expanded
-archive.  It then instantiates a package object and calls its
-``install()`` method.
-
-Install takes a ``spec`` object and a ``prefix`` path:
 
 .. literalinclude:: ../spack/packages/libelf.py
    :start-after: 0.8.12
    :linenos:
 
-We'll talk about ``spec`` objects and the types of methods you can
-call on them later.  The ``prefix`` is the path to the directory where
-the package should install the software after it is built.
+``install`` takes a ``spec``: a description of how the package should
+be built, and a ``prefix``: the path to the directory where the
+software should be installed.
 
-Inside of the ``install()`` function, things should look pretty
+:ref:`Writing the install method <install-method>` is documented in
+detail later, but in general, the ``install()`` method should look
 familiar.  ``libelf`` uses autotools, so the package first calls
 ``configure``, passing the prefix and some other package-specific
 arguments.  It then calls ``make`` and ``make install``.
 
-``configure`` and ``make`` look very similar to commands you'd type in
-a shell, but they're actually Python functions.  Spack provides these
-wrapper functions to allow you to call commands more naturally when
-you write packages.  This allows spack to provide some special
-features, as well.  For example, in Spack, ``make`` is parallel by
-default. Spack figures out the number of cores on your machine and
-passes and appropriate value for ``-j<numjobs>`` to the ``make``
-command.  In a package file, you can supply a keyword argument,
-``parallel=False``, to disable parallel make.  We do it here to avoid
-some race conditions in ``libelf``\'s ``install`` target.  The first
-call to ``make()``, which does not have a keyword argument, will still
-build in parallel.
+Spack provides wrapper functions for ``configure`` and ``make`` so
+that you can call them in a similar way to how you'd call a shell
+comamnd.
 
-We'll go into more detail about shell command functions in later
-sections.
-
+look very similar to commands you'd type in a shell, but they're
+actually Python functions.  Spack provides these wrapper functions to
+allow you to call commands more naturally when you write packages.
+See the section on :ref:`shell wrappers <shell-wrappers>`.
 
 .. _spack-create:
 
-Creating Packages Automatically
+Creating Packages
 ----------------------------------
 
 ``spack create``
@@ -247,8 +232,9 @@ Spack will automatically download the number of tarballs you specify
 
 Note that you don't need to do everything up front.  If your package
 is large, you can always choose to download just one tarball for now,
-then run :ref:`spack checksum <spack-checksum>` later if you end up wanting more.  Let's
-say, for now, that you opted to download 3 tarballs:
+then run :ref:`spack checksum <spack-checksum>` later if you end up
+wanting more.  Let's say, for now, that you opted to download 3
+tarballs:
 
 .. code-block:: sh
 
@@ -297,7 +283,7 @@ your favorite ``$EDITOR``:
 
        def install(self, spec, prefix):
            # FIXME: Modify the configure line to suit your build system here.
-           configure("--prefix=%s" % prefix)
+           configure("--prefix=" + prefix)
 
            # FIXME: Add logic to build and install here
            make()
@@ -358,7 +344,7 @@ in:
        versions = { '1.0' : '0123456789abcdef0123456789abcdef' }
 
        def install(self, spec, prefix):
-           configure("--prefix=%s" % prefix)
+           configure("--prefix=" + prefix)
            make()
            make("install")
 
@@ -418,13 +404,13 @@ your package in working order.
 
 
 Optional Package Attributes
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In addition to ``homepage``, ``url``, and ``versions``, there are some
 other useful attributes you can add to your package file.
 
 ``list_url``
-~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 When spack tries to find available versions of packages (e.g. in
 ``spack checksum``), by default it looks in the parent directory of
@@ -448,7 +434,7 @@ source code archives.  For these, you can specify a separate
    :end-before: versions
 
 ``list_depth``
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 Some packages may not have a listing of available verisons on a single
 page.  For these, you can specify a ``list_depth`` indicating that
@@ -796,13 +782,19 @@ fork a new process each time we invoke ``install()``.  This allows
 packages to have their own completely sandboxed build environment,
 without impacting other jobs that the main Spack process runs.
 
+.. _install-method:
 
 Implementing the ``install`` method
 ------------------------------------------
 
 Now that the metadata is out of the way, we can move on to the
-``install()`` method.  Recall that the ``install()`` method's
-signature looks like this:
+``install()`` method.  When a user runs ``spack install``, Spack
+fetches an archive for the correct version of the software, expands
+the archive, and sets the current working directory to the root
+directory of the expanded archive.  It then instantiates a package
+object and calls the ``install()`` method.
+
+The ``install()`` signature looks like this:
 
 .. code-block:: python
 
@@ -828,6 +820,11 @@ The parameters are as follows:
     targets into.  It acts like a string, but it's actually its own
     special type, :py:class:`Prefix <spack.util.prefix.Prefix>`.
 
+``spec`` and ``prefix`` are passed to ``install`` for convenience.
+``spec`` is also available as an attribute on the package
+(``self.spec``), and ``prefix`` is actually an attribute of ``spec``
+(``spec.prefix``).
+
 As mentioned in :ref:`install-environment`, you will usually not need
 to refer to most dependencies explicitly in your package file, as
 compiler wrapper take care of most of the heavy lifting here.  There
@@ -836,62 +833,269 @@ of dependencies, or when you need to do something different depending
 on the version, compiler, dependencies, etc. that your package is
 built with.  These parameters give you access to this type of information.
 
-Prefix objects
-~~~~~~~~~~~~~~~~~~~~
+.. _prefix-objects:
 
-For packages that do not have their own install target, or for those
-that implement it poorly (like ``libdwarf``), Spack provides the
-prefix object so you can manually copy things into the install
-directory. You can refer to the prefix directly, e.g.:
+Prefix objects
+----------------------
+
+Spack passes the ``prefix`` parameter to the install method so that
+you can pass it to ``configure``, ``cmake``, or some other installer,
+e.g.:
 
 .. code-block:: python
 
    configure('--prefix=' + prefix)
 
-The Prefix object will act like a string here.  You can also refer to
-standard subdirectories without having to construct paths yourself, e.g.:
+
+For the most part, prefix objects behave exactly like strings.  For
+packages that do not have their own install target, or for those that
+implement it poorly (like ``libdwarf``), you may need to manually copy
+things into particular directories under the prefix.  For this, you
+can refer to standard subdirectories without having to construct paths
+yourself, e.g.:
 
 .. code-block:: python
 
-   mkdirp(prefix.bin,
-          prefix.include,
-          prefix.lib,
-          prefix.man1)
+   def install(self, spec, prefix):
+       mkdirp(prefix.bin)
+       install('foo-tool', prefix.bin)
+
+       mkdirp(prefix.include)
+       install('foo.h', prefix.include)
+
+       mkdirp(prefix.lib)
+       install('libfoo.a', prefix.lib)
+
 
 Most of the standard UNIX directory names are attributes on the
-``prefix`` object.
+``prefix`` object.  See :py:class:`spack.prefix.Prefix` for a full
+list.
+
+
+.. _spec-objects:
+
+Spec objects
+-------------------------
+
+When ``install`` is called, most parts of the build process are set up
+for you.  The correct version's tarball has been downloaded and
+expanded.  Environment variables like ``CC`` and ``CXX`` are set to
+point to the correct compiler and version.  An install prefix has
+already been selected and passed in as ``prefix``.  In most cases this
+is all you need to get ``configure``, ``cmake``, or another install
+working correctly.
+
+There will be times when you need to know more about the build
+configuration.  For example, some software requires that you pass
+special parameters to ``configure``, like
+``--with-libelf=/path/to/libelf`` or ``--with-mpich``.  You might also
+need to supply special compiler flags depending on the compiler.  All
+of this information is available in the spec.
+
+Testing spec constraints
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can test whether your spec is configured a certain way by using
+the ``satisfies`` method.  For example, if you want to check whether
+the pcakage is at a particular version range, you can use specs to do
+that, e.g.:
+
+.. code-block:: python
+
+   if spec.satisfies('@1.2:1.4'):
+       configure_args.append("CXXFLAGS='-DWITH_FEATURE'")
+   configure('--prefix=' + prefix, *configure_args)
+
+This works for compilers, too:
+
+.. code-block:: python
+
+   if spec.satisfies('%gcc'):
+       configure_args.append('CXXFLAGS="-g3 -O3"')
+   if spec.satisfies('%intel'):
+       configure_args.append('CXXFLAGS="-xSSE2 -fast"')
+
+Or for combinations of spec constraints:
+
+.. code-block:: python
+
+   if spec.satisfies('@1.2%intel'):
+       tty.error("Version 1.2 breaks when using Intel compiler!")
+
+You can also do similar satisfaction tests for dependencies:
+
+.. code-block:: python
+
+   if spec.satisfies('^dyninst@8.0'):
+       configure_args.append('CXXFLAGS=-DSPECIAL_DYNINST_FEATURE')
+
+This could allow you to easily work around a bug in a particular
+dependency version.
+
+You can use ``satisfies()`` to test for particular dependencies,
+e.g. ``foo.satisfies('^openmpi@1.2')`` or ``foo.satisfies('^mpich')``,
+or you can use Python's builtin ``in`` operator:
+
+.. code-block:: python
+
+   if 'libelf' in spec:
+       print "this package depends on libelf"
+
+This is useful for virtual dependencies, as you can easily see what
+implementation was selected for this build:
+
+.. code-block:: python
+
+   if 'openmpi' in spec:
+       configure_args.append('--with-openmpi')
+   elif 'mpich' in spec:
+       configure_args.append('--with-mpich')
+   elif 'mvapich' in spec:
+       configure_args.append('--with-mvapich')
+
+It's also a bit more concise than satisfies.  The difference between
+the two functions is that ``satisfies()`` tests whether spec
+constraints overlap at all, while ``in`` tests whether a spec or any
+of its dependencies satisfy the provided spec.
+
+
+Accessing Dependencies
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You may need to get at some file or binary that's in the prefix of one
+of your dependencies.  You can do that by subscripting the spec:
+
+.. code-block:: python
+
+   my_mpi = spec['mpich']
+
+The value in the brackets needs to be some package name, and spec
+needs to depend on that package, or the operation will fail.  For
+example, the above code will fail if the ``spec`` doesn't depend on
+``mpich``.  The result
+
+``my_mpi`` is itself just another ``Spec`` object, so you can
+do all the same things you'd do with the package's own spec:
+
+.. code-block:: python
+
+   mpicc = new_path(my_mpi.prefix.bin, 'mpicc')
+
+
+Multimethods and ``@when``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spack allows you to make multiple versions of instance functions in
+packages, based on whether the package's spec satisfies particular
+criteria.
+
+The ``@when`` annotation lets packages declare multiple versions of
+methods like install() that depend on the package's spec.  For
+example:
+
+.. code-block:: python
+
+   class SomePackage(Package):
+       ...
+
+       def install(self, prefix):
+           # Do default install
+
+       @when('=chaos_5_x86_64_ib')
+       def install(self, prefix):
+           # This will be executed instead of the default install if
+           # the package's sys_type() is chaos_5_x86_64_ib.
+
+       @when('=bgqos_0")
+       def install(self, prefix):
+           # This will be executed if the package's sys_type is bgqos_0
+
+In the above code there are three versions of install(), two of which
+are specialized for particular platforms.  The version that is called
+depends on the architecture of the package spec.
+
+Note that this works for methods other than install, as well.  So,
+if you only have part of the install that is platform specific, you
+could do something more like this:
+
+.. code-block:: python
+
+   class SomePackage(Package):
+      ...
+       # virtual dependence on MPI.
+       # could resolve to mpich, mpich2, OpenMPI
+       depends_on('mpi')
+
+       def setup(self):
+           # do nothing in the default case
+           pass
+
+       @when('^openmpi')
+       def setup(self):
+           # do something special when this is built with OpenMPI for
+           # its MPI implementations.
+
+       def install(self, prefix):
+           # Do common install stuff
+           self.setup()
+           # Do more common install stuff
+
+You can write multiple ``@when`` specs that satisfy the package's spec,
+for example:
+
+.. code-block:: python
+
+   class SomePackage(Package):
+       ...
+       depends_on('mpi')
+
+       def setup_mpi(self):
+           # the default, called when no @when specs match
+           pass
+
+       @when('mpi@3:')
+       def setup_mpi(self):
+           # this will be called when mpi is version 3 or higher
+           pass
+
+       @when('mpi@2:')
+       def setup_mpi(self):
+           # this will be called when mpi is version 2 or higher
+           pass
+
+       @when('mpi@1:')
+       def setup_mpi(self):
+           # this will be called when mpi is version 1 or higher
+           pass
+
+In situations like this, the first matching spec, in declaration order
+will be called.  As before, if no ``@when`` spec matches, the default
+method (the one without the ``@when`` decorator) will be called.
+
+.. warning::
+
+   The default version of decorated methods must **always** come
+   first.  Otherwise it will override all of the platform-specific
+   versions.  There's not much we can do to get around this because of
+   the way decorators work.
 
 
 
+.. _shell-wrappers:
 
+Shell command wrappers
+-------------------------
 
-See :py:class:`spack.prefix.Prefix` to see what paths are available.
+This allows spack to provide some special features, as well.  For
+example, in Spack, ``make`` is parallel by default. Spack figures out
+the number of cores on your machine and passes and appropriate value
+for ``-j<numjobs>`` to the ``make`` command.  In a package file, you
+can supply a keyword argument, ``parallel=False``, to disable parallel
+make.  We do it here to avoid some race conditions in ``libelf``\'s
+``install`` target.  The first call to ``make()``, which does not have
+a keyword argument, will still build in parallel.
 
-
-
-
-
-Spec operations
-~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-Multimethods
-~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-Shell commands
-~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-
+.. _pacakge-lifecycle:
 
 Package lifecycle
 ------------------------------
