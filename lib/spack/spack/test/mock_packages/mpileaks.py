@@ -13,6 +13,4 @@ class Mpileaks(Package):
     depends_on("callpath")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        pass

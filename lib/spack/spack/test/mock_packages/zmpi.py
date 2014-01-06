@@ -12,6 +12,4 @@ class Zmpi(Package):
     depends_on('fake')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        pass

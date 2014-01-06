@@ -16,6 +16,4 @@ class Mpich(Package):
     provides('mpi@:1', when='@1:')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        pass

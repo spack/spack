@@ -6,6 +6,4 @@ class Fake(Package):
     versions = { '1.0' : 'foobarbaz' }
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        pass
