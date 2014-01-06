@@ -116,6 +116,7 @@ not for much else.  In general, you won't have to remember this naming
 convention because ``spack create`` will generate a boilerplate class
 for you, and you can just fill in the blanks.
 
+.. _metadata:
 
 Metadata
 ~~~~~~~~~~~~~~~~~~~~
@@ -130,26 +131,32 @@ a description, Spack will just print "None" for the description.
 In addition the package description, there are a few fields you'll
 need to fill out.  They are as follows:
 
-``homepage``
-    This is the URL where you can learn about the package and get
-    information.  It is displayed to users when they run ``spack info``.
+``homepage`` (required)
+  This is the URL where you can learn about the package and get
+  information.  It is displayed to users when they run ``spack info``.
 
-``url``
-    This is the URL where you can download a distribution tarball of
-    the pacakge's source code.
+``url`` (required)
+  This is the URL where you can download a distribution tarball of
+  the pacakge's source code.
 
-``versions``
-    This is a `dictionary
-    <http://docs.python.org/2/tutorial/datastructures.html#dictionaries>`_
-    mapping versions to MD5 hashes.  Spack uses the hashes to checksum
-    archives when it downloads a particular version.
+``versions`` (optional)
+  This is a `dictionary
+  <http://docs.python.org/2/tutorial/datastructures.html#dictionaries>`_
+  mapping versions to MD5 hashes.  Spack uses the hashes to checksum
+  archives when it downloads a particular version.
 
-The homepage and URL are required fields, and ``versions`` is not
-required but it's recommended.  Spack will warn usrs if they try to
-install a spec (e.g., ``libelf@0.8.10`` for which there is not a
-checksum available.  They can force it to download the new version and
-install, but it's better to provide checksums so users don't have to
-install from an unchecked archive.
+``parallel`` (optional)
+  Whether make should be parallel by default.  By default, this is
+   ``True``, and package authors need to call ``make(parallel=False)``
+   to override.  If you set this to ``False`` at the package level
+   then each call to ``make`` will be sequential by default, and users
+   will have to call ``make(parallel=True)`` to override it.
+
+``versions`` is optional but strongly recommended.  Spack will warn
+usrs if they try to install a version (e.g., ``libelf@0.8.10`` for
+which there is not a checksum available.  They can force it to
+download the new version and install, but it's better to provide
+checksums so users don't have to install from an unchecked archive.
 
 
 Install method
@@ -1086,26 +1093,82 @@ method (the one without the ``@when`` decorator) will be called.
 Shell command wrappers
 -------------------------
 
-This allows spack to provide some special features, as well.  For
-example, in Spack, ``make`` is parallel by default. Spack figures out
-the number of cores on your machine and passes and appropriate value
-for ``-j<numjobs>`` to the ``make`` command.  In a package file, you
-can supply a keyword argument, ``parallel=False``, to disable parallel
-make.  We do it here to avoid some race conditions in ``libelf``\'s
-``install`` target.  The first call to ``make()``, which does not have
-a keyword argument, will still build in parallel.
+Recall the install method in ``libelf.py``:
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       configure("--prefix=" + prefix,
+                 "--enable-shared",
+                 "--disable-dependency-tracking",
+                 "--disable-debug")
+       make()
+
+       # The mkdir commands in libelf's install can fail in parallel
+       make("install", parallel=False)
+
+Normally in Python, you'd have to write something like this in order
+to execute shell commands:
+
+.. code-block:: python
+
+   import subprocess
+   subprocess.check_call('configure', '--prefix=' + prefix)
+
+We've tried to make this a bit easier by providing callable wrapper
+objects for some shell commands.  By default, ``configure``,
+``cmake``, and ``make`` provided, so you can call them more naturally
+in your package files.
+
+If you need other commands, you can use ``which`` to get them:
+
+.. code-block:: python
+
+   sed = which('sed')
+   sed('s/foo/bar/', filename)
+
+The ``which`` function will search the ``PATH`` for the application.
+
+Callable wrappers also allow spack to provide some special features.
+For example, in Spack, ``make`` is parallel by default, and Spack
+figures out the number of cores on your machine and passes an
+appropriate value for ``-j<numjobs>`` when it calls ``make`` (see the
+``parallel`` package attribute under :ref:`metadata <metadata>`).  In
+a package file, you can supply a keyword argument, ``parallel=False``,
+to the ``make`` wrapper to disable parallel make.  In the ``libelf``
+package, this allows us to avoid race conditions in the library's
+build system.
 
 .. _pacakge-lifecycle:
 
-Package lifecycle
-------------------------------
+The package build process
+---------------------------------
+
+When you are building packages, you will likely not get things
+completely right the first time.
 
 The ``spack install`` command performs a number of tasks before it
 finally installs each package.  It downloads an archive, expands it in
-a temporary directory, and then performs the installation.  Spack has
-several commands that allow finer-grained control over each stage of
-the build process.
+a temporary directory, and only then gives control to the package's
+``install()`` method.  If the build doesn't go as planned, you may
+want to clean up the temporary directory, or if the package isn't
+downloading properly, you might want to run *only* the ``fetch`` stage
+of the build.
 
+A typical package development cycle might look like this:
+
+.. code-block:: sh
+
+   $ spack edit mypackage
+   $ spack install mypackage
+   ... build breaks! ...
+   $ spack clean mypackage
+   $ spack edit mypackage
+   $ spack install mypackage
+   ... repeat clean/install until install works ...
+
+Below are some commands that will allow you some finer-grained
+controll over the install process.
 
 ``spack fetch``
 ~~~~~~~~~~~~~~~~~
@@ -1168,11 +1231,3 @@ install -d`` to leave the build directory intact.  This allows you to
 inspect the build directory and potentially fix the build.  You can
 use ``purge`` or ``clean`` later to get rid of the unwanted temporary
 files.
-
-
-
-
-
-
-``spack graph``
-~~~~~~~~~~~~~~~~~~~~
