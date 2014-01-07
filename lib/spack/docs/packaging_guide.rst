@@ -1060,17 +1060,17 @@ for example:
            # the default, called when no @when specs match
            pass
 
-       @when('mpi@3:')
+       @when('^mpi@3:')
        def setup_mpi(self):
            # this will be called when mpi is version 3 or higher
            pass
 
-       @when('mpi@2:')
+       @when('^mpi@2:')
        def setup_mpi(self):
            # this will be called when mpi is version 2 or higher
            pass
 
-       @when('mpi@1:')
+       @when('^mpi@1:')
        def setup_mpi(self):
            # this will be called when mpi is version 1 or higher
            pass

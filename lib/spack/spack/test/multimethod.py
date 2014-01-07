@@ -30,8 +30,30 @@ class MultiMethodTest(MockPackagesTest):
 
 
     def test_version_overlap(self):
-        pkg = packages.get('multimethod@3.0')
-        self.assertRaises(AmbiguousMethodError, pkg.version_overlap)
+        pkg = packages.get('multimethod@2.0')
+        self.assertEqual(pkg.version_overlap(), 1)
+
+        pkg = packages.get('multimethod@5.0')
+        self.assertEqual(pkg.version_overlap(), 2)
+
+
+    def test_mpi_version(self):
+        pkg = packages.get('multimethod^mpich@3.0.4')
+        self.assertEqual(pkg.mpi_version(), 3)
+
+        pkg = packages.get('multimethod^mpich2@1.2')
+        self.assertEqual(pkg.mpi_version(), 2)
+
+        pkg = packages.get('multimethod^mpich@1.0')
+        self.assertEqual(pkg.mpi_version(), 1)
+
+
+    def test_undefined_mpi_version(self):
+        # This currently fails because provides() doesn't do
+        # the right thing undefined version ranges.
+        # TODO: fix this.
+        pkg = packages.get('multimethod^mpich@0.4')
+        self.assertEqual(pkg.mpi_version(), 0)
 
 
     def test_default_works(self):
@@ -69,11 +91,10 @@ class MultiMethodTest(MockPackagesTest):
         pkg = packages.get('multimethod^mpich')
         self.assertEqual(pkg.different_by_dep(), 'mpich')
 
-
-    def test_ambiguous_dep(self):
-        """If we try to switch on some entirely different dep, it's ambiguous"""
+        # If we try to switch on some entirely different dep, it's ambiguous,
+        # but should take the first option
         pkg = packages.get('multimethod^foobar')
-        self.assertRaises(AmbiguousMethodError, pkg.different_by_dep)
+        self.assertEqual(pkg.different_by_dep(), 'mpich')
 
 
     def test_virtual_dep_match(self):

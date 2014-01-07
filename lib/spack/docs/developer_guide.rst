@@ -3,6 +3,8 @@
 Developer Guide
 =====================
 
+This guide is intended for people who want to work on Spack's inner
+workings.  Right now it's pretty sparse.
 
 Spec objects
 -------------------------

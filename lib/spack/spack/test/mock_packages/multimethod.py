@@ -27,16 +27,35 @@ class Multimethod(Package):
 
 
     #
-    # These functions overlap too much, so there is ambiguity
+    # These functions overlap, so there is ambiguity, but we'll take
+    # the first one.
     #
     @when('@:4')
     def version_overlap(self):
-        pass
+        return 1
 
     @when('@2:')
     def version_overlap(self):
-        pass
+        return 2
 
+
+    #
+    # More complicated case with cascading versions.
+    #
+    def mpi_version(self):
+        return 0
+
+    @when('^mpi@3:')
+    def mpi_version(self):
+        return 3
+
+    @when('^mpi@2:')
+    def mpi_version(self):
+        return 2
+
+    @when('^mpi@1:')
+    def mpi_version(self):
+        return 1
 
 
     #

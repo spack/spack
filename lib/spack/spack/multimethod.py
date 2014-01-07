@@ -52,20 +52,20 @@ class SpecMultiMethod(object):
        registers method versions with them.
 
        To register a method, you can do something like this:
-           mf = SpecMultiMethod()
-           mf.register("^chaos_5_x86_64_ib", some_method)
+           mm = SpecMultiMethod()
+           mm.register("^chaos_5_x86_64_ib", some_method)
 
        The object registered needs to be a Spec or some string that
        will parse to be a valid spec.
 
-       When the pmf is actually called, it selects a version of the
+       When the mm is actually called, it selects a version of the
        method to call based on the sys_type of the object it is
        called on.
 
        See the docs for decorators below for more details.
     """
     def __init__(self, default=None):
-        self.method_map = {}
+        self.method_list = []
         self.default = default
         if default:
             functools.update_wrapper(self, default)
@@ -73,7 +73,7 @@ class SpecMultiMethod(object):
 
     def register(self, spec, method):
         """Register a version of a method for a particular sys_type."""
-        self.method_map[spec] = method
+        self.method_list.append((spec, method))
 
         if not hasattr(self, '__name__'):
             functools.update_wrapper(self, method)
@@ -87,33 +87,25 @@ class SpecMultiMethod(object):
 
 
     def __call__(self, package_self, *args, **kwargs):
-        """Try to find a method that matches package_self.sys_type.
-           If none is found, call the default method that this was
-           initialized with.  If there is no default, raise an error.
+        """Find the first method with a spec that matches the
+           package's spec.  If none is found, call the default
+           or if there is none, then raise a NoSuchMethodError.
         """
-        spec = package_self.spec
-        matching_specs = [s for s in self.method_map if s.satisfies(spec)]
-        num_matches = len(matching_specs)
-        if num_matches == 0:
-            if self.default is None:
-                raise NoSuchMethodError(type(package_self), self.__name__,
-                                        spec, self.method_map.keys())
-            else:
-                method = self.default
+        for spec, method in self.method_list:
+            if spec.satisfies(package_self.spec):
+                return method(package_self, *args, **kwargs)
 
-        elif num_matches == 1:
-            method = self.method_map[matching_specs[0]]
-
+        if self.default:
+            return self.default(package_self, *args, **kwargs)
         else:
-            raise AmbiguousMethodError(type(package_self), self.__name__,
-                                              spec, matching_specs)
-
-        return method(package_self, *args, **kwargs)
+            raise NoSuchMethodError(
+                type(package_self), self.__name__, spec,
+                [m[0] for m in self.method_list])
 
 
     def __str__(self):
         return "SpecMultiMethod {\n\tdefault: %s,\n\tspecs: %s\n}" % (
-            self.default, self.method_map)
+            self.default, self.method_list)
 
 
 class when(object):
@@ -207,12 +199,3 @@ class NoSuchMethodError(spack.error.SpackError):
             "Package %s does not support %s called with %s.  Options are: %s"
             % (cls.__name__, method_name, spec,
                ", ".join(str(s) for s in possible_specs)))
-
-
-class AmbiguousMethodError(spack.error.SpackError):
-    """Raised when we can't find a version of a multi-method."""
-    def __init__(self, cls, method_name, spec, matching_specs):
-        super(AmbiguousMethodError, self).__init__(
-            "Package %s has multiple versions of %s that match %s: %s"
-            % (cls.__name__, method_name, spec,
-               ",".join(str(s) for s in matching_specs)))
