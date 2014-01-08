@@ -4,12 +4,12 @@ Getting Started
 Download
 --------------------
 
-Getting spack is easy.  Clone it using `git <http://git-scm.com->`_
-with the following command:
+Getting spack is easy.  You can clone it from the `github repository
+<https://github.com/scalability-llnl/spack>`_ using this command:
 
 .. code-block:: sh
 
-   $ git clone ssh://git@cz-stash.llnl.gov:7999/scale/spack.git
+   $ git clone git@github.com:scalability-llnl/spack.git
 
 This will create a directory called ``spack``.  We'll assume that the
 full path to this directory is in some environment called
@@ -19,7 +19,7 @@ to go:
 .. code-block:: sh
 
    $ export PATH=spack/bin:$SPACK_HOME
-   $ spack install mpich
+   $ spack install libelf
 
 In general, most of your interactions with Spack will be through the
 ``spack`` command.

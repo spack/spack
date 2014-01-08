@@ -23,13 +23,15 @@ single build script for many different builds of the same package.
 
 See the :doc:`features` for examples and highlights.
 
-Get spack and install your first package:
+Get spack from the `github repository
+<https://github.com/scalability-llnl/spack>`_ and install your first
+package:
 
 .. code-block:: sh
 
-   $ git clone ssh://git@cz-stash.llnl.gov:7999/scale/spack.git
+   $ git clone git@github.com:scalability-llnl/spack.git
    $ cd spack/bin
-   $ ./spack install mpich
+   $ ./spack install libelf
 
 If you're new to spack and want to start using it, see :doc:`getting_started`,
 or refer to the full manual below.
