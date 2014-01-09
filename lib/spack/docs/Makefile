@@ -25,10 +25,15 @@ all: html
 # This creates a git repository and commits generated html docs.
 # It them pushes the new branch into THIS repository as gh-pages.
 #
+# github for some reason runs jekyll automatically on gh-pages
+# files, but we don't want that.  'touch .nojekyll' takes care
+# of it.
+#
 gh-pages: _build/html
 	root="$$(git rev-parse --show-toplevel)" && \
 	cd _build/html && \
 	rm -rf .git && \
+	touch .nojekyll && \
 	git init && \
 	git add . && \
 	git commit -m "Initial commit" && \
