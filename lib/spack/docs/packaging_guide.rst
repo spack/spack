@@ -42,6 +42,7 @@ It's probably easiest to learn about packages by looking at an
 example.  Let's take a look at ``libelf.py``:
 
 .. literalinclude:: ../spack/packages/libelf.py
+   :lines: 25-
    :linenos:
 
 Directory Structure

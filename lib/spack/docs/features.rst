@@ -102,6 +102,7 @@ It typically doesn't take much python coding to get from there to a
 working package file:
 
 .. literalinclude:: ../spack/packages/libelf.py
+   :lines: 25-
 
 Spack also provides wrapper functions around common commands like
 ``configure``, ``make``, and ``cmake`` to make writing packages
