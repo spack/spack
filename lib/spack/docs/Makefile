@@ -21,6 +21,20 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 all: html
 
+#
+# This creates a git repository and commits generated html docs.
+# It them pushes the new branch into THIS repository as gh-pages.
+#
+gh-pages: _build/html
+	root="$$(git rev-parse --show-toplevel)" && \
+	cd _build/html && \
+	rm -rf .git && \
+	git init && \
+	git add . && \
+	git commit -m "Initial commit" && \
+	git push -f $$root master:gh-pages && \
+	rm -rf .git
+
 upload:
 	rsync -avz --rsh=ssh --delete _build/html/ cab:/usr/global/web-pages/lc/www/adept/docs/spack
 
