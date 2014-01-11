@@ -1,3 +1,5 @@
+.. _packaging-guide:
+
 Packaging Guide
 =====================
 
@@ -614,6 +616,8 @@ with too low a version of ``mpich``.  For example, suppose the package
 Spack will fail with a constraint violation, because the version of
 MPICH requested is too low for the ``mpi`` requirement in ``foo``.
 
+
+.. _abstract-and-concrete:
 
 Abstract & concrete specs
 ------------------------------------------
