@@ -6,7 +6,7 @@ Packaging Guide
 This guide is intended for developers or administrators who want to
 *package* their software so that Spack can install it.  We assume that
 you have at least some familiarty with Python, and that you've read
-the :ref:`basic usage guide <basic_usage>`, especially the part
+the :ref:`basic usage guide <basic-usage>`, especially the part
 about :ref:`specs <sec-specs>`.
 
 There are two key parts of Spack:
@@ -459,6 +459,8 @@ this:
    :end-before: versions
 
 
+.. _dependencies:
+
 Dependencies
 ------------------------------
 
@@ -513,6 +515,7 @@ on the command line to find specs or to install specs with particular
 constraints, and package authors can use it to describe relationships
 between packages.
 
+.. _virtual-dependencies:
 
 Virtual dependencies
 -----------------------------
@@ -993,6 +996,7 @@ do all the same things you'd do with the package's own spec:
 
    mpicc = new_path(my_mpi.prefix.bin, 'mpicc')
 
+.. _multimethods:
 
 Multimethods and ``@when``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -22,6 +22,16 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+"""\
+The ``compilation`` module contains utility functions used by the compiler
+wrapper script.
+
+.. todo::
+
+   Think about moving this into the script to increase compilation
+   speed.
+
+"""
 import os
 import sys
 

@@ -23,7 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
-This file implements Version and version-ish objects.  These are:
+This module implements Version and version-ish objects.  These are:
 
 Version
   A single version of a package.

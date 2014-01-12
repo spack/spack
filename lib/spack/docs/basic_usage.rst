@@ -1,4 +1,4 @@
-.. _basic_usage:
+.. _basic-usage:
 
 Basic usage
 =====================

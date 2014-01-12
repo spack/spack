@@ -3,6 +3,8 @@
 Site-specific configuration
 ===================================
 
+.. _temp-space:
+
 Temporary space
 ----------------------------
 
@@ -47,6 +49,7 @@ in the first directory it finds to which it has write access.  Add
 more elements to the list to indicate where your own site's temporary
 directory is.
 
+.. _concretization-policies:
 
 Concretization policies
 ----------------------------
