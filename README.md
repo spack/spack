@@ -35,3 +35,4 @@ for Spack is also available.
 Authors
 ----------------
 Spack was written by Todd Gamblin, tgamblin@llnl.gov.
+LLNL-CODE-647188
