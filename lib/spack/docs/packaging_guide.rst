@@ -94,11 +94,11 @@ numbers, dashes, and underscores, and there are no other restrictions.
 You can name a package ``3proxy`` or ``_foo`` and Spack won't care --
 it just needs to see that name in the package spec.  Experienced
 Python programmers will notice that package names are actually Python
-module names, and but they're not necessarily valid Python
-identifiers.  i.e., you can't actually ``import 3proxy`` in Python.
-You'll get a syntax error because the identifier doesn't start with a
-letter or underscore.  For more details on why this is still ok, see
-the :ref:`developer guide<developer_guide>`.
+module names, but they're not necessarily valid Python identifiers.
+i.e., you can't actually ``import 3proxy`` in Python.  You'll get a
+syntax error because the identifier doesn't start with a letter or
+underscore.  For more details on why this is still ok, see the
+:ref:`developer guide<developer_guide>`.
 
 The **class name** is formed by converting words separated by `-` or
 ``_`` in the file name to camel case.  If the name starts with a
@@ -131,7 +131,7 @@ a class.  Spack uses the docstring to generate the description of the
 package that is shown when you run ``spack info``.  If you don't provide
 a description, Spack will just print "None" for the description.
 
-In addition the package description, there are a few fields you'll
+In addition to the package description, there are a few fields you'll
 need to fill out.  They are as follows:
 
 ``homepage`` (required)
@@ -150,10 +150,10 @@ need to fill out.  They are as follows:
 
 ``parallel`` (optional)
   Whether make should be parallel by default.  By default, this is
-   ``True``, and package authors need to call ``make(parallel=False)``
-   to override.  If you set this to ``False`` at the package level
-   then each call to ``make`` will be sequential by default, and users
-   will have to call ``make(parallel=True)`` to override it.
+  ``True``, and package authors need to call ``make(parallel=False)``
+  to override.  If you set this to ``False`` at the package level
+  then each call to ``make`` will be sequential by default, and users
+  will have to call ``make(parallel=True)`` to override it.
 
 ``versions`` is optional but strongly recommended.  Spack will warn
 usrs if they try to install a version (e.g., ``libelf@0.8.10`` for
@@ -186,12 +186,9 @@ arguments.  It then calls ``make`` and ``make install``.
 
 Spack provides wrapper functions for ``configure`` and ``make`` so
 that you can call them in a similar way to how you'd call a shell
-comamnd.
-
-look very similar to commands you'd type in a shell, but they're
-actually Python functions.  Spack provides these wrapper functions to
-allow you to call commands more naturally when you write packages.
-See the section on :ref:`shell wrappers <shell-wrappers>`.
+comamnd.  In reality, these are Python functions.  Spack provides
+these functions to make writing packages more natural. See the section
+on :ref:`shell wrappers <shell-wrappers>`.
 
 .. _spack-create:
 
@@ -203,8 +200,8 @@ Creating Packages
 
 The ``spack create`` command takes the drudgery out of making
 packages.  It generates boilerplate code that conforms to Spack's idea
-of a package should be, so that you can focus on getting your pacakge
-working.
+of what a package should be, so that you can focus on getting your
+pacakge working.
 
 All you need is the URL to a tarball you want to package:
 
@@ -213,9 +210,9 @@ All you need is the URL to a tarball you want to package:
    $ spack create http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
 
 When you run this, Spack will look at the tarball URL, and it will try
-to figure out the of the package to be created. It also tries to
-figure out what version strings for that package look like.  Once that
-is done, it tries to find *additional* versions by spidering the
+to figure out the name of the package to be created. It will also try
+to figure out what version strings for that package look like.  Once
+that is done, it tries to find *additional* versions by spidering the
 package's webpage.  Spack then prompts you to tell it how many
 versions you want to download and checksum.
 
@@ -257,7 +254,7 @@ tarballs:
    ==> Fetching http://www.cmake.org/files/v2.8/cmake-2.8.11.2.tar.gz
    ####################################################################      95.2%
 
-Now Spack generates some boilerplate and open the package file in
+Now Spack generates some boilerplate and opens the package file in
 your favorite ``$EDITOR``:
 
 .. code-block:: python
@@ -510,10 +507,10 @@ version range (e.g., ``0.8.2:0.8.4``) or a variant constraint
 (e.g.. ``+debug``) to control how dependencies should be built.
 
 Note that both users and package authors can use the same spec syntax
-to refer to different package configurations.  Users use this syntax
-on the command line to find specs or to install specs with particular
-constraints, and package authors can use it to describe relationships
-between packages.
+to refer to different package configurations.  Users use the spec
+syntax on the command line to find installed packages or to install
+packages with particular constraints, and package authors can use it
+to describe relationships between packages.
 
 .. _virtual-dependencies:
 
@@ -530,7 +527,7 @@ many large-scale parallel applications.
 
 MPI has several different implementations (e.g., `MPICH
 <http://www.mpich.org>`_, `OpenMPI <http://www.open-mpi.org>`_, and
-`MVAPICH <http://mvapich.cse.ohio-state.edu>`_, and scientific
+`MVAPICH <http://mvapich.cse.ohio-state.edu>`_) and scientific
 applicaitons can be built with any one of these.  Complicating
 matters, MPI does not have a standardized ABI, so a package built with
 one implementation cannot be relinked with another implementation.
@@ -579,7 +576,7 @@ adding a version constraint to the spec passed to ``provides``:
    provides("mpi@:2")
 
 Suppose that the above restriction is in the ``mpich2`` package.  This
-says that ``mpich2`` provides MPI support *up to* version 2, but if aa
+says that ``mpich2`` provides MPI support *up to* version 2, but if a
 package ``depends_on("mpi@3")``, then Spack will *not* build with ``mpich2``
 for the MPI implementation.
 
@@ -782,7 +779,7 @@ work with these systems, as well.
 
 If your build systm does *not* pick these variables up from the
 environment automatically, then you can simply pass them on the
-command line or us a patch as part of your build process to get the
+command line or use a patch as part of your build process to get the
 correct compilers into the project's build system.
 
 
@@ -841,12 +838,13 @@ The parameters are as follows:
 (``spec.prefix``).
 
 As mentioned in :ref:`install-environment`, you will usually not need
-to refer to most dependencies explicitly in your package file, as
-compiler wrapper take care of most of the heavy lifting here.  There
+to refer to dependencies explicitly in your package file, as the
+compiler wrappers take care of most of the heavy lifting here.  There
 will be times, though, when you need to refer to the install locations
 of dependencies, or when you need to do something different depending
 on the version, compiler, dependencies, etc. that your package is
-built with.  These parameters give you access to this type of information.
+built with.  These parameters give you access to this type of
+information.
 
 .. _prefix-objects:
 
@@ -987,10 +985,9 @@ of your dependencies.  You can do that by subscripting the spec:
 The value in the brackets needs to be some package name, and spec
 needs to depend on that package, or the operation will fail.  For
 example, the above code will fail if the ``spec`` doesn't depend on
-``mpich``.  The result
-
-``my_mpi`` is itself just another ``Spec`` object, so you can
-do all the same things you'd do with the package's own spec:
+``mpich``.  The value returned and assigned to ``my_mpi``, is itself
+just another ``Spec`` object, so you can do all the same things you
+would do with the package's own spec:
 
 .. code-block:: python
 
@@ -1126,8 +1123,8 @@ to execute shell commands:
 
 We've tried to make this a bit easier by providing callable wrapper
 objects for some shell commands.  By default, ``configure``,
-``cmake``, and ``make`` provided, so you can call them more naturally
-in your package files.
+``cmake``, and ``make`` wrappers are are provided, so you can call
+them more naturally in your package files.
 
 If you need other commands, you can use ``which`` to get them:
 
