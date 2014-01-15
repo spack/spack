@@ -18,7 +18,7 @@ to go:
 
 .. code-block:: sh
 
-   $ export PATH=spack/bin:$SPACK_HOME
+   $ export PATH=spack/bin:$PATH
    $ spack install libelf
 
 In general, most of your interactions with Spack will be through the

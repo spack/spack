@@ -234,7 +234,7 @@ completely remove the directory in which the package was installed.
 
    spack uninstall mpich
 
-If there are other installed packages depend on the package to be
+If there are still installed packages that depend on the package to be
 uninstalled, spack will issue a warning.  In general, it is safer to
 remove dependent packages *before* removing their dependencies.  Not
 doing so risks breaking packages on your system.  To remove a package
@@ -269,7 +269,7 @@ Here is an example of a much longer spec than we've seen thus far::
    mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt =bgqos_0 ^callpath @1.1 %gcc@4.7.2
 
 If provided to ``spack install``, this will install the ``mpileaks``
-library at some version between ``1.2`` and ``1.4`` (inclusive),,
+library at some version between ``1.2`` and ``1.4`` (inclusive),
 built using ``gcc`` at version 4.7.5 for the Blue Gene/Q architecture,
 with debug options enabled, and without Qt support.  Additionally, it
 says to link it with the ``callpath`` library (which it depends on),
@@ -543,12 +543,12 @@ a particular ``mpich`` version::
 
    spack install mpileaks ^mpich@3
 
-In this case, ``mpileaks`` only needs MPI-1 commands, so any MPI
-implementation will do.  If another package depends on ``mpi@2`` and
-you try to give it an insufficient MPI implementation (e.g., one that
-provides only ``mpi@:1``), then Spack will raise an error.  Likewise,
-if you try to plug in some package that doesn't provide MPI, Spack
-will raise an error.
+The ``mpileaks`` package in particular only needs MPI-1 commands, so
+any MPI implementation will do.  If another package depends on
+``mpi@2`` and you try to give it an insufficient MPI implementation
+(e.g., one that provides only ``mpi@:1``), then Spack will raise an
+error.  Likewise, if you try to plug in some package that doesn't
+provide MPI, Spack will raise an error.
 
 ``spack providers``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
