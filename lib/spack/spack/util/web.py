@@ -79,6 +79,10 @@ def _spider(args):
         req.get_method = lambda: "HEAD"
         resp = urllib2.urlopen(req, timeout=TIMEOUT)
 
+        if not "Content-type" in resp.headers:
+            print "ignoring page " + url
+            return pages
+
         if not resp.headers["Content-type"].startswith('text/html'):
             print "ignoring page " + url + " with content type " + resp.headers["Content-type"]
             return pages

@@ -26,7 +26,9 @@ import os
 import sys
 import re
 import subprocess
+
 import spack.tty as tty
+from spack.error import SpackError
 
 
 class Executable(object):
@@ -66,10 +68,13 @@ class Executable(object):
                 stderr=sys.stderr,
                 stdout=subprocess.PIPE if return_output else sys.stdout)
             out, err = proc.communicate()
+            if fail_on_error and proc.returncode != 0:
+                raise SpackError("command '%s' returned error code %d"
+                                 % (" ".join(cmd), proc.returncode))
             if return_output:
                 return out
 
-        except CalledProcessError, e:
+        except subprocess.CalledProcessError, e:
             if fail_on_error: raise
 
     def __repr__(self):
