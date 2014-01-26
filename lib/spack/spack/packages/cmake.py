@@ -31,6 +31,6 @@ class Cmake(Package):
 
     def install(self, spec, prefix):
         configure('--prefix='   + prefix,
-                  '--parallel=' + make_jobs)
+                  '--parallel=' + str(make_jobs))
         make()
         make('install')
