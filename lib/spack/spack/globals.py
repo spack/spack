@@ -81,7 +81,7 @@ use_tmp_stage = True
 # is a shared filesystem.  Spack will use the first of these paths
 # that it can create.
 tmp_dirs = ['/nfs/tmp2/%u/spack-stage',
-            '/var/tmp/%u/spcak-stage',
+            '/var/tmp/%u/spack-stage',
             '/tmp/%u/spack-stage']
 
 # Whether spack should allow installation of unsafe versions of
