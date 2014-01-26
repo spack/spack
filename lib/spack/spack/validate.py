@@ -27,7 +27,7 @@ from urlparse import urlparse
 
 from spack.util.compression import allowed_archive
 
-ALLOWED_SCHEMES    = ["http", "https", "ftp"]
+ALLOWED_SCHEMES    = ["http", "https", "ftp", "file"]
 
 def url(url_string):
     url = urlparse(url_string)
