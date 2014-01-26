@@ -1217,7 +1217,6 @@ class SpecParser(spack.parse.Parser):
 
     def architecture(self):
         self.expect(ID)
-        self.check_identifier()
         return self.token.value
 
 
