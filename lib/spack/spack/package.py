@@ -389,7 +389,10 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
-            self._stage = Stage(self.url, str(self.spec))
+            mirror_path="%s/%s-%s.tar.gz" % (
+                self.name, self.name, self.version)
+            self._stage = Stage(
+                self.url, mirror_path=mirror_path, name=str(self.spec))
         return self._stage
 
 
@@ -688,7 +691,8 @@ class Package(object):
 
     def install(self, spec, prefix):
         """Package implementations override this with their own build configuration."""
-        tty.die("Packages must provide an install method!")
+        configure()
+        #tty.die("Packages must provide an install method!")
 
 
     def do_uninstall(self):

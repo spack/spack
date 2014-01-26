@@ -65,7 +65,7 @@ class Stage(object):
        similar, and are intended to persist for only one run of spack.
     """
 
-    def __init__(self, url, name=None):
+    def __init__(self, url, **kwargs):
         """Create a stage object.
            Parameters:
              url     URL of the archive to be downloaded into this stage.
@@ -75,9 +75,11 @@ class Stage(object):
                      stage object later).  If name is not provided, then this
                      stage will be given a unique name automatically.
         """
+        self.name = kwargs.get('name')
+        self.mirror_path = kwargs.get('mirror_path')
+
         self.tmp_root = find_tmp_root()
         self.url = url
-        self.name = name
         self.path = None   # This will be set after setup is called.
 
 
@@ -210,6 +212,30 @@ class Stage(object):
             tty.die("Setup failed: no such directory: " + self.path)
 
 
+    def fetch_from_url(self, url):
+        try:
+            # Run curl but grab the mime type from the http headers
+            headers = spack.curl('-#',        # status bar
+                                 '-O',        # save file to disk
+                                 '-D', '-',   # print out HTML headers
+                                 '-L', url, return_output=True)
+        except:
+            # clean up archive on failure.
+            if self.archive_file:
+                os.remove(self.archive_file)
+            raise
+
+        # Check if we somehow got an HTML file rather than the archive we
+        # asked for.  We only look at the last content type, to handle
+        # redirects properly.
+        content_types = re.findall(r'Content-Type:[^\r\n]+', headers)
+        if content_types and 'text/html' in content_types[-1]:
+            tty.warn("The contents of " + self.archive_file + " look like HTML.",
+                     "The checksum will likely be bad.  If it is, you can use",
+                     "'spack clean --all' to remove the bad archive, then fix",
+                     "your internet gateway issue and install again.")
+
+
     def fetch(self):
         """Downloads the file at URL to the stage.  Returns true if it was downloaded,
            false if it already existed."""
@@ -218,29 +244,15 @@ class Stage(object):
             tty.msg("Already downloaded %s." % self.archive_file)
 
         else:
-            tty.msg("Fetching %s" % self.url)
+            urls = [self.url]
+            if self.mirror_path:
+                urls += ["%s/%s" % (m, self.mirror_path) for m in spack.mirrors]
 
-            try:
-                # Run curl but grab the mime type from the http headers
-                headers = spack.curl('-#',        # status bar
-                                     '-O',        # save file to disk
-                                     '-D', '-',   # print out HTML headers
-                                     '-L', self.url, return_output=True)
-            except:
-                # clean up archive on failure.
+            for url in urls:
+                tty.msg("Trying to fetch from %s" % url)
+                self.fetch_from_url(url)
                 if self.archive_file:
-                    os.remove(self.archive_file)
-                raise
-
-            # Check if we somehow got an HTML file rather than the archive we
-            # asked for.  We only look at the last content type, to handle
-            # redirects properly.
-            content_types = re.findall(r'Content-Type:[^\r\n]+', headers)
-            if content_types and 'text/html' in content_types[-1]:
-                tty.warn("The contents of " + self.archive_file + " look like HTML.",
-                         "The checksum will likely be bad.  If it is, you can use",
-                         "'spack clean --all' to remove the bad archive, then fix",
-                         "your internet gateway issue and install again.")
+                    break
 
         if not self.archive_file:
             raise FailedDownloadError(url)

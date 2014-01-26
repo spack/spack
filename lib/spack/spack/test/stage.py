@@ -189,7 +189,7 @@ class StageTest(unittest.TestCase):
 
 
     def checkSetupAndDestroy(self, stage_name=None):
-        stage = Stage(archive_url, stage_name)
+        stage = Stage(archive_url, name=stage_name)
         stage.setup()
         self.check_setup(stage, stage_name)
 
@@ -218,7 +218,7 @@ class StageTest(unittest.TestCase):
 
 
     def test_chdir(self):
-        stage = Stage(archive_url, stage_name)
+        stage = Stage(archive_url, name=stage_name)
 
         stage.chdir()
         self.check_setup(stage, stage_name)
@@ -229,7 +229,7 @@ class StageTest(unittest.TestCase):
 
 
     def test_fetch(self):
-        stage = Stage(archive_url, stage_name)
+        stage = Stage(archive_url, name=stage_name)
 
         stage.fetch()
         self.check_setup(stage, stage_name)
@@ -241,7 +241,7 @@ class StageTest(unittest.TestCase):
 
 
     def test_expand_archive(self):
-        stage = Stage(archive_url, stage_name)
+        stage = Stage(archive_url, name=stage_name)
 
         stage.fetch()
         self.check_setup(stage, stage_name)
@@ -255,7 +255,7 @@ class StageTest(unittest.TestCase):
 
 
     def test_expand_archive(self):
-        stage = Stage(archive_url, stage_name)
+        stage = Stage(archive_url, name=stage_name)
 
         stage.fetch()
         self.check_setup(stage, stage_name)
@@ -271,7 +271,7 @@ class StageTest(unittest.TestCase):
 
 
     def test_restage(self):
-        stage = Stage(archive_url, stage_name)
+        stage = Stage(archive_url, name=stage_name)
 
         stage.fetch()
         stage.expand_archive()

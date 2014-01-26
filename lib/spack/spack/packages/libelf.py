@@ -36,12 +36,12 @@ class Libelf(Package):
     versions = { '0.8.13' : '4136d7b4c04df68b686570afa26988ac',
                  '0.8.12' : 'e21f8273d9f5f6d43a59878dc274fec7', }
 
-    def install(self, spec, prefix):
-        configure("--prefix=" + prefix,
-                  "--enable-shared",
-                  "--disable-dependency-tracking",
-                  "--disable-debug")
-        make()
+    # def install(self, spec, prefix):
+    #     configure("--prefix=" + prefix,
+    #               "--enable-shared",
+    #               "--disable-dependency-tracking",
+    #               "--disable-debug")
+    #     make()
 
-        # The mkdir commands in libelf's install can fail in parallel
-        make("install", parallel=False)
+    #     # The mkdir commands in libelf's install can fail in parallel
+    #     make("install", parallel=False)

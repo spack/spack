@@ -104,6 +104,20 @@ do_checksum = True
 #
 sys_type = None
 
+#
+# Places to download tarballs from.  Examples:
+#
+# For a local directory:
+#   mirrors = ['file:///Users/gamblin2/spack-mirror']
+#
+# For a website:
+#   mirrors = ['http://spackports.org/spack-mirror/']
+#
+# For no mirrors:
+#   mirrors = []
+#
+mirrors = []
+
 # Important environment variables
 SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 SPACK_LIB = 'SPACK_LIB'
