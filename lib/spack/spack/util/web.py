@@ -124,6 +124,10 @@ def _spider(args):
         if depth == 1:
             raise spack.error.NoNetworkConnectionError(e.reason, url)
 
+    except Exception, e:
+        # Other types of errors are completely ignored.
+        pass
+
     return pages
 
 
