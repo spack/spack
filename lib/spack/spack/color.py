@@ -131,13 +131,7 @@ class match_to_ansi(object):
         if text:
             colored_text = text + self.escape(0)
 
-        if style == '*':
-            color_code = self.escape(styles[style] % colors[color])
-        elif style == '_':
-            color_code = self.escape(styles[style] % colors[color])
-        else:
-            color_code = self.escape(styles[style] % colors[color])
-
+        color_code = self.escape(styles[style] % colors[color])
         return color_code + colored_text
 
 
