@@ -110,11 +110,12 @@ class Stage(object):
         # Path looks ok, but need to check the target of the link.
         if os.path.islink(self.path):
             real_path = os.path.realpath(self.path)
+            real_tmp  = os.path.realpath(self.tmp_root)
 
             if spack.use_tmp_stage:
                 # If we're using a tmp dir, it's a link, and it points at the right spot,
                 # then keep it.
-                if (os.path.commonprefix((real_path, self.tmp_root)) == self.tmp_root
+                if (os.path.commonprefix((real_path, real_tmp)) == real_tmp
                     and os.path.exists(real_path)):
                     return False
                 else:
@@ -266,7 +267,6 @@ class Stage(object):
            downloaded.
         """
         self.chdir()
-
         if not self.archive_file:
             tty.die("Attempt to expand archive before fetching.")
 
