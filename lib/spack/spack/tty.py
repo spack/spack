@@ -71,7 +71,7 @@ def pkg(message):
 
     mac_ver = platform.mac_ver()[0]
     if mac_ver and Version(mac_ver) >= Version('10.7'):
-        print u"\U0001F4E6" + indent
+        print u"\U0001F4E6" + indent,
     else:
         cwrite('@*g{[+]} ')
     print message
