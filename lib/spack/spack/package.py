@@ -691,8 +691,7 @@ class Package(object):
 
     def install(self, spec, prefix):
         """Package implementations override this with their own build configuration."""
-        configure()
-        #tty.die("Packages must provide an install method!")
+        tty.die("Packages must provide an install method!")
 
 
     def do_uninstall(self):
