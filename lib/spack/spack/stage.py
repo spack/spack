@@ -234,9 +234,8 @@ class Stage(object):
         if content_types and 'text/html' in content_types[-1]:
             tty.warn("The contents of " + self.archive_file + " look like HTML.",
                      "The checksum will likely be bad.  If it is, you can use",
-                     "'spack clean --all' to remove the bad archive, then fix",
+                     "'spack clean --dist' to remove the bad archive, then fix",
                      "your internet gateway issue and install again.")
-
 
     def fetch(self):
         """Downloads the file at URL to the stage.  Returns true if it was downloaded,

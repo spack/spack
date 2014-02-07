@@ -83,6 +83,9 @@ class ${class_name}(Package):
 def setup_parser(subparser):
     subparser.add_argument('url', nargs='?', help="url of package archive")
     subparser.add_argument(
+        '-d', '--dirty', action='store_true', dest='dirty',
+        help="Don't clean up staging area when command completes.")
+    subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
         help="Overwrite any existing package file with the same name.")
 
@@ -167,7 +170,7 @@ def create(parser, args):
     guesser = ConfigureGuesser()
     ver_hash_tuples = spack.cmd.checksum.get_checksums(
         versions[:archives_to_fetch], urls[:archives_to_fetch],
-        first_stage_function=guesser)
+        first_stage_function=guesser, dirty=args.dirty)
 
     if not ver_hash_tuples:
         tty.die("Could not fetch any tarballs for %s." % name)

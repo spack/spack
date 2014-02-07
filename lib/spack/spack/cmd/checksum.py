@@ -29,6 +29,7 @@ import hashlib
 from pprint import pprint
 from subprocess import CalledProcessError
 
+import spack
 import spack.cmd
 import spack.tty as tty
 import spack.packages as packages
@@ -42,6 +43,9 @@ description ="Checksum available versions of a package to update a package file.
 def setup_parser(subparser):
     subparser.add_argument(
         'package', metavar='PACKAGE', help='Package to list versions for')
+    subparser.add_argument(
+        '-d', '--dirty', action='store_true', dest='dirty',
+        help="Don't clean up staging area when command completes.")
     subparser.add_argument(
         'versions', nargs=argparse.REMAINDER, help='Versions to generate checksums for')
 
@@ -67,7 +71,8 @@ def get_checksums(versions, urls, **kwargs):
             continue
 
         finally:
-            stage.destroy()
+            if not kwargs.get('dirty', False):
+                stage.destroy()
 
     return zip(versions, hashes)
 
@@ -105,7 +110,7 @@ def checksum(parser, args):
         return
 
     version_hashes = get_checksums(
-        versions[:archives_to_fetch], urls[:archives_to_fetch])
+        versions[:archives_to_fetch], urls[:archives_to_fetch], dirty=args.dirty)
 
     if not version_hashes:
         tty.die("Could not fetch any available versions for %s." % pkg.name)
