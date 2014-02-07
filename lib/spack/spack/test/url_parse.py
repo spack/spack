@@ -267,3 +267,8 @@ class UrlParseTest(unittest.TestCase):
         self.assert_detected(
             'synergy', '1.3.6p2',
             'http://synergy.googlecode.com/files/synergy-1.3.6p2-MacOSX-Universal.zip')
+
+    def test_mvapich2_version(self):
+        self.assert_detected(
+            'mvapich2', '1.9',
+            'http://mvapich.cse.ohio-state.edu/download/mvapich2/mv2/mvapich2-1.9.tgz')

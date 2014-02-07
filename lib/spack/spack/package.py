@@ -779,15 +779,15 @@ def find_versions_of_archive(archive_url, **kwargs):
     if not list_url:
         list_url = os.path.dirname(archive_url)
     if not wildcard:
-        wildcard = url.parse_version(archive_url).wildcard()
+        wildcard = url.wildcard_version(archive_url)
 
     versions = VersionList()
-    url_regex = os.path.basename(url.wildcard_version(archive_url))
+    url_regex = os.path.basename(wildcard)
 
     page_map = get_pages(list_url, depth=list_depth)
 
     for site, page in page_map.iteritems():
-        strings = re.findall(url_regex, page)
+        strings = set(re.findall(url_regex, page))
 
         for s in strings:
             match = re.search(wildcard, s)
