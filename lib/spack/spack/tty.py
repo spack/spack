@@ -29,7 +29,7 @@ from spack.color import *
 indent = "  "
 
 def msg(message, *args):
-    cprint("@*b{==>} @*w{%s}" % cescape(message))
+    cprint("@*b{==>} @*{%s}" % cescape(message))
     for arg in args:
         print indent + str(arg)
 
@@ -43,12 +43,12 @@ def info(message, *args, **kwargs):
 
 def verbose(message, *args):
     if spack.verbose:
-        info(message, *args, format='*g')
+        info(message, *args, format='c')
 
 
 def debug(*args):
     if spack.debug:
-        info("Debug: " + message, *args, format='*c')
+        info("Debug: " + message, *args, format='*g')
 
 
 def error(message, *args):

@@ -42,6 +42,8 @@ Here are some example color expressions:
 
   @r         Turn on red coloring
   @R         Turn on bright red coloring
+  @*{foo}    Bold foo, but don't change text color
+  @_{bar}    Underline bar, but don't change text color
   @*b        Turn on bold, blue text
   @_B        Turn on bright blue text with an underline
   @.         Revert to plain formatting
@@ -80,9 +82,9 @@ class ColorParseError(spack.error.SpackError):
         super(ColorParseError, self).__init__(message)
 
 # Text styles for ansi codes
-styles = {'*'  : '1;%s',       # bold
-          '_'  : '4:%s',       # underline
-          None : '0;%s' }      # plain
+styles = {'*'  : '1',       # bold
+          '_'  : '4',       # underline
+          None : '0' }      # plain
 
 # Dim and bright ansi colors
 colors = {'k' : 30, 'K' : 90,  # black
@@ -120,19 +122,22 @@ class match_to_ansi(object):
             return '@'
         elif m == '@.':
             return self.escape(0)
-        elif m == '@' or (style and not color):
+        elif m == '@':
             raise ColorParseError("Incomplete color format: '%s' in %s"
                                   % (m, match.string))
-        elif color not in colors:
-            raise ColorParseError("invalid color specifier: '%s' in '%s'"
-                                  % (color, match.string))
+
+        string = styles[style]
+        if color:
+            if color not in colors:
+                raise ColorParseError("invalid color specifier: '%s' in '%s'"
+                                      % (color, match.string))
+            string += ';' + str(colors[color])
 
         colored_text = ''
         if text:
             colored_text = text + self.escape(0)
 
-        color_code = self.escape(styles[style] % colors[color])
-        return color_code + colored_text
+        return self.escape(string) + colored_text
 
 
 def colorize(string, **kwargs):
