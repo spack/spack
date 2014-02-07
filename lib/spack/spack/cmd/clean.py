@@ -48,8 +48,7 @@ def clean(parser, args):
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
-        tty.msg("Cleaning for spec:", spec)
-        package = packages.get(spec.name)
+        package = packages.get(spec)
         if args.dist:
             package.do_clean_dist()
         elif args.work:

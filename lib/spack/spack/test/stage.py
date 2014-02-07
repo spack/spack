@@ -190,7 +190,6 @@ class StageTest(unittest.TestCase):
 
     def checkSetupAndDestroy(self, stage_name=None):
         stage = Stage(archive_url, name=stage_name)
-        stage.setup()
         self.check_setup(stage, stage_name)
 
         stage.destroy()

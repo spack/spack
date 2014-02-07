@@ -42,8 +42,8 @@ class Stage(object):
        expanded, and built before being installed.  It also handles downloading
        the archive.  A stage's lifecycle looks like this:
 
-       setup()
-         Create the stage directory.
+       Stage()
+         Constructor creates the stage directory.
        fetch()
          Fetch a source archive into the stage.
        expand_archive()
@@ -80,7 +80,9 @@ class Stage(object):
 
         self.tmp_root = find_tmp_root()
         self.url = url
-        self.path = None   # This will be set after setup is called.
+
+        self.path = None
+        self._setup()
 
 
     def _cleanup_dead_links(self):
@@ -131,7 +133,7 @@ class Stage(object):
         return False
 
 
-    def setup(self):
+    def _setup(self):
         """Creates the stage directory.
            If spack.use_tmp_stage is False, the stage directory is created
            directly under spack.stage_path.
@@ -206,7 +208,6 @@ class Stage(object):
 
     def chdir(self):
         """Changes directory to the stage path.  Or dies if it is not set up."""
-        self.setup()
         if os.path.isdir(self.path):
             os.chdir(self.path)
         else:

@@ -386,6 +386,8 @@ class Package(object):
     @property
     def stage(self):
         if not self.spec.concrete:
+            print self.spec
+            print self.spec.concrete
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
@@ -564,8 +566,6 @@ class Package(object):
         """Creates a stage directory and downloads the taball for this package.
            Working directory will be set to the stage directory.
         """
-        self.stage.setup()
-
         if spack.do_checksum and not self.version in self.versions:
             tty.die("Cannot fetch %s@%s safely; there is no checksum on file for this "
                     "version." % (self.name, self.version),
