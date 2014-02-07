@@ -29,7 +29,7 @@ from spack.color import *
 indent = "  "
 
 def msg(message, *args):
-    cprint("@*b{==>} @*{%s}" % cescape(message))
+    cprint("@*b{==>} %s" % cescape(message))
     for arg in args:
         print indent + str(arg)
 
