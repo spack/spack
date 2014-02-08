@@ -32,6 +32,7 @@ import spack.tty as tty
 """Names of tests to be included in Spack's test suite"""
 test_names = ['versions',
               'url_parse',
+              'packages',
               'stage',
               'spec_syntax',
               'spec_semantics',

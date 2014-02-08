@@ -210,9 +210,32 @@ def validate_package_name(pkg_name):
 
 
 def filename_for_package_name(pkg_name):
-    """Get the filename where a package name should be stored."""
+    """Get the filename for the module we should load for a particular package.
+       The package can be either in a standalone .py file, or it can be in
+       a directory with an __init__.py file.
+
+       Package "foo" in standalone .py file:
+         packages/foo.py
+
+       Package "foo" in directory:
+         packages/foo/__init__.py
+
+       The second form is used when there are files (like patches) that need
+       to be stored along with the package.
+
+       If the package doesn't exist yet, this will just return the name
+       of the standalone .py file.
+    """
     validate_package_name(pkg_name)
-    return new_path(spack.packages_path, "%s.py" % pkg_name)
+
+    pkg_dir   = new_path(spack.packages_path, pkg_name)
+
+    if os.path.isdir(pkg_dir):
+        init_file = new_path(pkg_dir, '__init__.py')
+        return init_file
+    else:
+        pkg_file  = "%s.py" % pkg_dir
+        return pkg_file
 
 
 def installed_package_specs():
@@ -249,7 +272,7 @@ def class_name_for_package_name(pkg_name):
 
 
 def exists(pkg_name):
-    """Whether a package is concrete."""
+    """Whether a package with the supplied name exists ."""
     return os.path.exists(filename_for_package_name(pkg_name))
 
 

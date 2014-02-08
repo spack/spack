@@ -105,8 +105,9 @@ def memoized(obj):
 
 
 def list_modules(directory, **kwargs):
-    """Lists all of the modules, excluding __init__.py, in
-       a particular directory."""
+    """Lists all of the modules, excluding __init__.py, in a
+       particular directory.  Listed packages have no particular
+       order."""
     list_directories = kwargs.setdefault('directories', True)
 
     for name in os.listdir(directory):

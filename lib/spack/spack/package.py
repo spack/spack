@@ -325,8 +325,11 @@ class Package(object):
         # this determines how the package should be built.
         self.spec = spec
 
-        # Name of package is the name of its module (the file that contains it)
-        self.name = inspect.getmodulename(self.module.__file__)
+        # Name of package is the name of its module, without the
+        # containing module names.
+        self.name = self.module.__name__
+        if '.' in self.name:
+            self.name = self.name[self.name.rindex('.') + 1:]
 
         # Make sure URL is an allowed type
         validate.url(self.url)
