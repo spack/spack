@@ -204,4 +204,6 @@ def wildcard_version(path):
     v = Version(ver)
     parts = list(re.escape(p) for p in path.split(str(v)))
 
-    return  v.wildcard().join(parts)
+    # Make a group for the wildcard, so it will be captured by the regex.
+    version_group = '(%s)' % v.wildcard()
+    return version_group.join(parts)

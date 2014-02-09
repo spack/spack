@@ -155,7 +155,7 @@ def create(parser, args):
     else:
         urls = [spack.url.substitute_version(url, v) for v in versions]
         if len(urls) > 1:
-            tty.msg("Found %s versions of %s." % (len(urls), name),
+            tty.msg("Found %s versions of %s:" % (len(urls), name),
                     *spack.cmd.elide_list(
                     ["%-10s%s" % (v,u) for v, u in zip(versions, urls)]))
             print

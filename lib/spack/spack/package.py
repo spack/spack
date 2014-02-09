@@ -394,8 +394,6 @@ class Package(object):
     @property
     def stage(self):
         if not self.spec.concrete:
-            print self.spec
-            print self.spec.concrete
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
@@ -803,8 +801,7 @@ class Package(object):
                 self._available_versions = find_versions_of_archive(
                     self.url,
                     list_url=self.list_url,
-                    list_depth=self.list_depth,
-                    wildcard=self.default_version.wildcard())
+                    list_depth=self.list_depth)
 
                 if not self._available_versions:
                     tty.warn("Found no versions for %s" % self.name,
@@ -834,26 +831,31 @@ class Package(object):
 def find_versions_of_archive(archive_url, **kwargs):
     list_url   = kwargs.get('list_url', None)
     list_depth = kwargs.get('list_depth', 1)
-    wildcard   = kwargs.get('wildcard', None)
 
     if not list_url:
         list_url = os.path.dirname(archive_url)
-    if not wildcard:
-        wildcard = url.wildcard_version(archive_url)
 
-    versions = VersionList()
-    url_regex = os.path.basename(wildcard)
+    # This creates a regex from the URL with a capture group for the
+    # version part of the URL.  The capture group is converted to a
+    # generic wildcard, so we can use this to extract things on a page
+    # that look like archive URLs.
+    url_regex = url.wildcard_version(archive_url)
 
+    # We'll be a bit more liberal and just look for the archive part,
+    # not the full path.
+    archive_regex = os.path.basename(url_regex)
+
+    # Grab some web pages to scrape.
     page_map = get_pages(list_url, depth=list_depth)
 
+    # Build a version list from all the matches we find
+    versions = VersionList()
     for site, page in page_map.iteritems():
-        strings = set(re.findall(url_regex, page))
-
-        for s in strings:
-            match = re.search(wildcard, s)
-            if match:
-                v = match.group(0)
-                versions.add(Version(v))
+        # extract versions from matches.
+        matches = re.finditer(archive_regex, page)
+        version_strings = set(m.group(1) for m in matches)
+        for v in version_strings:
+            versions.add(Version(v))
 
     return versions
 

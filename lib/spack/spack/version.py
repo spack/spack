@@ -163,7 +163,10 @@ class Version(object):
         wc = seg_res[0]
         for i in xrange(1, len(sep_res)):
             wc += '(?:' + sep_res[i] + seg_res[i]
-        wc += ')?' * (len(seg_res) - 1)
+
+        # Add possible alpha or beta indicator at the end of each segemnt
+        # We treat these specially b/c they're so common.
+        wc += '[ab]?)?' * (len(seg_res) - 1)
         return wc
 
 
