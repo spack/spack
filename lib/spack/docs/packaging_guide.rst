@@ -794,6 +794,28 @@ fork a new process each time we invoke ``install()``.  This allows
 packages to have their own completely sandboxed build environment,
 without impacting other jobs that the main Spack process runs.
 
+.. _patching:
+
+Patches
+------------------------------------------
+
+Depending on the host architecture, package version, known bugs, or
+other issues, you may need to patch your software to get it to build
+correctly.  Like many other package systems, spack allows you to store
+patches alongside your package files and apply them to source code
+after it's downloaded.
+
+``patch``
+~~~~~~~~~~~~~~~~~~~~~
+
+You can specif patches in your package file with the ``patch()``
+function.  ``patch`` looks like this::
+
+.. literalinclude:: ../spack/packages/mvapich2/__init__.py
+   :end-before: def install
+
+
+
 .. _install-method:
 
 Implementing the ``install`` method
