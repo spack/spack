@@ -55,6 +55,7 @@ from spack.stage import Stage
 from spack.util.lang import *
 from spack.util.web import get_pages
 from spack.util.environment import *
+from spack.util.filesystem import touch
 
 
 class Package(object):
@@ -267,10 +268,11 @@ class Package(object):
 
        p = Package()             # Done for you by spack
 
-       p.do_fetch()              # called by spack commands in spack/cmd.
-       p.do_stage()              # see spack.stage.Stage docs.
+       p.do_fetch()              # downloads tarball from a URL
+       p.do_stage()              # expands tarball in a temp directory
+       p.do_patch()              # applies patches to expanded source
        p.do_install()            # calls package's install() function
-       p.do_uninstall()
+       p.do_uninstall()          # removes install directory
 
     There are also some other commands that clean the build area:
 
@@ -303,6 +305,9 @@ class Package(object):
 
     """Specs of conflicting packages, keyed by name. """
     conflicted = {}
+
+    """Patches to apply to newly expanded source, if any."""
+    patches = {}
 
     #
     # These are default values for instance variables.
@@ -569,6 +574,9 @@ class Package(object):
         """Creates a stage directory and downloads the taball for this package.
            Working directory will be set to the stage directory.
         """
+        if not self.spec.concrete:
+            raise ValueError("Can only fetch concrete packages.")
+
         if spack.do_checksum and not self.version in self.versions:
             tty.die("Cannot fetch %s@%s safely; there is no checksum on file for this "
                     "version." % (self.name, self.version),
@@ -590,6 +598,9 @@ class Package(object):
     def do_stage(self):
         """Unpacks the fetched tarball, then changes into the expanded tarball
            directory."""
+        if not self.spec.concrete:
+            raise ValueError("Can only stage concrete packages.")
+
         self.do_fetch()
 
         archive_dir = self.stage.expanded_archive_path
@@ -599,6 +610,52 @@ class Package(object):
         else:
             tty.msg("Already staged %s" % self.name)
         self.stage.chdir_to_archive()
+
+
+    def do_patch(self):
+        """Calls do_stage(), then applied patches to the expanded tarball if they
+           haven't been applied already."""
+        if not self.spec.concrete:
+            raise ValueError("Can only patch concrete packages.")
+
+        self.do_stage()
+
+        # Construct paths to special files in the archive dir used to
+        # keep track of whether patches were successfully applied.
+        archive_dir = self.stage.expanded_archive_path
+        good_file = new_path(archive_dir, '.spack_patched')
+        bad_file  = new_path(archive_dir, '.spack_patch_failed')
+
+        # If we encounter an archive that failed to patch, restage it
+        # so that we can apply all the patches again.
+        if os.path.isfile(bad_file):
+            tty.msg("Patching failed last time.  Restaging.")
+            self.stage.restage()
+
+        self.stage.chdir_to_archive()
+
+        # If this file exists, then we already applied all the patches.
+        if os.path.isfile(good_file):
+            tty.msg("Already patched %s" % self.name)
+            return
+
+        # Apply all the patches for specs that match this on
+        for spec, patch_list in self.patches.items():
+            if self.spec.satisfies(spec):
+                for patch in patch_list:
+                    tty.msg('Applying patch %s' % patch.path_or_url)
+                    try:
+                        patch.apply(self.stage)
+                    except:
+                        # Touch bad file if anything goes wrong.
+                        touch(bad_file)
+                        raise
+
+        # patch succeeded.  Get rid of failed file & touch good file so we
+        # don't try to patch again again next time.
+        if os.path.isfile(bad_file):
+            os.remove(bad_file)
+        touch(good_file)
 
 
     def do_install(self):
@@ -616,7 +673,7 @@ class Package(object):
         if not self.ignore_dependencies:
             self.do_install_dependencies()
 
-        self.do_stage()
+        self.do_patch()
         self.setup_install_environment()
 
         # Add convenience commands to the package's module scope to

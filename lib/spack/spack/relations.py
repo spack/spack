@@ -75,6 +75,8 @@ import importlib
 import spack
 import spack.spec
 import spack.error
+
+from spack.patch import Patch
 from spack.spec import Spec, parse_anonymous_spec
 from spack.packages import packages_module
 from spack.util.lang import *
@@ -110,14 +112,33 @@ def provides(*specs, **kwargs):
             provided[provided_spec] = provider_spec
 
 
-"""Packages can declare conflicts with other packages.
-   This can be as specific as you like: use regular spec syntax.
-"""
+def patch(url_or_filename, **kwargs):
+    """Packages can declare patches to apply to source.  You can
+       optionally provide a when spec to indicate that a particular
+       patch should only be applied when the package's spec meets
+       certain conditions (e.g. a particular version).
+    """
+    pkg = get_calling_package_name()
+    level = kwargs.get('level', 1)
+    when_spec = parse_anonymous_spec(kwargs.get('when', pkg), pkg)
+
+    patches = caller_locals().setdefault('patches', {})
+    if when_spec not in patches:
+        patches[when_spec] = [Patch(pkg, url_or_filename, level)]
+    else:
+        # if this spec is identical to some other, then append this
+        # patch to the existing list.
+        patches[when_spec].append(Patch(pkg, url_or_filename, level))
+
+
 def conflicts(*specs):
+    """Packages can declare conflicts with other packages.
+       This can be as specific as you like: use regular spec syntax.
+
+       NOT YET IMPLEMENTED.
+    """
     # TODO: implement conflicts
     pass
-
-
 
 
 class RelationError(spack.error.SpackError):

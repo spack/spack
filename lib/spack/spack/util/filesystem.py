@@ -57,6 +57,11 @@ def working_dir(dirname):
     os.chdir(orig_dir)
 
 
+def touch(path):
+    with closing(open(path, 'a')) as file:
+        os.utime(path, None)
+
+
 def mkdirp(*paths):
     for path in paths:
         if not os.path.exists(path):

@@ -209,6 +209,12 @@ def validate_package_name(pkg_name):
         raise InvalidPackageNameError(pkg_name)
 
 
+def dirname_for_package_name(pkg_name):
+    """Get the directory name for a particular package would use, even if it's a
+       foo.py package and not a directory with a foo/__init__.py file."""
+    return new_path(spack.packages_path, pkg_name)
+
+
 def filename_for_package_name(pkg_name):
     """Get the filename for the module we should load for a particular package.
        The package can be either in a standalone .py file, or it can be in
@@ -227,8 +233,7 @@ def filename_for_package_name(pkg_name):
        of the standalone .py file.
     """
     validate_package_name(pkg_name)
-
-    pkg_dir   = new_path(spack.packages_path, pkg_name)
+    pkg_dir = dirname_for_package_name(pkg_name)
 
     if os.path.isdir(pkg_dir):
         init_file = new_path(pkg_dir, '__init__.py')
