@@ -809,12 +809,108 @@ after it's downloaded.
 ~~~~~~~~~~~~~~~~~~~~~
 
 You can specif patches in your package file with the ``patch()``
-function.  ``patch`` looks like this::
+function.  ``patch`` looks like this:
 
-.. literalinclude:: ../spack/packages/mvapich2/__init__.py
-   :end-before: def install
+.. code-block:: python
+
+   class Mvapich2(Package):
+       ...
+       patch('http://www.example.com/ad_lustre_rwcontig_open_source.patch',
+             when='@1.9:')
+
+The first argument can be either a URL or a filename.  It specifies a
+patch file that should be applied to your source.  If it is a URL, as
+above, then the patch will be fetched from the URL and then applied to
+your source code.  If the patch you supply is a filename, then the
+patch needs to live within the spack source tree.
+
+``patch`` can take two options keyword arguments.  They are:
+
+``when``
+  If supplied, this is a spec that tells spack when to apply
+  the patch.  If the installed package spec matches this spec, the
+  patch will be applied.  In our example above, the patch is applied
+  when mvapich is at version ``1.9`` or higher.
+
+``level``
+  This tells spack how to run the ``patch`` command.  By default,
+  the level is 1 and spack runs ``patch -p1``.  If level is 2,
+  spack will run ``patch -p2``, and so on.
+
+A lot of people are confused by level, so here's a primer.  If you
+look in your patch file, you'll see something like this:
+
+.. code-block:: diff
+
+   --- a/src/mpi/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 12:05:44.806417000 -0800
+   +++ b/src/mpi/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 11:53:03.295622000 -0800
+   @@ -8,7 +8,7 @@
+     *   Copyright (C) 2008 Sun Microsystems, Lustre group
+     */
+
+   -#define _XOPEN_SOURCE 600
+   +//#define _XOPEN_SOURCE 600
+    #include <stdlib.h>
+    #include <malloc.h>
+    #include "ad_lustre.h"
+
+The first two lines show paths with synthetic ``a/`` and ``b/``
+prefixes.  These are placeholders for the two ``mvapich2`` source
+directories that ``diff`` compared when it created the patch file.
+It's actually the default behavior for most programs that produce
+patch files.
+
+``-p1`` strings off the first level of prefix in both paths, allowing
+the patch to be applied from the root of an expanded mvapich2 archive.
+If you set level to ``2``, it would strip off ``src``, and so on.
+
+It's generally easier to just structure your patch file so that it
+applies cleanly with ``-p1``, but if you're using a URL to a patch you
+didn't create yourself, ``level`` can be handy.
 
 
+Patch files
+~~~~~~~~~~~~~~~~~~~~~
+
+If you don't want to use URLs, where in the spack source tree should
+you put patch files?
+
+We told you before that the ``mvapich2`` package needs to live in a
+python file like this::
+
+  $SPACK_ROOT/lib/spack/spack/
+      packages/
+          mvapich2.py
+
+This isn't actually the whole truth.  Packages in spack are actually
+just python modules, and another way to structure your python module
+is to use a directory containing ``__init__.py``.  So, you can make
+some room for your patch file like this::
+
+  $ cd $SPACK_ROOT/lib/spack/spack/packages
+  $ mkdir mvapich2
+  $ mv mvapich2.py mvapich2/__init__.py
+
+You can now put the patch file alongside ``__init__``.py inside the
+``mvapich2`` directory. Your package directory now looks like this::
+
+  $SPACK_ROOT/lib/spack/spack/
+      packages/
+          mvapich2/
+              __init__.py
+              ad_lustre_rwcontig_open_source.patch
+
+And ``__init__.py`` should look something like this:
+
+.. code-block:: python
+
+   class Mvapich2(Package):
+       ...
+       patch('ad_lustre_rwcontig_open_source.patch', when='@1.9:')
+
+The path to the local patch file should be relative to the package's
+directory in Spack, i.e. relative to
+``$SPACK_ROOT/lib/spack/spack/packages/<pkg_name>``.
 
 .. _install-method:
 
