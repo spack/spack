@@ -1314,6 +1314,18 @@ the downloaded archive in its temporary directory, where it will be
 built by ``spack install``.  Similar to ``fetch``, if the archive has
 already been expanded,  ``stage`` is idempotent.
 
+``spack patch``
+~~~~~~~~~~~~~~~~~
+
+After staging, Spack applies patches to downloaded packages, if any
+have been specified in the package file.  This command will run the
+install process throught he fetch, stage, and patch phases.  Spack
+keeps track of whether patches have already been applied and skips
+this step if they have been.  If Spack discovers that patches didn't
+apply cleanly on some previous run, then it will restage the entire
+package before patching.
+
+
 ``spack clean``
 ~~~~~~~~~~~~~~~~~
 
