@@ -247,7 +247,7 @@ class Stage(object):
         else:
             urls = [self.url]
             if self.mirror_path:
-                urls += ["%s/%s" % (m, self.mirror_path) for m in spack.mirrors]
+                urls = ["%s/%s" % (m, self.mirror_path) for m in spack.mirrors] + urls
 
             for url in urls:
                 tty.msg("Trying to fetch from %s" % url)

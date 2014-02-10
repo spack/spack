@@ -49,6 +49,143 @@ in the first directory it finds to which it has write access.  Add
 more elements to the list to indicate where your own site's temporary
 directory is.
 
+.. _mirrors:
+
+Mirrors
+----------------------------
+
+Some sites may not have access to the internet for fetching packages.
+These sites will need a local repository of tarballs from which they
+can get their files.  Spack has support for this with *mirrors*.  A
+mirror is a URL that points to a directory, either on the local
+filesystem or on some server, containing tarballs for all of Spack's
+packages.
+
+Here's an example of a mirror's directory structure::
+
+    mirror/
+        cmake/
+            cmake-2.8.10.2.tar.gz
+        dyninst/
+            DyninstAPI-8.1.1.tgz
+            DyninstAPI-8.1.2.tgz
+        libdwarf/
+            libdwarf-20130126.tar.gz
+            libdwarf-20130207.tar.gz
+            libdwarf-20130729.tar.gz
+        libelf/
+            libelf-0.8.12.tar.gz
+            libelf-0.8.13.tar.gz
+        libunwind/
+            libunwind-1.1.tar.gz
+        mpich/
+            mpich-3.0.4.tar.gz
+        mvapich2/
+        mvapich2-1.9.tgz
+
+The structure is very simple.  There is a top-level directory.  The
+second level directories are named after packages, and the third level
+contains tarballs for each package, named as they were in the
+package's fetch URL.
+
+``spack mirror``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+You can create a mirror using the ``spack mirror`` command, assuming
+you're on a machine where you can access the internet.  ``spack
+mirror`` will iterate through all of Spack's packages and download the
+safe ones into a directory structure like the one above.  Here is what
+it looks like:
+
+.. code-block:: bash
+
+   $ spack mirror mirror-dir
+   ==> No safe (checksummed) versions for package callpath.  Skipping.
+   ==> Trying to fetch from http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
+   ################################################################          90.2%
+   ==> Added mirror-dir/cmake/cmake-2.8.10.2.tar.gz to mirror
+   ==> Trying to fetch from http://www.dyninst.org/sites/default/files/downloads/dyninst/8.1.2/DyninstAPI-8.1.2.tgz
+   ###########################################################               82.0%
+   ==> Added mirror-dir/dyninst/DyninstAPI-8.1.2.tgz to mirror
+   ==> Trying to fetch from http://www.dyninst.org/sites/default/files/downloads/dyninst/8.1.2/DyninstAPI-8.1.1.tgz
+   ######################################################################## 100.0%
+   ==> Added mirror-dir/dyninst/DyninstAPI-8.1.1.tgz to mirror
+
+   ...
+
+   ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.12.tar.gz
+   ##############################################################            86.5%
+   ==> Added mirror-dir/libelf/libelf-0.8.12.tar.gz to mirror
+   ==> Trying to fetch from http://download.savannah.gnu.org/releases/libunwind/libunwind-1.1.tar.gz
+   ################################################################          89.3%
+   ==> Added mirror-dir/libunwind/libunwind-1.1.tar.gz to mirror
+   ==> Trying to fetch from http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz
+   #####################################################################     96.4%
+   ==> Added mirror-dir/mpich/mpich-3.0.4.tar.gz to mirror
+   ==> No safe (checksummed) versions for package mpileaks.  Skipping.
+   ==> Trying to fetch from http://mvapich.cse.ohio-state.edu/download/mvapich2/mv2/mvapich2-1.9.tgz
+   #######################################################################   99.2%
+   ==> Added mirror-dir/mvapich2/mvapich2-1.9.tgz to mirror
+   ==> Created Spack mirror in mirror-dir
+
+Once this is done, you can tar up the ``mirror-dir`` directory and
+copy it over to the machine you want it hosted on.
+
+Normally, ``spack mirror`` downloads all the archives it has checksums
+for.  If you want to only create a mirror for a subset of packages,
+you can do that by supplying a list of package names on the command
+line after ``spack mirror``.
+
+
+Setting up a mirror
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once you have a mirrror, you need to let spack know about it.  Find
+this section in ``globals.py``:
+
+.. code-block:: python
+
+   #
+   # Places to download tarballs from.  Examples:
+   #
+   # For a local directory:
+   #   mirrors = ['file:///Users/gamblin2/spack-mirror']
+   #
+   # For a website:
+   #   mirrors = ['http://spackports.org/spack-mirror/']
+   #
+   # For no mirrors:
+   #   mirrors = []
+   #
+   mirrors = []
+
+Change the list of mirrors to include the location where you copied
+your directory created by ``spack mirror``.  If it's on a local
+filesystem, you want to use a ``file://`` URL.  If it's on a private
+web server, you will need to use a ``http://`` or ``https://`` URL.
+
+Mirror precedence
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you have specified mirrors in ``globals.py``, then Spack will try
+to find an archive in each mirror in the list, in order, before it
+downloads from the URL in a package file.
+
+You can test whether a mirror is working properly by first setting it
+in ``globals.py``, then running ``spack fetch`` to test fetching the
+archive. Example:
+
+.. code-block:: bash
+
+   $ spack fetch dyninst
+   ==> Trying to fetch from file:///Users/gamblin2/mirror-dir/dyninst/DyninstAPI-8.1.2.tgz
+
+   ==> Checksum passed for dyninst
+
+If the mirror setup worked, you should see the mirror URL in the fetch
+output, like the ``file://`` URL above.
+
+
 .. _concretization-policies:
 
 Concretization policies

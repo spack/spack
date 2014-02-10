@@ -397,8 +397,7 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
-            mirror_path="%s/%s-%s.tar.gz" % (
-                self.name, self.name, self.version)
+            mirror_path = "%s/%s" % (self.name, os.path.basename(self.url))
             self._stage = Stage(
                 self.url, mirror_path=mirror_path, name=str(self.spec))
         return self._stage
