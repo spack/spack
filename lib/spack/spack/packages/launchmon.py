@@ -27,9 +27,10 @@ from spack import *
 class Launchmon(Package):
     homepage = "http://sourceforge.net/projects/launchmon"
     url      = "http://sourceforge.net/code-snapshots/svn/l/la/launchmon/code/launchmon-code-481-branches-launchmon-1.0-release.zip"
+    force_url = True
     list_url = "http://sourceforge.net/p/launchmon/code/HEAD/tree"
 
-    versions = {'1.0.0' : 'e35a7ec62859741cd7dc6237321e7f19'}
+    versions = {'1.0.0' : 'a0e5bfb7d82dc708d58bdbf93697886c'}
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix)
