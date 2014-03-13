@@ -36,27 +36,27 @@ def msg(message, *args):
 
 def info(message, *args, **kwargs):
     format = kwargs.get('format', '*b')
-    cprint("@%s{==>} %s" % (format, cescape(message)))
+    cprint("@%s{==>} %s" % (format, cescape(str(message))))
     for arg in args:
         print indent + str(arg)
 
 
 def verbose(message, *args):
     if spack.verbose:
-        info(message, *args, format='c')
+        info(str(message), *args, format='c')
 
 
 def debug(*args):
     if spack.debug:
-        info("Debug: " + message, *args, format='*g')
+        info("Debug: " + str(message), *args, format='*g')
 
 
 def error(message, *args):
-    info("Error: " + message, *args, format='*r')
+    info("Error: " + str(message), *args, format='*r')
 
 
 def warn(message, *args):
-    info("Warning: " + message, *args, format='*Y')
+    info("Warning: " + str(message), *args, format='*Y')
 
 
 def die(message, *args):
