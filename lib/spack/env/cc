@@ -29,6 +29,11 @@ spack_env_path   = get_path("SPACK_ENV_PATH")
 # Figure out what type of operation we're doing
 command = os.path.basename(sys.argv[0])
 cpp, cc, ccld, ld = range(4)
+
+# TODO: this can to be removed once Jira issue SPACK-16 is resolved
+if command == 'CC':
+    command = 'c++'
+
 if command == 'cpp':
     mode = cpp
 elif command == 'ld':
@@ -90,6 +95,7 @@ for item in ['.'] + spack_env_path:
 os.environ["PATH"] = ":".join(clean_path)
 
 full_command = [command] + arguments
+
 if spack_debug:
     input_log = os.path.join(spack_build_root, 'spack_cc_in.log')
     output_log = os.path.join(spack_build_root, 'spack_cc_out.log')
