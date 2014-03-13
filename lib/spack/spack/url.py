@@ -102,6 +102,9 @@ def parse_version_string_with_indices(path):
         # e.g. https://github.com/petdance/ack/tarball/1.93_02
         (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+_(\d+))$', path),
 
+        # e.g. https://github.com/hpc/lwgrp/archive/v1.0.1.tar.gz
+        (r'github.com/[^/]+/[^/]+/archive/v?(\d+(?:\.\d+)*)\.tar\.gz$', path),
+
         # e.g. https://github.com/erlang/otp/tarball/OTP_R15B01 (erlang style)
         (r'[-_](R\d+[AB]\d*(-\d+)?)', path),
 
@@ -169,6 +172,7 @@ def parse_name(path, ver=None):
     ntypes = (r'/sourceforge/([^/]+)/',
               r'/([^/]+)/(tarball|zipball)/',
               r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % ver,
+              r'github.com/[^/]+/([^/]+)/archive',
               r'/([^/]+)[_.-]v?%s' % ver,
               r'/([^/]+)%s' % ver,
               r'^([^/]+)[_.-]v?%s' % ver,
