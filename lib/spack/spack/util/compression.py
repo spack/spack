@@ -39,6 +39,9 @@ def allowed_archive(path):
 
 def decompressor_for(path):
     """Get the appropriate decompressor for a path."""
+    if path.endswith(".zip"):
+        unzip = which('unzip', required=True)
+        return unzip
     tar = which('tar', required=True)
     tar.add_default_arg('-xf')
     return tar
