@@ -22,26 +22,17 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from itertools import product
-from spack.util.executable import which
+from spack import *
 
-# Supported archvie extensions.
-PRE_EXTS = ["tar"]
-EXTS     = ["gz", "bz2", "xz", "Z", "zip", "tgz"]
+class PmgrCollective(Package):
+    """PMGR_COLLECTIVE provides a scalable network for bootstrapping
+       MPI jobs."""
+    homepage = "http://www.sourceforge.net/projects/pmgrcollective"
+    url      = "http://downloads.sourceforge.net/project/pmgrcollective/pmgrcollective/PMGR_COLLECTIVE-1.0/pmgr_collective-1.0.tgz"
+#    url      = "http://downloads.sourceforge.net/project/pmgrcollective/pmgrcollective/PMGR_COLLECTIVE-1.0/pmgr_collective-1.0.tgz?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fpmgrcollective%2F%3Fsource%3Ddlp&ts=1394747864&use_mirror=iweb
 
-# Add EXTS last so that .tar.gz is matched *before* tar.gz
-ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(PRE_EXTS, EXTS)] + EXTS
+    versions = { '1.0' : '0384d008774274cc3fc7b4d810dfd07e' }
 
-
-def allowed_archive(path):
-    return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
-
-
-def decompressor_for(path):
-    """Get the appropriate decompressor for a path."""
-    if path.endswith(".zip"):
-        unzip = which('unzip', required=True)
-        return unzip
-    tar = which('tar', required=True)
-    tar.add_default_arg('-xf')
-    return tar
+    def install(self, spec, prefix):
+        make('PREFIX="' + prefix + '"')
+        make('PREFIX="' + prefix + '"', "install")
