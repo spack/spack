@@ -51,9 +51,11 @@ parser = argparse.ArgumentParser(
 parser.add_argument('-V', '--version', action='version',
                     version="%s" % spack.spack_version)
 parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
-                    help="print additional output during builds")
+                    help="Print additional output during builds")
 parser.add_argument('-d', '--debug', action='store_true', dest='debug',
-                    help="write out debug logs during compile")
+                    help="Write out debug logs during compile")
+parser.add_argument('-k', '--insecure', action='store_true', dest='insecure',
+                    help="Do not check ssl certificates when downloading archives.")
 parser.add_argument('-m', '--mock', action='store_true', dest='mock',
                     help="Use mock packages instead of real ones.")
 
@@ -75,6 +77,11 @@ if args.mock:
     from spack.util.filesystem import new_path
     mock_path = new_path(spack.module_path, 'test', 'mock_packages')
     spack.packages_path = mock_path
+
+# If the user asked for it, don't check ssl certs.
+if args.insecure:
+    tty.warn("You asked for --insecure, which does not check SSL certificates.  ")
+    spack.curl.add_default_arg('-k')
 
 # Try to load the particular command asked for and run it
 command = spack.cmd.get_command(args.command)
