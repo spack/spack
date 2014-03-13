@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import shutil
 import argparse
 
 import spack.packages as packages
@@ -78,7 +79,7 @@ def mirror(parser, args):
                 final_dst = new_path(pkg_path, basename)
 
                 os.chdir(working_dir)
-                os.rename(stage.archive_file, final_dst)
+                shutil.move(stage.archive_file, final_dst)
                 tty.msg("Added %s to mirror" % final_dst)
 
             finally:
