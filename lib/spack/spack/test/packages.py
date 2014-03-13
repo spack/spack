@@ -40,7 +40,7 @@ class PackagesTest(MockPackagesTest):
 
     def test_regular_package_filename(self):
         filename = packages.filename_for_package_name('mpich')
-        self.assertEqual(filename, new_path(mock_packages_path, 'mpich.py'))
+        self.assertEqual(filename, join_path(mock_packages_path, 'mpich.py'))
 
 
     def test_regular_package_name(self):
@@ -61,9 +61,9 @@ class PackagesTest(MockPackagesTest):
 
     def test_directory_package_filename(self):
         filename = packages.filename_for_package_name('directory-pkg')
-        self.assertEqual(filename, new_path(mock_packages_path, 'directory-pkg/__init__.py'))
+        self.assertEqual(filename, join_path(mock_packages_path, 'directory-pkg/__init__.py'))
 
 
     def test_nonexisting_package_filename(self):
         filename = packages.filename_for_package_name('some-nonexisting-package')
-        self.assertEqual(filename, new_path(mock_packages_path, 'some-nonexisting-package.py'))
+        self.assertEqual(filename, join_path(mock_packages_path, 'some-nonexisting-package.py'))

@@ -26,10 +26,11 @@ import os
 import re
 import sys
 
+import llnl.util.tty as tty
+from llnl.util.lang import attr_setdefault
+
 import spack
 import spack.spec
-import spack.tty as tty
-from spack.util.lang import attr_setdefault
 
 # cmd has a submodule called "list" so preserve the python list module
 python_list = list

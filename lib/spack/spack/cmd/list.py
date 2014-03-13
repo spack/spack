@@ -23,7 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack.packages as packages
-from spack.colify import colify
+from llnl.util.tty.colify import colify
 
 description ="List available spack packages"
 

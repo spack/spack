@@ -29,13 +29,14 @@ import hashlib
 from pprint import pprint
 from subprocess import CalledProcessError
 
+import llnl.util.tty as tty
+from llnl.util.tty.colify import colify
+
 import spack
 import spack.cmd
-import spack.tty as tty
 import spack.packages as packages
 import spack.util.crypto
 from spack.stage import Stage, FailedDownloadError
-from spack.colify import colify
 from spack.version import *
 
 description ="Checksum available versions of a package to update a package file."

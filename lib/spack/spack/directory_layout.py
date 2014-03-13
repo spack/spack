@@ -24,12 +24,13 @@
 ##############################################################################
 import re
 import os
-import os.path
 import exceptions
 import hashlib
+import shutil
+from contextlib import closing
 
+from llnl.util.filesystem import join_path, mkdirp
 from spack.spec import Spec
-from spack.util.filesystem import *
 from spack.error import SpackError
 
 
@@ -138,7 +139,7 @@ class SpecHashDirectoryLayout(DirectoryLayout):
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
 
-        path = new_path(
+        path = join_path(
             spec.architecture,
             spec.compiler,
             "%s@%s%s" % (spec.name, spec.version, spec.variants))
@@ -168,7 +169,7 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
 
         path = self.path_for_spec(spec)
-        spec_file_path = new_path(path, self.spec_file)
+        spec_file_path = join_path(path, self.spec_file)
 
         if os.path.isdir(path):
             if not os.path.isfile(spec_file_path):
@@ -199,7 +200,7 @@ class SpecHashDirectoryLayout(DirectoryLayout):
 
         for path in traverse_dirs_at_depth(self.root, 3):
             arch, compiler, last_dir = path
-            spec_file_path = new_path(
+            spec_file_path = join_path(
                 self.root, arch, compiler, last_dir, self.spec_file)
             if os.path.exists(spec_file_path):
                 spec = self.read_spec(spec_file_path)

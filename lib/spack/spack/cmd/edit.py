@@ -26,9 +26,10 @@ import os
 import string
 from contextlib import closing
 
+import llnl.util.tty as tty
+
 import spack
 import spack.packages as packages
-import spack.tty as tty
 
 description = "Open package files in $EDITOR"
 

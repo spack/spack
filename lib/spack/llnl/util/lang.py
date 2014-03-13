@@ -27,11 +27,9 @@ import re
 import sys
 import functools
 import inspect
-from spack.util.filesystem import new_path
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
-
 
 def caller_locals():
     """This will return the locals of the *parent* of the caller.
@@ -114,9 +112,9 @@ def list_modules(directory, **kwargs):
         if name == '__init__.py':
             continue
 
-        path = new_path(directory, name)
+        path = os.path.join(directory, name)
         if list_directories and os.path.isdir(path):
-            init_py = new_path(path, '__init__.py')
+            init_py = os.path.join(path, '__init__.py')
             if os.path.isfile(init_py):
                 yield name
 

@@ -24,8 +24,9 @@
 ##############################################################################
 import os
 
+from llnl.util.filesystem import *
+
 from spack.version import Version
-from spack.util.filesystem import *
 from spack.util.executable import *
 from spack.directory_layout import SpecHashDirectoryLayout
 from spack.concretize import DefaultConcretizer
@@ -34,20 +35,20 @@ from spack.concretize import DefaultConcretizer
 prefix = ancestor(__file__, 4)
 
 # The spack script itself
-spack_file = new_path(prefix, "bin", "spack")
+spack_file = join_path(prefix, "bin", "spack")
 
 # spack directory hierarchy
-lib_path       = new_path(prefix, "lib", "spack")
-env_path       = new_path(lib_path, "env")
-module_path    = new_path(lib_path, "spack")
-packages_path  = new_path(module_path, "packages")
-compilers_path = new_path(module_path, "compilers")
-test_path      = new_path(module_path, "test")
+lib_path       = join_path(prefix, "lib", "spack")
+env_path       = join_path(lib_path, "env")
+module_path    = join_path(lib_path, "spack")
+packages_path  = join_path(module_path, "packages")
+compilers_path = join_path(module_path, "compilers")
+test_path      = join_path(module_path, "test")
 
-var_path       = new_path(prefix, "var", "spack")
-stage_path     = new_path(var_path, "stage")
+var_path       = join_path(prefix, "var", "spack")
+stage_path     = join_path(var_path, "stage")
 
-install_path   = new_path(prefix, "opt")
+install_path   = join_path(prefix, "opt")
 
 #
 # This controls how spack lays out install prefixes and
@@ -116,7 +117,7 @@ sys_type = None
 # For no mirrors:
 #   mirrors = []
 #
-mirrors = []
+mirrors = ['file:///Users/gamblin2/mirror']
 
 # Important environment variables
 SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'

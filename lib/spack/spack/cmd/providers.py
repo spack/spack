@@ -25,9 +25,10 @@
 import os
 import argparse
 
+from llnl.util.tty.colify import colify
+
 import spack.cmd
 import spack.packages
-from spack.colify import colify
 
 description ="List packages that provide a particular virtual package"
 

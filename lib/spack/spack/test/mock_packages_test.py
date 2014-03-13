@@ -24,12 +24,14 @@
 ##############################################################################
 import unittest
 
+from llnl.util.lang import list_modules
+from llnl.util.filesystem import join_path
+
 import spack
 import spack.packages as packages
 from spack.spec import Spec
-from spack.util.lang import new_path, list_modules
 
-mock_packages_path = new_path(spack.module_path, 'test', 'mock_packages')
+mock_packages_path = join_path(spack.module_path, 'test', 'mock_packages')
 original_deps = None
 
 

@@ -24,9 +24,10 @@
 ##############################################################################
 import argparse
 
+import llnl.util.tty as tty
+
 import spack.cmd
 import spack.packages as packages
-import spack.tty as tty
 import spack.stage as stage
 
 description = "Remove staged files for packages"

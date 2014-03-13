@@ -24,9 +24,11 @@
 ##############################################################################
 import os
 from subprocess import check_call, check_output
+
+import llnl.util.tty as tty
+
 import spack
-from spack import new_path
-import spack.tty as tty
+from spack import join_path
 
 description = "Create a new installation of spack in another prefix"
 
@@ -35,7 +37,7 @@ def setup_parser(subparser):
 
 
 def get_origin_url():
-    git_dir = new_path(spack.prefix, '.git')
+    git_dir = join_path(spack.prefix, '.git')
     origin_url = check_output(
         ['git', '--git-dir=%s' % git_dir, 'config', '--get', 'remote.origin.url'])
     return origin_url.strip()
@@ -47,7 +49,7 @@ def bootstrap(parser, args):
 
     tty.msg("Fetching spack from origin: %s" % origin_url)
 
-    if os.path.exists(new_path(prefix, '.git')):
+    if os.path.exists(join_path(prefix, '.git')):
         tty.die("There already seems to be a git repository in %s" % prefix)
 
     files_in_the_way = os.listdir(prefix)

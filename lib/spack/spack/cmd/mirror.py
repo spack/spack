@@ -26,12 +26,14 @@ import os
 import shutil
 import argparse
 
+import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp, join_path
+
 import spack.packages as packages
 import spack.cmd
-import spack.tty as tty
 
 from spack.stage import Stage
-from spack.util.filesystem import mkdirp, new_path
+
 
 description = "Create a directory full of package tarballs that can be used as a spack mirror."
 
@@ -66,7 +68,7 @@ def mirror(parser, args):
             continue
 
         # create a subdir for the current package.
-        pkg_path = new_path(args.directory, pkg_name)
+        pkg_path = join_path(args.directory, pkg_name)
         mkdirp(pkg_path)
 
         # Download all the tarballs using Stages, then move them into place
@@ -76,7 +78,7 @@ def mirror(parser, args):
             try:
                 stage.fetch()
                 basename = os.path.basename(stage.archive_file)
-                final_dst = new_path(pkg_path, basename)
+                final_dst = join_path(pkg_path, basename)
 
                 os.chdir(working_dir)
                 shutil.move(stage.archive_file, final_dst)

@@ -22,12 +22,14 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from pprint import pprint
+
+from llnl.util.tty.colify import colify
+from llnl.util.lang import list_modules
+
 import spack
 import spack.packages as packages
 import spack.test
-from spack.util.lang import list_modules
-from spack.colify import colify
-from pprint import pprint
 
 description ="Run unit tests"
 

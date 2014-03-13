@@ -29,7 +29,7 @@ import errno
 import getpass
 from contextlib import contextmanager, closing
 
-import spack.tty as tty
+import llnl.util.tty as tty
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
 
@@ -70,14 +70,10 @@ def mkdirp(*paths):
             raise OSError(errno.EEXIST, "File alredy exists", path)
 
 
-def new_path(prefix, *args):
+def join_path(prefix, *args):
     path = str(prefix)
     for elt in args:
         path = os.path.join(path, str(elt))
-
-    if re.search(r'\s', path):
-        tty.die("Invalid path: '%s'.  Use a path without whitespace." % path)
-
     return path
 
 
@@ -87,16 +83,6 @@ def ancestor(dir, n=1):
     for i in range(n):
         parent = os.path.dirname(parent)
     return parent
-
-
-def stem(path):
-    """Get the part of a path that does not include its compressed
-       type extension."""
-    for type in ALLOWED_ARCHIVE_TYPES:
-        suffix = r'\.%s$' % type
-        if re.search(suffix, path):
-            return re.sub(suffix, "", path)
-    return path
 
 
 def can_access(file_name):

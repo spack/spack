@@ -23,10 +23,11 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
-import spack
-from spack.color import *
+from llnl.util.tty.color import *
 
-indent = "  "
+debug   = False
+verbose = False
+indent  = "  "
 
 def msg(message, *args):
     cprint("@*b{==>} %s" % cescape(message))
@@ -42,13 +43,13 @@ def info(message, *args, **kwargs):
 
 
 def verbose(message, *args):
-    if spack.verbose:
-        info(str(message), *args, format='c')
+    if verbose:
+        info(message, *args, format='c')
 
 
 def debug(*args):
-    if spack.debug:
-        info("Debug: " + str(message), *args, format='*g')
+    if debug:
+        info("Debug: " + message, *args, format='*g')
 
 
 def error(message, *args):
@@ -62,19 +63,6 @@ def warn(message, *args):
 def die(message, *args):
     error(message, *args)
     sys.exit(1)
-
-
-def pkg(message):
-    """Outputs a message with a package icon."""
-    import platform
-    from version import Version
-
-    mac_ver = platform.mac_ver()[0]
-    if mac_ver and Version(mac_ver) >= Version('10.7'):
-        print u"\U0001F4E6" + indent,
-    else:
-        cwrite('@*g{[+]} ')
-    print message
 
 
 def get_number(prompt, **kwargs):

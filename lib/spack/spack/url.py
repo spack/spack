@@ -48,7 +48,7 @@ import os
 import re
 
 import spack.error
-import spack.util.filesystem as fs
+import spack.util.compression as comp
 from spack.version import Version
 
 #
@@ -85,9 +85,9 @@ def parse_version_string_with_indices(path):
     if os.path.isdir(path):
         stem = os.path.basename(path)
     elif re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', path):
-        stem = fs.stem(os.path.dirname(path))
+        stem = comp.stem(os.path.dirname(path))
     else:
-        stem = fs.stem(path)
+        stem = comp.stem(path)
 
     version_types = [
         # GitHub tarballs, e.g. v1.2.3

@@ -27,7 +27,7 @@ import sys
 import re
 import subprocess
 
-import spack.tty as tty
+import llnl.util.tty as tty
 from spack.error import SpackError
 
 

@@ -26,12 +26,13 @@ import collections
 import argparse
 from StringIO import StringIO
 
+from llnl.util.tty.colify import colify
+from llnl.util.tty.color import *
+
 import spack
 import spack.spec
 import spack.packages as packages
-import spack.colify
-from spack.color import *
-from spack.colify import colify
+
 
 description ="Find installed spack packages"
 

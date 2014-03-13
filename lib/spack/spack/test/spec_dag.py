@@ -32,7 +32,8 @@ import spack
 import spack.package
 import spack.packages as packages
 
-from spack.util.lang import new_path, list_modules
+from llnl.util.lang import list_modules
+
 from spack.spec import Spec
 from spack.test.mock_packages_test import *
 

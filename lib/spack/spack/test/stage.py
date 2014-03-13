@@ -31,28 +31,32 @@ import os
 import getpass
 from contextlib import *
 
+from llnl.util.filesystem import *
+
 import spack
 from spack.stage import Stage
-from spack.util.filesystem import *
 from spack.util.executable import which
 
-test_files_dir = new_path(spack.stage_path, '.test')
-test_tmp_path  = new_path(test_files_dir, 'tmp')
+test_files_dir = join_path(spack.stage_path, '.test')
+test_tmp_path  = join_path(test_files_dir, 'tmp')
 
 archive_dir      = 'test-files'
 archive_name     = archive_dir + '.tar.gz'
-archive_dir_path = new_path(test_files_dir, archive_dir)
-archive_url      = 'file://' + new_path(test_files_dir, archive_name)
+archive_dir_path = join_path(test_files_dir, archive_dir)
+archive_url      = 'file://' + join_path(test_files_dir, archive_name)
 readme_name      = 'README.txt'
-test_readme      = new_path(archive_dir_path, readme_name)
+test_readme      = join_path(archive_dir_path, readme_name)
 readme_text      = "hello world!\n"
 
 stage_name = 'spack-test-stage'
 
 
 class with_tmp(object):
-    """Decorator that executes a function with or without spack set
-       to use a temp dir."""
+    """Decorator that executes a function with or without spack set to use
+       a temp dir.  Spack allows builds to happen directly in the
+       stage directory or in a tmp dir and symlinked into the stage
+       directory, so this lets us use the same test in both cases.
+    """
     def __init__(self, use_tmp):
         self.use_tmp = use_tmp
 
@@ -107,7 +111,7 @@ class StageTest(unittest.TestCase):
         """
         if stage_name:
             # If it is a named stage, we know where the stage should be
-            stage_path = new_path(spack.stage_path, stage_name)
+            stage_path = join_path(spack.stage_path, stage_name)
         else:
             # If it's unnamed, ensure that we ran mkdtemp in the right spot.
             stage_path = stage.path
@@ -143,7 +147,7 @@ class StageTest(unittest.TestCase):
     def check_fetch(self, stage, stage_name):
         stage_path = self.get_stage_path(stage, stage_name)
         self.assertIn(archive_name, os.listdir(stage_path))
-        self.assertEqual(new_path(stage_path, archive_name),
+        self.assertEqual(join_path(stage_path, archive_name),
                          stage.archive_file)
 
 
@@ -153,10 +157,10 @@ class StageTest(unittest.TestCase):
         self.assertIn(archive_dir, os.listdir(stage_path))
 
         self.assertEqual(
-            new_path(stage_path, archive_dir),
+            join_path(stage_path, archive_dir),
             stage.expanded_archive_path)
 
-        readme = new_path(stage_path, archive_dir, readme_name)
+        readme = join_path(stage_path, archive_dir, readme_name)
         self.assertTrue(os.path.isfile(readme))
 
         with closing(open(readme)) as file:
@@ -171,7 +175,7 @@ class StageTest(unittest.TestCase):
     def check_chdir_to_archive(self, stage, stage_name):
         stage_path = self.get_stage_path(stage, stage_name)
         self.assertEqual(
-            new_path(os.path.realpath(stage_path), archive_dir),
+            join_path(os.path.realpath(stage_path), archive_dir),
             os.getcwd())
 
 

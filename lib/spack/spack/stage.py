@@ -27,11 +27,11 @@ import re
 import shutil
 import tempfile
 
+import llnl.util.tty as tty
+from llnl.util.filesystem import *
+
 import spack
 import spack.error as serr
-import spack.tty as tty
-
-from spack.util.filesystem import *
 from spack.util.compression import decompressor_for
 
 STAGE_PREFIX = 'spack-stage-'
@@ -88,7 +88,7 @@ class Stage(object):
     def _cleanup_dead_links(self):
         """Remove any dead links in the stage directory."""
         for file in os.listdir(spack.stage_path):
-            path = new_path(spack.stage_path, file)
+            path = join_path(spack.stage_path, file)
             if os.path.islink(path):
                 real_path = os.path.realpath(path)
                 if not os.path.exists(path):
@@ -150,7 +150,7 @@ class Stage(object):
 
         # If this is a named stage, then construct a named path.
         if self.name is not None:
-            self.path = new_path(spack.stage_path, self.name)
+            self.path = join_path(spack.stage_path, self.name)
 
         # If this is a temporary stage, them make the temp directory
         tmp_dir = None
@@ -159,7 +159,7 @@ class Stage(object):
                 # Unnamed tmp root.  Link the path in
                 tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
                 self.name = os.path.basename(tmp_dir)
-                self.path = new_path(spack.stage_path, self.name)
+                self.path = join_path(spack.stage_path, self.name)
                 if self._need_to_create_path():
                     os.symlink(tmp_dir, self.path)
 
@@ -200,7 +200,7 @@ class Stage(object):
             return None
 
         for file in os.listdir(self.path):
-            archive_path = spack.new_path(self.path, file)
+            archive_path = join_path(self.path, file)
             if os.path.isdir(archive_path):
                 return archive_path
         return None
@@ -333,7 +333,7 @@ def purge():
     """Remove all build directories in the top-level stage path."""
     if os.path.isdir(spack.stage_path):
         for stage_dir in os.listdir(spack.stage_path):
-            stage_path = spack.new_path(spack.stage_path, stage_dir)
+            stage_path = join_path(spack.stage_path, stage_dir)
             remove_linked_tree(stage_path)
 
 

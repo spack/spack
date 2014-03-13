@@ -25,10 +25,11 @@
 import os
 import platform as py_platform
 
+from llnl.util.lang import memoized
+
 import spack
 import spack.error as serr
 from spack.version import Version
-from spack.util.lang import memoized
 
 
 class InvalidSysTypeError(serr.SpackError):

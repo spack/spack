@@ -24,10 +24,9 @@
 ##############################################################################
 import re
 import textwrap
-
+from llnl.util.tty.colify import colify
 import spack
 import spack.packages as packages
-from spack.colify import colify
 
 description = "Get detailed information on a particular package"
 

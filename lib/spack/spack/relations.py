@@ -72,6 +72,8 @@ import re
 import inspect
 import importlib
 
+from llnl.util.lang import *
+
 import spack
 import spack.spec
 import spack.error
@@ -79,7 +81,6 @@ import spack.error
 from spack.patch import Patch
 from spack.spec import Spec, parse_anonymous_spec
 from spack.packages import packages_module
-from spack.util.lang import *
 
 
 """Adds a dependencies local variable in the locals of

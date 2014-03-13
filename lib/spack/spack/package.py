@@ -39,23 +39,28 @@ import re
 import subprocess
 import platform as py_platform
 import shutil
+import multiprocessing
+from urlparse import urlparse
+
+import llnl.util.tty as tty
+from llnl.util.tty.color import cwrite
+from llnl.util.filesystem import touch
+from llnl.util.lang import *
 
 from spack import *
 import spack.spec
 import spack.error
-import packages
-import tty
-import validate
-import multiprocessing
-import url
-
+import spack.packages as packages
+import spack.url as url
 import spack.util.crypto as crypto
 from spack.version import *
 from spack.stage import Stage
-from spack.util.lang import *
 from spack.util.web import get_pages
 from spack.util.environment import *
-from spack.util.filesystem import touch
+from spack.util.compression import allowed_archive
+
+"""Allowed URL schemes for spack packages."""
+_ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file"]
 
 
 class Package(object):
@@ -337,7 +342,7 @@ class Package(object):
             self.name = self.name[self.name.rindex('.') + 1:]
 
         # Make sure URL is an allowed type
-        validate.url(self.url)
+        validate_package_url(self.url)
 
         # patch up the URL with a new version if the spec version is concrete
         if self.spec.versions.concrete:
@@ -620,8 +625,8 @@ class Package(object):
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.
         archive_dir = self.stage.expanded_archive_path
-        good_file = new_path(archive_dir, '.spack_patched')
-        bad_file  = new_path(archive_dir, '.spack_patch_failed')
+        good_file = join_path(archive_dir, '.spack_patched')
+        bad_file  = join_path(archive_dir, '.spack_patch_failed')
 
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
@@ -664,7 +669,7 @@ class Package(object):
 
         if os.path.exists(self.prefix):
             tty.msg("%s is already installed." % self.name)
-            tty.pkg(self.prefix)
+            print_pkg(self.prefix)
             return
 
         if not self.ignore_dependencies:
@@ -678,27 +683,28 @@ class Package(object):
         self.add_commands_to_module()
 
         tty.msg("Building %s." % self.name)
-        try:
-            # create the install directory (allow the layout to handle this in
-            # case it needs to add extra files)
-            spack.install_layout.make_path_for_spec(self.spec)
 
+        # create the install directory (allow the layout to handle this in
+        # case it needs to add extra files)
+        spack.install_layout.make_path_for_spec(self.spec)
+
+        try:
             self.install(self.spec, self.prefix)
             if not os.path.isdir(self.prefix):
                 tty.die("Install failed for %s.  No install dir created." % self.name)
 
+            tty.msg("Successfully installed %s" % self.name)
+            print_pkg(self.prefix)
+
         except Exception, e:
-            if not self.dirty:
-                self.remove_prefix()
+            self.remove_prefix()
             raise
 
-        tty.msg("Successfully installed %s" % self.name)
-        tty.pkg(self.prefix)
-
-        # Once the install is done, destroy the stage where we built it,
-        # unless the user wants it kept around.
-        if not self.dirty:
-            self.stage.destroy()
+        finally:
+            # Once the install is done, destroy the stage where we built it,
+            # unless the user wants it kept around.
+            if not self.dirty:
+                self.stage.destroy()
 
 
     def setup_install_environment(self):
@@ -713,7 +719,7 @@ class Package(object):
         # in directories called "case*" within the env directory.
         env_paths = [env_path]
         for file in os.listdir(env_path):
-            path = new_path(env_path, file)
+            path = join_path(env_path, file)
             if file.startswith("case") and os.path.isdir(path):
                 env_paths.append(path)
         path_put_first("PATH", env_paths)
@@ -881,6 +887,26 @@ class MakeExecutable(Executable):
             args = (jobs,) + args
 
         super(MakeExecutable, self).__call__(*args, **kwargs)
+
+
+def validate_package_url(url_string):
+    """Determine whether spack can handle a particular URL or not."""
+    url = urlparse(url_string)
+    if url.scheme not in _ALLOWED_URL_SCHEMES:
+        tty.die("Invalid protocol in URL: '%s'" % url_string)
+
+    if not allowed_archive(url_string):
+        tty.die("Invalid file type in URL: '%s'" % url_string)
+
+
+def print_pkg(message):
+    """Outputs a message with a package icon."""
+    mac_ver = py_platform.mac_ver()[0]
+    if mac_ver and Version(mac_ver) >= Version('10.7'):
+        print u"\U0001F4E6" + tty.indent,
+    else:
+        cwrite('@*g{[+]} ')
+    print message
 
 
 class InvalidPackageDependencyError(spack.error.SpackError):

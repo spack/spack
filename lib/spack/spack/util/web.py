@@ -29,9 +29,10 @@ import urlparse
 from multiprocessing import Pool
 from HTMLParser import HTMLParser
 
+import llnl.util.tty as tty
+
 import spack
 import spack.error
-import spack.tty as tty
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
 # Timeout in seconds for web requests

@@ -24,14 +24,15 @@
 ##############################################################################
 import os
 
+import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
+
 import spack
 import spack.stage
 import spack.error
 import spack.packages as packages
-import spack.tty as tty
 
 from spack.util.executable import which
-from spack.util.filesystem import new_path
 
 # Patch tool for patching archives.
 _patch = which("patch", required=True)
@@ -55,7 +56,7 @@ class Patch(object):
             self.url = path_or_url
         else:
             pkg_dir = packages.dirname_for_package_name(pkg_name)
-            self.path = new_path(pkg_dir, path_or_url)
+            self.path = join_path(pkg_dir, path_or_url)
             if not os.path.isfile(self.path):
                 raise NoSuchPatchFileError(pkg_name, self.path)
 

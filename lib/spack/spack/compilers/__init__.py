@@ -25,10 +25,9 @@
 #
 # This needs to be expanded for full compiler support.
 #
-
+from llnl.util.lang import memoized, list_modules
 import spack
 import spack.compilers.gcc
-from spack.util.lang import memoized, list_modules
 
 @memoized
 def supported_compilers():

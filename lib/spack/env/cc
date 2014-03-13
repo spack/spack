@@ -18,7 +18,7 @@ if not spack_lib:
 # Grab a minimal set of spack packages
 sys.path.append(spack_lib)
 from spack.compilation import *
-import spack.tty as tty
+import llnl.util.tty as tty
 
 spack_prefix     = get_env_var("SPACK_PREFIX")
 spack_build_root = get_env_var("SPACK_BUILD_ROOT")

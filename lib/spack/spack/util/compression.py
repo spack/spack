@@ -22,6 +22,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import re
 from itertools import product
 from spack.util.executable import which
 
@@ -45,3 +46,13 @@ def decompressor_for(path):
     tar = which('tar', required=True)
     tar.add_default_arg('-xf')
     return tar
+
+
+def stem(path):
+    """Get the part of a path that does not include its compressed
+       type extension."""
+    for type in ALLOWED_ARCHIVE_TYPES:
+        suffix = r'\.%s$' % type
+        if re.search(suffix, path):
+            return re.sub(suffix, "", path)
+    return path

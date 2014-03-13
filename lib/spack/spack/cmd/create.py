@@ -28,11 +28,12 @@ import hashlib
 import re
 from contextlib import closing
 
+import llnl.util.tty as tty
+
 import spack
 import spack.cmd
 import spack.package
 import spack.packages as packages
-import spack.tty as tty
 import spack.url
 import spack.util.crypto as crypto
 import spack.cmd.checksum

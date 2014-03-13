@@ -95,16 +95,17 @@ import itertools
 import hashlib
 from StringIO import StringIO
 
+import llnl.util.tty as tty
+from llnl.util.lang import *
+from llnl.util.tty.color import *
+
 import spack.parse
 import spack.error
 import spack.compilers
 import spack.compilers.gcc
 import spack.packages as packages
-import spack.tty as tty
 
 from spack.version import *
-from spack.color import *
-from spack.util.lang import *
 from spack.util.string import *
 from spack.util.prefix import Prefix
 

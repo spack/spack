@@ -25,9 +25,11 @@
 import sys
 import unittest
 
+import llnl.util.tty as tty
+from llnl.util.tty.colify import colify
+
 import spack
-from spack.colify import colify
-import spack.tty as tty
+
 
 """Names of tests to be included in Spack's test suite"""
 test_names = ['versions',

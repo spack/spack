@@ -47,9 +47,10 @@ import sys
 import functools
 import collections
 
+from llnl.util.lang import *
+
 import spack.architecture
 import spack.error
-from spack.util.lang import *
 from spack.spec import parse_anonymous_spec, Spec
 
 

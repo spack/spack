@@ -25,7 +25,7 @@
 """
 This file contains utilities to help with installing packages.
 """
-from spack.util.filesystem import new_path
+from llnl.util.filesystem import join_path
 
 class Prefix(str):
     """This class represents an installation prefix, but provides useful
@@ -59,23 +59,23 @@ class Prefix(str):
 
     def __new__(cls, path):
         s = super(Prefix, cls).__new__(cls, path)
-        s.bin     = new_path(s, 'bin')
-        s.sbin    = new_path(s, 'sbin')
-        s.etc     = new_path(s, 'etc')
-        s.include = new_path(s, 'include')
-        s.lib     = new_path(s, 'lib')
-        s.lib64   = new_path(s, 'lib64')
-        s.libexec = new_path(s, 'libexec')
-        s.share   = new_path(s, 'share')
-        s.doc     = new_path(s.share, 'doc')
-        s.info    = new_path(s.share, 'info')
-        s.man     = new_path(s.share, 'man')
-        s.man1    = new_path(s.man, 'man1')
-        s.man2    = new_path(s.man, 'man2')
-        s.man3    = new_path(s.man, 'man3')
-        s.man4    = new_path(s.man, 'man4')
-        s.man5    = new_path(s.man, 'man5')
-        s.man6    = new_path(s.man, 'man6')
-        s.man7    = new_path(s.man, 'man7')
-        s.man8    = new_path(s.man, 'man8')
+        s.bin     = join_path(s, 'bin')
+        s.sbin    = join_path(s, 'sbin')
+        s.etc     = join_path(s, 'etc')
+        s.include = join_path(s, 'include')
+        s.lib     = join_path(s, 'lib')
+        s.lib64   = join_path(s, 'lib64')
+        s.libexec = join_path(s, 'libexec')
+        s.share   = join_path(s, 'share')
+        s.doc     = join_path(s.share, 'doc')
+        s.info    = join_path(s.share, 'info')
+        s.man     = join_path(s.share, 'man')
+        s.man1    = join_path(s.man, 'man1')
+        s.man2    = join_path(s.man, 'man2')
+        s.man3    = join_path(s.man, 'man3')
+        s.man4    = join_path(s.man, 'man4')
+        s.man5    = join_path(s.man, 'man5')
+        s.man6    = join_path(s.man, 'man6')
+        s.man7    = join_path(s.man, 'man7')
+        s.man8    = join_path(s.man, 'man8')
         return s

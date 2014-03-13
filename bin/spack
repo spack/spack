@@ -41,8 +41,8 @@ sys.path.insert(0, SPACK_LIB_PATH)
 
 # clean up the scope and start using spack package instead.
 del SPACK_FILE, SPACK_PREFIX, SPACK_LIB_PATH
+import llnl.util.tty as tty
 import spack
-import spack.tty as tty
 from spack.error import SpackError
 
 # Command parsing

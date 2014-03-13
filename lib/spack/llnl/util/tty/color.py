@@ -74,9 +74,8 @@ To output an @, use '@@'.  To output a } inside braces, use '}}'.
 """
 import re
 import sys
-import spack.error
 
-class ColorParseError(spack.error.SpackError):
+class ColorParseError(Exception):
     """Raised when a color format fails to parse."""
     def __init__(self, message):
         super(ColorParseError, self).__init__(message)

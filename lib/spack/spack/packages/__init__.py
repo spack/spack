@@ -29,12 +29,13 @@ import string
 import inspect
 import glob
 
+import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
+from llnl.util.lang import list_modules
+
 import spack
 import spack.error
 import spack.spec
-import spack.tty as tty
-from spack.util.filesystem import new_path
-from spack.util.lang import list_modules
 
 # Valid package names can contain '-' but can't start with it.
 valid_package_re = r'^\w[\w-]*$'
@@ -212,7 +213,7 @@ def validate_package_name(pkg_name):
 def dirname_for_package_name(pkg_name):
     """Get the directory name for a particular package would use, even if it's a
        foo.py package and not a directory with a foo/__init__.py file."""
-    return new_path(spack.packages_path, pkg_name)
+    return join_path(spack.packages_path, pkg_name)
 
 
 def filename_for_package_name(pkg_name):
@@ -236,7 +237,7 @@ def filename_for_package_name(pkg_name):
     pkg_dir = dirname_for_package_name(pkg_name)
 
     if os.path.isdir(pkg_dir):
-        init_file = new_path(pkg_dir, '__init__.py')
+        init_file = join_path(pkg_dir, '__init__.py')
         return init_file
     else:
         pkg_file  = "%s.py" % pkg_dir

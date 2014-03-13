@@ -49,8 +49,8 @@ import re
 from bisect import bisect_left
 from functools import total_ordering, wraps
 
-import spack.util.none_high as none_high
-import spack.util.none_low as none_low
+import llnl.util.compare.none_high as none_high
+import llnl.util.compare.none_low as none_low
 import spack.error
 
 # Valid version characters
