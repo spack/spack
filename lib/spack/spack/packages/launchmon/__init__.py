@@ -31,6 +31,7 @@ class Launchmon(Package):
     list_url = "http://sourceforge.net/p/launchmon/code/HEAD/tree"
 
     versions = {'1.0.0' : 'a0e5bfb7d82dc708d58bdbf93697886c'}
+    patch('patch.lmon_install_dir', level=0)
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix)
