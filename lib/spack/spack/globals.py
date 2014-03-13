@@ -70,6 +70,7 @@ editor = Executable(os.environ.get("EDITOR", ""))
 
 # Curl tool for fetching files.
 curl = which("curl", required=True)
+curl.add_default_arg("-k") # TODO not good
 
 # Whether to build in tmp space or directly in the stage_path.
 # If this is true, then spack will make stage directories in
