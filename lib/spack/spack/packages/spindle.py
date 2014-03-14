@@ -31,9 +31,9 @@ class Spindle(Package):
 
     versions = {'0.8.1' : 'f11793a6b9d8df2cd231fccb2857d912' }
 
-#    depends_on("launchmon")
+    depends_on("launchmon")
 
     def install(self, spec, prefix):
-        configure("--prefix=" + prefix + " --with-launchmon=/collab/usr/global/tools/launchmon/chaos_5_x86_64_ib/launchmon-1.0.0-20140312")
+        configure("--prefix=" + prefix)
         make()
         make("install")
