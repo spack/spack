@@ -31,10 +31,17 @@ class Stat(Package):
 
     def install(self, spec, prefix):
         my_mrnet = spec['mrnet']
+        my_graphlib = spec['graphlib']
+        my_dyninst = spec['dyninst']
+        my_libdwarf = spec['libdwarf']
 
         # FIXME: Modify the configure line to suit your build system here.
-        configure("--enable-gui", "--prefix=%s" %prefix, "--with-launchmon=/collab/usr/global/tools/launchmon/chaos_5_x86_64_ib/launchmon-1.0.0-20140312", "--with-mrnet=%s" %my_mrnet.prefix)
+        configure("--enable-gui", "--prefix=%s" %prefix, "--with-launchmon=/collab/usr/global/tools/launchmon/chaos_5_x86_64_ib/launchmon-1.0.0-20140312", "--with-mrnet=%s" %my_mrnet.prefix, "--with-graphlib=%s" %my_graphlib.prefix, "--with-stackwalker=%s" %my_dyninst.prefix, "--with-libdwarf=%s" %my_libdwarf.prefix)
 
+        # TODO: remove once Jira SPACK-19 is fixed
+        import shutil
+        shutil.copy2('/usr/bin/libtool', 'libtool')
+    
         # FIXME: Add logic to build and install here
         make(parallel=False)
         make("install")
