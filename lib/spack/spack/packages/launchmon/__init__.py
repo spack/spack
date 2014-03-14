@@ -30,10 +30,16 @@ class Launchmon(Package):
     force_url = True
     list_url = "http://sourceforge.net/p/launchmon/code/HEAD/tree"
 
-    versions = {'1.0.0' : 'a0e5bfb7d82dc708d58bdbf93697886c'}
+    #versions = {'1.0.0' : 'a0e5bfb7d82dc708d58bdbf93697886c'}
+    versions = {'1.0.0' : '9d1184397d3081b94e2c0577c3c605e5'}
     patch('patch.lmon_install_dir', level=0)
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix)
+
+        # TODO: remove once Jira SPACK-19 is fixed
+        import shutil
+        shutil.copy2('/usr/bin/libtool', 'libtool')
+
         make()
         make("install")

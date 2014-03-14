@@ -129,3 +129,19 @@ Index: config/x_ac_bootfabric.m4
  
        if test "x$with_cobo_port" != "xcheck" -a "x$with_cobo_port" != "xyes"; then
          AC_DEFINE(COBO_BEGIN_PORT, $with_cobo_port, [Define a beginning port for COBO_BASED])
+Index: config/x_ac_gcrpyt.m4
+===================================================================
+--- config/x_ac_gcrypt.m4       2011-10-22 00:50:38.000000000 -0700
++++ config/x_ac_gcrypt.patched.m4       2014-03-14 11:33:59.189220000 -0700
+@@ -55,8 +55,8 @@
+       AC_CONFIG_SUBDIRS([tools/libgpg-error])
+       AC_SUBST(GPGERRLOC, [tools/libgpg-error/src])
+       AC_SUBST(GCRYPTLOC, [tools/libgcrypt/src])
+-      AC_SUBST(LIBGCRYPT, [-lgcrypt])
+-      AC_SUBST(LIBGPGERR, [-lgpg-error])
++      AC_SUBST(LIBGCRYPT, [libgcrypt.la])
++      AC_SUBST(LIBGPGERR, [libgpg-error.la])
+       gcrypt_configured="yes"
+     else
+       AC_MSG_ERROR([tools/libgpg-error or tools/libgcrypt not found])
+
