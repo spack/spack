@@ -1,0 +1,151 @@
+diff -Nuar openmpi-1.6.5.orig/contrib/platform/llnl/optimized openmpi-1.6.5.llnl/contrib/platform/llnl/optimized
+--- openmpi-1.6.5.orig/contrib/platform/llnl/optimized	1969-12-31 16:00:00.000000000 -0800
++++ openmpi-1.6.5.llnl/contrib/platform/llnl/optimized	2013-08-08 23:47:12.704029000 -0700
+@@ -0,0 +1,29 @@
++enable_dlopen=no
++enable_mem_debug=no
++enable_mem_profile=no
++enable_debug_symbols=no
++enable_binaries=yes
++enable_heterogeneous=no
++enable_debug=no
++enable_shared=yes
++enable_static=yes
++enable_memchecker=no
++enable_ipv6=no
++enable_mpi_f77=yes
++enable_mpi_f90=yes
++enable_mpi_cxx=yes
++enable_mpi_cxx_seek=yes
++enable_cxx_exceptions=no
++enable_ft_thread=no
++enable_per_user_config_files=no
++enable_mca_no_build=carto,crs,filem,routed-linear,snapc,pml-dr,pml-crcp2,pml-crcpw,pml-v,pml-example,crcp,btl-tcp
++enable_contrib_no_build=libnbc,vt
++with_slurm=yes
++with_pmi=yes
++with_tm=no
++with_openib=yes
++with_psm=yes
++with_devel_headers=yes
++with_io_romio_flags=--with-file-system=ufs+nfs+lustre
++with_memory_manager=ptmalloc2
++with_valgrind=no
+diff -Nuar openmpi-1.6.5.orig/contrib/platform/llnl/optimized.conf openmpi-1.6.5.llnl/contrib/platform/llnl/optimized.conf
+--- openmpi-1.6.5.orig/contrib/platform/llnl/optimized.conf	1969-12-31 16:00:00.000000000 -0800
++++ openmpi-1.6.5.llnl/contrib/platform/llnl/optimized.conf	2013-08-08 23:43:52.907553000 -0700
+@@ -0,0 +1,114 @@
++#
++# Copyright (c) 2004-2005 The Trustees of Indiana University and Indiana
++#                         University Research and Technology
++#                         Corporation.  All rights reserved.
++# Copyright (c) 2004-2005 The University of Tennessee and The University
++#                         of Tennessee Research Foundation.  All rights
++#                         reserved.
++# Copyright (c) 2004-2005 High Performance Computing Center Stuttgart,
++#                         University of Stuttgart.  All rights reserved.
++# Copyright (c) 2004-2005 The Regents of the University of California.
++#                         All rights reserved.
++# Copyright (c) 2006      Cisco Systems, Inc.  All rights reserved.
++# Copyright (c) 2011      Los Alamos National Security, LLC.
++#                         All rights reserved.
++# $COPYRIGHT$
++#
++# Additional copyrights may follow
++#
++# $HEADER$
++#
++
++# This is the default system-wide MCA parameters defaults file.
++# Specifically, the MCA parameter "mca_param_files" defaults to a
++# value of
++# "$HOME/.openmpi/mca-params.conf:$sysconf/openmpi-mca-params.conf"
++# (this file is the latter of the two).  So if the default value of
++# mca_param_files is not changed, this file is used to set system-wide
++# MCA parameters.  This file can therefore be used to set system-wide
++# default MCA parameters for all users.  Of course, users can override
++# these values if they want, but this file is an excellent location
++# for setting system-specific MCA parameters for those users who don't
++# know / care enough to investigate the proper values for them.
++
++# Note that this file is only applicable where it is visible (in a
++# filesystem sense).  Specifically, MPI processes each read this file
++# during their startup to determine what default values for MCA
++# parameters should be used.  mpirun does not bundle up the values in
++# this file from the node where it was run and send them to all nodes;
++# the default value decisions are effectively distributed.  Hence,
++# these values are only applicable on nodes that "see" this file.  If
++# $sysconf is a directory on a local disk, it is likely that changes
++# to this file will need to be propagated to other nodes.  If $sysconf
++# is a directory that is shared via a networked filesystem, changes to
++# this file will be visible to all nodes that share this $sysconf.
++
++# The format is straightforward: one per line, mca_param_name =
++# rvalue.  Quoting is ignored (so if you use quotes or escape
++# characters, they'll be included as part of the value).  For example:
++
++# Disable run-time MPI parameter checking
++#   mpi_param_check = 0
++
++# Note that the value "~/" will be expanded to the current user's home
++# directory.  For example:
++
++# Change component loading path
++#   component_path = /usr/local/lib/openmpi:~/my_openmpi_components
++
++# See "ompi_info --param all all" for a full listing of Open MPI MCA
++# parameters available and their default values.
++#
++
++# Basic behavior to smooth startup
++mca_component_show_load_errors = 0
++orte_abort_timeout = 10
++opal_set_max_sys_limits = 1
++orte_report_launch_progress = 1
++
++# Define timeout for daemons to report back during launch
++orte_startup_timeout = 10000
++
++## Protect the shared file systems
++orte_no_session_dirs = /p,/usr/local,/usr/global,/nfs/tmp1,/nfs/tmp2
++orte_tmpdir_base = /tmp
++
++## Require an allocation to run - protects the frontend
++## from inadvertent job executions
++orte_allocation_required = 1
++
++## MPI behavior
++## Do NOT specify mpi_leave_pinned so system
++## can figure out for itself whether or not
++## it is supported and usable
++orte_notifier = syslog
++
++## Add the interface for out-of-band communication
++## and set it up
++oob_tcp_if_include=ib0
++oob_tcp_peer_retries = 1000
++oob_tcp_disable_family = IPv6
++oob_tcp_listen_mode = listen_thread
++oob_tcp_sndbuf = 32768
++oob_tcp_rcvbuf = 32768
++
++## Define the MPI interconnects
++btl = sm,openib,self
++
++## We are using the PSM MTL by default
++## There can only be one!
++pml = cm
++
++## Setup OpenIB - just in case
++btl_openib_want_fork_support = 0
++btl_openib_cpc_include = oob
++btl_openib_receive_queues = S,4096,1024:S,12288,512:S,65536,512
++
++## Enable cpu affinity
++opal_paffinity_alone = 1
++
++## Setup MPI options
++mpi_show_handle_leaks = 0
++mpi_warn_on_fork = 1
++mpi_abort_print_stack = 0
++
