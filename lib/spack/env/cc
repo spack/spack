@@ -28,11 +28,15 @@ spack_env_path   = get_path("SPACK_ENV_PATH")
 
 # Figure out what type of operation we're doing
 command = os.path.basename(sys.argv[0])
-cpp, cc, ccld, ld = range(4)
 
-# TODO: this can to be removed once Jira issue SPACK-16 is resolved
+cpp, cc, ccld, ld, version_check = range(5)
+
+########################################################################
+# TODO: this can to be removed once JIRA issue SPACK-16 is resolved
+#
 if command == 'CC':
     command = 'c++'
+########################################################################
 
 if command == 'cpp':
     mode = cpp
@@ -44,6 +48,9 @@ elif '-c' in sys.argv:
     mode = cc
 else:
     mode = ccld
+
+if '-V' in sys.argv or '-v' in sys.argv or '--version' in sys.argv:
+    mode = version_check
 
 # Parse out the includes, libs, etc. so we can adjust them if need be.
 parser = argparse.ArgumentParser(add_help=False)
