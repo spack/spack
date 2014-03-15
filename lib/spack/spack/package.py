@@ -326,6 +326,9 @@ class Package(object):
     """Controls whether install and uninstall check deps before running."""
     ignore_dependencies = False
 
+    """Dirty hack for forcing packages with uninterpretable URLs"""
+    force_url = False
+
 
     def __init__(self, spec):
         # These attributes are required for all packages.
@@ -557,11 +560,15 @@ class Package(object):
            override this, e.g. for boost versions where you need to ensure that there
            are _'s in the download URL.
         """
+        if self.force_url:
+            return self.default_version
         return str(version)
 
 
     def url_for_version(self, version):
         """Gives a URL that you can download a new version of this package from."""
+        if self.force_url:
+            return self.url
         return url.substitute_version(self.__class__.url, self.url_version(version))
 
 
