@@ -29,13 +29,15 @@ import re
 from contextlib import closing
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 
 import spack
 import spack.cmd
+import spack.cmd.checksum
 import spack.package
 import spack.url
+import spack.packages as packages
 import spack.util.crypto as crypto
-import spack.cmd.checksum
 
 from spack.util.executable import which
 from spack.stage import Stage
@@ -143,8 +145,10 @@ def create(parser, args):
     pkg_path = spack.db.filename_for_package_name(name)
     if os.path.exists(pkg_path) and not args.force:
         tty.die("%s already exists." % pkg_path)
+    else:
+        mkdirp(os.path.dirname(pkg_path))
 
-    class_name = spack.db.class_name_for_package_name(name)
+    class_name = packages.class_name_for_package_name(name)
     versions = list(reversed(spack.package.find_versions_of_archive(url)))
 
     archives_to_fetch = 1
