@@ -117,7 +117,7 @@ sys_type = None
 # For no mirrors:
 #   mirrors = []
 #
-mirrors = ['file:///Users/gamblin2/mirror']
+mirrors = []
 
 # Important environment variables
 SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'

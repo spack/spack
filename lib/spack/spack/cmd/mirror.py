@@ -84,6 +84,9 @@ def mirror(parser, args):
                 shutil.move(stage.archive_file, final_dst)
                 tty.msg("Added %s to mirror" % final_dst)
 
+            except Exception, e:
+                 tty.warn("Error while fetching %s.  Skipping." % url, e.message)
+
             finally:
                 stage.destroy()
 

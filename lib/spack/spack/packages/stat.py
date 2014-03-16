@@ -14,21 +14,26 @@ class Stat(Package):
     depends_on('mrnet')
 
     def install(self, spec, prefix):
-        my_mrnet = spec['mrnet']
-        my_graphlib = spec['graphlib']
-        #my_launchmon = spec['launchmon']
-        my_dyninst = spec['dyninst']
-        my_libdwarf = spec['libdwarf']
+        configure(
+            "--enable-gui",
+            "--prefix=%s" % prefix,
 
-        # TODO: this uses the launchmon package, but path is too long (see depends_on above) (Jira SPACK-21)
-        #configure("--enable-gui", "--prefix=%s" %prefix, "--with-launchmon=%s" %my_launchmon.prefix, "--with-mrnet=%s" %my_mrnet.prefix, "--with-graphlib=%s" %my_graphlib.prefix, "--with-stackwalker=%s" %my_dyninst.prefix, "--with-libdwarf=%s" %my_libdwarf.prefix)
+            # TODO: this uses the launchmon package, but path is
+            # too long (see depends_on above) (Jira SPACK-21)
+            # "--with-launchmon=%s" % spec['launchmon'].prefix,
 
-        # TODO: the configure line above is the proper one once Jira SPACK-21 is fixed
-        configure("--enable-gui", "--prefix=%s" %prefix, "--with-launchmon=/collab/usr/global/tools/launchmon/chaos_5_x86_64_ib/launchmon-1.0.0-20140312", "--with-mrnet=%s" %my_mrnet.prefix, "--with-graphlib=%s" %my_graphlib.prefix, "--with-stackwalker=%s" %my_dyninst.prefix, "--with-libdwarf=%s" %my_libdwarf.prefix)
+            # TODO: launchmon line above is the proper one once
+            # SPACK-21 is fixed
+            "--with-launchmon=/collab/usr/global/tools/launchmon/chaos_5_x86_64_ib/launchmon-1.0.0-20140312",
 
-        # TODO: remove once Jira SPACK-19 is fixed
+            "--with-mrnet=%s" % spec['mrnet'].prefix,
+            "--with-graphlib=%s" % spec['graphlib'].prefix,
+            "--with-stackwalker=%s" % spec['dyninst'].prefix,
+            "--with-libdwarf=%s" % spec['libdwarf'].prefix)
+
+        # TODO: remove once SPACK-19 is fixed
         import shutil
         shutil.copy2('/usr/bin/libtool', 'libtool')
-    
+
         make(parallel=False)
         make("install")

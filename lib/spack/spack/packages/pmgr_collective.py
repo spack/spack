@@ -29,7 +29,6 @@ class PmgrCollective(Package):
        MPI jobs."""
     homepage = "http://www.sourceforge.net/projects/pmgrcollective"
     url      = "http://downloads.sourceforge.net/project/pmgrcollective/pmgrcollective/PMGR_COLLECTIVE-1.0/pmgr_collective-1.0.tgz"
-#    url      = "http://downloads.sourceforge.net/project/pmgrcollective/pmgrcollective/PMGR_COLLECTIVE-1.0/pmgr_collective-1.0.tgz?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fpmgrcollective%2F%3Fsource%3Ddlp&ts=1394747864&use_mirror=iweb
 
     versions = { '1.0' : '0384d008774274cc3fc7b4d810dfd07e' }
 

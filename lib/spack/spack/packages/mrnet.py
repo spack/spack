@@ -6,9 +6,10 @@ class Mrnet(Package):
     url      = "ftp://ftp.cs.wisc.edu/paradyn/mrnet/mrnet_4.0.0.tar.gz"
 
     versions = { '4.0.0' : 'd00301c078cba57ef68613be32ceea2f', }
+    parallel = False
 
     def install(self, spec, prefix):
         configure("--prefix=%s" %prefix, "--enable-shared")
 
-        make(parallel=False)
-        make("install", parallel=False)
+        make()
+        make("install")
