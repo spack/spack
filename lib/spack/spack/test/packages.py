@@ -24,8 +24,11 @@
 ##############################################################################
 import unittest
 
-from spack.test.mock_packages_test import *
 import spack
+import spack.packages as packages
+
+from spack.test.mock_packages_test import *
+
 
 class PackagesTest(MockPackagesTest):
 
@@ -51,3 +54,11 @@ class PackagesTest(MockPackagesTest):
     def test_nonexisting_package_filename(self):
         filename = spack.db.filename_for_package_name('some-nonexisting-package')
         self.assertEqual(filename, join_path(mock_packages_path, 'some-nonexisting-package', 'package.py'))
+
+
+    def test_package_class_names(self):
+        self.assertEqual('Mpich',          packages.class_name_for_package_name('mpich'))
+        self.assertEqual('PmgrCollective', packages.class_name_for_package_name('pmgr_collective'))
+        self.assertEqual('PmgrCollective', packages.class_name_for_package_name('pmgr-collective'))
+        self.assertEqual('Pmgrcollective', packages.class_name_for_package_name('PmgrCollective'))
+        self.assertEqual('Num_3db',        packages.class_name_for_package_name('3db'))
