@@ -25,7 +25,7 @@
 import argparse
 
 import spack.cmd
-import spack.packages as packages
+import spack
 
 
 description="Patch expanded archive sources in preparation for install"
@@ -47,5 +47,5 @@ def patch(parser, args):
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
-        package = packages.get(spec)
+        package = spack.db.get(spec)
         package.do_patch()

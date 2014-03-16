@@ -26,8 +26,8 @@ import argparse
 
 import llnl.util.tty as tty
 
+import spack
 import spack.cmd
-import spack.packages as packages
 
 description="Remove an installed package"
 
@@ -49,7 +49,7 @@ def uninstall(parser, args):
     # Fail and ask user to be unambiguous if it doesn't
     pkgs = []
     for spec in specs:
-        matching_specs = packages.get_installed(spec)
+        matching_specs = spack.db.get_installed(spec)
         if len(matching_specs) > 1:
             tty.die("%s matches multiple packages.  Which one did you mean?"
                     % spec, *matching_specs)
@@ -58,7 +58,7 @@ def uninstall(parser, args):
             tty.die("%s does not match any installed packages." % spec)
 
         installed_spec = matching_specs[0]
-        pkgs.append(packages.get(installed_spec))
+        pkgs.append(spack.db.get(installed_spec))
 
     # Sort packages to be uninstalled by the number of installed dependents
     # This ensures we do things in the right order

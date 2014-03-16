@@ -23,9 +23,8 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack
-import spack.packages as packages
 
 description = "Write out inter-package dependencies in dot graph format"
 
 def graph(parser, args):
-    packages.graph_dependencies()
+    spack.db.graph_dependencies()

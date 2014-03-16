@@ -22,8 +22,8 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.packages as packages
 from llnl.util.tty.colify import colify
+import spack
 
 description ="List available spack packages"
 
@@ -33,4 +33,4 @@ def setup_parser(subparser):
 
 def list(parser, args):
     # Print all the package names in columns
-    colify(packages.all_package_names())
+    colify(spack.db.all_package_names())

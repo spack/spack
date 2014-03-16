@@ -31,7 +31,7 @@ from llnl.util.tty.color import *
 
 import spack
 import spack.spec
-import spack.packages as packages
+import spack
 
 
 description ="Find installed spack packages"
@@ -83,7 +83,7 @@ def find(parser, args):
 
     # Make a dict with specs keyed by architecture and compiler.
     index = hasher()
-    for spec in packages.installed_package_specs():
+    for spec in spack.db.installed_package_specs():
         if query_specs and not any(spec.satisfies(q) for q in query_specs):
             continue
 

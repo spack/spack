@@ -30,6 +30,8 @@ from llnl.util.tty.colify import colify
 
 import spack
 
+import spack.test.install
+
 
 """Names of tests to be included in Spack's test suite"""
 test_names = ['versions',
@@ -40,7 +42,8 @@ test_names = ['versions',
               'spec_semantics',
               'spec_dag',
               'concretize',
-              'multimethod']
+              'multimethod',
+              'install']
 
 
 def list_tests():

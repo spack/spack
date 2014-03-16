@@ -26,8 +26,8 @@ import argparse
 
 import llnl.util.tty as tty
 
+import spack
 import spack.cmd
-import spack.packages as packages
 import spack.stage as stage
 
 description = "Remove staged files for packages"
@@ -49,7 +49,7 @@ def clean(parser, args):
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
-        package = packages.get(spec)
+        package = spack.db.get(spec)
         if args.dist:
             package.do_clean_dist()
         elif args.work:

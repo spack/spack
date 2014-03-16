@@ -22,3 +22,17 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from spack import *
+
+class TrivialInstallTestPackage(Package):
+    """This package is a stub with a trivial install method.  It allows us
+       to test the install and uninstall logic of spack."""
+    homepage = "http://www.example.com/trivial_install"
+    url      = "http://www.unit-test-should-replace-this-url/trivial_install-1.0.tar.gz"
+
+    versions = { '1.0' : 'foobarbaz' }
+
+    def install(self, spec, prefix):
+        configure('--prefix=%s' % prefix)
+        make()
+        make('install')

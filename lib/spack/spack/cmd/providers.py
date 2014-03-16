@@ -27,8 +27,8 @@ import argparse
 
 from llnl.util.tty.colify import colify
 
+import spack
 import spack.cmd
-import spack.packages
 
 description ="List packages that provide a particular virtual package"
 
@@ -39,4 +39,4 @@ def setup_parser(subparser):
 
 def providers(parser, args):
     for spec in spack.cmd.parse_specs(args.vpkg_spec):
-        colify(sorted(spack.packages.providers_for(spec)), indent=4)
+        colify(sorted(spack.db.providers_for(spec)), indent=4)

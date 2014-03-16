@@ -28,54 +28,31 @@ from llnl.util.lang import list_modules
 from llnl.util.filesystem import join_path
 
 import spack
-import spack.packages as packages
+from spack.packages import PackageDB
 from spack.spec import Spec
 
 mock_packages_path = join_path(spack.module_path, 'test', 'mock_packages')
-original_deps = None
-
 
 def set_pkg_dep(pkg, spec):
     """Alters dependence information for a pacakge.
        Use this to mock up constraints.
     """
     spec = Spec(spec)
-    packages.get(pkg).dependencies[spec.name] = spec
-
-
-def restore_dependencies():
-    # each time through restore original dependencies & constraints
-    global original_deps
-    for pkg_name, deps in original_deps.iteritems():
-        packages.get(pkg_name).dependencies.clear()
-        for dep in deps:
-            set_pkg_dep(pkg_name, dep)
+    spack.db.get(pkg).dependencies[spec.name] = spec
 
 
 class MockPackagesTest(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):
-        # Use a different packages directory for these tests.  We want to use
-        # mocked up packages that don't interfere with the real ones.
-        cls.real_packages_path = spack.packages_path
-        spack.packages_path = mock_packages_path
-
-        # First time through, record original relationships bt/w packages
-        global original_deps
-        original_deps = {}
-        for name in list_modules(mock_packages_path):
-            pkg = packages.get(name)
-            original_deps[name] = [
-                spec for spec in pkg.dependencies.values()]
+    def setUp(self):
+        # Use the mock packages database for these tests.  This allows
+        # us to set up contrived packages that don't interfere with
+        # real ones.
+        self.real_db = spack.db
+        spack.db = PackageDB(mock_packages_path)
 
 
     @classmethod
-    def tearDownClass(cls):
+    def tearDown(self):
         """Restore the real packages path after any test."""
-        restore_dependencies()
-        spack.packages_path = cls.real_packages_path
-
-
-    def setUp(self):
-        """Before each test, restore deps between packages to original state."""
-        restore_dependencies()
+        #restore_dependencies()
+        spack.db = self.real_db

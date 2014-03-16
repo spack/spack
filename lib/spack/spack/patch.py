@@ -30,7 +30,6 @@ from llnl.util.filesystem import join_path
 import spack
 import spack.stage
 import spack.error
-import spack.packages as packages
 
 from spack.util.executable import which
 
@@ -55,7 +54,7 @@ class Patch(object):
         if '://' in path_or_url:
             self.url = path_or_url
         else:
-            pkg_dir = packages.dirname_for_package_name(pkg_name)
+            pkg_dir = spack.db.dirname_for_package_name(pkg_name)
             self.path = join_path(pkg_dir, path_or_url)
             if not os.path.isfile(self.path):
                 raise NoSuchPatchFileError(pkg_name, self.path)

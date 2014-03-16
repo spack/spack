@@ -80,7 +80,6 @@ import spack.error
 
 from spack.patch import Patch
 from spack.spec import Spec, parse_anonymous_spec
-from spack.packages import packages_module
 
 
 """Adds a dependencies local variable in the locals of

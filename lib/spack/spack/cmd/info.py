@@ -26,7 +26,6 @@ import re
 import textwrap
 from llnl.util.tty.colify import colify
 import spack
-import spack.packages as packages
 
 description = "Get detailed information on a particular package"
 
@@ -35,7 +34,7 @@ def setup_parser(subparser):
 
 
 def info(parser, args):
-    package = packages.get(args.name)
+    package = spack.db.get(args.name)
     print "Package:   ", package.name
     print "Homepage:  ", package.homepage
     print "Download:  ", package.url

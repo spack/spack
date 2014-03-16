@@ -28,7 +28,6 @@ from llnl.util.tty.colify import colify
 from llnl.util.lang import list_modules
 
 import spack
-import spack.packages as packages
 import spack.test
 
 description ="Run unit tests"

@@ -44,19 +44,19 @@ from urlparse import urlparse
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cwrite
-from llnl.util.filesystem import touch
+from llnl.util.filesystem import *
 from llnl.util.lang import *
 
-from spack import *
+import spack
 import spack.spec
 import spack.error
-import spack.packages as packages
 import spack.url as url
 import spack.util.crypto as crypto
 from spack.version import *
 from spack.stage import Stage
 from spack.util.web import get_pages
 from spack.util.environment import *
+from spack.util.executable import Executable, which
 from spack.util.compression import allowed_archive
 
 """Allowed URL schemes for spack packages."""
@@ -480,7 +480,7 @@ class Package(object):
                     yield spec
                 continue
 
-            for pkg in packages.get(name).preorder_traversal(visited, **kwargs):
+            for pkg in spack.db.get(name).preorder_traversal(visited, **kwargs):
                 yield pkg
 
 
@@ -539,7 +539,7 @@ class Package(object):
         """Return a list of the specs of all installed packages that depend
            on this one."""
         dependents = []
-        for spec in packages.installed_package_specs():
+        for spec in spack.db.installed_package_specs():
             if self.name in spec.dependencies:
                 dep_spec = spec.dependencies[self.name]
                 if self.spec == dep_spec:
@@ -594,7 +594,7 @@ class Package(object):
 
         self.stage.fetch()
 
-        if self.version in self.versions:
+        if spack.do_checksum and self.version in self.versions:
             digest = self.versions[self.version]
             checker = crypto.Checker(digest)
             if checker.check(self.stage.archive_file):
@@ -720,28 +720,28 @@ class Package(object):
 
         # Add spack environment at front of path and pass the
         # lib location along so the compiler script can find spack
-        os.environ[SPACK_LIB] = lib_path
+        os.environ[spack.SPACK_LIB] = spack.lib_path
 
         # Fix for case-insensitive file systems.  Conflicting links are
         # in directories called "case*" within the env directory.
-        env_paths = [env_path]
-        for file in os.listdir(env_path):
-            path = join_path(env_path, file)
+        env_paths = [spack.env_path]
+        for file in os.listdir(spack.env_path):
+            path = join_path(spack.env_path, file)
             if file.startswith("case") and os.path.isdir(path):
                 env_paths.append(path)
         path_put_first("PATH", env_paths)
-        path_set(SPACK_ENV_PATH, env_paths)
+        path_set(spack.SPACK_ENV_PATH, env_paths)
 
         # Pass along prefixes of dependencies here
         path_set(
-            SPACK_DEPENDENCIES,
+            spack.SPACK_DEPENDENCIES,
             [dep.package.prefix for dep in self.spec.dependencies.values()])
 
         # Install location
-        os.environ[SPACK_PREFIX] = self.prefix
+        os.environ[spack.SPACK_PREFIX] = self.prefix
 
         # Build root for logging.
-        os.environ[SPACK_BUILD_ROOT] = self.stage.expanded_archive_path
+        os.environ[spack.SPACK_BUILD_ROOT] = self.stage.expanded_archive_path
 
 
     def do_install_dependencies(self):
@@ -887,7 +887,7 @@ class MakeExecutable(Executable):
 
     def __call__(self, *args, **kwargs):
         parallel = kwargs.get('parallel', self.parallel)
-        disable_parallel = env_flag(SPACK_NO_PARALLEL_MAKE)
+        disable_parallel = env_flag(spack.SPACK_NO_PARALLEL_MAKE)
 
         if parallel and not disable_parallel:
             jobs = "-j%d" % multiprocessing.cpu_count()

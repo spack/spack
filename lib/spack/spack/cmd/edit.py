@@ -29,7 +29,6 @@ from contextlib import closing
 import llnl.util.tty as tty
 
 import spack
-import spack.packages as packages
 
 description = "Open package files in $EDITOR"
 
@@ -67,7 +66,7 @@ def edit(parser, args):
     if not name:
         path = spack.packages_path
     else:
-        path = packages.filename_for_package_name(name)
+        path = spack.db.filename_for_package_name(name)
 
         if os.path.exists(path):
             if not os.path.isfile(path):
@@ -78,7 +77,7 @@ def edit(parser, args):
             tty.die("No package '%s'.  Use spack create, or supply -f/--force "
                     "to edit a new file." % name)
         else:
-            class_name = packages.class_name_for_package_name(name)
+            class_name = spack.db.class_name_for_package_name(name)
 
             with closing(open(path, "w")) as pkg_file:
                 pkg_file.write(

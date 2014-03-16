@@ -33,7 +33,6 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.package
-import spack.packages as packages
 import spack.url
 import spack.util.crypto as crypto
 import spack.cmd.checksum
@@ -131,7 +130,7 @@ def create(parser, args):
         tty.msg("Couldn't guess a name for this package.")
         while not name:
             new_name = raw_input("Name: ")
-            if packages.valid_name(name):
+            if spack.db.valid_name(name):
                 name = new_name
             else:
                 print "Package name can only contain A-Z, a-z, 0-9, '_' and '-'"
@@ -141,11 +140,11 @@ def create(parser, args):
 
     tty.msg("Creating template for package %s" % name)
 
-    pkg_path = packages.filename_for_package_name(name)
+    pkg_path = spack.db.filename_for_package_name(name)
     if os.path.exists(pkg_path) and not args.force:
         tty.die("%s already exists." % pkg_path)
 
-    class_name = packages.class_name_for_package_name(name)
+    class_name = spack.db.class_name_for_package_name(name)
     versions = list(reversed(spack.package.find_versions_of_archive(url)))
 
     archives_to_fetch = 1

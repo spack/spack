@@ -24,7 +24,7 @@
 ##############################################################################
 import os
 from llnl.util.tty.colify import colify
-import spack.packages as packages
+import spack
 
 description ="List available versions of a package"
 
@@ -33,5 +33,5 @@ def setup_parser(subparser):
 
 
 def versions(parser, args):
-    pkg = packages.get(args.package)
+    pkg = spack.db.get(args.package)
     colify(reversed(pkg.fetch_available_versions()))

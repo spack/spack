@@ -35,7 +35,6 @@ TODO: make this customizable and allow users to configure
 """
 import spack.architecture
 import spack.compilers
-import spack.packages
 import spack.spec
 from spack.version import *
 

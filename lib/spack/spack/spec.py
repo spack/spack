@@ -99,16 +99,16 @@ import llnl.util.tty as tty
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 
+import spack
 import spack.parse
 import spack.error
 import spack.compilers
 import spack.compilers.gcc
-import spack.packages as packages
 
 from spack.version import *
 from spack.util.string import *
 from spack.util.prefix import Prefix
-
+from spack.virtual import ProviderIndex
 
 # Convenient names for color formats so that other things can use them
 compiler_color         = '@g'
@@ -379,7 +379,7 @@ class Spec(object):
 
     @property
     def package(self):
-        return packages.get(self)
+        return spack.db.get(self)
 
 
     @property
@@ -391,7 +391,7 @@ class Spec(object):
            Possible idea: just use conventin and make virtual deps all
            caps, e.g., MPI vs mpi.
         """
-        return not packages.exists(self.name)
+        return not spack.db.exists(self.name)
 
 
     @property
@@ -532,7 +532,7 @@ class Spec(object):
                 return
 
             for spec in virtuals:
-                providers = packages.providers_for(spec)
+                providers = spack.db.providers_for(spec)
                 concrete = spack.concretizer.choose_provider(spec, providers)
                 concrete = concrete.copy()
                 spec._replace_with(concrete)
@@ -624,7 +624,7 @@ class Spec(object):
 
         # Combine constraints from package dependencies with
         # constraints on the spec's dependencies.
-        pkg = packages.get(self.name)
+        pkg = spack.db.get(self.name)
         for name, pkg_dep in self.package.dependencies.items():
             # If it's a virtual dependency, try to find a provider
             if pkg_dep.virtual:
@@ -653,7 +653,7 @@ class Spec(object):
             else:
                 # if it's a real dependency, check whether it provides something
                 # already required in the spec.
-                index = packages.ProviderIndex([pkg_dep], restrict=True)
+                index = ProviderIndex([pkg_dep], restrict=True)
                 for vspec in (v for v in spec_deps.values() if v.virtual):
                     if index.providers_for(vspec):
                         vspec._replace_with(pkg_dep)
@@ -718,7 +718,7 @@ class Spec(object):
         # Remove virtual deps that are already provided by something in the spec
         spec_packages = [d.package for d in spec_deps.values() if not d.virtual]
 
-        index = packages.ProviderIndex(spec_deps.values(), restrict=True)
+        index = ProviderIndex(spec_deps.values(), restrict=True)
 
         visited = set()
         self._normalize_helper(visited, spec_deps, index)
@@ -754,7 +754,7 @@ class Spec(object):
         for spec in self.preorder_traversal():
             # Don't get a package for a virtual name.
             if not spec.virtual:
-                packages.get(spec.name)
+                spack.db.get(spec.name)
 
             # validate compiler name in addition to the package name.
             if spec.compiler:
@@ -888,10 +888,8 @@ class Spec(object):
                 return False
 
         # For virtual dependencies, we need to dig a little deeper.
-        self_index = packages.ProviderIndex(
-            self.preorder_traversal(), restrict=True)
-        other_index = packages.ProviderIndex(
-            other.preorder_traversal(), restrict=True)
+        self_index = ProviderIndex(self.preorder_traversal(), restrict=True)
+        other_index = ProviderIndex(other.preorder_traversal(), restrict=True)
 
         # This handles cases where there are already providers for both vpkgs
         if not self_index.satisfies(other_index):

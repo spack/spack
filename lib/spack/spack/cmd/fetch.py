@@ -24,8 +24,8 @@
 ##############################################################################
 import argparse
 
+import spack
 import spack.cmd
-import spack.packages as packages
 
 description = "Fetch archives for packages"
 
@@ -46,5 +46,5 @@ def fetch(parser, args):
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
-        package = packages.get(spec)
+        package = spack.db.get(spec)
         package.do_fetch()

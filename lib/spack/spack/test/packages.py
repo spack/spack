@@ -25,45 +25,29 @@
 import unittest
 
 from spack.test.mock_packages_test import *
-import spack.packages as packages
+import spack
 
 class PackagesTest(MockPackagesTest):
 
-    def test_load_regular_package(self):
-        pkg = packages.get('mpich')
+    def test_load_package(self):
+        pkg = spack.db.get('mpich')
 
 
-    def test_regular_package_name(self):
-        pkg = packages.get('mpich')
+    def test_package_name(self):
+        pkg = spack.db.get('mpich')
         self.assertEqual(pkg.name, 'mpich')
 
 
-    def test_regular_package_filename(self):
-        filename = packages.filename_for_package_name('mpich')
-        self.assertEqual(filename, join_path(mock_packages_path, 'mpich.py'))
+    def test_package_filename(self):
+        filename = spack.db.filename_for_package_name('mpich')
+        self.assertEqual(filename, join_path(mock_packages_path, 'mpich', 'package.py'))
 
 
-    def test_regular_package_name(self):
-        pkg = packages.get('mpich')
+    def test_package_name(self):
+        pkg = spack.db.get('mpich')
         self.assertEqual(pkg.name, 'mpich')
-
-
-    def test_load_directory_package(self):
-        pkg = packages.get('directory-pkg')
-        self.assertTrue(hasattr(pkg, 'this_is_a_directory_pkg'))
-        self.assertTrue(pkg.this_is_a_directory_pkg)
-
-
-    def test_directory_package_name(self):
-        pkg = packages.get('directory-pkg')
-        self.assertEqual(pkg.name, 'directory-pkg')
-
-
-    def test_directory_package_filename(self):
-        filename = packages.filename_for_package_name('directory-pkg')
-        self.assertEqual(filename, join_path(mock_packages_path, 'directory-pkg/__init__.py'))
 
 
     def test_nonexisting_package_filename(self):
-        filename = packages.filename_for_package_name('some-nonexisting-package')
-        self.assertEqual(filename, join_path(mock_packages_path, 'some-nonexisting-package.py'))
+        filename = spack.db.filename_for_package_name('some-nonexisting-package')
+        self.assertEqual(filename, join_path(mock_packages_path, 'some-nonexisting-package', 'package.py'))

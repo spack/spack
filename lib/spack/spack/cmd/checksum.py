@@ -34,7 +34,6 @@ from llnl.util.tty.colify import colify
 
 import spack
 import spack.cmd
-import spack.packages as packages
 import spack.util.crypto
 from spack.stage import Stage, FailedDownloadError
 from spack.version import *
@@ -81,7 +80,7 @@ def get_checksums(versions, urls, **kwargs):
 
 def checksum(parser, args):
     # get the package we're going to generate checksums for
-    pkg = packages.get(args.package)
+    pkg = spack.db.get(args.package)
 
     # If the user asked for specific versions, use those.
     versions = [ver(v) for v in args.versions]

@@ -74,9 +74,10 @@ args = parser.parse_args()
 spack.verbose = args.verbose
 spack.debug = args.debug
 if args.mock:
-    from spack.util.filesystem import new_path
-    mock_path = new_path(spack.module_path, 'test', 'mock_packages')
-    spack.packages_path = mock_path
+    from llnl.util.filesystem import join_path
+    from spack.packages import PackageDB
+    mock_path = join_path(spack.module_path, 'test', 'mock_packages')
+    spack.db = PackageDB(mock_path)
 
 # If the user asked for it, don't check ssl certs.
 if args.insecure:

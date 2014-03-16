@@ -24,9 +24,8 @@
 ##############################################################################
 import argparse
 
+import spack
 import spack.cmd
-import spack.packages as packages
-
 
 description="Expand downloaded archive in preparation for install"
 
@@ -47,5 +46,5 @@ def stage(parser, args):
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
-        package = packages.get(spec)
+        package = spack.db.get(spec)
         package.do_stage()

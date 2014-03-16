@@ -30,6 +30,7 @@ from spack.version import Version
 from spack.util.executable import *
 from spack.directory_layout import SpecHashDirectoryLayout
 from spack.concretize import DefaultConcretizer
+from spack.packages import PackageDB
 
 # This lives in $prefix/lib/spac/spack/__file__
 prefix = ancestor(__file__, 4)
@@ -41,7 +42,6 @@ spack_file = join_path(prefix, "bin", "spack")
 lib_path       = join_path(prefix, "lib", "spack")
 env_path       = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
-packages_path  = join_path(module_path, "packages")
 compilers_path = join_path(module_path, "compilers")
 test_path      = join_path(module_path, "test")
 
@@ -49,6 +49,12 @@ var_path       = join_path(prefix, "var", "spack")
 stage_path     = join_path(var_path, "stage")
 
 install_path   = join_path(prefix, "opt")
+
+#
+# Set up the packages database.
+#
+db = PackageDB(join_path(module_path, "packages"))
+
 
 #
 # This controls how spack lays out install prefixes and

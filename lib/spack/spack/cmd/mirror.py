@@ -29,9 +29,8 @@ import argparse
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, join_path
 
-import spack.packages as packages
+import spack
 import spack.cmd
-
 from spack.stage import Stage
 
 
@@ -46,7 +45,7 @@ def setup_parser(subparser):
 
 def mirror(parser, args):
     if not args.packages:
-        args.packages = [p for p in packages.all_package_names()]
+        args.packages = [p for p in spack.db.all_package_names()]
 
     if os.path.isfile(args.directory):
         tty.error("%s already exists and is a file." % args.directory)
@@ -59,7 +58,7 @@ def mirror(parser, args):
 
     # Iterate through packages and download all the safe tarballs for each of them
     for pkg_name in args.packages:
-        pkg = packages.get(pkg_name)
+        pkg = spack.db.get(pkg_name)
 
         # Skip any package that has no checksummed versions.
         if not pkg.versions:

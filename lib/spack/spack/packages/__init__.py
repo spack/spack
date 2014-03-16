@@ -28,14 +28,22 @@ import sys
 import string
 import inspect
 import glob
+import imp
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
-from llnl.util.lang import list_modules
+from llnl.util.lang import memoized
 
 import spack
 import spack.error
 import spack.spec
+from spack.virtual import ProviderIndex
+
+# Name of module under which packages are imported
+_imported_packages_module = 'spack.packages'
+
+# Name of the package file inside a package directory
+_package_file_name = 'package.py'
 
 # Valid package names can contain '-' but can't start with it.
 valid_package_re = r'^\w[\w-]*$'
@@ -43,220 +51,17 @@ valid_package_re = r'^\w[\w-]*$'
 # Don't allow consecutive [_-] in package names
 invalid_package_re = r'[_-][_-]+'
 
-instances = {}
-
-
-def _autospec(function):
-    """Decorator that automatically converts the argument of a single-arg
-       function to a Spec."""
-    def converter(arg):
-        if not isinstance(arg, spack.spec.Spec):
-            arg = spack.spec.Spec(arg)
-        return function(arg)
-    return converter
-
-
-class ProviderIndex(object):
-    """This is a dict of dicts used for finding providers of particular
-       virtual dependencies. The dict of dicts looks like:
-
-       { vpkg name :
-           { full vpkg spec : package providing spec } }
-
-       Callers can use this to first find which packages provide a vpkg,
-       then find a matching full spec.  e.g., in this scenario:
-
-       { 'mpi' :
-           { mpi@:1.1 : mpich,
-             mpi@:2.3 : mpich2@1.9: } }
-
-       Calling providers_for(spec) will find specs that provide a
-       matching implementation of MPI.
-    """
-    def __init__(self, specs, **kwargs):
-        # TODO: come up with another name for this.  This "restricts" values to
-        # the verbatim impu specs (i.e., it doesn't pre-apply package's constraints, and
-        # keeps things as broad as possible, so it's really the wrong name)
-        self.restrict = kwargs.setdefault('restrict', False)
-
-        self.providers = {}
-
-        for spec in specs:
-            if not isinstance(spec, spack.spec.Spec):
-                spec = spack.spec.Spec(spec)
-
-            if spec.virtual:
-                continue
-
-            self.update(spec)
-
-
-    def update(self, spec):
-        if type(spec) != spack.spec.Spec:
-            spec = spack.spec.Spec(spec)
-
-        assert(not spec.virtual)
-
-        pkg = spec.package
-        for provided_spec, provider_spec in pkg.provided.iteritems():
-            if provider_spec.satisfies(spec, deps=False):
-                provided_name = provided_spec.name
-                if provided_name not in self.providers:
-                    self.providers[provided_name] = {}
-
-                if self.restrict:
-                    self.providers[provided_name][provided_spec] = spec
-
-                else:
-                    # Before putting the spec in the map, constrain it so that
-                    # it provides what was asked for.
-                    constrained = spec.copy()
-                    constrained.constrain(provider_spec)
-                    self.providers[provided_name][provided_spec] = constrained
-
-
-    def providers_for(self, *vpkg_specs):
-        """Gives specs of all packages that provide virtual packages
-           with the supplied specs."""
-        providers = set()
-        for vspec in vpkg_specs:
-            # Allow string names to be passed as input, as well as specs
-            if type(vspec) == str:
-                vspec = spack.spec.Spec(vspec)
-
-            # Add all the providers that satisfy the vpkg spec.
-            if vspec.name in self.providers:
-                for provider_spec, spec in self.providers[vspec.name].items():
-                    if provider_spec.satisfies(vspec, deps=False):
-                        providers.add(spec)
-
-        # Return providers in order
-        return sorted(providers)
-
-
-    # TODO: this is pretty darned nasty, and inefficient.
-    def _cross_provider_maps(self, lmap, rmap):
-        result = {}
-        for lspec in lmap:
-            for rspec in rmap:
-                try:
-                    constrained = lspec.copy().constrain(rspec)
-                    if lmap[lspec].name != rmap[rspec].name:
-                        continue
-                    result[constrained] = lmap[lspec].copy().constrain(
-                        rmap[rspec], deps=False)
-                except spack.spec.UnsatisfiableSpecError:
-                    continue
-        return result
-
-
-    def __contains__(self, name):
-        """Whether a particular vpkg name is in the index."""
-        return name in self.providers
-
-
-    def satisfies(self, other):
-        """Check that providers of virtual specs are compatible."""
-        common = set(self.providers) & set(other.providers)
-        if not common:
-            return True
-
-        result = {}
-        for name in common:
-            crossed = self._cross_provider_maps(self.providers[name],
-                                                other.providers[name])
-            if crossed:
-                result[name] = crossed
-
-        return bool(result)
-
-
-
-@_autospec
-def get(spec):
-    if spec.virtual:
-        raise UnknownPackageError(spec.name)
-
-    if not spec in instances:
-        package_class = get_class_for_package_name(spec.name)
-        instances[spec.name] = package_class(spec)
-
-    return instances[spec.name]
-
-
-@_autospec
-def get_installed(spec):
-    return [s for s in installed_package_specs() if s.satisfies(spec)]
-
-
-@_autospec
-def providers_for(vpkg_spec):
-    if not hasattr(providers_for, 'index'):
-        providers_for.index = ProviderIndex(all_package_names())
-
-    providers = providers_for.index.providers_for(vpkg_spec)
-    if not providers:
-        raise UnknownPackageError("No such virtual package: %s" % vpkg_spec)
-    return providers
-
 
 def valid_package_name(pkg_name):
+    """Return whether the pkg_name is valid for use in Spack."""
     return (re.match(valid_package_re, pkg_name) and
             not re.search(invalid_package_re, pkg_name))
 
 
 def validate_package_name(pkg_name):
+    """Raise an exception if pkg_name is not valid."""
     if not valid_package_name(pkg_name):
         raise InvalidPackageNameError(pkg_name)
-
-
-def dirname_for_package_name(pkg_name):
-    """Get the directory name for a particular package would use, even if it's a
-       foo.py package and not a directory with a foo/__init__.py file."""
-    return join_path(spack.packages_path, pkg_name)
-
-
-def filename_for_package_name(pkg_name):
-    """Get the filename for the module we should load for a particular package.
-       The package can be either in a standalone .py file, or it can be in
-       a directory with an __init__.py file.
-
-       Package "foo" in standalone .py file:
-         packages/foo.py
-
-       Package "foo" in directory:
-         packages/foo/__init__.py
-
-       The second form is used when there are files (like patches) that need
-       to be stored along with the package.
-
-       If the package doesn't exist yet, this will just return the name
-       of the standalone .py file.
-    """
-    validate_package_name(pkg_name)
-    pkg_dir = dirname_for_package_name(pkg_name)
-
-    if os.path.isdir(pkg_dir):
-        init_file = join_path(pkg_dir, '__init__.py')
-        return init_file
-    else:
-        pkg_file  = "%s.py" % pkg_dir
-        return pkg_file
-
-
-def installed_package_specs():
-    return spack.install_layout.all_specs()
-
-
-def all_package_names():
-    """Generator function for all packages."""
-    for module in list_modules(spack.packages_path):
-        yield module
-
-
-def all_packages():
-    for name in all_package_names():
-        yield get(name)
 
 
 def class_name_for_package_name(pkg_name):
@@ -277,89 +82,185 @@ def class_name_for_package_name(pkg_name):
     return class_name
 
 
-def exists(pkg_name):
-    """Whether a package with the supplied name exists ."""
-    return os.path.exists(filename_for_package_name(pkg_name))
+def _autospec(function):
+    """Decorator that automatically converts the argument of a single-arg
+       function to a Spec."""
+    def converter(self, spec_like):
+        if not isinstance(spec_like, spack.spec.Spec):
+            spec_like = spack.spec.Spec(spec_like)
+        return function(self, spec_like)
+    return converter
 
 
-def packages_module():
-    # TODO: replace this with a proper package DB class, instead of this hackiness.
-    packages_path = re.sub(spack.module_path + '\/+', 'spack.', spack.packages_path)
-    packages_module = re.sub(r'/', '.', packages_path)
-    return packages_module
+class PackageDB(object):
+    def __init__(self, root):
+        """Construct a new package database from a root directory."""
+        self.root = root
+        self.instances = {}
+        self.provider_index = None
 
 
-def get_class_for_package_name(pkg_name):
-    file_name = filename_for_package_name(pkg_name)
+    @_autospec
+    def get(self, spec):
+        if spec.virtual:
+            raise UnknownPackageError(spec.name)
 
-    if os.path.exists(file_name):
-        if not os.path.isfile(file_name):
-            tty.die("Something's wrong. '%s' is not a file!" % file_name)
-        if not os.access(file_name, os.R_OK):
-            tty.die("Cannot read '%s'!" % file_name)
-    else:
-        raise UnknownPackageError(pkg_name)
+        if not spec in self.instances:
+            package_class = self.get_class_for_package_name(spec.name)
+            self.instances[spec.name] = package_class(spec)
 
-    # Figure out pacakges module from spack.packages_path
-    # This allows us to change the module path.
-    if not re.match(r'%s' % spack.module_path, spack.packages_path):
-        raise RuntimeError("Packages path is not a submodule of spack.")
-
-    class_name = class_name_for_package_name(pkg_name)
-    try:
-        module_name = "%s.%s" % (packages_module(), pkg_name)
-        module = __import__(module_name, fromlist=[class_name])
-    except ImportError, e:
-        tty.die("Error while importing %s.%s:\n%s" % (pkg_name, class_name, e.message))
-
-    cls = getattr(module, class_name)
-    if not inspect.isclass(cls):
-        tty.die("%s.%s is not a class" % (pkg_name, class_name))
-
-    return cls
+        return self.instances[spec.name]
 
 
-def compute_dependents():
-    """Reads in all package files and sets dependence information on
-       Package objects in memory.
-    """
-    if not hasattr(compute_dependents, index):
-        compute_dependents.index = {}
-
-    for pkg in all_packages():
-        if pkg._dependents is None:
-            pkg._dependents = []
-
-        for name, dep in pkg.dependencies.iteritems():
-            dpkg = get(name)
-            if dpkg._dependents is None:
-                dpkg._dependents = []
-            dpkg._dependents.append(pkg.name)
+    @_autospec
+    def get_installed(self, spec):
+        return [s for s in self.installed_package_specs() if s.satisfies(spec)]
 
 
-def graph_dependencies(out=sys.stdout):
-    """Print out a graph of all the dependencies between package.
-       Graph is in dot format."""
-    out.write('digraph G {\n')
-    out.write('  label = "Spack Dependencies"\n')
-    out.write('  labelloc = "b"\n')
-    out.write('  rankdir = "LR"\n')
-    out.write('  ranksep = "5"\n')
-    out.write('\n')
+    @_autospec
+    def providers_for(self, vpkg_spec):
+        if self.provider_index is None:
+            self.provider_index = ProviderIndex(self.all_package_names())
 
-    def quote(string):
-        return '"%s"' % string
+        providers = self.provider_index.providers_for(vpkg_spec)
+        if not providers:
+            raise UnknownPackageError("No such virtual package: %s" % vpkg_spec)
+        return providers
 
-    deps = []
-    for pkg in all_packages():
-        out.write('  %-30s [label="%s"]\n' % (quote(pkg.name), pkg.name))
-        for dep_name, dep in pkg.dependencies.iteritems():
-            deps.append((pkg.name, dep_name))
-    out.write('\n')
 
-    for pair in deps:
-        out.write('  "%s" -> "%s"\n' % pair)
-    out.write('}\n')
+    def dirname_for_package_name(self, pkg_name):
+        """Get the directory name for a particular package.  This is the
+           directory that contains its package.py file."""
+        return join_path(self.root, pkg_name)
+
+
+    def filename_for_package_name(self, pkg_name):
+        """Get the filename for the module we should load for a particular
+           package.  Packages for a pacakge DB live in
+           ``$root/<package_name>/package.py``
+
+           This will return a proper package.py path even if the
+           package doesn't exist yet, so callers will need to ensure
+           the package exists before importing.
+        """
+        validate_package_name(pkg_name)
+        pkg_dir = self.dirname_for_package_name(pkg_name)
+        return join_path(pkg_dir, _package_file_name)
+
+
+    def installed_package_specs(self):
+        """Read installed package names straight from the install directory
+           layout.
+        """
+        return spack.install_layout.all_specs()
+
+
+    @memoized
+    def all_package_names(self):
+        """Generator function for all packages.  This looks for
+           ``<pkg_name>/package.py`` files within the root direcotry"""
+        all_package_names = []
+        for pkg_name in os.listdir(self.root):
+            pkg_dir  = join_path(self.root, pkg_name)
+            pkg_file = join_path(pkg_dir, _package_file_name)
+            if os.path.isfile(pkg_file):
+                all_package_names.append(pkg_name)
+            all_package_names.sort()
+        return all_package_names
+
+
+    def all_packages(self):
+        for name in self.all_package_names():
+            yield get(name)
+
+
+    def exists(self, pkg_name):
+        """Whether a package with the supplied name exists ."""
+        return os.path.exists(self.filename_for_package_name(pkg_name))
+
+
+    @memoized
+    def get_class_for_package_name(self, pkg_name):
+        """Get an instance of the class for a particular package.
+
+           This method uses Python's ``imp`` package to load python
+           source from a Spack package's ``package.py`` file.  A
+           normal python import would only load each package once, but
+           because we do this dynamically, the method needs to be
+           memoized to ensure there is only ONE package class
+           instance, per package, per database.
+        """
+        file_path = self.filename_for_package_name(pkg_name)
+
+        if os.path.exists(file_path):
+            if not os.path.isfile(file_path):
+                tty.die("Something's wrong. '%s' is not a file!" % file_path)
+            if not os.access(file_path, os.R_OK):
+                tty.die("Cannot read '%s'!" % file_path)
+        else:
+            raise UnknownPackageError(pkg_name)
+
+        # Figure out pacakges module based on self.root
+        if not re.match(r'%s' % spack.module_path, self.root):
+            raise RuntimeError("Packages path is not a submodule of spack.")
+
+        class_name = class_name_for_package_name(pkg_name)
+        try:
+            module_name = _imported_packages_module + '.' + pkg_name
+            module = imp.load_source(module_name, file_path)
+
+        except ImportError, e:
+            tty.die("Error while importing %s from %s:\n%s" % (
+                pkg_name, file_path, e.message))
+
+        cls = getattr(module, class_name)
+        if not inspect.isclass(cls):
+            tty.die("%s.%s is not a class" % (pkg_name, class_name))
+
+        return cls
+
+
+    def compute_dependents(self):
+        """Reads in all package files and sets dependence information on
+           Package objects in memory.
+        """
+        if not hasattr(compute_dependents, index):
+            compute_dependents.index = {}
+
+        for pkg in all_packages():
+            if pkg._dependents is None:
+                pkg._dependents = []
+
+            for name, dep in pkg.dependencies.iteritems():
+                dpkg = get(name)
+                if dpkg._dependents is None:
+                    dpkg._dependents = []
+                dpkg._dependents.append(pkg.name)
+
+
+    def graph_dependencies(self, out=sys.stdout):
+        """Print out a graph of all the dependencies between package.
+           Graph is in dot format."""
+        out.write('digraph G {\n')
+        out.write('  label = "Spack Dependencies"\n')
+        out.write('  labelloc = "b"\n')
+        out.write('  rankdir = "LR"\n')
+        out.write('  ranksep = "5"\n')
+        out.write('\n')
+
+        def quote(string):
+            return '"%s"' % string
+
+        deps = []
+        for pkg in all_packages():
+            out.write('  %-30s [label="%s"]\n' % (quote(pkg.name), pkg.name))
+            for dep_name, dep in pkg.dependencies.iteritems():
+                deps.append((pkg.name, dep_name))
+        out.write('\n')
+
+        for pair in deps:
+            out.write('  "%s" -> "%s"\n' % pair)
+        out.write('}\n')
 
 
 class InvalidPackageNameError(spack.error.SpackError):

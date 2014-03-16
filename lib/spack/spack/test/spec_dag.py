@@ -30,7 +30,6 @@ You can find the dummy packages here::
 """
 import spack
 import spack.package
-import spack.packages as packages
 
 from llnl.util.lang import list_modules
 
