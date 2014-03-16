@@ -200,10 +200,6 @@ class PackageDB(object):
         else:
             raise UnknownPackageError(pkg_name)
 
-        # Figure out pacakges module based on self.root
-        if not re.match(r'%s' % spack.module_path, self.root):
-            raise RuntimeError("Packages path is not a submodule of spack.")
-
         class_name = class_name_for_package_name(pkg_name)
         try:
             module_name = _imported_packages_module + '.' + pkg_name

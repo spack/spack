@@ -24,14 +24,9 @@
 ##############################################################################
 import unittest
 
-from llnl.util.lang import list_modules
-from llnl.util.filesystem import join_path
-
 import spack
 from spack.packages import PackageDB
 from spack.spec import Spec
-
-mock_packages_path = join_path(spack.module_path, 'test', 'mock_packages')
 
 def set_pkg_dep(pkg, spec):
     """Alters dependence information for a pacakge.
@@ -48,7 +43,7 @@ class MockPackagesTest(unittest.TestCase):
         # us to set up contrived packages that don't interfere with
         # real ones.
         self.real_db = spack.db
-        spack.db = PackageDB(mock_packages_path)
+        spack.db = PackageDB(spack.mock_packages_path)
 
 
     @classmethod

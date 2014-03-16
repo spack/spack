@@ -24,9 +24,10 @@
 ##############################################################################
 import unittest
 
+from llnl.util.filesystem import join_path
+
 import spack
 import spack.packages as packages
-
 from spack.test.mock_packages_test import *
 
 
@@ -43,7 +44,7 @@ class PackagesTest(MockPackagesTest):
 
     def test_package_filename(self):
         filename = spack.db.filename_for_package_name('mpich')
-        self.assertEqual(filename, join_path(mock_packages_path, 'mpich', 'package.py'))
+        self.assertEqual(filename, join_path(spack.mock_packages_path, 'mpich', 'package.py'))
 
 
     def test_package_name(self):
@@ -53,7 +54,7 @@ class PackagesTest(MockPackagesTest):
 
     def test_nonexisting_package_filename(self):
         filename = spack.db.filename_for_package_name('some-nonexisting-package')
-        self.assertEqual(filename, join_path(mock_packages_path, 'some-nonexisting-package', 'package.py'))
+        self.assertEqual(filename, join_path(spack.mock_packages_path, 'some-nonexisting-package', 'package.py'))
 
 
     def test_package_class_names(self):

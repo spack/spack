@@ -53,8 +53,13 @@ install_path   = join_path(prefix, "opt")
 #
 # Set up the packages database.
 #
-db = PackageDB(join_path(module_path, "packages"))
+packages_path = join_path(var_path, "packages")
+db = PackageDB(packages_path)
 
+#
+# This is the path to mock packages used by spack for testing.
+#
+mock_packages_path = join_path(var_path, "mock_packages")
 
 #
 # This controls how spack lays out install prefixes and
