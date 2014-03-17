@@ -44,10 +44,10 @@ will fill in the unspecified values with sensible defaults.
 Customize dependencies
 -------------------------------------
 
-Spack is unique in that it allows *dependencies* of a particualr
-installation to be customized.  Suppose that ``mpileaks`` depends
-indirectly on ``libelf`` and ``libdwarf``.  Using ``^``, users can add
-custom configurations for the dependencies, as well:
+Spack allows *dependencies* of a particular installation to be
+customized extensively.  Suppose that ``mpileaks`` depends indirectly
+on ``libelf`` and ``libdwarf``.  Using ``^``, users can add custom
+configurations for the dependencies:
 
 .. code-block:: sh
 
@@ -77,11 +77,13 @@ archive.  The ``spack create`` command will create a boilerplate
 package file, and the package authors can fill in specific build steps
 in pure Python.
 
+For example, this command:
+
 .. code-block:: sh
 
    $ spack create http://www.mr511.de/software/libelf-0.8.13.tar.gz
 
-Creates ``libelf.py``:
+creates a simple python file:
 
 .. code-block:: python
 
@@ -98,10 +100,10 @@ Creates ``libelf.py``:
            make()
            make("install")
 
-It typically doesn't take much python coding to get from there to a
-working package file:
+It doesn't take much python coding to get from there to a working
+package:
 
-.. literalinclude:: ../spack/packages/libelf.py
+.. literalinclude:: ../../../var/spack/packages/libelf/package.py
    :lines: 25-
 
 Spack also provides wrapper functions around common commands like

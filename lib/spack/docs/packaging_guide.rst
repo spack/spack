@@ -41,9 +41,9 @@ Package Files
 ---------------------------
 
 It's probably easiest to learn about packages by looking at an
-example.  Let's take a look at ``libelf.py``:
+example.  Let's take a look at the ``libelf`` package:
 
-.. literalinclude:: ../spack/packages/libelf.py
+.. literalinclude:: ../../../var/spack/packages/libelf/package.py
    :lines: 25-
    :linenos:
 
@@ -51,59 +51,63 @@ Directory Structure
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A Spack installation directory is structured like a standard UNIX
-install prefix (``bin``, ``lib``, ``include``, ``share``, etc.).  Most
-of the code for Spack lives in ``$SPACK_ROOT/lib/spack``, and this is
-also the top-level include directory for Python code.  When Spack
-runs, it adds this directory to its ``PYTHONPATH``.
+install prefix (``bin``, ``lib``, ``include``, ``var``, ``opt``,
+etc.).  Most of the code for Spack lives in ``$SPACK_ROOT/lib/spack``.
+Packages themselves live in ``$SPACK_ROOT/var/spack/packages``.
 
-Spack packages live in the ``spack.packages`` Python package, which
-means that they need to go in ``$prefix/lib/spack/spack/packages``.
-If you list that directory, you'll see all the existing packages:
+If you ``cd`` to that directory, you will see directories for each
+package:
 
-.. command-output::  cd $SPACK_ROOT/lib/spack/spack/packages;  ls *.py
+.. command-output::  cd $SPACK_ROOT/var/spack/packages;  ls
    :shell:
-   :ellipsis: 5
+   :ellipsis: 10
 
-``__init__.py`` contains some utility functions used by Spack to load
-packages when they're needed for an installation.  All the other files
-in the ``packages`` directory are actual Spack packages used to
-install software.
+Each of these directories contains a file called ``package.py``.  This
+file is where all the python code for a package goes.  For example,
+the ``libelf`` package looks like this::
+
+   $SPACK_ROOT/var/spack/packages/
+       libelf/
+           package.py
+
+Alongside the ``package.py`` file, a package may contain extra files (like
+patches) that it needs to build.
+
 
 Package Names
 ~~~~~~~~~~~~~~~~~~
 
-The ``libelf`` package lives in a file called ``libelf.py``, and it
-contains a class called ``Libelf``.  The ``Libelf`` class extends
-Spack's ``Package`` class (and this is what makes it a Spack package).
-The **file name** is what users need to provide in their package
-specs. e.g., if you type any of these:
+Packages are named after the directory containing ``package.py``.  So,
+``libelf``'s ``package.py`` lives in a directory called ``libelf``.
+The ``package.py`` file contains a class called ``Libelf``, which
+extends Spack's ``Package`` class.  This is what makes it a Spack
+package.  The **directory name** is what users need to provide on the
+command line. e.g., if you type any of these:
 
 .. code-block:: sh
 
    $ spack install libelf
    $ spack install libelf@0.8.13
 
-Spack sees the package name in the spec and looks for a file called
-``libelf.py`` in its ``packages`` directory.  Likewise, if you say
-``spack install docbook-xml``, then Spack looks for a file called
-``docbook-xml.py``.
+Spack sees the package name in the spec and looks for
+``libelf/package.py`` in ``var/spack/packages``.  Likewise, if you say
+``spack install docbook-xml``, then Spack looks for
+``docbook-xml/package.py``.
 
-We use the filename for the package name to give packagers more
-freedom in naming their packages. Package names can contain letters,
-numbers, dashes, and underscores, and there are no other restrictions.
-You can name a package ``3proxy`` or ``_foo`` and Spack won't care --
-it just needs to see that name in the package spec.  Experienced
-Python programmers will notice that package names are actually Python
-module names, but they're not necessarily valid Python identifiers.
-i.e., you can't actually ``import 3proxy`` in Python.  You'll get a
-syntax error because the identifier doesn't start with a letter or
-underscore.  For more details on why this is still ok, see the
-:ref:`developer guide<developer_guide>`.
+We use the directory name to packagers more freedom when naming their
+packages. Package names can contain letters, numbers, dashes, and
+underscores.  You can name a package ``3proxy`` or ``_foo`` and Spack
+won't care -- it just needs to see that name in the package spec.
+These aren't valid Python module names, but we allow them in Spack and
+import ``package.py`` file dynamically.
 
-The **class name** is formed by converting words separated by `-` or
-``_`` in the file name to camel case.  If the name starts with a
-number, we prefix the class name with ``Num_``. Here are some
-examples:
+Package class names
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The **class name** (``Libelf`` in our example) is formed by converting
+words separated by `-` or ``_`` in the file name to camel case.  If
+the name starts with a number, we prefix the class name with
+``Num_``. Here are some examples:
 
 =================  =================
  Module Name         Class Name
@@ -125,11 +129,11 @@ Metadata
 ~~~~~~~~~~~~~~~~~~~~
 
 Just under the class name is a description of the ``libelf`` package.
-In Python, this is called a *docstring*, and it's a multi-line,
-triple-quoted (``"""``) string that comes just after the definition of
-a class.  Spack uses the docstring to generate the description of the
-package that is shown when you run ``spack info``.  If you don't provide
-a description, Spack will just print "None" for the description.
+In Python, this is called a *docstring*: a multi-line, triple-quoted
+(``"""``) string that comes just after the definition of a class.
+Spack uses the docstring to generate the description of the package
+that is shown when you run ``spack info``.  If you don't provide a
+description, Spack will just print "None" for the description.
 
 In addition to the package description, there are a few fields you'll
 need to fill out.  They are as follows:
@@ -148,12 +152,12 @@ need to fill out.  They are as follows:
   mapping versions to MD5 hashes.  Spack uses the hashes to checksum
   archives when it downloads a particular version.
 
-``parallel`` (optional)
-  Whether make should be parallel by default.  By default, this is
-  ``True``, and package authors need to call ``make(parallel=False)``
-  to override.  If you set this to ``False`` at the package level
-  then each call to ``make`` will be sequential by default, and users
-  will have to call ``make(parallel=True)`` to override it.
+``parallel`` (optional) Whether make should be parallel by default.
+  By default, this is ``True``, and package authors need to call
+  ``make(parallel=False)`` to override.  If you set this to ``False``
+  at the package level then each call to ``make`` will be sequential
+  by default, and users will have to call ``make(parallel=True)`` to
+  override it.
 
 ``versions`` is optional but strongly recommended.  Spack will warn
 usrs if they try to install a version (e.g., ``libelf@0.8.10`` for
@@ -170,7 +174,7 @@ method.  This is where the real work of installation happens, and
 it's the main part of the package you'll need to customize for each
 piece of software.
 
-.. literalinclude:: ../spack/packages/libelf.py
+.. literalinclude::  ../../../var/spack/packages/libelf/package.py
    :start-after: 0.8.12
    :linenos:
 
@@ -198,10 +202,9 @@ Creating Packages
 ``spack create``
 ~~~~~~~~~~~~~~~~~~~~~
 
-The ``spack create`` command takes the drudgery out of making
-packages.  It generates boilerplate code that conforms to Spack's idea
-of what a package should be, so that you can focus on getting your
-pacakge working.
+The ``spack create`` command takes the tedium out of making packages.
+It generates boilerplate code for you, so that you can focus on
+getting your package build working.
 
 All you need is the URL to a tarball you want to package:
 
@@ -240,8 +243,7 @@ Spack will automatically download the number of tarballs you specify
 Note that you don't need to do everything up front.  If your package
 is large, you can always choose to download just one tarball for now,
 then run :ref:`spack checksum <spack-checksum>` later if you end up
-wanting more.  Let's say, for now, that you opted to download 3
-tarballs:
+wanting more.  Let's say you chose to download 3 tarballs:
 
 .. code-block:: sh
 
@@ -254,8 +256,8 @@ tarballs:
    ==> Fetching http://www.cmake.org/files/v2.8/cmake-2.8.11.2.tar.gz
    ####################################################################      95.2%
 
-Now Spack generates some boilerplate and opens the package file in
-your favorite ``$EDITOR``:
+Now Spack generates boilerplate code and opens the new
+``package.py`` file in your favorite ``$EDITOR``:
 
 .. code-block:: python
    :linenos:
@@ -319,7 +321,7 @@ Once you've created a package, you can go back and edit it using
 
    spack edit libelf
 
-will open ``$SPACK_ROOT/lib/spack/spack/packages/libelf.py`` in
+will open ``$SPACK_ROOT/var/spack/packages/libelf/package.py`` in
 ``$EDITOR``.  If you try to edit a package that doesn't exist, Spack
 will recommend using ``spack create``:
 
@@ -334,8 +336,7 @@ that ``spack create`` does for you, then you can run ``spack edit
 
    $ spack edit -f foo
 
-Which will generate a *very* minimal package structure for you to fill
-in:
+Which will generate a minimal package structure for you to fill in:
 
 .. code-block:: python
    :linenos:
@@ -355,8 +356,8 @@ in:
            make()
            make("install")
 
-We recommend using this only when you have to, as it's generally more
-work than using ``spack create``.
+This is useful when, e.g., Spack cannot figure out the name and
+version of your package from the archive URL.
 
 
 .. _spack-checksum:
@@ -424,7 +425,7 @@ When spack tries to find available versions of packages (e.g. in
 the tarball in the package's ``url``.  For example, for libelf, the
 url is:
 
-.. literalinclude:: ../spack/packages/libelf.py
+.. literalinclude::  ../../../var/spack/packages/libelf/package.py
    :start-after: homepage
    :end-before: versions
 
@@ -436,7 +437,7 @@ source code archives.  For these, you can specify a separate
 ``list_url`` indicating the page to search for tarballs.  For example,
 ``libdwarf`` has the homepage as the ``list_url``:
 
-.. literalinclude:: ../spack/packages/libdwarf.py
+.. literalinclude::  ../../../var/spack/packages/libdwarf/package.py
    :start-after: Libdwarf
    :end-before: versions
 
@@ -451,7 +452,7 @@ the ``list_url`` for tarball links.  For example, ``mpich`` archives
 are stored in a directory tree of versions, so the package looks like
 this:
 
-.. literalinclude:: ../spack/packages/mpich.py
+.. literalinclude::  ../../../var/spack/packages/mpich/package.py
    :start-after: homepage
    :end-before: versions
 
@@ -469,7 +470,7 @@ build script for your own package?
 Spack makes this relatively easy.  Let's take a look at the
 ``libdwarf`` package to see how it's done:
 
-.. literalinclude:: ../spack/packages/libdwarf.py
+.. literalinclude:: ../../../var/spack/packages/libdwarf/package.py
    :linenos:
    :start-after: dwarf_dirs
    :end-before: def clean
@@ -544,7 +545,7 @@ In Spack, ``mpi`` is a *virtual package*.  A package can depend on it
 just like any other package, by supplying a ``depends_on`` call in the
 package definition.  In ``mpileaks``, this looks like so:
 
-.. literalinclude:: ../spack/packages/mpileaks.py
+.. literalinclude::  ../../../var/spack/packages/mpileaks/package.py
    :start-after: url
    :end-before: install
 
@@ -808,21 +809,37 @@ after it's downloaded.
 ``patch``
 ~~~~~~~~~~~~~~~~~~~~~
 
-You can specif patches in your package file with the ``patch()``
+You can specify patches in your package file with the ``patch()``
 function.  ``patch`` looks like this:
 
 .. code-block:: python
 
    class Mvapich2(Package):
        ...
-       patch('http://www.example.com/ad_lustre_rwcontig_open_source.patch',
-             when='@1.9:')
+       patch('ad_lustre_rwcontig_open_source.patch', when='@1.9:')
 
 The first argument can be either a URL or a filename.  It specifies a
-patch file that should be applied to your source.  If it is a URL, as
-above, then the patch will be fetched from the URL and then applied to
-your source code.  If the patch you supply is a filename, then the
-patch needs to live within the spack source tree.
+patch file that should be applied to your source.  If the patch you
+supply is a filename, then the patch needs to live within the spack
+source tree.  For example, the patch above lives in a directory
+structure like this::
+
+   $SPACK_ROOT/var/spack/packages/
+       mvapich2/
+           package.py
+           ad_lustre_rwcontig_open_source.patch
+
+If you supply a URL instead of a filename, the patch will be fetched
+from the URL and then applied to your source code.
+
+.. warning::
+
+   It is generally better to use a filename rather than a URL for your
+   patch.  Patches fetched from URLs are not currently checksummed,
+   and adding checksums for them is tedious for the package builder.
+   File patches go into the spack repository, which gives you git's
+   integrity guarantees.  URL patches may be removed in a future spack
+   version.
 
 ``patch`` can take two options keyword arguments.  They are:
 
@@ -838,7 +855,7 @@ patch needs to live within the spack source tree.
   spack will run ``patch -p2``, and so on.
 
 A lot of people are confused by level, so here's a primer.  If you
-look in your patch file, you'll see something like this:
+look in your patch file, you may see something like this:
 
 .. code-block:: diff
 
@@ -857,8 +874,8 @@ look in your patch file, you'll see something like this:
 The first two lines show paths with synthetic ``a/`` and ``b/``
 prefixes.  These are placeholders for the two ``mvapich2`` source
 directories that ``diff`` compared when it created the patch file.
-It's actually the default behavior for most programs that produce
-patch files.
+This is git's default behavior when creating patch files, but other
+programs may behave differently.
 
 ``-p1`` strings off the first level of prefix in both paths, allowing
 the patch to be applied from the root of an expanded mvapich2 archive.
@@ -868,49 +885,6 @@ It's generally easier to just structure your patch file so that it
 applies cleanly with ``-p1``, but if you're using a URL to a patch you
 didn't create yourself, ``level`` can be handy.
 
-
-Patch files
-~~~~~~~~~~~~~~~~~~~~~
-
-If you don't want to use URLs, where in the spack source tree should
-you put patch files?
-
-We told you before that the ``mvapich2`` package needs to live in a
-python file like this::
-
-  $SPACK_ROOT/lib/spack/spack/
-      packages/
-          mvapich2.py
-
-This isn't actually the whole truth.  Packages in spack are actually
-just python modules, and another way to structure your python module
-is to use a directory containing ``__init__.py``.  So, you can make
-some room for your patch file like this::
-
-  $ cd $SPACK_ROOT/lib/spack/spack/packages
-  $ mkdir mvapich2
-  $ mv mvapich2.py mvapich2/__init__.py
-
-You can now put the patch file alongside ``__init__``.py inside the
-``mvapich2`` directory. Your package directory now looks like this::
-
-  $SPACK_ROOT/lib/spack/spack/
-      packages/
-          mvapich2/
-              __init__.py
-              ad_lustre_rwcontig_open_source.patch
-
-And ``__init__.py`` should look something like this:
-
-.. code-block:: python
-
-   class Mvapich2(Package):
-       ...
-       patch('ad_lustre_rwcontig_open_source.patch', when='@1.9:')
-
-The path to the local patch file should be relative to the package's
-directory in Spack, i.e. relative to
-``$SPACK_ROOT/lib/spack/spack/packages/<pkg_name>``.
 
 .. _install-method:
 
@@ -1217,7 +1191,7 @@ method (the one without the ``@when`` decorator) will be called.
 Shell command wrappers
 -------------------------
 
-Recall the install method in ``libelf.py``:
+Recall the install method from ``libelf``:
 
 .. code-block:: python
 
