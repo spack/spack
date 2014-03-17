@@ -764,7 +764,7 @@ class Package(object):
 
 
     def do_uninstall(self):
-        if not os.path.exists(self.prefix):
+        if not self.installed:
             tty.die(self.name + " is not installed.")
 
         if not self.ignore_dependencies:
