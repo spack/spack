@@ -543,9 +543,7 @@ class Package(object):
         dependents = []
         for spec in spack.db.installed_package_specs():
             if self.name in spec.dependencies:
-                dep_spec = spec.dependencies[self.name]
-                if self.spec == dep_spec:
-                    dependents.append(dep_spec)
+                dependents.append(spec)
         return dependents
 
 
@@ -772,8 +770,8 @@ class Package(object):
         if not self.ignore_dependencies:
             deps = self.installed_dependents
             if deps: tty.die(
-                "Cannot uninstall %s. The following installed packages depend on it:"
-                % self.name, " ".join(deps))
+                "Cannot uninstall %s. The following installed packages depend on it: %s"
+                % (self.name, deps))
 
         self.remove_prefix()
         tty.msg("Successfully uninstalled %s." % self.name)
