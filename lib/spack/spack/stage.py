@@ -215,17 +215,27 @@ class Stage(object):
 
 
     def fetch_from_url(self, url):
-        try:
-            # Run curl but grab the mime type from the http headers
-            headers = spack.curl('-#',        # status bar
-                                 '-O',        # save file to disk
-                                 '-D', '-',   # print out HTML headers
-                                 '-L', url, return_output=True)
-        except:
+        # Run curl but grab the mime type from the http headers
+        headers = spack.curl('-#',        # status bar
+                             '-O',        # save file to disk
+                             '-D', '-',   # print out HTML headers
+                             '-L', url,
+                             return_output=True, fail_on_error=False)
+
+        if spack.curl.returncode != 0:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
-            raise
+
+            if spack.curl.returncode == 60:
+                # This is a certificate error.  Suggest spack -k
+                raise FailedDownloadError(
+                    url,
+                    "Curl was unable to fetch due to invalid certificate. "
+                    "This is either an attack, or your cluster's SSL configuration "
+                    "is bad.  If you believe your SSL configuration is bad, you "
+                    "can try running spack -k, which will not check SSL certificates."
+                    "Use this at your own risk.")
 
         # Check if we somehow got an HTML file rather than the archive we
         # asked for.  We only look at the last content type, to handle
@@ -358,7 +368,7 @@ def find_tmp_root():
 
 class FailedDownloadError(serr.SpackError):
     """Raised wen a download fails."""
-    def __init__(self, url):
+    def __init__(self, url, msg=""):
         super(FailedDownloadError, self).__init__(
-            "Failed to fetch file from URL: " + url)
+            "Failed to fetch file from URL: %s" % url, msg)
         self.url = url

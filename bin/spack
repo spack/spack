@@ -96,8 +96,10 @@ except SpackError, e:
     if spack.debug:
         # In debug mode, raise with a full stack trace.
         raise
+    elif e.long_message:
+        tty.die(e.message, e.long_message)
     else:
-        # Otherwise print a nice simple message.
         tty.die(e.message)
+
 except KeyboardInterrupt:
     tty.die("Got a keyboard interrupt from the user.")

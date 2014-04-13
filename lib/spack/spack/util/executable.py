@@ -35,7 +35,7 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
     def __init__(self, name):
         self.exe = name.split(' ')
-
+        self.returncode = None
 
     def add_default_arg(self, arg):
         self.exe.append(arg)
@@ -68,6 +68,8 @@ class Executable(object):
                 stderr=sys.stderr,
                 stdout=subprocess.PIPE if return_output else sys.stdout)
             out, err = proc.communicate()
+            self.returncode = proc.returncode
+
             if fail_on_error and proc.returncode != 0:
                 raise SpackError("command '%s' returned error code %d"
                                  % (" ".join(cmd), proc.returncode))

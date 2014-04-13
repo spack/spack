@@ -27,8 +27,9 @@ class SpackError(Exception):
     """This is the superclass for all Spack errors.
        Subclasses can be found in the modules they have to do with.
     """
-    def __init__(self, message):
+    def __init__(self, message, long_message=None):
         super(SpackError, self).__init__(message)
+        self.long_message = long_message
 
 
 class UnsupportedPlatformError(SpackError):

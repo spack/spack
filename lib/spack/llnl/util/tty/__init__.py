@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
+import textwrap
 from llnl.util.tty.color import *
 
 debug   = False
@@ -39,7 +40,10 @@ def info(message, *args, **kwargs):
     format = kwargs.get('format', '*b')
     cprint("@%s{==>} %s" % (format, cescape(str(message))))
     for arg in args:
-        print indent + str(arg)
+        lines = textwrap.wrap(
+            str(arg), initial_indent=indent, subsequent_indent=indent)
+        for line in lines:
+            print line
 
 
 def verbose(message, *args):
