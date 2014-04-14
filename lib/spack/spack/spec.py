@@ -270,12 +270,6 @@ class DependencyMap(HashableMap):
         return all(d.concrete for d in self.values())
 
 
-    def sha1(self):
-        sha = hashlib.sha1()
-        sha.update(str(self))
-        return sha.hexdigest()
-
-
     def __str__(self):
         sorted_dep_names = sorted(self.keys())
         return ''.join(
@@ -284,7 +278,7 @@ class DependencyMap(HashableMap):
 
 @key_ordering
 class Spec(object):
-    def __init__(self, spec_like, *dep_like):
+    def __init__(self, spec_like, *dep_like, **kwargs):
         # Copy if spec_like is a Spec.
         if isinstance(spec_like, Spec):
             self._dup(spec_like)
@@ -475,6 +469,19 @@ class Spec(object):
     @property
     def prefix(self):
         return Prefix(spack.install_layout.path_for_spec(self))
+
+
+    def dep_hash(self, length=None):
+        """Return a hash representing the dependencies of this spec
+           This will always normalize first so that the hash is consistent.
+        """
+        self.normalize()
+
+        sha = hashlib.sha1()
+        sha.update(str(self.dependencies))
+        full_hash = sha.hexdigest()
+
+        return full_hash[:length]
 
 
     def _concretize_helper(self, presets=None, visited=None):
@@ -1047,7 +1054,7 @@ class Spec(object):
                         write(c + str(self.architecture), c)
                 elif c == '#':
                     if self.dependencies:
-                        out.write('-' + self.dependencies.sha1()[:8])
+                        out.write('-' + self.dep_hash(8))
                 elif c == '$':
                     out.write('$')
                 escape = False
@@ -1109,12 +1116,6 @@ class Spec(object):
                 out += "^"
             out += node.format(format, color=color) + "\n"
         return out
-
-
-    def sha1(self):
-        sha = hashlib.sha1()
-        sha.update(str(self))
-        return sha.hexdigest()
 
 
     def __repr__(self):
