@@ -26,7 +26,7 @@ import collections
 import argparse
 from StringIO import StringIO
 
-from llnl.util.tty.colify import colify
+from llnl.util.tty.colify import colify, get_terminal_size
 from llnl.util.tty.color import *
 
 import spack
@@ -51,7 +51,7 @@ def setup_parser(subparser):
 # TODO: move this and colify to tty.
 def hline(label, char, color=''):
     max_width = 64
-    cols, rows = spack.colify.get_terminal_size()
+    cols, rows = get_terminal_size()
     if not cols:
         cols = max_width
     else:
