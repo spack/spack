@@ -23,7 +23,10 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
+import os
 import textwrap
+from StringIO import StringIO
+
 from llnl.util.tty.color import *
 
 debug   = False
@@ -97,3 +100,61 @@ def get_number(prompt, **kwargs):
         elif default is not None:
             number = default
     return number
+
+
+def hline(label=None, **kwargs):
+    """Draw an optionally colored or labeled horizontal line.
+       Options:
+
+       char       Char to draw the line with.  Default '-'
+       color      Color of the label.  Default is no color.
+       max_width  Maximum width of the line.  Default is 64 chars.
+
+       See tty.color for possible color formats.
+    """
+    char      = kwargs.get('char', '-')
+    color     = kwargs.get('color', '')
+    max_width = kwargs.get('max_width', 64)
+
+    cols, rows = terminal_size()
+    if not cols:
+        cols = max_width
+    else:
+        cols -= 2
+    cols = min(max_width, cols)
+
+    label = str(label)
+    prefix = char * 2 + " " + label + " "
+    suffix = (cols - len(prefix)) * char
+
+    out = StringIO()
+    if color:
+        prefix = char * 2 + " " + color + cescape(label) + "@. "
+        cwrite(prefix, stream=out, color=True)
+    else:
+        out.write(prefix)
+    out.write(suffix)
+
+    print out.getvalue()
+
+
+def terminal_size():
+    """Gets the dimensions of the console: cols, rows."""
+    def ioctl_GWINSZ(fd):
+        try:
+            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+        except:
+            return
+        return cr
+    cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
+    if not cr:
+        try:
+            fd = os.open(os.ctermid(), os.O_RDONLY)
+            cr = ioctl_GWINSZ(fd)
+            os.close(fd)
+        except:
+            pass
+    if not cr:
+        cr = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))
+
+    return int(cr[1]), int(cr[0])

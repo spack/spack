@@ -38,27 +38,7 @@ import fcntl
 import termios
 import struct
 
-def get_terminal_size():
-    """Get the dimensions of the console."""
-    def ioctl_GWINSZ(fd):
-        try:
-            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
-        except:
-            return
-        return cr
-    cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
-    if not cr:
-        try:
-            fd = os.open(os.ctermid(), os.O_RDONLY)
-            cr = ioctl_GWINSZ(fd)
-            os.close(fd)
-        except:
-            pass
-    if not cr:
-        cr = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))
-
-    return int(cr[1]), int(cr[0])
-
+from llnl.util.tty import terminal_size
 
 class ColumnConfig:
     def __init__(self, cols):
@@ -135,7 +115,7 @@ def colify(elts, **options):
 
     console_cols = options.get("cols", None)
     if not console_cols:
-        console_cols, console_rows = get_terminal_size()
+        console_cols, console_rows = terminal_size()
     elif type(console_cols) != int:
         raise ValueError("Number of columns must be an int")
     console_cols = max(1, console_cols - indent)
@@ -170,7 +150,7 @@ def colify(elts, **options):
 if __name__ == "__main__":
     import optparse
 
-    cols, rows = get_terminal_size()
+    cols, rows = terminal_size()
     parser = optparse.OptionParser()
     parser.add_option("-u", "--uniform", action="store_true", default=False,
                       help="Use uniformly sized columns instead of variable-size.")

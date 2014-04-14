@@ -326,7 +326,9 @@ class Package(object):
     """Controls whether install and uninstall check deps before running."""
     ignore_dependencies = False
 
-    """Dirty hack for forcing packages with uninterpretable URLs"""
+    """Dirty hack for forcing packages with uninterpretable URLs
+       TODO: get rid of this.
+    """
     force_url = False
 
 
@@ -676,7 +678,6 @@ class Package(object):
 
         if os.path.exists(self.prefix):
             tty.msg("%s is already installed." % self.name)
-            print_pkg(self.prefix)
             return
 
         if not self.ignore_dependencies:

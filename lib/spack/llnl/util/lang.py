@@ -31,6 +31,22 @@ import inspect
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
 
+
+def partition_list(elements, predicate):
+    """Partition a list into two lists, the first containing elements
+       for which the predicate evaluates to true, the second containing
+       those for which it is false.
+    """
+    trues = []
+    falses = []
+    for elt in elements:
+        if predicate(elt):
+            trues.append(elt)
+        else:
+            falses.append(elt)
+    return trues, falses
+
+
 def caller_locals():
     """This will return the locals of the *parent* of the caller.
        This allows a fucntion to insert variables into its caller's

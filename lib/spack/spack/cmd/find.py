@@ -26,13 +26,13 @@ import collections
 import argparse
 from StringIO import StringIO
 
-from llnl.util.tty.colify import colify, get_terminal_size
+import llnl.util.tty as tty
+from llnl.util.tty.colify import colify
 from llnl.util.tty.color import *
+from llnl.util.lang import partition_list
 
 import spack
 import spack.spec
-import spack
-
 
 description ="Find installed spack packages"
 
@@ -48,42 +48,25 @@ def setup_parser(subparser):
         help='optional specs to filter results')
 
 
-# TODO: move this and colify to tty.
-def hline(label, char, color=''):
-    max_width = 64
-    cols, rows = get_terminal_size()
-    if not cols:
-        cols = max_width
-    else:
-        cols -= 2
-    cols = min(max_width, cols)
-
-    label = str(label)
-    prefix = char * 2 + " " + label + " "
-    suffix = (cols - len(prefix)) * char
-
-    out = StringIO()
-    if color:
-        prefix = char * 2 + " " + color + cescape(label) + "@. "
-        cwrite(prefix, stream=out, color=True)
-    else:
-        out.write(prefix)
-    out.write(suffix)
-
-    return out.getvalue()
-
-
 def find(parser, args):
     def hasher():
         return collections.defaultdict(hasher)
 
-    query_specs = []
-    if args.query_specs:
-        query_specs = spack.cmd.parse_specs(args.query_specs, normalize=True)
+    # Filter out specs that don't exist.
+    query_specs = spack.cmd.parse_specs(args.query_specs)
+    query_specs, nonexisting = partition_list(
+        query_specs, lambda s: spack.db.exists(s.name))
+
+    if nonexisting:
+        msg = "No such package%s: " % ('s' if len(nonexisting) > 1 else '')
+        tty.msg(msg + ", ".join(s.name for s in nonexisting))
+        if not query_specs:
+            return
 
     # Make a dict with specs keyed by architecture and compiler.
     index = hasher()
     for spec in spack.db.installed_package_specs():
+        # Check whether this installed package matches any query.
         if query_specs and not any(spec.satisfies(q) for q in query_specs):
             continue
 
@@ -93,9 +76,9 @@ def find(parser, args):
 
     # Traverse the index and print out each package
     for architecture in index:
-        print hline(architecture, "=", spack.spec.architecture_color)
+        tty.hline(architecture, char='=', color=spack.spec.architecture_color)
         for compiler in index[architecture]:
-            print hline(compiler, "-", spack.spec.compiler_color)
+            tty.hline(architecture, char='-', color=spack.spec.compiler_color)
 
             specs = index[architecture][compiler]
             specs.sort()
