@@ -407,7 +407,7 @@ class Package(object):
         if self._stage is None:
             mirror_path = "%s/%s" % (self.name, os.path.basename(self.url))
             self._stage = Stage(
-                self.url, mirror_path=mirror_path, name=str(self.spec))
+                self.url, mirror_path=mirror_path, name=self.spec.short_spec)
         return self._stage
 
 

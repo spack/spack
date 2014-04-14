@@ -138,18 +138,8 @@ class SpecHashDirectoryLayout(DirectoryLayout):
 
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
-
-        path = join_path(
-            spec.architecture,
-            spec.compiler,
-            "%s@%s%s" % (spec.name, spec.version, spec.variants))
-
-        if spec.dependencies:
-            path += "-"
-            sha1 = spec.dependencies.sha1()
-            path += sha1[:self.prefix_size]
-
-        return path
+        dir_name = spec.format('$_$@$+$#')
+        return join_path(spec.architecture, spec.compiler, dir_name)
 
 
     def write_spec(self, spec, path):

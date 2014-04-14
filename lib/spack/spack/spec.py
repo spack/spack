@@ -466,6 +466,13 @@ class Spec(object):
 
 
     @property
+    def short_spec(self):
+        """Returns a version of the spec with the dependencies hashed
+           instead of completely enumerated."""
+        return self.format('$_$@$%@$+$=$#')
+
+
+    @property
     def prefix(self):
         return Prefix(spack.install_layout.path_for_spec(self))
 
@@ -998,15 +1005,18 @@ class Spec(object):
                $%@  Compiler & compiler version
                $+   Options
                $=   Architecture
-               $#   Dependencies' 6-char sha1 prefix
+               $#   Dependencies' 8-char sha1 prefix
                $$   $
 
            Anything else is copied verbatim into the output stream.
 
            *Example:*  ``$_$@$+`` translates to the name, version, and options
            of the package, but no dependencies, arch, or compiler.
+
+           TODO: allow, e.g., $6# to customize short hash length
+           TODO: allow, e.g., $## for full hash.
            """
-        color = kwargs.get('color', False)
+        color    = kwargs.get('color', False)
         length = len(format_string)
         out = StringIO()
         escape = compiler = False
@@ -1037,7 +1047,7 @@ class Spec(object):
                         write(c + str(self.architecture), c)
                 elif c == '#':
                     if self.dependencies:
-                        out.write('-' + self.dependencies.sha1()[:6])
+                        out.write('-' + self.dependencies.sha1()[:8])
                 elif c == '$':
                     out.write('$')
                 escape = False
