@@ -78,7 +78,7 @@ def find(parser, args):
     for architecture in index:
         tty.hline(architecture, char='=', color=spack.spec.architecture_color)
         for compiler in index[architecture]:
-            tty.hline(architecture, char='-', color=spack.spec.compiler_color)
+            tty.hline(compiler, char='-', color=spack.spec.compiler_color)
 
             specs = index[architecture][compiler]
             specs.sort()
