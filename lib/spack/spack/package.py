@@ -38,25 +38,22 @@ import os
 import re
 import subprocess
 import platform as py_platform
-import shutil
 import multiprocessing
 from urlparse import urlparse
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import cwrite
 from llnl.util.filesystem import *
 from llnl.util.lang import *
 
 import spack
 import spack.spec
 import spack.error
+import spack.build_environment as build_env
 import spack.url as url
 import spack.util.crypto as crypto
 from spack.version import *
 from spack.stage import Stage
 from spack.util.web import get_pages
-from spack.util.environment import *
-from spack.util.executable import Executable, which
 from spack.util.compression import allowed_archive
 
 """Allowed URL schemes for spack packages."""
@@ -413,46 +410,6 @@ class Package(object):
         return self._stage
 
 
-    def add_commands_to_module(self):
-        """Populate the module scope of install() with some useful functions.
-           This makes things easier for package writers.
-        """
-        m = self.module
-
-        m.make  = MakeExecutable('make', self.parallel)
-        m.gmake = MakeExecutable('gmake', self.parallel)
-
-        # number of jobs spack prefers to build with.
-        m.make_jobs = multiprocessing.cpu_count()
-
-        # Find the configure script in the archive path
-        # Don't use which for this; we want to find it in the current dir.
-        m.configure = Executable('./configure')
-        m.cmake = which("cmake")
-
-        # standard CMake arguments
-        m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % self.prefix,
-                            '-DCMAKE_BUILD_TYPE=None']
-        if py_platform.mac_ver()[0]:
-            m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
-
-        # Emulate some shell commands for convenience
-        m.cd         = os.chdir
-        m.mkdir      = os.mkdir
-        m.makedirs   = os.makedirs
-        m.remove     = os.remove
-        m.removedirs = os.removedirs
-
-        m.mkdirp     = mkdirp
-        m.install    = install
-        m.rmtree     = shutil.rmtree
-        m.move       = shutil.move
-
-        # Useful directories within the prefix are encapsulated in
-        # a Prefix object.
-        m.prefix  = self.prefix
-
-
     def preorder_traversal(self, visited=None, **kwargs):
         """This does a preorder traversal of the package's dependence DAG."""
         virtual = kwargs.get("virtual", False)
@@ -682,19 +639,16 @@ class Package(object):
             self.do_install_dependencies()
 
         self.do_patch()
-        self.setup_install_environment()
-
-        # Add convenience commands to the package's module scope to
-        # make building easier.
-        self.add_commands_to_module()
-
-        tty.msg("Building %s." % self.name)
 
         # create the install directory (allow the layout to handle this in
         # case it needs to add extra files)
         spack.install_layout.make_path_for_spec(self.spec)
 
+        tty.msg("Building %s." % self.name)
         try:
+            build_env.set_build_environment_variables(self)
+            build_env.set_module_variables_for_package(self)
+
             self.install(self.spec, self.prefix)
             if not os.path.isdir(self.prefix):
                 tty.die("Install failed for %s.  No install dir created." % self.name)
@@ -711,36 +665,6 @@ class Package(object):
             # unless the user wants it kept around.
             if not self.dirty:
                 self.stage.destroy()
-
-
-    def setup_install_environment(self):
-        """This ensures a clean install environment when we build packages."""
-        pop_keys(os.environ, "LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH")
-
-        # Add spack environment at front of path and pass the
-        # lib location along so the compiler script can find spack
-        os.environ[spack.SPACK_LIB] = spack.lib_path
-
-        # Fix for case-insensitive file systems.  Conflicting links are
-        # in directories called "case*" within the env directory.
-        env_paths = [spack.env_path]
-        for file in os.listdir(spack.env_path):
-            path = join_path(spack.env_path, file)
-            if file.startswith("case") and os.path.isdir(path):
-                env_paths.append(path)
-        path_put_first("PATH", env_paths)
-        path_set(spack.SPACK_ENV_PATH, env_paths)
-
-        # Pass along prefixes of dependencies here
-        path_set(
-            spack.SPACK_DEPENDENCIES,
-            [dep.package.prefix for dep in self.spec.dependencies.values()])
-
-        # Install location
-        os.environ[spack.SPACK_PREFIX] = self.prefix
-
-        # Build root for logging.
-        os.environ[spack.SPACK_BUILD_ROOT] = self.stage.expanded_archive_path
 
 
     def do_install_dependencies(self):
@@ -786,7 +710,8 @@ class Package(object):
     def clean(self):
         """By default just runs make clean.  Override if this isn't good."""
         try:
-            make = MakeExecutable('make', self.parallel)
+            # TODO: should we really call make clean, ro just blow away the directory?
+            make = build_env.MakeExecutable('make', self.parallel)
             make('clean')
             tty.msg("Successfully cleaned %s" % self.name)
         except subprocess.CalledProcessError, e:
@@ -871,30 +796,6 @@ def find_versions_of_archive(archive_url, **kwargs):
     return versions
 
 
-class MakeExecutable(Executable):
-    """Special Executable for make so the user can specify parallel or
-       not on a per-invocation basis.  Using 'parallel' as a kwarg will
-       override whatever the package's global setting is, so you can
-       either default to true or false and override particular calls.
-
-       Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
-       everything.
-    """
-    def __init__(self, name, parallel):
-        super(MakeExecutable, self).__init__(name)
-        self.parallel = parallel
-
-    def __call__(self, *args, **kwargs):
-        parallel = kwargs.get('parallel', self.parallel)
-        disable_parallel = env_flag(spack.SPACK_NO_PARALLEL_MAKE)
-
-        if parallel and not disable_parallel:
-            jobs = "-j%d" % multiprocessing.cpu_count()
-            args = (jobs,) + args
-
-        super(MakeExecutable, self).__call__(*args, **kwargs)
-
-
 def validate_package_url(url_string):
     """Determine whether spack can handle a particular URL or not."""
     url = urlparse(url_string)
@@ -911,6 +812,7 @@ def print_pkg(message):
     if mac_ver and Version(mac_ver) >= Version('10.7'):
         print u"\U0001F4E6" + tty.indent,
     else:
+        from llnl.util.tty.color import cwrite
         cwrite('@*g{[+]} ')
     print message
 

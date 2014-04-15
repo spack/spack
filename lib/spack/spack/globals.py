@@ -40,7 +40,7 @@ spack_file = join_path(prefix, "bin", "spack")
 
 # spack directory hierarchy
 lib_path       = join_path(prefix, "lib", "spack")
-env_path       = join_path(lib_path, "env")
+build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
 compilers_path = join_path(module_path, "compilers")
 test_path      = join_path(module_path, "test")
@@ -130,10 +130,3 @@ sys_type = None
 #
 mirrors = []
 
-# Important environment variables
-SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
-SPACK_LIB = 'SPACK_LIB'
-SPACK_ENV_PATH = 'SPACK_ENV_PATH'
-SPACK_DEPENDENCIES = 'SPACK_DEPENDENCIES'
-SPACK_PREFIX = 'SPACK_PREFIX'
-SPACK_BUILD_ROOT = 'SPACK_BUILD_ROOT'

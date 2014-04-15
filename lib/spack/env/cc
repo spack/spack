@@ -62,15 +62,17 @@ options, other_args = parser.parse_known_args()
 rpaths, other_args = parse_rpaths(other_args)
 
 # Add dependencies' include and lib paths to our compiler flags.
-def append_if_dir(path_list, *dirs):
-    full_path = os.path.join(*dirs)
-    if os.path.isdir(full_path):
-        path_list.append(full_path)
+def add_if_dir(path_list, directory, index=None):
+    if os.path.isdir(directory):
+        if index is None:
+            path_list.append(directory)
+        else:
+            path_list.insert(index, directory)
 
 for dep_dir in spack_deps:
-    append_if_dir(options.include_path, dep_dir, "include")
-    append_if_dir(options.lib_path,     dep_dir, "lib")
-    append_if_dir(options.lib_path,     dep_dir, "lib64")
+    add_if_dir(options.include_path, os.path.join(dep_dir, "include"))
+    add_if_dir(options.lib_path,     os.path.join(dep_dir, "lib"))
+    add_if_dir(options.lib_path,     os.path.join(dep_dir, "lib64"))
 
 # Add our modified arguments to it.
 arguments  = ['-I%s' % path for path in options.include_path]
@@ -95,11 +97,9 @@ for var in ["LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH"]:
         os.environ.pop(var)
 
 # Ensure that the delegated command doesn't just call this script again.
-clean_path = get_path("PATH")
-for item in ['.'] + spack_env_path:
-    if item in clean_path:
-        clean_path.remove(item)
-os.environ["PATH"] = ":".join(clean_path)
+remove_paths = ['.'] + spack_env_path
+path = [p for p in get_path("PATH") if p not in remove_paths]
+os.environ["PATH"] = ":".join(path)
 
 full_command = [command] + arguments
 
