@@ -26,16 +26,18 @@ from spack import *
 
 class Launchmon(Package):
     homepage = "http://sourceforge.net/projects/launchmon"
-    url      = "http://sourceforge.net/code-snapshots/svn/l/la/launchmon/code/launchmon-code-481-branches-launchmon-1.0-release.zip"
+    url      = "file:///usr/global/tools/launchmon/archives/launchmon-code-481-trunk.zip"
     force_url = True
     list_url = "http://sourceforge.net/p/launchmon/code/HEAD/tree"
 
-    #versions = {'1.0.0' : 'a0e5bfb7d82dc708d58bdbf93697886c'}
-    versions = {'1.0.0' : '9d1184397d3081b94e2c0577c3c605e5'}
-    patch('patch.lmon_install_dir', level=0)
+    versions = {'1.0.0' : '386cff2a2b62d41c952d6d9c812fb757'}
+#    patch('patch.lmon_install_dir', level=0)
 
     def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
+        configure(
+            "--prefix=" + prefix,
+            "--with-bootfabric=pmgr",
+            "--with-rm=slurm")
 
         # TODO: remove once Jira SPACK-19 is fixed
         import shutil
