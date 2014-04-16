@@ -33,9 +33,9 @@ Homebrew makes it very easy to create packages.  For a complete
 rundown on spack and how it differs from homebrew, look at the
 README.
 """
-import inspect
 import os
 import re
+import inspect
 import subprocess
 import platform as py_platform
 import multiprocessing
@@ -387,8 +387,9 @@ class Package(object):
         try:
             return url.parse_version(self.__class__.url)
         except UndetectableVersionError:
-            tty.die("Couldn't extract a default version from %s. You " +
-                    "must specify it explicitly in the package." % self.url)
+            raise PackageError(
+                "Couldn't extract a default version from %s." % self.url,
+                " You must specify it explicitly in the package file.")
 
 
     @property
@@ -490,7 +491,7 @@ class Package(object):
 
     @property
     def installed(self):
-        return os.path.exists(self.prefix)
+        return os.path.isdir(self.prefix)
 
 
     @property
@@ -544,10 +545,11 @@ class Package(object):
             raise ValueError("Can only fetch concrete packages.")
 
         if spack.do_checksum and not self.version in self.versions:
-            tty.die("Cannot fetch %s@%s safely; there is no checksum on file for this "
-                    "version." % (self.name, self.version),
-                    "Add a checksum to the package file, or use --no-checksum to "
-                    "skip this check.")
+            raise ChecksumError(
+                "Cannot fetch %s safely; there is no checksum on file for version %s."
+                % self.version,
+                "Add a checksum to the package file, or use --no-checksum to "
+                "skip this check.")
 
         self.stage.fetch()
 
@@ -557,8 +559,9 @@ class Package(object):
             if checker.check(self.stage.archive_file):
                 tty.msg("Checksum passed for %s" % self.name)
             else:
-                tty.die("%s checksum failed for %s.  Expected %s but got %s."
-                        % (checker.hash_name, self.name, digest, checker.sum))
+                raise ChecksumError(
+                    "%s checksum failed for %s." % checker.hash_name,
+                    "Expected %s but got %s." % (self.name, digest, checker.sum))
 
 
     def do_stage(self):
@@ -640,31 +643,55 @@ class Package(object):
 
         self.do_patch()
 
-        # create the install directory (allow the layout to handle this in
-        # case it needs to add extra files)
-        spack.install_layout.make_path_for_spec(self.spec)
-
-        tty.msg("Building %s." % self.name)
+        # Fork a child process to do the build.  This allows each
+        # package authors to have full control over their environment,
+        # etc. without offecting other builds that might be executed
+        # in the same spack call.
         try:
+            pid = os.fork()
+        except OSError, e:
+            raise InstallError("Unable to fork build process: %s" % e)
+
+        if pid == 0:
+            tty.msg("Building %s." % self.name)
+
+            # create the install directory (allow the layout to handle
+            # this in case it needs to add extra files)
+            spack.install_layout.make_path_for_spec(self.spec)
+
+            # Set up process's build environment before running install.
             build_env.set_build_environment_variables(self)
             build_env.set_module_variables_for_package(self)
 
-            self.install(self.spec, self.prefix)
-            if not os.path.isdir(self.prefix):
-                tty.die("Install failed for %s.  No install dir created." % self.name)
+            try:
+                # Subclasses implement install() to do the build &
+                # install work.
+                self.install(self.spec, self.prefix)
 
-            tty.msg("Successfully installed %s" % self.name)
-            print_pkg(self.prefix)
+                if not os.listdir(self.prefix):
+                    raise InstallError(
+                        "Install failed for %s.  Nothing was installed!"
+                        % self.name)
 
-        except Exception, e:
-            self.remove_prefix()
-            raise
-
-        finally:
-            # Once the install is done, destroy the stage where we built it,
-            # unless the user wants it kept around.
-            if not self.dirty:
+                # On successful install, remove the stage.
+                # Leave if if there is an error
                 self.stage.destroy()
+
+                tty.msg("Successfully installed %s" % self.name)
+                print_pkg(self.prefix)
+
+                sys.exit(0)
+
+            except Exception, e:
+                self.remove_prefix()
+                raise
+
+        # Parent process just waits for the child to complete.  If the
+        # child exited badly, assume it already printed an appropriate
+        # message.  Just make the parent exit with an error code.
+        pid, returncode = os.waitpid(pid, 0)
+        if returncode != 0:
+            sys.exit(1)
 
 
     def do_install_dependencies(self):
@@ -684,16 +711,16 @@ class Package(object):
 
     def install(self, spec, prefix):
         """Package implementations override this with their own build configuration."""
-        tty.die("Packages must provide an install method!")
+        raise InstallError("Package %s provides no install method!" % self.name)
 
 
     def do_uninstall(self):
         if not self.installed:
-            tty.die(self.name + " is not installed.")
+            raise InstallError(self.name + " is not installed.")
 
         if not self.ignore_dependencies:
             deps = self.installed_dependents
-            if deps: tty.die(
+            if deps: raise InstallError(
                 "Cannot uninstall %s. The following installed packages depend on it: %s"
                 % (self.name, deps))
 
@@ -817,7 +844,32 @@ def print_pkg(message):
     print message
 
 
-class InvalidPackageDependencyError(spack.error.SpackError):
+
+class FetchError(spack.error.SpackError):
+    """Raised when something goes wrong during fetch."""
+    def __init__(self, message, long_msg=None):
+        super(FetchError, self).__init__(message, long_msg)
+
+
+class ChecksumError(FetchError):
+    """Raised when archive fails to checksum."""
+    def __init__(self, message, long_msg):
+        super(ChecksumError, self).__init__(message, long_msg)
+
+
+class InstallError(spack.error.SpackError):
+    """Raised when something goes wrong during install or uninstall."""
+    def __init__(self, message, long_msg=None):
+        super(InstallError, self).__init__(message, long_msg)
+
+
+class PackageError(spack.error.SpackError):
+    """Raised when something is wrong with a package definition."""
+    def __init__(self, message, long_msg=None):
+        super(PackageError, self).__init__(message, long_msg)
+
+
+class InvalidPackageDependencyError(PackageError):
     """Raised when package specification is inconsistent with requirements of
        its dependencies."""
     def __init__(self, message):
