@@ -84,7 +84,7 @@ def sys_type():
 
     # Couldn't determine the sys_type for this machine.
     if sys_type is None:
-        raise NoSysTypeError()
+        return "unknown_arch"
 
     if not isinstance(sys_type, basestring):
         raise InvalidSysTypeError(sys_type)
