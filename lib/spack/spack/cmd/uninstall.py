@@ -68,4 +68,4 @@ def uninstall(parser, args):
 
     # Uninstall packages in order now.
     for pkg in pkgs:
-        pkg.do_uninstall()
+        pkg.do_uninstall(force=args.force)

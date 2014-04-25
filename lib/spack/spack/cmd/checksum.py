@@ -44,7 +44,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         'package', metavar='PACKAGE', help='Package to list versions for')
     subparser.add_argument(
-        '-d', '--dirty', action='store_true', dest='dirty',
+        '--keep-stage', action='store_true', dest='keep_stage',
         help="Don't clean up staging area when command completes.")
     subparser.add_argument(
         'versions', nargs=argparse.REMAINDER, help='Versions to generate checksums for')
@@ -54,6 +54,8 @@ def get_checksums(versions, urls, **kwargs):
     # Allow commands like create() to do some analysis on the first
     # archive after it is downloaded.
     first_stage_function = kwargs.get('first_stage_function', None)
+    keep_stage = kwargs.get('keep_stage', False)
+
 
     tty.msg("Downloading...")
     hashes = []
@@ -71,7 +73,7 @@ def get_checksums(versions, urls, **kwargs):
             continue
 
         finally:
-            if not kwargs.get('dirty', False):
+            if not keep_stage:
                 stage.destroy()
 
     return zip(versions, hashes)
@@ -110,7 +112,7 @@ def checksum(parser, args):
         return
 
     version_hashes = get_checksums(
-        versions[:archives_to_fetch], urls[:archives_to_fetch], dirty=args.dirty)
+        versions[:archives_to_fetch], urls[:archives_to_fetch], keep_stage=args.keep_stage)
 
     if not version_hashes:
         tty.die("Could not fetch any available versions for %s." % pkg.name)
