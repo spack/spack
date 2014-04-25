@@ -674,15 +674,18 @@ class Package(object):
                         % self.name)
 
                 # On successful install, remove the stage.
-                # Leave if if there is an error
+                # Leave if there is an error
                 self.stage.destroy()
 
                 tty.msg("Successfully installed %s" % self.name)
                 print_pkg(self.prefix)
 
-                sys.exit(0)
+                # Use os._exit here to avoid raising a SystemExit exception,
+                # which interferes with unit tests.
+                os._exit(0)
 
-            except Exception, e:
+            except:
+                # If anything else goes wrong, get rid of the install dir.
                 self.remove_prefix()
                 raise
 
