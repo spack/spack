@@ -152,21 +152,24 @@ class Version(object):
                 return r'[a-zA-Z]+'
 
         version = self.version
-        separators = ('',) + self.separators
+
+        # Use a wildcard for separators, in case a version is written
+        # two different ways (e.g., boost writes 1_55_0 and 1.55.0)
+        sep_re = '[_.-]'
+        separators = ('',) + (sep_re,) * len(self.separators)
 
         version += (version[-1],) * 2
-        separators += (separators[-1],) * 2
+        separators += (sep_re,) * 2
 
-        sep_res = [re.escape(sep) for sep in separators]
-        seg_res = [a_or_n(seg) for seg in version]
+        segments = [a_or_n(seg) for seg in version]
 
-        wc = seg_res[0]
-        for i in xrange(1, len(sep_res)):
-            wc += '(?:' + sep_res[i] + seg_res[i]
+        wc = segments[0]
+        for i in xrange(1, len(separators)):
+            wc += '(?:' + separators[i] + segments[i]
 
         # Add possible alpha or beta indicator at the end of each segemnt
         # We treat these specially b/c they're so common.
-        wc += '[ab]?)?' * (len(seg_res) - 1)
+        wc += '[ab]?)?' * (len(segments) - 1)
         return wc
 
 

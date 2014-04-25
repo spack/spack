@@ -41,5 +41,7 @@ class UnsupportedPlatformError(SpackError):
 class NoNetworkConnectionError(SpackError):
     """Raised when an operation needs an internet connection."""
     def __init__(self, message, url):
-        super(NoNetworkConnectionError, self).__init__(message)
+        super(NoNetworkConnectionError, self).__init__(
+            "No network connection: " + str(message),
+            "URL was: " + str(url))
         self.url = url

@@ -206,7 +206,7 @@ def wildcard_version(path):
     ver, start, end = parse_version_string_with_indices(path)
 
     v = Version(ver)
-    parts = list(re.escape(p) for p in path.split(str(v)))
+    parts = [re.escape(p) for p in re.split(v.wildcard(), path)]
 
     # Make a group for the wildcard, so it will be captured by the regex.
     version_group = '(%s)' % v.wildcard()

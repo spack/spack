@@ -1,6 +1,6 @@
+/var/spack/stage
 *.pyc
 /opt/
-/var/
 *~
 .DS_Store
 .idea
