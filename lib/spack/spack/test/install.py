@@ -93,6 +93,6 @@ class InstallTest(MockPackagesTest):
         try:
             pkg.do_install()
             pkg.do_uninstall()
-        except:
+        except Exception, e:
             if pkg: pkg.remove_prefix()
             raise

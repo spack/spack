@@ -86,8 +86,11 @@ class DirectoryLayout(object):
             shutil.rmtree(path, True)
 
         path = os.path.dirname(path)
-        while not os.listdir(path) and path != self.root:
-            os.rmdir(path)
+        while path != self.root:
+            if os.path.isdir(path):
+                if os.listdir(path):
+                    return
+                os.rmdir(path)
             path = os.path.dirname(path)
 
 
