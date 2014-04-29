@@ -317,12 +317,6 @@ class Package(object):
     """By default we build in parallel.  Subclasses can override this."""
     parallel = True
 
-    """Remove tarball and build by default.  If this is true, leave them."""
-    dirty = False
-
-    """Controls whether install and uninstall check deps before running."""
-    ignore_dependencies = False
-
     """Dirty hack for forcing packages with uninterpretable URLs
        TODO: get rid of this.
     """
@@ -532,8 +526,6 @@ class Package(object):
 
     def remove_prefix(self):
         """Removes the prefix for a package along with any empty parent directories."""
-        if self.dirty:
-            return
         spack.install_layout.remove_path_for_spec(self.spec)
 
 
@@ -627,10 +619,14 @@ class Package(object):
         touch(good_file)
 
 
-    def do_install(self):
+    def do_install(self, **kwargs):
         """This class should call this version of the install method.
            Package implementations should override install().
         """
+        # whether to keep the prefix on failure.  Default is to destroy it.
+        keep_prefix = kwargs.get('keep_prefix', False)
+        ignore_deps = kwargs.get('ignore_deps', False)
+
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
 
@@ -638,7 +634,7 @@ class Package(object):
             tty.msg("%s is already installed." % self.name)
             return
 
-        if not self.ignore_dependencies:
+        if not ignore_deps:
             self.do_install_dependencies()
 
         self.do_patch()
@@ -674,16 +670,25 @@ class Package(object):
                         % self.name)
 
                 # On successful install, remove the stage.
-                # Leave if if there is an error
+                # Leave if there is an error
                 self.stage.destroy()
 
                 tty.msg("Successfully installed %s" % self.name)
                 print_pkg(self.prefix)
 
-                sys.exit(0)
+                # Use os._exit here to avoid raising a SystemExit exception,
+                # which interferes with unit tests.
+                os._exit(0)
 
-            except Exception, e:
-                self.remove_prefix()
+            except:
+                if not keep_prefix:
+                    # If anything goes wrong, remove the install prefix
+                    self.remove_prefix()
+                else:
+                    tty.warn("Keeping install prefix in place despite error.",
+                             "Spack will think this package is installed." +
+                             "Manually remove this directory to fix:",
+                             self.prefix)
                 raise
 
         # Parent process just waits for the child to complete.  If the
@@ -714,11 +719,13 @@ class Package(object):
         raise InstallError("Package %s provides no install method!" % self.name)
 
 
-    def do_uninstall(self):
+    def do_uninstall(self, **kwargs):
+        force = kwargs.get('force', False)
+
         if not self.installed:
             raise InstallError(self.name + " is not installed.")
 
-        if not self.ignore_dependencies:
+        if not force:
             deps = self.installed_dependents
             if deps: raise InstallError(
                 "Cannot uninstall %s. The following installed packages depend on it: %s"
