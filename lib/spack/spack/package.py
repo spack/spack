@@ -568,8 +568,9 @@ class Package(object):
         if not archive_dir:
             tty.msg("Staging archive: %s" % self.stage.archive_file)
             self.stage.expand_archive()
+            tty.msg("Created stage directory in %s." % self.stage.path)
         else:
-            tty.msg("Already staged %s" % self.name)
+            tty.msg("Already staged %s in %s." % (self.name, self.stage.path))
         self.stage.chdir_to_archive()
 
 
@@ -631,7 +632,7 @@ class Package(object):
             raise ValueError("Can only install concrete packages.")
 
         if os.path.exists(self.prefix):
-            tty.msg("%s is already installed." % self.name)
+            tty.msg("%s is already installed in %s." % (self.name, self.prefix))
             return
 
         if not ignore_deps:

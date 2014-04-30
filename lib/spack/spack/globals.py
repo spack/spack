@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import tempfile
 
 from llnl.util.filesystem import *
 
@@ -92,9 +93,11 @@ use_tmp_stage = True
 # Use a %u to add a username to the stage paths here, in case this
 # is a shared filesystem.  Spack will use the first of these paths
 # that it can create.
-tmp_dirs = ['/nfs/tmp2/%u/spack-stage',
-            '/var/tmp/%u/spack-stage',
-            '/tmp/%u/spack-stage']
+tmp_dirs = []
+_default_tmp = tempfile.gettempdir()
+if _default_tmp != os.getcwd():
+    tmp_dirs.append(os.path.join(_default_tmp, 'spack-stage'))
+tmp_dirs.append('/nfs/tmp2/%u/spack-stage')
 
 # Whether spack should allow installation of unsafe versions of
 # software.  "Unsafe" versions are ones it doesn't have a checksum

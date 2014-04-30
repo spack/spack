@@ -23,11 +23,12 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
+import sys
 import subprocess
 import urllib2
 import urlparse
 from multiprocessing import Pool
-from HTMLParser import HTMLParser
+from HTMLParser import HTMLParser, HTMLParseError
 
 import llnl.util.tty as tty
 
@@ -67,7 +68,7 @@ def _spider(args):
        pool.  Firing off all the child links at once makes the fetch MUCH
        faster for pages with lots of children.
     """
-    url, depth, max_depth = args
+    url, depth, max_depth, raise_on_error = args
 
     pages = {}
     try:
@@ -81,11 +82,12 @@ def _spider(args):
         resp = urllib2.urlopen(req, timeout=TIMEOUT)
 
         if not "Content-type" in resp.headers:
-            print "ignoring page " + url
+            tty.warn("ignoring page " + url)
             return pages
 
         if not resp.headers["Content-type"].startswith('text/html'):
-            print "ignoring page " + url + " with content type " + resp.headers["Content-type"]
+            tty.warn("ignoring page " + url + " with content type " +
+                     resp.headers["Content-type"])
             return pages
 
         # Do the real GET request when we know it's just HTML.
@@ -100,9 +102,9 @@ def _spider(args):
         # If we're not at max depth, parse out the links in the page
         if depth < max_depth:
             link_parser = LinkParser()
-
             subcalls = []
             link_parser.feed(page)
+
             while link_parser.links:
                 raw_link = link_parser.links.pop()
 
@@ -112,7 +114,7 @@ def _spider(args):
 
                 # Evaluate the link relative to the page it came from.
                 abs_link = urlparse.urljoin(response_url, raw_link)
-                subcalls.append((abs_link, depth+1, max_depth))
+                subcalls.append((abs_link, depth+1, max_depth, raise_on_error))
 
             if subcalls:
                 pool = Pool(processes=len(subcalls))
@@ -121,13 +123,21 @@ def _spider(args):
                     pages.update(d)
 
     except urllib2.URLError, e:
-        # Only report it if it's the root page.  We ignore errors when spidering.
-        if depth == 1:
-            raise spack.error.NoNetworkConnectionError(e.reason, url)
+        if raise_on_error:
+            raise spack.error.NoNetworkConnectionError(str(e), url)
+
+    except HTMLParseError, e:
+        # This error indicates that Python's HTML parser sucks.
+        msg = "Got an error parsing HTML."
+
+        # Pre-2.7.3 Pythons in particular have rather prickly HTML parsing.
+        if sys.version_info[:3] < (2,7,3):
+            msg += " Use Python 2.7.3 or newer for better HTML parsing."
+
+        tty.warn(msg, url, "HTMLParseError: " + str(e))
 
     except Exception, e:
-        # Other types of errors are completely ignored.
-        pass
+        pass    # Other types of errors are completely ignored.
 
     return pages
 
@@ -141,5 +151,5 @@ def get_pages(root_url, **kwargs):
        performance over a sequential fetch.
     """
     max_depth = kwargs.setdefault('depth', 1)
-    pages =  _spider((root_url, 1, max_depth))
+    pages =  _spider((root_url, 1, max_depth, False))
     return pages

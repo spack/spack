@@ -34,6 +34,7 @@ class Dyninst(Package):
 
     depends_on("libelf")
     depends_on("libdwarf")
+    depends_on("boost@1.42:")
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix)
