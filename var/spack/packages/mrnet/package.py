@@ -8,6 +8,8 @@ class Mrnet(Package):
     versions = { '4.0.0' : 'd00301c078cba57ef68613be32ceea2f', }
     parallel = False
 
+    depends_on("boost")
+
     def install(self, spec, prefix):
         configure("--prefix=%s" %prefix, "--enable-shared")
 
@@ -17,5 +19,7 @@ class Mrnet(Package):
         # TODO: copy configuration header files to include directory
         #       this can be removed once we have STAT-2.1.0
         import shutil
-        shutil.copy2('%s/lib/mrnet-%s/include/mrnet_config.h' % (prefix, self.version), '%s/include/mrnet_config.h' % prefix)
-        shutil.copy2('%s/lib/xplat-%s/include/xplat_config.h' % (prefix, self.version), '%s/include/xplat_config.h' % prefix)
+        shutil.copy2('%s/lib/mrnet-%s/include/mrnet_config.h' % (prefix, self.version),
+                     '%s/include/mrnet_config.h' % prefix)
+        shutil.copy2('%s/lib/xplat-%s/include/xplat_config.h' % (prefix, self.version),
+                     '%s/include/xplat_config.h' % prefix)
