@@ -98,5 +98,9 @@ def find(parser, args):
                 for spec in specs:
                     print spec.tree(indent=4, format='$_$@$+', color=True),
             else:
-                for abbrv in abbreviated:
-                    print "    %s" % abbrv
+                max_len = max([len(s.name) for s in specs])
+                max_len += 4
+
+                for spec in specs:
+                    format = '$-' + str(max_len) + '_$@$+$#'
+                    print "   " + spec.format(format, color=True)

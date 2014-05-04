@@ -1015,6 +1015,10 @@ class Spec(object):
                $#   Dependencies' 8-char sha1 prefix
                $$   $
 
+           Optionally you can provide a width, e.g. $20_ for a 20-wide name.
+           Like printf, you can provide '-' for left justification, e.g.
+           $-20_ for a left-justified name.
+
            Anything else is copied verbatim into the output stream.
 
            *Example:*  ``$_$@$+`` translates to the name, version, and options
@@ -1035,27 +1039,40 @@ class Spec(object):
             else:
                 out.write(s)
 
-        for i, c in enumerate(format_string):
+        iterator = enumerate(format_string)
+        for i, c in iterator:
             if escape:
+                fmt = '%'
+                if c == '-':
+                    fmt += c
+                    i, c = next(iterator)
+
+                while c in '0123456789':
+                    fmt += c
+                    i, c = next(iterator)
+                fmt += 's'
+
                 if c == '_':
-                    out.write(self.name)
+                    out.write(fmt % self.name)
                 elif c == '@':
                     if self.versions and self.versions != _any_version:
-                        write(c + str(self.versions), c)
+                        write(fmt % (c + str(self.versions)), c)
                 elif c == '%':
                     if self.compiler:
-                        write(c + str(self.compiler.name), c)
+                        write(fmt % (c + str(self.compiler.name)), c)
                     compiler = True
                 elif c == '+':
                     if self.variants:
-                        write(str(self.variants), c)
+                        write(fmt % str(self.variants), c)
                 elif c == '=':
                     if self.architecture:
-                        write(c + str(self.architecture), c)
+                        write(fmt % (c + str(self.architecture)), c)
                 elif c == '#':
                     if self.dependencies:
-                        out.write('-' + self.dep_hash(8))
+                        out.write(fmt % ('-' + self.dep_hash(8)))
                 elif c == '$':
+                    if fmt != '':
+                        raise ValueError("Can't use format width with $$.")
                     out.write('$')
                 escape = False
 
