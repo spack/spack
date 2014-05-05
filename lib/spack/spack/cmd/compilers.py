@@ -24,11 +24,20 @@
 ##############################################################################
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
+from llnl.util.lang import index_by
 
 import spack.compilers
+import spack.spec
 
 description = "List available compilers"
 
+
 def compilers(parser, args):
-    tty.msg("Supported compilers")
-    colify(spack.compilers.supported_compilers(), indent=4)
+    tty.msg("Available compilers")
+
+    # Index compilers
+    index = index_by(spack.compilers.supported_compilers(), 'name')
+
+    for name, compilers in index.items():
+        tty.hline(name, char='=', color=spack.spec.compiler_color)
+        colify(compilers, indent=4)

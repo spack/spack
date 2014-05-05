@@ -173,11 +173,16 @@ class Compiler(object):
     """The Compiler field represents the compiler or range of compiler
        versions that a package should be built with.  Compilers have a
        name and a version list. """
-    def __init__(self, name, version=None):
+    def __init__(self, compiler_spec_like):
+        c = SpecParser().parse_compiler(compiler_spec_like)
+        self.name = c.name
+        self.versions = c.versions
+
+
+    def __init__(self, name, version):
         self.name = name
         self.versions = VersionList()
-        if version:
-            self.versions.add(version)
+        self.versions.add(version)
 
 
     def _add_version(self, version):
@@ -210,7 +215,8 @@ class Compiler(object):
 
 
     def copy(self):
-        clone = Compiler(self.name)
+        clone = Compiler.__new__(Compiler)
+        clone.name = self.name
         clone.versions = self.versions.copy()
         return clone
 
@@ -1188,6 +1194,11 @@ class SpecParser(spack.parse.Parser):
         return specs
 
 
+    def parse_compiler(self, text):
+        self.setup(text)
+        return self.compiler()
+
+
     def spec(self):
         """Parse a spec out of the input.  If a spec is supplied, then initialize
            and return it instead of creating a new one."""
@@ -1279,7 +1290,10 @@ class SpecParser(spack.parse.Parser):
     def compiler(self):
         self.expect(ID)
         self.check_identifier()
-        compiler = Compiler(self.token.value)
+
+        compiler = Compiler.__new__(Compiler)
+        compiler.name = self.token.value
+        compiler.versions = VersionList()
         if self.accept(AT):
             vlist = self.version_list()
             for version in vlist:

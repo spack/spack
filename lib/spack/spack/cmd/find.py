@@ -29,7 +29,7 @@ from StringIO import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import *
-from llnl.util.lang import partition_list
+from llnl.util.lang import partition_list, index_by
 
 import spack
 import spack.spec
@@ -49,9 +49,6 @@ def setup_parser(subparser):
 
 
 def find(parser, args):
-    def hasher():
-        return collections.defaultdict(hasher)
-
     # Filter out specs that don't exist.
     query_specs = spack.cmd.parse_specs(args.query_specs)
     query_specs, nonexisting = partition_list(
@@ -64,15 +61,9 @@ def find(parser, args):
             return
 
     # Make a dict with specs keyed by architecture and compiler.
-    index = hasher()
-    for spec in spack.db.installed_package_specs():
-        # Check whether this installed package matches any query.
-        if query_specs and not any(spec.satisfies(q) for q in query_specs):
-            continue
-
-        if spec.compiler not in index[spec.architecture]:
-            index[spec.architecture][spec.compiler] = []
-        index[spec.architecture][spec.compiler].append(spec)
+    specs = [s for s in spack.db.installed_package_specs()
+             if not query_specs or any(spec.satisfies(q) for q in query_specs)]
+    index = index_by(specs, 'architecture', 'compiler')
 
     # Traverse the index and print out each package
     for architecture in index:

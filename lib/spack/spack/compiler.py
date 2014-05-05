@@ -7,7 +7,7 @@ from spack.util import Executable
 from subprocess import check_output
 
 
-def _verify_compiler(*paths):
+def _verify_executables(*paths):
     for path in paths:
         if not os.path.isfile(path) and os.access(path, os.X_OK):
             raise InvalidCompilerPathError(path)
@@ -37,12 +37,12 @@ class Compiler(object):
 
 
     def __init__(self, cc, cxx, f77, f90):
-        _verify_compiler(cc, cxx, f77, f90)
+        _verify_executables(cc, cxx, f77, f90)
+
         self.cc  = Executable(cc)
         self.cxx = Executable(cxx)
         self.f77 = Executable(f77)
         self.f90 = Executable(f90)
-
 
     @property
     @memoized

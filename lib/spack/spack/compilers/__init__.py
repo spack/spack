@@ -26,16 +26,19 @@
 # This needs to be expanded for full compiler support.
 #
 from llnl.util.lang import memoized, list_modules
+
 import spack
 import spack.compilers.gcc
+import spack.spec
 
 @memoized
 def supported_compilers():
-    return [c for c in list_modules(spack.compilers_path)]
+    return [spack.spec.Compiler(c) for c in list_modules(spack.compilers_path)]
 
 
 def supported(compiler):
-    return compiler in supported_compilers()
+    return True
+#    return compiler in supported_compilers()
 
 
 @memoized
