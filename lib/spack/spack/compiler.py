@@ -1,10 +1,11 @@
 import os
+from llnl.util.lang import memoized
 
 import spack.error
 from spack.version import Version
-from spack.util import Executable
+from spack.util.executable import Executable
 
-from subprocess import check_output
+
 
 
 def _verify_executables(*paths):

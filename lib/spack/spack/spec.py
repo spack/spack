@@ -173,16 +173,23 @@ class Compiler(object):
     """The Compiler field represents the compiler or range of compiler
        versions that a package should be built with.  Compilers have a
        name and a version list. """
-    def __init__(self, compiler_spec_like):
-        c = SpecParser().parse_compiler(compiler_spec_like)
-        self.name = c.name
-        self.versions = c.versions
+    def __init__(self, *args):
+        nargs = len(args)
+        if nargs == 1:
+            # If there is one argument, it's a spec to parse
+            c = SpecParser().parse_compiler(args[0])
+            self.name = c.name
+            self.versions = c.versions
 
+        elif nargs == 2:
+            name, version = args
+            self.name = name
+            self.versions = VersionList()
+            self.versions.add(ver(version))
 
-    def __init__(self, name, version):
-        self.name = name
-        self.versions = VersionList()
-        self.versions.add(version)
+        else:
+            raise TypeError(
+                "__init__ takes 1 or 2 arguments. (%d given)" % nargs)
 
 
     def _add_version(self, version):
@@ -776,11 +783,10 @@ class Spec(object):
             if not spec.virtual:
                 spack.db.get(spec.name)
 
-            # validate compiler name in addition to the package name.
+            # validate compiler in addition to the package name.
             if spec.compiler:
-                compiler_name = spec.compiler.name
-                if not spack.compilers.supported(compiler_name):
-                    raise UnknownCompilerError(compiler_name)
+                if not spack.compilers.supported(spec.compiler):
+                    raise UnknownCompilerError(spec.compiler)
 
 
     def constrain(self, other, **kwargs):

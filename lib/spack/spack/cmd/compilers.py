@@ -31,13 +31,10 @@ import spack.spec
 
 description = "List available compilers"
 
-
 def compilers(parser, args):
     tty.msg("Available compilers")
 
-    # Index compilers
     index = index_by(spack.compilers.supported_compilers(), 'name')
-
     for name, compilers in index.items():
-        tty.hline(name, char='=', color=spack.spec.compiler_color)
+        tty.hline(name, char='-', color=spack.spec.compiler_color)
         colify(compilers, indent=4)

@@ -22,41 +22,20 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This needs to be expanded for full compiler support.
-#
-from llnl.util.lang import memoized, list_modules
+from spack.compiler import Compiler
 
-import spack.spec
-from spack.util.executable import which
+class Clang(Compiler):
+    # Subclasses use possible names of C compiler
+    cc_names = ['clang']
 
+    # Subclasses use possible names of C++ compiler
+    cxx_names = ['clang++']
 
+    # Subclasses use possible names of Fortran 77 compiler
+    f77_names = []
 
-@memoized
-def supported_compilers():
-    """Return a list of compiler types supported by Spack."""
-    return sorted(c for c in list_modules(spack.compilers_path))
+    # Subclasses use possible names of Fortran 90 compiler
+    f90_names = []
 
-
-def supported(compiler_spec):
-    """Test if a particular compiler is supported."""
-    if isinstance(compiler_spec, spack.spec.Compiler):
-        return compiler_spec.name in supported_compilers()
-
-    elif isinstance(compiler_spec, basestring):
-        return compiler_spec in supported_compilers()
-
-    else:
-        raise TypeError("compiler_spec must be string or spack.spec.Compiler")
-
-
-@memoized
-def default_compiler():
-    """Get the spec for the default compiler supported by Spack.
-       Currently just returns the system's default gcc.
-
-       TODO: provide a better way to specify/find this on startup.
-    """
-    gcc = which('gcc', required=True)
-    version = gcc('-dumpversion', return_output=True)
-    return spack.spec.Compiler('gcc', version)
+    def __init__(self, cc, cxx, f77, f90):
+        super(Gcc, self).__init__(cc, cxx, f77, f90)

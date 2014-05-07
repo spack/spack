@@ -43,6 +43,7 @@ spack_file = join_path(prefix, "bin", "spack")
 lib_path       = join_path(prefix, "lib", "spack")
 build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
+compilers_path = join_path(module_path, "compilers")
 test_path      = join_path(module_path, "test")
 var_path       = join_path(prefix, "var", "spack")
 stage_path     = join_path(var_path, "stage")
@@ -50,9 +51,9 @@ stage_path     = join_path(var_path, "stage")
 install_path   = join_path(prefix, "opt")
 
 #
-# Place to look for usable compiler installations
+# Place to look for usable compiler versions.
 #
-compilers_path = join_path(var_path, "compilers")
+compiler_version_path = join_path(var_path, "compilers")
 
 #
 # Set up the packages database.

@@ -22,18 +22,20 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a stub module.  It should be expanded when we implement full
-# compiler support.
-#
+from spack.compiler import Compiler
 
-import subprocess
-from spack.version import Version
+class Gcc(Compiler):
+    # Subclasses use possible names of C compiler
+    cc_names = ['gcc']
 
-cc = 'gcc'
-cxx = 'g++'
-fortran = 'gfortran'
+    # Subclasses use possible names of C++ compiler
+    cxx_names = ['g++']
 
-def get_version():
-    v = subprocess.check_output([cc, '-dumpversion'])
-    return Version(v)
+    # Subclasses use possible names of Fortran 77 compiler
+    f77_names = ['gfortran']
+
+    # Subclasses use possible names of Fortran 90 compiler
+    f90_names = ['gfortran']
+
+    def __init__(self, cc, cxx, f77, f90):
+        super(Gcc, self).__init__(cc, cxx, f77, f90)
