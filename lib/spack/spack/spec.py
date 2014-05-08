@@ -196,12 +196,20 @@ class Compiler(object):
         self.versions.add(version)
 
 
+    def _autospec(self, compiler_spec_like):
+        if not isinstance(compiler_spec_like, Compiler):
+            return Compiler(compiler_spec_like)
+        return compiler_spec_like
+
+
     def satisfies(self, other):
+        other = self._autospec(other)
         return (self.name == other.name and
                 self.versions.overlaps(other.versions))
 
 
     def constrain(self, other):
+        other = self._autospec(other)
         if not self.satisfies(other):
             raise UnsatisfiableCompilerSpecError(self, other)
 
@@ -374,14 +382,14 @@ class Spec(object):
         """
         if not self.dependents:
             return self
-        else:
-            # If the spec has multiple dependents, ensure that they all
-            # lead to the same place.  Spack shouldn't deal with any DAGs
-            # with multiple roots, so something's wrong if we find one.
-            depiter = iter(self.dependents.values())
-            first_root = next(depiter).root
-            assert(all(first_root is d.root for d in depiter))
-            return first_root
+
+        # If the spec has multiple dependents, ensure that they all
+        # lead to the same place.  Spack shouldn't deal with any DAGs
+        # with multiple roots, so something's wrong if we find one.
+        depiter = iter(self.dependents.values())
+        first_root = next(depiter).root
+        assert(all(first_root is d.root for d in depiter))
+        return first_root
 
 
     @property
@@ -441,16 +449,27 @@ class Spec(object):
 
            root     [=True]
                If false, this won't yield the root node, just its descendents.
+
+           direction [=children|parents]
+               If 'children', does a traversal of this spec's children.  If
+               'parents', traverses upwards in the DAG towards the root.
+
         """
         depth      = kwargs.get('depth', False)
         key_fun    = kwargs.get('key', id)
         yield_root = kwargs.get('root', True)
         cover      = kwargs.get('cover', 'nodes')
+        direction  = kwargs.get('direction', 'children')
 
         cover_values = ('nodes', 'edges', 'paths')
         if cover not in cover_values:
             raise ValueError("Invalid value for cover: %s.  Choices are %s"
                              % (cover, ",".join(cover_values)))
+
+        direction_values = ('children', 'parents')
+        if direction not in direction_values:
+            raise ValueError("Invalid value for direction: %s.  Choices are %s"
+                             % (direction, ",".join(direction_values)))
 
         if visited is None:
             visited = set()
@@ -465,9 +484,13 @@ class Spec(object):
         else:
             if yield_root or d > 0: yield result
 
+        successors = self.dependencies
+        if direction == 'parents':
+            successors = self.dependents
+
         visited.add(key)
-        for name in sorted(self.dependencies):
-            child = self.dependencies[name]
+        for name in sorted(successors):
+            child = successors[name]
             for elt in child.preorder_traversal(visited, d+1, **kwargs):
                 yield elt
 
@@ -776,7 +799,7 @@ class Spec(object):
     def validate_names(self):
         """This checks that names of packages and compilers in this spec are real.
            If they're not, it will raise either UnknownPackageError or
-           UnknownCompilerError.
+           UnsupportedCompilerError.
         """
         for spec in self.preorder_traversal():
             # Don't get a package for a virtual name.
@@ -786,7 +809,7 @@ class Spec(object):
             # validate compiler in addition to the package name.
             if spec.compiler:
                 if not spack.compilers.supported(spec.compiler):
-                    raise UnknownCompilerError(spec.compiler)
+                    raise UnsupportedCompilerError(spec.compiler.name)
 
 
     def constrain(self, other, **kwargs):
@@ -1385,11 +1408,11 @@ class DuplicateCompilerError(SpecError):
         super(DuplicateCompilerError, self).__init__(message)
 
 
-class UnknownCompilerError(SpecError):
+class UnsupportedCompilerError(SpecError):
     """Raised when the user asks for a compiler spack doesn't know about."""
     def __init__(self, compiler_name):
-        super(UnknownCompilerError, self).__init__(
-            "Unknown compiler: %s" % compiler_name)
+        super(UnsupportedCompilerError, self).__init__(
+            "The '%s' compiler is not yet supported." % compiler_name)
 
 
 class DuplicateArchitectureError(SpecError):

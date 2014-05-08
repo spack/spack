@@ -27,27 +27,34 @@
 #
 from llnl.util.lang import memoized, list_modules
 
+import spack
 import spack.spec
 from spack.util.executable import which
 
-
-
 @memoized
 def supported_compilers():
-    """Return a list of compiler types supported by Spack."""
+    """Return a list of names of compilers supported by Spack.
+
+       See available_compilers() to get a list of all the available
+       versions of supported compilers.
+    """
     return sorted(c for c in list_modules(spack.compilers_path))
+
+
+def available_compilers():
+    """Return a list of specs for all the compiler versions currently
+       available to build with.  These are instances of
+       spack.spec.Compiler.
+    """
+    return [spack.spec.Compiler(c)
+            for c in list_modules(spack.compiler_version_path)]
 
 
 def supported(compiler_spec):
     """Test if a particular compiler is supported."""
-    if isinstance(compiler_spec, spack.spec.Compiler):
-        return compiler_spec.name in supported_compilers()
-
-    elif isinstance(compiler_spec, basestring):
-        return compiler_spec in supported_compilers()
-
-    else:
-        raise TypeError("compiler_spec must be string or spack.spec.Compiler")
+    if not isinstance(compiler_spec, spack.spec.Compiler):
+        compiler_spec = spack.spec.Compiler(compiler_spec)
+    return compiler_spec.name in supported_compilers()
 
 
 @memoized

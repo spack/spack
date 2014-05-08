@@ -34,7 +34,7 @@ description = "List available compilers"
 def compilers(parser, args):
     tty.msg("Available compilers")
 
-    index = index_by(spack.compilers.supported_compilers(), 'name')
+    index = index_by(spack.compilers.available_compilers(), 'name')
     for name, compilers in index.items():
         tty.hline(name, char='-', color=spack.spec.compiler_color)
         colify(compilers, indent=4)

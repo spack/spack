@@ -89,15 +89,11 @@ class DefaultConcretizer(object):
 
 
     def concretize_compiler(self, spec):
-        """Currently just sets the compiler to gcc or throws an exception
-           if the compiler is set to something else.
-
-           TODO: implement below description.
-
-           If the spec already has a compiler, we're done.  If not, then
-           take the compiler used for the nearest ancestor with a concrete
-           compiler, or use the system default if there is no ancestor
-           with a compiler.
+        """If the spec already has a compiler, we're done.  If not, then take
+           the compiler used for the nearest ancestor with a compiler
+           spec and use that.  If the ancestor's compiler is not
+           concrete, then give it a valid version.  If there is no
+           ancestor with a compiler, use the system default compiler.
 
            Intuition: Use the system default if no package that depends on
            this one has a strict compiler requirement.  Otherwise, try to
@@ -105,10 +101,22 @@ class DefaultConcretizer(object):
            link to this one, to maximize compatibility.
         """
         if spec.compiler and spec.compiler.concrete:
-            if spec.compiler != spack.compilers.default_compiler():
-                raise spack.spec.UnknownCompilerError(str(spec.compiler))
-        else:
-            spec.compiler = spack.compilers.default_compiler()
+            return
+
+        try:
+            nearest = next(p for p in spec.preorder_traversal(direction='parents')
+                           if p.compiler is not None).compiler
+
+            if not nearest.concrete:
+                matches = [c for c in spack.compilers.available_compilers()
+                           if c.name == nearest.name]
+                nearest.versions = sorted(matches)[-1].versions.copy()
+                assert(nearest.concrete)
+
+            spec.compiler = nearest.copy()
+
+        except StopIteration:
+            spec.compiler = spack.compilers.default_compiler().copy()
 
 
     def choose_provider(self, spec, providers):
