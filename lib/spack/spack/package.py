@@ -539,7 +539,7 @@ class Package(object):
         if spack.do_checksum and not self.version in self.versions:
             raise ChecksumError(
                 "Cannot fetch %s safely; there is no checksum on file for version %s."
-                % self.version,
+                % (self.name, self.version),
                 "Add a checksum to the package file, or use --no-checksum to "
                 "skip this check.")
 
