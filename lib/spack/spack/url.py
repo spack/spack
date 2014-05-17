@@ -191,6 +191,16 @@ def parse_name_and_version(path):
     return (name, ver)
 
 
+def insensitize(string):
+    """Chagne upper and lowercase letters to be case insensitive in
+       the provided string.  e.g., 'a' because '[Aa]', 'B' becomes
+       '[bB]', etc.  Use for building regexes."""
+    def to_ins(match):
+        char = match.group(1)
+        return '[%s%s]' % (char.lower(), char.upper())
+    return re.sub(r'([a-zA-Z])', to_ins, string)
+
+
 def substitute_version(path, new_version):
     """Given a URL or archive name, find the version in the path and substitute
        the new version for it.
@@ -203,11 +213,26 @@ def wildcard_version(path):
     """Find the version in the supplied path, and return a regular expression
        that will match this path with any version in its place.
     """
-    ver, start, end = parse_version_string_with_indices(path)
+    # Get name and version, so we can treat them specially
+    name, v = parse_name_and_version(path)
 
-    v = Version(ver)
-    parts = [re.escape(p) for p in re.split(v.wildcard(), path)]
+    # Construct a case-insensitive regular expression for the package name.
+    name_re = '(%s)' % insensitize(name)
 
-    # Make a group for the wildcard, so it will be captured by the regex.
-    version_group = '(%s)' % v.wildcard()
-    return version_group.join(parts)
+    # Split the string apart by things that match the name so that if the
+    # name contains numbers or things that look like versions, we don't
+    # catch them with the version wildcard.
+    name_parts = re.split(name_re, path)
+
+    # Even elements in the array did *not* match the name
+    for i in xrange(0, len(name_parts), 2):
+        # Split each part by things that look like versions.
+        vparts = re.split(v.wildcard(), name_parts[i])
+
+        # Replace each version with a generic capture group to find versions.
+        # And escape everything else so it's not interpreted as a regex
+        vgroup = '(%s)' % v.wildcard()
+        name_parts[i] = vgroup.join(re.escape(vp) for vp in vparts)
+
+    # Put it all back together with original name matches intact.
+    return ''.join(name_parts)

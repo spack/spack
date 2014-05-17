@@ -123,6 +123,18 @@ def make_version_dict(ver_hash_tuples):
                            for v, h in ver_hash_tuples) + ' }'
 
 
+def get_name():
+    """Prompt user to input a package name."""
+    name = ""
+    while not name:
+        new_name = raw_input("Name: ")
+        if spack.db.valid_name(name):
+            name = new_name
+        else:
+            print "Package name can only contain A-Z, a-z, 0-9, '_' and '-'"
+    return name
+
+
 def create(parser, args):
     url = args.url
 
@@ -130,18 +142,15 @@ def create(parser, args):
     name, version = spack.url.parse_name_and_version(url)
     if not name:
         tty.msg("Couldn't guess a name for this package.")
-        while not name:
-            new_name = raw_input("Name: ")
-            if spack.db.valid_name(name):
-                name = new_name
-            else:
-                print "Package name can only contain A-Z, a-z, 0-9, '_' and '-'"
+        name = get_name()
 
     if not version:
         tty.die("Couldn't guess a version string from %s." % url)
 
+    tty.msg("This looks like a URL for %s version %s." % (name, version))
     tty.msg("Creating template for package %s" % name)
 
+    # Create a directory for the new package.
     pkg_path = spack.db.filename_for_package_name(name)
     if os.path.exists(pkg_path) and not args.force:
         tty.die("%s already exists." % pkg_path)

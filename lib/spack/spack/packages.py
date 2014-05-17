@@ -171,7 +171,7 @@ class PackageDB(object):
 
     def all_packages(self):
         for name in self.all_package_names():
-            yield get(name)
+            yield self.get(name)
 
 
     def exists(self, pkg_name):
@@ -228,7 +228,7 @@ class PackageDB(object):
                 pkg._dependents = []
 
             for name, dep in pkg.dependencies.iteritems():
-                dpkg = get(name)
+                dpkg = self.get(name)
                 if dpkg._dependents is None:
                     dpkg._dependents = []
                 dpkg._dependents.append(pkg.name)
