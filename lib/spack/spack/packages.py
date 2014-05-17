@@ -77,6 +77,7 @@ class PackageDB(object):
 
     @_autospec
     def get_installed(self, spec):
+        """Get all the installed specs that satisfy the provided spec constraint."""
         return [s for s in self.installed_package_specs() if s.satisfies(spec)]
 
 

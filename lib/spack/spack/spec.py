@@ -214,17 +214,17 @@ class CompilerSpec(object):
 
 
     def satisfies(self, other):
-        # TODO: This should not just look for overlapping versions.
-        # TODO: e.g., 4.7.3 should satisfy a requirement for 4.7.
         other = self._autospec(other)
         return (self.name == other.name and
-                self.versions.overlaps(other.versions))
+                self.versions.satisfies(other.versions))
 
 
     def constrain(self, other):
         other = self._autospec(other)
-        if not self.satisfies(other):
-            raise UnsatisfiableCompilerSpecError(self, other)
+
+        # ensure that other will actually constrain this spec.
+        if not other.satisfies(self):
+            raise UnsatisfiableCompilerSpecError(other, self)
 
         self.versions.intersect(other.versions)
 
@@ -866,8 +866,8 @@ class Spec(object):
         # TODO: might want more detail than this, e.g. specific deps
         # in violation. if this becomes a priority get rid of this
         # check and be more specici about what's wrong.
-        if not self.satisfies_dependencies(other):
-            raise UnsatisfiableDependencySpecError(self, other)
+        if not other.satisfies_dependencies(self):
+            raise UnsatisfiableDependencySpecError(other, self)
 
         # Handle common first-order constraints directly
         for name in self.common_dependencies(other):

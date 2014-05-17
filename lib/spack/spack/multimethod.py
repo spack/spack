@@ -117,7 +117,7 @@ class SpecMultiMethod(object):
            or if there is none, then raise a NoSuchMethodError.
         """
         for spec, method in self.method_list:
-            if spec.satisfies(package_self.spec):
+            if package_self.spec.satisfies(spec):
                 return method(package_self, *args, **kwargs)
 
         if self.default:

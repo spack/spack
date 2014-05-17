@@ -143,6 +143,18 @@ class Version(object):
         return self
 
 
+    @coerced
+    def satisfies(self, other):
+        """A Version 'satisfies' another if it is at least as specific and has a
+           common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
+           gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
+           a suitable compiler.
+        """
+        nself  = len(self.version)
+        nother = len(other.version)
+        return nother <= nself and self.version[:nother] == other.version
+
+
     def wildcard(self):
         """Create a regex that will match variants of this version string."""
         def a_or_n(seg):
@@ -327,6 +339,37 @@ class VersionRange(object):
 
 
     @coerced
+    def satisfies(self, other):
+        """A VersionRange satisfies another if some version in this range
+           would satisfy some version in the other range.  To do this it must
+           either:
+             a) Overlap with the other range
+             b) The start of this range satisfies the end of the other range.
+
+           This is essentially the same as overlaps(), but overlaps assumes
+           that its arguments are specific.  That is, 4.7 is interpreted as
+           4.7.0.0.0.0... .  This funciton assumes that 4.7 woudl be satisfied
+           by 4.7.3.5, etc.
+
+           Rationale:
+           If a user asks for gcc@4.5:4.7, and a package is only compatible with
+           gcc@4.7.3:4.8, then that package should be able to build under the
+           constraints.  Just using overlaps() would not work here.
+
+           Note that we don't need to check whether the end of this range
+           would satisfy the start of the other range, because overlaps()
+           already covers that case.
+
+           Note further that overlaps() is a symmetric operation, while
+           satisfies() is not.
+        """
+        return (self.overlaps(other) or
+                # if either self.start or other.end are None, then this can't
+                # satisfy, or overlaps() would've taken care of it.
+                self.start and other.end and self.start.satisfies(other.end))
+
+
+    @coerced
     def overlaps(self, other):
         return (other in self or self in other or
                 ((self.start == None or other.end is None or
@@ -444,11 +487,6 @@ class VersionList(object):
             return self[-1].highest()
 
 
-    def satisfies(self, other):
-        """Synonym for overlaps."""
-        return self.overlaps(other)
-
-
     @coerced
     def overlaps(self, other):
         if not other or not self:
@@ -457,6 +495,27 @@ class VersionList(object):
         s = o = 0
         while s < len(self) and o < len(other):
             if self[s].overlaps(other[o]):
+                return True
+            elif self[s] < other[o]:
+                s += 1
+            else:
+                o += 1
+        return False
+
+
+    @coerced
+    def satisfies(self, other):
+        """A VersionList satisfies another if some version in the list would
+           would satisfy some version in the other list.  This uses essentially
+           the same algorithm as overlaps() does for VersionList, but it calls
+           satisfies() on member Versions and VersionRanges.
+        """
+        if not other or not self:
+            return False
+
+        s = o = 0
+        while s < len(self) and o < len(other):
+            if self[s].satisfies(other[o]):
                 return True
             elif self[s] < other[o]:
                 s += 1
