@@ -107,7 +107,7 @@ Package class names
 The **class name** (``Libelf`` in our example) is formed by converting
 words separated by `-` or ``_`` in the file name to camel case.  If
 the name starts with a number, we prefix the class name with
-``Num_``. Here are some examples:
+``_``. Here are some examples:
 
 =================  =================
  Module Name         Class Name
@@ -115,7 +115,7 @@ the name starts with a number, we prefix the class name with
  ``foo_bar``         ``FooBar``
  ``docbook-xml``     ``DocbookXml``
  ``FooBar``          ``Foobar``
- ``3proxy``          ``Num_3proxy``
+ ``3proxy``          ``_3proxy``
 =================  =================
 
 The class name is needed by Spack to properly import a package, but

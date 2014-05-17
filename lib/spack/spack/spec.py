@@ -102,8 +102,7 @@ from llnl.util.tty.color import *
 import spack
 import spack.parse
 import spack.error
-import spack.compilers
-import spack.compilers.gcc
+from spack.compilers import supported as supported_compiler
 
 from spack.version import *
 from spack.util.string import *
@@ -169,17 +168,29 @@ def colorize_spec(spec):
 
 
 @key_ordering
-class Compiler(object):
-    """The Compiler field represents the compiler or range of compiler
-       versions that a package should be built with.  Compilers have a
+class CompilerSpec(object):
+    """The CompilerSpec field represents the compiler or range of compiler
+       versions that a package should be built with.  CompilerSpecs have a
        name and a version list. """
     def __init__(self, *args):
         nargs = len(args)
         if nargs == 1:
-            # If there is one argument, it's a spec to parse
-            c = SpecParser().parse_compiler(args[0])
-            self.name = c.name
-            self.versions = c.versions
+            arg = args[0]
+            # If there is one argument, it's either another CompilerSpec
+            # to copy or a string to parse
+            if isinstance(arg, basestring):
+                c = SpecParser().parse_compiler(arg)
+                self.name = c.name
+                self.versions = c.versions
+
+            elif isinstance(arg, CompilerSpec):
+                self.name = arg.name
+                self.versions = arg.versions.copy()
+
+            else:
+                raise TypeError(
+                    "Can only build CompilerSpec from string or CompilerSpec." +
+                    "  Found %s" % type(arg))
 
         elif nargs == 2:
             name, version = args
@@ -197,12 +208,14 @@ class Compiler(object):
 
 
     def _autospec(self, compiler_spec_like):
-        if not isinstance(compiler_spec_like, Compiler):
-            return Compiler(compiler_spec_like)
-        return compiler_spec_like
+        if isinstance(compiler_spec_like, CompilerSpec):
+            return compiler_spec_like
+        return CompilerSpec(compiler_spec_like)
 
 
     def satisfies(self, other):
+        # TODO: This should not just look for overlapping versions.
+        # TODO: e.g., 4.7.3 should satisfy a requirement for 4.7.
         other = self._autospec(other)
         return (self.name == other.name and
                 self.versions.overlaps(other.versions))
@@ -218,7 +231,7 @@ class Compiler(object):
 
     @property
     def concrete(self):
-        """A Compiler spec is concrete if its versions are concrete."""
+        """A CompilerSpec is concrete if its versions are concrete."""
         return self.versions.concrete
 
 
@@ -230,7 +243,7 @@ class Compiler(object):
 
 
     def copy(self):
-        clone = Compiler.__new__(Compiler)
+        clone = CompilerSpec.__new__(CompilerSpec)
         clone.name = self.name
         clone.versions = self.versions.copy()
         return clone
@@ -353,7 +366,7 @@ class Spec(object):
 
     def _set_compiler(self, compiler):
         """Called by the parser to set the compiler."""
-        if self.compiler: raise DuplicateCompilerError(
+        if self.compiler: raise DuplicateCompilerSpecError(
                 "Spec for '%s' cannot have two compilers." % self.name)
         self.compiler = compiler
 
@@ -808,7 +821,7 @@ class Spec(object):
 
             # validate compiler in addition to the package name.
             if spec.compiler:
-                if not spack.compilers.supported(spec.compiler):
+                if not supported_compiler(spec.compiler):
                     raise UnsupportedCompilerError(spec.compiler.name)
 
 
@@ -1320,7 +1333,7 @@ class SpecParser(spack.parse.Parser):
         self.expect(ID)
         self.check_identifier()
 
-        compiler = Compiler.__new__(Compiler)
+        compiler = CompilerSpec.__new__(CompilerSpec)
         compiler.name = self.token.value
         compiler.versions = VersionList()
         if self.accept(AT):
@@ -1402,10 +1415,10 @@ class DuplicateVariantError(SpecError):
         super(DuplicateVariantError, self).__init__(message)
 
 
-class DuplicateCompilerError(SpecError):
+class DuplicateCompilerSpecError(SpecError):
     """Raised when the same compiler occurs in a spec twice."""
     def __init__(self, message):
-        super(DuplicateCompilerError, self).__init__(message)
+        super(DuplicateCompilerSpecError, self).__init__(message)
 
 
 class UnsupportedCompilerError(SpecError):

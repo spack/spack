@@ -34,6 +34,7 @@ import platform
 from llnl.util.filesystem import *
 
 import spack
+from spack.compilers import compiler_for_spec
 from spack.util.executable import Executable, which
 from spack.util.environment import *
 
@@ -77,6 +78,11 @@ class MakeExecutable(Executable):
             args = (jobs,) + args
 
         super(MakeExecutable, self).__call__(*args, **kwargs)
+
+
+def set_compiler_environment_variables(pkg):
+    assert(pkg.spec.concrete)
+    compiler = compiler_for_spec(pkg.spec.compiler)
 
 
 def set_build_environment_variables(pkg):

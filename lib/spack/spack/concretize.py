@@ -99,6 +99,15 @@ class DefaultConcretizer(object):
            this one has a strict compiler requirement.  Otherwise, try to
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
+
+           TODO: In many cases we probably want to look for installed
+                 versions of each package and use *that* version if we
+                 can link to it.  The policy implemented here will
+                 tend to rebuild a lot of stuff becasue it will prefer
+                 a compiler in the spec to any compiler already-
+                 installed things were built with.  There is likely
+                 some better policy that finds some middle ground
+                 between these two extremes.
         """
         if spec.compiler and spec.compiler.concrete:
             return

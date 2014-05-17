@@ -657,6 +657,7 @@ class Package(object):
             spack.install_layout.make_path_for_spec(self.spec)
 
             # Set up process's build environment before running install.
+            build_env.set_compiler_environment_variables(self)
             build_env.set_build_environment_variables(self)
             build_env.set_module_variables_for_package(self)
 

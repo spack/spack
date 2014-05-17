@@ -25,7 +25,7 @@
 import unittest
 
 import spack
-from spack.spec import Spec, Compiler
+from spack.spec import Spec, CompilerSpec
 from spack.test.mock_packages_test import *
 
 class ConcretizeTest(MockPackagesTest):
@@ -169,7 +169,7 @@ class ConcretizeTest(MockPackagesTest):
         spec = Spec('mpileaks')
         spec.normalize()
 
-        spec['dyninst'].compiler = Compiler('clang')
+        spec['dyninst'].compiler = CompilerSpec('clang')
         spec.concretize()
 
         # TODO: not exactly the syntax I would like.

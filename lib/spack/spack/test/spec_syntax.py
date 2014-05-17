@@ -133,12 +133,12 @@ class SpecSyntaxTest(unittest.TestCase):
         self.assertRaises(DuplicateDependencyError, self.check_parse, "x ^y ^y")
 
     def test_duplicate_compiler(self):
-        self.assertRaises(DuplicateCompilerError, self.check_parse, "x%intel%intel")
-        self.assertRaises(DuplicateCompilerError, self.check_parse, "x%intel%gcc")
-        self.assertRaises(DuplicateCompilerError, self.check_parse, "x%gcc%intel")
-        self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%intel%intel")
-        self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%intel%gcc")
-        self.assertRaises(DuplicateCompilerError, self.check_parse, "x ^y%gcc%intel")
+        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x%intel%intel")
+        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x%intel%gcc")
+        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x%gcc%intel")
+        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x ^y%intel%intel")
+        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x ^y%intel%gcc")
+        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x ^y%gcc%intel")
 
 
     # ================================================================================
