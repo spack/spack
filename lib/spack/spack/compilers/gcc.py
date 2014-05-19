@@ -35,7 +35,7 @@ class Gcc(Compiler):
     f77_names = ['gfortran']
 
     # Subclasses use possible names of Fortran 90 compiler
-    f90_names = ['gfortran']
+    fc_names = ['gfortran']
 
-    def __init__(self, cc, cxx, f77, f90):
-        super(Gcc, self).__init__(cc, cxx, f77, f90)
+    def __init__(self, cc, cxx, f77, fc):
+        super(Gcc, self).__init__(cc, cxx, f77, fc)

@@ -36,6 +36,11 @@ def setup_parser(subparser):
         '-f', '--force', action='store_true', dest='force',
         help="Remove regardless of whether other packages depend on this one.")
     subparser.add_argument(
+        '-a', '--all', action='store_true', dest='all',
+        help="USE CAREFULLY.  Remove ALL installed packages that match each supplied spec. " +
+        "i.e., if you say uninstall libelf, ALL versions of libelf are uninstalled. " +
+        "This is both useful and dangerous, like rm -r.")
+    subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to uninstall")
 
 
@@ -50,15 +55,17 @@ def uninstall(parser, args):
     pkgs = []
     for spec in specs:
         matching_specs = spack.db.get_installed(spec)
-        if len(matching_specs) > 1:
-            tty.die("%s matches multiple packages.  Which one did you mean?"
-                    % spec, *matching_specs)
+        if not args.all and len(matching_specs) > 1:
+            tty.die("%s matches multiple packages." % spec,
+                    "You can either:",
+                    " a) Use spack uninstall -a to uninstall ALL matching specs, or",
+                    " b) use a more specific spec.",
+                    "Matching packages:", *("  " + str(s) for s in matching_specs))
 
-        elif len(matching_specs) == 0:
+        if len(matching_specs) == 0:
             tty.die("%s does not match any installed packages." % spec)
 
-        installed_spec = matching_specs[0]
-        pkgs.append(spack.db.get(installed_spec))
+        pkgs.extend(spack.db.get(s) for s in matching_specs)
 
     # Sort packages to be uninstalled by the number of installed dependents
     # This ensures we do things in the right order

@@ -36,7 +36,10 @@ def setup_parser(subparser):
         help="Do not try to install dependencies of requested packages.")
     subparser.add_argument(
         '--keep-prefix', action='store_true', dest='keep_prefix',
-        help="Don't clean up staging area when install completes.")
+        help="Don't remove the install prefix if installation fails.")
+    subparser.add_argument(
+        '--keep-stage', action='store_true', dest='keep_stage',
+        help="Don't remove the build stage if installation succeeds.")
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="Do not check packages against checksum")
@@ -55,4 +58,5 @@ def install(parser, args):
     for spec in specs:
         package = spack.db.get(spec)
         package.do_install(keep_prefix=args.keep_prefix,
+                           keep_stage=args.keep_stage,
                            ignore_deps=args.ignore_deps)

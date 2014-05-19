@@ -62,7 +62,7 @@ def find(parser, args):
 
     # Make a dict with specs keyed by architecture and compiler.
     specs = [s for s in spack.db.installed_package_specs()
-             if not query_specs or any(spec.satisfies(q) for q in query_specs)]
+             if not query_specs or any(s.satisfies(q) for q in query_specs)]
     index = index_by(specs, 'architecture', 'compiler')
 
     # Traverse the index and print out each package

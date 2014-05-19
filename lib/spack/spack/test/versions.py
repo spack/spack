@@ -311,7 +311,7 @@ class VersionsTest(unittest.TestCase):
         self.check_intersection(['0:1'], [':'], ['0:1'])
 
 
-    def test_satisfaction(self):
+    def test_basic_version_satisfaction(self):
         self.assert_satisfies('4.7.3',   '4.7.3')
 
         self.assert_satisfies('4.7.3',   '4.7')
@@ -326,6 +326,22 @@ class VersionsTest(unittest.TestCase):
         self.assert_does_not_satisfy('4.8',   '4.9')
         self.assert_does_not_satisfy('4',     '4.9')
 
+    def test_basic_version_satisfaction_in_lists(self):
+        self.assert_satisfies(['4.7.3'],   ['4.7.3'])
+
+        self.assert_satisfies(['4.7.3'],   ['4.7'])
+        self.assert_satisfies(['4.7.3b2'], ['4.7'])
+        self.assert_satisfies(['4.7b6'],   ['4.7'])
+
+        self.assert_satisfies(['4.7.3'],   ['4'])
+        self.assert_satisfies(['4.7.3b2'], ['4'])
+        self.assert_satisfies(['4.7b6'],   ['4'])
+
+        self.assert_does_not_satisfy(['4.8.0'], ['4.9'])
+        self.assert_does_not_satisfy(['4.8'],   ['4.9'])
+        self.assert_does_not_satisfy(['4'],     ['4.9'])
+
+    def test_version_range_satisfaction(self):
         self.assert_satisfies('4.7b6', '4.3:4.7')
         self.assert_satisfies('4.3.0', '4.3:4.7')
         self.assert_satisfies('4.3.2', '4.3:4.7')
@@ -336,6 +352,18 @@ class VersionsTest(unittest.TestCase):
         self.assert_satisfies('4.7b6',        '4.3:4.7')
         self.assert_does_not_satisfy('4.8.0', '4.3:4.7')
 
+    def test_version_range_satisfaction_in_lists(self):
+        self.assert_satisfies(['4.7b6'], ['4.3:4.7'])
+        self.assert_satisfies(['4.3.0'], ['4.3:4.7'])
+        self.assert_satisfies(['4.3.2'], ['4.3:4.7'])
+
+        self.assert_does_not_satisfy(['4.8.0'], ['4.3:4.7'])
+        self.assert_does_not_satisfy(['4.3'],   ['4.4:4.7'])
+
+        self.assert_satisfies(['4.7b6'],        ['4.3:4.7'])
+        self.assert_does_not_satisfy(['4.8.0'], ['4.3:4.7'])
+
+    def test_satisfaction_with_lists(self):
         self.assert_satisfies('4.7',     '4.3, 4.6, 4.7')
         self.assert_satisfies('4.7.3',   '4.3, 4.6, 4.7')
         self.assert_satisfies('4.6.5',   '4.3, 4.6, 4.7')

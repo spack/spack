@@ -626,6 +626,7 @@ class Package(object):
         """
         # whether to keep the prefix on failure.  Default is to destroy it.
         keep_prefix = kwargs.get('keep_prefix', False)
+        keep_stage  = kwargs.get('keep_stage', False)
         ignore_deps = kwargs.get('ignore_deps', False)
 
         if not self.spec.concrete:
@@ -671,9 +672,10 @@ class Package(object):
                         "Install failed for %s.  Nothing was installed!"
                         % self.name)
 
-                # On successful install, remove the stage.
-                # Leave if there is an error
-                self.stage.destroy()
+                if not keep_stage:
+                    # On successful install, remove the stage.
+                    # Leave it if there is an error
+                    self.stage.destroy()
 
                 tty.msg("Successfully installed %s" % self.name)
                 print_pkg(self.prefix)
@@ -725,16 +727,16 @@ class Package(object):
         force = kwargs.get('force', False)
 
         if not self.installed:
-            raise InstallError(self.name + " is not installed.")
+            raise InstallError(self.spec + " is not installed.")
 
         if not force:
             deps = self.installed_dependents
             if deps: raise InstallError(
                 "Cannot uninstall %s. The following installed packages depend on it: %s"
-                % (self.name, deps))
+                % (self.spec, deps))
 
         self.remove_prefix()
-        tty.msg("Successfully uninstalled %s." % self.name)
+        tty.msg("Successfully uninstalled %s." % self.spec)
 
 
     def do_clean(self):

@@ -43,7 +43,7 @@ class Executable(object):
 
     @property
     def command(self):
-        return self.exe[0]
+        return ' '.join(self.exe)
 
 
     def __call__(self, *args, **kwargs):

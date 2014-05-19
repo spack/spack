@@ -39,6 +39,8 @@ class Libdwarf(Package):
 
     depends_on("libelf")
 
+    parallel = False
+
 
     def clean(self):
         for dir in dwarf_dirs:

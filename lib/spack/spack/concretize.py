@@ -33,9 +33,10 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
-import spack.architecture
-import spack.compilers
 import spack.spec
+import spack.compilers
+import spack.architecture
+import spack.error
 from spack.version import *
 
 
@@ -117,9 +118,13 @@ class DefaultConcretizer(object):
                            if p.compiler is not None).compiler
 
             if not nearest.concrete:
-                matches = [c for c in spack.compilers.available_compilers()
-                           if c.name == nearest.name]
-                nearest.versions = sorted(matches)[-1].versions.copy()
+                # Take the newest compiler that saisfies the spec
+                matches = sorted(spack.compilers.find(nearest))
+                if not matches:
+                    raise UnavailableCompilerVersionError(nearest)
+
+                # copy concrete version into nearest spec
+                nearest.versions = matches[-1].versions.copy()
                 assert(nearest.concrete)
 
             spec.compiler = nearest.copy()
@@ -140,3 +145,12 @@ class DefaultConcretizer(object):
         first_key = sorted(index.keys())[0]
         latest_version = sorted(index[first_key])[-1]
         return latest_version
+
+
+class UnavailableCompilerVersionError(spack.error.SpackError):
+    """Raised when there is no available compiler that satisfies a
+       compiler spec."""
+    def __init__(self, compiler_spec):
+        super(UnavailableCompilerVersionError, self).__init__(
+            "No available compiler version matches '%s'" % compiler_spec,
+            "Run 'spack compilers' to see available compiler Options.")

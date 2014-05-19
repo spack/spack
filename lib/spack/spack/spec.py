@@ -102,7 +102,7 @@ from llnl.util.tty.color import *
 import spack
 import spack.parse
 import spack.error
-from spack.compilers import supported as supported_compiler
+import spack.compilers as compilers
 
 from spack.version import *
 from spack.util.string import *
@@ -231,8 +231,9 @@ class CompilerSpec(object):
 
     @property
     def concrete(self):
-        """A CompilerSpec is concrete if its versions are concrete."""
-        return self.versions.concrete
+        """A CompilerSpec is concrete if its versions are concrete and there
+           is an available compiler with the right version."""
+        return self.versions.concrete and self in compilers.all_compilers()
 
 
     @property
@@ -259,6 +260,9 @@ class CompilerSpec(object):
             vlist = ",".join(str(v) for v in self.versions)
             out += "@%s" % vlist
         return out
+
+    def __repr__(self):
+        return str(self)
 
 
 @key_ordering
@@ -821,12 +825,13 @@ class Spec(object):
 
             # validate compiler in addition to the package name.
             if spec.compiler:
-                if not supported_compiler(spec.compiler):
+                if not compilers.supported(spec.compiler):
                     raise UnsupportedCompilerError(spec.compiler.name)
 
 
     def constrain(self, other, **kwargs):
         other = self._autospec(other)
+        constrain_deps = kwargs.get('deps', True)
 
         if not self.name == other.name:
             raise UnsatisfiableSpecNameError(self.name, other.name)
@@ -854,7 +859,7 @@ class Spec(object):
         self.variants.update(other.variants)
         self.architecture = self.architecture or other.architecture
 
-        if kwargs.get('deps', True):
+        if constrain_deps:
             self._constrain_dependencies(other)
 
 
@@ -911,28 +916,28 @@ class Spec(object):
 
     def satisfies(self, other, **kwargs):
         other = self._autospec(other)
+        satisfy_deps = kwargs.get('deps', True)
 
         # First thing we care about is whether the name matches
         if self.name != other.name:
             return False
 
-        # This function simplifies null checking below
-        def check(attribute, op):
-            s = getattr(self, attribute)
-            o = getattr(other, attribute)
-            return not s or not o or op(s,o)
-
-        # All these attrs have satisfies criteria of their own
-        for attr in ('versions', 'variants', 'compiler'):
-            if not check(attr, lambda s, o: s.satisfies(o)):
+        # All these attrs have satisfies criteria of their own,
+        # but can be None to indicate no constraints.
+        for s, o in ((self.versions, other.versions),
+                     (self.variants, other.variants),
+                     (self.compiler, other.compiler)):
+            if s and o and not s.satisfies(o):
                 return False
 
-        # Architecture is just a string
-        # TODO: inviestigate making an Architecture class for symmetry
-        if not check('architecture', lambda s,o: s == o):
+        # Architecture satisfaction is currently just string equality.
+        # Can be None for unconstrained, though.
+        if (self.architecture and other.architecture and
+            self.architecture != other.architecture):
             return False
 
-        if kwargs.get('deps', True):
+        # If we need to descend into dependencies, do it, otherwise we're done.
+        if satisfy_deps:
             return self.satisfies_dependencies(other)
         else:
             return True

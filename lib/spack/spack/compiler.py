@@ -16,7 +16,7 @@ def _verify_executables(*paths):
 
 class Compiler(object):
     """This class encapsulates a Spack "compiler", which includes C,
-       C++, Fortran, and F90 compilers.  Subclasses should implement
+       C++, and Fortran compilers.  Subclasses should implement
        support for specific compilers, their possible names, arguments,
        and how to identify the particular type of compiler."""
 
@@ -30,20 +30,20 @@ class Compiler(object):
     f77_names = []
 
     # Subclasses use possible names of Fortran 90 compiler
-    f90_names = []
+    fc_names = []
 
     # Names of generic arguments used by this compiler
     arg_version = '-dumpversion'
     arg_rpath   = '-Wl,-rpath,%s'
 
 
-    def __init__(self, cc, cxx, f77, f90):
-        _verify_executables(cc, cxx, f77, f90)
+    def __init__(self, cc, cxx, f77, fc):
+        _verify_executables(cc, cxx, f77, fc)
 
         self.cc  = Executable(cc)
         self.cxx = Executable(cxx)
         self.f77 = Executable(f77)
-        self.f90 = Executable(f90)
+        self.fc  = Executable(fc)
 
     @property
     @memoized

@@ -41,49 +41,69 @@ _imported_compilers_module = 'spack.compiler.versions'
 _imported_versions_module  = 'spack.compilers'
 
 
+def _auto_compiler_spec(function):
+    def converter(cspec_like):
+        if not isinstance(cspec_like, spack.spec.CompilerSpec):
+            cspec_like = spack.spec.CompilerSpec(cspec_like)
+        return function(cspec_like)
+    return converter
+
+
 @memoized
 def supported_compilers():
-    """Return a list of names of compilers supported by Spack.
+    """Return a set of names of compilers supported by Spack.
 
        See available_compilers() to get a list of all the available
        versions of supported compilers.
     """
-    return sorted(c for c in list_modules(spack.compilers_path))
+    return sorted(name for name in list_modules(spack.compilers_path))
 
 
+@_auto_compiler_spec
 def supported(compiler_spec):
     """Test if a particular compiler is supported."""
-    if not isinstance(compiler_spec, spack.spec.CompilerSpec):
-        compiler_spec = spack.spec.CompilerSpec(compiler_spec)
     return compiler_spec.name in supported_compilers()
 
 
-def available_compilers():
-    """Return a list of specs for all the compiler versions currently
-       available to build with.  These are instances of
-       CompilerSpec.
+@memoized
+def all_compilers():
+    """Return a set of specs for all the compiler versions currently
+       available to build with.  These are instances of CompilerSpec.
     """
-    return [spack.spec.CompilerSpec(c)
-            for c in list_modules(spack.compiler_version_path)]
+    return set(spack.spec.CompilerSpec(c)
+               for c in list_modules(spack.compiler_version_path))
 
 
+@_auto_compiler_spec
+def find(compiler_spec):
+    """Return specs of available compilers that match the supplied
+       compiler spec.  Return an list if nothing found."""
+    return [c for c in all_compilers() if c.satisfies(compiler_spec)]
+
+
+@_auto_compiler_spec
+def compilers_for_spec(compiler_spec):
+    """This gets all compilers that satisfy the supplied CompilerSpec.
+       Returns an empty list if none are found.
+    """
+    matches = find(compiler_spec)
+
+    compilers = []
+    for cspec in matches:
+        path = join_path(spack.compiler_version_path, "%s.py" % cspec)
+        mod  = imp.load_source(_imported_versions_module, path)
+        cls  = class_for_compiler_name(cspec.name)
+        compilers.append(cls(mod.cc, mod.cxx, mod.f77, mod.fc))
+
+    return compilers
+
+
+@_auto_compiler_spec
 def compiler_for_spec(compiler_spec):
-    """This gets an instance of an actual spack.compiler.Compiler object
-       from a compiler spec.  The spec needs to be concrete for this to
-       work; it will raise an error if passed an abstract compiler.
-    """
-    matches = [c for c in available_compilers() if c.satisfies(compiler_spec)]
-
-    # TODO: do something when there are zero matches.
-    assert(len(matches) >= 1)
-
-    compiler = matches[0]
-    file_path = join_path(spack.compiler_version_path, "%s.py" % compiler)
-
-    mod = imp.load_source(_imported_versions_module, file_path)
-    compiler_class = class_for_compiler_name(compiler.name)
-
-    return compiler_class(mod.cc, mod.cxx, mod.f77, mod.f90)
+    assert(compiler_spec.concrete)
+    compilers = compilers_for_spec(compiler_spec)
+    assert(len(compilers) == 1)
+    return compilers[0]
 
 
 def class_for_compiler_name(compiler_name):
