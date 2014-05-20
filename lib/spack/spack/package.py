@@ -552,8 +552,8 @@ class Package(object):
                 tty.msg("Checksum passed for %s" % self.name)
             else:
                 raise ChecksumError(
-                    "%s checksum failed for %s." % checker.hash_name,
-                    "Expected %s but got %s." % (self.name, digest, checker.sum))
+                    "%s checksum failed for %s." % (checker.hash_name, self.name),
+                    "Expected %s but got %s." % (digest, checker.sum))
 
 
     def do_stage(self):
