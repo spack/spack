@@ -14,6 +14,8 @@ class Stat(Package):
     depends_on('launchmon')
     depends_on('mrnet')
 
+    patch('configure_mpicxx.patch', when='@2.1.0:')
+
     def install(self, spec, prefix):
         configure(
             "--enable-gui",
