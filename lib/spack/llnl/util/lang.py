@@ -32,6 +32,64 @@ import inspect
 ignore_modules = [r'^\.#', '~$']
 
 
+def index_by(objects, *funcs):
+    """Create a hierarchy of dictionaries by splitting the supplied
+       set of objects on unique values of the supplied functions.
+       Values are used as keys.  For example, suppose you have four
+       objects with attributes that look like this:
+
+           a = Spec(name="boost",    compiler="gcc",   arch="bgqos_0")
+           b = Spec(name="mrnet",    compiler="intel", arch="chaos_5_x86_64_ib")
+           c = Spec(name="libelf",   compiler="xlc",   arch="bgqos_0")
+           d = Spec(name="libdwarf", compiler="intel", arch="chaos_5_x86_64_ib")
+
+           list_of_specs = [a,b,c,d]
+           index1 = index_by(list_of_specs, lambda s: s.arch, lambda s: s.compiler)
+           index2 = index_by(list_of_specs, lambda s: s.compiler)
+
+       ``index1'' now has two levels of dicts, with lists at the
+       leaves, like this:
+
+           { 'bgqos_0'           : { 'gcc' : [a], 'xlc' : [c] },
+             'chaos_5_x86_64_ib' : { 'intel' : [b, d] }
+           }
+
+       And ``index2'' is a single level dictionary of lists that looks
+       like this:
+
+           { 'gcc'    : [a],
+             'intel'  : [b,d],
+             'xlc'    : [c]
+           }
+
+       If any elemnts in funcs is a string, it is treated as the name
+       of an attribute, and acts like getattr(object, name).  So
+       shorthand for the above two indexes would be:
+
+           index1 = index_by(list_of_specs, 'arch', 'compiler')
+           index2 = index_by(list_of_specs, 'compiler')
+    """
+    if not funcs:
+        return objects
+
+    f = funcs[0]
+    if isinstance(f, basestring):
+        f = lambda x: getattr(x, funcs[0])
+
+    result = {}
+    for o in objects:
+        key = f(o)
+        if key not in result:
+            result[key] = [o]
+        else:
+            result[key].append(o)
+
+    for key, objects in result.items():
+        result[key] = index_by(objects, *funcs[1:])
+
+    return result
+
+
 def partition_list(elements, predicate):
     """Partition a list into two lists, the first containing elements
        for which the predicate evaluates to true, the second containing
