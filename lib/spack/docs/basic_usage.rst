@@ -509,7 +509,6 @@ You can see what virtual packages a particular package provides by
 getting info on it:
 
 .. command-output:: spack info mpich
-   :ellipsis: 10
 
 Spack is unique in that its virtual packages can be versioned, just
 like regular packages.  A particular version of a package may provide
