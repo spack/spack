@@ -1,27 +1,15 @@
-# FIXME:
-# This is a template package file for Spack.  We've conveniently
-# put "FIXME" labels next to all the things you'll want to change.
-#
-# Once you've edited all the FIXME's, delete this whole message,
-# save this file, and test out your package like this:
-#
-#     spack install SAMRAI
-#
-# You can always get back here to change things with:
-#
-#     spack edit SAMRAI
-#
-# See the spack documentation for more information on building
-# packages.
-#
 from spack import *
 
 class Samrai(Package):
-    """FIXME: put a proper description of your package here."""
-    # FIXME: add a proper url for your package's homepage here.
+    """SAMRAI (Structured Adaptive Mesh Refinement Application Infrastructure)
+       is an object-oriented C++ software library enables exploration of numerical,
+       algorithmic, parallel computing, and software issues associated with applying
+       structured adaptive mesh refinement (SAMR) technology in large-scale parallel
+       application development.
+    """
     homepage = "https://computation-rnd.llnl.gov/SAMRAI/confirm.php"
     url      = "https://computation-rnd.llnl.gov/SAMRAI/download/SAMRAI-v3.7.3.tar.gz"
-	list_url = homepage
+    list_url = homepage
 
     versions = {
       '3.7.3'      : '12d574eacadf8c9a70f1bb4cd1a69df6',
@@ -35,10 +23,29 @@ class Samrai(Package):
       '2.4.4'      : '04fb048ed0efe7c531ac10c81cc5f6ac',
     }
 
-    def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
-        configure("--prefix=%s" % prefix)
+    depends_on("mpi")
+    depends_on("zlib")
+    depends_on("hdf5")
+    depends_on("boost@1.52.0")
 
-        # FIXME: Add logic to build and install here
+    # don't build tools with gcc
+    patch('no-tool-build.patch', when='%gcc')
+
+    # TODO: currently hard-coded to use openmpi - be careful!
+    def install(self, spec, prefix):
+        configure(
+            "--prefix=%s" % prefix,
+            "--with-CXX=%s" % spec['openmpi'].prefix.bin + "/mpic++",
+            "--with-CC=%s" % spec['openmpi'].prefix.bin + "/mpicc",
+            "--with-hdf5=%s" % spec['hdf5'].prefix,
+            "--with-boost=%s" % spec['boost'].prefix,
+            "--with-zlib=%s" % spec['zlib'].prefix,
+            "--disable-blas",
+            "--disable-lapack",
+            "--with-hypre=no",
+            "--with-petsc=no",
+            "--enable-opt",
+            "--disable-debug")
+
         make()
         make("install")

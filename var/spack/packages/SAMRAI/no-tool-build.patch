@@ -1,0 +1,20 @@
+--- SAMRAI/Makefile.in	2013-05-31 11:04:32.000000000 -0700
++++ SAMRAI/Makefile.in.notools	2014-05-30 10:31:15.135979900 -0700
+@@ -8,7 +8,7 @@
+ ##
+ #########################################################################
+ 
+-default: library tools
++default: library
+ 
+ SAMRAI  = @top_srcdir@
+ SUBDIR  = .
+@@ -135,7 +135,7 @@
+ 	done
+ 	$(MAKE) archive_remove_obj_names
+ 
+-install: library tools
++install: library
+ 	$(INSTALL) -d -m 755 $(INSTDIR)/config
+ 	$(INSTALL) -d -m 755 $(INSTDIR)/lib
+ 	$(INSTALL) -d -m 755 $(INSTDIR)/bin
