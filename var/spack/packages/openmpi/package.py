@@ -14,6 +14,8 @@ class Openmpi(Package):
 
     versions = { '1.6.5' : '03aed2a4aa4d0b27196962a2a65fc475', }
 
+    provides('mpi@:2')
+
     patch('ad_lustre_rwcontig_open_source.patch')
     patch('llnl-platforms.patch')
 
