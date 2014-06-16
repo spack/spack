@@ -651,18 +651,18 @@ class Package(object):
             raise InstallError("Unable to fork build process: %s" % e)
 
         if pid == 0:
-            tty.msg("Building %s." % self.name)
-
-            # create the install directory (allow the layout to handle
-            # this in case it needs to add extra files)
-            spack.install_layout.make_path_for_spec(self.spec)
-
-            # Set up process's build environment before running install.
-            build_env.set_compiler_environment_variables(self)
-            build_env.set_build_environment_variables(self)
-            build_env.set_module_variables_for_package(self)
-
             try:
+                tty.msg("Building %s." % self.name)
+
+                # create the install directory (allow the layout to handle
+                # this in case it needs to add extra files)
+                spack.install_layout.make_path_for_spec(self.spec)
+
+                # Set up process's build environment before running install.
+                build_env.set_compiler_environment_variables(self)
+                build_env.set_build_environment_variables(self)
+                build_env.set_module_variables_for_package(self)
+
                 # Subclasses implement install() to do the build &
                 # install work.
                 self.install(self.spec, self.prefix)
@@ -693,7 +693,11 @@ class Package(object):
                              "Spack will think this package is installed." +
                              "Manually remove this directory to fix:",
                              self.prefix)
-                raise
+
+                # Child doesn't raise or return to main spack code.
+                # Just runs default exception handler and exits.
+                sys.excepthook(*sys.exc_info())
+                os._exit(1)
 
         # Parent process just waits for the child to complete.  If the
         # child exited badly, assume it already printed an appropriate
@@ -727,7 +731,7 @@ class Package(object):
         force = kwargs.get('force', False)
 
         if not self.installed:
-            raise InstallError(self.spec + " is not installed.")
+            raise InstallError(str(self.spec) + " is not installed.")
 
         if not force:
             deps = self.installed_dependents
