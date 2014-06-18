@@ -26,9 +26,9 @@ import os
 from subprocess import check_call, check_output
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
 
 import spack
-from spack import join_path
 
 description = "Create a new installation of spack in another prefix"
 

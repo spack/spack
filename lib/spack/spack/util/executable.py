@@ -22,6 +22,8 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+__all__ = ['Executable', 'when']
+
 import os
 import sys
 import re
@@ -29,7 +31,6 @@ import subprocess
 
 import llnl.util.tty as tty
 from spack.error import SpackError
-
 
 class Executable(object):
     """Class representing a program that can be run on the command line."""

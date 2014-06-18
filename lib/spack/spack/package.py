@@ -654,8 +654,9 @@ class Package(object):
             try:
                 tty.msg("Building %s." % self.name)
 
-                # create the install directory (allow the layout to handle
-                # this in case it needs to add extra files)
+                # create the install directory.  The install layout
+                # handles this in case so that it can use whatever
+                # package naming scheme it likes.
                 spack.install_layout.make_path_for_spec(self.spec)
 
                 # Set up process's build environment before running install.
@@ -663,18 +664,17 @@ class Package(object):
                 build_env.set_build_environment_variables(self)
                 build_env.set_module_variables_for_package(self)
 
-                # Subclasses implement install() to do the build &
-                # install work.
+                # Subclasses implement install() to do the real work.
                 self.install(self.spec, self.prefix)
 
+                # Ensure that something was actually installed.
                 if not os.listdir(self.prefix):
                     raise InstallError(
                         "Install failed for %s.  Nothing was installed!"
                         % self.name)
 
+                # On successful install, remove the stage.
                 if not keep_stage:
-                    # On successful install, remove the stage.
-                    # Leave it if there is an error
                     self.stage.destroy()
 
                 tty.msg("Successfully installed %s" % self.name)

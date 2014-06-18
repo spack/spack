@@ -22,6 +22,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 import unittest
 import shutil
 from contextlib import closing
@@ -82,11 +83,12 @@ class InstallTest(MockPackagesTest):
         # Get a basic concrete spec for the trivial install package.
         spec = Spec(install_test_package)
         spec.concretize()
+        self.assertTrue(spec.concrete)
 
         # Get the package
         pkg = spack.db.get(spec)
 
-        # Fake some values
+        # Fake the URL for the package so it downloads from a file.
         archive_path = join_path(self.stage.path, archive_name)
         pkg.url = 'file://' + archive_path
 
@@ -94,5 +96,5 @@ class InstallTest(MockPackagesTest):
             pkg.do_install()
             pkg.do_uninstall()
         except Exception, e:
-            if pkg: pkg.remove_prefix()
+            pkg.remove_prefix()
             raise
