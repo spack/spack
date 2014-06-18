@@ -44,7 +44,8 @@ test_names = ['versions',
               'concretize',
               'multimethod',
               'install',
-              'package_sanity']
+              'package_sanity',
+              'config']
 
 
 def list_tests():
