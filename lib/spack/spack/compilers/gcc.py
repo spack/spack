@@ -37,5 +37,8 @@ class Gcc(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['gfortran']
 
+    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
+    suffixes = [r'-mp-\d\.\d']
+
     def __init__(self, cc, cxx, f77, fc):
         super(Gcc, self).__init__(cc, cxx, f77, fc)

@@ -27,10 +27,11 @@ spack_env_path      = get_path("SPACK_ENV_PATH")
 spack_debug_log_dir = get_env_var("SPACK_DEBUG_LOG_DIR")
 spack_spec          = get_env_var("SPACK_SPEC")
 
-spack_cc  = get_env_var("SPACK_CC")
-spack_cxx = get_env_var("SPACK_CXX")
-spack_f77 = get_env_var("SPACK_F77")
-spack_fc  = get_env_var("SPACK_FC")
+compiler_spec = get_env_var("SPACK_COMPILER_SPEC")
+spack_cc  = get_env_var("SPACK_CC",  required=False)
+spack_cxx = get_env_var("SPACK_CXX", required=False)
+spack_f77 = get_env_var("SPACK_F77", required=False)
+spack_fc  = get_env_var("SPACK_FC",  required=False)
 
 # Figure out what type of operation we're doing
 command = os.path.basename(sys.argv[0])
@@ -51,17 +52,25 @@ else:
 
 if command in ('cc', 'gcc', 'c89', 'c99', 'clang'):
     command = spack_cc
+    language = "C"
 elif command in ('c++', 'CC', 'g++', 'clang++'):
     command = spack_cxx
+    language = "C++"
 elif command in ('f77'):
     command = spack_f77
+    language = "Fortran 77"
 elif command in ('fc'):
     command = spack_fc
+    language = "Fortran 90"
 elif command in ('ld', 'cpp'):
     pass # leave it the same.  TODO: what's the right thing?
 else:
     raise Exception("Unknown compiler: %s" % command)
 
+if command is None:
+    print "ERROR: Compiler '%s' does not support compiling %s programs." % (
+        compiler_spec, language)
+    sys.exit(1)
 
 version_args = ['-V', '-v', '--version', '-dumpversion']
 if any(arg in sys.argv for arg in version_args):

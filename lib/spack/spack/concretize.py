@@ -110,14 +110,18 @@ class DefaultConcretizer(object):
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
         """
-        if spec.compiler and spec.compiler.concrete:
+        all_compilers = spack.compilers.all_compilers()
+
+        if (spec.compiler and
+            spec.compiler.concrete and
+            spec.compiler in all_compilers):
             return
 
         try:
             nearest = next(p for p in spec.preorder_traversal(direction='parents')
                            if p.compiler is not None).compiler
 
-            if not nearest.concrete:
+            if not nearest in all_compilers:
                 # Take the newest compiler that saisfies the spec
                 matches = sorted(spack.compilers.find(nearest))
                 if not matches:

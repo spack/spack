@@ -93,10 +93,16 @@ def set_compiler_environment_variables(pkg):
     os.environ['FC']  = 'fc'
 
     # Set SPACK compiler variables so that our wrapper knows what to call
-    os.environ['SPACK_CC']  = compiler.cc.command
-    os.environ['SPACK_CXX'] = compiler.cxx.command
-    os.environ['SPACK_F77'] = compiler.f77.command
-    os.environ['SPACK_FC']  = compiler.fc.command
+    if compiler.cc:
+        os.environ['SPACK_CC']  = compiler.cc.command
+    if compiler.cxx:
+        os.environ['SPACK_CXX'] = compiler.cxx.command
+    if compiler.f77:
+        os.environ['SPACK_F77'] = compiler.f77.command
+    if compiler.fc:
+        os.environ['SPACK_FC']  = compiler.fc.command
+
+    os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
 
 
 def set_build_environment_variables(pkg):

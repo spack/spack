@@ -233,7 +233,7 @@ class CompilerSpec(object):
     def concrete(self):
         """A CompilerSpec is concrete if its versions are concrete and there
            is an available compiler with the right version."""
-        return self.versions.concrete and self in compilers.all_compilers()
+        return self.versions.concrete
 
 
     @property

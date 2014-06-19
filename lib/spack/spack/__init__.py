@@ -53,11 +53,6 @@ stage_path     = join_path(var_path, "stage")
 install_path   = join_path(prefix, "opt")
 
 #
-# Place to look for usable compiler versions.
-#
-compiler_version_path = join_path(var_path, "compilers")
-
-#
 # Set up the packages database.
 #
 from spack.packages import PackageDB

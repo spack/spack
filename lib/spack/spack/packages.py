@@ -32,7 +32,6 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
 from llnl.util.lang import memoized
 
-import spack
 import spack.error
 import spack.spec
 from spack.virtual import ProviderIndex

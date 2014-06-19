@@ -56,11 +56,14 @@ def uninstall(parser, args):
     for spec in specs:
         matching_specs = spack.db.get_installed(spec)
         if not args.all and len(matching_specs) > 1:
-            tty.die("%s matches multiple packages." % spec,
-                    "You can either:",
-                    " a) Use spack uninstall -a to uninstall ALL matching specs, or",
-                    " b) use a more specific spec.",
-                    "Matching packages:", *("  " + str(s) for s in matching_specs))
+            args =  ["%s matches multiple packages." % spec,
+                     "Matching packages:"]
+            args += ["  " + str(s) for s in matching_specs]
+            args += ["You can either:",
+                     "  a) Use spack uninstall -a to uninstall ALL matching specs, or",
+                     "  b) use a more specific spec."]
+            tty.die(*args)
+
 
         if len(matching_specs) == 0:
             tty.die("%s does not match any installed packages." % spec)
