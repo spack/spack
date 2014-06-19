@@ -29,9 +29,19 @@ from StringIO import StringIO
 
 from llnl.util.tty.color import *
 
-debug   = False
-verbose = False
+_debug   = False
+_verbose = False
 indent  = "  "
+
+def set_debug(flag):
+    global _debug
+    _debug = flag
+
+
+def set_verbose(flag):
+    global _verbose
+    _verbose = flag
+
 
 def msg(message, *args):
     cprint("@*b{==>} %s" % cescape(message))
@@ -50,13 +60,13 @@ def info(message, *args, **kwargs):
 
 
 def verbose(message, *args):
-    if verbose:
+    if _verbose:
         info(message, *args, format='c')
 
 
-def debug(*args):
-    if debug:
-        info("Debug: " + message, *args, format='*g')
+def debug(message, *args):
+    if _debug:
+        info(message, *args, format='g')
 
 
 def error(message, *args):

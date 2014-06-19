@@ -38,6 +38,7 @@ class Executable(object):
         self.exe = name.split(' ')
         self.returncode = None
 
+
     def add_default_arg(self, arg):
         self.exe.append(arg)
 
@@ -61,7 +62,7 @@ class Executable(object):
                      "Consider removing them")
 
         cmd = self.exe + list(args)
-        tty.verbose(" ".join(cmd))
+        tty.debug(" ".join(cmd))
 
         try:
             proc = subprocess.Popen(
@@ -79,6 +80,19 @@ class Executable(object):
 
         except subprocess.CalledProcessError, e:
             if fail_on_error: raise
+
+
+    def __eq__(self, other):
+        return self.exe == other.exe
+
+
+    def __neq__(self, other):
+        return not (self == other)
+
+
+    def __hash__(self):
+        return hash((type(self),) + tuple(self.exe))
+
 
     def __repr__(self):
         return "<exe: %s>" % self.exe

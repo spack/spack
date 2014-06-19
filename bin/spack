@@ -77,8 +77,10 @@ for cmd in spack.cmd.commands:
 args = parser.parse_args()
 
 # Set up environment based on args.
-spack.verbose = args.verbose
+tty.set_verbose(args.verbose)
+tty.set_debug(args.debug)
 spack.debug = args.debug
+
 spack.spack_working_dir = working_dir
 if args.mock:
     from spack.packages import PackageDB
