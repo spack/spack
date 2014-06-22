@@ -83,8 +83,8 @@ like the one shown above.
 import os
 import re
 import inspect
-from collections import OrderedDict
 import ConfigParser as cp
+from collections import OrderedDict
 
 from llnl.util.lang import memoized
 
@@ -112,7 +112,10 @@ _section_regex = r'^([\w-]*)\s*' \
                  r'\"([^"]*\)\"$'
 
 
-def get_config(scope=None):
+# Cache of configs -- we memoize this for performance.
+_config = {}
+
+def get_config(scope=None, **kwargs):
     """Get a Spack configuration object, which can be used to set options.
 
        With no arguments, this returns a SpackConfigParser with config
@@ -124,13 +127,33 @@ def get_config(scope=None):
        options from that scope's configuration file are loaded.  The
        caller can set or unset options, then call ``write()`` on the
        config object to write it back out to the original config file.
+
+       By default, this will cache configurations and return the last
+       read version of the config file.  If the config file is
+       modified and you need to refresh, call get_config with the
+       refresh=True keyword argument.  This will force all files to be
+       re-read.
     """
-    if scope is None:
-        return SpackConfigParser()
-    elif scope not in _scopes:
+    refresh = kwargs.get('refresh', False)
+    if refresh:
+        _config.clear()
+
+    if scope not in _config:
+        if scope is None:
+            _config[scope] = SpackConfigParser([path for path in _scopes.values()])
+        elif scope not in _scopes:
+            raise UnknownConfigurationScopeError(scope)
+        else:
+            _config[scope] = SpackConfigParser(_scopes[scope])
+
+    return _config[scope]
+
+
+def get_filename(scope):
+    """Get the filename for a particular config scope."""
+    if not scope in _scopes:
         raise UnknownConfigurationScopeError(scope)
-    else:
-        return SpackConfigParser(_scopes[scope])
+    return _scopes[scope]
 
 
 def _parse_key(key):
@@ -197,19 +220,13 @@ class SpackConfigParser(cp.RawConfigParser):
     """Slightly modified from Python's raw config file parser to accept
        leading whitespace and preserve comments.
     """
-    # Slightly modified Python option expression. This one allows
-    # leading whitespace.
-    OPTCRE = re.compile(
-        r'\s*(?P<option>[^:=\s][^:=]*)'  # allow leading whitespace
-        r'\s*(?P<vi>[:=])\s*'
-        r'(?P<value>.*)$'
-        )
+    # Slightly modify Python option expressions to allow leading whitespace
+    OPTCRE    = re.compile(r'\s*' + cp.RawConfigParser.OPTCRE.pattern)
+    OPTCRE_NV = re.compile(r'\s*' + cp.RawConfigParser.OPTCRE_NV.pattern)
 
-    def __init__(self, file_or_files=None):
-        cp.RawConfigParser.__init__(self, dict_type=OrderedDict)
-
-        if not file_or_files:
-            file_or_files = [path for path in _scopes.values()]
+    def __init__(self, file_or_files):
+        cp.RawConfigParser.__init__(
+            self, dict_type=OrderedDict, allow_no_value=True)
 
         if isinstance(file_or_files, basestring):
             self.read([file_or_files])
@@ -228,6 +245,17 @@ class SpackConfigParser(cp.RawConfigParser):
         sn = _make_section_name(section, name)
         if not self.has_section(sn):
             self.add_section(sn)
+
+        # Allow valueless config options to be set like this:
+        #     spack config set mirror https://foo.bar.com
+        #
+        # Instead of this, which parses incorrectly:
+        #     spack config set mirror.https://foo.bar.com
+        #
+        if option is None:
+            option = value
+            value = None
+
         self.set(sn, option, value)
 
 
@@ -236,9 +264,15 @@ class SpackConfigParser(cp.RawConfigParser):
         """Get the value for a key.  Raises NoOptionError or NoSectionError if
            the key is not present."""
         sn = _make_section_name(section, name)
+
         try:
+            if not option:
+                # TODO: format this better
+                return self.items(sn)
+
             return self.get(sn, option)
 
+        # Wrap ConfigParser exceptions in SpackExceptions
         except cp.NoOptionError, e:  raise NoOptionError(e)
         except cp.NoSectionError, e: raise NoSectionError(e)
         except cp.Error, e:          raise ConfigParserError(e)
