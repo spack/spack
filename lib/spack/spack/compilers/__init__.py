@@ -22,7 +22,11 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+"""This module contains functions related to finding compilers on the
+system and configuring Spack to use multiple compilers.
+"""
 import imp
+import os
 
 from llnl.util.lang import memoized, list_modules
 from llnl.util.filesystem import join_path
@@ -32,13 +36,16 @@ import spack.error
 import spack.spec
 import spack.config
 
+from spack.util.multiproc import parmap
 from spack.compiler import Compiler
 from spack.util.executable import which
 from spack.util.naming import mod_to_class
+from spack.compilation import get_path
 
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 
+_default_order = ['gcc', 'intel', 'pgi', 'clang']
 
 def _auto_compiler_spec(function):
     def converter(cspec_like):
@@ -59,23 +66,72 @@ def _get_config():
     if existing:
         return config
 
-    user_config = spack.config.get_config('user')
-
-    compilers = find_default_compilers()
-    for name, clist in compilers.items():
-        for compiler in clist:
-            if compiler.spec not in existing:
-                add_compiler(user_config, compiler)
-    user_config.write()
+    compilers = find_compilers(*get_path('PATH'))
+    new_compilers = [
+        c for c in compilers if c.spec not in existing]
+    add_compilers_to_config('user', *new_compilers)
 
     # After writing compilers to the user config, return a full config
     # from all files.
-    return spack.config.get_config()
+    return spack.config.get_config(refresh=True)
+
+
+@memoized
+def default_compiler():
+    versions = []
+    for name in _default_order:  # TODO: customize order.
+        versions = find(name)
+        if versions: break
+
+    if not versions:
+        raise NoCompilersError()
+
+    return sorted(versions)[-1]
+
+
+def find_compilers(*path):
+    """Return a list of compilers found in the suppied paths.
+       This invokes the find() method for each Compiler class,
+       and appends the compilers detected to a list.
+    """
+    # Make sure path elements exist, and include /bin directories
+    # under prefixes.
+    filtered_path = []
+    for p in path:
+        # Eliminate symlinks and just take the real directories.
+        p = os.path.realpath(p)
+        if not os.path.isdir(p):
+            continue
+        filtered_path.append(p)
+
+        # Check for a bin directory, add it if it exists
+        bin = join_path(p, 'bin')
+        if os.path.isdir(bin):
+            filtered_path.append(os.path.realpath(bin))
+
+    # Once the paths are cleaned up, do a search for each type of
+    # compiler.  We can spawn a bunch of parallel searches to reduce
+    # the overhead of spelunking all these directories.
+    types = all_compiler_types()
+    compiler_lists = parmap(lambda cls: cls.find(*filtered_path), types)
+
+    # ensure all the version calls we made are cached in the parent
+    # process, as well.  This speeds up Spack a lot.
+    clist = reduce(lambda x,y: x+y, compiler_lists)
+    for c in clist: c._cache_version()
+    return clist
+
+
+def add_compilers_to_config(scope, *compilers):
+    config = spack.config.get_config(scope)
+    for compiler in compilers:
+        add_compiler(config, compiler)
+    config.write()
 
 
 def add_compiler(config, compiler):
     def setup_field(cspec, name, exe):
-        path = ' '.join(exe.exe) if exe else "None"
+        path = exe if exe else "None"
         config.set_value('compiler', cspec, name, path)
 
     for c in _required_instance_vars:
@@ -134,7 +190,9 @@ def compilers_for_spec(compiler_spec):
                 compiler_paths.append(compiler_path)
             else:
                 compiler_paths.append(None)
-        return cls(*compiler_paths)
+
+        args = tuple(compiler_paths) + (compiler_spec.version,)
+        return cls(*args)
 
     matches = find(compiler_spec)
     return [get_compiler(cspec) for cspec in matches]
@@ -168,34 +226,14 @@ def all_compiler_types():
     return [class_for_compiler_name(c) for c in supported_compilers()]
 
 
-def find_default_compilers():
-    """Search the user's environment to get default compilers.  Each
-       compiler class can have its own find() class method that can be
-       customized to locate that type of compiler.
-    """
-    # Compiler name is inserted on load by class_for_compiler_name
-    return {
-        Compiler.name : [Compiler(*c) for c in Compiler.find()]
-        for Compiler in all_compiler_types() }
-
-
-@memoized
-def default_compiler():
-    """Get the spec for the default compiler on the system.
-       Currently just returns the system's default gcc.
-
-       TODO: provide a more sensible default.  e.g. on Intel systems
-             we probably want icc.  On Mac OS, clang.  Probably need
-             to inspect the system and figure this out.
-    """
-    gcc = which('gcc', required=True)
-    version = gcc('-dumpversion', return_output=True)
-    return spack.spec.CompilerSpec('gcc', version)
-
-
 class InvalidCompilerConfigurationError(spack.error.SpackError):
     def __init__(self, compiler_spec):
         super(InvalidCompilerConfigurationError, self).__init__(
             "Invalid configuration for [compiler \"%s\"]: " % compiler_spec,
             "Compiler configuration must contain entries for all compilers: %s"
             % _required_instance_vars)
+
+
+class NoCompilersError(spack.error.SpackError):
+    def __init__(self):
+        super(NoCompilersError, self).__init__("Spack could not find any compilers!")

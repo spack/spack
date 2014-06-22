@@ -22,36 +22,24 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+"""
+This implements a parallel map operation but it can accept more values
+than multiprocessing.Pool.apply() can.  For example, apply() will fail
+to pickle functions if they're passed indirectly as parameters.
+"""
+from multiprocessing import Process, Pipe
+from itertools import izip
 
-class Intel(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ['icc']
+def spawn(f):
+    def fun(pipe,x):
+        pipe.send(f(x))
+        pipe.close()
+    return fun
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['icpc']
-
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ifort']
-
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ifort']
-
-
-    @classmethod
-    def default_version(cls, comp):
-        """The '--version' option seems to be the most consistent one
-           for intel compilers.  Output looks like this::
-
-               icpc (ICC) 12.1.5 20120612
-               Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
-
-           or::
-
-               ifort (IFORT) 12.1.5 20120612
-               Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
-        """
-        return get_compiler_version(
-            comp, '--version', r'\((?:IFORT|ICC)\) ([^ ]+)')
-
+def parmap(f,X):
+    pipe=[Pipe() for x in X]
+    proc=[Process(target=spawn(f),args=(c,x)) for x,(p,c) in izip(X,pipe)]
+    [p.start() for p in proc]
+    [p.join() for p in proc]
+    return [p.recv() for (p,c) in pipe]
 

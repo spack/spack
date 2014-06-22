@@ -24,34 +24,28 @@
 ##############################################################################
 from spack.compiler import *
 
-class Intel(Compiler):
+class Pgi(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['icc']
+    cc_names = ['pgcc']
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['icpc']
+    cxx_names = ['pgCC']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ifort']
+    f77_names = ['pgf77']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ifort']
-
+    fc_names = ['pgf95', 'pgf90']
 
     @classmethod
     def default_version(cls, comp):
-        """The '--version' option seems to be the most consistent one
-           for intel compilers.  Output looks like this::
+        """The '-V' option works for all the PGI compilers.
+           Output looks like this::
 
-               icpc (ICC) 12.1.5 20120612
-               Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
-
-           or::
-
-               ifort (IFORT) 12.1.5 20120612
-               Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
+               pgf95 10.2-0 64-bit target on x86-64 Linux -tp nehalem-64
+               Copyright 1989-2000, The Portland Group, Inc.  All Rights Reserved.
+               Copyright 2000-2010, STMicroelectronics, Inc.  All Rights Reserved.
         """
         return get_compiler_version(
-            comp, '--version', r'\((?:IFORT|ICC)\) ([^ ]+)')
-
+            comp, '-V', r'pg[^ ]* ([^ ]+) \d\d\d?-bit target')
 

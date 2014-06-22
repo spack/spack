@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import Compiler
+from spack.compiler import *
 
 class Gcc(Compiler):
     # Subclasses use possible names of C compiler
@@ -40,5 +40,14 @@ class Gcc(Compiler):
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     suffixes = [r'-mp-\d\.\d']
 
-    def __init__(self, cc, cxx, f77, fc):
-        super(Gcc, self).__init__(cc, cxx, f77, fc)
+    @classmethod
+    def fc_version(cls, fc):
+        return get_compiler_version(
+            fc, '-dumpversion',
+            # older gfortran versions don't have simple dumpversion output.
+            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+\.\d+)')
+
+
+    @classmethod
+    def f77_version(cls, f77):
+        return cls.fc_version(f77)

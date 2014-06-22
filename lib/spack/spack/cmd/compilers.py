@@ -26,15 +26,9 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.lang import index_by
 
-import spack.compilers
-import spack.spec
+from spack.cmd.compiler import compiler_list
 
-description = "List available compilers"
+description = "List available compilers. Same as 'spack compiler list'."
 
 def compilers(parser, args):
-    tty.msg("Available compilers")
-
-    index = index_by(spack.compilers.all_compilers(), 'name')
-    for name, compilers in index.items():
-        tty.hline(name, char='-', color=spack.spec.compiler_color)
-        colify(compilers, indent=4)
+    compiler_list(args)

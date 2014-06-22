@@ -32,9 +32,8 @@ import spack.config
 description = "Get and set configuration options."
 
 def setup_parser(subparser):
+    # User can only choose one
     scope_group = subparser.add_mutually_exclusive_group()
-
-    # File scope
     scope_group.add_argument(
         '--user', action='store_const', const='user', dest='scope',
         help="Use config file in user home directory (default).")
@@ -42,36 +41,44 @@ def setup_parser(subparser):
         '--site', action='store_const', const='site', dest='scope',
         help="Use config file in spack prefix.")
 
-    # Get (vs. default set)
-    subparser.add_argument(
-        '--get', action='store_true', dest='get',
-        help="Get the value associated with a key.")
+    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='config_command')
 
-    # positional arguments (value is only used on set)
-    subparser.add_argument(
-        'key', help="Get the value associated with KEY")
-    subparser.add_argument(
-        'value', nargs='?', default=None,
-        help="Value to associate with key")
+    set_parser = sp.add_parser('set', help='Set configuration values.')
+    set_parser.add_argument('key', help="Key to set value for.")
+    set_parser.add_argument('value', nargs='?', default=None,
+                            help="Value to associate with key")
+
+    get_parser = sp.add_parser('get', help='Get configuration values.')
+    get_parser.add_argument('key', help="Key to get value for.")
+
+    edit_parser = sp.add_parser('edit', help='Edit configuration file.')
+
+
+def config_set(args):
+    # default scope for writing is 'user'
+    if not args.scope:
+        args.scope = 'user'
+
+    config = spack.config.get_config(args.scope)
+    config.set_value(args.key, args.value)
+    config.write()
+
+
+def config_get(args):
+    config = spack.config.get_config(args.scope)
+    print config.get_value(args.key)
+
+
+def config_edit(args):
+    if not args.scope:
+        args.scope = 'user'
+    config_file = spack.config.get_filename(args.scope)
+    spack.editor(config_file)
 
 
 def config(parser, args):
-    key, value = args.key, args.value
+    action = { 'set'  : config_set,
+               'get'  : config_get,
+               'edit' : config_edit }
+    action[args.config_command](args)
 
-    # If we're writing need to do a few checks.
-    if not args.get:
-        # Default scope for writing is user scope.
-        if not args.scope:
-            args.scope = 'user'
-
-        if args.value is None:
-            tty.die("No value for '%s'.  " % args.key
-                    + "Spack config requires a key and a value.")
-
-    config = spack.config.get_config(args.scope)
-
-    if args.get:
-        print config.get_value(key)
-    else:
-        config.set_value(key, value)
-        config.write()

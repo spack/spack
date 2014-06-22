@@ -37,5 +37,16 @@ class Clang(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = []
 
-    def __init__(self, cc, cxx, f77, fc):
-        super(Clang, self).__init__(cc, cxx, f77, fc)
+
+    @classmethod
+    def default_version(self, comp):
+        """The '--version' option works for clang compilers.
+           Output looks like this::
+
+               clang version 3.1 (trunk 149096)
+               Target: x86_64-unknown-linux-gnu
+               Thread model: posix
+        """
+        return get_compiler_version(
+            comp, '--version', r'clang version ([^ ]+)')
+
