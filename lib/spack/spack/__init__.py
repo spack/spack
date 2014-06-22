@@ -93,7 +93,7 @@ spack_version = Version("1.0")
 from spack.util.executable import Executable, which
 
 # User's editor from the environment
-editor = Executable(os.environ.get("EDITOR", ""))
+editor = Executable(os.environ.get("EDITOR", "vi"))
 
 # Curl tool for fetching files.
 curl = which("curl", required=True)
