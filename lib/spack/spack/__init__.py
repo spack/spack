@@ -29,7 +29,11 @@
 # Spack internal code calls 'import spack' and accesses other
 # variables (spack.db, paths, etc.) directly.
 #
-__all__ = ['Package', 'when', 'provides', 'depends_on', 'patch']
+# TODO: maybe this should be separated out and should go in build_environment.py?
+# TODO: it's not clear where all the stuff that needs to be included in packages
+#       should live.  This file is overloaded for spack core vs. for packages.
+__all__ = ['Package', 'when', 'provides', 'depends_on',
+           'patch', 'Version', 'working_dir']
 
 import os
 import tempfile
@@ -150,6 +154,8 @@ mirrors = []
 #
 # Extra imports that should be generally usable from package.py files.
 #
+from llnl.util.filesystem import working_dir
 from spack.package import Package
 from spack.relations import depends_on, provides, patch
 from spack.multimethod import when
+from spack.version import Version
