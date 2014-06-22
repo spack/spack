@@ -34,6 +34,7 @@ import platform
 from llnl.util.filesystem import *
 
 import spack
+import spack.compilers as compilers
 from spack.util.executable import Executable, which
 from spack.util.environment import *
 
@@ -51,7 +52,9 @@ SPACK_LIB              = 'SPACK_LIB'
 SPACK_ENV_PATH         = 'SPACK_ENV_PATH'
 SPACK_DEPENDENCIES     = 'SPACK_DEPENDENCIES'
 SPACK_PREFIX           = 'SPACK_PREFIX'
-SPACK_BUILD_ROOT       = 'SPACK_BUILD_ROOT'
+SPACK_DEBUG            = 'SPACK_DEBUG'
+SPACK_SPEC             = 'SPACK_SPEC'
+SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
 
 
 class MakeExecutable(Executable):
@@ -79,6 +82,29 @@ class MakeExecutable(Executable):
         super(MakeExecutable, self).__call__(*args, **kwargs)
 
 
+def set_compiler_environment_variables(pkg):
+    assert(pkg.spec.concrete)
+    compiler = compilers.compiler_for_spec(pkg.spec.compiler)
+
+    # Set compiler variables used by CMake and autotools
+    os.environ['CC']  = 'cc'
+    os.environ['CXX'] = 'c++'
+    os.environ['F77'] = 'f77'
+    os.environ['FC']  = 'fc'
+
+    # Set SPACK compiler variables so that our wrapper knows what to call
+    if compiler.cc:
+        os.environ['SPACK_CC']  = compiler.cc
+    if compiler.cxx:
+        os.environ['SPACK_CXX'] = compiler.cxx
+    if compiler.f77:
+        os.environ['SPACK_F77'] = compiler.f77
+    if compiler.fc:
+        os.environ['SPACK_FC']  = compiler.fc
+
+    os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
+
+
 def set_build_environment_variables(pkg):
     """This ensures a clean install environment when we build packages.
     """
@@ -102,9 +128,6 @@ def set_build_environment_variables(pkg):
     # Install prefix
     os.environ[SPACK_PREFIX] = pkg.prefix
 
-    # Build root for logging.
-    os.environ[SPACK_BUILD_ROOT] = pkg.stage.expanded_archive_path
-
     # Remove these vars from the environment during build becaus they
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
@@ -113,6 +136,12 @@ def set_build_environment_variables(pkg):
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = ['%s/bin' % prefix for prefix in dep_prefixes]
     path_put_first('PATH', [bin for bin in bin_dirs if os.path.isdir(bin)])
+
+    # Working directory for the spack command itself, for debug logs.
+    if spack.debug:
+        os.environ[SPACK_DEBUG] = "TRUE"
+    os.environ[SPACK_SPEC] = str(pkg.spec)
+    os.environ[SPACK_DEBUG_LOG_DIR] = spack.spack_working_dir
 
 
 def set_module_variables_for_package(pkg):

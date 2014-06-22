@@ -25,8 +25,10 @@
 import unittest
 
 import spack
+import spack.config
 from spack.packages import PackageDB
 from spack.spec import Spec
+
 
 def set_pkg_dep(pkg, spec):
     """Alters dependence information for a pacakge.
@@ -45,9 +47,14 @@ class MockPackagesTest(unittest.TestCase):
         self.real_db = spack.db
         spack.db = PackageDB(spack.mock_packages_path)
 
+        self.real_scopes = spack.config._scopes
+        spack.config._scopes = {
+            'site' : spack.mock_site_config,
+            'user' : spack.mock_user_config }
 
     @classmethod
     def tearDown(self):
         """Restore the real packages path after any test."""
-        #restore_dependencies()
         spack.db = self.real_db
+        spack.config._scopes = self.real_scopes
+

@@ -24,11 +24,11 @@
 ##############################################################################
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
+from llnl.util.lang import index_by
 
-import spack.compilers
+from spack.cmd.compiler import compiler_list
 
-description = "List available compilers"
+description = "List available compilers. Same as 'spack compiler list'."
 
 def compilers(parser, args):
-    tty.msg("Supported compilers")
-    colify(spack.compilers.supported_compilers(), indent=4)
+    compiler_list(args)

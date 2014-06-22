@@ -626,6 +626,7 @@ class Package(object):
         """
         # whether to keep the prefix on failure.  Default is to destroy it.
         keep_prefix = kwargs.get('keep_prefix', False)
+        keep_stage  = kwargs.get('keep_stage', False)
         ignore_deps = kwargs.get('ignore_deps', False)
 
         if not self.spec.concrete:
@@ -650,29 +651,31 @@ class Package(object):
             raise InstallError("Unable to fork build process: %s" % e)
 
         if pid == 0:
-            tty.msg("Building %s." % self.name)
-
-            # create the install directory (allow the layout to handle
-            # this in case it needs to add extra files)
-            spack.install_layout.make_path_for_spec(self.spec)
-
-            # Set up process's build environment before running install.
-            build_env.set_build_environment_variables(self)
-            build_env.set_module_variables_for_package(self)
-
             try:
-                # Subclasses implement install() to do the build &
-                # install work.
+                tty.msg("Building %s." % self.name)
+
+                # create the install directory.  The install layout
+                # handles this in case so that it can use whatever
+                # package naming scheme it likes.
+                spack.install_layout.make_path_for_spec(self.spec)
+
+                # Set up process's build environment before running install.
+                build_env.set_compiler_environment_variables(self)
+                build_env.set_build_environment_variables(self)
+                build_env.set_module_variables_for_package(self)
+
+                # Subclasses implement install() to do the real work.
                 self.install(self.spec, self.prefix)
 
+                # Ensure that something was actually installed.
                 if not os.listdir(self.prefix):
                     raise InstallError(
                         "Install failed for %s.  Nothing was installed!"
                         % self.name)
 
                 # On successful install, remove the stage.
-                # Leave if there is an error
-                self.stage.destroy()
+                if not keep_stage:
+                    self.stage.destroy()
 
                 tty.msg("Successfully installed %s" % self.name)
                 print_pkg(self.prefix)
@@ -690,7 +693,11 @@ class Package(object):
                              "Spack will think this package is installed." +
                              "Manually remove this directory to fix:",
                              self.prefix)
-                raise
+
+                # Child doesn't raise or return to main spack code.
+                # Just runs default exception handler and exits.
+                sys.excepthook(*sys.exc_info())
+                os._exit(1)
 
         # Parent process just waits for the child to complete.  If the
         # child exited badly, assume it already printed an appropriate
@@ -724,16 +731,16 @@ class Package(object):
         force = kwargs.get('force', False)
 
         if not self.installed:
-            raise InstallError(self.name + " is not installed.")
+            raise InstallError(str(self.spec) + " is not installed.")
 
         if not force:
             deps = self.installed_dependents
             if deps: raise InstallError(
                 "Cannot uninstall %s. The following installed packages depend on it: %s"
-                % (self.name, deps))
+                % (self.spec, deps))
 
         self.remove_prefix()
-        tty.msg("Successfully uninstalled %s." % self.name)
+        tty.msg("Successfully uninstalled %s." % self.spec)
 
 
     def do_clean(self):

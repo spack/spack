@@ -102,8 +102,7 @@ from llnl.util.tty.color import *
 import spack
 import spack.parse
 import spack.error
-import spack.compilers
-import spack.compilers.gcc
+import spack.compilers as compilers
 
 from spack.version import *
 from spack.util.string import *
@@ -169,36 +168,71 @@ def colorize_spec(spec):
 
 
 @key_ordering
-class Compiler(object):
-    """The Compiler field represents the compiler or range of compiler
-       versions that a package should be built with.  Compilers have a
+class CompilerSpec(object):
+    """The CompilerSpec field represents the compiler or range of compiler
+       versions that a package should be built with.  CompilerSpecs have a
        name and a version list. """
-    def __init__(self, name, version=None):
-        self.name = name
-        self.versions = VersionList()
-        if version:
-            self.versions.add(version)
+    def __init__(self, *args):
+        nargs = len(args)
+        if nargs == 1:
+            arg = args[0]
+            # If there is one argument, it's either another CompilerSpec
+            # to copy or a string to parse
+            if isinstance(arg, basestring):
+                c = SpecParser().parse_compiler(arg)
+                self.name = c.name
+                self.versions = c.versions
+
+            elif isinstance(arg, CompilerSpec):
+                self.name = arg.name
+                self.versions = arg.versions.copy()
+
+            else:
+                raise TypeError(
+                    "Can only build CompilerSpec from string or CompilerSpec." +
+                    "  Found %s" % type(arg))
+
+        elif nargs == 2:
+            name, version = args
+            self.name = name
+            self.versions = VersionList()
+            self.versions.add(ver(version))
+
+        else:
+            raise TypeError(
+                "__init__ takes 1 or 2 arguments. (%d given)" % nargs)
 
 
     def _add_version(self, version):
         self.versions.add(version)
 
 
+    def _autospec(self, compiler_spec_like):
+        if isinstance(compiler_spec_like, CompilerSpec):
+            return compiler_spec_like
+        return CompilerSpec(compiler_spec_like)
+
+
     def satisfies(self, other):
+        other = self._autospec(other)
         return (self.name == other.name and
-                self.versions.overlaps(other.versions))
+                self.versions.satisfies(other.versions))
 
 
     def constrain(self, other):
-        if not self.satisfies(other):
-            raise UnsatisfiableCompilerSpecError(self, other)
+        other = self._autospec(other)
+
+        # ensure that other will actually constrain this spec.
+        if not other.satisfies(self):
+            raise UnsatisfiableCompilerSpecError(other, self)
 
         self.versions.intersect(other.versions)
 
 
     @property
     def concrete(self):
-        """A Compiler spec is concrete if its versions are concrete."""
+        """A CompilerSpec is concrete if its versions are concrete and there
+           is an available compiler with the right version."""
         return self.versions.concrete
 
 
@@ -210,7 +244,8 @@ class Compiler(object):
 
 
     def copy(self):
-        clone = Compiler(self.name)
+        clone = CompilerSpec.__new__(CompilerSpec)
+        clone.name = self.name
         clone.versions = self.versions.copy()
         return clone
 
@@ -225,6 +260,9 @@ class Compiler(object):
             vlist = ",".join(str(v) for v in self.versions)
             out += "@%s" % vlist
         return out
+
+    def __repr__(self):
+        return str(self)
 
 
 @key_ordering
@@ -332,7 +370,7 @@ class Spec(object):
 
     def _set_compiler(self, compiler):
         """Called by the parser to set the compiler."""
-        if self.compiler: raise DuplicateCompilerError(
+        if self.compiler: raise DuplicateCompilerSpecError(
                 "Spec for '%s' cannot have two compilers." % self.name)
         self.compiler = compiler
 
@@ -361,14 +399,14 @@ class Spec(object):
         """
         if not self.dependents:
             return self
-        else:
-            # If the spec has multiple dependents, ensure that they all
-            # lead to the same place.  Spack shouldn't deal with any DAGs
-            # with multiple roots, so something's wrong if we find one.
-            depiter = iter(self.dependents.values())
-            first_root = next(depiter).root
-            assert(all(first_root is d.root for d in depiter))
-            return first_root
+
+        # If the spec has multiple dependents, ensure that they all
+        # lead to the same place.  Spack shouldn't deal with any DAGs
+        # with multiple roots, so something's wrong if we find one.
+        depiter = iter(self.dependents.values())
+        first_root = next(depiter).root
+        assert(all(first_root is d.root for d in depiter))
+        return first_root
 
 
     @property
@@ -428,16 +466,27 @@ class Spec(object):
 
            root     [=True]
                If false, this won't yield the root node, just its descendents.
+
+           direction [=children|parents]
+               If 'children', does a traversal of this spec's children.  If
+               'parents', traverses upwards in the DAG towards the root.
+
         """
         depth      = kwargs.get('depth', False)
         key_fun    = kwargs.get('key', id)
         yield_root = kwargs.get('root', True)
         cover      = kwargs.get('cover', 'nodes')
+        direction  = kwargs.get('direction', 'children')
 
         cover_values = ('nodes', 'edges', 'paths')
         if cover not in cover_values:
             raise ValueError("Invalid value for cover: %s.  Choices are %s"
                              % (cover, ",".join(cover_values)))
+
+        direction_values = ('children', 'parents')
+        if direction not in direction_values:
+            raise ValueError("Invalid value for direction: %s.  Choices are %s"
+                             % (direction, ",".join(direction_values)))
 
         if visited is None:
             visited = set()
@@ -452,9 +501,13 @@ class Spec(object):
         else:
             if yield_root or d > 0: yield result
 
+        successors = self.dependencies
+        if direction == 'parents':
+            successors = self.dependents
+
         visited.add(key)
-        for name in sorted(self.dependencies):
-            child = self.dependencies[name]
+        for name in sorted(successors):
+            child = successors[name]
             for elt in child.preorder_traversal(visited, d+1, **kwargs):
                 yield elt
 
@@ -763,22 +816,22 @@ class Spec(object):
     def validate_names(self):
         """This checks that names of packages and compilers in this spec are real.
            If they're not, it will raise either UnknownPackageError or
-           UnknownCompilerError.
+           UnsupportedCompilerError.
         """
         for spec in self.preorder_traversal():
             # Don't get a package for a virtual name.
             if not spec.virtual:
                 spack.db.get(spec.name)
 
-            # validate compiler name in addition to the package name.
+            # validate compiler in addition to the package name.
             if spec.compiler:
-                compiler_name = spec.compiler.name
-                if not spack.compilers.supported(compiler_name):
-                    raise UnknownCompilerError(compiler_name)
+                if not compilers.supported(spec.compiler):
+                    raise UnsupportedCompilerError(spec.compiler.name)
 
 
     def constrain(self, other, **kwargs):
         other = self._autospec(other)
+        constrain_deps = kwargs.get('deps', True)
 
         if not self.name == other.name:
             raise UnsatisfiableSpecNameError(self.name, other.name)
@@ -806,7 +859,7 @@ class Spec(object):
         self.variants.update(other.variants)
         self.architecture = self.architecture or other.architecture
 
-        if kwargs.get('deps', True):
+        if constrain_deps:
             self._constrain_dependencies(other)
 
 
@@ -818,8 +871,8 @@ class Spec(object):
         # TODO: might want more detail than this, e.g. specific deps
         # in violation. if this becomes a priority get rid of this
         # check and be more specici about what's wrong.
-        if not self.satisfies_dependencies(other):
-            raise UnsatisfiableDependencySpecError(self, other)
+        if not other.satisfies_dependencies(self):
+            raise UnsatisfiableDependencySpecError(other, self)
 
         # Handle common first-order constraints directly
         for name in self.common_dependencies(other):
@@ -863,28 +916,28 @@ class Spec(object):
 
     def satisfies(self, other, **kwargs):
         other = self._autospec(other)
+        satisfy_deps = kwargs.get('deps', True)
 
         # First thing we care about is whether the name matches
         if self.name != other.name:
             return False
 
-        # This function simplifies null checking below
-        def check(attribute, op):
-            s = getattr(self, attribute)
-            o = getattr(other, attribute)
-            return not s or not o or op(s,o)
-
-        # All these attrs have satisfies criteria of their own
-        for attr in ('versions', 'variants', 'compiler'):
-            if not check(attr, lambda s, o: s.satisfies(o)):
+        # All these attrs have satisfies criteria of their own,
+        # but can be None to indicate no constraints.
+        for s, o in ((self.versions, other.versions),
+                     (self.variants, other.variants),
+                     (self.compiler, other.compiler)):
+            if s and o and not s.satisfies(o):
                 return False
 
-        # Architecture is just a string
-        # TODO: inviestigate making an Architecture class for symmetry
-        if not check('architecture', lambda s,o: s == o):
+        # Architecture satisfaction is currently just string equality.
+        # Can be None for unconstrained, though.
+        if (self.architecture and other.architecture and
+            self.architecture != other.architecture):
             return False
 
-        if kwargs.get('deps', True):
+        # If we need to descend into dependencies, do it, otherwise we're done.
+        if satisfy_deps:
             return self.satisfies_dependencies(other)
         else:
             return True
@@ -1188,6 +1241,11 @@ class SpecParser(spack.parse.Parser):
         return specs
 
 
+    def parse_compiler(self, text):
+        self.setup(text)
+        return self.compiler()
+
+
     def spec(self):
         """Parse a spec out of the input.  If a spec is supplied, then initialize
            and return it instead of creating a new one."""
@@ -1279,7 +1337,10 @@ class SpecParser(spack.parse.Parser):
     def compiler(self):
         self.expect(ID)
         self.check_identifier()
-        compiler = Compiler(self.token.value)
+
+        compiler = CompilerSpec.__new__(CompilerSpec)
+        compiler.name = self.token.value
+        compiler.versions = VersionList()
         if self.accept(AT):
             vlist = self.version_list()
             for version in vlist:
@@ -1359,17 +1420,17 @@ class DuplicateVariantError(SpecError):
         super(DuplicateVariantError, self).__init__(message)
 
 
-class DuplicateCompilerError(SpecError):
+class DuplicateCompilerSpecError(SpecError):
     """Raised when the same compiler occurs in a spec twice."""
     def __init__(self, message):
-        super(DuplicateCompilerError, self).__init__(message)
+        super(DuplicateCompilerSpecError, self).__init__(message)
 
 
-class UnknownCompilerError(SpecError):
+class UnsupportedCompilerError(SpecError):
     """Raised when the user asks for a compiler spack doesn't know about."""
     def __init__(self, compiler_name):
-        super(UnknownCompilerError, self).__init__(
-            "Unknown compiler: %s" % compiler_name)
+        super(UnsupportedCompilerError, self).__init__(
+            "The '%s' compiler is not yet supported." % compiler_name)
 
 
 class DuplicateArchitectureError(SpecError):

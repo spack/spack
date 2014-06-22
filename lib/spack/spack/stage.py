@@ -145,7 +145,7 @@ class Stage(object):
            back to making the stage inside spack.stage_path.
         """
         # Create the top-level stage directory
-        spack.mkdirp(spack.stage_path)
+        mkdirp(spack.stage_path)
         self._cleanup_dead_links()
 
         # If this is a named stage, then construct a named path.

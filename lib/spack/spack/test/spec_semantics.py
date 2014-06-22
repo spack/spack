@@ -37,16 +37,13 @@ class SpecSematicsTest(MockPackagesTest):
         left = Spec(spec)
         right = parse_anonymous_spec(anon_spec, left.name)
 
+        # Satisfies is one-directional.
         self.assertTrue(left.satisfies(right))
         self.assertTrue(left.satisfies(anon_spec))
-        self.assertTrue(right.satisfies(left))
 
-        try:
-            left.copy().constrain(right)
-            left.copy().constrain(anon_spec)
-            right.copy().constrain(left)
-        except SpecError, e:
-            self.fail("Got a SpecError in constrain!  " + e.message)
+        # if left satisfies right, then we should be able to consrain
+        # right by left.  Reverse is not always true.
+        right.copy().constrain(left)
 
 
     def check_unsatisfiable(self, spec, anon_spec):
@@ -56,25 +53,21 @@ class SpecSematicsTest(MockPackagesTest):
         self.assertFalse(left.satisfies(right))
         self.assertFalse(left.satisfies(anon_spec))
 
-        self.assertFalse(right.satisfies(left))
-
-        self.assertRaises(UnsatisfiableSpecError, left.constrain, right)
-        self.assertRaises(UnsatisfiableSpecError, left.constrain, anon_spec)
-        self.assertRaises(UnsatisfiableSpecError, right.constrain, left)
+        self.assertRaises(UnsatisfiableSpecError, right.copy().constrain, left)
 
 
-    def check_constrain(self, expected, constrained, constraint):
+    def check_constrain(self, expected, spec, constraint):
         exp = Spec(expected)
-        constrained = Spec(constrained)
+        spec = Spec(spec)
         constraint = Spec(constraint)
-        constrained.constrain(constraint)
-        self.assertEqual(exp, constrained)
+        spec.constrain(constraint)
+        self.assertEqual(exp, spec)
 
 
-    def check_invalid_constraint(self, constrained, constraint):
-        constrained = Spec(constrained)
+    def check_invalid_constraint(self, spec, constraint):
+        spec = Spec(spec)
         constraint = Spec(constraint)
-        self.assertRaises(UnsatisfiableSpecError, constrained.constrain, constraint)
+        self.assertRaises(UnsatisfiableSpecError, spec.constrain, constraint)
 
 
     # ================================================================================
@@ -177,3 +170,8 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
 
         self.check_invalid_constraint('libelf=bgqos_0', 'libelf=x86_54')
+
+
+    def test_compiler_satisfies(self):
+        self.check_satisfies('foo %gcc@4.7.3', '%gcc@4.7')
+        self.check_unsatisfiable('foo %gcc@4.7', '%gcc@4.7.3')

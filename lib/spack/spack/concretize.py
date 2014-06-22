@@ -33,9 +33,10 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
-import spack.architecture
-import spack.compilers
 import spack.spec
+import spack.compilers
+import spack.architecture
+import spack.error
 from spack.version import *
 
 
@@ -50,6 +51,15 @@ class DefaultConcretizer(object):
         """If the spec is already concrete, return.  Otherwise take
            the most recent available version, and default to the package's
            version if there are no avaialble versions.
+
+           TODO: In many cases we probably want to look for installed
+                 versions of each package and use an installed version
+                 if we can link to it.  The policy implemented here will
+                 tend to rebuild a lot of stuff becasue it will prefer
+                 a compiler in the spec to any compiler already-
+                 installed things were built with.  There is likely
+                 some better policy that finds some middle ground
+                 between these two extremes.
         """
         # return if already concrete.
         if spec.versions.concrete:
@@ -89,26 +99,42 @@ class DefaultConcretizer(object):
 
 
     def concretize_compiler(self, spec):
-        """Currently just sets the compiler to gcc or throws an exception
-           if the compiler is set to something else.
-
-           TODO: implement below description.
-
-           If the spec already has a compiler, we're done.  If not, then
-           take the compiler used for the nearest ancestor with a concrete
-           compiler, or use the system default if there is no ancestor
-           with a compiler.
+        """If the spec already has a compiler, we're done.  If not, then take
+           the compiler used for the nearest ancestor with a compiler
+           spec and use that.  If the ancestor's compiler is not
+           concrete, then give it a valid version.  If there is no
+           ancestor with a compiler, use the system default compiler.
 
            Intuition: Use the system default if no package that depends on
            this one has a strict compiler requirement.  Otherwise, try to
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
         """
-        if spec.compiler and spec.compiler.concrete:
-            if spec.compiler != spack.compilers.default_compiler():
-                raise spack.spec.UnknownCompilerError(str(spec.compiler))
-        else:
-            spec.compiler = spack.compilers.default_compiler()
+        all_compilers = spack.compilers.all_compilers()
+
+        if (spec.compiler and
+            spec.compiler.concrete and
+            spec.compiler in all_compilers):
+            return
+
+        try:
+            nearest = next(p for p in spec.preorder_traversal(direction='parents')
+                           if p.compiler is not None).compiler
+
+            if not nearest in all_compilers:
+                # Take the newest compiler that saisfies the spec
+                matches = sorted(spack.compilers.find(nearest))
+                if not matches:
+                    raise UnavailableCompilerVersionError(nearest)
+
+                # copy concrete version into nearest spec
+                nearest.versions = matches[-1].versions.copy()
+                assert(nearest.concrete)
+
+            spec.compiler = nearest.copy()
+
+        except StopIteration:
+            spec.compiler = spack.compilers.default_compiler().copy()
 
 
     def choose_provider(self, spec, providers):
@@ -123,3 +149,12 @@ class DefaultConcretizer(object):
         first_key = sorted(index.keys())[0]
         latest_version = sorted(index[first_key])[-1]
         return latest_version
+
+
+class UnavailableCompilerVersionError(spack.error.SpackError):
+    """Raised when there is no available compiler that satisfies a
+       compiler spec."""
+    def __init__(self, compiler_spec):
+        super(UnavailableCompilerVersionError, self).__init__(
+            "No available compiler version matches '%s'" % compiler_spec,
+            "Run 'spack compilers' to see available compiler Options.")

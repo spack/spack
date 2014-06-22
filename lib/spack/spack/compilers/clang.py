@@ -22,36 +22,31 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import *
+from spack.compiler import Compiler
 
-class Intel(Compiler):
+class Clang(Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = ['icc']
+    cc_names = ['clang']
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['icpc']
+    cxx_names = ['clang++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ifort']
+    f77_names = []
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ifort']
+    fc_names = []
 
 
     @classmethod
-    def default_version(cls, comp):
-        """The '--version' option seems to be the most consistent one
-           for intel compilers.  Output looks like this::
+    def default_version(self, comp):
+        """The '--version' option works for clang compilers.
+           Output looks like this::
 
-               icpc (ICC) 12.1.5 20120612
-               Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
-
-           or::
-
-               ifort (IFORT) 12.1.5 20120612
-               Copyright (C) 1985-2012 Intel Corporation.  All rights reserved.
+               clang version 3.1 (trunk 149096)
+               Target: x86_64-unknown-linux-gnu
+               Thread model: posix
         """
         return get_compiler_version(
-            comp, '--version', r'\((?:IFORT|ICC)\) ([^ ]+)')
-
+            comp, '--version', r'clang version ([^ ]+)')
 

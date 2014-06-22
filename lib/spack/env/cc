@@ -10,7 +10,7 @@ import argparse
 from contextlib import closing
 
 # Import spack parameters through the build environment.
-spack_lib      = os.environ.get("SPACK_LIB")
+spack_lib = os.environ.get("SPACK_LIB")
 if not spack_lib:
     print "Spack compiler must be run from spack!"
     sys.exit(1)
@@ -20,23 +20,23 @@ sys.path.append(spack_lib)
 from spack.compilation import *
 import llnl.util.tty as tty
 
-spack_prefix     = get_env_var("SPACK_PREFIX")
-spack_build_root = get_env_var("SPACK_BUILD_ROOT")
-spack_debug      = get_env_flag("SPACK_DEBUG")
-spack_deps       = get_path("SPACK_DEPENDENCIES")
-spack_env_path   = get_path("SPACK_ENV_PATH")
+spack_prefix        = get_env_var("SPACK_PREFIX")
+spack_debug         = get_env_flag("SPACK_DEBUG")
+spack_deps          = get_path("SPACK_DEPENDENCIES")
+spack_env_path      = get_path("SPACK_ENV_PATH")
+spack_debug_log_dir = get_env_var("SPACK_DEBUG_LOG_DIR")
+spack_spec          = get_env_var("SPACK_SPEC")
+
+compiler_spec = get_env_var("SPACK_COMPILER_SPEC")
+spack_cc  = get_env_var("SPACK_CC",  required=False)
+spack_cxx = get_env_var("SPACK_CXX", required=False)
+spack_f77 = get_env_var("SPACK_F77", required=False)
+spack_fc  = get_env_var("SPACK_FC",  required=False)
 
 # Figure out what type of operation we're doing
 command = os.path.basename(sys.argv[0])
 
 cpp, cc, ccld, ld, version_check = range(5)
-
-########################################################################
-# TODO: this can to be removed once JIRA issue SPACK-16 is resolved
-#
-if command == 'CC':
-    command = 'c++'
-########################################################################
 
 if command == 'cpp':
     mode = cpp
@@ -49,7 +49,31 @@ elif '-c' in sys.argv:
 else:
     mode = ccld
 
-if '-V' in sys.argv or '-v' in sys.argv or '--version' in sys.argv:
+
+if command in ('cc', 'gcc', 'c89', 'c99', 'clang'):
+    command = spack_cc
+    language = "C"
+elif command in ('c++', 'CC', 'g++', 'clang++'):
+    command = spack_cxx
+    language = "C++"
+elif command in ('f77'):
+    command = spack_f77
+    language = "Fortran 77"
+elif command in ('fc'):
+    command = spack_fc
+    language = "Fortran 90"
+elif command in ('ld', 'cpp'):
+    pass # leave it the same.  TODO: what's the right thing?
+else:
+    raise Exception("Unknown compiler: %s" % command)
+
+if command is None:
+    print "ERROR: Compiler '%s' does not support compiling %s programs." % (
+        compiler_spec, language)
+    sys.exit(1)
+
+version_args = ['-V', '-v', '--version', '-dumpversion']
+if any(arg in sys.argv for arg in version_args):
     mode = version_check
 
 # Parse out the includes, libs, etc. so we can adjust them if need be.
@@ -104,8 +128,8 @@ os.environ["PATH"] = ":".join(path)
 full_command = [command] + arguments
 
 if spack_debug:
-    input_log = os.path.join(spack_build_root, 'spack_cc_in.log')
-    output_log = os.path.join(spack_build_root, 'spack_cc_out.log')
+    input_log = os.path.join(spack_debug_log_dir,  'spack-cc-%s.in.log' % spack_spec)
+    output_log = os.path.join(spack_debug_log_dir, 'spack-cc-%s.out.log' % spack_spec)
     with closing(open(input_log, 'a')) as log:
         args = [os.path.basename(sys.argv[0])] + sys.argv[1:]
         log.write("%s\n" % " ".join(arg.replace(' ', r'\ ') for arg in args))

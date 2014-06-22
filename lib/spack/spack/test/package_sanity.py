@@ -31,6 +31,13 @@ import spack
 import spack.url as url
 
 class PackageSanityTest(unittest.TestCase):
+
+    def test_get_all_packages(self):
+        """Get all packages once and make sure that works."""
+        for name in spack.db.all_package_names():
+            spack.db.get(name)
+
+
     def test_url_versions(self):
         """Ensure that url_for_version does the right thing for at least the
            default version of each package.

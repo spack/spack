@@ -83,6 +83,14 @@ class VersionsTest(unittest.TestCase):
         self.assertFalse(ver(v1).overlaps(ver(v2)))
 
 
+    def assert_satisfies(self, v1, v2):
+        self.assertTrue(ver(v1).satisfies(ver(v2)))
+
+
+    def assert_does_not_satisfy(self, v1, v2):
+        self.assertFalse(ver(v1).satisfies(ver(v2)))
+
+
     def check_intersection(self, expected, a, b):
         self.assertEqual(ver(expected), ver(a).intersection(ver(b)))
 
@@ -301,3 +309,68 @@ class VersionsTest(unittest.TestCase):
         self.check_intersection(['2.5:2.7'],
                                 ['1.1:2.7'], ['2.5:3.0','1.0'])
         self.check_intersection(['0:1'], [':'], ['0:1'])
+
+
+    def test_basic_version_satisfaction(self):
+        self.assert_satisfies('4.7.3',   '4.7.3')
+
+        self.assert_satisfies('4.7.3',   '4.7')
+        self.assert_satisfies('4.7.3b2', '4.7')
+        self.assert_satisfies('4.7b6',   '4.7')
+
+        self.assert_satisfies('4.7.3',   '4')
+        self.assert_satisfies('4.7.3b2', '4')
+        self.assert_satisfies('4.7b6',   '4')
+
+        self.assert_does_not_satisfy('4.8.0', '4.9')
+        self.assert_does_not_satisfy('4.8',   '4.9')
+        self.assert_does_not_satisfy('4',     '4.9')
+
+    def test_basic_version_satisfaction_in_lists(self):
+        self.assert_satisfies(['4.7.3'],   ['4.7.3'])
+
+        self.assert_satisfies(['4.7.3'],   ['4.7'])
+        self.assert_satisfies(['4.7.3b2'], ['4.7'])
+        self.assert_satisfies(['4.7b6'],   ['4.7'])
+
+        self.assert_satisfies(['4.7.3'],   ['4'])
+        self.assert_satisfies(['4.7.3b2'], ['4'])
+        self.assert_satisfies(['4.7b6'],   ['4'])
+
+        self.assert_does_not_satisfy(['4.8.0'], ['4.9'])
+        self.assert_does_not_satisfy(['4.8'],   ['4.9'])
+        self.assert_does_not_satisfy(['4'],     ['4.9'])
+
+    def test_version_range_satisfaction(self):
+        self.assert_satisfies('4.7b6', '4.3:4.7')
+        self.assert_satisfies('4.3.0', '4.3:4.7')
+        self.assert_satisfies('4.3.2', '4.3:4.7')
+
+        self.assert_does_not_satisfy('4.8.0', '4.3:4.7')
+        self.assert_does_not_satisfy('4.3',   '4.4:4.7')
+
+        self.assert_satisfies('4.7b6',        '4.3:4.7')
+        self.assert_does_not_satisfy('4.8.0', '4.3:4.7')
+
+    def test_version_range_satisfaction_in_lists(self):
+        self.assert_satisfies(['4.7b6'], ['4.3:4.7'])
+        self.assert_satisfies(['4.3.0'], ['4.3:4.7'])
+        self.assert_satisfies(['4.3.2'], ['4.3:4.7'])
+
+        self.assert_does_not_satisfy(['4.8.0'], ['4.3:4.7'])
+        self.assert_does_not_satisfy(['4.3'],   ['4.4:4.7'])
+
+        self.assert_satisfies(['4.7b6'],        ['4.3:4.7'])
+        self.assert_does_not_satisfy(['4.8.0'], ['4.3:4.7'])
+
+    def test_satisfaction_with_lists(self):
+        self.assert_satisfies('4.7',     '4.3, 4.6, 4.7')
+        self.assert_satisfies('4.7.3',   '4.3, 4.6, 4.7')
+        self.assert_satisfies('4.6.5',   '4.3, 4.6, 4.7')
+        self.assert_satisfies('4.6.5.2', '4.3, 4.6, 4.7')
+
+        self.assert_does_not_satisfy('4',     '4.3, 4.6, 4.7')
+        self.assert_does_not_satisfy('4.8.0', '4.2, 4.3:4.7')
+
+        self.assert_satisfies('4.8.0', '4.2, 4.3:4.8')
+        self.assert_satisfies('4.8.2', '4.2, 4.3:4.8')

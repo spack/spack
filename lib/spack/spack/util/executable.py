@@ -22,14 +22,15 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+__all__ = ['Executable', 'which', 'ProcessError']
+
 import os
 import sys
 import re
 import subprocess
 
 import llnl.util.tty as tty
-from spack.error import SpackError
-
+import spack.error
 
 class Executable(object):
     """Class representing a program that can be run on the command line."""
@@ -37,19 +38,21 @@ class Executable(object):
         self.exe = name.split(' ')
         self.returncode = None
 
+
     def add_default_arg(self, arg):
         self.exe.append(arg)
 
 
     @property
     def command(self):
-        return self.exe[0]
+        return ' '.join(self.exe)
 
 
     def __call__(self, *args, **kwargs):
         """Run the executable with subprocess.check_output, return output."""
         return_output = kwargs.get("return_output", False)
         fail_on_error = kwargs.get("fail_on_error", True)
+        error         = kwargs.get("error", sys.stderr)
 
         quoted_args = [arg for arg in args if re.search(r'^"|^\'|"$|\'$', arg)]
         if quoted_args:
@@ -60,24 +63,49 @@ class Executable(object):
                      "Consider removing them")
 
         cmd = self.exe + list(args)
-        tty.verbose(" ".join(cmd))
+        tty.debug(" ".join(cmd))
 
+        close_error = False
         try:
+            if error is None:
+                error = open(os.devnull, 'w')
+                close_error = True
+
             proc = subprocess.Popen(
                 cmd,
-                stderr=sys.stderr,
+                stderr=error,
                 stdout=subprocess.PIPE if return_output else sys.stdout)
             out, err = proc.communicate()
             self.returncode = proc.returncode
 
             if fail_on_error and proc.returncode != 0:
-                raise SpackError("command '%s' returned error code %d"
-                                 % (" ".join(cmd), proc.returncode))
+                raise ProcessError("command '%s' returned error code %d"
+                                   % (" ".join(cmd), proc.returncode))
             if return_output:
                 return out
 
         except subprocess.CalledProcessError, e:
-            if fail_on_error: raise
+            if fail_on_error:
+                raise ProcessError(
+                    "command '%s' failed to run." % (
+                        " ".join(cmd), proc.returncode), str(e))
+
+        finally:
+            if close_error:
+                error.close()
+
+
+    def __eq__(self, other):
+        return self.exe == other.exe
+
+
+    def __neq__(self, other):
+        return not (self == other)
+
+
+    def __hash__(self):
+        return hash((type(self),) + tuple(self.exe))
+
 
     def __repr__(self):
         return "<exe: %s>" % self.exe
@@ -99,3 +127,8 @@ def which(name, **kwargs):
     if required:
         tty.die("spack requires %s.  Make sure it is in your path." % name)
     return None
+
+
+class ProcessError(spack.error.SpackError):
+    def __init__(self, msg, *long_msg):
+        super(ProcessError, self).__init__(msg, *long_msg)

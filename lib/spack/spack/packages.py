@@ -22,10 +22,8 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import re
 import os
 import sys
-import string
 import inspect
 import glob
 import imp
@@ -34,52 +32,16 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
 from llnl.util.lang import memoized
 
-import spack
 import spack.error
 import spack.spec
 from spack.virtual import ProviderIndex
+from spack.util.naming import mod_to_class, validate_module_name
 
 # Name of module under which packages are imported
 _imported_packages_module = 'spack.packages'
 
 # Name of the package file inside a package directory
 _package_file_name = 'package.py'
-
-# Valid package names can contain '-' but can't start with it.
-valid_package_re = r'^\w[\w-]*$'
-
-# Don't allow consecutive [_-] in package names
-invalid_package_re = r'[_-][_-]+'
-
-
-def valid_package_name(pkg_name):
-    """Return whether the pkg_name is valid for use in Spack."""
-    return (re.match(valid_package_re, pkg_name) and
-            not re.search(invalid_package_re, pkg_name))
-
-
-def validate_package_name(pkg_name):
-    """Raise an exception if pkg_name is not valid."""
-    if not valid_package_name(pkg_name):
-        raise InvalidPackageNameError(pkg_name)
-
-
-def class_name_for_package_name(pkg_name):
-    """Get a name for the class the package file should contain.  Note that
-       conflicts don't matter because the classes are in different modules.
-    """
-    validate_package_name(pkg_name)
-
-    class_name = pkg_name.replace('_', '-')
-    class_name = string.capwords(class_name, '-')
-    class_name = class_name.replace('-', '')
-
-    # If a class starts with a number, prefix it with Number_ to make it a valid
-    # Python class name.
-    if re.match(r'^[0-9]', class_name):
-        class_name = "Num_%s" % class_name
-
-    return class_name
 
 
 def _autospec(function):
@@ -114,6 +76,7 @@ class PackageDB(object):
 
     @_autospec
     def get_installed(self, spec):
+        """Get all the installed specs that satisfy the provided spec constraint."""
         return [s for s in self.installed_package_specs() if s.satisfies(spec)]
 
 
@@ -143,7 +106,7 @@ class PackageDB(object):
            package doesn't exist yet, so callers will need to ensure
            the package exists before importing.
         """
-        validate_package_name(pkg_name)
+        validate_module_name(pkg_name)
         pkg_dir = self.dirname_for_package_name(pkg_name)
         return join_path(pkg_dir, _package_file_name)
 
@@ -200,7 +163,7 @@ class PackageDB(object):
         else:
             raise UnknownPackageError(pkg_name)
 
-        class_name = class_name_for_package_name(pkg_name)
+        class_name = mod_to_class(pkg_name)
         try:
             module_name = _imported_packages_module + '.' + pkg_name
             module = imp.load_source(module_name, file_path)
@@ -257,14 +220,6 @@ class PackageDB(object):
         for pair in deps:
             out.write('  "%s" -> "%s"\n' % pair)
         out.write('}\n')
-
-
-class InvalidPackageNameError(spack.error.SpackError):
-    """Raised when we encounter a bad package name."""
-    def __init__(self, name):
-        super(InvalidPackageNameError, self).__init__(
-            "Invalid package name: " + name)
-        self.name = name
 
 
 class UnknownPackageError(spack.error.SpackError):

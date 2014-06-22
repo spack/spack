@@ -25,7 +25,7 @@
 import unittest
 
 import spack
-from spack.spec import Spec
+from spack.spec import Spec, CompilerSpec
 from spack.test.mock_packages_test import *
 
 class ConcretizeTest(MockPackagesTest):
@@ -163,3 +163,15 @@ class ConcretizeTest(MockPackagesTest):
         spec = Spec('indirect_mpich')
         spec.normalize()
         spec.concretize()
+
+
+    def test_compiler_inheritance(self):
+        spec = Spec('mpileaks')
+        spec.normalize()
+
+        spec['dyninst'].compiler = CompilerSpec('clang')
+        spec.concretize()
+
+        # TODO: not exactly the syntax I would like.
+        self.assertTrue(spec['libdwarf'].compiler.satisfies('clang'))
+        self.assertTrue(spec['libelf'].compiler.satisfies('clang'))

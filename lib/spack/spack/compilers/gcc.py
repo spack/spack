@@ -22,18 +22,32 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a stub module.  It should be expanded when we implement full
-# compiler support.
-#
+from spack.compiler import *
 
-import subprocess
-from spack.version import Version
+class Gcc(Compiler):
+    # Subclasses use possible names of C compiler
+    cc_names = ['gcc']
 
-cc = 'gcc'
-cxx = 'g++'
-fortran = 'gfortran'
+    # Subclasses use possible names of C++ compiler
+    cxx_names = ['g++']
 
-def get_version():
-    v = subprocess.check_output([cc, '-dumpversion'])
-    return Version(v)
+    # Subclasses use possible names of Fortran 77 compiler
+    f77_names = ['gfortran']
+
+    # Subclasses use possible names of Fortran 90 compiler
+    fc_names = ['gfortran']
+
+    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
+    suffixes = [r'-mp-\d\.\d']
+
+    @classmethod
+    def fc_version(cls, fc):
+        return get_compiler_version(
+            fc, '-dumpversion',
+            # older gfortran versions don't have simple dumpversion output.
+            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+\.\d+)')
+
+
+    @classmethod
+    def f77_version(cls, f77):
+        return cls.fc_version(f77)
