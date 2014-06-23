@@ -118,7 +118,6 @@ def find_compilers(*path):
     # ensure all the version calls we made are cached in the parent
     # process, as well.  This speeds up Spack a lot.
     clist = reduce(lambda x,y: x+y, compiler_lists)
-    for c in clist: c._cache_version()
     return clist
 
 
@@ -191,8 +190,7 @@ def compilers_for_spec(compiler_spec):
             else:
                 compiler_paths.append(None)
 
-        args = tuple(compiler_paths) + (compiler_spec.version,)
-        return cls(*args)
+        return cls(cspec, *compiler_paths)
 
     matches = find(compiler_spec)
     return [get_compiler(cspec) for cspec in matches]

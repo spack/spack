@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack.compiler import Compiler
+from spack.compiler import *
 
 class Clang(Compiler):
     # Subclasses use possible names of C compiler
@@ -48,5 +48,4 @@ class Clang(Compiler):
                Thread model: posix
         """
         return get_compiler_version(
-            comp, '--version', r'clang version ([^ ]+)')
-
+            comp, '--version', r'(?:clang version|based on LLVM) ([^ )]+)')

@@ -54,7 +54,7 @@ def get_compiler_version(compiler_path, version_arg, regex='(.*)'):
         output = compiler(version_arg, return_output=True, error=None)
 
         match = re.search(regex, output)
-        _version_cache[compiler_path] = match.group(1) if match else None
+        _version_cache[compiler_path] = match.group(1) if match else 'unknown'
 
     return _version_cache[compiler_path]
 
@@ -95,7 +95,7 @@ class Compiler(object):
     arg_rpath   = '-Wl,-rpath,%s'
 
 
-    def __init__(self, cc, cxx, f77, fc, version=None):
+    def __init__(self, cspec, cc, cxx, f77, fc):
         def check(exe):
             if exe is None:
                 return None
@@ -107,55 +107,20 @@ class Compiler(object):
         self.f77 = check(f77)
         self.fc  = check(fc)
 
-        # Allow versions to be memoized so we don't have to run
-        # compilers many times.  Record them in the version cache if
-        # we get them in a constructor
-        #
-        # TODO: what to do if compilers have different versions?
-        #
-        self._version = version
-        self._cache_version()
+        self.spec = cspec
 
 
     @property
     def version(self):
-        if not self._version:
-            v = self.cc_version(self.cc)
-            if v is not None:
-                self._version = v
-                return Version(v)
+        return self.spec.version
 
-            v = self.cxx_version(self.cxx)
-            if v is not None:
-                self._version = v
-                return Version(v)
-
-            v = self.f77_version(self.f77)
-            if v is not None:
-                self._version = v
-                return Version(v)
-
-            v = self.fc_version(self.fc)
-            if v is not None:
-                self._version = v
-                return Version(v)
-
-            raise InvalidCompilerError()
-
-        return Version(self._version)
-
-
-    def _cache_version(self):
-        _version_cache[self.cc] = self._version
-        _version_cache[self.cxx] = self._version
-        _version_cache[self.f77] = self._version
-        _version_cache[self.fc] = self._version
-
-
-    @property
-    def spec(self):
-        return spack.spec.CompilerSpec(self.name, self.version)
-
+    #
+    # Compiler classes have methods for querying the version of
+    # specific compiler executables.  This is used when discovering compilers.
+    #
+    # Compiler *instances* are just data objects, and can only be
+    # constructed from an actual set of executables.
+    #
 
     @classmethod
     def default_version(cls, cc):
@@ -237,16 +202,6 @@ class Compiler(object):
            cxx_names, etc. and it will group them if they have common
            prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
            be grouped with g++-mp-4.7 and gfortran-mp-4.7.
-
-           Example return values::
-
-               [ gcc('/usr/bin/gcc',      '/usr/bin/g++',
-                     '/usr/bin/gfortran', '/usr/bin/gfortran',
-                     Version('4.4.5')),
-                 gcc('/usr/bin/gcc-mp-4.5',      '/usr/bin/g++-mp-4.5',
-                     '/usr/bin/gfortran-mp-4.5', '/usr/bin/gfortran-mp-4.5',
-                     Version('4.7.2')) ]
-
         """
         dicts = parmap(
             lambda t: cls._find_matches_in_path(*t),
@@ -263,8 +218,8 @@ class Compiler(object):
         for k in all_keys:
             ver, pre, suf = k
             paths = tuple(pn[k] if k in pn else None for pn in dicts)
-            args = paths + (ver,)
-            compilers.append(cls(*args))
+            spec = spack.spec.CompilerSpec(cls.name, ver)
+            compilers.append(cls(spec, *paths))
 
         return compilers
 

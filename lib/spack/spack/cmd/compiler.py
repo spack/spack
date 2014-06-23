@@ -34,6 +34,7 @@ import spack.compilers
 import spack.spec
 import spack.config
 from spack.compilation import get_path
+from spack.spec import CompilerSpec
 
 description = "Manage compilers"
 
@@ -50,8 +51,13 @@ def setup_parser(subparser):
 
     list_parser   = sp.add_parser('list', help='list available compilers')
 
+    info_parser   = sp.add_parser('info', help='Show compiler paths.')
+    info_parser.add_argument('compiler_spec')
+
 
 def compiler_add(args):
+    """Search either $PATH or a list of paths for compilers and add them
+       to Spack's configuration."""
     paths = args.add_paths
     if not paths:
         paths = get_path('PATH')
@@ -64,9 +70,24 @@ def compiler_remove(args):
     pass
 
 
+def compiler_info(args):
+    """Print info about all compilers matching a spec."""
+    cspec = CompilerSpec(args.compiler_spec)
+    compilers = spack.compilers.compilers_for_spec(cspec)
+
+    if not compilers:
+        tty.error("No compilers match spec %s." % cspec)
+    else:
+        for c in compilers:
+            print str(c.spec) + ":"
+            print "\tcc  = %s" % c.cc
+            print "\tcxx = %s" % c.cxx
+            print "\tf77 = %s" % c.f77
+            print "\tfc  = %s" % c.fc
+
+
 def compiler_list(args):
     tty.msg("Available compilers")
-
     index = index_by(spack.compilers.all_compilers(), 'name')
     for name, compilers in index.items():
         tty.hline(name, char='-', color=spack.spec.compiler_color)
@@ -76,6 +97,6 @@ def compiler_list(args):
 def compiler(parser, args):
     action = { 'add'    : compiler_add,
                'remove' : compiler_remove,
+               'info'   : compiler_info,
                'list'   : compiler_list }
     action[args.compiler_command](args)
-
