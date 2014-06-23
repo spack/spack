@@ -33,7 +33,7 @@
 # TODO: it's not clear where all the stuff that needs to be included in packages
 #       should live.  This file is overloaded for spack core vs. for packages.
 __all__ = ['Package', 'when', 'provides', 'depends_on',
-           'patch', 'Version', 'working_dir']
+           'patch', 'Version', 'working_dir', 'which', 'Executable']
 
 import os
 import tempfile

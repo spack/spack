@@ -24,8 +24,6 @@
 ##############################################################################
 import argparse
 
-from pprint import pprint
-
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.lang import index_by
