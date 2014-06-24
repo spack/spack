@@ -7,6 +7,7 @@ import glob
 #./mcxx-1.99.2/config.log:    $ ./configure --prefix=/usr/gapps/exmatex/ompss --with-nanox=/usr/gapps/exmatex/ompss --enable-ompss --with-mpi=/opt/mvapich2-intel-shmem-1.7 --enable-tl-openmp-profile --enable-tl-openmp-intel
 
 class Ompss(Package):
+    """OmpSs is an effort to integrate features from the StarSs programming model developed by BSC into a single programming model. In particular, our objective is to extend OpenMP with new directives to support asynchronous parallelism and heterogeneity (devices like GPUs). However, it can also be understood as new directives extending other accelerator based APIs like CUDA or OpenCL. Our OmpSs environment is built on top of our Mercurium compiler and Nanos++ runtime system."""
     homepage = "http://pm.bsc.es/"
     url      = "http://pm.bsc.es/sites/default/files/ftp/ompss/releases/ompss-14.06.tar.gz"
     versions  = { '14.06' : '99be5dce74c0d7eea42636d26af47b4181ae2e11' }
