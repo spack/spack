@@ -44,6 +44,10 @@ from spack.util.compression import extension
 description = "Manage spack mirrors."
 
 def setup_parser(subparser):
+    subparser.add_argument(
+        '-n', '--no-checksum', action='store_true', dest='no_checksum',
+        help="Do not check fetched packages against checksum")
+
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='mirror_command')
 
@@ -170,7 +174,7 @@ def mirror_create(args):
             os.chdir(working_dir)
             mirror_file = join_path(args.directory, mirror_path)
             if os.path.exists(mirror_file):
-                tty.msg("Already fetched %s. Skipping." % mirror_file)
+                tty.msg("Already fetched %s." % mirror_file)
                 num_mirrored += 1
                 continue
 
@@ -181,6 +185,11 @@ def mirror_create(args):
                 # fetch changes directory into the stage
                 stage.fetch()
 
+                if not args.no_checksum and version in pkg.versions:
+                    digest = pkg.versions[version]
+                    stage.check(digest)
+                    tty.msg("Checksum passed for %s@%s" % (pkg.name, version))
+
                 # change back and move the new archive into place.
                 os.chdir(working_dir)
                 shutil.move(stage.archive_file, mirror_file)
@@ -188,7 +197,7 @@ def mirror_create(args):
                 num_mirrored += 1
 
             except Exception, e:
-                 tty.warn("Error while fetching %s.  Skipping." % url, e.message)
+                 tty.warn("Error while fetching %s." % url, e.message)
                  num_error += 1
 
             finally:
@@ -197,10 +206,10 @@ def mirror_create(args):
     # If nothing happened, try to say why.
     if not num_mirrored:
         if num_error:
-            tty.warn("No packages added to mirror.",
-                     "All packages failed to fetch.")
+            tty.error("No packages added to mirror.",
+                      "All packages failed to fetch.")
         else:
-            tty.warn("No packages added to mirror. No versions matched specs:")
+            tty.error("No packages added to mirror. No versions matched specs:")
             colify(args.specs, indent=4)
 
 

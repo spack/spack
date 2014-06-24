@@ -32,8 +32,10 @@ from llnl.util.filesystem import *
 
 import spack
 import spack.config
-import spack.error as serr
+import spack.error
+import spack.util.crypto as crypto
 from spack.util.compression import decompressor_for
+
 
 STAGE_PREFIX = 'spack-stage-'
 
@@ -186,8 +188,11 @@ class Stage(object):
     @property
     def archive_file(self):
         """Path to the source archive within this stage directory."""
-        for path in (os.path.join(self.path, os.path.basename(self.url)),
-                     os.path.join(self.path, os.path.basename(self.mirror_path))):
+        paths = [os.path.join(self.path, os.path.basename(self.url))]
+        if self.mirror_path:
+            paths.append(os.path.join(self.path, os.path.basename(self.mirror_path)))
+
+        for path in paths:
             if os.path.exists(path):
                 return path
         return None
@@ -272,6 +277,15 @@ class Stage(object):
             raise FailedDownloadError(url)
 
         return self.archive_file
+
+
+    def check(self, digest):
+        """Check the downloaded archive against a checksum digest"""
+        checker = crypto.Checker(digest)
+        if not checker.check(self.archive_file):
+            raise ChecksumError(
+                "%s checksum failed for %s." % (checker.hash_name, self.archive_file),
+                "Expected %s but got %s." % (digest, checker.sum))
 
 
     def expand_archive(self):
@@ -380,9 +394,15 @@ def find_tmp_root():
     return None
 
 
-class FailedDownloadError(serr.SpackError):
+class FailedDownloadError(spack.error.SpackError):
     """Raised wen a download fails."""
     def __init__(self, url, msg=""):
         super(FailedDownloadError, self).__init__(
             "Failed to fetch file from URL: %s" % url, msg)
         self.url = url
+
+
+class ChecksumError(spack.error.SpackError):
+    """Raised when archive fails to checksum."""
+    def __init__(self, message, long_msg):
+        super(ChecksumError, self).__init__(message, long_msg)

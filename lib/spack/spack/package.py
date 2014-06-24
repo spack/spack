@@ -50,7 +50,6 @@ import spack.spec
 import spack.error
 import spack.build_environment as build_env
 import spack.url as url
-import spack.util.crypto as crypto
 from spack.version import *
 from spack.stage import Stage
 from spack.util.web import get_pages
@@ -539,7 +538,7 @@ class Package(object):
             raise ValueError("Can only fetch concrete packages.")
 
         if spack.do_checksum and not self.version in self.versions:
-            raise ChecksumError(
+            raise FetchError(
                 "Cannot fetch %s safely; there is no checksum on file for version %s."
                 % (self.name, self.version),
                 "Add a checksum to the package file, or use --no-checksum to "
@@ -549,13 +548,8 @@ class Package(object):
 
         if spack.do_checksum and self.version in self.versions:
             digest = self.versions[self.version]
-            checker = crypto.Checker(digest)
-            if checker.check(self.stage.archive_file):
-                tty.msg("Checksum passed for %s" % self.name)
-            else:
-                raise ChecksumError(
-                    "%s checksum failed for %s." % (checker.hash_name, self.name),
-                    "Expected %s but got %s." % (digest, checker.sum))
+            self.stage.check(digest)
+            tty.msg("Checksum passed for %s@%s" % (self.name, self.version))
 
 
     def do_stage(self):
@@ -866,12 +860,6 @@ class FetchError(spack.error.SpackError):
     """Raised when something goes wrong during fetch."""
     def __init__(self, message, long_msg=None):
         super(FetchError, self).__init__(message, long_msg)
-
-
-class ChecksumError(FetchError):
-    """Raised when archive fails to checksum."""
-    def __init__(self, message, long_msg):
-        super(ChecksumError, self).__init__(message, long_msg)
 
 
 class InstallError(spack.error.SpackError):

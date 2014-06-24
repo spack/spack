@@ -105,4 +105,4 @@ except SpackError, e:
         tty.die(e.message)
 
 except KeyboardInterrupt:
-    tty.die("Got a keyboard interrupt from the user.")
+    tty.die("Keyboard interrupt.")
