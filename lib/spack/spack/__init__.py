@@ -138,24 +138,6 @@ do_checksum = True
 sys_type = None
 
 #
-# Places to download tarballs from.
-#
-# TODO: move to configuration.
-#
-# Examples:
-#
-# For a local directory:
-#   mirrors = ['file:///Users/gamblin2/spack-mirror']
-#
-# For a website:
-#   mirrors = ['http://spackports.org/spack-mirror/']
-#
-# For no mirrors:
-#   mirrors = []
-#
-mirrors = []
-
-#
 # Extra imports that should be generally usable from package.py files.
 #
 from llnl.util.filesystem import working_dir

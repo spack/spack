@@ -60,8 +60,17 @@ def compiler_add(args):
     if not paths:
         paths = get_path('PATH')
 
-    compilers = spack.compilers.find_compilers(*args.add_paths)
-    spack.compilers.add_compilers_to_config('user', *compilers)
+    compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
+                 if c.spec not in spack.compilers.all_compilers()]
+
+    if compilers:
+        spack.compilers.add_compilers_to_config('user', *compilers)
+        n = len(compilers)
+        tty.msg("Added %d new compiler%s to %s" % (
+            n, 's' if n > 1 else '', spack.config.get_filename('user')))
+        colify(reversed(sorted(c.spec for c in compilers)), indent=4)
+    else:
+        tty.msg("Found no new compilers")
 
 
 def compiler_remove(args):

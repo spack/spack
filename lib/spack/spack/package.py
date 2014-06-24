@@ -50,11 +50,10 @@ import spack.spec
 import spack.error
 import spack.build_environment as build_env
 import spack.url as url
-import spack.util.crypto as crypto
 from spack.version import *
 from spack.stage import Stage
 from spack.util.web import get_pages
-from spack.util.compression import allowed_archive
+from spack.util.compression import allowed_archive, extension
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file"]
@@ -399,7 +398,9 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
-            mirror_path = "%s/%s" % (self.name, os.path.basename(self.url))
+            # TODO: move this logic into a mirror module.
+            mirror_path = "%s/%s" % (self.name, "%s-%s.%s" % (
+                self.name, self.version, extension(self.url)))
             self._stage = Stage(
                 self.url, mirror_path=mirror_path, name=self.spec.short_spec)
         return self._stage
@@ -537,7 +538,7 @@ class Package(object):
             raise ValueError("Can only fetch concrete packages.")
 
         if spack.do_checksum and not self.version in self.versions:
-            raise ChecksumError(
+            raise FetchError(
                 "Cannot fetch %s safely; there is no checksum on file for version %s."
                 % (self.name, self.version),
                 "Add a checksum to the package file, or use --no-checksum to "
@@ -547,13 +548,8 @@ class Package(object):
 
         if spack.do_checksum and self.version in self.versions:
             digest = self.versions[self.version]
-            checker = crypto.Checker(digest)
-            if checker.check(self.stage.archive_file):
-                tty.msg("Checksum passed for %s" % self.name)
-            else:
-                raise ChecksumError(
-                    "%s checksum failed for %s." % (checker.hash_name, self.name),
-                    "Expected %s but got %s." % (digest, checker.sum))
+            self.stage.check(digest)
+            tty.msg("Checksum passed for %s@%s" % (self.name, self.version))
 
 
     def do_stage(self):
@@ -864,12 +860,6 @@ class FetchError(spack.error.SpackError):
     """Raised when something goes wrong during fetch."""
     def __init__(self, message, long_msg=None):
         super(FetchError, self).__init__(message, long_msg)
-
-
-class ChecksumError(FetchError):
-    """Raised when archive fails to checksum."""
-    def __init__(self, message, long_msg):
-        super(ChecksumError, self).__init__(message, long_msg)
 
 
 class InstallError(spack.error.SpackError):
