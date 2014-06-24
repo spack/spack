@@ -54,7 +54,7 @@ import spack.util.crypto as crypto
 from spack.version import *
 from spack.stage import Stage
 from spack.util.web import get_pages
-from spack.util.compression import allowed_archive
+from spack.util.compression import allowed_archive, extension
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file"]
@@ -399,7 +399,9 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
-            mirror_path = "%s/%s" % (self.name, os.path.basename(self.url))
+            # TODO: move this logic into a mirror module.
+            mirror_path = "%s/%s" % (self.name, "%s-%s.%s" % (
+                self.name, self.version, extension(self.url)))
             self._stage = Stage(
                 self.url, mirror_path=mirror_path, name=self.spec.short_spec)
         return self._stage

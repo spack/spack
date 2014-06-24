@@ -31,6 +31,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import *
 
 import spack
+import spack.config
 import spack.error as serr
 from spack.util.compression import decompressor_for
 
@@ -185,9 +186,10 @@ class Stage(object):
     @property
     def archive_file(self):
         """Path to the source archive within this stage directory."""
-        path = os.path.join(self.path, os.path.basename(self.url))
-        if os.path.exists(path):
-            return path
+        for path in (os.path.join(self.path, os.path.basename(self.url)),
+                     os.path.join(self.path, os.path.basename(self.mirror_path))):
+            if os.path.exists(path):
+                return path
         return None
 
 
@@ -247,6 +249,7 @@ class Stage(object):
                      "'spack clean --dist' to remove the bad archive, then fix",
                      "your internet gateway issue and install again.")
 
+
     def fetch(self):
         """Downloads the file at URL to the stage.  Returns true if it was downloaded,
            false if it already existed."""
@@ -257,7 +260,7 @@ class Stage(object):
         else:
             urls = [self.url]
             if self.mirror_path:
-                urls = ["%s/%s" % (m, self.mirror_path) for m in spack.mirrors] + urls
+                urls = ["%s/%s" % (m, self.mirror_path) for m in _get_mirrors()] + urls
 
             for url in urls:
                 tty.msg("Trying to fetch from %s" % url)
@@ -318,6 +321,17 @@ class Stage(object):
             os.getcwd()
         except OSError:
             os.chdir(os.path.dirname(self.path))
+
+
+def _get_mirrors():
+    """Get mirrors from spack configuration."""
+    config = spack.config.get_config()
+
+    mirrors = []
+    sec_names = config.get_section_names('mirror')
+    for name in sec_names:
+        mirrors.append(config.get_value('mirror', name, 'url'))
+    return mirrors
 
 
 def ensure_access(file=spack.stage_path):

@@ -225,8 +225,7 @@ class SpackConfigParser(cp.RawConfigParser):
     OPTCRE_NV = re.compile(r'\s*' + cp.RawConfigParser.OPTCRE_NV.pattern)
 
     def __init__(self, file_or_files):
-        cp.RawConfigParser.__init__(
-            self, dict_type=OrderedDict, allow_no_value=True)
+        cp.RawConfigParser.__init__(self, dict_type=OrderedDict)
 
         if isinstance(file_or_files, basestring):
             self.read([file_or_files])
@@ -284,6 +283,16 @@ class SpackConfigParser(cp.RawConfigParser):
            particular key."""
         sn = _make_section_name(section, name)
         return self.has_option(sn, option)
+
+
+    def has_named_section(self, section, name):
+        sn = _make_section_name(section, name)
+        return self.has_section(sn)
+
+
+    def remove_named_section(self, section, name):
+        sn = _make_section_name(section, name)
+        self.remove_section(sn)
 
 
     def get_section_names(self, sectype):

@@ -56,3 +56,12 @@ def stem(path):
         if re.search(suffix, path):
             return re.sub(suffix, "", path)
     return path
+
+
+def extension(path):
+    """Get the archive extension for a path."""
+    for type in ALLOWED_ARCHIVE_TYPES:
+        suffix = r'\.%s$' % type
+        if re.search(suffix, path):
+            return type
+    return None
