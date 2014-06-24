@@ -124,7 +124,7 @@ def mirror_create(args):
                             ">>> " + string, str(e))
 
     if not args.specs:
-        args.specs = spack.db.all_package_names()
+        args.specs = [Spec(n) for n in spack.db.all_package_names()]
 
     # Default name for directory is spack-mirror-<DATESTAMP>
     if not args.directory:
