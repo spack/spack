@@ -78,17 +78,109 @@ Packages like ``mpich`` use traditional version numbers like
 like ``20130729``.  Versions can contain numbers, letters, dashes,
 underscores, and periods.
 
-``spack compilers``
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-You can see supported compilers by running ``spack compilers``.  The
-output will depend on the platform you run it on.
-
-.. command-output:: spack compilers
-
-
-Seeing installed packages
+Compiler Configuration
 -----------------------------------
+
+Spack has the ability to build packages with multiple compilers and
+compiler versions. Spack searches for compilers on your machine
+automatically the first time it is run. It does this by inspecting
+your path.
+
+``spack compilers``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+You can see which compilers spack has found by running ``spack
+compilers`` or ``spack compiler list``::
+
+    $ spack compilers
+    ==> Available compilers
+    -- gcc ---------------------------------------------------------
+        gcc@4.9.0  gcc@4.8.0  gcc@4.7.0  gcc@4.6.2  gcc@4.4.7
+        gcc@4.8.2  gcc@4.7.1  gcc@4.6.3  gcc@4.6.1  gcc@4.1.2
+    -- intel -------------------------------------------------------
+        intel@15.0.0  intel@14.0.0  intel@13.0.0  intel@12.1.0  intel@10.0
+        intel@14.0.3  intel@13.1.1  intel@12.1.5  intel@12.0.4  intel@9.1
+        intel@14.0.2  intel@13.1.0  intel@12.1.3  intel@11.1
+        intel@14.0.1  intel@13.0.1  intel@12.1.2  intel@10.1
+    -- clang -------------------------------------------------------
+        clang@3.4  clang@3.3  clang@3.2  clang@3.1
+    -- pgi ---------------------------------------------------------
+        pgi@14.3-0   pgi@13.2-0  pgi@12.1-0   pgi@10.9-0  pgi@8.0-1
+        pgi@13.10-0  pgi@13.1-1  pgi@11.10-0  pgi@10.2-0  pgi@7.1-3
+        pgi@13.6-0   pgi@12.8-0  pgi@11.1-0   pgi@9.0-4   pgi@7.0-6
+
+Any of these compilers can be used to build Spack packages.  More on
+how this is done is in :ref:`sec-specs`.
+
+``spack compiler add``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If you do not see a compiler in this list, but you want to use it with
+Spack, you can simply run ``spack compiler add`` with the path to
+where the compiler is installed.  For example::
+
+    $ spack compiler add /usr/local/tools/ic-13.0.079
+    ==> Added 1 new compiler to /Users/gamblin2/.spackconfig
+        intel@13.0.079
+
+Or you can run ``spack compiler add`` with no arguments to force
+autodetection.  This is useful if you do not know where compilers
+live, but new compilers have been added to your ``PATH``.  For
+example, using dotkit, you might do this::
+
+    $ use gcc-4.9.0
+    $ spack compiler add
+    ==> Added 1 new compiler to /Users/gamblin2/.spackconfig
+        gcc@4.9.0
+
+
+``spack compiler info``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to see specifics on a particular compiler, you can run
+``spack compiler info`` on it::
+
+    $ spack compiler info intel@12.1.3
+    intel@12.1.3:
+    cc  = /usr/local/bin/icc-12.1.293
+    cxx = /usr/local/bin/icpc-12.1.293
+    f77 = /usr/local/bin/ifort-12.1.293
+    fc = /usr/local/bin/ifort-12.1.293
+
+This shows which C, C++, and Fortran compilers were detected by Spack.
+
+
+Manual configuration
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If autodetection fails, you can manually conigure a compiler by
+editing your ``~/.spackconfig`` file.  You can do this by running
+``spack config edit``, which will open the file in your ``$EDITOR``.
+
+Each compiler configuration in the file looks like this::
+
+    ...
+    [compiler "intel@15.0.0"]
+        cc = /usr/local/bin/icc-15.0.024-beta
+        cxx = /usr/local/bin/icpc-15.0.024-beta
+        f77 = /usr/local/bin/ifort-15.0.024-beta
+        fc = /usr/local/bin/ifort-15.0.024-beta
+    ...
+
+For compilers, like ``clang``, that do not support Fortran, you can simply
+put ``None`` for ``f77`` and ``fc``::
+
+    [compiler "clang@3.3svn"]
+        cc = /usr/bin/clang
+        cxx = /usr/bin/clang++
+        f77 = None
+        fc = None
+
+Once you save the file, the configured compilers will show up in the
+list displayed when you run ``spack compilers``.
+
+
+Seeing installed packages -----------------------------------
 
 ``spack find``
 ~~~~~~~~~~~~~~~~~~~~~~

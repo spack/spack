@@ -753,8 +753,6 @@ This is due to Spack's compiler interceptors.
 Environment variables
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. warning:: Environment variable setting is not fully implemented.
-
 Spack sets a number of standard environment variables so that build
 systems use its compiler wrappers for their builds.  The standard
 enviroment variables are:
@@ -764,10 +762,8 @@ enviroment variables are:
   =======================  =============================
     ``CC``                  C compiler
     ``CXX``                 C++ compiler
-    ``CPP``                 C Preprocessor
     ``F77``                 Fortran 77 compiler
-    ``F90``                 Fortran 90 compiler
-    ``F95``                 Fortran 95 compiler
+    ``FC``                  Fortran 90 and above compiler
     ``CMAKE_PREFIX_PATH``   Path to dependency prefixes for CMake
   =======================  =============================
 
@@ -786,8 +782,6 @@ correct compilers into the project's build system.
 
 Forked process
 ~~~~~~~~~~~~~~~~~~~~~
-
-.. warning:: This is not implemented yet.
 
 To give packages free reign over how they install things, how they
 modify the environemnt, and how they use Spack's internal APIs, we
