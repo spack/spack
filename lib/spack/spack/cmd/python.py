@@ -22,20 +22,24 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import code
 import os
+import sys
+import code
+import argparse
 import platform
 from contextlib import closing
 
 import spack
 
 def setup_parser(subparser):
-    subparser.add_argument('file', nargs='?', help="file to run")
+    subparser.add_argument(
+        'python_args', nargs=argparse.REMAINDER, help="File to run plus arguments.")
 
 description = "Launch an interpreter as spack would launch a command"
 
 def python(parser, args):
-    console = code.InteractiveConsole()
+    # Fake a main python shell by setting __name__ to __main__.
+    console = code.InteractiveConsole({'__name__' : '__main__'})
 
     if "PYTHONSTARTUP" in os.environ:
         startup_file = os.environ["PYTHONSTARTUP"]
@@ -43,9 +47,11 @@ def python(parser, args):
             with closing(open(startup_file)) as startup:
                 console.runsource(startup.read(), startup_file, 'exec')
 
-    if args.file:
-        with closing(open(args.file)) as file:
-            console.runsource(file.read(), args.file, 'exec')
+    python_args = args.python_args
+    if python_args:
+        sys.argv = python_args
+        with closing(open(python_args[0])) as file:
+            console.runsource(file.read(), python_args[0], 'exec')
     else:
         console.interact("Spack version %s\nPython %s, %s %s"""
                          % (spack.spack_version, platform.python_version(),
