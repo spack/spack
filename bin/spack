@@ -44,6 +44,7 @@ try:
     working_dir = os.getcwd()
 except OSError:
     os.chdir(SPACK_PREFIX)
+    working_dir = SPACK_PREFIX
 
 # clean up the scope and start using spack package instead.
 del SPACK_FILE, SPACK_PREFIX, SPACK_LIB_PATH
