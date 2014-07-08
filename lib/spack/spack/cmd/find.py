@@ -22,6 +22,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
 import collections
 import argparse
 from StringIO import StringIO
@@ -37,12 +38,14 @@ import spack.spec
 description ="Find installed spack packages"
 
 def setup_parser(subparser):
-    subparser.add_argument(
+    format_group = subparser.add_mutually_exclusive_group()
+    format_group.add_argument(
         '-p', '--paths', action='store_true', dest='paths',
         help='Show paths to package install directories')
-    subparser.add_argument(
+    format_group.add_argument(
         '-l', '--long', action='store_true', dest='full_specs',
         help='Show full-length specs of installed packages')
+
     subparser.add_argument(
         'query_specs', nargs=argparse.REMAINDER,
         help='optional specs to filter results')
@@ -56,13 +59,16 @@ def find(parser, args):
 
     if nonexisting:
         msg = "No such package%s: " % ('s' if len(nonexisting) > 1 else '')
-        tty.msg(msg + ", ".join(s.name for s in nonexisting))
+        msg += ", ".join(s.name for s in nonexisting)
+        tty.msg(msg)
+
         if not query_specs:
             return
 
-    # Make a dict with specs keyed by architecture and compiler.
     specs = [s for s in spack.db.installed_package_specs()
              if not query_specs or any(s.satisfies(q) for q in query_specs)]
+
+    # Make a dict with specs keyed by architecture and compiler.
     index = index_by(specs, 'architecture', 'compiler')
 
     # Traverse the index and print out each package

@@ -53,9 +53,12 @@ build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
 compilers_path = join_path(module_path, "compilers")
 test_path      = join_path(module_path, "test")
+hooks_path     = join_path(module_path, "hooks")
 var_path       = join_path(prefix, "var", "spack")
 stage_path     = join_path(var_path, "stage")
 install_path   = join_path(prefix, "opt")
+share_path     = join_path(prefix, "share", "spack")
+dotkit_path    = join_path(share_path, "dotkit")
 
 #
 # Set up the packages database.
@@ -90,7 +93,7 @@ concretizer = DefaultConcretizer()
 
 # Version information
 from spack.version import Version
-spack_version = Version("1.0")
+spack_version = Version("0.8")
 
 #
 # Executables used by Spack

@@ -29,6 +29,17 @@ import os
 dwarf_dirs = ['libdwarf', 'dwarfdump2']
 
 class Libdwarf(Package):
+    """The DWARF Debugging Information Format is of interest to
+       programmers working on compilers and debuggers (and any one
+       interested in reading or writing DWARF information). It was
+       developed by a committee (known as the PLSIG at the time)
+       starting around 1991. Starting around 1991 SGI developed the
+       libdwarf and dwarfdump tools for internal use and as part of
+       SGI IRIX developer tools. Since that time dwarfdump and
+       libdwarf have been shipped (as an executable and archive
+       respectively, not source) with every release of the SGI
+       MIPS/IRIX C compiler."""
+
     homepage = "http://www.prevanders.net/dwarf.html"
     url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
     list_url = homepage

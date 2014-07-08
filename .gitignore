@@ -5,3 +5,4 @@
 .DS_Store
 .idea
 /etc/spackconfig
+/share/spack/dotkit

@@ -51,12 +51,14 @@ def msg(message, *args):
 
 def info(message, *args, **kwargs):
     format = kwargs.get('format', '*b')
-    cprint("@%s{==>} %s" % (format, cescape(str(message))))
+    stream = kwargs.get('stream', sys.stdout)
+
+    cprint("@%s{==>} %s" % (format, cescape(str(message))), stream=stream)
     for arg in args:
         lines = textwrap.wrap(
             str(arg), initial_indent=indent, subsequent_indent=indent)
         for line in lines:
-            print line
+            stream.write(line + '\n')
 
 
 def verbose(message, *args):
@@ -66,15 +68,15 @@ def verbose(message, *args):
 
 def debug(message, *args):
     if _debug:
-        info(message, *args, format='g')
+        info(message, *args, format='g', stream=sys.stderr)
 
 
 def error(message, *args):
-    info("Error: " + str(message), *args, format='*r')
+    info("Error: " + str(message), *args, format='*r', stream=sys.stderr)
 
 
 def warn(message, *args):
-    info("Warning: " + str(message), *args, format='*Y')
+    info("Warning: " + str(message), *args, format='*Y', stream=sys.stderr)
 
 
 def die(message, *args):

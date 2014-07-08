@@ -1,5 +1,8 @@
 from spack import *
 
+import os
+from llnl.util.filesystem import join_path
+
 class Tau(Package):
     """A portable profiling and tracing toolkit for performance
        analysis of parallel programs written in Fortran, C, C++, UPC,
@@ -18,3 +21,16 @@ class Tau(Package):
         # After that, it's relatively standard.
         configure("-prefix=%s" % prefix)
         make("install")
+
+        # Link arch-specific directories into prefix since there is
+        # only one arch per prefix the way spack installs.
+        self.link_tau_arch_dirs()
+
+
+    def link_tau_arch_dirs(self):
+        for subdir in os.listdir(self.prefix):
+            for d in ('bin', 'lib'):
+                src  = join_path(self.prefix, subdir, d)
+                dest = join_path(self.prefix, d)
+                if os.path.isdir(src) and not os.path.exists(dest):
+                    os.symlink(join_path(subdir, d), dest)
