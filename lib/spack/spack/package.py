@@ -48,6 +48,7 @@ from llnl.util.lang import *
 import spack
 import spack.spec
 import spack.error
+import spack.hooks
 import spack.build_environment as build_env
 import spack.url as url
 from spack.version import *
@@ -495,7 +496,7 @@ class Package(object):
            on this one."""
         dependents = []
         for spec in spack.db.installed_package_specs():
-            if self.name in spec.dependencies:
+            if self in spec.dependencies:
                 dependents.append(spec)
         return dependents
 
@@ -703,6 +704,10 @@ class Package(object):
             sys.exit(1)
 
 
+        # Once everything else is done, run post install hooks
+        spack.hooks.post_install(self)
+
+
     def do_install_dependencies(self):
         # Pass along paths of dependencies here
         for dep in self.spec.dependencies.values():
@@ -731,12 +736,16 @@ class Package(object):
 
         if not force:
             deps = self.installed_dependents
+            formatted_deps = [s.format('$_$@$%@$+$=$#') for s in deps]
             if deps: raise InstallError(
                 "Cannot uninstall %s. The following installed packages depend on it: %s"
-                % (self.spec, deps))
+                % (self.spec, formatted_deps))
 
         self.remove_prefix()
         tty.msg("Successfully uninstalled %s." % self.spec)
+
+        # Once everything else is done, run post install hooks
+        spack.hooks.post_uninstall(self)
 
 
     def do_clean(self):
