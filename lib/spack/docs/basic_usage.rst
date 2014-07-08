@@ -281,7 +281,7 @@ of its dependencies, simply run ``spack install <package>``:
    spack install mpileaks
 
 Spack will fetch the tarball for ``mpileaks``, expand it, verify that
-it was donwloaded without errors, build it, and install it in its own
+it was downloaded without errors, build it, and install it in its own
 directory under ``$SPACK_HOME/opt``.  If the requested package depends
 on other packages in order to build, Spack fetches them as well, and
 installs them before it installs the requested package. Like the main
@@ -380,12 +380,12 @@ More formally, a spec consists of the following pieces:
 * ``=`` Optional architecture specifier (``bgqos_0``)
 * ``^`` Dependency specs (``^callpath@1.1``)
 
-There are two things to notice here.  One is that specs are
+There are two things to notice here.  The first is that specs are
 recursively defined.  That is, each dependency after ``^`` is a spec
-itself.  The second is that Notice that everything is optional
-*except* for the initial package name identifier.  Users can be as
-vague or as specific as they want about the details of building
-packages, and this makes spack good for beginners and experts alike.
+itself.  The second is that everything is optional *except* for the
+initial package name identifier.  Users can be as vague or as specific
+as they want about the details of building packages, and this makes
+spack good for beginners and experts alike.
 
 To really understand what's going on above, we need to think about how
 software is structured.  An executable or a library (these are
@@ -605,12 +605,12 @@ getting info on it:
 Spack is unique in that its virtual packages can be versioned, just
 like regular packages.  A particular version of a package may provide
 a particular version of a virtual package, and we can see above that
-``mpich`` versions ``1`` and above provide all interfaces up to ``1``,
-and ``mpich`` versions ``3`` and above provide ``mpi`` versions up to
-``3``.  A package can *depend on* a particular version of a virtual
-package, e.g. if an application needs MPI-2 functions, it can depend
-on ``mpi@2:`` to indicate that it needs some implementation that
-provides MPI-2 functions.
+``mpich`` versions ``1`` and above provide all ``mpi`` interface
+versions up to ``1``, and ``mpich`` versions ``3`` and above provide
+``mpi`` versions up to ``3``.  A package can *depend on* a particular
+version of a virtual package, e.g. if an application needs MPI-2
+functions, it can depend on ``mpi@2:`` to indicate that it needs some
+implementation that provides MPI-2 functions.
 
 
 Constraining virtual packages

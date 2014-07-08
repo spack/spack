@@ -636,7 +636,7 @@ Spack parses the command line and builds a spec from the description.
 The spec says that ``mpileaks`` should be built with the ``callpath``
 library at 1.0 and with the debug option enabled, and with ``libelf``
 version 0.8.11.  Spack will also look at the ``depends_on`` calls in
-all of these packags, and it will build a spec from that.  The specs
+all of these packages, and it will build a spec from that.  The specs
 from the command line and the specs built from package descriptions
 are then combined, and the constraints are checked against each other
 to make sure they're satisfiable.
@@ -871,9 +871,10 @@ directories that ``diff`` compared when it created the patch file.
 This is git's default behavior when creating patch files, but other
 programs may behave differently.
 
-``-p1`` strings off the first level of prefix in both paths, allowing
-the patch to be applied from the root of an expanded mvapich2 archive.
-If you set level to ``2``, it would strip off ``src``, and so on.
+``-p1`` strips off the first level of the prefix in both paths,
+allowing the patch to be applied from the root of an expanded mvapich2
+archive.  If you set level to ``2``, it would strip off ``src``, and
+so on.
 
 It's generally easier to just structure your patch file so that it
 applies cleanly with ``-p1``, but if you're using a URL to a patch you
@@ -996,8 +997,8 @@ Testing spec constraints
 
 You can test whether your spec is configured a certain way by using
 the ``satisfies`` method.  For example, if you want to check whether
-the pcakage is at a particular version range, you can use specs to do
-that, e.g.:
+the package's version is in a particular range, you can use specs to
+do that, e.g.:
 
 .. code-block:: python
 
@@ -1287,7 +1288,7 @@ already been expanded,  ``stage`` is idempotent.
 
 After staging, Spack applies patches to downloaded packages, if any
 have been specified in the package file.  This command will run the
-install process throught he fetch, stage, and patch phases.  Spack
+install process through the fetch, stage, and patch phases.  Spack
 keeps track of whether patches have already been applied and skips
 this step if they have been.  If Spack discovers that patches didn't
 apply cleanly on some previous run, then it will restage the entire
