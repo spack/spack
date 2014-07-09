@@ -90,7 +90,7 @@ def set_compiler_environment_variables(pkg):
     os.environ['CC']  = 'cc'
     os.environ['CXX'] = 'c++'
     os.environ['F77'] = 'f77'
-    os.environ['FC']  = 'fc'
+    os.environ['FC']  = 'f90'
 
     # Set SPACK compiler variables so that our wrapper knows what to call
     if compiler.cc:
@@ -173,6 +173,7 @@ def set_module_variables_for_package(pkg):
         m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
 
     # Emulate some shell commands for convenience
+    m.pwd        = os.getcwd
     m.cd         = os.chdir
     m.mkdir      = os.mkdir
     m.makedirs   = os.makedirs

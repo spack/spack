@@ -59,7 +59,7 @@ elif command in ('c++', 'CC', 'g++', 'clang++'):
 elif command in ('f77'):
     command = spack_f77
     language = "Fortran 77"
-elif command in ('fc'):
+elif command in ('fc', 'f90', 'f95'):
     command = spack_fc
     language = "Fortran 90"
 elif command in ('ld', 'cpp'):

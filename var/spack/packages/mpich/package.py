@@ -38,6 +38,8 @@ class Mpich(Package):
     provides('mpi@:1', when='@1:')
 
     def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
+        configure(
+            "--prefix=" + prefix,
+            "--enable-shared")
         make()
         make("install")
