@@ -36,7 +36,7 @@ import spack.cmd
 import spack.cmd.checksum
 import spack.package
 import spack.url
-import spack.packages as packages
+from spack.util.naming import mod_to_class
 import spack.util.crypto as crypto
 
 from spack.util.executable import which
@@ -157,7 +157,6 @@ def create(parser, args):
     else:
         mkdirp(os.path.dirname(pkg_path))
 
-    class_name = packages.class_name_for_package_name(name)
     versions = list(reversed(spack.package.find_versions_of_archive(url)))
 
     archives_to_fetch = 1
@@ -194,7 +193,7 @@ def create(parser, args):
             package_template.substitute(
                 name=name,
                 configure=guesser.configure,
-                class_name=class_name,
+                class_name=mod_to_class(name),
                 url=url,
                 versions=make_version_dict(ver_hash_tuples)))
 

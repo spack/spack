@@ -30,7 +30,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
 import spack
-import spack.packages as packages
+from spack.util.naming import mod_to_class
 
 description = "Open package files in $EDITOR"
 
@@ -80,10 +80,9 @@ def edit(parser, args):
                     "to edit a new file." % name)
         else:
             mkdirp(os.path.dirname(path))
-            class_name = packages.class_name_for_package_name(name)
             with closing(open(path, "w")) as pkg_file:
                 pkg_file.write(
-                    package_template.substitute(name=name, class_name=class_name))
+                    package_template.substitute(name=name, class_name=mod_to_class(name)))
 
     # If everything checks out, go ahead and edit.
     spack.editor(path)

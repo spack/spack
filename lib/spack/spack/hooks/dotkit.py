@@ -28,7 +28,7 @@ import textwrap
 import shutil
 from contextlib import closing
 
-from llnl.util.filesystem import join_path
+from llnl.util.filesystem import join_path, mkdirp
 
 import spack
 
