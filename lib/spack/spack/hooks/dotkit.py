@@ -33,6 +33,23 @@ from llnl.util.filesystem import join_path, mkdirp
 import spack
 
 
+class DotkitFile(object):
+    def __init__(self, path):
+        self.dk_file = open(path, 'w')
+
+    def close(self):
+        self.dk_file.close()
+
+    def write(self, *args):
+        self.dk_file.write(*args)
+
+    def alter(self, var, path):
+        self.dk_file.write("dk_alter %s %s\n" % (var, path))
+
+    def setenv(self, var, value):
+        self.dk_file.write("dk_setenv %s %s\n" % (var, value))
+
+
 def dotkit_file(pkg):
     dk_file_name = pkg.spec.format('$_$@$%@$+$=$#') + ".dk"
     return join_path(spack.dotkit_path, dk_file_name)
@@ -51,15 +68,15 @@ def post_install(pkg):
         ('LD_LIBRARY_PATH', pkg.prefix.lib64)]:
 
         if os.path.isdir(path):
-            alterations.append("dk_alter %s %s\n" % (var, path))
+            alterations.append((var, path))
 
     if not alterations:
         return
 
-    alterations.append("dk_alter CMAKE_PREFIX_PATH %s\n" % pkg.prefix)
+    alterations.append(("CMAKE_PREFIX_PATH", pkg.prefix))
 
     dk_file = dotkit_file(pkg)
-    with closing(open(dk_file, 'w')) as dk:
+    with closing(DotkitFile(dk_file)) as dk:
         # Put everything in the spack category.
         dk.write('#c spack\n')
 
@@ -72,8 +89,13 @@ def post_install(pkg):
                 dk.write("#h %s\n" % line)
 
         # Write alterations
-        for alter in alterations:
-            dk.write(alter)
+        for alt in alterations:
+            dk.alter(*alt)
+
+        # callback in case package has extensions.
+        dotkit_fun = getattr(pkg, 'dotkit', None)
+        if dotkit_fun and hasattr(dotkit_fun, '__call__'):
+            dotkit_fun(dk)
 
 
 def post_uninstall(pkg):
