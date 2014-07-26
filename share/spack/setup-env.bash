@@ -65,6 +65,10 @@ function spack {
     # Filter out use and unuse.  For any other commands, just run the
     # command.
     case $_spack_subcommand in
+        "cd")
+            cd $(spack stage -b "$@")
+            return
+            ;;
         "use") ;;
         "unuse") ;;
         *)
