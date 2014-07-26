@@ -11,11 +11,11 @@ class Postgresql(Package):
 
     version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
 
-    def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
-        configure("--prefix=%s" % prefix)
+    depends_on("openssl")
 
-        # FIXME: Add logic to build and install here
+    def install(self, spec, prefix):
+        configure("--prefix=%s" % prefix,
+                  "--with-openssl")
         make()
         make("install")
 
