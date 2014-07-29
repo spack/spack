@@ -16,6 +16,7 @@ class Ompss(Package):
     depends_on("mpi")
     #depends_on("openmp")
     depends_on("hwloc")
+    depends_on("extrae")
 
     def install(self, spec, prefix):
         if 'openmpi' in spec:
@@ -30,7 +31,7 @@ class Ompss(Package):
             openmp_options.append( "--enable-tl-openmp-intel" )
 
         os.chdir(glob.glob('./nanox-*').pop())
-        configure("--prefix=%s" % prefix, "--with-mcc=%s" % prefix, "--with-hwloc=%s" % spec['hwloc'].prefix)
+        configure("--prefix=%s" % prefix, "--with-mcc=%s" % prefix, "--with-extrae=%s" % spec['extrae'].prefix, "--with-hwloc=%s" % spec['hwloc'].prefix)
         make()
         make("install")
 
