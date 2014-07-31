@@ -8,14 +8,12 @@ class Ncurses(Package):
     """
 
     homepage = "http://invisible-island.net/ncurses/ncurses.html"
-    url      = "http://invisible-island.net/datafiles/release/ncurses.tar.gz"
 
-    versions = { 'stable' : '8cb9c412e5f2d96bc6f459aa8c6282a1' }
+    version('5.9', '8cb9c412e5f2d96bc6f459aa8c6282a1',
+            url='http://invisible-island.net/datafiles/release/ncurses.tar.gz')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
         make("install")
 
-    def url_for_version(self, version):
-        return "http://invisible-island.net/datafiles/release/ncurses.tar.gz"

@@ -29,7 +29,7 @@ class Spindle(Package):
     url      = "https://github.com/hpc/Spindle/archive/v0.8.1.tar.gz"
     list_url = "https://github.com/hpc/Spindle/releases"
 
-    versions = {'0.8.1' : 'f11793a6b9d8df2cd231fccb2857d912' }
+    version('0.8.1', 'f11793a6b9d8df2cd231fccb2857d912')
 
     depends_on("launchmon")
 

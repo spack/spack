@@ -68,6 +68,8 @@ provides
         spack install mpileaks ^mvapich
         spack install mpileaks ^mpich
 """
+__all__ = [ 'depends_on', 'provides', 'patch', 'version' ]
+
 import re
 import inspect
 import importlib
@@ -77,14 +79,38 @@ from llnl.util.lang import *
 import spack
 import spack.spec
 import spack.error
+import spack.url
 
+from spack.version import Version
 from spack.patch import Patch
 from spack.spec import Spec, parse_anonymous_spec
 
 
-"""Adds a dependencies local variable in the locals of
-   the calling class, based on args. """
+class VersionDescriptor(object):
+    """A VersionDescriptor contains information to describe a
+       particular version of a package.  That currently includes a URL
+       for the version along with a checksum."""
+    def __init__(self, checksum, url):
+        self.checksum = checksum
+        self.url = url
+
+
+def version(ver, checksum, **kwargs):
+    """Adds a version and associated metadata to the package."""
+    pkg = caller_locals()
+
+    versions = pkg.setdefault('versions', {})
+    patches  = pkg.setdefault('patches', {})
+
+    ver = Version(ver)
+    url = kwargs.get('url', None)
+
+    versions[ver] = VersionDescriptor(checksum, url)
+
+
 def depends_on(*specs):
+    """Adds a dependencies local variable in the locals of
+       the calling class, based on args. """
     pkg = get_calling_package_name()
 
     dependencies = caller_locals().setdefault('dependencies', {})

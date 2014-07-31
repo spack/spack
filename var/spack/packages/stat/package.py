@@ -5,8 +5,8 @@ class Stat(Package):
     homepage = "http://paradyn.org/STAT/STAT.html"
     url      = "https://github.com/lee218llnl/stat/archive/v2.0.0.tar.gz"
 
-    versions = { '2.0.0' : 'c7494210b0ba26b577171b92838e1a9b', }
-    versions = { '2.1.0' : 'ece26beaf057aa9134d62adcdda1ba91', }
+    version('2.0.0', 'c7494210b0ba26b577171b92838e1a9b')
+    version('2.1.0', 'ece26beaf057aa9134d62adcdda1ba91')
 
     depends_on('libdwarf')
     depends_on('dyninst')

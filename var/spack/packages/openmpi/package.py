@@ -12,7 +12,7 @@ class Openmpi(Package):
     homepage = "http://www.open-mpi.org"
     url      = "http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.5.tar.bz2"
 
-    versions = { '1.6.5' : '03aed2a4aa4d0b27196962a2a65fc475', }
+    version('1.6.5', '03aed2a4aa4d0b27196962a2a65fc475')
 
     provides('mpi@:2')
 
