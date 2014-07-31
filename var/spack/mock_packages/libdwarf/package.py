@@ -33,10 +33,10 @@ class Libdwarf(Package):
     url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
     list_url = homepage
 
-    versions = { 20130729 : "64b42692e947d5180e162e46c689dfbf",
-                 20130207 : 'foobarbaz',
-                 20111030 : 'foobarbaz',
-                 20070703 : 'foobarbaz' }
+    version(20130729, "64b42692e947d5180e162e46c689dfbf")
+    version(20130207, 'foobarbaz')
+    version(20111030, 'foobarbaz')
+    version(20070703, 'foobarbaz')
 
     depends_on("libelf")
 

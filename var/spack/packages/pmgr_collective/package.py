@@ -30,7 +30,7 @@ class PmgrCollective(Package):
     homepage = "http://www.sourceforge.net/projects/pmgrcollective"
     url      = "http://downloads.sourceforge.net/project/pmgrcollective/pmgrcollective/PMGR_COLLECTIVE-1.0/pmgr_collective-1.0.tgz"
 
-    versions = { '1.0' : '0384d008774274cc3fc7b4d810dfd07e' }
+    version('1.0', '0384d008774274cc3fc7b4d810dfd07e')
 
     def install(self, spec, prefix):
         make('PREFIX="' + prefix + '"')

@@ -48,7 +48,7 @@ def decompressor_for(path):
     return tar
 
 
-def stem(path):
+def strip_extension(path):
     """Get the part of a path that does not include its compressed
        type extension."""
     for type in ALLOWED_ARCHIVE_TYPES:

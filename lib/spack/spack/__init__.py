@@ -32,7 +32,7 @@
 # TODO: maybe this should be separated out and should go in build_environment.py?
 # TODO: it's not clear where all the stuff that needs to be included in packages
 #       should live.  This file is overloaded for spack core vs. for packages.
-__all__ = ['Package', 'when', 'provides', 'depends_on',
+__all__ = ['Package', 'when', 'provides', 'depends_on', 'version',
            'patch', 'Version', 'working_dir', 'which', 'Executable',
            'filter_file', 'change_sed_delimiter']
 
@@ -146,6 +146,6 @@ sys_type = None
 #
 from llnl.util.filesystem import working_dir
 from spack.package import Package
-from spack.relations import depends_on, provides, patch
+from spack.relations import *
 from spack.multimethod import when
 from spack.version import Version

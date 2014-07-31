@@ -181,7 +181,7 @@ class Version(object):
 
         # Add possible alpha or beta indicator at the end of each segemnt
         # We treat these specially b/c they're so common.
-        wc += '[ab]?)?' * (len(segments) - 1)
+        wc += '(?:[a-z]|alpha|beta)?)?' * (len(segments) - 1)
         return wc
 
 

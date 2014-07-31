@@ -29,19 +29,35 @@ import unittest
 
 import spack
 import spack.url as url
+from spack.packages import PackageDB
+
 
 class PackageSanityTest(unittest.TestCase):
 
-    def test_get_all_packages(self):
-        """Get all packages once and make sure that works."""
+    def check_db(self):
+        """Get all packages in a DB to make sure they work."""
         for name in spack.db.all_package_names():
             spack.db.get(name)
 
 
+    def test_get_all_packages(self):
+        """Get all packages once and make sure that works."""
+        self.check_db()
+
+
+    def test_get_all_mock_packages(self):
+        """Get the mock packages once each too."""
+        tmp = spack.db
+        spack.db = PackageDB(spack.mock_packages_path)
+        self.check_db()
+        spack.db = tmp
+
+
     def test_url_versions(self):
-        """Ensure that url_for_version does the right thing for at least the
-           default version of each package.
-        """
+        """Check URLs for regular packages, if they are explicitly defined."""
         for pkg in spack.db.all_packages():
-            v = url.parse_version(pkg.url)
-            self.assertEqual(pkg.url, pkg.url_for_version(v))
+            for v, vdesc in pkg.versions.items():
+                if vdesc.url:
+                    # If there is a url for the version check it.
+                    v_url = pkg.url_for_version(v)
+                    self.assertEqual(vdesc.url, v_url)

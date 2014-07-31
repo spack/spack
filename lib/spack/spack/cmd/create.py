@@ -70,7 +70,7 @@ class ${class_name}(Package):
     homepage = "http://www.example.com"
     url      = "${url}"
 
-    versions = ${versions}
+${versions}
 
     def install(self, spec, prefix):
         # FIXME: Modify the configure line to suit your build system here.
@@ -114,13 +114,11 @@ class ConfigureGuesser(object):
             self.configure = '%s\n        # %s' % (autotools, cmake)
 
 
-def make_version_dict(ver_hash_tuples):
-    max_len = max(len(str(v)) for v,hfg in ver_hash_tuples)
-    width = max_len + 2
-    format = "%-" + str(width) + "s : '%s',"
-    sep = '\n                 '
-    return '{ ' + sep.join(format % ("'%s'" % v, h)
-                           for v, h in ver_hash_tuples) + ' }'
+def make_version_calls(ver_hash_tuples):
+    """Adds a version() call to the package for each version found."""
+    max_len = max(len(str(v)) for v, h in ver_hash_tuples)
+    format = "    version(%%-%ds, '%%s')" % (max_len + 2)
+    return '\n'.join(format % ("'%s'" % v, h) for v, h in ver_hash_tuples)
 
 
 def get_name():
@@ -195,7 +193,7 @@ def create(parser, args):
                 configure=guesser.configure,
                 class_name=mod_to_class(name),
                 url=url,
-                versions=make_version_dict(ver_hash_tuples)))
+                versions=make_version_calls(ver_hash_tuples)))
 
     # If everything checks out, go ahead and edit.
     spack.editor(pkg_path)
