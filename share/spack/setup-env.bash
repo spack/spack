@@ -65,8 +65,38 @@ function spack {
     # Filter out use and unuse.  For any other commands, just run the
     # command.
     case $_spack_subcommand in
-        "use") ;;
-        "unuse") ;;
+        "use"|"unuse")
+            # Shift any other args for use off before parsing spec.
+            _spack_use_args=""
+            if [[ "$1" =~ ^- ]]; then
+                _spack_use_args="$1"; shift
+                _spack_spec="$@"
+            fi
+
+            # Here the user has run use or unuse with a spec.  Find a matching
+            # spec with a dotkit using spack dotkit, then use or unuse the
+            # result.  If spack dotkit comes back with an error, do nothing.
+            if _spack_full_spec=$(command spack dotkit $_spack_spec); then
+                $_spack_subcommand $_spack_use_args $_spack_full_spec
+            fi
+            return
+            ;;
+        "load"|"unload")
+            # Shift any other args for module off before parsing spec.
+            _spack_module_args=""
+            if [[ "$1" =~ ^- ]]; then
+                _spack_module_args="$1"; shift
+                _spack_spec="$@"
+            fi
+
+            # Here the user has run use or unuse with a spec.  Find a matching
+            # spec with a dotkit using spack dotkit, then use or unuse the
+            # result.  If spack dotkit comes back with an error, do nothing.
+            if _spack_full_spec=$(command spack tclmodule $_spack_spec); then
+                $_spack_subcommand $_spack_module_args $_spack_full_spec
+            fi
+            return
+            ;;
         *)
             command spack $_spack_subcommand "$@"
             return
@@ -79,19 +109,6 @@ function spack {
         return
     fi
 
-    # Shift any other args for use off before parsing spec.
-    _spack_use_args=""
-    if [[ "$1" =~ ^- ]]; then
-        _spack_use_args="$1"; shift
-        _spack_spec="$@"
-    fi
-
-    # Here the user has run use or unuse with a spec.  Find a matching
-    # spec with a dotkit using spack dotkit, then use or unuse the
-    # result.  If spack dotkit comes back with an error, do nothing.
-    if _spack_full_spec=$(command spack dotkit $_spack_spec); then
-        $_spack_subcommand $_spack_use_args $_spack_full_spec
-    fi
 }
 
 ########################################################################
@@ -128,5 +145,5 @@ _spack_share_dir="$(dirname ${BASH_SOURCE[0]})"
 _spack_prefix="$(dirname $(dirname $_spack_share_dir))"
 
 _spack_pathadd DK_NODE "$_spack_share_dir/dotkit"
+_spack_pathadd MODULEPATH "$_spack_share_dir/modules"
 _spack_pathadd PATH    "$_spack_prefix/bin"
-

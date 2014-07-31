@@ -59,6 +59,7 @@ stage_path     = join_path(var_path, "stage")
 install_path   = join_path(prefix, "opt")
 share_path     = join_path(prefix, "share", "spack")
 dotkit_path    = join_path(share_path, "dotkit")
+tclmodule_path    = join_path(share_path, "tclmodule")
 
 #
 # Set up the packages database.
