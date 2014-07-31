@@ -11,7 +11,8 @@ class Tau(Package):
     url      = "http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/tau-2.23.1.tar.gz"
 
     version('2.23.1', '6593b47ae1e7a838e632652f0426fe72')
-
+    version('2.23-perfdb', 'c97b404bcd94c7d9b04fa3dc0a32b0d1',
+            url='http://www.nic.uoregon.edu/~khuck/tau2-latest.tar.gz')
 
     def install(self, spec, prefix):
         # TAU isn't happy with directories that have '@' in the path.  Sigh.
