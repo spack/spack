@@ -1,10 +1,17 @@
 from spack import *
 
 class Extrae(Package):
-    """Extrae is the package devoted to generate tracefiles which can be analyzed later by Paraver. Extrae is a tool that uses different interposition mechanisms to inject probes into the target application so as to gather information regarding the application performance. The Extrae instrumentation package can instrument the MPI programin model, and the following parallel programming models either alone or in conjunction with MPI : OpenMP, CUDA, OpenCL, pthread, OmpSs"""
+    """Extrae is the package devoted to generate tracefiles which can
+       be analyzed later by Paraver. Extrae is a tool that uses
+       different interposition mechanisms to inject probes into the
+       target application so as to gather information regarding the
+       application performance. The Extrae instrumentation package can
+       instrument the MPI programin model, and the following parallel
+       programming models either alone or in conjunction with MPI :
+       OpenMP, CUDA, OpenCL, pthread, OmpSs"""
     homepage = "http://www.bsc.es/computer-sciences/extrae"
     url      = "http://www.bsc.es/ssl/apps/performanceTools/files/extrae-2.5.1.tar.bz2"
-    versions = { '2.5.1' : '422376b9c68243bd36a8a73fa62de106', }
+    version('2.5.1', '422376b9c68243bd36a8a73fa62de106')
 
     #depends_on("mpi")
     depends_on("openmpi@:1.6")
