@@ -70,7 +70,7 @@ def module_find(parser, args):
         sys.exit(1)
 
     match = specs[0]
-    if not os.path.isfile(spack.hooks.tclmodules.tclmodules_file(match.package)):
+    if not os.path.isfile(spack.hooks.tclmodule.module_file(match.package)):
         tty.die("No module is installed for package %s." % spec)
 
     print match.format('$_$@$+$%@$=$#')
@@ -84,8 +84,8 @@ def module_refresh(parser, args):
         specs = [s for s in specs
                  if any(s.satisfies(q) for q in query_specs)]
     else:
-        shutil.rmtree(spack.module_path, ignore_errors=False)
-        mkdirp(spack.module_path)
+        shutil.rmtree(spack.tclmodule_path, ignore_errors=False)
+        mkdirp(spack.tclmodule_path)
 
     for spec in specs:
         spack.hooks.tclmodule.post_install(spec.package)

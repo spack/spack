@@ -35,7 +35,7 @@ import spack
 
 def module_file(pkg):
     m_file_name = pkg.spec.format('$_$@$%@$+$=$#')
-    return join_path(spack.module_path, m_file_name)
+    return join_path(spack.tclmodule_path, m_file_name)
 
 
 def post_install(pkg):
@@ -51,26 +51,27 @@ def post_install(pkg):
         ('LD_LIBRARY_PATH', pkg.prefix.lib64)]:
 
         if os.path.isdir(path):
-            alterations.append("prepend_path %s %s\n" % (var, path))
+            alterations.append("prepend-path %s \"%s\"\n" % (var, path))
 
     if not alterations:
         return
 
-    alterations.append("prepend_path CMAKE_PREFIX_PATH %s\n" % pkg.prefix)
+    alterations.append("prepend-path CMAKE_PREFIX_PATH \"%s\"\n" % pkg.prefix)
 
     m_file = module_file(pkg)
     with closing(open(m_file, 'w')) as m:
         # Put everything in the spack category.
         m.write('#%Module1.0\n')
 
-        m.write('module-whatis \"%s\"\n' % pkg.spec.format("$_ $@"))
+        m.write('module-whatis \"%s\"\n\n' % pkg.spec.format("$_ $@"))
 
         # Recycle the description
         if pkg.__doc__:
             m.write('proc ModulesHelp { } {\n')
             doc = re.sub(r'\s+', ' ', pkg.__doc__)
-            m.write("puts str \"%s\"\n" % doc)
-            m.write('}')
+            doc = re.sub(r'"', '\"', pkg.__doc__)
+            m.write("puts stderr \"%s\"\n" % doc)
+            m.write('}\n\n')
 
 
         # Write alterations
