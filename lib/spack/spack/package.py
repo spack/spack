@@ -57,7 +57,7 @@ from spack.util.web import get_pages
 from spack.util.compression import allowed_archive, extension
 
 """Allowed URL schemes for spack packages."""
-_ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file"]
+_ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
 
 class Package(object):

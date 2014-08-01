@@ -153,6 +153,9 @@ def set_module_variables_for_package(pkg):
     m.make  = MakeExecutable('make', pkg.parallel)
     m.gmake = MakeExecutable('gmake', pkg.parallel)
 
+    # easy shortcut to os.environ
+    m.env = os.environ
+
     # number of jobs spack prefers to build with.
     m.make_jobs = multiprocessing.cpu_count()
 
@@ -168,7 +171,7 @@ def set_module_variables_for_package(pkg):
 
     # standard CMake arguments
     m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % pkg.prefix,
-                        '-DCMAKE_BUILD_TYPE=None']
+                        '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
     if platform.mac_ver()[0]:
         m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
 

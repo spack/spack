@@ -124,8 +124,19 @@ def expand_user(path):
     return path.replace('%u', username)
 
 
+def mkdirp(*paths):
+    for path in paths:
+        if not os.path.exists(path):
+            os.makedirs(path)
+        elif not os.path.isdir(path):
+            raise OSError(errno.EEXIST, "File alredy exists", path)
+
+
 @contextmanager
-def working_dir(dirname):
+def working_dir(dirname, **kwargs):
+    if kwargs.get('create', False):
+        mkdirp(dirname)
+
     orig_dir = os.getcwd()
     os.chdir(dirname)
     yield
@@ -135,14 +146,6 @@ def working_dir(dirname):
 def touch(path):
     with closing(open(path, 'a')) as file:
         os.utime(path, None)
-
-
-def mkdirp(*paths):
-    for path in paths:
-        if not os.path.exists(path):
-            os.makedirs(path)
-        elif not os.path.isdir(path):
-            raise OSError(errno.EEXIST, "File alredy exists", path)
 
 
 def join_path(prefix, *args):

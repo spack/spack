@@ -3,7 +3,7 @@
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by David Beckingsale, david@llnl.gov, All rights reserved.
+# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://scalability-llnl.github.io/spack
@@ -24,27 +24,23 @@
 ##############################################################################
 from spack import *
 
-class Llvm(Package):
-    """The LLVM Project is a collection of modular and reusable compiler and
-       toolchain technologies. Despite its name, LLVM has little to do with
-       traditional virtual machines, though it does provide helpful libraries
-       that can be used to build them. The name "LLVM" itself is not an acronym;
-       it is the full name of the project.
-    """
-    homepage = "http://llvm.org/"
-    url      = "http://llvm.org/releases/3.4.2/llvm-3.4.2.src.tar.gz"
+class LlvmLld(Package):
+    """lld - The LLVM Linker
+       lld is a new set of modular code for creating linker tools."""
+    homepage = "http://lld.llvm.org"
+    url      = "http://llvm.org/releases/3.4/lld-3.4.src.tar.gz"
 
-    version('3.4.2', 'a20669f75967440de949ac3b1bad439c')
+    depends_on('llvm')
+
+    version('3.4', '3b6a17e58c8416c869c14dd37682f78e')
 
     def install(self, spec, prefix):
         env['CXXFLAGS'] = '-std=c++11'
 
         with working_dir('spack-build', create=True):
             cmake('..',
-                  '-DLLVM_REQUIRES_RTTI=1',
-                  '-DPYTHON_EXECUTABLE=/usr/bin/python',
-                  '-DPYTHON_INCLUDE_DIR=/usr/include/python2.6',
-                  '-DPYTHON_LIBRARY=/usr/lib64/libpython2.6.so',
+                  '-DLLD_PATH_TO_LLVM_BUILD=%s' % spec['llvm'].prefix,
+                  '-DLLVM_MAIN_SRC_DIR=%s' % spec['llvm'].prefix,
                   *std_cmake_args)
-            make()
+            make('VERBOSE=1')
             make("install")
