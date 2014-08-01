@@ -1,6 +1,7 @@
 # FIXME: Add copyright statement
 #
 from spack import *
+from contextlib import closing
 
 class Cube(Package):
     """Cube the profile viewer for Score-P and Scalasca profiles. It 
@@ -13,16 +14,38 @@ class Cube(Package):
 
     version('4.2.3', '8f95b9531f5a8f8134f279c2767c9b20')
 
-    def install(self, spec, prefix):
-        configure_args = ["--prefix=%s" % prefix, 
-                          "--without-paraver", 
-                          "--without-gui",
-                          "--enable-shared"]
+    version('4.3TP1', 'a2090fbc7b2ba394bd5c09ba971e237f', 
+            url = 'http://apps.fz-juelich.de/scalasca/releases/cube/4.3/dist/cube-4.3-TP1.tar.gz')
 
-        if spec.satisfies('%gcc'):
-            configure_args.append('--with-nocross-compiler-suite=gcc')
-        if spec.satisfies('%intel'):
-            configure_args.append('--with-nocross-compiler-suite=intel')
+    backend_user_provided = """\
+CC=cc
+CXX=c++
+F77=f77
+FC=f90
+#CFLAGS=-fPIC
+#CXXFLAGS=-fPIC
+"""
+    frontend_user_provided = """\
+CC_FOR_BUILD=cc
+CXX_FOR_BUILD=c++
+F77_FOR_BUILD=f70
+FC_FOR_BUILD=f90
+"""
+
+    def install(self, spec, prefix):
+        # Use a custom compiler configuration, otherwise the score-p
+        # build system messes with spack's compiler settings.
+        # Create these three files in the build directory
+
+        with closing(open("vendor/common/build-config/platforms/platform-backend-user-provided", "w")) as backend_file:
+            backend_file.write(self.backend_user_provided)
+        with closing(open("vendor/common/build-config/platforms/platform-frontend-user-provided", "w")) as frontend_file:
+            frontend_file.write(self.frontend_user_provided)
+
+        configure_args = ["--prefix=%s" % prefix,
+                          "--with-custom-compilers",
+                          "--without-paraver", 
+                          "--without-gui"]
 
         configure(*configure_args)
 
