@@ -494,7 +494,7 @@ class Package(object):
            on this one."""
         dependents = []
         for spec in spack.db.installed_package_specs():
-            if self.spec != spec and self.spec in spec:
+            if self.name != spec.name and self.spec in spec:
                 dependents.append(spec)
         return dependents
 
