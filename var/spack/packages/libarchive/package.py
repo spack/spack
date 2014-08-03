@@ -1,7 +1,8 @@
 from spack import *
 
 class Libarchive(Package):
-    """libarchive: C library and command-line tools for reading and writing tar, cpio, zip, ISO, and other archive formats."""
+    """libarchive: C library and command-line tools for reading and
+       writing tar, cpio, zip, ISO, and other archive formats."""
     homepage = "http://www.libarchive.org"
     url      = "http://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
 
