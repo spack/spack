@@ -25,9 +25,14 @@
 from spack import *
 
 class Sqlite(Package):
+    """SQLite3 is an SQL database engine in a C library. Programs that
+       link the SQLite3 library can have SQL database access without
+       running a separate RDBMS process.
+    """
     homepage = "www.sqlite.org"
 
-    version('3.8.5', '0544ef6d7afd8ca797935ccc2685a9ed', url='http://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz')
+    version('3.8.5', '0544ef6d7afd8ca797935ccc2685a9ed',
+            url='http://www.sqlite.org/2014/sqlite-autoconf-3080500.tar.gz')
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix)

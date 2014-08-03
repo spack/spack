@@ -25,6 +25,7 @@
 from spack import *
 
 class Libmonitor(Package):
+    """Libmonitor is a library for process and thread control."""
     homepage = "http://hpctoolkit.org"
     url      = "file:///g/g0/legendre/tools/oss/openspeedshop-release-2.1/SOURCES/libmonitor-20130218.tar.gz"
 
