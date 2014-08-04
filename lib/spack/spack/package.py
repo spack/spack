@@ -322,9 +322,6 @@ class Package(object):
 
 
     def __init__(self, spec):
-        # These attributes are required for all packages.
-        attr_required(self.__class__, 'homepage')
-
         # this determines how the package should be built.
         self.spec = spec
 
@@ -396,9 +393,13 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
+            if not self.url:
+                raise PackageVersionError(self.version)
+
             # TODO: move this logic into a mirror module.
             mirror_path = "%s/%s" % (self.name, "%s-%s.%s" % (
                 self.name, self.version, extension(self.url)))
+
             self._stage = Stage(
                 self.url, mirror_path=mirror_path, name=self.spec.short_spec)
         return self._stage
@@ -531,8 +532,6 @@ class Package(object):
                     break
                 if self.versions[v].url:
                     url = self.versions[v].url
-            if not url:
-                raise PackageVersionError(v)
             return url
 
         if version in self.versions:

@@ -155,7 +155,8 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         """Read the contents of a file and parse them as a spec"""
         with closing(open(path)) as spec_file:
             string = spec_file.read().replace('\n', '')
-            return Spec(string)
+            # Specs from files are assumed normal and concrete
+            return Spec(string, concrete=True)
 
 
     def make_path_for_spec(self, spec):

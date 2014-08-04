@@ -345,6 +345,17 @@ class Spec(object):
         self.compiler = other.compiler
         self.dependencies = other.dependencies
 
+        # Specs are by default not assumed to be normal, but in some
+        # cases we've read them from a file want to assume normal.
+        # This allows us to manipulate specs that Spack doesn't have
+        # package.py files for.
+        self._normal = kwargs.get('normal', False)
+        self._concrete = kwargs.get('concrete', False)
+
+        # Specs cannot be concrete and non-normal.
+        if self._concrete:
+            self._normal = True
+
         # This allows users to construct a spec DAG with literals.
         # Note that given two specs a and b, Spec(a) copies a, but
         # Spec(a, b) will copy a but just add b as a dep.
@@ -432,11 +443,15 @@ class Spec(object):
            If any of the name, version, architecture, compiler, or depdenencies
            are ambiguous,then it is not concrete.
         """
-        return bool(not self.virtual
-                    and self.versions.concrete
-                    and self.architecture
-                    and self.compiler and self.compiler.concrete
-                    and self.dependencies.concrete)
+        if self._concrete:
+            return True
+
+        self._concrete = bool(not self.virtual
+                              and self.versions.concrete
+                              and self.architecture
+                              and self.compiler and self.compiler.concrete
+                              and self.dependencies.concrete)
+        return self._concrete
 
 
     def preorder_traversal(self, visited=None, d=0, **kwargs):
@@ -606,7 +621,7 @@ class Spec(object):
 
             # If there are duplicate providers or duplicate provider deps, this
             # consolidates them and merges constraints.
-            self.normalize()
+            self.normalize(force=True)
 
 
     def concretize(self):
@@ -621,9 +636,13 @@ class Spec(object):
            with requirements of its pacakges.  See flatten() and normalize() for
            more details on this.
         """
+        if self._concrete:
+            return
+
         self.normalize()
         self._expand_virtual_packages()
         self._concretize_helper()
+        self._concrete = True
 
 
     def concretized(self):
@@ -754,7 +773,7 @@ class Spec(object):
             dependency._normalize_helper(visited, spec_deps, provider_index)
 
 
-    def normalize(self):
+    def normalize(self, **kwargs):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -772,6 +791,9 @@ class Spec(object):
            TODO: normalize should probably implement some form of cycle detection,
            to ensure that the spec is actually a DAG.
         """
+        if self._normal and not kwargs.get('force', False):
+            return
+
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_names()
 
@@ -804,6 +826,9 @@ class Spec(object):
         if extra:
             raise InvalidDependencyException(
                 self.name + " does not depend on " + comma_or(extra))
+
+        # Mark the spec as normal once done.
+        self._normal = True
 
 
     def normalized(self):
@@ -1008,6 +1033,9 @@ class Spec(object):
             self.dependencies = other.dependencies.copy()
         else:
             self.dependencies = DependencyMap()
+
+        self._normal = other._normal
+        self._concrete = other._concrete
 
 
     def copy(self, **kwargs):
@@ -1260,6 +1288,9 @@ class SpecParser(spack.parse.Parser):
         spec.compiler = None
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
+
+        spec._normal = False
+        spec._concrete = False
 
         # record this so that we know whether version is
         # unspecified or not.
