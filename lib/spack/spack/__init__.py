@@ -81,7 +81,7 @@ mock_user_config = join_path(mock_config_path, "user_spackconfig")
 # stage directories.
 #
 from spack.directory_layout import SpecHashDirectoryLayout
-install_layout = SpecHashDirectoryLayout(install_path, prefix_size=6)
+install_layout = SpecHashDirectoryLayout(install_path)
 
 #
 # This controls how things are concretized in spack.

@@ -94,6 +94,7 @@ import sys
 import itertools
 import hashlib
 from StringIO import StringIO
+from operator import attrgetter
 
 import llnl.util.tty as tty
 from llnl.util.lang import *
@@ -352,10 +353,6 @@ class Spec(object):
         self._normal = kwargs.get('normal', False)
         self._concrete = kwargs.get('concrete', False)
 
-        # Specs cannot be concrete and non-normal.
-        if self._concrete:
-            self._normal = True
-
         # This allows users to construct a spec DAG with literals.
         # Note that given two specs a and b, Spec(a) copies a, but
         # Spec(a, b) will copy a but just add b as a dep.
@@ -489,6 +486,8 @@ class Spec(object):
         """
         depth      = kwargs.get('depth', False)
         key_fun    = kwargs.get('key', id)
+        if isinstance(key_fun, basestring):
+            key_fun = attrgetter(key_fun)
         yield_root = kwargs.get('root', True)
         cover      = kwargs.get('cover', 'nodes')
         direction  = kwargs.get('direction', 'children')
@@ -540,13 +539,15 @@ class Spec(object):
 
 
     def dep_hash(self, length=None):
-        """Return a hash representing the dependencies of this spec
-           This will always normalize first so that the hash is consistent.
+        """Return a hash representing all dependencies of this spec
+           (direct and indirect).
+
+           This always normalizes first so that hash is consistent.
         """
         self.normalize()
 
         sha = hashlib.sha1()
-        sha.update(str(self.dependencies))
+        sha.update(self.dep_string())
         full_hash = sha.hexdigest()
 
         return full_hash[:length]
@@ -661,19 +662,15 @@ class Spec(object):
 
            This will work even on specs that are not normalized; i.e. specs
            that have two instances of the same dependency in the DAG.
-           This is used as the first step of normalization.
+           This is the first step of normalization.
         """
-        # This ensures that the package descriptions themselves are consistent
-        if not self.virtual:
-            self.package.validate_dependencies()
-
         # Once that is guaranteed, we know any constraint violations are due
         # to the spec -- so they're the user's fault, not Spack's.
         flat_deps = DependencyMap()
         try:
-            for spec in self.preorder_traversal():
+            for spec in self.preorder_traversal(root=False):
                 if spec.name not in flat_deps:
-                    new_spec = spec.copy(dependencies=False)
+                    new_spec = spec.copy(deps=False)
                     flat_deps[spec.name] = new_spec
 
                 else:
@@ -797,9 +794,11 @@ class Spec(object):
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_names()
 
-        # Then ensure that the packages referenced are sane, that the
-        # provided spec is sane, and that all dependency specs are in the
-        # root node of the spec.  flat_dependencies will do this for us.
+        # Ensure that the package & dep descriptions are consistent & sane
+        if not self.virtual:
+            self.package.validate_dependencies()
+
+        # Get all the dependencies into one DependencyMap
         spec_deps = self.flat_dependencies()
         self.dependencies.clear()
 
@@ -1028,7 +1027,7 @@ class Spec(object):
             self.compiler = other.compiler.copy()
 
         self.dependents = DependencyMap()
-        copy_deps = kwargs.get('dependencies', True)
+        copy_deps = kwargs.get('deps', True)
         if copy_deps:
             self.dependencies = other.dependencies.copy()
         else:
@@ -1074,9 +1073,65 @@ class Spec(object):
         return False
 
 
-    def _cmp_key(self):
+    def sorted_deps(self):
+        """Return a list of all dependencies sorted by name."""
+        deps = self.flat_dependencies()
+        return tuple(deps[name] for name in sorted(deps))
+
+
+    def _eq_dag(self, other, vs, vo):
+        """Test that entire dependency DAGs are equal."""
+        vs.add(id(self))
+        vo.add(id(other))
+
+        if self._cmp_node() != other._cmp_node():
+            return False
+
+        if len(self.dependencies) != len(other.dependencies):
+            return False
+
+        ssorted = [self.dependencies[name]  for name in sorted(self.dependencies)]
+        osorted = [other.dependencies[name] for name in sorted(other.dependencies)]
+
+        for s, o in zip(ssorted, osorted):
+            # Check for duplicate or non-equal dependencies
+            if (id(s) in vs) != (id(o) in vo):
+                return False
+
+            # Skip visited nodes
+            if id(s) in vs:
+                continue
+
+            # Recursive check for equality
+            if not s._eq_dag(o, vs, vo):
+                return False
+
+        return True
+
+
+    def eq_dag(self, other):
+        """True if the entire dependency DAG of this spec is equal to another."""
+        return self._eq_dag(other, set(), set())
+
+
+    def ne_dag(self, other):
+        """True if the entire dependency DAG of this spec is not equal to
+           another."""
+        return not self.eq_dag(other)
+
+
+    def _cmp_node(self):
+        """Comparison key for just *this node* and not its deps."""
         return (self.name, self.versions, self.variants,
-                self.architecture, self.compiler, self.dependencies)
+                self.architecture, self.compiler)
+
+
+    def _cmp_key(self):
+        """Comparison key for this node and all dependencies *without*
+           considering structure.  This is the default, as
+           normalization will restore structure.
+        """
+        return self._cmp_node() + (self.sorted_deps(),)
 
 
     def colorized(self):
@@ -1179,12 +1234,12 @@ class Spec(object):
         return result
 
 
+    def dep_string(self):
+        return ''.join("^" + dep.format() for dep in self.sorted_deps())
+
+
     def __str__(self):
-        by_name = lambda d: d.name
-        deps = self.preorder_traversal(key=by_name, root=False)
-        sorted_deps = sorted(deps, key=by_name)
-        dep_string = ''.join("^" + dep.format() for dep in sorted_deps)
-        return self.format() + dep_string
+        return self.format() + self.dep_string()
 
 
     def tree(self, **kwargs):
