@@ -48,7 +48,7 @@ class SpecDagTest(MockPackagesTest):
                           spec.package.validate_dependencies)
 
 
-    def test_unique_node_traversal(self):
+    def test_preorder_node_traversal(self):
         dag = Spec('mpileaks ^zmpi')
         dag.normalize()
 
@@ -56,14 +56,14 @@ class SpecDagTest(MockPackagesTest):
                  'zmpi', 'fake']
         pairs = zip([0,1,2,3,4,2,3], names)
 
-        traversal = dag.preorder_traversal()
+        traversal = dag.traverse()
         self.assertListEqual([x.name for x in traversal], names)
 
-        traversal = dag.preorder_traversal(depth=True)
+        traversal = dag.traverse(depth=True)
         self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
 
 
-    def test_unique_edge_traversal(self):
+    def test_preorder_edge_traversal(self):
         dag = Spec('mpileaks ^zmpi')
         dag.normalize()
 
@@ -71,14 +71,14 @@ class SpecDagTest(MockPackagesTest):
                  'libelf', 'zmpi', 'fake', 'zmpi']
         pairs = zip([0,1,2,3,4,3,2,3,1], names)
 
-        traversal = dag.preorder_traversal(cover='edges')
+        traversal = dag.traverse(cover='edges')
         self.assertListEqual([x.name for x in traversal], names)
 
-        traversal = dag.preorder_traversal(cover='edges', depth=True)
+        traversal = dag.traverse(cover='edges', depth=True)
         self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
 
 
-    def test_unique_path_traversal(self):
+    def test_preorder_path_traversal(self):
         dag = Spec('mpileaks ^zmpi')
         dag.normalize()
 
@@ -86,10 +86,55 @@ class SpecDagTest(MockPackagesTest):
                  'libelf', 'zmpi', 'fake', 'zmpi', 'fake']
         pairs = zip([0,1,2,3,4,3,2,3,1,2], names)
 
-        traversal = dag.preorder_traversal(cover='paths')
+        traversal = dag.traverse(cover='paths')
         self.assertListEqual([x.name for x in traversal], names)
 
-        traversal = dag.preorder_traversal(cover='paths', depth=True)
+        traversal = dag.traverse(cover='paths', depth=True)
+        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+
+
+    def test_postorder_node_traversal(self):
+        dag = Spec('mpileaks ^zmpi')
+        dag.normalize()
+
+        names = ['libelf', 'libdwarf', 'dyninst', 'fake', 'zmpi',
+                 'callpath', 'mpileaks']
+        pairs = zip([4,3,2,3,2,1,0], names)
+
+        traversal = dag.traverse(order='post')
+        self.assertListEqual([x.name for x in traversal], names)
+
+        traversal = dag.traverse(depth=True, order='post')
+        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+
+
+    def test_postorder_edge_traversal(self):
+        dag = Spec('mpileaks ^zmpi')
+        dag.normalize()
+
+        names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
+                 'callpath', 'zmpi', 'mpileaks']
+        pairs = zip([4,3,3,2,3,2,1,1,0], names)
+
+        traversal = dag.traverse(cover='edges', order='post')
+        self.assertListEqual([x.name for x in traversal], names)
+
+        traversal = dag.traverse(cover='edges', depth=True, order='post')
+        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+
+
+    def test_postorder_path_traversal(self):
+        dag = Spec('mpileaks ^zmpi')
+        dag.normalize()
+
+        names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
+                 'callpath', 'fake', 'zmpi', 'mpileaks']
+        pairs = zip([4,3,3,2,3,2,1,2,1,0], names)
+
+        traversal = dag.traverse(cover='paths', order='post')
+        self.assertListEqual([x.name for x in traversal], names)
+
+        traversal = dag.traverse(cover='paths', depth=True, order='post')
         self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
 
 
@@ -142,7 +187,7 @@ class SpecDagTest(MockPackagesTest):
 
         # make sure nothing with the same name occurs twice
         counts = {}
-        for spec in dag.preorder_traversal(keyfun=id):
+        for spec in dag.traverse(key=id):
             if not spec.name in counts:
                 counts[spec.name] = 0
             counts[spec.name] += 1
@@ -152,7 +197,7 @@ class SpecDagTest(MockPackagesTest):
 
 
     def check_links(self, spec_to_check):
-        for spec in spec_to_check.preorder_traversal():
+        for spec in spec_to_check.traverse():
             for dependent in spec.dependents.values():
                 self.assertIn(
                     spec.name, dependent.dependencies,

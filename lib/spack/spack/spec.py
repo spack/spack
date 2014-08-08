@@ -451,9 +451,18 @@ class Spec(object):
         return self._concrete
 
 
-    def preorder_traversal(self, visited=None, d=0, **kwargs):
-        """Generic preorder traversal of the DAG represented by this spec.
+    def traverse(self, visited=None, d=0, **kwargs):
+        """Generic traversal of the DAG represented by this spec.
            This will yield each node in the spec.  Options:
+
+           order    [=pre|post]
+               Order to traverse spec nodes. Defaults to preorder traversal.
+               Options are:
+
+               'pre':  Pre-order traversal; each node is yielded before its
+                       children in the dependency DAG.
+               'post': Post-order  traversal; each node is yielded after its
+                       children in the dependency DAG.
 
            cover    [=nodes|edges|paths]
                Determines how extensively to cover the dag.  Possible vlaues:
@@ -472,7 +481,7 @@ class Spec(object):
                spec, but also their depth from the root in a (depth, node)
                tuple.
 
-           keyfun   [=id]
+           key   [=id]
                Allow a custom key function to track the identity of nodes
                in the traversal.
 
@@ -484,6 +493,7 @@ class Spec(object):
                'parents', traverses upwards in the DAG towards the root.
 
         """
+        # get initial values for kwargs
         depth      = kwargs.get('depth', False)
         key_fun    = kwargs.get('key', id)
         if isinstance(key_fun, basestring):
@@ -491,39 +501,49 @@ class Spec(object):
         yield_root = kwargs.get('root', True)
         cover      = kwargs.get('cover', 'nodes')
         direction  = kwargs.get('direction', 'children')
+        order      = kwargs.get('order', 'pre')
 
-        cover_values = ('nodes', 'edges', 'paths')
-        if cover not in cover_values:
-            raise ValueError("Invalid value for cover: %s.  Choices are %s"
-                             % (cover, ",".join(cover_values)))
-
-        direction_values = ('children', 'parents')
-        if direction not in direction_values:
-            raise ValueError("Invalid value for direction: %s.  Choices are %s"
-                             % (direction, ",".join(direction_values)))
+        # Make sure kwargs have legal values; raise ValueError if not.
+        def validate(name, val, allowed_values):
+            if val not in allowed_values:
+                raise ValueError("Invalid value for %s: %s.  Choices are %s"
+                                 % (name, val, ",".join(allowed_values)))
+        validate('cover',     cover,     ('nodes', 'edges', 'paths'))
+        validate('direction', direction, ('children', 'parents'))
+        validate('order',     order,     ('pre', 'post'))
 
         if visited is None:
             visited = set()
-
-        result = (d, self) if depth else self
         key = key_fun(self)
 
-        if key in visited:
-            if cover == 'nodes':    return
-            if yield_root or d > 0: yield result
-            if cover == 'edges':    return
-        else:
-            if yield_root or d > 0: yield result
+        # Node traversal does not yield visited nodes.
+        if key in visited and cover == 'nodes':
+            return
 
-        successors = self.dependencies
-        if direction == 'parents':
-            successors = self.dependents
+        # Determine whether and what to yield for this node.
+        yield_me = yield_root or d > 0
+        result = (d, self) if depth else self
 
-        visited.add(key)
-        for name in sorted(successors):
-            child = successors[name]
-            for elt in child.preorder_traversal(visited, d+1, **kwargs):
-                yield elt
+        # Preorder traversal yields before successors
+        if yield_me and order == 'pre':
+            yield result
+
+        # Edge traversal yields but skips children of visited nodes
+        if not (key in visited and cover == 'edges'):
+            # This code determines direction and yields the children/parents
+            successors = self.dependencies
+            if direction == 'parents':
+                successors = self.dependents
+
+            visited.add(key)
+            for name in sorted(successors):
+                child = successors[name]
+                for elt in child.traverse(visited, d+1, **kwargs):
+                    yield elt
+
+        # Postorder traversal yields after successors
+        if yield_me and order == 'post':
+            yield result
 
 
     @property
@@ -610,7 +630,7 @@ class Spec(object):
               a problem.
         """
         while True:
-            virtuals =[v for v in self.preorder_traversal() if v.virtual]
+            virtuals =[v for v in self.traverse() if v.virtual]
             if not virtuals:
                 return
 
@@ -668,7 +688,7 @@ class Spec(object):
         # to the spec -- so they're the user's fault, not Spack's.
         flat_deps = DependencyMap()
         try:
-            for spec in self.preorder_traversal(root=False):
+            for spec in self.traverse(root=False):
                 if spec.name not in flat_deps:
                     new_spec = spec.copy(deps=False)
                     flat_deps[spec.name] = new_spec
@@ -842,7 +862,7 @@ class Spec(object):
            If they're not, it will raise either UnknownPackageError or
            UnsupportedCompilerError.
         """
-        for spec in self.preorder_traversal():
+        for spec in self.traverse():
             # Don't get a package for a virtual name.
             if not spec.virtual:
                 spack.db.get(spec.name)
@@ -910,17 +930,17 @@ class Spec(object):
     def common_dependencies(self, other):
         """Return names of dependencies that self an other have in common."""
         common = set(
-            s.name for s in self.preorder_traversal(root=False))
+            s.name for s in self.traverse(root=False))
         common.intersection_update(
-            s.name for s in other.preorder_traversal(root=False))
+            s.name for s in other.traverse(root=False))
         return common
 
 
     def dep_difference(self, other):
         """Returns dependencies in self that are not in other."""
-        mine = set(s.name for s in self.preorder_traversal(root=False))
+        mine = set(s.name for s in self.traverse(root=False))
         mine.difference_update(
-            s.name for s in other.preorder_traversal(root=False))
+            s.name for s in other.traverse(root=False))
         return mine
 
 
@@ -979,8 +999,8 @@ class Spec(object):
                 return False
 
         # For virtual dependencies, we need to dig a little deeper.
-        self_index = ProviderIndex(self.preorder_traversal(), restrict=True)
-        other_index = ProviderIndex(other.preorder_traversal(), restrict=True)
+        self_index = ProviderIndex(self.traverse(), restrict=True)
+        other_index = ProviderIndex(other.traverse(), restrict=True)
 
         # This handles cases where there are already providers for both vpkgs
         if not self_index.satisfies(other_index):
@@ -1002,7 +1022,7 @@ class Spec(object):
 
     def virtual_dependencies(self):
         """Return list of any virtual deps in this spec."""
-        return [spec for spec in self.preorder_traversal() if spec.virtual]
+        return [spec for spec in self.traverse() if spec.virtual]
 
 
     def _dup(self, other, **kwargs):
@@ -1056,7 +1076,7 @@ class Spec(object):
 
     def __getitem__(self, name):
         """TODO: reconcile __getitem__, _add_dependency, __contains__"""
-        for spec in self.preorder_traversal():
+        for spec in self.traverse():
             if spec.name == name:
                 return spec
 
@@ -1067,7 +1087,7 @@ class Spec(object):
         """True if this spec has any dependency that satisfies the supplied
            spec."""
         spec = self._autospec(spec)
-        for s in self.preorder_traversal():
+        for s in self.traverse():
             if s.satisfies(spec):
                 return True
         return False
@@ -1080,11 +1100,12 @@ class Spec(object):
 
 
     def _eq_dag(self, other, vs, vo):
-        """Test that entire dependency DAGs are equal."""
+        """Recursive helper for eq_dag and ne_dag.  Does the actual DAG
+           traversal."""
         vs.add(id(self))
         vo.add(id(other))
 
-        if self._cmp_node() != other._cmp_node():
+        if self.ne_node(other):
             return False
 
         if len(self.dependencies) != len(other.dependencies):
@@ -1094,13 +1115,14 @@ class Spec(object):
         osorted = [other.dependencies[name] for name in sorted(other.dependencies)]
 
         for s, o in zip(ssorted, osorted):
+            visited_s = id(s) in vs
+            visited_o = id(o) in vo
+
             # Check for duplicate or non-equal dependencies
-            if (id(s) in vs) != (id(o) in vo):
-                return False
+            if visited_s != visited_o: return False
 
             # Skip visited nodes
-            if id(s) in vs:
-                continue
+            if visited_s or visited_o: continue
 
             # Recursive check for equality
             if not s._eq_dag(o, vs, vo):
@@ -1110,13 +1132,12 @@ class Spec(object):
 
 
     def eq_dag(self, other):
-        """True if the entire dependency DAG of this spec is equal to another."""
+        """True if the full dependency DAGs of specs are equal"""
         return self._eq_dag(other, set(), set())
 
 
     def ne_dag(self, other):
-        """True if the entire dependency DAG of this spec is not equal to
-           another."""
+        """True if the full dependency DAGs of specs are not equal"""
         return not self.eq_dag(other)
 
 
@@ -1124,6 +1145,16 @@ class Spec(object):
         """Comparison key for just *this node* and not its deps."""
         return (self.name, self.versions, self.variants,
                 self.architecture, self.compiler)
+
+
+    def eq_node(self, other):
+        """Equality with another spec, not including dependencies."""
+        return self._cmp_node() == other._cmp_node()
+
+
+    def ne_node(self, other):
+        """Inequality with another spec, not including dependencies."""
+        return self._cmp_node() != other._cmp_node()
 
 
     def _cmp_key(self):
@@ -1255,7 +1286,7 @@ class Spec(object):
         out = ""
         cur_id = 0
         ids = {}
-        for d, node in self.preorder_traversal(cover=cover, depth=True):
+        for d, node in self.traverse(order='pre', cover=cover, depth=True):
             out += " " * indent
             if depth:
                 out += "%-4d" % d
