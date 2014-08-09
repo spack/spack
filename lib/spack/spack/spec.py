@@ -310,9 +310,8 @@ class DependencyMap(HashableMap):
 
 
     def __str__(self):
-        sorted_dep_names = sorted(self.keys())
         return ''.join(
-            ["^" + str(self[name]) for name in sorted_dep_names])
+            ["^" + str(self[name]) for name in sorted(self.keys())])
 
 
 @key_ordering
@@ -562,10 +561,9 @@ class Spec(object):
         """Return a hash representing all dependencies of this spec
            (direct and indirect).
 
-           This always normalizes first so that hash is consistent.
+           If you want this hash to be consistent, you should
+           concretize the spec first so that it is not ambiguous.
         """
-        self.normalize()
-
         sha = hashlib.sha1()
         sha.update(self.dep_string())
         full_hash = sha.hexdigest()
@@ -641,7 +639,7 @@ class Spec(object):
                 spec._replace_with(concrete)
 
             # If there are duplicate providers or duplicate provider deps, this
-            # consolidates them and merges constraints.
+            # consolidates them and merge constraints.
             self.normalize(force=True)
 
 
@@ -675,43 +673,51 @@ class Spec(object):
         return clone
 
 
-    def flat_dependencies(self):
-        """Return a DependencyMap containing all of this spec's dependencies
-           with their constraints merged.  If there are any conflicts, throw
-           an exception.
+    def flat_dependencies(self, **kwargs):
+        """Return a DependencyMap containing all of this spec's
+           dependencies with their constraints merged.
 
-           This will work even on specs that are not normalized; i.e. specs
-           that have two instances of the same dependency in the DAG.
-           This is the first step of normalization.
+           If copy is True, returns merged copies of its dependencies
+           without modifying the spec it's called on.
+
+           If copy is False, clears this spec's dependencies and
+           returns them.
         """
-        # Once that is guaranteed, we know any constraint violations are due
-        # to the spec -- so they're the user's fault, not Spack's.
+        copy = kwargs.get('copy', True)
+
         flat_deps = DependencyMap()
         try:
             for spec in self.traverse(root=False):
                 if spec.name not in flat_deps:
-                    new_spec = spec.copy(deps=False)
-                    flat_deps[spec.name] = new_spec
-
+                    if copy:
+                        flat_deps[spec.name] = spec.copy(deps=False)
+                    else:
+                        flat_deps[spec.name] = spec
                 else:
                     flat_deps[spec.name].constrain(spec)
 
-        except UnsatisfiableSpecError, e:
-            # This REALLY shouldn't happen unless something is wrong in spack.
-            # It means we got a spec DAG with two instances of the same package
-            # that had inconsistent constraints.  There's no way for a user to
-            # produce a spec like this (the parser adds all deps to the root),
-            # so this means OUR code is not sane!
-            raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
+            if not copy:
+                for dep in flat_deps.values():
+                    dep.dependencies.clear()
+                    dep.dependents.clear()
+                self.dependencies.clear()
 
-        return flat_deps
+            return flat_deps
+
+        except UnsatisfiableSpecError, e:
+            # Here, the DAG contains two instances of the same package
+            # with inconsistent constraints.  Users cannot produce
+            # inconsistent specs like this on the command line: the
+            # parser doesn't allow it. Spack must be broken!
+            raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
 
 
     def flatten(self):
         """Pull all dependencies up to the root (this spec).
            Merge constraints for dependencies with the same name, and if they
            conflict, throw an exception. """
-        self.dependencies = self.flat_dependencies()
+        for dep in self.flat_dependencies(copy=False):
+            self._add_dependency(dep)
 
 
     def _normalize_helper(self, visited, spec_deps, provider_index):
@@ -819,8 +825,7 @@ class Spec(object):
             self.package.validate_dependencies()
 
         # Get all the dependencies into one DependencyMap
-        spec_deps = self.flat_dependencies()
-        self.dependencies.clear()
+        spec_deps = self.flat_dependencies(copy=False)
 
         # Figure out which of the user-provided deps provide virtual deps.
         # Remove virtual deps that are already provided by something in the spec
@@ -1037,22 +1042,29 @@ class Spec(object):
                Whether deps should be copied too.  Set to false to copy a
                spec but not its dependencies.
         """
-        # TODO: this needs to handle DAGs.
+        # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
         self.variants = other.variants.copy()
         self.architecture = other.architecture
-        self.compiler = None
-        if other.compiler:
-            self.compiler = other.compiler.copy()
-
+        self.compiler = other.compiler.copy() if other.compiler else None
         self.dependents = DependencyMap()
-        copy_deps = kwargs.get('deps', True)
-        if copy_deps:
-            self.dependencies = other.dependencies.copy()
-        else:
-            self.dependencies = DependencyMap()
+        self.dependencies = DependencyMap()
 
+        # If we copy dependencies, preserve DAG structure in the new spec
+        if kwargs.get('deps', True):
+            # This copies the deps from other using _dup(deps=False)
+            new_nodes = other.flat_dependencies()
+            new_nodes[self.name] = self
+
+            # Hook everything up properly here by traversing.
+            for spec in other.traverse(cover='nodes'):
+                parent = new_nodes[spec.name]
+                for child in spec.dependencies:
+                    if child not in parent.dependencies:
+                        parent._add_dependency(new_nodes[child])
+
+        # Since we preserved structure, we can copy _normal safely.
         self._normal = other._normal
         self._concrete = other._concrete
 

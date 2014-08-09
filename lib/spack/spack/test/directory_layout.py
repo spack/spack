@@ -29,10 +29,12 @@ import unittest
 import tempfile
 import shutil
 import os
+from contextlib import closing
 
 from llnl.util.filesystem import *
 
 import spack
+from spack.spec import Spec
 from spack.packages import PackageDB
 from spack.directory_layout import SpecHashDirectoryLayout
 
@@ -83,6 +85,18 @@ class DirectoryLayoutTest(unittest.TestCase):
             # Make sure spec file can be read back in to get the original spec
             spec_from_file = self.layout.read_spec(spec_path)
             self.assertEqual(spec, spec_from_file)
+            self.assertTrue(spec.eq_dag, spec_from_file)
+            self.assertTrue(spec_from_file.concrete)
+
+            # Ensure that specs that come out "normal" are really normal.
+            with closing(open(spec_path)) as spec_file:
+                read_separately = Spec(spec_file.read())
+
+                read_separately.normalize()
+                self.assertEqual(read_separately, spec_from_file)
+
+                read_separately.concretize()
+                self.assertEqual(read_separately, spec_from_file)
 
             # Make sure the dep hash of the read-in spec is the same
             self.assertEqual(spec.dep_hash(), spec_from_file.dep_hash())

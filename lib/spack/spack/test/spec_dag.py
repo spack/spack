@@ -392,3 +392,56 @@ class SpecDagTest(MockPackagesTest):
         self.assertIn(Spec('libdwarf'), spec)
         self.assertNotIn(Spec('libgoblin'), spec)
         self.assertIn(Spec('mpileaks'), spec)
+
+
+    def test_copy_simple(self):
+        orig = Spec('mpileaks')
+        copy = orig.copy()
+
+        self.check_links(copy)
+
+        self.assertEqual(orig, copy)
+        self.assertTrue(orig.eq_dag(copy))
+        self.assertEqual(orig._normal, copy._normal)
+        self.assertEqual(orig._concrete, copy._concrete)
+
+        # ensure no shared nodes bt/w orig and copy.
+        orig_ids = set(id(s) for s in orig.traverse())
+        copy_ids = set(id(s) for s in copy.traverse())
+        self.assertFalse(orig_ids.intersection(copy_ids))
+
+
+    def test_copy_normalized(self):
+        orig = Spec('mpileaks')
+        orig.normalize()
+        copy = orig.copy()
+
+        self.check_links(copy)
+
+        self.assertEqual(orig, copy)
+        self.assertTrue(orig.eq_dag(copy))
+        self.assertEqual(orig._normal, copy._normal)
+        self.assertEqual(orig._concrete, copy._concrete)
+
+        # ensure no shared nodes bt/w orig and copy.
+        orig_ids = set(id(s) for s in orig.traverse())
+        copy_ids = set(id(s) for s in copy.traverse())
+        self.assertFalse(orig_ids.intersection(copy_ids))
+
+
+    def test_copy_concretized(self):
+        orig = Spec('mpileaks')
+        orig.concretize()
+        copy = orig.copy()
+
+        self.check_links(copy)
+
+        self.assertEqual(orig, copy)
+        self.assertTrue(orig.eq_dag(copy))
+        self.assertEqual(orig._normal, copy._normal)
+        self.assertEqual(orig._concrete, copy._concrete)
+
+        # ensure no shared nodes bt/w orig and copy.
+        orig_ids = set(id(s) for s in orig.traverse())
+        copy_ids = set(id(s) for s in copy.traverse())
+        self.assertFalse(orig_ids.intersection(copy_ids))
