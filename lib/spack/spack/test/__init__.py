@@ -45,7 +45,8 @@ test_names = ['versions',
               'multimethod',
               'install',
               'package_sanity',
-              'config']
+              'config',
+              'directory_layout']
 
 
 def list_tests():

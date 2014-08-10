@@ -29,7 +29,10 @@ import hashlib
 import shutil
 from contextlib import closing
 
+import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
+
+import spack
 from spack.spec import Spec
 from spack.error import SpackError
 
@@ -131,12 +134,9 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         """Prefix size is number of characters in the SHA-1 prefix to use
            to make each hash unique.
         """
-        prefix_size = kwargs.get('prefix_size', 8)
-        spec_file   = kwargs.get('spec_file', '.spec')
-
+        spec_file_name   = kwargs.get('spec_file_name', '.spec')
         super(SpecHashDirectoryLayout, self).__init__(root)
-        self.prefix_size = prefix_size
-        self.spec_file = spec_file
+        self.spec_file_name = spec_file_name
 
 
     def relative_path_for_spec(self, spec):
@@ -154,16 +154,36 @@ class SpecHashDirectoryLayout(DirectoryLayout):
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
         with closing(open(path)) as spec_file:
-            string = spec_file.read().replace('\n', '')
             # Specs from files are assumed normal and concrete
-            return Spec(string, concrete=True)
+            spec = Spec(spec_file.read().replace('\n', ''))
+
+        # If we do not have a package on hand for this spec, we know
+        # it is concrete, and we *assume* that it is normal. This
+        # prevents us from trying to fetch a non-existing package, and
+        # allows best effort for commands like spack find.
+        if not spack.db.exists(spec.name):
+            spec._normal = True
+            spec._concrete = True
+        else:
+            spec.normalize()
+            if not spec.concrete:
+                tty.warn("Spec read from installed package is not concrete:",
+                         path, spec)
+
+        return spec
+
+
+    def spec_file_path(self, spec):
+        """Gets full path to spec file"""
+        _check_concrete(spec)
+        return join_path(self.path_for_spec(spec), self.spec_file_name)
 
 
     def make_path_for_spec(self, spec):
         _check_concrete(spec)
 
         path = self.path_for_spec(spec)
-        spec_file_path = join_path(path, self.spec_file)
+        spec_file_path = self.spec_file_path(spec)
 
         if os.path.isdir(path):
             if not os.path.isfile(spec_file_path):
@@ -177,8 +197,7 @@ class SpecHashDirectoryLayout(DirectoryLayout):
             spec_hash = self.hash_spec(spec)
             installed_hash = self.hash_spec(installed_spec)
             if installed_spec == spec_hash:
-                raise SpecHashCollisionError(
-                    installed_hash, spec_hash, self.prefix_size)
+                raise SpecHashCollisionError(installed_hash, spec_hash)
             else:
                 raise InconsistentInstallDirectoryError(
                     'Spec file in %s does not match SHA-1 hash!'
@@ -195,7 +214,7 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         for path in traverse_dirs_at_depth(self.root, 3):
             arch, compiler, last_dir = path
             spec_file_path = join_path(
-                self.root, arch, compiler, last_dir, self.spec_file)
+                self.root, arch, compiler, last_dir, self.spec_file_name)
             if os.path.exists(spec_file_path):
                 spec = self.read_spec(spec_file_path)
                 yield spec
@@ -209,10 +228,10 @@ class DirectoryLayoutError(SpackError):
 
 class SpecHashCollisionError(DirectoryLayoutError):
     """Raised when there is a hash collision in an SpecHashDirectoryLayout."""
-    def __init__(self, installed_spec, new_spec, prefix_size):
+    def __init__(self, installed_spec, new_spec):
         super(SpecHashDirectoryLayout, self).__init__(
-            'Specs %s and %s have the same %d character SHA-1 prefix!'
-            % prefix_size, installed_spec, new_spec)
+            'Specs %s and %s have the same SHA-1 prefix!'
+            % installed_spec, new_spec)
 
 
 class InconsistentInstallDirectoryError(DirectoryLayoutError):

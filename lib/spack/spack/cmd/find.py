@@ -89,7 +89,7 @@ def find(parser, args):
                 format = "    %-{}s%s".format(width)
 
                 for abbrv, spec in zip(abbreviated, specs):
-                    print format % (abbrv, spec.package.prefix)
+                    print format % (abbrv, spec.prefix)
 
             elif args.full_specs:
                 for spec in specs:

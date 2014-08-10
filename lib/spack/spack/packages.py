@@ -69,9 +69,9 @@ class PackageDB(object):
 
         if not spec in self.instances:
             package_class = self.get_class_for_package_name(spec.name)
-            self.instances[spec.name] = package_class(spec)
+            self.instances[spec.copy()] = package_class(spec)
 
-        return self.instances[spec.name]
+        return self.instances[spec]
 
 
     @_autospec
@@ -115,7 +115,13 @@ class PackageDB(object):
         """Read installed package names straight from the install directory
            layout.
         """
-        return spack.install_layout.all_specs()
+        # Get specs from the directory layout but ensure that they're
+        # all normalized properly.
+        installed = []
+        for spec in spack.install_layout.all_specs():
+            spec.normalize()
+            installed.append(spec)
+        return installed
 
 
     @memoized
@@ -179,24 +185,6 @@ class PackageDB(object):
         return cls
 
 
-    def compute_dependents(self):
-        """Reads in all package files and sets dependence information on
-           Package objects in memory.
-        """
-        if not hasattr(compute_dependents, index):
-            compute_dependents.index = {}
-
-        for pkg in all_packages():
-            if pkg._dependents is None:
-                pkg._dependents = []
-
-            for name, dep in pkg.dependencies.iteritems():
-                dpkg = self.get(name)
-                if dpkg._dependents is None:
-                    dpkg._dependents = []
-                dpkg._dependents.append(pkg.name)
-
-
     def graph_dependencies(self, out=sys.stdout):
         """Print out a graph of all the dependencies between package.
            Graph is in dot format."""
@@ -211,10 +199,17 @@ class PackageDB(object):
             return '"%s"' % string
 
         deps = []
-        for pkg in all_packages():
+        for pkg in self.all_packages():
             out.write('  %-30s [label="%s"]\n' % (quote(pkg.name), pkg.name))
+
+            # Add edges for each depends_on in the package.
             for dep_name, dep in pkg.dependencies.iteritems():
                 deps.append((pkg.name, dep_name))
+
+            # If the package provides something, add an edge for that.
+            for provider in set(p.name for p in pkg.provided):
+                deps.append((provider, pkg.name))
+
         out.write('\n')
 
         for pair in deps:
