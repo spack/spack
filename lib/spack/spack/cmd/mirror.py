@@ -24,10 +24,10 @@
 ##############################################################################
 import os
 import shutil
-import argparse
 from datetime import datetime
 from contextlib import closing
 
+from external import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.filesystem import mkdirp, join_path

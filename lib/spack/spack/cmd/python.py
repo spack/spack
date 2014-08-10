@@ -25,7 +25,7 @@
 import os
 import sys
 import code
-import argparse
+from external import argparse
 import platform
 from contextlib import closing
 

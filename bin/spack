@@ -28,7 +28,6 @@ if not sys.version_info[:2] >= (2,7):
     sys.exit("Spack requires Python 2.7.  Version was %s." % sys.version_info)
 
 import os
-import argparse
 
 # Find spack's location and its prefix.
 SPACK_FILE = os.path.realpath(os.path.expanduser(__file__))
@@ -51,6 +50,7 @@ del SPACK_FILE, SPACK_PREFIX, SPACK_LIB_PATH
 import llnl.util.tty as tty
 import spack
 from spack.error import SpackError
+from external import argparse
 
 # Command parsing
 parser = argparse.ArgumentParser(

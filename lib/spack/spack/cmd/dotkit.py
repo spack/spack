@@ -25,7 +25,7 @@
 import sys
 import os
 import shutil
-import argparse
+from external import argparse
 
 import llnl.util.tty as tty
 from llnl.util.lang import partition_list
