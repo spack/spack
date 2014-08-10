@@ -115,7 +115,13 @@ class PackageDB(object):
         """Read installed package names straight from the install directory
            layout.
         """
-        return spack.install_layout.all_specs()
+        # Get specs from the directory layout but ensure that they're
+        # all normalized properly.
+        installed = []
+        for spec in spack.install_layout.all_specs():
+            spec.normalize()
+            installed.append(spec)
+        return installed
 
 
     @memoized

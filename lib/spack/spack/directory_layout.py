@@ -29,6 +29,7 @@ import hashlib
 import shutil
 from contextlib import closing
 
+import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
 
 import spack
@@ -163,6 +164,11 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         if not spack.db.exists(spec.name):
             spec._normal = True
             spec._concrete = True
+        else:
+            spec.normalize()
+            if not spec.concrete:
+                tty.warn("Spec read from installed package is not concrete:",
+                         path, spec)
 
         return spec
 
