@@ -24,8 +24,8 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
-if not sys.version_info[:2] >= (2,7):
-    sys.exit("Spack requires Python 2.7.  Version was %s." % sys.version_info)
+if not sys.version_info[:2] >= (2,6):
+    sys.exit("Spack requires Python 2.6.  Version was %s." % sys.version_info)
 
 import os
 
