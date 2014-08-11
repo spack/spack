@@ -114,6 +114,7 @@ Functions = {
     "collections.Counter":      (2, 7),
     "collections.defaultdict":  (2, 5),
     "collections.OrderedDict":  (2, 7),
+    "functools.total_ordering": (2, 7),
     "enumerate":                (2, 3),
     "frozenset":                (2, 4),
     "itertools.compress":       (2, 7),
