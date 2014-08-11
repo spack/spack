@@ -84,10 +84,9 @@ import os
 import re
 import inspect
 import ConfigParser as cp
-from collections import OrderedDict
 
+from external.ordereddict import OrderedDict
 from llnl.util.lang import memoized
-
 import spack.error
 
 __all__ = [
@@ -222,7 +221,6 @@ class SpackConfigParser(cp.RawConfigParser):
     """
     # Slightly modify Python option expressions to allow leading whitespace
     OPTCRE    = re.compile(r'\s*' + cp.RawConfigParser.OPTCRE.pattern)
-    OPTCRE_NV = re.compile(r'\s*' + cp.RawConfigParser.OPTCRE_NV.pattern)
 
     def __init__(self, file_or_files):
         cp.RawConfigParser.__init__(self, dict_type=OrderedDict)
@@ -341,14 +339,13 @@ class SpackConfigParser(cp.RawConfigParser):
 
 
     def _read(self, fp, fpname):
-        """This is a copy of Python 2.7's _read() method, with support for
-           continuation lines removed.
-        """
-        cursect = None                        # None, or a dictionary
+        """This is a copy of Python 2.6's _read() method, with support for
+           continuation lines removed."""
+        cursect = None                            # None, or a dictionary
         optname = None
-        lineno = 0
         comment = 0
-        e = None                              # None, or an exception
+        lineno = 0
+        e = None                                  # None, or an exception
         while True:
             line = fp.readline()
             if not line:
@@ -359,7 +356,6 @@ class SpackConfigParser(cp.RawConfigParser):
                 (line.split(None, 1)[0].lower() == 'rem' and line[0] in "rR")):
                 self._sections["comment-%d" % comment] = line
                 comment += 1
-                continue
             # a section header or option header?
             else:
                 # is it a section header?
@@ -381,27 +377,21 @@ class SpackConfigParser(cp.RawConfigParser):
                     raise cp.MissingSectionHeaderError(fpname, lineno, line)
                 # an option line?
                 else:
-                    mo = self._optcre.match(line)
+                    mo = self.OPTCRE.match(line)
                     if mo:
                         optname, vi, optval = mo.group('option', 'vi', 'value')
+                        if vi in ('=', ':') and ';' in optval:
+                            # ';' is a comment delimiter only if it follows
+                            # a spacing character
+                            pos = optval.find(';')
+                            if pos != -1 and optval[pos-1].isspace():
+                                optval = optval[:pos]
+                        optval = optval.strip()
+                        # allow empty values
+                        if optval == '""':
+                            optval = ''
                         optname = self.optionxform(optname.rstrip())
-                        # This check is fine because the OPTCRE cannot
-                        # match if it would set optval to None
-                        if optval is not None:
-                            if vi in ('=', ':') and ';' in optval:
-                                # ';' is a comment delimiter only if it follows
-                                # a spacing character
-                                pos = optval.find(';')
-                                if pos != -1 and optval[pos-1].isspace():
-                                    optval = optval[:pos]
-                            optval = optval.strip()
-                            # allow empty values
-                            if optval == '""':
-                                optval = ''
-                            cursect[optname] = [optval]
-                        else:
-                            # valueless option handling
-                            cursect[optname] = optval
+                        cursect[optname] = optval
                     else:
                         # a non-fatal parsing error occurred.  set up the
                         # exception but keep going. the exception will be
@@ -414,23 +404,13 @@ class SpackConfigParser(cp.RawConfigParser):
         if e:
             raise e
 
-        # join the multi-line values collected while reading
-        all_sections = [self._defaults]
-        all_sections.extend(self._sections.values())
-        for options in all_sections:
-            # skip comments
-            if isinstance(options, basestring):
-                continue
 
-            for name, val in options.items():
-                if isinstance(val, list):
-                    options[name] = '\n'.join(val)
 
 
     def _write(self, fp):
         """Write an .ini-format representation of the configuration state.
 
-           This is taken from the default Python 2.7 source.  It writes 4
+           This is taken from the default Python 2.6 source.  It writes 4
            spaces at the beginning of lines instead of no leading space.
         """
         if self._defaults:
@@ -449,11 +429,9 @@ class SpackConfigParser(cp.RawConfigParser):
                 # Allow leading whitespace
                 fp.write("[%s]\n" % section)
                 for (key, value) in self._sections[section].items():
-                    if key == "__name__":
-                        continue
-                    if (value is not None) or (self._optcre == self.OPTCRE):
-                        key = " = ".join((key, str(value).replace('\n', '\n\t')))
-                    fp.write("    %s\n" % (key))
+                    if key != "__name__":
+                        fp.write("    %s = %s\n" %
+                                 (key, str(value).replace('\n', '\n\t')))
 
 
 class SpackConfigurationError(spack.error.SpackError):
