@@ -22,65 +22,14 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import re
-import textwrap
-import shutil
-from contextlib import closing
-
-from llnl.util.filesystem import join_path, mkdirp
-
-import spack
-
-
-def module_file(pkg):
-    m_file_name = pkg.spec.format('$_$@$%@$+$=$#')
-    return join_path(spack.tclmodule_path, m_file_name)
+import spack.modules
 
 
 def post_install(pkg):
-    if not os.path.exists(spack.module_path):
-        mkdirp(spack.module_path)
-
-    alterations = []
-    for var, path in [
-        ('PATH', pkg.prefix.bin),
-        ('MANPATH', pkg.prefix.man),
-        ('MANPATH', pkg.prefix.share_man),
-        ('LD_LIBRARY_PATH', pkg.prefix.lib),
-        ('LD_LIBRARY_PATH', pkg.prefix.lib64)]:
-
-        if os.path.isdir(path):
-            alterations.append("prepend-path %s \"%s\"\n" % (var, path))
-
-    if not alterations:
-        return
-
-    alterations.append("prepend-path CMAKE_PREFIX_PATH \"%s\"\n" % pkg.prefix)
-
-    m_file = module_file(pkg)
-    with closing(open(m_file, 'w')) as m:
-        # Put everything in the spack category.
-        m.write('#%Module1.0\n')
-
-        m.write('module-whatis \"%s\"\n\n' % pkg.spec.format("$_ $@"))
-
-        # Recycle the description
-        if pkg.__doc__:
-            m.write('proc ModulesHelp { } {\n')
-            doc = re.sub(r'\s+', ' ', pkg.__doc__)
-            doc = re.sub(r'"', '\"', pkg.__doc__)
-            m.write("puts stderr \"%s\"\n" % doc)
-            m.write('}\n\n')
-
-
-        # Write alterations
-        for alter in alterations:
-            m.write(alter)
+    dk = spack.modules.TclModule(pkg)
+    dk.write()
 
 
 def post_uninstall(pkg):
-    m_file = module_file(pkg)
-    if os.path.exists(m_file):
-        shutil.rmtree(m_file, ignore_errors=True)
-
+    dk = spack.modules.TclModule(pkg)
+    dk.remove()

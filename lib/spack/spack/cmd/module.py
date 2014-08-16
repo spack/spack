@@ -3,7 +3,7 @@
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by David Beckingsale, david@llnl.gov, All rights reserved.
+# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://scalability-llnl.github.io/spack
@@ -32,34 +32,43 @@ from llnl.util.lang import partition_list
 from llnl.util.filesystem import mkdirp
 
 import spack.cmd
-import spack.hooks.tclmodule
+import spack.modules
+from spack.util.string import *
+
 from spack.spec import Spec
 
+description ="Manipulate modules and dotkits."
 
-description ="Find modules for packages if they exist."
+module_types = {
+    'dotkit' : spack.modules.Dotkit,
+    'tcl'    : spack.modules.TclModule
+}
+
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        '--refresh', action='store_true', help='Regenerate all modules')
+    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='module_command')
 
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help='spec to find a module for.')
+    refresh_parser = sp.add_parser('refresh', help='Regenerate all module files.')
+
+    find_parser = sp.add_parser('find', help='Find module files for packages.')
+    find_parser.add_argument(
+        'module_type', help="Type of module to find file for. [" + '|'.join(module_types) + "]")
+    find_parser.add_argument('spec', nargs='+', help='spec to find a module file for.')
 
 
-def module_find(parser, args):
-    if not args.spec:
-        parser.parse_args(['tclmodule', '-h'])
-
-    spec = spack.cmd.parse_specs(args.spec)
-    if len(spec) > 1:
+def module_find(mtype, spec_array):
+    specs = spack.cmd.parse_specs(spec_array)
+    if len(specs) > 1:
         tty.die("You can only pass one spec.")
-    spec = spec[0]
+    spec = specs[0]
 
     if not spack.db.exists(spec.name):
         tty.die("No such package: %s" % spec.name)
 
-    specs = [s for s in spack.db.installed_package_specs() if s.satisfies(spec)]
+    if mtype not in module_types:
+        tty.die("Invalid module type: '%s'.  Options are " + comma_and(module_types))
 
+    specs = [s for s in spack.db.installed_package_specs() if s.satisfies(spec)]
     if len(specs) == 0:
         tty.die("No installed packages match spec %s" % spec)
 
@@ -69,31 +78,27 @@ def module_find(parser, args):
             sys.stderr.write(s.tree(color=True))
         sys.exit(1)
 
-    match = specs[0]
-    if not os.path.isfile(spack.hooks.tclmodule.module_file(match.package)):
-        tty.die("No module is installed for package %s." % spec)
+    mt = module_types[mtype]
+    mod = mt(spec.package)
+    if not os.path.isfile(mod.file_name):
+        tty.die("No dotkit is installed for package %s." % spec)
 
-    print match.format('$_$@$+$%@$=$#')
+    print mod.file_name
 
 
-def module_refresh(parser, args):
-    query_specs = spack.cmd.parse_specs(args.spec)
+def module_refresh():
+    shutil.rmtree(spack.dotkit_path, ignore_errors=False)
+    mkdirp(spack.dotkit_path)
 
     specs = spack.db.installed_package_specs()
-    if query_specs:
-        specs = [s for s in specs
-                 if any(s.satisfies(q) for q in query_specs)]
-    else:
-        shutil.rmtree(spack.tclmodule_path, ignore_errors=False)
-        mkdirp(spack.tclmodule_path)
-
     for spec in specs:
-        spack.hooks.tclmodule.post_install(spec.package)
+        for mt in module_types:
+            mt(spec.package).write()
 
 
+def module(parser, args):
+    if args.module_command == 'refresh':
+        module_refresh()
 
-def tclmodule(parser, args):
-    if args.refresh:
-        module_refresh(parser, args)
-    else:
-        module_find(parser, args)
+    elif args.module_command == 'find':
+        module_find(args.module_type, args.spec)

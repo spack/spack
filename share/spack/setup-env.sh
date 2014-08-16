@@ -24,15 +24,12 @@
 ##############################################################################
 
 #
-#
 # This file is part of Spack and sets up the spack environment for
-# bash shells.  This includes dotkit support as well as putting spack
-# in your path.  Source it like this:
+# bash and zsh.  This includes dotkit support, module support, and
+# it also puts spack in your path.  Source it like this:
 #
-#    . /path/to/spack/share/spack/setup-env.bash
+#    . /path/to/spack/share/spack/setup-env.sh
 #
-#
-
 
 ########################################################################
 # This is a wrapper around the spack command that forwards calls to
@@ -59,56 +56,46 @@
 # spack dotfiles.
 ########################################################################
 function spack {
-    _spack_subcommand=$1; shift
-    _spack_spec="$@"
+    _sp_subcommand=$1; shift
+    _sp_spec="$@"
 
     # Filter out use and unuse.  For any other commands, just run the
     # command.
-    case $_spack_subcommand in
-        "use"|"unuse")
+    case $_sp_subcommand in
+        "use"|"unuse"|"load"|"unload")
             # Shift any other args for use off before parsing spec.
-            _spack_use_args=""
+            _sp_module_args=""
             if [[ "$1" =~ ^- ]]; then
-                _spack_use_args="$1"; shift
-                _spack_spec="$@"
+                _sp_module_args="$1"; shift
+                _sp_spec="$@"
             fi
 
-            # Here the user has run use or unuse with a spec.  Find a matching
-            # spec with a dotkit using spack dotkit, then use or unuse the
-            # result.  If spack dotkit comes back with an error, do nothing.
-            if _spack_full_spec=$(command spack dotkit $_spack_spec); then
-                $_spack_subcommand $_spack_use_args $_spack_full_spec
-            fi
-            return
-            ;;
-        "load"|"unload")
-            # Shift any other args for module off before parsing spec.
-            _spack_module_args=""
-            if [[ "$1" =~ ^- ]]; then
-                _spack_module_args="$1"; shift
-                _spack_spec="$@"
-            fi
+            # Translate the parameter into pieces of a command.
+            # _sp_modtype is an arg to spack module find, and
+            # _sp_sh_cmd is the equivalent shell command.
+            case $_sp_subcommand in
+                "use"|"unuse")
+                    _sp_modtype=dotkit
+                    _sp_sh_cmd=$_sp_subcommand
+                    ;;
+                "load"|"unload")
+                    _sp_modtype=tcl
+                    _sp_sh_cmd="module $_sp_subcommand"
+                    ;;
+            esac
 
             # Here the user has run use or unuse with a spec.  Find a matching
-            # spec with a dotkit using spack dotkit, then use or unuse the
-            # result.  If spack dotkit comes back with an error, do nothing.
-            if _spack_full_spec=$(command spack tclmodule $_spack_spec); then
-                $_spack_subcommand $_spack_module_args $_spack_full_spec
+            # spec using 'spack module find', then use the appropriate module
+            # tool's commands to add/remove the result from the environment.
+            # If spack module command comes back with an error, do nothing.
+            if _sp_full_spec=$(command spack module find $_sp_modtype $_sp_spec); then
+                $_sp_sh_cmd $_sp_module_args $_sp_full_spec
             fi
             return
             ;;
         *)
-            command spack $_spack_subcommand "$@"
-            return
-            ;;
+            command spack $_sp_subcommand $_sp_spec
     esac
-
-    # If no args or -h, just run that command as well.
-    if [ -z "$1" -o "$1" = "-h" ]; then
-        command spack $_spack_subcommand -h
-        return
-    fi
-
 }
 
 ########################################################################
@@ -119,31 +106,45 @@ function spack {
 function _spack_pathadd {
     # If no variable name is supplied, just append to PATH
     # otherwise append to that variable.
-    varname=PATH
-    path="$1"
+    _pa_varname=PATH
+    _pa_new_path="$1"
     if [ -n "$2" ]; then
-        varname="$1"
-        path="$2"
+        _pa_varname="$1"
+        _pa_new_path="$2"
     fi
 
     # Do the actual prepending here.
-    eval "oldvalue=\"\$$varname\""
-    if [ -d "$path" ] && [[ ":$oldvalue:" != *":$path:"* ]]; then
-        if [ -n "$oldvalue" ]; then
-            eval "export $varname=\"$path:$oldvalue\""
+    eval "_pa_oldvalue=\$${_pa_varname}"
+
+    if [ -d "$_pa_new_path" ] && [[ ":$_pa_oldvalue:" != *":$_pa_new_path:"* ]]; then
+        if [ -n "$_pa_oldvalue" ]; then
+            eval "export $_pa_varname=\"$_pa_new_path:$_pa_oldvalue\""
         else
-            export $varname="$path"
+            export $_pa_varname="$_pa_new_path"
         fi
     fi
 }
 
+#
+# Figure out where this file is.  Below code needs to be portable to
+# bash and zsh.
+#
+_sp_source_file="${BASH_SOURCE[0]}"  # Bash's location of last sourced file.
+if [ -z "$_sp_source_file" ]; then
+    _sp_source_file="$0:A"           # zsh way to do it
+    if [[ "$_sp_source_file" == *":A" ]]; then
+        # Not zsh either... bail out with plain old $0,
+        # which WILL NOT work if this is sourced indirectly.
+        _sp_source_file="$0"
+    fi
+fi
 
 #
-# Set up dotkit and path in the user environment
+# Set up modules and dotkit search paths in the user environment
 #
-_spack_share_dir="$(dirname ${BASH_SOURCE[0]})"
-_spack_prefix="$(dirname $(dirname $_spack_share_dir))"
+_sp_share_dir="$(dirname $_sp_source_file)"
+_sp_prefix="$(dirname $(dirname $_sp_share_dir))"
 
-_spack_pathadd DK_NODE "$_spack_share_dir/dotkit"
-_spack_pathadd MODULEPATH "$_spack_share_dir/modules"
-_spack_pathadd PATH    "$_spack_prefix/bin"
+_spack_pathadd DK_NODE    "$_sp_share_dir/dotkit"
+_spack_pathadd MODULEPATH "$_sp_share_dir/modules"
+_spack_pathadd PATH       "$_sp_prefix/bin"
