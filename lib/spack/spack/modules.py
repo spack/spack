@@ -71,6 +71,7 @@ def print_help():
             "    . %s/setup-env.sh" % spack.share_path,
             "",
             "For csh and tcsh:",
+            "    setenv SPACK_ROOT %s"    % spack.prefix,
             "    source %s/setup-env.csh" % spack.share_path,
             "")
 
