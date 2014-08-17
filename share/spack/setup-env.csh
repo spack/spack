@@ -40,7 +40,8 @@ if ($?SPACK_ROOT) then
     alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/spack_pathadd.csh'
 
     # Set up modules and dotkit search paths in the user environment
-    _spack_pathadd DK_NODE    "$_spack_share_dir/dotkit"
-    _spack_pathadd MODULEPATH "$_spack_share_dir/modules"
+    # TODO: fix SYS_TYPE to something non-LLNL-specific
+    _spack_pathadd DK_NODE    "$_spack_share_dir/dotkit/$SYS_TYPE"
+    _spack_pathadd MODULEPATH "$_spack_share_dir/modules/$SYS_TYPE"
     _spack_pathadd PATH       "$SPACK_ROOT/bin"
 endif

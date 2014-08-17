@@ -56,6 +56,19 @@
 # spack dotfiles.
 ########################################################################
 function spack {
+    # accumulate initial flags for main spack command
+    _sp_flags=""
+    while [[ "$1" =~ ^- ]]; do
+        _sp_flags="$_sp_flags $1"
+        shift
+    done
+
+    # h and V flags don't require further output parsing.
+    if [[ "$_sp_flags" =~ *h* || "$_sp_flags" =~ *V* ]]; then
+        command spack $_sp_flags "$@"
+        return
+    fi
+
     _sp_subcommand=$1; shift
     _sp_spec="$@"
 
@@ -88,13 +101,13 @@ function spack {
             # spec using 'spack module find', then use the appropriate module
             # tool's commands to add/remove the result from the environment.
             # If spack module command comes back with an error, do nothing.
-            if _sp_full_spec=$(command spack module find $_sp_modtype $_sp_spec); then
+            if _sp_full_spec=$(command spack $_sp_flags module find $_sp_modtype $_sp_spec); then
                 $_sp_sh_cmd $_sp_module_args $_sp_full_spec
             fi
             return
             ;;
         *)
-            command spack $_sp_subcommand $_sp_spec
+            command spack $_sp_flags $_sp_subcommand $_sp_spec
     esac
 }
 
@@ -145,6 +158,7 @@ fi
 _sp_share_dir="$(dirname $_sp_source_file)"
 _sp_prefix="$(dirname $(dirname $_sp_share_dir))"
 
-_spack_pathadd DK_NODE    "$_sp_share_dir/dotkit"
-_spack_pathadd MODULEPATH "$_sp_share_dir/modules"
+# TODO: fix SYS_TYPE to something non-LLNL-specific
+_spack_pathadd DK_NODE    "$_sp_share_dir/dotkit/$SYS_TYPE"
+_spack_pathadd MODULEPATH "$_sp_share_dir/modules/$SYS_TYPE"
 _spack_pathadd PATH       "$_sp_prefix/bin"

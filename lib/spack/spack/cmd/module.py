@@ -52,13 +52,15 @@ def setup_parser(subparser):
 
 
 def module_find(mtype, spec_array):
+    """Look at all installed packages and see if the spec provided
+       matches any.  If it does, check whether there is a module file
+       of type <mtype> there, and print out the name that the user
+       should type to use that package's module.
+    """
     specs = spack.cmd.parse_specs(spec_array)
     if len(specs) > 1:
         tty.die("You can only pass one spec.")
     spec = specs[0]
-
-    if not spack.db.exists(spec.name):
-        tty.die("No such package: %s" % spec.name)
 
     if mtype not in module_types:
         tty.die("Invalid module type: '%s'.  Options are " + comma_and(module_types))
@@ -74,11 +76,12 @@ def module_find(mtype, spec_array):
         sys.exit(1)
 
     mt = module_types[mtype]
-    mod = mt(spec.package)
+    mod = mt(specs[0].package)
     if not os.path.isfile(mod.file_name):
-        tty.die("No dotkit is installed for package %s." % spec)
+        tty.error( mod.file_name)
+        tty.die("No %s module is installed for package %s." % (mtype, spec))
 
-    print mod.file_name
+    print mod.use_name
 
 
 def module_refresh():

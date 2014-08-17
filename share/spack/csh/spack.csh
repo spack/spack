@@ -22,14 +22,28 @@
 # avoids the need to come up with a user-friendly naming scheme for
 # spack dotfiles.
 ########################################################################
+# accumulate initial flags for main spack command
+set _sp_flags = ""
+while ( $#_sp_args > 0 )
+    if ( "$_sp_args[1]" !~ "-*" ) break
+    set _sp_flags = "$_sp_flags $_sp_args[1]"
+    shift _sp_args
+end
+
+# h and V flags don't require further output parsing.
+if ( "$_sp_flags" =~ *h* || "$_sp_flags" =~ *V* ) then
+    \spack $_sp_flags $_sp_args
+    goto _sp_end
+endif
+
 # Set up args -- we want a subcommand and a spec.
-set _sp_subcommand="";
-set _sp_spec="";
-[ $#_sp_args -gt 0 ] && set _sp_subcommand = ($_sp_args[1]);
-[ $#_sp_args -gt 1 ] && set _sp_spec = ($_sp_args[2-]);
+set _sp_subcommand=""
+set _sp_spec=""
+[ $#_sp_args -gt 0 ] && set _sp_subcommand = ($_sp_args[1])
+[ $#_sp_args -gt 1 ] && set _sp_spec = ($_sp_args[2-])
 
 # Figure out what type of module we're running here.
-set _sp_modtype = "";
+set _sp_modtype = ""
 switch ($_sp_subcommand)
 case use:
 case unuse:
@@ -48,12 +62,12 @@ case unload:
         case use:
         case unuse:
             set _sp_modtype = dotkit
-            set _sp_sh_cmd = $_sp_subcommand
+            set _sp_sh_cmd = ( "`alias $_sp_subcommand'" )
             breaksw
         case load:
         case unload:
             set _sp_modtype = tcl
-            set _sp_sh_cmd = ( module $_sp_subcommand )
+            set _sp_sh_cmd = ( "`alias module`" $_sp_subcommand )
             breaksw
     endsw
 
@@ -61,11 +75,17 @@ case unload:
     # spec using 'spack module find', then use the appropriate module
     # tool's commands to add/remove the result from the environment.
     # If spack module command comes back with an error, do nothing.
-    if { set _sp_full_spec = `command spack module find $_sp_modtype $_sp_spec` } then
-        echo $_sp_sh_cmd $_sp_module_args $_sp_full_spec
+    set _sp_full_spec = ""
+    if { set _sp_full_spec = `\spack module find $_sp_modtype $_sp_spec` } then
+         $_sp_sh_cmd $_sp_module_args $_sp_full_spec
     endif
+    breaksw
+
 default:
-    command spack $_sp_args
+    \spack $_sp_args
+    breaksw
 endsw
 
-unset _sp_args _sp_full_spec _sp_modtype _sp_module_args _sp_sh_cmd _sp_spec _sp_subcommand
+_sp_end:
+unset _sp_args _sp_full_spec _sp_modtype _sp_module_args
+unset _sp_sh_cmd _sp_spec _sp_subcommand _sp_flags

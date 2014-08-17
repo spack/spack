@@ -157,7 +157,14 @@ class EnvModule(object):
     def file_name(self):
         """Subclasses should implement this to return the name of the file
            where this module lives."""
-        return self.pkg.spec.format('$_$@$%@$+$=$#')
+        raise NotImplementedError()
+
+
+    @property
+    def use_name(self):
+        """Subclasses should implement this to return the name the
+           module command uses to refer to the package."""
+        raise NotImplementedError()
 
 
     def remove(self):
@@ -172,9 +179,12 @@ class Dotkit(EnvModule):
 
     @property
     def file_name(self):
-        spec = self.pkg.spec
-        return join_path(Dotkit.path, spec.architecture,
-                         spec.format('$_$@$%@$+$#.dk'))
+        return join_path(Dotkit.path, self.pkg.spec.architecture,
+                         self.pkg.spec.format('$_$@$%@$+$#.dk'))
+
+    @property
+    def use_name(self):
+        return self.pkg.spec.format('$_$@$%@$+$#')
 
 
     def _write(self, dk_file):
@@ -206,9 +216,12 @@ class TclModule(EnvModule):
 
     @property
     def file_name(self):
-        spec = self.pkg.spec
-        return join_path(TclModule.path, spec.architecture,
-                         spec.format('$_$@$%@$+$#'))
+        return join_path(TclModule.path, self.pkg.spec.architecture, self.use_name)
+
+
+    @property
+    def use_name(self):
+        return self.pkg.spec.format('$_$@$%@$+$#')
 
 
     def _write(self, m_file):
