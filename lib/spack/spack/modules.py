@@ -56,8 +56,10 @@ from llnl.util.filesystem import join_path, mkdirp
 
 import spack
 
-dotkit_path  = join_path(spack.share_path, "dotkit")
-tcl_mod_path = join_path(spack.share_path, "modules")
+"""Registry of all types of modules.  Entries created by EnvModule's
+   metaclass."""
+module_types = {}
+
 
 def print_help():
     """For use by commands to tell user how to activate shell support."""
@@ -77,6 +79,15 @@ def print_help():
 
 
 class EnvModule(object):
+    name = 'env_module'
+
+    class __metaclass__(type):
+        def __init__(cls, name, bases, dict):
+            type.__init__(cls, name, bases, dict)
+            if cls.name != 'env_module':
+                module_types[cls.name] = cls
+
+
     def __init__(self, pkg=None):
         # category in the modules system
         # TODO: come up with smarter category names.
@@ -97,7 +108,7 @@ class EnvModule(object):
         if self._paths is None:
             self._paths = {}
 
-            def add_path(self, path_name, directory):
+            def add_path(path_name, directory):
                 path = self._paths.setdefault(path_name, [])
                 path.append(directory)
 
@@ -126,14 +137,14 @@ class EnvModule(object):
     def write(self):
         """Write out a module file for this object."""
         module_dir = os.path.dirname(self.file_name)
-        if not os.path.exists():
+        if not os.path.exists(module_dir):
             mkdirp(module_dir)
 
         # If there are no paths, no need for a dotkit.
         if not self.paths:
             return
 
-        with closing(open(self.file_name)) as f:
+        with closing(open(self.file_name, 'w')) as f:
             self._write(f)
 
 
@@ -156,10 +167,13 @@ class EnvModule(object):
 
 
 class Dotkit(EnvModule):
+    name = 'dotkit'
+    path = join_path(spack.share_path, "dotkit")
+
     @property
     def file_name(self):
         spec = self.pkg.spec
-        return join_path(dotkit_path, spec.architecture,
+        return join_path(Dotkit.path, spec.architecture,
                          spec.format('$_$@$%@$+$#.dk'))
 
 
@@ -183,14 +197,17 @@ class Dotkit(EnvModule):
                 dk_file.write("dk_alter %s %s\n" % (var, directory))
 
         # Let CMake find this package.
-        dk_file.write("dk_alter CMAKE_PREFIX_PATH %s\n" % pkg.prefix)
+        dk_file.write("dk_alter CMAKE_PREFIX_PATH %s\n" % self.pkg.prefix)
 
 
 class TclModule(EnvModule):
+    name = 'tcl'
+    path = join_path(spack.share_path, "modules")
+
     @property
     def file_name(self):
         spec = self.pkg.spec
-        return join_path(tcl_mod_path, spec.architecture,
+        return join_path(TclModule.path, spec.architecture,
                          spec.format('$_$@$%@$+$#'))
 
 
@@ -214,4 +231,4 @@ class TclModule(EnvModule):
             for directory in dirs:
                 m_file.write("prepend-path %s \"%s\"\n" % (var, directory))
 
-        m_file.write("prepend-path CMAKE_PREFIX_PATH \"%s\"\n" % pkg.prefix)
+        m_file.write("prepend-path CMAKE_PREFIX_PATH \"%s\"\n" % self.pkg.prefix)

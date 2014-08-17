@@ -32,17 +32,12 @@ from llnl.util.lang import partition_list
 from llnl.util.filesystem import mkdirp
 
 import spack.cmd
-import spack.modules
+from spack.modules import module_types
 from spack.util.string import *
 
 from spack.spec import Spec
 
 description ="Manipulate modules and dotkits."
-
-module_types = {
-    'dotkit' : spack.modules.Dotkit,
-    'tcl'    : spack.modules.TclModule
-}
 
 
 def setup_parser(subparser):
@@ -87,13 +82,19 @@ def module_find(mtype, spec_array):
 
 
 def module_refresh():
-    shutil.rmtree(spack.dotkit_path, ignore_errors=False)
-    mkdirp(spack.dotkit_path)
+    """Regenerate all module files for installed packages known to
+       spack (some packages may no longer exist)."""
+    specs = [s for s in spack.db.installed_known_package_specs()]
 
-    specs = spack.db.installed_package_specs()
-    for spec in specs:
-        for mt in module_types:
-            mt(spec.package).write()
+    for name, cls in module_types.items():
+        tty.msg("Regenerating %s module files." % name)
+        if os.path.isdir(cls.path):
+            shutil.rmtree(cls.path, ignore_errors=False)
+        mkdirp(cls.path)
+        for spec in specs:
+            tty.debug("   Writing file for %s." % spec)
+            cls(spec.package).write()
+
 
 
 def module(parser, args):
