@@ -75,6 +75,13 @@ for cmd in spack.cmd.commands:
     module = spack.cmd.get_module(cmd)
     subparser = subparsers.add_parser(cmd, help=module.description)
     module.setup_parser(subparser)
+
+# Just print help and exit if run with no arguments at all
+if len(sys.argv) == 1:
+    parser.print_help()
+    sys.exit(1)
+
+# actually parse the args.
 args = parser.parse_args()
 
 # Set up environment based on args.

@@ -124,6 +124,16 @@ class PackageDB(object):
         return installed
 
 
+    def installed_known_package_specs(self):
+        """Read installed package names straight from the install
+           directory layout, but return only specs for which the
+           package is known to this version of spack.
+        """
+        for spec in spack.install_layout.all_specs():
+            if self.exists(spec.name):
+                yield spec
+
+
     @memoized
     def all_package_names(self):
         """Generator function for all packages.  This looks for

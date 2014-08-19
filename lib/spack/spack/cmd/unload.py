@@ -3,7 +3,7 @@
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Written by David Beckingsale, david@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://scalability-llnl.github.io/spack
@@ -22,14 +22,17 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import argparse
 import spack.modules
 
+description ="Remove package from environment using module."
 
-def post_install(pkg):
-    dk = spack.modules.Dotkit(pkg)
-    dk.write()
+def setup_parser(subparser):
+    """Parser is only constructed so that this prints a nice help
+       message with -h. """
+    subparser.add_argument(
+        'spec', nargs=argparse.REMAINDER, help='Spec of package to unload with modules.')
 
 
-def post_uninstall(pkg):
-    dk = spack.modules.Dotkit(pkg)
-    dk.remove()
+def unload(parser, args):
+    spack.modules.print_help()

@@ -22,14 +22,26 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack.modules
 
+#
+# This file is part of Spack and sets up the spack environment for
+# csh and tcsh.  This includes dotkit support, module support, and
+# it also puts spack in your path.  Source it like this:
+#
+#    setenv SPACK_ROOT /path/to/spack
+#    source $SPACK_ROOT/share/spack/setup-env.csh
+#
+if ($?SPACK_ROOT) then
+    set _spack_source_file = $SPACK_ROOT/share/spack/setup-env.csh
+    set _spack_share_dir   = $SPACK_ROOT/share/spack
 
-def post_install(pkg):
-    dk = spack.modules.Dotkit(pkg)
-    dk.write()
+    # Command aliases point at separate source files
+    alias spack          'set _sp_args = (\!*); source $_spack_share_dir/csh/spack.csh'
+    alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/spack_pathadd.csh'
 
-
-def post_uninstall(pkg):
-    dk = spack.modules.Dotkit(pkg)
-    dk.remove()
+    # Set up modules and dotkit search paths in the user environment
+    # TODO: fix SYS_TYPE to something non-LLNL-specific
+    _spack_pathadd DK_NODE    "$_spack_share_dir/dotkit/$SYS_TYPE"
+    _spack_pathadd MODULEPATH "$_spack_share_dir/modules/$SYS_TYPE"
+    _spack_pathadd PATH       "$SPACK_ROOT/bin"
+endif

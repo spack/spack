@@ -3,7 +3,7 @@
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Written by David Beckingsale, david@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://scalability-llnl.github.io/spack
@@ -26,10 +26,10 @@ import spack.modules
 
 
 def post_install(pkg):
-    dk = spack.modules.Dotkit(pkg)
+    dk = spack.modules.TclModule(pkg)
     dk.write()
 
 
 def post_uninstall(pkg):
-    dk = spack.modules.Dotkit(pkg)
+    dk = spack.modules.TclModule(pkg)
     dk.remove()

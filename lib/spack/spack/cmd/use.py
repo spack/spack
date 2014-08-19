@@ -23,28 +23,16 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
-import llnl.util.tty as tty
-import spack
+import spack.modules
 
 description ="Add package to environment using dotkit."
 
 def setup_parser(subparser):
+    """Parser is only constructed so that this prints a nice help
+       message with -h. """
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help='Spec of package to add.')
-
-
-def print_help():
-    tty.msg("Spack dotkit support is not initialized.",
-            "",
-            "To use dotkit with Spack, you must first run the command",
-            "below, which you can copy and paste:",
-            "",
-            "For bash:",
-            "    . %s/setup-env.bash" % spack.share_path,
-            "",
-            "ksh/csh/tcsh shells are currently unsupported",
-            "")
+        'spec', nargs=argparse.REMAINDER, help='Spec of package to use with dotkit.')
 
 
 def use(parser, args):
-    print_help()
+    spack.modules.print_help()
