@@ -120,8 +120,7 @@ class Stage(object):
             if spack.use_tmp_stage:
                 # If we're using a tmp dir, it's a link, and it points at the right spot,
                 # then keep it.
-                if (os.path.commonprefix((real_path, real_tmp)) == real_tmp
-                    and os.path.exists(real_path)):
+                if (real_path.startswith(real_tmp) and os.path.exists(real_path)):
                     return False
                 else:
                     # otherwise, just unlink it and start over.

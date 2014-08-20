@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 import sys
-if not sys.version_info[:2] >= (2,7):
-    sys.exit("Spack requires Python 2.7.  Version was %s." % sys.version_info)
+if not sys.version_info[:2] >= (2,6):
+    sys.exit("Spack requires Python 2.6.  Version was %s." % sys.version_info)
 
 import os
 import re
 import subprocess
-import argparse
 from contextlib import closing
 
 # Import spack parameters through the build environment.
@@ -18,6 +17,7 @@ if not spack_lib:
 # Grab a minimal set of spack packages
 sys.path.append(spack_lib)
 from spack.compilation import *
+from external import argparse
 import llnl.util.tty as tty
 
 spack_prefix        = get_env_var("SPACK_PREFIX")

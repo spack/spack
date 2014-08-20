@@ -838,7 +838,7 @@ class Spec(object):
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.
-        extra = set(spec_deps.viewkeys()).difference(visited)
+        extra = set(spec_deps.keys()).difference(visited)
 
         # Also subtract out all the packags that provide a needed vpkg
         vdeps = [v for v in self.package.virtual_dependencies()]

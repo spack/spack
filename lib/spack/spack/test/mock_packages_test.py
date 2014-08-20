@@ -39,7 +39,6 @@ def set_pkg_dep(pkg, spec):
 
 
 class MockPackagesTest(unittest.TestCase):
-    @classmethod
     def setUp(self):
         # Use the mock packages database for these tests.  This allows
         # us to set up contrived packages that don't interfere with
@@ -52,7 +51,7 @@ class MockPackagesTest(unittest.TestCase):
             'site' : spack.mock_site_config,
             'user' : spack.mock_user_config }
 
-    @classmethod
+
     def tearDown(self):
         """Restore the real packages path after any test."""
         spack.db = self.real_db

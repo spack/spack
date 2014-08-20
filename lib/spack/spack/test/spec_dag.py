@@ -57,10 +57,10 @@ class SpecDagTest(MockPackagesTest):
         pairs = zip([0,1,2,3,4,2,3], names)
 
         traversal = dag.traverse()
-        self.assertListEqual([x.name for x in traversal], names)
+        self.assertEqual([x.name for x in traversal], names)
 
         traversal = dag.traverse(depth=True)
-        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
 
 
     def test_preorder_edge_traversal(self):
@@ -72,10 +72,10 @@ class SpecDagTest(MockPackagesTest):
         pairs = zip([0,1,2,3,4,3,2,3,1], names)
 
         traversal = dag.traverse(cover='edges')
-        self.assertListEqual([x.name for x in traversal], names)
+        self.assertEqual([x.name for x in traversal], names)
 
         traversal = dag.traverse(cover='edges', depth=True)
-        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
 
 
     def test_preorder_path_traversal(self):
@@ -87,10 +87,10 @@ class SpecDagTest(MockPackagesTest):
         pairs = zip([0,1,2,3,4,3,2,3,1,2], names)
 
         traversal = dag.traverse(cover='paths')
-        self.assertListEqual([x.name for x in traversal], names)
+        self.assertEqual([x.name for x in traversal], names)
 
         traversal = dag.traverse(cover='paths', depth=True)
-        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
 
 
     def test_postorder_node_traversal(self):
@@ -102,10 +102,10 @@ class SpecDagTest(MockPackagesTest):
         pairs = zip([4,3,2,3,2,1,0], names)
 
         traversal = dag.traverse(order='post')
-        self.assertListEqual([x.name for x in traversal], names)
+        self.assertEqual([x.name for x in traversal], names)
 
         traversal = dag.traverse(depth=True, order='post')
-        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
 
 
     def test_postorder_edge_traversal(self):
@@ -117,10 +117,10 @@ class SpecDagTest(MockPackagesTest):
         pairs = zip([4,3,3,2,3,2,1,1,0], names)
 
         traversal = dag.traverse(cover='edges', order='post')
-        self.assertListEqual([x.name for x in traversal], names)
+        self.assertEqual([x.name for x in traversal], names)
 
         traversal = dag.traverse(cover='edges', depth=True, order='post')
-        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
 
 
     def test_postorder_path_traversal(self):
@@ -132,10 +132,10 @@ class SpecDagTest(MockPackagesTest):
         pairs = zip([4,3,3,2,3,2,1,2,1,0], names)
 
         traversal = dag.traverse(cover='paths', order='post')
-        self.assertListEqual([x.name for x in traversal], names)
+        self.assertEqual([x.name for x in traversal], names)
 
         traversal = dag.traverse(cover='paths', depth=True, order='post')
-        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
 
 
     def test_conflicting_spec_constraints(self):
@@ -199,13 +199,13 @@ class SpecDagTest(MockPackagesTest):
     def check_links(self, spec_to_check):
         for spec in spec_to_check.traverse():
             for dependent in spec.dependents.values():
-                self.assertIn(
-                    spec.name, dependent.dependencies,
+                self.assertTrue(
+                    spec.name in dependent.dependencies,
                     "%s not in dependencies of %s" % (spec.name, dependent.name))
 
             for dependency in spec.dependencies.values():
-                self.assertIn(
-                    spec.name, dependency.dependents,
+                self.assertTrue(
+                    spec.name in dependency.dependents,
                     "%s not in dependents of %s" % (spec.name, dependency.name))
 
 
@@ -385,13 +385,13 @@ class SpecDagTest(MockPackagesTest):
 
     def test_contains(self):
         spec = Spec('mpileaks ^mpi ^libelf@1.8.11 ^libdwarf')
-        self.assertIn(Spec('mpi'), spec)
-        self.assertIn(Spec('libelf'), spec)
-        self.assertIn(Spec('libelf@1.8.11'), spec)
-        self.assertNotIn(Spec('libelf@1.8.12'), spec)
-        self.assertIn(Spec('libdwarf'), spec)
-        self.assertNotIn(Spec('libgoblin'), spec)
-        self.assertIn(Spec('mpileaks'), spec)
+        self.assertTrue(Spec('mpi') in spec)
+        self.assertTrue(Spec('libelf') in spec)
+        self.assertTrue(Spec('libelf@1.8.11') in spec)
+        self.assertFalse(Spec('libelf@1.8.12') in spec)
+        self.assertTrue(Spec('libdwarf') in spec)
+        self.assertFalse(Spec('libgoblin') in spec)
+        self.assertTrue(Spec('mpileaks') in spec)
 
 
     def test_copy_simple(self):

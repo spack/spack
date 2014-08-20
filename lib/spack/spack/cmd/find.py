@@ -24,7 +24,7 @@
 ##############################################################################
 import sys
 import collections
-import argparse
+from external import argparse
 from StringIO import StringIO
 
 import llnl.util.tty as tty

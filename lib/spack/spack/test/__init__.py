@@ -46,7 +46,8 @@ test_names = ['versions',
               'install',
               'package_sanity',
               'config',
-              'directory_layout']
+              'directory_layout',
+              'python_version']
 
 
 def list_tests():
@@ -71,7 +72,7 @@ def run(names, verbose=False):
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
 
-    testsRun = errors = failures = skipped = 0
+    testsRun = errors = failures = 0
     for test in names:
         module = 'spack.test.' + test
         print module
@@ -82,12 +83,10 @@ def run(names, verbose=False):
         testsRun += result.testsRun
         errors   += len(result.errors)
         failures += len(result.failures)
-        skipped  += len(result.skipped)
 
     succeeded = not errors and not failures
     tty.msg("Tests Complete.",
             "%5d tests run" % testsRun,
-            "%5d skipped" % skipped,
             "%5d failures" % failures,
             "%5d errors" % errors)
 

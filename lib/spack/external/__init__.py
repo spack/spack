@@ -3,7 +3,7 @@
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by David Beckingsale, david@llnl.gov, All rights reserved.
+# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://scalability-llnl.github.io/spack
@@ -22,17 +22,12 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from external import argparse
-import spack.modules
+"""
+This module contains external, potentially separately licensed,
+packages that are included in spack.
 
-description ="Add package to environment using modules."
-
-def setup_parser(subparser):
-    """Parser is only constructed so that this prints a nice help
-       message with -h. """
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help='Spec of package to load with modules.')
-
-
-def load(parser, args):
-    spack.modules.print_help()
+So far:
+    argparse:    We include our own version to be Python 2.6 compatible.
+    pyqver2:     External script to query required python version of python source code.
+                 Used for ensuring 2.6 compatibility.
+"""
