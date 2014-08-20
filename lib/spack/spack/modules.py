@@ -88,7 +88,7 @@ class EnvModule(object):
                 module_types[cls.name] = cls
 
 
-    def __init__(self, pkg=None):
+    def __init__(self, spec=None):
         # category in the modules system
         # TODO: come up with smarter category names.
         self.category = "spack"
@@ -100,7 +100,7 @@ class EnvModule(object):
         # dict pathname -> list of directories to be prepended to in
         # the module file.
         self._paths = None
-        self.pkg = pkg
+        self.spec = spec
 
 
     @property
@@ -114,22 +114,22 @@ class EnvModule(object):
 
             # Add paths if they exist.
             for var, directory in [
-                    ('PATH', self.pkg.prefix.bin),
-                    ('MANPATH', self.pkg.prefix.man),
-                    ('MANPATH', self.pkg.prefix.share_man),
-                    ('LD_LIBRARY_PATH', self.pkg.prefix.lib),
-                    ('LD_LIBRARY_PATH', self.pkg.prefix.lib64)]:
+                    ('PATH', self.spec.prefix.bin),
+                    ('MANPATH', self.spec.prefix.man),
+                    ('MANPATH', self.spec.prefix.share_man),
+                    ('LD_LIBRARY_PATH', self.spec.prefix.lib),
+                    ('LD_LIBRARY_PATH', self.spec.prefix.lib64)]:
 
                 if os.path.isdir(directory):
                     add_path(var, directory)
 
             # short description is just the package + version
             # TODO: maybe packages can optionally provide it.
-            self.short_description = self.pkg.spec.format("$_ $@")
+            self.short_description = self.spec.format("$_ $@")
 
             # long description is the docstring with reduced whitespace.
-            if self.pkg.__doc__:
-                self.long_description = re.sub(r'\s+', ' ', self.pkg.__doc__)
+            if self.spec.package.__doc__:
+                self.long_description = re.sub(r'\s+', ' ', self.spec.package.__doc__)
 
         return self._paths
 
@@ -179,12 +179,12 @@ class Dotkit(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(Dotkit.path, self.pkg.spec.architecture,
-                         self.pkg.spec.format('$_$@$%@$+$#.dk'))
+        return join_path(Dotkit.path, self.spec.architecture,
+                         self.spec.format('$_$@$%@$+$#.dk'))
 
     @property
     def use_name(self):
-        return self.pkg.spec.format('$_$@$%@$+$#')
+        return self.spec.format('$_$@$%@$+$#')
 
 
     def _write(self, dk_file):
@@ -207,7 +207,7 @@ class Dotkit(EnvModule):
                 dk_file.write("dk_alter %s %s\n" % (var, directory))
 
         # Let CMake find this package.
-        dk_file.write("dk_alter CMAKE_PREFIX_PATH %s\n" % self.pkg.prefix)
+        dk_file.write("dk_alter CMAKE_PREFIX_PATH %s\n" % self.spec.prefix)
 
 
 class TclModule(EnvModule):
@@ -216,12 +216,12 @@ class TclModule(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(TclModule.path, self.pkg.spec.architecture, self.use_name)
+        return join_path(TclModule.path, self.spec.architecture, self.use_name)
 
 
     @property
     def use_name(self):
-        return self.pkg.spec.format('$_$@$%@$+$#')
+        return self.spec.format('$_$@$%@$+$#')
 
 
     def _write(self, m_file):
@@ -244,4 +244,4 @@ class TclModule(EnvModule):
             for directory in dirs:
                 m_file.write("prepend-path %s \"%s\"\n" % (var, directory))
 
-        m_file.write("prepend-path CMAKE_PREFIX_PATH \"%s\"\n" % self.pkg.prefix)
+        m_file.write("prepend-path CMAKE_PREFIX_PATH \"%s\"\n" % self.spec.prefix)

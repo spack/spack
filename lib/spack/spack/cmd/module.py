@@ -57,13 +57,13 @@ def module_find(mtype, spec_array):
        of type <mtype> there, and print out the name that the user
        should type to use that package's module.
     """
+    if mtype not in module_types:
+        tty.die("Invalid module type: '%s'.  Options are %s." % (mtype, comma_or(module_types)))
+
     specs = spack.cmd.parse_specs(spec_array)
     if len(specs) > 1:
         tty.die("You can only pass one spec.")
     spec = specs[0]
-
-    if mtype not in module_types:
-        tty.die("Invalid module type: '%s'.  Options are " + comma_and(module_types))
 
     specs = [s for s in spack.db.installed_package_specs() if s.satisfies(spec)]
     if len(specs) == 0:
@@ -76,10 +76,9 @@ def module_find(mtype, spec_array):
         sys.exit(1)
 
     mt = module_types[mtype]
-    mod = mt(specs[0].package)
+    mod = mt(specs[0])
     if not os.path.isfile(mod.file_name):
-        tty.error( mod.file_name)
-        tty.die("No %s module is installed for package %s." % (mtype, spec))
+        tty.die("No %s module is installed for %s." % (mtype, spec))
 
     print mod.use_name
 
@@ -96,7 +95,7 @@ def module_refresh():
         mkdirp(cls.path)
         for spec in specs:
             tty.debug("   Writing file for %s." % spec)
-            cls(spec.package).write()
+            cls(spec).write()
 
 
 
