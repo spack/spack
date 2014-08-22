@@ -22,20 +22,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
-#
-# When packages call 'from spack import *', this is what is brought in.
-#
-# Spack internal code calls 'import spack' and accesses other
-# variables (spack.db, paths, etc.) directly.
-#
-# TODO: maybe this should be separated out and should go in build_environment.py?
-# TODO: it's not clear where all the stuff that needs to be included in packages
-#       should live.  This file is overloaded for spack core vs. for packages.
-__all__ = ['Package', 'when', 'provides', 'depends_on', 'version',
-           'patch', 'Version', 'working_dir', 'which', 'Executable',
-           'filter_file', 'change_sed_delimiter']
-
 import os
 import tempfile
 from llnl.util.filesystem import *
@@ -140,11 +126,30 @@ do_checksum = True
 #
 sys_type = None
 
+
 #
-# Extra imports that should be generally usable from package.py files.
+# When packages call 'from spack import *', this extra stuff is brought in.
 #
-from llnl.util.filesystem import working_dir
+# Spack internal code should call 'import spack' and accesses other
+# variables (spack.db, paths, etc.) directly.
+#
+# TODO: maybe this should be separated out and should go in build_environment.py?
+# TODO: it's not clear where all the stuff that needs to be included in packages
+#       should live.  This file is overloaded for spack core vs. for packages.
+#
+__all__ = ['Package', 'Version', 'when']
 from spack.package import Package
-from spack.relations import *
-from spack.multimethod import when
 from spack.version import Version
+from spack.multimethod import when
+
+import llnl.util.filesystem
+from llnl.util.filesystem import *
+__all__ += llnl.util.filesystem.__all__
+
+import spack.relations
+from spack.relations import *
+__all__ += spack.relations.__all__
+
+import spack.util.executable
+from spack.util.executable import *
+__all__ += spack.util.executable.__all__

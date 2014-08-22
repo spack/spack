@@ -45,6 +45,10 @@ set _sp_spec=""
 # Figure out what type of module we're running here.
 set _sp_modtype = ""
 switch ($_sp_subcommand)
+case "cd":
+    shift _sp_args
+    cd `spack stage --print-build-dir $_sp_args`
+    breaksw
 case use:
 case unuse:
 case load:

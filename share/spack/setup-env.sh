@@ -75,6 +75,10 @@ function spack {
     # Filter out use and unuse.  For any other commands, just run the
     # command.
     case $_sp_subcommand in
+        "cd")
+            cd $(spack stage --print-build-dir "$@")
+            return
+            ;;
         "use"|"unuse"|"load"|"unload")
             # Shift any other args for use off before parsing spec.
             _sp_module_args=""
@@ -108,6 +112,7 @@ function spack {
             ;;
         *)
             command spack $_sp_flags $_sp_subcommand $_sp_spec
+            ;;
     esac
 }
 
