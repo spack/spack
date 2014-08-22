@@ -64,10 +64,10 @@ module_types = {}
 def print_help():
     """For use by commands to tell user how to activate shell support."""
 
-    tty.msg("Spack module/dotkit support is not initialized.",
+    tty.msg("This command requires spack's shell integration.",
             "",
-            "To use dotkit or modules with Spack, you must first run",
-            "one of the commands below.  You can copy/paste them.",
+            "To initialize spack's shell commands, you must run one of",
+            "the commands below.  Choose the right command for your shell.",
             "",
             "For bash and zsh:",
             "    . %s/setup-env.sh" % spack.share_path,

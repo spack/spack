@@ -37,13 +37,6 @@ def setup_parser(subparser):
         help="Do not check downloaded packages against checksum")
 
     dir_parser = subparser.add_mutually_exclusive_group()
-    dir_parser.add_argument(
-        '-d', '--print-stage-dir', action='store_const', dest='print_dir',
-        const='print_stage', help="Prints out the stage directory for a spec.")
-    dir_parser.add_argument(
-        '-b', '--print-build-dir', action='store_const', dest='print_dir',
-        const='print_build', help="Prints out the expanded archive path for a spec.")
-
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages to stage")
 
@@ -56,24 +49,7 @@ def stage(parser, args):
         spack.do_checksum = False
 
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
-
-    if args.print_dir:
-        if len(specs) != 1:
-            tty.die("--print-stage-dir and --print-build-dir options only take one spec.")
-
-        spec = specs[0]
-        pkg = spack.db.get(spec)
-
-        if args.print_dir == 'print_stage':
-            print pkg.stage.path
-        elif args.print_dir == 'print_build':
-            if not os.listdir(pkg.stage.path):
-                tty.die("Stage directory is empty.  Run this first:",
-                        "spack stage " + " ".join(args.specs))
-            print pkg.stage.expanded_archive_path
-
-    else:
-        for spec in specs:
-            package = spack.db.get(spec)
-            package.do_stage()
+    for spec in specs:
+        package = spack.db.get(spec)
+        package.do_stage()
 

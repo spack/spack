@@ -76,7 +76,7 @@ function spack {
     # command.
     case $_sp_subcommand in
         "cd")
-            cd $(spack stage --print-build-dir "$@")
+            cd $(spack location "$@")
             return
             ;;
         "use"|"unuse"|"load"|"unload")
@@ -87,28 +87,28 @@ function spack {
                 _sp_spec="$@"
             fi
 
-            # Translate the parameter into pieces of a command.
-            # _sp_modtype is an arg to spack module find, and
-            # _sp_sh_cmd is the equivalent shell command.
-            case $_sp_subcommand in
-                "use"|"unuse")
-                    _sp_modtype=dotkit
-                    _sp_sh_cmd=$_sp_subcommand
-                    ;;
-                "load"|"unload")
-                    _sp_modtype=tcl
-                    _sp_sh_cmd="module $_sp_subcommand"
-                    ;;
-            esac
-
             # Here the user has run use or unuse with a spec.  Find a matching
             # spec using 'spack module find', then use the appropriate module
             # tool's commands to add/remove the result from the environment.
             # If spack module command comes back with an error, do nothing.
-            if _sp_full_spec=$(command spack $_sp_flags module find $_sp_modtype $_sp_spec); then
-                $_sp_sh_cmd $_sp_module_args $_sp_full_spec
-            fi
-            return
+            case $_sp_subcommand in
+                "use")
+                    if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
+                        use $_sp_module_args $_sp_full_spec
+                    fi ;;
+                "unuse")
+                    if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
+                        unuse $_sp_module_args $_sp_full_spec
+                    fi ;;
+                "load")
+                    if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
+                        module load $_sp_module_args $_sp_full_spec
+                    fi ;;
+                "unload")
+                    if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
+                        module unload $_sp_module_args $_sp_full_spec
+                    fi ;;
+            esac
             ;;
         *)
             command spack $_sp_flags $_sp_subcommand $_sp_spec

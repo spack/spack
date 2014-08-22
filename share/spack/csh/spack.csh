@@ -45,9 +45,9 @@ set _sp_spec=""
 # Figure out what type of module we're running here.
 set _sp_modtype = ""
 switch ($_sp_subcommand)
-case "cd":
+case cd:
     shift _sp_args
-    cd `spack stage --print-build-dir $_sp_args`
+    cd `spack location $_sp_args`
     breaksw
 case use:
 case unuse:
@@ -59,30 +59,36 @@ case unload:
         shift _sp_spec
         set _sp_spec = ($_sp_spec)
     endif
-    # Translate the parameter into pieces of a command.
-    # _sp_modtype is an arg to spack module find, and
-    # _sp_sh_cmd is the equivalent shell command.
-    switch ($_sp_subcommand)
-        case use:
-        case unuse:
-            set _sp_modtype = dotkit
-            set _sp_sh_cmd = ( "`alias $_sp_subcommand'" )
-            breaksw
-        case load:
-        case unload:
-            set _sp_modtype = tcl
-            set _sp_sh_cmd = ( "`alias module`" $_sp_subcommand )
-            breaksw
-    endsw
 
     # Here the user has run use or unuse with a spec.  Find a matching
     # spec using 'spack module find', then use the appropriate module
     # tool's commands to add/remove the result from the environment.
-    # If spack module command comes back with an error, do nothing.
-    set _sp_full_spec = ""
-    if { set _sp_full_spec = `\spack module find $_sp_modtype $_sp_spec` } then
-         $_sp_sh_cmd $_sp_module_args $_sp_full_spec
-    endif
+    switch ($_sp_subcommand)
+        case "use":
+            set _sp_full_spec = ( "`\spack $_sp_flags module find dotkit $_sp_spec`" )
+            if ( $? == 0 ) then
+                use $_sp_module_args $_sp_full_spec
+            endif
+            breaksw
+        case "unuse":
+            set _sp_full_spec = ( "`\spack $_sp_flags module find dotkit $_sp_spec`" )
+            if ( $? == 0 ) then
+                unuse $_sp_module_args $_sp_full_spec
+            endif
+            breaksw
+        case "load":
+            set _sp_full_spec = ( "`\spack $_sp_flags module find tcl $_sp_spec`" )
+            if ( $? == 0 ) then
+                module load $_sp_module_args $_sp_full_spec
+            endif
+            breaksw
+        case "unload":
+            set _sp_full_spec = ( "`\spack $_sp_flags module find tcl $_sp_spec`" )
+            if ( $? == 0 ) then
+                module unload $_sp_module_args $_sp_full_spec
+            endif
+            breaksw
+    endsw
     breaksw
 
 default:

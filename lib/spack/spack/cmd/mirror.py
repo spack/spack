@@ -41,7 +41,7 @@ from spack.stage import Stage
 from spack.util.compression import extension
 
 
-description = "Manage spack mirrors."
+description = "Manage mirrors."
 
 def setup_parser(subparser):
     subparser.add_argument(
