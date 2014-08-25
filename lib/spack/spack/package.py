@@ -337,7 +337,7 @@ class Package(object):
 
         # Sanity check some required variables that could be
         # overridden by package authors.
-        def sanity_check_dict(attr_name):
+        def ensure_has_dict(attr_name):
             if not hasattr(self, attr_name):
                 raise PackageError("Package %s must define %s" % attr_name)
 
@@ -345,10 +345,10 @@ class Package(object):
             if not isinstance(attr, dict):
                 raise PackageError("Package %s has non-dict %s attribute!"
                                    % (self.name, attr_name))
-        sanity_check_dict('versions')
-        sanity_check_dict('dependencies')
-        sanity_check_dict('conflicted')
-        sanity_check_dict('patches')
+        ensure_has_dict('versions')
+        ensure_has_dict('dependencies')
+        ensure_has_dict('conflicted')
+        ensure_has_dict('patches')
 
         # Check versions in the versions dict.
         for v in self.versions:
@@ -362,9 +362,8 @@ class Package(object):
         # Version-ize the keys in versions dict
         try:
             self.versions = dict((Version(v), h) for v,h in self.versions.items())
-        except ValueError:
-            raise ValueError("Keys of versions dict in package %s must be versions!"
-                             % self.name)
+        except ValueError, e:
+            raise ValueError("In package %s: %s" % (self.name, e.message))
 
         # stage used to build this package.
         self._stage = None
@@ -600,9 +599,8 @@ class Package(object):
 
         self.do_fetch()
 
-        archive_dir = self.stage.expanded_archive_path
+        archive_dir = self.stage.source_path
         if not archive_dir:
-            tty.msg("Staging archive: %s" % self.stage.archive_file)
             self.stage.expand_archive()
             tty.msg("Created stage directory in %s." % self.stage.path)
         else:
@@ -620,7 +618,7 @@ class Package(object):
 
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.
-        archive_dir = self.stage.expanded_archive_path
+        archive_dir = self.stage.source_path
         good_file = join_path(archive_dir, '.spack_patched')
         bad_file  = join_path(archive_dir, '.spack_patch_failed')
 

@@ -95,7 +95,7 @@ class VersionDescriptor(object):
 
 
 def version(ver, checksum, **kwargs):
-    """Adds a version and associated metadata to the package."""
+    """Adds a version and metadata describing how to fetch it."""
     pkg = caller_locals()
 
     versions = pkg.setdefault('versions', {})

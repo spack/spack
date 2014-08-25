@@ -32,18 +32,20 @@ from llnl.util.filesystem import *
 
 import spack
 import spack.config
+from spack.fetch_strategy import strategy_for_url, URLFetchStrategy
 import spack.error
-import spack.util.crypto as crypto
-from spack.util.compression import decompressor_for
+
 
 
 STAGE_PREFIX = 'spack-stage-'
 
 
 class Stage(object):
-    """A Stage object manaages a directory where an archive is downloaded,
-       expanded, and built before being installed.  It also handles downloading
-       the archive.  A stage's lifecycle looks like this:
+    """A Stage object manaages a directory where some source code is
+       downloaded and built before being installed.  It handles
+       fetching the source code, either as an archive to be expanded
+       or by checking it out of a repository.  A stage's lifecycle
+       looks like this:
 
        Stage()
          Constructor creates the stage directory.
@@ -71,18 +73,24 @@ class Stage(object):
     def __init__(self, url, **kwargs):
         """Create a stage object.
            Parameters:
-             url     URL of the archive to be downloaded into this stage.
+             url_or_fetch_strategy
+                 URL of the archive to be downloaded into this stage, OR
+                 a valid FetchStrategy.
 
-             name    If a name is provided, then this stage is a named stage
-                     and will persist between runs (or if you construct another
-                     stage object later).  If name is not provided, then this
-                     stage will be given a unique name automatically.
+             name
+                 If a name is provided, then this stage is a named stage
+                 and will persist between runs (or if you construct another
+                 stage object later).  If name is not provided, then this
+                 stage will be given a unique name automatically.
         """
+        if isinstance(url, basestring):
+            self.fetcher = strategy_for_url(url)
+            self.fetcher.set_stage(self)
+
         self.name = kwargs.get('name')
         self.mirror_path = kwargs.get('mirror_path')
 
         self.tmp_root = find_tmp_root()
-        self.url = url
 
         self.path = None
         self._setup()
@@ -198,17 +206,17 @@ class Stage(object):
 
 
     @property
-    def expanded_archive_path(self):
-        """Returns the path to the expanded archive directory if it's expanded;
-           None if the archive hasn't been expanded.
-        """
-        if not self.archive_file:
-            return None
+    def source_path(self):
+        """Returns the path to the expanded/checked out source code
+           within this fetch strategy's path.
 
-        for file in os.listdir(self.path):
-            archive_path = join_path(self.path, file)
-            if os.path.isdir(archive_path):
-                return archive_path
+           This assumes nothing else is going ot be put in the
+           FetchStrategy's path.  It searches for the first
+           subdirectory of the path it can find, then returns that.
+        """
+        for p in [os.path.join(self.path, f) for f in os.listdir(self.path)]:
+            if os.path.isdir(p):
+                return p
         return None
 
 
@@ -220,71 +228,35 @@ class Stage(object):
             tty.die("Setup failed: no such directory: " + self.path)
 
 
-    def fetch_from_url(self, url):
-        # Run curl but grab the mime type from the http headers
-        headers = spack.curl('-#',        # status bar
-                             '-O',        # save file to disk
-                             '-D', '-',   # print out HTML headers
-                             '-L', url,
-                             return_output=True, fail_on_error=False)
-
-        if spack.curl.returncode != 0:
-            # clean up archive on failure.
-            if self.archive_file:
-                os.remove(self.archive_file)
-
-            if spack.curl.returncode == 60:
-                # This is a certificate error.  Suggest spack -k
-                raise FailedDownloadError(
-                    url,
-                    "Curl was unable to fetch due to invalid certificate. "
-                    "This is either an attack, or your cluster's SSL configuration "
-                    "is bad.  If you believe your SSL configuration is bad, you "
-                    "can try running spack -k, which will not check SSL certificates."
-                    "Use this at your own risk.")
-
-        # Check if we somehow got an HTML file rather than the archive we
-        # asked for.  We only look at the last content type, to handle
-        # redirects properly.
-        content_types = re.findall(r'Content-Type:[^\r\n]+', headers)
-        if content_types and 'text/html' in content_types[-1]:
-            tty.warn("The contents of " + self.archive_file + " look like HTML.",
-                     "The checksum will likely be bad.  If it is, you can use",
-                     "'spack clean --dist' to remove the bad archive, then fix",
-                     "your internet gateway issue and install again.")
-
-
     def fetch(self):
-        """Downloads the file at URL to the stage.  Returns true if it was downloaded,
-           false if it already existed."""
+        """Downloads an archive or checks out code from a repository."""
         self.chdir()
-        if self.archive_file:
-            tty.msg("Already downloaded %s." % self.archive_file)
 
-        else:
-            urls = [self.url]
-            if self.mirror_path:
-                urls = ["%s/%s" % (m, self.mirror_path) for m in _get_mirrors()] + urls
+        fetchers = [self.fetcher]
 
-            for url in urls:
-                tty.msg("Trying to fetch from %s" % url)
-                self.fetch_from_url(url)
-                if self.archive_file:
-                    break
+        # TODO: move mirror logic out of here and clean it up!
+        if self.mirror_path:
+            urls = ["%s/%s" % (m, self.mirror_path) for m in _get_mirrors()]
+            digest = None
+            if isinstance(self.fetcher, URLFetchStrategy):
+                digest = self.fetcher.digest
+            fetchers = [URLFetchStrategy(url, digest) for url in urls] + fetchers
+            for f in fetchers:
+                f.set_stage(self)
 
-        if not self.archive_file:
-            raise FailedDownloadError(url)
-
-        return self.archive_file
+        for fetcher in fetchers:
+            try:
+                fetcher.fetch()
+                break
+            except spack.error.SpackError, e:
+                tty.msg("Download from %s failed." % fetcher)
+                continue
 
 
     def check(self, digest):
-        """Check the downloaded archive against a checksum digest"""
-        checker = crypto.Checker(digest)
-        if not checker.check(self.archive_file):
-            raise ChecksumError(
-                "%s checksum failed for %s." % (checker.hash_name, self.archive_file),
-                "Expected %s but got %s." % (digest, checker.sum))
+        """Check the downloaded archive against a checksum digest.
+           No-op if this stage checks code out of a repository."""
+        self.fetcher.check()
 
 
     def expand_archive(self):
@@ -292,19 +264,14 @@ class Stage(object):
            archive.  Fail if the stage is not set up or if the archive is not yet
            downloaded.
         """
-        self.chdir()
-        if not self.archive_file:
-            tty.die("Attempt to expand archive before fetching.")
-
-        decompress = decompressor_for(self.archive_file)
-        decompress(self.archive_file)
+        self.fetcher.expand()
 
 
     def chdir_to_archive(self):
         """Changes directory to the expanded archive directory.
            Dies with an error if there was no expanded archive.
         """
-        path = self.expanded_archive_path
+        path = self.source_path
         if not path:
             tty.die("Attempt to chdir before expanding archive.")
         else:
@@ -317,12 +284,7 @@ class Stage(object):
         """Removes the expanded archive path if it exists, then re-expands
            the archive.
         """
-        if not self.archive_file:
-            tty.die("Attempt to restage when not staged.")
-
-        if self.expanded_archive_path:
-            shutil.rmtree(self.expanded_archive_path, True)
-        self.expand_archive()
+        self.fetcher.reset()
 
 
     def destroy(self):
@@ -393,15 +355,26 @@ def find_tmp_root():
     return None
 
 
-class FailedDownloadError(spack.error.SpackError):
-    """Raised wen a download fails."""
-    def __init__(self, url, msg=""):
-        super(FailedDownloadError, self).__init__(
-            "Failed to fetch file from URL: %s" % url, msg)
-        self.url = url
+class StageError(spack.error.SpackError):
+    def __init__(self, message, long_message=None):
+        super(self, StageError).__init__(message, long_message)
 
 
-class ChecksumError(spack.error.SpackError):
+class ChecksumError(StageError):
     """Raised when archive fails to checksum."""
-    def __init__(self, message, long_msg):
+    def __init__(self, message, long_msg=None):
         super(ChecksumError, self).__init__(message, long_msg)
+
+
+class RestageError(StageError):
+    def __init__(self, message, long_msg=None):
+        super(RestageError, self).__init__(message, long_msg)
+
+
+class ChdirError(StageError):
+    def __init__(self, message, long_msg=None):
+        super(ChdirError, self).__init__(message, long_msg)
+
+
+# Keep this in namespace for convenience
+FailedDownloadError = spack.fetch_strategy.FailedDownloadError
