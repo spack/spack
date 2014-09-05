@@ -56,8 +56,8 @@ class PackageSanityTest(unittest.TestCase):
     def test_url_versions(self):
         """Check URLs for regular packages, if they are explicitly defined."""
         for pkg in spack.db.all_packages():
-            for v, vdesc in pkg.versions.items():
-                if vdesc.url:
+            for v, vattrs in pkg.versions.items():
+                if 'url' in vattrs:
                     # If there is a url for the version check it.
                     v_url = pkg.url_for_version(v)
-                    self.assertEqual(vdesc.url, v_url)
+                    self.assertEqual(vattrs['url'], v_url)

@@ -52,6 +52,7 @@ import spack.compilers
 import spack.hooks
 import spack.build_environment as build_env
 import spack.url as url
+import spack.fetch_strategy as fs
 from spack.version import *
 from spack.stage import Stage
 from spack.util.web import get_pages
@@ -300,7 +301,7 @@ class Package(object):
     # These variables are defaults for the various "relations".
     #
     """Map of information about Versions of this package.
-       Map goes: Version -> VersionDescriptor"""
+       Map goes: Version -> dict of attributes"""
     versions = {}
 
     """Specs of dependency packages, keyed by name."""
@@ -356,8 +357,7 @@ class Package(object):
 
         # Check version descriptors
         for v in sorted(self.versions):
-            vdesc = self.versions[v]
-            assert(isinstance(vdesc, spack.relations.VersionDescriptor))
+            assert(isinstance(self.versions[v], dict))
 
         # Version-ize the keys in versions dict
         try:
@@ -368,9 +368,14 @@ class Package(object):
         # stage used to build this package.
         self._stage = None
 
-        # patch up self.url based on the actual version
+        # If there's no default URL provided, set this package's url to None
+        if not hasattr(self, 'url'):
+            self.url = None
+
+        # Set up a fetch strategy for this package.
+        self.fetcher = None
         if self.spec.concrete:
-            self.url = self.url_for_version(self.version)
+            self.fetcher = fs.from_args(self.versions[self.version], self)
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -387,6 +392,61 @@ class Package(object):
         return self.spec.versions[0]
 
 
+    @memoized
+    def version_urls(self):
+        """Return a list of URLs for different versions of this
+           package, sorted by version.  A version's URL only appears
+           in this list if it has an explicitly defined URL."""
+        version_urls = {}
+        for v in sorted(self.versions):
+            args = self.versions[v]
+            if 'url' in args:
+                version_urls[v] = args['url']
+        return version_urls
+
+
+    def nearest_url(self, version):
+        """Finds the URL for the next lowest version with a URL.
+           If there is no lower version with a URL, uses the
+           package url property. If that isn't there, uses a
+           *higher* URL, and if that isn't there raises an error.
+        """
+        version_urls = self.version_urls()
+        url = self.url
+
+        for v in version_urls:
+            if v > version and url:
+                break
+            if version_urls[v]:
+                url = version_urls[v]
+        return url
+
+
+    def has_url(self):
+        """Returns whether there is a URL available for this package.
+           If there isn't, it's probably fetched some other way (version
+           control, etc.)"""
+        return self.url or self.version_urls()
+
+
+    # TODO: move this out of here and into some URL extrapolation module.
+    def url_for_version(self, version):
+        """Returns a URL that you can download a new version of this package from."""
+        if not isinstance(version, Version):
+            version = Version(version)
+
+        if not self.has_url():
+            raise NoURLError(self.__class__)
+
+        # If we have a specific URL for this version, don't extrapolate.
+        version_urls = self.version_urls()
+        if version in version_urls:
+            return version_urls[version]
+        else:
+            return url.substitute_version(self.nearest_url(version),
+                                          self.url_version(version))
+
+
     @property
     def stage(self):
         if not self.spec.concrete:
@@ -397,11 +457,12 @@ class Package(object):
                 raise PackageVersionError(self.version)
 
             # TODO: move this logic into a mirror module.
+            # TODO: get rid of dependence on extension.
             mirror_path = "%s/%s" % (self.name, "%s-%s.%s" % (
                 self.name, self.version, extension(self.url)))
 
             self._stage = Stage(
-                self.url, mirror_path=mirror_path, name=self.spec.short_spec)
+                self.fetcher, mirror_path=mirror_path, name=self.spec.short_spec)
         return self._stage
 
 
@@ -523,36 +584,6 @@ class Package(object):
         return str(version)
 
 
-    def url_for_version(self, version):
-        """Returns a URL that you can download a new version of this package from."""
-        if not isinstance(version, Version):
-            version = Version(version)
-
-        def nearest_url(version):
-            """Finds the URL for the next lowest version with a URL.
-               If there is no lower version with a URL, uses the
-               package url property. If that isn't there, uses a
-               *higher* URL, and if that isn't there raises an error.
-            """
-            url = getattr(self, 'url', None)
-            for v in sorted(self.versions):
-                if v > version and url:
-                    break
-                if self.versions[v].url:
-                    url = self.versions[v].url
-            return url
-
-        if version in self.versions:
-            vdesc = self.versions[version]
-            if not vdesc.url:
-                base_url = nearest_url(version)
-                vdesc.url = url.substitute_version(
-                    base_url, self.url_version(version))
-            return vdesc.url
-        else:
-            return nearest_url(version)
-
-
     @property
     def default_url(self):
         if self.concrete:
@@ -605,7 +636,7 @@ class Package(object):
             tty.msg("Created stage directory in %s." % self.stage.path)
         else:
             tty.msg("Already staged %s in %s." % (self.name, self.stage.path))
-        self.stage.chdir_to_archive()
+        self.stage.chdir_to_source()
 
 
     def do_patch(self):
@@ -628,7 +659,7 @@ class Package(object):
             tty.msg("Patching failed last time.  Restaging.")
             self.stage.restage()
 
-        self.stage.chdir_to_archive()
+        self.stage.chdir_to_source()
 
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
@@ -788,7 +819,7 @@ class Package(object):
 
     def do_clean(self):
         if self.stage.expanded_archive_path:
-            self.stage.chdir_to_archive()
+            self.stage.chdir_to_source()
             self.clean()
 
 
@@ -944,3 +975,10 @@ class VersionFetchError(PackageError):
         super(VersionFetchError, self).__init__(
             "Cannot fetch version for package %s " % cls.__name__ +
             "because it does not define a default url.")
+
+
+class NoURLError(PackageError):
+    """Raised when someone tries to build a URL for a package with no URLs."""
+    def __init__(self, cls):
+        super(NoURLError, self).__init__(
+            "Package %s has no version with a URL." % cls.__name__)

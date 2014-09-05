@@ -32,6 +32,7 @@ from llnl.util.filesystem import *
 
 import spack
 from spack.stage import Stage
+from spack.fetch_strategy import URLFetchStrategy
 from spack.directory_layout import SpecHashDirectoryLayout
 from spack.util.executable import which
 from spack.test.mock_packages_test import *
@@ -100,11 +101,16 @@ class InstallTest(MockPackagesTest):
         self.assertTrue(spec.concrete)
 
         # Get the package
+        print
+        print "======== GETTING PACKAGE ========"
         pkg = spack.db.get(spec)
+
+        print "======== GOT PACKAGE ========"
+        print
 
         # Fake the URL for the package so it downloads from a file.
         archive_path = join_path(self.stage.path, archive_name)
-        pkg.url = 'file://' + archive_path
+        pkg.fetcher = URLFetchStrategy('file://' + archive_path)
 
         try:
             pkg.do_install()

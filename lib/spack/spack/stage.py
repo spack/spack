@@ -32,9 +32,8 @@ from llnl.util.filesystem import *
 
 import spack
 import spack.config
-from spack.fetch_strategy import strategy_for_url, URLFetchStrategy
+import spack.fetch_strategy as fetch_strategy
 import spack.error
-
 
 
 STAGE_PREFIX = 'spack-stage-'
@@ -70,7 +69,7 @@ class Stage(object):
        similar, and are intended to persist for only one run of spack.
     """
 
-    def __init__(self, url, **kwargs):
+    def __init__(self, url_or_fetch_strategy, **kwargs):
         """Create a stage object.
            Parameters:
              url_or_fetch_strategy
@@ -83,9 +82,15 @@ class Stage(object):
                  stage object later).  If name is not provided, then this
                  stage will be given a unique name automatically.
         """
-        if isinstance(url, basestring):
-            self.fetcher = strategy_for_url(url)
+        if isinstance(url_or_fetch_strategy, basestring):
+            self.fetcher = fetch_strategy.from_url(url_or_fetch_strategy)
             self.fetcher.set_stage(self)
+
+        elif isinstance(url_or_fetch_strategy, fetch_strategy.FetchStrategy):
+            self.fetcher = url_or_fetch_strategy
+
+        else:
+            raise ValueError("Can't construct Stage without url or fetch strategy")
 
         self.name = kwargs.get('name')
         self.mirror_path = kwargs.get('mirror_path')
@@ -237,10 +242,12 @@ class Stage(object):
         # TODO: move mirror logic out of here and clean it up!
         if self.mirror_path:
             urls = ["%s/%s" % (m, self.mirror_path) for m in _get_mirrors()]
+
             digest = None
-            if isinstance(self.fetcher, URLFetchStrategy):
+            if isinstance(self.fetcher, fetch_strategy.URLFetchStrategy):
                 digest = self.fetcher.digest
-            fetchers = [URLFetchStrategy(url, digest) for url in urls] + fetchers
+            fetchers = [fetch_strategy.URLFetchStrategy(url, digest)
+                        for url in urls] + fetchers
             for f in fetchers:
                 f.set_stage(self)
 
@@ -267,7 +274,7 @@ class Stage(object):
         self.fetcher.expand()
 
 
-    def chdir_to_archive(self):
+    def chdir_to_source(self):
         """Changes directory to the expanded archive directory.
            Dies with an error if there was no expanded archive.
         """

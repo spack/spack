@@ -47,7 +47,9 @@ import llnl.util.tty as tty
 import spack
 import spack.error
 import spack.util.crypto as crypto
+from spack.version import Version, ver
 from spack.util.compression import decompressor_for
+
 
 
 class FetchStrategy(object):
@@ -63,21 +65,37 @@ class FetchStrategy(object):
         self.stage = stage
 
 
-    # Subclasses need to implement tehse methods
+    # Subclasses need to implement these methods
     def fetch(self): pass    # Return True on success, False on fail
     def check(self): pass
     def expand(self): pass
     def reset(self): pass
-    def __str__(self): pass
+    def __str__(self):
+        return "FetchStrategy.__str___"
 
+    # This method is used to match fetch strategies to version()
+    # arguments in packages.
+    @classmethod
+    def match(kwargs):
+        return any(k in kwargs for k in self.attributes)
 
 
 class URLFetchStrategy(FetchStrategy):
+    attributes = ('url', 'md5')
 
-    def __init__(self, url, digest=None):
+    def __init__(self, url=None, digest=None, **kwargs):
         super(URLFetchStrategy, self).__init__()
-        self.url = url
-        self.digest = digest
+
+        # If URL or digest are provided in the kwargs, then prefer
+        # those values.
+        self.url = kwargs.get('url', None)
+        if not self.url: self.url = url
+
+        self.digest = kwargs.get('md5', None)
+        if not self.digest: self.digest = digest
+
+        if not self.url:
+            raise ValueError("URLFetchStrategy requires a url for fetching.")
 
 
     def fetch(self):
@@ -142,9 +160,7 @@ class URLFetchStrategy(FetchStrategy):
         self.stage.chdir()
         if not self.archive_file:
             raise NoArchiveFileError("URLFetchStrategy couldn't find archive file",
-                                     "Failed on expand() for URL %s" % self.url)
-
-        print self.archive_file
+                                      "Failed on expand() for URL %s" % self.url)
 
         decompress = decompressor_for(self.archive_file)
         decompress(self.archive_file)
@@ -175,19 +191,117 @@ class URLFetchStrategy(FetchStrategy):
 
 
     def __str__(self):
+        if self.url:
+            return self.url
+        else:
+            return "URLFetchStrategy <no url>"
+
+
+class VCSFetchStrategy(FetchStrategy):
+    def __init__(self, name):
+        super(VCSFetchStrategy, self).__init__()
+        self.name = name
+
+
+    def check(self):
+        assert(self.stage)
+        tty.msg("No check needed when fetching with %s." % self.name)
+
+    def expand(self):
+        assert(self.stage)
+        tty.debug("Source fetched with %s is already expanded." % self.name)
+
+
+
+class GitFetchStrategy(VCSFetchStrategy):
+    attributes = ('git', 'ref', 'tag', 'branch')
+
+    def __init__(self, **kwargs):
+        super(GitFetchStrategy, self).__init__("git")
+        self.url = kwargs.get('git', None)
+        if not self.url:
+            raise ValueError("GitFetchStrategy requires git argument.")
+
+        if sum((k in kwargs for k in ('ref', 'tag', 'branch'))) > 1:
+            raise FetchStrategyError(
+                "Git requires exactly one ref, branch, or tag.")
+
+        self._git = None
+        self.ref    = kwargs.get('ref', None)
+        self.branch = kwargs.get('branch', None)
+        if not self.branch:
+            self.branch = kwargs.get('tag', None)
+
+
+    @property
+    def git_version(self):
+        git = which('git', required=True)
+        vstring = git('--version', return_output=True).lstrip('git version ')
+        return Version(vstring)
+
+
+    @property
+    def git(self):
+        if not self._git:
+            self._git = which('git', required=True)
+        return self._git
+
+
+    def fetch(self):
+        assert(self.stage)
+        self.stage.chdir()
+
+        if self.stage.source_path:
+            tty.msg("Already fetched %s." % self.source_path)
+            return
+
+        tty.msg("Trying to clone git repository: %s" % self.url)
+
+
+        if self.ref:
+            # Need to do a regular clone and check out everything if
+            # they asked for a particular ref.
+            git('clone', self.url)
+            self.chdir_to_source()
+            git('checkout', self.ref)
+
+        else:
+            # Can be more efficient if not checking out a specific ref.
+            args = ['clone']
+
+            # If we want a particular branch ask for it.
+            if self.branch:
+                args.extend(['--branch', self.branch])
+
+            # Try to be efficient if we're using a new enough git.
+            # This checks out only one branch's history
+            if self.git_version > ver('1.7.10'):
+                args.append('--single-branch')
+
+            args.append(self.url)
+            git(*args)
+            self.chdir_to_source()
+
+
+    def reset(self):
+        assert(self.stage)
+        git = which('git', required=True)
+
+        self.stage.chdir_to_source()
+        git('checkout', '.')
+        git('clean', '-f')
+
+
+    def __str__(self):
         return self.url
 
 
-
-class GitFetchStrategy(FetchStrategy):
-    pass
-
-
 class SvnFetchStrategy(FetchStrategy):
+    attributes = ('svn', 'rev', 'revision')
     pass
 
 
-def strategy_for_url(url):
+def from_url(url):
     """Given a URL, find an appropriate fetch strategy for it.
        Currently just gives you a URLFetchStrategy that uses curl.
 
@@ -196,6 +310,27 @@ def strategy_for_url(url):
     """
     return URLFetchStrategy(url)
 
+
+def args_are_for(args, fetcher):
+    return any(arg in args for arg in fetcher.attributes)
+
+
+def from_args(args, pkg):
+    """Determine a fetch strategy based on the arguments supplied to
+       version() in the package description."""
+    fetchers = (URLFetchStrategy, GitFetchStrategy)
+    for fetcher in fetchers:
+        if args_are_for(args, fetcher):
+            attrs = {}
+            for attr in fetcher.attributes:
+                default = getattr(pkg, attr, None)
+                if default:
+                    attrs[attr] = default
+
+            attrs.update(args)
+            return fetcher(**attrs)
+
+    return None
 
 class FetchStrategyError(spack.error.SpackError):
     def __init__(self, msg, long_msg):
@@ -219,4 +354,8 @@ class NoDigestError(FetchStrategyError):
     def __init__(self, msg, long_msg):
         super(NoDigestError, self).__init__(msg, long_msg)
 
+
+class InvalidArgsError(FetchStrategyError):
+    def __init__(self, msg, long_msg):
+        super(InvalidArgsError, self).__init__(msg, long_msg)
 

@@ -64,7 +64,7 @@ class Patch(object):
         """Fetch this patch, if necessary, and apply it to the source
            code in the supplied stage.
         """
-        stage.chdir_to_archive()
+        stage.chdir_to_source()
 
         patch_stage = None
         try:
