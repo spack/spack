@@ -20,6 +20,7 @@ class Stat(Package):
         configure(
             "--enable-gui",
             "--prefix=%s" % prefix,
+            "--disable-examples", # Examples require MPI: avoid this dependency.
             "--with-launchmon=%s"   % spec['launchmon'].prefix,
             "--with-mrnet=%s"       % spec['mrnet'].prefix,
             "--with-graphlib=%s"    % spec['graphlib'].prefix,
