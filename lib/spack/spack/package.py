@@ -453,17 +453,16 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
-            if not self.url:
-                raise PackageVersionError(self.version)
-
-            # TODO: move this logic into a mirror module.
-            # TODO: get rid of dependence on extension.
-            mirror_path = "%s/%s" % (self.name, "%s-%s.%s" % (
-                self.name, self.version, extension(self.url)))
-
             self._stage = Stage(
-                self.fetcher, mirror_path=mirror_path, name=self.spec.short_spec)
+                self.fetcher, mirror_path=self.mirror_path(), name=self.spec.short_spec)
         return self._stage
+
+
+    def mirror_path(self):
+        """Get path to this package's archive in a mirror."""
+        filename = "%s-%s." % (self.name, self.version)
+        filename += extension(self.url) if self.has_url() else "tar.gz"
+        return "%s/%s" % (self.name, filename)
 
 
     def preorder_traversal(self, visited=None, **kwargs):
@@ -617,9 +616,7 @@ class Package(object):
         self.stage.fetch()
 
         if spack.do_checksum and self.version in self.versions:
-            digest = self.versions[self.version].checksum
-            self.stage.check(digest)
-            tty.msg("Checksum passed for %s@%s" % (self.name, self.version))
+            self.stage.check()
 
 
     def do_stage(self):
@@ -645,7 +642,13 @@ class Package(object):
         if not self.spec.concrete:
             raise ValueError("Can only patch concrete packages.")
 
+        # Kick off the stage first.
         self.do_stage()
+
+        # If there are no patches, note it.
+        if not self.patches:
+            tty.msg("No patches needed for %s." % self.name)
+            return
 
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.

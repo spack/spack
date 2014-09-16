@@ -84,14 +84,12 @@ class Stage(object):
         """
         if isinstance(url_or_fetch_strategy, basestring):
             self.fetcher = fetch_strategy.from_url(url_or_fetch_strategy)
-            self.fetcher.set_stage(self)
-
         elif isinstance(url_or_fetch_strategy, fetch_strategy.FetchStrategy):
             self.fetcher = url_or_fetch_strategy
-
         else:
             raise ValueError("Can't construct Stage without url or fetch strategy")
 
+        self.fetcher.set_stage(self)
         self.name = kwargs.get('name')
         self.mirror_path = kwargs.get('mirror_path')
 
@@ -260,7 +258,7 @@ class Stage(object):
                 continue
 
 
-    def check(self, digest):
+    def check(self):
         """Check the downloaded archive against a checksum digest.
            No-op if this stage checks code out of a repository."""
         self.fetcher.check()

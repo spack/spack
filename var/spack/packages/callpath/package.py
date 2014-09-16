@@ -33,6 +33,8 @@ class Callpath(Package):
 
     version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')
 
+    depends_on("libelf")
+    depends_on("libdwarf")
     depends_on("dyninst")
     depends_on("adept-utils")
     depends_on("mpi")
