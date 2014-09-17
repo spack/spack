@@ -24,17 +24,18 @@
 ##############################################################################
 from spack import *
 
-class Adeptutils(Package):
-    """LLNL Utility Libraries"""
+class AdeptUtils(Package):
+    """Utility libraries for LLNL performance tools."""
 
     homepage = "https://github.com/scalability-llnl/adept-utils"
     url      = "https://github.com/scalability-llnl/adept-utils/archive/v1.0.tar.gz"
 
     version('1.0', '5c6cd9badce56c945ac8551e34804397')
 
+    depends_on("boost")
     depends_on("mpi")
 
     def install(self, spec, prefix):
-        cmake("-DCMAKE_INSTALL_PREFIX=" + prefix)
+        cmake(*std_cmake_args)
         make()
         make("install")

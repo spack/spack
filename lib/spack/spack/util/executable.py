@@ -121,7 +121,7 @@ def which(name, **kwargs):
 
     for dir in path:
         exe = os.path.join(dir, name)
-        if os.access(exe, os.X_OK):
+        if os.path.isfile(exe) and os.access(exe, os.X_OK):
             return Executable(exe)
 
     if required:
