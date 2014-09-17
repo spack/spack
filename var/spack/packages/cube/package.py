@@ -17,9 +17,11 @@ class Cube(Package):
     version('4.3TP1', 'a2090fbc7b2ba394bd5c09ba971e237f', 
             url = 'http://apps.fz-juelich.de/scalasca/releases/cube/4.3/dist/cube-4.3-TP1.tar.gz')
 
+    # Using CC as C++ compiler provides quirky workaround for a Score-P build system attempt 
+    # to guess a matching C compiler when configuring scorep-score
     backend_user_provided = """\
 CC=cc
-CXX=c++
+CXX=CC
 F77=f77
 FC=f90
 #CFLAGS=-fPIC
@@ -27,7 +29,7 @@ FC=f90
 """
     frontend_user_provided = """\
 CC_FOR_BUILD=cc
-CXX_FOR_BUILD=c++
+CXX_FOR_BUILD=CC
 F77_FOR_BUILD=f70
 FC_FOR_BUILD=f90
 """

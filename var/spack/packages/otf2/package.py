@@ -43,9 +43,9 @@ MPI_CFLAGS=-fPIC
 MPI_CXXFLAGS=-fPIC
 """
 
-    @when('@:1.2')
+    @when('@:1.2.1')
     def version_specific_args(self):
-        return ["--with-platform=disabled"]
+        return ["--with-platform=disabled", "CC=cc", "CXX=c++", "F77=f77", "F90=f90", "CFLAGS=-fPIC", "CXXFLAGS=-fPIC"]
 
     @when('@1.3:')
     def version_specific_args(self):
