@@ -24,21 +24,18 @@
 ##############################################################################
 from spack import *
 
-class Callpath(Package):
-    """Library for representing callpaths consistently in
-       distributed-memory performance tools."""
+class AdeptUtils(Package):
+    """Utility libraries for LLNL performance tools."""
 
-    homepage = "https://github.com/scalability-llnl/callpath"
-    url      = "https://github.com/scalability-llnl/callpath/archive/v1.0.1.tar.gz"
+    homepage = "https://github.com/scalability-llnl/adept-utils"
+    url      = "https://github.com/scalability-llnl/adept-utils/archive/v1.0.tar.gz"
 
-    version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')
+    version('1.0', '5c6cd9badce56c945ac8551e34804397')
 
-    depends_on("dyninst")
-    depends_on("adept-utils")
+    depends_on("boost")
     depends_on("mpi")
 
     def install(self, spec, prefix):
-        # TODO: offer options for the walker used.
-        cmake('.', "-DCALLPATH_WALKER=dyninst", *std_cmake_args)
+        cmake(*std_cmake_args)
         make()
         make("install")

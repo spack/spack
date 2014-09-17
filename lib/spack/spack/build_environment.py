@@ -122,7 +122,7 @@ def set_build_environment_variables(pkg):
 
     # Prefixes of all of the package's dependencies go in
     # SPACK_DEPENDENCIES
-    dep_prefixes = [d.package.prefix for d in pkg.spec.dependencies.values()]
+    dep_prefixes = [d.prefix for d in pkg.spec.traverse(root=False)]
     path_set(SPACK_DEPENDENCIES, dep_prefixes)
 
     # Install prefix

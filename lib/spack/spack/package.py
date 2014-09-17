@@ -773,7 +773,7 @@ class Package(object):
                 ' '.join(formatted_deps))
 
         self.remove_prefix()
-        tty.msg("Successfully uninstalled %s." % self.spec)
+        tty.msg("Successfully uninstalled %s." % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_uninstall(self)
