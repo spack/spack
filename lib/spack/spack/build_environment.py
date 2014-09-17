@@ -122,7 +122,7 @@ def set_build_environment_variables(pkg):
 
     # Prefixes of all of the package's dependencies go in
     # SPACK_DEPENDENCIES
-    dep_prefixes = [d.package.prefix for d in pkg.spec.dependencies.values()]
+    dep_prefixes = [d.prefix for d in pkg.spec.traverse(root=False)]
     path_set(SPACK_DEPENDENCIES, dep_prefixes)
 
     # Install prefix
@@ -142,6 +142,10 @@ def set_build_environment_variables(pkg):
         os.environ[SPACK_DEBUG] = "TRUE"
     os.environ[SPACK_SPEC] = str(pkg.spec)
     os.environ[SPACK_DEBUG_LOG_DIR] = spack.spack_working_dir
+
+    # Add dependencies to CMAKE_PREFIX_PATH
+    dep_prefixes = [d.package.prefix for d in pkg.spec.dependencies.values()]
+    path_set("CMAKE_PREFIX_PATH", dep_prefixes)
 
 
 def set_module_variables_for_package(pkg):

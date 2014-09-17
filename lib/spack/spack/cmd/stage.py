@@ -22,8 +22,10 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
+import os
+from external import argparse
 
+import llnl.util.tty as tty
 import spack
 import spack.cmd
 
@@ -33,18 +35,21 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="Do not check downloaded packages against checksum")
+
+    dir_parser = subparser.add_mutually_exclusive_group()
     subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER, help="specs of packages to stage")
+        'specs', nargs=argparse.REMAINDER, help="specs of packages to stage")
 
 
 def stage(parser, args):
-    if not args.packages:
+    if not args.specs:
         tty.die("stage requires at least one package argument")
 
     if args.no_checksum:
         spack.do_checksum = False
 
-    specs = spack.cmd.parse_specs(args.packages, concretize=True)
+    specs = spack.cmd.parse_specs(args.specs, concretize=True)
     for spec in specs:
         package = spack.db.get(spec)
         package.do_stage()
+

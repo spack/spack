@@ -118,7 +118,7 @@ class DefaultConcretizer(object):
             return
 
         try:
-            nearest = next(p for p in spec.preorder_traversal(direction='parents')
+            nearest = next(p for p in spec.traverse(direction='parents')
                            if p.compiler is not None).compiler
 
             if not nearest in all_compilers:

@@ -25,14 +25,17 @@
 import os
 import unittest
 import shutil
+import tempfile
 from contextlib import closing
 
 from llnl.util.filesystem import *
 
 import spack
 from spack.stage import Stage
+from spack.directory_layout import SpecHashDirectoryLayout
 from spack.util.executable import which
 from spack.test.mock_packages_test import *
+
 
 dir_name = 'trivial-1.0'
 archive_name = 'trivial-1.0.tar.gz'
@@ -66,8 +69,15 @@ class InstallTest(MockPackagesTest):
             tar = which('tar')
             tar('-czf', archive_name, dir_name)
 
-        # We use a fake pacakge, so skip the checksum.
+        # We use a fake package, so skip the checksum.
         spack.do_checksum = False
+
+        # Use a fake install directory to avoid conflicts bt/w
+        # installed pkgs and mock packages.
+        self.tmpdir = tempfile.mkdtemp()
+        self.orig_layout = spack.install_layout
+        spack.install_layout = SpecHashDirectoryLayout(self.tmpdir)
+
 
     def tearDown(self):
         super(InstallTest, self).tearDown()
@@ -77,6 +87,10 @@ class InstallTest(MockPackagesTest):
 
         # Turn checksumming back on
         spack.do_checksum = True
+
+        # restore spack's layout.
+        spack.install_layout = self.orig_layout
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
 
 
     def test_install_and_uninstall(self):

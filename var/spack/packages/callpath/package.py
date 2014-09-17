@@ -25,13 +25,20 @@
 from spack import *
 
 class Callpath(Package):
-    homepage = "https://github.com/tgamblin/callpath"
-    url      = "http://github.com/tgamblin/callpath-0.2.tar.gz"
+    """Library for representing callpaths consistently in
+       distributed-memory performance tools."""
+
+    homepage = "https://github.com/scalability-llnl/callpath"
+    url      = "https://github.com/scalability-llnl/callpath/archive/v1.0.1.tar.gz"
+
+    version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')
 
     depends_on("dyninst")
+    depends_on("adept-utils")
     depends_on("mpi")
 
     def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
+        # TODO: offer options for the walker used.
+        cmake('.', "-DCALLPATH_WALKER=dyninst", *std_cmake_args)
         make()
         make("install")

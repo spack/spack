@@ -176,7 +176,7 @@ def compilers_for_spec(compiler_spec):
     config = _get_config()
 
     def get_compiler(cspec):
-        items = { k:v for k,v in config.items('compiler "%s"' % cspec) }
+        items = dict((k,v) for k,v in config.items('compiler "%s"' % cspec))
 
         if not all(n in items for n in _required_instance_vars):
             raise InvalidCompilerConfigurationError(cspec)

@@ -72,7 +72,6 @@ __all__ = [ 'depends_on', 'provides', 'patch', 'version' ]
 
 import re
 import inspect
-import importlib
 
 from llnl.util.lang import *
 

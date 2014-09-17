@@ -189,7 +189,7 @@ class Compiler(object):
                 return None
 
         successful = [key for key in parmap(check, checks) if key is not None]
-        return { (v, p, s) : path for v, p, s, path in successful }
+        return dict(((v, p, s), path) for v, p, s, path in successful)
 
     @classmethod
     def find(cls, *path):

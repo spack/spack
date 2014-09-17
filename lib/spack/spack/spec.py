@@ -94,6 +94,7 @@ import sys
 import itertools
 import hashlib
 from StringIO import StringIO
+from operator import attrgetter
 
 import llnl.util.tty as tty
 from llnl.util.lang import *
@@ -309,9 +310,8 @@ class DependencyMap(HashableMap):
 
 
     def __str__(self):
-        sorted_dep_names = sorted(self.keys())
         return ''.join(
-            ["^" + str(self[name]) for name in sorted_dep_names])
+            ["^" + str(self[name]) for name in sorted(self.keys())])
 
 
 @key_ordering
@@ -351,10 +351,6 @@ class Spec(object):
         # package.py files for.
         self._normal = kwargs.get('normal', False)
         self._concrete = kwargs.get('concrete', False)
-
-        # Specs cannot be concrete and non-normal.
-        if self._concrete:
-            self._normal = True
 
         # This allows users to construct a spec DAG with literals.
         # Note that given two specs a and b, Spec(a) copies a, but
@@ -454,9 +450,18 @@ class Spec(object):
         return self._concrete
 
 
-    def preorder_traversal(self, visited=None, d=0, **kwargs):
-        """Generic preorder traversal of the DAG represented by this spec.
+    def traverse(self, visited=None, d=0, **kwargs):
+        """Generic traversal of the DAG represented by this spec.
            This will yield each node in the spec.  Options:
+
+           order    [=pre|post]
+               Order to traverse spec nodes. Defaults to preorder traversal.
+               Options are:
+
+               'pre':  Pre-order traversal; each node is yielded before its
+                       children in the dependency DAG.
+               'post': Post-order  traversal; each node is yielded after its
+                       children in the dependency DAG.
 
            cover    [=nodes|edges|paths]
                Determines how extensively to cover the dag.  Possible vlaues:
@@ -475,7 +480,7 @@ class Spec(object):
                spec, but also their depth from the root in a (depth, node)
                tuple.
 
-           keyfun   [=id]
+           key   [=id]
                Allow a custom key function to track the identity of nodes
                in the traversal.
 
@@ -487,44 +492,57 @@ class Spec(object):
                'parents', traverses upwards in the DAG towards the root.
 
         """
+        # get initial values for kwargs
         depth      = kwargs.get('depth', False)
         key_fun    = kwargs.get('key', id)
+        if isinstance(key_fun, basestring):
+            key_fun = attrgetter(key_fun)
         yield_root = kwargs.get('root', True)
         cover      = kwargs.get('cover', 'nodes')
         direction  = kwargs.get('direction', 'children')
+        order      = kwargs.get('order', 'pre')
 
-        cover_values = ('nodes', 'edges', 'paths')
-        if cover not in cover_values:
-            raise ValueError("Invalid value for cover: %s.  Choices are %s"
-                             % (cover, ",".join(cover_values)))
-
-        direction_values = ('children', 'parents')
-        if direction not in direction_values:
-            raise ValueError("Invalid value for direction: %s.  Choices are %s"
-                             % (direction, ",".join(direction_values)))
+        # Make sure kwargs have legal values; raise ValueError if not.
+        def validate(name, val, allowed_values):
+            if val not in allowed_values:
+                raise ValueError("Invalid value for %s: %s.  Choices are %s"
+                                 % (name, val, ",".join(allowed_values)))
+        validate('cover',     cover,     ('nodes', 'edges', 'paths'))
+        validate('direction', direction, ('children', 'parents'))
+        validate('order',     order,     ('pre', 'post'))
 
         if visited is None:
             visited = set()
-
-        result = (d, self) if depth else self
         key = key_fun(self)
 
-        if key in visited:
-            if cover == 'nodes':    return
-            if yield_root or d > 0: yield result
-            if cover == 'edges':    return
-        else:
-            if yield_root or d > 0: yield result
+        # Node traversal does not yield visited nodes.
+        if key in visited and cover == 'nodes':
+            return
 
-        successors = self.dependencies
-        if direction == 'parents':
-            successors = self.dependents
+        # Determine whether and what to yield for this node.
+        yield_me = yield_root or d > 0
+        result = (d, self) if depth else self
 
-        visited.add(key)
-        for name in sorted(successors):
-            child = successors[name]
-            for elt in child.preorder_traversal(visited, d+1, **kwargs):
-                yield elt
+        # Preorder traversal yields before successors
+        if yield_me and order == 'pre':
+            yield result
+
+        # Edge traversal yields but skips children of visited nodes
+        if not (key in visited and cover == 'edges'):
+            # This code determines direction and yields the children/parents
+            successors = self.dependencies
+            if direction == 'parents':
+                successors = self.dependents
+
+            visited.add(key)
+            for name in sorted(successors):
+                child = successors[name]
+                for elt in child.traverse(visited, d+1, **kwargs):
+                    yield elt
+
+        # Postorder traversal yields after successors
+        if yield_me and order == 'post':
+            yield result
 
 
     @property
@@ -540,13 +558,14 @@ class Spec(object):
 
 
     def dep_hash(self, length=None):
-        """Return a hash representing the dependencies of this spec
-           This will always normalize first so that the hash is consistent.
-        """
-        self.normalize()
+        """Return a hash representing all dependencies of this spec
+           (direct and indirect).
 
+           If you want this hash to be consistent, you should
+           concretize the spec first so that it is not ambiguous.
+        """
         sha = hashlib.sha1()
-        sha.update(str(self.dependencies))
+        sha.update(self.dep_string())
         full_hash = sha.hexdigest()
 
         return full_hash[:length]
@@ -609,7 +628,7 @@ class Spec(object):
               a problem.
         """
         while True:
-            virtuals =[v for v in self.preorder_traversal() if v.virtual]
+            virtuals =[v for v in self.traverse() if v.virtual]
             if not virtuals:
                 return
 
@@ -620,7 +639,7 @@ class Spec(object):
                 spec._replace_with(concrete)
 
             # If there are duplicate providers or duplicate provider deps, this
-            # consolidates them and merges constraints.
+            # consolidates them and merge constraints.
             self.normalize(force=True)
 
 
@@ -654,47 +673,51 @@ class Spec(object):
         return clone
 
 
-    def flat_dependencies(self):
-        """Return a DependencyMap containing all of this spec's dependencies
-           with their constraints merged.  If there are any conflicts, throw
-           an exception.
+    def flat_dependencies(self, **kwargs):
+        """Return a DependencyMap containing all of this spec's
+           dependencies with their constraints merged.
 
-           This will work even on specs that are not normalized; i.e. specs
-           that have two instances of the same dependency in the DAG.
-           This is used as the first step of normalization.
+           If copy is True, returns merged copies of its dependencies
+           without modifying the spec it's called on.
+
+           If copy is False, clears this spec's dependencies and
+           returns them.
         """
-        # This ensures that the package descriptions themselves are consistent
-        if not self.virtual:
-            self.package.validate_dependencies()
+        copy = kwargs.get('copy', True)
 
-        # Once that is guaranteed, we know any constraint violations are due
-        # to the spec -- so they're the user's fault, not Spack's.
         flat_deps = DependencyMap()
         try:
-            for spec in self.preorder_traversal():
+            for spec in self.traverse(root=False):
                 if spec.name not in flat_deps:
-                    new_spec = spec.copy(dependencies=False)
-                    flat_deps[spec.name] = new_spec
-
+                    if copy:
+                        flat_deps[spec.name] = spec.copy(deps=False)
+                    else:
+                        flat_deps[spec.name] = spec
                 else:
                     flat_deps[spec.name].constrain(spec)
 
-        except UnsatisfiableSpecError, e:
-            # This REALLY shouldn't happen unless something is wrong in spack.
-            # It means we got a spec DAG with two instances of the same package
-            # that had inconsistent constraints.  There's no way for a user to
-            # produce a spec like this (the parser adds all deps to the root),
-            # so this means OUR code is not sane!
-            raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
+            if not copy:
+                for dep in flat_deps.values():
+                    dep.dependencies.clear()
+                    dep.dependents.clear()
+                self.dependencies.clear()
 
-        return flat_deps
+            return flat_deps
+
+        except UnsatisfiableSpecError, e:
+            # Here, the DAG contains two instances of the same package
+            # with inconsistent constraints.  Users cannot produce
+            # inconsistent specs like this on the command line: the
+            # parser doesn't allow it. Spack must be broken!
+            raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
 
 
     def flatten(self):
         """Pull all dependencies up to the root (this spec).
            Merge constraints for dependencies with the same name, and if they
            conflict, throw an exception. """
-        self.dependencies = self.flat_dependencies()
+        for dep in self.flat_dependencies(copy=False):
+            self._add_dependency(dep)
 
 
     def _normalize_helper(self, visited, spec_deps, provider_index):
@@ -797,11 +820,12 @@ class Spec(object):
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_names()
 
-        # Then ensure that the packages referenced are sane, that the
-        # provided spec is sane, and that all dependency specs are in the
-        # root node of the spec.  flat_dependencies will do this for us.
-        spec_deps = self.flat_dependencies()
-        self.dependencies.clear()
+        # Ensure that the package & dep descriptions are consistent & sane
+        if not self.virtual:
+            self.package.validate_dependencies()
+
+        # Get all the dependencies into one DependencyMap
+        spec_deps = self.flat_dependencies(copy=False)
 
         # Figure out which of the user-provided deps provide virtual deps.
         # Remove virtual deps that are already provided by something in the spec
@@ -814,7 +838,7 @@ class Spec(object):
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.
-        extra = set(spec_deps.viewkeys()).difference(visited)
+        extra = set(spec_deps.keys()).difference(visited)
 
         # Also subtract out all the packags that provide a needed vpkg
         vdeps = [v for v in self.package.virtual_dependencies()]
@@ -843,7 +867,7 @@ class Spec(object):
            If they're not, it will raise either UnknownPackageError or
            UnsupportedCompilerError.
         """
-        for spec in self.preorder_traversal():
+        for spec in self.traverse():
             # Don't get a package for a virtual name.
             if not spec.virtual:
                 spack.db.get(spec.name)
@@ -911,17 +935,17 @@ class Spec(object):
     def common_dependencies(self, other):
         """Return names of dependencies that self an other have in common."""
         common = set(
-            s.name for s in self.preorder_traversal(root=False))
+            s.name for s in self.traverse(root=False))
         common.intersection_update(
-            s.name for s in other.preorder_traversal(root=False))
+            s.name for s in other.traverse(root=False))
         return common
 
 
     def dep_difference(self, other):
         """Returns dependencies in self that are not in other."""
-        mine = set(s.name for s in self.preorder_traversal(root=False))
+        mine = set(s.name for s in self.traverse(root=False))
         mine.difference_update(
-            s.name for s in other.preorder_traversal(root=False))
+            s.name for s in other.traverse(root=False))
         return mine
 
 
@@ -980,8 +1004,8 @@ class Spec(object):
                 return False
 
         # For virtual dependencies, we need to dig a little deeper.
-        self_index = ProviderIndex(self.preorder_traversal(), restrict=True)
-        other_index = ProviderIndex(other.preorder_traversal(), restrict=True)
+        self_index = ProviderIndex(self.traverse(), restrict=True)
+        other_index = ProviderIndex(other.traverse(), restrict=True)
 
         # This handles cases where there are already providers for both vpkgs
         if not self_index.satisfies(other_index):
@@ -1003,7 +1027,7 @@ class Spec(object):
 
     def virtual_dependencies(self):
         """Return list of any virtual deps in this spec."""
-        return [spec for spec in self.preorder_traversal() if spec.virtual]
+        return [spec for spec in self.traverse() if spec.virtual]
 
 
     def _dup(self, other, **kwargs):
@@ -1018,22 +1042,29 @@ class Spec(object):
                Whether deps should be copied too.  Set to false to copy a
                spec but not its dependencies.
         """
-        # TODO: this needs to handle DAGs.
+        # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
         self.variants = other.variants.copy()
         self.architecture = other.architecture
-        self.compiler = None
-        if other.compiler:
-            self.compiler = other.compiler.copy()
-
+        self.compiler = other.compiler.copy() if other.compiler else None
         self.dependents = DependencyMap()
-        copy_deps = kwargs.get('dependencies', True)
-        if copy_deps:
-            self.dependencies = other.dependencies.copy()
-        else:
-            self.dependencies = DependencyMap()
+        self.dependencies = DependencyMap()
 
+        # If we copy dependencies, preserve DAG structure in the new spec
+        if kwargs.get('deps', True):
+            # This copies the deps from other using _dup(deps=False)
+            new_nodes = other.flat_dependencies()
+            new_nodes[self.name] = self
+
+            # Hook everything up properly here by traversing.
+            for spec in other.traverse(cover='nodes'):
+                parent = new_nodes[spec.name]
+                for child in spec.dependencies:
+                    if child not in parent.dependencies:
+                        parent._add_dependency(new_nodes[child])
+
+        # Since we preserved structure, we can copy _normal safely.
         self._normal = other._normal
         self._concrete = other._concrete
 
@@ -1057,7 +1088,7 @@ class Spec(object):
 
     def __getitem__(self, name):
         """TODO: reconcile __getitem__, _add_dependency, __contains__"""
-        for spec in self.preorder_traversal():
+        for spec in self.traverse():
             if spec.name == name:
                 return spec
 
@@ -1068,15 +1099,82 @@ class Spec(object):
         """True if this spec has any dependency that satisfies the supplied
            spec."""
         spec = self._autospec(spec)
-        for s in self.preorder_traversal():
+        for s in self.traverse():
             if s.satisfies(spec):
                 return True
         return False
 
 
-    def _cmp_key(self):
+    def sorted_deps(self):
+        """Return a list of all dependencies sorted by name."""
+        deps = self.flat_dependencies()
+        return tuple(deps[name] for name in sorted(deps))
+
+
+    def _eq_dag(self, other, vs, vo):
+        """Recursive helper for eq_dag and ne_dag.  Does the actual DAG
+           traversal."""
+        vs.add(id(self))
+        vo.add(id(other))
+
+        if self.ne_node(other):
+            return False
+
+        if len(self.dependencies) != len(other.dependencies):
+            return False
+
+        ssorted = [self.dependencies[name]  for name in sorted(self.dependencies)]
+        osorted = [other.dependencies[name] for name in sorted(other.dependencies)]
+
+        for s, o in zip(ssorted, osorted):
+            visited_s = id(s) in vs
+            visited_o = id(o) in vo
+
+            # Check for duplicate or non-equal dependencies
+            if visited_s != visited_o: return False
+
+            # Skip visited nodes
+            if visited_s or visited_o: continue
+
+            # Recursive check for equality
+            if not s._eq_dag(o, vs, vo):
+                return False
+
+        return True
+
+
+    def eq_dag(self, other):
+        """True if the full dependency DAGs of specs are equal"""
+        return self._eq_dag(other, set(), set())
+
+
+    def ne_dag(self, other):
+        """True if the full dependency DAGs of specs are not equal"""
+        return not self.eq_dag(other)
+
+
+    def _cmp_node(self):
+        """Comparison key for just *this node* and not its deps."""
         return (self.name, self.versions, self.variants,
-                self.architecture, self.compiler, self.dependencies)
+                self.architecture, self.compiler)
+
+
+    def eq_node(self, other):
+        """Equality with another spec, not including dependencies."""
+        return self._cmp_node() == other._cmp_node()
+
+
+    def ne_node(self, other):
+        """Inequality with another spec, not including dependencies."""
+        return self._cmp_node() != other._cmp_node()
+
+
+    def _cmp_key(self):
+        """Comparison key for this node and all dependencies *without*
+           considering structure.  This is the default, as
+           normalization will restore structure.
+        """
+        return self._cmp_node() + (self.sorted_deps(),)
 
 
     def colorized(self):
@@ -1179,12 +1277,12 @@ class Spec(object):
         return result
 
 
+    def dep_string(self):
+        return ''.join("^" + dep.format() for dep in self.sorted_deps())
+
+
     def __str__(self):
-        by_name = lambda d: d.name
-        deps = self.preorder_traversal(key=by_name, root=False)
-        sorted_deps = sorted(deps, key=by_name)
-        dep_string = ''.join("^" + dep.format() for dep in sorted_deps)
-        return self.format() + dep_string
+        return self.format() + self.dep_string()
 
 
     def tree(self, **kwargs):
@@ -1200,7 +1298,7 @@ class Spec(object):
         out = ""
         cur_id = 0
         ids = {}
-        for d, node in self.preorder_traversal(cover=cover, depth=True):
+        for d, node in self.traverse(order='pre', cover=cover, depth=True):
             out += " " * indent
             if depth:
                 out += "%-4d" % d

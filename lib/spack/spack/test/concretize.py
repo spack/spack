@@ -134,29 +134,29 @@ class ConcretizeTest(MockPackagesTest):
     def test_virtual_is_fully_expanded_for_callpath(self):
         # force dependence on fake "zmpi" by asking for MPI 10.0
         spec = Spec('callpath ^mpi@10.0')
-        self.assertIn('mpi', spec.dependencies)
-        self.assertNotIn('fake', spec)
+        self.assertTrue('mpi' in spec.dependencies)
+        self.assertFalse('fake' in spec)
 
         spec.concretize()
 
-        self.assertIn('zmpi', spec.dependencies)
-        self.assertNotIn('mpi', spec)
-        self.assertIn('fake', spec.dependencies['zmpi'])
+        self.assertTrue('zmpi' in spec.dependencies)
+        self.assertFalse('mpi' in spec)
+        self.assertTrue('fake' in spec.dependencies['zmpi'])
 
 
     def test_virtual_is_fully_expanded_for_mpileaks(self):
         spec = Spec('mpileaks ^mpi@10.0')
-        self.assertIn('mpi', spec.dependencies)
-        self.assertNotIn('fake', spec)
+        self.assertTrue('mpi' in spec.dependencies)
+        self.assertFalse('fake' in spec)
 
         spec.concretize()
 
-        self.assertIn('zmpi', spec.dependencies)
-        self.assertIn('callpath', spec.dependencies)
-        self.assertIn('zmpi', spec.dependencies['callpath'].dependencies)
-        self.assertIn('fake', spec.dependencies['callpath'].dependencies['zmpi'].dependencies)
+        self.assertTrue('zmpi' in spec.dependencies)
+        self.assertTrue('callpath' in spec.dependencies)
+        self.assertTrue('zmpi' in spec.dependencies['callpath'].dependencies)
+        self.assertTrue('fake' in spec.dependencies['callpath'].dependencies['zmpi'].dependencies)
 
-        self.assertNotIn('mpi', spec)
+        self.assertFalse('mpi' in spec)
 
 
     def test_my_dep_depends_on_provider_of_my_virtual_dep(self):

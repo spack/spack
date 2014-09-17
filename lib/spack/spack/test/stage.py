@@ -51,28 +51,20 @@ readme_text      = "hello world!\n"
 stage_name = 'spack-test-stage'
 
 
-class with_tmp(object):
-    """Decorator that executes a function with or without spack set to use
-       a temp dir.  Spack allows builds to happen directly in the
-       stage directory or in a tmp dir and symlinked into the stage
-       directory, so this lets us use the same test in both cases.
+@contextmanager
+def use_tmp(use_tmp):
+    """Allow some test code to be executed with spack.use_tmp_stage
+       set to a certain value.  Context manager makes sure it's reset
+       on failure.
     """
-    def __init__(self, use_tmp):
-        self.use_tmp = use_tmp
-
-    def __call__(self, fun):
-        use_tmp = self.use_tmp
-        def new_test_function(self):
-            old_tmp = spack.use_tmp_stage
-            spack.use_tmp_stage = use_tmp
-            fun(self)
-            spack.use_tmp_stage = old_tmp
-        return new_test_function
+    old_tmp = spack.use_tmp_stage
+    spack.use_tmp_stage = use_tmp
+    yield
+    spack.use_tmp_stage = old_tmp
 
 
 class StageTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         """This sets up a mock archive to fetch, and a mock temp space for use
            by the Stage class.  It doesn't actually create the Stage -- that
            is done by individual tests.
@@ -92,52 +84,58 @@ class StageTest(unittest.TestCase):
             tar('czf', archive_name, archive_dir)
 
         # Make spack use the test environment for tmp stuff.
-        cls.old_tmp_dirs = spack.tmp_dirs
+        self.old_tmp_dirs = spack.tmp_dirs
         spack.tmp_dirs = [test_tmp_path]
 
+        # record this since this test changes to directories that will
+        # be removed.
+        self.working_dir = os.getcwd()
 
-    @classmethod
-    def tearDownClass(cls):
+
+    def tearDown(self):
         """Blows away the test environment directory."""
         shutil.rmtree(test_files_dir)
 
+        # chdir back to original working dir
+        os.chdir(self.working_dir)
+
         # restore spack's original tmp environment
-        spack.tmp_dirs = cls.old_tmp_dirs
+        spack.tmp_dirs = self.old_tmp_dirs
 
 
     def get_stage_path(self, stage, stage_name):
-        """Figure out based on a stage and an intended name where it should
-           be living.  This depends on whether it's named or not.
+        """Figure out where a stage should be living.  This depends on
+           whether it's named.
         """
-        if stage_name:
+        if stage_name is not None:
             # If it is a named stage, we know where the stage should be
-            stage_path = join_path(spack.stage_path, stage_name)
+            return join_path(spack.stage_path, stage_name)
         else:
             # If it's unnamed, ensure that we ran mkdtemp in the right spot.
-            stage_path = stage.path
-            self.assertIsNotNone(stage_path)
-            self.assertEqual(
-                os.path.commonprefix((stage_path, spack.stage_path)),
-                spack.stage_path)
-        return stage_path
+            self.assertTrue(stage.path is not None)
+            self.assertTrue(stage.path.startswith(spack.stage_path))
+            return stage.path
 
 
     def check_setup(self, stage, stage_name):
         """Figure out whether a stage was set up correctly."""
         stage_path = self.get_stage_path(stage, stage_name)
+
+        # Ensure stage was created in the spack stage directory
         self.assertTrue(os.path.isdir(stage_path))
 
         if spack.use_tmp_stage:
-            # Make sure everything was created and linked correctly for
-            # a tmp stage.
+            # Check that the stage dir is really a symlink.
             self.assertTrue(os.path.islink(stage_path))
 
+            # Make sure it points to a valid directory
             target = os.path.realpath(stage_path)
             self.assertTrue(os.path.isdir(target))
             self.assertFalse(os.path.islink(target))
-            self.assertEqual(
-                os.path.commonprefix((target, test_tmp_path)),
-                test_tmp_path)
+
+            # Make sure the directory is in the place we asked it to
+            # be (see setUp and tearDown)
+            self.assertTrue(target.startswith(test_tmp_path))
 
         else:
             # Make sure the stage path is NOT a link for a non-tmp stage
@@ -146,15 +144,15 @@ class StageTest(unittest.TestCase):
 
     def check_fetch(self, stage, stage_name):
         stage_path = self.get_stage_path(stage, stage_name)
-        self.assertIn(archive_name, os.listdir(stage_path))
+        self.assertTrue(archive_name in os.listdir(stage_path))
         self.assertEqual(join_path(stage_path, archive_name),
                          stage.archive_file)
 
 
     def check_expand_archive(self, stage, stage_name):
         stage_path = self.get_stage_path(stage, stage_name)
-        self.assertIn(archive_name, os.listdir(stage_path))
-        self.assertIn(archive_dir, os.listdir(stage_path))
+        self.assertTrue(archive_name in os.listdir(stage_path))
+        self.assertTrue(archive_dir in os.listdir(stage_path))
 
         self.assertEqual(
             join_path(stage_path, archive_dir),
@@ -192,32 +190,40 @@ class StageTest(unittest.TestCase):
             self.assertFalse(os.path.exists(target))
 
 
-    def checkSetupAndDestroy(self, stage_name=None):
-        stage = Stage(archive_url, name=stage_name)
-        self.check_setup(stage, stage_name)
-
-        stage.destroy()
-        self.check_destroy(stage, stage_name)
-
-
-    @with_tmp(True)
     def test_setup_and_destroy_name_with_tmp(self):
-        self.checkSetupAndDestroy(stage_name)
+        with use_tmp(True):
+            stage = Stage(archive_url, name=stage_name)
+            self.check_setup(stage, stage_name)
+
+            stage.destroy()
+            self.check_destroy(stage, stage_name)
 
 
-    @with_tmp(False)
     def test_setup_and_destroy_name_without_tmp(self):
-        self.checkSetupAndDestroy(stage_name)
+        with use_tmp(False):
+            stage = Stage(archive_url, name=stage_name)
+            self.check_setup(stage, stage_name)
+
+            stage.destroy()
+            self.check_destroy(stage, stage_name)
 
 
-    @with_tmp(True)
     def test_setup_and_destroy_no_name_with_tmp(self):
-        self.checkSetupAndDestroy(None)
+        with use_tmp(True):
+            stage = Stage(archive_url)
+            self.check_setup(stage, None)
+
+            stage.destroy()
+            self.check_destroy(stage, None)
 
 
-    @with_tmp(False)
     def test_setup_and_destroy_no_name_without_tmp(self):
-        self.checkSetupAndDestroy(None)
+        with use_tmp(False):
+            stage = Stage(archive_url)
+            self.check_setup(stage, None)
+
+            stage.destroy()
+            self.check_destroy(stage, None)
 
 
     def test_chdir(self):
@@ -286,7 +292,7 @@ class StageTest(unittest.TestCase):
         with closing(open('foobar', 'w')) as file:
             file.write("this file is to be destroyed.")
 
-        self.assertIn('foobar', os.listdir(stage.expanded_archive_path))
+        self.assertTrue('foobar' in os.listdir(stage.expanded_archive_path))
 
         # Make sure the file is not there after restage.
         stage.restage()
@@ -295,7 +301,7 @@ class StageTest(unittest.TestCase):
 
         stage.chdir_to_archive()
         self.check_chdir_to_archive(stage, stage_name)
-        self.assertNotIn('foobar', os.listdir(stage.expanded_archive_path))
+        self.assertFalse('foobar' in os.listdir(stage.expanded_archive_path))
 
         stage.destroy()
         self.check_destroy(stage, stage_name)

@@ -24,7 +24,7 @@
 ##############################################################################
 import os
 import re
-import argparse
+from external import argparse
 import hashlib
 from pprint import pprint
 from subprocess import CalledProcessError

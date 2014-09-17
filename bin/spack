@@ -24,11 +24,10 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
-if not sys.version_info[:2] >= (2,7):
-    sys.exit("Spack requires Python 2.7.  Version was %s." % sys.version_info)
+if not sys.version_info[:2] >= (2,6):
+    sys.exit("Spack requires Python 2.6.  Version was %s." % sys.version_info)
 
 import os
-import argparse
 
 # Find spack's location and its prefix.
 SPACK_FILE = os.path.realpath(os.path.expanduser(__file__))
@@ -51,6 +50,7 @@ del SPACK_FILE, SPACK_PREFIX, SPACK_LIB_PATH
 import llnl.util.tty as tty
 import spack
 from spack.error import SpackError
+from external import argparse
 
 # Command parsing
 parser = argparse.ArgumentParser(
@@ -75,6 +75,13 @@ for cmd in spack.cmd.commands:
     module = spack.cmd.get_module(cmd)
     subparser = subparsers.add_parser(cmd, help=module.description)
     module.setup_parser(subparser)
+
+# Just print help and exit if run with no arguments at all
+if len(sys.argv) == 1:
+    parser.print_help()
+    sys.exit(1)
+
+# actually parse the args.
 args = parser.parse_args()
 
 # Set up environment based on args.

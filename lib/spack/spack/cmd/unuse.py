@@ -22,15 +22,17 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
-import spack.cmd.use
+from external import argparse
+import spack.modules
 
 description ="Remove package from environment using dotkit."
 
 def setup_parser(subparser):
+    """Parser is only constructed so that this prints a nice help
+       message with -h. """
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help='Spec of package to remove.')
+        'spec', nargs=argparse.REMAINDER, help='Spec of package to unuse with dotkit.')
 
 
 def unuse(parser, args):
-    spack.cmd.use.print_help()
+    spack.modules.print_help()

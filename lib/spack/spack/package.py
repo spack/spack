@@ -360,7 +360,7 @@ class Package(object):
 
         # Version-ize the keys in versions dict
         try:
-            self.versions = { Version(v):h for v,h in self.versions.items() }
+            self.versions = dict((Version(v), h) for v,h in self.versions.items())
         except ValueError:
             raise ValueError("Keys of versions dict in package %s must be versions!"
                              % self.name)
@@ -773,7 +773,7 @@ class Package(object):
                 ' '.join(formatted_deps))
 
         self.remove_prefix()
-        tty.msg("Successfully uninstalled %s." % self.spec)
+        tty.msg("Successfully uninstalled %s." % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_uninstall(self)
