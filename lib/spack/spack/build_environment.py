@@ -144,8 +144,16 @@ def set_build_environment_variables(pkg):
     os.environ[SPACK_DEBUG_LOG_DIR] = spack.spack_working_dir
 
     # Add dependencies to CMAKE_PREFIX_PATH
-    dep_prefixes = [d.package.prefix for d in pkg.spec.dependencies.values()]
     path_set("CMAKE_PREFIX_PATH", dep_prefixes)
+
+    # Add any pkgconfig directories to PKG_CONFIG_PATH
+    pkg_config_dirs = []
+    for p in dep_prefixes:
+        for libdir in ('lib', 'lib64'):
+            pcdir = join_path(p, libdir, 'pkgconfig')
+            if os.path.isdir(pcdir):
+                pkg_config_dirs.append(pcdir)
+    path_set("PKG_CONFIG_PATH", pkg_config_dirs)
 
 
 def set_module_variables_for_package(pkg):

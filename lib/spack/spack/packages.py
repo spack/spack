@@ -69,7 +69,10 @@ class PackageDB(object):
 
         if not spec in self.instances:
             package_class = self.get_class_for_package_name(spec.name)
-            self.instances[spec.copy()] = package_class(spec)
+            try:
+                self.instances[spec.copy()] = package_class(spec)
+            except Exception, e:
+                raise FailedConstructorError(spec.name, e)
 
         return self.instances[spec]
 
@@ -231,4 +234,13 @@ class UnknownPackageError(spack.error.SpackError):
     """Raised when we encounter a package spack doesn't have."""
     def __init__(self, name):
         super(UnknownPackageError, self).__init__("Package %s not found." % name)
+        self.name = name
+
+
+class FailedConstructorError(spack.error.SpackError):
+    """Raised when a package's class constructor fails."""
+    def __init__(self, name, reason):
+        super(FailedConstructorError, self).__init__(
+            "Class constructor failed for package '%s'." % name,
+            str(reason))
         self.name = name
