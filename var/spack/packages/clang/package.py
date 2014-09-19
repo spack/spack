@@ -36,7 +36,7 @@ class Clang(Package):
     version('3.4.2', '87945973b7c73038871c5f849a818588')
 
     def install(self, spec, prefix):
-        env['CXXFLAGS'] = '-std=c++11'
+        env['CXXFLAGS'] = self.compiler.cxx11_flag
 
         with working_dir('spack-build', create=True):
             cmake('..',

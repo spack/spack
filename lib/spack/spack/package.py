@@ -48,6 +48,7 @@ from llnl.util.lang import *
 import spack
 import spack.spec
 import spack.error
+import spack.compilers
 import spack.hooks
 import spack.build_environment as build_env
 import spack.url as url
@@ -503,6 +504,14 @@ class Package(object):
     def prefix(self):
         """Get the prefix into which this package should be installed."""
         return self.spec.prefix
+
+
+    @property
+    def compiler(self):
+        """Get the spack.compiler.Compiler object used to build this package."""
+        if not self.spec.concrete:
+            raise ValueError("Can only get a compiler for a concrete package.")
+        return spack.compilers.compiler_for_spec(self.spec.compiler)
 
 
     def url_version(self, version):

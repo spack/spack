@@ -35,12 +35,12 @@ class LlvmLld(Package):
     version('3.4', '3b6a17e58c8416c869c14dd37682f78e')
 
     def install(self, spec, prefix):
-        env['CXXFLAGS'] = '-std=c++11'
+        env['CXXFLAGS'] = self.compier.cxx11_flag
 
         with working_dir('spack-build', create=True):
             cmake('..',
                   '-DLLD_PATH_TO_LLVM_BUILD=%s' % spec['llvm'].prefix,
                   '-DLLVM_MAIN_SRC_DIR=%s' % spec['llvm'].prefix,
                   *std_cmake_args)
-            make('VERBOSE=1')
+            make()
             make("install")

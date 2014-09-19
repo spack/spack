@@ -37,7 +37,7 @@ class Llvm(Package):
     version('3.4.2', 'a20669f75967440de949ac3b1bad439c')
 
     def install(self, spec, prefix):
-        env['CXXFLAGS'] = '-std=c++11'
+        env['CXXFLAGS'] = self.compiler.cxx11_flag
 
         with working_dir('spack-build', create=True):
             cmake('..',

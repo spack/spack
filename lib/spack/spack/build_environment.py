@@ -84,7 +84,7 @@ class MakeExecutable(Executable):
 
 def set_compiler_environment_variables(pkg):
     assert(pkg.spec.concrete)
-    compiler = compilers.compiler_for_spec(pkg.spec.compiler)
+    compiler = pkg.compiler
 
     # Set compiler variables used by CMake and autotools
     os.environ['CC']  = 'cc'
