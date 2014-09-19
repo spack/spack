@@ -24,10 +24,10 @@
 ##############################################################################
 import os
 import shutil
-import argparse
 from datetime import datetime
 from contextlib import closing
 
+from external import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 from llnl.util.filesystem import mkdirp, join_path
@@ -41,7 +41,7 @@ from spack.stage import Stage
 from spack.util.compression import extension
 
 
-description = "Manage spack mirrors."
+description = "Manage mirrors."
 
 def setup_parser(subparser):
     subparser.add_argument(

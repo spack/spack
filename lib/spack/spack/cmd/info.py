@@ -37,15 +37,17 @@ def info(parser, args):
     package = spack.db.get(args.name)
     print "Package:   ", package.name
     print "Homepage:  ", package.homepage
-    print "Download:  ", package.url
 
     print
     print "Safe versions:  "
 
-    if package.versions:
-        colify(reversed(sorted(package.versions)), indent=4)
+    if not package.versions:
+        print("None.")
     else:
-        print "None.  Use spack versions %s to get a list of downloadable versions." % package.name
+        maxlen = max(len(str(v)) for v in package.versions)
+        fmt = "%%-%ss" % maxlen
+        for v in reversed(sorted(package.versions)):
+            print "    " + (fmt % v) + "    " + package.url_for_version(v)
 
     print
     print "Dependencies:"

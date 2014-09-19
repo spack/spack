@@ -22,7 +22,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import llnl.util.tty as tty
 from spack.compiler import *
+from spack.version import ver
 
 class Gcc(Compiler):
     # Subclasses use possible names of C compiler
@@ -39,6 +41,15 @@ class Gcc(Compiler):
 
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     suffixes = [r'-mp-\d\.\d']
+
+    @property
+    def cxx11_flag(self):
+        if self.version < ver('4.3'):
+            tty.die("Only gcc 4.3 and above support c++11.")
+        elif self.version < ver('4.7'):
+            return "-std=gnu++0x"
+        else:
+            return "-std=gnu++11"
 
     @classmethod
     def fc_version(cls, fc):

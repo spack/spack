@@ -47,7 +47,8 @@ import os
 import sys
 import re
 from bisect import bisect_left
-from functools import total_ordering, wraps
+from functools import wraps
+from external.functools import total_ordering
 
 import llnl.util.compare.none_high as none_high
 import llnl.util.compare.none_low as none_low
@@ -181,7 +182,7 @@ class Version(object):
 
         # Add possible alpha or beta indicator at the end of each segemnt
         # We treat these specially b/c they're so common.
-        wc += '[ab]?)?' * (len(segments) - 1)
+        wc += '(?:[a-z]|alpha|beta)?)?' * (len(segments) - 1)
         return wc
 
 

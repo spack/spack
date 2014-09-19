@@ -28,10 +28,10 @@ class Mpileaks(Package):
     homepage = "http://www.llnl.gov"
     url      = "http://www.llnl.gov/mpileaks-1.0.tar.gz"
 
-    versions = { 1.0 : 'foobarbaz',
-                 2.1 : 'foobarbaz',
-                 2.2 : 'foobarbaz',
-                 2.3 : 'foobarbaz' }
+    version(1.0, 'foobarbaz')
+    version(2.1, 'foobarbaz')
+    version(2.2, 'foobarbaz')
+    version(2.3, 'foobarbaz')
 
     depends_on("mpi")
     depends_on("callpath")

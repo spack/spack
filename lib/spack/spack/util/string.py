@@ -33,7 +33,9 @@ def comma_list(sequence, article=''):
         return sequence[0]
     else:
         out =  ', '.join(str(s) for s in sequence[:-1])
-        out += ', '
+        if len(sequence) != 2:
+            out += ','   # oxford comma
+        out += ' '
         if article:
             out += article + ' '
         out += str(sequence[-1])

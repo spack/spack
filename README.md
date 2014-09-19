@@ -35,4 +35,20 @@ for Spack is also available.
 Authors
 ----------------
 Spack was written by Todd Gamblin, tgamblin@llnl.gov.
-LLNL-CODE-647188
+
+Significant contributions were also made by the following awesome
+people:
+
+  * David Beckingsale
+  * David Boehme
+  * Luc Jaulmes
+  * Matt Legendre
+  * Greg Lee
+  * Adam Moody
+
+Release
+----------------
+Spack is released under an LGPL license.  For more details see the
+LICENSE file.
+
+``LLNL-CODE-647188``

@@ -82,12 +82,16 @@ def parse_version_string_with_indices(path):
     """Try to extract a version string from a filename or URL.  This is taken
        largely from Homebrew's Version class."""
 
-    if os.path.isdir(path):
-        stem = os.path.basename(path)
-    elif re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', path):
-        stem = comp.stem(os.path.dirname(path))
-    else:
-        stem = comp.stem(path)
+    # Strip off sourceforge download stuffix.
+    if re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', path):
+        path = os.path.dirname(path)
+
+    # Strip archive extension
+    path = comp.strip_extension(path)
+
+    # Take basename to avoid including parent dirs in version name
+    # Remember the offset of the stem in the full path.
+    stem = os.path.basename(path)
 
     version_types = [
         # GitHub tarballs, e.g. v1.2.3
@@ -137,10 +141,10 @@ def parse_version_string_with_indices(path):
         (r'_((\d+\.)+\d+[a-z]?)[.]orig$', stem),
 
         # e.g. http://www.openssl.org/source/openssl-0.9.8s.tar.gz
-        (r'-([^-]+)', stem),
+        (r'-([^-]+(-alpha|-beta)?)', stem),
 
         # e.g. astyle_1.23_macosx.tar.gz
-        (r'_([^_]+)', stem),
+        (r'_([^_]+(_alpha|_beta)?)', stem),
 
         # e.g. http://mirrors.jenkins-ci.org/war/1.486/jenkins.war
         (r'\/(\d\.\d+)\/', path),
@@ -152,7 +156,9 @@ def parse_version_string_with_indices(path):
         regex, match_string = vtype[:2]
         match = re.search(regex, match_string)
         if match and match.group(1) is not None:
-            return match.group(1), match.start(1), match.end(1)
+            version = match.group(1)
+            start = path.index(version)
+            return version, start, start+len(version)
 
     raise UndetectableVersionError(path)
 

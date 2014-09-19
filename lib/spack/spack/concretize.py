@@ -72,7 +72,7 @@ class DefaultConcretizer(object):
         if valid_versions:
             spec.versions = ver([valid_versions[-1]])
         else:
-            spec.versions = ver([pkg.default_version])
+            raise NoValidVerionError(spec)
 
 
     def concretize_architecture(self, spec):
@@ -118,7 +118,7 @@ class DefaultConcretizer(object):
             return
 
         try:
-            nearest = next(p for p in spec.preorder_traversal(direction='parents')
+            nearest = next(p for p in spec.traverse(direction='parents')
                            if p.compiler is not None).compiler
 
             if not nearest in all_compilers:
@@ -158,3 +158,11 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
         super(UnavailableCompilerVersionError, self).__init__(
             "No available compiler version matches '%s'" % compiler_spec,
             "Run 'spack compilers' to see available compiler Options.")
+
+
+class NoValidVerionError(spack.error.SpackError):
+    """Raised when there is no available version for a package that
+       satisfies a spec."""
+    def __init__(self, spec):
+        super(NoValidVerionError, self).__init__(
+            "No available version of %s matches '%s'" % (spec.name, spec.versions))

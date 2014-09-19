@@ -22,12 +22,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
+from external import argparse
 
 import llnl.util.tty as tty
 
 import spack
 import spack.cmd
+import spack.packages
 
 description="Remove an installed package"
 
@@ -68,7 +69,15 @@ def uninstall(parser, args):
         if len(matching_specs) == 0:
             tty.die("%s does not match any installed packages." % spec)
 
-        pkgs.extend(spack.db.get(s) for s in matching_specs)
+        for s in matching_specs:
+            try:
+                # should work if package is known to spack
+                pkgs.append(spack.db.get(s))
+
+            except spack.packages.UnknownPackageError, e:
+                # The package.py file has gone away -- but still want to uninstall.
+                spack.Package(s).do_uninstall(force=True)
+
 
     # Sort packages to be uninstalled by the number of installed dependents
     # This ensures we do things in the right order

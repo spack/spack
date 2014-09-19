@@ -119,9 +119,8 @@ def caller_locals():
 
 
 def get_calling_package_name():
-    """Make sure that the caller is a class definition, and return
-       the module's name.  This is useful for getting the name of
-       spack packages from inside a relation function.
+    """Make sure that the caller is a class definition, and return the
+       module's name.
     """
     stack = inspect.stack()
     try:
@@ -144,8 +143,9 @@ def get_calling_package_name():
 def attr_required(obj, attr_name):
     """Ensure that a class has a required attribute."""
     if not hasattr(obj, attr_name):
-        tty.die("No required attribute '%s' in class '%s'"
-                % (attr_name, obj.__class__.__name__))
+        raise RequiredAttributeError(
+            "No required attribute '%s' in class '%s'"
+            % (attr_name, obj.__class__.__name__))
 
 
 def attr_setdefault(obj, name, value):
@@ -259,3 +259,8 @@ def in_function(function_name):
         return False
     finally:
         del stack
+
+
+class RequiredAttributeError(ValueError):
+    def __init__(self, message):
+        super(RequiredAttributeError, self).__init__(message)

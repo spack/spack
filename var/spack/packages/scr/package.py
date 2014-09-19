@@ -30,7 +30,7 @@ class Scr(Package):
 
     depends_on("mpi")
 
-    versions = { '1.1-7' : 'a5930e9ab27d1b7049447c2fd7734ebd' }
+    version('1.1-7', 'a5930e9ab27d1b7049447c2fd7734ebd')
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix,

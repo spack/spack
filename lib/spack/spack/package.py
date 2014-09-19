@@ -48,6 +48,7 @@ from llnl.util.lang import *
 import spack
 import spack.spec
 import spack.error
+import spack.compilers
 import spack.hooks
 import spack.build_environment as build_env
 import spack.url as url
@@ -57,7 +58,7 @@ from spack.util.web import get_pages
 from spack.util.compression import allowed_archive, extension
 
 """Allowed URL schemes for spack packages."""
-_ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file"]
+_ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
 
 class Package(object):
@@ -296,9 +297,12 @@ class Package(object):
     """
 
     #
-    # These variables are defaults for the various relations defined on
-    # packages.  Subclasses will have their own versions of these.
+    # These variables are defaults for the various "relations".
     #
+    """Map of information about Versions of this package.
+       Map goes: Version -> VersionDescriptor"""
+    versions = {}
+
     """Specs of dependency packages, keyed by name."""
     dependencies = {}
 
@@ -317,17 +321,8 @@ class Package(object):
     """By default we build in parallel.  Subclasses can override this."""
     parallel = True
 
-    """Dirty hack for forcing packages with uninterpretable URLs
-       TODO: get rid of this.
-    """
-    force_url = False
-
 
     def __init__(self, spec):
-        # These attributes are required for all packages.
-        attr_required(self.__class__, 'homepage')
-        attr_required(self.__class__, 'url')
-
         # this determines how the package should be built.
         self.spec = spec
 
@@ -337,28 +332,36 @@ class Package(object):
         if '.' in self.name:
             self.name = self.name[self.name.rindex('.') + 1:]
 
-        # Make sure URL is an allowed type
-        validate_package_url(self.url)
-
-        # patch up the URL with a new version if the spec version is concrete
-        if self.spec.versions.concrete:
-            self.url = self.url_for_version(self.spec.version)
-
         # This is set by scraping a web page.
         self._available_versions = None
 
-        # versions should be a dict from version to checksum, for safe versions
-        # of this package.  If it's not present, make it an empty dict.
-        if not hasattr(self, 'versions'):
-            self.versions = {}
+        # Sanity check some required variables that could be
+        # overridden by package authors.
+        def sanity_check_dict(attr_name):
+            if not hasattr(self, attr_name):
+                raise PackageError("Package %s must define %s" % attr_name)
 
-        if not isinstance(self.versions, dict):
-            raise ValueError("versions attribute of package %s must be a dict!"
-                             % self.name)
+            attr = getattr(self, attr_name)
+            if not isinstance(attr, dict):
+                raise PackageError("Package %s has non-dict %s attribute!"
+                                   % (self.name, attr_name))
+        sanity_check_dict('versions')
+        sanity_check_dict('dependencies')
+        sanity_check_dict('conflicted')
+        sanity_check_dict('patches')
+
+        # Check versions in the versions dict.
+        for v in self.versions:
+            assert(isinstance(v, Version))
+
+        # Check version descriptors
+        for v in sorted(self.versions):
+            vdesc = self.versions[v]
+            assert(isinstance(vdesc, spack.relations.VersionDescriptor))
 
         # Version-ize the keys in versions dict
         try:
-            self.versions = { Version(v):h for v,h in self.versions.items() }
+            self.versions = dict((Version(v), h) for v,h in self.versions.items())
         except ValueError:
             raise ValueError("Keys of versions dict in package %s must be versions!"
                              % self.name)
@@ -366,24 +369,16 @@ class Package(object):
         # stage used to build this package.
         self._stage = None
 
+        # patch up self.url based on the actual version
+        if self.spec.concrete:
+            self.url = self.url_for_version(self.version)
+
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
             self.list_url = None
 
         if not hasattr(self, 'list_depth'):
             self.list_depth = 1
-
-
-    @property
-    def default_version(self):
-        """Get the version in the default URL for this package,
-           or fails."""
-        try:
-            return url.parse_version(self.__class__.url)
-        except UndetectableVersionError:
-            raise PackageError(
-                "Couldn't extract a default version from %s." % self.url,
-                " You must specify it explicitly in the package file.")
 
 
     @property
@@ -399,9 +394,13 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
+            if not self.url:
+                raise PackageVersionError(self.version)
+
             # TODO: move this logic into a mirror module.
             mirror_path = "%s/%s" % (self.name, "%s-%s.%s" % (
                 self.name, self.version, extension(self.url)))
+
             self._stage = Stage(
                 self.url, mirror_path=mirror_path, name=self.spec.short_spec)
         return self._stage
@@ -496,7 +495,7 @@ class Package(object):
            on this one."""
         dependents = []
         for spec in spack.db.installed_package_specs():
-            if self.spec != spec and self.spec in spec:
+            if self.name != spec.name and self.spec in spec:
                 dependents.append(spec)
         return dependents
 
@@ -507,6 +506,14 @@ class Package(object):
         return self.spec.prefix
 
 
+    @property
+    def compiler(self):
+        """Get the spack.compiler.Compiler object used to build this package."""
+        if not self.spec.concrete:
+            raise ValueError("Can only get a compiler for a concrete package.")
+        return spack.compilers.compiler_for_spec(self.spec.compiler)
+
+
     def url_version(self, version):
         """Given a version, this returns a string that should be substituted into the
            package's URL to download that version.
@@ -514,16 +521,48 @@ class Package(object):
            override this, e.g. for boost versions where you need to ensure that there
            are _'s in the download URL.
         """
-        if self.force_url:
-            return self.default_version
         return str(version)
 
 
     def url_for_version(self, version):
-        """Gives a URL that you can download a new version of this package from."""
-        if self.force_url:
-            return self.url
-        return url.substitute_version(self.__class__.url, self.url_version(version))
+        """Returns a URL that you can download a new version of this package from."""
+        if not isinstance(version, Version):
+            version = Version(version)
+
+        def nearest_url(version):
+            """Finds the URL for the next lowest version with a URL.
+               If there is no lower version with a URL, uses the
+               package url property. If that isn't there, uses a
+               *higher* URL, and if that isn't there raises an error.
+            """
+            url = getattr(self, 'url', None)
+            for v in sorted(self.versions):
+                if v > version and url:
+                    break
+                if self.versions[v].url:
+                    url = self.versions[v].url
+            return url
+
+        if version in self.versions:
+            vdesc = self.versions[version]
+            if not vdesc.url:
+                base_url = nearest_url(version)
+                vdesc.url = url.substitute_version(
+                    base_url, self.url_version(version))
+            return vdesc.url
+        else:
+            return nearest_url(version)
+
+
+    @property
+    def default_url(self):
+        if self.concrete:
+            return self.url_for_version(self.version)
+        else:
+            url = getattr(self, 'url', None)
+            if url:
+                return url
+
 
 
     def remove_prefix(self):
@@ -548,7 +587,7 @@ class Package(object):
         self.stage.fetch()
 
         if spack.do_checksum and self.version in self.versions:
-            digest = self.versions[self.version]
+            digest = self.versions[self.version].checksum
             self.stage.check(digest)
             tty.msg("Checksum passed for %s@%s" % (self.name, self.version))
 
@@ -743,7 +782,7 @@ class Package(object):
                 ' '.join(formatted_deps))
 
         self.remove_prefix()
-        tty.msg("Successfully uninstalled %s." % self.spec)
+        tty.msg("Successfully uninstalled %s." % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_uninstall(self)
@@ -779,6 +818,9 @@ class Package(object):
 
 
     def fetch_available_versions(self):
+        if not hasattr(self, 'url'):
+            raise VersionFetchError(self.__class__)
+
         # If not, then try to fetch using list_url
         if not self._available_versions:
             try:
@@ -865,7 +907,6 @@ def print_pkg(message):
     print message
 
 
-
 class FetchError(spack.error.SpackError):
     """Raised when something goes wrong during fetch."""
     def __init__(self, message, long_msg=None):
@@ -889,3 +930,19 @@ class InvalidPackageDependencyError(PackageError):
        its dependencies."""
     def __init__(self, message):
         super(InvalidPackageDependencyError, self).__init__(message)
+
+
+class PackageVersionError(PackageError):
+    """Raised when a version URL cannot automatically be determined."""
+    def __init__(self, version):
+        super(PackageVersionError, self).__init__(
+            "Cannot determine a URL automatically for version %s." % version,
+            "Please provide a url for this version in the package.py file.")
+
+
+class VersionFetchError(PackageError):
+    """Raised when a version URL cannot automatically be determined."""
+    def __init__(self, cls):
+        super(VersionFetchError, self).__init__(
+            "Cannot fetch version for package %s " % cls.__name__ +
+            "because it does not define a default url.")

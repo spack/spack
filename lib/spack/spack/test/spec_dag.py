@@ -48,7 +48,7 @@ class SpecDagTest(MockPackagesTest):
                           spec.package.validate_dependencies)
 
 
-    def test_unique_node_traversal(self):
+    def test_preorder_node_traversal(self):
         dag = Spec('mpileaks ^zmpi')
         dag.normalize()
 
@@ -56,14 +56,14 @@ class SpecDagTest(MockPackagesTest):
                  'zmpi', 'fake']
         pairs = zip([0,1,2,3,4,2,3], names)
 
-        traversal = dag.preorder_traversal()
-        self.assertListEqual([x.name for x in traversal], names)
+        traversal = dag.traverse()
+        self.assertEqual([x.name for x in traversal], names)
 
-        traversal = dag.preorder_traversal(depth=True)
-        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+        traversal = dag.traverse(depth=True)
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
 
 
-    def test_unique_edge_traversal(self):
+    def test_preorder_edge_traversal(self):
         dag = Spec('mpileaks ^zmpi')
         dag.normalize()
 
@@ -71,14 +71,14 @@ class SpecDagTest(MockPackagesTest):
                  'libelf', 'zmpi', 'fake', 'zmpi']
         pairs = zip([0,1,2,3,4,3,2,3,1], names)
 
-        traversal = dag.preorder_traversal(cover='edges')
-        self.assertListEqual([x.name for x in traversal], names)
+        traversal = dag.traverse(cover='edges')
+        self.assertEqual([x.name for x in traversal], names)
 
-        traversal = dag.preorder_traversal(cover='edges', depth=True)
-        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+        traversal = dag.traverse(cover='edges', depth=True)
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
 
 
-    def test_unique_path_traversal(self):
+    def test_preorder_path_traversal(self):
         dag = Spec('mpileaks ^zmpi')
         dag.normalize()
 
@@ -86,11 +86,56 @@ class SpecDagTest(MockPackagesTest):
                  'libelf', 'zmpi', 'fake', 'zmpi', 'fake']
         pairs = zip([0,1,2,3,4,3,2,3,1,2], names)
 
-        traversal = dag.preorder_traversal(cover='paths')
-        self.assertListEqual([x.name for x in traversal], names)
+        traversal = dag.traverse(cover='paths')
+        self.assertEqual([x.name for x in traversal], names)
 
-        traversal = dag.preorder_traversal(cover='paths', depth=True)
-        self.assertListEqual([(x, y.name) for x,y in traversal], pairs)
+        traversal = dag.traverse(cover='paths', depth=True)
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
+
+
+    def test_postorder_node_traversal(self):
+        dag = Spec('mpileaks ^zmpi')
+        dag.normalize()
+
+        names = ['libelf', 'libdwarf', 'dyninst', 'fake', 'zmpi',
+                 'callpath', 'mpileaks']
+        pairs = zip([4,3,2,3,2,1,0], names)
+
+        traversal = dag.traverse(order='post')
+        self.assertEqual([x.name for x in traversal], names)
+
+        traversal = dag.traverse(depth=True, order='post')
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
+
+
+    def test_postorder_edge_traversal(self):
+        dag = Spec('mpileaks ^zmpi')
+        dag.normalize()
+
+        names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
+                 'callpath', 'zmpi', 'mpileaks']
+        pairs = zip([4,3,3,2,3,2,1,1,0], names)
+
+        traversal = dag.traverse(cover='edges', order='post')
+        self.assertEqual([x.name for x in traversal], names)
+
+        traversal = dag.traverse(cover='edges', depth=True, order='post')
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
+
+
+    def test_postorder_path_traversal(self):
+        dag = Spec('mpileaks ^zmpi')
+        dag.normalize()
+
+        names = ['libelf', 'libdwarf', 'libelf', 'dyninst', 'fake', 'zmpi',
+                 'callpath', 'fake', 'zmpi', 'mpileaks']
+        pairs = zip([4,3,3,2,3,2,1,2,1,0], names)
+
+        traversal = dag.traverse(cover='paths', order='post')
+        self.assertEqual([x.name for x in traversal], names)
+
+        traversal = dag.traverse(cover='paths', depth=True, order='post')
+        self.assertEqual([(x, y.name) for x,y in traversal], pairs)
 
 
     def test_conflicting_spec_constraints(self):
@@ -142,7 +187,7 @@ class SpecDagTest(MockPackagesTest):
 
         # make sure nothing with the same name occurs twice
         counts = {}
-        for spec in dag.preorder_traversal(keyfun=id):
+        for spec in dag.traverse(key=id):
             if not spec.name in counts:
                 counts[spec.name] = 0
             counts[spec.name] += 1
@@ -152,15 +197,15 @@ class SpecDagTest(MockPackagesTest):
 
 
     def check_links(self, spec_to_check):
-        for spec in spec_to_check.preorder_traversal():
+        for spec in spec_to_check.traverse():
             for dependent in spec.dependents.values():
-                self.assertIn(
-                    spec.name, dependent.dependencies,
+                self.assertTrue(
+                    spec.name in dependent.dependencies,
                     "%s not in dependencies of %s" % (spec.name, dependent.name))
 
             for dependency in spec.dependencies.values():
-                self.assertIn(
-                    spec.name, dependency.dependents,
+                self.assertTrue(
+                    spec.name in dependency.dependents,
                     "%s not in dependents of %s" % (spec.name, dependency.name))
 
 
@@ -221,30 +266,53 @@ class SpecDagTest(MockPackagesTest):
 
 
     def test_equal(self):
-        spec = Spec('mpileaks ^callpath ^libelf ^libdwarf')
-        self.assertNotEqual(spec, Spec(
-            'mpileaks', Spec('callpath',
-                             Spec('libdwarf',
-                                  Spec('libelf')))))
-        self.assertNotEqual(spec, Spec(
-            'mpileaks', Spec('callpath',
-                             Spec('libelf',
-                                  Spec('libdwarf')))))
+        # Different spec structures to test for equality
+        flat = Spec('mpileaks ^callpath ^libelf ^libdwarf')
 
-        self.assertEqual(spec, Spec(
-            'mpileaks', Spec('callpath'), Spec('libdwarf'), Spec('libelf')))
+        flat_init = Spec(
+            'mpileaks', Spec('callpath'), Spec('libdwarf'), Spec('libelf'))
 
-        self.assertEqual(spec, Spec(
-            'mpileaks', Spec('libelf'), Spec('libdwarf'), Spec('callpath')))
+        flip_flat = Spec(
+            'mpileaks', Spec('libelf'), Spec('libdwarf'), Spec('callpath'))
+
+        dag = Spec('mpileaks', Spec('callpath',
+                                    Spec('libdwarf',
+                                         Spec('libelf'))))
+
+        flip_dag = Spec('mpileaks', Spec('callpath',
+                                         Spec('libelf',
+                                              Spec('libdwarf'))))
+
+        # All these are equal to each other with regular ==
+        specs = (flat, flat_init, flip_flat, dag, flip_dag)
+        for lhs, rhs in zip(specs, specs):
+            self.assertEqual(lhs, rhs)
+            self.assertEqual(str(lhs), str(rhs))
+
+        # Same DAGs constructed different ways are equal
+        self.assertTrue(flat.eq_dag(flat_init))
+
+        # order at same level does not matter -- (dep on same parent)
+        self.assertTrue(flat.eq_dag(flip_flat))
+
+        # DAGs should be unequal if nesting is different
+        self.assertFalse(flat.eq_dag(dag))
+        self.assertFalse(flat.eq_dag(flip_dag))
+        self.assertFalse(flip_flat.eq_dag(dag))
+        self.assertFalse(flip_flat.eq_dag(flip_dag))
+        self.assertFalse(dag.eq_dag(flip_dag))
 
 
     def test_normalize_mpileaks(self):
+        # Spec parsed in from a string
         spec = Spec('mpileaks ^mpich ^callpath ^dyninst ^libelf@1.8.11 ^libdwarf')
 
+        # What that spec should look like after parsing
         expected_flat = Spec(
             'mpileaks', Spec('mpich'), Spec('callpath'), Spec('dyninst'),
             Spec('libelf@1.8.11'), Spec('libdwarf'))
 
+        # What it should look like after normalization
         mpich = Spec('mpich')
         libelf = Spec('libelf@1.8.11')
         expected_normalized = Spec(
@@ -257,7 +325,10 @@ class SpecDagTest(MockPackagesTest):
                  mpich),
             mpich)
 
-        expected_non_unique_nodes = Spec(
+        # Similar to normalized spec, but now with copies of the same
+        # libelf node.  Normalization should result in a single unique
+        # node for each package, so this is the wrong DAG.
+        non_unique_nodes = Spec(
             'mpileaks',
             Spec('callpath',
                  Spec('dyninst',
@@ -267,21 +338,33 @@ class SpecDagTest(MockPackagesTest):
                  mpich),
             Spec('mpich'))
 
-        self.assertEqual(expected_normalized, expected_non_unique_nodes)
+        # All specs here should be equal under regular equality
+        specs = (spec, expected_flat, expected_normalized, non_unique_nodes)
+        for lhs, rhs in zip(specs, specs):
+            self.assertEqual(lhs, rhs)
+            self.assertEqual(str(lhs), str(rhs))
 
-        self.assertEqual(str(expected_normalized), str(expected_non_unique_nodes))
-        self.assertEqual(str(spec), str(expected_non_unique_nodes))
-        self.assertEqual(str(expected_normalized), str(spec))
-
+        # Test that equal and equal_dag are doing the right thing
         self.assertEqual(spec, expected_flat)
-        self.assertNotEqual(spec, expected_normalized)
-        self.assertNotEqual(spec, expected_non_unique_nodes)
+        self.assertTrue(spec.eq_dag(expected_flat))
+
+        self.assertEqual(spec, expected_normalized)
+        self.assertFalse(spec.eq_dag(expected_normalized))
+
+        self.assertEqual(spec, non_unique_nodes)
+        self.assertFalse(spec.eq_dag(non_unique_nodes))
 
         spec.normalize()
 
-        self.assertNotEqual(spec, expected_flat)
+        # After normalizing, spec_dag_equal should match the normalized spec.
+        self.assertEqual(spec, expected_flat)
+        self.assertFalse(spec.eq_dag(expected_flat))
+
         self.assertEqual(spec, expected_normalized)
-        self.assertEqual(spec, expected_non_unique_nodes)
+        self.assertTrue(spec.eq_dag(expected_normalized))
+
+        self.assertEqual(spec, non_unique_nodes)
+        self.assertFalse(spec.eq_dag(non_unique_nodes))
 
 
     def test_normalize_with_virtual_package(self):
@@ -302,10 +385,63 @@ class SpecDagTest(MockPackagesTest):
 
     def test_contains(self):
         spec = Spec('mpileaks ^mpi ^libelf@1.8.11 ^libdwarf')
-        self.assertIn(Spec('mpi'), spec)
-        self.assertIn(Spec('libelf'), spec)
-        self.assertIn(Spec('libelf@1.8.11'), spec)
-        self.assertNotIn(Spec('libelf@1.8.12'), spec)
-        self.assertIn(Spec('libdwarf'), spec)
-        self.assertNotIn(Spec('libgoblin'), spec)
-        self.assertIn(Spec('mpileaks'), spec)
+        self.assertTrue(Spec('mpi') in spec)
+        self.assertTrue(Spec('libelf') in spec)
+        self.assertTrue(Spec('libelf@1.8.11') in spec)
+        self.assertFalse(Spec('libelf@1.8.12') in spec)
+        self.assertTrue(Spec('libdwarf') in spec)
+        self.assertFalse(Spec('libgoblin') in spec)
+        self.assertTrue(Spec('mpileaks') in spec)
+
+
+    def test_copy_simple(self):
+        orig = Spec('mpileaks')
+        copy = orig.copy()
+
+        self.check_links(copy)
+
+        self.assertEqual(orig, copy)
+        self.assertTrue(orig.eq_dag(copy))
+        self.assertEqual(orig._normal, copy._normal)
+        self.assertEqual(orig._concrete, copy._concrete)
+
+        # ensure no shared nodes bt/w orig and copy.
+        orig_ids = set(id(s) for s in orig.traverse())
+        copy_ids = set(id(s) for s in copy.traverse())
+        self.assertFalse(orig_ids.intersection(copy_ids))
+
+
+    def test_copy_normalized(self):
+        orig = Spec('mpileaks')
+        orig.normalize()
+        copy = orig.copy()
+
+        self.check_links(copy)
+
+        self.assertEqual(orig, copy)
+        self.assertTrue(orig.eq_dag(copy))
+        self.assertEqual(orig._normal, copy._normal)
+        self.assertEqual(orig._concrete, copy._concrete)
+
+        # ensure no shared nodes bt/w orig and copy.
+        orig_ids = set(id(s) for s in orig.traverse())
+        copy_ids = set(id(s) for s in copy.traverse())
+        self.assertFalse(orig_ids.intersection(copy_ids))
+
+
+    def test_copy_concretized(self):
+        orig = Spec('mpileaks')
+        orig.concretize()
+        copy = orig.copy()
+
+        self.check_links(copy)
+
+        self.assertEqual(orig, copy)
+        self.assertTrue(orig.eq_dag(copy))
+        self.assertEqual(orig._normal, copy._normal)
+        self.assertEqual(orig._concrete, copy._concrete)
+
+        # ensure no shared nodes bt/w orig and copy.
+        orig_ids = set(id(s) for s in orig.traverse())
+        copy_ids = set(id(s) for s in copy.traverse())
+        self.assertFalse(orig_ids.intersection(copy_ids))

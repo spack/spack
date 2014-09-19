@@ -28,7 +28,7 @@ class Launchmon(Package):
     homepage = "http://sourceforge.net/projects/launchmon"
     url      = "http://downloads.sourceforge.net/project/launchmon/launchmon/1.0.1%20release/launchmon-1.0.1.tar.gz"
 
-    versions = { '1.0.1' : '2f12465803409fd07f91174a4389eb2b' }
+    version('1.0.1', '2f12465803409fd07f91174a4389eb2b')
 
     def install(self, spec, prefix):
         configure(

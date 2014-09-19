@@ -44,7 +44,7 @@ class ${class_name}(Package):
     homepage = "http://www.example.com"
     url      = "http://www.example.com/${name}-1.0.tar.gz"
 
-    versions = { '1.0' : '0123456789abcdef0123456789abcdef' }
+    version('1.0', '0123456789abcdef0123456789abcdef')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

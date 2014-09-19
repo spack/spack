@@ -70,7 +70,7 @@ class ${class_name}(Package):
     homepage = "http://www.example.com"
     url      = "${url}"
 
-    versions = ${versions}
+${versions}
 
     def install(self, spec, prefix):
         # FIXME: Modify the configure line to suit your build system here.
@@ -87,6 +87,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--keep-stage', action='store_true', dest='keep_stage',
         help="Don't clean up staging area when command completes.")
+    subparser.add_argument(
+        '-n', '--name', dest='alternate_name', default=None,
+        help="Override the autodetected name for the created package.")
     subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
         help="Overwrite any existing package file with the same name.")
@@ -114,25 +117,11 @@ class ConfigureGuesser(object):
             self.configure = '%s\n        # %s' % (autotools, cmake)
 
 
-def make_version_dict(ver_hash_tuples):
-    max_len = max(len(str(v)) for v,hfg in ver_hash_tuples)
-    width = max_len + 2
-    format = "%-" + str(width) + "s : '%s',"
-    sep = '\n                 '
-    return '{ ' + sep.join(format % ("'%s'" % v, h)
-                           for v, h in ver_hash_tuples) + ' }'
-
-
-def get_name():
-    """Prompt user to input a package name."""
-    name = ""
-    while not name:
-        new_name = raw_input("Name: ")
-        if spack.db.valid_name(name):
-            name = new_name
-        else:
-            print "Package name can only contain A-Z, a-z, 0-9, '_' and '-'"
-    return name
+def make_version_calls(ver_hash_tuples):
+    """Adds a version() call to the package for each version found."""
+    max_len = max(len(str(v)) for v, h in ver_hash_tuples)
+    format = "    version(%%-%ds, '%%s')" % (max_len + 2)
+    return '\n'.join(format % ("'%s'" % v, h) for v, h in ver_hash_tuples)
 
 
 def create(parser, args):
@@ -140,12 +129,21 @@ def create(parser, args):
 
     # Try to deduce name and version of the new package from the URL
     name, version = spack.url.parse_name_and_version(url)
-    if not name:
-        tty.msg("Couldn't guess a name for this package.")
-        name = get_name()
+
+    # Use a user-supplied name if one is present
+    name = kwargs.get(args, 'alternate_name', False)
+    if args.name:
+        name = args.name
 
     if not version:
         tty.die("Couldn't guess a version string from %s." % url)
+
+    if not name:
+        tty.die("Couldn't guess a name for this package. Try running:", "",
+                "spack create --name <name> <url>")
+
+    if not spack.db.valid_name(name):
+        tty.die("Package name can only contain A-Z, a-z, 0-9, '_' and '-'")
 
     tty.msg("This looks like a URL for %s version %s." % (name, version))
     tty.msg("Creating template for package %s" % name)
@@ -195,7 +193,7 @@ def create(parser, args):
                 configure=guesser.configure,
                 class_name=mod_to_class(name),
                 url=url,
-                versions=make_version_dict(ver_hash_tuples)))
+                versions=make_version_calls(ver_hash_tuples)))
 
     # If everything checks out, go ahead and edit.
     spack.editor(pkg_path)

@@ -84,7 +84,7 @@ class MakeExecutable(Executable):
 
 def set_compiler_environment_variables(pkg):
     assert(pkg.spec.concrete)
-    compiler = compilers.compiler_for_spec(pkg.spec.compiler)
+    compiler = pkg.compiler
 
     # Set compiler variables used by CMake and autotools
     os.environ['CC']  = 'cc'
@@ -122,7 +122,7 @@ def set_build_environment_variables(pkg):
 
     # Prefixes of all of the package's dependencies go in
     # SPACK_DEPENDENCIES
-    dep_prefixes = [d.package.prefix for d in pkg.spec.dependencies.values()]
+    dep_prefixes = [d.prefix for d in pkg.spec.traverse(root=False)]
     path_set(SPACK_DEPENDENCIES, dep_prefixes)
 
     # Install prefix
@@ -143,6 +143,18 @@ def set_build_environment_variables(pkg):
     os.environ[SPACK_SPEC] = str(pkg.spec)
     os.environ[SPACK_DEBUG_LOG_DIR] = spack.spack_working_dir
 
+    # Add dependencies to CMAKE_PREFIX_PATH
+    path_set("CMAKE_PREFIX_PATH", dep_prefixes)
+
+    # Add any pkgconfig directories to PKG_CONFIG_PATH
+    pkg_config_dirs = []
+    for p in dep_prefixes:
+        for libdir in ('lib', 'lib64'):
+            pcdir = join_path(p, libdir, 'pkgconfig')
+            if os.path.isdir(pcdir):
+                pkg_config_dirs.append(pcdir)
+    path_set("PKG_CONFIG_PATH", pkg_config_dirs)
+
 
 def set_module_variables_for_package(pkg):
     """Populate the module scope of install() with some useful functions.
@@ -152,6 +164,9 @@ def set_module_variables_for_package(pkg):
 
     m.make  = MakeExecutable('make', pkg.parallel)
     m.gmake = MakeExecutable('gmake', pkg.parallel)
+
+    # easy shortcut to os.environ
+    m.env = os.environ
 
     # number of jobs spack prefers to build with.
     m.make_jobs = multiprocessing.cpu_count()
@@ -168,7 +183,7 @@ def set_module_variables_for_package(pkg):
 
     # standard CMake arguments
     m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % pkg.prefix,
-                        '-DCMAKE_BUILD_TYPE=None']
+                        '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
     if platform.mac_ver()[0]:
         m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
 

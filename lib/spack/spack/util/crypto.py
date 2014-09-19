@@ -35,7 +35,7 @@ _acceptable_hashes = [
     hashlib.sha512 ]
 
 """Index for looking up hasher for a digest."""
-_size_to_hash = { h().digest_size : h for h in _acceptable_hashes }
+_size_to_hash = dict((h().digest_size, h) for h in _acceptable_hashes)
 
 
 def checksum(hashlib_algo, filename, **kwargs):

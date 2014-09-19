@@ -22,62 +22,14 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import re
-import textwrap
-import shutil
-from contextlib import closing
-
-from llnl.util.filesystem import join_path, mkdirp
-
-import spack
-
-
-def dotkit_file(pkg):
-    dk_file_name = pkg.spec.format('$_$@$%@$+$=$#') + ".dk"
-    return join_path(spack.dotkit_path, dk_file_name)
+import spack.modules
 
 
 def post_install(pkg):
-    if not os.path.exists(spack.dotkit_path):
-        mkdirp(spack.dotkit_path)
-
-    alterations = []
-    for var, path in [
-        ('PATH', pkg.prefix.bin),
-        ('MANPATH', pkg.prefix.man),
-        ('MANPATH', pkg.prefix.share_man),
-        ('LD_LIBRARY_PATH', pkg.prefix.lib),
-        ('LD_LIBRARY_PATH', pkg.prefix.lib64)]:
-
-        if os.path.isdir(path):
-            alterations.append("dk_alter %s %s\n" % (var, path))
-
-    if not alterations:
-        return
-
-    alterations.append("dk_alter CMAKE_PREFIX_PATH %s\n" % pkg.prefix)
-
-    dk_file = dotkit_file(pkg)
-    with closing(open(dk_file, 'w')) as dk:
-        # Put everything in the spack category.
-        dk.write('#c spack\n')
-
-        dk.write('#d %s\n' % pkg.spec.format("$_ $@"))
-
-        # Recycle the description
-        if pkg.__doc__:
-            doc = re.sub(r'\s+', ' ', pkg.__doc__)
-            for line in textwrap.wrap(doc, 72):
-                dk.write("#h %s\n" % line)
-
-        # Write alterations
-        for alter in alterations:
-            dk.write(alter)
+    dk = spack.modules.Dotkit(pkg.spec)
+    dk.write()
 
 
 def post_uninstall(pkg):
-    dk_file = dotkit_file(pkg)
-    if os.path.exists(dk_file):
-        shutil.rmtree(dk_file, ignore_errors=True)
-
+    dk = spack.modules.Dotkit(pkg.spec)
+    dk.remove()

@@ -27,7 +27,8 @@ from spack import *
 class Cmake(Package):
     homepage  = 'https://www.cmake.org'
     url       = 'http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz'
-    versions  = { '2.8.10.2' : '097278785da7182ec0aea8769d06860c' }
+
+    version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
     def install(self, spec, prefix):
         configure('--prefix='   + prefix,

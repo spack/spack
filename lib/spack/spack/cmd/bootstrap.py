@@ -23,12 +23,13 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-from subprocess import check_call, check_output
+from subprocess import check_call
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
+from llnl.util.filesystem import join_path, mkdirp
 
 import spack
+from spack.util.executable import which
 
 description = "Create a new installation of spack in another prefix"
 
@@ -38,8 +39,10 @@ def setup_parser(subparser):
 
 def get_origin_url():
     git_dir = join_path(spack.prefix, '.git')
-    origin_url = check_output(
-        ['git', '--git-dir=%s' % git_dir, 'config', '--get', 'remote.origin.url'])
+    git = which('git', required=True)
+    origin_url = git(
+        '--git-dir=%s' % git_dir, 'config', '--get', 'remote.origin.url',
+        return_output=True)
     return origin_url.strip()
 
 
@@ -48,6 +51,11 @@ def bootstrap(parser, args):
     prefix = args.prefix
 
     tty.msg("Fetching spack from origin: %s" % origin_url)
+
+    if os.path.isfile(prefix):
+        tty.die("There is already a file at %s" % prefix)
+
+    mkdirp(prefix)
 
     if os.path.exists(join_path(prefix, '.git')):
         tty.die("There already seems to be a git repository in %s" % prefix)
@@ -62,10 +70,11 @@ def bootstrap(parser, args):
             "%s/lib/spack/..." % prefix)
 
     os.chdir(prefix)
-    check_call(['git', 'init', '--shared', '-q'])
-    check_call(['git', 'remote', 'add', 'origin', origin_url])
-    check_call(['git', 'fetch', 'origin', 'master:refs/remotes/origin/master', '-n', '-q'])
-    check_call(['git', 'reset', '--hard', 'origin/master', '-q'])
+    git = which('git', required=True)
+    git('init', '--shared', '-q')
+    git('remote', 'add', 'origin', origin_url)
+    git('fetch', 'origin', 'master:refs/remotes/origin/master', '-n', '-q')
+    git('reset', '--hard', 'origin/master', '-q')
 
     tty.msg("Successfully created a new spack in %s" % prefix,
             "Run %s/bin/spack to use this installation." % prefix)

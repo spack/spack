@@ -11,10 +11,10 @@ class Hdf5(Package):
     list_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
 
-    versions = { '1.8.13' : 'c03426e9e77d7766944654280b467289', }
+    version('1.8.13', 'c03426e9e77d7766944654280b467289')
 
     depends_on("mpi")
-    depends_on("zlib") 
+    depends_on("zlib")
 
     # TODO: currently hard-coded to use OpenMPI
     def install(self, spec, prefix):

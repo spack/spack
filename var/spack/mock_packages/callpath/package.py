@@ -28,9 +28,9 @@ class Callpath(Package):
     homepage = "https://github.com/tgamblin/callpath"
     url      = "http://github.com/tgamblin/callpath-1.0.tar.gz"
 
-    versions = { 0.8 : 'foobarbaz',
-                 0.9 : 'foobarbaz',
-                 1.0 : 'foobarbaz' }
+    version(0.8, 'foobarbaz')
+    version(0.9, 'foobarbaz')
+    version(1.0, 'foobarbaz')
 
     depends_on("dyninst")
     depends_on("mpi")
