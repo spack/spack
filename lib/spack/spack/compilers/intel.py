@@ -37,6 +37,15 @@ class Intel(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['ifort']
 
+    @property
+    def cxx11_flag(self):
+        if self.version < ver('11.1'):
+            tty.die("Only intel 11.1 and above support c++11.")
+        elif self.version < ver('13'):
+            return "-std=c++0x"
+        else:
+            return "-std=c++11"
+
 
     @classmethod
     def default_version(cls, comp):

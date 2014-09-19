@@ -94,6 +94,9 @@ class Compiler(object):
     # Names of generic arguments used by this compiler
     arg_rpath   = '-Wl,-rpath,%s'
 
+    # argument used to get C++11 options
+    cxx11_flag = "-std=c++11"
+
 
     def __init__(self, cspec, cc, cxx, f77, fc):
         def check(exe):

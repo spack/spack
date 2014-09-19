@@ -22,43 +22,26 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import llnl.util.tty as tty
-from spack.compiler import *
-from spack.version import ver
+from spack import *
 
-class Gcc(Compiler):
-    # Subclasses use possible names of C compiler
-    cc_names = ['gcc']
+class Clang(Package):
+    """The goal of the Clang project is to create a new C, C++,
+       Objective C and Objective C++ front-end for the LLVM compiler.
+    """
+    homepage = "http://clang.llvm.org"
+    url      = "http://llvm.org/releases/3.4.2/cfe-3.4.2.src.tar.gz"
 
-    # Subclasses use possible names of C++ compiler
-    cxx_names = ['g++']
+    depends_on("llvm")
 
-    # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['gfortran']
+    version('3.4.2', '87945973b7c73038871c5f849a818588')
 
-    # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['gfortran']
+    def install(self, spec, prefix):
+        env['CXXFLAGS'] = self.compiler.cxx11_flag
 
-    # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
-
-    @property
-    def cxx11_flag(self):
-        if self.version < ver('4.3'):
-            tty.die("Only gcc 4.3 and above support c++11.")
-        elif self.version < ver('4.7'):
-            return "-std=gnu++0x"
-        else:
-            return "-std=gnu++11"
-
-    @classmethod
-    def fc_version(cls, fc):
-        return get_compiler_version(
-            fc, '-dumpversion',
-            # older gfortran versions don't have simple dumpversion output.
-            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+\.\d+)')
-
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.fc_version(f77)
+        with working_dir('spack-build', create=True):
+            cmake('..',
+                  '-DCLANG_PATH_TO_LLVM_BUILD=%s' % spec['llvm'].prefix,
+                  '-DLLVM_MAIN_SRC_DIR=%s' % spec['llvm'].prefix,
+                  *std_cmake_args)
+            make()
+            make("install")
