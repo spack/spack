@@ -36,7 +36,7 @@ import spack.cmd
 import spack.cmd.checksum
 import spack.package
 import spack.url
-from spack.util.naming import mod_to_class
+from spack.util.naming import *
 import spack.util.crypto as crypto
 
 from spack.util.executable import which
@@ -128,21 +128,22 @@ def create(parser, args):
     url = args.url
 
     # Try to deduce name and version of the new package from the URL
-    name, version = spack.url.parse_name_and_version(url)
-
-    # Use a user-supplied name if one is present
-    name = kwargs.get(args, 'alternate_name', False)
-    if args.name:
-        name = args.name
-
+    version = spack.url.parse_version(url)
     if not version:
         tty.die("Couldn't guess a version string from %s." % url)
 
-    if not name:
-        tty.die("Couldn't guess a name for this package. Try running:", "",
-                "spack create --name <name> <url>")
+    # Try to guess a name.  If it doesn't work, allow the user to override.
+    if args.alternate_name:
+        name = args.alternate_name
+    else:
+        try:
+            name = spack.url.parse_name(url, version)
+        except spack.url.UndetectableNameError, e:
+            # Use a user-supplied name if one is present
+            tty.die("Couldn't guess a name for this package. Try running:", "",
+                    "spack create --name <name> <url>")
 
-    if not spack.db.valid_name(name):
+    if not valid_module_name(name):
         tty.die("Package name can only contain A-Z, a-z, 0-9, '_' and '-'")
 
     tty.msg("This looks like a URL for %s version %s." % (name, version))
