@@ -9,7 +9,7 @@ Getting spack is easy.  You can clone it from the `github repository
 
 .. code-block:: sh
 
-   $ git clone git@github.com:scalability-llnl/spack.git
+   $ git clone https://github.com/scalability-llnl/spack.git
 
 This will create a directory called ``spack``.  We'll assume that the
 full path to this directory is in some environment called

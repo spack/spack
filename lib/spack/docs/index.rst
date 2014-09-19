@@ -29,7 +29,7 @@ package:
 
 .. code-block:: sh
 
-   $ git clone git@github.com:scalability-llnl/spack.git
+   $ git clone https://github.com/scalability-llnl/spack.git
    $ cd spack/bin
    $ ./spack install libelf
 
