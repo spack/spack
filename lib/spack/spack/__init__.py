@@ -137,9 +137,9 @@ sys_type = None
 # TODO: it's not clear where all the stuff that needs to be included in packages
 #       should live.  This file is overloaded for spack core vs. for packages.
 #
-__all__ = ['Package', 'Version', 'when']
+__all__ = ['Package', 'Version', 'when', 'ver']
 from spack.package import Package
-from spack.version import Version
+from spack.version import Version, ver
 from spack.multimethod import when
 
 import llnl.util.filesystem

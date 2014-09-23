@@ -38,8 +38,18 @@ class Mpich(Package):
     provides('mpi@:1', when='@1:')
 
     def install(self, spec, prefix):
-        configure(
-            "--prefix=" + prefix,
-            "--enable-shared")
+        config_args = ["--prefix=" + prefix,
+                       "--enable-shared"]
+
+        # TODO: Spack should make it so that you can't actually find
+        # these compilers if they're "disabled" for the current
+        # compiler configuration.
+        if not self.compiler.f77:
+            config_args.append("--disable-f77")
+
+        if not self.compiler.fc:
+            config_args.append("--disable-fc")
+
+        configure(*config_args)
         make()
         make("install")
