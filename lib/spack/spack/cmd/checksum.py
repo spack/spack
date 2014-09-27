@@ -117,7 +117,5 @@ def checksum(parser, args):
     if not version_hashes:
         tty.die("Could not fetch any available versions for %s." % pkg.name)
 
-    dict_string = ["    '%s' : '%s'," % (v, h) for v, h in version_hashes]
-    dict_string = ['{'] + dict_string + ["}"]
-
-    tty.msg("Checksummed new versions of %s:" % pkg.name, *dict_string)
+    version_lines = ["    version('%s', '%s')" % (v, h) for v, h in version_hashes]
+    tty.msg("Checksummed new versions of %s:" % pkg.name, *version_lines)
