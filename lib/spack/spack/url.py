@@ -78,6 +78,26 @@ class UndetectableNameError(UrlParseError):
             "Couldn't parse package name in: " + path, path)
 
 
+def find_list_url(url):
+    """Finds a good list URL for the supplied URL.  This depends on
+       the site.  By default, just assumes that a good list URL is the
+       dirname of an archive path.  For github URLs, this returns the
+       URL of the project's releases page.
+    """
+
+    url_types = [
+        # e.g. https://github.com/scalability-llnl/callpath/archive/v1.0.1.tar.gz
+        (r'^(https://github.com/[^/]+/[^/]+)/archive/', lambda m: m.group(1) + '/releases')
+        ]
+
+    for pattern, fun in url_types:
+        match = re.search(pattern, url)
+        if match:
+            return fun(match)
+    else:
+        return os.path.dirname(url)
+
+
 def parse_version_string_with_indices(path):
     """Try to extract a version string from a filename or URL.  This is taken
        largely from Homebrew's Version class."""
