@@ -421,6 +421,76 @@ class SvnFetchStrategy(VCSFetchStrategy):
         self.svn('revert', '.', '-R')
 
 
+class HgFetchStrategy(VCSFetchStrategy):
+    """Fetch strategy that gets source code from a Mercurial repository.
+       Use like this in a package:
+
+           version('name', hg='https://jay.grs.rwth-aachen.de/hg/lwm2')
+
+       Optionally, you can provide a branch, or revision to check out, e.g.:
+
+           version('torus', hg='https://jay.grs.rwth-aachen.de/hg/lwm2', branch='torus')
+
+       You can use these three optional attributes in addition to ``hg``:
+
+           * ``branch``: Particular branch to build from (default is 'default')
+           * ``tag``: Particular tag to check out
+           * ``revision``: Particular revision hash in the repo
+    """
+    enabled = True
+    required_attributes = ['hg']
+
+    def __init__(self, **kwargs):
+        super(HgFetchStrategy, self).__init__(
+            'hg', 'tag', 'branch', 'revision', **kwargs)
+        self._hg = None
+
+        # For git fetch branches and tags the same way.
+        if not self.revision:
+            self.revision = self.branch
+        if not self.revision:
+            self.revision = self.tag
+
+
+    @property
+    def hg(self):
+        if not self._hg:
+            self._hg = which('hg', required=True)
+        return self._hg
+
+
+    def fetch(self):
+        assert(self.stage)
+        self.stage.chdir()
+
+        if self.stage.source_path:
+            tty.msg("Already fetched %s." % self.stage.source_path)
+            return
+
+        tty.msg("Trying to clone Mercurial repository: %s" % self.url)
+
+        args = ['clone', self.url]
+        if self.revision:
+            args += ['-r', self.revision]
+
+        self.hg(*args)
+
+
+    def reset(self):
+        assert(self.stage)
+        self.stage.chdir()
+
+        scrubbed = "scrubbed-source-tmp"
+        args = ['clone']
+        if self.revision:
+            args += ['-r', self.revision]
+        args += [self.stage.source_path, scrubbed]
+
+        self.hg(*args)
+        shutil.rmtree(self.stage.source_path, ignore_errors=True)
+        shutil.move(scrubbed, self.stage.source_path)
+
+
 def from_url(url):
     """Given a URL, find an appropriate fetch strategy for it.
        Currently just gives you a URLFetchStrategy that uses curl.
