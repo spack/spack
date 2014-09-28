@@ -859,7 +859,7 @@ def find_versions_of_archive(archive_url, **kwargs):
     list_depth = kwargs.get('list_depth', 1)
 
     if not list_url:
-        list_url = os.path.dirname(archive_url)
+        list_url = url.find_list_url(archive_url)
 
     # This creates a regex from the URL with a capture group for the
     # version part of the URL.  The capture group is converted to a
