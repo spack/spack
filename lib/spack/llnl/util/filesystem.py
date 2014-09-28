@@ -38,7 +38,7 @@ import llnl.util.tty as tty
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
 
-def filter_file(regex, repl, *filenames):
+def filter_file(regex, repl, *filenames, **kwargs):
     """Like sed, but uses python regular expressions.
 
        Filters every line of file through regex and replaces the file
@@ -49,16 +49,31 @@ def filter_file(regex, repl, *filenames):
        return a suitable replacement string.  If it is a string, it
        can contain ``\1``, ``\2``, etc. to represent back-substitution
        as sed would allow.
+
+       Keyword Options:
+         string[=False]         If True, treat regex as a plain string.
+         backup[=True]          Make a backup files suffixed with ~
+         ignore_absent[=False]  Ignore any files that don't exist.
     """
-    # Keep callables intact
-    if not hasattr(repl, '__call__'):
-        # Allow strings to use \1, \2, etc. for replacement, like sed
+    string = kwargs.get('string', False)
+    backup = kwargs.get('backup', True)
+    ignore_absent = kwargs.get('ignore_absent', False)
+
+    # Allow strings to use \1, \2, etc. for replacement, like sed
+    if not callable(repl):
         unescaped = repl.replace(r'\\', '\\')
         repl = lambda m: re.sub(
             r'\\([0-9])', lambda x: m.group(int(x.group(1))), unescaped)
 
+    if string:
+        regex = re.escape(regex)
+
     for filename in filenames:
         backup = filename + "~"
+
+        if ignore_absent and not os.path.exists(filename):
+            continue
+
         shutil.copy(filename, backup)
         try:
             with closing(open(backup)) as infile:
@@ -70,6 +85,10 @@ def filter_file(regex, repl, *filenames):
             # clean up the original file on failure.
             shutil.move(backup, filename)
             raise
+
+        finally:
+            if not backup:
+                shutil.rmtree(backup, ignore_errors=True)
 
 
 def change_sed_delimiter(old_delim, new_delim, *filenames):

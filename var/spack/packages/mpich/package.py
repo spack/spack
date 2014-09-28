@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 class Mpich(Package):
     """MPICH is a high performance and widely portable implementation of
@@ -53,3 +54,26 @@ class Mpich(Package):
         configure(*config_args)
         make()
         make("install")
+
+        self.filter_compilers()
+
+
+    def filter_compilers(self):
+        """Run after install to make the MPI compilers use the
+           compilers that Spack built the package with.
+
+           If this isn't done, they'll have CC, CXX, F77, and FC set
+           to Spack's generic cc, c++, f77, and f90.  We want them to
+           be bound to whatever compiler they were built with.
+        """
+        bin = self.prefix.bin
+        mpicc  = os.path.join(bin, 'mpicc')
+        mpicxx = os.path.join(bin, 'mpicxx')
+        mpif77 = os.path.join(bin, 'mpif77')
+        mpif90 = os.path.join(bin, 'mpif90')
+
+        kwargs = { 'ignore_absent' : True, 'backup' : False, 'string' : True }
+        filter_file('CC="cc"',   'CC="%s"'  % self.compiler.cc,  mpicc,  **kwargs)
+        filter_file('CXX="c++"', 'CXX="%s"' % self.compiler.cxx, mpicxx, **kwargs)
+        filter_file('F77="f77"', 'F77="%s"' % self.compiler.f77, mpif77, **kwargs)
+        filter_file('FC="f90"',  'FC="%s"'  % self.compiler.fc,  mpif90, **kwargs)
