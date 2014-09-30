@@ -46,8 +46,17 @@ set _sp_spec=""
 set _sp_modtype = ""
 switch ($_sp_subcommand)
 case cd:
+    shift _sp_args  # get rid of 'cd'
+
+    set _sp_arg=""
+    [ $#_sp_args -gt 0 ] && set _sp_arg = ($_sp_args[1])
     shift _sp_args
-    cd `spack location $_sp_args`
+
+    if ( "$_sp_arg" == "-h" ) then
+        \spack cd -h
+    else
+        cd `\spack location $_sp_arg $_sp_args`
+    endif
     breaksw
 case use:
 case unuse:

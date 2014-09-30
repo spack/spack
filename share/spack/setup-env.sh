@@ -76,7 +76,12 @@ function spack {
     # command.
     case $_sp_subcommand in
         "cd")
-            cd $(spack location "$@")
+            _sp_arg="$1"; shift
+            if [ "$_sp_arg" = "-h" ]; then
+                command spack cd -h
+            else
+                cd $(spack location $_sp_arg "$@")
+            fi
             return
             ;;
         "use"|"unuse"|"load"|"unload")
