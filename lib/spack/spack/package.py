@@ -551,7 +551,8 @@ class Package(object):
                     base_url, self.url_version(version))
             return vdesc.url
         else:
-            return nearest_url(version)
+            base_url = nearest_url(version)
+            return url.substitute_version(base_url, self.url_version(version))
 
 
     @property
