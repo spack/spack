@@ -224,6 +224,7 @@ class Stage(object):
         # Run curl but grab the mime type from the http headers
         headers = spack.curl('-#',        # status bar
                              '-O',        # save file to disk
+                             '-f',        # fail on >400 errors
                              '-D', '-',   # print out HTML headers
                              '-L', url,
                              return_output=True, fail_on_error=False)
@@ -232,6 +233,10 @@ class Stage(object):
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
+
+            if spack.curl.returncode == 22:
+                # This is a 404.  Curl will print the error.
+                raise FailedDownloadError(url)
 
             if spack.curl.returncode == 60:
                 # This is a certificate error.  Suggest spack -k
