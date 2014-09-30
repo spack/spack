@@ -96,7 +96,7 @@ def checksum(parser, args):
         if not versions:
             tty.die("Could not fetch any available versions for %s." % pkg.name)
 
-    versions = list(reversed(versions))
+    versions = list(reversed(sorted(versions)))
     urls = [pkg.url_for_version(v) for v in versions]
 
 
