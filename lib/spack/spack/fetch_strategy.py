@@ -225,15 +225,14 @@ class VCSFetchStrategy(FetchStrategy):
             "%s requires %s argument." % (self.__class__, name))
 
         # Ensure that there's only one of the rev_types
-        if sum((k in kwargs for k in rev_types)) > 1:
+        if sum(k in kwargs for k in rev_types) > 1:
             raise FetchStrategyError(
                 "Supply only one of %s to fetch with %s." % (
                     comma_or(rev_types), name))
 
         # Set attributes for each rev type.
         for rt in rev_types:
-            setattr(self, rt, getattr(kwargs, rt, None))
-
+            setattr(self, rt, kwargs.get(rt, None))
 
     def check(self):
         assert(self.stage)
@@ -301,7 +300,14 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.msg("Already fetched %s." % self.stage.source_path)
             return
 
-        tty.msg("Trying to clone git repository: %s" % self.url)
+        args = []
+        if self.commit:
+            args.append('at commit %s' % self.commit)
+        elif self.tag:
+            args.append('at tag %s' % self.branch)
+        elif self.branch:
+            args.append('on branch %s' % self.branch)
+        tty.msg("Trying to clone git repository:", self.url, *args)
 
         if self.commit:
             # Need to do a regular clone and check out everything if
@@ -460,4 +466,3 @@ class NoDigestError(FetchStrategyError):
 class InvalidArgsError(FetchStrategyError):
     def __init__(self, msg, long_msg):
         super(InvalidArgsError, self).__init__(msg, long_msg)
-

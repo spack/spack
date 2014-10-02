@@ -372,10 +372,8 @@ class Package(object):
         if not hasattr(self, 'url'):
             self.url = None
 
-        # Set up a fetch strategy for this package.
-        self.fetcher = None
-        if self.spec.concrete:
-            self.fetcher = fs.from_args(self.versions[self.version], self)
+        # Init fetch strategy to None
+        self._fetcher = None
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -456,6 +454,21 @@ class Package(object):
             self._stage = Stage(
                 self.fetcher, mirror_path=self.mirror_path(), name=self.spec.short_spec)
         return self._stage
+
+
+    @property
+    def fetcher(self):
+        if not self.spec.concrete:
+            raise ValueError("Can only get a fetcher for a concrete package.")
+
+        if not self._fetcher:
+            self._fetcher = fs.from_args(self.versions[self.version], self)
+        return self._fetcher
+
+
+    @fetcher.setter
+    def fetcher(self, f):
+        self._fetcher = f
 
 
     def mirror_path(self):

@@ -101,12 +101,7 @@ class InstallTest(MockPackagesTest):
         self.assertTrue(spec.concrete)
 
         # Get the package
-        print
-        print "======== GETTING PACKAGE ========"
         pkg = spack.db.get(spec)
-
-        print "======== GOT PACKAGE ========"
-        print
 
         # Fake the URL for the package so it downloads from a file.
         archive_path = join_path(self.stage.path, archive_name)
