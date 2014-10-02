@@ -209,9 +209,16 @@ class URLFetchStrategy(FetchStrategy):
         self.expand()
 
 
-    def __str__(self):
+    def __repr__(self):
         url = self.url if self.url else "no url"
         return "URLFetchStrategy<%s>" % url
+
+
+    def __str__(self):
+        if self.url:
+            return self.url
+        else:
+            return "URLFetchStrategy<no url>"
 
 
 class VCSFetchStrategy(FetchStrategy):
@@ -245,6 +252,10 @@ class VCSFetchStrategy(FetchStrategy):
 
 
     def __str__(self):
+        return self.url
+
+
+    def __repr__(self):
         return "%s<%s>" % (self.__class__, self.url)
 
 
@@ -359,6 +370,8 @@ class SvnFetchStrategy(VCSFetchStrategy):
         super(SvnFetchStrategy, self).__init__(
             'svn', 'revision', **kwargs)
         self._svn = None
+        if self.revision is not None:
+            self.revision = str(self.revision)
 
 
     @property
@@ -381,6 +394,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
         args = ['checkout', '--force']
         if self.revision:
             args += ['-r', self.revision]
+        args.append(self.url)
 
         self.svn(*args)
         self.stage.chdir_to_source()
@@ -388,12 +402,16 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     def _remove_untracked_files(self):
         """Removes untracked files in an svn repository."""
-        status = self.svn('status', '--no-ignore', check_output=True)
+        status = self.svn('status', '--no-ignore', return_output=True)
+        self.svn('status', '--no-ignore')
         for line in status.split('\n'):
-            if not re.match('^[I?]'):
+            if not re.match('^[I?]', line):
                 continue
             path = line[8:].strip()
-            shutil.rmtree(path, ignore_errors=True)
+            if os.path.isfile(path):
+                os.unlink(path)
+            elif os.path.isdir(path):
+                shutil.rmtree(path, ignore_errors=True)
 
 
     def reset(self):

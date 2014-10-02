@@ -643,7 +643,7 @@ class Package(object):
         archive_dir = self.stage.source_path
         if not archive_dir:
             self.stage.expand_archive()
-            tty.msg("Created stage directory in %s." % self.stage.path)
+            tty.msg("Created stage in %s." % self.stage.path)
         else:
             tty.msg("Already staged %s in %s." % (self.name, self.stage.path))
         self.stage.chdir_to_source()

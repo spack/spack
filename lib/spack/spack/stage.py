@@ -254,7 +254,7 @@ class Stage(object):
                 fetcher.fetch()
                 break
             except spack.error.SpackError, e:
-                tty.msg("Download from %s failed." % fetcher)
+                tty.msg("Fetching %s failed." % fetcher)
                 continue
 
 
