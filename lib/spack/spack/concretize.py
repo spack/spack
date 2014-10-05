@@ -68,11 +68,13 @@ class DefaultConcretizer(object):
         # If there are known avaialble versions, return the most recent
         # version that satisfies the spec
         pkg = spec.package
-        valid_versions = pkg.available_versions.intersection(spec.versions)
+        valid_versions = [v for v in pkg.available_versions
+                          if any(v.satisfies(sv) for sv in spec.versions)]
         if valid_versions:
             spec.versions = ver([valid_versions[-1]])
         else:
-            raise NoValidVerionError(spec)
+            print spec
+            raise NoValidVersionError(spec)
 
 
     def concretize_architecture(self, spec):
@@ -160,9 +162,9 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
             "Run 'spack compilers' to see available compiler Options.")
 
 
-class NoValidVerionError(spack.error.SpackError):
+class NoValidVersionError(spack.error.SpackError):
     """Raised when there is no available version for a package that
        satisfies a spec."""
     def __init__(self, spec):
-        super(NoValidVerionError, self).__init__(
+        super(NoValidVersionError, self).__init__(
             "No available version of %s matches '%s'" % (spec.name, spec.versions))

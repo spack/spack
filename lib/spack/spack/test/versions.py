@@ -95,6 +95,10 @@ class VersionsTest(unittest.TestCase):
         self.assertEqual(ver(expected), ver(a).intersection(ver(b)))
 
 
+    def check_union(self, expected, a, b):
+        self.assertEqual(ver(expected), ver(a).union(ver(b)))
+
+
     def test_two_segments(self):
         self.assert_ver_eq('1.0', '1.0')
         self.assert_ver_lt('1.0', '2.0')
@@ -217,12 +221,16 @@ class VersionsTest(unittest.TestCase):
         self.assert_in('1.3.5-7', '1.2:1.4')
         self.assert_not_in('1.1', '1.2:1.4')
         self.assert_not_in('1.5', '1.2:1.4')
-        self.assert_not_in('1.4.2', '1.2:1.4')
+
+        self.assert_in('1.4.2', '1.2:1.4')
+        self.assert_not_in('1.4.2', '1.2:1.4.0')
 
         self.assert_in('1.2.8', '1.2.7:1.4')
         self.assert_in('1.2.7:1.4', ':')
         self.assert_not_in('1.2.5', '1.2.7:1.4')
-        self.assert_not_in('1.4.1', '1.2.7:1.4')
+
+        self.assert_in('1.4.1', '1.2.7:1.4')
+        self.assert_not_in('1.4.1', '1.2.7:1.4.0')
 
 
     def test_in_list(self):
@@ -252,6 +260,17 @@ class VersionsTest(unittest.TestCase):
         self.assert_overlaps(':', ':')
         self.assert_overlaps(':', '1.6:1.9')
         self.assert_overlaps('1.6:1.9', ':')
+
+
+    def test_overlap_with_containment(self):
+        self.assert_in('1.6.5', '1.6')
+        self.assert_in('1.6.5', ':1.6')
+
+        self.assert_overlaps('1.6.5', ':1.6')
+        self.assert_overlaps(':1.6', '1.6.5')
+
+        self.assert_not_in(':1.6', '1.6.5')
+        self.assert_in('1.6.5', ':1.6')
 
 
     def test_lists_overlap(self):
@@ -311,6 +330,32 @@ class VersionsTest(unittest.TestCase):
         self.check_intersection(['0:1'], [':'], ['0:1'])
 
 
+    def test_intersect_with_containment(self):
+        self.check_intersection('1.6.5', '1.6.5', ':1.6')
+        self.check_intersection('1.6.5', ':1.6', '1.6.5')
+
+        self.check_intersection('1.6:1.6.5', ':1.6.5', '1.6')
+        self.check_intersection('1.6:1.6.5', '1.6', ':1.6.5')
+
+
+    def test_union_with_containment(self):
+        self.check_union(':1.6', '1.6.5', ':1.6')
+        self.check_union(':1.6', ':1.6', '1.6.5')
+
+        self.check_union(':1.6', ':1.6.5', '1.6')
+        self.check_union(':1.6', '1.6', ':1.6.5')
+
+
+    def test_union_with_containment(self):
+        self.check_union(':', '1.0:', ':2.0')
+
+        self.check_union('1:4', '1:3', '2:4')
+        self.check_union('1:4', '2:4', '1:3')
+
+        # Tests successor/predecessor case.
+        self.check_union('1:4', '1:2', '3:4')
+
+
     def test_basic_version_satisfaction(self):
         self.assert_satisfies('4.7.3',   '4.7.3')
 
@@ -325,6 +370,7 @@ class VersionsTest(unittest.TestCase):
         self.assert_does_not_satisfy('4.8.0', '4.9')
         self.assert_does_not_satisfy('4.8',   '4.9')
         self.assert_does_not_satisfy('4',     '4.9')
+
 
     def test_basic_version_satisfaction_in_lists(self):
         self.assert_satisfies(['4.7.3'],   ['4.7.3'])
@@ -341,6 +387,7 @@ class VersionsTest(unittest.TestCase):
         self.assert_does_not_satisfy(['4.8'],   ['4.9'])
         self.assert_does_not_satisfy(['4'],     ['4.9'])
 
+
     def test_version_range_satisfaction(self):
         self.assert_satisfies('4.7b6', '4.3:4.7')
         self.assert_satisfies('4.3.0', '4.3:4.7')
@@ -351,6 +398,7 @@ class VersionsTest(unittest.TestCase):
 
         self.assert_satisfies('4.7b6',        '4.3:4.7')
         self.assert_does_not_satisfy('4.8.0', '4.3:4.7')
+
 
     def test_version_range_satisfaction_in_lists(self):
         self.assert_satisfies(['4.7b6'], ['4.3:4.7'])
