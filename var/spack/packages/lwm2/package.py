@@ -7,7 +7,7 @@ class Lwm2(Package):
     """
     homepage = "https://jay.grs.rwth-aachen.de/redmine/projects/lwm2"
 
-    version('torus', hg='https://jay.grs.rwth-aachen.de/hg/lwm2', branch='torus')
+    version('torus', hg='https://jay.grs.rwth-aachen.de/hg/lwm2', revision='torus')
 
     depends_on("papi")
     depends_on("mpi")

@@ -315,7 +315,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         if self.commit:
             args.append('at commit %s' % self.commit)
         elif self.tag:
-            args.append('at tag %s' % self.branch)
+            args.append('at tag %s' % self.tag)
         elif self.branch:
             args.append('on branch %s' % self.branch)
         tty.msg("Trying to clone git repository:", self.url, *args)
@@ -431,25 +431,20 @@ class HgFetchStrategy(VCSFetchStrategy):
 
            version('torus', hg='https://jay.grs.rwth-aachen.de/hg/lwm2', branch='torus')
 
-       You can use these three optional attributes in addition to ``hg``:
+       You can use the optional 'revision' attribute to check out a
+       branch, tag, or particular revision in hg.  To prevent
+       non-reproducible builds, using a moving target like a branch is
+       discouraged.
 
-           * ``branch``: Particular branch to build from (default is 'default')
-           * ``tag``: Particular tag to check out
-           * ``revision``: Particular revision hash in the repo
+           * ``revision``: Particular revision, branch, or tag.
     """
     enabled = True
     required_attributes = ['hg']
 
     def __init__(self, **kwargs):
         super(HgFetchStrategy, self).__init__(
-            'hg', 'tag', 'branch', 'revision', **kwargs)
+            'hg', 'revision', **kwargs)
         self._hg = None
-
-        # For git fetch branches and tags the same way.
-        if not self.revision:
-            self.revision = self.branch
-        if not self.revision:
-            self.revision = self.tag
 
 
     @property
@@ -467,7 +462,10 @@ class HgFetchStrategy(VCSFetchStrategy):
             tty.msg("Already fetched %s." % self.stage.source_path)
             return
 
-        tty.msg("Trying to clone Mercurial repository: %s" % self.url)
+        args = []
+        if self.revision:
+            args.append('at revision %s' % self.revision)
+        tty.msg("Trying to clone Mercurial repository:", self.url, *args)
 
         args = ['clone', self.url]
         if self.revision:
@@ -480,15 +478,18 @@ class HgFetchStrategy(VCSFetchStrategy):
         assert(self.stage)
         self.stage.chdir()
 
+        source_path = self.stage.source_path
         scrubbed = "scrubbed-source-tmp"
+
         args = ['clone']
         if self.revision:
             args += ['-r', self.revision]
-        args += [self.stage.source_path, scrubbed]
-
+        args += [source_path, scrubbed]
         self.hg(*args)
-        shutil.rmtree(self.stage.source_path, ignore_errors=True)
-        shutil.move(scrubbed, self.stage.source_path)
+
+        shutil.rmtree(source_path, ignore_errors=True)
+        shutil.move(scrubbed, source_path)
+        self.stage.chdir_to_source()
 
 
 def from_url(url):
