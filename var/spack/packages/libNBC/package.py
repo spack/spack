@@ -24,16 +24,16 @@
 ##############################################################################
 from spack import *
 
-class Netgauge(Package):
-    """Netgauge is a high-precision network parameter measurement
-    tool. It supports benchmarking of many different network protocols
-    and communication patterns. The main focus lies on accuracy,
-    statistical analysis and easy extensibility.
+class Libnbc(Package):
+    """LibNBC is a prototypic implementation of a nonblocking
+    interface for MPI collective operations. Based on ANSI C and
+    MPI-1, it supports all MPI-1 collective operations in a
+    nonblocking manner. LibNBC is distributed under the BSD license.
     """
-    homepage = "http://unixer.de/research/netgauge/"
-    url      = "http://unixer.de/research/netgauge/netgauge-2.4.6.tar.gz"
+    homepage = "http://unixer.de/research/nbcoll/libnbc/"
+    url      = "http://unixer.de/research/nbcoll/libnbc/libNBC-1.1.1.tar.gz"
 
-    version('2.4.6', 'e0e040ec6452e93ca21ccc54deac1d7f')
+    version('1.1.1', 'ece5c94992591a9fa934a90e5dbe50ce')
 
     depends_on("mpi")
 
