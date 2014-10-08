@@ -25,6 +25,9 @@
 from spack import *
 
 class Scr(Package):
+    """SCR caches checkpoint data in storage on the compute nodes of a
+       Linux cluster to provide a fast, scalable checkpoint/restart
+       capability for MPI codes"""
     homepage = "https://computation-rnd.llnl.gov/scr"
     url      = "http://downloads.sourceforge.net/project/scalablecr/releases/scr-1.1-7.tar.gz"
 

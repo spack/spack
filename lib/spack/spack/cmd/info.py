@@ -24,52 +24,132 @@
 ##############################################################################
 import re
 import textwrap
-from llnl.util.tty.colify import colify
+from StringIO import StringIO
+from llnl.util.tty.colify import *
 import spack
 
 description = "Get detailed information on a particular package"
 
 def setup_parser(subparser):
-    subparser.add_argument('name', metavar="PACKAGE", help="name of packages to get info on")
+    subparser.add_argument('-r', '--rst', action='store_true',
+                           help="List all packages in reStructured text, for docs.")
+    subparser.add_argument('name', metavar="PACKAGE", nargs='?', help="name of packages to get info on")
 
 
-def info(parser, args):
-    package = spack.db.get(args.name)
-    print "Package:   ", package.name
-    print "Homepage:  ", package.homepage
+def format_doc(pkg, **kwargs):
+    """Wrap doc string at 72 characters and format nicely"""
+    indent = kwargs.get('indent', 0)
+
+    if not pkg.__doc__:
+        return ""
+
+    doc = re.sub(r'\s+', ' ', pkg.__doc__)
+    lines = textwrap.wrap(doc, 72)
+    results = StringIO()
+    for line in lines:
+        results.write((" " * indent) + line + "\n")
+    return results.getvalue()
+
+
+def github_url(pkg):
+    """Link to a package file on github."""
+    return ("https://github.com/scalability-llnl/spack/blob/master/var/spack/packages/%s/package.py" %
+            pkg.name)
+
+
+def rst_table(elts):
+    """Print out a RST-style table."""
+    cols = StringIO()
+    ncol, widths = colify(elts, output=cols, tty=True)
+    header = " ".join("=" * (w-1) for w in widths)
+    return "%s\n%s%s" % (header, cols.getvalue(), header)
+
+
+def info_rst():
+    """Print out information on all packages in restructured text."""
+    pkgs = sorted(spack.db.all_packages(), key=lambda s:s.name.lower())
+
+    print "Package List"
+    print "=================="
+
+    print "This is a list of things you can install using Spack.  It is"
+    print "automatically generated based on the packages in the latest Spack"
+    print "release."
+    print
+
+    print "Spack currently has %d mainline packages:" % len(pkgs)
+    print
+    print rst_table("`%s`_" % p.name for p in pkgs)
+    print
+    print "-----"
+
+    # Output some text for each package.
+    for pkg in pkgs:
+        print
+        print ".. _%s:" % pkg.name
+        print
+        print pkg.name
+        print "-" * len(pkg.name)
+        print "Links"
+        print "    * `Homepage <%s>`__" % pkg.homepage
+        print "    * `%s/package.py <%s>`__" % (pkg.name, github_url(pkg))
+        print
+        if pkg.dependencies:
+            print "Dependencies"
+            print "  " + ", ".join("`%s`_" % d if d != "mpi" else d
+                                   for d in pkg.dependencies)
+            print
+        print "Description"
+        print format_doc(pkg, indent=2)
+        print
+        print "-----"
+
+
+def info_text(pkg):
+    """Print out a plain text description of a package."""
+    print "Package:   ", pkg.name
+    print "Homepage:  ", pkg.homepage
 
     print
     print "Safe versions:  "
 
-    if not package.versions:
+    if not pkg.versions:
         print("None.")
     else:
-        maxlen = max(len(str(v)) for v in package.versions)
+        maxlen = max(len(str(v)) for v in pkg.versions)
         fmt = "%%-%ss" % maxlen
-        for v in reversed(sorted(package.versions)):
-            print "    " + (fmt % v) + "    " + package.url_for_version(v)
+        for v in reversed(sorted(pkg.versions)):
+            print "    " + (fmt % v) + "    " + pkg.url_for_version(v)
 
     print
     print "Dependencies:"
-    if package.dependencies:
-        colify(package.dependencies, indent=4)
+    if pkg.dependencies:
+        colify(pkg.dependencies, indent=4)
     else:
         print "    None"
 
     print
     print "Virtual packages: "
-    if package.provided:
-        for spec, when in package.provided.items():
+    if pkg.provided:
+        for spec, when in pkg.provided.items():
             print "    %s provides %s" % (when, spec)
     else:
         print "    None"
 
     print
     print "Description:"
-    if package.__doc__:
-        doc = re.sub(r'\s+', ' ', package.__doc__)
-        lines = textwrap.wrap(doc, 72)
-        for line in lines:
-            print "    " + line
+    if pkg.__doc__:
+        print format_doc(pkg, indent=4)
     else:
         print "    None"
+
+
+def info(parser, args):
+     if args.rst:
+         info_rst()
+
+     else:
+         if not args.name:
+             tty.die("You must supply a package name.")
+         pkg = spack.db.get(args.name)
+         info_text(pkg)

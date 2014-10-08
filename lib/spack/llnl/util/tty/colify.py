@@ -109,13 +109,15 @@ def colify(elts, **options):
     # elts needs to be an array of strings so we can count the elements
     elts = [str(elt) for elt in elts]
     if not elts:
-        return
+        return (0, ())
 
     if not tty:
         if tty is False or not isatty(output):
             for elt in elts:
                 output.write("%s\n" % elt)
-            return
+
+            maxlen = max(len(str(s)) for s in elts)
+            return (1, (maxlen,))
 
     console_cols = options.get("cols", None)
     if not console_cols:
@@ -149,6 +151,8 @@ def colify(elts, **options):
         row += 1
         if row == rows_last_col:
             cols -= 1
+
+    return (config.cols, tuple(config.widths))
 
 
 def colified(elts, **options):

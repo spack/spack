@@ -25,6 +25,8 @@
 from spack import *
 
 class Cmake(Package):
+    """A cross-platform, open-source build system. CMake is a family of
+       tools designed to build, test and package software."""
     homepage  = 'https://www.cmake.org'
     url       = 'http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz'
 

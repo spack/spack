@@ -25,6 +25,11 @@
 from spack import *
 
 class Spindle(Package):
+    """Spindle improves the library-loading performance of dynamically
+       linked HPC applications.  Without Spindle large MPI jobs can
+       overload on a shared file system when loading dynamically
+       linked libraries, causing site-wide performance problems.
+    """
     homepage = "https://computation-rnd.llnl.gov/spindle"
     url      = "https://github.com/hpc/Spindle/archive/v0.8.1.tar.gz"
     list_url = "https://github.com/hpc/Spindle/releases"

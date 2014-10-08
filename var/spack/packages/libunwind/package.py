@@ -25,6 +25,8 @@
 from spack import *
 
 class Libunwind(Package):
+    """A portable and efficient C programming interface (API) to determine
+       the call-chain of a program."""
     homepage = "http://www.nongnu.org/libunwind/"
     url      = "http://download.savannah.gnu.org/releases/libunwind/libunwind-1.1.tar.gz"
 

@@ -25,6 +25,8 @@
 from spack import *
 
 class Dyninst(Package):
+    """API for dynamic binary instrumentation.  Modify programs while they
+    are executing without recompiling, re-linking, or re-executing."""
     homepage = "https://paradyn.org"
     url      = "http://www.dyninst.org/sites/default/files/downloads/dyninst/8.1.2/DyninstAPI-8.1.2.tgz"
     list_url = "http://www.dyninst.org/downloads/dyninst-8.x"
