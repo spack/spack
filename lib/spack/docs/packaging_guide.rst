@@ -286,9 +286,9 @@ Now Spack generates boilerplate code and opens the new
        homepage = "http://www.example.com"
        url      = "http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz"
 
-       versions = { '2.8.12.1' : '9d38cd4e2c94c3cea97d0e2924814acc',
-                    '2.8.12'   : '105bc6d21cc2e9b6aff901e43c53afea',
-                    '2.8.11.2' : '6f5d7b8e7534a5d9e1a7664ba63cf882', }
+       version('2.8.12.1', '9d38cd4e2c94c3cea97d0e2924814acc')
+       version('2.8.12',   '105bc6d21cc2e9b6aff901e43c53afea')
+       version('2.8.11.2', '6f5d7b8e7534a5d9e1a7664ba63cf882')
 
        def install(self, spec, prefix):
            # FIXME: Modify the configure line to suit your build system here.
@@ -349,7 +349,7 @@ Which will generate a minimal package structure for you to fill in:
        homepage = "http://www.example.com"
        url      = "http://www.example.com/foo-1.0.tar.gz"
 
-       versions = { '1.0' : '0123456789abcdef0123456789abcdef' }
+       version('1.0', '0123456789abcdef0123456789abcdef')
 
        def install(self, spec, prefix):
            configure("--prefix=" + prefix)
@@ -395,12 +395,10 @@ and paste into your package file:
 .. code-block:: sh
 
    ==> Checksummed new versions of libelf:
-     {
-         '0.8.13' : '4136d7b4c04df68b686570afa26988ac',
-         '0.8.12' : 'e21f8273d9f5f6d43a59878dc274fec7',
-         '0.8.11' : 'e931910b6d100f6caa32239849947fbf',
-         '0.8.10' : '9db4d36c283d9790d8fa7df1f4d7b4d9',
-     }
+       version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
+       version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
+       version('0.8.11', 'e931910b6d100f6caa32239849947fbf')
+       version('0.8.10', '9db4d36c283d9790d8fa7df1f4d7b4d9')
 
 You should be able to add these checksums directly to the versions
 field in your package.
