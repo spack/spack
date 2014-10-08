@@ -427,7 +427,7 @@ class Package(object):
         return self.url or self.version_urls()
 
 
-    # TODO: move this out of here and into some URL extrapolation module.
+    # TODO: move this out of here and into some URL extrapolation module?
     def url_for_version(self, version):
         """Returns a URL that you can download a new version of this package from."""
         if not isinstance(version, Version):
@@ -598,7 +598,7 @@ class Package(object):
 
     @property
     def default_url(self):
-        if self.concrete:
+        if self.spec.version.concrete:
             return self.url_for_version(self.version)
         else:
             url = getattr(self, 'url', None)
@@ -841,13 +841,9 @@ class Package(object):
 
     def clean(self):
         """By default just runs make clean.  Override if this isn't good."""
-        try:
-            # TODO: should we really call make clean, ro just blow away the directory?
-            make = build_env.MakeExecutable('make', self.parallel)
-            make('clean')
-            tty.msg("Successfully cleaned %s" % self.name)
-        except subprocess.CalledProcessError, e:
-            tty.warn("Warning: 'make clean' didn't work.  Consider 'spack clean --work'.")
+        # TODO: should we really call make clean, ro just blow away the directory?
+        make = build_env.MakeExecutable('make', self.parallel)
+        make('clean')
 
 
     def do_clean_work(self):
@@ -859,7 +855,6 @@ class Package(object):
         """Removes the stage directory where this package was built."""
         if os.path.exists(self.stage.path):
             self.stage.destroy()
-        tty.msg("Successfully cleaned %s" % self.name)
 
 
     def fetch_available_versions(self):

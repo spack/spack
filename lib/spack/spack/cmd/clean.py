@@ -52,7 +52,15 @@ def clean(parser, args):
         package = spack.db.get(spec)
         if args.dist:
             package.do_clean_dist()
+            tty.msg("Cleaned %s" % package.name)
+
         elif args.work:
             package.do_clean_work()
+            tty.msg("Restaged %s" % package.name)
+
         else:
-            package.do_clean()
+            try:
+                package.do_clean()
+            except subprocess.CalledProcessError, e:
+                tty.warn("Warning: 'make clean' didn't work.  Consider 'spack clean --work'.")
+                tty.msg("Made clean for %s" % package.name)
