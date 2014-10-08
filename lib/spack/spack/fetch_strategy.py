@@ -50,7 +50,7 @@ import spack.util.crypto as crypto
 from spack.util.executable import *
 from spack.util.string import *
 from spack.version import Version, ver
-from spack.util.compression import decompressor_for
+from spack.util.compression import decompressor_for, extension
 
 """List of all fetch strategies, created by FetchStrategy metaclass."""
 all_strategies = []
@@ -81,11 +81,14 @@ class FetchStrategy(object):
 
 
     # Subclasses need to implement these methods
-    def fetch(self): pass    # Return True on success, False on fail
-    def check(self): pass
-    def expand(self): pass
-    def reset(self): pass
-    def __str__(self):
+    def fetch(self):   pass  # Return True on success, False on fail.
+    def check(self):   pass  # Do checksum.
+    def expand(self):  pass  # Expand archive.
+    def reset(self):   pass  # Revert to freshly downloaded state.
+
+    def archive(self, destination): pass  # Used to create tarball for mirror.
+
+    def __str__(self):       # Should be human readable URL.
         return "FetchStrategy.__str___"
 
     # This method is used to match fetch strategies to version()
@@ -185,6 +188,14 @@ class URLFetchStrategy(FetchStrategy):
         decompress(self.archive_file)
 
 
+    def archive(self, destination):
+        """This archive"""
+        if not self.archive_file:
+            raise NoArchiveFileError("Cannot call archive() before fetching.")
+        assert(extension(destination) == extension(self.archive_file))
+        shutil.move(self.archive_file, destination)
+
+
     def check(self):
         """Check the downloaded archive against a checksum digest.
            No-op if this stage checks code out of a repository."""
@@ -249,6 +260,23 @@ class VCSFetchStrategy(FetchStrategy):
     def expand(self):
         assert(self.stage)
         tty.debug("Source fetched with %s is already expanded." % self.name)
+
+
+    def archive(self, destination, **kwargs):
+        assert(extension(destination) == 'tar.gz')
+        assert(self.stage.source_path.startswith(self.stage.path))
+
+        tar = which('tar', required=True)
+
+        patterns = kwargs.get('exclude', None)
+        if patterns is not None:
+            if isinstance(patterns, basestring):
+                patterns = [patterns]
+            for p in patterns:
+                tar.add_default_arg('--exclude=%s' % p)
+
+        self.stage.chdir()
+        tar('-czf', destination, os.path.basename(self.stage.source_path))
 
 
     def __str__(self):
@@ -345,6 +373,10 @@ class GitFetchStrategy(VCSFetchStrategy):
             self.stage.chdir_to_source()
 
 
+    def archive(self, destination):
+        super(GitFetchStrategy, self).archive(destination, exclude='.git')
+
+
     def reset(self):
         assert(self.stage)
         self.stage.chdir_to_source()
@@ -414,6 +446,10 @@ class SvnFetchStrategy(VCSFetchStrategy):
                 shutil.rmtree(path, ignore_errors=True)
 
 
+    def archive(self, destination):
+        super(SvnFetchStrategy, self).archive(destination, exclude='.svn')
+
+
     def reset(self):
         assert(self.stage)
         self.stage.chdir_to_source()
@@ -472,6 +508,10 @@ class HgFetchStrategy(VCSFetchStrategy):
             args += ['-r', self.revision]
 
         self.hg(*args)
+
+
+    def archive(self, destination):
+        super(HgFetchStrategy, self).archive(destination, exclude='.hg')
 
 
     def reset(self):
