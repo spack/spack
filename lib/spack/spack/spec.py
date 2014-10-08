@@ -1619,7 +1619,7 @@ class UnsatisfiableSpecError(SpecError):
 class UnsatisfiableSpecNameError(UnsatisfiableSpecError):
     """Raised when two specs aren't even for the same package."""
     def __init__(self, provided, required):
-        super(UnsatisfiableVersionSpecError, self).__init__(
+        super(UnsatisfiableSpecNameError, self).__init__(
             provided, required, "name")
 
 
