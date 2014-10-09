@@ -94,6 +94,9 @@ def info_rst():
         print "    * `Homepage <%s>`__" % pkg.homepage
         print "    * `%s/package.py <%s>`__" % (pkg.name, github_url(pkg))
         print
+        if pkg.versions:
+            print "Versions:"
+            print "  " + ", ".join(str(v) for v in reversed(sorted(pkg.versions)))
         if pkg.dependencies:
             print "Dependencies"
             print "  " + ", ".join("`%s`_" % d if d != "mpi" else d
