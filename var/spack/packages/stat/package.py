@@ -27,9 +27,5 @@ class Stat(Package):
             "--with-stackwalker=%s" % spec['dyninst'].prefix,
             "--with-libdwarf=%s"    % spec['libdwarf'].prefix)
 
-        # TODO: remove once SPACK-19 is fixed
-        import shutil
-        shutil.copy2('/usr/bin/libtool', 'libtool')
-
         make(parallel=False)
         make("install")
