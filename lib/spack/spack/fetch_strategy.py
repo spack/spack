@@ -37,6 +37,8 @@ in order to build it.  They need to define the following methods:
         Restore original state of downloaded code.  Used by clean commands.
         This may just remove the expanded source and re-expand an archive,
         or it may run something like git reset --hard.
+    * archive()
+        Archive a source directory, e.g. for creating a mirror.
 """
 import os
 import re
@@ -90,6 +92,9 @@ class FetchStrategy(object):
 
     def __str__(self):       # Should be human readable URL.
         return "FetchStrategy.__str___"
+
+    @property
+    def unique_name(self): pass
 
     # This method is used to match fetch strategies to version()
     # arguments in packages.
@@ -189,7 +194,7 @@ class URLFetchStrategy(FetchStrategy):
 
 
     def archive(self, destination):
-        """This archive"""
+        """Just moves this archive to the destination."""
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
         assert(extension(destination) == extension(self.archive_file))
@@ -230,6 +235,10 @@ class URLFetchStrategy(FetchStrategy):
             return self.url
         else:
             return "URLFetchStrategy<no url>"
+
+    @property
+    def unique_name(self):
+        return "spack-fetch-url:%s" % self
 
 
 class VCSFetchStrategy(FetchStrategy):
@@ -384,6 +393,17 @@ class GitFetchStrategy(VCSFetchStrategy):
         self.git('clean', '-f')
 
 
+    @property
+    def unique_name(self):
+        name = "spack-fetch-git:%s" % self.url
+        if self.commit:
+            name += "@" + self.commit
+        elif self.branch:
+            name += "@" + self.branch
+        elif self.tag:
+            name += "@" + self.tag
+
+
 class SvnFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a subversion repository.
        Use like this in a package:
@@ -455,6 +475,14 @@ class SvnFetchStrategy(VCSFetchStrategy):
         self.stage.chdir_to_source()
         self._remove_untracked_files()
         self.svn('revert', '.', '-R')
+
+
+    @property
+    def unique_name(self):
+        name = "spack-fetch-svn:%s" % self.url
+        if self.revision:
+            name += "@" + self.revision
+
 
 
 class HgFetchStrategy(VCSFetchStrategy):
@@ -532,6 +560,14 @@ class HgFetchStrategy(VCSFetchStrategy):
         self.stage.chdir_to_source()
 
 
+    @property
+    def unique_name(self):
+        name = "spack-fetch-hg:%s" % self.url
+        if self.revision:
+            name += "@" + self.revision
+
+
+
 def from_url(url):
     """Given a URL, find an appropriate fetch strategy for it.
        Currently just gives you a URLFetchStrategy that uses curl.
@@ -546,9 +582,18 @@ def args_are_for(args, fetcher):
     fetcher.matches(args)
 
 
-def from_args(args, pkg):
+def for_package_version(pkg, version):
     """Determine a fetch strategy based on the arguments supplied to
        version() in the package description."""
+    # If it's not a known version, extrapolate one.
+    if not version in pkg.versions:
+        url = pkg.url_for_verison(version)
+        if not url:
+            raise InvalidArgsError(pkg, version)
+        return URLFetchStrategy()
+
+    # Grab a dict of args out of the package version dict
+    args = pkg.versions[version]
 
     # Test all strategies against per-version arguments.
     for fetcher in all_strategies:
@@ -564,9 +609,7 @@ def from_args(args, pkg):
         if fetcher.matches(attrs):
             return fetcher(**attrs)
 
-    raise InvalidArgsError(
-        "Could not construct fetch strategy for package %s",
-        pkg.spec.format("%_%@"))
+    raise InvalidArgsError(pkg, version)
 
 
 class FetchStrategyError(spack.error.SpackError):
@@ -593,5 +636,7 @@ class NoDigestError(FetchStrategyError):
 
 
 class InvalidArgsError(FetchStrategyError):
-    def __init__(self, msg, long_msg):
-        super(InvalidArgsError, self).__init__(msg, long_msg)
+    def __init__(self, pkg, version):
+        msg = "Could not construct a fetch strategy for package %s at version %s"
+        msg %= (pkg.name, version)
+        super(InvalidArgsError, self).__init__(msg)

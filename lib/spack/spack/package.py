@@ -385,8 +385,8 @@ class Package(object):
 
     @property
     def version(self):
-        if not self.spec.concrete:
-            raise ValueError("Can only get version of concrete package.")
+        if not self.spec.versions.concrete:
+            raise ValueError("Can only get of package with concrete version.")
         return self.spec.versions[0]
 
 
@@ -451,18 +451,20 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
-            self._stage = Stage(
-                self.fetcher, mirror_path=self.mirror_path(), name=self.spec.short_spec)
+            self._stage = Stage(self.fetcher,
+                                mirror_path=self.mirror_path(),
+                                name=self.spec.short_spec)
         return self._stage
 
 
     @property
     def fetcher(self):
-        if not self.spec.concrete:
-            raise ValueError("Can only get a fetcher for a concrete package.")
+        if not self.spec.versions.concrete:
+            raise ValueError(
+                "Can only get a fetcher for a package with concrete versions.")
 
         if not self._fetcher:
-            self._fetcher = fs.from_args(self.versions[self.version], self)
+            self._fetcher = fs.for_package_version(self, self.version)
         return self._fetcher
 
 
@@ -598,13 +600,14 @@ class Package(object):
 
     @property
     def default_url(self):
-        if self.spec.version.concrete:
+        if self.spec.versions.concrete:
             return self.url_for_version(self.version)
         else:
             url = getattr(self, 'url', None)
             if url:
                 return url
 
+        return None
 
 
     def remove_prefix(self):
