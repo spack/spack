@@ -34,24 +34,9 @@ import spack
 from spack.version import ver
 from spack.stage import Stage
 from spack.util.executable import which
+
 from spack.test.mock_packages_test import *
-
-test_repo_path = 'test-repo'
-test_file_name = 'test-file.txt'
-
-test_branch = 'test-branch'
-test_branch_file_name = 'branch-test-file'
-
-test_tag_branch = 'test-tag-branch'
-test_tag = 'test-tag'
-test_tag_file_name = 'tag-test-file'
-
-untracked = 'foobarbaz'
-
-git = which('git', required=True)
-
-def rev_hash(rev):
-    return git('rev-parse', rev, return_output=True).strip()
+from spack.test.mock_repo import MockGitRepo
 
 
 class GitFetchTest(MockPackagesTest):
@@ -61,36 +46,8 @@ class GitFetchTest(MockPackagesTest):
         """Create a git repository with master and two other branches,
            and one tag, so that we can experiment on it."""
         super(GitFetchTest, self).setUp()
-        self.stage = Stage('fetch-test')
 
-        self.repo_path = join_path(self.stage.path, test_repo_path)
-        mkdirp(self.repo_path)
-
-        self.test_file = join_path(self.repo_path, test_file_name)
-        touch(self.test_file)
-
-        with working_dir(self.repo_path):
-            git('init')
-            git('add', self.test_file)
-            git('commit', '-m', 'testing')
-
-            git('branch', test_branch)
-            git('branch', test_tag_branch)
-
-            git('checkout', test_branch)
-            touch(test_branch_file_name)
-            git('add', test_branch_file_name)
-            git('commit', '-m' 'branch test')
-
-            git('checkout', test_tag_branch)
-            touch(test_tag_file_name)
-            git('add', test_tag_file_name)
-            git('commit', '-m' 'tag test')
-            git('tag', test_tag)
-
-            git('checkout', 'master')
-
-            self.commit = rev_hash(test_tag)
+        self.repo = MockGitRepo()
 
         spec = Spec('git-test')
         spec.concretize()
@@ -101,15 +58,15 @@ class GitFetchTest(MockPackagesTest):
         """Destroy the stage space used by this test."""
         super(GitFetchTest, self).tearDown()
 
-        if self.stage is not None:
-            self.stage.destroy()
+        if self.repo.stage is not None:
+            self.repo.stage.destroy()
 
         self.pkg.do_clean_dist()
 
 
     def assert_rev(self, rev):
         """Check that the current git revision is equal to the supplied rev."""
-        self.assertEqual(rev_hash('HEAD'), rev_hash(rev))
+        self.assertEqual(self.repo.rev_hash('HEAD'), self.repo.rev_hash(rev))
 
 
     def try_fetch(self, rev, test_file, args):
@@ -133,10 +90,11 @@ class GitFetchTest(MockPackagesTest):
         os.unlink(file_path)
         self.assertFalse(os.path.isfile(file_path))
 
-        touch(untracked)
-        self.assertTrue(os.path.isfile(untracked))
+        untracked_file = 'foobarbaz'
+        touch(untracked_file)
+        self.assertTrue(os.path.isfile(untracked_file))
         self.pkg.do_clean_work()
-        self.assertFalse(os.path.isfile(untracked))
+        self.assertFalse(os.path.isfile(untracked_file))
 
         self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
         self.assertTrue(os.path.isfile(file_path))
@@ -146,30 +104,30 @@ class GitFetchTest(MockPackagesTest):
 
     def test_fetch_master(self):
         """Test a default git checkout with no commit or tag specified."""
-        self.try_fetch('master', test_file_name, {
-            'git' : self.repo_path
+        self.try_fetch('master', self.repo.r0_file, {
+            'git' : self.repo.path
         })
 
 
-    def test_fetch_branch(self):
+    def ztest_fetch_branch(self):
         """Test fetching a branch."""
-        self.try_fetch(test_branch, test_branch_file_name, {
-            'git'    : self.repo_path,
-            'branch' : test_branch
+        self.try_fetch(self.repo.branch, self.repo.branch_file, {
+            'git'    : self.repo.path,
+            'branch' : self.repo.branch
         })
 
 
-    def test_fetch_tag(self):
+    def ztest_fetch_tag(self):
         """Test fetching a tag."""
-        self.try_fetch(test_tag, test_tag_file_name, {
-            'git' : self.repo_path,
-            'tag' : test_tag
+        self.try_fetch(self.repo.tag, self.repo.tag_file, {
+            'git' : self.repo.path,
+            'tag' : self.repo.tag
         })
 
 
-    def test_fetch_commit(self):
+    def ztest_fetch_commit(self):
         """Test fetching a particular commit."""
-        self.try_fetch(self.commit, test_tag_file_name, {
-            'git'    : self.repo_path,
-            'commit' : self.commit
+        self.try_fetch(self.repo.r1, self.repo.r1_file, {
+            'git'    : self.repo.path,
+            'commit' : self.repo.r1
         })

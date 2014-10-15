@@ -36,17 +36,7 @@ from spack.version import ver
 from spack.stage import Stage
 from spack.util.executable import which
 from spack.test.mock_packages_test import *
-
-test_repo_path = 'test-repo'
-
-test_import_path = 'test-import'
-test_file_name = 'test-file.txt'
-test_rev_file_name = 'test-rev-file'
-
-untracked = 'foobarbaz'
-
-svn = which('svn', required=True)
-svnadmin = which('svnadmin', required=True)
+from spack.test.mock_repo import svn, MockSvnRepo
 
 
 class SvnFetchTest(MockPackagesTest):
@@ -55,26 +45,8 @@ class SvnFetchTest(MockPackagesTest):
     def setUp(self):
         """Create an svn repository with two revisions."""
         super(SvnFetchTest, self).setUp()
-        self.stage = Stage('fetch-test')
-        self.stage.chdir()
 
-        repo_path = join_path(self.stage.path, test_repo_path)
-        svnadmin('create', repo_path)
-        self.repo_url = 'file://' + repo_path
-
-        self.import_path = join_path(self.stage.path, test_import_path)
-        mkdirp(self.import_path)
-        with working_dir(self.import_path):
-            touch(test_file_name)
-
-        svn('import', self.import_path, self.repo_url, '-m', 'Initial import')
-
-        shutil.rmtree(self.import_path)
-        svn('checkout', self.repo_url, self.import_path)
-        with working_dir(self.import_path):
-            touch(test_rev_file_name)
-            svn('add', test_rev_file_name)
-            svn('ci', '-m', 'second revision')
+        self.repo = MockSvnRepo()
 
         spec = Spec('svn-test')
         spec.concretize()
@@ -85,8 +57,8 @@ class SvnFetchTest(MockPackagesTest):
         """Destroy the stage space used by this test."""
         super(SvnFetchTest, self).tearDown()
 
-        if self.stage is not None:
-            self.stage.destroy()
+        if self.repo.stage is not None:
+            self.repo.stage.destroy()
 
         self.pkg.do_clean_dist()
 
@@ -99,7 +71,7 @@ class SvnFetchTest(MockPackagesTest):
             for line in output.split('\n'):
                 match = re.match(r'Revision: (\d+)', line)
                 if match:
-                    return int(match.group(1))
+                    return match.group(1)
         self.assertEqual(get_rev(), rev)
 
 
@@ -124,6 +96,7 @@ class SvnFetchTest(MockPackagesTest):
         os.unlink(file_path)
         self.assertFalse(os.path.isfile(file_path))
 
+        untracked = 'foobarbaz'
         touch(untracked)
         self.assertTrue(os.path.isfile(untracked))
         self.pkg.do_clean_work()
@@ -137,14 +110,14 @@ class SvnFetchTest(MockPackagesTest):
 
     def test_fetch_default(self):
         """Test a default checkout and make sure it's on rev 1"""
-        self.try_fetch(2, test_rev_file_name, {
-            'svn' : self.repo_url
+        self.try_fetch(self.repo.r1, self.repo.r1_file, {
+            'svn' : self.repo.url
         })
 
 
     def test_fetch_r1(self):
         """Test fetching an older revision (0)."""
-        self.try_fetch(1, test_file_name, {
-            'svn'      : self.repo_url,
-            'revision' : 1
+        self.try_fetch(self.repo.r0, self.repo.r0_file, {
+            'svn'      : self.repo.url,
+            'revision' : self.repo.r0
         })

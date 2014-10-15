@@ -35,46 +35,18 @@ from spack.version import ver
 from spack.stage import Stage
 from spack.util.executable import which
 from spack.test.mock_packages_test import *
+from spack.test.mock_repo import MockHgRepo
 
-test_repo_path = 'test-repo'
-test_file_name = 'test-file.txt'
-test_rev1_file_name = 'test-file2.txt'
-untracked = 'foobarbaz'
-
-hg = which('hg', required=True)
 
 class HgFetchTest(MockPackagesTest):
     """Tests fetching from a dummy hg repository."""
-
-    def get_rev(self):
-        """Get current mercurial revision."""
-        return hg('id', '-i', return_output=True).strip()
-
 
     def setUp(self):
         """Create a hg repository with master and two other branches,
            and one tag, so that we can experiment on it."""
         super(HgFetchTest, self).setUp()
-        self.stage = Stage('fetch-test')
 
-        self.repo_path = join_path(self.stage.path, test_repo_path)
-        mkdirp(self.repo_path)
-
-        test_file      = join_path(self.repo_path, test_file_name)
-        test_file_rev1 = join_path(self.repo_path, test_rev1_file_name)
-
-        with working_dir(self.repo_path):
-            hg('init')
-
-            touch(test_file)
-            hg('add', test_file)
-            hg('commit', '-m', 'revision 0', '-u', 'test')
-            self.rev0 = self.get_rev()
-
-            touch(test_file_rev1)
-            hg('add', test_file_rev1)
-            hg('commit', '-m' 'revision 1', '-u', 'test')
-            self.rev1 = self.get_rev()
+        self.repo = MockHgRepo()
 
         spec = Spec('hg-test')
         spec.concretize()
@@ -85,15 +57,10 @@ class HgFetchTest(MockPackagesTest):
         """Destroy the stage space used by this test."""
         super(HgFetchTest, self).tearDown()
 
-        if self.stage is not None:
-            self.stage.destroy()
+        if self.repo.stage is not None:
+            self.repo.stage.destroy()
 
         self.pkg.do_clean_dist()
-
-
-    def assert_rev(self, rev):
-        """Check that the current hg revision is equal to the supplied rev."""
-        self.assertEqual(self.get_rev(), rev)
 
 
     def try_fetch(self, rev, test_file, args):
@@ -108,7 +75,7 @@ class HgFetchTest(MockPackagesTest):
         self.pkg.versions[ver('hg')] = args
 
         self.pkg.do_stage()
-        self.assert_rev(rev)
+        self.assertEqual(self.repo.get_rev(), rev)
 
         file_path = join_path(self.pkg.stage.source_path, test_file)
         self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
@@ -117,6 +84,7 @@ class HgFetchTest(MockPackagesTest):
         os.unlink(file_path)
         self.assertFalse(os.path.isfile(file_path))
 
+        untracked = 'foobarbaz'
         touch(untracked)
         self.assertTrue(os.path.isfile(untracked))
         self.pkg.do_clean_work()
@@ -125,19 +93,19 @@ class HgFetchTest(MockPackagesTest):
         self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
         self.assertTrue(os.path.isfile(file_path))
 
-        self.assert_rev(rev)
+        self.assertEqual(self.repo.get_rev(), rev)
 
 
     def test_fetch_default(self):
         """Test a default hg checkout with no commit or tag specified."""
-        self.try_fetch(self.rev1, test_rev1_file_name, {
-            'hg' : self.repo_path
+        self.try_fetch(self.repo.r1, self.repo.r1_file, {
+            'hg' : self.repo.path
         })
 
 
     def test_fetch_rev0(self):
         """Test fetching a branch."""
-        self.try_fetch(self.rev0, test_file_name, {
-            'hg'       : self.repo_path,
-            'revision' : self.rev0
+        self.try_fetch(self.repo.r0, self.repo.r0_file, {
+            'hg'       : self.repo.path,
+            'revision' : self.repo.r0
         })
