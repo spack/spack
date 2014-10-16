@@ -147,7 +147,7 @@ def create(path, specs, **kwargs):
             archive_path = join_path(subdir, archive_file)
 
             if os.path.exists(archive_path):
-                tty.msg("%s is already present.  Skipping." % spec.format("$_$@"))
+                tty.msg("Already added %s" % spec.format("$_$@"))
                 present.append(spec)
                 continue
 

@@ -43,7 +43,7 @@ in order to build it.  They need to define the following methods:
 import os
 import re
 import shutil
-
+from functools import wraps
 import llnl.util.tty as tty
 
 import spack
@@ -56,6 +56,16 @@ from spack.util.compression import decompressor_for, extension
 
 """List of all fetch strategies, created by FetchStrategy metaclass."""
 all_strategies = []
+
+def _needs_stage(fun):
+    """Many methods on fetch strategies require a stage to be set
+       using set_stage().  This decorator adds a check for self.stage."""
+    @wraps(fun)
+    def wrapper(self, *args, **kwargs):
+        if not self.stage:
+            raise NoStageError(fun)
+        return fun(self, *args, **kwargs)
+    return wrapper
 
 
 class FetchStrategy(object):
@@ -121,10 +131,8 @@ class URLFetchStrategy(FetchStrategy):
         if not self.url:
             raise ValueError("URLFetchStrategy requires a url for fetching.")
 
-
+    @_needs_stage
     def fetch(self):
-        assert(self.stage)
-
         self.stage.chdir()
 
         if self.archive_file:
@@ -172,13 +180,10 @@ class URLFetchStrategy(FetchStrategy):
     @property
     def archive_file(self):
         """Path to the source archive within this stage directory."""
-        assert(self.stage)
-        path = os.path.join(self.stage.path, os.path.basename(self.url))
-        return path if os.path.exists(path) else None
+        return self.stage.archive_file
 
-
+    @_needs_stage
     def expand(self):
-        assert(self.stage)
         tty.msg("Staging archive: %s" % self.archive_file)
 
         self.stage.chdir()
@@ -201,12 +206,13 @@ class URLFetchStrategy(FetchStrategy):
         shutil.move(self.archive_file, destination)
 
 
+    @_needs_stage
     def check(self):
         """Check the downloaded archive against a checksum digest.
            No-op if this stage checks code out of a repository."""
-        assert(self.stage)
         if not self.digest:
             raise NoDigestError("Attempt to check URLFetchStrategy with no digest.")
+
         checker = crypto.Checker(self.digest)
         if not checker.check(self.archive_file):
             raise ChecksumError(
@@ -214,9 +220,9 @@ class URLFetchStrategy(FetchStrategy):
                 "Expected %s but got %s." % (self.digest, checker.sum))
 
 
+    @_needs_stage
     def reset(self):
         """Removes the source path if it exists, then re-expands the archive."""
-        assert(self.stage)
         if not self.archive_file:
             raise NoArchiveFileError("Tried to reset URLFetchStrategy before fetching",
                                      "Failed on reset() for URL %s" % self.url)
@@ -257,16 +263,18 @@ class VCSFetchStrategy(FetchStrategy):
         for rt in rev_types:
             setattr(self, rt, kwargs.get(rt, None))
 
+
+    @_needs_stage
     def check(self):
-        assert(self.stage)
         tty.msg("No checksum needed when fetching with %s." % self.name)
 
 
+    @_needs_stage
     def expand(self):
-        assert(self.stage)
         tty.debug("Source fetched with %s is already expanded." % self.name)
 
 
+    @_needs_stage
     def archive(self, destination, **kwargs):
         assert(extension(destination) == 'tar.gz')
         assert(self.stage.source_path.startswith(self.stage.path))
@@ -335,9 +343,8 @@ class GitFetchStrategy(VCSFetchStrategy):
             self._git = which('git', required=True)
         return self._git
 
-
+    @_needs_stage
     def fetch(self):
-        assert(self.stage)
         self.stage.chdir()
 
         if self.stage.source_path:
@@ -382,8 +389,8 @@ class GitFetchStrategy(VCSFetchStrategy):
         super(GitFetchStrategy, self).archive(destination, exclude='.git')
 
 
+    @_needs_stage
     def reset(self):
-        assert(self.stage)
         self.stage.chdir_to_source()
         self.git('checkout', '.')
         self.git('clean', '-f')
@@ -418,8 +425,8 @@ class SvnFetchStrategy(VCSFetchStrategy):
         return self._svn
 
 
+    @_needs_stage
     def fetch(self):
-        assert(self.stage)
         self.stage.chdir()
 
         if self.stage.source_path:
@@ -455,8 +462,8 @@ class SvnFetchStrategy(VCSFetchStrategy):
         super(SvnFetchStrategy, self).archive(destination, exclude='.svn')
 
 
+    @_needs_stage
     def reset(self):
-        assert(self.stage)
         self.stage.chdir_to_source()
         self._remove_untracked_files()
         self.svn('revert', '.', '-R')
@@ -494,9 +501,8 @@ class HgFetchStrategy(VCSFetchStrategy):
             self._hg = which('hg', required=True)
         return self._hg
 
-
+    @_needs_stage
     def fetch(self):
-        assert(self.stage)
         self.stage.chdir()
 
         if self.stage.source_path:
@@ -519,8 +525,8 @@ class HgFetchStrategy(VCSFetchStrategy):
         super(HgFetchStrategy, self).archive(destination, exclude='.hg')
 
 
+    @_needs_stage
     def reset(self):
-        assert(self.stage)
         self.stage.chdir()
 
         source_path = self.stage.source_path
@@ -617,5 +623,12 @@ class ChecksumError(FetchError):
     """Raised when archive fails to checksum."""
     def __init__(self, message, long_msg=None):
         super(ChecksumError, self).__init__(message, long_msg)
+
+
+class NoStageError(FetchError):
+    """Raised when fetch operations are called before set_stage()."""
+    def __init__(self, method):
+        super(NoStageError, self).__init__(
+            "Must call FetchStrategy.set_stage() before calling %s" % method.__name__)
 
 
