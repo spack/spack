@@ -70,6 +70,7 @@ class DefaultConcretizer(object):
         pkg = spec.package
         valid_versions = [v for v in pkg.available_versions
                           if any(v.satisfies(sv) for sv in spec.versions)]
+
         if valid_versions:
             spec.versions = ver([valid_versions[-1]])
         else:

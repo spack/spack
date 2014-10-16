@@ -559,7 +559,7 @@ def for_package_version(pkg, version):
         url = pkg.url_for_verison(version)
         if not url:
             raise InvalidArgsError(pkg, version)
-        return URLFetchStrategy()
+        return URLFetchStrategy(url)
 
     # Grab a dict of args out of the package version dict
     args = pkg.versions[version]
@@ -574,6 +574,8 @@ def for_package_version(pkg, version):
     for fetcher in all_strategies:
         attrs = dict((attr, getattr(pkg, attr, None))
                      for attr in fetcher.required_attributes)
+        if 'url' in attrs:
+            attrs['url'] = pkg.url_for_version(version)
         attrs.update(args)
         if fetcher.matches(attrs):
             return fetcher(**attrs)
@@ -581,12 +583,12 @@ def for_package_version(pkg, version):
     raise InvalidArgsError(pkg, version)
 
 
-class FetchStrategyError(spack.error.SpackError):
+class FetchError(spack.error.SpackError):
     def __init__(self, msg, long_msg):
-        super(FetchStrategyError, self).__init__(msg, long_msg)
+        super(FetchError, self).__init__(msg, long_msg)
 
 
-class FailedDownloadError(FetchStrategyError):
+class FailedDownloadError(FetchError):
     """Raised wen a download fails."""
     def __init__(self, url, msg=""):
         super(FailedDownloadError, self).__init__(
@@ -594,18 +596,26 @@ class FailedDownloadError(FetchStrategyError):
         self.url = url
 
 
-class NoArchiveFileError(FetchStrategyError):
+class NoArchiveFileError(FetchError):
     def __init__(self, msg, long_msg):
         super(NoArchiveFileError, self).__init__(msg, long_msg)
 
 
-class NoDigestError(FetchStrategyError):
+class NoDigestError(FetchError):
     def __init__(self, msg, long_msg):
         super(NoDigestError, self).__init__(msg, long_msg)
 
 
-class InvalidArgsError(FetchStrategyError):
+class InvalidArgsError(FetchError):
     def __init__(self, pkg, version):
         msg = "Could not construct a fetch strategy for package %s at version %s"
         msg %= (pkg.name, version)
         super(InvalidArgsError, self).__init__(msg)
+
+
+class ChecksumError(FetchError):
+    """Raised when archive fails to checksum."""
+    def __init__(self, message, long_msg=None):
+        super(ChecksumError, self).__init__(message, long_msg)
+
+

@@ -71,8 +71,12 @@ def setup_parser(subparser):
 
 def mirror_add(args):
     """Add a mirror to Spack."""
+    url = args.url
+    if url.startswith('/'):
+        url = 'file://' + url
+
     config = spack.config.get_config('user')
-    config.set_value('mirror', args.name, 'url', args.url)
+    config.set_value('mirror', args.name, 'url', url)
     config.write()
 
 
@@ -158,6 +162,9 @@ def mirror_create(args):
         "  %-4d already present"  % p,
         "  %-4d added"            % m,
         "  %-4d failed to fetch." % e)
+    if error:
+        tty.error("Failed downloads:")
+        colify(s.format("$_$@") for s in error)
 
 
 def mirror(parser, args):

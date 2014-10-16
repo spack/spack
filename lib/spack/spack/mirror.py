@@ -146,7 +146,7 @@ def create(path, specs, **kwargs):
             archive_file = mirror_archive_filename(spec)
             archive_path = join_path(subdir, archive_file)
 
-            if os.path.exists(archive_file):
+            if os.path.exists(archive_path):
                 tty.msg("%s is already present.  Skipping." % spec.format("$_$@"))
                 present.append(spec)
                 continue

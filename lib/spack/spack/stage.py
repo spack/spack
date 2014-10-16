@@ -32,7 +32,7 @@ from llnl.util.filesystem import *
 
 import spack
 import spack.config
-import spack.fetch_strategy as fetch_strategy
+import spack.fetch_strategy as fs
 import spack.error
 
 
@@ -83,8 +83,8 @@ class Stage(object):
                  stage will be given a unique name automatically.
         """
         if isinstance(url_or_fetch_strategy, basestring):
-            self.fetcher = fetch_strategy.from_url(url_or_fetch_strategy)
-        elif isinstance(url_or_fetch_strategy, fetch_strategy.FetchStrategy):
+            self.fetcher = fs.from_url(url_or_fetch_strategy)
+        elif isinstance(url_or_fetch_strategy, fs.FetchStrategy):
             self.fetcher = url_or_fetch_strategy
         else:
             raise ValueError("Can't construct Stage without url or fetch strategy")
@@ -198,7 +198,10 @@ class Stage(object):
     @property
     def archive_file(self):
         """Path to the source archive within this stage directory."""
-        paths = [os.path.join(self.path, os.path.basename(self.url))]
+        if not isinstance(self.fetcher, fs.URLFetchStrategy):
+            return None
+
+        paths = [os.path.join(self.path, os.path.basename(self.fetcher.url))]
         if self.mirror_path:
             paths.append(os.path.join(self.path, os.path.basename(self.mirror_path)))
 
@@ -242,9 +245,9 @@ class Stage(object):
             urls = ["%s/%s" % (m, self.mirror_path) for m in _get_mirrors()]
 
             digest = None
-            if isinstance(self.fetcher, fetch_strategy.URLFetchStrategy):
+            if isinstance(self.fetcher, fs.URLFetchStrategy):
                 digest = self.fetcher.digest
-            fetchers = [fetch_strategy.URLFetchStrategy(url, digest)
+            fetchers = [fs.URLFetchStrategy(url, digest)
                         for url in urls] + fetchers
             for f in fetchers:
                 f.set_stage(self)
@@ -365,12 +368,6 @@ class StageError(spack.error.SpackError):
         super(self, StageError).__init__(message, long_message)
 
 
-class ChecksumError(StageError):
-    """Raised when archive fails to checksum."""
-    def __init__(self, message, long_msg=None):
-        super(ChecksumError, self).__init__(message, long_msg)
-
-
 class RestageError(StageError):
     def __init__(self, message, long_msg=None):
         super(RestageError, self).__init__(message, long_msg)
@@ -382,4 +379,4 @@ class ChdirError(StageError):
 
 
 # Keep this in namespace for convenience
-FailedDownloadError = spack.fetch_strategy.FailedDownloadError
+FailedDownloadError = fs.FailedDownloadError
