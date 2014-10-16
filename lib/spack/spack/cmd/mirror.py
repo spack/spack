@@ -54,6 +54,9 @@ def setup_parser(subparser):
         'specs', nargs=argparse.REMAINDER, help="Specs of packages to put in mirror")
     create_parser.add_argument(
         '-f', '--file', help="File with specs of packages to put in mirror.")
+    create_parser.add_argument(
+        '-o', '--one-version-per-spec', action='store_const', const=1, default=0,
+        help="Only fetch one 'preferred' version per spec, not all known versions.")
 
     add_parser = sp.add_parser('add', help=mirror_add.__doc__)
     add_parser.add_argument('name', help="Mnemonic name for mirror.")
@@ -128,26 +131,29 @@ def mirror_create(args):
     # If nothing is passed, use all packages.
     if not specs:
         specs = [Spec(n) for n in spack.db.all_package_names()]
+        specs.sort(key=lambda s: s.format("$_$@").lower())
 
     # Default name for directory is spack-mirror-<DATESTAMP>
-    if not args.directory:
+    directory = args.directory
+    if not directory:
         timestamp = datetime.now().strftime("%Y-%m-%d")
-        args.directory = 'spack-mirror-' + timestamp
+        directory = 'spack-mirror-' + timestamp
 
     # Make sure nothing is in the way.
     existed = False
-    if os.path.isfile(args.directory):
-        tty.error("%s already exists and is a file." % args.directory)
-    elif os.path.isdir(args.directory):
+    if os.path.isfile(directory):
+        tty.error("%s already exists and is a file." % directory)
+    elif os.path.isdir(directory):
         existed = True
 
     # Actually do the work to create the mirror
-    present, mirrored, error = spack.mirror.create(args.directory, specs)
+    present, mirrored, error = spack.mirror.create(
+        directory, specs, num_versions=args.one_version_per_spec)
     p, m, e = len(present), len(mirrored), len(error)
 
     verb = "updated" if existed else "created"
     tty.msg(
-        "Successfully %s mirror in %s." % (verb, args.directory),
+        "Successfully %s mirror in %s." % (verb, directory),
         "Archive stats:",
         "  %-4d already present"  % p,
         "  %-4d added"            % m,

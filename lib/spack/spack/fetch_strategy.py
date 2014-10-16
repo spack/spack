@@ -93,9 +93,6 @@ class FetchStrategy(object):
     def __str__(self):       # Should be human readable URL.
         return "FetchStrategy.__str___"
 
-    @property
-    def unique_name(self): pass
-
     # This method is used to match fetch strategies to version()
     # arguments in packages.
     @classmethod
@@ -197,7 +194,10 @@ class URLFetchStrategy(FetchStrategy):
         """Just moves this archive to the destination."""
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
-        assert(extension(destination) == extension(self.archive_file))
+
+        if not extension(destination) == extension(self.archive_file):
+            raise ValueError("Cannot archive without matching extensions.")
+
         shutil.move(self.archive_file, destination)
 
 
@@ -235,10 +235,6 @@ class URLFetchStrategy(FetchStrategy):
             return self.url
         else:
             return "URLFetchStrategy<no url>"
-
-    @property
-    def unique_name(self):
-        return "spack-fetch-url:%s" % self
 
 
 class VCSFetchStrategy(FetchStrategy):
@@ -393,17 +389,6 @@ class GitFetchStrategy(VCSFetchStrategy):
         self.git('clean', '-f')
 
 
-    @property
-    def unique_name(self):
-        name = "spack-fetch-git:%s" % self.url
-        if self.commit:
-            name += "@" + self.commit
-        elif self.branch:
-            name += "@" + self.branch
-        elif self.tag:
-            name += "@" + self.tag
-
-
 class SvnFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a subversion repository.
        Use like this in a package:
@@ -475,14 +460,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
         self.stage.chdir_to_source()
         self._remove_untracked_files()
         self.svn('revert', '.', '-R')
-
-
-    @property
-    def unique_name(self):
-        name = "spack-fetch-svn:%s" % self.url
-        if self.revision:
-            name += "@" + self.revision
-
 
 
 class HgFetchStrategy(VCSFetchStrategy):
@@ -558,14 +535,6 @@ class HgFetchStrategy(VCSFetchStrategy):
         shutil.rmtree(source_path, ignore_errors=True)
         shutil.move(scrubbed, source_path)
         self.stage.chdir_to_source()
-
-
-    @property
-    def unique_name(self):
-        name = "spack-fetch-hg:%s" % self.url
-        if self.revision:
-            name += "@" + self.revision
-
 
 
 def from_url(url):

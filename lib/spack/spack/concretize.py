@@ -73,7 +73,6 @@ class DefaultConcretizer(object):
         if valid_versions:
             spec.versions = ver([valid_versions[-1]])
         else:
-            print spec
             raise NoValidVersionError(spec)
 
 

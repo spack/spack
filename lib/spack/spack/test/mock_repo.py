@@ -22,7 +22,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 import shutil
+from contextlib import closing
 
 from llnl.util.filesystem import *
 
@@ -32,21 +34,6 @@ from spack.stage import Stage
 from spack.util.executable import which
 
 
-class MockRepo(object):
-    def __init__(self, stage_name, repo_name):
-        """This creates a stage and a repo directory within the stage."""
-        # Stage where this repo has been created
-        self.stage = Stage(stage_name)
-
-        # Full path to the repo within the stage.
-        self.path = join_path(self.stage.path, 'mock-git-repo')
-        mkdirp(self.path)
-
-        # Name for rev0 & rev1 files in the repo to be
-        self.r0_file = 'r0_file'
-        self.r1_file = 'r1_file'
-
-
 #
 # VCS Systems used by mock repo code.
 #
@@ -54,9 +41,64 @@ git      = which('git',      required=True)
 svn      = which('svn',      required=True)
 svnadmin = which('svnadmin', required=True)
 hg       = which('hg',       required=True)
+tar      = which('tar',      required=True)
 
 
-class MockGitRepo(MockRepo):
+class MockRepo(object):
+    def __init__(self, stage_name, repo_name):
+        """This creates a stage where some archive/repo files can be staged
+           for testing spack's fetch strategies."""
+        # Stage where this repo has been created
+        self.stage = Stage(stage_name)
+
+        # Full path to the repo within the stage.
+        self.path = join_path(self.stage.path, repo_name)
+        mkdirp(self.path)
+
+
+class MockArchive(MockRepo):
+    """Creates a very simple archive directory with a configure script and a
+       makefile that installs to a prefix.  Tars it up into an archive."""
+
+    def __init__(self):
+        repo_name = 'mock-archive-repo'
+        super(MockArchive, self).__init__('mock-archive-stage', repo_name)
+
+        with working_dir(self.path):
+            configure = join_path(self.path, 'configure')
+
+            with closing(open(configure, 'w')) as cfg_file:
+                cfg_file.write(
+                    "#!/bin/sh\n"
+                    "prefix=$(echo $1 | sed 's/--prefix=//')\n"
+                    "cat > Makefile <<EOF\n"
+                    "all:\n"
+                    "\techo Building...\n\n"
+                    "install:\n"
+                    "\tmkdir -p $prefix\n"
+                    "\ttouch $prefix/dummy_file\n"
+                    "EOF\n")
+            os.chmod(configure, 0755)
+
+        with working_dir(self.stage.path):
+            archive_name = "%s.tar.gz" % repo_name
+            tar('-czf', archive_name, repo_name)
+
+        self.archive_path = join_path(self.stage.path, archive_name)
+        self.url = 'file://' + self.archive_path
+
+
+class MockVCSRepo(MockRepo):
+    def __init__(self, stage_name, repo_name):
+        """This creates a stage and a repo directory within the stage."""
+        super(MockVCSRepo, self).__init__(stage_name, repo_name)
+
+        # Name for rev0 & rev1 files in the repo to be
+        self.r0_file = 'r0_file'
+        self.r1_file = 'r1_file'
+
+
+class MockGitRepo(MockVCSRepo):
     def __init__(self):
         super(MockGitRepo, self).__init__('mock-git-stage', 'mock-git-repo')
 
@@ -97,17 +139,20 @@ class MockGitRepo(MockRepo):
             self.r1      = self.rev_hash(self.branch)
             self.r1_file = self.branch_file
 
+            self.url = self.path
+
     def rev_hash(self, rev):
         return git('rev-parse', rev, return_output=True).strip()
 
 
-class MockSvnRepo(MockRepo):
+class MockSvnRepo(MockVCSRepo):
     def __init__(self):
         super(MockSvnRepo, self).__init__('mock-svn-stage', 'mock-svn-repo')
 
+        self.url = 'file://' + self.path
+
         with working_dir(self.stage.path):
             svnadmin('create', self.path)
-            self.url = 'file://' + self.path
 
             tmp_path = join_path(self.stage.path, 'tmp-path')
             mkdirp(tmp_path)
@@ -129,9 +174,10 @@ class MockSvnRepo(MockRepo):
             self.r1 = '2'
 
 
-class MockHgRepo(MockRepo):
+class MockHgRepo(MockVCSRepo):
     def __init__(self):
         super(MockHgRepo, self).__init__('mock-hg-stage', 'mock-hg-repo')
+        self.url = 'file://' + self.path
 
         with working_dir(self.path):
             hg('init')

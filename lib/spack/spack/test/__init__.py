@@ -50,7 +50,8 @@ test_names = ['versions',
               'python_version',
               'git_fetch',
               'svn_fetch',
-              'hg_fetch']
+              'hg_fetch',
+              'mirror']
 
 
 def list_tests():

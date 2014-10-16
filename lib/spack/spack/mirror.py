@@ -49,16 +49,18 @@ def mirror_archive_filename(spec):
     if not spec.version.concrete:
         raise ValueError("mirror.path requires spec with concrete version.")
 
-    url = spec.package.default_url
-    if url is None:
-        ext = 'tar.gz'
+    fetcher = spec.package.fetcher
+    if isinstance(fetcher, fs.URLFetchStrategy):
+        # If we fetch this version with a URLFetchStrategy, use URL's archive type
+        ext = extension(fetcher.url)
     else:
-        ext = extension(url)
+        # Otherwise we'll make a .tar.gz ourselves
+        ext = 'tar.gz'
 
     return "%s-%s.%s" % (spec.package.name, spec.version, ext)
 
 
-def get_matching_versions(specs):
+def get_matching_versions(specs, **kwargs):
     """Get a spec for EACH known version matching any spec in the list."""
     matching = []
     for spec in specs:
@@ -69,11 +71,18 @@ def get_matching_versions(specs):
             tty.msg("No safe (checksummed) versions for package %s." % pkg.name)
             continue
 
-        for v in reversed(sorted(pkg.versions)):
+        num_versions = kwargs.get('num_versions', 0)
+        for i, v in enumerate(reversed(sorted(pkg.versions))):
+            # Generate no more than num_versions versions for each spec.
+            if num_versions and i >= num_versions:
+                break
+
+            # Generate only versions that satisfy the spec.
             if v.satisfies(spec.versions):
                 s = Spec(pkg.name)
                 s.versions = VersionList([v])
                 matching.append(s)
+
     return matching
 
 
@@ -85,6 +94,11 @@ def create(path, specs, **kwargs):
          path    Path to create a mirror directory hierarchy in.
          specs   Any package versions matching these specs will be added
                  to the mirror.
+
+       Keyword args:
+         no_checksum:  If True, do not checkpoint when fetching (default False)
+         num_versions: Max number of versions to fetch per spec,
+                       if spec is ambiguous (default is 0 for all of them)
 
        Return Value:
          Returns a tuple of lists: (present, mirrored, error)
@@ -104,13 +118,15 @@ def create(path, specs, **kwargs):
     specs = [s if isinstance(s, Spec) else Spec(s) for s in specs]
 
     # Get concrete specs for each matching version of these specs.
-    version_specs = get_matching_versions(specs)
+    version_specs = get_matching_versions(
+        specs, num_versions=kwargs.get('num_versions', 0))
     for s in version_specs:
         s.concretize()
 
-    # Create a directory if none exists
-    if not os.path.isdir(path):
-        mkdirp(path)
+    # Get the absolute path of the root before we start jumping around.
+    mirror_root = os.path.abspath(path)
+    if not os.path.isdir(mirror_root):
+        mkdirp(mirror_root)
 
     # Things to keep track of while parsing specs.
     present  = []
@@ -124,19 +140,21 @@ def create(path, specs, **kwargs):
         stage = None
         try:
             # create a subdirectory for the current package@version
-            realpath = os.path.realpath(path)
-            subdir = join_path(realpath, pkg.name)
+            subdir = join_path(mirror_root, pkg.name)
             mkdirp(subdir)
 
             archive_file = mirror_archive_filename(spec)
             archive_path = join_path(subdir, archive_file)
-            if os.path.exists(archive_path):
+
+            if os.path.exists(archive_file):
+                tty.msg("%s is already present.  Skipping." % spec.format("$_$@"))
                 present.append(spec)
                 continue
 
             # Set up a stage and a fetcher for the download
+            unique_fetch_name = spec.format("$_$@")
             fetcher = fs.for_package_version(pkg, pkg.version)
-            stage = Stage(fetcher, name=fetcher.unique_name)
+            stage = Stage(fetcher, name=unique_fetch_name)
             fetcher.set_stage(stage)
 
             # Do the fetch and checksum if necessary
@@ -148,7 +166,7 @@ def create(path, specs, **kwargs):
             # Fetchers have to know how to archive their files.  Use
             # that to move/copy/create an archive in the mirror.
             fetcher.archive(archive_path)
-            tty.msg("Added %s to mirror" % archive_path)
+            tty.msg("Added %s." % spec.format("$_$@"))
             mirrored.append(spec)
 
         except Exception, e:

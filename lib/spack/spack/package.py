@@ -598,18 +598,6 @@ class Package(object):
         return str(version)
 
 
-    @property
-    def default_url(self):
-        if self.spec.versions.concrete:
-            return self.url_for_version(self.version)
-        else:
-            url = getattr(self, 'url', None)
-            if url:
-                return url
-
-        return None
-
-
     def remove_prefix(self):
         """Removes the prefix for a package along with any empty parent directories."""
         spack.install_layout.remove_path_for_spec(self.spec)
