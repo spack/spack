@@ -440,9 +440,10 @@ class Package(object):
         version_urls = self.version_urls()
         if version in version_urls:
             return version_urls[version]
-        else:
-            return url.substitute_version(self.nearest_url(version),
-                                          self.url_version(version))
+
+        # If we have no idea, try to substitute the version.
+        return url.substitute_version(self.nearest_url(version),
+                                      self.url_version(version))
 
 
     @property

@@ -51,7 +51,8 @@ test_names = ['versions',
               'git_fetch',
               'svn_fetch',
               'hg_fetch',
-              'mirror']
+              'mirror',
+              'url_extrapolate']
 
 
 def list_tests():
