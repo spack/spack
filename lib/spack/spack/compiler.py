@@ -190,6 +190,12 @@ class Compiler(object):
             except ProcessError, e:
                 tty.debug("Couldn't get version for compiler %s" % full_path, e)
                 return None
+            except Exception, e:
+                # Catching "Exception" here is fine because it just
+                # means something went wrong running a candidate executable.
+                tty.debug("Error while executing candidate compiler %s" % full_path,
+                          "%s: %s" %(e.__class__.__name__, e))
+                return None
 
         successful = [key for key in parmap(check, checks) if key is not None]
         return dict(((v, p, s), path) for v, p, s, path in successful)
