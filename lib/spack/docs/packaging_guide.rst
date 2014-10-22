@@ -27,177 +27,21 @@ be ubiquitous in the HPC community due to its use in numerical codes.
 Second, it's a modern language and has many powerful features to help
 make package writing easy.
 
-Finally, we've gone to great lengths to make it *easy* to create
-packages.  The ``spack create`` command lets you generate a
-boilerplate package template from a tarball URL, and ideally you'll
-only need to run this once and slightly modify the boilerplate to get
-your package working.
-
-This section of the guide goes through the parts of a package, and
-then tells you how to make your own.  If you're impatient, jump ahead
-to :ref:`spack-create`.
-
-Package Files
----------------------------
-
-It's probably easiest to learn about packages by looking at an
-example.  Let's take a look at the ``libelf`` package:
-
-.. literalinclude:: ../../../var/spack/packages/libelf/package.py
-   :lines: 25-
-   :linenos:
-
-Directory Structure
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A Spack installation directory is structured like a standard UNIX
-install prefix (``bin``, ``lib``, ``include``, ``var``, ``opt``,
-etc.).  Most of the code for Spack lives in ``$SPACK_ROOT/lib/spack``.
-Packages themselves live in ``$SPACK_ROOT/var/spack/packages``.
-
-If you ``cd`` to that directory, you will see directories for each
-package:
-
-.. command-output::  cd $SPACK_ROOT/var/spack/packages;  ls
-   :shell:
-   :ellipsis: 10
-
-Each of these directories contains a file called ``package.py``.  This
-file is where all the python code for a package goes.  For example,
-the ``libelf`` package looks like this::
-
-   $SPACK_ROOT/var/spack/packages/
-       libelf/
-           package.py
-
-Alongside the ``package.py`` file, a package may contain extra files (like
-patches) that it needs to build.
-
-
-Package Names
-~~~~~~~~~~~~~~~~~~
-
-Packages are named after the directory containing ``package.py``.  So,
-``libelf``'s ``package.py`` lives in a directory called ``libelf``.
-The ``package.py`` file contains a class called ``Libelf``, which
-extends Spack's ``Package`` class.  This is what makes it a Spack
-package.  The **directory name** is what users need to provide on the
-command line. e.g., if you type any of these:
-
-.. code-block:: sh
-
-   $ spack install libelf
-   $ spack install libelf@0.8.13
-
-Spack sees the package name in the spec and looks for
-``libelf/package.py`` in ``var/spack/packages``.  Likewise, if you say
-``spack install docbook-xml``, then Spack looks for
-``docbook-xml/package.py``.
-
-We use the directory name to packagers more freedom when naming their
-packages. Package names can contain letters, numbers, dashes, and
-underscores.  You can name a package ``3proxy`` or ``_foo`` and Spack
-won't care -- it just needs to see that name in the package spec.
-These aren't valid Python module names, but we allow them in Spack and
-import ``package.py`` file dynamically.
-
-Package class names
-~~~~~~~~~~~~~~~~~~~~~~~
-
-The **class name** (``Libelf`` in our example) is formed by converting
-words separated by `-` or ``_`` in the file name to camel case.  If
-the name starts with a number, we prefix the class name with
-``_``. Here are some examples:
-
-=================  =================
- Module Name         Class Name
-=================  =================
- ``foo_bar``         ``FooBar``
- ``docbook-xml``     ``DocbookXml``
- ``FooBar``          ``Foobar``
- ``3proxy``          ``_3proxy``
-=================  =================
-
-The class name is needed by Spack to properly import a package, but
-not for much else.  In general, you won't have to remember this naming
-convention because ``spack create`` will generate a boilerplate class
-for you, and you can just fill in the blanks.
-
-.. _metadata:
-
-Metadata
-~~~~~~~~~~~~~~~~~~~~
-
-Just under the class name is a description of the ``libelf`` package.
-In Python, this is called a *docstring*: a multi-line, triple-quoted
-(``"""``) string that comes just after the definition of a class.
-Spack uses the docstring to generate the description of the package
-that is shown when you run ``spack info``.  If you don't provide a
-description, Spack will just print "None" for the description.
-
-In addition to the package description, there are a few fields you'll
-need to fill out.  They are as follows:
-
-``homepage`` (required)
-  This is the URL where you can learn about the package and get
-  information.  It is displayed to users when they run ``spack info``.
-
-``url`` (required)
-  This is the URL where you can download a distribution tarball of
-  the pacakge's source code.
-
-``versions`` (optional)
-  This is a `dictionary
-  <http://docs.python.org/2/tutorial/datastructures.html#dictionaries>`_
-  mapping versions to MD5 hashes.  Spack uses the hashes to checksum
-  archives when it downloads a particular version.
-
-``parallel`` (optional) Whether make should be parallel by default.
-  By default, this is ``True``, and package authors need to call
-  ``make(parallel=False)`` to override.  If you set this to ``False``
-  at the package level then each call to ``make`` will be sequential
-  by default, and users will have to call ``make(parallel=True)`` to
-  override it.
-
-``versions`` is optional but strongly recommended.  Spack will warn
-usrs if they try to install a version (e.g., ``libelf@0.8.10`` for
-which there is not a checksum available.  They can force it to
-download the new version and install, but it's better to provide
-checksums so users don't have to install from an unchecked archive.
-
-
-Install method
-~~~~~~~~~~~~~~~~~~~~~~~
-
-The last element of the ``libelf`` package is its ``install()``
-method.  This is where the real work of installation happens, and
-it's the main part of the package you'll need to customize for each
-piece of software.
-
-.. literalinclude::  ../../../var/spack/packages/libelf/package.py
-   :start-after: 0.8.12
-   :linenos:
-
-``install`` takes a ``spec``: a description of how the package should
-be built, and a ``prefix``: the path to the directory where the
-software should be installed.
-
-:ref:`Writing the install method <install-method>` is documented in
-detail later, but in general, the ``install()`` method should look
-familiar.  ``libelf`` uses autotools, so the package first calls
-``configure``, passing the prefix and some other package-specific
-arguments.  It then calls ``make`` and ``make install``.
-
-Spack provides wrapper functions for ``configure`` and ``make`` so
-that you can call them in a similar way to how you'd call a shell
-comamnd.  In reality, these are Python functions.  Spack provides
-these functions to make writing packages more natural. See the section
-on :ref:`shell wrappers <shell-wrappers>`.
-
-.. _spack-create:
-
 Creating Packages
 ----------------------------------
+
+Spack tries to make it *very* easy to create packages.  The ``spack
+create`` command lets you generate a boilerplate package template from
+a tarball URL.  In most cases, you'll only need to run this once, then
+slightly modify the boilerplate to get your package working.
+
+If ``spack create`` does not work for you, you can always use ``spack
+edit``. This section of the guide goes through the parts of a package,
+and then tells you how to make your own.  If you're impatient, jump
+ahead to :ref:`spack-create`.
+
+
+.. _spack-create:
 
 ``spack create``
 ~~~~~~~~~~~~~~~~~~~~~
@@ -212,9 +56,9 @@ All you need is the URL to a tarball you want to package:
 
    $ spack create http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
 
-When you run this, Spack will look at the tarball URL, and it will try
-to figure out the name of the package to be created. It will also try
-to figure out what version strings for that package look like.  Once
+When you run this, Spack looks at the tarball URL and tries to figure
+out the name of the package to be created. It will also try to
+determine out what version strings look like for this package. Once
 that is done, it tries to find *additional* versions by spidering the
 package's webpage.  Spack then prompts you to tell it how many
 versions you want to download and checksum.
@@ -409,6 +253,164 @@ Note that for ``spack checksum`` to work, Spack needs to be able to
 ``import`` your pacakge in Python.  That means it can't have any
 syntax errors, or the ``import`` will fail.  Use this once you've got
 your package in working order.
+
+
+
+Package Files
+---------------------------
+
+It's probably easiest to learn about packages by looking at an
+example.  Let's take a look at the ``libelf`` package:
+
+.. literalinclude:: ../../../var/spack/packages/libelf/package.py
+   :lines: 25-
+   :linenos:
+
+Directory Structure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A Spack installation directory is structured like a standard UNIX
+install prefix (``bin``, ``lib``, ``include``, ``var``, ``opt``,
+etc.).  Most of the code for Spack lives in ``$SPACK_ROOT/lib/spack``.
+Packages themselves live in ``$SPACK_ROOT/var/spack/packages``.
+
+If you ``cd`` to that directory, you will see directories for each
+package:
+
+.. command-output::  cd $SPACK_ROOT/var/spack/packages;  ls
+   :shell:
+   :ellipsis: 10
+
+Each of these directories contains a file called ``package.py``.  This
+file is where all the python code for a package goes.  For example,
+the ``libelf`` package looks like this::
+
+   $SPACK_ROOT/var/spack/packages/
+       libelf/
+           package.py
+
+Alongside the ``package.py`` file, a package may contain extra files (like
+patches) that it needs to build.
+
+
+Package Names
+~~~~~~~~~~~~~~~~~~
+
+Packages are named after the directory containing ``package.py``.  So,
+``libelf``'s ``package.py`` lives in a directory called ``libelf``.
+The ``package.py`` file contains a class called ``Libelf``, which
+extends Spack's ``Package`` class.  This is what makes it a Spack
+package.  The **directory name** is what users need to provide on the
+command line. e.g., if you type any of these:
+
+.. code-block:: sh
+
+   $ spack install libelf
+   $ spack install libelf@0.8.13
+
+Spack sees the package name in the spec and looks for
+``libelf/package.py`` in ``var/spack/packages``.  Likewise, if you say
+``spack install docbook-xml``, then Spack looks for
+``docbook-xml/package.py``.
+
+We use the directory name to packagers more freedom when naming their
+packages. Package names can contain letters, numbers, dashes, and
+underscores.  You can name a package ``3proxy`` or ``_foo`` and Spack
+lwon't care -- it just needs to see that name in the package spec.
+These aren't valid Python module names, but we allow them in Spack and
+import ``package.py`` file dynamically.
+
+Package class names
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The **class name** (``Libelf`` in our example) is formed by converting
+words separated by `-` or ``_`` in the file name to camel case.  If
+the name starts with a number, we prefix the class name with
+``_``. Here are some examples:
+
+=================  =================
+ Module Name         Class Name
+=================  =================
+ ``foo_bar``         ``FooBar``
+ ``docbook-xml``     ``DocbookXml``
+ ``FooBar``          ``Foobar``
+ ``3proxy``          ``_3proxy``
+=================  =================
+
+The class name is needed by Spack to properly import a package, but
+not for much else.  In general, you won't have to remember this naming
+convention because ``spack create`` will generate a boilerplate class
+for you, and you can just fill in the blanks.
+
+.. _metadata:
+
+Package metadata
+--------------------
+
+Under the class declaration is a *docstring* (as Python calls it)
+enclosed in triple-quotes (``"""``).  Spack uses the docstring to
+generate the description of the package that is shown when you run
+``spack info``.  If you don't provide a description, Spack will just
+print "None" for the description.
+
+In addition to the package description, there are a few fields you'll
+need to fill out.  They are as follows:
+
+``homepage`` (required)
+  This is the URL where you can learn about the package and get
+  information.  It is displayed to users when they run ``spack info``.
+
+``url`` (required)
+  This is the URL where you can download a distribution tarball of
+  the pacakge's source code.
+
+``versions`` (optional)
+  This is a `dictionary
+  <http://docs.python.org/2/tutorial/datastructures.html#dictionaries>`_
+  mapping versions to MD5 hashes.  Spack uses the hashes to checksum
+  archives when it downloads a particular version.
+
+``parallel`` (optional) Whether make should be parallel by default.
+  By default, this is ``True``, and package authors need to call
+  ``make(parallel=False)`` to override.  If you set this to ``False``
+  at the package level then each call to ``make`` will be sequential
+  by default, and users will have to call ``make(parallel=True)`` to
+  override it.
+
+``versions`` is optional but strongly recommended.  Spack will warn
+usrs if they try to install a version (e.g., ``libelf@0.8.10`` for
+which there is not a checksum available.  They can force it to
+download the new version and install, but it's better to provide
+checksums so users don't have to install from an unchecked archive.
+
+
+Install method
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The last element of the ``libelf`` package is its ``install()``
+method.  This is where the real work of installation happens, and
+it's the main part of the package you'll need to customize for each
+piece of software.
+
+.. literalinclude::  ../../../var/spack/packages/libelf/package.py
+   :start-after: 0.8.12
+   :linenos:
+
+``install`` takes a ``spec``: a description of how the package should
+be built, and a ``prefix``: the path to the directory where the
+software should be installed.
+
+:ref:`Writing the install method <install-method>` is documented in
+detail later, but in general, the ``install()`` method should look
+familiar.  ``libelf`` uses autotools, so the package first calls
+``configure``, passing the prefix and some other package-specific
+arguments.  It then calls ``make`` and ``make install``.
+
+Spack provides wrapper functions for ``configure`` and ``make`` so
+that you can call them in a similar way to how you'd call a shell
+comamnd.  In reality, these are Python functions.  Spack provides
+these functions to make writing packages more natural. See the section
+on :ref:`shell wrappers <shell-wrappers>`.
 
 
 Optional Package Attributes
