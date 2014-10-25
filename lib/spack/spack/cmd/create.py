@@ -72,6 +72,9 @@ class ${class_name}(Package):
 
 ${versions}
 
+    # FIXME: Add dependencies if this package requires them.
+    # depends_on("foo")
+
     def install(self, spec, prefix):
         # FIXME: Modify the configure line to suit your build system here.
         ${configure}
