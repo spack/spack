@@ -8,7 +8,11 @@ class Mpe2(Package):
 
     version('1.3.0', '67bf0c7b2e573df3ba0d2059a96c2f7b')
 
+    patch('mpe2.patch')
+
     depends_on("mpi")
+
+    provides("mpe")
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix,
