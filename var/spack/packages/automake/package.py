@@ -7,7 +7,7 @@ class Automake(Package):
 
     version('1.14.1', 'd052a3e884631b9c7892f2efce542d75')
 
-    depends_on(autoconf)
+    depends_on('autoconf')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

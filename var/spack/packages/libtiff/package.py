@@ -1,6 +1,6 @@
 from spack import *
 
-class libtiff(Package):
+class Libtiff(Package):
     """libtiff graphics format library"""
     homepage = "http://www.remotesensing.org/libtiff/"
     url      = "http://download.osgeo.org/libtiff/tiff-4.0.3.tar.gz"
