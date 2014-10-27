@@ -768,9 +768,9 @@ information about the package, and to determine where to download its
 source code.
 
 Spack uses the tarball URL to extrapolate where to find other tarballs
-of the same package (e.g. in `spack-checksum`_, but this does not
-always work.  This section covers ways you can tell Spack to find
-tarballs elsewhere.
+of the same package (e.g. in `spack checksum <spack-checksum_>`_, but
+this does not always work.  This section covers ways you can tell
+Spack to find tarballs elsewhere.
 
 .. _attribute_list_url:
 
@@ -778,8 +778,9 @@ tarballs elsewhere.
 ~~~~~~~~~~~~~~~~~~~~~
 
 When spack tries to find available versions of packages (e.g. with
-`spack-checksum`_), it spiders the parent directory of the tarball in
-the ``url`` attribute.  For example, for libelf, the url is:
+`spack checksum <spack-checksum_>`_), it spiders the parent directory
+of the tarball in the ``url`` attribute.  For example, for libelf, the
+url is:
 
 .. code-block:: python
 
@@ -1335,8 +1336,8 @@ If your build system does *not* automatically pick these variables up
 from the environment, then you can simply pass them on the command
 line or use a patch as part of your build process to get the correct
 compilers into the project's build system.  There are also some file
-editing commands you can use -- these are described later in
-`filtering-files`_.
+editing commands you can use -- these are described later in the
+`section on file manipulation <file-manipulation_>`_.
 
 In addition to the compiler variables, these variables are set before
 entering ``install()`` so that packages can locate dependencies
@@ -1466,9 +1467,28 @@ yourself, e.g.:
 
 
 Most of the standard UNIX directory names are attributes on the
-``prefix`` object.  See :py:class:`spack.prefix.Prefix` for a full
-list.
+``prefix`` object.  Here is a full list:
 
+  =========================  ================================================
+  Prefix Attribute           Location
+  =========================  ================================================
+  ``prefix.bin``             ``$prefix/bin``
+  ``prefix.sbin``            ``$prefix/sbin``
+  ``prefix.etc``             ``$prefix/etc``
+  ``prefix.include``         ``$prefix/include``
+  ``prefix.lib``             ``$prefix/lib``
+  ``prefix.lib64``           ``$prefix/lib64``
+  ``prefix.libexec``         ``$prefix/libexec``
+  ``prefix.share``           ``$prefix/share``
+  ``prefix.doc``             ``$prefix/doc``
+  ``prefix.info``            ``$prefix/info``
+
+  ``prefix.man``             ``$prefix/man``
+  ``prefix.man[1-8]``        ``$prefix/man/man[1-8]``
+
+  ``prefix.share_man``       ``$prefix/share/man``
+  ``prefix.share_man[1-8]``  ``$prefix/share/man[1-8]``
+  =========================  ================================================
 
 .. _spec-objects:
 
@@ -1678,11 +1698,10 @@ method (the one without the ``@when`` decorator) will be called.
    the way decorators work.
 
 
-
 .. _shell-wrappers:
 
-Shell command wrappers
--------------------------
+Shell command functions
+----------------------------
 
 Recall the install method from ``libelf``:
 
@@ -1730,9 +1749,161 @@ to the ``make`` wrapper to disable parallel make.  In the ``libelf``
 package, this allows us to avoid race conditions in the library's
 build system.
 
+
+.. _file-manipulation:
+
+File manipulation functions
+------------------------------
+
+Many builds are not perfect. If a build lacks an install target, or if
+it does not use systems like CMake or autotools, which have standard
+ways of setting compilers and options, you may need to edit files or
+install some files yourself to get them working with Spack.
+
+You can do this with standard Python code, and Python has rich
+libraries with functions for file manipulation and filtering.  Spack
+also provides a number of convenience functions of its own to make
+your life even easier.  These functions are described in this section.
+
+All of the functions in this section can be included by simply
+running:
+
+.. code-block:: python
+
+   from spack import *
+
+This is already part of the boilerplate for packages created with
+``spack create`` or ``spack edit``.
+
+
+Filtering functions
+~~~~~~~~~~~~~~~~~~~~~~
+
+:py:func:`filter_file(regex, repl, *filenames, **kwargs) <spack.filter_file>`
+  Works like ``sed`` but with Python regular expression syntax.  Takes
+  a regular expression, a replacement, and a set of files.  ``repl``
+  can be a raw string or a callable function.  If it is a raw string,
+  it can contain ``\1``, ``\2``, etc. to refer to capture groups in
+  the regular expression.  If it is a callable, it is passed the
+  Python ``MatchObject`` and should return a suitable replacement
+  string for the particular match.
+
+  Examples:
+
+  #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
+
+     .. code-block:: python
+
+        filter_file(r'#!/usr/bin/perl',
+                    '#!/usr/bin/env perl', join_path(prefix.bin, 'bib2xhtml'))
+
+  #. Switching the compilers used by ``mpich``'s MPI wrapper scripts from
+     ``cc``, etc. to the compilers used by the Spack build:
+
+     .. code-block:: python
+
+        filter_file('CC="cc"', 'CC="%s"' % self.compiler.cc,
+                    join_path(prefix.bin, 'mpicc'))
+
+        filter_file('CXX="c++"', 'CXX="%s"' % self.compiler.cxx,
+                    join_path(prefix.bin, 'mpicxx'))
+
+:py:func:`change_sed_delimiter(old_delim, new_delim, *filenames) <spack.change_sed_delim>`
+    Some packages, like TAU, have a build system that can't install
+    into directories with, e.g. '@' in the name, because they use
+    hard-coded ``sed`` commands in their build.
+
+    ``change_sed_delimiter`` finds all ``sed`` search/replace commands
+    and change the delimiter.  e.g., if the file contains commands
+    that look like ``s///``, you can use this to change them to
+    ``s@@@``.
+
+    Example of changing ``s///`` to ``s@@@`` in TAU:
+
+    .. code-block:: python
+
+       change_sed_delimiter('@', ';', 'configure')
+       change_sed_delimiter('@', ';', 'utils/FixMakefile')
+       change_sed_delimiter('@', ';', 'utils/FixMakefile.sed.default')
+
+
+File functions
+~~~~~~~~~~~~~~~~~~~~~~
+
+:py:func:`ancestor(dir, n=1) <spack.ancestor>`
+  Get the n\ :sup:`th` ancestor of the directory ``dir``.
+
+:py:func:`can_access(path) <spack.can_access>`
+  True if we can read and write to the file at ``path``.  Same as
+  native python ``os.access(file_name, os.R_OK|os.W_OK)``.
+
+:py:func:`install(src, dest) <spack.install>`
+  Install a file to a particular location.  For example, install a
+  header into the ``include`` directory under the install ``prefix``:
+
+  .. code-block:: python
+
+     install('my-header.h', join_path(prefix.include))
+
+:py:func:`join_path(prefix, *args) <spack.join_path>` Like
+  ``os.path.join``, this joins paths using the OS path separator.
+  However, this version allows an arbitrary number of arguments, so
+  you can string together many path components.
+
+:py:func:`mkdirp(*paths) <spack.mkdirp>`
+  Create each of the directories in ``paths``, creating any parent
+  directories if they do not exist.
+
+:py:func:`working_dir(dirname, kwargs) <spack.working_dir>`
+  This is a Python `Context Manager
+  <https://docs.python.org/2/library/contextlib.html>`_ that makes it
+  easier to work with subdirectories in builds.  You use this with the
+  Python ``with`` statement to change into a working directory, and
+  when the with block is done, you change back to the original
+  directory.  Think of it as a safe ``pushd`` / ``popd`` combination,
+  where ``popd`` is guaranteed to be called at the end, even if
+  exceptions are thrown.
+
+  Example usage:
+
+  #. The ``libdwarf`` build first runs ``configure`` and ``make`` in a
+     subdirectory called ``libdwarf``.  It then implements the
+     installation code itself.  This is natural with ``working_dir``:
+
+     .. code-block:: python
+
+        with working_dir('libdwarf'):
+            configure("--prefix=" + prefix, "--enable-shared")
+            make()
+            install('libdwarf.a',  prefix.lib)
+
+  #. Many CMake builds require that you build "out of source", that
+     is, in a subdirectory.  You can handle creating and ``cd``'ing to
+     the subdirectory like the LLVM package does:
+
+     .. code-block:: python
+
+        with working_dir('spack-build', create=True):
+            cmake('..',
+                  '-DLLVM_REQUIRES_RTTI=1',
+                  '-DPYTHON_EXECUTABLE=/usr/bin/python',
+                  '-DPYTHON_INCLUDE_DIR=/usr/include/python2.6',
+                  '-DPYTHON_LIBRARY=/usr/lib64/libpython2.6.so',
+                  *std_cmake_args)
+            make()
+            make("install")
+
+     The ``create=True`` keyword argument causes the command to create
+     the directory if it does not exist.
+
+
+:py:func:`touch(path) <spack.touch>`
+  Create an empty file at ``path``.
+
+
 .. _pacakge-lifecycle:
 
-Useful Packaging Commands
+Package Workflow Commands
 ---------------------------------
 
 When you are building packages, you will likely not get things

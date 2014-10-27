@@ -10,25 +10,6 @@ Only a small subset of commands are needed for typical usage.
 This section covers a small set of subcommands that should cover most
 general use cases for Spack.
 
-Getting Help
------------------------
-
-``spack help``
-~~~~~~~~~~~~~~~~~~~~~~
-
-The ``help`` subcommand will print out out a list of all of
-``spack``'s options and subcommands:
-
-.. command-output:: spack help
-
-Adding an argument, e.g. ``spack help <subcommand>``, will print out
-usage information for a particular subcommand:
-
-.. command-output:: spack help install
-
-Alternately, you can use ``spack -h`` in place of ``spack help``, or
-``spack <subcommand> -h`` to get help on a particular subcommand.
-
 
 Listing available packages
 ------------------------------
@@ -824,3 +805,22 @@ used ``gcc``.  You could therefore just type:
    $ spack load libelf %intel
 
 To identify just the one built with the Intel compiler.
+
+Getting Help
+-----------------------
+
+``spack help``
+~~~~~~~~~~~~~~~~~~~~~~
+
+If you don't find what you need here, the ``help`` subcommand will
+print out out a list of *all* of ``spack``'s options and subcommands:
+
+.. command-output:: spack help
+
+Adding an argument, e.g. ``spack help <subcommand>``, will print out
+usage information for a particular subcommand:
+
+.. command-output:: spack help install
+
+Alternately, you can use ``spack -h`` in place of ``spack help``, or
+``spack <subcommand> -h`` to get help on a particular subcommand.
