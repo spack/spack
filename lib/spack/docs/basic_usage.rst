@@ -657,3 +657,170 @@ add a version specifier to the spec:
 
 Notice that the package versions that provide insufficient MPI
 versions are now filtered out.
+
+.. _shell-support:
+
+Interactive Shell Support
+-------------------------------
+
+Spack provides some limited shell support to make it easier to use the
+packages it provides.  You can enable shell support by sourcing some
+files in the ``/share/spack`` directory.
+
+For ``bash`` or ``ksh``, run::
+
+  . $SPACK_ROOT/share/spack/setup-env.sh
+
+For ``csh`` and ``tcsh`` run:
+
+  setenv SPACK_ROOT /path/to/spack
+  source $SPACK_ROOT/share/spack/setup-env.csh
+
+You can put the above code in your ``.bashrc`` or ``.cshrc``, and
+Spack's shell support will be available on the command line.
+
+
+Environment Modules
+-------------------------------
+
+.. note::
+
+   Environment module support is currently experimental and should not
+   be considered a stable feature of Spack.  In particular, the
+   interface and/or generated module names may change in future
+   versions.
+
+When you install a package with Spack, it automatically generates an
+environment module that lets you add the package to your environment.
+
+Currently, Spack supports the generation of `TCL Modules
+<http://wiki.tcl.tk/12999>`_ and `Dotkit
+<https://computing.llnl.gov/?set=jobs&page=dotkit>`_.  Generated
+module files for each of these systems can be found in these
+directories:
+
+  * ``$SPACK_ROOT/share/spack/modules``
+  * ``$SPACK_ROOT/share/spack/dotkit``
+
+The directories are automatically added to your ``MODULEPATH`` and
+``DK_NODE`` environment variables when you enable Spack's `shell
+support <shell-support_>`_.
+
+Using Modules & Dotkits
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you have shell support enabled you should be able to run either
+``module avail`` or ``use -l spack`` to see what modules/dotkits have
+been installed.  Here is sample output of those programs, showing lots
+of installed packages.
+
+  .. code-block:: sh
+
+     $ module avail
+
+     ------- /g/g21/gamblin2/src/spack/share/spack/modules/chaos_5_x86_64_ib --------
+     adept-utils@1.0%gcc@4.4.7-5adef8da   libelf@0.8.13%gcc@4.4.7
+     automaded@1.0%gcc@4.4.7-d9691bb0     libelf@0.8.13%intel@15.0.0
+     boost@1.55.0%gcc@4.4.7               mpc@1.0.2%gcc@4.4.7-559607f5
+     callpath@1.0.1%gcc@4.4.7-5dce4318    mpfr@3.1.2%gcc@4.4.7
+     dyninst@8.1.2%gcc@4.4.7-b040c20e     mpich@3.0.4%gcc@4.4.7
+     gcc@4.9.1%gcc@4.4.7-93ab98c5         mpich@3.0.4%gcc@4.9.0
+     gmp@6.0.0a%gcc@4.4.7                 mrnet@4.1.0%gcc@4.4.7-72b7881d
+     graphlib@2.0.0%gcc@4.4.7             netgauge@2.4.6%gcc@4.9.0-27912b7b
+     launchmon@1.0.1%gcc@4.4.7            stat@2.1.0%gcc@4.4.7-51101207
+     libNBC@1.1.1%gcc@4.9.0-27912b7b      sundials@2.5.0%gcc@4.9.0-27912b7b
+     libdwarf@20130729%gcc@4.4.7-b52fac98
+
+  .. code-block:: sh
+
+     $ use -l spack
+
+     spack ----------
+       adept-utils@1.0%gcc@4.4.7-5adef8da - adept-utils @1.0
+       automaded@1.0%gcc@4.4.7-d9691bb0 - automaded @1.0
+       boost@1.55.0%gcc@4.4.7 - boost @1.55.0
+       callpath@1.0.1%gcc@4.4.7-5dce4318 - callpath @1.0.1
+       dyninst@8.1.2%gcc@4.4.7-b040c20e - dyninst @8.1.2
+       gmp@6.0.0a%gcc@4.4.7 - gmp @6.0.0a
+       libNBC@1.1.1%gcc@4.9.0-27912b7b - libNBC @1.1.1
+       libdwarf@20130729%gcc@4.4.7-b52fac98 - libdwarf @20130729
+       libelf@0.8.13%gcc@4.4.7 - libelf @0.8.13
+       libelf@0.8.13%intel@15.0.0 - libelf @0.8.13
+       mpc@1.0.2%gcc@4.4.7-559607f5 - mpc @1.0.2
+       mpfr@3.1.2%gcc@4.4.7 - mpfr @3.1.2
+       mpich@3.0.4%gcc@4.4.7 - mpich @3.0.4
+       mpich@3.0.4%gcc@4.9.0 - mpich @3.0.4
+       netgauge@2.4.6%gcc@4.9.0-27912b7b - netgauge @2.4.6
+       sundials@2.5.0%gcc@4.9.0-27912b7b - sundials @2.5.0
+
+The names here should look familiar, they're the same ones from
+``spack find``.  You *can* use the names here directly.  For example,
+you could type either of these:
+
+.. code-block:: sh
+
+   use callpath@1.0.1%gcc@4.4.7-5dce4318
+   module load callpath@1.0.1%gcc@4.4.7-5dce4318
+
+And they would work fine. However, that is not particularly pretty,
+easy to remember, or easy to type.
+
+Luckily, Spack has its own interface for using modules and dotkits.
+You can use the same spec syntax you're used to:
+
+Modules:
+  * ``spack load <spec>``
+  * ``spack unload <spec>``
+Dotkit:
+  * ``spack use <spec>``
+  * ``spack unuse <spec>``
+
+And you can use the same shortened names you use everywhere else in
+Spack.  For example:
+
+.. code-block:: sh
+
+   $ spack install mpich %gcc@4.4.7
+   # ... wait for install ...
+   $ spack use mpich%gcc@4.4.7
+   Prepending: mpich@3.0.4%gcc@4.4.7 (ok)
+   $ which mpicc
+   ~/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/mpich@3.0.4/bin/mpicc
+
+Or, similarly with modules:
+   $ spack load mpich %gcc@4.4.7
+
+The generated files will add appropriate directories to you ``PATH``,
+``MANPATH``, and ``LD_LIBRARY_PATH`` to assist you and other programs
+with finding the libraries you've installed.
+
+You can unuse/unload packages similarly.
+
+These commands are only available if you have enabled Spack's shell
+support, but they allow you to use Spack's abbreviated names for
+packages to get them into your environment.
+
+Ambiguous module names
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+If a spec used with load/unload or use/unuse is ambiguous (i.e. more
+than one installed package matches it), then Spack will warn you:
+
+.. code-block:: sh
+
+   $ spack load libelf
+   ==> Error: Multiple matches for spec libelf.  Choose one:
+   libelf@0.8.13%gcc@4.4.7=chaos_5_x86_64_ib
+   libelf@0.8.13%intel@15.0.0=chaos_5_x86_64_ib
+
+You can either type the ``spack load`` command again with a fully
+qualified argument, or you can add just enough extra constraints to
+identify one package.  For example, above, the key differentiator is
+that one ``libelf`` is built with the Intel compiler, while the other
+used ``gcc``.  You could therefore just type:
+
+.. code-block:: sh
+
+   $ spack load libelf %intel
+
+To identify just the one built with the Intel compiler.
