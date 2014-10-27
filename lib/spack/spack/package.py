@@ -115,13 +115,13 @@ class Package(object):
 
     2. The class name, "Cmake".  This is formed by converting `-` or
        ``_`` in the module name to camel case.  If the name starts with
-       a number, we prefix the class name with ``Num_``. Examples:
+       a number, we prefix the class name with ``_``. Examples:
 
          Module Name       Class Name
           foo_bar           FooBar
           docbook-xml       DocbookXml
           FooBar            Foobar
-          3proxy            Num_3proxy
+          3proxy            _3proxy
 
         The class name is what spack looks for when it loads a package module.
 
