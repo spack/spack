@@ -26,6 +26,7 @@ import re
 import textwrap
 from llnl.util.tty.colify import colify
 import spack
+import spack.fetch_strategy as fs
 
 description = "Get detailed information on a particular package"
 
@@ -34,40 +35,41 @@ def setup_parser(subparser):
 
 
 def info(parser, args):
-    package = spack.db.get(args.name)
-    print "Package:   ", package.name
-    print "Homepage:  ", package.homepage
+    pkg = spack.db.get(args.name)
+    print "Package:   ", pkg.name
+    print "Homepage:  ", pkg.homepage
 
     print
-    print "Safe versions:  "
+    print "Versions:  "
 
-    if not package.versions:
+    if not pkg.versions:
         print("None.")
     else:
-        maxlen = max(len(str(v)) for v in package.versions)
+        maxlen = max(len(str(v)) for v in pkg.versions)
         fmt = "%%-%ss" % maxlen
-        for v in reversed(sorted(package.versions)):
-            print "    " + (fmt % v) + "    " + package.url_for_version(v)
+        for v in reversed(sorted(pkg.versions)):
+            f = fs.for_package_version(pkg, v)
+            print "    " + (fmt % v) + "    " + str(f)
 
     print
     print "Dependencies:"
-    if package.dependencies:
-        colify(package.dependencies, indent=4)
+    if pkg.dependencies:
+        colify(pkg.dependencies, indent=4)
     else:
         print "    None"
 
     print
-    print "Virtual packages: "
-    if package.provided:
-        for spec, when in package.provided.items():
+    print "Virtual pkgs: "
+    if pkg.provided:
+        for spec, when in pkg.provided.items():
             print "    %s provides %s" % (when, spec)
     else:
         print "    None"
 
     print
     print "Description:"
-    if package.__doc__:
-        doc = re.sub(r'\s+', ' ', package.__doc__)
+    if pkg.__doc__:
+        doc = re.sub(r'\s+', ' ', pkg.__doc__)
         lines = textwrap.wrap(doc, 72)
         for line in lines:
             print "    " + line

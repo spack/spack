@@ -240,7 +240,7 @@ class URLFetchStrategy(FetchStrategy):
         if self.url:
             return self.url
         else:
-            return "URLFetchStrategy<no url>"
+            return "[no url]"
 
 
 class VCSFetchStrategy(FetchStrategy):
@@ -293,7 +293,7 @@ class VCSFetchStrategy(FetchStrategy):
 
 
     def __str__(self):
-        return self.url
+        return "VCS: %s" % self.url
 
 
     def __repr__(self):
@@ -396,6 +396,10 @@ class GitFetchStrategy(VCSFetchStrategy):
         self.git('clean', '-f')
 
 
+    def __str__(self):
+        return "[git] %s" % self.url
+
+
 class SvnFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a subversion repository.
        Use like this in a package:
@@ -467,6 +471,11 @@ class SvnFetchStrategy(VCSFetchStrategy):
         self.stage.chdir_to_source()
         self._remove_untracked_files()
         self.svn('revert', '.', '-R')
+
+
+    def __str__(self):
+        return "[svn] %s" % self.url
+
 
 
 class HgFetchStrategy(VCSFetchStrategy):
@@ -541,6 +550,10 @@ class HgFetchStrategy(VCSFetchStrategy):
         shutil.rmtree(source_path, ignore_errors=True)
         shutil.move(scrubbed, source_path)
         self.stage.chdir_to_source()
+
+
+    def __str__(self):
+        return "[hg] %s" % self.url
 
 
 def from_url(url):
@@ -630,5 +643,3 @@ class NoStageError(FetchError):
     def __init__(self, method):
         super(NoStageError, self).__init__(
             "Must call FetchStrategy.set_stage() before calling %s" % method.__name__)
-
-
