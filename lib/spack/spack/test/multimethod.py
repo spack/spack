@@ -73,11 +73,11 @@ class MultiMethodTest(MockPackagesTest):
 
 
     def test_undefined_mpi_version(self):
-        # This currently fails because provides() doesn't do
-        # the right thing undefined version ranges.
-        # TODO: fix this.
         pkg = spack.db.get('multimethod^mpich@0.4')
-        self.assertEqual(pkg.mpi_version(), 0)
+        self.assertEqual(pkg.mpi_version(), 1)
+
+        pkg = spack.db.get('multimethod^mpich@1.4')
+        self.assertEqual(pkg.mpi_version(), 1)
 
 
     def test_default_works(self):

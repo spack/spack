@@ -37,7 +37,7 @@ class Mpich(Package):
     version('3.0', 'foobarbaz')
 
     provides('mpi@:3', when='@3:')
-    provides('mpi@:1', when='@1:')
+    provides('mpi@:1', when='@:1')
 
     def install(self, spec, prefix):
         pass
