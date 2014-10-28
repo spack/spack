@@ -10,25 +10,6 @@ Only a small subset of commands are needed for typical usage.
 This section covers a small set of subcommands that should cover most
 general use cases for Spack.
 
-Getting Help
------------------------
-
-``spack help``
-~~~~~~~~~~~~~~~~~~~~~~
-
-The ``help`` subcommand will print out out a list of all of
-``spack``'s options and subcommands:
-
-.. command-output:: spack help
-
-Adding an argument, e.g. ``spack help <subcommand>``, will print out
-usage information for a particular subcommand:
-
-.. command-output:: spack help install
-
-Alternately, you can use ``spack -h`` in place of ``spack help``, or
-``spack <subcommand> -h`` to get help on a particular subcommand.
-
 
 Listing available packages
 ------------------------------
@@ -327,19 +308,19 @@ completely remove the directory in which the package was installed.
    spack uninstall mpich
 
 If there are still installed packages that depend on the package to be
-uninstalled, spack will issue a warning.  In general, it is safer to
-remove dependent packages *before* removing their dependencies.  Not
-doing so risks breaking packages on your system.  To remove a package
-without regard for its dependencies, run ``spack uninstall -f
-<package>`` to override the warning.
+uninstalled, spack will refuse to uninstall.  If you know what you're
+doing, you can override this with ``spack uninstall -f <package>``.
+However, running this risks breaking other installed packages. In
+general, it is safer to remove dependent packages *before* removing
+their dependencies.
 
 A line like ``spack uninstall mpich`` may be ambiguous, if multiple
 ``mpich`` configurations are installed.  For example, if both
 ``mpich@3.0.2`` and ``mpich@3.1`` are installed, it could refer to
 either one, and Spack cannot determine which one to uninstall.  Spack
-will ask you to provide a version number to remove any ambiguity.  For
-example, ``spack uninstall mpich@3.1`` is unambiguous in the
-above scenario.
+will ask you to provide a version number to remove the ambiguity.  For
+example, ``spack uninstall mpich@3.1`` is unambiguous in the above
+scenario.
 
 
 .. _sec-specs:
@@ -657,3 +638,236 @@ add a version specifier to the spec:
 
 Notice that the package versions that provide insufficient MPI
 versions are now filtered out.
+
+.. _shell-support:
+
+Environment Modules
+-------------------------------
+
+.. note::
+
+   Environment module support is currently experimental and should not
+   be considered a stable feature of Spack.  In particular, the
+   interface and/or generated module names may change in future
+   versions.
+
+Spack provides some limited integration with environment module
+systems to make it easier to use the packages it provides.
+
+You can enable shell support by sourcing some files in the
+``/share/spack`` directory.
+
+For ``bash`` or ``ksh``, run:
+
+.. code-block:: sh
+
+   . $SPACK_ROOT/share/spack/setup-env.sh
+
+For ``csh`` and ``tcsh`` run:
+
+.. code-block:: csh
+
+   setenv SPACK_ROOT /path/to/spack
+   source $SPACK_ROOT/share/spack/setup-env.csh
+
+You can put the above code in your ``.bashrc`` or ``.cshrc``, and
+Spack's shell support will be available on the command line.
+
+
+-------------------------------
+
+
+When you install a package with Spack, it automatically generates an
+environment module that lets you add the package to your environment.
+
+Currently, Spack supports the generation of `TCL Modules
+<http://wiki.tcl.tk/12999>`_ and `Dotkit
+<https://computing.llnl.gov/?set=jobs&page=dotkit>`_.  Generated
+module files for each of these systems can be found in these
+directories:
+
+  * ``$SPACK_ROOT/share/spack/modules``
+  * ``$SPACK_ROOT/share/spack/dotkit``
+
+The directories are automatically added to your ``MODULEPATH`` and
+``DK_NODE`` environment variables when you enable Spack's `shell
+support <shell-support_>`_.
+
+Using Modules & Dotkits
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you have shell support enabled you should be able to run either
+``module avail`` or ``use -l spack`` to see what modules/dotkits have
+been installed.  Here is sample output of those programs, showing lots
+of installed packages.
+
+  .. code-block:: sh
+
+     $ module avail
+
+     ------- /g/g21/gamblin2/src/spack/share/spack/modules/chaos_5_x86_64_ib --------
+     adept-utils@1.0%gcc@4.4.7-5adef8da   libelf@0.8.13%gcc@4.4.7
+     automaded@1.0%gcc@4.4.7-d9691bb0     libelf@0.8.13%intel@15.0.0
+     boost@1.55.0%gcc@4.4.7               mpc@1.0.2%gcc@4.4.7-559607f5
+     callpath@1.0.1%gcc@4.4.7-5dce4318    mpfr@3.1.2%gcc@4.4.7
+     dyninst@8.1.2%gcc@4.4.7-b040c20e     mpich@3.0.4%gcc@4.4.7
+     gcc@4.9.1%gcc@4.4.7-93ab98c5         mpich@3.0.4%gcc@4.9.0
+     gmp@6.0.0a%gcc@4.4.7                 mrnet@4.1.0%gcc@4.4.7-72b7881d
+     graphlib@2.0.0%gcc@4.4.7             netgauge@2.4.6%gcc@4.9.0-27912b7b
+     launchmon@1.0.1%gcc@4.4.7            stat@2.1.0%gcc@4.4.7-51101207
+     libNBC@1.1.1%gcc@4.9.0-27912b7b      sundials@2.5.0%gcc@4.9.0-27912b7b
+     libdwarf@20130729%gcc@4.4.7-b52fac98
+
+  .. code-block:: sh
+
+     $ use -l spack
+
+     spack ----------
+       adept-utils@1.0%gcc@4.4.7-5adef8da - adept-utils @1.0
+       automaded@1.0%gcc@4.4.7-d9691bb0 - automaded @1.0
+       boost@1.55.0%gcc@4.4.7 - boost @1.55.0
+       callpath@1.0.1%gcc@4.4.7-5dce4318 - callpath @1.0.1
+       dyninst@8.1.2%gcc@4.4.7-b040c20e - dyninst @8.1.2
+       gmp@6.0.0a%gcc@4.4.7 - gmp @6.0.0a
+       libNBC@1.1.1%gcc@4.9.0-27912b7b - libNBC @1.1.1
+       libdwarf@20130729%gcc@4.4.7-b52fac98 - libdwarf @20130729
+       libelf@0.8.13%gcc@4.4.7 - libelf @0.8.13
+       libelf@0.8.13%intel@15.0.0 - libelf @0.8.13
+       mpc@1.0.2%gcc@4.4.7-559607f5 - mpc @1.0.2
+       mpfr@3.1.2%gcc@4.4.7 - mpfr @3.1.2
+       mpich@3.0.4%gcc@4.4.7 - mpich @3.0.4
+       mpich@3.0.4%gcc@4.9.0 - mpich @3.0.4
+       netgauge@2.4.6%gcc@4.9.0-27912b7b - netgauge @2.4.6
+       sundials@2.5.0%gcc@4.9.0-27912b7b - sundials @2.5.0
+
+The names here should look familiar, they're the same ones from
+``spack find``.  You *can* use the names here directly.  For example,
+you could type either of these commands to load the callpath module
+(assuming dotkit and modules are installed):
+
+.. code-block:: sh
+
+   use callpath@1.0.1%gcc@4.4.7-5dce4318
+
+.. code-block:: sh
+
+   module load callpath@1.0.1%gcc@4.4.7-5dce4318
+
+Neither of these is particularly pretty, easy to remember, or
+easy to type.  Luckily, Spack has its own interface for using modules
+and dotkits.  You can use the same spec syntax you're used to:
+
+  =========================  ==========================
+  Modules                    Dotkit
+  =========================  ==========================
+  ``spack load <spec>``      ``spack use <spec>``
+  ``spack unload <spec>``    ``spack unuse <spec>``
+  =========================  ==========================
+
+And you can use the same shortened names you use everywhere else in
+Spack.  For example, this will add the ``mpich`` package built with
+``gcc`` to your path:
+
+.. code-block:: sh
+
+   $ spack install mpich %gcc@4.4.7
+
+   # ... wait for install ...
+
+   $ spack use mpich %gcc@4.4.7
+   Prepending: mpich@3.0.4%gcc@4.4.7 (ok)
+   $ which mpicc
+   ~/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/mpich@3.0.4/bin/mpicc
+
+Or, similarly with modules, you could type:
+
+.. code-block:: sh
+
+   $ spack load mpich %gcc@4.4.7
+
+These commands will add appropriate directories to your ``PATH``,
+``MANPATH``, and ``LD_LIBRARY_PATH``.  When you no longer want to use
+a package, you can type unload or unuse similarly:
+
+.. code-block:: sh
+
+   $ spack unload mpich %gcc@4.4.7    # modules
+   $ spack unuse mpich %gcc@4.4.7     # dotkit
+
+.. note::
+
+   These ``use``, ``unuse``, ``load``, and ``unload`` subcommands are
+   only available if you have enabled Spack's shell support *and* you
+   have dotkit or modules installed on your machine.
+
+Ambiguous module names
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+If a spec used with load/unload or use/unuse is ambiguous (i.e. more
+than one installed package matches it), then Spack will warn you:
+
+.. code-block:: sh
+
+   $ spack load libelf
+   ==> Error: Multiple matches for spec libelf.  Choose one:
+   libelf@0.8.13%gcc@4.4.7=chaos_5_x86_64_ib
+   libelf@0.8.13%intel@15.0.0=chaos_5_x86_64_ib
+
+You can either type the ``spack load`` command again with a fully
+qualified argument, or you can add just enough extra constraints to
+identify one package.  For example, above, the key differentiator is
+that one ``libelf`` is built with the Intel compiler, while the other
+used ``gcc``.  You could therefore just type:
+
+.. code-block:: sh
+
+   $ spack load libelf %intel
+
+To identify just the one built with the Intel compiler.
+
+
+Regenerating Module files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Module and dotkit files are generated when packages are installed, and
+are placed in the following directories under the Spack root:
+
+  * ``$SPACK_ROOT/share/spack/modules``
+  * ``$SPACK_ROOT/share/spack/dotkit``
+
+Sometimes you may need to regenerate the modules files.  For example,
+if newer, fancier module support is added to Spack at some later date,
+you may want to regenerate all the modules to take advantage of these
+new features.
+
+``spack module refresh``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Running ``spack module refresh`` will remove the
+``share/spack/modules`` and ``share/spack/dotkit`` directories, then
+regenerate all module and dotkit files from scratch:
+
+.. code-block:: sh
+
+   $ spack module refresh
+   ==> Regenerating tcl module files.
+   ==> Regenerating dotkit module files.
+
+Getting Help
+-----------------------
+
+``spack help``
+~~~~~~~~~~~~~~~~~~~~~~
+
+If you don't find what you need here, the ``help`` subcommand will
+print out out a list of *all* of ``spack``'s options and subcommands:
+
+.. command-output:: spack help
+
+Adding an argument, e.g. ``spack help <subcommand>``, will print out
+usage information for a particular subcommand:
+
+.. command-output:: spack help install
+
+Alternately, you can use ``spack -h`` in place of ``spack help``, or
+``spack <subcommand> -h`` to get help on a particular subcommand.

@@ -144,6 +144,7 @@ def expand_user(path):
 
 
 def mkdirp(*paths):
+    """Creates a directory, as well as parent directories if needed."""
     for path in paths:
         if not os.path.exists(path):
             os.makedirs(path)
@@ -163,6 +164,7 @@ def working_dir(dirname, **kwargs):
 
 
 def touch(path):
+    """Creates an empty file at the specified path."""
     with closing(open(path, 'a')) as file:
         os.utime(path, None)
 
