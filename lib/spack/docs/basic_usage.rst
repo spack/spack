@@ -25,7 +25,12 @@ Spack can install:
 
 .. command-output:: spack list
 
-The packages are listed by name in alphabetical order.
+The packages are listed by name in alphabetical order.  You can also
+do wildcard searches using ``*``:
+
+.. command-output:: spack list m*
+
+.. command-output:: spack list *util*
 
 
 ``spack info``
