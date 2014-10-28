@@ -27,6 +27,7 @@ import textwrap
 from StringIO import StringIO
 from llnl.util.tty.colify import *
 import spack
+import spack.fetch_strategy as fs
 
 description = "Get detailed information on a particular package"
 
@@ -122,7 +123,8 @@ def info_text(pkg):
         maxlen = max(len(str(v)) for v in pkg.versions)
         fmt = "%%-%ss" % maxlen
         for v in reversed(sorted(pkg.versions)):
-            print "    " + (fmt % v) + "    " + pkg.url_for_version(v)
+            f = fs.for_package_version(pkg, v)
+            print "    " + (fmt % v) + "    " + str(f)
 
     print
     print "Dependencies:"

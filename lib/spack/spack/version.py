@@ -50,10 +50,6 @@ from bisect import bisect_left
 from functools import wraps
 from external.functools import total_ordering
 
-import llnl.util.compare.none_high as none_high
-import llnl.util.compare.none_low as none_low
-import spack.error
-
 # Valid version characters
 VALID_VERSION = r'[A-Za-z0-9_.-]'
 
@@ -256,18 +252,39 @@ class Version(object):
 
     @coerced
     def __contains__(self, other):
-        return self == other
+        if other is None:
+            return False
+        return other.version[:len(self.version)] == self.version
+
+
+    def is_predecessor(self, other):
+        """True if the other version is the immediate predecessor of this one.
+           That is, NO versions v exist such that:
+           (self < v < other and v not in self).
+        """
+        if len(self.version) != len(other.version):
+            return False
+
+        sl = self.version[-1]
+        ol = other.version[-1]
+        return type(sl) == int and type(ol) == int and (ol - sl == 1)
+
+
+    def is_successor(self, other):
+        return other.is_predecessor(self)
 
 
     @coerced
     def overlaps(self, other):
-        return self == other
+        return self in other or other in self
 
 
     @coerced
     def union(self, other):
-        if self == other:
+        if self == other or other in self:
             return self
+        elif self in other:
+            return other
         else:
             return VersionList([self, other])
 
@@ -290,7 +307,7 @@ class VersionRange(object):
 
         self.start = start
         self.end = end
-        if start and end and  end < start:
+        if start and end and end < start:
             raise ValueError("Invalid Version range: %s" % self)
 
 
@@ -312,9 +329,12 @@ class VersionRange(object):
         if other is None:
             return False
 
-        return (none_low.lt(self.start, other.start) or
-                (self.start == other.start and
-                 none_high.lt(self.end, other.end)))
+        s, o = self, other
+        if s.start != o.start:
+            return s.start is None or (o.start is not None and s.start < o.start)
+
+        return (s.end != o.end and
+                o.end is None or (s.end is not None and s.end < o.end))
 
 
     @coerced
@@ -335,8 +355,23 @@ class VersionRange(object):
 
     @coerced
     def __contains__(self, other):
-        return (none_low.ge(other.start, self.start) and
-                none_high.le(other.end, self.end))
+        if other is None:
+            return False
+
+        in_lower = (self.start == other.start or
+                    self.start is None or
+                    (other.start is not None and (
+                        self.start < other.start or
+                        other.start in self.start)))
+        if not in_lower:
+            return False
+
+        in_upper = (self.end == other.end or
+                    self.end is None or
+                    (other.end is not None and (
+                        self.end > other.end or
+                        other.end in self.end)))
+        return in_upper
 
 
     @coerced
@@ -372,27 +407,75 @@ class VersionRange(object):
 
     @coerced
     def overlaps(self, other):
-        return (other in self or self in other or
-                ((self.start == None or other.end is None or
-                  self.start <= other.end) and
-                 (other.start is None or self.end == None or
-                  other.start <= self.end)))
+        return ((self.start == None or other.end is None or
+                 self.start <= other.end or
+                 other.end in self.start or self.start in other.end) and
+                (other.start is None or self.end == None or
+                 other.start <= self.end or
+                 other.start in self.end or self.end in other.start))
 
 
     @coerced
     def union(self, other):
-        if self.overlaps(other):
-            return VersionRange(none_low.min(self.start, other.start),
-                                none_high.max(self.end, other.end))
-        else:
+        if not self.overlaps(other):
+            if (self.end is not None and other.start is not None and
+                self.end.is_predecessor(other.start)):
+                return VersionRange(self.start, other.end)
+
+            if (other.end is not None and self.start is not None and
+                other.end.is_predecessor(self.start)):
+                return VersionRange(other.start, self.end)
+
             return VersionList([self, other])
+
+        # if we're here, then we know the ranges overlap.
+        if self.start is None or other.start is None:
+            start = None
+        else:
+            start = self.start
+            # TODO: See note in intersection() about < and in discrepancy.
+            if self.start in other.start or other.start < self.start:
+                start = other.start
+
+        if self.end is None or other.end is None:
+            end = None
+        else:
+            end = self.end
+            # TODO: See note in intersection() about < and in discrepancy.
+            if not other.end in self.end:
+                if end in other.end or other.end > self.end:
+                    end = other.end
+
+        return VersionRange(start, end)
 
 
     @coerced
     def intersection(self, other):
         if self.overlaps(other):
-            return VersionRange(none_low.max(self.start, other.start),
-                                none_high.min(self.end, other.end))
+            if self.start is None:
+                start = other.start
+            else:
+                start = self.start
+                if other.start is not None:
+                    if other.start > start or other.start in start:
+                        start = other.start
+
+            if self.end is None:
+                end = other.end
+            else:
+                end = self.end
+                # TODO: does this make sense?
+                # This is tricky:
+                #     1.6.5 in 1.6 = True  (1.6.5 is more specific)
+                #     1.6 < 1.6.5  = True  (lexicographic)
+                # Should 1.6 NOT be less than 1.6.5?  Hm.
+                # Here we test (not end in other.end) first to avoid paradox.
+                if other.end is not None and not end in other.end:
+                    if other.end < end or other.end in end:
+                        end = other.end
+
+            return VersionRange(start, end)
+
         else:
             return VersionList()
 

@@ -23,23 +23,19 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import shutil
+import sys
 from datetime import datetime
-from contextlib import closing
 
 from external import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
-from llnl.util.filesystem import mkdirp, join_path
 
 import spack
 import spack.cmd
 import spack.config
+import spack.mirror
 from spack.spec import Spec
 from spack.error import SpackError
-from spack.stage import Stage
-from spack.util.compression import extension
-
 
 description = "Manage mirrors."
 
@@ -58,6 +54,9 @@ def setup_parser(subparser):
         'specs', nargs=argparse.REMAINDER, help="Specs of packages to put in mirror")
     create_parser.add_argument(
         '-f', '--file', help="File with specs of packages to put in mirror.")
+    create_parser.add_argument(
+        '-o', '--one-version-per-spec', action='store_const', const=1, default=0,
+        help="Only fetch one 'preferred' version per spec, not all known versions.")
 
     add_parser = sp.add_parser('add', help=mirror_add.__doc__)
     add_parser.add_argument('name', help="Mnemonic name for mirror.")
@@ -72,8 +71,12 @@ def setup_parser(subparser):
 
 def mirror_add(args):
     """Add a mirror to Spack."""
+    url = args.url
+    if url.startswith('/'):
+        url = 'file://' + url
+
     config = spack.config.get_config('user')
-    config.set_value('mirror', args.name, 'url', args.url)
+    config.set_value('mirror', args.name, 'url', url)
     config.write()
 
 
@@ -105,112 +108,63 @@ def mirror_list(args):
         print fmt % (name, val)
 
 
+def _read_specs_from_file(filename):
+    with closing(open(filename, "r")) as stream:
+        for i, string in enumerate(stream):
+            try:
+                s = Spec(string)
+                s.package
+                args.specs.append(s)
+            except SpackError, e:
+                tty.die("Parse error in %s, line %d:" % (args.file, i+1),
+                        ">>> " + string, str(e))
+
+
 def mirror_create(args):
     """Create a directory to be used as a spack mirror, and fill it with
        package archives."""
     # try to parse specs from the command line first.
-    args.specs = spack.cmd.parse_specs(args.specs)
+    specs = spack.cmd.parse_specs(args.specs)
 
     # If there is a file, parse each line as a spec and add it to the list.
     if args.file:
-        with closing(open(args.file, "r")) as stream:
-            for i, string in enumerate(stream):
-                try:
-                    s = Spec(string)
-                    s.package
-                    args.specs.append(s)
-                except SpackError, e:
-                    tty.die("Parse error in %s, line %d:" % (args.file, i+1),
-                            ">>> " + string, str(e))
+        if specs:
+            tty.die("Cannot pass specs on the command line with --file.")
+        specs = _read_specs_from_file(args.file)
 
-    if not args.specs:
-        args.specs = [Spec(n) for n in spack.db.all_package_names()]
+    # If nothing is passed, use all packages.
+    if not specs:
+        specs = [Spec(n) for n in spack.db.all_package_names()]
+        specs.sort(key=lambda s: s.format("$_$@").lower())
 
     # Default name for directory is spack-mirror-<DATESTAMP>
-    if not args.directory:
+    directory = args.directory
+    if not directory:
         timestamp = datetime.now().strftime("%Y-%m-%d")
-        args.directory = 'spack-mirror-' + timestamp
+        directory = 'spack-mirror-' + timestamp
 
     # Make sure nothing is in the way.
-    if os.path.isfile(args.directory):
-        tty.error("%s already exists and is a file." % args.directory)
+    existed = False
+    if os.path.isfile(directory):
+        tty.error("%s already exists and is a file." % directory)
+    elif os.path.isdir(directory):
+        existed = True
 
-    # Create a directory if none exists
-    if not os.path.isdir(args.directory):
-        mkdirp(args.directory)
-        tty.msg("Created new mirror in %s" % args.directory)
-    else:
-        tty.msg("Adding to existing mirror in %s" % args.directory)
+    # Actually do the work to create the mirror
+    present, mirrored, error = spack.mirror.create(
+        directory, specs, num_versions=args.one_version_per_spec)
+    p, m, e = len(present), len(mirrored), len(error)
 
-    # Things to keep track of while parsing specs.
-    working_dir = os.getcwd()
-    num_mirrored = 0
-    num_error = 0
-
-    # Iterate through packages and download all the safe tarballs for each of them
-    for spec in args.specs:
-        pkg = spec.package
-
-        # Skip any package that has no checksummed versions.
-        if not pkg.versions:
-            tty.msg("No safe (checksummed) versions for package %s."
-                    % pkg.name)
-            continue
-
-        # create a subdir for the current package.
-        pkg_path = join_path(args.directory, pkg.name)
-        mkdirp(pkg_path)
-
-        # Download all the tarballs using Stages, then move them into place
-        for version in pkg.versions:
-            # Skip versions that don't match the spec
-            vspec = Spec('%s@%s' % (pkg.name, version))
-            if not vspec.satisfies(spec):
-                continue
-
-            mirror_path = "%s/%s-%s.%s" % (
-                pkg.name, pkg.name, version, extension(pkg.url))
-
-            os.chdir(working_dir)
-            mirror_file = join_path(args.directory, mirror_path)
-            if os.path.exists(mirror_file):
-                tty.msg("Already fetched %s." % mirror_file)
-                num_mirrored += 1
-                continue
-
-            # Get the URL for the version and set up a stage to download it.
-            url = pkg.url_for_version(version)
-            stage = Stage(url)
-            try:
-                # fetch changes directory into the stage
-                stage.fetch()
-
-                if not args.no_checksum and version in pkg.versions:
-                    digest = pkg.versions[version]
-                    stage.check(digest)
-                    tty.msg("Checksum passed for %s@%s" % (pkg.name, version))
-
-                # change back and move the new archive into place.
-                os.chdir(working_dir)
-                shutil.move(stage.archive_file, mirror_file)
-                tty.msg("Added %s to mirror" % mirror_file)
-                num_mirrored += 1
-
-            except Exception, e:
-                 tty.warn("Error while fetching %s." % url, e.message)
-                 num_error += 1
-
-            finally:
-                stage.destroy()
-
-    # If nothing happened, try to say why.
-    if not num_mirrored:
-        if num_error:
-            tty.error("No packages added to mirror.",
-                      "All packages failed to fetch.")
-        else:
-            tty.error("No packages added to mirror. No versions matched specs:")
-            colify(args.specs, indent=4)
+    verb = "updated" if existed else "created"
+    tty.msg(
+        "Successfully %s mirror in %s." % (verb, directory),
+        "Archive stats:",
+        "  %-4d already present"  % p,
+        "  %-4d added"            % m,
+        "  %-4d failed to fetch." % e)
+    if error:
+        tty.error("Failed downloads:")
+        colify(s.format("$_$@") for s in error)
 
 
 def mirror(parser, args):
@@ -218,4 +172,5 @@ def mirror(parser, args):
                'add'    : mirror_add,
                'remove' : mirror_remove,
                'list'   : mirror_list }
+
     action[args.mirror_command](args)

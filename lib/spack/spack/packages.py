@@ -47,10 +47,10 @@ _package_file_name = 'package.py'
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
        function to a Spec."""
-    def converter(self, spec_like):
+    def converter(self, spec_like, **kwargs):
         if not isinstance(spec_like, spack.spec.Spec):
             spec_like = spack.spec.Spec(spec_like)
-        return function(self, spec_like)
+        return function(self, spec_like, **kwargs)
     return converter
 
 
@@ -63,9 +63,13 @@ class PackageDB(object):
 
 
     @_autospec
-    def get(self, spec):
+    def get(self, spec, **kwargs):
         if spec.virtual:
             raise UnknownPackageError(spec.name)
+
+        if kwargs.get('new', False):
+            if spec in self.instances:
+                del self.instances[spec]
 
         if not spec in self.instances:
             package_class = self.get_class_for_package_name(spec.name)
@@ -75,6 +79,17 @@ class PackageDB(object):
                 raise FailedConstructorError(spec.name, e)
 
         return self.instances[spec]
+
+
+    @_autospec
+    def delete(self, spec):
+        """Force a package to be recreated."""
+        del self.instances[spec]
+
+
+    def purge(self):
+        """Clear entire package instance cache."""
+        self.instances.clear()
 
 
     @_autospec

@@ -55,7 +55,7 @@ def setup_parser(subparser):
         '-s', '--stage-dir', action='store_true', help="Stage directory for a spec.")
     directories.add_argument(
         '-b', '--build-dir', action='store_true',
-        help="Expanded archive directory for a spec (requires it to be staged first).")
+        help="Checked out or expanded source directory for a spec (requires it to be staged first).")
 
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER, help="spec of package to fetch directory for.")
@@ -107,8 +107,8 @@ def location(parser, args):
                 print pkg.stage.path
 
             else:  #  args.build_dir is the default.
-                if not os.listdir(pkg.stage.path):
+                if not pkg.stage.source_path:
                     tty.die("Build directory does not exist yet. Run this to create it:",
                             "spack stage " + " ".join(args.spec))
-                print pkg.stage.expanded_archive_path
+                print pkg.stage.source_path
 

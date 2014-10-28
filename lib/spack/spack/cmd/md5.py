@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2014, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,23 +22,31 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
+import os
+import hashlib
+from external import argparse
 
-class Dyninst(Package):
-    homepage = "https://paradyn.org"
-    url      = "http://www.paradyn.org/release8.1/DyninstAPI-8.1.1.tgz"
+import llnl.util.tty as tty
+from llnl.util.filesystem import *
 
-    version('8.2',   'cxyzab',
-            url='http://www.paradyn.org/release8.2/DyninstAPI-8.2.tgz')
-    version('8.1.2', 'bcxyza',
-            url='http://www.paradyn.org/release8.1.2/DyninstAPI-8.1.2.tgz')
-    version('8.1.1', 'abcxyz',
-            url='http://www.paradyn.org/release8.1/DyninstAPI-8.1.1.tgz')
+import spack.util.crypto
 
-    depends_on("libelf")
-    depends_on("libdwarf")
+description = "Calculate md5 checksums for files."
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+def setup_parser(subparser):
+    setup_parser.parser = subparser
+    subparser.add_argument('files', nargs=argparse.REMAINDER,
+                           help="Files to checksum.")
+
+def md5(parser, args):
+    if not args.files:
+        setup_parser.parser.print_help()
+
+    for f in args.files:
+        if not os.path.isfile(f):
+            tty.die("Not a file: %s" % f)
+        if not can_access(f):
+            tty.die("Cannot read file: %s" % f)
+
+        checksum = spack.util.crypto.checksum(hashlib.md5, f)
+        print "%s  %s" % (checksum, f)

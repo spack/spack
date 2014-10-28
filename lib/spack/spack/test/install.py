@@ -32,14 +32,12 @@ from llnl.util.filesystem import *
 
 import spack
 from spack.stage import Stage
+from spack.fetch_strategy import URLFetchStrategy
 from spack.directory_layout import SpecHashDirectoryLayout
 from spack.util.executable import which
 from spack.test.mock_packages_test import *
+from spack.test.mock_repo import MockArchive
 
-
-dir_name = 'trivial-1.0'
-archive_name = 'trivial-1.0.tar.gz'
-install_test_package = 'trivial_install_test_package'
 
 class InstallTest(MockPackagesTest):
     """Tests install and uninstall on a trivial package."""
@@ -47,27 +45,8 @@ class InstallTest(MockPackagesTest):
     def setUp(self):
         super(InstallTest, self).setUp()
 
-        self.stage = Stage('not_a_real_url')
-        archive_dir = join_path(self.stage.path, dir_name)
-        dummy_configure = join_path(archive_dir, 'configure')
-
-        mkdirp(archive_dir)
-        with closing(open(dummy_configure, 'w')) as configure:
-            configure.write(
-                "#!/bin/sh\n"
-                "prefix=$(echo $1 | sed 's/--prefix=//')\n"
-                "cat > Makefile <<EOF\n"
-                "all:\n"
-                "\techo Building...\n\n"
-                "install:\n"
-                "\tmkdir -p $prefix\n"
-                "\ttouch $prefix/dummy_file\n"
-                "EOF\n")
-        os.chmod(dummy_configure, 0755)
-
-        with working_dir(self.stage.path):
-            tar = which('tar')
-            tar('-czf', archive_name, dir_name)
+        # create a simple installable package directory and tarball
+        self.repo = MockArchive()
 
         # We use a fake package, so skip the checksum.
         spack.do_checksum = False
@@ -82,8 +61,8 @@ class InstallTest(MockPackagesTest):
     def tearDown(self):
         super(InstallTest, self).tearDown()
 
-        if self.stage is not None:
-            self.stage.destroy()
+        if self.repo.stage is not None:
+            self.repo.stage.destroy()
 
         # Turn checksumming back on
         spack.do_checksum = True
@@ -95,7 +74,7 @@ class InstallTest(MockPackagesTest):
 
     def test_install_and_uninstall(self):
         # Get a basic concrete spec for the trivial install package.
-        spec = Spec(install_test_package)
+        spec = Spec('trivial_install_test_package')
         spec.concretize()
         self.assertTrue(spec.concrete)
 
@@ -103,8 +82,7 @@ class InstallTest(MockPackagesTest):
         pkg = spack.db.get(spec)
 
         # Fake the URL for the package so it downloads from a file.
-        archive_path = join_path(self.stage.path, archive_name)
-        pkg.url = 'file://' + archive_path
+        pkg.fetcher = URLFetchStrategy(self.repo.url)
 
         try:
             pkg.do_install()

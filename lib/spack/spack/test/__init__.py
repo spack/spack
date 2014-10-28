@@ -48,7 +48,12 @@ test_names = ['versions',
               'package_sanity',
               'config',
               'directory_layout',
-              'python_version']
+              'python_version',
+              'git_fetch',
+              'svn_fetch',
+              'hg_fetch',
+              'mirror',
+              'url_extrapolate']
 
 
 def list_tests():

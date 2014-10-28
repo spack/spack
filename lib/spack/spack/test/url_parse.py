@@ -281,10 +281,15 @@ class UrlParseTest(unittest.TestCase):
             'synergy', '1.3.6p2',
             'http://synergy.googlecode.com/files/synergy-1.3.6p2-MacOSX-Universal.zip')
 
-    def test_mvapich2_version(self):
+    def test_mvapich2_19_version(self):
         self.check(
             'mvapich2', '1.9',
             'http://mvapich.cse.ohio-state.edu/download/mvapich2/mv2/mvapich2-1.9.tgz')
+
+    def test_mvapich2_19_version(self):
+        self.check(
+            'mvapich2', '2.0',
+            'http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.0.tar.gz')
 
     def test_hdf5_version(self):
         self.check(
