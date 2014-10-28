@@ -308,19 +308,19 @@ completely remove the directory in which the package was installed.
    spack uninstall mpich
 
 If there are still installed packages that depend on the package to be
-uninstalled, spack will issue a warning.  In general, it is safer to
-remove dependent packages *before* removing their dependencies.  Not
-doing so risks breaking packages on your system.  To remove a package
-without regard for its dependencies, run ``spack uninstall -f
-<package>`` to override the warning.
+uninstalled, spack will refuse to uninstall.  If you know what you're
+doing, you can override this with ``spack uninstall -f <package>``.
+However, running this risks breaking other installed packages. In
+general, it is safer to remove dependent packages *before* removing
+their dependencies.
 
 A line like ``spack uninstall mpich`` may be ambiguous, if multiple
 ``mpich`` configurations are installed.  For example, if both
 ``mpich@3.0.2`` and ``mpich@3.1`` are installed, it could refer to
 either one, and Spack cannot determine which one to uninstall.  Spack
-will ask you to provide a version number to remove any ambiguity.  For
-example, ``spack uninstall mpich@3.1`` is unambiguous in the
-above scenario.
+will ask you to provide a version number to remove the ambiguity.  For
+example, ``spack uninstall mpich@3.1`` is unambiguous in the above
+scenario.
 
 
 .. _sec-specs:
@@ -641,26 +641,6 @@ versions are now filtered out.
 
 .. _shell-support:
 
-Interactive Shell Support
--------------------------------
-
-Spack provides some limited shell support to make it easier to use the
-packages it provides.  You can enable shell support by sourcing some
-files in the ``/share/spack`` directory.
-
-For ``bash`` or ``ksh``, run::
-
-  . $SPACK_ROOT/share/spack/setup-env.sh
-
-For ``csh`` and ``tcsh`` run:
-
-  setenv SPACK_ROOT /path/to/spack
-  source $SPACK_ROOT/share/spack/setup-env.csh
-
-You can put the above code in your ``.bashrc`` or ``.cshrc``, and
-Spack's shell support will be available on the command line.
-
-
 Environment Modules
 -------------------------------
 
@@ -670,6 +650,32 @@ Environment Modules
    be considered a stable feature of Spack.  In particular, the
    interface and/or generated module names may change in future
    versions.
+
+Spack provides some limited integration with environment module
+systems to make it easier to use the packages it provides.
+
+You can enable shell support by sourcing some files in the
+``/share/spack`` directory.
+
+For ``bash`` or ``ksh``, run:
+
+.. code-block:: sh
+
+   . $SPACK_ROOT/share/spack/setup-env.sh
+
+For ``csh`` and ``tcsh`` run:
+
+.. code-block:: csh
+
+   setenv SPACK_ROOT /path/to/spack
+   source $SPACK_ROOT/share/spack/setup-env.csh
+
+You can put the above code in your ``.bashrc`` or ``.cshrc``, and
+Spack's shell support will be available on the command line.
+
+
+-------------------------------
+
 
 When you install a package with Spack, it automatically generates an
 environment module that lets you add the package to your environment.
@@ -736,50 +742,63 @@ of installed packages.
 
 The names here should look familiar, they're the same ones from
 ``spack find``.  You *can* use the names here directly.  For example,
-you could type either of these:
+you could type either of these commands to load the callpath module
+(assuming dotkit and modules are installed):
 
 .. code-block:: sh
 
    use callpath@1.0.1%gcc@4.4.7-5dce4318
+
+.. code-block:: sh
+
    module load callpath@1.0.1%gcc@4.4.7-5dce4318
 
-And they would work fine. However, that is not particularly pretty,
-easy to remember, or easy to type.
+Neither of these is particularly pretty, easy to remember, or
+easy to type.  Luckily, Spack has its own interface for using modules
+and dotkits.  You can use the same spec syntax you're used to:
 
-Luckily, Spack has its own interface for using modules and dotkits.
-You can use the same spec syntax you're used to:
-
-Modules:
-  * ``spack load <spec>``
-  * ``spack unload <spec>``
-Dotkit:
-  * ``spack use <spec>``
-  * ``spack unuse <spec>``
+  =========================  ==========================
+  Modules                    Dotkit
+  =========================  ==========================
+  ``spack load <spec>``      ``spack use <spec>``
+  ``spack unload <spec>``    ``spack unuse <spec>``
+  =========================  ==========================
 
 And you can use the same shortened names you use everywhere else in
-Spack.  For example:
+Spack.  For example, this will add the ``mpich`` package built with
+``gcc`` to your path:
 
 .. code-block:: sh
 
    $ spack install mpich %gcc@4.4.7
+
    # ... wait for install ...
-   $ spack use mpich%gcc@4.4.7
+
+   $ spack use mpich %gcc@4.4.7
    Prepending: mpich@3.0.4%gcc@4.4.7 (ok)
    $ which mpicc
    ~/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/mpich@3.0.4/bin/mpicc
 
-Or, similarly with modules:
+Or, similarly with modules, you could type:
+
+.. code-block:: sh
+
    $ spack load mpich %gcc@4.4.7
 
-The generated files will add appropriate directories to you ``PATH``,
-``MANPATH``, and ``LD_LIBRARY_PATH`` to assist you and other programs
-with finding the libraries you've installed.
+These commands will add appropriate directories to your ``PATH``,
+``MANPATH``, and ``LD_LIBRARY_PATH``.  When you no longer want to use
+a package, you can type unload or unuse similarly:
 
-You can unuse/unload packages similarly.
+.. code-block:: sh
 
-These commands are only available if you have enabled Spack's shell
-support, but they allow you to use Spack's abbreviated names for
-packages to get them into your environment.
+   $ spack unload mpich %gcc@4.4.7    # modules
+   $ spack unuse mpich %gcc@4.4.7     # dotkit
+
+.. note::
+
+   These ``use``, ``unuse``, ``load``, and ``unload`` subcommands are
+   only available if you have enabled Spack's shell support *and* you
+   have dotkit or modules installed on your machine.
 
 Ambiguous module names
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -805,6 +824,34 @@ used ``gcc``.  You could therefore just type:
    $ spack load libelf %intel
 
 To identify just the one built with the Intel compiler.
+
+
+Regenerating Module files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Module and dotkit files are generated when packages are installed, and
+are placed in the following directories under the Spack root:
+
+  * ``$SPACK_ROOT/share/spack/modules``
+  * ``$SPACK_ROOT/share/spack/dotkit``
+
+Sometimes you may need to regenerate the modules files.  For example,
+if newer, fancier module support is added to Spack at some later date,
+you may want to regenerate all the modules to take advantage of these
+new features.
+
+``spack module refresh``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Running ``spack module refresh`` will remove the
+``share/spack/modules`` and ``share/spack/dotkit`` directories, then
+regenerate all module and dotkit files from scratch:
+
+.. code-block:: sh
+
+   $ spack module refresh
+   ==> Regenerating tcl module files.
+   ==> Regenerating dotkit module files.
 
 Getting Help
 -----------------------
