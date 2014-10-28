@@ -22,49 +22,22 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""
-Functions for comparing values that may potentially be None.
-These none_low functions consider None as less than all other values.
-"""
+from spack import *
 
-# Preserve builtin min and max functions
-_builtin_min = min
-_builtin_max = max
+class Libnbc(Package):
+    """LibNBC is a prototypic implementation of a nonblocking
+    interface for MPI collective operations. Based on ANSI C and
+    MPI-1, it supports all MPI-1 collective operations in a
+    nonblocking manner. LibNBC is distributed under the BSD license.
+    """
+    homepage = "http://unixer.de/research/nbcoll/libnbc/"
+    url      = "http://unixer.de/research/nbcoll/libnbc/libNBC-1.1.1.tar.gz"
 
+    version('1.1.1', 'ece5c94992591a9fa934a90e5dbe50ce')
 
-def lt(lhs, rhs):
-    """Less-than comparison.  None is lower than any value."""
-    return lhs != rhs and (lhs is None or (rhs is not None and lhs < rhs))
+    depends_on("mpi")
 
-
-def le(lhs, rhs):
-    """Less-than-or-equal comparison.  None is less than any value."""
-    return lhs == rhs or lt(lhs, rhs)
-
-
-def gt(lhs, rhs):
-    """Greater-than comparison.  None is less than any value."""
-    return lhs != rhs and not lt(lhs, rhs)
-
-
-def ge(lhs, rhs):
-    """Greater-than-or-equal comparison.  None is less than any value."""
-    return lhs == rhs or gt(lhs, rhs)
-
-
-def min(lhs, rhs):
-    """Minimum function where None is less than any value."""
-    if lhs is None or rhs is None:
-        return None
-    else:
-        return _builtin_min(lhs, rhs)
-
-
-def max(lhs, rhs):
-    """Maximum function where None is less than any value."""
-    if lhs is None:
-        return rhs
-    elif rhs is None:
-        return lhs
-    else:
-        return _builtin_max(lhs, rhs)
+    def install(self, spec, prefix):
+        configure("--prefix=%s" % prefix)
+        make()
+        make("install")

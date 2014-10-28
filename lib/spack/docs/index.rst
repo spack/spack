@@ -48,6 +48,7 @@ Table of Contents
    packaging_guide
    site_configuration
    developer_guide
+   package_list
    API Docs <spack>
 
 Indices and tables

@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
+import os
 from itertools import product
 from spack.util.executable import which
 
@@ -60,6 +61,11 @@ def strip_extension(path):
 
 def extension(path):
     """Get the archive extension for a path."""
+
+    # Strip sourceforge suffix.
+    if re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', path):
+        path = os.path.dirname(path)
+
     for type in ALLOWED_ARCHIVE_TYPES:
         suffix = r'\.%s$' % type
         if re.search(suffix, path):

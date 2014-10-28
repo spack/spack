@@ -79,32 +79,28 @@ import spack
 import spack.spec
 import spack.error
 import spack.url
-
 from spack.version import Version
 from spack.patch import Patch
 from spack.spec import Spec, parse_anonymous_spec
 
 
-class VersionDescriptor(object):
-    """A VersionDescriptor contains information to describe a
-       particular version of a package.  That currently includes a URL
-       for the version along with a checksum."""
-    def __init__(self, checksum, url):
-        self.checksum = checksum
-        self.url = url
 
-
-def version(ver, checksum, **kwargs):
-    """Adds a version and associated metadata to the package."""
+def version(ver, checksum=None, **kwargs):
+    """Adds a version and metadata describing how to fetch it.
+       Metadata is just stored as a dict in the package's versions
+       dictionary.  Package must turn it into a valid fetch strategy
+       later.
+    """
     pkg = caller_locals()
-
     versions = pkg.setdefault('versions', {})
-    patches  = pkg.setdefault('patches', {})
 
-    ver = Version(ver)
-    url = kwargs.get('url', None)
+    # special case checksum for backward compatibility
+    if checksum:
+        kwargs['md5'] = checksum
 
-    versions[ver] = VersionDescriptor(checksum, url)
+    # Store the kwargs for the package to use later when constructing
+    # a fetch strategy.
+    versions[Version(ver)] = kwargs
 
 
 def depends_on(*specs):

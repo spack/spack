@@ -146,7 +146,7 @@ class StageTest(unittest.TestCase):
         stage_path = self.get_stage_path(stage, stage_name)
         self.assertTrue(archive_name in os.listdir(stage_path))
         self.assertEqual(join_path(stage_path, archive_name),
-                         stage.archive_file)
+                         stage.fetcher.archive_file)
 
 
     def check_expand_archive(self, stage, stage_name):
@@ -156,7 +156,7 @@ class StageTest(unittest.TestCase):
 
         self.assertEqual(
             join_path(stage_path, archive_dir),
-            stage.expanded_archive_path)
+            stage.source_path)
 
         readme = join_path(stage_path, archive_dir, readme_name)
         self.assertTrue(os.path.isfile(readme))
@@ -170,7 +170,7 @@ class StageTest(unittest.TestCase):
         self.assertEqual(os.path.realpath(stage_path), os.getcwd())
 
 
-    def check_chdir_to_archive(self, stage, stage_name):
+    def check_chdir_to_source(self, stage, stage_name):
         stage_path = self.get_stage_path(stage, stage_name)
         self.assertEqual(
             join_path(os.path.realpath(stage_path), archive_dir),
@@ -271,9 +271,9 @@ class StageTest(unittest.TestCase):
         self.check_fetch(stage, stage_name)
 
         stage.expand_archive()
-        stage.chdir_to_archive()
+        stage.chdir_to_source()
         self.check_expand_archive(stage, stage_name)
-        self.check_chdir_to_archive(stage, stage_name)
+        self.check_chdir_to_source(stage, stage_name)
 
         stage.destroy()
         self.check_destroy(stage, stage_name)
@@ -284,24 +284,24 @@ class StageTest(unittest.TestCase):
 
         stage.fetch()
         stage.expand_archive()
-        stage.chdir_to_archive()
+        stage.chdir_to_source()
         self.check_expand_archive(stage, stage_name)
-        self.check_chdir_to_archive(stage, stage_name)
+        self.check_chdir_to_source(stage, stage_name)
 
         # Try to make a file in the old archive dir
         with closing(open('foobar', 'w')) as file:
             file.write("this file is to be destroyed.")
 
-        self.assertTrue('foobar' in os.listdir(stage.expanded_archive_path))
+        self.assertTrue('foobar' in os.listdir(stage.source_path))
 
         # Make sure the file is not there after restage.
         stage.restage()
         self.check_chdir(stage, stage_name)
         self.check_fetch(stage, stage_name)
 
-        stage.chdir_to_archive()
-        self.check_chdir_to_archive(stage, stage_name)
-        self.assertFalse('foobar' in os.listdir(stage.expanded_archive_path))
+        stage.chdir_to_source()
+        self.check_chdir_to_source(stage, stage_name)
+        self.assertFalse('foobar' in os.listdir(stage.source_path))
 
         stage.destroy()
         self.check_destroy(stage, stage_name)

@@ -45,6 +45,7 @@ people:
   * Matt Legendre
   * Greg Lee
   * Adam Moody
+  * Bob Robey
 
 Release
 ----------------

@@ -37,8 +37,10 @@ import sys
 import fcntl
 import termios
 import struct
+from StringIO import StringIO
 
 from llnl.util.tty import terminal_size
+
 
 class ColumnConfig:
     def __init__(self, cols):
@@ -102,16 +104,20 @@ def colify(elts, **options):
     output       = options.get("output", sys.stdout)
     indent       = options.get("indent", 0)
     padding      = options.get("padding", 2)
+    tty          = options.get('tty', None)
 
     # elts needs to be an array of strings so we can count the elements
     elts = [str(elt) for elt in elts]
     if not elts:
-        return
+        return (0, ())
 
-    if not isatty(output):
-        for elt in elts:
-            output.write("%s\n" % elt)
-        return
+    if not tty:
+        if tty is False or not isatty(output):
+            for elt in elts:
+                output.write("%s\n" % elt)
+
+            maxlen = max(len(str(s)) for s in elts)
+            return (1, (maxlen,))
 
     console_cols = options.get("cols", None)
     if not console_cols:
@@ -145,6 +151,17 @@ def colify(elts, **options):
         row += 1
         if row == rows_last_col:
             cols -= 1
+
+    return (config.cols, tuple(config.widths))
+
+
+def colified(elts, **options):
+    """Invokes the colify() function but returns the result as a string
+       instead of writing it to an output string."""
+    sio = StringIO()
+    options['output'] = sio
+    colify(elts, **options)
+    return sio.getvalue()
 
 
 if __name__ == "__main__":

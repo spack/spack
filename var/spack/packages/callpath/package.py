@@ -31,8 +31,11 @@ class Callpath(Package):
     homepage = "https://github.com/scalability-llnl/callpath"
     url      = "https://github.com/scalability-llnl/callpath/archive/v1.0.1.tar.gz"
 
+    version('1.0.2', 'b1994d5ee7c7db9d27586fc2dcf8f373')
     version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')
 
+    depends_on("libelf")
+    depends_on("libdwarf")
     depends_on("dyninst")
     depends_on("adept-utils")
     depends_on("mpi")

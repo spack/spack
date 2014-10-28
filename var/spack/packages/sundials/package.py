@@ -22,49 +22,18 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""
-Functions for comparing values that may potentially be None.
-These none_high functions consider None as greater than all other values.
-"""
+from spack import *
 
-# Preserve builtin min and max functions
-_builtin_min = min
-_builtin_max = max
+class Sundials(Package):
+    """SUNDIALS (SUite of Nonlinear and DIfferential/ALgebraic equation Solvers)"""
+    homepage = "http://computation.llnl.gov/casc/sundials/"
+    url      = "http://computation.llnl.gov/casc/sundials/download/code/sundials-2.5.0.tar.gz"
 
+    version('2.5.0', 'aba8b56eec600de3109cfb967aa3ba0f')
 
-def lt(lhs, rhs):
-    """Less-than comparison.  None is greater than any value."""
-    return lhs != rhs and (rhs is None or (lhs is not None and lhs < rhs))
+    depends_on("mpi")
 
-
-def le(lhs, rhs):
-    """Less-than-or-equal comparison.  None is greater than any value."""
-    return lhs == rhs or lt(lhs, rhs)
-
-
-def gt(lhs, rhs):
-    """Greater-than comparison.  None is greater than any value."""
-    return lhs != rhs and not lt(lhs, rhs)
-
-
-def ge(lhs, rhs):
-    """Greater-than-or-equal comparison.  None is greater than any value."""
-    return lhs == rhs or gt(lhs, rhs)
-
-
-def min(lhs, rhs):
-    """Minimum function where None is greater than any value."""
-    if lhs is None:
-        return rhs
-    elif rhs is None:
-        return lhs
-    else:
-        return _builtin_min(lhs, rhs)
-
-
-def max(lhs, rhs):
-    """Maximum function where None is greater than any value."""
-    if lhs is None or rhs is None:
-        return None
-    else:
-        return _builtin_max(lhs, rhs)
+    def install(self, spec, prefix):
+        configure("--prefix=%s" % prefix)
+        make()
+        make("install")

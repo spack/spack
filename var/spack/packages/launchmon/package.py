@@ -25,6 +25,8 @@
 from spack import *
 
 class Launchmon(Package):
+    """Software infrastructure that enables HPC run-time tools to
+       co-locate tool daemons with a parallel job."""
     homepage = "http://sourceforge.net/projects/launchmon"
     url      = "http://downloads.sourceforge.net/project/launchmon/launchmon/1.0.1%20release/launchmon-1.0.1.tar.gz"
 

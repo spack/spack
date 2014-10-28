@@ -22,6 +22,12 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 all: html
 
 #
+# This autogenerates a package list.
+#
+package_list:
+	spack info -r > package_list.rst
+
+#
 # This creates a git repository and commits generated html docs.
 # It them pushes the new branch into THIS repository as gh-pages.
 #
@@ -36,12 +42,14 @@ gh-pages: _build/html
 	touch .nojekyll && \
 	git init && \
 	git add . && \
-	git commit -m "Initial commit" && \
+	git commit -m "Spack Documentation" && \
 	git push -f $$root master:gh-pages && \
 	rm -rf .git
 
 upload:
 	rsync -avz --rsh=ssh --delete _build/html/ cab:/usr/global/web-pages/lc/www/adept/docs/spack
+	git push -f origin gh-pages
+	git push -f github gh-pages
 
 apidoc:
 	sphinx-apidoc -T -o . $(PYTHONPATH)/spack
@@ -69,9 +77,10 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
+	-rm -f package_list.rst
 	-rm -rf $(BUILDDIR)/* $(APIDOC_FILES)
 
-html: apidoc
+html: apidoc package_list
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

@@ -96,7 +96,7 @@ if args.mock:
 
 # If the user asked for it, don't check ssl certs.
 if args.insecure:
-    tty.warn("You asked for --insecure, which does not check SSL certificates.")
+    tty.warn("You asked for --insecure, which does not check SSL certificates or checksums.")
     spack.curl.add_default_arg('-k')
 
 # Try to load the particular command asked for and run it

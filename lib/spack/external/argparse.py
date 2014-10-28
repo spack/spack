@@ -108,6 +108,8 @@ import re as _re
 import sys as _sys
 import textwrap as _textwrap
 
+from llnl.util.tty.colify import colified
+
 from gettext import gettext as _
 
 try:
@@ -2285,8 +2287,8 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
     def _check_value(self, action, value):
         # converted value must be one of the choices (if specified)
         if action.choices is not None and value not in action.choices:
-            tup = value, ', '.join(map(repr, action.choices))
-            msg = _('invalid choice: %r (choose from %s)') % tup
+            cols = colified(sorted(action.choices), indent=4, tty=True)
+            msg = _('invalid choice: %r choose from:\n%s') % (value, cols)
             raise ArgumentError(action, msg)
 
     # =======================

@@ -25,10 +25,18 @@
 from spack import *
 
 class Cmake(Package):
+    """A cross-platform, open-source build system. CMake is a family of
+       tools designed to build, test and package software."""
     homepage  = 'https://www.cmake.org'
-    url       = 'http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz'
 
-    version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
+    version('2.8.10.2', '097278785da7182ec0aea8769d06860c',
+            url = 'http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz')
+ 
+    version('3.0.2', 'db4c687a31444a929d2fdc36c4dfb95f',
+            url = 'http://www.cmake.org/files/v3.0/cmake-3.0.2.tar.gz')
+
+#    version('3.0.1', 'e2e05d84cb44a42f1371d9995631dcf5')
+#    version('3.0.0', '21a1c85e1a3b803c4b48e7ff915a863e')
 
     def install(self, spec, prefix):
         configure('--prefix='   + prefix,

@@ -56,7 +56,7 @@ class Gcc(Compiler):
         return get_compiler_version(
             fc, '-dumpversion',
             # older gfortran versions don't have simple dumpversion output.
-            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+\.\d+)')
+            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)')
 
 
     @classmethod

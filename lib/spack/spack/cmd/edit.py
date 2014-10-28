@@ -27,9 +27,10 @@ import string
 from contextlib import closing
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, join_path
 
 import spack
+import spack.cmd
 from spack.util.naming import mod_to_class
 
 description = "Open package files in $EDITOR"
@@ -58,31 +59,43 @@ def setup_parser(subparser):
         '-f', '--force', dest='force', action='store_true',
         help="Open a new file in $EDITOR even if package doesn't exist.")
     subparser.add_argument(
+        '-c', '--command', dest='edit_command', action='store_true',
+        help="Edit the command with the supplied name instead of a package.")
+    subparser.add_argument(
         'name', nargs='?', default=None, help="name of package to edit")
 
 
 def edit(parser, args):
     name = args.name
 
-    # By default open the directory where packages live.
-    if not name:
-        path = spack.packages_path
-    else:
-        path = spack.db.filename_for_package_name(name)
-
-        if os.path.exists(path):
-            if not os.path.isfile(path):
-                tty.die("Something's wrong.  '%s' is not a file!" % path)
-            if not os.access(path, os.R_OK|os.W_OK):
-                tty.die("Insufficient permissions on '%s'!" % path)
-        elif not args.force:
-            tty.die("No package '%s'.  Use spack create, or supply -f/--force "
-                    "to edit a new file." % name)
+    if args.edit_command:
+        if not name:
+            path = spack.cmd.command_path
         else:
-            mkdirp(os.path.dirname(path))
-            with closing(open(path, "w")) as pkg_file:
-                pkg_file.write(
-                    package_template.substitute(name=name, class_name=mod_to_class(name)))
+            path = join_path(spack.cmd.command_path, name + ".py")
+            if not os.path.exists(path):
+                tty.die("No command named '%s'." % name)
+
+    else:
+        # By default open the directory where packages or commands live.
+        if not name:
+            path = spack.packages_path
+        else:
+            path = spack.db.filename_for_package_name(name)
+
+            if os.path.exists(path):
+                if not os.path.isfile(path):
+                    tty.die("Something's wrong.  '%s' is not a file!" % path)
+                if not os.access(path, os.R_OK|os.W_OK):
+                    tty.die("Insufficient permissions on '%s'!" % path)
+            elif not args.force:
+                tty.die("No package '%s'.  Use spack create, or supply -f/--force "
+                        "to edit a new file." % name)
+            else:
+                mkdirp(os.path.dirname(path))
+                with closing(open(path, "w")) as pkg_file:
+                    pkg_file.write(
+                        package_template.substitute(name=name, class_name=mod_to_class(name)))
 
     # If everything checks out, go ahead and edit.
     spack.editor(path)

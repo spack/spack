@@ -36,6 +36,7 @@ import spack.test.install
 """Names of tests to be included in Spack's test suite"""
 test_names = ['versions',
               'url_parse',
+              'url_substitution',
               'packages',
               'stage',
               'spec_syntax',
@@ -47,7 +48,12 @@ test_names = ['versions',
               'package_sanity',
               'config',
               'directory_layout',
-              'python_version']
+              'python_version',
+              'git_fetch',
+              'svn_fetch',
+              'hg_fetch',
+              'mirror',
+              'url_extrapolate']
 
 
 def list_tests():
