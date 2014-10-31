@@ -169,6 +169,10 @@ class Compiler(object):
 
         checks = []
         for directory in path:
+            if not (os.path.isdir(directory) and
+                    os.access(directory, os.R_OK | os.X_OK)):
+                continue
+
             files = os.listdir(directory)
             for exe in files:
                 full_path = join_path(directory, exe)
