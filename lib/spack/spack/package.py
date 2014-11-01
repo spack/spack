@@ -368,12 +368,19 @@ class Package(object):
         # stage used to build this package.
         self._stage = None
 
-        # If there's no default URL provided, set this package's url to None
-        if not hasattr(self, 'url'):
-            self.url = None
-
-        # Init fetch strategy to None
+        # Init fetch strategy and url to None
         self._fetcher = None
+        self.url = None
+
+        # Fix up self.url if this package fetches with a URLFetchStrategy.
+        # This makes self.url behave sanely.
+        if self.spec.versions.concrete:
+            # TODO: this is a really roundabout way of determining the type of fetch to do.
+            # TODO: figure out a more sane fetch strategy/package init order
+            # TODO: (right now it's conflated with stage, package, and the tests make assumptions)
+            f = fs.for_package_version(self, self.version)
+            if isinstance(f, fs.URLFetchStrategy):
+                self.url = self.url_for_version(self.spec.version)
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -410,7 +417,7 @@ class Package(object):
            *higher* URL, and if that isn't there raises an error.
         """
         version_urls = self.version_urls()
-        url = self.url
+        url = getattr(self.__class__, 'url', None)
 
         for v in version_urls:
             if v > version and url:
@@ -420,21 +427,15 @@ class Package(object):
         return url
 
 
-    def has_url(self):
-        """Returns whether there is a URL available for this package.
-           If there isn't, it's probably fetched some other way (version
-           control, etc.)"""
-        return self.url or self.version_urls()
-
-
     # TODO: move this out of here and into some URL extrapolation module?
     def url_for_version(self, version):
         """Returns a URL that you can download a new version of this package from."""
         if not isinstance(version, Version):
             version = Version(version)
 
-        if not self.has_url():
-            raise NoURLError(self.__class__)
+        cls = self.__class__
+        if not (hasattr(cls, 'url') or self.version_urls()):
+            raise NoURLError(cls)
 
         # If we have a specific URL for this version, don't extrapolate.
         version_urls = self.version_urls()
@@ -477,7 +478,7 @@ class Package(object):
     def mirror_path(self):
         """Get path to this package's archive in a mirror."""
         filename = "%s-%s." % (self.name, self.version)
-        filename += extension(self.url) if self.has_url() else "tar.gz"
+        filename += extension(self.url) if self.url else "tar.gz"
         return "%s/%s" % (self.name, filename)
 
 
@@ -708,6 +709,8 @@ class Package(object):
         if os.path.exists(self.prefix):
             tty.msg("%s is already installed in %s." % (self.name, self.prefix))
             return
+
+        tty.msg("Installing %s" % self.name)
 
         if not ignore_deps:
             self.do_install_dependencies()

@@ -580,7 +580,7 @@ def for_package_version(pkg, version):
        version() in the package description."""
     # If it's not a known version, extrapolate one.
     if not version in pkg.versions:
-        url = pkg.url_for_verison(version)
+        url = pkg.url_for_version(version)
         if not url:
             raise InvalidArgsError(pkg, version)
         return URLFetchStrategy(url)
