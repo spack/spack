@@ -1,25 +1,16 @@
-# FIXME:
-# This is a template package file for Spack.  We've conveniently
-# put "FIXME" labels next to all the things you'll want to change.
-#
-# Once you've edited all the FIXME's, delete this whole message,
-# save this file, and test out your package like this:
-#
-#     spack install dbus
-#
-# You can always get back here to change things with:
-#
-#     spack edit dbus
-#
-# See the spack documentation for more information on building
-# packages.
-#
 from spack import *
 
 class Dbus(Package):
-    """FIXME: put a proper description of your package here."""
-    # FIXME: add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    """D-Bus is a message bus system, a simple way for applications to
+       talk to one another. D-Bus supplies both a system daemon (for
+       events such new hardware device printer queue ) and a
+       per-user-login-session daemon (for general IPC needs among user
+       applications). Also, the message bus is built on top of a
+       general one-to-one message passing framework, which can be used
+       by any two applications to communicate directly (without going
+       through the message bus daemon)."""
+
+    homepage = "http://dbus.freedesktop.org/"
     url      = "http://dbus.freedesktop.org/releases/dbus/dbus-1.8.8.tar.gz"
 
     version('1.9.0', 'ec6895a4d5c0637b01f0d0e7689e2b36')
@@ -28,13 +19,7 @@ class Dbus(Package):
     version('1.8.4', '4717cb8ab5b80978fcadf2b4f2f72e1b')
     version('1.8.2', 'd6f709bbec0a022a1847c7caec9d6068')
 
-    # FIXME: Add dependencies if this package requires them.
-    # depends_on("foo")
-
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
         configure("--prefix=%s" % prefix)
-
-        # FIXME: Add logic to build and install here
         make()
         make("install")

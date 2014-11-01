@@ -5,7 +5,7 @@ class Qt(Package):
     homepage = "http://qt.io"
 
     version('4.8.6', '2edbe4d6c2eff33ef91732602f3518eb',
-            "http://download.qt-project.org/official_releases/qt/4.8/4.8.6/qt-everywhere-opensource-src-4.8.6.tar.gz")
+            url="http://download.qt-project.org/official_releases/qt/4.8/4.8.6/qt-everywhere-opensource-src-4.8.6.tar.gz")
 
     # depends_on("zlib")
 
