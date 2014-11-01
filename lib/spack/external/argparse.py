@@ -1708,6 +1708,21 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
             self._positionals._add_action(action)
         return action
 
+
+    def get_subparser(self, name):
+        """Gets a subparser added with the supplied name.
+           This is an extension to the standard argparse API.
+        """
+        subpasrsers_actions = [
+            action for action in self._actions
+            if isinstance(action, _SubParsersAction)]
+        for action in subpasrsers_actions:
+            for choice, subparser in action.choices.items():
+                if choice == name:
+                    return subparser
+        return None
+
+
     def _get_optional_actions(self):
         return [action
                 for action in self._actions
