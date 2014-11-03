@@ -28,7 +28,7 @@ class Libmonitor(Package):
     """Libmonitor is a library for process and thread control."""
     homepage = "http://hpctoolkit.org"
 
-    version('20130218', svn='https://outreach.scidac.gov/svn/libmonitor/trunk', revision=146)
+    version('20130218', svn='http://libmonitor.googlecode.com/svn/trunk/', revision=146)
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix)
