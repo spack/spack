@@ -10,10 +10,14 @@ class Ncurses(Package):
     homepage = "http://invisible-island.net/ncurses/ncurses.html"
 
     version('5.9', '8cb9c412e5f2d96bc6f459aa8c6282a1',
-            url='http://invisible-island.net/datafiles/release/ncurses.tar.gz')
+            url='http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure("--prefix=%s" % prefix,
+                  "--with-shared",
+                  "--enable-widec",
+                  "--enable-pc-files",
+                  "--without-ada")
         make()
         make("install")
 

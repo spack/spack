@@ -37,6 +37,10 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='pkg_command')
 
+    add_parser = sp.add_parser('add', help=pkg_add.__doc__)
+    add_parser.add_argument('packages', nargs=argparse.REMAINDER,
+                            help="Names of packages to add to git repo.")
+
     list_parser = sp.add_parser('list', help=pkg_list.__doc__)
     list_parser.add_argument('rev', default='HEAD', nargs='?',
                              help="Revision to list packages for.")
@@ -79,6 +83,16 @@ def list_packages(rev):
     return sorted(line[len(relpath):] for line in output.split('\n') if line)
 
 
+def pkg_add(args):
+    for pkg_name in args.packages:
+        filename = spack.db.filename_for_package_name(pkg_name)
+        if not os.path.isfile(filename):
+            tty.die("No such package: %s.  Path does not exist:" % pkg_name, filename)
+
+        git = get_git()
+        git('-C', spack.packages_path, 'add', filename)
+
+
 def pkg_list(args):
     """List packages associated with a particular spack git revision."""
     colify(list_packages(args.rev))
@@ -117,7 +131,8 @@ def pkg_added(args):
 
 
 def pkg(parser, args):
-    action = { 'diff'    : pkg_diff,
+    action = { 'add'    : pkg_add,
+               'diff'    : pkg_diff,
                'list'    : pkg_list,
                'removed' : pkg_removed,
                'added'   : pkg_added }
