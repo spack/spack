@@ -31,7 +31,7 @@ from llnl.util.lang import index_by
 import spack.compilers
 import spack.spec
 import spack.config
-from spack.compilation import get_path
+from spack.util.environment import get_path
 from spack.spec import CompilerSpec
 
 description = "Manage compilers"

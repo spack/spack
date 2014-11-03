@@ -35,8 +35,8 @@ import spack.error
 import spack.spec
 from spack.util.multiproc import parmap
 from spack.util.executable import *
+from spack.util.environment import get_path
 from spack.version import Version
-from spack.compilation import get_path
 
 __all__ = ['Compiler', 'get_compiler_version']
 

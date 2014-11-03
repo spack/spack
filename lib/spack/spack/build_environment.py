@@ -48,12 +48,11 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 # set_build_environment_variables and used to pass parameters to
 # Spack's compiler wrappers.
 #
-SPACK_LIB              = 'SPACK_LIB'
 SPACK_ENV_PATH         = 'SPACK_ENV_PATH'
 SPACK_DEPENDENCIES     = 'SPACK_DEPENDENCIES'
 SPACK_PREFIX           = 'SPACK_PREFIX'
 SPACK_DEBUG            = 'SPACK_DEBUG'
-SPACK_SPEC             = 'SPACK_SPEC'
+SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
 
 
@@ -108,9 +107,6 @@ def set_compiler_environment_variables(pkg):
 def set_build_environment_variables(pkg):
     """This ensures a clean install environment when we build packages.
     """
-    # This tells the compiler script where to find the Spack installation.
-    os.environ[SPACK_LIB] = spack.lib_path
-
     # Add spack build environment path with compiler wrappers first in
     # the path.  We handle case sensitivity conflicts like "CC" and
     # "cc" by putting one in the <build_env_path>/case-insensitive
@@ -140,7 +136,7 @@ def set_build_environment_variables(pkg):
     # Working directory for the spack command itself, for debug logs.
     if spack.debug:
         os.environ[SPACK_DEBUG] = "TRUE"
-    os.environ[SPACK_SPEC] = str(pkg.spec)
+    os.environ[SPACK_SHORT_SPEC] = pkg.spec.short_spec
     os.environ[SPACK_DEBUG_LOG_DIR] = spack.spack_working_dir
 
     # Add dependencies to CMAKE_PREFIX_PATH
