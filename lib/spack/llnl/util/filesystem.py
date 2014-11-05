@@ -22,8 +22,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-__all__ = ['install', 'expand_user', 'working_dir', 'touch', 'mkdirp',
-           'join_path', 'ancestor', 'can_access', 'filter_file', 'change_sed_delimiter']
+__all__ = ['set_install_permissions', 'install', 'expand_user', 'working_dir',
+           'touch', 'mkdirp', 'force_remove', 'join_path', 'ancestor',
+           'can_access', 'filter_file', 'change_sed_delimiter']
 
 import os
 import sys
@@ -127,10 +128,19 @@ def change_sed_delimiter(old_delim, new_delim, *filenames):
         filter_file(double_quoted, '"%s"' % repl, f)
 
 
+def set_install_permissions(path):
+    """Set appropriate permissions on the installed file."""
+    if os.path.isdir(path):
+        os.chmod(path, 0755)
+    else:
+        os.chmod(path, 0644)
+
+
 def install(src, dest):
     """Manually install a file to a particular location."""
     tty.info("Installing %s to %s" % (src, dest))
     shutil.copy(src, dest)
+    set_install_permissions(dest)
 
 
 def expand_user(path):
@@ -151,6 +161,15 @@ def mkdirp(*paths):
         elif not os.path.isdir(path):
             raise OSError(errno.EEXIST, "File alredy exists", path)
 
+
+def force_remove(*paths):
+    """Remove files without printing errors.  Like rm -f, does NOT
+       remove directories."""
+    for path in paths:
+        try:
+            os.remove(path)
+        except OSError, e:
+            pass
 
 @contextmanager
 def working_dir(dirname, **kwargs):
