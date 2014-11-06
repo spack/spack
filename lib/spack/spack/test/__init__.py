@@ -30,9 +30,6 @@ from llnl.util.tty.colify import colify
 
 import spack
 
-import spack.test.install
-
-
 """Names of tests to be included in Spack's test suite"""
 test_names = ['versions',
               'url_parse',
