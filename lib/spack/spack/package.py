@@ -40,6 +40,8 @@ import subprocess
 import platform as py_platform
 import multiprocessing
 from urlparse import urlparse
+import textwrap
+from StringIO import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
@@ -850,6 +852,23 @@ class Package(object):
         """Removes the stage directory where this package was built."""
         if os.path.exists(self.stage.path):
             self.stage.destroy()
+
+
+    def format_doc(self, **kwargs):
+        """Wrap doc string at 72 characters and format nicely"""
+        indent = kwargs.get('indent', 0)
+
+        if not self.__doc__:
+            return ""
+
+        doc = re.sub(r'\s+', ' ', self.__doc__)
+        lines = textwrap.wrap(doc, 72)
+        results = StringIO()
+        for line in lines:
+            results.write((" " * indent) + line + "\n")
+        return results.getvalue()
+
+
 
 
     def fetch_available_versions(self):

@@ -68,7 +68,7 @@ def print_text_info(pkg):
     print
     print "Description:"
     if pkg.__doc__:
-        print format_doc(pkg, indent=4)
+        print pkg.format_doc(indent=4)
     else:
         print "    None"
 

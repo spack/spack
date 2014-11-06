@@ -23,28 +23,12 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
-import textwrap
 from StringIO import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.colify import *
 import spack
 
 description = "Print a list of all packages in reStructuredText."
-
-
-def format_doc(pkg, **kwargs):
-    """Wrap doc string at 72 characters and format nicely"""
-    indent = kwargs.get('indent', 0)
-
-    if not pkg.__doc__:
-        return ""
-
-    doc = re.sub(r'\s+', ' ', pkg.__doc__)
-    lines = textwrap.wrap(doc, 72)
-    results = StringIO()
-    for line in lines:
-        results.write((" " * indent) + line + "\n")
-    return results.getvalue()
 
 
 def github_url(pkg):
@@ -99,7 +83,7 @@ def print_rst_package_list():
                                    for d in pkg.dependencies)
             print
         print "Description"
-        print format_doc(pkg, indent=2)
+        print pkg.format_doc(indent=2)
         print
         print "-----"
 
