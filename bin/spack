@@ -113,4 +113,5 @@ except SpackError, e:
         tty.die(e.message)
 
 except KeyboardInterrupt:
+    sys.stderr.write('\n')
     tty.die("Keyboard interrupt.")

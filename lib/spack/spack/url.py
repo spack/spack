@@ -245,6 +245,10 @@ def wildcard_version(path):
     # Construct a case-insensitive regular expression for the package name.
     name_re = '(%s)' % insensitize(name)
 
+    # protect extensions like bz2 from wildcarding.
+    ext = comp.extension(path)
+    path = comp.strip_extension(path)
+
     # Split the string apart by things that match the name so that if the
     # name contains numbers or things that look like versions, we don't
     # catch them with the version wildcard.
@@ -261,4 +265,4 @@ def wildcard_version(path):
         name_parts[i] = vgroup.join(re.escape(vp) for vp in vparts)
 
     # Put it all back together with original name matches intact.
-    return ''.join(name_parts)
+    return ''.join(name_parts) + '.' + ext

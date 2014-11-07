@@ -159,13 +159,12 @@ def create(parser, args):
     else:
         mkdirp(os.path.dirname(pkg_path))
 
-    versions = list(reversed(spack.package.find_versions_of_archive(url)))
+    versions = spack.package.find_versions_of_archive(url)
 
     archives_to_fetch = 1
     if not versions:
         # If the fetch failed for some reason, revert to what the user provided
-        versions = [version]
-        urls = [url]
+        versions = { version : url }
     else:
         urls = [spack.url.substitute_version(url, v) for v in versions]
         if len(urls) > 1:
@@ -180,6 +179,8 @@ def create(parser, args):
             if not archives_to_fetch:
                 tty.msg("Aborted.")
                 return
+
+    sorted_versions = list(reversed(versions))
 
     guesser = ConfigureGuesser()
     ver_hash_tuples = spack.cmd.checksum.get_checksums(

@@ -68,7 +68,7 @@ class DefaultConcretizer(object):
         # If there are known avaialble versions, return the most recent
         # version that satisfies the spec
         pkg = spec.package
-        valid_versions = [v for v in pkg.available_versions
+        valid_versions = [v for v in pkg.versions
                           if any(v.satisfies(sv) for sv in spec.versions)]
 
         if valid_versions:
