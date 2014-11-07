@@ -32,13 +32,13 @@ class Gcc(Package):
        Objective-C, Fortran, and Java."""
     homepage = "https://gcc.gnu.org"
 
-    list_url = 'http://mirrors.kernel.org/gnu/gcc/'
+    list_url = 'http://open-source-box.org/gcc/'
     list_depth = 2
 
     version('4.9.2', '4df8ee253b7f3863ad0b86359cd39c43',
-            url="http://mirrors.kernel.org/gnu/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2")
+            url="http://open-source-box.org/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2")
     version('4.9.1', 'fddf71348546af523353bd43d34919c1',
-            url="http://mirrors.kernel.org/gnu/gcc/gcc-4.9.1/gcc-4.9.1.tar.bz2")
+            url="http://open-source-box.org/gcc/gcc-4.9.1/gcc-4.9.1.tar.bz2")
 
     depends_on("mpc")
     depends_on("mpfr")
