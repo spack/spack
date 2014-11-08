@@ -34,15 +34,35 @@ from spack.test.mock_packages_test import *
 
 class UrlExtrapolateTest(MockPackagesTest):
 
-    def test_known_version(self):
-        d = spack.db.get('dyninst')
+    def test_libelf_version(self):
+        base = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+        self.assertEqual(url.substitute_version(base, '0.8.13'), base)
+        self.assertEqual(url.substitute_version(base, '0.8.12'),
+                         "http://www.mr511.de/software/libelf-0.8.12.tar.gz")
+        self.assertEqual(url.substitute_version(base, '0.3.1'),
+                         "http://www.mr511.de/software/libelf-0.3.1.tar.gz")
+        self.assertEqual(url.substitute_version(base, '1.3.1b'),
+                         "http://www.mr511.de/software/libelf-1.3.1b.tar.gz")
+
+
+    def test_libdwarf_version(self):
+        base = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
+        self.assertEqual(url.substitute_version(base, '20130729'), base)
+        self.assertEqual(url.substitute_version(base, '8.12'),
+                         "http://www.prevanders.net/libdwarf-8.12.tar.gz")
+
+
+    def test_dyninst_version(self):
+        # Dyninst has a version twice in the URL.
+        base = "http://www.dyninst.org/sites/default/files/downloads/dyninst/8.1.2/DyninstAPI-8.1.2.tgz"
+        self.assertEqual(url.substitute_version(base, '8.1.2'), base)
+        self.assertEqual(
+            url.substitute_version(base, '8.2'),
+            "http://www.dyninst.org/sites/default/files/downloads/dyninst/8.2/DyninstAPI-8.2.tgz")
 
         self.assertEqual(
-            d.url_for_version('8.2'), 'http://www.paradyn.org/release8.2/DyninstAPI-8.2.tgz')
-        self.assertEqual(
-            d.url_for_version('8.1.2'), 'http://www.paradyn.org/release8.1.2/DyninstAPI-8.1.2.tgz')
-        self.assertEqual(
-            d.url_for_version('8.1.1'), 'http://www.paradyn.org/release8.1/DyninstAPI-8.1.1.tgz')
+            url.substitute_version(base, '8.3.1'),
+            "http://www.dyninst.org/sites/default/files/downloads/dyninst/8.3.1/DyninstAPI-8.3.1.tgz")
 
 
     def test_extrapolate_version(self):
@@ -59,8 +79,8 @@ class UrlExtrapolateTest(MockPackagesTest):
         # 8.2 matches both the release8.2 component and the DyninstAPI-8.2 component.
         # Extrapolation should replace both with the new version.
         # TODO: figure out a consistent policy for this.
-        # self.assertEqual(
-        #     d.url_for_version('8.2.3'), 'http://www.paradyn.org/release8.2.3/DyninstAPI-8.2.3.tgz')
+        self.assertEqual(
+            d.url_for_version('8.2.3'), 'http://www.paradyn.org/release8.2.3/DyninstAPI-8.2.3.tgz')
 
 
     def test_with_package(self):

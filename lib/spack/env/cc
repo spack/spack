@@ -275,9 +275,15 @@ for dir in "${libraries[@]}"; do args+=("-L$dir"); done
 for lib in "${libs[@]}";      do args+=("-l$lib"); done
 
 if [ "$mode" = ccld ]; then
-    for dir in "${rpaths[@]}"; do args+=("-Wl,-rpath=$dir"); done
+    for dir in "${rpaths[@]}"; do
+        args+=("-Wl,-rpath")
+        args+=("-Wl,$dir");
+    done
 elif [ "$mode" = ld ]; then
-    for dir in "${rpaths[@]}"; do args+=("-rpath=$dir"); done
+    for dir in "${rpaths[@]}"; do
+        args+=("-rpath")
+        args+=("$dir");
+    done
 fi
 
 #

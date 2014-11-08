@@ -57,27 +57,6 @@ from spack.version import Version
 # "path" seemed like the most generic term.
 #
 
-class UrlParseError(spack.error.SpackError):
-    """Raised when the URL module can't parse something correctly."""
-    def __init__(self, msg, path):
-        super(UrlParseError, self).__init__(msg)
-        self.path = path
-
-
-class UndetectableVersionError(UrlParseError):
-    """Raised when we can't parse a version from a string."""
-    def __init__(self, path):
-        super(UndetectableVersionError, self).__init__(
-            "Couldn't detect version in: " + path, path)
-
-
-class UndetectableNameError(UrlParseError):
-    """Raised when we can't parse a package name from a string."""
-    def __init__(self, path):
-        super(UndetectableNameError, self).__init__(
-            "Couldn't parse package name in: " + path, path)
-
-
 def find_list_url(url):
     """Finds a good list URL for the supplied URL.  This depends on
        the site.  By default, just assumes that a good list URL is the
@@ -98,7 +77,7 @@ def find_list_url(url):
         return os.path.dirname(url)
 
 
-def parse_version_string_with_indices(path):
+def parse_version_offset(path):
     """Try to extract a version string from a filename or URL.  This is taken
        largely from Homebrew's Version class."""
 
@@ -112,6 +91,7 @@ def parse_version_string_with_indices(path):
     # Take basename to avoid including parent dirs in version name
     # Remember the offset of the stem in the full path.
     stem = os.path.basename(path)
+    offset = len(path) - len(stem)
 
     version_types = [
         # GitHub tarballs, e.g. v1.2.3
@@ -172,13 +152,13 @@ def parse_version_string_with_indices(path):
         # e.g. http://www.ijg.org/files/jpegsrc.v8d.tar.gz
         (r'\.v(\d+[a-z]?)', stem)]
 
-    for vtype in version_types:
+    for i, vtype in enumerate(version_types):
         regex, match_string = vtype[:2]
         match = re.search(regex, match_string)
         if match and match.group(1) is not None:
             version = match.group(1)
-            start = path.index(version)
-            return version, start, start+len(version)
+            start = offset + match.start(1)
+            return version, start, len(version)
 
     raise UndetectableVersionError(path)
 
@@ -187,11 +167,11 @@ def parse_version(path):
     """Given a URL or archive name, extract a version from it and return
        a version object.
     """
-    ver, start, end = parse_version_string_with_indices(path)
+    ver, start, l = parse_version_offset(path)
     return Version(ver)
 
 
-def parse_name(path, ver=None):
+def parse_name_offset(path, ver=None):
     if ver is None:
         ver = parse_version(path)
 
@@ -207,8 +187,14 @@ def parse_name(path, ver=None):
     for nt in ntypes:
         match = re.search(nt, path)
         if match:
-            return match.group(1)
+            name = match.group(1)
+            return name, match.start(1), len(name)
     raise UndetectableNameError(path)
+
+
+def parse_name(path, ver=None):
+    name, start, l = parse_name_offset(path, ver)
+    return name
 
 
 def parse_name_and_version(path):
@@ -231,8 +217,8 @@ def substitute_version(path, new_version):
     """Given a URL or archive name, find the version in the path and substitute
        the new version for it.
     """
-    ver, start, end = parse_version_string_with_indices(path)
-    return path[:start] + str(new_version) + path[end:]
+    ver, start, l = parse_version_offset(path)
+    return path[:start] + str(new_version) + path[(start+l):]
 
 
 def wildcard_version(path):
@@ -266,3 +252,24 @@ def wildcard_version(path):
 
     # Put it all back together with original name matches intact.
     return ''.join(name_parts) + '.' + ext
+
+
+class UrlParseError(spack.error.SpackError):
+    """Raised when the URL module can't parse something correctly."""
+    def __init__(self, msg, path):
+        super(UrlParseError, self).__init__(msg)
+        self.path = path
+
+
+class UndetectableVersionError(UrlParseError):
+    """Raised when we can't parse a version from a string."""
+    def __init__(self, path):
+        super(UndetectableVersionError, self).__init__(
+            "Couldn't detect version in: " + path, path)
+
+
+class UndetectableNameError(UrlParseError):
+    """Raised when we can't parse a package name from a string."""
+    def __init__(self, path):
+        super(UndetectableNameError, self).__init__(
+            "Couldn't parse package name in: " + path, path)
