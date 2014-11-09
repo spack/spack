@@ -613,11 +613,14 @@ class Package(object):
             raise ValueError("Can only fetch concrete packages.")
 
         if spack.do_checksum and not self.version in self.versions:
-            raise FetchError(
-                "Cannot fetch %s safely; there is no checksum on file for version %s."
-                % (self.name, self.version),
-                "Add a checksum to the package file, or use --no-checksum to "
-                "skip this check.")
+            tty.warn("There is no checksum on file to fetch %s safely."
+                     % self.spec.format('$_$@'))
+            ignore = tty.get_yes_or_no("  Fetch anyway?", default=False)
+            msg = "Add a checksum or use --no-checksum to skip this check."
+            if ignore:
+                tty.msg("Fetching with no checksum.", msg)
+            else:
+                raise FetchError("Will not fetch %s." % self.spec.format('$_$@'), msg)
 
         self.stage.fetch()
 
