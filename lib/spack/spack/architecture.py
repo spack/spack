@@ -65,7 +65,7 @@ def get_mac_sys_type():
     if not mac_ver:
         return None
 
-    return "macosx_{}_{}".format(
+    return "macosx_%s_%s" % (
         Version(mac_ver).up_to(2), py_platform.machine())
 
 
