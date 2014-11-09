@@ -38,7 +38,7 @@ import spack.util.crypto
 from spack.stage import Stage, FailedDownloadError
 from spack.version import *
 
-description ="Checksum available versions of a package to update a package file."
+description ="Checksum available versions of a package."
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -85,24 +85,24 @@ def checksum(parser, args):
     pkg = spack.db.get(args.package)
 
     # If the user asked for specific versions, use those.
-    versions = [ver(v) for v in args.versions]
-
-    if not all(type(v) == Version for v in versions):
-        tty.die("Cannot generate checksums for version lists or " +
-                "version ranges.  Use unambiguous versions.")
-
-    if not versions:
-        versions = pkg.fetch_available_versions()
+    if args.versions:
+        versions = {}
+        for v in args.versions:
+            v = ver(v)
+            if not isinstance(v, Version):
+                tty.die("Cannot generate checksums for version lists or " +
+                        "version ranges.  Use unambiguous versions.")
+            versions[v] = pkg.url_for_version(v)
+    else:
+        versions = pkg.fetch_remote_versions()
         if not versions:
-            tty.die("Could not fetch any available versions for %s." % pkg.name)
+            tty.die("Could not fetch any versions for %s." % pkg.name)
 
-    versions = list(reversed(sorted(versions)))
-    urls = [pkg.url_for_version(v) for v in versions]
+    sorted_versions = list(reversed(sorted(versions)))
 
-
-    tty.msg("Found %s versions of %s." % (len(urls), pkg.name),
+    tty.msg("Found %s versions of %s." % (len(versions), pkg.name),
             *spack.cmd.elide_list(
-            ["%-10s%s" % (v,u) for v, u in zip(versions, urls)]))
+            ["%-10s%s" % (v, versions[v]) for v in sorted_versions]))
     print
     archives_to_fetch = tty.get_number(
         "How many would you like to checksum?", default=5, abort='q')
@@ -112,10 +112,12 @@ def checksum(parser, args):
         return
 
     version_hashes = get_checksums(
-        versions[:archives_to_fetch], urls[:archives_to_fetch], keep_stage=args.keep_stage)
+        sorted_versions[:archives_to_fetch],
+        [versions[v] for v in sorted_versions[:archives_to_fetch]],
+        keep_stage=args.keep_stage)
 
     if not version_hashes:
-        tty.die("Could not fetch any available versions for %s." % pkg.name)
+        tty.die("Could not fetch any versions for %s." % pkg.name)
 
     version_lines = ["    version('%s', '%s')" % (v, h) for v, h in version_hashes]
     tty.msg("Checksummed new versions of %s:" % pkg.name, *version_lines)

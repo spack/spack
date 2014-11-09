@@ -39,7 +39,7 @@ import inspect
 import subprocess
 import platform as py_platform
 import multiprocessing
-from urlparse import urlparse
+from urlparse import urlparse, urljoin
 import textwrap
 from StringIO import StringIO
 
@@ -335,9 +335,6 @@ class Package(object):
         if '.' in self.name:
             self.name = self.name[self.name.rindex('.') + 1:]
 
-        # This is set by scraping a web page.
-        self._available_versions = None
-
         # Sanity check some required variables that could be
         # overridden by package authors.
         def ensure_has_dict(attr_name):
@@ -372,14 +369,15 @@ class Package(object):
 
         # Init fetch strategy and url to None
         self._fetcher = None
-        self.url = None
+        self.url = getattr(self.__class__, 'url', None)
 
         # Fix up self.url if this package fetches with a URLFetchStrategy.
         # This makes self.url behave sanely.
         if self.spec.versions.concrete:
-            # TODO: this is a really roundabout way of determining the type of fetch to do.
-            # TODO: figure out a more sane fetch strategy/package init order
-            # TODO: (right now it's conflated with stage, package, and the tests make assumptions)
+            # TODO: this is a really roundabout way of determining the type
+            # TODO: of fetch to do. figure out a more sane fetch strategy/package
+            # TODO: init order (right now it's conflated with stage, package, and
+            # TODO: the tests make assumptions)
             f = fs.for_package_version(self, self.version)
             if isinstance(f, fs.URLFetchStrategy):
                 self.url = self.url_for_version(self.spec.version)
@@ -869,73 +867,70 @@ class Package(object):
         return results.getvalue()
 
 
+    @property
+    def all_urls(self):
+        urls = []
+        if self.url:
+            urls.append(self.url)
+
+        for args in self.versions.values():
+            if 'url' in args:
+                urls.append(args['url'])
+        return urls
 
 
-    def fetch_available_versions(self):
-        if not hasattr(self, 'url'):
+    def fetch_remote_versions(self):
+        """Try to find remote versions of this package using the
+           list_url and any other URLs described in the package file."""
+        if not self.all_urls:
             raise VersionFetchError(self.__class__)
 
-        # If not, then try to fetch using list_url
-        if not self._available_versions:
-            try:
-                self._available_versions = find_versions_of_archive(
-                    self.url,
-                    list_url=self.list_url,
-                    list_depth=self.list_depth)
-
-                if not self._available_versions:
-                    tty.warn("Found no versions for %s" % self.name,
-                             "Check the list_url and list_depth attribute on the "
-                             + self.name + " package.",
-                             "Use them to tell Spack where to look for versions.")
-
-            except spack.error.NoNetworkConnectionError, e:
-                tty.die("Package.fetch_available_versions couldn't connect to:",
-                        e.url, e.message)
-
-        return self._available_versions
+        try:
+            return find_versions_of_archive(
+                *self.all_urls, list_url=self.list_url, list_depth=self.list_depth)
+        except spack.error.NoNetworkConnectionError, e:
+            tty.die("Package.fetch_versions couldn't connect to:",
+                    e.url, e.message)
 
 
-    @property
-    def available_versions(self):
-        # If the package overrode available_versions, then use that.
-        if self.versions is not None:
-            return VersionList(self.versions.keys())
-        else:
-            vlist = self.fetch_available_versions()
-            if not vlist:
-                vlist = ver([self.version])
-            return vlist
-
-
-def find_versions_of_archive(archive_url, **kwargs):
+def find_versions_of_archive(*archive_urls, **kwargs):
     list_url   = kwargs.get('list_url', None)
     list_depth = kwargs.get('list_depth', 1)
 
-    if not list_url:
-        list_url = url.find_list_url(archive_url)
-
-    # This creates a regex from the URL with a capture group for the
-    # version part of the URL.  The capture group is converted to a
-    # generic wildcard, so we can use this to extract things on a page
-    # that look like archive URLs.
-    url_regex = url.wildcard_version(archive_url)
-
-    # We'll be a bit more liberal and just look for the archive part,
-    # not the full path.
-    archive_regex = os.path.basename(url_regex)
+    # Generate a list of list_urls based on archive urls and any
+    # explicitly listed list_url in the package
+    list_urls = set()
+    if list_url:
+        list_urls.add(list_url)
+    for aurl in archive_urls:
+        list_urls.add(url.find_list_url(aurl))
 
     # Grab some web pages to scrape.
-    page_map = get_pages(list_url, depth=list_depth)
+    page_map = {}
+    for lurl in list_urls:
+        page_map.update(get_pages(lurl, depth=list_depth))
+
+    # Scrape them for archive URLs
+    regexes = []
+    for aurl in archive_urls:
+        # This creates a regex from the URL with a capture group for
+        # the version part of the URL.  The capture group is converted
+        # to a generic wildcard, so we can use this to extract things
+        # on a page that look like archive URLs.
+        url_regex = url.wildcard_version(aurl)
+
+        # We'll be a bit more liberal and just look for the archive
+        # part, not the full path.
+        regexes.append(os.path.basename(url_regex))
 
     # Build a version list from all the matches we find
-    versions = VersionList()
-    for site, page in page_map.iteritems():
+    versions = {}
+    for page_url, content in page_map.iteritems():
         # extract versions from matches.
-        matches = re.finditer(archive_regex, page)
-        version_strings = set(m.group(1) for m in matches)
-        for v in version_strings:
-            versions.add(Version(v))
+        for regex in regexes:
+            versions.update(
+                (Version(m.group(1)), urljoin(page_url, m.group(0)))
+                for m in re.finditer(regex, content))
 
     return versions
 
@@ -998,8 +993,8 @@ class VersionFetchError(PackageError):
     """Raised when a version URL cannot automatically be determined."""
     def __init__(self, cls):
         super(VersionFetchError, self).__init__(
-            "Cannot fetch version for package %s " % cls.__name__ +
-            "because it does not define a default url.")
+            "Cannot fetch versions for package %s " % cls.__name__ +
+            "because it does not define any URLs to fetch.")
 
 
 class NoURLError(PackageError):

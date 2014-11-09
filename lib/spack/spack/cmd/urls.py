@@ -22,34 +22,37 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-from llnl.util.tty.colify import colify
-import llnl.util.tty as tty
+import sys
 import spack
+import spack.url
 
-description ="List available versions of a package"
+description = "Inspect urls used by packages in spack."
 
 def setup_parser(subparser):
-    subparser.add_argument('package', metavar='PACKAGE', help='Package to list versions for')
+    subparser.add_argument(
+        '-c', '--color', action='store_true',
+        help="Color the parsed version and name in the urls shown.  "
+             "Version will be cyan, name red.")
+    subparser.add_argument(
+        '-e', '--extrapolation', action='store_true',
+        help="Color the versions used for extrapolation as well."
+             "Additional versions are green, names magenta.")
 
 
-def versions(parser, args):
-    pkg = spack.db.get(args.package)
+def urls(parser, args):
+    urls = set()
+    for pkg in spack.db.all_packages():
+        url = getattr(pkg.__class__, 'url', None)
+        if url:
+            urls.add(url)
 
-    safe_versions = pkg.versions
-    fetched_versions = pkg.fetch_remote_versions()
-    remote_versions = set(fetched_versions).difference(safe_versions)
+        for params in pkg.versions.values():
+            url = params.get('url', None)
+            if url:
+                urls.add(url)
 
-    tty.msg("Safe versions (already checksummed):")
-    colify(sorted(safe_versions, reverse=True), indent=2)
-
-    tty.msg("Remote versions (not yet checksummed):")
-    if not remote_versions:
-        if not fetched_versions:
-            print "  Found no versions for %s" % pkg.name
-            tty.debug("Check the list_url and list_depth attribute on the "
-                      "package to help Spack find versions.")
+    for url in sorted(urls):
+        if args.color or args.extrapolation:
+            print spack.url.color_url(url, subs=args.extrapolation, errors=True)
         else:
-            print "  Found no unckecksummed versions for %s" % pkg.name
-    else:
-        colify(sorted(remote_versions, reverse=True), indent=2)
+            print url

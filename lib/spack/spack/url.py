@@ -46,6 +46,9 @@ it's never been told about that version before.
 """
 import os
 import re
+from StringIO import StringIO
+
+from llnl.util.tty.color import *
 
 import spack.error
 import spack.util.compression as comp
@@ -56,27 +59,6 @@ from spack.version import Version
 # work on paths and URLs.  There's not a good word for both of these, but
 # "path" seemed like the most generic term.
 #
-
-class UrlParseError(spack.error.SpackError):
-    """Raised when the URL module can't parse something correctly."""
-    def __init__(self, msg, path):
-        super(UrlParseError, self).__init__(msg)
-        self.path = path
-
-
-class UndetectableVersionError(UrlParseError):
-    """Raised when we can't parse a version from a string."""
-    def __init__(self, path):
-        super(UndetectableVersionError, self).__init__(
-            "Couldn't detect version in: " + path, path)
-
-
-class UndetectableNameError(UrlParseError):
-    """Raised when we can't parse a package name from a string."""
-    def __init__(self, path):
-        super(UndetectableNameError, self).__init__(
-            "Couldn't parse package name in: " + path, path)
-
 
 def find_list_url(url):
     """Finds a good list URL for the supplied URL.  This depends on
@@ -98,7 +80,7 @@ def find_list_url(url):
         return os.path.dirname(url)
 
 
-def parse_version_string_with_indices(path):
+def parse_version_offset(path):
     """Try to extract a version string from a filename or URL.  This is taken
        largely from Homebrew's Version class."""
 
@@ -112,6 +94,7 @@ def parse_version_string_with_indices(path):
     # Take basename to avoid including parent dirs in version name
     # Remember the offset of the stem in the full path.
     stem = os.path.basename(path)
+    offset = len(path) - len(stem)
 
     version_types = [
         # GitHub tarballs, e.g. v1.2.3
@@ -132,6 +115,10 @@ def parse_version_string_with_indices(path):
         # e.g. https://github.com/erlang/otp/tarball/OTP_R15B01 (erlang style)
         (r'[-_](R\d+[AB]\d*(-\d+)?)', path),
 
+        # e.g., https://github.com/hpc/libcircle/releases/download/0.2.1-rc.1/libcircle-0.2.1-rc.1.tar.gz
+        # e.g., https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
+        (r'github.com/[^/]+/[^/]+/releases/download/v?([^/]+)/.*$', path),
+
         # e.g. boost_1_39_0
         (r'((\d+_)+\d+)$', stem),
 
@@ -146,7 +133,7 @@ def parse_version_string_with_indices(path):
         (r'-((\d+\.)*\d+)$', stem),
 
         # e.g. foobar-4.5.1b
-        (r'-((\d+\.)*\d+([a-z]|rc|RC)\d*)$', stem),
+        (r'-((\d+\.)*\d+\-?([a-z]|rc|RC|tp|TP)\d*)$', stem),
 
         # e.g. foobar-4.5.0-beta1, or foobar-4.50-beta
         (r'-((\d+\.)*\d+-beta(\d+)?)$', stem),
@@ -172,13 +159,18 @@ def parse_version_string_with_indices(path):
         # e.g. http://www.ijg.org/files/jpegsrc.v8d.tar.gz
         (r'\.v(\d+[a-z]?)', stem)]
 
-    for vtype in version_types:
-        regex, match_string = vtype[:2]
+    for i, vtype in enumerate(version_types):
+        regex, match_string = vtype
         match = re.search(regex, match_string)
         if match and match.group(1) is not None:
             version = match.group(1)
-            start = path.index(version)
-            return version, start, start+len(version)
+            start   = match.start(1)
+
+            # if we matched from the basename, then add offset in.
+            if match_string is stem:
+                start += offset
+
+            return version, start, len(version)
 
     raise UndetectableVersionError(path)
 
@@ -187,28 +179,56 @@ def parse_version(path):
     """Given a URL or archive name, extract a version from it and return
        a version object.
     """
-    ver, start, end = parse_version_string_with_indices(path)
+    ver, start, l = parse_version_offset(path)
     return Version(ver)
 
 
-def parse_name(path, ver=None):
-    if ver is None:
-        ver = parse_version(path)
+def parse_name_offset(path, v=None):
+    if v is None:
+        v = parse_version(path)
 
-    ntypes = (r'/sourceforge/([^/]+)/',
-              r'/([^/]+)/(tarball|zipball)/',
-              r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % ver,
-              r'github.com/[^/]+/([^/]+)/archive',
-              r'/([^/]+)[_.-]v?%s' % ver,
-              r'/([^/]+)%s' % ver,
-              r'^([^/]+)[_.-]v?%s' % ver,
-              r'^([^/]+)%s' % ver)
+    # Strip archive extension
+    path = comp.strip_extension(path)
 
-    for nt in ntypes:
-        match = re.search(nt, path)
+    # Allow matching with either path or stem, as with the version.
+    stem = os.path.basename(path)
+    offset = len(path) - len(stem)
+
+    name_types = [
+        (r'/sourceforge/([^/]+)/', path),
+        (r'github.com/[^/]+/[^/]+/releases/download/%s/(.*)-%s$' % (v, v), path),
+        (r'/([^/]+)/(tarball|zipball)/', path),
+        (r'/([^/]+)[_.-](bin|dist|stable|src|sources)[_.-]%s' % v, path),
+        (r'github.com/[^/]+/([^/]+)/archive', path),
+
+        (r'([^/]+)[_.-]v?%s' % v, stem),   # prefer the stem
+        (r'([^/]+)%s' % v, stem),
+
+        (r'/([^/]+)[_.-]v?%s' % v, path),   # accept the path if name is not in stem.
+        (r'/([^/]+)%s' % v, path),
+
+        (r'^([^/]+)[_.-]v?%s' % v, path),
+        (r'^([^/]+)%s' % v, path)]
+
+    for i, name_type in enumerate(name_types):
+        regex, match_string = name_type
+        match = re.search(regex, match_string)
         if match:
-            return match.group(1)
+            name  = match.group(1)
+            start = match.start(1)
+
+            # if we matched from the basename, then add offset in.
+            if match_string is stem:
+                start += offset
+
+            return name, start, len(name)
+
     raise UndetectableNameError(path)
+
+
+def parse_name(path, ver=None):
+    name, start, l = parse_name_offset(path, ver)
+    return name
 
 
 def parse_name_and_version(path):
@@ -218,7 +238,7 @@ def parse_name_and_version(path):
 
 
 def insensitize(string):
-    """Chagne upper and lowercase letters to be case insensitive in
+    """Change upper and lowercase letters to be case insensitive in
        the provided string.  e.g., 'a' because '[Aa]', 'B' becomes
        '[bB]', etc.  Use for building regexes."""
     def to_ins(match):
@@ -227,12 +247,53 @@ def insensitize(string):
     return re.sub(r'([a-zA-Z])', to_ins, string)
 
 
-def substitute_version(path, new_version):
-    """Given a URL or archive name, find the version in the path and substitute
-       the new version for it.
+def cumsum(elts, init=0, fn=lambda x:x):
+    """Return cumulative sum of result of fn on each element in elts."""
+    sums = []
+    s = init
+    for i, e in enumerate(elts):
+        sums.append(s)
+        s += fn(e)
+    return sums
+
+
+def substitution_offsets(path):
+    """This returns offsets for substituting versions and names in the provided path.
+       It is a helper for substitute_version().
     """
-    ver, start, end = parse_version_string_with_indices(path)
-    return path[:start] + str(new_version) + path[end:]
+    # Get name and version offsets
+    try:
+        ver,  vs, vl = parse_version_offset(path)
+        name, ns, nl = parse_name_offset(path, ver)
+    except UndetectableNameError, e:
+        return (None, -1, -1, (), ver, vs, vl, (vs,))
+    except UndetectableVersionError, e:
+        return (None, -1, -1, (), None, -1, -1, ())
+
+    # protect extensions like bz2 from getting inadvertently
+    # considered versions.
+    ext = comp.extension(path)
+    path = comp.strip_extension(path)
+
+    # Construct a case-insensitive regular expression for the package name.
+    name_re = '(%s)' % insensitize(name)
+
+    # Split the string apart by things that match the name so that if the
+    # name contains numbers or things that look like versions, we don't
+    # accidentally substitute them with a version.
+    name_parts = re.split(name_re, path)
+
+    offsets = cumsum(name_parts, 0, len)
+    name_offsets = offsets[1::2]
+
+    ver_offsets = []
+    for i in xrange(0, len(name_parts), 2):
+        vparts = re.split(ver, name_parts[i])
+        voffsets = cumsum(vparts, offsets[i], len)
+        ver_offsets.extend(voffsets[1::2])
+
+    return (name, ns, nl, tuple(name_offsets),
+            ver,  vs, vl, tuple(ver_offsets))
 
 
 def wildcard_version(path):
@@ -241,6 +302,10 @@ def wildcard_version(path):
     """
     # Get name and version, so we can treat them specially
     name, v = parse_name_and_version(path)
+
+    # protect extensions like bz2 from wildcarding.
+    ext = comp.extension(path)
+    path = comp.strip_extension(path)
 
     # Construct a case-insensitive regular expression for the package name.
     name_re = '(%s)' % insensitize(name)
@@ -261,4 +326,107 @@ def wildcard_version(path):
         name_parts[i] = vgroup.join(re.escape(vp) for vp in vparts)
 
     # Put it all back together with original name matches intact.
-    return ''.join(name_parts)
+    return ''.join(name_parts) + '.' + ext
+
+
+def substitute_version(path, new_version):
+    """Given a URL or archive name, find the version in the path and
+       substitute the new version for it.  Replace all occurrences of
+       the version *if* they don't overlap with the package name.
+
+       Simple example::
+         substitute_version('http://www.mr511.de/software/libelf-0.8.13.tar.gz', '2.9.3')
+         ->'http://www.mr511.de/software/libelf-2.9.3.tar.gz'
+
+       Complex examples::
+         substitute_version('http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.0.tar.gz', 2.1)
+         -> 'http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.1.tar.gz'
+
+         # In this string, the "2" in mvapich2 is NOT replaced.
+         substitute_version('http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.tar.gz', 2.1)
+         -> 'http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.1.tar.gz'
+
+    """
+    (name, ns, nl, noffs,
+     ver,  vs, vl, voffs) = substitution_offsets(path)
+
+    new_path = ''
+    last = 0
+    for vo in voffs:
+        new_path += path[last:vo]
+        new_path += str(new_version)
+        last = vo + vl
+
+    new_path += path[last:]
+    return new_path
+
+
+def color_url(path, **kwargs):
+    """Color the parts of the url according to Spack's parsing.
+
+       Colors are:
+          Cyan: The version found by parse_version_offset().
+          Red:  The name found by parse_name_offset().
+
+          Green:   Instances of version string substituted by substitute_version().
+          Magenta: Instances of the name (protected from substitution).
+
+       Optional args:
+          errors=True    Append parse errors at end of string.
+          subs=True      Color substitutions as well as parsed name/version.
+
+    """
+    errors = kwargs.get('errors', False)
+    subs   = kwargs.get('subs', False)
+
+    (name, ns, nl, noffs,
+     ver,  vs, vl, voffs) = substitution_offsets(path)
+
+    nends = [no + nl - 1 for no in noffs]
+    vends = [vo + vl - 1 for vo in voffs]
+
+    nerr = verr = 0
+    out = StringIO()
+    for i in range(len(path)):
+        if   i == vs:    out.write('@c'); verr += 1
+        elif i == ns:    out.write('@r'); nerr += 1
+        elif subs:
+            if i in voffs: out.write('@g')
+            elif i in noffs: out.write('@m')
+
+        out.write(path[i])
+
+        if   i == vs + vl - 1:  out.write('@.'); verr += 1
+        elif i == ns + nl - 1:  out.write('@.'); nerr += 1
+        elif subs:
+            if i in vends or i in nends:
+                out.write('@.')
+
+    if errors:
+        if nerr == 0: out.write(" @r{[no name]}")
+        if verr == 0: out.write(" @r{[no version]}")
+        if nerr == 1: out.write(" @r{[incomplete name]}")
+        if verr == 1: out.write(" @r{[incomplete version]}")
+
+    return colorize(out.getvalue())
+
+
+class UrlParseError(spack.error.SpackError):
+    """Raised when the URL module can't parse something correctly."""
+    def __init__(self, msg, path):
+        super(UrlParseError, self).__init__(msg)
+        self.path = path
+
+
+class UndetectableVersionError(UrlParseError):
+    """Raised when we can't parse a version from a string."""
+    def __init__(self, path):
+        super(UndetectableVersionError, self).__init__(
+            "Couldn't detect version in: " + path, path)
+
+
+class UndetectableNameError(UrlParseError):
+    """Raised when we can't parse a package name from a string."""
+    def __init__(self, path):
+        super(UndetectableNameError, self).__init__(
+            "Couldn't parse package name in: " + path, path)

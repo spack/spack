@@ -22,34 +22,21 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-from llnl.util.tty.colify import colify
-import llnl.util.tty as tty
-import spack
+from spack import *
 
-description ="List available versions of a package"
+class Mpc(Package):
+    """Gnu Mpc is a C library for the arithmetic of complex numbers
+       with arbitrarily high precision and correct rounding of the
+       result."""
+    homepage = "http://www.multiprecision.org"
+    url      = "ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.2.tar.gz"
 
-def setup_parser(subparser):
-    subparser.add_argument('package', metavar='PACKAGE', help='Package to list versions for')
+    version('1.0.2', '68fadff3358fb3e7976c7a398a0af4c3')
 
+    depends_on("gmp")
+    depends_on("mpfr")
 
-def versions(parser, args):
-    pkg = spack.db.get(args.package)
-
-    safe_versions = pkg.versions
-    fetched_versions = pkg.fetch_remote_versions()
-    remote_versions = set(fetched_versions).difference(safe_versions)
-
-    tty.msg("Safe versions (already checksummed):")
-    colify(sorted(safe_versions, reverse=True), indent=2)
-
-    tty.msg("Remote versions (not yet checksummed):")
-    if not remote_versions:
-        if not fetched_versions:
-            print "  Found no versions for %s" % pkg.name
-            tty.debug("Check the list_url and list_depth attribute on the "
-                      "package to help Spack find versions.")
-        else:
-            print "  Found no unckecksummed versions for %s" % pkg.name
-    else:
-        colify(sorted(remote_versions, reverse=True), indent=2)
+    def install(self, spec, prefix):
+        configure("--prefix=%s" % prefix)
+        make()
+        make("install")

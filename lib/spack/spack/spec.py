@@ -1096,8 +1096,9 @@ class Spec(object):
 
 
     def __contains__(self, spec):
-        """True if this spec has any dependency that satisfies the supplied
-           spec."""
+        """True if this spec satisfis the provided spec, or if any dependency
+           does.  If the spec has no name, then we parse this one first.
+        """
         spec = self._autospec(spec)
         for s in self.traverse():
             if s.satisfies(spec):

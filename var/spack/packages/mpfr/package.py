@@ -22,34 +22,17 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-from llnl.util.tty.colify import colify
-import llnl.util.tty as tty
-import spack
+from spack import *
 
-description ="List available versions of a package"
+class Mpfr(Package):
+    """The MPFR library is a C library for multiple-precision
+       floating-point computations with correct rounding."""
+    homepage = "http://www.mpfr.org"
+    url      = "http://www.mpfr.org/mpfr-current/mpfr-3.1.2.tar.bz2"
 
-def setup_parser(subparser):
-    subparser.add_argument('package', metavar='PACKAGE', help='Package to list versions for')
+    version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
 
-
-def versions(parser, args):
-    pkg = spack.db.get(args.package)
-
-    safe_versions = pkg.versions
-    fetched_versions = pkg.fetch_remote_versions()
-    remote_versions = set(fetched_versions).difference(safe_versions)
-
-    tty.msg("Safe versions (already checksummed):")
-    colify(sorted(safe_versions, reverse=True), indent=2)
-
-    tty.msg("Remote versions (not yet checksummed):")
-    if not remote_versions:
-        if not fetched_versions:
-            print "  Found no versions for %s" % pkg.name
-            tty.debug("Check the list_url and list_depth attribute on the "
-                      "package to help Spack find versions.")
-        else:
-            print "  Found no unckecksummed versions for %s" % pkg.name
-    else:
-        colify(sorted(remote_versions, reverse=True), indent=2)
+    def install(self, spec, prefix):
+        configure("--prefix=%s" % prefix)
+        make()
+        make("install")
