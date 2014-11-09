@@ -31,7 +31,7 @@ from llnl.util.tty.colify import colify
 import spack
 from spack.util.executable import *
 
-description = "Query packages associated with particular git revisions in spack."
+description = "Query packages associated with particular git revisions."
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(

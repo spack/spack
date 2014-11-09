@@ -38,7 +38,7 @@ import spack.util.crypto
 from spack.stage import Stage, FailedDownloadError
 from spack.version import *
 
-description ="Checksum available versions of a package to update a package file."
+description ="Checksum available versions of a package."
 
 def setup_parser(subparser):
     subparser.add_argument(
