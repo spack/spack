@@ -156,7 +156,7 @@ class URLFetchStrategy(FetchStrategy):
 
             if spack.curl.returncode == 22:
                 # This is a 404.  Curl will print the error.
-                raise FailedDownloadError(url)
+                raise FailedDownloadError(self.url)
 
             if spack.curl.returncode == 60:
                 # This is a certificate error.  Suggest spack -k
