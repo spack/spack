@@ -121,7 +121,7 @@ def colify(elts, **options):
 
     console_cols = options.get("cols", None)
     if not console_cols:
-        console_cols, console_rows = terminal_size()
+        console_rows, console_cols = terminal_size()
     elif type(console_cols) != int:
         raise ValueError("Number of columns must be an int")
     console_cols = max(1, console_cols - indent)
@@ -167,7 +167,7 @@ def colified(elts, **options):
 if __name__ == "__main__":
     import optparse
 
-    cols, rows = terminal_size()
+    rows, cols = terminal_size()
     parser = optparse.OptionParser()
     parser.add_option("-u", "--uniform", action="store_true", default=False,
                       help="Use uniformly sized columns instead of variable-size.")

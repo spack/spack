@@ -25,6 +25,9 @@
 import sys
 import os
 import textwrap
+import fcntl
+import termios
+import struct
 from StringIO import StringIO
 
 from llnl.util.tty.color import *
@@ -155,7 +158,7 @@ def hline(label=None, **kwargs):
     color     = kwargs.get('color', '')
     max_width = kwargs.get('max_width', 64)
 
-    cols, rows = terminal_size()
+    rows, cols = terminal_size()
     if not cols:
         cols = max_width
     else:
@@ -178,22 +181,22 @@ def hline(label=None, **kwargs):
 
 
 def terminal_size():
-    """Gets the dimensions of the console: cols, rows."""
+    """Gets the dimensions of the console: (rows, cols)."""
     def ioctl_GWINSZ(fd):
         try:
-            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+            rc = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
         except:
             return
-        return cr
-    cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
-    if not cr:
+        return rc
+    rc = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
+    if not rc:
         try:
             fd = os.open(os.ctermid(), os.O_RDONLY)
-            cr = ioctl_GWINSZ(fd)
+            rc = ioctl_GWINSZ(fd)
             os.close(fd)
         except:
             pass
-    if not cr:
-        cr = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))
+    if not rc:
+        rc = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))
 
-    return int(cr[1]), int(cr[0])
+    return int(rc[0]), int(rc[1])
