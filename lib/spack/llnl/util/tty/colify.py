@@ -22,16 +22,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-# colify
-# By Todd Gamblin, tgamblin@llnl.gov
-#
-# Takes a list of items as input and finds a good columnization of them,
-# similar to how gnu ls does.  You can pipe output to this script and
-# get a tight display for it.  This supports both uniform-width and
-# variable-width (tighter) columns.
-#
-# Run colify -h for more information.
-#
+"""
+Routines for printing columnar output.  See colify() for more information.
+"""
 import os
 import sys
 import fcntl
@@ -54,12 +47,21 @@ class ColumnConfig:
         return "<Config: %s>" % ", ".join("%s: %r" % a for a in attrs)
 
 
-def config_variable_cols(elts, console_cols, padding):
+def config_variable_cols(elts, console_width, padding):
+    """Variable-width column fitting algorithm.
+
+       This function determines the most columns that can fit in the
+       screen width.  Unlike uniform fitting, where all columns take
+       the width of the longest element in the list, each column takes
+       the width of its own longest element. This packs elements more
+       efficiently on screen.
+    """
     # Get a bound on the most columns we could possibly have.
     lengths = [len(elt) for elt in elts]
-    max_cols = max(1, console_cols / (min(lengths) + padding))
+    max_cols = max(1, console_width / (min(lengths) + padding))
     max_cols = min(len(elts), max_cols)
 
+    # Determine the most columns possible for the console width.
     configs = [ColumnConfig(c) for c in xrange(1, max_cols+1)]
     for elt, length in enumerate(lengths):
         for i, conf in enumerate(configs):
@@ -72,7 +74,7 @@ def config_variable_cols(elts, console_cols, padding):
                 if conf.widths[col] < padded:
                     conf.line_length += padded - conf.widths[col]
                     conf.widths[col] = padded
-                    conf.valid = (conf.line_length < console_cols)
+                    conf.valid = (conf.line_length < console_width)
 
     try:
         config = next(conf for conf in reversed(configs) if conf.valid)
@@ -85,26 +87,55 @@ def config_variable_cols(elts, console_cols, padding):
     return config
 
 
-def config_uniform_cols(elts, console_cols, padding):
+def config_uniform_cols(elts, console_width, padding):
+    """Uniform-width column fitting algorithm.
+
+       Determines the longest element in the list, and determines how
+       many columns of that width will fit on screen.  Returns a
+       corresponding column config.
+    """
     max_len = max(len(elt) for elt in elts) + padding
-    cols = max(1, console_cols / max_len)
+    cols = max(1, console_width / max_len)
     cols = min(len(elts), cols)
     config = ColumnConfig(cols)
     config.widths = [max_len] * cols
     return config
 
 
-def isatty(ostream):
-    force = os.environ.get('COLIFY_TTY', 'false').lower() != 'false'
-    return force or ostream.isatty()
-
-
 def colify(elts, **options):
+    """Takes a list of elements as input and finds a good columnization
+    of them, similar to how gnu ls does. This supports both
+    uniform-width and variable-width (tighter) columns.
+
+    If elts is not a list of strings, each element is first conveted
+    using str().
+
+    Keyword arguments:
+
+    output=<stream>   A file object to write to.  Default is sys.stdout.
+    indent=<int>      Optionally indent all columns by some number of spaces.
+    padding=<int>     Spaces between columns.  Default is 2.
+
+    tty=<bool>        Whether to attempt to write to a tty.  Default is to
+                      autodetect a tty. Set to False to force single-column output.
+
+    method=<string>   Method to use to fit columns.  Options are variable or uniform.
+                      Variable-width columns are tighter, uniform columns are all the
+                      same width and fit less data on the screen.
+
+    width=<int>       Width of the output.  Default is 80 if tty is not detected.
+    """
     # Get keyword arguments or set defaults
-    output       = options.get("output", sys.stdout)
-    indent       = options.get("indent", 0)
-    padding      = options.get("padding", 2)
-    tty          = options.get('tty', None)
+    output       = options.pop("output", sys.stdout)
+    indent       = options.pop("indent", 0)
+    padding      = options.pop("padding", 2)
+    tty          = options.pop('tty', None)
+    method       = options.pop("method", "variable")
+    console_cols = options.pop("width", None)
+
+    if options:
+        raise TypeError("'%s' is an invalid keyword argument for this function."
+                        % next(options.iterkeys()))
 
     # elts needs to be an array of strings so we can count the elements
     elts = [str(elt) for elt in elts]
@@ -112,21 +143,21 @@ def colify(elts, **options):
         return (0, ())
 
     if not tty:
-        if tty is False or not isatty(output):
+        if tty is False or not output.isatty():
             for elt in elts:
                 output.write("%s\n" % elt)
 
             maxlen = max(len(str(s)) for s in elts)
             return (1, (maxlen,))
 
-    console_cols = options.get("cols", None)
+    # Specify the number of character columns to use.
     if not console_cols:
         console_rows, console_cols = terminal_size()
     elif type(console_cols) != int:
         raise ValueError("Number of columns must be an int")
     console_cols = max(1, console_cols - indent)
 
-    method = options.get("method", "variable")
+    # Choose a method.  Variable-width colums vs uniform-width.
     if method == "variable":
         config = config_variable_cols(elts, console_cols, padding)
     elif method == "uniform":
@@ -162,29 +193,3 @@ def colified(elts, **options):
     options['output'] = sio
     colify(elts, **options)
     return sio.getvalue()
-
-
-if __name__ == "__main__":
-    import optparse
-
-    rows, cols = terminal_size()
-    parser = optparse.OptionParser()
-    parser.add_option("-u", "--uniform", action="store_true", default=False,
-                      help="Use uniformly sized columns instead of variable-size.")
-    parser.add_option("-p", "--padding", metavar="PADDING", action="store",
-                      type=int, default=2, help="Spaces to add between columns.  Default is 2.")
-    parser.add_option("-i", "--indent", metavar="SPACES", action="store",
-                      type=int, default=0, help="Indent the output by SPACES.  Default is 0.")
-    parser.add_option("-w", "--width", metavar="COLS", action="store",
-                      type=int, default=cols, help="Indent the output by SPACES.  Default is 0.")
-    options, args = parser.parse_args()
-
-    method = "variable"
-    if options.uniform:
-        method = "uniform"
-
-    if sys.stdin.isatty():
-        parser.print_help()
-        sys.exit(1)
-    else:
-        colify([line.strip() for line in sys.stdin], method=method, **options.__dict__)
