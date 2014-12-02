@@ -47,7 +47,7 @@ class ColumnConfig:
         return "<Config: %s>" % ", ".join("%s: %r" % a for a in attrs)
 
 
-def config_variable_cols(elts, console_width, padding):
+def config_variable_cols(elts, console_width, padding, cols=0):
     """Variable-width column fitting algorithm.
 
        This function determines the most columns that can fit in the
@@ -55,20 +55,28 @@ def config_variable_cols(elts, console_width, padding):
        the width of the longest element in the list, each column takes
        the width of its own longest element. This packs elements more
        efficiently on screen.
+
+       If cols is nonzero, force
     """
+    if cols < 0:
+        raise ValueError("cols must be non-negative.")
+
     # Get a bound on the most columns we could possibly have.
     lengths = [len(elt) for elt in elts]
     max_cols = max(1, console_width / (min(lengths) + padding))
     max_cols = min(len(elts), max_cols)
 
+    # Range of column counts to try.  If forced, use the supplied value.
+    col_range = [cols] if cols else xrange(1, max_cols+1)
+
     # Determine the most columns possible for the console width.
-    configs = [ColumnConfig(c) for c in xrange(1, max_cols+1)]
+    configs = [ColumnConfig(c) for c in col_range]
     for elt, length in enumerate(lengths):
-        for i, conf in enumerate(configs):
+        for conf in configs:
             if conf.valid:
-                col = elt / ((len(elts) + i) / (i + 1))
+                col = elt / ((len(elts) + conf.cols - 1) / conf.cols)
                 padded = length
-                if col < i:
+                if col < (conf.cols - 1):
                     padded += padding
 
                 if conf.widths[col] < padded:
@@ -87,16 +95,20 @@ def config_variable_cols(elts, console_width, padding):
     return config
 
 
-def config_uniform_cols(elts, console_width, padding):
+def config_uniform_cols(elts, console_width, padding, cols=0):
     """Uniform-width column fitting algorithm.
 
        Determines the longest element in the list, and determines how
        many columns of that width will fit on screen.  Returns a
        corresponding column config.
     """
+    if cols < 0:
+        raise ValueError("cols must be non-negative.")
+
     max_len = max(len(elt) for elt in elts) + padding
-    cols = max(1, console_width / max_len)
-    cols = min(len(elts), cols)
+    if cols == 0:
+        cols = max(1, console_width / max_len)
+        cols = min(len(elts), cols)
     config = ColumnConfig(cols)
     config.widths = [max_len] * cols
     return config
@@ -115,6 +127,10 @@ def colify(elts, **options):
     output=<stream>   A file object to write to.  Default is sys.stdout.
     indent=<int>      Optionally indent all columns by some number of spaces.
     padding=<int>     Spaces between columns.  Default is 2.
+    width=<int>       Width of the output.  Default is 80 if tty is not detected.
+
+    cols=<int>        Force number of columns. Default is to size to terminal,
+                      or single-column if no tty
 
     tty=<bool>        Whether to attempt to write to a tty.  Default is to
                       autodetect a tty. Set to False to force single-column output.
@@ -123,15 +139,19 @@ def colify(elts, **options):
                       Variable-width columns are tighter, uniform columns are all the
                       same width and fit less data on the screen.
 
-    width=<int>       Width of the output.  Default is 80 if tty is not detected.
+    decorator=<func>  Function to add decoration (such as color) after columns have
+                      already been fitted.  Useful for fitting based only on
+                      positive-width characters.
     """
     # Get keyword arguments or set defaults
+    cols         = options.pop("cols", 0)
     output       = options.pop("output", sys.stdout)
     indent       = options.pop("indent", 0)
     padding      = options.pop("padding", 2)
     tty          = options.pop('tty', None)
     method       = options.pop("method", "variable")
     console_cols = options.pop("width", None)
+    decorator    = options.pop("decorator", lambda x:x)
 
     if options:
         raise TypeError("'%s' is an invalid keyword argument for this function."
@@ -159,9 +179,9 @@ def colify(elts, **options):
 
     # Choose a method.  Variable-width colums vs uniform-width.
     if method == "variable":
-        config = config_variable_cols(elts, console_cols, padding)
+        config = config_variable_cols(elts, console_cols, padding, cols)
     elif method == "uniform":
-        config = config_uniform_cols(elts, console_cols, padding)
+        config = config_uniform_cols(elts, console_cols, padding, cols)
     else:
         raise ValueError("method must be one of: " + allowed_methods)
 
@@ -176,7 +196,7 @@ def colify(elts, **options):
         output.write(" " * indent)
         for col in xrange(cols):
             elt = col * rows + row
-            output.write(formats[col] % elts[elt])
+            output.write(formats[col] % decorator(elts[elt]))
 
         output.write("\n")
         row += 1
