@@ -260,6 +260,8 @@ class Stage(object):
                 tty.msg("Fetching from %s failed." % fetcher)
                 tty.debug(e)
                 continue
+        else:
+            tty.die("All fetchers failed for %s" % self.name)
 
 
     def check(self):

@@ -156,9 +156,10 @@ class URLFetchStrategy(FetchStrategy):
 
             if spack.curl.returncode == 22:
                 # This is a 404.  Curl will print the error.
-                raise FailedDownloadError(self.url)
+                raise FailedDownloadError(
+                    self.url, "URL %s was not found!" % self.url)
 
-            if spack.curl.returncode == 60:
+            elif spack.curl.returncode == 60:
                 # This is a certificate error.  Suggest spack -k
                 raise FailedDownloadError(
                     self.url,
@@ -167,6 +168,13 @@ class URLFetchStrategy(FetchStrategy):
                     "is bad.  If you believe your SSL configuration is bad, you "
                     "can try running spack -k, which will not check SSL certificates."
                     "Use this at your own risk.")
+
+            else:
+                # This is some other curl error.  Curl will print the
+                # error, but print a spack message too
+                raise FailedDownloadError(
+                    self.url, "Curl failed with error %d", spack.curl.returncode)
+
 
         # Check if we somehow got an HTML file rather than the archive we
         # asked for.  We only look at the last content type, to handle
