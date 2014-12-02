@@ -196,7 +196,7 @@ def colify(elts, **options):
         output.write(" " * indent)
         for col in xrange(cols):
             elt = col * rows + row
-            output.write(formats[col] % decorator(elts[elt]))
+            output.write(decorator(formats[col] % elts[elt]))
 
         output.write("\n")
         row += 1
@@ -204,6 +204,25 @@ def colify(elts, **options):
             cols -= 1
 
     return (config.cols, tuple(config.widths))
+
+
+def colify_table(table, **options):
+    if table is None:
+        raise TypeError("Can't call colify_table on NoneType")
+    elif not table or not table[0]:
+        raise ValueError("Table is empty in colify_table!")
+
+    columns = len(table[0])
+    def transpose():
+        for i in xrange(columns):
+            for row in table:
+                yield row[i]
+
+    if 'cols' in options:
+        raise ValueError("Cannot override columsn in colify_table.")
+    options['cols'] = columns
+
+    colify(transpose(), **options)
 
 
 def colified(elts, **options):

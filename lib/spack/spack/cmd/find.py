@@ -24,13 +24,14 @@
 ##############################################################################
 import sys
 import collections
+import itertools
 from external import argparse
 from StringIO import StringIO
 
 import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
+from llnl.util.tty.colify import *
 from llnl.util.tty.color import *
-from llnl.util.lang import partition_list, index_by
+from llnl.util.lang import *
 
 import spack
 import spack.spec
@@ -65,39 +66,40 @@ def find(parser, args):
         if not query_specs:
             return
 
-    specs = [s for s in spack.db.installed_package_specs()
-             if not query_specs or any(s.satisfies(q) for q in query_specs)]
+    # Get all the specs the user asked for
+    if not query_specs:
+        specs = set(spack.db.installed_package_specs())
+    else:
+        results = [set(spack.db.get_installed(qs)) for qs in query_specs]
+        specs = set.union(*results)
 
     # Make a dict with specs keyed by architecture and compiler.
-    index = index_by(specs, 'architecture', 'compiler')
+    index = index_by(specs, ('architecture', 'compiler'))
 
     # Traverse the index and print out each package
-    for architecture in index:
-        tty.hline(architecture, char='=', color=spack.spec.architecture_color)
-        for compiler in index[architecture]:
-            tty.hline(compiler, char='-', color=spack.spec.compiler_color)
+    for i, (architecture, compiler) in enumerate(sorted(index)):
+        if i > 0: print
+        tty.hline("%s / %s" % (compiler, architecture), char='-')
 
-            specs = index[architecture][compiler]
-            specs.sort()
+        specs = index[(architecture, compiler)]
+        specs.sort()
 
-            abbreviated = [s.format('$_$@$+$#', color=True) for s in specs]
+        abbreviated = [s.format('$_$@$+$#', color=True) for s in specs]
 
-            if args.paths:
-                # Print one spec per line along with prefix path
-                width = max(len(s) for s in abbreviated)
-                width += 2
-                format = "    %-{}s%s".format(width)
+        if args.paths:
+            # Print one spec per line along with prefix path
+            width = max(len(s) for s in abbreviated)
+            width += 2
+            format = "    %-{}s%s".format(width)
 
-                for abbrv, spec in zip(abbreviated, specs):
-                    print format % (abbrv, spec.prefix)
+            for abbrv, spec in zip(abbreviated, specs):
+                print format % (abbrv, spec.prefix)
 
-            elif args.full_specs:
-                for spec in specs:
-                    print spec.tree(indent=4, format='$_$@$+', color=True),
-            else:
-                max_len = max([len(s.name) for s in specs])
-                max_len += 4
+        elif args.full_specs:
+            for spec in specs:
+                print spec.tree(indent=4, format='$_$@$+', color=True),
+        else:
+            max_len = max([len(s.name) for s in specs])
+            max_len += 4
 
-                for spec in specs:
-                    format = '$-' + str(max_len) + '_$@$+$#'
-                    print "   " + spec.format(format, color=True)
+            colify((s.format('$-_$@$+$#') for s in specs), decorator=spack.spec.colorize_spec)
