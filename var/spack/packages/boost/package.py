@@ -53,7 +53,10 @@ class Boost(Package):
         bootstrap = Executable('./bootstrap.sh')
         bootstrap()
 
-        b2 = Executable('./b2')
+        # b2 used to be called bjam, before 1.47 (sigh)
+        b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
+
+        b2 = Executable(b2name)
         b2('install',
            '-j %s' % make_jobs,
            '--prefix=%s' % prefix)
