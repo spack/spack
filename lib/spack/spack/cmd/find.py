@@ -79,13 +79,16 @@ def find(parser, args):
     # Traverse the index and print out each package
     for i, (architecture, compiler) in enumerate(sorted(index)):
         if i > 0: print
-        tty.hline("%s / %s" % (compiler, architecture), char='-')
 
-        specs = index[(architecture, compiler)]
+        header = "%s{%s} / %s{%s}" % (
+            spack.spec.architecture_color, architecture,
+            spack.spec.compiler_color, compiler)
+        tty.hline(colorize(header), char='-')
+
+        specs = index[(architecture,compiler)]
         specs.sort()
 
         abbreviated = [s.format('$_$@$+$#', color=True) for s in specs]
-
         if args.paths:
             # Print one spec per line along with prefix path
             width = max(len(s) for s in abbreviated)
@@ -99,7 +102,4 @@ def find(parser, args):
             for spec in specs:
                 print spec.tree(indent=4, format='$_$@$+', color=True),
         else:
-            max_len = max([len(s.name) for s in specs])
-            max_len += 4
-
-            colify((s.format('$-_$@$+$#') for s in specs), decorator=spack.spec.colorize_spec)
+            colify(s.format('$-_$@$+$#', color=True) for s in specs)

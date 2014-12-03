@@ -33,6 +33,7 @@ import struct
 from StringIO import StringIO
 
 from llnl.util.tty import terminal_size
+from llnl.util.tty.color import clen
 
 
 class ColumnConfig:
@@ -40,7 +41,8 @@ class ColumnConfig:
         self.cols = cols
         self.line_length = 0
         self.valid = True
-        self.widths = [0] * cols
+        self.widths = [0] * cols   # does not include ansi colors
+        self.cwidths = [0] * cols  # includes ansi colors
 
     def __repr__(self):
         attrs = [(a,getattr(self, a)) for a in dir(self) if not a.startswith("__")]
@@ -62,7 +64,10 @@ def config_variable_cols(elts, console_width, padding, cols=0):
         raise ValueError("cols must be non-negative.")
 
     # Get a bound on the most columns we could possibly have.
-    lengths = [len(elt) for elt in elts]
+    # 'clen' ignores length of ansi color sequences.
+    lengths = [clen(e) for e in elts]
+    clengths = [len(e) for e in elts]
+
     max_cols = max(1, console_width / (min(lengths) + padding))
     max_cols = min(len(elts), max_cols)
 
@@ -71,17 +76,16 @@ def config_variable_cols(elts, console_width, padding, cols=0):
 
     # Determine the most columns possible for the console width.
     configs = [ColumnConfig(c) for c in col_range]
-    for elt, length in enumerate(lengths):
+    for i, length in enumerate(lengths):
         for conf in configs:
             if conf.valid:
-                col = elt / ((len(elts) + conf.cols - 1) / conf.cols)
-                padded = length
-                if col < (conf.cols - 1):
-                    padded += padding
+                col = i / ((len(elts) + conf.cols - 1) / conf.cols)
+                p = padding if col < (conf.cols - 1) else 0
 
-                if conf.widths[col] < padded:
-                    conf.line_length += padded - conf.widths[col]
-                    conf.widths[col] = padded
+                if conf.widths[col] < (length + p):
+                    conf.line_length += length + p - conf.widths[col]
+                    conf.widths[col]  = length + p
+                    conf.cwidths[col] = clengths[i] + p
                     conf.valid = (conf.line_length < console_width)
 
     try:
@@ -105,12 +109,17 @@ def config_uniform_cols(elts, console_width, padding, cols=0):
     if cols < 0:
         raise ValueError("cols must be non-negative.")
 
-    max_len = max(len(elt) for elt in elts) + padding
+    # 'clen' ignores length of ansi color sequences.
+    max_len = max(clen(e) for e in elts) + padding
+    max_clen = max(len(e) for e in elts) + padding
     if cols == 0:
         cols = max(1, console_width / max_len)
         cols = min(len(elts), cols)
+
     config = ColumnConfig(cols)
     config.widths = [max_len] * cols
+    config.cwidths = [max_clen] * cols
+
     return config
 
 
@@ -139,9 +148,8 @@ def colify(elts, **options):
                       Variable-width columns are tighter, uniform columns are all the
                       same width and fit less data on the screen.
 
-    decorator=<func>  Function to add decoration (such as color) after columns have
-                      already been fitted.  Useful for fitting based only on
-                      positive-width characters.
+    len=<func>        Function to use for calculating string length.
+                      Useful for ignoring ansi color. Default is 'len'.
     """
     # Get keyword arguments or set defaults
     cols         = options.pop("cols", 0)
@@ -151,7 +159,6 @@ def colify(elts, **options):
     tty          = options.pop('tty', None)
     method       = options.pop("method", "variable")
     console_cols = options.pop("width", None)
-    decorator    = options.pop("decorator", lambda x:x)
 
     if options:
         raise TypeError("'%s' is an invalid keyword argument for this function."
@@ -162,13 +169,10 @@ def colify(elts, **options):
     if not elts:
         return (0, ())
 
+    # Use only one column if not a tty.
     if not tty:
         if tty is False or not output.isatty():
-            for elt in elts:
-                output.write("%s\n" % elt)
-
-            maxlen = max(len(str(s)) for s in elts)
-            return (1, (maxlen,))
+            cols = 1
 
     # Specify the number of character columns to use.
     if not console_cols:
@@ -186,7 +190,7 @@ def colify(elts, **options):
         raise ValueError("method must be one of: " + allowed_methods)
 
     cols = config.cols
-    formats = ["%%-%ds" % width for width in config.widths[:-1]]
+    formats = ["%%-%ds" % width for width in config.cwidths[:-1]]
     formats.append("%s")  # last column has no trailing space
 
     rows = (len(elts) + cols - 1) / cols
@@ -196,7 +200,7 @@ def colify(elts, **options):
         output.write(" " * indent)
         for col in xrange(cols):
             elt = col * rows + row
-            output.write(decorator(formats[col] % elts[elt]))
+            output.write(formats[col] % elts[elt])
 
         output.write("\n")
         row += 1

@@ -145,18 +145,16 @@ def get_yes_or_no(prompt, **kwargs):
 
 
 def hline(label=None, **kwargs):
-    """Draw an optionally colored or labeled horizontal line.
+    """Draw a labeled horizontal line.
        Options:
-
        char       Char to draw the line with.  Default '-'
-       color      Color of the label.  Default is no color.
        max_width  Maximum width of the line.  Default is 64 chars.
-
-       See tty.color for possible color formats.
     """
-    char      = kwargs.get('char', '-')
-    color     = kwargs.get('color', '')
-    max_width = kwargs.get('max_width', 64)
+    char      = kwargs.pop('char', '-')
+    max_width = kwargs.pop('max_width', 64)
+    if kwargs:
+        raise TypeError("'%s' is an invalid keyword argument for this function."
+                        % next(kwargs.iterkeys()))
 
     rows, cols = terminal_size()
     if not cols:
@@ -166,15 +164,12 @@ def hline(label=None, **kwargs):
     cols = min(max_width, cols)
 
     label = str(label)
-    prefix = char * 2 + " " + label + " "
-    suffix = (cols - len(prefix)) * char
+    prefix = char * 2 + " "
+    suffix = " " + (cols - len(prefix) - clen(label)) * char
 
     out = StringIO()
-    if color:
-        prefix = char * 2 + " " + color + cescape(label) + "@. "
-        cwrite(prefix, stream=out, color=True)
-    else:
-        out.write(prefix)
+    out.write(prefix)
+    out.write(label)
     out.write(suffix)
 
     print out.getvalue()
