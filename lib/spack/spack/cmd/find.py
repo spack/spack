@@ -41,11 +41,14 @@ description ="Find installed spack packages"
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
+        '-l', '--long', action='store_true', dest='long',
+        help='Show dependency hashes as well as versions.')
+    format_group.add_argument(
         '-p', '--paths', action='store_true', dest='paths',
         help='Show paths to package install directories')
     format_group.add_argument(
-        '-l', '--long', action='store_true', dest='full_specs',
-        help='Show full-length specs of installed packages')
+        '-d', '--deps', action='store_true', dest='full_deps',
+        help='Show full dependency DAG of installed packages')
 
     subparser.add_argument(
         'query_specs', nargs=argparse.REMAINDER,
@@ -88,7 +91,7 @@ def find(parser, args):
         specs = index[(architecture,compiler)]
         specs.sort()
 
-        abbreviated = [s.format('$_$@$+$#', color=True) for s in specs]
+        abbreviated = [s.format('$_$@$+', color=True) for s in specs]
         if args.paths:
             # Print one spec per line along with prefix path
             width = max(len(s) for s in abbreviated)
@@ -98,8 +101,11 @@ def find(parser, args):
             for abbrv, spec in zip(abbreviated, specs):
                 print format % (abbrv, spec.prefix)
 
-        elif args.full_specs:
+        elif args.full_deps:
             for spec in specs:
                 print spec.tree(indent=4, format='$_$@$+', color=True),
         else:
-            colify(s.format('$-_$@$+$#', color=True) for s in specs)
+            fmt = '$-_$@$+'
+            if args.long:
+                fmt += '$#'
+            colify(s.format(fmt, color=True) for s in specs)
