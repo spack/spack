@@ -149,6 +149,11 @@ def colorize(string, **kwargs):
     return re.sub(color_re, match_to_ansi(color), string)
 
 
+def clen(string):
+    """Return the length of a string, excluding ansi color sequences."""
+    return len(re.sub(r'\033[^m]*m', '', string))
+
+
 def cwrite(string, stream=sys.stdout, color=None):
     """Replace all color expressions in string with ANSI control
        codes and write the result to the stream.  If color is

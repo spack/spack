@@ -25,6 +25,7 @@
 from external import argparse
 
 import llnl.util.tty as tty
+from llnl.util.tty.color import colorize
 from llnl.util.tty.colify import colify
 from llnl.util.lang import index_by
 
@@ -96,9 +97,12 @@ def compiler_info(args):
 def compiler_list(args):
     tty.msg("Available compilers")
     index = index_by(spack.compilers.all_compilers(), 'name')
-    for name, compilers in index.items():
-        tty.hline(name, char='-', color=spack.spec.compiler_color)
-        colify(reversed(sorted(compilers)), indent=4)
+    for i, (name, compilers) in enumerate(index.items()):
+        if i >= 1: print
+
+        cname = "%s{%s}" % (spack.spec.compiler_color, name)
+        tty.hline(colorize(cname), char='-')
+        colify(reversed(sorted(compilers)))
 
 
 def compiler(parser, args):
