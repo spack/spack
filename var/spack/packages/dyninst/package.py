@@ -32,7 +32,7 @@ class Dyninst(Package):
     list_url = "http://www.dyninst.org/downloads/dyninst-8.x"
 
     version('8.1.2', 'bf03b33375afa66fe0efa46ce3f4b17a')
-    version('8.1.1', '1f8743e3a5662b25ce64a7edf647e77d')
+    version('8.1.1', 'd1a04e995b7aa70960cd1d1fac8bd6ac')
 
     depends_on("libelf")
     depends_on("libdwarf")
