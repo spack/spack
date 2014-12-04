@@ -180,11 +180,11 @@ def create(parser, args):
                 tty.msg("Aborted.")
                 return
 
-    sorted_versions = list(reversed(versions))
+    sorted_versions = list(reversed(versions.keys()))
 
     guesser = ConfigureGuesser()
     ver_hash_tuples = spack.cmd.checksum.get_checksums(
-        versions[:archives_to_fetch], urls[:archives_to_fetch],
+        sorted_versions[:archives_to_fetch], urls[:archives_to_fetch],
         first_stage_function=guesser, keep_stage=args.keep_stage)
 
     if not ver_hash_tuples:
