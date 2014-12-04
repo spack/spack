@@ -345,8 +345,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def git_version(self):
-        git = which('git', required=True)
-        vstring = git('--version', return_output=True).lstrip('git version ')
+        vstring = self.git('--version', return_output=True).lstrip('git version ')
         return Version(vstring)
 
 
@@ -355,6 +354,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         if not self._git:
             self._git = which('git', required=True)
         return self._git
+
 
     @_needs_stage
     def fetch(self):
