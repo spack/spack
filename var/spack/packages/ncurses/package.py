@@ -16,7 +16,7 @@ class Ncurses(Package):
         configure("--prefix=%s" % prefix,
                   "--with-shared",
                   "--enable-widec",
-                  "--enable-pc-files",
+                  "--disable-pc-files",
                   "--without-ada")
         make()
         make("install")
