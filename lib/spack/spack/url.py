@@ -47,7 +47,9 @@ it's never been told about that version before.
 import os
 import re
 from StringIO import StringIO
+from urlparse import urlsplit, urlunsplit
 
+import llnl.util.tty as tty
 from llnl.util.tty.color import *
 
 import spack.error
@@ -80,6 +82,19 @@ def find_list_url(url):
         return os.path.dirname(url)
 
 
+def strip_url(path):
+    """Strip query (?..) and fragment (#..) from URLs. Returns URL as two
+       parts: the URL and the stripped part.
+    """
+    try:
+        components = urlsplit(path)
+        stripped = components[:3] + (None, None)
+        return (urlunsplit(stripped), "?%s#%s" % components[3:5])
+    except ValueError:
+        tty.debug("Got error parsing path %s" % path)
+        return (path, '')  # Ignore URL parse errors here
+
+
 def parse_version_offset(path):
     """Try to extract a version string from a filename or URL.  This is taken
        largely from Homebrew's Version class."""
@@ -87,6 +102,9 @@ def parse_version_offset(path):
     # Strip off sourceforge download stuffix.
     if re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', path):
         path = os.path.dirname(path)
+
+    # Remove trailing ?... from URL
+    path, stripped = strip_url(path)
 
     # Strip archive extension
     path = comp.strip_extension(path)
@@ -186,6 +204,9 @@ def parse_version(path):
 def parse_name_offset(path, v=None):
     if v is None:
         v = parse_version(path)
+
+    # Remove trailing ?... from URL
+    path, stripped = strip_url(path)
 
     # Strip archive extension
     path = comp.strip_extension(path)
@@ -303,6 +324,9 @@ def wildcard_version(path):
     # Get name and version, so we can treat them specially
     name, v = parse_name_and_version(path)
 
+    # strip URL query/fragment first.
+    path, query = strip_url(path)
+
     # protect extensions like bz2 from wildcarding.
     ext = comp.extension(path)
     path = comp.strip_extension(path)
@@ -326,7 +350,7 @@ def wildcard_version(path):
         name_parts[i] = vgroup.join(re.escape(vp) for vp in vparts)
 
     # Put it all back together with original name matches intact.
-    return ''.join(name_parts) + '.' + ext
+    return ''.join(name_parts) + '.' + ext + query
 
 
 def substitute_version(path, new_version):
