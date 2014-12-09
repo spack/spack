@@ -56,7 +56,6 @@ def get_checksums(versions, urls, **kwargs):
     first_stage_function = kwargs.get('first_stage_function', None)
     keep_stage = kwargs.get('keep_stage', False)
 
-
     tty.msg("Downloading...")
     hashes = []
     for i, (url, version) in enumerate(zip(urls, versions)):
@@ -98,7 +97,7 @@ def checksum(parser, args):
         if not versions:
             tty.die("Could not fetch any versions for %s." % pkg.name)
 
-    sorted_versions = list(reversed(sorted(versions)))
+    sorted_versions = sorted(versions, reverse=True)
 
     tty.msg("Found %s versions of %s." % (len(versions), pkg.name),
             *spack.cmd.elide_list(
