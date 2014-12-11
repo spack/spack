@@ -82,35 +82,73 @@ def find_list_url(url):
         return os.path.dirname(url)
 
 
-def strip_url(path):
-    """Strip query (?..) and fragment (#..) from URLs. Returns URL as two
-       parts: the URL and the stripped part.
-    """
+def strip_query_and_fragment(path):
     try:
         components = urlsplit(path)
         stripped = components[:3] + (None, None)
-        return (urlunsplit(stripped), "?%s#%s" % components[3:5])
+
+        query, frag = components[3:5]
+        suffix = ''
+        if query: suffix += '?' + query
+        if frag:  suffix += '#' + frag
+
+        return (urlunsplit(stripped), suffix)
+
     except ValueError:
         tty.debug("Got error parsing path %s" % path)
         return (path, '')  # Ignore URL parse errors here
 
 
+def split_url_extension(path):
+    """Some URLs have a query string, e.g.:
+
+          1. https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true
+          2. http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin.tar.gz
+
+       In (1), the query string needs to be stripped to get at the
+       extension, but in (2), the filename is IN a single final query
+       argument.
+
+       This strips the URL into three pieces: prefix, ext, and suffix.
+       The suffix contains anything that was stripped off the URL to
+       get at the file extension.  In (1), it will be '?raw=true', but
+       in (2), it will be empty. e.g.:
+
+           1. ('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7', '.tgz', '?raw=true')
+           2. ('http://www.apache.org/dyn/closer.cgi?path=/cassandra/1.2.0/apache-cassandra-1.2.0-rc2-bin',
+               '.tar.gz', None)
+    """
+    prefix, ext, suffix = path, '', ''
+
+    # Strip off sourceforge download suffix.
+    match = re.search(r'((?:sourceforge.net|sf.net)/.*)(/download)$', path)
+    if match:
+        prefix, suffix = match.groups()
+
+    ext = comp.extension(prefix)
+    if ext is not None:
+        prefix = comp.strip_extension(prefix)
+
+    else:
+        prefix, suf = strip_query_and_fragment(prefix)
+        ext = comp.extension(prefix)
+        prefix = comp.strip_extension(prefix)
+        suffix = suf + suffix
+        if ext is None:
+            ext = ''
+
+    return prefix, ext, suffix
+
+
 def parse_version_offset(path):
     """Try to extract a version string from a filename or URL.  This is taken
        largely from Homebrew's Version class."""
+    original_path = path
 
-    # Strip off sourceforge download stuffix.
-    if re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', path):
-        path = os.path.dirname(path)
+    path, ext, suffix = split_url_extension(path)
 
-    # Remove trailing ?... from URL
-    path, stripped = strip_url(path)
-
-    # Strip archive extension
-    path = comp.strip_extension(path)
-
-    # Take basename to avoid including parent dirs in version name
-    # Remember the offset of the stem in the full path.
+    # Allow matches against the basename, to avoid including parent
+    # dirs in version name Remember the offset of the stem in the path
     stem = os.path.basename(path)
     offset = len(path) - len(stem)
 
@@ -128,7 +166,7 @@ def parse_version_offset(path):
         (r'github.com/.+/(?:zip|tar)ball/v?((\d+\.)+\d+_(\d+))$', path),
 
         # e.g. https://github.com/hpc/lwgrp/archive/v1.0.1.tar.gz
-        (r'github.com/[^/]+/[^/]+/archive/v?(\d+(?:\.\d+)*)\.tar\.gz$', path),
+        (r'github.com/[^/]+/[^/]+/archive/v?(\d+(?:\.\d+)*)$', path),
 
         # e.g. https://github.com/erlang/otp/tarball/OTP_R15B01 (erlang style)
         (r'[-_](R\d+[AB]\d*(-\d+)?)', path),
@@ -190,7 +228,7 @@ def parse_version_offset(path):
 
             return version, start, len(version)
 
-    raise UndetectableVersionError(path)
+    raise UndetectableVersionError(original_path)
 
 
 def parse_version(path):
@@ -205,11 +243,7 @@ def parse_name_offset(path, v=None):
     if v is None:
         v = parse_version(path)
 
-    # Remove trailing ?... from URL
-    path, stripped = strip_url(path)
-
-    # Strip archive extension
-    path = comp.strip_extension(path)
+    path, ext, suffix = split_url_extension(path)
 
     # Allow matching with either path or stem, as with the version.
     stem = os.path.basename(path)
@@ -324,12 +358,7 @@ def wildcard_version(path):
     # Get name and version, so we can treat them specially
     name, v = parse_name_and_version(path)
 
-    # strip URL query/fragment first.
-    path, query = strip_url(path)
-
-    # protect extensions like bz2 from wildcarding.
-    ext = comp.extension(path)
-    path = comp.strip_extension(path)
+    path, ext, suffix = split_url_extension(path)
 
     # Construct a case-insensitive regular expression for the package name.
     name_re = '(%s)' % insensitize(name)
@@ -350,7 +379,11 @@ def wildcard_version(path):
         name_parts[i] = vgroup.join(re.escape(vp) for vp in vparts)
 
     # Put it all back together with original name matches intact.
-    return ''.join(name_parts) + '.' + ext + query
+    result = ''.join(name_parts)
+    if ext:
+        result += '.' + ext
+    result += suffix
+    return result
 
 
 def substitute_version(path, new_version):

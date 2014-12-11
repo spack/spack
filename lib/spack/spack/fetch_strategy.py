@@ -173,7 +173,7 @@ class URLFetchStrategy(FetchStrategy):
                 # This is some other curl error.  Curl will print the
                 # error, but print a spack message too
                 raise FailedDownloadError(
-                    self.url, "Curl failed with error %d", spack.curl.returncode)
+                    self.url, "Curl failed with error %d" % spack.curl.returncode)
 
 
         # Check if we somehow got an HTML file rather than the archive we

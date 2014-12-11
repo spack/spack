@@ -98,3 +98,10 @@ class UrlExtrapolateTest(unittest.TestCase):
                        'http://open-source-box.org/gcc/gcc-4.7/gcc-4.7.tar.bz2')
         self.check_url('http://open-source-box.org/gcc/gcc-4.4.7/gcc-4.4.7.tar.bz2', '4.4.7',
                        'http://open-source-box.org/gcc/gcc-4.4.7/gcc-4.4.7.tar.bz2')
+
+
+    def test_github_raw(self):
+        self.check_url('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true', '2.0.7',
+                       'https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true')
+        self.check_url('https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true', '4.7',
+                       'https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v4.7.tgz?raw=true')

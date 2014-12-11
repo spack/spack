@@ -322,3 +322,8 @@ class UrlParseTest(unittest.TestCase):
         self.check(
             'gcc', '4.4.7',
             'http://open-source-box.org/gcc/gcc-4.9.2/gcc-4.4.7.tar.bz2')
+
+    def test_github_raw_url(self):
+        self.check(
+            'PowerParser', '2.0.7',
+            'https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true')
