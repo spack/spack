@@ -140,6 +140,27 @@ def split_url_extension(path):
     return prefix, ext, suffix
 
 
+def downloaded_file_extension(path):
+    """This returns the type of archive a URL refers to.  This is
+       sometimes confusing becasue of URLs like:
+
+           (1) https://github.com/petdance/ack/tarball/1.93_02
+
+       Where the URL doesn't actually contain the filename.  We need
+       to know what type it is so that we can appropriately name files
+       in mirrors.
+    """
+    match = re.search(r'github.com/.+/(zip|tar)ball/', path)
+    if match:
+        if   match.group(1) == 'zip': return 'zip'
+        elif match.group(1) == 'tar': return 'tar.gz'
+
+    prefix, ext, suffix = split_url_extension(path)
+    if not ext:
+        raise UrlParseError("Cannot deduce archive type in %s" % path, path)
+    return ext
+
+
 def parse_version_offset(path):
     """Try to extract a version string from a filename or URL.  This is taken
        largely from Homebrew's Version class."""

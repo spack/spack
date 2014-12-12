@@ -51,6 +51,7 @@ import spack
 import spack.spec
 import spack.error
 import spack.compilers
+import spack.mirror
 import spack.hooks
 import spack.build_environment as build_env
 import spack.url as url
@@ -453,9 +454,9 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
-            self._stage = Stage(self.fetcher,
-                                mirror_path=self.mirror_path(),
-                                name=self.spec.short_spec)
+            mp = spack.mirror.mirror_archive_filename(self.spec)
+            self._stage = Stage(
+                self.fetcher, mirror_path=mp, name=self.spec.short_spec)
         return self._stage
 
 
@@ -473,13 +474,6 @@ class Package(object):
     @fetcher.setter
     def fetcher(self, f):
         self._fetcher = f
-
-
-    def mirror_path(self):
-        """Get path to this package's archive in a mirror."""
-        filename = "%s-%s." % (self.name, self.version)
-        filename += extension(self.url) if self.url else "tar.gz"
-        return "%s/%s" % (self.name, filename)
 
 
     def preorder_traversal(self, visited=None, **kwargs):
