@@ -157,19 +157,24 @@ class SpecHashDirectoryLayout(DirectoryLayout):
             # Specs from files are assumed normal and concrete
             spec = Spec(spec_file.read().replace('\n', ''))
 
-        # If we do not have a package on hand for this spec, we know
-        # it is concrete, and we *assume* that it is normal. This
-        # prevents us from trying to fetch a non-existing package, and
-        # allows best effort for commands like spack find.
-        if not spack.db.exists(spec.name):
-            spec._normal = True
-            spec._concrete = True
-        else:
-            spec.normalize()
-            if not spec.concrete:
-                tty.warn("Spec read from installed package is not concrete:",
-                         path, spec)
+        if all(spack.db.exists(s.name) for s in spec.traverse()):
+            copy = spec.copy()
+            copy.normalize()
+            if copy.concrete:
+                return copy   # These are specs spack still understands.
 
+        # If we get here, either the spec is no longer in spack, or
+        # something about its dependencies has changed. So we need to
+        # just assume the read spec is correct.  We'll lose graph
+        # information if we do this, but this is just for best effort
+        # for commands like uninstall and find.  Currently Spack
+        # doesn't do anything that needs the graph info after install.
+
+        # TODO: store specs with full connectivity information, so
+        # that we don't have to normalize or reconstruct based on
+        # changing dependencies in the Spack tree.
+        spec._normal = True
+        spec._concrete = True
         return spec
 
 

@@ -74,7 +74,8 @@ class PackageDB(object):
         if not spec in self.instances:
             package_class = self.get_class_for_package_name(spec.name)
             try:
-                self.instances[spec.copy()] = package_class(spec)
+                copy = spec.copy()
+                self.instances[copy] = package_class(copy)
             except Exception, e:
                 raise FailedConstructorError(spec.name, e)
 
