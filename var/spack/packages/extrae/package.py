@@ -31,7 +31,15 @@ class Extrae(Package):
         elif 'mvapich2' in spec:
             mpi = spec['mvapich2']
 
-        configure("--prefix=%s" % prefix, "--with-mpi=%s" % mpi.prefix, "--with-unwind=%s" % spec['libunwind'].prefix, "--with-dyninst=%s" % spec['dyninst'].prefix, "--with-boost=%s" % spec['boost'].prefix, "--with-dwarf=%s" % spec['libdwarf'].prefix, "--with-papi=%s" % spec['papi'].prefix, "--with-dyninst-headers=%s" % spec['dyninst'].prefix.include, "--with-dyninst-libs=%s" % spec['dyninst'].prefix.lib)
+        configure("--prefix=%s" % prefix,
+                  "--with-mpi=%s" % mpi.prefix,
+                  "--with-unwind=%s" % spec['libunwind'].prefix,
+                  "--with-dyninst=%s" % spec['dyninst'].prefix,
+                  "--with-boost=%s" % spec['boost'].prefix,
+                  "--with-dwarf=%s" % spec['libdwarf'].prefix,
+                  "--with-papi=%s" % spec['papi'].prefix,
+                  "--with-dyninst-headers=%s" % spec['dyninst'].prefix.include,
+                  "--with-dyninst-libs=%s" % spec['dyninst'].prefix.lib)
 
         make()
         make("install", parallel=False)
