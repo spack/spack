@@ -44,6 +44,9 @@ def setup_parser(subparser):
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="Do not check packages against checksum")
     subparser.add_argument(
+        '--fake', action='store_true', dest='fake',
+        help="Fake install.  Just remove the prefix and touch a fake file in it.")
+    subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
 
 
@@ -59,4 +62,5 @@ def install(parser, args):
         package = spack.db.get(spec)
         package.do_install(keep_prefix=args.keep_prefix,
                            keep_stage=args.keep_stage,
-                           ignore_deps=args.ignore_deps)
+                           ignore_deps=args.ignore_deps,
+                           fake=args.fake)
