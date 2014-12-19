@@ -25,7 +25,8 @@
 ##############################################################################
 import sys
 if not sys.version_info[:2] >= (2,6):
-    sys.exit("Spack requires Python 2.6.  Version was %s." % sys.version_info)
+    v_info = sys.version_info[:3]
+    sys.exit("Spack requires Python 2.6 or higher.  This is Python %d.%d.%d." % v_info)
 
 import os
 
