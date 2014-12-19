@@ -709,9 +709,10 @@ class Package(object):
            Package implementations should override install().
         """
         # whether to keep the prefix on failure.  Default is to destroy it.
-        keep_prefix = kwargs.get('keep_prefix', False)
-        keep_stage  = kwargs.get('keep_stage', False)
-        ignore_deps = kwargs.get('ignore_deps', False)
+        keep_prefix  = kwargs.get('keep_prefix', False)
+        keep_stage   = kwargs.get('keep_stage', False)
+        ignore_deps  = kwargs.get('ignore_deps', False)
+        fake_install = kwargs.get('fake', False)
 
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -725,7 +726,8 @@ class Package(object):
         if not ignore_deps:
             self.do_install_dependencies()
 
-        self.do_patch()
+        if not fake_install:
+            self.do_patch()
 
         # Fork a child process to do the build.  This allows each
         # package authors to have full control over their environment,
@@ -750,8 +752,14 @@ class Package(object):
                 build_env.set_build_environment_variables(self)
                 build_env.set_module_variables_for_package(self)
 
-                # Subclasses implement install() to do the real work.
-                self.install(self.spec, self.prefix)
+                if fake_install:
+                    mkdirp(self.prefix.bin)
+                    touch(join_path(self.prefix.bin, 'fake'))
+                    mkdirp(self.prefix.lib)
+                    mkdirp(self.prefix.man1)
+                else:
+                    # Subclasses implement install() to do the real work.
+                    self.install(self.spec, self.prefix)
 
                 # Ensure that something was actually installed.
                 if not os.listdir(self.prefix):

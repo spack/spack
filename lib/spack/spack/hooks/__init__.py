@@ -47,8 +47,11 @@ import spack
 def all_hook_modules():
     modules = []
     for name in list_modules(spack.hooks_path):
+        mod_name = __name__ + '.' + name
         path = join_path(spack.hooks_path, name) + ".py"
-        modules.append(imp.load_source('spack.hooks', path))
+        mod = imp.load_source(mod_name, path)
+        modules.append(mod)
+
     return modules
 
 

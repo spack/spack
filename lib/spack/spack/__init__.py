@@ -26,7 +26,7 @@ import os
 import tempfile
 from llnl.util.filesystem import *
 
-# This lives in $prefix/lib/spac/spack/__file__
+# This lives in $prefix/lib/spack/spack/__file__
 prefix = ancestor(__file__, 4)
 
 # The spack script itself
