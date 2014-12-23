@@ -37,6 +37,7 @@ from llnl.util.filesystem import *
 
 import spack
 import spack.error
+import spack.url as url
 import spack.fetch_strategy as fs
 from spack.spec import Spec
 from spack.stage import Stage
@@ -52,7 +53,7 @@ def mirror_archive_filename(spec):
     fetcher = spec.package.fetcher
     if isinstance(fetcher, fs.URLFetchStrategy):
         # If we fetch this version with a URLFetchStrategy, use URL's archive type
-        ext = extension(fetcher.url)
+        ext = url.downloaded_file_extension(fetcher.url)
     else:
         # Otherwise we'll make a .tar.gz ourselves
         ext = 'tar.gz'
