@@ -5,6 +5,7 @@ class Imagemagick(Package):
     homepage = "http://www.imagemagic.org"
     url      = "http://www.imagemagick.org/download/ImageMagick-6.8.9-10.tar.gz"
 
+    version('6.9.0-0',  '2cf094cb86ec518fa5bc669ce2d21613')
     version('6.8.9-10', 'aa050bf9785e571c956c111377bbf57c')
     version('6.8.9-9',  'e63fed3e3550851328352c708f800676')
 

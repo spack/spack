@@ -7,7 +7,7 @@ class Qt(Package):
     version('4.8.6', '2edbe4d6c2eff33ef91732602f3518eb',
             url="http://download.qt-project.org/official_releases/qt/4.8/4.8.6/qt-everywhere-opensource-src-4.8.6.tar.gz")
 
-    # depends_on("zlib")
+    depends_on("lcms")
 
     def install(self, spec, prefix):
         # FIXME: Modify the configure line to suit your build system here.
