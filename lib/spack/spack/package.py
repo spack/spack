@@ -35,6 +35,7 @@ README.
 """
 import os
 import re
+import time
 import inspect
 import subprocess
 import platform as py_platform
@@ -390,6 +391,10 @@ class Package(object):
         if not hasattr(self, 'list_depth'):
             self.list_depth = 1
 
+        # Set up some internal variables for timing.
+        self._fetch_time = 0.0
+        self._total_time = 0.0
+
 
     @property
     def version(self):
@@ -606,6 +611,7 @@ class Package(object):
         if not self.spec.concrete:
             raise ValueError("Can only fetch concrete packages.")
 
+        start_time = time.time()
         if spack.do_checksum and not self.version in self.versions:
             tty.warn("There is no checksum on file to fetch %s safely."
                      % self.spec.format('$_$@'))
@@ -624,6 +630,7 @@ class Package(object):
                     "Will not fetch %s." % self.spec.format('$_$@'), checksum_msg)
 
         self.stage.fetch()
+        self._fetch_time = time.time() - start_time
 
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
@@ -720,6 +727,7 @@ class Package(object):
         if not ignore_deps:
             self.do_install_dependencies()
 
+        start_time = time.time()
         if not fake_install:
             self.do_patch()
 
@@ -765,7 +773,13 @@ class Package(object):
                 if not keep_stage:
                     self.stage.destroy()
 
-                tty.msg("Successfully installed %s" % self.name)
+                # Stop timer.
+                self._total_time = time.time() - start_time
+                build_time = self._total_time - self._fetch_time
+
+                tty.msg("Successfully installed %s." % self.name,
+                        "Fetch: %.2f sec.  Build: %.2f sec.  Total: %.2f sec."
+                        % (self._fetch_time, build_time, self._total_time))
                 print_pkg(self.prefix)
 
                 # Use os._exit here to avoid raising a SystemExit exception,
