@@ -45,7 +45,7 @@ import re
 import shutil
 from functools import wraps
 import llnl.util.tty as tty
-
+from llnl.util.filesystem import *
 import spack
 import spack.error
 import spack.util.crypto as crypto
@@ -205,7 +205,25 @@ class URLFetchStrategy(FetchStrategy):
                                       "Failed on expand() for URL %s" % self.url)
 
         decompress = decompressor_for(self.archive_file)
+
+        # Expand all tarballs in their own directory to contain
+        # exploding tarballs.
+        tarball_container = os.path.join(self.stage.path, "spack-expanded-archive")
+        mkdirp(tarball_container)
+        os.chdir(tarball_container)
         decompress(self.archive_file)
+
+        # If the tarball *didn't* explode, move
+        # the expanded directory up & remove the protector directory.
+        files = os.listdir(tarball_container)
+        if len(files) == 1:
+            expanded_dir = os.path.join(tarball_container, files[0])
+            if os.path.isdir(expanded_dir):
+                shutil.move(expanded_dir, self.stage.path)
+                os.rmdir(tarball_container)
+
+        # Set the wd back to the stage when done.
+        self.stage.chdir()
 
 
     def archive(self, destination):
