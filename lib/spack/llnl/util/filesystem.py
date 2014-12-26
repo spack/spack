@@ -63,8 +63,11 @@ def filter_file(regex, repl, *filenames, **kwargs):
     # Allow strings to use \1, \2, etc. for replacement, like sed
     if not callable(repl):
         unescaped = repl.replace(r'\\', '\\')
-        repl = lambda m: re.sub(
-            r'\\([0-9])', lambda x: m.group(int(x.group(1))), unescaped)
+        def replace_groups_with_groupid(m):
+            def groupid_to_group(x):
+                return m.group(int(x.group(1)))
+            return re.sub(r'\\([1-9])', groupid_to_group, unescaped)
+        repl = replace_groups_with_groupid
 
     if string:
         regex = re.escape(regex)
