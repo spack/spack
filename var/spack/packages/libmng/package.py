@@ -13,6 +13,10 @@ class Libmng(Package):
     depends_on("zlib")
     depends_on("lcms")
 
+    def patch(self):
+        # jpeg requires stdio to beincluded before its headrs.
+        filter_file(r'^(\#include \<jpeglib\.h\>)', '#include<stdio.h>\n\\1', 'libmng_types.h')
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
