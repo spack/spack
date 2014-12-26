@@ -22,9 +22,18 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from external import argparse
 import spack
+import spack.cmd
 
 description = "Write out inter-package dependencies in dot graph format"
 
+def setup_parser(subparser):
+    subparser.add_argument(
+        'specs', nargs=argparse.REMAINDER,
+        help="specs of packages to graph.  Default is all packages.")
+
+
 def graph(parser, args):
-    spack.db.graph_dependencies()
+    specs = spack.cmd.parse_specs(args.specs)
+    spack.db.graph_dependencies(*specs)

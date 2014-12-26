@@ -269,6 +269,28 @@ def in_function(function_name):
         del stack
 
 
+def check_kwargs(kwargs, fun):
+    """Helper for making functions with kwargs.  Checks whether the kwargs
+       are empty after all of them have been popped off.  If they're
+       not, raises an error describing which kwargs are invalid.
+
+       Example::
+
+          def foo(self, **kwargs):
+              x = kwargs.pop('x', None)
+              y = kwargs.pop('y', None)
+              z = kwargs.pop('z', None)
+              check_kwargs(kwargs, self.foo)
+
+          # This raises a TypeError:
+          foo(w='bad kwarg')
+    """
+    if kwargs:
+        raise TypeError(
+            "'%s' is an invalid keyword argument for function %s()."
+            % (next(kwargs.iterkeys()), fun.__name__))
+
+
 class RequiredAttributeError(ValueError):
     def __init__(self, message):
         super(RequiredAttributeError, self).__init__(message)

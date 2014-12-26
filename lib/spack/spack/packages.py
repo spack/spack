@@ -30,7 +30,7 @@ import imp
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
-from llnl.util.lang import memoized
+from llnl.util.lang import *
 
 import spack.error
 import spack.spec
@@ -214,9 +214,12 @@ class PackageDB(object):
         return cls
 
 
-    def graph_dependencies(self, out=sys.stdout):
+    def graph_dependencies(self, *specs, **kwargs):
         """Print out a graph of all the dependencies between package.
            Graph is in dot format."""
+        out = kwargs.pop('out', sys.stdout)
+        check_kwargs(kwargs, self.graph_dependencies)
+
         out.write('digraph G {\n')
         out.write('  label = "Spack Dependencies"\n')
         out.write('  labelloc = "b"\n')
@@ -227,8 +230,15 @@ class PackageDB(object):
         def quote(string):
             return '"%s"' % string
 
+        if not specs:
+            packages = self.all_packages()
+        else:
+            packages = []
+            for spec in specs:
+                packages.extend(s.package for s in spec.normalized().traverse())
+
         deps = []
-        for pkg in self.all_packages():
+        for pkg in packages:
             out.write('  %-30s [label="%s"]\n' % (quote(pkg.name), pkg.name))
 
             # Add edges for each depends_on in the package.
