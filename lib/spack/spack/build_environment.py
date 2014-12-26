@@ -199,3 +199,10 @@ def set_module_variables_for_package(pkg):
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
     m.prefix  = pkg.prefix
+
+
+def setup_package(pkg):
+    """Execute all environment setup routines."""
+    set_compiler_environment_variables(pkg)
+    set_build_environment_variables(pkg)
+    set_module_variables_for_package(pkg)

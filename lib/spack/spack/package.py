@@ -662,8 +662,11 @@ class Package(object):
         # Kick off the stage first.
         self.do_stage()
 
+        # Package can add its own patch function.
+        has_patch_fun = hasattr(self, 'patch') and callable(self.patch)
+
         # If there are no patches, note it.
-        if not self.patches:
+        if not self.patches and not has_patch_fun:
             tty.msg("No patches needed for %s." % self.name)
             return
 
@@ -686,7 +689,7 @@ class Package(object):
             tty.msg("Already patched %s" % self.name)
             return
 
-        # Apply all the patches for specs that match this on
+        # Apply all the patches for specs that match this one
         for spec, patch_list in self.patches.items():
             if self.spec.satisfies(spec):
                 for patch in patch_list:
@@ -703,6 +706,11 @@ class Package(object):
         if os.path.isfile(bad_file):
             os.remove(bad_file)
         touch(good_file)
+
+        if has_patch_fun:
+            self.patch()
+
+        tty.msg("Patched %s" % self.name)
 
 
     def do_install(self, **kwargs):
@@ -750,9 +758,7 @@ class Package(object):
                 spack.install_layout.make_path_for_spec(self.spec)
 
                 # Set up process's build environment before running install.
-                build_env.set_compiler_environment_variables(self)
-                build_env.set_build_environment_variables(self)
-                build_env.set_module_variables_for_package(self)
+                build_env.setup_package(self)
 
                 if fake_install:
                     mkdirp(self.prefix.bin)
