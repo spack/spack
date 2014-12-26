@@ -190,6 +190,7 @@ def set_module_variables_for_package(pkg):
     m.makedirs   = os.makedirs
     m.remove     = os.remove
     m.removedirs = os.removedirs
+    m.symlink    = os.symlink
 
     m.mkdirp     = mkdirp
     m.install    = install

@@ -1,4 +1,5 @@
 from spack import *
+from glob import glob
 
 class Bzip2(Package):
     """bzip2 is a freely available, patent free high-quality data
@@ -15,5 +16,19 @@ class Bzip2(Package):
         # No configure system -- have to filter the makefile for this package.
         filter_file(r'CC=gcc', 'CC=cc', 'Makefile', string=True)
 
-        make()
+        make('-f', 'Makefile-libbz2_so')
+        make('clean')
         make("install", "PREFIX=%s" % prefix)
+
+        bzip2_exe = join_path(prefix.bin, 'bzip2')
+        install('bzip2-shared', bzip2_exe)
+        for libfile in glob('libbz2.so*'):
+            install(libfile, prefix.lib)
+
+        bunzip2 = join_path(prefix.bin, 'bunzip2')
+        remove(bunzip2)
+        symlink(bzip2_exe, bunzip2)
+
+        bzcat   = join_path(prefix.bin, 'bzcat')
+        remove(bzcat)
+        symlink(bzip2_exe, bzcat)
