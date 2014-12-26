@@ -35,6 +35,7 @@ README.
 """
 import os
 import re
+import time
 import inspect
 import subprocess
 import platform as py_platform
@@ -390,6 +391,10 @@ class Package(object):
         if not hasattr(self, 'list_depth'):
             self.list_depth = 1
 
+        # Set up some internal variables for timing.
+        self._fetch_time = 0.0
+        self._total_time = 0.0
+
 
     @property
     def version(self):
@@ -606,6 +611,7 @@ class Package(object):
         if not self.spec.concrete:
             raise ValueError("Can only fetch concrete packages.")
 
+        start_time = time.time()
         if spack.do_checksum and not self.version in self.versions:
             tty.warn("There is no checksum on file to fetch %s safely."
                      % self.spec.format('$_$@'))
@@ -624,6 +630,7 @@ class Package(object):
                     "Will not fetch %s." % self.spec.format('$_$@'), checksum_msg)
 
         self.stage.fetch()
+        self._fetch_time = time.time() - start_time
 
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
@@ -655,8 +662,11 @@ class Package(object):
         # Kick off the stage first.
         self.do_stage()
 
+        # Package can add its own patch function.
+        has_patch_fun = hasattr(self, 'patch') and callable(self.patch)
+
         # If there are no patches, note it.
-        if not self.patches:
+        if not self.patches and not has_patch_fun:
             tty.msg("No patches needed for %s." % self.name)
             return
 
@@ -679,7 +689,7 @@ class Package(object):
             tty.msg("Already patched %s" % self.name)
             return
 
-        # Apply all the patches for specs that match this on
+        # Apply all the patches for specs that match this one
         for spec, patch_list in self.patches.items():
             if self.spec.satisfies(spec):
                 for patch in patch_list:
@@ -696,6 +706,11 @@ class Package(object):
         if os.path.isfile(bad_file):
             os.remove(bad_file)
         touch(good_file)
+
+        if has_patch_fun:
+            self.patch()
+
+        tty.msg("Patched %s" % self.name)
 
 
     def do_install(self, **kwargs):
@@ -720,6 +735,7 @@ class Package(object):
         if not ignore_deps:
             self.do_install_dependencies()
 
+        start_time = time.time()
         if not fake_install:
             self.do_patch()
 
@@ -742,9 +758,7 @@ class Package(object):
                 spack.install_layout.make_path_for_spec(self.spec)
 
                 # Set up process's build environment before running install.
-                build_env.set_compiler_environment_variables(self)
-                build_env.set_build_environment_variables(self)
-                build_env.set_module_variables_for_package(self)
+                build_env.setup_package(self)
 
                 if fake_install:
                     mkdirp(self.prefix.bin)
@@ -765,7 +779,13 @@ class Package(object):
                 if not keep_stage:
                     self.stage.destroy()
 
-                tty.msg("Successfully installed %s" % self.name)
+                # Stop timer.
+                self._total_time = time.time() - start_time
+                build_time = self._total_time - self._fetch_time
+
+                tty.msg("Successfully installed %s." % self.name,
+                        "Fetch: %.2f sec.  Build: %.2f sec.  Total: %.2f sec."
+                        % (self._fetch_time, build_time, self._total_time))
                 print_pkg(self.prefix)
 
                 # Use os._exit here to avoid raising a SystemExit exception,
