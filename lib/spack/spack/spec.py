@@ -1328,7 +1328,8 @@ class Spec(object):
 
     def graph(self, **kwargs):
         N      = kwargs.get('node', 'o')        # Node character
-        out    = kwargs.get('out', sys.stdout)
+        color  = kwargs.get('color', True)
+        out    = kwargs.get('out', ColorStream(sys.stdout, color=color))
         indent = kwargs.get('indent', 0)
         indent *= ' '
 
