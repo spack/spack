@@ -1330,105 +1330,140 @@ class Spec(object):
         N      = kwargs.get('node', 'o')        # Node character
         color  = kwargs.get('color', True)
         out    = kwargs.get('out', ColorStream(sys.stdout, color=color))
+        debug  = kwargs.get('debug', False)
         indent = kwargs.get('indent', 0)
         indent *= ' '
 
         topo_order = self.topological_sort(reverse=True)
+
+        # Work on a clone so the spec is self contained (no incoming
+        # parent edges), and so we don't destroy this spec.
         clone = self.copy()
+
+        # Fast access to nodes in the spec.
         nodes = clone.index()
+        frontier = []
 
         def ordered_deps(node):
             deps = node.dependencies
             return sorted((d for d in deps), reverse=True)
 
-        frontier = []
 
-        debug = False
-
-        def back_edge(end, start):
+        def back_edge(end, start, **kwargs):
             assert(end < start)
+            collapse = kwargs.get('collapse', True)
+            label    = kwargs.get('label', '')  # debug label
+
 
             if (start - end) > 1:
-                if debug:
-                    out.write(" " * 80)
-
+                # This part draws a long back edge.
                 out.write(indent)
                 out.write("| " * (end + 1))
                 out.write("|_" * (start - end - 2))
-                out.write("|/ ")
-                out.write("/ " * (len(frontier) - start))
+                out.write("|/")
+                if collapse:
+                    out.write(" ")
+                    out.write("/ " * (len(frontier) - start))
+                else:
+                    out.write("| " * (len(frontier) - start))
+
+                if debug:
+                    out.write(" " * 20)
+                    out.write("%s  %s" % (frontier, label))
+
                 out.write("\n")
 
-            if debug:
-                out.write(" " * 80)
-
+            # This part draws the final collapsing line
             out.write(indent)
             out.write("| " * end)
             out.write("|/")
             out.write("| " * (start - end - 1))
-            if (start - end) > 1:
+            if (start - end) > 1 or not collapse:
                 out.write("| " * (len(frontier) - start))
             else:
                 out.write(" /" * (len(frontier) - start))
+
+            if debug:
+                out.write(" " * 20)
+                out.write("%s  %s" % (frontier, label))
+
             out.write("\n")
 
 
-        def connect_deps(i, deps):
+        def connect_deps(i, deps, **kwargs):
             if len(deps) == 1 and deps in frontier:
                 j = frontier.index(deps)
                 if j < i:
-                    back_edge(j, i)
+                    back_edge(j, i, **kwargs)
                 else:
                     if i < j:
                         frontier.pop(j)
                         frontier.insert(i, deps)
-                    back_edge(i, j+1)
+                    back_edge(i, j+1, **kwargs)
+                return True
 
             elif deps:
                 frontier.insert(i, deps)
+                return False
 
 
         def add_deps_to_frontier(node, i):
             deps = ordered_deps(node)
-            connect_deps(i, deps)
+            connect_deps(i, deps, label="add_deps")
             for d in deps:
                 del nodes[d].dependents[node.name]
 
 
-        name = topo_order.pop()
-        add_deps_to_frontier(nodes[name], 0)
+        def find(seq, predicate):
+            for i, elt in enumerate(seq):
+                if predicate(elt):
+                    return i
+            return -1
 
-        if debug:
-            out.write("%-80s" % frontier)
 
+        add_deps_to_frontier(self, 0)
         out.write(indent)
-        out.write('%s  %s\n' % (N, name))
+        out.write('%s  %s\n' % (N, self.name))
+        topo_order.pop()
 
-        while topo_order:
-            if debug:
-                out.write("%-80s" % frontier)
-
-            # Find last i, len(frontier[i]) > 1
-            i = len(frontier) - 1
-            for f in frontier[-1::-1]:
-                if len(f) > 1: break
-                i -= 1
+        while frontier:
+            # Find an unexpanded part of frontier
+            i = find(frontier, lambda f: len(f) > 1)
 
             # Expand frontier until there are enough columns for all children.
             if i >= 0:
-                out.write(indent)
-                out.write("| " * i)
-                out.write("|\ ")
-                out.write("\ " * (len(frontier) - i - 1))
-                out.write("\n")
+                # Do all back connections possible from this element
+                # before expanding.
+                back_connect = [d for d in frontier[i] if [d] in frontier[:i]]
+                for d in back_connect:
+                    j = frontier.index([d])
+                    frontier[i].remove(d)
+                    connect_deps(i, [d], collapse=False, label="back_connect")
 
-                name = frontier[i].pop(0)
-                deps = [name]
+                if not frontier[i]:
+                    frontier.pop(i)
 
-                connect_deps(i, deps)
-                if i+1 < len(frontier) and len(frontier[i+1]) == 1:
-                    deps = frontier.pop(i+1)
-                    connect_deps(i+1, deps)
+                elif len(frontier[i]) > 1:
+                    name = frontier[i].pop(0)
+                    deps = [name]
+
+                    out.write(indent)
+                    out.write("| " * i)
+                    out.write("|\ ")
+                    out.write("\ " * (len(frontier) - i - 1))
+                    out.write("\n")
+
+                    connect_deps(i, deps, label="expansion")
+
+                # Handle any back edges to the right
+                j = i+1
+                while j < len(frontier):
+                    deps = frontier.pop(j)
+                    # TODO: semantics of connect_deps are weird.
+                    # TODO: false return means the popped item was put
+                    # TODO: back & not connected.
+                    if not connect_deps(j, deps, label="ending"):
+                        j += 1
 
             else:
                 name = topo_order.pop()
@@ -1438,9 +1473,10 @@ class Spec(object):
                 # the frontier. Since specs are single-rooted DAGs,
                 # the node is always there. If the graph had multiple
                 # roots, we'd need to handle that case case of a new root.
-                i, elt = next(f for f in enumerate(frontier) if name in f[1])
+                i = find(frontier, lambda f: name in f)
                 frontier.pop(i)
 
+                out.write(indent)
                 out.write("| " * i)
                 out.write("%s " % N)
                 out.write("| " * (len(frontier) - i))
@@ -1449,9 +1485,7 @@ class Spec(object):
                 if node.dependencies:
                     add_deps_to_frontier(node, i)
                 elif frontier:
-                    if debug:
-                        out.write(" " * 80)
-
+                    out.write(indent)
                     out.write("| " * i)
                     out.write(" /" * (len(frontier) - i))
                     out.write("\n")
