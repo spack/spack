@@ -93,6 +93,7 @@ expansion when it is the first character in an id typed on the command line.
 import sys
 import itertools
 import hashlib
+from heapq import *
 from StringIO import StringIO
 from operator import attrgetter
 
@@ -712,6 +713,15 @@ class Spec(object):
             raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
 
 
+    def index(self):
+        """Return DependencyMap that points to all the dependencies in this
+           spec."""
+        dm = DependencyMap()
+        for spec in self.traverse():
+            dm[spec.name] = spec
+        return dm
+
+
     def flatten(self):
         """Pull all dependencies up to the root (this spec).
            Merge constraints for dependencies with the same name, and if they
@@ -1314,6 +1324,174 @@ class Spec(object):
                 out += "^"
             out += node.format(fmt, color=color) + "\n"
         return out
+
+
+    def graph(self, **kwargs):
+        N      = kwargs.get('node', 'o')        # Node character
+        out    = kwargs.get('out', sys.stdout)
+        indent = kwargs.get('indent', 0)
+        indent *= ' '
+
+        topo_order = self.topological_sort(reverse=True)
+        clone = self.copy()
+        nodes = clone.index()
+
+        def ordered_deps(node):
+            deps = node.dependencies
+            return sorted((d for d in deps), reverse=True)
+
+        frontier = []
+
+        debug = True
+        debug = False
+
+        def back_edge(end, start):
+            assert(end < start)
+
+            if (start - end) > 1:
+                if debug:
+                    out.write(" " * 80)
+
+                out.write(indent)
+                out.write("| " * (end + 1))
+                out.write("|_" * (start - end - 2))
+                out.write("|/ ")
+                out.write("/ " * (len(frontier) - start))
+                out.write("\n")
+
+            if debug:
+                out.write(" " * 80)
+
+            out.write(indent)
+            out.write("| " * end)
+            out.write("|/")
+            out.write("| " * (start - end - 1))
+            out.write(" /" * (len(frontier) - start))
+            out.write("\n")
+
+
+        def connect_deps(i, deps):
+            if len(deps) == 1 and deps in frontier:
+                j = frontier.index(deps)
+                if j < i:
+                    back_edge(j, i)
+                else:
+                    if i < j:
+                        frontier.pop(j)
+                        frontier.insert(i, deps)
+                    back_edge(i, j+1)
+
+            elif deps:
+                frontier.insert(i, deps)
+
+
+        def add_deps_to_frontier(node, i):
+            deps = ordered_deps(node)
+            connect_deps(i, deps)
+            for d in deps:
+                del nodes[d].dependents[node.name]
+
+
+        name = topo_order.pop()
+        add_deps_to_frontier(nodes[name], 0)
+
+        if debug:
+            out.write("%-80s" % frontier)
+
+        out.write(indent)
+        out.write('%s  %s\n' % (N, name))
+
+        while topo_order:
+            if debug:
+                out.write("%-80s" % frontier)
+
+            # Find last i, len(frontier[i]) > 1
+            i = len(frontier) - 1
+            for f in frontier[-1::-1]:
+                if len(f) > 1: break
+                i -= 1
+
+            # Expand frontier until there are enough columns for all children.
+            if i >= 0:
+                out.write(indent)
+                out.write("| " * i)
+                out.write("|\ ")
+                out.write("\ " * (len(frontier) - i - 1))
+                out.write("\n")
+
+                name = frontier[i].pop(0)
+                deps = [name]
+
+                connect_deps(i, deps)
+
+            else:
+                name = topo_order.pop()
+                node = nodes[name]
+
+                # Find the next node in topo order and remove it from
+                # the frontier. Since specs are single-rooted DAGs,
+                # the node is always there. If the graph had multiple
+                # roots, we'd need to handle that case case of a new root.
+                i, elt = next(f for f in enumerate(frontier) if name in f[1])
+                frontier.pop(i)
+
+                out.write("| " * i)
+                out.write("%s " % N)
+                out.write("| " * (len(frontier) - i))
+                out.write(" %s\n" % name)
+
+                if node.dependencies:
+                    add_deps_to_frontier(node, i)
+                elif frontier:
+                    if debug:
+                        out.write(" " * 80)
+
+                    out.write("| " * i)
+                    out.write(" /" * (len(frontier) - i))
+                    out.write("\n")
+
+
+        out.write("\n")
+        out.write("%s\n" % frontier)
+
+        # Reverse the lines in the output
+        #return '\n'.join(reversed(out.getvalue().split('\n')))
+
+        return "" #out.getvalue()
+
+
+    def topological_sort(self, **kwargs):
+        """Return a list of dependency specs sorted topologically.
+           This spec is not modified in the process."""
+        reverse = kwargs.get('reverse', False)
+        if not reverse:
+            parents  = lambda s: s.dependents
+            children = lambda s: s.dependencies
+        else:
+            parents  = lambda s: s.dependencies
+            children = lambda s: s.dependents
+
+        spec = self.copy()
+        nodes = spec.index()
+
+        topo_order = []
+        remaining = [name for name in nodes.keys() if not parents(nodes[name])]
+        heapify(remaining)
+
+        while remaining:
+            name = heappop(remaining)
+            topo_order.append(name)
+
+            node = nodes[name]
+            for dep in children(node).values():
+                del parents(dep)[node.name]
+                if not parents(dep):
+                    heappush(remaining, dep.name)
+
+        if any(parents(s) for s in spec.traverse()):
+            raise ValueError("Spec has cycles!")
+        else:
+            return topo_order
 
 
     def __repr__(self):
