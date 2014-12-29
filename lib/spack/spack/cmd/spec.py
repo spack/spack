@@ -46,15 +46,12 @@ def spec(parser, args):
         spec.normalize()
         print spec.tree(color=True, indent=2, cover='paths')
 
-        print
-        print spec.topological_sort(reverse=True)
-        print
-        print "Graph"
-        print "------------------------------"
-        print spec.graph()
-        return
-
         print "Concretized"
         print "------------------------------"
         spec.concretize()
         print spec.tree(color=True, indent=2)
+
+        print "Graph"
+        print "------------------------------"
+        spec.graph()
+        return

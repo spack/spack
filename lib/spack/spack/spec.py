@@ -1343,7 +1343,6 @@ class Spec(object):
 
         frontier = []
 
-        debug = True
         debug = False
 
         def back_edge(end, start):
@@ -1367,7 +1366,10 @@ class Spec(object):
             out.write("| " * end)
             out.write("|/")
             out.write("| " * (start - end - 1))
-            out.write(" /" * (len(frontier) - start))
+            if (start - end) > 1:
+                out.write("| " * (len(frontier) - start))
+            else:
+                out.write(" /" * (len(frontier) - start))
             out.write("\n")
 
 
@@ -1424,6 +1426,9 @@ class Spec(object):
                 deps = [name]
 
                 connect_deps(i, deps)
+                if i+1 < len(frontier) and len(frontier[i+1]) == 1:
+                    deps = frontier.pop(i+1)
+                    connect_deps(i+1, deps)
 
             else:
                 name = topo_order.pop()
@@ -1450,15 +1455,6 @@ class Spec(object):
                     out.write("| " * i)
                     out.write(" /" * (len(frontier) - i))
                     out.write("\n")
-
-
-        out.write("\n")
-        out.write("%s\n" % frontier)
-
-        # Reverse the lines in the output
-        #return '\n'.join(reversed(out.getvalue().split('\n')))
-
-        return "" #out.getvalue()
 
 
     def topological_sort(self, **kwargs):
