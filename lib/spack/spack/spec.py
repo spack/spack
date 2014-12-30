@@ -1444,18 +1444,30 @@ class Spec(object):
                     frontier.pop(i)
 
                 elif len(frontier[i]) > 1:
-                    name = frontier[i].pop(0)
-                    deps = [name]
-
+                    # Expand forawrd after doing all back connections
                     out.write(indent)
                     out.write("| " * i)
-                    out.write("|\ ")
-                    out.write("\ " * (len(frontier) - i - 1))
-                    out.write("\n")
+                    out.write("|\\")
 
-                    connect_deps(i, deps, label="expansion")
+                    if (i+1 < len(frontier) and len(frontier[i+1]) == 1
+                        and frontier[i+1][0] in frontier[i]):
+                        # We need to connect to the element to the right.
+                        # Keep lines straight by connecting directly and
+                        # avoiding immediate expand/contract.
+                        name = frontier[i+1][0]
+                        frontier[i].remove(name)
+                        out.write("| " * (len(frontier) - i - 1))
+                        out.write("\n")
 
-                # Handle any back edges to the right
+                    else:
+                        # Just allow the expansion here.
+                        name = frontier[i].pop(0)
+                        deps = [name]
+                        out.write(" \\" * (len(frontier) - i - 1))
+                        out.write("\n")
+                        connect_deps(i, deps, label="expansion")
+
+                # Handle any remaining back edges to the right
                 j = i+1
                 while j < len(frontier):
                     deps = frontier.pop(j)
