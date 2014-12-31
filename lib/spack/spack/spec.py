@@ -1349,57 +1349,71 @@ class Spec(object):
             return sorted((d for d in deps), reverse=True)
 
 
-        def back_edge(end, start, **kwargs):
-            assert(end < start)
-            collapse = kwargs.get('collapse', True)
-            label    = kwargs.get('label', '')  # debug label
-
-
-            if (start - end) > 1:
-                # This part draws a long back edge.
-                out.write(indent)
-                out.write("| " * (end + 1))
-                out.write("|_" * (start - end - 2))
-                out.write("|/")
-                if collapse:
-                    out.write(" ")
-                    out.write("/ " * (len(frontier) - start))
-                else:
-                    out.write("| " * (len(frontier) - start))
-
-                if debug:
-                    out.write(" " * 20)
-                    out.write("%s  %s" % (frontier, label))
-
-                out.write("\n")
-
-            # This part draws the final collapsing line
+        def back_edge(prev_ends, end, start, collapse, label=None):
+            # Use prev & next for pipelining -- pipelined edges have
+            # the same start, and they're in sorted order e.g.::
+            #
+            #               start
+            #       | |_|_|_|/|
+            #       |/| | |_|/|
+            #       | | |/| | |  <-- when doing this line.
+            #    prev end
+            #
             out.write(indent)
-            out.write("| " * end)
-            out.write("|/")
-            out.write("| " * (start - end - 1))
-            if (start - end) > 1 or not collapse:
-                out.write("| " * (len(frontier) - start))
+
+            f = len(frontier)
+
+            def advance(to, fun):
+                for i in range(advance.pos, to):
+                    fun()
+                    advance.pos += 1
+            advance.pos = 0
+
+            for p in prev_ends:
+                advance(p,             lambda: out.write("| "))
+                advance(p+1,           lambda: out.write("|/"))
+
+            if end >= 0:
+                advance(end + 1,       lambda: out.write("| "))
+                advance(start - 1,     lambda: out.write("|_"))
             else:
-                out.write(" /" * (len(frontier) - start))
+                advance(start - 1,     lambda: out.write("| "))
+
+            if start >= 0:
+                advance(start,         lambda: out.write("|/"))
+
+            if collapse:
+                advance(len(frontier), lambda: out.write(" /"))
+            else:
+                advance(len(frontier), lambda: out.write("| "))
 
             if debug:
-                out.write(" " * 20)
-                out.write("%s  %s" % (frontier, label))
+                out.write(" " * 10)
+                if label: out.write(label)
+                out.write("%s" % frontier)
 
             out.write("\n")
 
 
-        def connect_deps(i, deps, **kwargs):
+        def connect_deps(i, deps, collapse, label):
+            """Connect dependencies to frontier at position i."""
             if len(deps) == 1 and deps in frontier:
                 j = frontier.index(deps)
+
+                # connect to the left
                 if j < i:
-                    back_edge(j, i, **kwargs)
+                    if i-j > 1:   # two lines if distance > 1
+                        back_edge([], j,  i, True, label)
+                    back_edge([j], -1, -1, (i-j == 1), label)
+
+                # connect to the right
                 else:
                     if i < j:
                         frontier.pop(j)
                         frontier.insert(i, deps)
-                    back_edge(i, j+1, **kwargs)
+                    if j-i > 1:
+                        back_edge([], i, j+1, collapse, label)
+                    back_edge([i], -1,  -1, not (j-i > 1) and collapse, label)
                 return True
 
             elif deps:
@@ -1408,8 +1422,10 @@ class Spec(object):
 
 
         def add_deps_to_frontier(node, i):
+            """Add dependencies to frontier, connecting them if they're fully
+               expanded, and deleting parent pointers."""
             deps = ordered_deps(node)
-            connect_deps(i, deps, label="add_deps")
+            connect_deps(i, deps, True, "add_deps")
             for d in deps:
                 del nodes[d].dependents[node.name]
 
@@ -1432,13 +1448,26 @@ class Spec(object):
 
             # Expand frontier until there are enough columns for all children.
             if i >= 0:
-                # Do all back connections possible from this element
-                # before expanding.
-                back_connect = [d for d in frontier[i] if [d] in frontier[:i]]
-                for d in back_connect:
-                    j = frontier.index([d])
-                    frontier[i].remove(d)
-                    connect_deps(i, [d], collapse=False, label="back_connect")
+                # Figure out how many back connections there are and
+                # sort them so we do them in order
+                back = []
+                for d in frontier[i]:
+                    b = find(frontier[:i], lambda f: f == [d])
+                    if b != -1: back.append((b, d))
+
+                # Do all back connections in sorted order so we can
+                # pipeline them and save space.
+                if back:
+                    back.sort()
+
+                    prev_ends = []
+                    for j, (b, d) in enumerate(back):
+                        if i-b > 1:
+                            back_edge(prev_ends, b, i, False)
+                            del prev_ends[:]
+                        prev_ends.append(b)
+                        frontier[i].remove(d)
+                    back_edge(prev_ends, -1, -1, False)
 
                 if not frontier[i]:
                     frontier.pop(i)
@@ -1465,7 +1494,7 @@ class Spec(object):
                         deps = [name]
                         out.write(" \\" * (len(frontier) - i - 1))
                         out.write("\n")
-                        connect_deps(i, deps, label="expansion")
+                        connect_deps(i, deps, True, "expansion")
 
                 # Handle any remaining back edges to the right
                 j = i+1
@@ -1474,7 +1503,7 @@ class Spec(object):
                     # TODO: semantics of connect_deps are weird.
                     # TODO: false return means the popped item was put
                     # TODO: back & not connected.
-                    if not connect_deps(j, deps, label="ending"):
+                    if not connect_deps(j, deps, True, "rem_back"):
                         j += 1
 
             else:
