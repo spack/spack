@@ -1342,6 +1342,16 @@ class Spec(object):
 
         # Fast access to nodes in the spec.
         nodes = clone.index()
+
+        # Colors associated with each node in the DAG.
+        # Edges are colored by the node they point to.
+        all_colors = 'rgbmcyRGBMCY'
+        colors = dict((name, all_colors[i % len(all_colors)])
+                      for i, name in enumerate(topo_order))
+        def write_edge(string, index, sub=0):
+            edge = "@%s{%s}" % (colors[frontier[index][sub]], string)
+            out.write(edge)
+
         frontier = []
 
         def ordered_deps(node):
@@ -1363,29 +1373,30 @@ class Spec(object):
 
             f = len(frontier)
 
+            self._pos = 0
             def advance(to, fun):
-                for i in range(advance.pos, to):
+                for i in range(self._pos, to):
                     fun()
-                    advance.pos += 1
-            advance.pos = 0
+                    self._pos += 1
 
             for p in prev_ends:
-                advance(p,             lambda: out.write("| "))
-                advance(p+1,           lambda: out.write("|/"))
-
+                advance(p,             lambda: write_edge("| ", self._pos))
+                advance(p+1,           lambda: write_edge("|/", self._pos))
             if end >= 0:
-                advance(end + 1,       lambda: out.write("| "))
-                advance(start - 1,     lambda: out.write("|_"))
+                advance(end + 1,       lambda: write_edge("| ", self._pos))
+                advance(start - 1,     lambda: (write_edge("|", self._pos) or
+                                                write_edge("_", end)))
             else:
-                advance(start - 1,     lambda: out.write("| "))
+                advance(start - 1,     lambda: write_edge("| ", self._pos))
 
             if start >= 0:
-                advance(start,         lambda: out.write("|/"))
+                advance(start,         lambda: (write_edge("|", self._pos) or
+                                                write_edge("/", end)))
 
             if collapse:
-                advance(len(frontier), lambda: out.write(" /"))
+                advance(len(frontier), lambda: write_edge(" /", self._pos))
             else:
-                advance(len(frontier), lambda: out.write("| "))
+                advance(len(frontier), lambda: write_edge("| ", self._pos))
 
             if debug:
                 out.write(" " * 10)
@@ -1462,11 +1473,11 @@ class Spec(object):
 
                     prev_ends = []
                     for j, (b, d) in enumerate(back):
+                        frontier[i].remove(d)
                         if i-b > 1:
                             back_edge(prev_ends, b, i, False)
                             del prev_ends[:]
                         prev_ends.append(b)
-                        frontier[i].remove(d)
                     back_edge(prev_ends, -1, -1, False)
 
                 if not frontier[i]:
@@ -1475,8 +1486,9 @@ class Spec(object):
                 elif len(frontier[i]) > 1:
                     # Expand forawrd after doing all back connections
                     out.write(indent)
-                    out.write("| " * i)
-                    out.write("|\\")
+                    for c in range(i):
+                        write_edge("| ", c)
+                    write_edge("|", i)
 
                     if (i+1 < len(frontier) and len(frontier[i+1]) == 1
                         and frontier[i+1][0] in frontier[i]):
@@ -1485,14 +1497,19 @@ class Spec(object):
                         # avoiding immediate expand/contract.
                         name = frontier[i+1][0]
                         frontier[i].remove(name)
-                        out.write("| " * (len(frontier) - i - 1))
+
+                        write_edge("\\", i+1)
+                        for c in range(i+1, len(frontier)):
+                            write_edge("| ", c )
                         out.write("\n")
 
                     else:
                         # Just allow the expansion here.
                         name = frontier[i].pop(0)
                         deps = [name]
-                        out.write(" \\" * (len(frontier) - i - 1))
+                        write_edge("\\", i)
+                        for c in range(i+1, len(frontier)):
+                            write_edge(" \\", c)
                         out.write("\n")
                         connect_deps(i, deps, True, "expansion")
 
@@ -1518,17 +1535,21 @@ class Spec(object):
                 frontier.pop(i)
 
                 out.write(indent)
-                out.write("| " * i)
+                for c in range(i):
+                    write_edge("| ", c)
                 out.write("%s " % N)
-                out.write("| " * (len(frontier) - i))
+                for c in range(i, len(frontier)):
+                    write_edge("| ", c)
                 out.write(" %s\n" % name)
 
                 if node.dependencies:
                     add_deps_to_frontier(node, i)
                 elif frontier:
                     out.write(indent)
-                    out.write("| " * i)
-                    out.write(" /" * (len(frontier) - i))
+                    for c in range(i):
+                        write_edge("| ", c)
+                    for c in range(i, len(frontier)):
+                        write_edge(" /", c)
                     out.write("\n")
 
 
