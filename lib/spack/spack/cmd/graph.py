@@ -39,7 +39,7 @@ def setup_parser(subparser):
         '--dot', action='store_true',
         help="Generate graph in dot format and print to stdout.")
 
-    method.add_argument(
+    subparser.add_argument(
         '--concretize', action='store_true', help="Concretize specs before graphing.")
 
     subparser.add_argument(

@@ -46,6 +46,7 @@ from llnl.util.lang import *
 from llnl.util.tty.color import *
 
 import spack
+from spack.spec import Spec
 
 
 def topological_sort(spec, **kwargs):
@@ -455,23 +456,28 @@ def graph_dot(*specs, **kwargs):
         return '"%s"' % string
 
     if not specs:
-        packages = spack.db.all_packages()
+        specs = [p.name for p in spack.db.all_packages()]
     else:
-        packages = []
-        for spec in specs:
-            packages.extend(s.package for s in spec.normalized().traverse())
+        roots = specs
+        specs = set()
+        for spec in roots:
+            specs.update(Spec(s.name) for s in spec.normalized().traverse())
 
     deps = []
-    for pkg in packages:
-        out.write('  %-30s [label="%s"]\n' % (quote(pkg.name), pkg.name))
+    for spec in specs:
+        out.write('  %-30s [label="%s"]\n' % (quote(spec.name), spec.name))
+
+        # Skip virtual specs (we'll find out about them from concrete ones.
+        if spec.virtual:
+            continue
 
         # Add edges for each depends_on in the package.
-        for dep_name, dep in pkg.dependencies.iteritems():
-            deps.append((pkg.name, dep_name))
+        for dep_name, dep in spec.package.dependencies.iteritems():
+            deps.append((spec.name, dep_name))
 
         # If the package provides something, add an edge for that.
-        for provider in set(p.name for p in pkg.provided):
-            deps.append((provider, pkg.name))
+        for provider in set(s.name for s in spec.package.provided):
+            deps.append((provider, spec.name))
 
     out.write('\n')
 
