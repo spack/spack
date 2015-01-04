@@ -27,8 +27,8 @@ import spack.cmd
 
 import llnl.util.tty as tty
 
-import spack.url as url
 import spack
+import spack.url as url
 
 description = "print out abstract and concrete versions of a spec."
 
@@ -44,14 +44,9 @@ def spec(parser, args):
         print "Normalized"
         print "------------------------------"
         spec.normalize()
-        print spec.tree(color=True, indent=2, cover='paths')
+        print spec.tree(color=True, indent=2)
 
         print "Concretized"
         print "------------------------------"
         spec.concretize()
         print spec.tree(color=True, indent=2)
-
-        print "Graph"
-        print "------------------------------"
-        spec.graph()
-        return

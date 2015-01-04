@@ -214,48 +214,6 @@ class PackageDB(object):
         return cls
 
 
-    def graph_dependencies(self, *specs, **kwargs):
-        """Print out a graph of all the dependencies between package.
-           Graph is in dot format."""
-        out = kwargs.pop('out', sys.stdout)
-        check_kwargs(kwargs, self.graph_dependencies)
-
-        out.write('digraph G {\n')
-        out.write('  label = "Spack Dependencies"\n')
-        out.write('  labelloc = "b"\n')
-        out.write('  rankdir = "LR"\n')
-        out.write('  ranksep = "5"\n')
-        out.write('\n')
-
-        def quote(string):
-            return '"%s"' % string
-
-        if not specs:
-            packages = self.all_packages()
-        else:
-            packages = []
-            for spec in specs:
-                packages.extend(s.package for s in spec.normalized().traverse())
-
-        deps = []
-        for pkg in packages:
-            out.write('  %-30s [label="%s"]\n' % (quote(pkg.name), pkg.name))
-
-            # Add edges for each depends_on in the package.
-            for dep_name, dep in pkg.dependencies.iteritems():
-                deps.append((pkg.name, dep_name))
-
-            # If the package provides something, add an edge for that.
-            for provider in set(p.name for p in pkg.provided):
-                deps.append((provider, pkg.name))
-
-        out.write('\n')
-
-        for pair in deps:
-            out.write('  "%s" -> "%s"\n' % pair)
-        out.write('}\n')
-
-
 class UnknownPackageError(spack.error.SpackError):
     """Raised when we encounter a package spack doesn't have."""
     def __init__(self, name):

@@ -111,4 +111,3 @@ def location(parser, args):
                     tty.die("Build directory does not exist yet. Run this to create it:",
                             "spack stage " + " ".join(args.spec))
                 print pkg.stage.source_path
-
