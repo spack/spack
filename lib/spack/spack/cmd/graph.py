@@ -55,7 +55,7 @@ def graph(parser, args):
         graph_dot(*specs)
 
     elif specs:     # ascii is default: user doesn't need to provide it explicitly
-        graph_ascii(specs[0])
+        graph_ascii(specs[0], debug=spack.debug)
         for spec in specs[1:]:
             print # extra line bt/w independent graphs
-            graph_ascii(spec)
+            graph_ascii(spec, debug=spack.debug)

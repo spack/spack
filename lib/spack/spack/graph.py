@@ -29,7 +29,30 @@ This file contains code for graphing DAGs of software packages
 about:
 
 graph_ascii() will output a colored graph of a spec in ascii format,
-knd of like the graph git shows with "git log --graph".
+kind of like the graph git shows with "git log --graph", e.g.::
+
+    o  mpileaks
+    |\
+    | |\
+    | o |  callpath
+    |/| |
+    | |\|
+    | |\ \
+    | | |\ \
+    | | | | o  adept-utils
+    | |_|_|/|
+    |/| | | |
+    o | | | |  mpi
+     / / / /
+    | | o |  dyninst
+    | |/| |
+    |/|/| |
+    | | |/
+    | o |  libdwarf
+    |/ /
+    o |  libelf
+     /
+    o  boost
 
 graph_dot() will output a graph of a spec (or multiple specs) in dot
 format.
@@ -102,11 +125,16 @@ def find(seq, predicate):
     return -1
 
 
+# Names of different graph line states.  We Record previous line
+# states so that we can easily determine what to do when connecting.
+states = ('node', 'collapse', 'merge-right', 'expand-right', 'back-edge')
+NODE, COLLAPSE, MERGE_RIGHT, EXPAND_RIGHT, BACK_EDGE = states
+
 class AsciiGraph(object):
     def __init__(self):
         # These can be set after initialization or after a call to
         # graph() to change behavior.
-        self.node_character = 'o'
+        self.node_character = '*'
         self.debug = False
         self.indent = 0
 
@@ -120,6 +148,7 @@ class AsciiGraph(object):
         self._out = None              # Output stream
         self._frontier = None         # frontier
         self._nodes = None            # dict from name -> node
+        self._prev_state = None       # State of previous line
 
 
     def _indent(self):
@@ -133,7 +162,7 @@ class AsciiGraph(object):
         self._out.write(edge)
 
 
-    def _connect_deps(self, i, deps, collapse, label):
+    def _connect_deps(self, i, deps, label=None):
         """Connect dependencies to existing edges in the frontier.
 
         ``deps`` are to be inserted at position i in the
@@ -147,9 +176,6 @@ class AsciiGraph(object):
 
         Parameters:
 
-        collapse -- whether the frontier is collapsing or staying the
-                    same size.
-
         label    -- optional debug label for the connection.
 
         Returns: True if the deps were connected to another edge
@@ -161,20 +187,25 @@ class AsciiGraph(object):
         if len(deps) == 1 and deps in self._frontier:
             j = self._frontier.index(deps)
 
-            # connect to the left
-            if j < i:
-                if i-j > 1:   # two lines if distance > 1
-                    self._back_edge([], j,  i, True, label)
-                self._back_edge([j], -1, -1, (i-j == 1), label)
+            # convert a right connection into a left connection
+            if i < j:
+                self._frontier.pop(j)
+                self._frontier.insert(i, deps)
+                return self._connect_deps(j, deps, label)
 
-            # connect to the right
-            else:
-                if i < j:
-                    self._frontier.pop(j)
-                    self._frontier.insert(i, deps)
-                if j-i > 1:
-                    self._back_edge([], i, j+1, collapse, label)
-                self._back_edge([i], -1,  -1, not (j-i > 1) and collapse, label)
+            collapse = True
+            if self._prev_state == EXPAND_RIGHT:
+                # Special case for when prev. line expanded (spacing is off by 1)
+                # Need two lines here even when distance in frontier is 1.
+                self._back_edge_line([], j,  i+1, True, label + "-1.5 " + str((i,j)))
+                collapse = False
+
+            elif i-j > 1:
+                # We need two lines to connect if distance > 1
+                self._back_edge_line([], j,  i, True, label + "-1 " + str((i,j)))
+                collapse = False
+
+            self._back_edge_line([j], -1, -1, collapse, label + "-2 " + str((i,j)))
             return True
 
         elif deps:
@@ -182,22 +213,20 @@ class AsciiGraph(object):
             return False
 
 
-    def _add_deps_to_frontier(self, node, i):
-        """Add dependencies to frontier.
+    def _set_state(self, state, label=None):
+        if state not in states:
+            raise ValueError("Invalid graph state!")
+        self._prev_state = state
 
-        Adds the dependencies of <node> to the frontier, and connects
-        them to other open edges if they match.  Also deletes parent
-        pointers in the node to mark edges as covered.
-
-        """
-        deps = sorted((d for d in node.dependencies), reverse=True)
-        self._connect_deps(i, deps, True, "add_deps")
-        for d in deps:
-            del self._nodes[d].dependents[node.name]
-
+        if self.debug:
+            self._out.write(" " * 20)
+            self._out.write("%-20s" % (
+                str(self._prev_state) if self._prev_state else ''))
+            self._out.write("%-20s" % (str(label) if label else ''))
+            self._out.write("%s" % self._frontier)
 
 
-    def _back_edge(self, prev_ends, end, start, collapse, label=None):
+    def _back_edge_line(self, prev_ends, end, start, collapse, label=None):
         """Write part of a backwards edge in the graph.
 
         Writes single- or multi-line backward edges in an ascii graph.
@@ -267,12 +296,64 @@ class AsciiGraph(object):
         else:
             advance(flen,      lambda: [("| ", self._pos)] )
 
-        if self.debug:
-            self._out.write(" " * 10)
-            if label:
-                self._out.write(label)
-            self._out.write("%s" % self._frontier)
+        self._set_state(BACK_EDGE, label)
+        self._out.write("\n")
 
+
+    def _node_line(self, index, name):
+        """Writes a line with a node at index."""
+        self._indent()
+        for c in range(index):
+            self._write_edge("| ", c)
+
+        self._out.write("%s " % self.node_character)
+
+        for c in range(index+1, len(self._frontier)):
+            self._write_edge("| ", c)
+
+        self._out.write(" %s" % name)
+        self._set_state(NODE)
+        self._out.write("\n")
+
+
+    def _collapse_line(self, index):
+        """Write a collapsing line after a node was added at index."""
+        self._indent()
+        for c in range(index):
+            self._write_edge("| ", c)
+        for c in range(index, len(self._frontier)):
+            self._write_edge(" /", c)
+
+        self._set_state(COLLAPSE)
+        self._out.write("\n")
+
+
+    def _merge_right_line(self, index):
+        """Edge at index is same as edge to right.  Merge directly with '\'"""
+        self._indent()
+        for c in range(index):
+            self._write_edge("| ", c)
+        self._write_edge("|", index)
+        self._write_edge("\\", index+1)
+        for c in range(index+1, len(self._frontier)):
+            self._write_edge("| ", c )
+
+        self._set_state(MERGE_RIGHT)
+        self._out.write("\n")
+
+
+    def _expand_right_line(self, index):
+        self._indent()
+        for c in range(index):
+            self._write_edge("| ", c)
+
+        self._write_edge("|", index)
+        self._write_edge("\\", index+1)
+
+        for c in range(index+2, len(self._frontier)):
+            self._write_edge(" \\", c)
+
+        self._set_state(EXPAND_RIGHT)
         self._out.write("\n")
 
 
@@ -311,27 +392,22 @@ class AsciiGraph(object):
         self._name_to_color = dict((name, self.colors[i % len(self.colors)])
                                   for i, name in enumerate(topo_order))
 
-        # This array tracks the open edges at the frontier of the
-        # graph we're writing out.
-        self._frontier = []
-
-        self._add_deps_to_frontier(spec, 0)
-        self._indent()
-        self._out.write('%s  %s\n' % (self.node_character, spec.name))
-        topo_order.pop()
-
+        # Frontier tracks open edges of the graph as it's written out.
+        self._frontier = [[spec.name]]
         while self._frontier:
             # Find an unexpanded part of frontier
             i = find(self._frontier, lambda f: len(f) > 1)
 
-            # Expand frontier until there are enough columns for all children.
             if i >= 0:
+                # Expand frontier until there are enough columns for all children.
+
                 # Figure out how many back connections there are and
                 # sort them so we do them in order
                 back = []
                 for d in self._frontier[i]:
                     b = find(self._frontier[:i], lambda f: f == [d])
-                    if b != -1: back.append((b, d))
+                    if b != -1:
+                        back.append((b, d))
 
                 # Do all back connections in sorted order so we can
                 # pipeline them and save space.
@@ -341,79 +417,61 @@ class AsciiGraph(object):
                     for j, (b, d) in enumerate(back):
                         self._frontier[i].remove(d)
                         if i-b > 1:
-                            self._back_edge(prev_ends, b, i, False)
+                            self._back_edge_line(prev_ends, b, i, False, 'left-1')
                             del prev_ends[:]
                         prev_ends.append(b)
-                    self._back_edge(prev_ends, -1, -1, False)
+                    self._back_edge_line(prev_ends, -1, -1, False, 'left-2')
 
                 if not self._frontier[i]:
                     self._frontier.pop(i)
 
                 elif len(self._frontier[i]) > 1:
-                    # Expand forawrd after doing all back connections
-                    self._indent()
-                    for c in range(i):
-                        self._write_edge("| ", c)
-                    self._write_edge("|", i)
+                    # Expand forward after doing all back connections
 
                     if (i+1 < len(self._frontier) and len(self._frontier[i+1]) == 1
                         and self._frontier[i+1][0] in self._frontier[i]):
                         # We need to connect to the element to the right.
                         # Keep lines straight by connecting directly and
-                        # avoiding immediate expand/contract.
+                        # avoiding unnecessary expand/contract.
                         name = self._frontier[i+1][0]
                         self._frontier[i].remove(name)
-
-                        self._write_edge("\\", i+1)
-                        for c in range(i+1, len(self._frontier)):
-                            self._write_edge("| ", c )
-                        self._out.write("\n")
+                        self._merge_right_line(i)
 
                     else:
                         # Just allow the expansion here.
                         name = self._frontier[i].pop(0)
                         deps = [name]
-                        self._write_edge("\\", i)
-                        for c in range(i+1, len(self._frontier)):
-                            self._write_edge(" \\", c)
-                        self._out.write("\n")
-                        self._connect_deps(i, deps, True, "expansion")
+                        self._frontier.insert(i, deps)
+                        self._expand_right_line(i)
+
+                        self._frontier.pop(i)
+                        self._connect_deps(i, deps, "post-expand")
+
 
                 # Handle any remaining back edges to the right
                 j = i+1
                 while j < len(self._frontier):
                     deps = self._frontier.pop(j)
-                    if not self._connect_deps(j, deps, True, "rem_back"):
+                    if not self._connect_deps(j, deps, "back-from-right"):
                         j += 1
 
             else:
+                # Nothing to expand; add dependencies for a node.
                 name = topo_order.pop()
                 node = self._nodes[name]
 
-                # Find the next node in topo order and remove it from
-                # the frontier. Since specs are single-rooted DAGs,
-                # the node is always there. If the graph had multiple
-                # roots, we'd need to handle that case case of a new root.
+                # Find the named node in the frontier and draw it.
                 i = find(self._frontier, lambda f: name in f)
+                self._node_line(i, name)
+
+                # Replace node with its dependencies
                 self._frontier.pop(i)
-
-                self._indent()
-                for c in range(i):
-                    self._write_edge("| ", c)
-                self._out.write("%s " % self.node_character)
-                for c in range(i, len(self._frontier)):
-                    self._write_edge("| ", c)
-                self._out.write(" %s\n" % name)
-
                 if node.dependencies:
-                    self._add_deps_to_frontier(node, i)
+                    deps = sorted((d for d in node.dependencies), reverse=True)
+                    self._connect_deps(i, deps, "new-deps") # anywhere.
+
                 elif self._frontier:
-                    self._indent()
-                    for c in range(i):
-                        self._write_edge("| ", c)
-                    for c in range(i, len(self._frontier)):
-                        self._write_edge(" /", c)
-                    self._out.write("\n")
+                    self._collapse_line(i)
 
 
 def graph_ascii(spec, **kwargs):
