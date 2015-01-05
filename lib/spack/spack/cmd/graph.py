@@ -31,6 +31,8 @@ from spack.graph import *
 description = "Generate graphs of package dependency relationships."
 
 def setup_parser(subparser):
+    setup_parser.parser = subparser
+
     method = subparser.add_mutually_exclusive_group()
     method.add_argument(
         '--ascii', action='store_true',
@@ -50,6 +52,9 @@ def graph(parser, args):
     specs = spack.cmd.parse_specs(
         args.specs, normalize=True, concretize=args.concretize)
 
+    if not specs:
+        setup_parser.parser.print_help()
+        return 1
 
     if args.dot:    # Dot graph only if asked for.
         graph_dot(*specs)

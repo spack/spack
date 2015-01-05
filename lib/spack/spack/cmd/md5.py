@@ -41,6 +41,7 @@ def setup_parser(subparser):
 def md5(parser, args):
     if not args.files:
         setup_parser.parser.print_help()
+        return 1
 
     for f in args.files:
         if not os.path.isfile(f):
