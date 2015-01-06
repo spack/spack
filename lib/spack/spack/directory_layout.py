@@ -71,6 +71,21 @@ class DirectoryLayout(object):
         raise NotImplementedError()
 
 
+    def get_extensions(self, spec):
+        """Get a set of currently installed extension packages for a spec."""
+        raise NotImplementedError()
+
+
+    def add_extension(self, spec, extension_spec):
+        """Add to the list of currently installed extensions."""
+        raise NotImplementedError()
+
+
+    def remove_extension(self, spec, extension_spec):
+        """Remove from the list of currently installed extensions."""
+        raise NotImplementedError()
+
+
     def path_for_spec(self, spec):
         """Return an absolute path from the root to a directory for the spec."""
         _check_concrete(spec)
@@ -134,9 +149,11 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         """Prefix size is number of characters in the SHA-1 prefix to use
            to make each hash unique.
         """
-        spec_file_name   = kwargs.get('spec_file_name', '.spec')
+        spec_file_name = kwargs.get('spec_file_name', '.spec')
+        extension_file_name = kwargs.get('extension_file_name', '.extensions')
         super(SpecHashDirectoryLayout, self).__init__(root)
         self.spec_file_name = spec_file_name
+        self.extension_file_name = extension_file_name
 
 
     def relative_path_for_spec(self, spec):
@@ -225,6 +242,55 @@ class SpecHashDirectoryLayout(DirectoryLayout):
                 yield spec
 
 
+    def extension_file_path(self, spec):
+        """Gets full path to an installed package's extension file"""
+        _check_concrete(spec)
+        return join_path(self.path_for_spec(spec), self.extension_file_name)
+
+
+    def get_extensions(self, spec):
+        path = self.extension_file_path(spec)
+
+        extensions = set()
+        if os.path.exists(path):
+            with closing(open(path)) as spec_file:
+                for line in spec_file:
+                    try:
+                        extensions.add(Spec(line))
+                    except SpecError, e:
+                        raise InvalidExtensionSpecError(str(e))
+        return extensions
+
+
+    def write_extensions(self, extensions):
+        path = self.extension_file_path(spec)
+        with closing(open(path, 'w')) as spec_file:
+            for extension in sorted(extensions):
+                spec_file.write("%s\n" % extensions)
+
+
+    def add_extension(self, spec, extension_spec):
+        exts = get_extensions(spec)
+        if extension_spec in exts:
+            raise ExtensionAlreadyInstalledError(spec, extension_spec)
+        else:
+            for already_installed in exts:
+                if spec.name == extension_spec.name:
+                    raise ExtensionConflictError(spec, extension_spec, already_installed)
+
+        exts.add(extension_spec)
+        self.write_extensions(exts)
+
+
+    def remove_extension(self, spec, extension_spec):
+        exts = get_extensions(spec)
+        if not extension_spec in exts:
+            raise NoSuchExtensionError(spec, extension_spec)
+
+        exts.remove(extension_spec)
+        self.write_extensions(exts)
+
+
 class DirectoryLayoutError(SpackError):
     """Superclass for directory layout errors."""
     def __init__(self, message):
@@ -250,3 +316,32 @@ class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
     def __init__(self, path):
         super(InstallDirectoryAlreadyExistsError, self).__init__(
             "Install path %s already exists!")
+
+
+class InvalidExtensionSpecError(DirectoryLayoutError):
+    """Raised when an extension file has a bad spec in it."""
+    def __init__(self, message):
+        super(InvalidExtensionSpecError, self).__init__(message)
+
+
+class ExtensionAlreadyInstalledError(DirectoryLayoutError):
+    """Raised when an extension is added to a package that already has it."""
+    def __init__(self, spec, extension_spec):
+        super(ExtensionAlreadyInstalledError, self).__init__(
+            "%s is already installed in %s" % (extension_spec, spec))
+
+
+class ExtensionConflictError(DirectoryLayoutError):
+    """Raised when an extension is added to a package that already has it."""
+    def __init__(self, spec, extension_spec, conflict):
+        super(ExtensionConflictError, self).__init__(
+            "%s cannot be installed in %s because it conflicts with %s."% (
+                extension_spec, spec, conflict))
+
+
+class NoSuchExtensionError(DirectoryLayoutError):
+    """Raised when an extension isn't there on remove."""
+    def __init__(self, spec, extension_spec):
+        super(NoSuchExtensionError, self).__init__(
+            "%s cannot be removed from %s beacuse it's not installed."% (
+                extension_spec, spec, conflict))
