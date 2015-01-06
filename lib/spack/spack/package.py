@@ -768,6 +768,10 @@ class Package(object):
                 # package naming scheme it likes.
                 spack.install_layout.make_path_for_spec(self.spec)
 
+                # Run the pre-install hook in the child process after
+                # the directory is created.
+                spack.hooks.pre_install(self)
+
                 # Set up process's build environment before running install.
                 self.stage.chdir_to_source()
                 build_env.setup_package(self)
@@ -862,6 +866,10 @@ class Package(object):
                 "The following installed packages depend on it: %s" %
                 ' '.join(formatted_deps))
 
+        # Pre-uninstall hook runs first.
+        spack.hooks.pre_uninstall(self)
+
+        # Uninstalling in Spack only requires removing the prefix.
         self.remove_prefix()
         tty.msg("Successfully uninstalled %s." % self.spec.short_spec)
 
