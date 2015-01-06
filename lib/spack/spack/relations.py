@@ -107,13 +107,37 @@ def depends_on(*specs):
     """Adds a dependencies local variable in the locals of
        the calling class, based on args. """
     pkg = get_calling_package_name()
+    clocals = caller_locals()
+    dependencies = clocals.setdefault('dependencies', {})
 
-    dependencies = caller_locals().setdefault('dependencies', {})
     for string in specs:
         for spec in spack.spec.parse(string):
             if pkg == spec.name:
                 raise CircularReferenceError('depends_on', pkg)
             dependencies[spec.name] = spec
+
+
+def extends(*specs):
+    """Same as depends_on, but dependency is symlinked into parent prefix.
+
+    This is for Python and other language modules where the module
+    needs to be installed into the prefix of the Python installation.
+    Spack handles this by installing modules into their own prefix,
+    but allowing ONE module version to be symlinked into a parent
+    Python install at a time.
+
+    """
+    pkg = get_calling_package_name()
+    clocals = caller_locals()
+    dependencies = clocals.setdefault('dependencies', {})
+    extendees = clocals.setdefault('extendees', {})
+
+    for string in specs:
+        for spec in spack.spec.parse(string):
+            if pkg == spec.name:
+                raise CircularReferenceError('depends_on', pkg)
+            dependencies[spec.name] = spec
+            extendees[spec.name] = spec
 
 
 def provides(*specs, **kwargs):

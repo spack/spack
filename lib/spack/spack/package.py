@@ -314,6 +314,9 @@ class Package(object):
     """Specs of virtual packages provided by this package, keyed by name."""
     provided = {}
 
+    """Specs of packages this one extends, keyed by name."""
+    extendees = {}
+
     """Specs of conflicting packages, keyed by name. """
     conflicted = {}
 
