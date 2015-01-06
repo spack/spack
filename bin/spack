@@ -29,6 +29,7 @@ if not sys.version_info[:2] >= (2,6):
     sys.exit("Spack requires Python 2.6 or higher.  This is Python %d.%d.%d." % v_info)
 
 import os
+import shlex
 
 # Find spack's location and its prefix.
 SPACK_FILE = os.path.realpath(os.path.expanduser(__file__))
@@ -62,10 +63,11 @@ parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
                     help="Print additional output during builds")
 parser.add_argument('-d', '--debug', action='store_true', dest='debug',
                     help="Write out debug logs during compile")
-parser.add_argument('-k', '--insecure', action='store_true', dest='insecure',
-                    help="Do not check ssl certificates when downloading archives.")
 parser.add_argument('-m', '--mock', action='store_true', dest='mock',
                     help="Use mock packages instead of real ones.")
+
+parser.add_argument('--curl-options', action='store', dest='curl_options',
+                    help="Optional commandline options to pass to the curl commands")
 
 # each command module implements a parser() function, to which we pass its
 # subparser for setup.
@@ -95,10 +97,11 @@ if args.mock:
     from spack.packages import PackageDB
     spack.db = PackageDB(spack.mock_packages_path)
 
-# If the user asked for it, don't check ssl certs.
-if args.insecure:
-    tty.warn("You asked for --insecure, which does not check SSL certificates or checksums.")
-    spack.curl.add_default_arg('-k')
+# If the user asked for it, add additional curl commandline options
+if args.curl_options:
+    tty.debug("You provided additional Curl commandline options: %s" % (args.curl_options))
+    for option in shlex.split(args.curl_options):
+        spack.curl.add_default_arg(option)
 
 # Try to load the particular command asked for and run it
 command = spack.cmd.get_command(args.command)
