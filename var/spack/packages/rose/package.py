@@ -29,7 +29,7 @@ class Rose(Package):
 
         # Configure, compile & install
         with working_dir('rose-build', create=True):
-            #boost = spec['boost']
+            boost = spec['boost']
 
             configure = Executable('../configure')
             configure("--prefix=" + prefix,
