@@ -744,7 +744,7 @@ class Package(object):
         tty.msg("Installing %s" % self.name)
 
         if not ignore_deps:
-            self.do_install_dependencies()
+            self.do_install_dependencies(**kwargs)
 
         start_time = time.time()
         if not fake_install:
@@ -832,10 +832,10 @@ class Package(object):
         spack.hooks.post_install(self)
 
 
-    def do_install_dependencies(self):
+    def do_install_dependencies(self, **kwargs):
         # Pass along paths of dependencies here
         for dep in self.spec.dependencies.values():
-            dep.package.do_install()
+            dep.package.do_install(**kwargs)
 
 
     @property
