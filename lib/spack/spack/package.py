@@ -329,6 +329,9 @@ class Package(object):
     """By default we build in parallel.  Subclasses can override this."""
     parallel = True
 
+    """Most packages are NOT extendable.  Set to True if you want extensions."""
+    extendable = False
+
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -397,6 +400,9 @@ class Package(object):
         # Set up some internal variables for timing.
         self._fetch_time = 0.0
         self._total_time = 0.0
+
+        for name, spec in self.extendees.items():
+            spack.db.get(spec)._check_extendable()
 
 
     @property
@@ -877,6 +883,79 @@ class Package(object):
         spack.hooks.post_uninstall(self)
 
 
+    def _check_extendable(self):
+        if not self.extendable:
+            raise ValueError("Package %s is not extendable!" % self.name)
+
+
+    def _sanity_check_extension(self, extension):
+        self._check_extendable()
+        if not self.installed:
+            raise ValueError("Can only (de)activate extensions for installed packages.")
+        if not extension.installed:
+            raise ValueError("Extensions must first be installed.")
+        if not self.name in extension.extendees:
+            raise ValueError("%s does not extend %s!" % (extension.name, self.name))
+        if not self.spec.satisfies(extension.extendees[self.name]):
+            raise ValueError("%s does not satisfy %s!" % (self.spec, extension.spec))
+
+
+    def do_activate(self, extension):
+        self._sanity_check_extension(extension)
+
+        self.activate(extension)
+        spack.install_layout.add_extension(self.spec, extension.spec)
+        tty.msg("Activated extension %s for %s."
+                % (extension.spec.short_spec, self.spec.short_spec))
+
+
+    def activate(self, extension):
+        """Symlinks all files from the extension into extendee's install dir.
+
+        Package authors can override this method to support other
+        extension mechanisms.  Spack internals (commands, hooks, etc.)
+        should call do_activate() method so that proper checks are
+        always executed.
+
+        """
+        conflict = check_link_tree(
+            extension.prefix, self.prefix,
+            ignore=spack.install_layout.hidden_file_paths)
+
+        if conflict:
+            raise ExtensionConflictError(conflict)
+
+        merge_link_tree(extension.prefix, self.prefix,
+                        ignore=spack.install_layout.hidden_file_paths)
+
+
+    def do_deactivate(self, extension):
+        self._sanity_check_extension(extension)
+        self.deactivate(extension)
+
+        ext = extension.spec
+        if ext in spack.install_layout.get_extensions(self.spec):
+            spack.install_layout.remove_extension(self.spec, ext)
+
+        tty.msg("Deactivated extension %s for %s."
+                % (extension.spec.short_spec, self.spec.short_spec))
+
+
+    def deactivate(self, extension):
+        """Unlinks all files from extension out of extendee's install dir.
+
+        Package authors can override this method to support other
+        extension mechanisms.  Spack internals (commands, hooks, etc.)
+        should call do_deactivate() method so that proper checks are
+        always executed.
+
+        """
+        unmerge_link_tree(extension.prefix, self.prefix,
+                          ignore=spack.install_layout.hidden_file_paths)
+        tty.msg("Deactivated %s as extension of %s."
+                % (extension.spec.short_spec, self.spec.short_spec))
+
+
     def do_clean(self):
         if self.stage.expanded_archive_path:
             self.stage.chdir_to_source()
@@ -1068,3 +1147,9 @@ class NoURLError(PackageError):
     def __init__(self, cls):
         super(NoURLError, self).__init__(
             "Package %s has no version with a URL." % cls.__name__)
+
+
+class ExtensionConflictError(PackageError):
+    def __init__(self, path):
+        super(ExtensionConflictError, self).__init__(
+            "Extension blocked by file: %s" % path)

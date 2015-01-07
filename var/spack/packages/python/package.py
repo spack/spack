@@ -1,9 +1,12 @@
 from spack import *
 
+
 class Python(Package):
     """The Python programming language."""
     homepage = "http://www.python.org"
     url      = "http://www.python.org/ftp/python/2.7.8/Python-2.7.8.tar.xz"
+
+    extendable = True
 
     version('2.7.8', 'd235bdfa75b8396942e360a70487ee00')
 

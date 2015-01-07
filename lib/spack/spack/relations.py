@@ -68,7 +68,7 @@ provides
         spack install mpileaks ^mvapich
         spack install mpileaks ^mpich
 """
-__all__ = [ 'depends_on', 'provides', 'patch', 'version' ]
+__all__ = [ 'depends_on', 'extends', 'provides', 'patch', 'version' ]
 
 import re
 import inspect
@@ -135,7 +135,7 @@ def extends(*specs):
     for string in specs:
         for spec in spack.spec.parse(string):
             if pkg == spec.name:
-                raise CircularReferenceError('depends_on', pkg)
+                raise CircularReferenceError('extends', pkg)
             dependencies[spec.name] = spec
             extendees[spec.name] = spec
 
