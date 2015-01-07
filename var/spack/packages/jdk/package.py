@@ -24,9 +24,7 @@ class Jdk(Package):
     #
     # See http://stackoverflow.com/questions/10268583/how-to-automate-download-and-installation-of-java-jdk-on-linux
     curl_options=[
-        '-k', # ignore ssl certificates
         '-j', # junk cookies
-        '-L', # follow redirects
         '-H', # specify required License Agreement cookie
         'Cookie: oraclelicense=accept-securebackup-cookie']
 
