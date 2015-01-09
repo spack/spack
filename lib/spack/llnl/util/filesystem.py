@@ -24,8 +24,7 @@
 ##############################################################################
 __all__ = ['set_install_permissions', 'install', 'expand_user', 'working_dir',
            'touch', 'mkdirp', 'force_remove', 'join_path', 'ancestor',
-           'can_access', 'filter_file', 'change_sed_delimiter', 'is_exe',
-           'check_link_tree', 'merge_link_tree', 'unmerge_link_tree']
+           'can_access', 'filter_file', 'change_sed_delimiter', 'is_exe']
 
 import os
 import sys
@@ -223,82 +222,3 @@ def ancestor(dir, n=1):
 def can_access(file_name):
     """True if we have read/write access to the file."""
     return os.access(file_name, os.R_OK|os.W_OK)
-
-
-def traverse_link_tree(src_root, dest_root, follow_nonexisting=True, **kwargs):
-    # Yield directories before or after their contents.
-    order  = kwargs.get('order', 'pre')
-    if order not in ('pre', 'post'):
-        raise ValueError("Order must be 'pre' or 'post'.")
-
-    # List of relative paths to ignore under the src root.
-    ignore = kwargs.get('ignore', None)
-    if isinstance(ignore, basestring):
-        ignore = (ignore,)
-
-    for dirpath, dirnames, filenames in os.walk(src_root):
-        rel_path  = dirpath[len(src_root):]
-        rel_path = rel_path.lstrip(os.path.sep)
-        dest_dirpath = os.path.join(dest_root, rel_path)
-
-        # Don't descend into ignored directories
-        if ignore and dest_dirpath in ignore:
-            return
-
-        # Don't descend into dirs in dest that do not exist in src.
-        if not follow_nonexisting:
-            dirnames[:] = [
-                d for d in dirnames
-                if os.path.exists(os.path.join(dest_dirpath, d))]
-
-        # preorder yields directories before children
-        if order == 'pre':
-            yield (dirpath, dest_dirpath)
-
-        for name in filenames:
-            src_file  = os.path.join(dirpath, name)
-            dest_file = os.path.join(dest_dirpath, name)
-
-            # Ignore particular paths inside the install root.
-            src_relpath = src_file[len(src_root):]
-            src_relpath = src_relpath.lstrip(os.path.sep)
-            if ignore and src_relpath in ignore:
-                continue
-
-            yield (src_file, dest_file)
-
-        # postorder yields directories after children
-        if order == 'post':
-            yield (dirpath, dest_dirpath)
-
-
-
-def check_link_tree(src_root, dest_root, **kwargs):
-    for src, dest in traverse_link_tree(src_root, dest_root, False, **kwargs):
-        if os.path.exists(dest) and not os.path.isdir(dest):
-            return dest
-    return None
-
-
-def merge_link_tree(src_root, dest_root, **kwargs):
-    kwargs['order'] = 'pre'
-    for src, dest in traverse_link_tree(src_root, dest_root, **kwargs):
-        if os.path.isdir(src):
-            mkdirp(dest)
-        else:
-            assert(not os.path.exists(dest))
-            os.symlink(src, dest)
-
-
-def unmerge_link_tree(src_root, dest_root, **kwargs):
-    kwargs['order'] = 'post'
-    for src, dest in traverse_link_tree(src_root, dest_root, **kwargs):
-        if os.path.isdir(dest):
-            if not os.listdir(dest):
-                # TODO: what if empty directories were present pre-merge?
-                shutil.rmtree(dest, ignore_errors=True)
-
-        elif os.path.exists(dest):
-            if not os.path.islink(dest):
-                raise ValueError("%s is not a link tree!" % dest)
-            os.remove(dest)

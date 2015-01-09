@@ -45,6 +45,7 @@ import textwrap
 from StringIO import StringIO
 
 import llnl.util.tty as tty
+from llnl.util.link_tree import LinkTree
 from llnl.util.filesystem import *
 from llnl.util.lang import *
 
@@ -918,15 +919,12 @@ class Package(object):
         always executed.
 
         """
-        conflict = check_link_tree(
-            extension.prefix, self.prefix,
-            ignore=spack.install_layout.hidden_file_paths)
-
+        tree = LinkTree(extension.prefix)
+        conflict = tree.find_conflict(
+            self.prefix, ignore=spack.install_layout.hidden_file_paths)
         if conflict:
             raise ExtensionConflictError(conflict)
-
-        merge_link_tree(extension.prefix, self.prefix,
-                        ignore=spack.install_layout.hidden_file_paths)
+        tree.merge(self.prefix, ignore=spack.install_layout.hidden_file_paths)
 
 
     def do_deactivate(self, extension):
@@ -950,8 +948,8 @@ class Package(object):
         always executed.
 
         """
-        unmerge_link_tree(extension.prefix, self.prefix,
-                          ignore=spack.install_layout.hidden_file_paths)
+        tree = LinkTree(extension.prefix)
+        tree.unmerge(self.prefix, ignore=spack.install_layout.hidden_file_paths)
         tty.msg("Deactivated %s as extension of %s."
                 % (extension.spec.short_spec, self.spec.short_spec))
 
