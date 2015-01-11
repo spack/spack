@@ -149,6 +149,7 @@ class AsciiGraph(object):
         self._frontier = None         # frontier
         self._nodes = None            # dict from name -> node
         self._prev_state = None       # State of previous line
+        self._prev_index = None       # Index of expansion point of prev line
 
 
     def _indent(self):
@@ -195,15 +196,19 @@ class AsciiGraph(object):
 
             collapse = True
             if self._prev_state == EXPAND_RIGHT:
-                # Special case for when prev. line expanded (spacing is off by 1)
-                # Need two lines here even when distance in frontier is 1.
-                self._back_edge_line([], j,  i+1, True, label + "-1.5 " + str((i,j)))
+                # Special case where previous line expanded and i is off by 1.
+                self._back_edge_line([], j, i+1, True, label + "-1.5 " + str((i+1,j)))
                 collapse = False
 
-            elif i-j > 1:
-                # We need two lines to connect if distance > 1
-                self._back_edge_line([], j,  i, True, label + "-1 " + str((i,j)))
-                collapse = False
+            else:
+                # Previous node also expanded here, so i is off by one.
+                if self._prev_state == NODE and self._prev_index < i:
+                    i += 1
+
+                if i-j > 1:
+                    # We need two lines to connect if distance > 1
+                    self._back_edge_line([], j,  i, True, label + "-1 " + str((i,j)))
+                    collapse = False
 
             self._back_edge_line([j], -1, -1, collapse, label + "-2 " + str((i,j)))
             return True
@@ -213,10 +218,11 @@ class AsciiGraph(object):
             return False
 
 
-    def _set_state(self, state, label=None):
+    def _set_state(self, state, index, label=None):
         if state not in states:
             raise ValueError("Invalid graph state!")
         self._prev_state = state
+        self._prev_index = index
 
         if self.debug:
             self._out.write(" " * 20)
@@ -296,7 +302,7 @@ class AsciiGraph(object):
         else:
             advance(flen,      lambda: [("| ", self._pos)] )
 
-        self._set_state(BACK_EDGE, label)
+        self._set_state(BACK_EDGE, end, label)
         self._out.write("\n")
 
 
@@ -312,7 +318,7 @@ class AsciiGraph(object):
             self._write_edge("| ", c)
 
         self._out.write(" %s" % name)
-        self._set_state(NODE)
+        self._set_state(NODE, index)
         self._out.write("\n")
 
 
@@ -324,7 +330,7 @@ class AsciiGraph(object):
         for c in range(index, len(self._frontier)):
             self._write_edge(" /", c)
 
-        self._set_state(COLLAPSE)
+        self._set_state(COLLAPSE, index)
         self._out.write("\n")
 
 
@@ -338,7 +344,7 @@ class AsciiGraph(object):
         for c in range(index+1, len(self._frontier)):
             self._write_edge("| ", c )
 
-        self._set_state(MERGE_RIGHT)
+        self._set_state(MERGE_RIGHT, index)
         self._out.write("\n")
 
 
@@ -353,7 +359,7 @@ class AsciiGraph(object):
         for c in range(index+2, len(self._frontier)):
             self._write_edge(" \\", c)
 
-        self._set_state(EXPAND_RIGHT)
+        self._set_state(EXPAND_RIGHT, index)
         self._out.write("\n")
 
 
