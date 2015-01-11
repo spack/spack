@@ -426,10 +426,13 @@ class AsciiGraph(object):
                             self._back_edge_line(prev_ends, b, i, False, 'left-1')
                             del prev_ends[:]
                         prev_ends.append(b)
-                    self._back_edge_line(prev_ends, -1, -1, False, 'left-2')
 
-                if not self._frontier[i]:
-                    self._frontier.pop(i)
+                    # Check whether we did ALL the deps as back edges,
+                    # in which case we're done.
+                    collapse = not self._frontier[i]
+                    if collapse:
+                        self._frontier.pop(i)
+                    self._back_edge_line(prev_ends, -1, -1, collapse, 'left-2')
 
                 elif len(self._frontier[i]) > 1:
                     # Expand forward after doing all back connections
