@@ -10,10 +10,4 @@ class PySetuptools(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        site_packages_dir = "%s/lib/python2.7/site-packages" % prefix
-        mkdirp(site_packages_dir)
-
-        env['PYTHONPATH'] = site_packages_dir
-
-        python = which('python')
         python('setup.py', 'install', '--prefix=%s' % prefix)
