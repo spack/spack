@@ -65,7 +65,6 @@ def uninstall(parser, args):
                      "  b) use a more specific spec."]
             tty.die(*args)
 
-
         if len(matching_specs) == 0:
             tty.die("%s does not match any installed packages." % spec)
 

@@ -131,6 +131,8 @@ def extends(*specs):
     clocals = caller_locals()
     dependencies = clocals.setdefault('dependencies', {})
     extendees = clocals.setdefault('extendees', {})
+    if extendees:
+        raise RelationError("Packages can extend at most one other package.")
 
     for string in specs:
         for spec in spack.spec.parse(string):

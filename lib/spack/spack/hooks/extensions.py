@@ -27,23 +27,12 @@ import spack
 
 
 def post_install(pkg):
-    assert(pkg.spec.concrete)
-    for name, spec in pkg.extendees.items():
-        ext = pkg.spec[name]
-        epkg = ext.package
-        if epkg.installed:
-            epkg.do_activate(pkg)
+    pkg.do_activate()
 
 
 def pre_uninstall(pkg):
-    assert(pkg.spec.concrete)
-
     # Need to do this b/c uninstall does not automatically do it.
     # TODO: store full graph info in stored .spec file.
     pkg.spec.normalize()
 
-    for name, spec in pkg.extendees.items():
-        ext = pkg.spec[name]
-        epkg = ext.package
-        if epkg.installed:
-            epkg.do_deactivate(pkg)
+    pkg.do_deactivate()

@@ -315,14 +315,17 @@ class Package(object):
     """Specs of virtual packages provided by this package, keyed by name."""
     provided = {}
 
-    """Specs of packages this one extends, keyed by name."""
-    extendees = {}
-
     """Specs of conflicting packages, keyed by name. """
     conflicted = {}
 
     """Patches to apply to newly expanded source, if any."""
     patches = {}
+
+    """Specs of package this one extends, or None.
+
+    Currently, ppackages can extend at most one other package.
+    """
+    extendees = {}
 
     #
     # These are default values for instance variables.
@@ -402,8 +405,8 @@ class Package(object):
         self._fetch_time = 0.0
         self._total_time = 0.0
 
-        for name, spec in self.extendees.items():
-            spack.db.get(spec)._check_extendable()
+        if self.is_extension:
+            spack.db.get(self.extendee_spec)._check_extendable()
 
 
     @property
@@ -489,6 +492,34 @@ class Package(object):
     @fetcher.setter
     def fetcher(self, f):
         self._fetcher = f
+
+
+    @property
+    def extendee_spec(self):
+        """Spec of the extendee of this package, or None if it is not an extension."""
+        if not self.extendees:     return None
+
+        name = next(iter(self.extendees))
+        if not name in self.spec:
+            return self.extendees[name]
+
+        # Need to do this to get the concrete version of the spec
+        return self.spec[name]
+
+
+    @property
+    def is_extension(self):
+        return len(self.extendees) > 0
+
+
+    @property
+    def activated(self):
+        if not self.spec.concrete:
+            raise ValueError("Only concrete package extensions can be activated.")
+        if not self.is_extension:
+            raise ValueError("is_extension called on package that is not an extension.")
+
+        return self.spec in spack.install_layout.get_extensions(self.extendee_spec)
 
 
     def preorder_traversal(self, visited=None, **kwargs):
@@ -784,10 +815,9 @@ class Package(object):
                 build_env.setup_package(self)
 
                 # Allow extendees to further set up the environment.
-                for ext_name in self.extendees:
-                    ext_spec = self.spec[ext_name]
-                    ext_spec.package.setup_extension_environment(
-                        self.module, ext_spec, self.spec)
+                if self.is_extension:
+                    self.extendee_spec.package.setup_extension_environment(
+                        self.module, self.extendee_spec, self.spec)
 
                 if fake_install:
                     self.do_fake_install()
@@ -839,7 +869,6 @@ class Package(object):
         pid, returncode = os.waitpid(pid, 0)
         if returncode != 0:
             sys.exit(1)
-
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_install(self)
@@ -919,25 +948,30 @@ class Package(object):
             raise ValueError("Package %s is not extendable!" % self.name)
 
 
-    def _sanity_check_extension(self, extension):
-        self._check_extendable()
-        if not self.installed:
+    def _sanity_check_extension(self):
+        extendee_package = self.extendee_spec.package
+        extendee_package._check_extendable()
+
+        if not extendee_package.installed:
             raise ValueError("Can only (de)activate extensions for installed packages.")
-        if not extension.installed:
+        if not self.installed:
             raise ValueError("Extensions must first be installed.")
-        if not self.name in extension.extendees:
-            raise ValueError("%s does not extend %s!" % (extension.name, self.name))
-        if not self.spec.satisfies(extension.extendees[self.name]):
-            raise ValueError("%s does not satisfy %s!" % (self.spec, extension.spec))
+        if not self.extendee_spec.name in self.extendees:
+            raise ValueError("%s does not extend %s!" % (self.name, self.extendee.name))
 
 
-    def do_activate(self, extension):
-        self._sanity_check_extension(extension)
+    def do_activate(self):
+        """Called on an etension to invoke the extendee's activate method.
 
-        self.activate(extension)
-        spack.install_layout.add_extension(self.spec, extension.spec)
+        Commands should call this routine, and should not call
+        activate() directly.
+        """
+        self._sanity_check_extension()
+        self.extendee_spec.package.activate(self)
+
+        spack.install_layout.add_extension(self.extendee_spec, self.spec)
         tty.msg("Activated extension %s for %s."
-                % (extension.spec.short_spec, self.spec.short_spec))
+                % (self.spec.short_spec, self.extendee_spec.short_spec))
 
 
     def activate(self, extension):
@@ -957,20 +991,19 @@ class Package(object):
         tree.merge(self.prefix, ignore=spack.install_layout.hidden_file_paths)
 
 
-    def do_deactivate(self, extension):
-        self._sanity_check_extension(extension)
-        self.deactivate(extension)
+    def do_deactivate(self):
+        self._sanity_check_extension()
+        self.extendee_spec.package.deactivate(self)
 
-        ext = extension.spec
-        if ext in spack.install_layout.get_extensions(self.spec):
-            spack.install_layout.remove_extension(self.spec, ext)
+        if self.spec in spack.install_layout.get_extensions(self.extendee_spec):
+            spack.install_layout.remove_extension(self.extendee_spec, self.spec)
 
         tty.msg("Deactivated extension %s for %s."
-                % (extension.spec.short_spec, self.spec.short_spec))
+                % (self.spec.short_spec, self.extendee_spec.short_spec))
 
 
     def deactivate(self, extension):
-        """Unlinks all files from extension out of extendee's install dir.
+        """Unlinks all files from extension out of this package's install dir.
 
         Package authors can override this method to support other
         extension mechanisms.  Spack internals (commands, hooks, etc.)
@@ -980,8 +1013,6 @@ class Package(object):
         """
         tree = LinkTree(extension.prefix)
         tree.unmerge(self.prefix, ignore=spack.install_layout.hidden_file_paths)
-        tty.msg("Deactivated %s as extension of %s."
-                % (extension.spec.short_spec, self.spec.short_spec))
 
 
     def do_clean(self):

@@ -77,6 +77,8 @@ class PackageDB(object):
                 copy = spec.copy()
                 self.instances[copy] = package_class(copy)
             except Exception, e:
+                if spack.debug:
+                    sys.excepthook(*sys.exc_info())
                 raise FailedConstructorError(spec.name, e)
 
         return self.instances[spec]
