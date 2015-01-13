@@ -712,6 +712,15 @@ class Spec(object):
             raise InconsistentSpecError("Invalid Spec DAG: %s" % e.message)
 
 
+    def index(self):
+        """Return DependencyMap that points to all the dependencies in this
+           spec."""
+        dm = DependencyMap()
+        for spec in self.traverse():
+            dm[spec.name] = spec
+        return dm
+
+
     def flatten(self):
         """Pull all dependencies up to the root (this spec).
            Merge constraints for dependencies with the same name, and if they
@@ -858,7 +867,7 @@ class Spec(object):
     def normalized(self):
         """Return a normalized copy of this spec without modifying this spec."""
         clone = self.copy()
-        clone.normalized()
+        clone.normalize()
         return clone
 
 
@@ -1289,12 +1298,13 @@ class Spec(object):
     def tree(self, **kwargs):
         """Prints out this spec and its dependencies, tree-formatted
            with indentation."""
-        color  = kwargs.get('color', False)
-        depth  = kwargs.get('depth', False)
-        showid = kwargs.get('ids',   False)
-        cover  = kwargs.get('cover', 'nodes')
-        indent = kwargs.get('indent', 0)
-        format = kwargs.get('format', '$_$@$%@$+$=')
+        color  = kwargs.pop('color', False)
+        depth  = kwargs.pop('depth', False)
+        showid = kwargs.pop('ids',   False)
+        cover  = kwargs.pop('cover', 'nodes')
+        indent = kwargs.pop('indent', 0)
+        fmt    = kwargs.pop('format', '$_$@$%@$+$=')
+        check_kwargs(kwargs, self.tree)
 
         out = ""
         cur_id = 0
@@ -1311,7 +1321,7 @@ class Spec(object):
             out += ("    " * d)
             if d > 0:
                 out += "^"
-            out += node.format(format, color=color) + "\n"
+            out += node.format(fmt, color=color) + "\n"
         return out
 
 
