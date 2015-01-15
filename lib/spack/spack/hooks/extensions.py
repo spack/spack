@@ -27,7 +27,8 @@ import spack
 
 
 def post_install(pkg):
-    pkg.do_activate()
+    if pkg.is_extension:
+        pkg.do_activate()
 
 
 def pre_uninstall(pkg):
@@ -35,4 +36,5 @@ def pre_uninstall(pkg):
     # TODO: store full graph info in stored .spec file.
     pkg.spec.normalize()
 
-    pkg.do_deactivate()
+    if pkg.is_extension:
+        pkg.do_deactivate()
