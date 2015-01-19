@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 from external import argparse
 
 import llnl.util.tty as tty
@@ -86,11 +87,12 @@ def location(parser, args):
                 tty.die("Spec '%s' matches no installed packages." % spec)
 
             elif len(matching_specs) > 1:
-                args =  ["%s matches multiple packages." % spec,
-                         "Matching packages:"]
-                args += ["  " + str(s) for s in matching_specs]
-                args += ["Use a more specific spec."]
-                tty.die(*args)
+                tty.error("%s matches multiple packages:" % spec)
+                for s in matching_specs:
+                    sys.stderr.write(s.tree(color=True))
+                    sys.stderr.write("\n")
+                sys.stderr.write("Use a more specific spec.\n")
+                sys.exit(1)
 
             print matching_specs[0].prefix
 
