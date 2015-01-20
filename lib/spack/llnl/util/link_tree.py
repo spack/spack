@@ -72,8 +72,7 @@ class LinkTree(object):
 
         order=[pre|post] -- Whether to do pre- or post-order traveral.
 
-        ignore=<container> -- Optional container of root-relative
-                              paths to ignore.
+        ignore=<predicate> -- Predicate indicating which files to ignore.
 
         follow_nonexisting -- Whether to descend into directories in
                               src that do not exit in dest.
@@ -85,9 +84,7 @@ class LinkTree(object):
             raise ValueError("Order must be 'pre' or 'post'.")
 
         # List of relative paths to ignore under the src root.
-        ignore = kwargs.get('ignore', None)
-        if isinstance(ignore, basestring):
-            ignore = (ignore,)
+        ignore = kwargs.get('ignore', lambda filename: False)
 
         # Whether to descend when dirs dont' exist in dest.
         follow_nonexisting = kwargs.get('follow_nonexisting', True)
@@ -98,7 +95,7 @@ class LinkTree(object):
             dest_dirpath = os.path.join(dest_root, rel_path)
 
             # Don't descend into ignored directories
-            if ignore and dest_dirpath in ignore:
+            if ignore(dest_dirpath):
                 return
 
             # Don't descend into dirs in dest that do not exist in src.
@@ -118,7 +115,7 @@ class LinkTree(object):
                 # Ignore particular paths inside the install root.
                 src_relpath = src_file[len(self._root):]
                 src_relpath = src_relpath.lstrip(os.path.sep)
-                if ignore and src_relpath in ignore:
+                if ignore(src_relpath):
                     continue
 
                 yield (src_file, dest_file)

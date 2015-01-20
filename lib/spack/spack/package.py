@@ -995,14 +995,15 @@ class Package(object):
         always executed.
 
         """
-        ignore_files = set(spack.install_layout.hidden_file_paths)
-        ignore_files.update(kwargs.get('ignore', ()))
+        def ignore(filename):
+            return (filename in spack.install_layout.hidden_file_paths or
+                    kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix)
-        conflict = tree.find_conflict(self.prefix, ignore=ignore_files)
+        conflict = tree.find_conflict(self.prefix, ignore=ignore)
         if conflict:
             raise ExtensionConflictError(conflict)
-        tree.merge(self.prefix, ignore=ignore_files)
+        tree.merge(self.prefix, ignore=ignore)
 
 
     def do_deactivate(self):
@@ -1026,11 +1027,12 @@ class Package(object):
         always executed.
 
         """
-        ignore_files = set(spack.install_layout.hidden_file_paths)
-        ignore_files.update(kwargs.get('ignore', ()))
+        def ignore(filename):
+            return (filename in spack.install_layout.hidden_file_paths or
+                    kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix)
-        tree.unmerge(self.prefix, ignore=ignore_files)
+        tree.unmerge(self.prefix, ignore=ignore)
 
 
     def do_clean(self):

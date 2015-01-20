@@ -1,7 +1,9 @@
 from spack import *
 
 class PyNose(Package):
-    """nose extends the test loading and running features of unittest, making it easier to write, find and run tests."""
+    """nose extends the test loading and running features of unittest,
+    making it easier to write, find and run tests."""
+
     homepage = "https://pypi.python.org/pypi/nose"
     url      = "https://pypi.python.org/packages/source/n/nose/nose-1.3.4.tar.gz"
 

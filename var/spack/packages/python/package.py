@@ -1,5 +1,6 @@
 from spack import *
 import os
+import re
 
 class Python(Package):
     """The Python programming language."""
@@ -59,19 +60,21 @@ class Python(Package):
         mkdirp(module.site_packages_dir)
 
 
-    def add_ignore_files(self, args):
+    def make_ignore(self, args):
         """Add some ignore files to activate/deactivate args."""
-        ignore  = set(args.get('ignore', ()))
-        ignore.add(os.path.join(self.site_packages_dir, 'site.py'))
-        ignore.add(os.path.join(self.site_packages_dir, 'site.pyc'))
-        args.update(ignore=ignore)
+        orig_ignore = args.get('ignore', lambda f: False)
+        def ignore(filename):
+            return (re.search(r'/site\.pyc?$', filename) or
+                    re.search(r'\.pth$', filename) or
+                    orig_ignore(filename))
+        return ignore
 
 
     def activate(self, ext_pkg, **args):
-        self.add_ignore_files(args)
+        args.update(ignore=self.make_ignore(args))
         super(Python, self).activate(ext_pkg, **args)
 
 
     def deactivate(self, ext_pkg, **args):
-        self.add_ignore_files(args)
+        args.update(ignore=self.make_ignore(args))
         super(Python, self).deactivate(ext_pkg, **args)
