@@ -497,14 +497,24 @@ class Package(object):
     @property
     def extendee_spec(self):
         """Spec of the extendee of this package, or None if it is not an extension."""
-        if not self.extendees:     return None
-
+        if not self.extendees:
+            return None
         name = next(iter(self.extendees))
         if not name in self.spec:
-            return self.extendees[name]
+            spec, kwargs = self.extendees[name]
+            return spec
 
         # Need to do this to get the concrete version of the spec
         return self.spec[name]
+
+
+    @property
+    def extendee_args(self):
+        """Spec of the extendee of this package, or None if it is not an extension."""
+        if not self.extendees:
+            return None
+        name = next(iter(self.extendees))
+        return self.extendees[name][1]
 
 
     @property
@@ -949,6 +959,8 @@ class Package(object):
 
 
     def _sanity_check_extension(self):
+        if not self.is_extension:
+            raise ValueError("This package is not an extension.")
         extendee_package = self.extendee_spec.package
         extendee_package._check_extendable()
 
@@ -967,14 +979,14 @@ class Package(object):
         activate() directly.
         """
         self._sanity_check_extension()
-        self.extendee_spec.package.activate(self)
+        self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.install_layout.add_extension(self.extendee_spec, self.spec)
         tty.msg("Activated extension %s for %s."
                 % (self.spec.short_spec, self.extendee_spec.short_spec))
 
 
-    def activate(self, extension):
+    def activate(self, extension, **kwargs):
         """Symlinks all files from the extension into extendee's install dir.
 
         Package authors can override this method to support other
@@ -983,17 +995,20 @@ class Package(object):
         always executed.
 
         """
+        ignore_files = set(spack.install_layout.hidden_file_paths)
+        ignore_files.update(kwargs.get('ignore', ()))
+
         tree = LinkTree(extension.prefix)
-        conflict = tree.find_conflict(
-            self.prefix, ignore=spack.install_layout.hidden_file_paths)
+        conflict = tree.find_conflict(self.prefix, ignore=ignore_files)
         if conflict:
             raise ExtensionConflictError(conflict)
-        tree.merge(self.prefix, ignore=spack.install_layout.hidden_file_paths)
+        tree.merge(self.prefix, ignore=ignore_files)
 
 
     def do_deactivate(self):
+        """Called on the extension to invoke extendee's deactivate() method."""
         self._sanity_check_extension()
-        self.extendee_spec.package.deactivate(self)
+        self.extendee_spec.package.deactivate(self, **self.extendee_args)
 
         if self.spec in spack.install_layout.get_extensions(self.extendee_spec):
             spack.install_layout.remove_extension(self.extendee_spec, self.spec)
@@ -1002,7 +1017,7 @@ class Package(object):
                 % (self.spec.short_spec, self.extendee_spec.short_spec))
 
 
-    def deactivate(self, extension):
+    def deactivate(self, extension, **kwargs):
         """Unlinks all files from extension out of this package's install dir.
 
         Package authors can override this method to support other
@@ -1011,8 +1026,11 @@ class Package(object):
         always executed.
 
         """
+        ignore_files = set(spack.install_layout.hidden_file_paths)
+        ignore_files.update(kwargs.get('ignore', ()))
+
         tree = LinkTree(extension.prefix)
-        tree.unmerge(self.prefix, ignore=spack.install_layout.hidden_file_paths)
+        tree.unmerge(self.prefix, ignore=ignore_files)
 
 
     def do_clean(self):

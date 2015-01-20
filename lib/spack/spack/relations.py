@@ -117,7 +117,7 @@ def depends_on(*specs):
             dependencies[spec.name] = spec
 
 
-def extends(*specs):
+def extends(spec, **kwargs):
     """Same as depends_on, but dependency is symlinked into parent prefix.
 
     This is for Python and other language modules where the module
@@ -125,6 +125,10 @@ def extends(*specs):
     Spack handles this by installing modules into their own prefix,
     but allowing ONE module version to be symlinked into a parent
     Python install at a time.
+
+    keyword arguments can be passed to extends() so that extension
+    packages can pass parameters to the extendee's extension
+    mechanism.
 
     """
     pkg = get_calling_package_name()
@@ -134,12 +138,11 @@ def extends(*specs):
     if extendees:
         raise RelationError("Packages can extend at most one other package.")
 
-    for string in specs:
-        for spec in spack.spec.parse(string):
-            if pkg == spec.name:
-                raise CircularReferenceError('extends', pkg)
-            dependencies[spec.name] = spec
-            extendees[spec.name] = spec
+    spec = Spec(spec)
+    if pkg == spec.name:
+        raise CircularReferenceError('extends', pkg)
+    dependencies[spec.name] = spec
+    extendees[spec.name] = (spec, kwargs)
 
 
 def provides(*specs, **kwargs):

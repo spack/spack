@@ -28,6 +28,16 @@ class Python(Package):
         make("install")
 
 
+    @property
+    def python_lib_dir(self):
+        return os.path.join('lib', 'python%d.%d' % self.version[:2])
+
+
+    @property
+    def site_packages_dir(self):
+        return os.path.join(self.python_lib_dir, 'site-packages')
+
+
     def setup_extension_environment(self, module, spec, ext_spec):
         """Called before python modules' install() methods.
 
@@ -39,11 +49,29 @@ class Python(Package):
         module.python = Executable(join_path(spec.prefix.bin, 'python'))
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
-        module.python_lib_dir = join_path(ext_spec.prefix.lib, 'python%d.%d' % self.version[:2])
-        module.site_packages_dir = join_path(module.python_lib_dir, 'site-packages')
+        module.python_lib_dir = os.path.join(ext_spec.prefix, self.python_lib_dir)
+        module.site_packages_dir = os.path.join(ext_spec.prefix, self.site_packages_dir)
 
         # Add site packages directory to the PYTHONPATH
         os.environ['PYTHONPATH'] = module.site_packages_dir
 
         # Make the site packages directory if it does not exist already.
         mkdirp(module.site_packages_dir)
+
+
+    def add_ignore_files(self, args):
+        """Add some ignore files to activate/deactivate args."""
+        ignore  = set(args.get('ignore', ()))
+        ignore.add(os.path.join(self.site_packages_dir, 'site.py'))
+        ignore.add(os.path.join(self.site_packages_dir, 'site.pyc'))
+        args.update(ignore=ignore)
+
+
+    def activate(self, ext_pkg, **args):
+        self.add_ignore_files(args)
+        super(Python, self).activate(ext_pkg, **args)
+
+
+    def deactivate(self, ext_pkg, **args):
+        self.add_ignore_files(args)
+        super(Python, self).deactivate(ext_pkg, **args)
