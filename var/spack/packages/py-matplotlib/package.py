@@ -1,4 +1,5 @@
 from spack import *
+import os
 
 class PyMatplotlib(Package):
     """Python plotting package."""
@@ -18,3 +19,19 @@ class PyMatplotlib(Package):
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
+        if str(self.version) == '1.4.2':
+            # hack to fix configuration file
+            config_file = None
+            for p,d,f in os.walk(prefix.lib):
+                for file in f:
+                    if file.find('matplotlibrc') != -1:
+                        config_file = join_path(p, 'matplotlibrc')
+                        print config_file
+            if config_file == None:
+                raise InstallError('could not find config file')
+            filter_file(r'backend      : pyside',
+                        'backend      : Qt4Agg',
+                        config_file)
+            filter_file(r'#backend.qt4 : PyQt4',
+                        'backend.qt4 : PySide',
+                        config_file)
