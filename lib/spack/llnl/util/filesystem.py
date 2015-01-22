@@ -24,7 +24,7 @@
 ##############################################################################
 __all__ = ['set_install_permissions', 'install', 'expand_user', 'working_dir',
            'touch', 'mkdirp', 'force_remove', 'join_path', 'ancestor',
-           'can_access', 'filter_file', 'change_sed_delimiter']
+           'can_access', 'filter_file', 'change_sed_delimiter', 'is_exe']
 
 import os
 import sys
@@ -152,6 +152,11 @@ def install(src, dest):
     if src_mode | stat.S_IXGRP: dest_mode |= stat.S_IXGRP
     if src_mode | stat.S_IXOTH: dest_mode |= stat.S_IXOTH
     os.chmod(dest, dest_mode)
+
+
+def is_exe(path):
+    """True if path is an executable file."""
+    return os.path.isfile(path) and os.access(path, os.X_OK)
 
 
 def expand_user(path):
