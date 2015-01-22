@@ -7,7 +7,7 @@ class Psapi(Package):
     homepage = "https://github.com/scalability-llnl/PSAPI"
     url      = "http://www.example.com/memaxes-psapi-1.0.tar.gz"
 
-    version('0.5', git='https://github.com/scalability-llnl/PSAPI.git', tag='v0.5')
+    version('0.6', git='https://github.com/scalability-llnl/PSAPI.git', tag='v0.6')
 
     depends_on('dyninst')
 
