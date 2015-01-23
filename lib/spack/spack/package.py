@@ -713,6 +713,14 @@ class Package(object):
         tty.msg("Patched %s" % self.name)
 
 
+    def do_fake_install(self):
+        """Make a fake install directory contaiing a 'fake' file in bin."""
+        mkdirp(self.prefix.bin)
+        touch(join_path(self.prefix.bin, 'fake'))
+        mkdirp(self.prefix.lib)
+        mkdirp(self.prefix.man1)
+
+
     def do_install(self, **kwargs):
         """This class should call this version of the install method.
            Package implementations should override install().
@@ -758,13 +766,11 @@ class Package(object):
                 spack.install_layout.make_path_for_spec(self.spec)
 
                 # Set up process's build environment before running install.
+                self.stage.chdir_to_source()
                 build_env.setup_package(self)
 
                 if fake_install:
-                    mkdirp(self.prefix.bin)
-                    touch(join_path(self.prefix.bin, 'fake'))
-                    mkdirp(self.prefix.lib)
-                    mkdirp(self.prefix.man1)
+                    self.do_fake_install()
                 else:
                     # Subclasses implement install() to do the real work.
                     self.install(self.spec, self.prefix)
@@ -923,6 +929,23 @@ class Package(object):
         except spack.error.NoNetworkConnectionError, e:
             tty.die("Package.fetch_versions couldn't connect to:",
                     e.url, e.message)
+
+
+    @property
+    def rpath(self):
+        """Get the rpath this package links with, as a list of paths."""
+        rpaths = [self.prefix.lib, self.prefix.lib64]
+        rpaths.extend(d.prefix.lib for d in self.spec.traverse(root=False)
+                      if os.path.isdir(d.prefix.lib))
+        rpaths.extend(d.prefix.lib64 for d in self.spec.traverse(root=False)
+                      if os.path.isdir(d.prefix.lib64))
+        return rpaths
+
+
+    @property
+    def rpath_args(self):
+        """Get the rpath args as a string, with -Wl,-rpath= for each element."""
+        return " ".join("-Wl,-rpath=%s" % p for p in self.rpath)
 
 
 def find_versions_of_archive(*archive_urls, **kwargs):
