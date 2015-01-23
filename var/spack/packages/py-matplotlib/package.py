@@ -16,6 +16,7 @@ class PyMatplotlib(Package):
     depends_on('py-dateutil')
     depends_on('py-pytz')
     depends_on('py-nose')
+    depends_on('py-numpy')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

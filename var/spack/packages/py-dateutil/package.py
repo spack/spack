@@ -8,6 +8,7 @@ class PyDateutil(Package):
     version('2.4.0', '75714163bb96bedd07685cdb2071b8bc')
 
     extends('python')
+    depends_on('py-setuptools')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
