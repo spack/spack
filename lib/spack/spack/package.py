@@ -836,10 +836,7 @@ class Package(object):
                     self.install(self.spec, self.prefix)
 
                 # Ensure that something was actually installed.
-                if not os.listdir(self.prefix):
-                    raise InstallError(
-                        "Install failed for %s.  Nothing was installed!"
-                        % self.name)
+                self._sanity_check_install()
 
                 # On successful install, remove the stage.
                 if not keep_stage:
@@ -882,6 +879,15 @@ class Package(object):
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_install(self)
+
+
+
+    def _sanity_check_install(self):
+        installed = set(os.listdir(self.prefix))
+        installed.difference_update(spack.install_layout.hidden_file_paths)
+        if not installed:
+            raise InstallError(
+                "Install failed for %s.  Nothing was installed!" % self.name)
 
 
     def do_install_dependencies(self, **kwargs):
