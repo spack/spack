@@ -51,7 +51,8 @@ test_names = ['versions',
               'hg_fetch',
               'mirror',
               'url_extrapolate',
-              'cc']
+              'cc',
+              'link_tree']
 
 
 def list_tests():

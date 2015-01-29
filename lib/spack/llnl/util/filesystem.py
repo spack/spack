@@ -23,7 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 __all__ = ['set_install_permissions', 'install', 'expand_user', 'working_dir',
-           'touch', 'mkdirp', 'force_remove', 'join_path', 'ancestor',
+           'touch', 'touchp', 'mkdirp', 'force_remove', 'join_path', 'ancestor',
            'can_access', 'filter_file', 'change_sed_delimiter', 'is_exe']
 
 import os
@@ -202,6 +202,12 @@ def touch(path):
     """Creates an empty file at the specified path."""
     with closing(open(path, 'a')) as file:
         os.utime(path, None)
+
+
+def touchp(path):
+    """Like touch, but creates any parent directories needed for the file."""
+    mkdirp(os.path.dirname(path))
+    touch(path)
 
 
 def join_path(prefix, *args):

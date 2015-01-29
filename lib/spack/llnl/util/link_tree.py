@@ -29,6 +29,89 @@ import os
 import shutil
 from llnl.util.filesystem import mkdirp
 
+empty_file_name = '.spack-empty'
+
+
+def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
+    """Traverse two filesystem trees simultaneously.
+
+    Walks the LinkTree directory in pre or post order.  Yields each
+    file in the source directory with a matching path from the dest
+    directory, along with whether the file is a directory.
+    e.g., for this tree::
+
+        root/
+          a/
+            file1
+            file2
+          b/
+            file3
+
+    When called on dest, this yields::
+
+        ('root',         'dest')
+        ('root/a',       'dest/a')
+        ('root/a/file1', 'dest/a/file1')
+        ('root/a/file2', 'dest/a/file2')
+        ('root/b',       'dest/b')
+        ('root/b/file3', 'dest/b/file3')
+
+    Optional args:
+
+    order=[pre|post] -- Whether to do pre- or post-order traveral.
+
+    ignore=<predicate> -- Predicate indicating which files to ignore.
+
+    follow_nonexisting -- Whether to descend into directories in
+                          src that do not exit in dest. Default True.
+
+    follow_links -- Whether to descend into symlinks in src.
+
+    """
+    follow_nonexisting = kwargs.get('follow_nonexisting', True)
+    follow_links = kwargs.get('follow_link', False)
+
+    # Yield in pre or post order?
+    order  = kwargs.get('order', 'pre')
+    if order not in ('pre', 'post'):
+        raise ValueError("Order must be 'pre' or 'post'.")
+
+    # List of relative paths to ignore under the src root.
+    ignore = kwargs.get('ignore', lambda filename: False)
+
+    # Don't descend into ignored directories
+    if ignore(rel_path):
+        return
+
+    source_path = os.path.join(source_root, rel_path)
+    dest_path   = os.path.join(dest_root, rel_path)
+
+    # preorder yields directories before children
+    if order == 'pre':
+        yield (source_path, dest_path)
+
+    for f in os.listdir(source_path):
+        source_child = os.path.join(source_path, f)
+        dest_child   = os.path.join(dest_path, f)
+
+        # Treat as a directory
+        if os.path.isdir(source_child) and (
+            follow_links or not os.path.islink(source_child)):
+
+            # When follow_nonexisting isn't set, don't descend into dirs
+            # in source that do not exist in dest
+            if follow_nonexisting or os.path.exists(dest_child):
+                tuples = traverse_tree(source_child, dest_child, rel_path, **kwargs)
+                for t in tuples: yield t
+
+        # Treat as a file.
+        elif not ignore(os.path.join(rel_path, f)):
+            yield (source_child, dest_child)
+
+    if order == 'post':
+        yield (source_path, dest_path)
+
+
 
 class LinkTree(object):
     """Class to create trees of symbolic links from a source directory.
@@ -42,95 +125,20 @@ class LinkTree(object):
 
     """
     def __init__(self, source_root):
+        if not os.path.exists(source_root):
+            raise IOError("No such file or directory: '%s'", source_root)
+
         self._root = source_root
 
 
-    def traverse(self, dest_root, **kwargs):
-        """Traverse LinkTree root and dest simultaneously.
-
-        Walks the LinkTree directory in pre or post order.  Yields
-        each file in the source directory with a matching path from
-        the dest directory.  e.g., for this tree::
-
-            root/
-              a/
-                file1
-                file2
-              b/
-                file3
-
-        When called on dest, this yields::
-
-            ('root',         'dest')
-            ('root/a',       'dest/a')
-            ('root/a/file1', 'dest/a/file1')
-            ('root/a/file2', 'dest/a/file2')
-            ('root/b',       'dest/b')
-            ('root/b/file3', 'dest/b/file3')
-
-        Optional args:
-
-        order=[pre|post] -- Whether to do pre- or post-order traveral.
-
-        ignore=<predicate> -- Predicate indicating which files to ignore.
-
-        follow_nonexisting -- Whether to descend into directories in
-                              src that do not exit in dest.
-
-        """
-        # Yield directories before or after their contents.
-        order  = kwargs.get('order', 'pre')
-        if order not in ('pre', 'post'):
-            raise ValueError("Order must be 'pre' or 'post'.")
-
-        # List of relative paths to ignore under the src root.
-        ignore = kwargs.get('ignore', lambda filename: False)
-
-        # Whether to descend when dirs dont' exist in dest.
-        follow_nonexisting = kwargs.get('follow_nonexisting', True)
-
-        for dirpath, dirnames, filenames in os.walk(self._root):
-            rel_path  = dirpath[len(self._root):]
-            rel_path = rel_path.lstrip(os.path.sep)
-            dest_dirpath = os.path.join(dest_root, rel_path)
-
-            # Don't descend into ignored directories
-            if ignore(dest_dirpath):
-                return
-
-            # Don't descend into dirs in dest that do not exist in src.
-            if not follow_nonexisting:
-                dirnames[:] = [
-                    d for d in dirnames
-                    if os.path.exists(os.path.join(dest_dirpath, d))]
-
-            # preorder yields directories before children
-            if order == 'pre':
-                yield (dirpath, dest_dirpath)
-
-            for name in filenames:
-                src_file  = os.path.join(dirpath, name)
-                dest_file = os.path.join(dest_dirpath, name)
-
-                # Ignore particular paths inside the install root.
-                src_relpath = src_file[len(self._root):]
-                src_relpath = src_relpath.lstrip(os.path.sep)
-                if ignore(src_relpath):
-                    continue
-
-                yield (src_file, dest_file)
-
-            # postorder yields directories after children
-            if order == 'post':
-                yield (dirpath, dest_dirpath)
-
-
-
     def find_conflict(self, dest_root, **kwargs):
-        """Returns the first file in dest that also exists in src."""
+        """Returns the first file in dest that conflicts with src"""
         kwargs['follow_nonexisting'] = False
-        for src, dest in self.traverse(dest_root, **kwargs):
-            if os.path.exists(dest) and not os.path.isdir(dest):
+        for src, dest in traverse_tree(self._root, dest_root, **kwargs):
+            if os.path.isdir(src):
+                if os.path.exists(dest) and not os.path.isdir(dest):
+                    return dest
+            elif os.path.exists(dest):
                 return dest
         return None
 
@@ -138,9 +146,20 @@ class LinkTree(object):
     def merge(self, dest_root, **kwargs):
         """Link all files in src into dest, creating directories if necessary."""
         kwargs['order'] = 'pre'
-        for src, dest in self.traverse(dest_root, **kwargs):
+        for src, dest in traverse_tree(self._root, dest_root, **kwargs):
             if os.path.isdir(src):
-                mkdirp(dest)
+                if not os.path.exists(dest):
+                    mkdirp(dest)
+                    continue
+
+                if not os.path.isdir(dest):
+                    raise ValueError("File blocks directory: %s" % dest)
+
+                # mark empty directories so they aren't removed on unmerge.
+                if not os.listdir(dest):
+                    marker = os.path.join(dest, empty_file_name)
+                    touch(marker)
+
             else:
                 assert(not os.path.exists(dest))
                 os.symlink(src, dest)
@@ -153,11 +172,19 @@ class LinkTree(object):
 
         """
         kwargs['order'] = 'post'
-        for src, dest in self.traverse(dest_root, **kwargs):
-            if os.path.isdir(dest):
+        for src, dest in traverse_tree(self._root, dest_root, **kwargs):
+            if os.path.isdir(src):
+                if not os.path.isdir(dest):
+                    raise ValueError("File blocks directory: %s" % dest)
+
+                # remove directory if it is empty.
                 if not os.listdir(dest):
-                    # TODO: what if empty directories were present pre-merge?
                     shutil.rmtree(dest, ignore_errors=True)
+
+                # remove empty dir marker if present.
+                marker = os.path.join(dest, empty_file_name)
+                if os.path.exists(marker):
+                    os.remove(marker)
 
             elif os.path.exists(dest):
                 if not os.path.islink(dest):
