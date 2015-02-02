@@ -11,6 +11,7 @@ class PyBasemap(Package):
     geos_version = {'1.0.7' : '3.3.3'}
 
     extends('python')
+    depends_on('py-setuptools')
     depends_on('py-numpy')
     depends_on('py-matplotlib')
     depends_on('py-pil')

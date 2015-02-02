@@ -522,6 +522,11 @@ class Package(object):
         return len(self.extendees) > 0
 
 
+    def extends(self, spec):
+        return (spec.name in self.extendees and
+                spec.satisfies(self.extendees[spec.name][0]))
+
+
     @property
     def activated(self):
         if not self.spec.concrete:

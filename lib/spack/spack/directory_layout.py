@@ -269,8 +269,8 @@ class SpecHashDirectoryLayout(DirectoryLayout):
     def get_extensions(self, spec):
         _check_concrete(spec)
 
-        path = self.extension_file_path(spec)
         extensions = set()
+        path = self.extension_file_path(spec)
         if os.path.exists(path):
             with closing(open(path)) as ext_file:
                 for line in ext_file:

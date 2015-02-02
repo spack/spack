@@ -26,6 +26,7 @@ import sys
 from external import argparse
 
 import llnl.util.tty as tty
+from llnl.util.tty.colify import colify
 
 import spack
 import spack.cmd
@@ -66,10 +67,10 @@ def extensions(parser, args):
 
     exts = spack.install_layout.get_extensions(spec)
     if not exts:
-        tty.msg("%s has no activated extensions." % spec.short_spec)
+        tty.msg("%s has no activated extensions." % spec.cshort_spec)
     else:
-        tty.msg("Showing %d activated extension%s for package:"
-                % (len(exts), 's' if len(exts) > 1 else ''),
-                spec.short_spec)
+        tty.msg("Extensions for package %s:" % spec.cshort_spec)
+        colify(pkg.name for pkg in spack.db.extensions_for(spec))
         print
+        tty.msg("%d currently activated:" % len(exts))
         spack.cmd.find.display_specs(exts, mode=args.mode)

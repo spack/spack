@@ -27,7 +27,7 @@ __all__ = ['LinkTree']
 
 import os
 import shutil
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import *
 
 empty_file_name = '.spack-empty'
 
@@ -93,6 +93,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
     for f in os.listdir(source_path):
         source_child = os.path.join(source_path, f)
         dest_child   = os.path.join(dest_path, f)
+        rel_child    = os.path.join(rel_path, f)
 
         # Treat as a directory
         if os.path.isdir(source_child) and (
@@ -101,7 +102,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
-                tuples = traverse_tree(source_child, dest_child, rel_path, **kwargs)
+                tuples = traverse_tree(source_root, dest_root, rel_child, **kwargs)
                 for t in tuples: yield t
 
         # Treat as a file.

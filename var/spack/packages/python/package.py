@@ -1,6 +1,9 @@
 from spack import *
+import spack
 import os
 import re
+from contextlib import closing
+
 
 class Python(Package):
     """The Python programming language."""
@@ -28,6 +31,10 @@ class Python(Package):
         make()
         make("install")
 
+
+    # ========================================================================
+    # Set up environment to make install easy for python extensions.
+    # ========================================================================
 
     @property
     def python_lib_dir(self):
@@ -60,21 +67,81 @@ class Python(Package):
         mkdirp(module.site_packages_dir)
 
 
-    def make_ignore(self, args):
+    # ========================================================================
+    # Handle specifics of activating and deactivating python modules.
+    # ========================================================================
+
+    def python_ignore(self, ext_pkg, args):
         """Add some ignore files to activate/deactivate args."""
         orig_ignore = args.get('ignore', lambda f: False)
+
         def ignore(filename):
-            return (re.search(r'/site\.pyc?$', filename) or
-                    re.search(r'\.pth$', filename) or
+            # Always ignore easy-install.pth, as it needs to be merged.
+            patterns = [r'easy-install\.pth$']
+
+            # Ignore pieces of setuptools installed by other packages.
+            if ext_pkg.name != 'py-setuptools':
+                patterns.append(r'/site\.pyc?$')
+                patterns.append(r'setuptools\.pth')
+                patterns.append(r'bin/easy_install[^/]*$')
+                patterns.append(r'setuptools.*egg$')
+
+            return (any(re.search(p, filename) for p in patterns) or
                     orig_ignore(filename))
+
         return ignore
 
 
+    def write_easy_install_pth(self, extensions):
+        paths = []
+        for ext in extensions:
+            ext_site_packages = os.path.join(ext.prefix, self.site_packages_dir)
+            easy_pth = "%s/easy-install.pth" % ext_site_packages
+
+            if not os.path.isfile(easy_pth):
+                continue
+
+            with closing(open(easy_pth)) as f:
+                for line in f:
+                    line = line.rstrip()
+
+                    # Skip lines matching these criteria
+                    if not line: continue
+                    if re.search(r'^(import|#)', line): continue
+                    if (ext.name != 'py-setuptools' and
+                        re.search(r'setuptools.*egg$', line)): continue
+
+                    paths.append(line)
+
+        site_packages = os.path.join(self.prefix, self.site_packages_dir)
+        main_pth = "%s/easy-install.pth" % site_packages
+
+        if not paths:
+            if os.path.isfile(main_pth):
+                os.remove(main_pth)
+
+        else:
+            with closing(open(main_pth, 'w')) as f:
+                f.write("import sys; sys.__plen = len(sys.path)\n")
+                for path in paths:
+                    f.write("%s\n" % path)
+                f.write("import sys; new=sys.path[sys.__plen:]; del sys.path[sys.__plen:]; "
+                        "p=getattr(sys,'__egginsert',0); sys.path[p:p]=new; sys.__egginsert = p+len(new)\n")
+
+
     def activate(self, ext_pkg, **args):
-        args.update(ignore=self.make_ignore(args))
+        args.update(ignore=self.python_ignore(ext_pkg, args))
         super(Python, self).activate(ext_pkg, **args)
+
+        extensions = set(spack.install_layout.get_extensions(self.spec))
+        extensions.add(ext_pkg.spec)
+        self.write_easy_install_pth(extensions)
 
 
     def deactivate(self, ext_pkg, **args):
-        args.update(ignore=self.make_ignore(args))
+        args.update(ignore=self.python_ignore(ext_pkg, args))
         super(Python, self).deactivate(ext_pkg, **args)
+
+        extensions = set(spack.install_layout.get_extensions(self.spec))
+        extensions.remove(ext_pkg.spec)
+        self.write_easy_install_pth(extensions)
