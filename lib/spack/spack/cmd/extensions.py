@@ -54,9 +54,14 @@ def extensions(parser, args):
     if not args.spec:
         tty.die("extensions requires a package spec.")
 
+    # Checks
     spec = spack.cmd.parse_specs(args.spec)
     if len(spec) > 1:
         tty.die("Can only list extensions for one package.")
+
+    if not spec[0].package.extendable:
+        tty.die("%s is not an extendable package." % spec[0].name)
+
     spec = spack.cmd.disambiguate_spec(spec[0])
 
     if not spec.package.extendable:
@@ -65,12 +70,28 @@ def extensions(parser, args):
     if not args.mode:
         args.mode = 'short'
 
-    exts = spack.install_layout.get_extensions(spec)
-    if not exts:
-        tty.msg("%s has no activated extensions." % spec.cshort_spec)
-    else:
-        tty.msg("Extensions for package %s:" % spec.cshort_spec)
-        colify(pkg.name for pkg in spack.db.extensions_for(spec))
-        print
-        tty.msg("%d currently activated:" % len(exts))
-        spack.cmd.find.display_specs(exts, mode=args.mode)
+    # List package names of extensions
+    extensions = spack.db.extensions_for(spec)
+    if not extensions:
+        tty.msg("%s has no extensions." % spec.cshort_spec)
+        return
+    tty.msg("%s extensions:" % spec.cshort_spec)
+    colify(ext.name for ext in extensions)
+
+    # List specs of installed extensions.
+    installed  = [s.spec for s in spack.db.installed_extensions_for(spec)]
+    print
+    if not installed:
+        tty.msg("None activated.")
+        return
+    tty.msg("%d installed:" % len(installed))
+    spack.cmd.find.display_specs(installed, mode=args.mode)
+
+    # List specs of activated extensions.
+    activated  = spack.install_layout.get_extensions(spec)
+    print
+    if not activated:
+        tty.msg("None activated.")
+        return
+    tty.msg("%d currently activated:" % len(exts))
+    spack.cmd.find.display_specs(installed, mode=args.mode)

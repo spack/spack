@@ -117,6 +117,12 @@ class PackageDB(object):
         return [p for p in self.all_packages() if p.extends(extendee_spec)]
 
 
+    @_autospec
+    def installed_extensions_for(self, extendee_spec):
+        return [s.package for s in self.installed_package_specs()
+                if s.package.extends(extendee_spec)]
+
+
     def dirname_for_package_name(self, pkg_name):
         """Get the directory name for a particular package.  This is the
            directory that contains its package.py file."""
