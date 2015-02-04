@@ -93,5 +93,5 @@ def extensions(parser, args):
     if not activated:
         tty.msg("None activated.")
         return
-    tty.msg("%d currently activated:" % len(exts))
-    spack.cmd.find.display_specs(installed, mode=args.mode)
+    tty.msg("%d currently activated:" % len(activated))
+    spack.cmd.find.display_specs(activated, mode=args.mode)
