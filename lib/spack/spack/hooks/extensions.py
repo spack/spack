@@ -26,15 +26,11 @@
 import spack
 
 
-def post_install(pkg):
-    if pkg.is_extension:
-        pkg.do_activate()
-
-
 def pre_uninstall(pkg):
     # Need to do this b/c uninstall does not automatically do it.
     # TODO: store full graph info in stored .spec file.
     pkg.spec.normalize()
 
     if pkg.is_extension:
-        pkg.do_deactivate()
+        if pkg.activated:
+            pkg.do_deactivate()
