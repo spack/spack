@@ -10,13 +10,8 @@ class Libdrm(Package):
 
     version('2.4.59', '105ac7af1afcd742d402ca7b4eb168b6')
 
-    # FIXME: Add dependencies if this package requires them.
-    # depends_on("foo")
-
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
         configure("--prefix=%s" % prefix)
 
-        # FIXME: Add logic to build and install here
         make()
         make("install")
