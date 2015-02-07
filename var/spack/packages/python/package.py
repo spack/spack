@@ -66,6 +66,11 @@ class Python(Package):
         # Make the site packages directory if it does not exist already.
         mkdirp(module.site_packages_dir)
 
+        # Add dependent packages' site-packages directory to PYTHONPATH
+        for d in ext_spec.traverse():
+            if d.package.extends(self.spec):
+                os.environ['PYTHONPATH'] += ':' + os.path.join(d.prefix, self.site_packages_dir)
+
 
     # ========================================================================
     # Handle specifics of activating and deactivating python modules.
