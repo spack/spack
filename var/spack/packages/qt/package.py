@@ -45,46 +45,19 @@ class Qt(Package):
         filter_file(r'^QMAKE_CXX *=.*$',       'QMAKE_CXX = c++',     qmake_conf)
 
 
-    @property
-    def common_config_args(self):
-        return [
-            '-prefix', self.prefix,
-            '-v',
-            '-opensource',
-            "-release",
-            '-shared',
-            '-confirm-license',
-            '-openssl-linked',
-            '-dbus-linked',
-            '-optimized-qmake',
-            '-no-openvg',
-            '-no-pch',
-            # For now, disable all the database drivers
-            "-no-sql-db2", "-no-sql-ibase", "-no-sql-mysql", "-no-sql-oci", "-no-sql-odbc",
-            "-no-sql-psql", "-no-sql-sqlite", "-no-sql-sqlite2", "-no-sql-tds",
-            # NIS is deprecated in more recent glibc
-            "-no-nis"]
-
-
-    @when('@4')
-    def configure(self):
-        configure('-no-phonon',
-                  '-no-phonon-backend',
-                  '-fast',
-                  *self.common_config_args)
-
-
-    @when('@5')
-    def configure(self):
-        configure('-no-eglfs',
-                  '-no-directfb',
-                  '-qt-xcb',
-                  # If someone wants to get a webkit build working, be my guest!
-                  '-skip', 'qtwebkit',
-                  *self.common_config_args)
-
-
     def install(self, spec, prefix):
-        self.configure()
+        configure('-v',
+                  '-confirm-license',
+                  '-opensource',
+                  '-prefix', prefix,
+                  '-openssl-linked',
+                  '-dbus-linked',
+                  '-fast',
+                  '-optimized-qmake',
+                  '-no-pch',
+# phonon required for py-pyqt4
+#                  '-no-phonon',
+#                  '-no-phonon-backend',
+                  '-no-openvg')
         make()
         make("install")

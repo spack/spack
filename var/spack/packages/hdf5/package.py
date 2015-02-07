@@ -18,12 +18,14 @@ class Hdf5(Package):
 
     # TODO: currently hard-coded to use OpenMPI
     def install(self, spec, prefix):
+
         configure(
             "--prefix=%s" % prefix,
             "--with-zlib=%s" % spec['zlib'].prefix,
             "--enable-parallel",
-            "CC=%s" % spec['openmpi'].prefix.bin + "/mpicc",
-            "CXX=%s" % spec['openmpi'].prefix.bin + "/mpic++")
+            "--enable-shared",
+            "CC=%s" % spec['mpich'].prefix.bin + "/mpicc",
+            "CXX=%s" % spec['mpich'].prefix.bin + "/mpic++")
 
         make()
         make("install")

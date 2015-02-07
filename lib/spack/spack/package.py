@@ -45,6 +45,7 @@ import textwrap
 from StringIO import StringIO
 
 import llnl.util.tty as tty
+from llnl.util.link_tree import LinkTree
 from llnl.util.filesystem import *
 from llnl.util.lang import *
 
@@ -320,11 +321,20 @@ class Package(object):
     """Patches to apply to newly expanded source, if any."""
     patches = {}
 
+    """Specs of package this one extends, or None.
+
+    Currently, ppackages can extend at most one other package.
+    """
+    extendees = {}
+
     #
     # These are default values for instance variables.
     #
     """By default we build in parallel.  Subclasses can override this."""
     parallel = True
+
+    """Most packages are NOT extendable.  Set to True if you want extensions."""
+    extendable = False
 
 
     def __init__(self, spec):
@@ -395,6 +405,9 @@ class Package(object):
         self._fetch_time = 0.0
         self._total_time = 0.0
 
+        if self.is_extension:
+            spack.db.get(self.extendee_spec)._check_extendable()
+
 
     @property
     def version(self):
@@ -459,7 +472,7 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
-            mp = spack.mirror.mirror_archive_filename(self.spec)
+            mp = spack.mirror.mirror_archive_path(self.spec)
             self._stage = Stage(
                 self.fetcher, mirror_path=mp, name=self.spec.short_spec)
         return self._stage
@@ -479,6 +492,49 @@ class Package(object):
     @fetcher.setter
     def fetcher(self, f):
         self._fetcher = f
+
+
+    @property
+    def extendee_spec(self):
+        """Spec of the extendee of this package, or None if it is not an extension."""
+        if not self.extendees:
+            return None
+        name = next(iter(self.extendees))
+        if not name in self.spec:
+            spec, kwargs = self.extendees[name]
+            return spec
+
+        # Need to do this to get the concrete version of the spec
+        return self.spec[name]
+
+
+    @property
+    def extendee_args(self):
+        """Spec of the extendee of this package, or None if it is not an extension."""
+        if not self.extendees:
+            return None
+        name = next(iter(self.extendees))
+        return self.extendees[name][1]
+
+
+    @property
+    def is_extension(self):
+        return len(self.extendees) > 0
+
+
+    def extends(self, spec):
+        return (spec.name in self.extendees and
+                spec.satisfies(self.extendees[spec.name][0]))
+
+
+    @property
+    def activated(self):
+        if not self.spec.concrete:
+            raise ValueError("Only concrete package extensions can be activated.")
+        if not self.is_extension:
+            raise ValueError("is_extension called on package that is not an extension.")
+
+        return self.spec in spack.install_layout.get_extensions(self.extendee_spec)
 
 
     def preorder_traversal(self, visited=None, **kwargs):
@@ -713,6 +769,14 @@ class Package(object):
         tty.msg("Patched %s" % self.name)
 
 
+    def do_fake_install(self):
+        """Make a fake install directory contaiing a 'fake' file in bin."""
+        mkdirp(self.prefix.bin)
+        touch(join_path(self.prefix.bin, 'fake'))
+        mkdirp(self.prefix.lib)
+        mkdirp(self.prefix.man1)
+
+
     def do_install(self, **kwargs):
         """This class should call this version of the install method.
            Package implementations should override install().
@@ -733,7 +797,7 @@ class Package(object):
         tty.msg("Installing %s" % self.name)
 
         if not ignore_deps:
-            self.do_install_dependencies()
+            self.do_install_dependencies(**kwargs)
 
         start_time = time.time()
         if not fake_install:
@@ -757,23 +821,27 @@ class Package(object):
                 # package naming scheme it likes.
                 spack.install_layout.make_path_for_spec(self.spec)
 
+                # Run the pre-install hook in the child process after
+                # the directory is created.
+                spack.hooks.pre_install(self)
+
                 # Set up process's build environment before running install.
+                self.stage.chdir_to_source()
                 build_env.setup_package(self)
 
+                # Allow extendees to further set up the environment.
+                if self.is_extension:
+                    self.extendee_spec.package.setup_extension_environment(
+                        self.module, self.extendee_spec, self.spec)
+
                 if fake_install:
-                    mkdirp(self.prefix.bin)
-                    touch(join_path(self.prefix.bin, 'fake'))
-                    mkdirp(self.prefix.lib)
-                    mkdirp(self.prefix.man1)
+                    self.do_fake_install()
                 else:
                     # Subclasses implement install() to do the real work.
                     self.install(self.spec, self.prefix)
 
                 # Ensure that something was actually installed.
-                if not os.listdir(self.prefix):
-                    raise InstallError(
-                        "Install failed for %s.  Nothing was installed!"
-                        % self.name)
+                self._sanity_check_install()
 
                 # On successful install, remove the stage.
                 if not keep_stage:
@@ -814,15 +882,23 @@ class Package(object):
         if returncode != 0:
             sys.exit(1)
 
-
         # Once everything else is done, run post install hooks
         spack.hooks.post_install(self)
 
 
-    def do_install_dependencies(self):
+
+    def _sanity_check_install(self):
+        installed = set(os.listdir(self.prefix))
+        installed.difference_update(spack.install_layout.hidden_file_paths)
+        if not installed:
+            raise InstallError(
+                "Install failed for %s.  Nothing was installed!" % self.name)
+
+
+    def do_install_dependencies(self, **kwargs):
         # Pass along paths of dependencies here
         for dep in self.spec.dependencies.values():
-            dep.package.do_install()
+            dep.package.do_install(**kwargs)
 
 
     @property
@@ -832,6 +908,30 @@ class Package(object):
         """
         return __import__(self.__class__.__module__,
                           fromlist=[self.__class__.__name__])
+
+
+    def setup_extension_environment(self, module, spec, ext_spec):
+        """Called before the install() method of extensions.
+
+        Default implementation does nothing, but this can be
+        overridden by an extendable package to set up the install
+        environment for its extensions.  This is useful if there are
+        some common steps to installing all extensions for a
+        certain package.
+
+        Some examples:
+
+        1. Installing python modules generally requires PYTHONPATH to
+           point to the lib/pythonX.Y/site-packages directory in the
+           module's install prefix.  This could set that variable.
+
+        2. Extensions often need to invoke the 'python' interpreter
+           from the Python installation being extended.  This routine can
+           put a 'python' Execuable object in the module scope for the
+           extension package to simplify extension installs.
+
+        """
+        pass
 
 
     def install(self, spec, prefix):
@@ -853,11 +953,97 @@ class Package(object):
                 "The following installed packages depend on it: %s" %
                 ' '.join(formatted_deps))
 
+        # Pre-uninstall hook runs first.
+        spack.hooks.pre_uninstall(self)
+
+        # Uninstalling in Spack only requires removing the prefix.
         self.remove_prefix()
         tty.msg("Successfully uninstalled %s." % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_uninstall(self)
+
+
+    def _check_extendable(self):
+        if not self.extendable:
+            raise ValueError("Package %s is not extendable!" % self.name)
+
+
+    def _sanity_check_extension(self):
+        if not self.is_extension:
+            raise ValueError("This package is not an extension.")
+        extendee_package = self.extendee_spec.package
+        extendee_package._check_extendable()
+
+        if not extendee_package.installed:
+            raise ValueError("Can only (de)activate extensions for installed packages.")
+        if not self.installed:
+            raise ValueError("Extensions must first be installed.")
+        if not self.extendee_spec.name in self.extendees:
+            raise ValueError("%s does not extend %s!" % (self.name, self.extendee.name))
+
+
+    def do_activate(self):
+        """Called on an etension to invoke the extendee's activate method.
+
+        Commands should call this routine, and should not call
+        activate() directly.
+        """
+        self._sanity_check_extension()
+        self.extendee_spec.package.activate(self, **self.extendee_args)
+
+        spack.install_layout.add_extension(self.extendee_spec, self.spec)
+        tty.msg("Activated extension %s for %s."
+                % (self.spec.short_spec, self.extendee_spec.short_spec))
+
+
+    def activate(self, extension, **kwargs):
+        """Symlinks all files from the extension into extendee's install dir.
+
+        Package authors can override this method to support other
+        extension mechanisms.  Spack internals (commands, hooks, etc.)
+        should call do_activate() method so that proper checks are
+        always executed.
+
+        """
+        def ignore(filename):
+            return (filename in spack.install_layout.hidden_file_paths or
+                    kwargs.get('ignore', lambda f: False)(filename))
+
+        tree = LinkTree(extension.prefix)
+        conflict = tree.find_conflict(self.prefix, ignore=ignore)
+        if conflict:
+            raise ExtensionConflictError(conflict)
+        tree.merge(self.prefix, ignore=ignore)
+
+
+    def do_deactivate(self):
+        """Called on the extension to invoke extendee's deactivate() method."""
+        self._sanity_check_extension()
+        self.extendee_spec.package.deactivate(self, **self.extendee_args)
+
+        if self.spec in spack.install_layout.get_extensions(self.extendee_spec):
+            spack.install_layout.remove_extension(self.extendee_spec, self.spec)
+
+        tty.msg("Deactivated extension %s for %s."
+                % (self.spec.short_spec, self.extendee_spec.short_spec))
+
+
+    def deactivate(self, extension, **kwargs):
+        """Unlinks all files from extension out of this package's install dir.
+
+        Package authors can override this method to support other
+        extension mechanisms.  Spack internals (commands, hooks, etc.)
+        should call do_deactivate() method so that proper checks are
+        always executed.
+
+        """
+        def ignore(filename):
+            return (filename in spack.install_layout.hidden_file_paths or
+                    kwargs.get('ignore', lambda f: False)(filename))
+
+        tree = LinkTree(extension.prefix)
+        tree.unmerge(self.prefix, ignore=ignore)
 
 
     def do_clean(self):
@@ -923,6 +1109,23 @@ class Package(object):
         except spack.error.NoNetworkConnectionError, e:
             tty.die("Package.fetch_versions couldn't connect to:",
                     e.url, e.message)
+
+
+    @property
+    def rpath(self):
+        """Get the rpath this package links with, as a list of paths."""
+        rpaths = [self.prefix.lib, self.prefix.lib64]
+        rpaths.extend(d.prefix.lib for d in self.spec.traverse(root=False)
+                      if os.path.isdir(d.prefix.lib))
+        rpaths.extend(d.prefix.lib64 for d in self.spec.traverse(root=False)
+                      if os.path.isdir(d.prefix.lib64))
+        return rpaths
+
+
+    @property
+    def rpath_args(self):
+        """Get the rpath args as a string, with -Wl,-rpath= for each element."""
+        return " ".join("-Wl,-rpath=%s" % p for p in self.rpath)
 
 
 def find_versions_of_archive(*archive_urls, **kwargs):
@@ -1034,3 +1237,9 @@ class NoURLError(PackageError):
     def __init__(self, cls):
         super(NoURLError, self).__init__(
             "Package %s has no version with a URL." % cls.__name__)
+
+
+class ExtensionConflictError(PackageError):
+    def __init__(self, path):
+        super(ExtensionConflictError, self).__init__(
+            "Extension blocked by file: %s" % path)

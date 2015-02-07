@@ -53,6 +53,19 @@ class DirectoryLayout(object):
         self.root = root
 
 
+    @property
+    def hidden_file_paths(self):
+        """Return a list of hidden files used by the directory layout.
+
+        Paths are relative to the root of an install directory.
+
+        If the directory layout uses no hidden files to maintain
+        state, this should return an empty container, e.g. [] or (,).
+
+        """
+        raise NotImplementedError()
+
+
     def all_specs(self):
         """To be implemented by subclasses to traverse all specs for which there is
            a directory within the root.
@@ -68,6 +81,21 @@ class DirectoryLayout(object):
 
     def make_path_for_spec(self, spec):
         """Creates the installation directory for a spec."""
+        raise NotImplementedError()
+
+
+    def get_extensions(self, spec):
+        """Get a set of currently installed extension packages for a spec."""
+        raise NotImplementedError()
+
+
+    def add_extension(self, spec, extension_spec):
+        """Add to the list of currently installed extensions."""
+        raise NotImplementedError()
+
+
+    def remove_extension(self, spec, extension_spec):
+        """Remove from the list of currently installed extensions."""
         raise NotImplementedError()
 
 
@@ -134,9 +162,16 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         """Prefix size is number of characters in the SHA-1 prefix to use
            to make each hash unique.
         """
-        spec_file_name   = kwargs.get('spec_file_name', '.spec')
+        spec_file_name = kwargs.get('spec_file_name', '.spec')
+        extension_file_name = kwargs.get('extension_file_name', '.extensions')
         super(SpecHashDirectoryLayout, self).__init__(root)
         self.spec_file_name = spec_file_name
+        self.extension_file_name = extension_file_name
+
+
+    @property
+    def hidden_file_paths(self):
+        return ('.spec', '.extensions')
 
 
     def relative_path_for_spec(self, spec):
@@ -225,6 +260,62 @@ class SpecHashDirectoryLayout(DirectoryLayout):
                 yield spec
 
 
+    def extension_file_path(self, spec):
+        """Gets full path to an installed package's extension file"""
+        _check_concrete(spec)
+        return join_path(self.path_for_spec(spec), self.extension_file_name)
+
+
+    def get_extensions(self, spec):
+        _check_concrete(spec)
+
+        extensions = set()
+        path = self.extension_file_path(spec)
+        if os.path.exists(path):
+            with closing(open(path)) as ext_file:
+                for line in ext_file:
+                    try:
+                        extensions.add(Spec(line.strip()))
+                    except spack.error.SpackError, e:
+                        raise InvalidExtensionSpecError(str(e))
+        return extensions
+
+
+    def write_extensions(self, spec, extensions):
+        path = self.extension_file_path(spec)
+        with closing(open(path, 'w')) as spec_file:
+            for extension in sorted(extensions):
+                spec_file.write("%s\n" % extension)
+
+
+    def add_extension(self, spec, extension_spec):
+        _check_concrete(spec)
+        _check_concrete(extension_spec)
+
+        exts = self.get_extensions(spec)
+        if extension_spec in exts:
+            raise ExtensionAlreadyInstalledError(spec, extension_spec)
+        else:
+            for already_installed in exts:
+                if spec.name == extension_spec.name:
+                    raise ExtensionConflictError(spec, extension_spec, already_installed)
+
+        exts.add(extension_spec)
+        self.write_extensions(spec, exts)
+
+
+    def remove_extension(self, spec, extension_spec):
+        _check_concrete(spec)
+        _check_concrete(extension_spec)
+
+        exts = self.get_extensions(spec)
+        if not extension_spec in exts:
+            raise NoSuchExtensionError(spec, extension_spec)
+
+        exts.remove(extension_spec)
+        self.write_extensions(spec, exts)
+
+
 class DirectoryLayoutError(SpackError):
     """Superclass for directory layout errors."""
     def __init__(self, message):
@@ -250,3 +341,32 @@ class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
     def __init__(self, path):
         super(InstallDirectoryAlreadyExistsError, self).__init__(
             "Install path %s already exists!")
+
+
+class InvalidExtensionSpecError(DirectoryLayoutError):
+    """Raised when an extension file has a bad spec in it."""
+    def __init__(self, message):
+        super(InvalidExtensionSpecError, self).__init__(message)
+
+
+class ExtensionAlreadyInstalledError(DirectoryLayoutError):
+    """Raised when an extension is added to a package that already has it."""
+    def __init__(self, spec, extension_spec):
+        super(ExtensionAlreadyInstalledError, self).__init__(
+            "%s is already installed in %s" % (extension_spec.short_spec, spec.short_spec))
+
+
+class ExtensionConflictError(DirectoryLayoutError):
+    """Raised when an extension is added to a package that already has it."""
+    def __init__(self, spec, extension_spec, conflict):
+        super(ExtensionConflictError, self).__init__(
+            "%s cannot be installed in %s because it conflicts with %s."% (
+                extension_spec.short_spec, spec.short_spec, conflict.short_spec))
+
+
+class NoSuchExtensionError(DirectoryLayoutError):
+    """Raised when an extension isn't there on remove."""
+    def __init__(self, spec, extension_spec):
+        super(NoSuchExtensionError, self).__init__(
+            "%s cannot be removed from %s because it's not installed."% (
+                extension_spec.short_spec, spec.short_spec))
