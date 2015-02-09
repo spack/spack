@@ -44,7 +44,7 @@ class MirrorTest(MockPackagesTest):
         self.repos = {}
 
 
-    def set_up_package(self, name, mock_repo_class, url_attr):
+    def set_up_package(self, name, MockRepoClass, url_attr):
         """Use this to set up a mock package to be mirrored.
            Each package needs us to:
              1. Set up a mock repo/archive to fetch from.
@@ -56,7 +56,7 @@ class MirrorTest(MockPackagesTest):
 
         # Get the package and fix its fetch args to point to a mock repo
         pkg = spack.db.get(spec)
-        repo = mock_repo_class()
+        repo = MockRepoClass()
         self.repos[name] = repo
 
         # change the fetch args of the first (only) version.
@@ -71,7 +71,7 @@ class MirrorTest(MockPackagesTest):
 
         for name, repo in self.repos.items():
             if repo.stage:
-                repo.stage.destroy()
+                pass #repo.stage.destroy()
 
         self.repos.clear()
 
@@ -129,7 +129,7 @@ class MirrorTest(MockPackagesTest):
                     self.assertTrue(all(l in exclude for l in dcmp.left_only))
 
         finally:
-            stage.destroy()
+            pass #stage.destroy()
 
 
     def test_git_mirror(self):

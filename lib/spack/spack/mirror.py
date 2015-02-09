@@ -46,7 +46,7 @@ from spack.util.compression import extension
 
 
 def mirror_archive_filename(spec):
-    """Get the path that this spec will live at within a mirror."""
+    """Get the name of the spec's archive in the mirror."""
     if not spec.version.concrete:
         raise ValueError("mirror.path requires spec with concrete version.")
 
@@ -59,6 +59,11 @@ def mirror_archive_filename(spec):
         ext = 'tar.gz'
 
     return "%s-%s.%s" % (spec.package.name, spec.version, ext)
+
+
+def mirror_archive_path(spec):
+    """Get the relative path to the spec's archive within a mirror."""
+    return join_path(spec.name, mirror_archive_filename(spec))
 
 
 def get_matching_versions(specs, **kwargs):
@@ -141,11 +146,9 @@ def create(path, specs, **kwargs):
         stage = None
         try:
             # create a subdirectory for the current package@version
-            subdir = join_path(mirror_root, pkg.name)
+            archive_path = join_path(path, mirror_archive_path(spec))
+            subdir = os.path.dirname(archive_path)
             mkdirp(subdir)
-
-            archive_file = mirror_archive_filename(spec)
-            archive_path = join_path(subdir, archive_file)
 
             if os.path.exists(archive_path):
                 tty.msg("Already added %s" % spec.format("$_$@"))

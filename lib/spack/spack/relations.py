@@ -68,7 +68,7 @@ provides
         spack install mpileaks ^mvapich
         spack install mpileaks ^mpich
 """
-__all__ = [ 'depends_on', 'provides', 'patch', 'version' ]
+__all__ = [ 'depends_on', 'extends', 'provides', 'patch', 'version' ]
 
 import re
 import inspect
@@ -107,13 +107,42 @@ def depends_on(*specs):
     """Adds a dependencies local variable in the locals of
        the calling class, based on args. """
     pkg = get_calling_package_name()
+    clocals = caller_locals()
+    dependencies = clocals.setdefault('dependencies', {})
 
-    dependencies = caller_locals().setdefault('dependencies', {})
     for string in specs:
         for spec in spack.spec.parse(string):
             if pkg == spec.name:
                 raise CircularReferenceError('depends_on', pkg)
             dependencies[spec.name] = spec
+
+
+def extends(spec, **kwargs):
+    """Same as depends_on, but dependency is symlinked into parent prefix.
+
+    This is for Python and other language modules where the module
+    needs to be installed into the prefix of the Python installation.
+    Spack handles this by installing modules into their own prefix,
+    but allowing ONE module version to be symlinked into a parent
+    Python install at a time.
+
+    keyword arguments can be passed to extends() so that extension
+    packages can pass parameters to the extendee's extension
+    mechanism.
+
+    """
+    pkg = get_calling_package_name()
+    clocals = caller_locals()
+    dependencies = clocals.setdefault('dependencies', {})
+    extendees = clocals.setdefault('extendees', {})
+    if extendees:
+        raise RelationError("Packages can extend at most one other package.")
+
+    spec = Spec(spec)
+    if pkg == spec.name:
+        raise CircularReferenceError('extends', pkg)
+    dependencies[spec.name] = spec
+    extendees[spec.name] = (spec, kwargs)
 
 
 def provides(*specs, **kwargs):

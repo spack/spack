@@ -32,29 +32,46 @@ class Gcc(Package):
        Objective-C, Fortran, and Java."""
     homepage = "https://gcc.gnu.org"
 
+    url = "http://open-source-box.org/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2"
     list_url = 'http://open-source-box.org/gcc/'
     list_depth = 2
 
-    version('4.9.2', '4df8ee253b7f3863ad0b86359cd39c43',
-            url="http://open-source-box.org/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2")
-    version('4.9.1', 'fddf71348546af523353bd43d34919c1',
-            url="http://open-source-box.org/gcc/gcc-4.9.1/gcc-4.9.1.tar.bz2")
+    version('4.9.2', '4df8ee253b7f3863ad0b86359cd39c43')
+    version('4.9.1', 'fddf71348546af523353bd43d34919c1')
+    version('4.8.4', '5a84a30839b2aca22a2d723de2a626ec')
+    version('4.7.4', '4c696da46297de6ae77a82797d2abe28')
+    version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
+    version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
-    depends_on("mpc")
     depends_on("mpfr")
     depends_on("gmp")
+    depends_on("mpc")     # when @4.5:
     depends_on("libelf")
 
+    # Save these until we can do optional deps.
+    #depends_on("isl")
+    #depends_on("ppl")
+    #depends_on("cloog")
 
     def install(self, spec, prefix):
         # libjava/configure needs a minor fix to install into spack paths.
         filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure', string=True)
 
+        enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
+        if spec.satisfies("@4.7.1:"):
+            enabled_languages.add('go')
+
         # Rest of install is straightforward.
         configure("--prefix=%s" % prefix,
                   "--libdir=%s/lib64" % prefix,
                   "--disable-multilib",
-                  "--enable-languages=c,c++,fortran,java,objc,go",
+                  "--enable-languages=" + ','.join(enabled_languages),
+                  "--with-mpc=%s"    % spec['mpc'].prefix,
+                  "--with-mpfr=%s"   % spec['mpfr'].prefix,
+                  "--with-gmp=%s"    % spec['gmp'].prefix,
+                  "--with-libelf=%s" % spec['libelf'].prefix,
+                  "--with-stage1-ldflags=%s" % self.rpath_args,
+                  "--with-boot-ldflags=%s"   % self.rpath_args,
                   "--enable-lto",
                   "--with-quad")
         make()
