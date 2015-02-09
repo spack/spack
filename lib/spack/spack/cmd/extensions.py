@@ -82,7 +82,7 @@ def extensions(parser, args):
     installed  = [s.spec for s in spack.db.installed_extensions_for(spec)]
     print
     if not installed:
-        tty.msg("None activated.")
+        tty.msg("None installed.")
         return
     tty.msg("%d installed:" % len(installed))
     spack.cmd.find.display_specs(installed, mode=args.mode)
