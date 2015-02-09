@@ -75,7 +75,8 @@ def extensions(parser, args):
     if not extensions:
         tty.msg("%s has no extensions." % spec.cshort_spec)
         return
-    tty.msg("%s extensions:" % spec.cshort_spec)
+    tty.msg(spec.cshort_spec)
+    tty.msg("%d extensions:" % len(extensions))
     colify(ext.name for ext in extensions)
 
     # List specs of installed extensions.
