@@ -1,4 +1,5 @@
 from spack import *
+import os
 
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
@@ -29,7 +30,16 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("jpeg")
 
-    depends_on("gperf") # Needed to build Qt with webkit.
+     # Webkit
+    # depends_on("gperf")
+    # depends_on("flex")
+    # depends_on("bison")
+    # depends_on("ruby")
+    # depends_on("icu4c")
+
+    # OpenGL hardware acceleration
+    depends_on("mesa")
+    depends_on("libxcb")
 
     def patch(self):
         if self.spec.satisfies('@4'):
@@ -46,13 +56,19 @@ class Qt(Package):
 
 
     def install(self, spec, prefix):
+        # Apparently this is the only way to 
+        # "truly" get rid of webkit compiles now...
+        os.rename("qtwebkit","no-qtwebkit")
+        os.rename("qtwebkit-examples","no-qtwebkit-examples")
         configure('-v',
                   '-confirm-license',
                   '-opensource',
                   '-prefix', prefix,
                   '-openssl-linked',
                   '-dbus-linked',
-                  '-fast',
+                  #'-fast',
+                  '-opengl',
+                  '-qt-xcb',
                   '-optimized-qmake',
                   '-no-pch',
 # phonon required for py-pyqt4
