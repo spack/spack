@@ -60,16 +60,16 @@ class Python(Package):
         module.python_lib_dir = os.path.join(ext_spec.prefix, self.python_lib_dir)
         module.site_packages_dir = os.path.join(ext_spec.prefix, self.site_packages_dir)
 
-        # Add site packages directory to the PYTHONPATH
-        os.environ['PYTHONPATH'] = module.site_packages_dir
-
         # Make the site packages directory if it does not exist already.
         mkdirp(module.site_packages_dir)
 
-        # Add dependent packages' site-packages directory to PYTHONPATH
+        # Set PYTHONPATH to include site-packages dir for the
+        # extension and any other python extensions it depends on.
+        python_paths = []
         for d in ext_spec.traverse():
             if d.package.extends(self.spec):
-                os.environ['PYTHONPATH'] += ':' + os.path.join(d.prefix, self.site_packages_dir)
+                python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
+        os.environ['PYTHONPATH'] = ':'.join(python_paths)
 
 
     # ========================================================================
