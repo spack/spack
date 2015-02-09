@@ -24,13 +24,14 @@
 ##############################################################################
 import sys
 import collections
+import itertools
 from external import argparse
 from StringIO import StringIO
 
 import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
+from llnl.util.tty.colify import *
 from llnl.util.tty.color import *
-from llnl.util.lang import partition_list, index_by
+from llnl.util.lang import *
 
 import spack
 import spack.spec
@@ -40,15 +41,62 @@ description ="Find installed spack packages"
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
-        '-p', '--paths', action='store_true', dest='paths',
+        '-l', '--long', action='store_const', dest='mode', const='long',
+        help='Show dependency hashes as well as versions.')
+    format_group.add_argument(
+        '-p', '--paths', action='store_const', dest='mode', const='paths',
         help='Show paths to package install directories')
     format_group.add_argument(
-        '-l', '--long', action='store_true', dest='full_specs',
-        help='Show full-length specs of installed packages')
+        '-d', '--deps', action='store_const', dest='mode', const='deps',
+        help='Show full dependency DAG of installed packages')
 
     subparser.add_argument(
         'query_specs', nargs=argparse.REMAINDER,
         help='optional specs to filter results')
+
+
+def display_specs(specs, **kwargs):
+    mode = kwargs.get('mode', 'short')
+
+    # Make a dict with specs keyed by architecture and compiler.
+    index = index_by(specs, ('architecture', 'compiler'))
+
+    # Traverse the index and print out each package
+    for i, (architecture, compiler) in enumerate(sorted(index)):
+        if i > 0: print
+
+        header = "%s{%s} / %s{%s}" % (
+            spack.spec.architecture_color, architecture,
+            spack.spec.compiler_color, compiler)
+        tty.hline(colorize(header), char='-')
+
+        specs = index[(architecture,compiler)]
+        specs.sort()
+
+        abbreviated = [s.format('$_$@$+', color=True) for s in specs]
+        if mode == 'paths':
+            # Print one spec per line along with prefix path
+            width = max(len(s) for s in abbreviated)
+            width += 2
+            format = "    %-{}s%s".format(width)
+
+            for abbrv, spec in zip(abbreviated, specs):
+                print format % (abbrv, spec.prefix)
+
+        elif mode == 'deps':
+            for spec in specs:
+                print spec.tree(indent=4, format='$_$@$+', color=True),
+
+        elif mode in ('short', 'long'):
+            fmt = '$-_$@$+'
+            if mode == 'long':
+                fmt += '$#'
+            colify(s.format(fmt, color=True) for s in specs)
+
+        else:
+            raise ValueError(
+                "Invalid mode for display_specs: %s. Must be one of (paths, deps, short)." % mode)
+
 
 
 def find(parser, args):
@@ -65,39 +113,14 @@ def find(parser, args):
         if not query_specs:
             return
 
-    specs = [s for s in spack.db.installed_package_specs()
-             if not query_specs or any(s.satisfies(q) for q in query_specs)]
+    # Get all the specs the user asked for
+    if not query_specs:
+        specs = set(spack.db.installed_package_specs())
+    else:
+        results = [set(spack.db.get_installed(qs)) for qs in query_specs]
+        specs = set.union(*results)
 
-    # Make a dict with specs keyed by architecture and compiler.
-    index = index_by(specs, 'architecture', 'compiler')
+    if not args.mode:
+        args.mode = 'short'
+    display_specs(specs, mode=args.mode)
 
-    # Traverse the index and print out each package
-    for architecture in index:
-        tty.hline(architecture, char='=', color=spack.spec.architecture_color)
-        for compiler in index[architecture]:
-            tty.hline(compiler, char='-', color=spack.spec.compiler_color)
-
-            specs = index[architecture][compiler]
-            specs.sort()
-
-            abbreviated = [s.format('$_$@$+$#', color=True) for s in specs]
-
-            if args.paths:
-                # Print one spec per line along with prefix path
-                width = max(len(s) for s in abbreviated)
-                width += 2
-                format = "    %-{}s%s".format(width)
-
-                for abbrv, spec in zip(abbreviated, specs):
-                    print format % (abbrv, spec.prefix)
-
-            elif args.full_specs:
-                for spec in specs:
-                    print spec.tree(indent=4, format='$_$@$+', color=True),
-            else:
-                max_len = max([len(s.name) for s in specs])
-                max_len += 4
-
-                for spec in specs:
-                    format = '$-' + str(max_len) + '_$@$+$#'
-                    print "   " + spec.format(format, color=True)

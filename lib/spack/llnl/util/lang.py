@@ -68,6 +68,12 @@ def index_by(objects, *funcs):
 
            index1 = index_by(list_of_specs, 'arch', 'compiler')
            index2 = index_by(list_of_specs, 'compiler')
+
+       You can also index by tuples by passing tuples:
+
+           index1 = index_by(list_of_specs, ('arch', 'compiler'))
+
+       Keys in the resulting dict will look like ('gcc', 'bgqos_0').
     """
     if not funcs:
         return objects
@@ -75,6 +81,8 @@ def index_by(objects, *funcs):
     f = funcs[0]
     if isinstance(f, basestring):
         f = lambda x: getattr(x, funcs[0])
+    elif isinstance(f, tuple):
+        f = lambda x: tuple(getattr(x, p) for p in funcs[0])
 
     result = {}
     for o in objects:
@@ -259,6 +267,28 @@ def in_function(function_name):
         return False
     finally:
         del stack
+
+
+def check_kwargs(kwargs, fun):
+    """Helper for making functions with kwargs.  Checks whether the kwargs
+       are empty after all of them have been popped off.  If they're
+       not, raises an error describing which kwargs are invalid.
+
+       Example::
+
+          def foo(self, **kwargs):
+              x = kwargs.pop('x', None)
+              y = kwargs.pop('y', None)
+              z = kwargs.pop('z', None)
+              check_kwargs(kwargs, self.foo)
+
+          # This raises a TypeError:
+          foo(w='bad kwarg')
+    """
+    if kwargs:
+        raise TypeError(
+            "'%s' is an invalid keyword argument for function %s()."
+            % (next(kwargs.iterkeys()), fun.__name__))
 
 
 class RequiredAttributeError(ValueError):

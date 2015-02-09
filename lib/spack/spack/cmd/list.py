@@ -61,5 +61,4 @@ def list(parser, args):
     indent=0
     if sys.stdout.isatty():
         tty.msg("%d packages." % len(sorted_packages))
-        indent=2
     colify(sorted_packages, indent=indent)

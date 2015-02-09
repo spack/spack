@@ -48,12 +48,11 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 # set_build_environment_variables and used to pass parameters to
 # Spack's compiler wrappers.
 #
-SPACK_LIB              = 'SPACK_LIB'
 SPACK_ENV_PATH         = 'SPACK_ENV_PATH'
 SPACK_DEPENDENCIES     = 'SPACK_DEPENDENCIES'
 SPACK_PREFIX           = 'SPACK_PREFIX'
 SPACK_DEBUG            = 'SPACK_DEBUG'
-SPACK_SPEC             = 'SPACK_SPEC'
+SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
 
 
@@ -108,9 +107,6 @@ def set_compiler_environment_variables(pkg):
 def set_build_environment_variables(pkg):
     """This ensures a clean install environment when we build packages.
     """
-    # This tells the compiler script where to find the Spack installation.
-    os.environ[SPACK_LIB] = spack.lib_path
-
     # Add spack build environment path with compiler wrappers first in
     # the path.  We handle case sensitivity conflicts like "CC" and
     # "cc" by putting one in the <build_env_path>/case-insensitive
@@ -140,7 +136,7 @@ def set_build_environment_variables(pkg):
     # Working directory for the spack command itself, for debug logs.
     if spack.debug:
         os.environ[SPACK_DEBUG] = "TRUE"
-    os.environ[SPACK_SPEC] = str(pkg.spec)
+    os.environ[SPACK_SHORT_SPEC] = pkg.spec.short_spec
     os.environ[SPACK_DEBUG_LOG_DIR] = spack.spack_working_dir
 
     # Add dependencies to CMAKE_PREFIX_PATH
@@ -187,6 +183,10 @@ def set_module_variables_for_package(pkg):
     if platform.mac_ver()[0]:
         m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
 
+    # Set up CMake rpath
+    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
+    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(pkg)))
+
     # Emulate some shell commands for convenience
     m.pwd        = os.getcwd
     m.cd         = os.chdir
@@ -194,6 +194,7 @@ def set_module_variables_for_package(pkg):
     m.makedirs   = os.makedirs
     m.remove     = os.remove
     m.removedirs = os.removedirs
+    m.symlink    = os.symlink
 
     m.mkdirp     = mkdirp
     m.install    = install
@@ -203,3 +204,20 @@ def set_module_variables_for_package(pkg):
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
     m.prefix  = pkg.prefix
+
+
+def get_rpaths(pkg):
+    """Get a list of all the rpaths for a package."""
+    rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
+    rpaths.extend(d.prefix.lib for d in pkg.spec.traverse(root=False)
+                  if os.path.isdir(d.prefix.lib))
+    rpaths.extend(d.prefix.lib64 for d in pkg.spec.traverse(root=False)
+                  if os.path.isdir(d.prefix.lib64))
+    return rpaths
+
+
+def setup_package(pkg):
+    """Execute all environment setup routines."""
+    set_compiler_environment_variables(pkg)
+    set_build_environment_variables(pkg)
+    set_module_variables_for_package(pkg)

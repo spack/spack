@@ -26,7 +26,7 @@ import os
 import tempfile
 from llnl.util.filesystem import *
 
-# This lives in $prefix/lib/spac/spack/__file__
+# This lives in $prefix/lib/spack/spack/__file__
 prefix = ancestor(__file__, 4)
 
 # The spack script itself
@@ -138,7 +138,7 @@ sys_type = None
 #       should live.  This file is overloaded for spack core vs. for packages.
 #
 __all__ = ['Package', 'Version', 'when', 'ver']
-from spack.package import Package
+from spack.package import Package, ExtensionConflictError
 from spack.version import Version, ver
 from spack.multimethod import when
 

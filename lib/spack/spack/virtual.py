@@ -26,20 +26,21 @@
 The ``virtual`` module contains utility classes for virtual dependencies.
 """
 import spack.spec
+import itertools
 
 class ProviderIndex(object):
     """This is a dict of dicts used for finding providers of particular
        virtual dependencies. The dict of dicts looks like:
 
        { vpkg name :
-           { full vpkg spec : package providing spec } }
+           { full vpkg spec : set(packages providing spec) } }
 
        Callers can use this to first find which packages provide a vpkg,
        then find a matching full spec.  e.g., in this scenario:
 
        { 'mpi' :
-           { mpi@:1.1 : mpich,
-             mpi@:2.3 : mpich2@1.9: } }
+           { mpi@:1.1 : set([mpich]),
+             mpi@:2.3 : set([mpich2@1.9:]) } }
 
        Calling providers_for(spec) will find specs that provide a
        matching implementation of MPI.
@@ -75,15 +76,19 @@ class ProviderIndex(object):
                 if provided_name not in self.providers:
                     self.providers[provided_name] = {}
 
+                provider_map = self.providers[provided_name]
+                if not provided_spec in provider_map:
+                    provider_map[provided_spec] = set()
+
                 if self.restrict:
-                    self.providers[provided_name][provided_spec] = spec
+                    provider_map[provided_spec].add(spec)
 
                 else:
                     # Before putting the spec in the map, constrain it so that
                     # it provides what was asked for.
                     constrained = spec.copy()
                     constrained.constrain(provider_spec)
-                    self.providers[provided_name][provided_spec] = constrained
+                    provider_map[provided_spec].add(constrained)
 
 
     def providers_for(self, *vpkg_specs):
@@ -97,9 +102,9 @@ class ProviderIndex(object):
 
             # Add all the providers that satisfy the vpkg spec.
             if vspec.name in self.providers:
-                for provider_spec, spec in self.providers[vspec.name].items():
+                for provider_spec, spec_set in self.providers[vspec.name].items():
                     if provider_spec.satisfies(vspec, deps=False):
-                        providers.add(spec)
+                        providers.update(spec_set)
 
         # Return providers in order
         return sorted(providers)
@@ -108,16 +113,22 @@ class ProviderIndex(object):
     # TODO: this is pretty darned nasty, and inefficient.
     def _cross_provider_maps(self, lmap, rmap):
         result = {}
-        for lspec in lmap:
-            for rspec in rmap:
-                try:
-                    constrained = lspec.copy().constrain(rspec)
-                    if lmap[lspec].name != rmap[rspec].name:
+        for lspec, rspec in itertools.product(lmap, rmap):
+            try:
+                constrained = lspec.copy().constrain(rspec)
+            except spack.spec.UnsatisfiableSpecError:
+                continue
+
+            # lp and rp are left and right provider specs.
+            for lp_spec, rp_spec in itertools.product(lmap[lspec], rmap[rspec]):
+                if lp_spec.name == rp_spec.name:
+                    try:
+                        const = lp_spec.copy().constrain(rp_spec,deps=False)
+                        if constrained not in result:
+                            result[constrained] = set()
+                        result[constrained].add(const)
+                    except spack.spec.UnsatisfiableSpecError:
                         continue
-                    result[constrained] = lmap[lspec].copy().constrain(
-                        rmap[rspec], deps=False)
-                except spack.spec.UnsatisfiableSpecError:
-                    continue
         return result
 
 
@@ -132,6 +143,8 @@ class ProviderIndex(object):
         if not common:
             return True
 
+        # This ensures that some provider in other COULD satisfy the
+        # vpkg constraints on self.
         result = {}
         for name in common:
             crossed = self._cross_provider_maps(self.providers[name],

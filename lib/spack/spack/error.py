@@ -33,6 +33,12 @@ class SpackError(Exception):
         self.long_message = long_message
 
 
+    def __str__(self):
+        msg = self.message
+        if self.long_message:
+            msg += "\n    %s" % self.long_message
+        return msg
+
 class UnsupportedPlatformError(SpackError):
     """Raised by packages when a platform is not supported"""
     def __init__(self, message):

@@ -35,13 +35,17 @@ README.
 """
 import os
 import re
+import time
 import inspect
 import subprocess
 import platform as py_platform
 import multiprocessing
-from urlparse import urlparse
+from urlparse import urlparse, urljoin
+import textwrap
+from StringIO import StringIO
 
 import llnl.util.tty as tty
+from llnl.util.link_tree import LinkTree
 from llnl.util.filesystem import *
 from llnl.util.lang import *
 
@@ -49,6 +53,7 @@ import spack
 import spack.spec
 import spack.error
 import spack.compilers
+import spack.mirror
 import spack.hooks
 import spack.build_environment as build_env
 import spack.url as url
@@ -316,11 +321,20 @@ class Package(object):
     """Patches to apply to newly expanded source, if any."""
     patches = {}
 
+    """Specs of package this one extends, or None.
+
+    Currently, ppackages can extend at most one other package.
+    """
+    extendees = {}
+
     #
     # These are default values for instance variables.
     #
     """By default we build in parallel.  Subclasses can override this."""
     parallel = True
+
+    """Most packages are NOT extendable.  Set to True if you want extensions."""
+    extendable = False
 
 
     def __init__(self, spec):
@@ -332,9 +346,6 @@ class Package(object):
         self.name = self.module.__name__
         if '.' in self.name:
             self.name = self.name[self.name.rindex('.') + 1:]
-
-        # This is set by scraping a web page.
-        self._available_versions = None
 
         # Sanity check some required variables that could be
         # overridden by package authors.
@@ -368,12 +379,20 @@ class Package(object):
         # stage used to build this package.
         self._stage = None
 
-        # If there's no default URL provided, set this package's url to None
-        if not hasattr(self, 'url'):
-            self.url = None
-
-        # Init fetch strategy to None
+        # Init fetch strategy and url to None
         self._fetcher = None
+        self.url = getattr(self.__class__, 'url', None)
+
+        # Fix up self.url if this package fetches with a URLFetchStrategy.
+        # This makes self.url behave sanely.
+        if self.spec.versions.concrete:
+            # TODO: this is a really roundabout way of determining the type
+            # TODO: of fetch to do. figure out a more sane fetch strategy/package
+            # TODO: init order (right now it's conflated with stage, package, and
+            # TODO: the tests make assumptions)
+            f = fs.for_package_version(self, self.version)
+            if isinstance(f, fs.URLFetchStrategy):
+                self.url = self.url_for_version(self.spec.version)
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -381,6 +400,13 @@ class Package(object):
 
         if not hasattr(self, 'list_depth'):
             self.list_depth = 1
+
+        # Set up some internal variables for timing.
+        self._fetch_time = 0.0
+        self._total_time = 0.0
+
+        if self.is_extension:
+            spack.db.get(self.extendee_spec)._check_extendable()
 
 
     @property
@@ -410,7 +436,7 @@ class Package(object):
            *higher* URL, and if that isn't there raises an error.
         """
         version_urls = self.version_urls()
-        url = self.url
+        url = getattr(self.__class__, 'url', None)
 
         for v in version_urls:
             if v > version and url:
@@ -420,21 +446,15 @@ class Package(object):
         return url
 
 
-    def has_url(self):
-        """Returns whether there is a URL available for this package.
-           If there isn't, it's probably fetched some other way (version
-           control, etc.)"""
-        return self.url or self.version_urls()
-
-
     # TODO: move this out of here and into some URL extrapolation module?
     def url_for_version(self, version):
         """Returns a URL that you can download a new version of this package from."""
         if not isinstance(version, Version):
             version = Version(version)
 
-        if not self.has_url():
-            raise NoURLError(self.__class__)
+        cls = self.__class__
+        if not (hasattr(cls, 'url') or self.version_urls()):
+            raise NoURLError(cls)
 
         # If we have a specific URL for this version, don't extrapolate.
         version_urls = self.version_urls()
@@ -452,9 +472,9 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
-            self._stage = Stage(self.fetcher,
-                                mirror_path=self.mirror_path(),
-                                name=self.spec.short_spec)
+            mp = spack.mirror.mirror_archive_path(self.spec)
+            self._stage = Stage(
+                self.fetcher, mirror_path=mp, name=self.spec.short_spec)
         return self._stage
 
 
@@ -474,11 +494,47 @@ class Package(object):
         self._fetcher = f
 
 
-    def mirror_path(self):
-        """Get path to this package's archive in a mirror."""
-        filename = "%s-%s." % (self.name, self.version)
-        filename += extension(self.url) if self.has_url() else "tar.gz"
-        return "%s/%s" % (self.name, filename)
+    @property
+    def extendee_spec(self):
+        """Spec of the extendee of this package, or None if it is not an extension."""
+        if not self.extendees:
+            return None
+        name = next(iter(self.extendees))
+        if not name in self.spec:
+            spec, kwargs = self.extendees[name]
+            return spec
+
+        # Need to do this to get the concrete version of the spec
+        return self.spec[name]
+
+
+    @property
+    def extendee_args(self):
+        """Spec of the extendee of this package, or None if it is not an extension."""
+        if not self.extendees:
+            return None
+        name = next(iter(self.extendees))
+        return self.extendees[name][1]
+
+
+    @property
+    def is_extension(self):
+        return len(self.extendees) > 0
+
+
+    def extends(self, spec):
+        return (spec.name in self.extendees and
+                spec.satisfies(self.extendees[spec.name][0]))
+
+
+    @property
+    def activated(self):
+        if not self.spec.concrete:
+            raise ValueError("Only concrete package extensions can be activated.")
+        if not self.is_extension:
+            raise ValueError("is_extension called on package that is not an extension.")
+
+        return self.spec in spack.install_layout.get_extensions(self.extendee_spec)
 
 
     def preorder_traversal(self, visited=None, **kwargs):
@@ -611,14 +667,26 @@ class Package(object):
         if not self.spec.concrete:
             raise ValueError("Can only fetch concrete packages.")
 
+        start_time = time.time()
         if spack.do_checksum and not self.version in self.versions:
-            raise FetchError(
-                "Cannot fetch %s safely; there is no checksum on file for version %s."
-                % (self.name, self.version),
-                "Add a checksum to the package file, or use --no-checksum to "
-                "skip this check.")
+            tty.warn("There is no checksum on file to fetch %s safely."
+                     % self.spec.format('$_$@'))
+
+            # Ask the user whether to skip the checksum if we're
+            # interactive, but just fail if non-interactive.
+            checksum_msg = "Add a checksum or use --no-checksum to skip this check."
+            ignore_checksum = False
+            if sys.stdout.isatty():
+                ignore_checksum = tty.get_yes_or_no("  Fetch anyway?", default=False)
+                if ignore_checksum:
+                    tty.msg("Fetching with no checksum.", checksum_msg)
+
+            if not ignore_checksum:
+                raise FetchError(
+                    "Will not fetch %s." % self.spec.format('$_$@'), checksum_msg)
 
         self.stage.fetch()
+        self._fetch_time = time.time() - start_time
 
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
@@ -650,8 +718,11 @@ class Package(object):
         # Kick off the stage first.
         self.do_stage()
 
+        # Package can add its own patch function.
+        has_patch_fun = hasattr(self, 'patch') and callable(self.patch)
+
         # If there are no patches, note it.
-        if not self.patches:
+        if not self.patches and not has_patch_fun:
             tty.msg("No patches needed for %s." % self.name)
             return
 
@@ -674,7 +745,7 @@ class Package(object):
             tty.msg("Already patched %s" % self.name)
             return
 
-        # Apply all the patches for specs that match this on
+        # Apply all the patches for specs that match this one
         for spec, patch_list in self.patches.items():
             if self.spec.satisfies(spec):
                 for patch in patch_list:
@@ -692,15 +763,29 @@ class Package(object):
             os.remove(bad_file)
         touch(good_file)
 
+        if has_patch_fun:
+            self.patch()
+
+        tty.msg("Patched %s" % self.name)
+
+
+    def do_fake_install(self):
+        """Make a fake install directory contaiing a 'fake' file in bin."""
+        mkdirp(self.prefix.bin)
+        touch(join_path(self.prefix.bin, 'fake'))
+        mkdirp(self.prefix.lib)
+        mkdirp(self.prefix.man1)
+
 
     def do_install(self, **kwargs):
         """This class should call this version of the install method.
            Package implementations should override install().
         """
         # whether to keep the prefix on failure.  Default is to destroy it.
-        keep_prefix = kwargs.get('keep_prefix', False)
-        keep_stage  = kwargs.get('keep_stage', False)
-        ignore_deps = kwargs.get('ignore_deps', False)
+        keep_prefix  = kwargs.get('keep_prefix', False)
+        keep_stage   = kwargs.get('keep_stage', False)
+        ignore_deps  = kwargs.get('ignore_deps', False)
+        fake_install = kwargs.get('fake', False)
 
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -709,10 +794,14 @@ class Package(object):
             tty.msg("%s is already installed in %s." % (self.name, self.prefix))
             return
 
-        if not ignore_deps:
-            self.do_install_dependencies()
+        tty.msg("Installing %s" % self.name)
 
-        self.do_patch()
+        if not ignore_deps:
+            self.do_install_dependencies(**kwargs)
+
+        start_time = time.time()
+        if not fake_install:
+            self.do_patch()
 
         # Fork a child process to do the build.  This allows each
         # package authors to have full control over their environment,
@@ -732,25 +821,39 @@ class Package(object):
                 # package naming scheme it likes.
                 spack.install_layout.make_path_for_spec(self.spec)
 
-                # Set up process's build environment before running install.
-                build_env.set_compiler_environment_variables(self)
-                build_env.set_build_environment_variables(self)
-                build_env.set_module_variables_for_package(self)
+                # Run the pre-install hook in the child process after
+                # the directory is created.
+                spack.hooks.pre_install(self)
 
-                # Subclasses implement install() to do the real work.
-                self.install(self.spec, self.prefix)
+                # Set up process's build environment before running install.
+                self.stage.chdir_to_source()
+                build_env.setup_package(self)
+
+                # Allow extendees to further set up the environment.
+                if self.is_extension:
+                    self.extendee_spec.package.setup_extension_environment(
+                        self.module, self.extendee_spec, self.spec)
+
+                if fake_install:
+                    self.do_fake_install()
+                else:
+                    # Subclasses implement install() to do the real work.
+                    self.install(self.spec, self.prefix)
 
                 # Ensure that something was actually installed.
-                if not os.listdir(self.prefix):
-                    raise InstallError(
-                        "Install failed for %s.  Nothing was installed!"
-                        % self.name)
+                self._sanity_check_install()
 
                 # On successful install, remove the stage.
                 if not keep_stage:
                     self.stage.destroy()
 
-                tty.msg("Successfully installed %s" % self.name)
+                # Stop timer.
+                self._total_time = time.time() - start_time
+                build_time = self._total_time - self._fetch_time
+
+                tty.msg("Successfully installed %s." % self.name,
+                        "Fetch: %.2f sec.  Build: %.2f sec.  Total: %.2f sec."
+                        % (self._fetch_time, build_time, self._total_time))
                 print_pkg(self.prefix)
 
                 # Use os._exit here to avoid raising a SystemExit exception,
@@ -779,15 +882,23 @@ class Package(object):
         if returncode != 0:
             sys.exit(1)
 
-
         # Once everything else is done, run post install hooks
         spack.hooks.post_install(self)
 
 
-    def do_install_dependencies(self):
+
+    def _sanity_check_install(self):
+        installed = set(os.listdir(self.prefix))
+        installed.difference_update(spack.install_layout.hidden_file_paths)
+        if not installed:
+            raise InstallError(
+                "Install failed for %s.  Nothing was installed!" % self.name)
+
+
+    def do_install_dependencies(self, **kwargs):
         # Pass along paths of dependencies here
         for dep in self.spec.dependencies.values():
-            dep.package.do_install()
+            dep.package.do_install(**kwargs)
 
 
     @property
@@ -797,6 +908,30 @@ class Package(object):
         """
         return __import__(self.__class__.__module__,
                           fromlist=[self.__class__.__name__])
+
+
+    def setup_extension_environment(self, module, spec, ext_spec):
+        """Called before the install() method of extensions.
+
+        Default implementation does nothing, but this can be
+        overridden by an extendable package to set up the install
+        environment for its extensions.  This is useful if there are
+        some common steps to installing all extensions for a
+        certain package.
+
+        Some examples:
+
+        1. Installing python modules generally requires PYTHONPATH to
+           point to the lib/pythonX.Y/site-packages directory in the
+           module's install prefix.  This could set that variable.
+
+        2. Extensions often need to invoke the 'python' interpreter
+           from the Python installation being extended.  This routine can
+           put a 'python' Execuable object in the module scope for the
+           extension package to simplify extension installs.
+
+        """
+        pass
 
 
     def install(self, spec, prefix):
@@ -818,11 +953,97 @@ class Package(object):
                 "The following installed packages depend on it: %s" %
                 ' '.join(formatted_deps))
 
+        # Pre-uninstall hook runs first.
+        spack.hooks.pre_uninstall(self)
+
+        # Uninstalling in Spack only requires removing the prefix.
         self.remove_prefix()
         tty.msg("Successfully uninstalled %s." % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_uninstall(self)
+
+
+    def _check_extendable(self):
+        if not self.extendable:
+            raise ValueError("Package %s is not extendable!" % self.name)
+
+
+    def _sanity_check_extension(self):
+        if not self.is_extension:
+            raise ValueError("This package is not an extension.")
+        extendee_package = self.extendee_spec.package
+        extendee_package._check_extendable()
+
+        if not extendee_package.installed:
+            raise ValueError("Can only (de)activate extensions for installed packages.")
+        if not self.installed:
+            raise ValueError("Extensions must first be installed.")
+        if not self.extendee_spec.name in self.extendees:
+            raise ValueError("%s does not extend %s!" % (self.name, self.extendee.name))
+
+
+    def do_activate(self):
+        """Called on an etension to invoke the extendee's activate method.
+
+        Commands should call this routine, and should not call
+        activate() directly.
+        """
+        self._sanity_check_extension()
+        self.extendee_spec.package.activate(self, **self.extendee_args)
+
+        spack.install_layout.add_extension(self.extendee_spec, self.spec)
+        tty.msg("Activated extension %s for %s."
+                % (self.spec.short_spec, self.extendee_spec.short_spec))
+
+
+    def activate(self, extension, **kwargs):
+        """Symlinks all files from the extension into extendee's install dir.
+
+        Package authors can override this method to support other
+        extension mechanisms.  Spack internals (commands, hooks, etc.)
+        should call do_activate() method so that proper checks are
+        always executed.
+
+        """
+        def ignore(filename):
+            return (filename in spack.install_layout.hidden_file_paths or
+                    kwargs.get('ignore', lambda f: False)(filename))
+
+        tree = LinkTree(extension.prefix)
+        conflict = tree.find_conflict(self.prefix, ignore=ignore)
+        if conflict:
+            raise ExtensionConflictError(conflict)
+        tree.merge(self.prefix, ignore=ignore)
+
+
+    def do_deactivate(self):
+        """Called on the extension to invoke extendee's deactivate() method."""
+        self._sanity_check_extension()
+        self.extendee_spec.package.deactivate(self, **self.extendee_args)
+
+        if self.spec in spack.install_layout.get_extensions(self.extendee_spec):
+            spack.install_layout.remove_extension(self.extendee_spec, self.spec)
+
+        tty.msg("Deactivated extension %s for %s."
+                % (self.spec.short_spec, self.extendee_spec.short_spec))
+
+
+    def deactivate(self, extension, **kwargs):
+        """Unlinks all files from extension out of this package's install dir.
+
+        Package authors can override this method to support other
+        extension mechanisms.  Spack internals (commands, hooks, etc.)
+        should call do_deactivate() method so that proper checks are
+        always executed.
+
+        """
+        def ignore(filename):
+            return (filename in spack.install_layout.hidden_file_paths or
+                    kwargs.get('ignore', lambda f: False)(filename))
+
+        tree = LinkTree(extension.prefix)
+        tree.unmerge(self.prefix, ignore=ignore)
 
 
     def do_clean(self):
@@ -849,71 +1070,102 @@ class Package(object):
             self.stage.destroy()
 
 
-    def fetch_available_versions(self):
-        if not hasattr(self, 'url'):
-            raise VersionFetchError(self.__class__)
+    def format_doc(self, **kwargs):
+        """Wrap doc string at 72 characters and format nicely"""
+        indent = kwargs.get('indent', 0)
 
-        # If not, then try to fetch using list_url
-        if not self._available_versions:
-            try:
-                self._available_versions = find_versions_of_archive(
-                    self.url,
-                    list_url=self.list_url,
-                    list_depth=self.list_depth)
+        if not self.__doc__:
+            return ""
 
-                if not self._available_versions:
-                    tty.warn("Found no versions for %s" % self.name,
-                             "Check the list_url and list_depth attribute on the "
-                             + self.name + " package.",
-                             "Use them to tell Spack where to look for versions.")
-
-            except spack.error.NoNetworkConnectionError, e:
-                tty.die("Package.fetch_available_versions couldn't connect to:",
-                        e.url, e.message)
-
-        return self._available_versions
+        doc = re.sub(r'\s+', ' ', self.__doc__)
+        lines = textwrap.wrap(doc, 72)
+        results = StringIO()
+        for line in lines:
+            results.write((" " * indent) + line + "\n")
+        return results.getvalue()
 
 
     @property
-    def available_versions(self):
-        # If the package overrode available_versions, then use that.
-        if self.versions is not None:
-            return VersionList(self.versions.keys())
-        else:
-            vlist = self.fetch_available_versions()
-            if not vlist:
-                vlist = ver([self.version])
-            return vlist
+    def all_urls(self):
+        urls = []
+        if self.url:
+            urls.append(self.url)
+
+        for args in self.versions.values():
+            if 'url' in args:
+                urls.append(args['url'])
+        return urls
 
 
-def find_versions_of_archive(archive_url, **kwargs):
+    def fetch_remote_versions(self):
+        """Try to find remote versions of this package using the
+           list_url and any other URLs described in the package file."""
+        if not self.all_urls:
+            raise VersionFetchError(self.__class__)
+
+        try:
+            return find_versions_of_archive(
+                *self.all_urls, list_url=self.list_url, list_depth=self.list_depth)
+        except spack.error.NoNetworkConnectionError, e:
+            tty.die("Package.fetch_versions couldn't connect to:",
+                    e.url, e.message)
+
+
+    @property
+    def rpath(self):
+        """Get the rpath this package links with, as a list of paths."""
+        rpaths = [self.prefix.lib, self.prefix.lib64]
+        rpaths.extend(d.prefix.lib for d in self.spec.traverse(root=False)
+                      if os.path.isdir(d.prefix.lib))
+        rpaths.extend(d.prefix.lib64 for d in self.spec.traverse(root=False)
+                      if os.path.isdir(d.prefix.lib64))
+        return rpaths
+
+
+    @property
+    def rpath_args(self):
+        """Get the rpath args as a string, with -Wl,-rpath= for each element."""
+        return " ".join("-Wl,-rpath=%s" % p for p in self.rpath)
+
+
+def find_versions_of_archive(*archive_urls, **kwargs):
     list_url   = kwargs.get('list_url', None)
     list_depth = kwargs.get('list_depth', 1)
 
-    if not list_url:
-        list_url = url.find_list_url(archive_url)
-
-    # This creates a regex from the URL with a capture group for the
-    # version part of the URL.  The capture group is converted to a
-    # generic wildcard, so we can use this to extract things on a page
-    # that look like archive URLs.
-    url_regex = url.wildcard_version(archive_url)
-
-    # We'll be a bit more liberal and just look for the archive part,
-    # not the full path.
-    archive_regex = os.path.basename(url_regex)
+    # Generate a list of list_urls based on archive urls and any
+    # explicitly listed list_url in the package
+    list_urls = set()
+    if list_url:
+        list_urls.add(list_url)
+    for aurl in archive_urls:
+        list_urls.add(url.find_list_url(aurl))
 
     # Grab some web pages to scrape.
-    page_map = get_pages(list_url, depth=list_depth)
+    page_map = {}
+    for lurl in list_urls:
+        page_map.update(get_pages(lurl, depth=list_depth))
+
+    # Scrape them for archive URLs
+    regexes = []
+    for aurl in archive_urls:
+        # This creates a regex from the URL with a capture group for
+        # the version part of the URL.  The capture group is converted
+        # to a generic wildcard, so we can use this to extract things
+        # on a page that look like archive URLs.
+        url_regex = url.wildcard_version(aurl)
+
+        # We'll be a bit more liberal and just look for the archive
+        # part, not the full path.
+        regexes.append(os.path.basename(url_regex))
 
     # Build a version list from all the matches we find
-    versions = VersionList()
-    for site, page in page_map.iteritems():
+    versions = {}
+    for page_url, content in page_map.iteritems():
         # extract versions from matches.
-        matches = re.finditer(archive_regex, page)
-        version_strings = set(m.group(1) for m in matches)
-        for v in version_strings:
-            versions.add(Version(v))
+        for regex in regexes:
+            versions.update(
+                (Version(m.group(1)), urljoin(page_url, m.group(0)))
+                for m in re.finditer(regex, content))
 
     return versions
 
@@ -976,8 +1228,8 @@ class VersionFetchError(PackageError):
     """Raised when a version URL cannot automatically be determined."""
     def __init__(self, cls):
         super(VersionFetchError, self).__init__(
-            "Cannot fetch version for package %s " % cls.__name__ +
-            "because it does not define a default url.")
+            "Cannot fetch versions for package %s " % cls.__name__ +
+            "because it does not define any URLs to fetch.")
 
 
 class NoURLError(PackageError):
@@ -985,3 +1237,9 @@ class NoURLError(PackageError):
     def __init__(self, cls):
         super(NoURLError, self).__init__(
             "Package %s has no version with a URL." % cls.__name__)
+
+
+class ExtensionConflictError(PackageError):
+    def __init__(self, path):
+        super(ExtensionConflictError, self).__init__(
+            "Extension blocked by file: %s" % path)

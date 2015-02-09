@@ -25,7 +25,8 @@
 ##############################################################################
 import sys
 if not sys.version_info[:2] >= (2,6):
-    sys.exit("Spack requires Python 2.6.  Version was %s." % sys.version_info)
+    v_info = sys.version_info[:3]
+    sys.exit("Spack requires Python 2.6 or higher.  This is Python %d.%d.%d." % v_info)
 
 import os
 
@@ -102,7 +103,7 @@ if args.insecure:
 # Try to load the particular command asked for and run it
 command = spack.cmd.get_command(args.command)
 try:
-    command(parser, args)
+    return_val = command(parser, args)
 except SpackError, e:
     if spack.debug:
         # In debug mode, raise with a full stack trace.
@@ -113,4 +114,13 @@ except SpackError, e:
         tty.die(e.message)
 
 except KeyboardInterrupt:
+    sys.stderr.write('\n')
     tty.die("Keyboard interrupt.")
+
+# Allow commands to return values if they want to exit with some ohter code.
+if return_val is None:
+    sys.exit(0)
+elif isinstance(return_val, int):
+    sys.exit(return_val)
+else:
+    tty.die("Bad return value from command %s: %s" % (args.command, return_val))

@@ -40,7 +40,7 @@ from spack.util.multiproc import parmap
 from spack.compiler import Compiler
 from spack.util.executable import which
 from spack.util.naming import mod_to_class
-from spack.compilation import get_path
+from spack.util.environment import get_path
 
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']

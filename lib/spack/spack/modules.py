@@ -49,6 +49,7 @@ import os
 import re
 import textwrap
 import shutil
+from glob import glob
 from contextlib import closing
 
 import llnl.util.tty as tty
@@ -122,6 +123,13 @@ class EnvModule(object):
 
                 if os.path.isdir(directory):
                     add_path(var, directory)
+
+            # Add python path unless it's an actual python installation
+            # TODO: is there a better way to do this?
+            if self.spec.name != 'python':
+                site_packages = glob(join_path(self.spec.prefix.lib, "python*/site-packages"))
+                if site_packages:
+                    add_path('PYTHONPATH', site_packages[0])
 
             # short description is just the package + version
             # TODO: maybe packages can optionally provide it.

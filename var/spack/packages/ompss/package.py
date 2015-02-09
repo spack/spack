@@ -16,8 +16,10 @@ class Ompss(Package):
        APIs like CUDA or OpenCL. Our OmpSs environment is built on top
        of our Mercurium compiler and Nanos++ runtime system."""
     homepage = "http://pm.bsc.es/"
-    url      = "http://pm.bsc.es/sites/default/files/ftp/ompss/releases/ompss-14.06.tar.gz"
-    version('14.06', '99be5dce74c0d7eea42636d26af47b4181ae2e11')
+    url      = "http://pm.bsc.es/sites/default/files/ftp/ompss/releases/ompss-14.10.tar.gz"
+    list_url = 'http://pm.bsc.es/ompss-downloads'
+
+    version('14.10', '404d161265748f2f96bb35fd8c7e79ee')
 
     # all dependencies are optional, really
     depends_on("mpi")
@@ -46,4 +48,3 @@ class Ompss(Package):
         configure("--prefix=%s" % prefix, "--with-nanox=%s" % prefix, "--enable-ompss", "--with-mpi=%s" % mpi.prefix, *openmp_options)
         make()
         make("install")
-

@@ -45,7 +45,7 @@ import re
 import shutil
 from functools import wraps
 import llnl.util.tty as tty
-
+from llnl.util.filesystem import *
 import spack
 import spack.error
 import spack.util.crypto as crypto
@@ -156,9 +156,10 @@ class URLFetchStrategy(FetchStrategy):
 
             if spack.curl.returncode == 22:
                 # This is a 404.  Curl will print the error.
-                raise FailedDownloadError(url)
+                raise FailedDownloadError(
+                    self.url, "URL %s was not found!" % self.url)
 
-            if spack.curl.returncode == 60:
+            elif spack.curl.returncode == 60:
                 # This is a certificate error.  Suggest spack -k
                 raise FailedDownloadError(
                     self.url,
@@ -167,6 +168,13 @@ class URLFetchStrategy(FetchStrategy):
                     "is bad.  If you believe your SSL configuration is bad, you "
                     "can try running spack -k, which will not check SSL certificates."
                     "Use this at your own risk.")
+
+            else:
+                # This is some other curl error.  Curl will print the
+                # error, but print a spack message too
+                raise FailedDownloadError(
+                    self.url, "Curl failed with error %d" % spack.curl.returncode)
+
 
         # Check if we somehow got an HTML file rather than the archive we
         # asked for.  We only look at the last content type, to handle
@@ -197,7 +205,25 @@ class URLFetchStrategy(FetchStrategy):
                                       "Failed on expand() for URL %s" % self.url)
 
         decompress = decompressor_for(self.archive_file)
+
+        # Expand all tarballs in their own directory to contain
+        # exploding tarballs.
+        tarball_container = os.path.join(self.stage.path, "spack-expanded-archive")
+        mkdirp(tarball_container)
+        os.chdir(tarball_container)
         decompress(self.archive_file)
+
+        # If the tarball *didn't* explode, move
+        # the expanded directory up & remove the protector directory.
+        files = os.listdir(tarball_container)
+        if len(files) == 1:
+            expanded_dir = os.path.join(tarball_container, files[0])
+            if os.path.isdir(expanded_dir):
+                shutil.move(expanded_dir, self.stage.path)
+                os.rmdir(tarball_container)
+
+        # Set the wd back to the stage when done.
+        self.stage.chdir()
 
 
     def archive(self, destination):
@@ -337,8 +363,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def git_version(self):
-        git = which('git', required=True)
-        vstring = git('--version', return_output=True).lstrip('git version ')
+        vstring = self.git('--version', return_output=True).lstrip('git version ')
         return Version(vstring)
 
 
@@ -347,6 +372,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         if not self._git:
             self._git = which('git', required=True)
         return self._git
+
 
     @_needs_stage
     def fetch(self):
@@ -580,7 +606,7 @@ def for_package_version(pkg, version):
        version() in the package description."""
     # If it's not a known version, extrapolate one.
     if not version in pkg.versions:
-        url = pkg.url_for_verison(version)
+        url = pkg.url_for_version(version)
         if not url:
             raise InvalidArgsError(pkg, version)
         return URLFetchStrategy(url)

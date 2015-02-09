@@ -25,7 +25,7 @@ all: html
 # This autogenerates a package list.
 #
 package_list:
-	spack info -r > package_list.rst
+	spack package-list > package_list.rst
 
 #
 # This creates a git repository and commits generated html docs.

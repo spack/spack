@@ -30,7 +30,7 @@ import imp
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
-from llnl.util.lang import memoized
+from llnl.util.lang import *
 
 import spack.error
 import spack.spec
@@ -74,8 +74,11 @@ class PackageDB(object):
         if not spec in self.instances:
             package_class = self.get_class_for_package_name(spec.name)
             try:
-                self.instances[spec.copy()] = package_class(spec)
+                copy = spec.copy()
+                self.instances[copy] = package_class(copy)
             except Exception, e:
+                if spack.debug:
+                    sys.excepthook(*sys.exc_info())
                 raise FailedConstructorError(spec.name, e)
 
         return self.instances[spec]
@@ -107,6 +110,17 @@ class PackageDB(object):
         if not providers:
             raise UnknownPackageError("No such virtual package: %s" % vpkg_spec)
         return providers
+
+
+    @_autospec
+    def extensions_for(self, extendee_spec):
+        return [p for p in self.all_packages() if p.extends(extendee_spec)]
+
+
+    @_autospec
+    def installed_extensions_for(self, extendee_spec):
+        return [s.package for s in self.installed_package_specs()
+                if s.package.extends(extendee_spec)]
 
 
     def dirname_for_package_name(self, pkg_name):
@@ -211,38 +225,6 @@ class PackageDB(object):
             tty.die("%s.%s is not a class" % (pkg_name, class_name))
 
         return cls
-
-
-    def graph_dependencies(self, out=sys.stdout):
-        """Print out a graph of all the dependencies between package.
-           Graph is in dot format."""
-        out.write('digraph G {\n')
-        out.write('  label = "Spack Dependencies"\n')
-        out.write('  labelloc = "b"\n')
-        out.write('  rankdir = "LR"\n')
-        out.write('  ranksep = "5"\n')
-        out.write('\n')
-
-        def quote(string):
-            return '"%s"' % string
-
-        deps = []
-        for pkg in self.all_packages():
-            out.write('  %-30s [label="%s"]\n' % (quote(pkg.name), pkg.name))
-
-            # Add edges for each depends_on in the package.
-            for dep_name, dep in pkg.dependencies.iteritems():
-                deps.append((pkg.name, dep_name))
-
-            # If the package provides something, add an edge for that.
-            for provider in set(p.name for p in pkg.provided):
-                deps.append((provider, pkg.name))
-
-        out.write('\n')
-
-        for pair in deps:
-            out.write('  "%s" -> "%s"\n' % pair)
-        out.write('}\n')
 
 
 class UnknownPackageError(spack.error.SpackError):

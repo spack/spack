@@ -25,6 +25,9 @@
 import sys
 import os
 import textwrap
+import fcntl
+import termios
+import struct
 from StringIO import StringIO
 
 from llnl.util.tty.color import *
@@ -114,21 +117,46 @@ def get_number(prompt, **kwargs):
     return number
 
 
+def get_yes_or_no(prompt, **kwargs):
+    default_value = kwargs.get('default', None)
+
+    if default_value is None:
+        prompt += ' [y/n] '
+    elif default_value is True:
+        prompt += ' [Y/n] '
+    elif default_value is False:
+        prompt += ' [y/N] '
+    else:
+        raise ValueError("default for get_yes_no() must be True, False, or None.")
+
+    result = None
+    while result is None:
+        ans = raw_input(prompt).lower()
+        if not ans:
+            result = default_value
+            if result is None:
+                print "Please enter yes or no."
+        else:
+            if ans == 'y' or ans == 'yes':
+                result = True
+            elif ans == 'n' or ans == 'no':
+                result = False
+    return result
+
+
 def hline(label=None, **kwargs):
-    """Draw an optionally colored or labeled horizontal line.
+    """Draw a labeled horizontal line.
        Options:
-
        char       Char to draw the line with.  Default '-'
-       color      Color of the label.  Default is no color.
        max_width  Maximum width of the line.  Default is 64 chars.
-
-       See tty.color for possible color formats.
     """
-    char      = kwargs.get('char', '-')
-    color     = kwargs.get('color', '')
-    max_width = kwargs.get('max_width', 64)
+    char      = kwargs.pop('char', '-')
+    max_width = kwargs.pop('max_width', 64)
+    if kwargs:
+        raise TypeError("'%s' is an invalid keyword argument for this function."
+                        % next(kwargs.iterkeys()))
 
-    cols, rows = terminal_size()
+    rows, cols = terminal_size()
     if not cols:
         cols = max_width
     else:
@@ -136,37 +164,34 @@ def hline(label=None, **kwargs):
     cols = min(max_width, cols)
 
     label = str(label)
-    prefix = char * 2 + " " + label + " "
-    suffix = (cols - len(prefix)) * char
+    prefix = char * 2 + " "
+    suffix = " " + (cols - len(prefix) - clen(label)) * char
 
     out = StringIO()
-    if color:
-        prefix = char * 2 + " " + color + cescape(label) + "@. "
-        cwrite(prefix, stream=out, color=True)
-    else:
-        out.write(prefix)
+    out.write(prefix)
+    out.write(label)
     out.write(suffix)
 
     print out.getvalue()
 
 
 def terminal_size():
-    """Gets the dimensions of the console: cols, rows."""
+    """Gets the dimensions of the console: (rows, cols)."""
     def ioctl_GWINSZ(fd):
         try:
-            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+            rc = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
         except:
             return
-        return cr
-    cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
-    if not cr:
+        return rc
+    rc = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
+    if not rc:
         try:
             fd = os.open(os.ctermid(), os.O_RDONLY)
-            cr = ioctl_GWINSZ(fd)
+            rc = ioctl_GWINSZ(fd)
             os.close(fd)
         except:
             pass
-    if not cr:
-        cr = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))
+    if not rc:
+        rc = (os.environ.get('LINES', 25), os.environ.get('COLUMNS', 80))
 
-    return int(cr[1]), int(cr[0])
+    return int(rc[0]), int(rc[1])

@@ -28,6 +28,7 @@ import hashlib
 import re
 from contextlib import closing
 
+from external.ordereddict import OrderedDict
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 
@@ -159,32 +160,33 @@ def create(parser, args):
     else:
         mkdirp(os.path.dirname(pkg_path))
 
-    versions = list(reversed(spack.package.find_versions_of_archive(url)))
+    versions = spack.package.find_versions_of_archive(url)
+    rkeys = sorted(versions.keys(), reverse=True)
+    versions = OrderedDict(zip(rkeys, (versions[v] for v in rkeys)))
 
     archives_to_fetch = 1
     if not versions:
         # If the fetch failed for some reason, revert to what the user provided
-        versions = [version]
-        urls = [url]
-    else:
-        urls = [spack.url.substitute_version(url, v) for v in versions]
-        if len(urls) > 1:
-            tty.msg("Found %s versions of %s:" % (len(urls), name),
-                    *spack.cmd.elide_list(
-                    ["%-10s%s" % (v,u) for v, u in zip(versions, urls)]))
-            print
-            archives_to_fetch = tty.get_number(
-                "Include how many checksums in the package file?",
-                default=5, abort='q')
+        versions = { version : url }
+    elif len(versions) > 1:
+        tty.msg("Found %s versions of %s:" % (len(versions), name),
+                *spack.cmd.elide_list(
+                    ["%-10s%s" % (v,u) for v, u in versions.iteritems()]))
+        print
+        archives_to_fetch = tty.get_number(
+            "Include how many checksums in the package file?",
+            default=5, abort='q')
 
-            if not archives_to_fetch:
-                tty.msg("Aborted.")
-                return
+        if not archives_to_fetch:
+            tty.msg("Aborted.")
+            return
 
     guesser = ConfigureGuesser()
     ver_hash_tuples = spack.cmd.checksum.get_checksums(
-        versions[:archives_to_fetch], urls[:archives_to_fetch],
-        first_stage_function=guesser, keep_stage=args.keep_stage)
+        versions.keys()[:archives_to_fetch],
+        [versions[v] for v in versions.keys()[:archives_to_fetch]],
+        first_stage_function=guesser,
+        keep_stage=args.keep_stage)
 
     if not ver_hash_tuples:
         tty.die("Could not fetch any tarballs for %s." % name)
