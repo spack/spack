@@ -109,12 +109,17 @@ class DirectoryLayout(object):
 
 
     def remove_path_for_spec(self, spec):
-        """Removes a prefix and any empty parent directories from the root."""
+        """Removes a prefix and any empty parent directories from the root.
+           Raised RemoveFailedError if something goes wrong.
+        """
         path = self.path_for_spec(spec)
         assert(path.startswith(self.root))
 
         if os.path.exists(path):
-            shutil.rmtree(path, True)
+            try:
+                shutil.rmtree(path)
+            except exceptions.OSError, e:
+                raise RemoveFailedError(spec, path, e)
 
         path = os.path.dirname(path)
         while path != self.root:
@@ -330,6 +335,15 @@ class SpecHashCollisionError(DirectoryLayoutError):
             % installed_spec, new_spec)
 
 
+class RemoveFailedError(DirectoryLayoutError):
+    """Raised when a DirectoryLayout cannot remove an install prefix."""
+    def __init__(self, installed_spec, prefix, error):
+        super(RemoveFailedError, self).__init__(
+            'Could not remove prefix %s for %s : %s'
+            % prefix, installed_spec.short_spec, error)
+        self.cause = error
+
+
 class InconsistentInstallDirectoryError(DirectoryLayoutError):
     """Raised when a package seems to be installed to the wrong place."""
     def __init__(self, message):
@@ -370,3 +384,5 @@ class NoSuchExtensionError(DirectoryLayoutError):
         super(NoSuchExtensionError, self).__init__(
             "%s cannot be removed from %s because it's not installed."% (
                 extension_spec.short_spec, spec.short_spec))
+
+
