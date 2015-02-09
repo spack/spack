@@ -829,11 +829,6 @@ class Package(object):
                 self.stage.chdir_to_source()
                 build_env.setup_package(self)
 
-                # Allow dependencies to further set up the environment.
-                for dep_spec in self.spec.traverse(root=False):
-                    dep_spec.package.setup_dependent_environment(
-                        self.module, dep_spec, self.spec)
-
                 if fake_install:
                     self.do_fake_install()
                 else:
