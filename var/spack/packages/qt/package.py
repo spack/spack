@@ -1,3 +1,4 @@
+import os
 from spack import *
 
 class Qt(Package):
@@ -19,6 +20,11 @@ class Qt(Package):
     depends_on("libpng")
     depends_on("libmng")
     depends_on("jpeg")
+
+    def setup_dependent_environment(self, module, spec, dep_spec):
+        """Dependencies of Qt find it using the QTDIR environment variable."""
+        os.environ['QTDIR'] = self.prefix
+
 
     def patch(self):
         # Fix qmake compilers in the default mkspec

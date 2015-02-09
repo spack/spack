@@ -46,7 +46,7 @@ class Python(Package):
         return os.path.join(self.python_lib_dir, 'site-packages')
 
 
-    def setup_extension_environment(self, module, spec, ext_spec):
+    def setup_dependent_environment(self, module, spec, ext_spec):
         """Called before python modules' install() methods.
 
         In most cases, extensions will only need to have one line::
