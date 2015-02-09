@@ -41,6 +41,7 @@ people:
 
   * David Beckingsale
   * David Boehme
+  * Alfredo Gimenez
   * Luc Jaulmes
   * Matt Legendre
   * Greg Lee
