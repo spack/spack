@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from external import argparse
+import subprocess
 
 import llnl.util.tty as tty
 
