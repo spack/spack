@@ -17,9 +17,12 @@ class PyMatplotlib(Package):
     depends_on('py-pytz')
     depends_on('py-nose')
     depends_on('py-numpy')
+    depends_on('qt')
+
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
+
         if str(self.version) == '1.4.2':
             # hack to fix configuration file
             config_file = None

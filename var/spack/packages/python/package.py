@@ -1,8 +1,9 @@
-from spack import *
-import spack
 import os
 import re
 from contextlib import closing
+
+from spack import *
+import spack
 
 
 class Python(Package):
