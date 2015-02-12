@@ -8,6 +8,7 @@ class PyLibxml2(Package):
     version('2.6.21', '229dd2b3d110a77defeeaa73af83f7f3')
 
     extends('python')
+    depends_on('libxml2')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

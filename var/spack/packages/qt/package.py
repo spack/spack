@@ -1,3 +1,4 @@
+import os
 from spack import *
 import os
 
@@ -30,7 +31,7 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("jpeg")
 
-     # Webkit
+    # Webkit
     # depends_on("gperf")
     # depends_on("flex")
     # depends_on("bison")
@@ -40,6 +41,12 @@ class Qt(Package):
     # OpenGL hardware acceleration
     depends_on("mesa")
     depends_on("libxcb")
+
+
+    def setup_dependent_environment(self, module, spec, dep_spec):
+        """Dependencies of Qt find it using the QTDIR environment variable."""
+        os.environ['QTDIR'] = self.prefix
+
 
     def patch(self):
         if self.spec.satisfies('@4'):
@@ -56,7 +63,7 @@ class Qt(Package):
 
 
     def install(self, spec, prefix):
-        # Apparently this is the only way to 
+        # Apparently this is the only way to
         # "truly" get rid of webkit compiles now...
         os.rename("qtwebkit","no-qtwebkit")
         os.rename("qtwebkit-examples","no-qtwebkit-examples")

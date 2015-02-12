@@ -221,3 +221,8 @@ def setup_package(pkg):
     set_compiler_environment_variables(pkg)
     set_build_environment_variables(pkg)
     set_module_variables_for_package(pkg)
+
+    # Allow dependencies to set up environment as well.
+    for dep_spec in pkg.spec.traverse(root=False):
+        dep_spec.package.setup_dependent_environment(
+            pkg.module, dep_spec, pkg.spec)

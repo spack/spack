@@ -829,11 +829,6 @@ class Package(object):
                 self.stage.chdir_to_source()
                 build_env.setup_package(self)
 
-                # Allow extendees to further set up the environment.
-                if self.is_extension:
-                    self.extendee_spec.package.setup_extension_environment(
-                        self.module, self.extendee_spec, self.spec)
-
                 if fake_install:
                     self.do_fake_install()
                 else:
@@ -910,8 +905,8 @@ class Package(object):
                           fromlist=[self.__class__.__name__])
 
 
-    def setup_extension_environment(self, module, spec, ext_spec):
-        """Called before the install() method of extensions.
+    def setup_dependent_environment(self, module, spec, dependent_spec):
+        """Called before the install() method of dependents.
 
         Default implementation does nothing, but this can be
         overridden by an extendable package to set up the install
@@ -929,6 +924,8 @@ class Package(object):
            from the Python installation being extended.  This routine can
            put a 'python' Execuable object in the module scope for the
            extension package to simplify extension installs.
+
+        3. A lot of Qt extensions need QTDIR set.  This can be used to do that.
 
         """
         pass
