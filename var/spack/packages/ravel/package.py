@@ -6,9 +6,8 @@ class Ravel(Package):
 
     homepage = "https://github.com/scalability-llnl/ravel"
 
-
-    version('1.0', git="ssh://git@cz-stash.llnl.gov:7999/pave/ravel.git",
-            branch='features/otf2export')
+    version('1.0.0', git="https://github.com/scalability-llnl/ravel.git",
+            branch='master')
 
     depends_on('cmake@2.8.9:')
 
@@ -18,6 +17,6 @@ class Ravel(Package):
     depends_on('qt@5:')
 
     def install(self, spec, prefix):
-        cmake(*std_cmake_args)
+        cmake('-Wno-dev', *std_cmake_args)
         make()
         make("install")
