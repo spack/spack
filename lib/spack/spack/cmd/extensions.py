@@ -89,10 +89,10 @@ def extensions(parser, args):
     spack.cmd.find.display_specs(installed, mode=args.mode)
 
     # List specs of activated extensions.
-    activated  = spack.install_layout.get_extensions(spec)
+    activated = spack.install_layout.extension_map(spec)
     print
     if not activated:
         tty.msg("None activated.")
         return
     tty.msg("%d currently activated:" % len(activated))
-    spack.cmd.find.display_specs(activated, mode=args.mode)
+    spack.cmd.find.display_specs(activated.values(), mode=args.mode)

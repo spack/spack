@@ -534,7 +534,8 @@ class Package(object):
         if not self.is_extension:
             raise ValueError("is_extension called on package that is not an extension.")
 
-        return self.spec in spack.install_layout.get_extensions(self.extendee_spec)
+        exts = spack.install_layout.extension_map(self.extendee_spec)
+        return (self.name in exts) and (exts[self.name] == self.spec)
 
 
     def preorder_traversal(self, visited=None, **kwargs):
@@ -987,6 +988,8 @@ class Package(object):
         activate() directly.
         """
         self._sanity_check_extension()
+        spack.install_layout.check_extension_conflict(self.extendee_spec, self.spec)
+
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.install_layout.add_extension(self.extendee_spec, self.spec)
@@ -1014,12 +1017,22 @@ class Package(object):
         tree.merge(self.prefix, ignore=ignore)
 
 
-    def do_deactivate(self):
+    def do_deactivate(self, **kwargs):
         """Called on the extension to invoke extendee's deactivate() method."""
+        force = kwargs.get('force', False)
+
         self._sanity_check_extension()
+
+        # Allow a force deactivate to happen.  This can unlink
+        # spurious files if something was corrupted.
+        if not force:
+            spack.install_layout.check_activated(self.extendee_spec, self.spec)
+
         self.extendee_spec.package.deactivate(self, **self.extendee_args)
 
-        if self.spec in spack.install_layout.get_extensions(self.extendee_spec):
+        # redundant activation check -- makes SURE the spec is not
+        # still activated even if something was wrong above.
+        if self.activated:
             spack.install_layout.remove_extension(self.extendee_spec, self.spec)
 
         tty.msg("Deactivated extension %s for %s."

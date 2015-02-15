@@ -98,9 +98,9 @@ class Python(Package):
         return ignore
 
 
-    def write_easy_install_pth(self, extensions):
+    def write_easy_install_pth(self, exts):
         paths = []
-        for ext in extensions:
+        for ext in sorted(exts.values()):
             ext_site_packages = os.path.join(ext.prefix, self.site_packages_dir)
             easy_pth = "%s/easy-install.pth" % ext_site_packages
 
@@ -139,15 +139,15 @@ class Python(Package):
         args.update(ignore=self.python_ignore(ext_pkg, args))
         super(Python, self).activate(ext_pkg, **args)
 
-        extensions = set(spack.install_layout.get_extensions(self.spec))
-        extensions.add(ext_pkg.spec)
-        self.write_easy_install_pth(extensions)
+        exts = spack.install_layout.extension_map(self.spec)
+        exts[ext_pkg.name] = ext_pkg.spec
+        self.write_easy_install_pth(exts)
 
 
     def deactivate(self, ext_pkg, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
         super(Python, self).deactivate(ext_pkg, **args)
 
-        extensions = set(spack.install_layout.get_extensions(self.spec))
-        extensions.remove(ext_pkg.spec)
-        self.write_easy_install_pth(extensions)
+        exts = spack.install_layout.extension_map(self.spec)
+        del exts[ext_pkg.name]
+        self.write_easy_install_pth(exts)
