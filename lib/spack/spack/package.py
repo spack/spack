@@ -848,8 +848,8 @@ class Package(object):
                 build_time = self._total_time - self._fetch_time
 
                 tty.msg("Successfully installed %s." % self.name,
-                        "Fetch: %.2f sec.  Build: %.2f sec.  Total: %.2f sec."
-                        % (self._fetch_time, build_time, self._total_time))
+                        "Fetch: %s.  Build: %s.  Total: %s."
+                        % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
                 print_pkg(self.prefix)
 
                 # Use os._exit here to avoid raising a SystemExit exception,
@@ -1199,6 +1199,18 @@ def print_pkg(message):
         from llnl.util.tty.color import cwrite
         cwrite('@*g{[+]} ')
     print message
+
+
+def _hms(seconds):
+    """Convert time in seconds to hours, minutes, seconds."""
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+
+    parts = []
+    if h: parts.append("%dh" % h)
+    if m: parts.append("%dm" % m)
+    if s: parts.append("%.2fs" % s)
+    return ' '.join(parts)
 
 
 class FetchError(spack.error.SpackError):
