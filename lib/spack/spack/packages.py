@@ -192,6 +192,7 @@ class PackageDB(object):
             yield self.get(name)
 
 
+    @memoized
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists ."""
         return os.path.exists(self.filename_for_package_name(pkg_name))

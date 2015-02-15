@@ -31,6 +31,7 @@ import tempfile
 from contextlib import closing
 
 import llnl.util.tty as tty
+from llnl.util.lang import memoized
 from llnl.util.filesystem import join_path, mkdirp
 
 import spack
@@ -223,6 +224,9 @@ class SpecHashDirectoryLayout(DirectoryLayout):
 
         if all(spack.db.exists(s.name) for s in spec.traverse()):
             copy = spec.copy()
+
+            # TODO: It takes a lot of time to normalize every spec on read.
+            # TODO: Storing graph info with spec files would fix this.
             copy.normalize()
             if copy.concrete:
                 return copy   # These are specs spack still understands.
@@ -276,17 +280,20 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         self.write_spec(spec, spec_file_path)
 
 
+    @memoized
     def all_specs(self):
         if not os.path.isdir(self.root):
-            return
+            return []
 
+        specs = []
         for path in traverse_dirs_at_depth(self.root, 3):
             arch, compiler, last_dir = path
             spec_file_path = join_path(
                 self.root, arch, compiler, last_dir, self.spec_file_name)
             if os.path.exists(spec_file_path):
                 spec = self.read_spec(spec_file_path)
-                yield spec
+                specs.append(spec)
+        return specs
 
 
     def extension_file_path(self, spec):
