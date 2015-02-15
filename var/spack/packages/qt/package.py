@@ -43,9 +43,9 @@ class Qt(Package):
                   '-fast',
                   '-optimized-qmake',
                   '-no-pch',
-# phonon required for py-pyqt4
-#                  '-no-phonon',
-#                  '-no-phonon-backend',
+                  # phonon required for py-pyqt
+                  # '-no-phonon',
+                  # '-no-phonon-backend',
                   '-no-openvg')
         make()
         make("install")
