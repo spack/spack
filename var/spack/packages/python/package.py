@@ -43,6 +43,11 @@ class Python(Package):
 
 
     @property
+    def python_include_dir(self):
+        return os.path.join('include', 'python%d.%d' % self.version[:2])
+
+
+    @property
     def site_packages_dir(self):
         return os.path.join(self.python_lib_dir, 'site-packages')
 
@@ -58,8 +63,9 @@ class Python(Package):
         module.python = Executable(join_path(spec.prefix.bin, 'python'))
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
-        module.python_lib_dir = os.path.join(ext_spec.prefix, self.python_lib_dir)
-        module.site_packages_dir = os.path.join(ext_spec.prefix, self.site_packages_dir)
+        module.python_lib_dir     = os.path.join(ext_spec.prefix, self.python_lib_dir)
+        module.python_include_dir = os.path.join(ext_spec.prefix, self.python_include_dir)
+        module.site_packages_dir  = os.path.join(ext_spec.prefix, self.site_packages_dir)
 
         # Make the site packages directory if it does not exist already.
         mkdirp(module.site_packages_dir)
