@@ -58,14 +58,16 @@ parser = argparse.ArgumentParser(
     description='Spack: the Supercomputing PACKage Manager.')
 parser.add_argument('-V', '--version', action='version',
                     version="%s" % spack.spack_version)
-parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
+parser.add_argument('-v', '--verbose', action='store_true',
                     help="Print additional output during builds")
-parser.add_argument('-d', '--debug', action='store_true', dest='debug',
+parser.add_argument('-d', '--debug', action='store_true',
                     help="Write out debug logs during compile")
-parser.add_argument('-k', '--insecure', action='store_true', dest='insecure',
+parser.add_argument('-k', '--insecure', action='store_true',
                     help="Do not check ssl certificates when downloading archives.")
-parser.add_argument('-m', '--mock', action='store_true', dest='mock',
+parser.add_argument('-m', '--mock', action='store_true',
                     help="Use mock packages instead of real ones.")
+parser.add_argument('-p', '--profile', action='store_true',
+                    help="Profile execution using cProfile.")
 
 # each command module implements a parser() function, to which we pass its
 # subparser for setup.
@@ -85,42 +87,49 @@ if len(sys.argv) == 1:
 # actually parse the args.
 args = parser.parse_args()
 
-# Set up environment based on args.
-tty.set_verbose(args.verbose)
-tty.set_debug(args.debug)
-spack.debug = args.debug
+def main():
+    # Set up environment based on args.
+    tty.set_verbose(args.verbose)
+    tty.set_debug(args.debug)
+    spack.debug = args.debug
 
-spack.spack_working_dir = working_dir
-if args.mock:
-    from spack.packages import PackageDB
-    spack.db = PackageDB(spack.mock_packages_path)
+    spack.spack_working_dir = working_dir
+    if args.mock:
+        from spack.packages import PackageDB
+        spack.db = PackageDB(spack.mock_packages_path)
 
-# If the user asked for it, don't check ssl certs.
-if args.insecure:
-    tty.warn("You asked for --insecure, which does not check SSL certificates or checksums.")
-    spack.curl.add_default_arg('-k')
+    # If the user asked for it, don't check ssl certs.
+    if args.insecure:
+        tty.warn("You asked for --insecure, which does not check SSL certificates or checksums.")
+        spack.curl.add_default_arg('-k')
 
-# Try to load the particular command asked for and run it
-command = spack.cmd.get_command(args.command)
-try:
-    return_val = command(parser, args)
-except SpackError, e:
-    if spack.debug:
-        # In debug mode, raise with a full stack trace.
-        raise
-    elif e.long_message:
-        tty.die(e.message, e.long_message)
+    # Try to load the particular command asked for and run it
+    command = spack.cmd.get_command(args.command)
+    try:
+        return_val = command(parser, args)
+    except SpackError, e:
+        if spack.debug:
+            # In debug mode, raise with a full stack trace.
+            raise
+        elif e.long_message:
+            tty.die(e.message, e.long_message)
+        else:
+            tty.die(e.message)
+
+    except KeyboardInterrupt:
+        sys.stderr.write('\n')
+        tty.die("Keyboard interrupt.")
+
+    # Allow commands to return values if they want to exit with some ohter code.
+    if return_val is None:
+        sys.exit(0)
+    elif isinstance(return_val, int):
+        sys.exit(return_val)
     else:
-        tty.die(e.message)
+        tty.die("Bad return value from command %s: %s" % (args.command, return_val))
 
-except KeyboardInterrupt:
-    sys.stderr.write('\n')
-    tty.die("Keyboard interrupt.")
-
-# Allow commands to return values if they want to exit with some ohter code.
-if return_val is None:
-    sys.exit(0)
-elif isinstance(return_val, int):
-    sys.exit(return_val)
+if args.profile:
+    import cProfile
+    cProfile.run('main()', sort='tottime')
 else:
-    tty.die("Bad return value from command %s: %s" % (args.command, return_val))
+    main()
