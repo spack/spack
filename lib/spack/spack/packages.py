@@ -119,8 +119,15 @@ class PackageDB(object):
 
     @_autospec
     def installed_extensions_for(self, extendee_spec):
-        return [s.package for s in self.installed_package_specs()
-                if s.package.extends(extendee_spec)]
+        for s in self.installed_package_specs():
+            try:
+                if s.package.extends(extendee_spec):
+                    yield s.package
+            except UnknownPackageError, e:
+                # Skip packages we know nothing about
+                continue
+                # TODO: add some conditional way to do this instead of
+                # catching exceptions.
 
 
     def dirname_for_package_name(self, pkg_name):
