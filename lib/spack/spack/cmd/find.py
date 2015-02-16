@@ -122,5 +122,8 @@ def find(parser, args):
 
     if not args.mode:
         args.mode = 'short'
+
+    if sys.stdout.isatty():
+        tty.msg("%d installed packages." % len(specs))
     display_specs(specs, mode=args.mode)
 

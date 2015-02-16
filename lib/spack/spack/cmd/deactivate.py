@@ -31,6 +31,9 @@ description = "Deactivate a package extension."
 
 def setup_parser(subparser):
     subparser.add_argument(
+        '-f', '--force', action='store_true',
+        help="Run deactivation even if spec is NOT currently activated.")
+    subparser.add_argument(
         'spec', nargs=argparse.REMAINDER, help="spec of package extension to deactivate.")
 
 
@@ -44,7 +47,7 @@ def deactivate(parser, args):
     spack.db.get(specs[0])
 
     spec = spack.cmd.disambiguate_spec(specs[0])
-    if not spec.package.activated:
+    if not args.force and not spec.package.activated:
         tty.die("Package %s is not activated." % specs[0].short_spec)
 
-    spec.package.do_deactivate()
+    spec.package.do_deactivate(force=args.force)

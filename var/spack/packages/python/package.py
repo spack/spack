@@ -155,5 +155,6 @@ class Python(Package):
         super(Python, self).deactivate(ext_pkg, **args)
 
         exts = spack.install_layout.extension_map(self.spec)
-        del exts[ext_pkg.name]
-        self.write_easy_install_pth(exts)
+        if ext_pkg.name in exts:        # Make deactivate idempotent.
+            del exts[ext_pkg.name]
+            self.write_easy_install_pth(exts)

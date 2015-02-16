@@ -175,6 +175,10 @@ class LinkTree(object):
         kwargs['order'] = 'post'
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
             if os.path.isdir(src):
+                # Skip non-existing links.
+                if not os.path.exists(dest):
+                    continue
+
                 if not os.path.isdir(dest):
                     raise ValueError("File blocks directory: %s" % dest)
 
