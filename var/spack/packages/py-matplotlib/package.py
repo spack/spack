@@ -17,8 +17,12 @@ class PyMatplotlib(Package):
     depends_on('py-pytz')
     depends_on('py-nose')
     depends_on('py-numpy')
-    depends_on('qt')
 
+    depends_on('qt')
+    depends_on('bzip2')
+    depends_on('tcl')
+    depends_on('tk')
+    depends_on('qhull')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

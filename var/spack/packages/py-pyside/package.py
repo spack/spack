@@ -13,7 +13,6 @@ class PyPyside(Package):
     depends_on('py-setuptools')
     depends_on('qt@:4')
 
-
     def patch(self):
         """Undo PySide RPATH handling and add Spack RPATH."""
         # Add Spack's standard CMake args to the sub-builds.

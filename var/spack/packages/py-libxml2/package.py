@@ -9,6 +9,7 @@ class PyLibxml2(Package):
 
     extends('python')
     depends_on('libxml2')
+    depends_on('libxslt')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
