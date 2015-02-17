@@ -1,6 +1,7 @@
 import os
 import re
 from contextlib import closing
+from llnl.util.lang import match_predicate
 
 from spack import *
 import spack
@@ -85,23 +86,19 @@ class Python(Package):
 
     def python_ignore(self, ext_pkg, args):
         """Add some ignore files to activate/deactivate args."""
-        orig_ignore = args.get('ignore', lambda f: False)
+        ignore_arg = args.get('ignore', lambda f: False)
 
-        def ignore(filename):
-            # Always ignore easy-install.pth, as it needs to be merged.
-            patterns = [r'easy-install\.pth$']
+        # Always ignore easy-install.pth, as it needs to be merged.
+        patterns = [r'easy-install\.pth$']
 
-            # Ignore pieces of setuptools installed by other packages.
-            if ext_pkg.name != 'py-setuptools':
-                patterns.append(r'/site\.pyc?$')
-                patterns.append(r'setuptools\.pth')
-                patterns.append(r'bin/easy_install[^/]*$')
-                patterns.append(r'setuptools.*egg$')
+        # Ignore pieces of setuptools installed by other packages.
+        if ext_pkg.name != 'py-setuptools':
+            patterns.append(r'/site\.pyc?$')
+            patterns.append(r'setuptools\.pth')
+            patterns.append(r'bin/easy_install[^/]*$')
+            patterns.append(r'setuptools.*egg$')
 
-            return (any(re.search(p, filename) for p in patterns) or
-                    orig_ignore(filename))
-
-        return ignore
+        return match_predicate(ignore_arg, patterns)
 
 
     def write_easy_install_pth(self, exts):
