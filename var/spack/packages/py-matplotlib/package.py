@@ -8,7 +8,8 @@ class PyMatplotlib(Package):
 
     version('1.4.2', '7d22efb6cce475025733c50487bd8898')
 
-    extends('python')
+    extends('python', ignore=r'bin/nosetests.*$')
+
     depends_on('py-pyside')
     depends_on('py-ipython')
     depends_on('py-pyparsing')

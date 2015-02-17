@@ -9,7 +9,7 @@ class PyNose(Package):
 
     version('1.3.4', '6ed7169887580ddc9a8e16048d38274d')
 
-    extends('python')
+    extends('python', ignore=r'bin/nosetests.*$')
     depends_on('py-setuptools')
 
     def install(self, spec, prefix):
