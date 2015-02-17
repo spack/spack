@@ -33,4 +33,4 @@ def pre_uninstall(pkg):
 
     if pkg.is_extension:
         if pkg.activated:
-            pkg.do_deactivate()
+            pkg.do_deactivate(force=True)

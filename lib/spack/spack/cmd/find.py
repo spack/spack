@@ -85,7 +85,7 @@ def display_specs(specs, **kwargs):
 
         elif mode == 'deps':
             for spec in specs:
-                print spec.tree(indent=4, format='$_$@$+', color=True),
+                print spec.tree(indent=4, format='$_$@$+$#', color=True),
 
         elif mode in ('short', 'long'):
             fmt = '$-_$@$+'

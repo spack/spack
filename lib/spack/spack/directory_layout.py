@@ -371,7 +371,7 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         _check_concrete(ext_spec)
 
         # Check whether it's already installed or if it's a conflict.
-        exts = self.extension_map(spec)
+        exts = self._extension_map(spec)
         self.check_extension_conflict(spec, ext_spec)
 
         # do the actual adding.
@@ -384,7 +384,7 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         _check_concrete(ext_spec)
 
         # Make sure it's installed before removing.
-        exts = self.extension_map(spec)
+        exts = self._extension_map(spec)
         self.check_activated(spec, ext_spec)
 
         # do the actual removing.
@@ -450,10 +450,10 @@ class ExtensionConflictError(DirectoryLayoutError):
 
 
 class NoSuchExtensionError(DirectoryLayoutError):
-    """Raised when an extension isn't there on remove."""
+    """Raised when an extension isn't there on deactivate."""
     def __init__(self, spec, ext_spec):
         super(NoSuchExtensionError, self).__init__(
-            "%s cannot be removed from %s because it's not installed."% (
+            "%s cannot be removed from %s because it's not activated."% (
                 ext_spec.short_spec, spec.short_spec))
 
 

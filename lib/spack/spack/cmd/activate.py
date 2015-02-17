@@ -31,6 +31,9 @@ description = "Activate a package extension."
 
 def setup_parser(subparser):
     subparser.add_argument(
+        '-f', '--force', action='store_true',
+        help="Activate without first activating dependencies.")
+    subparser.add_argument(
         'spec', nargs=argparse.REMAINDER, help="spec of package extension to activate.")
 
 
@@ -44,6 +47,9 @@ def activate(parser, args):
     spack.db.get(specs[0])
 
     spec = spack.cmd.disambiguate_spec(specs[0])
+    if not spec.package.is_extension:
+        tty.die("%s is not an extension." % spec.name)
+
     if spec.package.activated:
         tty.die("Package %s is already activated." % specs[0].short_spec)
 

@@ -529,11 +529,8 @@ class Package(object):
 
     @property
     def activated(self):
-        if not self.spec.concrete:
-            raise ValueError("Only concrete package extensions can be activated.")
         if not self.is_extension:
             raise ValueError("is_extension called on package that is not an extension.")
-
         exts = spack.install_layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
 
@@ -956,20 +953,33 @@ class Package(object):
             raise ValueError("%s does not extend %s!" % (self.name, self.extendee.name))
 
 
-    def do_activate(self):
+    def do_activate(self, **kwargs):
         """Called on an etension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
         activate() directly.
         """
         self._sanity_check_extension()
+        force = kwargs.get('force', False)
+
+        # TODO: get rid of this normalize - DAG handling.
+        self.spec.normalize()
+
         spack.install_layout.check_extension_conflict(self.extendee_spec, self.spec)
+
+        if not force:
+            for spec in self.spec.traverse(root=False):
+                if spec.package.extends(self.extendee_spec):
+                    # TODO: fix this normalize() requirement -- revisit DAG handling.
+                    spec.package.spec.normalize()
+                    if not spec.package.activated:
+                        spec.package.do_activate(**kwargs)
 
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.install_layout.add_extension(self.extendee_spec, self.spec)
         tty.msg("Activated extension %s for %s."
-                % (self.spec.short_spec, self.extendee_spec.short_spec))
+                % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
 
 
     def activate(self, extension, **kwargs):
@@ -994,14 +1004,20 @@ class Package(object):
 
     def do_deactivate(self, **kwargs):
         """Called on the extension to invoke extendee's deactivate() method."""
-        force = kwargs.get('force', False)
-
         self._sanity_check_extension()
+        force = kwargs.get('force', False)
 
         # Allow a force deactivate to happen.  This can unlink
         # spurious files if something was corrupted.
         if not force:
             spack.install_layout.check_activated(self.extendee_spec, self.spec)
+
+            activated = spack.install_layout.extension_map(self.extendee_spec)
+            for name, aspec in activated.items():
+                if aspec != self.spec and self.spec in aspec:
+                    raise ActivationError(
+                        "Cannot deactivate %s beacuse %s is activated and depends on it."
+                        % (self.spec.short_spec, aspec.short_spec))
 
         self.extendee_spec.package.deactivate(self, **self.extendee_args)
 
@@ -1011,7 +1027,7 @@ class Package(object):
             spack.install_layout.remove_extension(self.extendee_spec, self.spec)
 
         tty.msg("Deactivated extension %s for %s."
-                % (self.spec.short_spec, self.extendee_spec.short_spec))
+                % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
 
 
     def deactivate(self, extension, **kwargs):
@@ -1236,7 +1252,15 @@ class NoURLError(PackageError):
             "Package %s has no version with a URL." % cls.__name__)
 
 
-class ExtensionConflictError(PackageError):
+class ExtensionError(PackageError): pass
+
+
+class ExtensionConflictError(ExtensionError):
     def __init__(self, path):
         super(ExtensionConflictError, self).__init__(
             "Extension blocked by file: %s" % path)
+
+
+class ActivationError(ExtensionError):
+    def __init__(self, msg, long_msg=None):
+        super(ActivationError, self).__init__(msg, long_msg)
