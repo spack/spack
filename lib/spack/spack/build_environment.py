@@ -184,6 +184,10 @@ def set_module_variables_for_package(pkg):
     if platform.mac_ver()[0]:
         m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
 
+    # Set up CMake rpath
+    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
+    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(pkg)))
+
     # Emulate some shell commands for convenience
     m.pwd        = os.getcwd
     m.cd         = os.chdir
@@ -201,6 +205,16 @@ def set_module_variables_for_package(pkg):
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
     m.prefix  = pkg.prefix
+
+
+def get_rpaths(pkg):
+    """Get a list of all the rpaths for a package."""
+    rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
+    rpaths.extend(d.prefix.lib for d in pkg.spec.traverse(root=False)
+                  if os.path.isdir(d.prefix.lib))
+    rpaths.extend(d.prefix.lib64 for d in pkg.spec.traverse(root=False)
+                  if os.path.isdir(d.prefix.lib64))
+    return rpaths
 
 
 def setup_package(pkg):

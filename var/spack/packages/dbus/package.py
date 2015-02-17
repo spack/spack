@@ -23,3 +23,7 @@ class Dbus(Package):
         configure("--prefix=%s" % prefix)
         make()
         make("install")
+
+        # dbus needs a machine id generated after install
+        dbus_uuidgen = Executable(join_path(prefix.bin, 'dbus-uuidgen'))
+        dbus_uuidgen('--ensure')
