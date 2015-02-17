@@ -8,9 +8,9 @@ class PyPylint(Package):
 
     version('1.4.1', 'df7c679bdcce5019389038847e4de622')
 
-#    extends('python')
-    extends('python', ignore=lambda f:re.match(r"site.py*", f))
+    extends('python')
     depends_on('py-nose')
+    depends_on('py-setuptools')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

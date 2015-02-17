@@ -7,6 +7,7 @@ class PyMpi4py(Package):
 
     version('1.3.1', 'dbe9d22bdc8ed965c23a7ceb6f32fc3c')
     extends('python')
+    depends_on('py-setuptools')
     depends_on('mpi')
 
     def install(self, spec, prefix):

@@ -9,6 +9,7 @@ class PyVirtualenv(Package):
     version('1.11.6', 'f61cdd983d2c4e6aeabb70b1060d6f49')
 
     extends('python')
+    depends_on('py-setuptools')
 
     def clean(self):
         if os.path.exists('build'):

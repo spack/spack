@@ -10,6 +10,7 @@ class PyNose(Package):
     version('1.3.4', '6ed7169887580ddc9a8e16048d38274d')
 
     extends('python')
+    depends_on('py-setuptools')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
