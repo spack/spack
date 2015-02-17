@@ -553,6 +553,13 @@ class Spec(object):
 
 
     @property
+    def cshort_spec(self):
+        """Returns a version of the spec with the dependencies hashed
+           instead of completely enumerated."""
+        return self.format('$_$@$%@$+$=$#', color=True)
+
+
+    @property
     def prefix(self):
         return Prefix(spack.install_layout.path_for_spec(self))
 

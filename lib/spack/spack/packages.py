@@ -77,6 +77,8 @@ class PackageDB(object):
                 copy = spec.copy()
                 self.instances[copy] = package_class(copy)
             except Exception, e:
+                if spack.debug:
+                    sys.excepthook(*sys.exc_info())
                 raise FailedConstructorError(spec.name, e)
 
         return self.instances[spec]
@@ -108,6 +110,24 @@ class PackageDB(object):
         if not providers:
             raise UnknownPackageError("No such virtual package: %s" % vpkg_spec)
         return providers
+
+
+    @_autospec
+    def extensions_for(self, extendee_spec):
+        return [p for p in self.all_packages() if p.extends(extendee_spec)]
+
+
+    @_autospec
+    def installed_extensions_for(self, extendee_spec):
+        for s in self.installed_package_specs():
+            try:
+                if s.package.extends(extendee_spec):
+                    yield s.package
+            except UnknownPackageError, e:
+                # Skip packages we know nothing about
+                continue
+                # TODO: add some conditional way to do this instead of
+                # catching exceptions.
 
 
     def dirname_for_package_name(self, pkg_name):
@@ -172,6 +192,7 @@ class PackageDB(object):
             yield self.get(name)
 
 
+    @memoized
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists ."""
         return os.path.exists(self.filename_for_package_name(pkg_name))

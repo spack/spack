@@ -28,6 +28,7 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import os
+import sys
 import shutil
 import multiprocessing
 import platform
@@ -207,3 +208,63 @@ def setup_package(pkg):
     set_compiler_environment_variables(pkg)
     set_build_environment_variables(pkg)
     set_module_variables_for_package(pkg)
+
+    # Allow dependencies to set up environment as well.
+    for dep_spec in pkg.spec.traverse(root=False):
+        dep_spec.package.setup_dependent_environment(
+            pkg.module, dep_spec, pkg.spec)
+
+
+def fork(pkg, function):
+    """Fork a child process to do part of a spack build.
+
+    Arguments:
+
+    pkg -- pkg whose environemnt we should set up the
+           forked process for.
+    function -- arg-less function to run in the child process.
+
+    Usage:
+       def child_fun():
+           # do stuff
+       build_env.fork(pkg, child_fun)
+
+    Forked processes are run with the build environemnt set up by
+    spack.build_environment.  This allows package authors to have
+    full control over the environment, etc. without offecting
+    other builds that might be executed in the same spack call.
+
+    If something goes wrong, the child process is expected toprint
+    the error and the parent process will exit with error as
+    well. If things go well, the child exits and the parent
+    carries on.
+    """
+    try:
+        pid = os.fork()
+    except OSError, e:
+        raise InstallError("Unable to fork build process: %s" % e)
+
+    if pid == 0:
+        # Give the child process the package's build environemnt.
+        setup_package(pkg)
+
+        try:
+            # call the forked function.
+            function()
+
+            # Use os._exit here to avoid raising a SystemExit exception,
+            # which interferes with unit tests.
+            os._exit(0)
+        except:
+            # Child doesn't raise or return to main spack code.
+            # Just runs default exception handler and exits.
+            sys.excepthook(*sys.exc_info())
+            os._exit(1)
+
+    else:
+        # Parent process just waits for the child to complete.  If the
+        # child exited badly, assume it already printed an appropriate
+        # message.  Just make the parent exit with an error code.
+        pid, returncode = os.waitpid(pid, 0)
+        if returncode != 0:
+            sys.exit(1)

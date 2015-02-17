@@ -31,7 +31,9 @@
 
    Currently the following hooks are supported:
 
+      * pre_install()
       * post_install()
+      * pre_uninstall()
       * post_uninstall()
 
    This can be used to implement support for things like module
@@ -70,5 +72,8 @@ class HookRunner(object):
 #
 # Define some functions that can be called to fire off hooks.
 #
-post_install = HookRunner('post_install')
+pre_install    = HookRunner('pre_install')
+post_install   = HookRunner('post_install')
+
+pre_uninstall  = HookRunner('pre_uninstall')
 post_uninstall = HookRunner('post_uninstall')

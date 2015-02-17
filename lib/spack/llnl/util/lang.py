@@ -291,6 +291,37 @@ def check_kwargs(kwargs, fun):
             % (next(kwargs.iterkeys()), fun.__name__))
 
 
+def match_predicate(*args):
+    """Utility function for making string matching predicates.
+
+    Each arg can be a:
+        - regex
+        - list or tuple of regexes
+        - predicate that takes a string.
+
+    This returns a predicate that is true if:
+        - any arg regex matches
+        - any regex in a list or tuple of regexes matches.
+        - any predicate in args matches.
+    """
+    def match(string):
+        for arg in args:
+            if isinstance(arg, basestring):
+                if re.search(arg, string):
+                    return True
+            elif isinstance(arg, list) or isinstance(arg, tuple):
+                if any(re.search(i, string) for i in arg):
+                    return True
+            elif callable(arg):
+                if arg(string):
+                    return True
+            else:
+                raise ValueError("args to match_predicate must be regex, "
+                                 "list of regexes, or callable.")
+        return False
+    return match
+
+
 class RequiredAttributeError(ValueError):
     def __init__(self, message):
         super(RequiredAttributeError, self).__init__(message)
