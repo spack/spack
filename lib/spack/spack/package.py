@@ -804,23 +804,14 @@ class Package(object):
         if not fake_install:
             self.do_patch()
 
-        # Fork a child process to do the build.  This allows each
-        # package authors to have full control over their environment,
-        # etc. without offecting other builds that might be executed
-        # in the same spack call.
-        try:
-            pid = os.fork()
-        except OSError, e:
-            raise InstallError("Unable to fork build process: %s" % e)
+        # create the install directory.  The install layout
+        # handles this in case so that it can use whatever
+        # package naming scheme it likes.
+        spack.install_layout.make_path_for_spec(self.spec)
 
-        if pid == 0:
+        def real_work():
             try:
                 tty.msg("Building %s." % self.name)
-
-                # create the install directory.  The install layout
-                # handles this in case so that it can use whatever
-                # package naming scheme it likes.
-                spack.install_layout.make_path_for_spec(self.spec)
 
                 # Run the pre-install hook in the child process after
                 # the directory is created.
@@ -828,8 +819,6 @@ class Package(object):
 
                 # Set up process's build environment before running install.
                 self.stage.chdir_to_source()
-                build_env.setup_package(self)
-
                 if fake_install:
                     self.do_fake_install()
                 else:
@@ -852,10 +841,6 @@ class Package(object):
                         % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
                 print_pkg(self.prefix)
 
-                # Use os._exit here to avoid raising a SystemExit exception,
-                # which interferes with unit tests.
-                os._exit(0)
-
             except:
                 if not keep_prefix:
                     # If anything goes wrong, remove the install prefix
@@ -865,22 +850,12 @@ class Package(object):
                              "Spack will think this package is installed." +
                              "Manually remove this directory to fix:",
                              self.prefix)
+                raise
 
-                # Child doesn't raise or return to main spack code.
-                # Just runs default exception handler and exits.
-                sys.excepthook(*sys.exc_info())
-                os._exit(1)
-
-        # Parent process just waits for the child to complete.  If the
-        # child exited badly, assume it already printed an appropriate
-        # message.  Just make the parent exit with an error code.
-        pid, returncode = os.waitpid(pid, 0)
-        if returncode != 0:
-            sys.exit(1)
+        build_env.fork(self, real_work)
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_install(self)
-
 
 
     def _sanity_check_install(self):
