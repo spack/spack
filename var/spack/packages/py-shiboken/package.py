@@ -1,4 +1,5 @@
 from spack import *
+import os
 
 class PyShiboken(Package):
     """Shiboken generates bindings for C++ libraries using CPython source code."""
@@ -19,11 +20,15 @@ class PyShiboken(Package):
         """Undo Shiboken RPATH handling and add Spack RPATH."""
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.
+        pypkg = self.spec['python'].package
+        rpath = self.rpath
+        rpath.append(os.path.join(self.prefix, pypkg.site_packages_dir, 'Shiboken'))
+
         filter_file(
             r'OPTION_CMAKE,',
             r'OPTION_CMAKE, ' + (
                 '"-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE", '
-                '"-DCMAKE_INSTALL_RPATH=%s",' % ':'.join(self.rpath)),
+                '"-DCMAKE_INSTALL_RPATH=%s",' % ':'.join(rpath)),
             'setup.py')
 
         # Shiboken tries to patch ELF files to remove RPATHs
