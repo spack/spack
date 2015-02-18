@@ -1047,26 +1047,13 @@ class Package(object):
         tree.unmerge(self.prefix, ignore=ignore)
 
 
-    def do_clean(self):
-        if self.stage.expanded_archive_path:
-            self.stage.chdir_to_source()
-            self.clean()
-
-
-    def clean(self):
-        """By default just runs make clean.  Override if this isn't good."""
-        # TODO: should we really call make clean, ro just blow away the directory?
-        make = build_env.MakeExecutable('make', self.parallel)
-        make('clean')
-
-
-    def do_clean_work(self):
-        """By default just blows away the stage directory and re-stages."""
+    def do_restage(self):
+        """Reverts expanded/checked out source to a pristine state."""
         self.stage.restage()
 
 
-    def do_clean_dist(self):
-        """Removes the stage directory where this package was built."""
+    def do_clean(self):
+        """Removes the package's build stage and source tarball."""
         if os.path.exists(self.stage.path):
             self.stage.destroy()
 

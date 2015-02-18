@@ -29,18 +29,18 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 
-description = "Remove build stage and source tarball for packages."
+description = "Revert checked out package source code."
 
 def setup_parser(subparser):
     subparser.add_argument('packages', nargs=argparse.REMAINDER,
-                           help="specs of packages to clean")
+                           help="specs of packages to restage")
 
 
-def clean(parser, args):
+def restage(parser, args):
     if not args.packages:
-        tty.die("spack clean requires at least one package spec.")
+        tty.die("spack restage requires at least one package spec.")
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
         package = spack.db.get(spec)
-        package.do_clean()
+        package.do_restage()

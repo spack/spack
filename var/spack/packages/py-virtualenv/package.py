@@ -11,9 +11,5 @@ class PyVirtualenv(Package):
     extends('python')
     depends_on('py-setuptools')
 
-    def clean(self):
-        if os.path.exists('build'):
-            shutil.rmtree('build')
-
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
