@@ -63,24 +63,41 @@ class Qt(Package):
 
 
     def install(self, spec, prefix):
-        # Apparently this is the only way to
-        # "truly" get rid of webkit compiles now...
-        os.rename("qtwebkit","no-qtwebkit")
-        os.rename("qtwebkit-examples","no-qtwebkit-examples")
-        configure('-v',
-                  '-confirm-license',
-                  '-opensource',
-                  '-prefix', prefix,
-                  '-openssl-linked',
-                  '-dbus-linked',
-                  #'-fast',
-                  '-opengl',
-                  '-qt-xcb',
-                  '-optimized-qmake',
-                  '-no-pch',
-                  # phonon required for py-pyqt
-                  # '-no-phonon',
-                  # '-no-phonon-backend',
-                  '-no-openvg')
+        if self.spec.satisfies('@4'):
+            configure('-v',
+                      '-confirm-license',
+                      '-opensource',
+                      '-prefix', prefix,
+                      '-openssl-linked',
+                      '-dbus-linked',
+                      #'-fast',
+                      '-opengl',
+                      '-optimized-qmake',
+                      '-no-pch',
+                      # phonon required for py-pyqt
+                      # '-no-phonon',
+                      # '-no-phonon-backend',
+                      '-no-openvg')
+        elif self.spec.satisfies('@5'):
+            # Apparently this is the only way to
+            # "truly" get rid of webkit compiles now...
+            os.rename("qtwebkit","no-qtwebkit")
+            os.rename("qtwebkit-examples","no-qtwebkit-examples")
+
+            configure('-v',
+                      '-confirm-license',
+                      '-opensource',
+                      '-prefix', prefix,
+                      '-openssl-linked',
+                      '-dbus-linked',
+                      #'-fast',
+                      '-opengl',
+                      '-qt-xcb',
+                      '-optimized-qmake',
+                      '-no-pch',
+                      # phonon required for py-pyqt
+                      # '-no-phonon',
+                      # '-no-phonon-backend',
+                      '-no-openvg')
         make()
         make("install")
