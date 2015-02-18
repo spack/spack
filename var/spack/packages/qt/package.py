@@ -62,42 +62,47 @@ class Qt(Package):
         filter_file(r'^QMAKE_CXX *=.*$',       'QMAKE_CXX = c++',     qmake_conf)
 
 
-    def install(self, spec, prefix):
-        if self.spec.satisfies('@4'):
-            configure('-v',
-                      '-confirm-license',
-                      '-opensource',
-                      '-prefix', prefix,
-                      '-openssl-linked',
-                      '-dbus-linked',
-                      #'-fast',
-                      '-opengl',
-                      '-optimized-qmake',
-                      '-no-pch',
-                      # phonon required for py-pyqt
-                      # '-no-phonon',
-                      # '-no-phonon-backend',
-                      '-no-openvg')
-        elif self.spec.satisfies('@5'):
-            # Apparently this is the only way to
-            # "truly" get rid of webkit compiles now...
-            os.rename("qtwebkit","no-qtwebkit")
-            os.rename("qtwebkit-examples","no-qtwebkit-examples")
 
-            configure('-v',
-                      '-confirm-license',
-                      '-opensource',
-                      '-prefix', prefix,
-                      '-openssl-linked',
-                      '-dbus-linked',
-                      #'-fast',
-                      '-opengl',
-                      '-qt-xcb',
-                      '-optimized-qmake',
-                      '-no-pch',
-                      # phonon required for py-pyqt
-                      # '-no-phonon',
-                      # '-no-phonon-backend',
-                      '-no-openvg')
+    @property
+    def common_config_args(self):
+        return [
+            '-prefix', self.prefix,
+            '-v',
+            '-opensource',
+            '-opengl',
+            "-release",
+            '-shared',
+            '-confirm-license',
+            '-openssl-linked',
+            '-dbus-linked',
+            '-optimized-qmake',
+            '-no-openvg',
+            '-no-pch',
+            # NIS is deprecated in more recent glibc
+            "-no-nis",
+            # For now, disable all the database drivers
+            "-no-sql-db2", "-no-sql-ibase", "-no-sql-mysql", "-no-sql-oci", "-no-sql-odbc",
+            "-no-sql-psql", "-no-sql-sqlite", "-no-sql-sqlite2", "-no-sql-tds"]
+
+
+    @when('@4')
+    def configure(self):
+        configure('-fast',
+                  '-no-webkit',
+                  *self.common_config_args)
+
+
+    @when('@5')
+    def configure(self):
+        configure('-no-eglfs',
+                  '-no-directfb',
+                  '-qt-xcb',
+                  # If someone wants to get a webkit build working, be my guest!
+                  '-skip', 'qtwebkit',
+                  *self.common_config_args)
+
+
+    def install(self, spec, prefix):
+        self.configure()
         make()
         make("install")
