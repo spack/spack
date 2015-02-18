@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
+import cgi
 from StringIO import StringIO
 import llnl.util.tty as tty
 from llnl.util.tty.colify import *
@@ -70,9 +71,9 @@ def print_rst_package_list():
         print
         print pkg.name
         print "-" * len(pkg.name)
-        print "Links"
-        print "    * `Homepage <%s>`__" % pkg.homepage
-        print "    * `%s/package.py <%s>`__" % (pkg.name, github_url(pkg))
+        print "Links:"
+        print "  * `%s <%s>`__" % (cgi.escape(pkg.homepage), pkg.homepage)
+        print "  * `%s/package.py <%s>`__" % (pkg.name, github_url(pkg))
         print
         if pkg.versions:
             print "Versions:"
@@ -82,7 +83,7 @@ def print_rst_package_list():
             print "  " + ", ".join("`%s`_" % d if d != "mpi" else d
                                    for d in pkg.dependencies)
             print
-        print "Description"
+        print "Description:"
         print pkg.format_doc(indent=2)
         print
         print "-----"
