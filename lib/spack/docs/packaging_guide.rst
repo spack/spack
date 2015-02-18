@@ -1964,35 +1964,33 @@ apply cleanly on some previous run, then it will restage the entire
 package before patching.
 
 
-``spack clean``
+``spack restage``
 ~~~~~~~~~~~~~~~~~
+Restores the source code to pristine state, as it was before building.
 
-There are several variations of ``spack clean``.  With no arguments,
-``spack clean`` runs ``make clean`` in the expanded archive directory.
-This is useful if an attempted build failed, and something needs to be
-changed to get a package to build.  If a particular package does not
-have a ``make clean`` target, this will do nothing.
+Does this in one of two ways:
 
-``spack clean -w / --work``
+  1. If the source was fetched as a tarball, deletes the entire build
+     directory and re-expands the tarball.
+
+  2. If the source was checked out from a repository, this deletes the
+     build directory and checks it out again.
+
+
+``spack clean``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Deletes the entire build directory and re-expands it from the downloaded
-archive. This is useful if a package does not support a proper ``make clean``
-target.
+Cleans up temporary files for a particular package, by deleting the
+expanded/checked out source code *and* any downloaded archive.  If
+``fetch``, ``stage``, or ``install`` are run again after this, Spack's
+build process will start from scratch.
 
-``spack clean -d / --dist``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Deletes the build directory *and* the downloaded archive.  If
-``fetch``, ``stage``, or ``install`` are run again after this, the
-process will start from scratch, and the archive archive will be
-downloaded again.  Useful if somehow a bad archive is downloaded
-accidentally and needs to be cleaned out of the staging area.
 
 ``spack purge``
 ~~~~~~~~~~~~~~~~~
-
-Cleans up *everything* in the build directory.  You can use this to
-recover disk space if temporary files from interrupted or failed
-installs accumulate in the staging area.
+Cleans up all of Spack's temporary files.  Use this to recover disk
+space if temporary files from interrupted or failed installs
+accumulate in the staging area.  This is equivalent to running ``spack
+clean`` for every package you have fetched or staged.
 
 
 Keeping the stage directory on success
