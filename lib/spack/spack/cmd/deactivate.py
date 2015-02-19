@@ -44,6 +44,7 @@ def setup_parser(subparser):
 
 
 def deactivate(parser, args):
+    # TODO: shouldn't have to concretize here.  Fix DAG issues.
     specs = spack.cmd.parse_specs(args.spec, concretize=True)
     if len(specs) != 1:
         tty.die("deactivate requires one spec.  %d given." % len(specs))
@@ -59,6 +60,7 @@ def deactivate(parser, args):
         if pkg.extendable:
             tty.msg("Deactivating all extensions of %s" % pkg.spec.short_spec)
             ext_pkgs = spack.db.installed_extensions_for(spec)
+
             for ext_pkg in ext_pkgs:
                 ext_pkg.spec.normalize()
                 if ext_pkg.activated:
@@ -67,6 +69,9 @@ def deactivate(parser, args):
         elif pkg.is_extension:
             # TODO: store DAG info properly (see above)
             spec.normalize()
+
+            if not args.force and not spec.package.activated:
+                tty.die("%s is not activated." % pkg.spec.short_spec)
 
             tty.msg("Deactivating %s and all dependencies." % pkg.spec.short_spec)
 
