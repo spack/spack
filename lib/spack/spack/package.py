@@ -941,16 +941,17 @@ class Package(object):
 
     def _sanity_check_extension(self):
         if not self.is_extension:
-            raise ValueError("This package is not an extension.")
+            raise ActivationError("This package is not an extension.")
+
         extendee_package = self.extendee_spec.package
         extendee_package._check_extendable()
 
         if not extendee_package.installed:
-            raise ValueError("Can only (de)activate extensions for installed packages.")
+            raise ActivationError("Can only (de)activate extensions for installed packages.")
         if not self.installed:
-            raise ValueError("Extensions must first be installed.")
+            raise ActivationError("Extensions must first be installed.")
         if not self.extendee_spec.name in self.extendees:
-            raise ValueError("%s does not extend %s!" % (self.name, self.extendee.name))
+            raise ActivationError("%s does not extend %s!" % (self.name, self.extendee.name))
 
 
     def do_activate(self, **kwargs):
