@@ -2032,6 +2032,80 @@ to get rid of the install prefix before you build again:
    spack uninstall -f <spec>
 
 
+Graphing Dependencies
+--------------------------
+
+Spack provides the ``spack graph`` command for graphing dependencies.
+The command by default generates an ASCII rendering of a spec's
+dependency graph.  For example::
+
+   $ spack graph mpileaks
+   o  mpileaks
+   |\
+   | |\
+   | o |  callpath
+   |/| |
+   | |\|
+   | |\ \
+   | | |\ \
+   | | | | o  adept-utils
+   | |_|_|/|
+   |/| | | |
+   o | | | |  mpi
+    / / / /
+   | | o |  dyninst
+   | |/| |
+   |/|/| |
+   | | |/
+   | o |  libdwarf
+   |/ /
+   o |  libelf
+    /
+   o  boost
+
+At the top is the root package in the DAG, with dependency edges
+emerging from it.  On a color terminal, the edges are colored by which
+dependency they lead to.
+
+You can also use ``spack graph`` to generate graphs in the widely used
+`Dot <http://www.graphviz.org/doc/info/lang.html>`_ format.  For
+example::
+
+   $ spack graph --dot mpileaks
+   digraph G {
+     label = "Spack Dependencies"
+     labelloc = "b"
+     rankdir = "LR"
+     ranksep = "5"
+
+     "boost"                        [label="boost"]
+     "callpath"                     [label="callpath"]
+     "libdwarf"                     [label="libdwarf"]
+     "mpileaks"                     [label="mpileaks"]
+     "mpi"                          [label="mpi"]
+     "adept-utils"                  [label="adept-utils"]
+     "dyninst"                      [label="dyninst"]
+     "libelf"                       [label="libelf"]
+
+     "callpath" -> "dyninst"
+     "callpath" -> "adept-utils"
+     "callpath" -> "mpi"
+     "callpath" -> "libelf"
+     "callpath" -> "libdwarf"
+     "libdwarf" -> "libelf"
+     "mpileaks" -> "adept-utils"
+     "mpileaks" -> "callpath"
+     "mpileaks" -> "mpi"
+     "adept-utils" -> "boost"
+     "adept-utils" -> "mpi"
+     "dyninst" -> "boost"
+     "dyninst" -> "libelf"
+     "dyninst" -> "libdwarf"
+   }
+
+This graph can be provided as input to other graphing tools, such as
+those in `Graphviz <http://www.graphviz.org>`_.
+
 Interactive Shell Support
 --------------------------
 

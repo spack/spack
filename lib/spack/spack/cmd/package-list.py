@@ -49,6 +49,8 @@ def print_rst_package_list():
     """Print out information on all packages in restructured text."""
     pkgs = sorted(spack.db.all_packages(), key=lambda s:s.name.lower())
 
+    print ".. _package-list:"
+    print
     print "Package List"
     print "=================="
 

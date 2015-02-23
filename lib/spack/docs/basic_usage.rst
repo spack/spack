@@ -4,18 +4,17 @@ Basic usage
 =====================
 
 Spack is implemented as a single command (``spack``) with many
-*subcommands*, much like ``git``, ``svn``, ``yum``, or ``apt-get``.
-Only a small subset of commands are needed for typical usage.
-
-This section covers a small set of subcommands that should cover most
-general use cases for Spack.
+*subcommands*.  Only a small subset of commands is needed for typical
+usage.
 
 
 Listing available packages
 ------------------------------
 
-The first thing you will likely want to do with spack is find out what
-software is available to install.  There are a few relevant commands.
+The first thing you likely want to do with spack is to install some
+software.  Before that, you need to know what's available.  You can
+see avaialble package names either using the :ref:`package-list`, or
+using the commands below.
 
 ``spack list``
 ~~~~~~~~~~~~~~~~
@@ -36,33 +35,273 @@ do wildcard searches using ``*``:
 ``spack info``
 ~~~~~~~~~~~~~~~~
 
-To get information on a particular package from the full list, run
-``spack info <package name>``.  For example, for ``mpich`` the output
-looks like this:
+To get more information on a particular package from `spack list`, use
+`spack info`.  Just supply the name of a package:
 
 .. command-output:: spack info mpich
 
-This includes basic information about the package: where to download
-it, its dependencies, virtual packages it provides (e.g. an MPI
-implementation will provide the MPI interface), and a text
-description, if one is available.  :ref:`Dependencies
-<sec-specs>` and :ref:`virtual dependencies
-<sec-virtual-dependencies>` are described in more detail later.
+Most of the information is self-explanatory.  *Safe versions* are
+versions that Spack has a checksum for, and Spack will use the
+checksum to ensure they downloaded without any errors or malicious
+attacks.  :ref:`Dependencies <sec-specs>` and :ref:`virtual
+dependencies <sec-virtual-dependencies>`, are described in more detail
+later.
 
 ``spack versions``
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-To see available versions of a package, run ``spack versions``, for
-example:
+To see *more* available versions of a package, run ``spack versions``,
+for example:
 
 .. command-output:: spack versions libelf
 
-Since it has to manage many different software packages, Spack doesn't
-place many restrictions on what a package version has to look like.
-Packages like ``mpich`` use traditional version numbers like
-``3.0.4``. Other packages, like ``libdwarf`` use date-stamp versions
-like ``20130729``.  Versions can contain numbers, letters, dashes,
-underscores, and periods.
+There are two sections in the output.  *Safe versions* are ones that
+have already been checksummed.  Spack goes a step further, though, and
+also shows you what versions are available out on the web---these are
+*remote versions*.  Spack gets this information by scraping it
+directly from webpages.  Depending on the package, Spack may or may
+not be able to find any remote versions.
+
+
+Installing and uninstalling
+------------------------------
+
+Now that you know how to list avaiable packages and versions, you're
+ready to start installing things.
+
+``spack install``
+~~~~~~~~~~~~~~~~~~~~~
+
+``spack install`` will install any package shown by ``spack list``.
+To install the latest version of a pacakge, along with all of its
+dependencies, simply give it a package name:
+
+.. code-block:: sh
+
+   $ spack install mpileaks
+
+If `mpileaks` depends on other packages, Spack will install those
+first.  It then fetches the tarball for ``mpileaks``, expands it,
+verifies that it was downloaded without errors, builds it, and
+installs it in its own directory under ``$SPACK_HOME/opt``. You'll see
+a number of messages from spack, a lot of build output, and a message
+that the packages is installed:
+
+.. code-block:: sh
+
+   $ spack install mpileaks
+   ==> Installing mpileaks
+   ==> mpich is already installed in /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/mpich@3.0.4.
+   ==> callpath is already installed in /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/callpath@1.0.2-5dce4318.
+   ==> adept-utils is already installed in /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/adept-utils@1.0-5adef8da.
+   ==> Trying to fetch from https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
+   ######################################################################## 100.0%
+   ==> Staging archive: /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7=chaos_5_x86_64_ib-59f6ad23/mpileaks-1.0.tar.gz
+   ==> Created stage in /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7=chaos_5_x86_64_ib-59f6ad23.
+   ==> No patches needed for mpileaks.
+   ==> Building mpileaks.
+
+   ... build output ...
+
+   ==> Successfully installed mpileaks.
+     Fetch: 2.16s.  Build: 9.82s.  Total: 11.98s.
+   [+] /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/mpileaks@1.0-59f6ad23
+
+The last line, with the ``[+]``, indicates where the package is
+installed.
+
+Building a specific version
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spack can also build *specific versions* of a package.  To do this,
+just add ``@`` after the package name, followed by a version:
+
+.. code-block:: sh
+
+   $ spack install mpich@3.0.4
+
+Any number of versions of the same package can be installed at once
+without interfering with each other.  This is good for multi-user
+sites, as installing a version that one user needs will not disrupt
+existing installations for other users.
+
+In addition to different versions, Spack can customize the compiler,
+compile-time options (variants), and platform (for cross compiles) of
+an installation.  Spack is unique in that it can also configure the
+*dependencies* a package is built with.  For example, two
+configurations of the same version of a package, one built with boost
+1.39.0, and the other version built with version 1.43.0, can coexist.
+
+This can all be done on the command line using special syntax.  Spack
+calls the descriptor used to refer to a particular package
+configuration a **spec**.  In the command lines above, both
+``mpileaks`` and ``mpileaks@3.0.4`` are specs.  Specs are described in
+detail in :ref:`sec-specs`.
+
+
+``spack uninstall``
+~~~~~~~~~~~~~~~~~~~~~
+
+To uninstall a package, type ``spack uninstall <package>``.  This will
+completely remove the directory in which the package was installed.
+
+.. code-block:: sh
+
+   spack uninstall mpich
+
+If there are still installed packages that depend on the package to be
+uninstalled, spack will refuse to uninstall it. You can override this
+behavior with ``spack uninstall -f <package>``, but you risk breaking
+other installed packages. In general, it is safer to remove dependent
+packages *before* removing their dependencies.
+
+A line like ``spack uninstall mpich`` may be ambiguous, if multiple
+``mpich`` configurations are installed.  For example, if both
+``mpich@3.0.2`` and ``mpich@3.1`` are installed, ``mpich`` could refer
+to either one. Because it cannot determine which one to uninstall,
+Spack will ask you to provide a version number to remove the
+ambiguity.  As an example, ``spack uninstall mpich@3.1`` is
+unambiguous in this scenario.
+
+
+Seeing installed packages
+-----------------------------------
+
+We know that ``spack list`` shows you the names of available packages,
+but how do you figure out which are installed?
+
+
+``spack find``
+~~~~~~~~~~~~~~~~~~~~~~
+
+``spack find`` shows the *specs* of installed packages.  A spec is
+like a name, but it has a version, compiler, architecture, and build
+options associated with it.  In spack, you can have many installations
+of the same package with different specs.
+
+Running ``spack find`` with no arguments lists installed packages:
+
+.. code-block:: sh
+
+   $ spack find
+   ==> 74 installed packages.
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+   ImageMagick@6.8.9-10  libdwarf@20130729  py-dateutil@2.4.0
+   adept-utils@1.0       libdwarf@20130729  py-ipython@2.3.1
+   atk@2.14.0            libelf@0.8.12      py-matplotlib@1.4.2
+   boost@1.55.0          libelf@0.8.13      py-nose@1.3.4
+   bzip2@1.0.6           libffi@3.1         py-numpy@1.9.1
+   cairo@1.14.0          libmng@2.0.2       py-pygments@2.0.1
+   callpath@1.0.2        libpng@1.6.16      py-pyparsing@2.0.3
+   cmake@3.0.2           libtiff@4.0.3      py-pyside@1.2.2
+   dbus@1.8.6            libtool@2.4.2      py-pytz@2014.10
+   dbus@1.9.0            libxcb@1.11        py-setuptools@11.3.1
+   dyninst@8.1.2         libxml2@2.9.2      py-six@1.9.0
+   fontconfig@2.11.1     libxml2@2.9.2      python@2.7.8
+   freetype@2.5.3        llvm@3.0           qhull@1.0
+   gdk-pixbuf@2.31.2     memaxes@0.5        qt@4.8.6
+   glib@2.42.1           mesa@8.0.5         qt@5.4.0
+   graphlib@2.0.0        mpich@3.0.4        readline@6.3
+   gtkplus@2.24.25       mpileaks@1.0       sqlite@3.8.5
+   harfbuzz@0.9.37       mrnet@4.1.0        stat@2.1.0
+   hdf5@1.8.13           ncurses@5.9        tcl@8.6.3
+   icu@54.1              netcdf@4.3.3       tk@src
+   jpeg@9a               openssl@1.0.1h     vtk@6.1.0
+   launchmon@1.0.1       pango@1.36.8       xcb-proto@1.11
+   lcms@2.6              pixman@0.32.6      xz@5.2.0
+   libdrm@2.4.33         py-dateutil@2.4.0  zlib@1.2.8
+
+   -- chaos_5_x86_64_ib / gcc@4.9.2 --------------------------------
+   libelf@0.8.10  mpich@3.0.4
+
+Packages are divided into groups according to their architecture and
+compiler.  Within each group, Spack tries to keep the view simple, and
+only shows the version of installed packages.
+
+In some cases, there may be differnt configurations of the *same*
+version of a package installed.  For example, there are two
+installations of of ``libdwarf@20130729`` above.  We can look at them
+in more detail using ``spack find -d``, and by asking only to show
+``libdwarf`` packages:
+
+.. code-block:: sh
+
+   $ spack find --deps libdwarf
+   ==> 2 installed packages.
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+       libdwarf@20130729-d9b90962
+           ^libelf@0.8.12
+       libdwarf@20130729-b52fac98
+           ^libelf@0.8.13
+
+Now we see that the two instances of ``libdwarf`` depend on
+*different* versions of ``libelf``: 0.8.12 and 0.8.13.  This view can
+become complicated for packages with many dependencies.  If you just
+want to know whether two packages' dependencies differ, you can use
+``spack find -l``:
+
+.. code-block:: sh
+
+   $ spack find -l libdwarf
+   ==> 2 installed packages.
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+   libdwarf@20130729-d9b90962  libdwarf@20130729-b52fac98
+
+Now the ``libwarf`` installs have hashes after their names.  These are
+hashes over all of the dependencies of each package.  If the hashes
+are the same, then the packages have the same dependency configuration.
+
+If you want to know the path where each package is installed, you can
+use ``spack find -p``:
+
+.. code-block:: sh
+
+   $ spack find -p
+   ==> 74 installed packages.
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+       ImageMagick@6.8.9-10  /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/ImageMagick@6.8.9-10-4df950dd
+       adept-utils@1.0       /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/adept-utils@1.0-5adef8da
+       atk@2.14.0            /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/atk@2.14.0-3d09ac09
+       boost@1.55.0          /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/boost@1.55.0
+       bzip2@1.0.6           /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/bzip2@1.0.6
+       cairo@1.14.0          /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/cairo@1.14.0-fcc2ab44
+       callpath@1.0.2        /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/callpath@1.0.2-5dce4318
+   ...
+
+And, finally, you can restrict your search to a particular package
+by supplying its name:
+
+.. code-block:: sh
+
+   $ spack find -p libelf
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+       libelf@0.8.11  /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.11
+       libelf@0.8.12  /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.12
+       libelf@0.8.13  /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.13
+
+``spack find`` actually does a lot more than this.  You can use
+*specs* to query for specific configurations and builds of each
+package. If you want to find only libelf versions greater than version
+0.8.12, you could say:
+
+.. code-block:: sh
+
+   $ spack find libelf@0.8.12:
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+       libelf@0.8.12  libelf@0.8.13
+
+Finding just the versions of libdwarf built with a particular version
+of libelf would look like this:
+
+.. code-block:: sh
+
+   $ spack find -l libdwarf ^libelf@0.8.12
+   ==> 1 installed packages.
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+   libdwarf@20130729-d9b90962
+
+The full spec syntax is discussed in detail in :ref:`sec-specs`.
+
 
 Compiler Configuration
 -----------------------------------
@@ -110,14 +349,17 @@ where the compiler is installed.  For example::
         intel@13.0.079
 
 Or you can run ``spack compiler add`` with no arguments to force
-autodetection.  This is useful if you do not know where compilers
-live, but new compilers have been added to your ``PATH``.  For
-example, using dotkit, you might do this::
+autodetection.  This is useful if you do not know where compilers are
+installed, but you know that new compilers have been added to your
+``PATH``.  For example, using dotkit, you might do this::
 
-    $ use gcc-4.9.0
+    $ module load gcc-4.9.0
     $ spack compiler add
     ==> Added 1 new compiler to /Users/gamblin2/.spackconfig
         gcc@4.9.0
+
+This loads the environment module for gcc-4.9.0 to get it into the
+``PATH``, and then it adds the compiler to Spack.
 
 
 ``spack compiler info``
@@ -126,17 +368,20 @@ example, using dotkit, you might do this::
 If you want to see specifics on a particular compiler, you can run
 ``spack compiler info`` on it::
 
-    $ spack compiler info intel@12.1.3
-    intel@12.1.3:
-    cc  = /usr/local/bin/icc-12.1.293
-    cxx = /usr/local/bin/icpc-12.1.293
-    f77 = /usr/local/bin/ifort-12.1.293
-    fc = /usr/local/bin/ifort-12.1.293
+   $ spack compiler info intel@15
+   intel@15.0.0:
+           cc  = /usr/local/bin/icc-15.0.090
+           cxx = /usr/local/bin/icpc-15.0.090
+           f77 = /usr/local/bin/ifort-15.0.090
+           fc  = /usr/local/bin/ifort-15.0.090
 
 This shows which C, C++, and Fortran compilers were detected by Spack.
+Notice also that we didn't have to be too specific about the
+version. We just said ``intel@15``, and information about the only
+matching Intel compiler was displayed.
 
 
-Manual configuration
+Manual compiler configuration
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 If autodetection fails, you can manually conigure a compiler by
@@ -153,8 +398,8 @@ Each compiler configuration in the file looks like this::
         fc = /usr/local/bin/ifort-15.0.024-beta
     ...
 
-For compilers, like ``clang``, that do not support Fortran, you can simply
-put ``None`` for ``f77`` and ``fc``::
+For compilers, like ``clang``, that do not support Fortran, put
+``None`` for ``f77`` and ``fc``::
 
     [compiler "clang@3.3svn"]
         cc = /usr/bin/clang
@@ -163,169 +408,7 @@ put ``None`` for ``f77`` and ``fc``::
         fc = None
 
 Once you save the file, the configured compilers will show up in the
-list displayed when you run ``spack compilers``.
-
-
-Seeing installed packages -----------------------------------
-
-``spack find``
-~~~~~~~~~~~~~~~~~~~~~~
-
-The second thing you're likely to want to do with Spack, and the first
-thing users of your system will likely want to do, is to find what
-software is already installed and ready to use.  You can do that with
-``spack find``.
-
-Running ``spack find`` with no arguments will list all the installed
-packages:
-
-.. code-block:: sh
-
-   $ spack find
-   == chaos_5_x86_64_ib ===========================================
-   -- gcc@4.4.7 ---------------------------------------------------
-       libdwarf@20130207-d9b909
-       libdwarf@20130729-d9b909
-       libdwarf@20130729-b52fac
-       libelf@0.8.11
-       libelf@0.8.12
-       libelf@0.8.13
-
-Packages are grouped by architecture, then by the compiler used to
-build them, and then by their versions and options.  If a package has
-dependencies, there will also be a hash at the end of the name
-indicating the dependency configuration.  Packages with the same hash
-have the same dependency configuration.  If you want ALL information
-about dependencies, as well, then you can supply ``-l`` or ``--long``:
-
-.. code-block:: sh
-
-   $ spack find -l
-   == chaos_5_x86_64_ib ===========================================
-   -- gcc@4.4.7 ---------------------------------------------------
-       libdwarf@20130207
-           ^libelf@0.8.12
-       libdwarf@20130729
-           ^libelf@0.8.12
-       libdwarf@20130729
-           ^libelf@0.8.13
-       libelf@0.8.11
-       libelf@0.8.12
-       libelf@0.8.13
-
-Now you can see which versions of ``libelf`` each version of
-``libdwarf`` was built with.
-
-If you want to know the path where each of these packages is
-installed, do ``spack find -p`` or ``--path``:
-
-.. code-block:: sh
-
-   $ spack find -p
-   == chaos_5_x86_64_ib ===========================================
-   -- gcc@4.4.7 ---------------------------------------------------
-       libdwarf@20130207-d9b909  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libdwarf@20130207-d9b909
-       libdwarf@20130729-d9b909  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libdwarf@20130729-d9b909
-       libdwarf@20130729-b52fac  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libdwarf@20130729-b52fac
-       libelf@0.8.11             /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.11
-       libelf@0.8.12             /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.12
-       libelf@0.8.13             /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.13
-
-
-And, finally, you can restrict your search to a particular package
-by supplying its name:
-
-.. code-block:: sh
-
-   $ spack find -p libelf
-   == chaos_5_x86_64_ib ===========================================
-   -- gcc@4.4.7 ---------------------------------------------------
-       libelf@0.8.11  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.11
-       libelf@0.8.12  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.12
-       libelf@0.8.13  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/libelf@0.8.13
-
-
-``spack find`` actually does a lot more than this.  You can use
-*specs* to query for specific configurations and builds of each
-package.  The full spec syntax is discussed in detail in
-:ref:`sec-specs`.
-
-
-
-Installing and uninstalling
-------------------------------
-
-``spack install``
-~~~~~~~~~~~~~~~~~~~~~
-
-``spack install`` will install any package that appears in the output
-of ``spack list``.  To install the latest version of a pacakge and all
-of its dependencies, simply run ``spack install <package>``:
-
-.. code-block:: sh
-
-   spack install mpileaks
-
-Spack will fetch the tarball for ``mpileaks``, expand it, verify that
-it was downloaded without errors, build it, and install it in its own
-directory under ``$SPACK_HOME/opt``.  If the requested package depends
-on other packages in order to build, Spack fetches them as well, and
-installs them before it installs the requested package. Like the main
-package, each dependency is also installed in its own directory.
-
-Spack can also build *specific* configurations of a package.  For
-example, to install something with a specific version, add ``@`` after
-the package name, followed by a version string:
-
-.. code-block:: sh
-
-   spack install mpich@3.0.4
-
-Any number of configurations of the same package can be installed at
-once without interfering with each other.  This is good for multi-user
-sites, as installing a version that one user needs will not disrupt
-existing installations for other users.
-
-In addition to version configuraitons, Spack can customize the
-compiler, compile-time options (variants), and platform (for cross
-compiles) of an installation.  Spack is unique in that it can also
-configure the *dependencies* a package is built with.  For example,
-two configurations of the same version of a package, one built with
-boost 1.39.0, and the other version built with version 1.43.0, can
-coexist.
-
-This can all be done on the command line using special syntax.  Spack
-calls the descriptor used to refer to a particular package
-configuration a **spec**.  In the command lines above, both
-``mpileaks`` and ``mpileaks@3.0.4`` are specs.  To customize
-additional properties, simply add more attributes to the spec.  Specs
-and their syntax are covered in more detail in :ref:`sec-specs`.
-
-
-``spack uninstall``
-~~~~~~~~~~~~~~~~~~~~~
-
-To uninstall a package, type ``spack uninstall <package>``.  This will
-completely remove the directory in which the package was installed.
-
-.. code-block:: sh
-
-   spack uninstall mpich
-
-If there are still installed packages that depend on the package to be
-uninstalled, spack will refuse to uninstall.  If you know what you're
-doing, you can override this with ``spack uninstall -f <package>``.
-However, running this risks breaking other installed packages. In
-general, it is safer to remove dependent packages *before* removing
-their dependencies.
-
-A line like ``spack uninstall mpich`` may be ambiguous, if multiple
-``mpich`` configurations are installed.  For example, if both
-``mpich@3.0.2`` and ``mpich@3.1`` are installed, it could refer to
-either one, and Spack cannot determine which one to uninstall.  Spack
-will ask you to provide a version number to remove the ambiguity.  For
-example, ``spack uninstall mpich@3.1`` is unambiguous in the above
-scenario.
+list displayed by ``spack compilers``.
 
 
 .. _sec-specs:
@@ -333,10 +416,10 @@ scenario.
 Specs & Dependencies
 -------------------------
 
-We now know that ``spack install`` and ``spack uninstall`` both take a
-package name with an optional version specifier.  In Spack, that
-descriptor is called a *spec*.  Spack uses specs to refer to a
-particular build configuration (or configurations) of a package.
+We know that ``spack install``, ``spack uninstall``, and other
+commands take a package name with an optional version specifier.  In
+Spack, that descriptor is called a *spec*.  Spack uses specs to refer
+to a particular build configuration (or configurations) of a package.
 Specs are more than a package name and a version; you can use them to
 specify the compiler, compiler version, architecture, compile options,
 and dependency options for a build.  In this section, we'll go over
@@ -499,6 +582,11 @@ based on site policies.
 Variants
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+.. Note::
+
+   Variants are not yet supported, but will be in the next Spack
+   release (0.9), due in Q2 2015.
+
 Variants are named options associated with a particular package, and
 they can be turned on or off.  For example, above, supplying
 ``+debug`` causes ``mpileaks`` to be built with debug flags.  The
@@ -543,6 +631,11 @@ the command line is provided for convenience and legibility.
 
 Architecture specifier
 ~~~~~~~~~~~~~~~~~~~~~~~
+
+.. Note::
+
+   Architecture specifiers are part of specs but are not yet
+   functional. They will be in Spack version 1.0, due in Q3 2015.
 
 The architecture specifier starts with a ``=`` and also comes after
 some package name within a spec.  It allows a user to specify a
@@ -678,10 +771,6 @@ For ``csh`` and ``tcsh`` run:
 You can put the above code in your ``.bashrc`` or ``.cshrc``, and
 Spack's shell support will be available on the command line.
 
-
--------------------------------
-
-
 When you install a package with Spack, it automatically generates an
 environment module that lets you add the package to your environment.
 
@@ -710,7 +799,7 @@ of installed packages.
 
      $ module avail
 
-     ------- /g/g21/gamblin2/src/spack/share/spack/modules/chaos_5_x86_64_ib --------
+     ------- /home/gamblin2/spack/share/spack/modules/chaos_5_x86_64_ib --------
      adept-utils@1.0%gcc@4.4.7-5adef8da   libelf@0.8.13%gcc@4.4.7
      automaded@1.0%gcc@4.4.7-d9691bb0     libelf@0.8.13%intel@15.0.0
      boost@1.55.0%gcc@4.4.7               mpc@1.0.2%gcc@4.4.7-559607f5
@@ -857,6 +946,215 @@ regenerate all module and dotkit files from scratch:
    $ spack module refresh
    ==> Regenerating tcl module files.
    ==> Regenerating dotkit module files.
+
+
+.. _extensions:
+
+Extensions & Python Support
+------------------------------------
+
+Spack's installation model assumes that each package will live in its
+own install prefix.  However, certain packages are typically installed
+*within* the directory hierarchy of other packages.  For example,
+modules in interpreted languages like `Python
+<https://www.python.org>`_ are typically installed in the
+``$prefix/lib/python-2.7/site-packages`` directory.
+
+Spack has support for this type of installation as well.  In Spack,
+a package that can live inside the prefix of another package is called
+an *extension*.  Suppose you have Python installed like so:
+
+.. code-block:: sh
+
+   $ spack find python
+   ==> 1 installed packages.
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+   python@2.7.8
+
+``spack extensions``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+You can find extensions for your Python installation like this:
+
+.. code-block:: sh
+
+   $ spack extensions python
+   ==> python@2.7.8%gcc@4.4.7=chaos_5_x86_64_ib-703c7a96
+   ==> 36 extensions:
+   geos          py-ipython     py-pexpect    py-pyside            py-sip
+   py-basemap    py-libxml2     py-pil        py-pytz              py-six
+   py-biopython  py-mako        py-pmw        py-rpy2              py-sympy
+   py-cython     py-matplotlib  py-pychecker  py-scientificpython  py-virtualenv
+   py-dateutil   py-mpi4py      py-pygments   py-scikit-learn
+   py-epydoc     py-mx          py-pylint     py-scipy
+   py-gnuplot    py-nose        py-pyparsing  py-setuptools
+   py-h5py       py-numpy       py-pyqt       py-shiboken
+
+   ==> 12 installed:
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+   py-dateutil@2.4.0    py-nose@1.3.4       py-pyside@1.2.2
+   py-dateutil@2.4.0    py-numpy@1.9.1      py-pytz@2014.10
+   py-ipython@2.3.1     py-pygments@2.0.1   py-setuptools@11.3.1
+   py-matplotlib@1.4.2  py-pyparsing@2.0.3  py-six@1.9.0
+
+   ==> None activated.
+
+The extensions are a subset of what's returned by ``spack list``, and
+they are packages like any ohter.  They are installed into their own
+prefixes, and you can see this with ``spack find -p``:
+
+.. code-block:: sh
+   $ spack find -p py-numpy
+   ==> 1 installed packages.
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+       py-numpy@1.9.1  /g/g21/gamblin2/src/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/py-numpy@1.9.1-66733244
+
+However, even though this package is installed, you cannot use it
+directly when you run ``python``:
+
+.. code-block:: sh
+
+   $ spack load python
+   $ python
+   Python 2.7.8 (default, Feb 17 2015, 01:35:25)
+   [GCC 4.4.7 20120313 (Red Hat 4.4.7-11)] on linux2
+   Type "help", "copyright", "credits" or "license" for more information.
+   >>> import numpy
+   Traceback (most recent call last):
+     File "<stdin>", line 1, in <module>
+   ImportError: No module named numpy
+   >>>
+
+Extensions & Environment Modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are two ways to get ``numpy`` working in Python.  The first is
+to use :ref:`shell-support`.  You can simply ``use`` or ``load`` the
+module for the extension, and it will be added to the ``PYTHONPATH``
+in your current shell.
+
+For tcl modules:
+
+.. code-block:: sh
+
+   $ spack load python
+   $ spack load py-numpy
+
+or, for dotkit:
+
+.. code-block:: sh
+
+   $ spack use python
+   $ spack use py-numpy
+
+Now ``import numpy`` will succeed for as long as you keep your current
+session open.
+
+
+Activating Extensions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is often desirable to have certain packages *always* available as
+part of a Python installation.  Spack offers a more permanent solution
+for this case.  Instead of requiring users to load particular
+environment modules, you can *activate* the package within the Python
+installation:
+
+``spack activate``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: sh
+
+   $ spack activate py-numpy
+   ==> Activated extension py-setuptools@11.3.1%gcc@4.4.7=chaos_5_x86_64_ib-3c74eb69 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-nose@1.3.4%gcc@4.4.7=chaos_5_x86_64_ib-5f70f816 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
+
+Several things have happened here.  The user requested that
+``py-numpy`` be activated in the ``python`` installation it was built
+with.  Spack knows that ``py-numpy`` depends on ``py-nose`` and
+``py-setuptools``, so it activated those packages first.  Finally,
+once all dpeendencies were activated in the ``python`` installation,
+``py-numpy`` was activated as well.
+
+If we run ``spack extensions`` again, we now see the three new
+packages listed as activated:
+
+.. code-block:: sh
+
+   $ spack extensions python
+   ==> python@2.7.8%gcc@4.4.7=chaos_5_x86_64_ib-703c7a96
+   ==> 36 extensions:
+   geos          py-ipython     py-pexpect    py-pyside            py-sip
+   py-basemap    py-libxml2     py-pil        py-pytz              py-six
+   py-biopython  py-mako        py-pmw        py-rpy2              py-sympy
+   py-cython     py-matplotlib  py-pychecker  py-scientificpython  py-virtualenv
+   py-dateutil   py-mpi4py      py-pygments   py-scikit-learn
+   py-epydoc     py-mx          py-pylint     py-scipy
+   py-gnuplot    py-nose        py-pyparsing  py-setuptools
+   py-h5py       py-numpy       py-pyqt       py-shiboken
+
+   ==> 12 installed:
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+   py-dateutil@2.4.0    py-nose@1.3.4       py-pyside@1.2.2
+   py-dateutil@2.4.0    py-numpy@1.9.1      py-pytz@2014.10
+   py-ipython@2.3.1     py-pygments@2.0.1   py-setuptools@11.3.1
+   py-matplotlib@1.4.2  py-pyparsing@2.0.3  py-six@1.9.0
+
+   ==> 3 currently activated:
+   -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
+   py-nose@1.3.4  py-numpy@1.9.1  py-setuptools@11.3.1
+
+
+Now, when a user runs python, ``numpy`` will be avaiable for import
+*without* the user having to explicitly loaded.  ``python@2.7.8`` now
+acts like a system Python installation with ``numpy`` installed inside
+of it.
+
+Spack accomplishes this by symbolically linking the *entire* prefix of
+the ``py-numpy`` into the prefix of the ``python`` package.  To the
+python interpreter, it looks like ``numpy`` is installed in the
+``site-packages`` directory.
+
+The only limitation of activation is that you can only have a *single*
+version of an extension activated at a time.  This is because multiple
+versions of the same extension would conflict if symbolically linked
+into the same prefix.  Users who want a different version of a package
+can still get it by using environment modules, but they will have to
+explicitly load their preferred version.
+
+``spack activate -f``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+If, for some reason, you want to activate a package *without* its
+dependencies, you can use ``spack activate -f``:
+
+.. code-block:: sh
+
+   $ spack activate -f py-numpy
+   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
+
+
+``spack deactivate``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+We've seen how activating an extension can be used to set up a default
+version of a Python module.  Obviously, you may want to change that at
+some point.  ``spack deactivate`` is the command for this.  There are
+several variants:
+
+  * ``spack deactivate <extension>`` will deactivate a single
+    extension.  If another activated extension depends on this one,
+    Spack will warn you and exit with an error.
+  * ``spack deactivate -f <extension>`` deactivates an extension
+    regardless of packages that depend on it.
+  * ``spack deactivate -a <extension>`` deactivates an extension and
+    all of its dependencies.  Use ``-f`` to disregard dependents.
+  * ``spack deactivate -a <extendee>`` deactivates *all* activated
+    extensions of a package.  For example, to deactivate *all* python
+    extensions, use::
+
+       spack deactivate -a python
+
 
 Getting Help
 -----------------------
