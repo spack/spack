@@ -48,9 +48,7 @@ os.environ['PATH'] += os.pathsep + '$SPACK_ROOT/bin'
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
-os.environ['COLIFY_TTY'] = 'true'
-os.environ['COLUMNS']    = '80'
-os.environ['LINES']      = '25'
+os.environ['COLIFY_SIZE'] = '25x80'
 
 # Enable todo items
 todo_include_todos = True

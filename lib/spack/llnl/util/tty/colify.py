@@ -169,6 +169,15 @@ def colify(elts, **options):
     if not elts:
         return (0, ())
 
+    # environment size is of the form "<rows>x<cols>"
+    env_size = os.environ.get('COLIFY_SIZE')
+    if env_size:
+        try:
+            r, c = env_size.split('x')
+            console_rows, console_cols = int(r), int(c)
+            tty = True
+        except: pass
+
     # Use only one column if not a tty.
     if not tty:
         if tty is False or not output.isatty():
