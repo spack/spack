@@ -1171,12 +1171,8 @@ def validate_package_url(url_string):
 
 def print_pkg(message):
     """Outputs a message with a package icon."""
-    mac_ver = py_platform.mac_ver()[0]
-    if mac_ver and Version(mac_ver) >= Version('10.7'):
-        print u"\U0001F4E6" + tty.indent,
-    else:
-        from llnl.util.tty.color import cwrite
-        cwrite('@*g{[+]} ')
+    from llnl.util.tty.color import cwrite
+    cwrite('@*g{[+]} ')
     print message
 
 
