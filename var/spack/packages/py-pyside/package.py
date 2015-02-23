@@ -43,5 +43,3 @@ class PyPyside(Package):
         python('setup.py', 'install',
                '--prefix=%s' % prefix,
                '--jobs=%s' % make_jobs)
-
-

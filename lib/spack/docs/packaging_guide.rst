@@ -16,16 +16,17 @@ There are two key parts of Spack:
       software according to a spec.
 
 Specs allow a user to describe a *particular* build in a way that a
-package author can understand.  Packages allow a developer to
-encapsulate the logic build logic for different versions, compilers,
+package author can understand.  Packages allow a the packager to
+encapsulate the build logic for different versions, compilers,
 options, platforms, and dependency combinations in one place.
+Essentially, a package translates a spec into build logic.
 
 Packages in Spack are written in pure Python, so you can do anything
 in Spack that you can do in Python.  Python was chosen as the
 implementation language for two reasons.  First, Python is becoming
-ubiquitous in the HPC community due to its use in numerical codes.
-Second, it's a modern language and has many powerful features to help
-make package writing easy.
+ubiquitous in the scientific software community. Second, it's a modern
+language and has many powerful features to help make package writing
+easy.
 
 Creating & Editing Packages
 ----------------------------------
@@ -35,24 +36,23 @@ Creating & Editing Packages
 ``spack create``
 ~~~~~~~~~~~~~~~~~~~~~
 
-The ``spack create`` command generates boilerplate package template
-from a URL pointing to a tarball or other software archive.  In most
-cases, you'll only need to run this once, then slightly modify the
-boilerplate to get your package working.
+The ``spack create`` command generates a boilerplate package template
+from a URL.  The URL should point to a tarball or other software
+archive.  In most cases, ``spack create`` plus a few modifications is
+all you need to get a package working.
 
-All you need is the URL to a tarball (other archive formats are ok
-too) you want to package:
+Here's an example:
 
 .. code-block:: sh
 
    $ spack create http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
 
-When you run this, Spack looks at the tarball URL and tries to figure
-out the name of the package to be created. It also tries to determine
-out what version strings look like for this package. Using this
-information, it tries to find *additional* versions by spidering the
-package's webpage.  If it finds multiple versions, Spack prompts you
-to tell it how many versions you want to download and checksum.
+Spack examines the tarball URL and tries to figure out the name of the
+package to be created. It also tries to determine what version strings
+look like for this package. Using this information, it will try to
+find *additional* versions by spidering the package's webpage.  If it
+finds multiple versions, Spack prompts you to tell it how many
+versions you want to download and checksum:
 
 .. code-block:: sh
 
@@ -63,12 +63,6 @@ to tell it how many versions you want to download and checksum.
      2.8.12.1  http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
      2.8.12    http://www.cmake.org/files/v2.8/cmake-2.8.12.tar.gz
      2.8.11.2  http://www.cmake.org/files/v2.8/cmake-2.8.11.2.tar.gz
-     2.8.11.1  http://www.cmake.org/files/v2.8/cmake-2.8.11.1.tar.gz
-     2.8.11    http://www.cmake.org/files/v2.8/cmake-2.8.11.tar.gz
-     2.8.10.2  http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
-     2.8.10.1  http://www.cmake.org/files/v2.8/cmake-2.8.10.1.tar.gz
-     2.8.10    http://www.cmake.org/files/v2.8/cmake-2.8.10.tar.gz
-     2.8.9     http://www.cmake.org/files/v2.8/cmake-2.8.9.tar.gz
      ...
      2.8.0     http://www.cmake.org/files/v2.8/cmake-2.8.0.tar.gz
 
@@ -77,10 +71,30 @@ to tell it how many versions you want to download and checksum.
 Spack will automatically download the number of tarballs you specify
 (starting with the most recent) and checksum each of them.
 
-Note that you don't need to do everything up front.  If your package
-is large, you can always choose to download just one tarball for now,
-then run :ref:`spack checksum <spack-checksum>` later if you end up
-wanting more.  Let's say you choose to download 3 tarballs:
+You do not *have* to download all of the versions up front. You can
+always choose to download just one tarball initially, and run
+:ref:`spack checksum <spack-checksum>` later if you need more.
+
+.. note::
+
+   If ``spack create`` fails to detect the package name correctly,
+   you can try supplying it yourself, e.g.::
+
+      $ spack create --name cmake  http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
+
+   If it fails entirely, you can get minimal boilerplate by using
+   :ref:`spack-edit-f`, or you can manually create a directory and
+   ``package.py`` file for the package in ``var/spack/packages``.
+
+.. note::
+
+   Spack can fetch packages from source code repositories, but,
+   ``spack create`` will *not* currently create a boilerplate package
+   from a repository URL.  You will need to use :ref:`spack-edit-f`
+   and manually edit the ``version()`` directives to fetch from a
+   repo.  See :ref:`vcs-fetch` for details.
+
+Let's say you download 3 tarballs:
 
 .. code-block:: sh
 
@@ -93,8 +107,8 @@ wanting more.  Let's say you choose to download 3 tarballs:
    ==> Fetching http://www.cmake.org/files/v2.8/cmake-2.8.11.2.tar.gz
    ####################################################################      95.2%
 
-Now Spack generates boilerplate code and opens the new
-``package.py`` file in your favorite ``$EDITOR``:
+Now Spack generates boilerplate code and opens a new ``package.py``
+file in your favorite ``$EDITOR``:
 
 .. code-block:: python
    :linenos:
@@ -140,12 +154,6 @@ Now Spack generates boilerplate code and opens the new
 
 The tedious stuff (creating the class, checksumming archives) has been
 done for you.
-
-.. note::
-
-   If ``spack create`` fails to download or to detect the package
-   version, you can use ``spack edit -f`` to generate simpler
-   boilerplate.  See the next section for more on this.
 
 In the generated package, the download ``url`` attribute is already
 set.  All the things you still need to change are marked with
@@ -199,27 +207,30 @@ The ``cmake`` package actually lives in
 a much simpler shortcut and saves you the trouble of typing the full
 path.
 
-
-``spack edit -f``
-~~~~~~~~~~~~~~~~~~~~
 If you try to edit a package that doesn't exist, Spack will recommend
-using ``spack create``:
+using ``spack create`` or ``spack edit -f``:
 
 .. code-block:: sh
 
    $ spack edit foo
    ==> Error: No package 'foo'.  Use spack create, or supply -f/--force to edit a new file.
 
-As the output advises, You can use ``spack edit -f/--force`` to force
-the creation of a new, *very* simple boilerplate package:
+.. _spack-edit-f:
+
+``spack edit -f``
+~~~~~~~~~~~~~~~~~~~~
+
+``spack edit -f`` can be used to create a new, minimal boilerplate
+package:
 
 .. code-block:: sh
 
    $ spack edit -f foo
 
-Unlike ``spack create``, which tries to infer names and versions, and
-which actually downloads the tarball and checksums it for you, ``spack
-edit -f`` will substitute dummy values for you to fill in yourself:
+Unlike ``spack create``, which infers names and versions, and which
+actually downloads the tarball and checksums it for you, ``spack edit
+-f`` has no such fanciness.  It will substitute dummy values for you
+to fill in yourself:
 
 .. code-block:: python
    :linenos:
@@ -246,6 +257,13 @@ version of your package from the archive URL.
 Naming & Directory Structure
 --------------------------------------
 
+.. note::
+
+   Spack's default naming and directory structure will change in
+   version 0.9.  Specifically, 0.9 will stop using directory names
+   with special characters like ``@``, to avoid interfering with
+   certain packages that do not handle this well.
+
 This section describes how packages need to be named, and where they
 live in Spack's directory structure.  In general, `spack-create`_ and
 `spack-edit`_ handle creating package files for you, so you can skip
@@ -264,6 +282,7 @@ package:
 
 .. command-output::  cd $SPACK_ROOT/var/spack/packages;  ls -CF
    :shell:
+   :ellipsis: 10
 
 Each directory contains a file called ``package.py``, which is where
 all the python code for the package goes.  For example, the ``libelf``
@@ -280,11 +299,9 @@ Package Names
 
 Packages are named after the directory containing ``package.py``.  So,
 ``libelf``'s ``package.py`` lives in a directory called ``libelf``.
-The ``package.py`` file contains a class called ``Libelf``, which
-extends Spack's ``Package`` class.  This is what makes it a Spack
-package:
-
-``var/spack/packages/libelf/package.py``
+The ``package.py`` file defines a class called ``Libelf``, which
+extends Spack's ``Package`` class.  for example, here is
+``$SPACK_ROOT/var/spack/packages/libelf/package.py``:
 
 .. code-block:: python
    :linenos:
@@ -301,8 +318,9 @@ package:
        def install():
            ...
 
-The **directory name** (``libelf``) is what users need to provide on
-the command line. e.g., if you type any of these:
+The **directory name** (``libelf``) determines the package name that
+users should provide on the command line. e.g., if you type any of
+these:
 
 .. code-block:: sh
 
@@ -311,8 +329,8 @@ the command line. e.g., if you type any of these:
 
 Spack sees the package name in the spec and looks for
 ``libelf/package.py`` in ``var/spack/packages``.  Likewise, if you say
-``spack install docbook-xml``, then Spack looks for
-``docbook-xml/package.py``.
+``spack install py-numpy``, then Spack looks for
+``py-numpy/package.py``.
 
 Spack uses the directory name as the package name in order to give
 packagers more freedom in naming their packages.  Package names can
@@ -342,8 +360,7 @@ some examples:
 =================  =================
 
 In general, you won't have to remember this naming convention because
-`spack-create`_ and `spack-edit`_ will generate boilerplate for you,
-and you can just fill in the blanks.
+`spack-create`_ and `spack-edit`_ handle the details for you.
 
 
 Adding new versions
@@ -381,9 +398,8 @@ For the URL above, you might have to add an explicit URL because the
 version can't simply be substituted in the original ``url`` to
 construct the new one for ``8.2.1``.
 
-Wehn you supply a custom URL for a version, Spack uses that URL
-*verbatim* when fetching the version, and will *not* perform
-extrapolation.
+When you supply a custom URL for a version, Spack uses that URL
+*verbatim* and does not perform extrapolation.
 
 Checksums
 ~~~~~~~~~~~~~~~~~
@@ -392,10 +408,11 @@ Spack uses a checksum to ensure that the downloaded package version is
 not corrupted or compromised.  This is especially important when
 fetching from insecure sources, like unencrypted http.  By default, a
 package will *not* be installed if it doesn't pass a checksum test
-(though users can overried this with ``spack install --no-checksum``).
+(though you can override this with ``spack install --no-checksum``).
 
 Spack can currently support checksums using the MD5, SHA-1, SHA-224,
-SHA-256, SHA-384, and SHA-512 algorithms.
+SHA-256, SHA-384, and SHA-512 algorithms.  It determines the algorithm
+to use based on the hash length.
 
 ``spack md5``
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -459,16 +476,18 @@ By default, Spack will search for new tarball downloads by scraping
 the parent directory of the tarball you gave it.  So, if your tarball
 is at ``http://example.com/downloads/foo-1.0.tar.gz``, Spack will look
 in ``http://example.com/downloads/`` for links to additional versions.
-If you need to search another path for download links, see the
-reference documentation on `attribute_list_url`_ and
+If you need to search another path for download links, you can supply
+some extra attributes that control how your package finds new
+versions. See the documentation on `attribute_list_url`_ and
 `attributee_list_depth`_.
 
 .. note::
 
   * This command assumes that Spack can extrapolate new URLs from an
     existing URL in the package, and that Spack can find similar URLs
-    on a webpage.  If that's not possible, you'll need to manually add
-    ``version`` calls yourself.
+    on a webpage.  If that's not possible, e.g. if the package's
+    developers don't name their tarballs consistently, you'll need to
+    manually add ``version`` calls yourself.
 
   * For ``spack checksum`` to work, Spack needs to be able to
     ``import`` your pacakge in Python.  That means it can't have any
@@ -481,32 +500,33 @@ reference documentation on `attribute_list_url`_ and
 Fetching from VCS Repositories
 --------------------------------------
 
-For some packages, source code is hosted in a Version Control System
-(VCS) repository rather than as a tarball.  Packages can be set up to
-fetch from a repository instead of a tarball. Currently, Spack
-supports fetching with `Git <git-fetch_>`_, `Mercurial (hg)
-<hg-fetch_>`_, and `Subversion (SVN) <svn-fetch_>`_.
+For some packages, source code is provided in a Version Control System
+(VCS) repository rather than in a tarball.  Spack can fetch packages
+from VCS repositories. Currently, Spack supports fetching with `Git
+<git-fetch_>`_, `Mercurial (hg) <hg-fetch_>`_, and `Subversion (SVN)
+<svn-fetch_>`_.
 
 To fetch a package from a source repository, you add a ``version()``
 call to your package with parameters indicating the repository URL and
-any branch, tag, or revision to fetch.  See below for the paramters
+any branch, tag, or revision to fetch.  See below for the parameters
 you'll need for each VCS system.
 
 Repositories and versions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The package author is responsible for coming up with a sensible name
-for each version.  For example, if you're fetching from a tag like
-``v1.0``, you might call that ``1.0``.  If you're fetching a nameless
-git commit or an older subversion revision, you might give the commit
-an intuitive name, like ``dev`` for a development version, or
-``some-fancy-new-feature`` if you want to be more specific.
+for each version to be fetched from a repository.  For example, if
+you're fetching from a tag like ``v1.0``, you might call that ``1.0``.
+If you're fetching a nameless git commit or an older subversion
+revision, you might give the commit an intuitive name, like ``dev``
+for a development version, or ``some-fancy-new-feature`` if you want
+to be more specific.
 
 In general, it's recommended to fetch tags or particular
 commits/revisions, NOT branches or the repository mainline, as
 branches move forward over time and you aren't guaranteed to get the
 same thing every time you fetch a particular version.  Life isn't
-simple, though, so this is not strictly enforced.
+always simple, though, so this is not strictly enforced.
 
 In some future release, Spack may support extrapolating repository
 versions as it does for tarball URLs, but currently this is not
@@ -633,7 +653,7 @@ Subversion
 
 To fetch with subversion, use the ``svn`` and ``revision`` parameters:
 
-Head
+Fetching the head
   Simply add an ``svn`` parameter to ``version``:
 
   .. code-block:: python
@@ -642,7 +662,7 @@ Head
 
   This is not recommended, as the head will move forward over time.
 
-Revisions
+Fetching a revision
   To fetch a particular revision, add a ``revision`` to the
   version call:
 
@@ -745,6 +765,53 @@ from the URL and then applied to your source code.
   It's generally easier to just structure your patch file so that it
   applies cleanly with ``-p1``, but if you're using a patch you didn't
   create yourself, ``level`` can be handy.
+
+``patch()`` functions
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to supplying patch files, you can write a custom function
+to patch a package's source.  For example, the ``py-pyside`` package
+contains some custom code for tweaking the way the PySide build
+handles ``RPATH``:
+
+.. code-block:: python
+   :linenos:
+
+   class PyPyside(Package):
+       ...
+
+       def patch(self):
+           """Undo PySide RPATH handling and add Spack RPATH."""
+           # Figure out the special RPATH
+           pypkg = self.spec['python'].package
+           rpath = self.rpath
+           rpath.append(os.path.join(self.prefix, pypkg.site_packages_dir, 'PySide'))
+
+           # Add Spack's standard CMake args to the sub-builds.
+           # They're called BY setup.py so we have to patch it.
+           filter_file(
+               r'OPTION_CMAKE,',
+               r'OPTION_CMAKE, ' + (
+                   '"-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE", '
+                   '"-DCMAKE_INSTALL_RPATH=%s",' % ':'.join(rpath)),
+               'setup.py')
+
+           # PySide tries to patch ELF files to remove RPATHs
+           # Disable this and go with the one we set.
+           filter_file(
+               r'^\s*rpath_cmd\(pyside_path, srcpath\)',
+               r'#rpath_cmd(pyside_path, srcpath)',
+               'pyside_postinstall.py')
+
+A ``patch`` function, if present, will be run after patch files are
+applied and before ``install()`` is run.
+
+You could put this logic in ``install()``, but putting it in a patch
+function gives you some benefits.  First, spack ensures that the
+``patch()`` function is run once per code checkout.  That means that
+if you run install, hit ctrl-C, and run install again, the code in the
+patch function is only run once.  Also, you can tell Spack to run only the patching part of the build using the ..
+
 
 
 Finding Package Downloads
@@ -1932,6 +1999,8 @@ A typical package workflow might look like this:
 Below are some commands that will allow you some finer-grained
 controll over the install process.
 
+.. _spack-fetch:
+
 ``spack fetch``
 ~~~~~~~~~~~~~~~~~
 
@@ -1944,6 +2013,8 @@ directory will be located under ``$SPACK_HOME/var/spack``.
 When run after the archive has already been downloaded, ``spack
 fetch`` is idempotent and will not download the archive again.
 
+.. _spack-stage:
+
 ``spack stage``
 ~~~~~~~~~~~~~~~~~
 
@@ -1951,6 +2022,8 @@ The second step in ``spack install`` after ``spack fetch``.  Expands
 the downloaded archive in its temporary directory, where it will be
 built by ``spack install``.  Similar to ``fetch``, if the archive has
 already been expanded,  ``stage`` is idempotent.
+
+.. _spack-patch:
 
 ``spack patch``
 ~~~~~~~~~~~~~~~~~
@@ -1962,7 +2035,6 @@ keeps track of whether patches have already been applied and skips
 this step if they have been.  If Spack discovers that patches didn't
 apply cleanly on some previous run, then it will restage the entire
 package before patching.
-
 
 ``spack clean``
 ~~~~~~~~~~~~~~~~~
@@ -2034,6 +2106,11 @@ to get rid of the install prefix before you build again:
 
 Graphing Dependencies
 --------------------------
+
+.. _spack-graph:
+
+``spack graph``
+~~~~~~~~~~~~~~~~~~~
 
 Spack provides the ``spack graph`` command for graphing dependencies.
 The command by default generates an ASCII rendering of a spec's
