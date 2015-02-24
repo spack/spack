@@ -1,6 +1,6 @@
 .. _site-configuration:
 
-Site-specific configuration
+Site configuration
 ===================================
 
 .. _temp-space:
@@ -134,3 +134,53 @@ Set concretizer to *your own* class instead of the default:
    concretizer = MyConcretizer()
 
 The next time you run Spack, your changes should take effect.
+
+
+Profiling
+~~~~~~~~~~~~~~~~~~~~~
+
+Spack has some limited builtin support for profiling, and can report
+statistics using standard Python timing tools.  To use this feature,
+supply ``-p`` to Spack on the command line, before any subcommands.
+
+.. _spack-p:
+
+``spack -p``
+^^^^^^^^^^^^^^^^^^
+
+``spack -p`` output looks like this:
+
+.. code-block:: sh
+
+   $ spack -p graph dyninst
+   o  dyninst
+   |\
+   | |\
+   | o |  libdwarf
+   |/ /
+   o |  libelf
+    /
+   o  boost
+
+         307670 function calls (305943 primitive calls) in 0.127 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      853    0.021    0.000    0.066    0.000 inspect.py:472(getmodule)
+    51197    0.011    0.000    0.018    0.000 inspect.py:51(ismodule)
+    73961    0.010    0.000    0.010    0.000 {isinstance}
+     1762    0.006    0.000    0.053    0.000 inspect.py:440(getsourcefile)
+    32075    0.006    0.000    0.006    0.000 {hasattr}
+     1760    0.004    0.000    0.004    0.000 {posix.stat}
+     2240    0.004    0.000    0.004    0.000 {posix.lstat}
+     2602    0.004    0.000    0.011    0.000 inspect.py:398(getfile)
+      771    0.004    0.000    0.077    0.000 inspect.py:518(findsource)
+     2656    0.004    0.000    0.004    0.000 {method 'match' of '_sre.SRE_Pattern' objects}
+    30772    0.003    0.000    0.003    0.000 {method 'get' of 'dict' objects}
+    ...
+
+The bottom of the output shows the top most time consuming functions,
+slowest on top.  The profiling support is from Python's builtin tool,
+`cProfile
+<https://docs.python.org/2/library/profile.html#module-cProfile>`_.
