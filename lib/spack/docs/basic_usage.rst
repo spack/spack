@@ -13,7 +13,7 @@ Listing available packages
 
 The first thing you likely want to do with spack is to install some
 software.  Before that, you need to know what's available.  You can
-see avaialble package names either using the :ref:`package-list`, or
+see available package names either using the :ref:`package-list`, or
 using the commands below.
 
 .. _spack-list:
@@ -27,7 +27,7 @@ Spack can install:
 .. command-output:: spack list
 
 The packages are listed by name in alphabetical order.  You can also
-do wildcard searches using ``*``:
+do wildcats searches using ``*``:
 
 .. command-output:: spack list m*
 
@@ -64,14 +64,14 @@ There are two sections in the output.  *Safe versions* are ones that
 have already been checksummed.  Spack goes a step further, though, and
 also shows you what versions are available out on the web---these are
 *remote versions*.  Spack gets this information by scraping it
-directly from webpages.  Depending on the package, Spack may or may
+directly from web pages.  Depending on the package, Spack may or may
 not be able to find any remote versions.
 
 
 Installing and uninstalling
 ------------------------------
 
-Now that you know how to list avaiable packages and versions, you're
+Now that you know how to list available packages and versions, you're
 ready to start installing things.
 
 .. _spack-install:
@@ -80,7 +80,7 @@ ready to start installing things.
 ~~~~~~~~~~~~~~~~~~~~~
 
 ``spack install`` will install any package shown by ``spack list``.
-To install the latest version of a pacakge, along with all of its
+To install the latest version of a package, along with all of its
 dependencies, simply give it a package name:
 
 .. code-block:: sh
@@ -227,7 +227,7 @@ Packages are divided into groups according to their architecture and
 compiler.  Within each group, Spack tries to keep the view simple, and
 only shows the version of installed packages.
 
-In some cases, there may be differnt configurations of the *same*
+In some cases, there may be different configurations of the *same*
 version of a package installed.  For example, there are two
 installations of of ``libdwarf@20130729`` above.  We can look at them
 in more detail using ``spack find -d``, and by asking only to show
@@ -362,7 +362,7 @@ where the compiler is installed.  For example::
         intel@13.0.079
 
 Or you can run ``spack compiler add`` with no arguments to force
-autodetection.  This is useful if you do not know where compilers are
+auto-detection.  This is useful if you do not know where compilers are
 installed, but you know that new compilers have been added to your
 ``PATH``.  For example, using dotkit, you might do this::
 
@@ -398,7 +398,7 @@ matching Intel compiler was displayed.
 Manual compiler configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If autodetection fails, you can manually conigure a compiler by
+If auto-detection fails, you can manually configure a compiler by
 editing your ``~/.spackconfig`` file.  You can do this by running
 ``spack config edit``, which will open the file in your ``$EDITOR``.
 
@@ -1021,7 +1021,7 @@ You can find extensions for your Python installation like this:
    ==> None activated.
 
 The extensions are a subset of what's returned by ``spack list``, and
-they are packages like any ohter.  They are installed into their own
+they are packages like any other.  They are installed into their own
 prefixes, and you can see this with ``spack find -p``:
 
 .. code-block:: sh
@@ -1098,7 +1098,7 @@ Several things have happened here.  The user requested that
 ``py-numpy`` be activated in the ``python`` installation it was built
 with.  Spack knows that ``py-numpy`` depends on ``py-nose`` and
 ``py-setuptools``, so it activated those packages first.  Finally,
-once all dpeendencies were activated in the ``python`` installation,
+once all dependencies were activated in the ``python`` installation,
 ``py-numpy`` was activated as well.
 
 If we run ``spack extensions`` again, we now see the three new
@@ -1130,7 +1130,7 @@ packages listed as activated:
    py-nose@1.3.4  py-numpy@1.9.1  py-setuptools@11.3.1
 
 
-Now, when a user runs python, ``numpy`` will be avaiable for import
+Now, when a user runs python, ``numpy`` will be available for import
 *without* the user having to explicitly loaded.  ``python@2.7.8`` now
 acts like a system Python installation with ``numpy`` installed inside
 of it.

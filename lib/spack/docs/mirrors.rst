@@ -47,7 +47,7 @@ contains tarballs for each package, named after each package.
    In order to make mirror creation reasonably fast, we copy the
    tarball in its original format to the mirror directory, but we do
    not standardize on a particular compression algorithm, because this
-   would potentially require expanding and recompressing each archive.
+   would potentially require expanding and re-compressing each archive.
 
 .. _spack-mirror:
 
@@ -161,7 +161,7 @@ your site.
 ``spack mirror add``
 ----------------------------
 
-Once you have a mirrror, you need to let spack know about it.  This is
+Once you have a mirror, you need to let spack know about it.  This is
 relatively simple.  First, figure out the URL for the mirror.  If it's
 a file, you can use a file URL like this one::
 

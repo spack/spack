@@ -5,7 +5,7 @@ Packaging Guide
 
 This guide is intended for developers or administrators who want to
 package software so that Spack can install it.  It assumes that you
-have at least some familiarty with Python, and that you've read the
+have at least some familiarity with Python, and that you've read the
 :ref:`basic usage guide <basic-usage>`, especially the part about
 :ref:`specs <sec-specs>`.
 
@@ -459,7 +459,7 @@ example for ``libelf``:
    How many would you like to checksum? (default is 5, q to abort)
 
 This does the same thing that ``spack create`` does, but it allows you
-to go back and add new vesrions easily as you need them (e.g., as
+to go back and add new versions easily as you need them (e.g., as
 they're released).  It fetches the tarballs you ask for and prints out
 a list of ``version`` commands ready to copy/paste into your package
 file:
@@ -479,7 +479,7 @@ in ``http://example.com/downloads/`` for links to additional versions.
 If you need to search another path for download links, you can supply
 some extra attributes that control how your package finds new
 versions. See the documentation on `attribute_list_url`_ and
-`attributee_list_depth`_.
+`attribute_list_depth`_.
 
 .. note::
 
@@ -490,7 +490,7 @@ versions. See the documentation on `attribute_list_url`_ and
     manually add ``version`` calls yourself.
 
   * For ``spack checksum`` to work, Spack needs to be able to
-    ``import`` your pacakge in Python.  That means it can't have any
+    ``import`` your package in Python.  That means it can't have any
     syntax errors, or the ``import`` will fail.  Use this once you've
     got your package in working order.
 
@@ -643,7 +643,7 @@ Revisions
   revisions, you can use ``revision`` for branches, tags, and commits
   when you fetch with Mercurial.
 
-As wtih git, you can fetch these versions using the ``spack install
+As with git, you can fetch these versions using the ``spack install
 example@<version>`` command-line syntax.
 
 .. _svn-fetch:
@@ -927,7 +927,7 @@ the ``list_url``, because that is where links to old versions are:
 ~~~~~~~~~~~~~~~~~~~~~
 
 ``libdwarf`` and many other packages have a listing of available
-verisons on a single webpage, but not all do.  For example, ``mpich``
+versions on a single webpage, but not all do.  For example, ``mpich``
 has a tarball URL that looks like this:
 
     url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
@@ -1095,7 +1095,7 @@ called before the ``install()`` method of any dependent packages.
 This allows dependencies to set up environment variables and other
 properties to be used by dependents.
 
-The funciton declaration should look like this:
+The function declaration should look like this:
 
 .. code-block:: python
 
@@ -1115,7 +1115,7 @@ The arguments to this function are:
   * **spec**: the spec of the *dependency package* (the one the function is called on).
   * **dep_spec**: the spec of the dependent package (i.e. dep_spec depends on spec).
 
-A goo example of using these is in the Python packge:
+A good example of using these is in the Python package:
 
 .. code-block:: python
 
@@ -1148,7 +1148,7 @@ packages to have a very simple install method, like this:
    def install(self, spec, prefix):
        python('setup.py', 'install', '--prefix=%s' % prefix)
 
-Python's ``setup_dependent_environment`` method also sets up smoe
+Python's ``setup_dependent_environment`` method also sets up some
 other variables, creates a directory, and sets up the ``PYTHONPATH``
 so that dependent packages can find their dependencies at build time.
 
@@ -1217,7 +1217,7 @@ Activation & deactivation
 Spack's ``Package`` class has default ``activate`` and ``deactivate``
 implementations that handle symbolically linking extensions' prefixes
 into the directory of the parent package.  However, extendable
-packages can override these methdos to add custom activate/deactivate
+packages can override these methods to add custom activate/deactivate
 logic of their own.  For example, the ``activate`` and ``deactivate``
 methods in the Python class use the symbolic linking, but they also
 handle details surrounding Python's ``.pth`` files, and other aspects
@@ -1286,7 +1286,7 @@ Virtual dependencies
 -----------------------------
 
 In some cases, more than one package can satisfy another package's
-dependency.  One way this can happen is if a pacakge depends on a
+dependency.  One way this can happen is if a package depends on a
 particular *interface*, but there are multiple *implementations* of
 the interface, and the package could be built with any of them.  A
 *very* common interface in HPC is the `Message Passing Interface (MPI)
@@ -1299,7 +1299,7 @@ MPI has several different implementations (e.g., `MPICH
 applications can be built with any one of them.  Complicating matters,
 MPI does not have a standardized ABI, so a package built with one
 implementation cannot simply be relinked with another implementation.
-Many pacakage managers handle interfaces like this by requiring many
+Many package managers handle interfaces like this by requiring many
 similar package files, e.g., ``foo``, ``foo-mvapich``, ``foo-mpich``,
 but Spack avoids this explosion of package files by providing support
 for *virtual dependencies*.
@@ -1325,7 +1325,7 @@ supplying a ``depends_on`` call in the package definition.  For example:
        depends_on("adept-utils")
        depends_on("callpath")
 
-Here, ``callpath`` and ``adept-utils`` are concrete pacakges, but
+Here, ``callpath`` and ``adept-utils`` are concrete packages, but
 there is no actual package file for ``mpi``, so we say it is a
 *virtual* package.  The syntax of ``depends_on``, is the same for
 both.  If we look inside the package file of an MPI implementation,
@@ -1349,7 +1349,7 @@ to ``provides`` to add constraints.  This allows Spack to support the
 notion of *versioned interfaces*.  The MPI standard has gone through
 many revisions, each with new functions added, and each revision of
 the standard has a version number.  Some packages may require a recent
-implementation that supports MPI-3 fuctions, but some MPI versions may
+implementation that supports MPI-3 functions, but some MPI versions may
 only provide up to MPI-2.  Others may need MPI 2.1 or higher.  You can
 indicate this by adding a version constraint to the spec passed to
 ``provides``:
@@ -1381,7 +1381,7 @@ constraints on the *providing* package, or the *provider*.  The
 provider only provides the declared virtual spec when *it* matches
 the constraints in the when clause.  Here, when ``mpich`` is at
 version 3 or higher, it provides MPI up to version 3.  When ``mpich``
-is at version 1 or higher, it provides the MPI virtual pacakge at
+is at version 1 or higher, it provides the MPI virtual package at
 version 1.
 
 The ``when`` qualifier ensures that Spack selects a suitably high
@@ -1544,7 +1544,7 @@ software should be installed.
 
 Spack provides wrapper functions for ``configure`` and ``make`` so
 that you can call them in a similar way to how you'd call a shell
-comamnd.  In reality, these are Python functions.  Spack provides
+command.  In reality, these are Python functions.  Spack provides
 these functions to make writing packages more natural. See the section
 on :ref:`shell wrappers <shell-wrappers>`.
 
@@ -1603,7 +1603,7 @@ The install environment
 --------------------------
 
 In general, you should not have to do much differently in your install
-method than you would when installing a pacakge on the command line.
+method than you would when installing a package on the command line.
 In fact, you may need to do *less* than you would on the command line.
 
 Spack tries to set environment variables and modify compiler calls so
@@ -1626,7 +1626,7 @@ purposes:
  #. Make build systems use Spack's compiler wrappers for their builds.
  #. Allow build systems to find dependencies more easily
 
-The Compiler enviroment variables that Spack sets are:
+The Compiler environment variables that Spack sets are:
 
   ============  ===============================
     Variable     Purpose
@@ -1656,7 +1656,7 @@ entering ``install()`` so that packages can locate dependencies
 easily:
 
   =======================  =============================
-    ``PATH``                Set to point to ``/bin`` directories of dpeendencies
+    ``PATH``                Set to point to ``/bin`` directories of dependencies
     ``CMAKE_PREFIX_PATH``   Path to dependency prefixes for CMake
     ``PKG_CONFIG_PATH``     Path to any pkgconfig directories for dependencies
     ``PYTHONPATH``          Path to site-packages dir of any python dependencies
@@ -1742,7 +1742,7 @@ the command line.
 Forking ``install()``
 ~~~~~~~~~~~~~~~~~~~~~
 
-To give packagers free reign over their install environemnt, Spack
+To give packagers free reign over their install environment, Spack
 forks a new process each time it invokes a package's ``install()``
 method.  This allows packages to have their own completely sandboxed
 build environment, without impacting other jobs that the main Spack
@@ -1870,7 +1870,7 @@ dependency version.
 
 You can use ``satisfies()`` to test for particular dependencies,
 e.g. ``foo.satisfies('^openmpi@1.2')`` or ``foo.satisfies('^mpich')``,
-or you can use Python's builtin ``in`` operator:
+or you can use Python's built-in ``in`` operator:
 
 .. code-block:: python
 
@@ -1899,7 +1899,7 @@ Accessing Dependencies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You may need to get at some file or binary that's in the prefix of one
-of your dependencies.  You can do that by subscripting the spec:
+of your dependencies.  You can do that by sub-scripting the spec:
 
 .. code-block:: python
 
@@ -2219,7 +2219,7 @@ File functions
   Create an empty file at ``path``.
 
 
-.. _pacakge-lifecycle:
+.. _package-lifecycle:
 
 Packaging workflow commands
 ---------------------------------
@@ -2248,7 +2248,7 @@ A typical package workflow might look like this:
    ... repeat clean/install until install works ...
 
 Below are some commands that will allow you some finer-grained
-controll over the install process.
+control over the install process.
 
 .. _spack-fetch:
 
@@ -2325,7 +2325,7 @@ Keeping the stage directory on success
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 By default, ``spack install`` will delete the staging area once a
-pacakge has been successfully built and installed.  Use
+package has been successfully built and installed.  Use
 ``--keep-stage`` to leave the build directory intact:
 
 .. code-block:: sh
@@ -2474,7 +2474,7 @@ build it:
    /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3=linux-ppc64/libelf-0.8.13
 
 ``spack cd`` here changed he current working directory to the
-directory containing theexpanded ``libelf`` source code.  There are a
+directory containing the expanded ``libelf`` source code.  There are a
 number of other places you can cd to in the spack directory hierarchy:
 
 .. command-output:: spack cd -h

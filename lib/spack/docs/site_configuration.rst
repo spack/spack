@@ -9,7 +9,7 @@ Temporary space
 ----------------------------
 
 .. warning:: Temporary space configuration will be moved to configuration files.
-   The intructions here are old and refer to ``__init__.py``
+   The instructions here are old and refer to ``__init__.py``
 
 By default, Spack will try to do all of its building in temporary
 space.  There are two main reasons for this.  First, Spack is designed
@@ -93,7 +93,7 @@ the virtual spec to specs for possible implementations, and
 later, so there is no need to fully concretize the spec when returning
 it.
 
-The ``DefaultConcretizer`` is intendend to provide sensible defaults
+The ``DefaultConcretizer`` is intended to provide sensible defaults
 for each policy, but there are certain choices that it can't know
 about.  For example, one site might prefer ``OpenMPI`` over ``MPICH``,
 or another might prefer an old version of some packages.  These types
@@ -139,7 +139,7 @@ The next time you run Spack, your changes should take effect.
 Profiling
 ~~~~~~~~~~~~~~~~~~~~~
 
-Spack has some limited builtin support for profiling, and can report
+Spack has some limited built-in support for profiling, and can report
 statistics using standard Python timing tools.  To use this feature,
 supply ``-p`` to Spack on the command line, before any subcommands.
 
@@ -181,6 +181,6 @@ supply ``-p`` to Spack on the command line, before any subcommands.
     ...
 
 The bottom of the output shows the top most time consuming functions,
-slowest on top.  The profiling support is from Python's builtin tool,
+slowest on top.  The profiling support is from Python's built-in tool,
 `cProfile
 <https://docs.python.org/2/library/profile.html#module-cProfile>`_.
