@@ -79,10 +79,9 @@ class Qt(Package):
             '-no-openvg',
             '-no-pch',
             # NIS is deprecated in more recent glibc
-            "-no-nis",
-            # For now, disable all the database drivers
-            "-no-sql-db2", "-no-sql-ibase", "-no-sql-mysql", "-no-sql-oci", "-no-sql-odbc",
-            "-no-sql-psql", "-no-sql-sqlite", "-no-sql-sqlite2", "-no-sql-tds"]
+            "-no-nis"]
+    # Don't disable all the database drivers, but should
+    # really get them into spack at some point.
 
 
     @when('@4')
