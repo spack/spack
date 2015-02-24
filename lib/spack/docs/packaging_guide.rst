@@ -28,7 +28,7 @@ ubiquitous in the scientific software community. Second, it's a modern
 language and has many powerful features to help make package writing
 easy.
 
-Creating & Editing Packages
+Creating & editing packages
 ----------------------------------
 
 .. _spack-create:
@@ -254,7 +254,7 @@ This is useful when ``spack create`` cannot figure out the name and
 version of your package from the archive URL.
 
 
-Naming & Directory Structure
+Naming & directory structure
 --------------------------------------
 
 .. note::
@@ -497,7 +497,7 @@ versions. See the documentation on `attribute_list_url`_ and
 
 .. _vcs-fetch:
 
-Fetching from VCS Repositories
+Fetching from VCS repositories
 --------------------------------------
 
 For some packages, source code is provided in a Version Control System
@@ -774,6 +774,8 @@ to patch a package's source.  For example, the ``py-pyside`` package
 contains some custom code for tweaking the way the PySide build
 handles ``RPATH``:
 
+.. _pyside-patch:
+
 .. code-block:: python
    :linenos:
 
@@ -810,14 +812,59 @@ You could put this logic in ``install()``, but putting it in a patch
 function gives you some benefits.  First, spack ensures that the
 ``patch()`` function is run once per code checkout.  That means that
 if you run install, hit ctrl-C, and run install again, the code in the
-patch function is only run once.  Also, you can tell Spack to run only the patching part of the build using the ..
+patch function is only run once.  Also, you can tell Spack to run only
+the patching part of the build using the :ref:`spack-patch` command.
 
-
-
-Finding Package Downloads
+Handling RPATHs
 ----------------------------
 
-We've already seen the ``homepage`` and ``url`` package attributes:
+Spack installs each package in a way that ensures that all of its
+dependencies are found when it runs.  It does this using `RPATHs
+<http://en.wikipedia.org/wiki/Rpath>`_.  An RPATH is a search
+path, stored in a binary (an executable or library), that tells the
+dynamic loader where to find its dependencies at runtime. You may be
+familiar with ```LD_LIBRARY_PATH``
+<http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html>`_
+on Linux or ```DYLD_LIBRARY_PATH``
+<https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/dyld.1.html>`
+on Mac OS X.  RPATH is similar to these paths, in that it tells
+the loader where to find libraries.  Unlike them, it is embedded in
+the binary and not set in each user's environment.
+
+RPATHs in Spack are handled in one of three ways:
+
+  1. For most packages, RPATHs are handled automatically using Spack's
+     :ref:`compiler wrappers <compiler-wrappers>`.  These wrappers are
+     set in standard variables like ``CC``, ``CXX``, and ``FC``, so
+     most build systems (autotools and many gmake systems) pick them
+     up and use them.
+  2. CMake also respects Spack's compiler wrappers, but many CMake
+     builds have logic to overwrite RPATHs when binaries are
+     installed. Spack provides the ``std_cmake_args`` variable, which
+     includes parameters necessary for CMake build use the right
+     installation RPATH.  It can be used like this when ``cmake`` is
+     invoked:
+
+     .. code-block:: python
+
+        class MyPackage(Package):
+            ...
+            def install(self, spec, prefix):
+                cmake('..', *std_cmake_args)
+                make()
+                make('install')
+
+  3. If you need to modify the build to add your own RPATHs, you can
+     use the ``self.rpath`` property of your package, which will
+     return a list of all the RPATHs that Spack will use when it
+     links.  You can see this how this is used in the :ref:`PySide
+     example <pyside-patch>` above.
+
+
+Finding new versions
+----------------------------
+
+You've already seen the ``homepage`` and ``url`` package attributes:
 
 .. code-block:: python
    :linenos:
@@ -853,7 +900,7 @@ url is:
 
    url = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
 
-Spack spiders ``http://www.mr511.de/software/`` to find similar
+Here, Spack spiders ``http://www.mr511.de/software/`` to find similar
 tarball links and ultimately to make a list of available versions of
 ``libelf``.
 
@@ -907,7 +954,7 @@ when spidering the page.
 
 .. _attribute_parallel:
 
-Parallel Builds
+Parallel builds
 ------------------
 
 By default, Spack will invoke ``make()`` with a ``-j <njobs>``
@@ -1035,6 +1082,203 @@ to different package configurations.  Users use the spec syntax on the
 command line to find installed packages or to install packages with
 particular constraints, and package authors can use specs to describe
 relationships between packages.
+
+.. _setup-dependent-environment:
+
+``setup_dependent_environment()``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spack provides a mechanism for dependencies to provide variables that
+can be used in their dependents' build.  Any package can declare a
+``setup_dependent_environment()`` function, and this function will be
+called before the ``install()`` method of any dependent packages.
+This allows dependencies to set up environment variables and other
+properties to be used by dependents.
+
+The funciton declaration should look like this:
+
+.. code-block:: python
+
+   class Qt(Package):
+       ...
+       def setup_dependent_environment(self, module, spec, dep_spec):
+           """Dependencies of Qt find it using the QTDIR environment variable."""
+           os.environ['QTDIR'] = self.prefix
+
+Here, the Qt package sets the ``QTDIR`` environment variable so that
+packages that depend on a particular Qt installation will find it.
+
+The arguments to this function are:
+
+  * **module**: the module of the dependent package, where global
+    properties can be assigned.
+  * **spec**: the spec of the *dependency package* (the one the function is called on).
+  * **dep_spec**: the spec of the dependent package (i.e. dep_spec depends on spec).
+
+A goo example of using these is in the Python packge:
+
+.. code-block:: python
+
+   def setup_dependent_environment(self, module, spec, dep_spec):
+       # Python extension builds can have a global python executable function
+       module.python = Executable(join_path(spec.prefix.bin, 'python'))
+
+       # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
+       module.python_lib_dir     = os.path.join(dep_spec.prefix, self.python_lib_dir)
+       module.python_include_dir = os.path.join(dep_spec.prefix, self.python_include_dir)
+       module.site_packages_dir  = os.path.join(dep_spec.prefix, self.site_packages_dir)
+
+       # Make the site packages directory if it does not exist already.
+       mkdirp(module.site_packages_dir)
+
+       # Set PYTHONPATH to include site-packages dir for the
+       # extension and any other python extensions it depends on.
+       python_paths = []
+       for d in dep_spec.traverse():
+           if d.package.extends(self.spec):
+               python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
+       os.environ['PYTHONPATH'] = ':'.join(python_paths)
+
+The first thing that happens here is that the ``python`` command is
+inserted into module scope of the dependent.  This allows most python
+packages to have a very simple install method, like this:
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       python('setup.py', 'install', '--prefix=%s' % prefix)
+
+Python's ``setup_dependent_environment`` method also sets up smoe
+other variables, creates a directory, and sets up the ``PYTHONPATH``
+so that dependent packages can find their dependencies at build time.
+
+
+.. _packaging_extensions:
+
+Extensions
+-------------------------
+
+Spack's support for package extensions is documented extensively in
+:ref:`extensions`.  This section documents how to make your own
+extendable packages and extensions.
+
+To support extensions, a package needs to set its ``extendable``
+property to ``True``, e.g.:
+
+.. code-block:: python
+
+   class Python(Package):
+       ...
+       extendable = True
+       ...
+
+To make a package into an extension, simply add simply add an
+``extends`` call in the package definition, and pass it the name of an
+extendable package:
+
+.. code-block:: python
+
+   class PyNumpy(Package):
+       ...
+       extends('python')
+       ...
+
+Now, the ``py-numpy`` package can be used as an argument to ``spack
+activate``.  When it is activated, all the files in its prefix will be
+symbolically linked into the prefix of the python package.
+
+Sometimes, certain files in one package will conflict with those in
+another, which means they cannot both be activated (symlinked) at the
+same time.  In this case, you can tell Spack to ignore those files
+when it does the activation:
+
+.. code-block:: python
+
+   class PyNose(Package):
+       ...
+       extends('python', ignore=r'bin/nosetests.*$')
+       ...
+
+The code above will prevent ``$prefix/bin/nosetests`` from being
+linked in at activation time.
+
+.. note::
+
+   You can call *either* ``depends_on`` or ``extends`` on any one
+   package, but not both.  For example you cannot both
+   ``depends_on('python')`` and ``extends(python)`` in the same
+   package.  ``extends`` implies ``depends_on``.
+
+
+
+Activation & deactivation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spack's ``Package`` class has default ``activate`` and ``deactivate``
+implementations that handle symbolically linking extensions' prefixes
+into the directory of the parent package.  However, extendable
+packages can override these methdos to add custom activate/deactivate
+logic of their own.  For example, the ``activate`` and ``deactivate``
+methods in the Python class use the symbolic linking, but they also
+handle details surrounding Python's ``.pth`` files, and other aspects
+of Python packaging.
+
+Spack's extensions mechanism is designed to be extensible, so that
+other packages (like Ruby, R, Perl, etc.)  can provide their own
+custom extension management logic, as they may not handle modules the
+same way that Python does.
+
+Let's look at Python's activate function:
+
+.. code-block:: python
+
+   def activate(self, ext_pkg, **kwargs):
+       kwargs.update(ignore=self.python_ignore(ext_pkg, kwargs))
+       super(Python, self).activate(ext_pkg, **kwargs)
+
+       exts = spack.install_layout.extension_map(self.spec)
+       exts[ext_pkg.name] = ext_pkg.spec
+       self.write_easy_install_pth(exts)
+
+This function is called on the *extendee* (Python).  It first calls
+``activate`` in the superclass, which handles symlinking the
+extension package's prefix into this package's prefix.  It then does
+some special handling of the ``easy-install.pth`` file, part of
+Python's setuptools.
+
+Deactivate behaves similarly to activate, but it unlinks files:
+
+.. code-block:: python
+
+   def deactivate(self, ext_pkg, **kwargs):
+       kwargs.update(ignore=self.python_ignore(ext_pkg, kwargs))
+       super(Python, self).deactivate(ext_pkg, **kwargs)
+
+       exts = spack.install_layout.extension_map(self.spec)
+       if ext_pkg.name in exts:     # Make deactivate idempotent.
+           del exts[ext_pkg.name]
+           self.write_easy_install_pth(exts)
+
+Both of these methods call some custom functions in the Python
+package.  See the source for Spack's Python package for details.
+
+
+Activation arguments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You may have noticed that the ``activate`` function defined above
+takes keyword arguments.  These are the keyword arguments from
+``extends()``, and they are passed to both activate and deactivate.
+
+This capability allows an extension to customize its own activation by
+passing arguments to the extendee.  Extendees can likewise implement
+custom ``activate()`` and ``deactivate()`` functions to suit their
+needs.
+
+The only keyword argument supported by default is the ``ignore``
+argument, which can take a regex, list of regexes, or a predicate to
+determine which files *not* to symlink during activation.
+
 
 .. _virtual-dependencies:
 
@@ -1257,6 +1501,7 @@ explicitly.  Concretization policies are discussed in more detail in
 :ref:`site-configuration`.  Sites using Spack can customize them to
 match the preferences of their own users.
 
+.. _spack-spec:
 
 ``spack spec``
 ~~~~~~~~~~~~~~~~~~~~
@@ -1354,7 +1599,7 @@ information.
 
 .. _install-environment:
 
-The Install environment
+The install environment
 --------------------------
 
 In general, you should not have to do much differently in your install
@@ -1414,6 +1659,7 @@ easily:
     ``PATH``                Set to point to ``/bin`` directories of dpeendencies
     ``CMAKE_PREFIX_PATH``   Path to dependency prefixes for CMake
     ``PKG_CONFIG_PATH``     Path to any pkgconfig directories for dependencies
+    ``PYTHONPATH``          Path to site-packages dir of any python dependencies
   =======================  =============================
 
 ``PATH`` is set up to point to dependencies ``/bin`` directories so
@@ -1433,6 +1679,12 @@ dependencies using the GNU ``pkg-config`` tool.  It is similar to
 ``CMAKE_PREFIX_PATH`` in that it allows a build to automatically
 discover its dependencies.
 
+If you want to see the environment that a package will build with, or
+if you want to run commands in that environment to test them out, you
+can use the :ref:```spack env`` <spack-env>` command, documented
+below.
+
+.. _compiler-wrappers:
 
 Compiler interceptors
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1497,7 +1749,6 @@ build environment, without impacting other jobs that the main Spack
 process runs.  Packages are free to change the environment or to
 modify Spack internals, because each ``install()`` call has its own
 dedicated process.
-
 
 .. _prefix-objects:
 
@@ -1970,7 +2221,7 @@ File functions
 
 .. _pacakge-lifecycle:
 
-Package Workflow Commands
+Packaging workflow commands
 ---------------------------------
 
 When you are building packages, you will likely not get things
@@ -2036,6 +2287,8 @@ this step if they have been.  If Spack discovers that patches didn't
 apply cleanly on some previous run, then it will restage the entire
 package before patching.
 
+.. _spack-restage:
+
 ``spack restage``
 ~~~~~~~~~~~~~~~~~
 Restores the source code to pristine state, as it was before building.
@@ -2048,6 +2301,7 @@ Does this in one of two ways:
   2. If the source was checked out from a repository, this deletes the
      build directory and checks it out again.
 
+.. _spack-clean:
 
 ``spack clean``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2056,6 +2310,8 @@ expanded/checked out source code *and* any downloaded archive.  If
 ``fetch``, ``stage``, or ``install`` are run again after this, Spack's
 build process will start from scratch.
 
+
+.. _spack-purge:
 
 ``spack purge``
 ~~~~~~~~~~~~~~~~~
@@ -2102,7 +2358,7 @@ to get rid of the install prefix before you build again:
    spack uninstall -f <spec>
 
 
-Graphing Dependencies
+Graphing dependencies
 --------------------------
 
 .. _spack-graph:
@@ -2181,7 +2437,7 @@ example::
 This graph can be provided as input to other graphing tools, such as
 those in `Graphviz <http://www.graphviz.org>`_.
 
-Interactive Shell Support
+Interactive shell support
 --------------------------
 
 Spack provides some limited shell support to make life easier for
@@ -2197,6 +2453,7 @@ For ``csh`` and ``tcsh`` run:
 
 ``spack cd`` will then be available.
 
+.. _spack-cd:
 
 ``spack cd``
 ~~~~~~~~~~~~~~~~~
@@ -2227,6 +2484,35 @@ directory, install directory, package directory) and others change to
 core spack locations.  For example, ``spack cd -m`` will take you to
 the main python source directory of your spack install.
 
+.. _spack-env:
+
+``spack env``
+~~~~~~~~~~~~~~~~~~~~~~
+
+``spack env`` functions much like the standard unix ``env`` command,
+but it takes a spec as an argument.  You can use it to see the
+environment variables that will be set when a particular build runs,
+for example:
+
+.. code-block:: sh
+
+   $ spack env mpileaks@1.1%intel
+
+This will display the entire environment that will be set when the
+``mpileaks@1.1%intel`` build runs.
+
+To run commands in a package's build environment, you can simply provided them after the spec argument to ``spack env``:
+
+.. code-block:: sh
+
+   $ spack cd mpileaks@1.1%intel
+   $ spack env mpileaks@1.1%intel ./configure
+
+This will cd to the build directory and then run ``configure`` in the
+package's build environment.
+
+
+.. _spack-location:
 
 ``spack location``
 ~~~~~~~~~~~~~~~~~~~~~~

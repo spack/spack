@@ -287,10 +287,9 @@ class Package(object):
 
     .. code-block:: python
 
-       p.do_clean()              # runs make clean
-       p.do_clean_work()         # removes the build directory and
+       p.do_clean()              # removes the stage directory entirely
+       p.do_restage()            # removes the build directory and
                                  # re-expands the archive.
-       p.do_clean_dist()         # removes the stage directory entirely
 
     The convention used here is that a do_* function is intended to be called
     internally by Spack commands (in spack.cmd).  These aren't for package

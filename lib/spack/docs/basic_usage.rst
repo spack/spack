@@ -16,6 +16,8 @@ software.  Before that, you need to know what's available.  You can
 see avaialble package names either using the :ref:`package-list`, or
 using the commands below.
 
+.. _spack-list:
+
 ``spack list``
 ~~~~~~~~~~~~~~~~
 
@@ -31,6 +33,7 @@ do wildcard searches using ``*``:
 
 .. command-output:: spack list *util*
 
+.. _spack-info:
 
 ``spack info``
 ~~~~~~~~~~~~~~~~
@@ -46,6 +49,8 @@ checksum to ensure they downloaded without any errors or malicious
 attacks.  :ref:`Dependencies <sec-specs>` and :ref:`virtual
 dependencies <sec-virtual-dependencies>`, are described in more detail
 later.
+
+.. _spack-versions:
 
 ``spack versions``
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,6 +73,8 @@ Installing and uninstalling
 
 Now that you know how to list avaiable packages and versions, you're
 ready to start installing things.
+
+.. _spack-install:
 
 ``spack install``
 ~~~~~~~~~~~~~~~~~~~~~
@@ -138,6 +145,7 @@ configuration a **spec**.  In the command lines above, both
 ``mpileaks`` and ``mpileaks@3.0.4`` are specs.  Specs are described in
 detail in :ref:`sec-specs`.
 
+.. _spack-uninstall:
 
 ``spack uninstall``
 ~~~~~~~~~~~~~~~~~~~~~
@@ -170,6 +178,7 @@ Seeing installed packages
 We know that ``spack list`` shows you the names of available packages,
 but how do you figure out which are installed?
 
+.. _spack-find:
 
 ``spack find``
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -303,13 +312,15 @@ of libelf would look like this:
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
 
 
-Compiler Configuration
+Compiler configuration
 -----------------------------------
 
 Spack has the ability to build packages with multiple compilers and
 compiler versions. Spack searches for compilers on your machine
 automatically the first time it is run. It does this by inspecting
 your path.
+
+.. _spack-compilers:
 
 ``spack compilers``
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -337,6 +348,8 @@ compilers`` or ``spack compiler list``::
 Any of these compilers can be used to build Spack packages.  More on
 how this is done is in :ref:`sec-specs`.
 
+.. _spack-compiler-add:
+
 ``spack compiler add``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -361,6 +374,7 @@ installed, but you know that new compilers have been added to your
 This loads the environment module for gcc-4.9.0 to get it into the
 ``PATH``, and then it adds the compiler to Spack.
 
+.. _spack-compiler-info:
 
 ``spack compiler info``
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -382,7 +396,7 @@ matching Intel compiler was displayed.
 
 
 Manual compiler configuration
-~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If autodetection fails, you can manually conigure a compiler by
 editing your ``~/.spackconfig`` file.  You can do this by running
@@ -413,7 +427,7 @@ list displayed by ``spack compilers``.
 
 .. _sec-specs:
 
-Specs & Dependencies
+Specs & dependencies
 -------------------------
 
 We know that ``spack install``, ``spack uninstall``, and other
@@ -720,6 +734,8 @@ any MPI implementation will do.  If another package depends on
 error.  Likewise, if you try to plug in some package that doesn't
 provide MPI, Spack will raise an error.
 
+.. _spack-providers:
+
 ``spack providers``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -739,7 +755,7 @@ versions are now filtered out.
 
 .. _shell-support:
 
-Environment Modules
+Environment modules
 -------------------------------
 
 .. note::
@@ -786,6 +802,7 @@ directories:
 The directories are automatically added to your ``MODULEPATH`` and
 ``DK_NODE`` environment variables when you enable Spack's `shell
 support <shell-support_>`_.
+
 
 Using Modules & Dotkits
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -934,6 +951,8 @@ if newer, fancier module support is added to Spack at some later date,
 you may want to regenerate all the modules to take advantage of these
 new features.
 
+.. _spack-module:
+
 ``spack module refresh``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -950,7 +969,7 @@ regenerate all module and dotkit files from scratch:
 
 .. _extensions:
 
-Extensions & Python Support
+Extensions & Python support
 ------------------------------------
 
 Spack's installation model assumes that each package will live in its
@@ -970,6 +989,8 @@ an *extension*.  Suppose you have Python installed like so:
    ==> 1 installed packages.
    -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
    python@2.7.8
+
+.. _spack-extensions:
 
 ``spack extensions``
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -1004,6 +1025,7 @@ they are packages like any ohter.  They are installed into their own
 prefixes, and you can see this with ``spack find -p``:
 
 .. code-block:: sh
+
    $ spack find -p py-numpy
    ==> 1 installed packages.
    -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
@@ -1059,6 +1081,8 @@ part of a Python installation.  Spack offers a more permanent solution
 for this case.  Instead of requiring users to load particular
 environment modules, you can *activate* the package within the Python
 installation:
+
+.. _spack-activate:
 
 ``spack activate``
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1133,6 +1157,7 @@ dependencies, you can use ``spack activate -f``:
    $ spack activate -f py-numpy
    ==> Activated extension py-numpy@1.9.1%gcc@4.4.7=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
 
+.. _spack-deactivate:
 
 ``spack deactivate``
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1158,6 +1183,8 @@ several variants:
 
 Getting Help
 -----------------------
+
+.. _spack-help:
 
 ``spack help``
 ~~~~~~~~~~~~~~~~~~~~~~
