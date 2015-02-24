@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 from external import argparse
 
 import llnl.util.tty as tty
@@ -77,38 +78,30 @@ def location(parser, args):
             tty.die("You must supply a spec.")
         if len(specs) != 1:
             tty.die("Too many specs.  Supply only one.")
-        spec = specs[0]
 
         if args.install_dir:
             # install_dir command matches against installed specs.
-            matching_specs = spack.db.get_installed(spec)
-            if not matching_specs:
-                tty.die("Spec '%s' matches no installed packages." % spec)
-
-            elif len(matching_specs) > 1:
-                args =  ["%s matches multiple packages." % spec,
-                         "Matching packages:"]
-                args += ["  " + str(s) for s in matching_specs]
-                args += ["Use a more specific spec."]
-                tty.die(*args)
-
-            print matching_specs[0].prefix
-
-        elif args.package_dir:
-            # This one just needs the spec name.
-            print join_path(spack.db.root, spec.name)
+            spec = spack.cmd.disambiguate_spec(specs[0])
+            print spec.prefix
 
         else:
-            # These versions need concretized specs.
-            spec.concretize()
-            pkg = spack.db.get(spec)
+            spec = specs[0]
 
-            if args.stage_dir:
-                print pkg.stage.path
+            if args.package_dir:
+                # This one just needs the spec name.
+                print join_path(spack.db.root, spec.name)
 
-            else:  #  args.build_dir is the default.
-                if not pkg.stage.source_path:
-                    tty.die("Build directory does not exist yet. Run this to create it:",
-                            "spack stage " + " ".join(args.spec))
-                print pkg.stage.source_path
+            else:
+                # These versions need concretized specs.
+                spec.concretize()
+                pkg = spack.db.get(spec)
+
+                if args.stage_dir:
+                    print pkg.stage.path
+
+                else:  #  args.build_dir is the default.
+                    if not pkg.stage.source_path:
+                        tty.die("Build directory does not exist yet. Run this to create it:",
+                                "spack stage " + " ".join(args.spec))
+                    print pkg.stage.source_path
 

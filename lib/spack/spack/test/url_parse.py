@@ -295,3 +295,35 @@ class UrlParseTest(unittest.TestCase):
         self.check(
             'hdf5', '1.8.13',
             'http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.13.tar.bz2')
+
+    def test_scalasca_version(self):
+        self.check(
+            'cube', '4.2.3',
+            'http://apps.fz-juelich.de/scalasca/releases/cube/4.2/dist/cube-4.2.3.tar.gz')
+        self.check(
+            'cube', '4.3-TP1',
+            'http://apps.fz-juelich.de/scalasca/releases/cube/4.3/dist/cube-4.3-TP1.tar.gz')
+
+    def test_mpileaks_version(self):
+        self.check(
+            'mpileaks', '1.0',
+            'https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz')
+        self.check(
+            'mpileaks', '1.0',
+            'https://github.com/hpc/mpileaks/releases/download/1.0/mpileaks-1.0.tar.gz')
+
+    def test_gcc_version(self):
+        self.check(
+            'gcc', '4.4.7',
+            'http://open-source-box.org/gcc/gcc-4.4.7/gcc-4.4.7.tar.bz2')
+
+    def test_gcc_version_precedence(self):
+        # prefer the version in the tarball, not in the url prefix.
+        self.check(
+            'gcc', '4.4.7',
+            'http://open-source-box.org/gcc/gcc-4.9.2/gcc-4.4.7.tar.bz2')
+
+    def test_github_raw_url(self):
+        self.check(
+            'PowerParser', '2.0.7',
+            'https://github.com/losalamos/CLAMR/blob/packages/PowerParser_v2.0.7.tgz?raw=true')

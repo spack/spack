@@ -53,13 +53,6 @@ class Libdwarf(Package):
     parallel = False
 
 
-    def clean(self):
-        for dir in dwarf_dirs:
-            with working_dir(dir):
-                if os.path.exists('Makefile'):
-                    make('clean')
-
-
     def install(self, spec, prefix):
         # dwarf build does not set arguments for ar properly
         make.add_default_arg('ARFLAGS=rcs')

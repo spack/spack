@@ -1,5 +1,8 @@
 from spack import *
 
+# typical working line with extrae 3.0.1
+# ./configure --prefix=/usr/local --with-mpi=/usr/lib64/mpi/gcc/openmpi --with-unwind=/usr/local --with-papi=/usr --with-dwarf=/usr --with-elf=/usr --with-dyninst=/usr --with-binutils=/usr --with-xml-prefix=/usr --enable-openmp --enable-nanos --enable-pthread --disable-parallel-merge LDFLAGS=-pthread
+
 class Extrae(Package):
     """Extrae is the package devoted to generate tracefiles which can
        be analyzed later by Paraver. Extrae is a tool that uses
@@ -10,11 +13,10 @@ class Extrae(Package):
        programming models either alone or in conjunction with MPI :
        OpenMP, CUDA, OpenCL, pthread, OmpSs"""
     homepage = "http://www.bsc.es/computer-sciences/extrae"
-    url      = "http://www.bsc.es/ssl/apps/performanceTools/files/extrae-2.5.1.tar.bz2"
-    version('2.5.1', '422376b9c68243bd36a8a73fa62de106')
+    url      = "http://www.bsc.es/ssl/apps/performanceTools/files/extrae-3.0.1.tar.bz2"
+    version('3.0.1', 'a6a8ca96cd877723cd8cc5df6bdb922b')
 
-    #depends_on("mpi")
-    depends_on("openmpi@:1.6")
+    depends_on("mpi")
     depends_on("dyninst")
     depends_on("libunwind")
     depends_on("boost")
@@ -24,14 +26,20 @@ class Extrae(Package):
     def install(self, spec, prefix):
         if 'openmpi' in spec:
             mpi = spec['openmpi']
-            #if spec.satisfies('@2.5.1') and spec.satisfies('^openmpi@1.6.5'):
-            #    tty.error("Some headers conflict when using OpenMPI 1.6.5. Please use 1.6 instead.")
         elif 'mpich' in spec:
             mpi = spec['mpich']
         elif 'mvapich2' in spec:
             mpi = spec['mvapich2']
 
-        configure("--prefix=%s" % prefix, "--with-mpi=%s" % mpi.prefix, "--with-unwind=%s" % spec['libunwind'].prefix, "--with-dyninst=%s" % spec['dyninst'].prefix, "--with-boost=%s" % spec['boost'].prefix, "--with-dwarf=%s" % spec['libdwarf'].prefix, "--with-papi=%s" % spec['papi'].prefix, "--with-dyninst-headers=%s" % spec['dyninst'].prefix.include, "--with-dyninst-libs=%s" % spec['dyninst'].prefix.lib)
+        configure("--prefix=%s"				% prefix,
+	            "--with-mpi=%s"				% mpi.prefix,
+	            "--with-unwind=%s"			% spec['libunwind'].prefix,
+	            "--with-dyninst=%s"			% spec['dyninst'].prefix,
+	            "--with-boost=%s"			% spec['boost'].prefix,
+	            "--with-dwarf=%s"			% spec['libdwarf'].prefix,
+	            "--with-papi=%s"			% spec['papi'].prefix,
+	            "--with-dyninst-headers=%s"	% spec['dyninst'].prefix.include,
+	            "--with-dyninst-libs=%s"	% spec['dyninst'].prefix.lib)
 
         make()
         make("install", parallel=False)

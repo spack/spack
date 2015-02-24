@@ -24,6 +24,15 @@
 ##############################################################################
 import os
 
+
+def get_path(name):
+    path = os.environ.get(name, "").strip()
+    if path:
+        return path.split(":")
+    else:
+        return []
+
+
 def env_flag(name):
     if name in os.environ:
         return os.environ[name].lower() == "true"

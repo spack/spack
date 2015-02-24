@@ -45,7 +45,6 @@ class PythonVersionTest(unittest.TestCase):
     def spack_python_files(self):
         # first file is the spack script.
         yield spack.spack_file
-        yield os.path.join(spack.build_env_path, 'cc')
 
         # Next files are all the source files and package files.
         search_paths = [spack.lib_path, spack.var_path]

@@ -30,7 +30,7 @@ class Spindle(Package):
        overload on a shared file system when loading dynamically
        linked libraries, causing site-wide performance problems.
     """
-    homepage = "https://computation-rnd.llnl.gov/spindle"
+    homepage = "https://computation.llnl.gov/project/spindle/"
     url      = "https://github.com/hpc/Spindle/archive/v0.8.1.tar.gz"
     list_url = "https://github.com/hpc/Spindle/releases"
 

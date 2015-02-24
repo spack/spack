@@ -1,0 +1,1565 @@
+diff -Naur bash-4.3/builtins/circle.def mpibash-4.3/builtins/circle.def
+--- bash-4.3/builtins/circle.def    1969-12-31 17:00:00.000000000 -0700
++++ mpibash-4.3/builtins/circle.def 2014-05-13 11:27:37.314100671 -0600
+@@ -0,0 +1,620 @@
++This file is circle.def, from which is created circle.c.
++It implements all of the "circle_*" builtins in Bash.
++
++$PRODUCES circle.c
++
++#include <config.h>
++
++#include <stdio.h>
++#if defined (HAVE_UNISTD_H)
++#  ifdef _MINIX
++#    include <sys/types.h>
++#  endif
++#  include <unistd.h>
++#endif
++
++#include "../bashintl.h"
++#include "../shell.h"
++#include "common.h"
++#include "bashgetopt.h"
++#include <libcircle.h>
++
++extern int running_trap, trap_saved_exit_value;
++
++static int circle_rank;          /* Rank in the Libcircle job */
++static SHELL_VAR *create_func = NULL;   /* User-defined callback function for CIRCLE_cb_create. */
++static SHELL_VAR *process_func = NULL;  /* User-defined callback function for CIRCLE_cb_process. */
++static SHELL_VAR *reduce_init_func = NULL;  /* User-defined callback function for CIRCLE_cb_reduce_init. */
++static SHELL_VAR *reduce_fini_func = NULL;  /* User-defined callback function for CIRCLE_cb_reduce_fini. */
++static SHELL_VAR *reduce_op_func = NULL;   /* User-defined callback function for CIRCLE_cb_reduce_op. */
++static CIRCLE_handle *current_handle = NULL;   /* Active handle within a callback or NULL if not within a callback */
++static int within_reduction = 0;           /* 1=within a reduction callback; 0=not */
++
++/* Return with a usage message if no arguments remain. */
++#define YES_ARGS(LIST)                          \
++  if ((LIST) == 0)                              \
++    {                                           \
++      builtin_usage ();                         \
++      return (EX_USAGE);                        \
++    }
++
++/* Perform the same operation as bind_variable, but with VALUE being a
++ * number, not a string. */
++static SHELL_VAR *
++bind_variable_number (name, value, flags)
++     const char *name;
++     long value;
++     int flags;
++{
++  char numstr[25];    /* String version of VALUE */
++
++  sprintf (numstr, "%ld", value);
++  return bind_variable (name, numstr, flags);
++}
++
++/* Invoke the user-defined creation-callback function (create_func). */
++static void
++internal_create_func (handle)
++     CIRCLE_handle *handle;
++{
++  WORD_LIST *funcargs;
++
++  if (create_func == NULL)
++    return;
++  current_handle = handle;
++  funcargs = make_word_list (make_word ("cb_create"), NULL);
++  execute_shell_function (create_func, funcargs);
++  dispose_words (funcargs);
++  current_handle = NULL;
++}
++
++/* Invoke the user-defined process-callback function (process_func). */
++static void
++internal_process_func (handle)
++     CIRCLE_handle *handle;
++{
++  WORD_LIST *funcargs;
++
++  if (process_func == NULL)
++    return;
++  current_handle = handle;
++  funcargs = make_word_list (make_word ("cb_process"), NULL);
++  execute_shell_function (process_func, funcargs);
++  dispose_words (funcargs);
++  current_handle = NULL;
++}
++
++/* Invoke the user-defined reduction-initiation callback function
++ * (reduce_init_func). */
++static void
++internal_reduce_init_func (void)
++{
++  WORD_LIST *funcargs;
++
++  if (reduce_init_func == NULL)
++    return;
++  within_reduction = 1;
++  funcargs = make_word_list (make_word ("cb_reduce_init"), NULL);
++  execute_shell_function (reduce_init_func, funcargs);
++  dispose_words (funcargs);
++  within_reduction = 0;
++}
++
++/* Invoke the user-defined reduction callback function
++ * (reduce_op_func). */
++static void
++internal_reduce_op_func (buf1, size1, buf2, size2)
++     const void* buf1;
++     size_t size1;
++     const void* buf2;
++     size_t size2;
++{
++  WORD_LIST *funcargs;
++
++  if (reduce_op_func == NULL)
++    return;
++  within_reduction = 1;
++  funcargs = make_word_list (make_word (buf2), NULL);
++  funcargs = make_word_list (make_word (buf1), funcargs);
++  funcargs = make_word_list (make_word ("cb_reduce_op"), funcargs);
++  execute_shell_function (reduce_op_func, funcargs);
++  dispose_words (funcargs);
++  within_reduction = 0;
++}
++
++/* Invoke the user-defined reduction-finalization callback function
++ * (reduce_fini_func). */
++static void
++internal_reduce_fini_func (buf, size)
++     const void* buf;
++     size_t size;
++{
++  WORD_LIST *funcargs;
++
++  if (reduce_fini_func == NULL)
++    return;
++  funcargs = make_word_list (make_word (buf), NULL);
++  funcargs = make_word_list (make_word ("cb_reduce_fini"), funcargs);
++  execute_shell_function (reduce_fini_func, funcargs);
++  dispose_words (funcargs);
++}
++
++/* Look up a user-provided callback function. */
++static int
++find_callback_function (list, user_func)
++     WORD_LIST *list;
++     SHELL_VAR **user_func;
++{
++  char *funcname;   /* Name of the user-defined function. */
++
++  /* If no argument was provided, nullify the callback function. */
++  if (list == NULL)
++    {
++      *user_func = NULL;
++      return EXECUTION_SUCCESS;
++    }
++
++  /* Get the callback function. */
++  funcname = list->word->word;
++  list = list->next;
++  no_args (list);
++  *user_func = find_function (funcname);
++  if (*user_func == NULL)
++    {
++      builtin_error (_("function %s not found"), funcname);
++      return EXECUTION_FAILURE;
++    }
++  return EXECUTION_SUCCESS;
++}
++
++/* Initialize Libcircle. */
++void
++initialize_libcircle (argc, argv)
++     int argc;
++     char **argv;
++{
++  circle_rank = CIRCLE_init (argc, argv, CIRCLE_DEFAULT_FLAGS);
++  bind_variable_number ("circle_rank", circle_rank, 0);
++  CIRCLE_enable_logging (CIRCLE_LOG_WARN);
++  CIRCLE_cb_create (internal_create_func);
++  CIRCLE_cb_process (internal_process_func);
++  CIRCLE_cb_reduce_init (internal_reduce_init_func);
++  CIRCLE_cb_reduce_op (internal_reduce_op_func);
++  CIRCLE_cb_reduce_fini (internal_reduce_fini_func);
++}
++
++/* Finalize Libcircle. */
++void
++finalize_libcircle (void)
++{
++  CIRCLE_finalize ();
++}
++
++/* ---------------------------------------------------------------------- */
++
++$BUILTIN circle_set_options
++$FUNCTION circle_set_options_builtin
++$SHORT_DOC circle_set_options [flag]...
++Change Libcircle's run-time behavior.
++
++Arguments:
++  FLAG          "split_random", "split_equal", or "create_global"
++
++Multiple flags can be provided.  If no flags are provided, Libcircle
++reverts to its default options.
++
++Exit Status:
++Returns 0 unless an invalid option is given.
++$END
++/*'*/
++
++/* Here is the circle_set_options builtin. */
++int
++circle_set_options_builtin (list)
++     WORD_LIST *list;
++{
++  char *word;          /* One argument */
++  int flags = 0;       /* Flags to pass to CIRCLE_set_options */
++
++  if (list == NULL)
++    flags = CIRCLE_DEFAULT_FLAGS;
++  else
++    while (list != NULL)
++      {
++        word = list->word->word;
++        if (!strcmp (word, "split_random"))
++          flags |= CIRCLE_SPLIT_RANDOM;
++        else if (!strcmp (word, "split_equal"))
++          flags |= CIRCLE_SPLIT_EQUAL;
++        else if (!strcmp (word, "create_global"))
++          flags |= CIRCLE_CREATE_GLOBAL;
++        else
++          {
++            builtin_error (_("invalid flag \"%s\""), word);
++            return (EXECUTION_FAILURE);
++          }
++        list = list->next;
++      }
++  CIRCLE_set_options (flags);
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN circle_cb_create
++$FUNCTION circle_cb_create_builtin
++$SHORT_DOC circle_cb_create [func]
++Register a function that will create work when asked.
++
++Arguments:
++  FUNC          User-defined callback function that will invoke
++                circle_enqueue when called
++
++If FUNC is omitted, no function will be associated with work creation.
++This can be used to nullify a previous circle_cb_create invocation.
++
++Exit Status:
++Returns 0 unless an invalid function is given or an error occurs.
++$END
++
++/* Here is the circle_cb_create builtin. */
++int
++circle_cb_create_builtin (list)
++     WORD_LIST *list;
++{
++  return find_callback_function (list, &create_func);
++}
++
++$BUILTIN circle_cb_process
++$FUNCTION circle_cb_process_builtin
++$SHORT_DOC circle_cb_process [func]
++Register a function that will process work when asked.
++
++Arguments:
++  FUNC          User-defined callback function that will invoke
++                circle_enqueue when called
++
++If FUNC is omitted, no function will be associated with work processing.
++This can be used to nullify a previous circle_cb_process invocation.
++
++Exit Status:
++Returns 0 unless an invalid function is given or an error occurs.
++$END
++
++/* Here is the circle_cb_process builtin. */
++int
++circle_cb_process_builtin (list)
++     WORD_LIST *list;
++{
++  return find_callback_function (list, &process_func);
++}
++
++$BUILTIN circle_begin
++$FUNCTION circle_begin_builtin
++$SHORT_DOC circle_begin
++Begin creation and processing of the distributed work queue.
++
++Exit Status:
++Returns 0 unless an error occurs.
++$END
++
++/* Here is the circle_begin builtin. */
++int
++circle_begin_builtin (list)
++     WORD_LIST *list;
++{
++  no_args (list);
++  CIRCLE_begin ();
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN circle_enqueue
++$FUNCTION circle_enqueue_builtin
++$SHORT_DOC circle_enqueue work
++Enqueue work onto the distributed queue.
++
++Arguments:
++  WORK          "Work" as represented by an arbitrary string of limited
++                size (generally around 4KB)
++
++Exit Status:
++Returns 0 unless an error occurs.
++$END
++
++/* Here is the circle_enqueue builtin. */
++int
++circle_enqueue_builtin (list)
++     WORD_LIST *list;
++{
++  char *work;          /* Work to perform */
++
++  /* Extract the work argument. */
++  YES_ARGS (list);
++  work = list->word->word;
++  list = list->next;
++  no_args (list);
++
++  /* Complain if we're not within a proper callback function. */
++  if (current_handle == NULL)
++    {
++      builtin_error (_("not within a Libcircle \"create\" or \"process\" callback function"));
++      return EXECUTION_FAILURE;
++    }
++
++  /* Enqueue the work. */
++  if (current_handle->enqueue (work) == -1)
++    return EXECUTION_FAILURE;
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN circle_dequeue
++$FUNCTION circle_dequeue_builtin
++$SHORT_DOC circle_dequeue var
++Dequeue work from the distributed queue into a variable.
++
++Arguments:
++  VAR           Variable in which to receive previously enqueued "work"
++
++Exit Status:
++Returns 0 unless an error occurs.
++$END
++
++/* Here is the circle_dequeue builtin. */
++int
++circle_dequeue_builtin (list)
++     WORD_LIST *list;
++{
++  char *varname;       /* Variable in which to store the work string */
++  char work[CIRCLE_MAX_STRING_LEN+1];  /* Work to perform */
++
++  /* Extract the variable-name argument. */
++  YES_ARGS (list);
++  varname = list->word->word;
++  list = list->next;
++  no_args (list);
++
++  /* Complain if we're not within a callback function. */
++  if (current_handle == NULL)
++    {
++      builtin_error (_("not within a Libcircle callback function"));
++      return EXECUTION_FAILURE;
++    }
++
++  /* Dequeue the work and bind it to the given variable. */
++  if (current_handle->dequeue (work) == -1)
++    return EXECUTION_FAILURE;
++  bind_variable (varname, work, 0);
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN circle_enable_logging
++$FUNCTION circle_enable_logging_builtin
++$SHORT_DOC circle_enable_logging log_level
++Change Libcircle's logging verbosity
++
++Arguments:
++  LOG_LEVEL     "fatal", "error", "warning", "info", or "debug"
++
++Exit Status:
++Returns 0 unless an invalid option is given.
++$END
++/*'*/
++
++/* Here is the circle_enable_logging builtin. */
++int
++circle_enable_logging_builtin (list)
++     WORD_LIST *list;
++{
++  char *word;                   /* One argument */
++  CIRCLE_loglevel loglevel;     /* Level to set */
++
++  /* Parse the log level. */
++  YES_ARGS (list);
++  word = list->word->word;
++  if (!strcmp (word, "fatal"))
++    loglevel = CIRCLE_LOG_FATAL;
++  else if (!strcmp (word, "error"))
++    loglevel = CIRCLE_LOG_ERR;
++  else if (!strcmp (word, "warning"))
++    loglevel = CIRCLE_LOG_WARN;
++  else if (!strcmp (word, "info"))
++    loglevel = CIRCLE_LOG_INFO;
++  else if (!strcmp (word, "debug"))
++    loglevel = CIRCLE_LOG_DBG;
++  else
++    {
++      builtin_error (_("invalid log level \"%s\""), word);
++      return (EXECUTION_FAILURE);
++    }
++
++  /* Set the log level. */
++  CIRCLE_enable_logging (loglevel);
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN circle_abort
++$FUNCTION circle_abort_builtin
++$SHORT_DOC circle_abort
++Terminate queue processing.
++
++Exit Status:
++Returns 0 unless an error occurs.
++$END
++
++/* Here is the circle_abort builtin. */
++int
++circle_abort_builtin (list)
++     WORD_LIST *list;
++{
++  no_args (list);
++  CIRCLE_abort ();
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN circle_checkpoint
++$FUNCTION circle_checkpoint_builtin
++$SHORT_DOC circle_checkpoint
++Checkpoint a work queue to disk.
++
++Write a file called circle${circle_rank}.txt containing the current
++queue state of rank ${circle_rank}.  On a later run, a worker can
++invoke circle_read_restarts to repopulate its queue from such a
++checkpoint file.
++
++Exit Status:
++Returns 0 unless an error occurs.
++$END
++/*'*/
++
++/* Here is the circle_checkpoint builtin. */
++int
++circle_checkpoint_builtin (list)
++     WORD_LIST *list;
++{
++  no_args (list);
++  CIRCLE_checkpoint ();
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN circle_read_restarts
++$FUNCTION circle_read_restarts_builtin
++$SHORT_DOC circle_read_restarts
++Repopulate a work queue from a disk checkpoint.
++
++Read queue contents from a file called circle${circle_rank}.txt, which
++was previously produced by circle_checkpoint.
++
++Exit Status:
++Returns 0 unless an error occurs.
++$END
++/*'*/
++
++/* Here is the circle_read_restarts builtin. */
++int
++circle_read_restarts_builtin (list)
++     WORD_LIST *list;
++{
++  no_args (list);
++  CIRCLE_read_restarts ();
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN circle_cb_reduce_init
++$FUNCTION circle_cb_reduce_init_builtin
++$SHORT_DOC circle_cb_reduce_init [func]
++Register a function that will initiate a reduction operation.
++
++Arguments:
++  FUNC          User-defined callback function that will invoke
++                circle_reduce when called
++
++FUNC will be invoked on all ranks.
++
++If FUNC is omitted, no function will be associated with reduction
++initialization.  This can be used to nullify a previous
++circle_cb_reduce_init invocation.
++
++Exit Status:
++Returns 0 unless an invalid function is given or an error occurs.
++$END
++
++/* Here is the circle_cb_reduce_init builtin. */
++int
++circle_cb_reduce_init_builtin (list)
++     WORD_LIST *list;
++{
++  return find_callback_function (list, &reduce_init_func);
++}
++
++$BUILTIN circle_cb_reduce_op
++$FUNCTION circle_cb_reduce_op_builtin
++$SHORT_DOC circle_cb_reduce_op [func]
++Register a function that will complete a reduction operation.
++
++Arguments:
++  FUNC          User-defined callback function that will receive
++                two items to reduce and invoke circle_reduce on
++                the reduced value
++
++If FUNC is omitted, no function will be associated with reduction
++execution.  This can be used to nullify a previous circle_cb_reduce_op
++invocation.
++
++Exit Status:
++Returns 0 unless an invalid function is given or an error occurs.
++$END
++
++/* Here is the circle_cb_reduce_op builtin. */
++int
++circle_cb_reduce_op_builtin (list)
++     WORD_LIST *list;
++{
++  return find_callback_function (list, &reduce_op_func);
++}
++
++$BUILTIN circle_cb_reduce_fini
++$FUNCTION circle_cb_reduce_fini_builtin
++$SHORT_DOC circle_cb_reduce_fini [func]
++Register a function that will complete a reduction operation.
++
++Arguments:
++  FUNC          User-defined callback function that will receive
++                the final reduced data
++
++If FUNC is omitted, no function will be associated with reduction
++completion.  This can be used to nullify a previous
++circle_cb_reduce_fini invocation.
++
++Libcircle guarantees that FUNC will be invoked only on rank 0.
++
++Exit Status:
++Returns 0 unless an invalid function is given or an error occurs.
++$END
++
++/* Here is the circle_cb_reduce_fini builtin. */
++int
++circle_cb_reduce_fini_builtin (list)
++     WORD_LIST *list;
++{
++  return find_callback_function (list, &reduce_fini_func);
++}
++
++$BUILTIN circle_reduce
++$FUNCTION circle_reduce_builtin
++$SHORT_DOC circle_reduce work
++Seed the next phase of a reduction operation
++
++Arguments:
++  WORK          "Work" as represented by an arbitrary string of limited
++                size (generally around 4KB)
++
++This function should be called both by the callback function
++registered with circle_reduce_init and the callback function
++registered with circle_reduce_op.
++
++Exit Status:
++Returns 0 unless an error occurs.
++$END
++
++/* Here is the circle_reduce builtin. */
++int
++circle_reduce_builtin (list)
++     WORD_LIST *list;
++{
++  char *work;          /* Work to perform */
++
++  /* Extract the work argument. */
++  YES_ARGS (list);
++  work = list->word->word;
++  list = list->next;
++  no_args (list);
++
++  /* Complain if we're not within a proper callback function. */
++  if (!within_reduction)
++    {
++      builtin_error (_("not within a Libcircle \"reduce_init\" or \"reduce_op\" callback function"));
++      return EXECUTION_FAILURE;
++    }
++
++  /* Reduce the work. */
++  CIRCLE_reduce (work, strlen (work));
++  return EXECUTION_SUCCESS;
++}
+diff -Naur bash-4.3/builtins/Makefile.in mpibash-4.3/builtins/Makefile.in
+--- bash-4.3/builtins/Makefile.in   2012-05-25 07:29:19.000000000 -0600
++++ mpibash-4.3/builtins/Makefile.in        2014-05-13 11:27:37.314100671 -0600
+@@ -141,7 +141,9 @@
+ 	  $(srcdir)/times.def $(srcdir)/trap.def $(srcdir)/type.def \
+ 	  $(srcdir)/ulimit.def $(srcdir)/umask.def $(srcdir)/wait.def \
+ 	  $(srcdir)/reserved.def $(srcdir)/pushd.def $(srcdir)/shopt.def \
+-	  $(srcdir)/printf.def $(srcdir)/complete.def $(srcdir)/mapfile.def
++	  $(srcdir)/printf.def $(srcdir)/complete.def $(srcdir)/mapfile.def \
++	  $(srcdir)/mpi.def \
++@CIRCLE@	  $(srcdir)/circle.def
+ 
+ STATIC_SOURCE = common.c evalstring.c evalfile.c getopt.c bashgetopt.c \
+ 		getopt.h 
+@@ -153,7 +155,9 @@
+ 	jobs.o kill.o let.o mapfile.o \
+ 	pushd.o read.o return.o set.o setattr.o shift.o source.o \
+ 	suspend.o test.o times.o trap.o type.o ulimit.o umask.o \
+-	wait.o getopts.o shopt.o printf.o getopt.o bashgetopt.o complete.o
++	wait.o getopts.o shopt.o printf.o getopt.o bashgetopt.o complete.o \
++	mpi.o \
++@CIRCLE@	circle.o
+ 
+ CREATED_FILES = builtext.h builtins.c psize.aux pipesize.h tmpbuiltins.c \
+ 	tmpbuiltins.h
+@@ -317,6 +321,8 @@
+ getopts.o: getopts.def
+ reserved.o: reserved.def
+ complete.o: complete.def
++@CIRCLE@ circle.o: circle.def
++mpi.o: mpi.def
+
+ # C files
+ bashgetopt.o: ../config.h $(topdir)/bashansi.h $(BASHINCDIR)/ansi_stdlib.h
+@@ -644,6 +650,19 @@
+ mapfile.o: $(topdir)/subst.h $(topdir)/externs.h $(BASHINCDIR)/maxpath.h
+ mapfile.o: $(topdir)/shell.h $(topdir)/syntax.h $(topdir)/variables.h $(topdir)/conftypes.h
+ mapfile.o: $(topdir)/arrayfunc.h ../pathnames.h
++@CIRCLE@ circle.o: $(topdir)/command.h ../config.h $(BASHINCDIR)/memalloc.h $(topdir)/error.h
++@CIRCLE@ circle.o: $(topdir)/general.h $(topdir)/xmalloc.h $(topdir)/subst.h $(topdir)/externs.h
++@CIRCLE@ circle.o: $(topdir)/quit.h $(topdir)/dispose_cmd.h $(topdir)/make_cmd.h
++@CIRCLE@ circle.o: $(topdir)/shell.h $(topdir)/syntax.h $(topdir)/unwind_prot.h $(topdir)/variables.h $(topdir)/conftypes.h
++@CIRCLE@ circle.o: $(BASHINCDIR)/maxpath.h ../pathnames.h
++mpi.o: ../config.h ../config-top.h ../config-bot.h ../bashintl.h
++mpi.o: ../include/gettext.h ../shell.h ../config.h ../bashjmp.h
++mpi.o: ../include/posixjmp.h ../command.h ../syntax.h ../general.h
++mpi.o: ../bashtypes.h ../include/chartypes.h ../xmalloc.h ../bashansi.h
++mpi.o: ../error.h ../variables.h ../array.h ../assoc.h ../hashlib.h
++mpi.o: ../conftypes.h ../arrayfunc.h ../quit.h ../sig.h ../include/maxpath.h
++mpi.o: ../unwind_prot.h ../dispose_cmd.h ../make_cmd.h ../include/ocache.h
++mpi.o: ../subst.h ../pathnames.h ../externs.h common.h bashgetopt.h
+
+ #bind.o: $(RL_LIBSRC)chardefs.h $(RL_LIBSRC)readline.h $(RL_LIBSRC)keymaps.h
+
+diff -Naur bash-4.3/builtins/mpi.def mpibash-4.3/builtins/mpi.def
+--- bash-4.3/builtins/mpi.def       1969-12-31 17:00:00.000000000 -0700
++++ mpibash-4.3/builtins/mpi.def    2014-05-13 11:27:37.314100671 -0600
+@@ -0,0 +1,744 @@
++This file is mpi.def, from which is created mpi.c.
++It implements all of the "mpi_*" builtins in Bash.
++
++$PRODUCES mpi.c
++
++#include <config.h>
++
++#include <stdio.h>
++#if defined (HAVE_UNISTD_H)
++#  ifdef _MINIX
++#    include <sys/types.h>
++#  endif
++#  include <unistd.h>
++#endif
++
++#include "../bashintl.h"
++#include "../shell.h"
++#include "common.h"
++#include "bashgetopt.h"
++#include <mpi.h>
++
++extern int running_trap, trap_saved_exit_value;
++
++/* Keep track of who we are within MPI_COMM_WORLD. */
++static int mpi_rank;
++static int mpi_num_ranks;
++
++/* Try an MPI operation.  Return with an error message on failure. */
++#define MPI_TRY(STMT)                           \
++  do                                            \
++    {                                           \
++      int mpierr;                               \
++      mpierr = STMT;                            \
++      if (mpierr != MPI_SUCCESS)                \
++        return report_mpi_error (mpierr);       \
++    }                                           \
++  while (0)
++
++/* Return with a usage message if no arguments remain. */
++#define YES_ARGS(LIST)                          \
++  if ((LIST) == 0)                              \
++    {                                           \
++      builtin_usage ();                         \
++      return (EX_USAGE);                        \
++    }
++
++/* Return with an error message if a given variable is read-only or if
++ * we can't write to it for any other reason (e.g., it's defined as a
++ * function). */
++#define REQUIRE_WRITABLE(NAME)                                          \
++  do                                                                    \
++    {                                                                   \
++      SHELL_VAR *bindvar = find_shell_variable (NAME);                  \
++      if (bindvar)                                                      \
++        {                                                               \
++          if (readonly_p (bindvar))                                     \
++            {                                                           \
++              err_readonly (NAME);                                      \
++              return (EXECUTION_FAILURE);                               \
++            }                                                           \
++          if (unbind_variable (NAME) == -1)                             \
++            {                                                           \
++              builtin_error ("Failed to write to variable %s", NAME);   \
++              return (EXECUTION_FAILURE);                               \
++            }                                                           \
++        }                                                               \
++    }                                                                   \
++  while (0)
++
++/* Initialize MPI. */
++void
++initialize_mpi (argc, argv)
++     int argc;
++     char **argv;
++{
++  int init_done;
++
++  MPI_Initialized (&init_done);
++  if (!init_done)
++    MPI_Init (&argc, &argv);
++  MPI_Errhandler_set (MPI_COMM_WORLD, MPI_ERRORS_RETURN);
++  MPI_Comm_rank (MPI_COMM_WORLD, &mpi_rank);
++  MPI_Comm_size (MPI_COMM_WORLD, &mpi_num_ranks);
++}
++
++/* Finalize MPI. */
++void
++finalize_mpi ()
++{
++  MPI_Finalize ();
++}
++
++/* Parse an operation name into an MPI_Op.  Return 1 on success, 0 on
++ * failure. */
++static int
++parse_operation (char *name, MPI_Op *op)
++{
++  /* Define a mapping from operator names to MPI_Op values. */
++  typedef struct {
++    char *name;        /* Operation name (e.g., "sum") */
++    MPI_Op value;      /* Operation value (e.g., MPI_SUM) */
++  } opname2value_t;
++  static opname2value_t oplist[] = {
++    {"max",    MPI_MAX},
++    {"min",    MPI_MIN},
++    {"sum",    MPI_SUM},
++    {"prod",   MPI_PROD},
++    {"land",   MPI_LAND},
++    {"band",   MPI_BAND},
++    {"lor",    MPI_LOR},
++    {"bor",    MPI_BOR},
++    {"lxor",   MPI_LXOR},
++    {"bxor",   MPI_BXOR},
++    {"maxloc", MPI_MAXLOC},
++    {"minloc", MPI_MINLOC}
++  };
++  size_t i;
++
++  for (i = 0; i < sizeof(oplist)/sizeof(opname2value_t); i++)
++    if (!strcmp(name, oplist[i].name))
++      {
++        *op = oplist[i].value;
++        if (i > 0)
++          {
++            /* As a performance optimization, bubble up the value we
++             * just found. */
++            opname2value_t prev = oplist[i - 1];
++            oplist[i - 1] = oplist[i];
++            oplist[i] = prev;
++          }
++        return 1;
++      }
++  return 0;
++}
++
++/* Report an error to the user and return EXECUTION_FAILURE. */
++static int
++report_mpi_error (mpierr)
++     int mpierr;
++{
++  char errstr[MPI_MAX_ERROR_STRING];
++  int errstrlen;
++
++  MPI_Error_string (mpierr, errstr, &errstrlen);
++  builtin_error ("%s", errstr);
++  return EXECUTION_FAILURE;
++}
++
++/* Perform the same operation as bind_variable, but with VALUE being a
++ * number, not a string. */
++static SHELL_VAR *
++bind_variable_number (name, value, flags)
++     const char *name;
++     long value;
++     int flags;
++{
++  char numstr[25];    /* String version of VALUE */
++
++  sprintf (numstr, "%ld", value);
++  return bind_variable (name, numstr, flags);
++}
++
++/* Perform the same operation as bind_array_variable, but with VALUE
++ * being a number, not a string. */
++static SHELL_VAR *
++bind_array_variable_number (name, ind, value, flags)
++     char *name;
++     arrayind_t ind;
++     long value;
++     int flags;
++{
++  char numstr[25];    /* String version of VALUE */
++
++  sprintf (numstr, "%ld", value);
++  return bind_array_variable (name, ind, numstr, flags);
++}
++
++/* Define a reduction-type function (allreduce, scan, exscan, etc.). */
++typedef int (*reduction_func_t)(void *, void *, int, MPI_Datatype, MPI_Op, MPI_Comm);
++
++/* Perform any reduction-type operation (allreduce, scan, exscan, etc.). */
++static int
++reduction_like (list, funcname, func)
++     WORD_LIST *list;
++     char *funcname;
++     reduction_func_t func;
++{
++  char *word;                   /* One argument */
++  struct {
++    long int value;             /* Reduced value */
++    int rank;                   /* Rank associated with the above */
++  } number, result;
++  MPI_Op operation = MPI_SUM;   /* Operation to perform */
++  char *varname;                /* Name of the variable to bind the results to */
++  intmax_t n;
++  int i;
++
++  /* Parse "-O OPERATION" (optional), where OPERATION is a reduction
++   * operation. */
++  YES_ARGS (list);
++  word = list->word->word;
++  if (ISOPTION (word, 'O'))
++    {
++      list = list->next;
++      if (list == 0)
++        {
++          sh_needarg (funcname);
++          return (EX_USAGE);
++        }
++      word = list->word->word;
++      if (!parse_operation (word, &operation))
++        {
++          sh_invalidopt ("-O");
++          return (EX_USAGE);
++        }
++      list = list->next;
++    }
++
++  /* Parse the argument, which must be a number. */
++  YES_ARGS (list);
++  word = list->word->word;
++  if (!legal_number (word, &n))
++    {
++      sh_neednumarg (funcname);
++      return (EX_USAGE);
++    }
++  number.value = (long int) n;
++  number.rank = mpi_rank;
++  list = list->next;
++
++  /* Parse the target variable, which must not be read-only. */
++  YES_ARGS (list);
++  varname = list->word->word;
++  if (mpi_rank != 0 || func != MPI_Exscan)
++    REQUIRE_WRITABLE (varname);
++  list = list->next;
++  no_args (list);
++
++  /* Perform the reduction operation.  Bind the given array variable
++   * to the result and, for minloc/maxloc, the associated rank. */
++  if (mpi_rank != 0 || func != MPI_Exscan) {
++    bind_array_variable (varname, 0, "", 0);
++    bind_array_variable (varname, 1, "", 0);
++  }
++  if (operation == MPI_MINLOC || operation == MPI_MAXLOC)
++    {
++      MPI_TRY (func (&number, &result, 1, MPI_LONG_INT, operation, MPI_COMM_WORLD));
++      if (mpi_rank != 0 || func != MPI_Exscan)
++   bind_array_variable_number (varname, 1, result.rank, 0);
++    }
++  else
++    MPI_TRY (func (&number.value, &result.value, 1, MPI_LONG, operation, MPI_COMM_WORLD));
++  if (mpi_rank != 0 || func != MPI_Exscan)
++    bind_array_variable_number (varname, 0, result.value, 0);
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN mpi_comm_rank
++$FUNCTION mpi_comm_rank_builtin
++$SHORT_DOC mpi_comm_rank name
++Return the process's rank in the MPI job.
++
++Arguments:
++  NAME          Scalar variable in which to receive the rank
++
++Exit Status:
++Returns 0 unless an invalid option is given.
++$END
++/*'*/
++
++/* Here is the mpi_comm_rank builtin. */
++int
++mpi_comm_rank_builtin (list)
++     WORD_LIST *list;
++{
++  char *varname;         /* Name of the variable to bind the results to */
++
++  YES_ARGS (list);
++  varname = list->word->word;
++  REQUIRE_WRITABLE (varname);
++  list = list->next;
++  no_args (list);
++  bind_variable_number (varname, mpi_rank, 0);
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN mpi_comm_size
++$FUNCTION mpi_comm_size_builtin
++$SHORT_DOC mpi_comm_size name
++Return the total number of ranks in the MPI job.
++
++Arguments:
++  NAME          Scalar variable in which to receive the number of ranks
++
++Exit Status:
++Returns 0 unless an invalid option is given.
++$END
++
++/* Here is the mpi_comm_size builtin. */
++int
++mpi_comm_size_builtin (list)
++     WORD_LIST *list;
++{
++  char *varname;         /* Name of the variable to bind the results to */
++
++  YES_ARGS (list);
++  varname = list->word->word;
++  REQUIRE_WRITABLE (varname);
++  list = list->next;
++  no_args (list);
++  bind_variable_number (varname, mpi_num_ranks, 0);
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN mpi_abort
++$FUNCTION mpi_abort_builtin
++$SHORT_DOC mpi_abort [n]
++Abort all processes in the MPI job and exit the shell.
++
++Exits not only the caller's shell (with a status of N) but also all
++remote shells that are part of the same MPI job.  If N is omitted, the
++exit status is that of the last command executed.
++
++This command should be used only in extreme circumstances.  It is
++better for each process to exit normally on its own.
++$END
++/*'*/
++
++/* Here is the mpi_abort builtin. */
++int
++mpi_abort_builtin (list)
++     WORD_LIST *list;
++{
++  int exit_value;
++
++  exit_value = (running_trap == 1 && list == 0) ? trap_saved_exit_value : get_exitstat (list);  /* Copied from exit.def */
++  MPI_TRY (MPI_Abort (MPI_COMM_WORLD, exit_value));
++  return EXECUTION_FAILURE;
++}
++
++$BUILTIN mpi_send
++$FUNCTION mpi_send_builtin
++$SHORT_DOC mpi_send [-t tag] rank message
++Send a message to a remote process in the same MPI job.
++
++Options:
++  -t TAG        Send the message using tag TAG (default: 0).  TAG must
++                be a nonnegative integer.
++
++Arguments:
++  RANK          Whom to send the message to.  RANK must be an integer in
++                the range [0, $(mpi_comm_size)-1].
++
++  MESSAGE       String to send to rank RANK.
++
++Exit Status:
++Returns 0 unless an invalid option is given or an error occurs.
++$END
++
++/* Here is the mpi_send builtin. */
++int
++mpi_send_builtin (list)
++     WORD_LIST *list;
++{
++  char *word;              /* One argument */
++  intmax_t target_rank;    /* MPI target rank */
++  char *message;           /* Message to send to rank target_rank */
++  intmax_t tag = 0;        /* Message tag to use */
++
++  /* Parse "-t TAG" (optional), where TAG is a number or "any". */
++  YES_ARGS (list);
++  word = list->word->word;
++  if (ISOPTION (word, 't'))
++    {
++      list = list->next;
++      if (list == 0)
++        {
++          sh_needarg ("mpi_recv");
++          return (EX_USAGE);
++        }
++      word = list->word->word;
++      if (!legal_number (word, &tag))
++        {
++          sh_neednumarg ("-t");
++          return (EX_USAGE);
++        }
++      list = list->next;
++    }
++  else if (*word == '-')
++    {
++      sh_invalidopt (word);
++      builtin_usage ();
++      return (EX_USAGE);
++    }
++
++  /* Parse the target rank, which must be a number. */
++  YES_ARGS (list);
++  word = list->word->word;
++  if (!legal_number (word, &target_rank))
++    {
++      builtin_error (_("mpi_send: numeric rank required"));
++      return (EX_USAGE);
++    }
++  list = list->next;
++
++  /* Parse the message to send. */
++  YES_ARGS (list);
++  message = list->word->word;
++  list = list->next;
++  no_args (list);
++
++  /* Send the message. */
++  MPI_TRY (MPI_Send (message, strlen(message)+1, MPI_BYTE, (int)target_rank, (int)tag, MPI_COMM_WORLD));
++  return EXECUTION_SUCCESS;
++}
++
++
++$BUILTIN mpi_recv
++$FUNCTION mpi_recv_builtin
++$SHORT_DOC mpi_recv [-t tag] rank name
++Receive a message from a remote process in the same MPI job.
++
++Options:
++  -t TAG        Receive only messages sent using tag TAG (default: 0).
++                TAG must be either a nonnegative integer or the string
++                "any" to receive messages sent using any tag.
++
++Arguments:
++  RANK          Receive only messages sent from sender RANK.  RANK
++                must either be in the range [0, $(mpi_comm_size)-1] or
++                be the string "any" to receive messages from any sender.
++
++  NAME          Array variable in which to receive the message, sender
++                rank, and tag.
++
++Exit Status:
++Returns 0 unless an invalid option is given or an error occurs.
++$END
++
++/* Here is the mpi_recv builtin. */
++int
++mpi_recv_builtin (list)
++     WORD_LIST *list;
++{
++  char *word;            /* One argument */
++  intmax_t source_rank;  /* MPI source rank */
++  char *endptr;          /* Used for parsing strings into numbers */
++  MPI_Status status;     /* Status of an MPI operation */
++  int count;             /* Message length in bytes */
++  intmax_t tag = 0;      /* Message tag to use */
++  char *varname;         /* Name of the variable to bind the results to */
++  static char *message = NULL;  /* Message received from MPI */
++  static size_t alloced = 0;    /* Number of bytes allocated for the above */
++  int opt;               /* Parsed option */
++
++  /* Parse any options provided. */
++  reset_internal_getopt ();
++  while ((opt = internal_getopt (list, "t:")) != -1)
++    {
++      switch (opt)
++        {
++          case 't':
++            if (!strcmp (list_optarg, "any"))
++              tag = MPI_ANY_TAG;
++            else if (!legal_number (list_optarg, &tag))
++              {
++                builtin_error (_("-t: numeric argument or \"any\" required"));
++                return (EX_USAGE);
++              }
++            break;
++
++          default:
++            sh_invalidopt (word);
++            builtin_usage ();
++            return (EX_USAGE);
++        }
++    }
++  list = loptend;
++
++  /* Parse the source rank, which must be a number or "any". */
++  YES_ARGS (list);
++  word = list->word->word;
++  if (!legal_number (word, &source_rank))
++    {
++      if (!strcmp (word, "any"))
++        source_rank = MPI_ANY_SOURCE;
++      else
++        {
++          builtin_error (_("mpi_recv: numeric rank or \"any\" required"));
++          return (EX_USAGE);
++        }
++    }
++  list = list->next;
++
++  /* Parse the target variable, which must not be read-only. */
++  YES_ARGS (list);
++  varname = list->word->word;
++  REQUIRE_WRITABLE (varname);
++  list = list->next;
++  no_args (list);
++
++  /* Receive a message.  Because we don't know long the message will
++   * be, we first probe to get the length. */
++  MPI_TRY (MPI_Probe ((int)source_rank, (int)tag, MPI_COMM_WORLD, &status));
++  MPI_TRY (MPI_Get_count (&status, MPI_BYTE, &count));
++  if (alloced < count)
++    {
++      message = xrealloc (message, count);
++      alloced = count;
++    }
++  MPI_TRY (MPI_Recv (message, count, MPI_BYTE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status));
++  bind_array_variable (varname, 0, message, 0);
++  bind_array_variable_number (varname, 1, status.MPI_SOURCE, 0);
++  bind_array_variable_number (varname, 2, status.MPI_TAG, 0);
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN mpi_barrier
++$FUNCTION mpi_barrier_builtin
++$SHORT_DOC mpi_barrier
++Synchronizes all of the processes in the MPI job.
++
++No process will return from mpi_barrier until all processes have
++called mpi_barrier.
++
++Exit Status:
++Returns 0 unless an invalid option is given or an error occurs.
++$END
++
++/* Here is the mpi_barrier builtin. */
++int
++mpi_barrier_builtin (list)
++     WORD_LIST *list;
++{
++  no_args (list);
++  MPI_TRY (MPI_Barrier (MPI_COMM_WORLD));
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN mpi_bcast
++$FUNCTION mpi_bcast_builtin
++$SHORT_DOC mpi_bcast [message] name
++Broadcast a message to all processes in the same MPI job.
++
++Arguments:
++  MESSAGE       String to broadcast from one process to all the others.
++
++  NAME          Scalar variable in which to receive the broadcast message.
++
++Exactly one process in the MPI job must specify a message to
++broadcast.  No process will return from mpi_bcast until all processes
++have called mpi_bcast.
++
++Exit Status:
++Returns 0 unless an invalid option is given or an error occurs.
++$END
++
++/* Here is the mpi_bcast builtin. */
++int
++mpi_bcast_builtin (list)
++     WORD_LIST *list;
++{
++  char *word;            /* One argument */
++  int root;              /* MPI root rank */
++  char *root_message;    /* Message to broadcast */
++  int msglen;            /* Length in bytes of the above (including the NULL byte) */
++  char *varname;         /* Name of the variable to bind the results to */
++  static int *all_lengths = NULL;   /* List of every rank's msglen */
++  static char *message = NULL;      /* Message received from the root */
++  static int alloced = 0;           /* Bytes allocated for the above */
++  int i;
++
++  /* Parse the optional message and target variable, which must not be
++   * read-only. */
++  YES_ARGS (list);
++  if (list->next == NULL)
++    {
++      /* Non-root */
++      root_message = NULL;
++      msglen = -1;
++    }
++  else
++    {
++      /* Root */
++      root_message = list->word->word;
++      msglen = (int) strlen(root_message) + 1;
++      list = list->next;
++    }
++  varname = list->word->word;
++  REQUIRE_WRITABLE (varname);
++  list = list->next;
++  no_args (list);
++
++  /* Acquire global agreement on the root and the message size. */
++  if (all_lengths == NULL)
++    all_lengths = xmalloc (mpi_num_ranks*sizeof(int));
++  MPI_TRY (MPI_Allgather (&msglen, 1, MPI_INT, all_lengths, 1, MPI_INT, MPI_COMM_WORLD));
++  root = -1;
++  for (i = 0; i < mpi_num_ranks; i++)
++    {
++      if (all_lengths[i] == -1)
++        continue;
++      if (root != -1)
++        {
++          builtin_error (_("mpi_bcast: more than one process specified a message"));
++          return (EXECUTION_FAILURE);
++        }
++      root = i;
++      msglen = all_lengths[i];
++    }
++  if (root == -1)
++    {
++      builtin_error (_("mpi_bcast: no process specified a message"));
++      return (EXECUTION_FAILURE);
++    }
++
++  /* Broadcast the message. */
++  if (mpi_rank == root)
++    {
++      MPI_TRY (MPI_Bcast (root_message, msglen, MPI_BYTE, root, MPI_COMM_WORLD));
++      bind_variable (varname, root_message, 0);
++    }
++  else
++    {
++      if (alloced < msglen)
++        {
++          message = xrealloc (message, msglen);
++          alloced = msglen;
++        }
++      MPI_TRY (MPI_Bcast (message, msglen, MPI_BYTE, root, MPI_COMM_WORLD));
++      bind_variable (varname, message, 0);
++    }
++  return EXECUTION_SUCCESS;
++}
++
++$BUILTIN mpi_scan
++$FUNCTION mpi_scan_builtin
++$SHORT_DOC mpi_scan number name
++Perform an inclusive scan across all processes in the same MPI job.
++
++ -O OPERATION   Operation to perform.  Must be one of "max", "min",
++                "sum", "prod", "land", "band", "lor", "bor", "lxor",
++                "bxor", "maxloc", or "minloc" (default: "sum").
++
++Arguments:
++  NUMBER        Integer to use in the scan operation.
++
++  NAME          Array variable in which to receive the result and, in
++                the case of maxloc and minloc, the associated rank.
++
++In an inclusive-scan operation, each process i presents a number,
++a[i].  Once all processes in the MPI job have presented their number,
++the command returns a[0] to rank 0, a[0]+a[1] to rank 1,
++a[0]+a[1]+a[2] to rank 2, and so forth.  The -O option enables "+" to
++be replaced with other operations.
++
++Inclusive scans can be useful for assigning a unique index to each
++process in the MPI job.
++
++Exit Status:
++Returns 0 unless an invalid option is given or an error occurs.
++$END
++
++/* Here is the mpi_scan builtin. */
++int
++mpi_scan_builtin (list)
++     WORD_LIST *list;
++{
++  return reduction_like (list, "mpi_scan", MPI_Scan);
++}
++
++$BUILTIN mpi_exscan
++$FUNCTION mpi_exscan_builtin
++$SHORT_DOC mpi_exscan number name
++Perform an exclusive scan across all processes in the same MPI job.
++
++ -O OPERATION   Operation to perform.  Must be one of "max", "min",
++                "sum", "prod", "land", "band", "lor", "bor", "lxor",
++                "bxor", "maxloc", or "minloc" (default: "sum").
++
++Arguments:
++  NUMBER        Integer to use in the scan operation.
++
++  NAME          Array variable in which to receive the result and, in
++                the case of maxloc and minloc, the associated rank.
++
++In a exclusive-scan operation, each process i presents a number, a[i].
++Once all processes in the MPI job have presented their number, the
++command assigns a[0] to NAME on rank 1, a[0]+a[1] to NAME on rank 2,
++a[0]+a[1]+a[2] to NAME on rank 3, and so forth.  No assignment is
++performed on rank 0.  The -O option enables "+" to be replaced with
++other operations.
++
++Exclusive scans can be useful for assigning a unique index to each
++process in the MPI job.
++
++Exit Status:
++Returns 0 unless an invalid option is given or an error occurs.
++$END
++
++/* Here is the mpi_exscan builtin. */
++int
++mpi_exscan_builtin (list)
++     WORD_LIST *list;
++{
++  return reduction_like (list, "mpi_exscan", MPI_Exscan);
++}
++
++$BUILTIN mpi_allreduce
++$FUNCTION mpi_allreduce_builtin
++$SHORT_DOC mpi_allreduce number name
++Reduce numbers from all processes in an MPI job to a single number.
++
++Options:
++
++ -O OPERATION   Operation to perform.  Must be one of "max", "min",
++                "sum", "prod", "land", "band", "lor", "bor", "lxor",
++                "bxor", "maxloc", or "minloc" (default: "sum").
++
++Arguments:
++  NUMBER        Integer to use in the allreduce operation.
++
++  NAME          Array variable in which to receive the result and, in
++                the case of maxloc and minloc, the associated rank.
++
++In an all-reduce operation, each process i presents a number, a[i].
++Once all processes in the MPI job have presented their number, the
++command returns a[0]+a[1]+...+a[n-1] to all ranks.  The -O option
++enables "+" to be replaced with other operations.
++
++All-reduces can be useful for reaching global agreement (e.g., of a
++termination condition).
++
++Exit Status:
++Returns 0 unless an invalid option is given or an error occurs.
++$END
++
++/* Here is the mpi_allreduce builtin. */
++int
++mpi_allreduce_builtin (list)
++     WORD_LIST *list;
++{
++  return reduction_like (list, "mpi_allreduce", MPI_Allreduce);
++}
+diff -Naur bash-4.3/config.h.in mpibash-4.3/config.h.in
+--- bash-4.3/config.h.in    2013-06-29 15:35:33.000000000 -0600
++++ mpibash-4.3/config.h.in 2014-05-13 11:27:37.314100671 -0600
+@@ -1147,6 +1147,12 @@
+ /* Define if you have the `__argz_stringify' function. */
+ #undef HAVE___ARGZ_STRINGIFY
+
++/* Define if you have both the <libcircle.h> header file and the libcircle library. */
++#undef HAVE_LIBCIRCLE
++
++/* Define if you have the `CIRCLE_cb_reduce_op' function. */
++#undef HAVE_CIRCLE_CB_REDUCE_OP
++
+ /* End additions for lib/intl */
+
+ #include "config-bot.h"
+diff -Naur bash-4.3/configure.ac mpibash-4.3/configure.ac
+--- bash-4.3/configure.ac   2014-02-11 08:37:53.000000000 -0700
++++ mpibash-4.3/configure.ac        2014-05-13 11:27:37.302100179 -0600
+@@ -24,7 +24,7 @@
+ AC_REVISION([for Bash 4.3, version 4.063])dnl
+
+ define(bashvers, 4.3)
+-define(relstatus, release)
++define(relstatus, MPI)
+
+ AC_INIT([bash], bashvers-relstatus, [bug-bash@gnu.org])
+
+@@ -813,6 +813,21 @@
+     fi
+ ])
+
++dnl Ensure that we can find an MPI library.
++AC_CHECK_FUNCS([MPI_Init], [], [
++  AC_MSG_ERROR([Cannot continue without MPI.  Consider specifying CC=mpicc.])])
++
++dnl If we have Libcircle, use it, too.
++AC_SEARCH_LIBS([CIRCLE_cb_create], [circle], [AC_CHECK_HEADERS([libcircle.h])])
++if test "x$ac_cv_header_libcircle_h" = xyes; then
++  libcircle_make_prefix=""
++  AC_DEFINE([HAVE_LIBCIRCLE], [1], [Define if you have the Libcircle header and library.])
++  AC_CHECK_FUNCS([CIRCLE_cb_reduce_op])
++else
++  libcircle_make_prefix="#"
++fi
++AC_SUBST([CIRCLE], [$libcircle_make_prefix])
++
+ BASH_CHECK_DECL(strtoimax)
+ BASH_CHECK_DECL(strtol)
+ BASH_CHECK_DECL(strtoll)
+diff -Naur bash-4.3/Makefile.in mpibash-4.3/Makefile.in
+--- bash-4.3/Makefile.in    2014-01-25 14:27:30.000000000 -0700
++++ mpibash-4.3/Makefile.in 2014-05-13 11:27:37.314100671 -0600
+@@ -104,7 +104,7 @@
+ VERSPROG = bashversion$(EXEEXT)
+ VERSOBJ = bashversion.$(OBJEXT)
+
+-Program = bash$(EXEEXT)
++Program = mpibash$(EXEEXT)
+ Version = @BASHVERS@
+ PatchLevel = `$(BUILD_DIR)/$(VERSPROG) -p`
+ RELSTATUS = @RELSTATUS@
+diff -Naur bash-4.3/shell.c mpibash-4.3/shell.c
+--- bash-4.3/shell.c        2014-01-14 06:04:32.000000000 -0700
++++ mpibash-4.3/shell.c     2014-05-13 11:27:37.314100671 -0600
+@@ -107,6 +107,13 @@
+ extern char *primary_prompt, *secondary_prompt;
+ extern char *this_command_name;
+
++extern void initialize_mpi __P((int, char **));
++extern void finalize_mpi __P((void));
++#ifdef HAVE_LIBCIRCLE
++extern void initialize_libcircle __P((int, char **));
++extern void finalize_libcircle __P((void));
++#endif
++
+ /* Non-zero means that this shell has already been run; i.e. you should
+    call shell_reinitialize () if you need to start afresh. */
+ int shell_initialized = 0;
+@@ -324,7 +331,7 @@
+ static void init_interactive_script __P((void));
+
+ static void set_shell_name __P((char *));
+-static void shell_initialize __P((void));
++static void shell_initialize __P((int, char **));
+ static void shell_reinitialize __P((void));
+
+ static void show_shell_usage __P((FILE *, int));
+@@ -561,7 +568,7 @@
+
+   /* From here on in, the shell must be a normal functioning shell.
+      Variables from the environment are expected to be set, etc. */
+-  shell_initialize ();
++  shell_initialize (argc, argv);
+
+   set_default_lang ();
+   set_default_locale_vars ();
+@@ -941,6 +948,12 @@
+     end_job_control ();
+ #endif /* JOB_CONTROL */
+
++#ifdef HAVE_LIBCIRCLE
++  finalize_libcircle ();
++#else
++  finalize_mpi ();
++#endif
++
+   /* Always return the exit status of the last command to our parent. */
+   sh_exit (s);
+ }
+@@ -1691,7 +1704,9 @@
+ /* Do whatever is necessary to initialize the shell.
+    Put new initializations in here. */
+ static void
+-shell_initialize ()
++shell_initialize (argc, argv)
++     int argc;
++     char **argv;
+ {
+   char hostname[256];
+
+@@ -1760,6 +1775,17 @@
+   initialize_shell_options (privileged_mode||running_setuid);
+   initialize_bashopts (privileged_mode||running_setuid);
+ #endif
++
++  /* Initialize Libcircle and MPI. */
++#ifdef HAVE_LIBCIRCLE
++  initialize_libcircle (argc, argv);
++  initialize_mpi (argc, argv);
++  bind_variable ("libcircle", "yes", 0);
++#else
++  initialize_mpi (argc, argv);
++  bind_variable ("libcircle", "no", 0);
++#endif
++  bind_variable ("mpibash", "yes", 0);
+ }
+
+ /* Function called by main () when it appears that the shell has already

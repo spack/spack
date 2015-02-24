@@ -149,6 +149,11 @@ def colorize(string, **kwargs):
     return re.sub(color_re, match_to_ansi(color), string)
 
 
+def clen(string):
+    """Return the length of a string, excluding ansi color sequences."""
+    return len(re.sub(r'\033[^m]*m', '', string))
+
+
 def cwrite(string, stream=sys.stdout, color=None):
     """Replace all color expressions in string with ANSI control
        codes and write the result to the stream.  If color is
@@ -172,17 +177,20 @@ def cescape(string):
 
 class ColorStream(object):
     def __init__(self, stream, color=None):
-        self.__class__ = type(stream.__class__.__name__,
-                              (self.__class__, stream.__class__), {})
-        self.__dict__ = stream.__dict__
-        self.color = color
-        self.stream = stream
+        self._stream = stream
+        self._color = color
 
     def write(self, string, **kwargs):
-        if kwargs.get('raw', False):
-            super(ColorStream, self).write(string)
-        else:
-            cwrite(string, self.stream, self.color)
+        raw = kwargs.get('raw', False)
+        raw_write = getattr(self._stream, 'write')
+
+        color = self._color
+        if self._color is None:
+            if raw:
+                color=True
+            else:
+                color = self._stream.isatty()
+        raw_write(colorize(string, color=color))
 
     def writelines(self, sequence, **kwargs):
         raw = kwargs.get('raw', False)

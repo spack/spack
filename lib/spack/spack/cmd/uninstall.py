@@ -65,19 +65,18 @@ def uninstall(parser, args):
                      "  b) use a more specific spec."]
             tty.die(*args)
 
-
         if len(matching_specs) == 0:
+            if args.force: continue
             tty.die("%s does not match any installed packages." % spec)
 
         for s in matching_specs:
             try:
                 # should work if package is known to spack
-                pkgs.append(spack.db.get(s))
+                pkgs.append(s.package)
 
             except spack.packages.UnknownPackageError, e:
                 # The package.py file has gone away -- but still want to uninstall.
                 spack.Package(s).do_uninstall(force=True)
-
 
     # Sort packages to be uninstalled by the number of installed dependents
     # This ensures we do things in the right order

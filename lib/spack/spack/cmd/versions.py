@@ -24,6 +24,7 @@
 ##############################################################################
 import os
 from llnl.util.tty.colify import colify
+import llnl.util.tty as tty
 import spack
 
 description ="List available versions of a package"
@@ -34,4 +35,21 @@ def setup_parser(subparser):
 
 def versions(parser, args):
     pkg = spack.db.get(args.package)
-    colify(reversed(pkg.fetch_available_versions()))
+
+    safe_versions = pkg.versions
+    fetched_versions = pkg.fetch_remote_versions()
+    remote_versions = set(fetched_versions).difference(safe_versions)
+
+    tty.msg("Safe versions (already checksummed):")
+    colify(sorted(safe_versions, reverse=True), indent=2)
+
+    tty.msg("Remote versions (not yet checksummed):")
+    if not remote_versions:
+        if not fetched_versions:
+            print "  Found no versions for %s" % pkg.name
+            tty.debug("Check the list_url and list_depth attribute on the "
+                      "package to help Spack find versions.")
+        else:
+            print "  Found no unckecksummed versions for %s" % pkg.name
+    else:
+        colify(sorted(remote_versions, reverse=True), indent=2)

@@ -25,7 +25,7 @@
 import re
 import sys
 import subprocess
-import urllib2
+import urllib2, cookielib
 import urlparse
 from multiprocessing import Pool
 from HTMLParser import HTMLParser, HTMLParseError
@@ -68,7 +68,7 @@ def _spider(args):
        pool.  Firing off all the child links at once makes the fetch MUCH
        faster for pages with lots of children.
     """
-    url, depth, max_depth, raise_on_error = args
+    url, visited, root, opener, depth, max_depth, raise_on_error = args
 
     pages = {}
     try:
@@ -82,12 +82,12 @@ def _spider(args):
         resp = urllib2.urlopen(req, timeout=TIMEOUT)
 
         if not "Content-type" in resp.headers:
-            tty.warn("ignoring page " + url)
+            tty.debug("ignoring page " + url)
             return pages
 
         if not resp.headers["Content-type"].startswith('text/html'):
-            tty.warn("ignoring page " + url + " with content type " +
-                     resp.headers["Content-type"])
+            tty.debug("ignoring page " + url + " with content type " +
+                      resp.headers["Content-type"])
             return pages
 
         # Do the real GET request when we know it's just HTML.
@@ -114,15 +114,30 @@ def _spider(args):
 
                 # Evaluate the link relative to the page it came from.
                 abs_link = urlparse.urljoin(response_url, raw_link)
-                subcalls.append((abs_link, depth+1, max_depth, raise_on_error))
+
+                # Skip things outside the root directory
+                if not abs_link.startswith(root):
+                    continue
+
+                # Skip already-visited links
+                if abs_link in visited:
+                    continue
+
+                subcalls.append((abs_link, visited, root, None, depth+1, max_depth, raise_on_error))
+                visited.add(abs_link)
 
             if subcalls:
-                pool = Pool(processes=len(subcalls))
-                dicts = pool.map(_spider, subcalls)
-                for d in dicts:
-                    pages.update(d)
+                try:
+                    pool = Pool(processes=len(subcalls))
+                    dicts = pool.map(_spider, subcalls)
+                    for d in dicts:
+                        pages.update(d)
+                finally:
+                    pool.terminate()
+                    pool.join()
 
     except urllib2.URLError, e:
+        tty.debug(e)
         if raise_on_error:
             raise spack.error.NoNetworkConnectionError(str(e), url)
 
@@ -137,7 +152,8 @@ def _spider(args):
         tty.warn(msg, url, "HTMLParseError: " + str(e))
 
     except Exception, e:
-        pass    # Other types of errors are completely ignored.
+        # Other types of errors are completely ignored, except in debug mode.
+        tty.debug("Error in _spider: %s" % e)
 
     return pages
 
@@ -151,5 +167,5 @@ def get_pages(root_url, **kwargs):
        performance over a sequential fetch.
     """
     max_depth = kwargs.setdefault('depth', 1)
-    pages =  _spider((root_url, 1, max_depth, False))
+    pages =  _spider((root_url, set(), root_url, None, 1, max_depth, False))
     return pages

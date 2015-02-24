@@ -61,13 +61,15 @@ def strip_extension(path):
 
 def extension(path):
     """Get the archive extension for a path."""
+    if path is None:
+        raise ValueError("Can't call extension() on None")
 
     # Strip sourceforge suffix.
     if re.search(r'((?:sourceforge.net|sf.net)/.*)/download$', path):
         path = os.path.dirname(path)
 
-    for type in ALLOWED_ARCHIVE_TYPES:
-        suffix = r'\.%s$' % type
+    for t in ALLOWED_ARCHIVE_TYPES:
+        suffix = r'\.%s$' % t
         if re.search(suffix, path):
-            return type
+            return t
     return None

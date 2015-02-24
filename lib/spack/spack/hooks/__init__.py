@@ -31,7 +31,9 @@
 
    Currently the following hooks are supported:
 
+      * pre_install()
       * post_install()
+      * pre_uninstall()
       * post_uninstall()
 
    This can be used to implement support for things like module
@@ -47,8 +49,11 @@ import spack
 def all_hook_modules():
     modules = []
     for name in list_modules(spack.hooks_path):
+        mod_name = __name__ + '.' + name
         path = join_path(spack.hooks_path, name) + ".py"
-        modules.append(imp.load_source('spack.hooks', path))
+        mod = imp.load_source(mod_name, path)
+        modules.append(mod)
+
     return modules
 
 
@@ -67,5 +72,8 @@ class HookRunner(object):
 #
 # Define some functions that can be called to fire off hooks.
 #
-post_install = HookRunner('post_install')
+pre_install    = HookRunner('pre_install')
+post_install   = HookRunner('post_install')
+
+pre_uninstall  = HookRunner('pre_uninstall')
 post_uninstall = HookRunner('post_uninstall')
