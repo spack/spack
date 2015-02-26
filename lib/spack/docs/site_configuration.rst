@@ -1,200 +1,7 @@
 .. _site-configuration:
 
-Site-specific configuration
+Site configuration
 ===================================
-
-.. _mirrors:
-
-Mirrors
-----------------------------
-
-Some sites may not have access to the internet for fetching packages.
-These sites will need a local repository of tarballs from which they
-can get their files.  Spack has support for this with *mirrors*.  A
-mirror is a URL that points to a directory, either on the local
-filesystem or on some server, containing tarballs for all of Spack's
-packages.
-
-Here's an example of a mirror's directory structure::
-
-    mirror/
-        cmake/
-            cmake-2.8.10.2.tar.gz
-        dyninst/
-            DyninstAPI-8.1.1.tgz
-            DyninstAPI-8.1.2.tgz
-        libdwarf/
-            libdwarf-20130126.tar.gz
-            libdwarf-20130207.tar.gz
-            libdwarf-20130729.tar.gz
-        libelf/
-            libelf-0.8.12.tar.gz
-            libelf-0.8.13.tar.gz
-        libunwind/
-            libunwind-1.1.tar.gz
-        mpich/
-            mpich-3.0.4.tar.gz
-        mvapich2/
-        mvapich2-1.9.tgz
-
-The structure is very simple.  There is a top-level directory.  The
-second level directories are named after packages, and the third level
-contains tarballs for each package, named as they were in the
-package's fetch URL.
-
-``spack mirror``
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Mirrors are managed with the ``spack mirror`` command.  The help for
-``spack mirror`` looks like this::
-
-    $ spack mirror -h
-    usage: spack mirror [-h] SUBCOMMAND ...
-
-    positional arguments:
-      SUBCOMMAND
-        create           Create a directory to be used as a spack mirror, and fill
-                         it with package archives.
-        add              Add a mirror to Spack.
-        remove           Remove a mirror by name.
-        list             Print out available mirrors to the console.
-
-    optional arguments:
-      -h, --help         show this help message and exit
-
-The ``create`` command actually builds a mirror by fetching all of its
-packages from the internet and checksumming them.
-
-The other three commands are for managing mirror configuration.  They
-control the URL(s) from which Spack downloads its packages.
-
-
-``spack mirror create``
-~~~~~~~~~~~~~~~~~~~~~~~
-
-You can create a mirror using the ``spack mirror create`` command, assuming
-you're on a machine where you can access the internet.
-
-The command will iterate through all of Spack's packages and download
-the safe ones into a directory structure like the one above.  Here is
-what it looks like:
-
-
-.. code-block:: bash
-
-   $ spack mirror create libelf libdwarf
-   ==> Created new mirror in spack-mirror-2014-06-24
-   ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
-   ##########################################################                81.6%
-   ==> Checksum passed for libelf@0.8.13
-   ==> Added spack-mirror-2014-06-24/libelf/libelf-0.8.13.tar.gz to mirror
-   ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.12.tar.gz
-   ######################################################################    98.6%
-   ==> Checksum passed for libelf@0.8.12
-   ==> Added spack-mirror-2014-06-24/libelf/libelf-0.8.12.tar.gz to mirror
-   ==> Trying to fetch from http://www.prevanders.net/libdwarf-20130207.tar.gz
-   ######################################################################    97.3%
-   ==> Checksum passed for libdwarf@20130207
-   ==> Added spack-mirror-2014-06-24/libdwarf/libdwarf-20130207.tar.gz to mirror
-   ==> Trying to fetch from http://www.prevanders.net/libdwarf-20130126.tar.gz
-   ########################################################                  78.9%
-   ==> Checksum passed for libdwarf@20130126
-   ==> Added spack-mirror-2014-06-24/libdwarf/libdwarf-20130126.tar.gz to mirror
-   ==> Trying to fetch from http://www.prevanders.net/libdwarf-20130729.tar.gz
-   #############################################################             84.7%
-   ==> Checksum passed for libdwarf@20130729
-   ==> Added spack-mirror-2014-06-24/libdwarf/libdwarf-20130729.tar.gz to mirror
-
-Once this is done, you can tar up the ``spack-mirror-2014-06-24`` directory and
-copy it over to the machine you want it hosted on.
-
-Custom package sets
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Normally, ``spack mirror create`` downloads all the archives it has
-checksums for.  If you want to only create a mirror for a subset of
-packages, you can do that by supplying a list of package specs on the
-command line after ``spack mirror create``.  For example, this
-command::
-
-    $ spack mirror create libelf@0.8.12: boost@1.44:
-
-Will create a mirror for libelf versions greater than or equal to
-0.8.12 and boost versions greater than or equal to 1.44.
-
-Mirror files
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you have a *very* large number of packages you want to mirror, you
-can supply a file with specs in it, one per line::
-
-   $ cat specs.txt
-   libdwarf
-   libelf@0.8.12:
-   boost@1.44:
-   boost@1.39.0
-   ...
-   $ spack mirror create -f specs.txt
-   ...
-
-This is useful if there is a specific suite of software managed by
-your site.
-
-
-``spack mirror add``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Once you have a mirrror, you need to let spack know about it.  This is
-relatively simple.  First, figure out the URL for the mirror.  If it's
-a file, you can use a file URL like this one::
-
-    file:///Users/gamblin2/spack-mirror-2014-06-24
-
-That points to the directory on the local filesystem.  If it were on a
-web server, you could use a URL like this one:
-
-    https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
-
-Spack will use the URL as the root for all of the packages it fetches.
-You can tell your Spack installation to use that mirror like this:
-
-.. code-block:: bash
-
-   $ spack mirror add local_filesystem file:///Users/gamblin2/spack-mirror-2014-06-24
-
-Each mirror has a name so that you can refer to it again later.
-
-``spack mirror list``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you want to see all the mirrors Spack knows about you can run ``spack mirror list``::
-
-   $ spack mirror list
-   local_filesystem    file:///Users/gamblin2/spack-mirror-2014-06-24
-
-``spack mirror remove``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-And, if you want to remove a mirror, just remove it by name::
-
-   $ spack mirror remove local_filesystem
-   $ spack mirror list
-   ==> No mirrors configured.
-
-Mirror precedence
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Adding a mirror really just adds a section in ``~/.spackconfig``::
-
-   [mirror "local_filesystem"]
-       url = file:///Users/gamblin2/spack-mirror-2014-06-24
-   [mirror "remote_server"]
-       url = https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
-
-If you want to change the order in which mirrors are searched for
-packages, you can edit this file and reorder the sections.  Spack will
-search the topmost mirror first and the bottom-most mirror last.
-
 
 .. _temp-space:
 
@@ -202,7 +9,7 @@ Temporary space
 ----------------------------
 
 .. warning:: Temporary space configuration will be moved to configuration files.
-   The intructions here are old and refer to ``__init__.py``
+   The instructions here are old and refer to ``__init__.py``
 
 By default, Spack will try to do all of its building in temporary
 space.  There are two main reasons for this.  First, Spack is designed
@@ -286,7 +93,7 @@ the virtual spec to specs for possible implementations, and
 later, so there is no need to fully concretize the spec when returning
 it.
 
-The ``DefaultConcretizer`` is intendend to provide sensible defaults
+The ``DefaultConcretizer`` is intended to provide sensible defaults
 for each policy, but there are certain choices that it can't know
 about.  For example, one site might prefer ``OpenMPI`` over ``MPICH``,
 or another might prefer an old version of some packages.  These types
@@ -327,3 +134,53 @@ Set concretizer to *your own* class instead of the default:
    concretizer = MyConcretizer()
 
 The next time you run Spack, your changes should take effect.
+
+
+Profiling
+~~~~~~~~~~~~~~~~~~~~~
+
+Spack has some limited built-in support for profiling, and can report
+statistics using standard Python timing tools.  To use this feature,
+supply ``-p`` to Spack on the command line, before any subcommands.
+
+.. _spack-p:
+
+``spack -p``
+^^^^^^^^^^^^^^^^^^
+
+``spack -p`` output looks like this:
+
+.. code-block:: sh
+
+   $ spack -p graph dyninst
+   o  dyninst
+   |\
+   | |\
+   | o |  libdwarf
+   |/ /
+   o |  libelf
+    /
+   o  boost
+
+         307670 function calls (305943 primitive calls) in 0.127 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      853    0.021    0.000    0.066    0.000 inspect.py:472(getmodule)
+    51197    0.011    0.000    0.018    0.000 inspect.py:51(ismodule)
+    73961    0.010    0.000    0.010    0.000 {isinstance}
+     1762    0.006    0.000    0.053    0.000 inspect.py:440(getsourcefile)
+    32075    0.006    0.000    0.006    0.000 {hasattr}
+     1760    0.004    0.000    0.004    0.000 {posix.stat}
+     2240    0.004    0.000    0.004    0.000 {posix.lstat}
+     2602    0.004    0.000    0.011    0.000 inspect.py:398(getfile)
+      771    0.004    0.000    0.077    0.000 inspect.py:518(findsource)
+     2656    0.004    0.000    0.004    0.000 {method 'match' of '_sre.SRE_Pattern' objects}
+    30772    0.003    0.000    0.003    0.000 {method 'get' of 'dict' objects}
+    ...
+
+The bottom of the output shows the top most time consuming functions,
+slowest on top.  The profiling support is from Python's built-in tool,
+`cProfile
+<https://docs.python.org/2/library/profile.html#module-cProfile>`_.

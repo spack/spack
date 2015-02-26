@@ -29,11 +29,10 @@ class Clang(Package):
        Objective C and Objective C++ front-end for the LLVM compiler.
     """
     homepage = "http://clang.llvm.org"
-    url      = "http://llvm.org/releases/3.4.2/cfe-3.4.2.src.tar.gz"
+    list_url = "http://llvm.org/releases/download.html"
 
     depends_on("llvm")
-
-    version('3.4.2', '87945973b7c73038871c5f849a818588')
+    version('3.4.2', '87945973b7c73038871c5f849a818588', url='http://llvm.org/releases/3.4.2/cfe-3.4.2.src.tar.xz')
 
     def install(self, spec, prefix):
         env['CXXFLAGS'] = self.compiler.cxx11_flag

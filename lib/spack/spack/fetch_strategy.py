@@ -41,6 +41,7 @@ in order to build it.  They need to define the following methods:
         Archive a source directory, e.g. for creating a mirror.
 """
 import os
+import sys
 import re
 import shutil
 from functools import wraps
@@ -141,13 +142,19 @@ class URLFetchStrategy(FetchStrategy):
 
         tty.msg("Trying to fetch from %s" % self.url)
 
+        curl_args = ['-O',        # save file to disk
+                     '-f',        # fail on >400 errors
+                     '-D', '-',   # print out HTML headers
+                     '-L', self.url,]
+
+        if sys.stdout.isatty():
+            curl_args.append('-#')  # status bar when using a tty
+        else:
+            curl_args.append('-sS') # just errors when not.
+
         # Run curl but grab the mime type from the http headers
-        headers = spack.curl('-#',        # status bar
-                             '-O',        # save file to disk
-                             '-f',        # fail on >400 errors
-                             '-D', '-',   # print out HTML headers
-                             '-L', self.url,
-                             return_output=True, fail_on_error=False)
+        headers = spack.curl(
+            *curl_args, return_output=True, fail_on_error=False)
 
         if spack.curl.returncode != 0:
             # clean up archive on failure.

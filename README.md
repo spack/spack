@@ -36,16 +36,19 @@ Authors
 ----------------
 Spack was written by Todd Gamblin, tgamblin@llnl.gov.
 
-Significant contributions were also made by the following awesome
-people:
+Significant contributions were also made by:
 
   * David Beckingsale
   * David Boehme
+  * Alfredo Gimenez
   * Luc Jaulmes
   * Matt Legendre
   * Greg Lee
   * Adam Moody
+  * Saravan Pantham
+  * Joachim Protze
   * Bob Robey
+  * Justin Too
 
 Release
 ----------------

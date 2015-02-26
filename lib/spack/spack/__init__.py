@@ -78,7 +78,7 @@ concretizer = DefaultConcretizer()
 
 # Version information
 from spack.version import Version
-spack_version = Version("0.8")
+spack_version = Version("0.8.15")
 
 #
 # Executables used by Spack
@@ -138,7 +138,7 @@ sys_type = None
 #       should live.  This file is overloaded for spack core vs. for packages.
 #
 __all__ = ['Package', 'Version', 'when', 'ver']
-from spack.package import Package
+from spack.package import Package, ExtensionConflictError
 from spack.version import Version, ver
 from spack.multimethod import when
 

@@ -50,11 +50,11 @@ as a descriptor for one or more instances of that template.  Users
 express the configuration they want using a spec, and a package turns
 the spec into a complete build.
 
-The obvious difficulty with this design is that users underspecify
+The obvious difficulty with this design is that users under-specify
 what they want.  To build a software package, the package object needs
 a *complete* specification.  In Spack, if a spec describes only one
 instance of a package, then we say it is **concrete**.  If a spec
-could describes many instances, (i.e. it is underspecified in one way
+could describes many instances, (i.e. it is under-specified in one way
 or another), then we say it is **abstract**.
 
 Spack's job is to take an *abstract* spec from the user, find a
@@ -92,7 +92,7 @@ with a high level view of Spack's directory structure::
 Spack is designed so that it could live within a `standard UNIX
 directory hierarchy <http://linux.die.net/man/7/hier>`_, so ``lib``,
 ``var``, and ``opt`` all contain a ``spack`` subdirectory in case
-Spack is installed alongside other software.  Most of the insteresting
+Spack is installed alongside other software.  Most of the interesting
 parts of Spack live in ``lib/spack``.  Files under ``var`` are created
 as needed, so there is no ``var`` directory when you initially clone
 Spack from the repository.
@@ -123,13 +123,13 @@ Package-related modules
   Contains the :class:`Package <spack.package.Package>` class, which
   is the superclass for all packages in Spack.  Methods on ``Package``
   implement all phases of the :ref:`package lifecycle
-  <pacakge-lifecycle>` and manage the build process.
+  <package-lifecycle>` and manage the build process.
 
 :mod:`spack.packages`
   Contains all of the packages in Spack and methods for managing them.
   Functions like :func:`packages.get <spack.packages.get>` and
   :func:`class_name_for_package_name
-  <packages.class_name_for_package_name>` handle mapping packge module
+  <packages.class_name_for_package_name>` handle mapping package module
   names to class names and dynamically instantiating packages by name
   from module files.
 
