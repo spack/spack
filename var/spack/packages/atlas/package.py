@@ -32,18 +32,11 @@ class Atlas(Package):
 
     version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da')
 
-    # FIXME: Add dependencies if this package requires them.
-    # depends_on("foo")
-
     def install(self, spec, prefix):
-        #os.mkdir('ATLAS-Build')
-        #os.chdir('ATLAS-Build')
         with working_dir('ATLAS-Build', create=True):
             self.module.configure = Executable('../configure')
-        # FIXME: Modify the configure line to suit your build system here.
             configure("--prefix=%s" % prefix)
 
-        # FIXME: Add logic to build and install here
             make()
             make('check')
             make('ptcheck')
