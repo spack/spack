@@ -37,7 +37,9 @@ class Lapack(Package):
     depends_on('atlas')
 
     def install(self, spec, prefix):
-        cmake(".", '-DBLAS_LIBRARIES=f77blas;atlas', *std_cmake_args)
+        atlas_blas = spec['atlas'].prefix.lib + '/libf77blas.a'
+        atlas_lib = spec['atlas'].prefix.lib + "/libatlas.a"
+        cmake(".", '-DBLAS_LIBRARIES='+atlas_blas + ";" + atlas_lib, *std_cmake_args)
 
         make()
         make("install")
