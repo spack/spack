@@ -1,19 +1,3 @@
-# FIXME:
-# This is a template package file for Spack.  We've conveniently
-# put "FIXME" labels next to all the things you'll want to change.
-#
-# Once you've edited all the FIXME's, delete this whole message,
-# save this file, and test out your package like this:
-#
-#     spack install lapack
-#
-# You can always get back here to change things with:
-#
-#     spack edit lapack
-#
-# See the spack documentation for more information on building
-# packages.
-#
 from spack import *
 
 class Lapack(Package):
@@ -37,9 +21,9 @@ class Lapack(Package):
     depends_on('atlas')
 
     def install(self, spec, prefix):
-        atlas_blas = spec['atlas'].prefix.lib + '/libf77blas.a'
-        atlas_lib = spec['atlas'].prefix.lib + "/libatlas.a"
-        cmake(".", '-DBLAS_LIBRARIES='+atlas_blas + ";" + atlas_lib, *std_cmake_args)
+        atlas_libs = ['libf77blas.a', 'libatlas.a']
+        atlas_libs = [join_path(spec['atlas'].prefix.lib, lib,) for lib in atlas_libs]
 
+        cmake(".", '-DBLAS_LIBRARIES=' + ";".join(atlas_libs), *std_cmake_args)
         make()
         make("install")
