@@ -7,8 +7,8 @@ class Samrai(Package):
        structured adaptive mesh refinement (SAMR) technology in large-scale parallel
        application development.
     """
-    homepage = "https://computation-rnd.llnl.gov/SAMRAI/confirm.php"
-    url      = "https://computation-rnd.llnl.gov/SAMRAI/download/SAMRAI-v3.7.3.tar.gz"
+    homepage = "https://computation.llnl.gov/project/SAMRAI/"
+    url      = "https://computation.llnl.gov/project/SAMRAI/download/SAMRAI-v3.9.1.tar.gz"
     list_url = homepage
 
     version('3.7.3',      '12d574eacadf8c9a70f1bb4cd1a69df6')
