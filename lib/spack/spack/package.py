@@ -62,6 +62,7 @@ from spack.version import *
 from spack.stage import Stage
 from spack.util.web import get_pages
 from spack.util.compression import allowed_archive, extension
+from spack.util.executable import ProcessError
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -805,6 +806,16 @@ class Package(object):
         # package naming scheme it likes.
         spack.install_layout.make_path_for_spec(self.spec)
 
+        def cleanup():
+            if not keep_prefix:
+                # If anything goes wrong, remove the install prefix
+                self.remove_prefix()
+            else:
+                tty.warn("Keeping install prefix in place despite error.",
+                         "Spack will think this package is installed." +
+                         "Manually remove this directory to fix:",
+                         self.prefix)
+
         def real_work():
             try:
                 tty.msg("Building %s." % self.name)
@@ -837,15 +848,20 @@ class Package(object):
                         % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
                 print_pkg(self.prefix)
 
-            except:
-                if not keep_prefix:
-                    # If anything goes wrong, remove the install prefix
-                    self.remove_prefix()
+            except ProcessError, e:
+                # One of the processes returned an error code.
+                # Suppress detailed stack trace here unless in debug mode
+                if spack.debug:
+                    raise e
                 else:
-                    tty.warn("Keeping install prefix in place despite error.",
-                             "Spack will think this package is installed." +
-                             "Manually remove this directory to fix:",
-                             self.prefix)
+                    tty.error(e)
+
+                # Still need to clean up b/c there was an error.
+                cleanup()
+
+            except:
+                # other exceptions just clean up and raise.
+                cleanup()
                 raise
 
         build_env.fork(self, real_work)
