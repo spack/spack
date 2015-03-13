@@ -10,6 +10,7 @@ class Scotch(Package):
     list_url = "http://gforge.inria.fr/frs/?group_id=248"
 
     version('6.0.3', '10b0cc0f184de2de99859eafaca83cfc')
+
     depends_on('mpi')
 
 
