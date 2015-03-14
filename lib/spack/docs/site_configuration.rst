@@ -8,8 +8,9 @@ Site configuration
 Temporary space
 ----------------------------
 
-.. warning:: Temporary space configuration will be moved to configuration files.
-   The instructions here are old and refer to ``__init__.py``
+.. warning:: Temporary space configuration will eventually be moved to
+   configuration files, but currently these settings are in
+   ``lib/spack/spack/__init__.py``
 
 By default, Spack will try to do all of its building in temporary
 space.  There are two main reasons for this.  First, Spack is designed
