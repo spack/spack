@@ -22,51 +22,26 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""
-This package contains relationships that can be defined among packages.
-Relations are functions that can be called inside a package definition,
-for example:
+"""This package contains directives that can be used within a package.
 
-    class OpenMPI(Package):
+Directives are functions that can be called inside a package
+definition to modify the package, for example:
+
+    class OpenMpi(Package):
         depends_on("hwloc")
         provides("mpi")
         ...
 
-The available relations are:
+``provides`` and ``depends_on`` are spack directives.
 
-depends_on
-    Above, the OpenMPI package declares that it "depends on" hwloc.  This means
-    that the hwloc package needs to be installed before OpenMPI can be
-    installed.  When a user runs 'spack install openmpi', spack will fetch
-    hwloc and install it first.
+The available directives are:
 
-provides
-    This is useful when more than one package can satisfy a dependence.  Above,
-    OpenMPI declares that it "provides" mpi.  Other implementations of the MPI
-    interface, like mvapich and mpich, also provide mpi, e.g.:
+  * ``version``
+  * ``depends_on``
+  * ``provides``
+  * ``extends``
+  * ``patch``
 
-        class Mvapich(Package):
-            provides("mpi")
-            ...
-
-        class Mpich(Package):
-            provides("mpi")
-            ...
-
-    Instead of depending on openmpi, mvapich, or mpich, another package can
-    declare that it depends on "mpi":
-
-        class Mpileaks(Package):
-            depends_on("mpi")
-            ...
-
-    Now the user can pick which MPI they would like to build with when they
-    install mpileaks.  For example, the user could install 3 instances of
-    mpileaks, one for each MPI version, by issuing these three commands:
-
-        spack install mpileaks ^openmpi
-        spack install mpileaks ^mvapich
-        spack install mpileaks ^mpich
 """
 __all__ = [ 'depends_on', 'extends', 'provides', 'patch', 'version' ]
 
@@ -84,14 +59,27 @@ from spack.patch import Patch
 from spack.spec import Spec, parse_anonymous_spec
 
 
+def directive(fun):
+    """Decorator that allows a function to be called while a class is
+       being constructed, and to modify the class.
 
-def version(ver, checksum=None, **kwargs):
+       Adds the class scope as an initial parameter when called, like
+       a class method would.
+    """
+    def directive_function(*args, **kwargs):
+        pkg      = DictWrapper(caller_locals())
+        pkg.name = get_calling_module_name()
+        return fun(pkg, *args, **kwargs)
+    return directive_function
+
+
+@directive
+def version(pkg, ver, checksum=None, **kwargs):
     """Adds a version and metadata describing how to fetch it.
        Metadata is just stored as a dict in the package's versions
        dictionary.  Package must turn it into a valid fetch strategy
        later.
     """
-    pkg = caller_locals()
     versions = pkg.setdefault('versions', {})
 
     # special case checksum for backward compatibility
@@ -103,21 +91,21 @@ def version(ver, checksum=None, **kwargs):
     versions[Version(ver)] = kwargs
 
 
-def depends_on(*specs):
+@directive
+def depends_on(pkg, *specs):
     """Adds a dependencies local variable in the locals of
        the calling class, based on args. """
-    pkg = get_calling_package_name()
-    clocals = caller_locals()
-    dependencies = clocals.setdefault('dependencies', {})
+    dependencies = pkg.setdefault('dependencies', {})
 
     for string in specs:
         for spec in spack.spec.parse(string):
-            if pkg == spec.name:
-                raise CircularReferenceError('depends_on', pkg)
+            if pkg.name == spec.name:
+                raise CircularReferenceError('depends_on', pkg.name)
             dependencies[spec.name] = spec
 
 
-def extends(spec, **kwargs):
+@directive
+def extends(pkg, spec, **kwargs):
     """Same as depends_on, but dependency is symlinked into parent prefix.
 
     This is for Python and other language modules where the module
@@ -131,64 +119,54 @@ def extends(spec, **kwargs):
     mechanism.
 
     """
-    pkg = get_calling_package_name()
-    clocals = caller_locals()
-    dependencies = clocals.setdefault('dependencies', {})
-    extendees = clocals.setdefault('extendees', {})
+    dependencies = pkg.setdefault('dependencies', {})
+    extendees = pkg.setdefault('extendees', {})
     if extendees:
         raise RelationError("Packages can extend at most one other package.")
 
     spec = Spec(spec)
-    if pkg == spec.name:
-        raise CircularReferenceError('extends', pkg)
+    if pkg.name == spec.name:
+        raise CircularReferenceError('extends', pkg.name)
     dependencies[spec.name] = spec
     extendees[spec.name] = (spec, kwargs)
 
 
-def provides(*specs, **kwargs):
+@directive
+def provides(pkg, *specs, **kwargs):
     """Allows packages to provide a virtual dependency.  If a package provides
        'mpi', other packages can declare that they depend on "mpi", and spack
        can use the providing package to satisfy the dependency.
     """
-    pkg = get_calling_package_name()
-    spec_string = kwargs.get('when', pkg)
-    provider_spec = parse_anonymous_spec(spec_string, pkg)
+    spec_string = kwargs.get('when', pkg.name)
+    provider_spec = parse_anonymous_spec(spec_string, pkg.name)
 
-    provided = caller_locals().setdefault("provided", {})
+    provided = pkg.setdefault("provided", {})
     for string in specs:
         for provided_spec in spack.spec.parse(string):
-            if pkg == provided_spec.name:
-                raise CircularReferenceError('depends_on', pkg)
+            if pkg.name == provided_spec.name:
+                raise CircularReferenceError('depends_on', pkg.name)
             provided[provided_spec] = provider_spec
 
 
-def patch(url_or_filename, **kwargs):
+@directive
+def patch(pkg, url_or_filename, **kwargs):
     """Packages can declare patches to apply to source.  You can
        optionally provide a when spec to indicate that a particular
        patch should only be applied when the package's spec meets
        certain conditions (e.g. a particular version).
     """
-    pkg = get_calling_package_name()
     level = kwargs.get('level', 1)
-    when_spec = parse_anonymous_spec(kwargs.get('when', pkg), pkg)
+    when  = kwargs.get('when', pkg.name)
 
-    patches = caller_locals().setdefault('patches', {})
+    patches = pkg.setdefault('patches', {})
+
+    when_spec = parse_anonymous_spec(when, pkg.name)
     if when_spec not in patches:
-        patches[when_spec] = [Patch(pkg, url_or_filename, level)]
+        patches[when_spec] = [Patch(pkg.name, url_or_filename, level)]
     else:
         # if this spec is identical to some other, then append this
         # patch to the existing list.
-        patches[when_spec].append(Patch(pkg, url_or_filename, level))
-
-
-def conflicts(*specs):
-    """Packages can declare conflicts with other packages.
-       This can be as specific as you like: use regular spec syntax.
-
-       NOT YET IMPLEMENTED.
-    """
-    # TODO: implement conflicts
-    pass
+        patches[when_spec].append(Patch(pkg.name, url_or_filename, level))
 
 
 class RelationError(spack.error.SpackError):

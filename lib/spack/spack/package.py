@@ -303,7 +303,8 @@ class Package(object):
     """
 
     #
-    # These variables are defaults for the various "relations".
+    # These variables are defaults for Spack's various package
+    # directives.
     #
     """Map of information about Versions of this package.
        Map goes: Version -> dict of attributes"""

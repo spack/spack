@@ -126,9 +126,9 @@ def caller_locals():
         del stack
 
 
-def get_calling_package_name():
+def get_calling_module_name():
     """Make sure that the caller is a class definition, and return the
-       module's name.
+       enclosing module's name.
     """
     stack = inspect.stack()
     try:
@@ -320,6 +320,27 @@ def match_predicate(*args):
                                  "list of regexes, or callable.")
         return False
     return match
+
+
+
+def DictWrapper(dictionary):
+    """Returns a class that wraps a dictionary and enables it to be used
+       like an object."""
+    class wrapper(object):
+        def __getattr__(self, name):
+            return dictionary[name]
+
+        def __setattr__(self, name, value):
+            dictionary[name] = value
+            return value
+
+        def setdefault(self, *args):
+            return dictionary.setdefault(*args)
+
+        def get(self, *args):
+            return dictionary.get(*args)
+
+    return wrapper()
 
 
 class RequiredAttributeError(ValueError):

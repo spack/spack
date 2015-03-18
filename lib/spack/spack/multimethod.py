@@ -195,7 +195,7 @@ class when(object):
     """
 class when(object):
     def __init__(self, spec):
-        pkg = get_calling_package_name()
+        pkg = get_calling_module_name()
         self.spec = parse_anonymous_spec(spec, pkg)
 
     def __call__(self, method):
