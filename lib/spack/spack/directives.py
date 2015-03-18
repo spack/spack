@@ -41,9 +41,11 @@ The available directives are:
   * ``provides``
   * ``extends``
   * ``patch``
+  * ``variant``
 
 """
-__all__ = [ 'depends_on', 'extends', 'provides', 'patch', 'version' ]
+__all__ = [ 'depends_on', 'extends', 'provides', 'patch', 'version',
+            'variant' ]
 
 import re
 import inspect
@@ -59,52 +61,125 @@ from spack.patch import Patch
 from spack.spec import Spec, parse_anonymous_spec
 
 
-def directive(fun):
-    """Decorator that allows a function to be called while a class is
-       being constructed, and to modify the class.
+#
+# This is a list of all directives, built up as they are defined in
+# this file.
+#
+directives = {}
 
-       Adds the class scope as an initial parameter when called, like
-       a class method would.
+
+def ensure_dicts(pkg):
+    """Ensure that a package has all the dicts required by directives."""
+    for name, d in directives.items():
+        d.ensure_dicts(pkg)
+
+
+class directive(object):
+    """Decorator for Spack directives.
+
+    Spack directives allow you to modify a package while it is being
+    defined, e.g. to add version or depenency information.  Directives
+    are one of the key pieces of Spack's package "langauge", which is
+    embedded in python.
+
+    Here's an example directive:
+
+        @directive(dicts='versions')
+        version(pkg, ...):
+            ...
+
+    This directive allows you write:
+
+        class Foo(Package):
+            version(...)
+
+    The ``@directive`` decorator handles a couple things for you:
+
+      1. Adds the class scope (pkg) as an initial parameter when
+         called, like a class method would.  This allows you to modify
+         a package from within a directive, while the package is still
+         being defined.
+
+      2. It automatically adds a dictionary called "versions" to the
+         package so that you can refer to pkg.versions.
+
+    The ``(dicts='versions')`` part ensures that ALL packages in Spack
+    will have a ``versions`` attribute after they're constructed, and
+    that if no directive actually modified it, it will just be an
+    empty dict.
+
+    This is just a modular way to add storage attributes to the
+    Package class, and it's how Spack gets information from the
+    packages to the core.
+
     """
-    def directive_function(*args, **kwargs):
-        pkg      = DictWrapper(caller_locals())
-        pkg.name = get_calling_module_name()
-        return fun(pkg, *args, **kwargs)
-    return directive_function
+
+    def __init__(self, **kwargs):
+        # dict argument allows directives to have storage on the package.
+        dicts = kwargs.get('dicts', None)
+
+        if isinstance(dicts, basestring):
+            dicts = (dicts,)
+        elif type(dicts) not in (list, tuple):
+            raise TypeError(
+                "dicts arg must be list, tuple, or string. Found %s."
+                % type(dicts))
+
+        self.dicts = dicts
 
 
-@directive
+    def ensure_dicts(self, pkg):
+        """Ensure that a package has the dicts required by this directive."""
+        for d in self.dicts:
+            if not hasattr(pkg, d):
+                setattr(pkg, d, {})
+
+            attr = getattr(pkg, d)
+            if not isinstance(attr, dict):
+                raise spack.error.SpackError(
+                    "Package %s has non-dict %s attribute!" % (pkg, d))
+
+
+    def __call__(self, directive_function):
+        directives[directive_function.__name__] = self
+
+        def wrapped(*args, **kwargs):
+            pkg = DictWrapper(caller_locals())
+            self.ensure_dicts(pkg)
+
+            pkg.name = get_calling_module_name()
+            return directive_function(pkg, *args, **kwargs)
+
+        return wrapped
+
+
+@directive(dicts='versions')
 def version(pkg, ver, checksum=None, **kwargs):
     """Adds a version and metadata describing how to fetch it.
        Metadata is just stored as a dict in the package's versions
        dictionary.  Package must turn it into a valid fetch strategy
        later.
     """
-    versions = pkg.setdefault('versions', {})
-
     # special case checksum for backward compatibility
     if checksum:
         kwargs['md5'] = checksum
 
-    # Store the kwargs for the package to use later when constructing
-    # a fetch strategy.
-    versions[Version(ver)] = kwargs
+    # Store kwargs for the package to later with a fetch_strategy.
+    pkg.versions[Version(ver)] = kwargs
 
 
-@directive
+@directive(dicts='dependencies')
 def depends_on(pkg, *specs):
     """Adds a dependencies local variable in the locals of
        the calling class, based on args. """
-    dependencies = pkg.setdefault('dependencies', {})
-
     for string in specs:
         for spec in spack.spec.parse(string):
             if pkg.name == spec.name:
                 raise CircularReferenceError('depends_on', pkg.name)
-            dependencies[spec.name] = spec
+            pkg.dependencies[spec.name] = spec
 
 
-@directive
+@directive(dicts=('extendees', 'dependencies'))
 def extends(pkg, spec, **kwargs):
     """Same as depends_on, but dependency is symlinked into parent prefix.
 
@@ -119,19 +194,17 @@ def extends(pkg, spec, **kwargs):
     mechanism.
 
     """
-    dependencies = pkg.setdefault('dependencies', {})
-    extendees = pkg.setdefault('extendees', {})
-    if extendees:
-        raise RelationError("Packages can extend at most one other package.")
+    if pkg.extendees:
+        raise DirectiveError("Packages can extend at most one other package.")
 
     spec = Spec(spec)
     if pkg.name == spec.name:
         raise CircularReferenceError('extends', pkg.name)
-    dependencies[spec.name] = spec
-    extendees[spec.name] = (spec, kwargs)
+    pkg.dependencies[spec.name] = spec
+    pkg.extendees[spec.name] = (spec, kwargs)
 
 
-@directive
+@directive(dicts='provided')
 def provides(pkg, *specs, **kwargs):
     """Allows packages to provide a virtual dependency.  If a package provides
        'mpi', other packages can declare that they depend on "mpi", and spack
@@ -140,15 +213,14 @@ def provides(pkg, *specs, **kwargs):
     spec_string = kwargs.get('when', pkg.name)
     provider_spec = parse_anonymous_spec(spec_string, pkg.name)
 
-    provided = pkg.setdefault("provided", {})
     for string in specs:
         for provided_spec in spack.spec.parse(string):
             if pkg.name == provided_spec.name:
                 raise CircularReferenceError('depends_on', pkg.name)
-            provided[provided_spec] = provider_spec
+            pkg.provided[provided_spec] = provider_spec
 
 
-@directive
+@directive(dicts='patches')
 def patch(pkg, url_or_filename, **kwargs):
     """Packages can declare patches to apply to source.  You can
        optionally provide a when spec to indicate that a particular
@@ -158,36 +230,42 @@ def patch(pkg, url_or_filename, **kwargs):
     level = kwargs.get('level', 1)
     when  = kwargs.get('when', pkg.name)
 
-    patches = pkg.setdefault('patches', {})
-
     when_spec = parse_anonymous_spec(when, pkg.name)
-    if when_spec not in patches:
-        patches[when_spec] = [Patch(pkg.name, url_or_filename, level)]
+    if when_spec not in pkg.patches:
+        pkg.patches[when_spec] = [Patch(pkg.name, url_or_filename, level)]
     else:
         # if this spec is identical to some other, then append this
         # patch to the existing list.
-        patches[when_spec].append(Patch(pkg.name, url_or_filename, level))
+        pkg.patches[when_spec].append(Patch(pkg.name, url_or_filename, level))
 
 
-class RelationError(spack.error.SpackError):
-    """This is raised when something is wrong with a package relation."""
-    def __init__(self, relation, message):
-        super(RelationError, self).__init__(message)
-        self.relation = relation
+@directive(dicts='variants')
+def variant(pkg, name, description="", **kwargs):
+    """Define a variant for the package.  Allows the user to supply
+       +variant/-variant in a spec.  You can optionally supply an
+       initial + or - to make the variant enabled or disabled by defaut.
+    """
+    return
+
+    if not re.match(r'[-~+]?[A-Za-z0-9_][A-Za-z0-9_.-]*', name):
+        raise DirectiveError("Invalid variant name in %s: '%s'"
+                             % (pkg.name, name))
+
+    enabled = re.match(r'+', name)
+    pkg.variants[name] = enabled
 
 
-class ScopeError(RelationError):
-    """This is raised when a relation is called from outside a spack package."""
-    def __init__(self, relation):
-        super(ScopeError, self).__init__(
-            relation,
-            "Must invoke '%s' from inside a class definition!" % relation)
+class DirectiveError(spack.error.SpackError):
+    """This is raised when something is wrong with a package directive."""
+    def __init__(self, directive, message):
+        super(DirectiveError, self).__init__(message)
+        self.directive = directive
 
 
-class CircularReferenceError(RelationError):
+class CircularReferenceError(DirectiveError):
     """This is raised when something depends on itself."""
-    def __init__(self, relation, package):
+    def __init__(self, directive, package):
         super(CircularReferenceError, self).__init__(
-            relation,
-            "Package '%s' cannot pass itself to %s." % (package, relation))
+            directive,
+            "Package '%s' cannot pass itself to %s." % (package, directive))
         self.package = package

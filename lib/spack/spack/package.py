@@ -55,6 +55,7 @@ import spack.error
 import spack.compilers
 import spack.mirror
 import spack.hooks
+import spack.directives
 import spack.build_environment as build_env
 import spack.url as url
 import spack.fetch_strategy as fs
@@ -301,33 +302,6 @@ class Package(object):
     clean() (some of them do this), and others to provide custom behavior.
 
     """
-
-    #
-    # These variables are defaults for Spack's various package
-    # directives.
-    #
-    """Map of information about Versions of this package.
-       Map goes: Version -> dict of attributes"""
-    versions = {}
-
-    """Specs of dependency packages, keyed by name."""
-    dependencies = {}
-
-    """Specs of virtual packages provided by this package, keyed by name."""
-    provided = {}
-
-    """Specs of conflicting packages, keyed by name. """
-    conflicted = {}
-
-    """Patches to apply to newly expanded source, if any."""
-    patches = {}
-
-    """Specs of package this one extends, or None.
-
-    Currently, ppackages can extend at most one other package.
-    """
-    extendees = {}
-
     #
     # These are default values for instance variables.
     #
@@ -351,20 +325,8 @@ class Package(object):
         if '.' in self.name:
             self.name = self.name[self.name.rindex('.') + 1:]
 
-        # Sanity check some required variables that could be
-        # overridden by package authors.
-        def ensure_has_dict(attr_name):
-            if not hasattr(self, attr_name):
-                raise PackageError("Package %s must define %s" % attr_name)
-
-            attr = getattr(self, attr_name)
-            if not isinstance(attr, dict):
-                raise PackageError("Package %s has non-dict %s attribute!"
-                                   % (self.name, attr_name))
-        ensure_has_dict('versions')
-        ensure_has_dict('dependencies')
-        ensure_has_dict('conflicted')
-        ensure_has_dict('patches')
+        # Sanity check attributes required by Spack directives.
+        spack.directives.ensure_dicts(type(self))
 
         # Check versions in the versions dict.
         for v in self.versions:
