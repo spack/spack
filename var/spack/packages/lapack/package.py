@@ -1,5 +1,4 @@
 from spack import *
-from subprocess import call
 import sys
 import glob
 
@@ -22,7 +21,7 @@ class Lapack(Package):
     def install(self, spec, prefix):
         # CMake could be used if the build becomes more complex
 
-        call(['cp', 'make.inc.example', 'make.inc'])
+        symlink('make.inc.example', 'make.inc')
 
         # Retrieves name of package that satisifies 'blas' virtual dependency
         blas_name = next(m for m in ('netlib_blas', 'atlas') if m in spec)

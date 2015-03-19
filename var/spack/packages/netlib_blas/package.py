@@ -1,5 +1,4 @@
 from spack import *
-from subprocess import call
 
 class NetlibBlas(Package):
     """Netlib reference BLAS"""
@@ -15,7 +14,7 @@ class NetlibBlas(Package):
     parallel = False
 
     def install(self, spec, prefix):
-        call(['cp', 'make.inc.example', 'make.inc'])
+        symlink('make.inc.example', 'make.inc')
         make('blaslib')
         
         # Tests that blas builds correctly
@@ -26,4 +25,4 @@ class NetlibBlas(Package):
         install('librefblas.a', prefix.lib)
 
         # Blas virtual package should provide blas.a
-        call(['ln', '-s', prefix.lib + '/librefblas.a', prefix.lib + '/blas.a'])
+        symlink(prefix.lib + '/librefblas.a', prefix.lib + '/blas.a')
