@@ -1203,13 +1203,28 @@ class Spec(object):
            in the format string.  The format strings you can provide are::
 
                $_   Package name
-               $@   Version
-               $%   Compiler
-               $%@  Compiler & compiler version
-               $+   Options
-               $=   Architecture
-               $#   Dependencies' 8-char sha1 prefix
+               $@   Version with '@' prefix
+               $%   Compiler with '%' prefix
+               $%@  Compiler with '%' prefix & compiler version with '@' prefix
+               $+   Options 
+               $=   Architecture with '=' prefix
+               $#   Dependencies' 8-char sha1 prefix with '-' prefix
                $$   $
+
+               You can also use full-string versions, which leave off the prefixes:
+
+               ${PACKAGE}       Package name
+               ${VERSION}       Version
+               ${COMPILER}      Full compiler string
+               ${COMPILERNAME}  Compiler name
+               ${COMPILERVER}   Compiler version
+               ${OPTIONS}       Options
+               ${ARCHITECTURE}  Architecture
+               ${SHA1}          Dependencies 8-char sha1 prefix
+
+               ${SPACK_ROOT}    The spack root directory
+               ${SPACK_INSTALL} The default spack install directory, ${SPACK_PREFIX}/opt
+
 
            Optionally you can provide a width, e.g. $20_ for a 20-wide name.
            Like printf, you can provide '-' for left justification, e.g.
@@ -1226,7 +1241,8 @@ class Spec(object):
         color    = kwargs.get('color', False)
         length = len(format_string)
         out = StringIO()
-        escape = compiler = False
+        named = escape = compiler = False
+        named_str = fmt = ''
 
         def write(s, c):
             if color:
@@ -1270,6 +1286,9 @@ class Spec(object):
                     if fmt != '%s':
                         raise ValueError("Can't use format width with $$.")
                     out.write('$')
+                elif c == '{':
+                    named = True
+                    named_str = ''
                 escape = False
 
             elif compiler:
@@ -1281,6 +1300,40 @@ class Spec(object):
                 else:
                     out.write(c)
                 compiler = False
+
+            elif named:
+                if not c == '}':
+                    if i == length - 1:
+                        raise ValueError("Error: unterminated ${ in format: '%s'"
+                                         % format_string)
+                    named_str += c
+                    continue;
+                if named_str == 'PACKAGE':
+                    write(fmt % self.name, '@')
+                elif named_str == 'COMPILER':
+                    if self.compiler:
+                        write(fmt % self.compiler, '%')
+                elif named_str == 'COMPILERNAME':
+                    if self.compiler:
+                        write(fmt % self.compiler.name, '%')
+                elif named_str == 'COMPILERVER':
+                    if self.compiler:
+                        write(fmt % self.compiler.versions, '%')
+                elif named_str == 'OPTIONS':
+                    if self.variants:
+                        write(fmt % str(self.variants), '+')
+                elif named_str == 'ARCHITECTURE':
+                    if self.architecture:
+                        write(fmt % str(self.architecture), '=')
+                elif named_str == 'SHA1':
+                    if self.dependencies:
+                        out.write(fmt % str(self.dep_hash(8)))
+                elif named_str == 'SPACK_ROOT':
+                    out.write(fmt % spack.prefix)
+                elif named_str == 'SPACK_INSTALL':
+                    out.write(fmt % spack.install_path)
+
+                named = False
 
             elif c == '$':
                 escape = True
