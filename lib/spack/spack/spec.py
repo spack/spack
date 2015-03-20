@@ -1267,7 +1267,7 @@ class Spec(object):
                     if self.dependencies:
                         out.write(fmt % ('-' + self.dep_hash(8)))
                 elif c == '$':
-                    if fmt != '':
+                    if fmt != '%s':
                         raise ValueError("Can't use format width with $$.")
                     out.write('$')
                 escape = False
