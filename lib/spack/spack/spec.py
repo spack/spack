@@ -1310,6 +1310,9 @@ class Spec(object):
                     continue;
                 if named_str == 'PACKAGE':
                     write(fmt % self.name, '@')
+                if named_str == 'VERSION':
+                    if self.versions and self.versions != _any_version:
+                        write(fmt % str(self.versions), '@')
                 elif named_str == 'COMPILER':
                     if self.compiler:
                         write(fmt % self.compiler, '%')
