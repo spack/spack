@@ -240,14 +240,12 @@ def patch(pkg, url_or_filename, **kwargs):
 
 
 @directive(dicts='variants')
-def variant(pkg, name, description="", **kwargs):
+def variant(pkg, name, description=""):
     """Define a variant for the package.  Allows the user to supply
        +variant/-variant in a spec.  You can optionally supply an
        initial + or - to make the variant enabled or disabled by defaut.
     """
-    return
-
-    if not re.match(r'[-~+]?[A-Za-z0-9_][A-Za-z0-9_.-]*', name):
+    if not re.match(r'^[-~+]?[A-Za-z0-9_][A-Za-z0-9_.-]*$', name):
         raise DirectiveError("Invalid variant name in %s: '%s'"
                              % (pkg.name, name))
 

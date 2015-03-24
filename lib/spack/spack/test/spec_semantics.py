@@ -71,7 +71,7 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     # ================================================================================
-    # Satisfiability and constraints
+    # Satisfiability
     # ================================================================================
     def test_satisfies(self):
         self.check_satisfies('libelf@0.8.13', '@0:1')
@@ -95,6 +95,9 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_unsatisfiable('foo%pgi@4.3', '%pgi@4.4:4.6')
         self.check_unsatisfiable('foo@4.0%pgi', '@1:3%pgi')
         self.check_unsatisfiable('foo@4.0%pgi@4.5', '@1:3%pgi@4.4:4.6')
+
+        self.check_satisfies('foo %gcc@4.7.3', '%gcc@4.7')
+        self.check_unsatisfiable('foo %gcc@4.7', '%gcc@4.7.3')
 
 
     def test_satisfies_architecture(self):
@@ -147,7 +150,16 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_unsatisfiable('mpileaks^mpi@3:', '^mpich@1.0')
 
 
-    def test_constrain(self):
+    def test_satisfies_variant(self):
+        self.check_satisfies('foo %gcc@4.7.3', '%gcc@4.7')
+        self.check_unsatisfiable('foo %gcc@4.7', '%gcc@4.7.3')
+
+
+
+    # ================================================================================
+    # Constraints
+    # ================================================================================
+    def test_constrain_variants(self):
         self.check_constrain('libelf@2.1:2.5', 'libelf@0:2.5', 'libelf@2.1:3')
         self.check_constrain('libelf@2.1:2.5%gcc@4.5:4.6',
                              'libelf@0:2.5%gcc@2:4.6', 'libelf@2.1:3%gcc@4.5:4.7')
@@ -158,6 +170,8 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf~foo')
         self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf+debug~foo')
 
+
+    def test_constrain_arch(self):
         self.check_constrain('libelf=bgqos_0', 'libelf=bgqos_0', 'libelf=bgqos_0')
         self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
 
@@ -170,8 +184,3 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
 
         self.check_invalid_constraint('libelf=bgqos_0', 'libelf=x86_54')
-
-
-    def test_compiler_satisfies(self):
-        self.check_satisfies('foo %gcc@4.7.3', '%gcc@4.7')
-        self.check_unsatisfiable('foo %gcc@4.7', '%gcc@4.7.3')
