@@ -32,6 +32,18 @@ Documentation
 [Full documentation](http://scalability-llnl.github.io/spack)
 for Spack is also available.
 
+Contributing to Spack
+------------------------
+
+Spack is an open source project, and we welcome contributions in the
+form of new packages, bugfixes, or even core development.  If you are
+interested in contributing to spack, the first step is to join the
+mailing list.  Click the link below and send the resulting email to
+subscribe:
+
+  * **[Subscribe](mailto:majordomo@lists.llnl.gov?subject=subscribe&body=subscribe%20spack)**
+  * **[Unsubscribe](mailto:majordomo@lists.llnl.gov?subject=unsubscribe&body=unsubscribe%20spack)**
+
 Authors
 ----------------
 Spack was written by Todd Gamblin, tgamblin@llnl.gov.
