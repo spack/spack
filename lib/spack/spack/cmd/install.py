@@ -29,6 +29,7 @@ import spack
 import spack.cmd
 from spack.symlinks import update_symlinks
 from spack.package import installed_package_names
+import llnl.util.tty as tty
 
 description = "Build and install packages"
 
