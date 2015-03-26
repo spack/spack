@@ -109,6 +109,7 @@ from spack.version import *
 from spack.util.string import *
 from spack.util.prefix import Prefix
 from spack.virtual import ProviderIndex
+from spack.package_config import PackageConfig
 
 # Convenient names for color formats so that other things can use them
 compiler_color         = '@g'
@@ -1352,6 +1353,48 @@ class Spec(object):
 
     def dep_string(self):
         return ''.join("^" + dep.format() for dep in self.sorted_deps())
+
+
+    def __cmp__(self, other):
+        if not self.concrete or not other.concrete:
+            raise ValueError("Non-concrete tyeps cannot be compared!")
+
+        #Package name sort order is not configurable, always goes alphabetical
+        if self.name != other.name:
+            return cmp(self.name, other.name)
+        
+        #Package version is second in compare order
+        pkgname = self.name
+        if self.versions != other.versions:
+            return spack.pkgconfig.component_compare(pkgname, 'version',
+                         self.versions[0], other.versions[0], True)
+
+        #Compiler is third
+        if self.compiler.name != other.compiler.name:
+            return spack.pkgconfig.component_compare(pkgname, 'compiler',
+                         self.compiler.name, other.compiler.name)
+
+        #Compiler version
+        if self.compiler.versions != other.compiler.versions:
+            return spack.pkgconfig.component_compare(pkgname, 'compilerver',
+                         self.compiler.versions[0], other.compiler.versions[0], True)
+
+        #Variants
+        if self.variants != other.variants:
+            return spack.pkgconfig.component_list_compare(pkgname, 'variant',
+                         self.variants, other.variants)
+
+        #Architecture
+        if self.architecture != other.architecture:
+            return spack.pkgconfig.component_compare(pkgname, 'architecture',
+                         self.architecture, other.architecture)
+
+        #Dependency is not configurable
+        if self.dep_hash() != other.dep_hash():
+            return -1 if self.dep_hash() < other.dep_hash() else 1
+
+        #Equal specs
+        return 0
 
 
     def __str__(self):

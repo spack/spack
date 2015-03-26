@@ -69,6 +69,13 @@ from spack.directory_layout import SpecHashDirectoryLayout
 install_layout = SpecHashDirectoryLayout(install_path)
 
 #
+# PackageConfig parses the 'package' sections of .spackconfig, and
+# can be used to determine spec sort orders
+#
+from spack.package_config import PackageConfig
+pkgconfig = PackageConfig()
+
+#
 # This controls how things are concretized in spack.
 # Replace it with a subclass if you want different
 # policies.

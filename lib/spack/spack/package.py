@@ -64,6 +64,8 @@ from spack.util.web import get_pages
 from spack.util.compression import allowed_archive, extension
 from spack.util.executable import ProcessError
 
+from spack.symlinks import *
+
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
@@ -868,6 +870,8 @@ class Package(object):
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_install(self)
+
+        update_symlinks()
 
 
     def _sanity_check_install(self):
