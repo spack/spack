@@ -127,14 +127,16 @@ class PackageConfig(object):
 
         cmp_a = None
         cmp_b = None
+        reverse = None
         if not a_in_list and not b_in_list:
             cmp_a = a
             cmp_b = b
+            reverse = -1 if reverse_natural_compare else 1
         else:
             cmp_a = list.index(str(a))
             cmp_b = list.index(str(b))
+            reverse = 1
         
-        reverse = -1 if reverse_natural_compare else 1
         if cmp_a < cmp_b:
             return -1 * reverse
         elif cmp_a > cmp_b:
