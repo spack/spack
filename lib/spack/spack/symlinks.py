@@ -29,17 +29,21 @@ import spack.spec
 import llnl.util.tty as tty
 from spack.spec import Spec
 
-def update_symlinks(packages=None):
+def _all_sorted_specs(packages, uninstalled_specs=None):
     all_specs = spack.install_layout.all_specs()
     filtered_specs = None
     if packages:
         filtered_specs = [spec for spec in all_specs if spec.name in packages]
     else:
         filtered_specs = all_specs
-    sorted_specs = sorted(filtered_specs, cmp=Spec.__cmp__)
-    
+    if uninstalled_specs:
+        filtered_specs = [spec for spec in filtered_specs if not spec in uninstalled_specs]
+    return sorted(filtered_specs, cmp=Spec.__cmp__)
+
+
+def _symlinks_for_specs(specs):
     symlinks = {}
-    for spec in sorted_specs:
+    for spec in specs:
         pkgname = spec.name
         pkglinks = spack.pkgconfig.symlinks_for_pkgname(pkgname)
         formated_pkglinks = [spec.format(link) for link in pkglinks]
@@ -67,7 +71,10 @@ def update_symlinks(packages=None):
                 tty.die("Could not access symlink %s for package %s" % link, spec)
             
             symlinks[link] = (target, original_target)
+    return symlinks
 
+
+def _create_symlinks(symlinks, during_uninstall=False):
     for link in symlinks:
         targets = symlinks[link]
         target = targets[0]
@@ -87,5 +94,34 @@ def update_symlinks(packages=None):
             tty.die("Could create symlink %s to %s" % (link, target))
         if original_target:
             tty.msg("Spack updating symlink: %s\n    from: %s\n    to:   %s" % (link, original_target, target))
+        elif during_uninstall:
+            tty.msg("Spack updating symlink: %s\n    to: %s" % (link, target))
         else:
-            tty.msg("Spack creating symlink %s to %s" % (link, target))
+            tty.msg("Spack creating symlink: %s\n    to %s" % (link, target))    
+
+
+def update_symlinks(packages=None):
+    sorted_specs = _all_sorted_specs(packages)
+    symlinks = _symlinks_for_specs(sorted_specs)
+    _create_symlinks(symlinks)
+
+
+def uninstall_symlinks(uninstalled_packages):
+    uninstalled_specs = [pkg.spec for pkg in uninstalled_packages]
+    symlinks = _symlinks_for_specs(uninstalled_specs)
+    uninstalled_locations = [spack.install_layout.path_for_spec(spec) for spec in uninstalled_specs]
+    uninstalled_names = [spec.name for spec in uninstalled_specs]
+
+    for link in symlinks:
+        target = symlinks[link][0]
+        original_target = symlinks[link][1]
+        if target in uninstalled_locations or original_target == '[dead link]':
+            try:
+                os.unlink(link)
+            except exceptions.OSError, e:
+                tty.die("Could not remove existing symlink %s" % link)
+            tty.msg("Spack removing symlink: %s" % link)
+    sorted_specs = _all_sorted_specs(uninstalled_names, uninstalled_specs)
+    symlinks = _symlinks_for_specs(sorted_specs)
+    _create_symlinks(symlinks, True)
+

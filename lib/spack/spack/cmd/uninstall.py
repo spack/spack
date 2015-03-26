@@ -29,6 +29,7 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.packages
+from spack.symlinks import uninstall_symlinks
 
 description="Remove an installed package"
 
@@ -87,3 +88,5 @@ def uninstall(parser, args):
     # Uninstall packages in order now.
     for pkg in pkgs:
         pkg.do_uninstall(force=args.force)
+
+    uninstall_symlinks(pkgs)
