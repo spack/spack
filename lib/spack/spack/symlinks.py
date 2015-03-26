@@ -125,3 +125,14 @@ def uninstall_symlinks(uninstalled_packages):
     symlinks = _symlinks_for_specs(sorted_specs)
     _create_symlinks(symlinks, True)
 
+
+def list_symlinks():
+    sorted_specs = _all_sorted_specs(None)
+    symlinks = _symlinks_for_specs(sorted_specs)
+
+    for link in symlinks:
+        target = symlinks[link][0]
+        actual_target = symlinks[link][1]
+        print("%s -> %s" % (link, actual_target))
+        if target != actual_target:
+            tty.warn('Symlink out of date! %s should point to %s' % (link, target))

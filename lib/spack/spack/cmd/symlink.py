@@ -23,7 +23,30 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
-from spack.symlinks import *
+from external import argparse
+
+import spack
+
+description="Manage spack symlinks"
+
+def setup_parser(subparser):
+    sp = subparser.add_subparsers(
+        metavar='SUBCOMMAND', dest='symlink_command')
+
+    list_parser = sp.add_parser('list', help=symlink_list.__doc__)
+    update_parser = sp.add_parser('update', help=symlink_update.__doc__)
+    update_parser.add_argument('packages', nargs=argparse.REMAINDER, help="Optional package names to update")
+
+def symlink_list(args):
+    """List all spack-managed symlinks"""
+    spack.symlinks.list_symlinks()
+
+def symlink_update(args):
+    """Update symlinks"""
+    spack.symlinks.update_symlinks(args.packages)
 
 def symlink(parser, arg):
-    update_symlinks()
+    action = { 'list' : symlink_list,
+               'update' : symlink_update }
+
+    action[arg.symlink_command](arg)
