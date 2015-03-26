@@ -1,4 +1,6 @@
 from spack import *
+import sys
+import glob
 
 class Lapack(Package):
     """
@@ -18,12 +20,29 @@ class Lapack(Package):
     version('3.4.0', '02d5706ec03ba885fc246e5fa10d8c70')
     version('3.3.1', 'd0d533ec9a5b74933c2a1e84eedc58b4')
 
-    depends_on('atlas')
+    # blas is a virtual dependency.
+    depends_on('blas')
+
+    # Doesn't always build correctly in parallel
+    parallel = False
+
+    @when('^netlib_blas')
+    def get_blas_libs(self):
+        blas = self.spec['netlib_blas']
+        return [join_path(blas.prefix.lib, 'blas.a')]
+
+
+    @when('^atlas')
+    def get_blas_libs(self):
+        blas = self.spec['atlas']
+        return [join_path(blas.prefix.lib, l)
+                for l in ('libf77blas.a', 'libatlas.a')]
+
 
     def install(self, spec, prefix):
-        atlas_libs = ['libf77blas.a', 'libatlas.a']
-        atlas_libs = [join_path(spec['atlas'].prefix.lib, lib,) for lib in atlas_libs]
-
-        cmake(".", '-DBLAS_LIBRARIES=' + ";".join(atlas_libs), *std_cmake_args)
+        blas_libs = ";".join(self.get_blas_libs())
+        cmake(".", '-DBLAS_LIBRARIES=' + blas_libs, *std_cmake_args)
         make()
         make("install")
+
+
