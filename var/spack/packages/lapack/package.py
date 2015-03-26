@@ -24,9 +24,9 @@ class Lapack(Package):
     # Doesn't always build correctly in parallel
     parallel = False
 
-    @when('^netlib_blas')
+    @when('^netlib-blas')
     def get_blas_libs(self):
-        blas = self.spec['netlib_blas']
+        blas = self.spec['netlib-blas']
         return [join_path(blas.prefix.lib, 'blas.a')]
 
 
