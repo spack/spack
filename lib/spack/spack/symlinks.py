@@ -26,6 +26,7 @@
 import os
 import spack
 import spack.spec
+import exceptions
 import llnl.util.tty as tty
 from spack.spec import Spec
 
@@ -44,8 +45,7 @@ def _all_sorted_specs(packages, uninstalled_specs=None):
 def _symlinks_for_specs(specs):
     symlinks = {}
     for spec in specs:
-        pkgname = spec.name
-        pkglinks = spack.pkgconfig.symlinks_for_pkgname(pkgname)
+        pkglinks = spack.pkgconfig.symlinks_for_spec(spec)
         formated_pkglinks = [spec.format(link) for link in pkglinks]
         target = spack.install_layout.path_for_spec(spec)
 

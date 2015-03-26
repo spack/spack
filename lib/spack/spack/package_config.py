@@ -25,12 +25,14 @@
 
 import spack
 import spack.config
+import re
 import llnl.util.tty as tty
+import spack.spec
 
 class PackageConfig(object):
     """A class for parsing the package information in the .spackconfig file"""
     packages = []
-    fields = [ 'symlinks', 'prefix', 'srcdir', 'version_order', 'compiler_order', 'compilerver_order', 'variant_order', 'architecture_order' ]
+    fields = [ 'symlinks', 'srcdir', 'version_order', 'compiler_order', 'compilerver_order', 'variant_order', 'architecture_order' ]
 
     def __init__(self):
         config = spack.config.get_config()
@@ -42,34 +44,50 @@ class PackageConfig(object):
             self.packages.append((package, field_list))
 
     
-    def multifield_for_pkgname(self, pkgname, field):
+    def multifield_for_pkgname(self, pkgname, spec, field):
         result = []
+        default_values = None
+
+        if not self.packages:
+            return []
         for (package, config_field_values) in self.packages:
-            if package != 'default' and pkgname != package:
+            if package == 'default':
+                default_values = config_field_values
                 continue
+            if spec and not spec.satisfies(package):
+                continue
+            if not spec and pkgname != package:
+                continue
+
             for (config_field, config_value) in config_field_values:
-                if config_field != field:
-                    continue
-                value_list = config_value.split(':')
-                for values in value_list:
-                    result.extend(values.split(','))
+                if config_field == field:
+                    result.extend(re.split('[:,]', config_value))
+        for (default_field, default_value) in default_values:
+            if default_field == field:
+                result.extend(re.split('[:,]', default_value))        
         return result
 
 
     multifield_cache = {}
-    def lookup_multifield_for_pkgname(self, pkgname, field):
-        if not (pkgname, field) in self.multifield_cache:
-            self.multifield_cache[(pkgname, field)] = self.multifield_for_pkgname(pkgname, field)
-        return self.multifield_cache[(pkgname, field)]
+    def lookup_multifield_for_pkgname(self, pkgname, spec, field):
+        name = str(spec) if spec else pkgname
+        if not (name, field) in self.multifield_cache:
+            self.multifield_cache[(name, field)] = self.multifield_for_pkgname(pkgname, spec, field)
+        return self.multifield_cache[(name, field)]
 
         
-    def singlefield_for_pkgname(self, pkgname, field):
+    def singlefield_for_pkgname(self, pkgname, spec, field):
         result = None
         result_package = None
         default_value = None
 
+        if not self.packages:
+            return None
+
         for (package, config_field_values) in self.packages:
-            if package != 'default' and pkgname != package:
+            if spec and not spec.satisfies(package):
+                continue
+            if not spec and pkgname != package:
                 continue
             for (config_field, config_value) in config_field_value:
                 if config_field != field:
@@ -88,36 +106,33 @@ class PackageConfig(object):
 
 
     singlefield_cache = {}
-    def lookup_singlefield_for_pkgname(self, pkgname, field):
-        if not (pkgname, field) in self.singlefield_cache:
-            self.singlefield_cache[(pkgname, field)] = self.singlefield_for_pkgname(pkgname, field)
-        return self.singlefield_cache[(pkgname, field)]
+    def lookup_singlefield_for_pkgname(self, pkgname, spec, field):
+        name = str(spec) if spec else pkgname
+        if not (name, field) in self.singlefield_cache:
+            self.singlefield_cache[(name, field)] = self.singlefield_for_pkgname(pkgname, spec, field)
+        return self.singlefield_cache[(name, field)]
 
         
-    def symlinks_for_pkgname(self, pkgname):
-        return self.lookup_multifield_for_pkgname(pkgname, 'symlinks')
+    def symlinks_for_spec(self, spec):
+        return self.lookup_multifield_for_pkgname(spec.name, spec, 'symlinks')
     
 
-    def prefix_for_pkgname(self, pkgname):
-        return self.lookup_singlefield_for_pkgname(pkgname, 'prefix')
-
-        
-    def srcdir_for_pkgname(self, pkgname):
-        return self.lookup_singlefield_for_pkgname(pkgname, 'srcdir')
+    def srcdir_for_spec(self, spec):
+        return self.lookup_singlefield_for_pkgname(spec.name, spec, 'srcdir')
         
             
     def compiler_order_for_pkgname(self, pkgname):
-        return self.lookup_singlefield_for_pkgname(pkgname, 'compiler_order')
+        return self.lookup_singlefield_for_pkgname(pkgname, None, 'compiler_order')
 
     
     def version_order_for_pkgname(self, pkgname):
-        return self.lookup_singlefield_for_pkgname(pkgname, 'version_order')
+        return self.lookup_singlefield_for_pkgname(pkgname, None, 'version_order')
 
     def compilerver_order_for_pkgname(self, pkgname):
-        return self.lookup_singlefield_for_pkgname(pkgname, 'compilerver_order')
+        return self.lookup_singlefield_for_pkgname(pkgname, None, 'compilerver_order')
 
     def component_compare(self, pkgname, component, a, b, reverse_natural_compare=False):
-        list = self.lookup_multifield_for_pkgname(pkgname, component + '_order')
+        list = self.lookup_multifield_for_pkgname(pkgname, None, component + '_order')
         a_in_list = str(a) in list
         b_in_list = str(b) in list
         if a_in_list and not b_in_list:
