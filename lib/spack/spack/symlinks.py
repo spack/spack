@@ -29,6 +29,7 @@ import spack.spec
 import exceptions
 import llnl.util.tty as tty
 from spack.spec import Spec
+from llnl.util.filesystem import mkdirp
 
 def _all_sorted_specs(packages, uninstalled_specs=None):
     all_specs = spack.install_layout.all_specs()
@@ -87,7 +88,17 @@ def _create_symlinks(symlinks, during_uninstall=False):
             try:
                 os.unlink(link)
             except exceptions.OSError, e:
-                tty.die("Could not remove existing symlink %s" % link)
+                tty.die("Could not remove existing symlink %s" % link)        
+        (head, tail) = os.path.split(link)
+        try:
+            if not tail:
+                tty.die("Symlink %s cannot be a directory" % (link))
+            if os.path.isfile(head):
+                tty.die("Symlink %s has path component that is not a directory" % (link))
+            if not os.path.exists(head):
+                mkdirp(head)
+        except exceptions.OSError, e:
+            tty.die("Could not access directory %s for symlink %s" % (tail, target))
         try:
             os.symlink(target, link)
         except exceptions.OSError, e:
