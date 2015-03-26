@@ -27,6 +27,8 @@ from external import argparse
 
 import spack
 import spack.cmd
+from spack.symlinks import update_symlinks
+from spack.package import installed_package_names
 
 description = "Build and install packages"
 
@@ -64,3 +66,5 @@ def install(parser, args):
                            keep_stage=args.keep_stage,
                            ignore_deps=args.ignore_deps,
                            fake=args.fake)
+    if installed_package_names:
+        update_symlinks(installed_package_names)
