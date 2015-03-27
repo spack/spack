@@ -49,8 +49,18 @@ def _symlinks_for_specs(specs):
         pkglinks = spack.pkgconfig.symlinks_for_spec(spec)
         formated_pkglinks = [spec.format(link) for link in pkglinks]
         target = spack.install_layout.path_for_spec(spec)
+        all_links = [(link, target) for link in formated_pkglinks]
 
-        for link in formated_pkglinks:
+        deep_pkglinks = spack.pkgconfig.deep_symlinks_for_spec(spec)
+        for link in deep_pkglinks:
+            pair = link.split(' ')
+            if len(pair) != 2:
+                tty.die("Ill-formated deep link '%s' in spack config.  Expected 'link deep_part'." % link)
+            all_links.append((spec.format(pair[0]), target + '/' + spec.format(pair[1])))
+
+        for link_pairs in all_links:
+            link = link_pairs[0]
+            link_target = link_pairs[1]
             if link in symlinks:
                 # A higher-priority spec is already installing a symlink here
                 continue
@@ -71,7 +81,7 @@ def _symlinks_for_specs(specs):
             except exceptions.OSError, e:
                 tty.die("Could not access symlink %s for package %s" % link, spec)
             
-            symlinks[link] = (target, original_target)
+            symlinks[link] = (link_target, original_target)
     return symlinks
 
 

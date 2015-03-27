@@ -32,7 +32,7 @@ import spack.spec
 class PackageConfig(object):
     """A class for parsing the package information in the .spackconfig file"""
     packages = []
-    fields = [ 'symlinks', 'srcdir', 'version_order', 'compiler_order', 'compilerver_order', 'variant_order', 'architecture_order' ]
+    fields = [ 'symlinks', 'srcdir', 'version_order', 'compiler_order', 'compilerver_order', 'variant_order', 'architecture_order', 'deep_symlinks']
 
     def __init__(self):
         config = spack.config.get_config()
@@ -115,6 +115,10 @@ class PackageConfig(object):
         
     def symlinks_for_spec(self, spec):
         return self.lookup_multifield_for_pkgname(spec.name, spec, 'symlinks')
+
+
+    def deep_symlinks_for_spec(self, spec):
+        return self.lookup_multifield_for_pkgname(spec.name, spec, 'deep_symlinks')
     
 
     def srcdir_for_spec(self, spec):
