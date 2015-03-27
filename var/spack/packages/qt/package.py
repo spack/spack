@@ -50,9 +50,11 @@ class Qt(Package):
 
     def patch(self):
         if self.spec.satisfies('@4'):
-            qmake_conf = 'mkspecs/common/g++-base.conf'
+            qmake_conf      = 'mkspecs/common/g++-base.conf'
+            qmake_unix_conf = 'mkspecs/common/g++-unix.conf'
         elif self.spec.satisfies('@5'):
-            qmake_conf = 'qtbase/mkspecs/common/g++-base.conf'
+            qmake_conf      = 'qtbase/mkspecs/common/g++-base.conf'
+            qmake_unix_conf = 'qtbase/mkspecs/common/g++-unix.conf'
         else:
             return
 
@@ -60,7 +62,7 @@ class Qt(Package):
         filter_file(r'^QMAKE_COMPILER *=.*$',  'QMAKE_COMPILER = cc', qmake_conf)
         filter_file(r'^QMAKE_CC *=.*$',        'QMAKE_CC = cc',       qmake_conf)
         filter_file(r'^QMAKE_CXX *=.*$',       'QMAKE_CXX = c++',     qmake_conf)
-
+        filter_file(r'^QMAKE_LFLAGS_NOUNDEF *\+?=.*$',  'QMAKE_LFLAGS_NOUNDEF =', qmake_unix_conf)
 
 
     @property
