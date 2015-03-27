@@ -52,6 +52,7 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 SPACK_ENV_PATH         = 'SPACK_ENV_PATH'
 SPACK_DEPENDENCIES     = 'SPACK_DEPENDENCIES'
 SPACK_PREFIX           = 'SPACK_PREFIX'
+SPACK_INSTALL          = 'SPACK_INSTALL'
 SPACK_DEBUG            = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
@@ -124,6 +125,9 @@ def set_build_environment_variables(pkg):
 
     # Install prefix
     os.environ[SPACK_PREFIX] = pkg.prefix
+
+    # Install root prefix
+    os.environ[SPACK_INSTALL] = spack.install_path
 
     # Remove these vars from the environment during build becaus they
     # can affect how some packages find libraries.  We want to make
