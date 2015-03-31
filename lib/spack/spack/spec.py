@@ -1370,14 +1370,9 @@ class Spec(object):
                          self.versions[0], other.versions[0], True)
 
         #Compiler is third
-        if self.compiler.name != other.compiler.name:
-            return spack.pkgconfig.component_compare(pkgname, 'compiler',
-                         self.compiler.name, other.compiler.name)
-
-        #Compiler version
-        if self.compiler.versions != other.compiler.versions:
-            return spack.pkgconfig.component_compare(pkgname, 'compilerver',
-                         self.compiler.versions[0], other.compiler.versions[0], True)
+        if self.compiler != other.compiler:
+            return spack.pkgconfig.compiler_compare(pkgname,
+                         self.compiler, other.compiler)
 
         #Variants
         if self.variants != other.variants:

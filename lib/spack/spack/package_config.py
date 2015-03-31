@@ -32,7 +32,8 @@ import spack.spec
 class PackageConfig(object):
     """A class for parsing the package information in the .spackconfig file"""
     packages = []
-    fields = [ 'symlinks', 'srcdir', 'version_order', 'compiler_order', 'compilerver_order', 'variant_order', 'architecture_order', 'deep_symlinks']
+    fields = [ 'symlinks', 'srcdir', 'version_order', 'compiler_order', 'variant_order', 'architecture_order', 'deep_symlinks']
+    compiler_default_order = [ 'gcc', 'intel', 'clang', 'pgi' ] #Arbitrary, but consistent
 
     def __init__(self):
         config = spack.config.get_config()
@@ -132,8 +133,38 @@ class PackageConfig(object):
     def version_order_for_pkgname(self, pkgname):
         return self.lookup_singlefield_for_pkgname(pkgname, None, 'version_order')
 
-    def compilerver_order_for_pkgname(self, pkgname):
-        return self.lookup_singlefield_for_pkgname(pkgname, None, 'compilerver_order')
+        
+    _compilerspec_for_pkgname_cache = {}
+    def _compilerspec_for_pkgname(self, pkgname):
+        if not pkgname in self._compilerspec_for_pkgname_cache:
+            list = self.lookup_multifield_for_pkgname(pkgname, None, 'compiler_order')
+            if not list: list = self.compiler_default_order
+            self._compilerspec_for_pkgname_cache[pkgname] = [spack.spec.CompilerSpec(s) for s in list]
+        return self._compilerspec_for_pkgname_cache[pkgname]
+
+
+    def compiler_compare(self, pkgname, a, b):
+        specs = self._compilerspec_for_pkgname(pkgname)
+        a_index = None
+        b_index = None
+        for i, cspec in enumerate(specs):
+            if a_index == None and cspec.satisfies(a):
+                a_index = i
+                if b_index:
+                    break
+            if b_index == None and cspec.satisfies(b):
+                b_index = i
+                if a_index:
+                    break
+
+        if   a_index != None and b_index == None: return -1
+        elif a_index == None and b_index != None: return 1
+        elif a_index != None and b_index == a_index: return -1 * cmp(a, b)
+        elif a_index != None and b_index != None: return cmp(a_index, b_index)
+        elif a < b: return 1
+        elif b < a: return -1
+        else: return 0
+        
 
     def component_compare(self, pkgname, component, a, b, reverse_natural_compare=False):
         list = self.lookup_multifield_for_pkgname(pkgname, None, component + '_order')
