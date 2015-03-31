@@ -1366,8 +1366,8 @@ class Spec(object):
         #Package version is second in compare order
         pkgname = self.name
         if self.versions != other.versions:
-            return spack.pkgconfig.component_compare(pkgname, 'version',
-                         self.versions[0], other.versions[0], True)
+            return spack.pkgconfig.version_compare(pkgname,
+                         self.versions[0], other.versions[0])
 
         #Compiler is third
         if self.compiler != other.compiler:

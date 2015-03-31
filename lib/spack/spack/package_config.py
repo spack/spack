@@ -194,6 +194,11 @@ class PackageConfig(object):
         else:
             return 0
 
+            
+    def version_compare(self, pkgname, a, b):
+        return self.component_compare(pkgname, 'version', a, b, True)
+
+
     def component_list_compare(self, pkgname, component, list_a, list_b):
         list = self.lookup_multifield_for_pkgname(pkgname, component + '_order')
         for i in list:
