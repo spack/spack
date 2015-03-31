@@ -47,7 +47,7 @@ class PackageConfig(object):
     
     def multifield_for_pkgname(self, pkgname, spec, field):
         result = []
-        default_values = None
+        default_values = []
 
         if not self.packages:
             return []
