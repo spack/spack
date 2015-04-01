@@ -30,7 +30,8 @@ class AdeptUtils(Package):
     homepage = "https://github.com/scalability-llnl/adept-utils"
     url      = "https://github.com/scalability-llnl/adept-utils/archive/v1.0.tar.gz"
 
-    version('1.0', '5c6cd9badce56c945ac8551e34804397')
+    version('1.0.1', '731a310717adcb004d9d195130efee7d')
+    version('1.0',   '5c6cd9badce56c945ac8551e34804397')
 
     depends_on("boost")
     depends_on("mpi")
