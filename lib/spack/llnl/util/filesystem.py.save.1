@@ -22,10 +22,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-__all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree',
-           'expand_user', 'working_dir', 'touch', 'touchp', 'mkdirp',
-           'force_remove', 'join_path', 'ancestor', 'can_access', 'filter_file',
-           'change_sed_delimiter', 'is_exe', 'force_symlink']
+__all__ = ['set_install_permissions', 'install', 'expand_user', 'working_dir',
+           'touch', 'touchp', 'mkdirp', 'force_remove', 'join_path', 'ancestor',
+           'can_access', 'filter_file', 'change_sed_delimiter', 'is_exe']
 
 import os
 import sys
@@ -140,31 +139,18 @@ def set_install_permissions(path):
         os.chmod(path, 0644)
 
 
-def copy_mode(src, dest):
+def install(src, dest):
+    """Manually install a file to a particular location."""
+    tty.info("Installing %s to %s" % (src, dest))
+    shutil.copy(src, dest)
+    set_install_permissions(dest)
+
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
     if src_mode | stat.S_IXUSR: dest_mode |= stat.S_IXUSR
     if src_mode | stat.S_IXGRP: dest_mode |= stat.S_IXGRP
     if src_mode | stat.S_IXOTH: dest_mode |= stat.S_IXOTH
     os.chmod(dest, dest_mode)
-
-
-def install(src, dest):
-    """Manually install a file to a particular location."""
-    tty.debug("Installing %s to %s" % (src, dest))
-    shutil.copy(src, dest)
-    set_install_permissions(dest)
-    copy_mode(src, dest)
-
-
-def install_tree(src, dest, **kwargs):
-    """Manually install a file to a particular location."""
-    tty.debug("Installing %s to %s" % (src, dest))
-    shutil.copytree(src, dest, **kwargs)
-
-    for s, d in traverse_tree(src, dest, follow_nonexisting=False):
-        set_install_permissions(d)
-        copy_mode(s, d)
 
 
 def is_exe(path):
@@ -223,14 +209,6 @@ def touchp(path):
     touch(path)
 
 
-def force_symlink(src, dest):
-    try:
-        os.symlink(src, dest)
-    except OSError, e:
-        os.remove(dest)
-        os.symlink(src, dest)
-
-
 def join_path(prefix, *args):
     path = str(prefix)
     for elt in args:
@@ -249,84 +227,3 @@ def ancestor(dir, n=1):
 def can_access(file_name):
     """True if we have read/write access to the file."""
     return os.access(file_name, os.R_OK|os.W_OK)
-
-
-def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
-    """Traverse two filesystem trees simultaneously.
-
-    Walks the LinkTree directory in pre or post order.  Yields each
-    file in the source directory with a matching path from the dest
-    directory, along with whether the file is a directory.
-    e.g., for this tree::
-
-        root/
-          a/
-            file1
-            file2
-          b/
-            file3
-
-    When called on dest, this yields::
-
-        ('root',         'dest')
-        ('root/a',       'dest/a')
-        ('root/a/file1', 'dest/a/file1')
-        ('root/a/file2', 'dest/a/file2')
-        ('root/b',       'dest/b')
-        ('root/b/file3', 'dest/b/file3')
-
-    Optional args:
-
-    order=[pre|post] -- Whether to do pre- or post-order traveral.
-
-    ignore=<predicate> -- Predicate indicating which files to ignore.
-
-    follow_nonexisting -- Whether to descend into directories in
-                          src that do not exit in dest. Default True.
-
-    follow_links -- Whether to descend into symlinks in src.
-
-    """
-    follow_nonexisting = kwargs.get('follow_nonexisting', True)
-    follow_links = kwargs.get('follow_link', False)
-
-    # Yield in pre or post order?
-    order  = kwargs.get('order', 'pre')
-    if order not in ('pre', 'post'):
-        raise ValueError("Order must be 'pre' or 'post'.")
-
-    # List of relative paths to ignore under the src root.
-    ignore = kwargs.get('ignore', lambda filename: False)
-
-    # Don't descend into ignored directories
-    if ignore(rel_path):
-        return
-
-    source_path = os.path.join(source_root, rel_path)
-    dest_path   = os.path.join(dest_root, rel_path)
-
-    # preorder yields directories before children
-    if order == 'pre':
-        yield (source_path, dest_path)
-
-    for f in os.listdir(source_path):
-        source_child = os.path.join(source_path, f)
-        dest_child   = os.path.join(dest_path, f)
-        rel_child    = os.path.join(rel_path, f)
-
-        # Treat as a directory
-        if os.path.isdir(source_child) and (
-            follow_links or not os.path.islink(source_child)):
-
-            # When follow_nonexisting isn't set, don't descend into dirs
-            # in source that do not exist in dest
-            if follow_nonexisting or os.path.exists(dest_child):
-                tuples = traverse_tree(source_root, dest_root, rel_child, **kwargs)
-                for t in tuples: yield t
-
-        # Treat as a file.
-        elif not ignore(os.path.join(rel_path, f)):
-            yield (source_child, dest_child)
-
-    if order == 'post':
-        yield (source_path, dest_path)

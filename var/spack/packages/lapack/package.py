@@ -12,20 +12,15 @@ class Lapack(Package):
 
     depends_on('blas')
 
-    def install(self, spec, prefix):
-        mv = which('mv') # Create a shell wrapper for the mv command.
-        mkdir = which('mkdir') # Create a shell wrapper for the mkdir command.
-        pwd = os.getcwd() # Retrieve the current working dir.
-
+    def install(self, spec, prefix):     
         # Lapack and BLAS testing fails for some reason, but the library is 
-        # built and ready to go at this point. The testing stuff is going to be 
-        # switched off for now.
+        # built and ready to go after make() is called. The testing stuff is 
+        # going to be switched off for now.
         filter_file('blas_testing lapack_testing ', ' ', 'Makefile', string=True)
-
-        mv('%s/make.inc.example' % pwd, '%s/make.inc' % pwd)
+        move('./make.inc.example', './make.inc')
         filter_file('../../librefblas.a', '%s/libblas.a' % spec['blas'].prefix.lib, 'make.inc', string=True) # Specify the BLAS lib to use.
 
         make()
         mkdir('%s' % prefix.lib) # Create the lib dir inside the install dir.
-        mv('%s/liblapack.a' % pwd, '%s/liblapack.a' % prefix.lib) # Move the library file to the install dir.
+        move('./liblapack.a', '%s/liblapack.a' % prefix.lib) # Move the library file to the install dir.
 
