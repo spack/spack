@@ -25,6 +25,8 @@
 import sys
 from external import argparse
 
+import llnl.util.tty as tty
+
 import spack
 import spack.cmd
 
@@ -34,6 +36,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="Do not try to install dependencies of requested packages.")
+    subparser.add_argument(
+        '-j', '--jobs', action='store', type=int,
+        help="Explicitly set number of make jobs.  Default is #cpus.")
     subparser.add_argument(
         '--keep-prefix', action='store_true', dest='keep_prefix',
         help="Don't remove the install prefix if installation fails.")
@@ -54,13 +59,19 @@ def install(parser, args):
     if not args.packages:
         tty.die("install requires at least one package argument")
 
+    if args.jobs is not None:
+        if args.jobs <= 0:
+            tty.die("The -j option must be a positive integer!")
+
     if args.no_checksum:
         spack.do_checksum = False
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
         package = spack.db.get(spec)
-        package.do_install(keep_prefix=args.keep_prefix,
-                           keep_stage=args.keep_stage,
-                           ignore_deps=args.ignore_deps,
-                           fake=args.fake)
+        package.do_install(
+            keep_prefix=args.keep_prefix,
+            keep_stage=args.keep_stage,
+            ignore_deps=args.ignore_deps,
+            make_jobs=args.jobs,
+            fake=args.fake)
