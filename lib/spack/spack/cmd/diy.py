@@ -23,54 +23,35 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from external import argparse
-
-import llnl.util.tty as tty
-
 import spack
 import spack.cmd
 
-description = "Build and install packages"
+description = "Build a package for an existing source directory."
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="Do not try to install dependencies of requested packages.")
     subparser.add_argument(
-        '-j', '--jobs', action='store', type=int,
-        help="Explicitly set number of make jobs.  Default is #cpus.")
-    subparser.add_argument(
         '--keep-prefix', action='store_true', dest='keep_prefix',
         help="Don't remove the install prefix if installation fails.")
     subparser.add_argument(
-        '--keep-stage', action='store_true', dest='keep_stage',
-        help="Don't remove the build stage if installation succeeds.")
-    subparser.add_argument(
-        '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="Do not check packages against checksum")
-    subparser.add_argument(
-        '--fake', action='store_true', dest='fake',
-        help="Fake install.  Just remove the prefix and touch a fake file in it.")
-    subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
+        'spec', nargs=argparse.REMAINDER,
+        help="specs to use for install.  Must contain package AND verison.")
 
 
-def install(parser, args):
-    if not args.packages:
-        tty.die("install requires at least one package argument")
+def diy(self, args):
+    if not args.spec:
+        tty.die("spack diy requires a package spec argument.")
 
-    if args.jobs is not None:
-        if args.jobs <= 0:
-            tty.die("The -j option must be a positive integer!")
+    specs = spack.cmd.parse_specs(args.specs, concretize=True)
+    if len(specs) > 1:
+        tty.die("spack diy only takes one spec.")
 
-    if args.no_checksum:
-        spack.do_checksum = False        # TODO: remove this global.
+    spec = specs[0]
+    package = spack.db.get(spec)
 
-    specs = spack.cmd.parse_specs(args.packages, concretize=True)
-    for spec in specs:
-        package = spack.db.get(spec)
-        package.do_install(
-            keep_prefix=args.keep_prefix,
-            keep_stage=args.keep_stage,
-            ignore_deps=args.ignore_deps,
-            make_jobs=args.jobs,
-            fake=args.fake)
+    package.do_install(
+        keep_prefix=args.keep_prefix,
+        ignore_deps=args.ignore_deps,
+        keep_stage=True)   # don't remove stage dir for diy.
