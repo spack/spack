@@ -78,7 +78,7 @@ concretizer = DefaultConcretizer()
 
 # Version information
 from spack.version import Version
-spack_version = Version("0.8")
+spack_version = Version("0.8.15")
 
 #
 # Executables used by Spack

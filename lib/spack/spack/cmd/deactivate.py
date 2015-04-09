@@ -24,27 +24,81 @@
 ##############################################################################
 from external import argparse
 import llnl.util.tty as tty
+
 import spack
 import spack.cmd
+from spack.graph import topological_sort
 
 description = "Deactivate a package extension."
 
 def setup_parser(subparser):
     subparser.add_argument(
+        '-f', '--force', action='store_true',
+        help="Run deactivation even if spec is NOT currently activated.")
+    subparser.add_argument(
+        '-a', '--all', action='store_true',
+        help="Deactivate all extensions of an extendable pacakge, or "
+        "deactivate an extension AND its dependencies.")
+    subparser.add_argument(
         'spec', nargs=argparse.REMAINDER, help="spec of package extension to deactivate.")
 
 
 def deactivate(parser, args):
+    # TODO: shouldn't have to concretize here.  Fix DAG issues.
     specs = spack.cmd.parse_specs(args.spec, concretize=True)
     if len(specs) != 1:
         tty.die("deactivate requires one spec.  %d given." % len(specs))
 
-    # TODO: remove this hack when DAG info is stored in dir layout.
+    # TODO: remove this hack when DAG info is stored properly.
     # This ensures the ext spec is always normalized properly.
     spack.db.get(specs[0])
 
     spec = spack.cmd.disambiguate_spec(specs[0])
-    if not spec.package.activated:
-        tty.die("Package %s is not activated." % specs[0].short_spec)
+    pkg = spec.package
 
-    spec.package.do_deactivate()
+    if args.all:
+        if pkg.extendable:
+            tty.msg("Deactivating all extensions of %s" % pkg.spec.short_spec)
+            ext_pkgs = spack.db.installed_extensions_for(spec)
+
+            for ext_pkg in ext_pkgs:
+                ext_pkg.spec.normalize()
+                if ext_pkg.activated:
+                    ext_pkg.do_deactivate(force=True)
+
+        elif pkg.is_extension:
+            # TODO: store DAG info properly (see above)
+            spec.normalize()
+
+            if not args.force and not spec.package.activated:
+                tty.die("%s is not activated." % pkg.spec.short_spec)
+
+            tty.msg("Deactivating %s and all dependencies." % pkg.spec.short_spec)
+
+            topo_order = topological_sort(spec)
+            index = spec.index()
+
+            for name in topo_order:
+                espec = index[name]
+                epkg = espec.package
+
+                # TODO: store DAG info properly (see above)
+                epkg.spec.normalize()
+
+                if epkg.extends(pkg.extendee_spec):
+                    if epkg.activated or args.force:
+
+                        epkg.do_deactivate(force=args.force)
+
+        else:
+            tty.die("spack deactivate --all requires an extendable package or an extension.")
+
+    else:
+        if not pkg.is_extension:
+            tty.die("spack deactivate requires an extension.",
+                    "Did you mean 'spack deactivate --all'?")
+
+        if not args.force and not spec.package.activated:
+            tty.die("Package %s is not activated." % specs[0].short_spec)
+
+        spec.package.do_deactivate(force=args.force)

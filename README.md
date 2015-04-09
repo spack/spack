@@ -32,20 +32,53 @@ Documentation
 [Full documentation](http://scalability-llnl.github.io/spack)
 for Spack is also available.
 
+Get Involved!
+------------------------
+
+Spack is an open source project.  Questions, discussion, and
+contributions are welcome. Contributions can be anything from new
+packages to bugfixes, or even new core features.
+
+### Mailing list
+
+If you are interested in contributing to spack, the first step is to
+join the mailing list.  We're currently using LLNL's old-fashioned
+mailing list software, so you'll need to click the links below and
+send the resulting email to subscribe or unsubscribe:
+
+  * **[Subscribe](mailto:majordomo@lists.llnl.gov?subject=subscribe&body=subscribe%20spack)**
+  * **[Unsubscribe](mailto:majordomo@lists.llnl.gov?subject=unsubscribe&body=unsubscribe%20spack)**
+
+### Contributions
+
+At the moment, contributing to Spack is relatively simple.  Just send us
+a [pull request](https://help.github.com/articles/using-pull-requests/).
+When you send your request, make ``develop`` the destination branch.
+
+Spack is using a rough approximation of the [Git
+Flow](http://nvie.com/posts/a-successful-git-branching-model/)
+branching model.  The ``develop`` branch contains the latest
+contributions, and ``master`` is always tagged and points to the
+latest stable release.
+
+
 Authors
 ----------------
 Spack was written by Todd Gamblin, tgamblin@llnl.gov.
 
-Significant contributions were also made by the following awesome
-people:
+Significant contributions were also made by:
 
   * David Beckingsale
   * David Boehme
+  * Alfredo Gimenez
   * Luc Jaulmes
   * Matt Legendre
   * Greg Lee
   * Adam Moody
+  * Saravan Pantham
+  * Joachim Protze
   * Bob Robey
+  * Justin Too
 
 Release
 ----------------

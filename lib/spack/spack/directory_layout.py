@@ -27,9 +27,11 @@ import os
 import exceptions
 import hashlib
 import shutil
+import tempfile
 from contextlib import closing
 
 import llnl.util.tty as tty
+from llnl.util.lang import memoized
 from llnl.util.filesystem import join_path, mkdirp
 
 import spack
@@ -84,17 +86,38 @@ class DirectoryLayout(object):
         raise NotImplementedError()
 
 
-    def get_extensions(self, spec):
-        """Get a set of currently installed extension packages for a spec."""
+    def extension_map(self, spec):
+        """Get a dict of currently installed extension packages for a spec.
+
+           Dict maps { name : extension_spec }
+           Modifying dict does not affect internals of this layout.
+        """
         raise NotImplementedError()
 
 
-    def add_extension(self, spec, extension_spec):
+    def check_extension_conflict(self, spec, ext_spec):
+        """Ensure that ext_spec can be activated in spec.
+
+           If not, raise ExtensionAlreadyInstalledError or
+           ExtensionConflictError.
+        """
+        raise NotImplementedError()
+
+
+    def check_activated(self, spec, ext_spec):
+        """Ensure that ext_spec can be removed from spec.
+
+           If not, raise NoSuchExtensionError.
+        """
+        raise NotImplementedError()
+
+
+    def add_extension(self, spec, ext_spec):
         """Add to the list of currently installed extensions."""
         raise NotImplementedError()
 
 
-    def remove_extension(self, spec, extension_spec):
+    def remove_extension(self, spec, ext_spec):
         """Remove from the list of currently installed extensions."""
         raise NotImplementedError()
 
@@ -109,12 +132,17 @@ class DirectoryLayout(object):
 
 
     def remove_path_for_spec(self, spec):
-        """Removes a prefix and any empty parent directories from the root."""
+        """Removes a prefix and any empty parent directories from the root.
+           Raised RemoveFailedError if something goes wrong.
+        """
         path = self.path_for_spec(spec)
         assert(path.startswith(self.root))
 
         if os.path.exists(path):
-            shutil.rmtree(path, True)
+            try:
+                shutil.rmtree(path)
+            except exceptions.OSError, e:
+                raise RemoveFailedError(spec, path, e)
 
         path = os.path.dirname(path)
         while path != self.root:
@@ -168,6 +196,8 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         self.spec_file_name = spec_file_name
         self.extension_file_name = extension_file_name
 
+        # Cache of already written/read extension maps.
+        self._extension_maps = {}
 
     @property
     def hidden_file_paths(self):
@@ -194,6 +224,9 @@ class SpecHashDirectoryLayout(DirectoryLayout):
 
         if all(spack.db.exists(s.name) for s in spec.traverse()):
             copy = spec.copy()
+
+            # TODO: It takes a lot of time to normalize every spec on read.
+            # TODO: Storing graph info with spec files would fix this.
             copy.normalize()
             if copy.concrete:
                 return copy   # These are specs spack still understands.
@@ -247,17 +280,20 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         self.write_spec(spec, spec_file_path)
 
 
+    @memoized
     def all_specs(self):
         if not os.path.isdir(self.root):
-            return
+            return []
 
+        specs = []
         for path in traverse_dirs_at_depth(self.root, 3):
             arch, compiler, last_dir = path
             spec_file_path = join_path(
                 self.root, arch, compiler, last_dir, self.spec_file_name)
             if os.path.exists(spec_file_path):
                 spec = self.read_spec(spec_file_path)
-                yield spec
+                specs.append(spec)
+        return specs
 
 
     def extension_file_path(self, spec):
@@ -266,54 +302,94 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         return join_path(self.path_for_spec(spec), self.extension_file_name)
 
 
-    def get_extensions(self, spec):
+    def _extension_map(self, spec):
+        """Get a dict<name -> spec> for all extensions currnetly
+           installed for this package."""
         _check_concrete(spec)
 
-        extensions = set()
+        if not spec in self._extension_maps:
+            path = self.extension_file_path(spec)
+            if not os.path.exists(path):
+                self._extension_maps[spec] = {}
+
+            else:
+                exts = {}
+                with closing(open(path)) as ext_file:
+                    for line in ext_file:
+                        try:
+                            spec = Spec(line.strip())
+                            exts[spec.name] = spec
+                        except spack.error.SpackError, e:
+                            # TODO: do something better here -- should be
+                            # resilient to corrupt files.
+                            raise InvalidExtensionSpecError(str(e))
+                self._extension_maps[spec] = exts
+
+        return self._extension_maps[spec]
+
+
+    def extension_map(self, spec):
+        """Defensive copying version of _extension_map() for external API."""
+        return self._extension_map(spec).copy()
+
+
+    def check_extension_conflict(self, spec, ext_spec):
+        exts = self._extension_map(spec)
+        if ext_spec.name in exts:
+            installed_spec = exts[ext_spec.name]
+            if ext_spec == installed_spec:
+                raise ExtensionAlreadyInstalledError(spec, ext_spec)
+            else:
+                raise ExtensionConflictError(spec, ext_spec, installed_spec)
+
+
+    def check_activated(self, spec, ext_spec):
+        exts = self._extension_map(spec)
+        if (not ext_spec.name in exts) or (ext_spec != exts[ext_spec.name]):
+            raise NoSuchExtensionError(spec, ext_spec)
+
+
+    def _write_extensions(self, spec, extensions):
         path = self.extension_file_path(spec)
-        if os.path.exists(path):
-            with closing(open(path)) as ext_file:
-                for line in ext_file:
-                    try:
-                        extensions.add(Spec(line.strip()))
-                    except spack.error.SpackError, e:
-                        raise InvalidExtensionSpecError(str(e))
-        return extensions
+
+        # Create a temp file in the same directory as the actual file.
+        dirname, basename = os.path.split(path)
+        tmp = tempfile.NamedTemporaryFile(
+            prefix=basename, dir=dirname, delete=False)
+
+        # Write temp file.
+        with closing(tmp):
+            for extension in sorted(extensions.values()):
+                tmp.write("%s\n" % extension)
+
+        # Atomic update by moving tmpfile on top of old one.
+        os.rename(tmp.name, path)
 
 
-    def write_extensions(self, spec, extensions):
-        path = self.extension_file_path(spec)
-        with closing(open(path, 'w')) as spec_file:
-            for extension in sorted(extensions):
-                spec_file.write("%s\n" % extension)
-
-
-    def add_extension(self, spec, extension_spec):
+    def add_extension(self, spec, ext_spec):
         _check_concrete(spec)
-        _check_concrete(extension_spec)
+        _check_concrete(ext_spec)
 
-        exts = self.get_extensions(spec)
-        if extension_spec in exts:
-            raise ExtensionAlreadyInstalledError(spec, extension_spec)
-        else:
-            for already_installed in exts:
-                if spec.name == extension_spec.name:
-                    raise ExtensionConflictError(spec, extension_spec, already_installed)
+        # Check whether it's already installed or if it's a conflict.
+        exts = self._extension_map(spec)
+        self.check_extension_conflict(spec, ext_spec)
 
-        exts.add(extension_spec)
-        self.write_extensions(spec, exts)
+        # do the actual adding.
+        exts[ext_spec.name] = ext_spec
+        self._write_extensions(spec, exts)
 
 
-    def remove_extension(self, spec, extension_spec):
+    def remove_extension(self, spec, ext_spec):
         _check_concrete(spec)
-        _check_concrete(extension_spec)
+        _check_concrete(ext_spec)
 
-        exts = self.get_extensions(spec)
-        if not extension_spec in exts:
-            raise NoSuchExtensionError(spec, extension_spec)
+        # Make sure it's installed before removing.
+        exts = self._extension_map(spec)
+        self.check_activated(spec, ext_spec)
 
-        exts.remove(extension_spec)
-        self.write_extensions(spec, exts)
+        # do the actual removing.
+        del exts[ext_spec.name]
+        self._write_extensions(spec, exts)
 
 
 class DirectoryLayoutError(SpackError):
@@ -328,6 +404,15 @@ class SpecHashCollisionError(DirectoryLayoutError):
         super(SpecHashDirectoryLayout, self).__init__(
             'Specs %s and %s have the same SHA-1 prefix!'
             % installed_spec, new_spec)
+
+
+class RemoveFailedError(DirectoryLayoutError):
+    """Raised when a DirectoryLayout cannot remove an install prefix."""
+    def __init__(self, installed_spec, prefix, error):
+        super(RemoveFailedError, self).__init__(
+            'Could not remove prefix %s for %s : %s'
+            % prefix, installed_spec.short_spec, error)
+        self.cause = error
 
 
 class InconsistentInstallDirectoryError(DirectoryLayoutError):
@@ -351,22 +436,24 @@ class InvalidExtensionSpecError(DirectoryLayoutError):
 
 class ExtensionAlreadyInstalledError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
-    def __init__(self, spec, extension_spec):
+    def __init__(self, spec, ext_spec):
         super(ExtensionAlreadyInstalledError, self).__init__(
-            "%s is already installed in %s" % (extension_spec.short_spec, spec.short_spec))
+            "%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec))
 
 
 class ExtensionConflictError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
-    def __init__(self, spec, extension_spec, conflict):
+    def __init__(self, spec, ext_spec, conflict):
         super(ExtensionConflictError, self).__init__(
             "%s cannot be installed in %s because it conflicts with %s."% (
-                extension_spec.short_spec, spec.short_spec, conflict.short_spec))
+                ext_spec.short_spec, spec.short_spec, conflict.short_spec))
 
 
 class NoSuchExtensionError(DirectoryLayoutError):
-    """Raised when an extension isn't there on remove."""
-    def __init__(self, spec, extension_spec):
+    """Raised when an extension isn't there on deactivate."""
+    def __init__(self, spec, ext_spec):
         super(NoSuchExtensionError, self).__init__(
-            "%s cannot be removed from %s because it's not installed."% (
-                extension_spec.short_spec, spec.short_spec))
+            "%s cannot be removed from %s because it's not activated."% (
+                ext_spec.short_spec, spec.short_spec))
+
+

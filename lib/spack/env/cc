@@ -262,7 +262,7 @@ done
 
 # Include all -L's and prefix/whatever dirs in rpath
 for dir in "${libraries[@]}"; do
-    [ "$dir" != "." ] && rpaths+=("$dir")
+    [[ dir = $SPACK_INSTALL* ]] && rpaths+=("$dir")
 done
 rpaths+=("$SPACK_PREFIX/lib")
 rpaths+=("$SPACK_PREFIX/lib64")

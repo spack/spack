@@ -85,7 +85,7 @@ def display_specs(specs, **kwargs):
 
         elif mode == 'deps':
             for spec in specs:
-                print spec.tree(indent=4, format='$_$@$+', color=True),
+                print spec.tree(indent=4, format='$_$@$+$#', color=True),
 
         elif mode in ('short', 'long'):
             fmt = '$-_$@$+'
@@ -122,5 +122,8 @@ def find(parser, args):
 
     if not args.mode:
         args.mode = 'short'
+
+    if sys.stdout.isatty():
+        tty.msg("%d installed packages." % len(specs))
     display_specs(specs, mode=args.mode)
 

@@ -8,6 +8,7 @@ class PySix(Package):
     version('1.9.0', '476881ef4012262dfc8adc645ee786c4')
 
     extends('python')
+    depends_on('py-setuptools')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

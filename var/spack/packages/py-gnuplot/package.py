@@ -8,6 +8,7 @@ class PyGnuplot(Package):
     version('1.8', 'abd6f571e7aec68ae7db90a5217cd5b1')
 
     extends('python')
+    depends_on('py-numpy')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

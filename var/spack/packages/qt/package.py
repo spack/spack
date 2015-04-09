@@ -1,3 +1,4 @@
+import os
 from spack import *
 import os
 
@@ -30,7 +31,7 @@ class Qt(Package):
     depends_on("libmng")
     depends_on("jpeg")
 
-     # Webkit
+    # Webkit
     # depends_on("gperf")
     # depends_on("flex")
     # depends_on("bison")
@@ -41,11 +42,19 @@ class Qt(Package):
     depends_on("mesa")
     depends_on("libxcb")
 
+
+    def setup_dependent_environment(self, module, spec, dep_spec):
+        """Dependencies of Qt find it using the QTDIR environment variable."""
+        os.environ['QTDIR'] = self.prefix
+
+
     def patch(self):
         if self.spec.satisfies('@4'):
-            qmake_conf = 'mkspecs/common/g++-base.conf'
+            qmake_conf      = 'mkspecs/common/g++-base.conf'
+            qmake_unix_conf = 'mkspecs/common/g++-unix.conf'
         elif self.spec.satisfies('@5'):
-            qmake_conf = 'qtbase/mkspecs/common/g++-base.conf'
+            qmake_conf      = 'qtbase/mkspecs/common/g++-base.conf'
+            qmake_unix_conf = 'qtbase/mkspecs/common/g++-unix.conf'
         else:
             return
 
@@ -53,27 +62,48 @@ class Qt(Package):
         filter_file(r'^QMAKE_COMPILER *=.*$',  'QMAKE_COMPILER = cc', qmake_conf)
         filter_file(r'^QMAKE_CC *=.*$',        'QMAKE_CC = cc',       qmake_conf)
         filter_file(r'^QMAKE_CXX *=.*$',       'QMAKE_CXX = c++',     qmake_conf)
+        filter_file(r'^QMAKE_LFLAGS_NOUNDEF *\+?=.*$',  'QMAKE_LFLAGS_NOUNDEF =', qmake_unix_conf)
+
+
+    @property
+    def common_config_args(self):
+        return [
+            '-prefix', self.prefix,
+            '-v',
+            '-opensource',
+            '-opengl',
+            "-release",
+            '-shared',
+            '-confirm-license',
+            '-openssl-linked',
+            '-dbus-linked',
+            '-optimized-qmake',
+            '-no-openvg',
+            '-no-pch',
+            # NIS is deprecated in more recent glibc
+            "-no-nis"]
+    # Don't disable all the database drivers, but should
+    # really get them into spack at some point.
+
+
+    @when('@4')
+    def configure(self):
+        configure('-fast',
+                  '-no-webkit',
+                  *self.common_config_args)
+
+
+    @when('@5')
+    def configure(self):
+        configure('-no-eglfs',
+                  '-no-directfb',
+                  '-qt-xcb',
+                  # If someone wants to get a webkit build working, be my guest!
+                  '-skip', 'qtwebkit',
+                  *self.common_config_args)
 
 
     def install(self, spec, prefix):
-        # Apparently this is the only way to 
-        # "truly" get rid of webkit compiles now...
-        os.rename("qtwebkit","no-qtwebkit")
-        os.rename("qtwebkit-examples","no-qtwebkit-examples")
-        configure('-v',
-                  '-confirm-license',
-                  '-opensource',
-                  '-prefix', prefix,
-                  '-openssl-linked',
-                  '-dbus-linked',
-                  #'-fast',
-                  '-opengl',
-                  '-qt-xcb',
-                  '-optimized-qmake',
-                  '-no-pch',
-# phonon required for py-pyqt4
-#                  '-no-phonon',
-#                  '-no-phonon-backend',
-                  '-no-openvg')
+        self.configure()
         make()
         make("install")

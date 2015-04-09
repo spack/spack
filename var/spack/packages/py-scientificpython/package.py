@@ -1,7 +1,11 @@
 from spack import *
 
 class PyScientificpython(Package):
-    """ScientificPython is a collection of Python modules for scientific computing. It contains support for geometry, mathematical functions, statistics, physical units, IO, visualization, and parallelization."""
+    """ScientificPython is a collection of Python modules for
+       scientific computing. It contains support for geometry,
+       mathematical functions, statistics, physical units, IO,
+       visualization, and parallelization."""
+
     homepage = "https://sourcesup.renater.fr/projects/scientific-py/"
     url      = "https://sourcesup.renater.fr/frs/download.php/4411/ScientificPython-2.8.1.tar.gz"
 

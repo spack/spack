@@ -33,20 +33,27 @@ import spack.url as url
 description = "print out abstract and concrete versions of a spec."
 
 def setup_parser(subparser):
+    subparser.add_argument('-i', '--ids', action='store_true',
+                           help="show numerical ids for dependencies.")
     subparser.add_argument('specs', nargs=argparse.REMAINDER, help="specs of packages")
 
+
 def spec(parser, args):
+    kwargs = { 'ids'    : args.ids,
+               'indent' : 2,
+               'color'  : True }
+
     for spec in spack.cmd.parse_specs(args.specs):
         print "Input spec"
         print "------------------------------"
-        print spec.tree(color=True, indent=2)
+        print spec.tree(**kwargs)
 
         print "Normalized"
         print "------------------------------"
         spec.normalize()
-        print spec.tree(color=True, indent=2)
+        print spec.tree(**kwargs)
 
         print "Concretized"
         print "------------------------------"
         spec.concretize()
-        print spec.tree(color=True, indent=2)
+        print spec.tree(**kwargs)

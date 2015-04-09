@@ -60,7 +60,7 @@ class SvnFetchTest(MockPackagesTest):
         if self.repo.stage is not None:
             self.repo.stage.destroy()
 
-        self.pkg.do_clean_dist()
+        self.pkg.do_clean()
 
 
     def assert_rev(self, rev):
@@ -99,7 +99,7 @@ class SvnFetchTest(MockPackagesTest):
         untracked = 'foobarbaz'
         touch(untracked)
         self.assertTrue(os.path.isfile(untracked))
-        self.pkg.do_clean_work()
+        self.pkg.do_restage()
         self.assertFalse(os.path.isfile(untracked))
 
         self.assertTrue(os.path.isdir(self.pkg.stage.source_path))

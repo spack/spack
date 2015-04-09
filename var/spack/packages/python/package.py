@@ -1,8 +1,10 @@
-from spack import *
-import spack
 import os
 import re
 from contextlib import closing
+from llnl.util.lang import match_predicate
+
+from spack import *
+import spack
 
 
 class Python(Package):
@@ -42,11 +44,16 @@ class Python(Package):
 
 
     @property
+    def python_include_dir(self):
+        return os.path.join('include', 'python%d.%d' % self.version[:2])
+
+
+    @property
     def site_packages_dir(self):
         return os.path.join(self.python_lib_dir, 'site-packages')
 
 
-    def setup_extension_environment(self, module, spec, ext_spec):
+    def setup_dependent_environment(self, module, spec, ext_spec):
         """Called before python modules' install() methods.
 
         In most cases, extensions will only need to have one line::
@@ -57,14 +64,20 @@ class Python(Package):
         module.python = Executable(join_path(spec.prefix.bin, 'python'))
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
-        module.python_lib_dir = os.path.join(ext_spec.prefix, self.python_lib_dir)
-        module.site_packages_dir = os.path.join(ext_spec.prefix, self.site_packages_dir)
-
-        # Add site packages directory to the PYTHONPATH
-        os.environ['PYTHONPATH'] = module.site_packages_dir
+        module.python_lib_dir     = os.path.join(ext_spec.prefix, self.python_lib_dir)
+        module.python_include_dir = os.path.join(ext_spec.prefix, self.python_include_dir)
+        module.site_packages_dir  = os.path.join(ext_spec.prefix, self.site_packages_dir)
 
         # Make the site packages directory if it does not exist already.
         mkdirp(module.site_packages_dir)
+
+        # Set PYTHONPATH to include site-packages dir for the
+        # extension and any other python extensions it depends on.
+        python_paths = []
+        for d in ext_spec.traverse():
+            if d.package.extends(self.spec):
+                python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
+        os.environ['PYTHONPATH'] = ':'.join(python_paths)
 
 
     # ========================================================================
@@ -73,28 +86,24 @@ class Python(Package):
 
     def python_ignore(self, ext_pkg, args):
         """Add some ignore files to activate/deactivate args."""
-        orig_ignore = args.get('ignore', lambda f: False)
+        ignore_arg = args.get('ignore', lambda f: False)
 
-        def ignore(filename):
-            # Always ignore easy-install.pth, as it needs to be merged.
-            patterns = [r'easy-install\.pth$']
+        # Always ignore easy-install.pth, as it needs to be merged.
+        patterns = [r'easy-install\.pth$']
 
-            # Ignore pieces of setuptools installed by other packages.
-            if ext_pkg.name != 'py-setuptools':
-                patterns.append(r'/site\.pyc?$')
-                patterns.append(r'setuptools\.pth')
-                patterns.append(r'bin/easy_install[^/]*$')
-                patterns.append(r'setuptools.*egg$')
+        # Ignore pieces of setuptools installed by other packages.
+        if ext_pkg.name != 'py-setuptools':
+            patterns.append(r'/site\.pyc?$')
+            patterns.append(r'setuptools\.pth')
+            patterns.append(r'bin/easy_install[^/]*$')
+            patterns.append(r'setuptools.*egg$')
 
-            return (any(re.search(p, filename) for p in patterns) or
-                    orig_ignore(filename))
-
-        return ignore
+        return match_predicate(ignore_arg, patterns)
 
 
-    def write_easy_install_pth(self, extensions):
+    def write_easy_install_pth(self, exts):
         paths = []
-        for ext in extensions:
+        for ext in sorted(exts.values()):
             ext_site_packages = os.path.join(ext.prefix, self.site_packages_dir)
             easy_pth = "%s/easy-install.pth" % ext_site_packages
 
@@ -133,15 +142,16 @@ class Python(Package):
         args.update(ignore=self.python_ignore(ext_pkg, args))
         super(Python, self).activate(ext_pkg, **args)
 
-        extensions = set(spack.install_layout.get_extensions(self.spec))
-        extensions.add(ext_pkg.spec)
-        self.write_easy_install_pth(extensions)
+        exts = spack.install_layout.extension_map(self.spec)
+        exts[ext_pkg.name] = ext_pkg.spec
+        self.write_easy_install_pth(exts)
 
 
     def deactivate(self, ext_pkg, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
         super(Python, self).deactivate(ext_pkg, **args)
 
-        extensions = set(spack.install_layout.get_extensions(self.spec))
-        extensions.remove(ext_pkg.spec)
-        self.write_easy_install_pth(extensions)
+        exts = spack.install_layout.extension_map(self.spec)
+        if ext_pkg.name in exts:        # Make deactivate idempotent.
+            del exts[ext_pkg.name]
+            self.write_easy_install_pth(exts)

@@ -9,10 +9,7 @@ class PyVirtualenv(Package):
     version('1.11.6', 'f61cdd983d2c4e6aeabb70b1060d6f49')
 
     extends('python')
-
-    def clean(self):
-        if os.path.exists('build'):
-            shutil.rmtree('build')
+    depends_on('py-setuptools')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2014, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -28,39 +28,19 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
-import spack.stage as stage
 
-description = "Remove staged files for packages"
+description = "Remove build stage and source tarball for packages."
 
 def setup_parser(subparser):
-    subparser.add_argument('-c', "--clean", action="store_true", dest='clean',
-                           help="run make clean in the build directory (default)")
-    subparser.add_argument('-w', "--work", action="store_true", dest='work',
-                           help="delete the build directory and re-expand it from its archive.")
-    subparser.add_argument('-d', "--dist", action="store_true", dest='dist',
-                           help="delete the downloaded archive.")
     subparser.add_argument('packages', nargs=argparse.REMAINDER,
                            help="specs of packages to clean")
 
 
 def clean(parser, args):
     if not args.packages:
-        tty.die("spack clean requires at least one package argument")
+        tty.die("spack clean requires at least one package spec.")
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
         package = spack.db.get(spec)
-        if args.dist:
-            package.do_clean_dist()
-            tty.msg("Cleaned %s" % package.name)
-
-        elif args.work:
-            package.do_clean_work()
-            tty.msg("Restaged %s" % package.name)
-
-        else:
-            try:
-                package.do_clean()
-            except subprocess.CalledProcessError, e:
-                tty.warn("Warning: 'make clean' didn't work.  Consider 'spack clean --work'.")
-                tty.msg("Made clean for %s" % package.name)
+        package.do_clean()

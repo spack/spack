@@ -8,18 +8,13 @@ class PyBasemap(Package):
 
     version('1.0.7', '48c0557ced9e2c6e440b28b3caff2de8')
 
-    geos_version = {'1.0.7' : '3.3.3'}
-
     extends('python')
     depends_on('py-setuptools')
     depends_on('py-numpy')
     depends_on('py-matplotlib')
     depends_on('py-pil')
+    depends_on("geos")
 
     def install(self, spec, prefix):
-        with working_dir('geos-%s' % self.geos_version[str(self.version)]):
-            configure("--prefix=" + prefix)
-            make()
-            make("install")
-        os.environ['GEOS_DIR'] = prefix
+        env['GEOS_DIR'] = spec['geos'].prefix
         python('setup.py', 'install', '--prefix=%s' % prefix)

@@ -10,5 +10,7 @@ class PyRpy2(Package):
     extends('python')
     depends_on('py-setuptools')
 
+    depends_on('R')
+
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

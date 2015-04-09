@@ -75,23 +75,24 @@ def extensions(parser, args):
     if not extensions:
         tty.msg("%s has no extensions." % spec.cshort_spec)
         return
-    tty.msg("%s extensions:" % spec.cshort_spec)
+    tty.msg(spec.cshort_spec)
+    tty.msg("%d extensions:" % len(extensions))
     colify(ext.name for ext in extensions)
 
     # List specs of installed extensions.
     installed  = [s.spec for s in spack.db.installed_extensions_for(spec)]
     print
     if not installed:
-        tty.msg("None activated.")
+        tty.msg("None installed.")
         return
     tty.msg("%d installed:" % len(installed))
     spack.cmd.find.display_specs(installed, mode=args.mode)
 
     # List specs of activated extensions.
-    activated  = spack.install_layout.get_extensions(spec)
+    activated = spack.install_layout.extension_map(spec)
     print
     if not activated:
         tty.msg("None activated.")
         return
-    tty.msg("%d currently activated:" % len(exts))
-    spack.cmd.find.display_specs(installed, mode=args.mode)
+    tty.msg("%d currently activated:" % len(activated))
+    spack.cmd.find.display_specs(activated.values(), mode=args.mode)

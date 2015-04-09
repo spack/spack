@@ -28,6 +28,7 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import os
+import sys
 import shutil
 import multiprocessing
 import platform
@@ -51,6 +52,7 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 SPACK_ENV_PATH         = 'SPACK_ENV_PATH'
 SPACK_DEPENDENCIES     = 'SPACK_DEPENDENCIES'
 SPACK_PREFIX           = 'SPACK_PREFIX'
+SPACK_INSTALL          = 'SPACK_INSTALL'
 SPACK_DEBUG            = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
@@ -66,16 +68,16 @@ class MakeExecutable(Executable):
        Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
        everything.
     """
-    def __init__(self, name, parallel):
+    def __init__(self, name, jobs):
         super(MakeExecutable, self).__init__(name)
-        self.parallel = parallel
+        self.jobs = jobs
 
     def __call__(self, *args, **kwargs):
-        parallel = kwargs.get('parallel', self.parallel)
+        parallel = kwargs.get('parallel', self.jobs > 1)
         disable_parallel = env_flag(SPACK_NO_PARALLEL_MAKE)
 
-        if parallel and not disable_parallel:
-            jobs = "-j%d" % multiprocessing.cpu_count()
+        if self.jobs > 1 and not disable_parallel:
+            jobs = "-j%d" % self.jobs
             args = (jobs,) + args
 
         super(MakeExecutable, self).__call__(*args, **kwargs)
@@ -124,6 +126,9 @@ def set_build_environment_variables(pkg):
     # Install prefix
     os.environ[SPACK_PREFIX] = pkg.prefix
 
+    # Install root prefix
+    os.environ[SPACK_INSTALL] = spack.install_path
+
     # Remove these vars from the environment during build becaus they
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
@@ -158,14 +163,20 @@ def set_module_variables_for_package(pkg):
     """
     m = pkg.module
 
-    m.make  = MakeExecutable('make', pkg.parallel)
-    m.gmake = MakeExecutable('gmake', pkg.parallel)
+    # number of jobs spack will to build with.
+    jobs = multiprocessing.cpu_count()
+    if not pkg.parallel:
+        jobs = 1
+    elif pkg.make_jobs:
+        jobs = pkg.make_jobs
+    m.make_jobs = jobs
+
+    # TODO: make these build deps that can be installed if not found.
+    m.make  = MakeExecutable('make', jobs)
+    m.gmake = MakeExecutable('gmake', jobs)
 
     # easy shortcut to os.environ
     m.env = os.environ
-
-    # number of jobs spack prefers to build with.
-    m.make_jobs = multiprocessing.cpu_count()
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
@@ -188,18 +199,19 @@ def set_module_variables_for_package(pkg):
     m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(pkg)))
 
     # Emulate some shell commands for convenience
-    m.pwd        = os.getcwd
-    m.cd         = os.chdir
-    m.mkdir      = os.mkdir
-    m.makedirs   = os.makedirs
-    m.remove     = os.remove
-    m.removedirs = os.removedirs
-    m.symlink    = os.symlink
+    m.pwd          = os.getcwd
+    m.cd           = os.chdir
+    m.mkdir        = os.mkdir
+    m.makedirs     = os.makedirs
+    m.remove       = os.remove
+    m.removedirs   = os.removedirs
+    m.symlink      = os.symlink
 
-    m.mkdirp     = mkdirp
-    m.install    = install
-    m.rmtree     = shutil.rmtree
-    m.move       = shutil.move
+    m.mkdirp       = mkdirp
+    m.install      = install
+    m.install_tree = install_tree
+    m.rmtree       = shutil.rmtree
+    m.move         = shutil.move
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
@@ -221,3 +233,63 @@ def setup_package(pkg):
     set_compiler_environment_variables(pkg)
     set_build_environment_variables(pkg)
     set_module_variables_for_package(pkg)
+
+    # Allow dependencies to set up environment as well.
+    for dep_spec in pkg.spec.traverse(root=False):
+        dep_spec.package.setup_dependent_environment(
+            pkg.module, dep_spec, pkg.spec)
+
+
+def fork(pkg, function):
+    """Fork a child process to do part of a spack build.
+
+    Arguments:
+
+    pkg -- pkg whose environemnt we should set up the
+           forked process for.
+    function -- arg-less function to run in the child process.
+
+    Usage:
+       def child_fun():
+           # do stuff
+       build_env.fork(pkg, child_fun)
+
+    Forked processes are run with the build environemnt set up by
+    spack.build_environment.  This allows package authors to have
+    full control over the environment, etc. without offecting
+    other builds that might be executed in the same spack call.
+
+    If something goes wrong, the child process is expected toprint
+    the error and the parent process will exit with error as
+    well. If things go well, the child exits and the parent
+    carries on.
+    """
+    try:
+        pid = os.fork()
+    except OSError, e:
+        raise InstallError("Unable to fork build process: %s" % e)
+
+    if pid == 0:
+        # Give the child process the package's build environemnt.
+        setup_package(pkg)
+
+        try:
+            # call the forked function.
+            function()
+
+            # Use os._exit here to avoid raising a SystemExit exception,
+            # which interferes with unit tests.
+            os._exit(0)
+        except:
+            # Child doesn't raise or return to main spack code.
+            # Just runs default exception handler and exits.
+            sys.excepthook(*sys.exc_info())
+            os._exit(1)
+
+    else:
+        # Parent process just waits for the child to complete.  If the
+        # child exited badly, assume it already printed an appropriate
+        # message.  Just make the parent exit with an error code.
+        pid, returncode = os.waitpid(pid, 0)
+        if returncode != 0:
+            sys.exit(1)

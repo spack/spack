@@ -1,4 +1,5 @@
 from spack import *
+import os
 
 class PySip(Package):
     """SIP is a tool that makes it very easy to create Python bindings for C and C++ libraries."""
@@ -10,6 +11,10 @@ class PySip(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('configure.py')
+        python('configure.py',
+               '--destdir=%s' % site_packages_dir,
+               '--bindir=%s' % spec.prefix.bin,
+               '--incdir=%s' % python_include_dir,
+               '--sipdir=%s' % os.path.join(spec.prefix.share, 'sip'))
         make()
         make('install')

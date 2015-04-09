@@ -9,6 +9,7 @@ class PyBiopython(Package):
 
     extends('python')
     depends_on('py-mx')
+    depends_on('py-numpy')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

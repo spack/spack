@@ -8,7 +8,8 @@ class PyMatplotlib(Package):
 
     version('1.4.2', '7d22efb6cce475025733c50487bd8898')
 
-    extends('python')
+    extends('python', ignore=r'bin/nosetests.*$')
+
     depends_on('py-pyside')
     depends_on('py-ipython')
     depends_on('py-pyparsing')
@@ -18,8 +19,15 @@ class PyMatplotlib(Package):
     depends_on('py-nose')
     depends_on('py-numpy')
 
+    depends_on('qt')
+    depends_on('bzip2')
+    depends_on('tcl')
+    depends_on('tk')
+    depends_on('qhull')
+
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
+
         if str(self.version) == '1.4.2':
             # hack to fix configuration file
             config_file = None

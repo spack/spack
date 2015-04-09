@@ -62,6 +62,7 @@ from spack.version import *
 from spack.stage import Stage
 from spack.util.web import get_pages
 from spack.util.compression import allowed_archive, extension
+from spack.util.executable import ProcessError
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -287,10 +288,9 @@ class Package(object):
 
     .. code-block:: python
 
-       p.do_clean()              # runs make clean
-       p.do_clean_work()         # removes the build directory and
+       p.do_clean()              # removes the stage directory entirely
+       p.do_restage()            # removes the build directory and
                                  # re-expands the archive.
-       p.do_clean_dist()         # removes the stage directory entirely
 
     The convention used here is that a do_* function is intended to be called
     internally by Spack commands (in spack.cmd).  These aren't for package
@@ -332,6 +332,9 @@ class Package(object):
     #
     """By default we build in parallel.  Subclasses can override this."""
     parallel = True
+
+    """# jobs to use for parallel make. If set, overrides default of ncpus."""
+    make_jobs = None
 
     """Most packages are NOT extendable.  Set to True if you want extensions."""
     extendable = False
@@ -529,12 +532,10 @@ class Package(object):
 
     @property
     def activated(self):
-        if not self.spec.concrete:
-            raise ValueError("Only concrete package extensions can be activated.")
         if not self.is_extension:
             raise ValueError("is_extension called on package that is not an extension.")
-
-        return self.spec in spack.install_layout.get_extensions(self.extendee_spec)
+        exts = spack.install_layout.extension_map(self.extendee_spec)
+        return (self.name in exts) and (exts[self.name] == self.spec)
 
 
     def preorder_traversal(self, visited=None, **kwargs):
@@ -783,9 +784,12 @@ class Package(object):
         """
         # whether to keep the prefix on failure.  Default is to destroy it.
         keep_prefix  = kwargs.get('keep_prefix', False)
-        keep_stage   = kwargs.get('keep_stage', False)
+        keep_stage   = kwargs.get('keep_stage',  False)
         ignore_deps  = kwargs.get('ignore_deps', False)
-        fake_install = kwargs.get('fake', False)
+        fake_install = kwargs.get('fake',        False)
+
+        # Override builtin number of make jobs.
+        self.make_jobs    = kwargs.get('make_jobs',   None)
 
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -803,23 +807,24 @@ class Package(object):
         if not fake_install:
             self.do_patch()
 
-        # Fork a child process to do the build.  This allows each
-        # package authors to have full control over their environment,
-        # etc. without offecting other builds that might be executed
-        # in the same spack call.
-        try:
-            pid = os.fork()
-        except OSError, e:
-            raise InstallError("Unable to fork build process: %s" % e)
+        # create the install directory.  The install layout
+        # handles this in case so that it can use whatever
+        # package naming scheme it likes.
+        spack.install_layout.make_path_for_spec(self.spec)
 
-        if pid == 0:
+        def cleanup():
+            if not keep_prefix:
+                # If anything goes wrong, remove the install prefix
+                self.remove_prefix()
+            else:
+                tty.warn("Keeping install prefix in place despite error.",
+                         "Spack will think this package is installed." +
+                         "Manually remove this directory to fix:",
+                         self.prefix)
+
+        def real_work():
             try:
                 tty.msg("Building %s." % self.name)
-
-                # create the install directory.  The install layout
-                # handles this in case so that it can use whatever
-                # package naming scheme it likes.
-                spack.install_layout.make_path_for_spec(self.spec)
 
                 # Run the pre-install hook in the child process after
                 # the directory is created.
@@ -827,13 +832,6 @@ class Package(object):
 
                 # Set up process's build environment before running install.
                 self.stage.chdir_to_source()
-                build_env.setup_package(self)
-
-                # Allow extendees to further set up the environment.
-                if self.is_extension:
-                    self.extendee_spec.package.setup_extension_environment(
-                        self.module, self.extendee_spec, self.spec)
-
                 if fake_install:
                     self.do_fake_install()
                 else:
@@ -852,39 +850,30 @@ class Package(object):
                 build_time = self._total_time - self._fetch_time
 
                 tty.msg("Successfully installed %s." % self.name,
-                        "Fetch: %.2f sec.  Build: %.2f sec.  Total: %.2f sec."
-                        % (self._fetch_time, build_time, self._total_time))
+                        "Fetch: %s.  Build: %s.  Total: %s."
+                        % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
                 print_pkg(self.prefix)
 
-                # Use os._exit here to avoid raising a SystemExit exception,
-                # which interferes with unit tests.
-                os._exit(0)
+            except ProcessError, e:
+                # One of the processes returned an error code.
+                # Suppress detailed stack trace here unless in debug mode
+                if spack.debug:
+                    raise e
+                else:
+                    tty.error(e)
+
+                # Still need to clean up b/c there was an error.
+                cleanup()
 
             except:
-                if not keep_prefix:
-                    # If anything goes wrong, remove the install prefix
-                    self.remove_prefix()
-                else:
-                    tty.warn("Keeping install prefix in place despite error.",
-                             "Spack will think this package is installed." +
-                             "Manually remove this directory to fix:",
-                             self.prefix)
+                # other exceptions just clean up and raise.
+                cleanup()
+                raise
 
-                # Child doesn't raise or return to main spack code.
-                # Just runs default exception handler and exits.
-                sys.excepthook(*sys.exc_info())
-                os._exit(1)
-
-        # Parent process just waits for the child to complete.  If the
-        # child exited badly, assume it already printed an appropriate
-        # message.  Just make the parent exit with an error code.
-        pid, returncode = os.waitpid(pid, 0)
-        if returncode != 0:
-            sys.exit(1)
+        build_env.fork(self, real_work)
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_install(self)
-
 
 
     def _sanity_check_install(self):
@@ -910,8 +899,8 @@ class Package(object):
                           fromlist=[self.__class__.__name__])
 
 
-    def setup_extension_environment(self, module, spec, ext_spec):
-        """Called before the install() method of extensions.
+    def setup_dependent_environment(self, module, spec, dependent_spec):
+        """Called before the install() method of dependents.
 
         Default implementation does nothing, but this can be
         overridden by an extendable package to set up the install
@@ -929,6 +918,8 @@ class Package(object):
            from the Python installation being extended.  This routine can
            put a 'python' Execuable object in the module scope for the
            extension package to simplify extension installs.
+
+        3. A lot of Qt extensions need QTDIR set.  This can be used to do that.
 
         """
         pass
@@ -971,30 +962,46 @@ class Package(object):
 
     def _sanity_check_extension(self):
         if not self.is_extension:
-            raise ValueError("This package is not an extension.")
+            raise ActivationError("This package is not an extension.")
+
         extendee_package = self.extendee_spec.package
         extendee_package._check_extendable()
 
         if not extendee_package.installed:
-            raise ValueError("Can only (de)activate extensions for installed packages.")
+            raise ActivationError("Can only (de)activate extensions for installed packages.")
         if not self.installed:
-            raise ValueError("Extensions must first be installed.")
+            raise ActivationError("Extensions must first be installed.")
         if not self.extendee_spec.name in self.extendees:
-            raise ValueError("%s does not extend %s!" % (self.name, self.extendee.name))
+            raise ActivationError("%s does not extend %s!" % (self.name, self.extendee.name))
 
 
-    def do_activate(self):
+    def do_activate(self, **kwargs):
         """Called on an etension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
         activate() directly.
         """
         self._sanity_check_extension()
+        force = kwargs.get('force', False)
+
+        # TODO: get rid of this normalize - DAG handling.
+        self.spec.normalize()
+
+        spack.install_layout.check_extension_conflict(self.extendee_spec, self.spec)
+
+        if not force:
+            for spec in self.spec.traverse(root=False):
+                if spec.package.extends(self.extendee_spec):
+                    # TODO: fix this normalize() requirement -- revisit DAG handling.
+                    spec.package.spec.normalize()
+                    if not spec.package.activated:
+                        spec.package.do_activate(**kwargs)
+
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.install_layout.add_extension(self.extendee_spec, self.spec)
         tty.msg("Activated extension %s for %s."
-                % (self.spec.short_spec, self.extendee_spec.short_spec))
+                % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
 
 
     def activate(self, extension, **kwargs):
@@ -1017,16 +1024,32 @@ class Package(object):
         tree.merge(self.prefix, ignore=ignore)
 
 
-    def do_deactivate(self):
+    def do_deactivate(self, **kwargs):
         """Called on the extension to invoke extendee's deactivate() method."""
         self._sanity_check_extension()
+        force = kwargs.get('force', False)
+
+        # Allow a force deactivate to happen.  This can unlink
+        # spurious files if something was corrupted.
+        if not force:
+            spack.install_layout.check_activated(self.extendee_spec, self.spec)
+
+            activated = spack.install_layout.extension_map(self.extendee_spec)
+            for name, aspec in activated.items():
+                if aspec != self.spec and self.spec in aspec:
+                    raise ActivationError(
+                        "Cannot deactivate %s beacuse %s is activated and depends on it."
+                        % (self.spec.short_spec, aspec.short_spec))
+
         self.extendee_spec.package.deactivate(self, **self.extendee_args)
 
-        if self.spec in spack.install_layout.get_extensions(self.extendee_spec):
+        # redundant activation check -- makes SURE the spec is not
+        # still activated even if something was wrong above.
+        if self.activated:
             spack.install_layout.remove_extension(self.extendee_spec, self.spec)
 
         tty.msg("Deactivated extension %s for %s."
-                % (self.spec.short_spec, self.extendee_spec.short_spec))
+                % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
 
 
     def deactivate(self, extension, **kwargs):
@@ -1046,26 +1069,13 @@ class Package(object):
         tree.unmerge(self.prefix, ignore=ignore)
 
 
-    def do_clean(self):
-        if self.stage.expanded_archive_path:
-            self.stage.chdir_to_source()
-            self.clean()
-
-
-    def clean(self):
-        """By default just runs make clean.  Override if this isn't good."""
-        # TODO: should we really call make clean, ro just blow away the directory?
-        make = build_env.MakeExecutable('make', self.parallel)
-        make('clean')
-
-
-    def do_clean_work(self):
-        """By default just blows away the stage directory and re-stages."""
+    def do_restage(self):
+        """Reverts expanded/checked out source to a pristine state."""
         self.stage.restage()
 
 
-    def do_clean_dist(self):
-        """Removes the stage directory where this package was built."""
+    def do_clean(self):
+        """Removes the package's build stage and source tarball."""
         if os.path.exists(self.stage.path):
             self.stage.destroy()
 
@@ -1182,13 +1192,21 @@ def validate_package_url(url_string):
 
 def print_pkg(message):
     """Outputs a message with a package icon."""
-    mac_ver = py_platform.mac_ver()[0]
-    if mac_ver and Version(mac_ver) >= Version('10.7'):
-        print u"\U0001F4E6" + tty.indent,
-    else:
-        from llnl.util.tty.color import cwrite
-        cwrite('@*g{[+]} ')
+    from llnl.util.tty.color import cwrite
+    cwrite('@*g{[+]} ')
     print message
+
+
+def _hms(seconds):
+    """Convert time in seconds to hours, minutes, seconds."""
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+
+    parts = []
+    if h: parts.append("%dh" % h)
+    if m: parts.append("%dm" % m)
+    if s: parts.append("%.2fs" % s)
+    return ' '.join(parts)
 
 
 class FetchError(spack.error.SpackError):
@@ -1239,7 +1257,15 @@ class NoURLError(PackageError):
             "Package %s has no version with a URL." % cls.__name__)
 
 
-class ExtensionConflictError(PackageError):
+class ExtensionError(PackageError): pass
+
+
+class ExtensionConflictError(ExtensionError):
     def __init__(self, path):
         super(ExtensionConflictError, self).__init__(
             "Extension blocked by file: %s" % path)
+
+
+class ActivationError(ExtensionError):
+    def __init__(self, msg, long_msg=None):
+        super(ActivationError, self).__init__(msg, long_msg)
