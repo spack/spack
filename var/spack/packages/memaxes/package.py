@@ -5,12 +5,11 @@ class Memaxes(Package):
 
     homepage = "https://github.com/scalability-llnl/MemAxes"
 
-    version('0.5', 'b0f561d48aa7301e028d074bc4b5751b',
+    version('0.5', '5874f3fda9fd2d313c0ff9684f915ab5',
             url='https://github.com/scalability-llnl/MemAxes/archive/v0.5.tar.gz')
 
     depends_on("cmake@2.8.9:")
     depends_on("qt@5:")
-    depends_on("vtk")
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
