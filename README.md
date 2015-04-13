@@ -42,12 +42,10 @@ packages to bugfixes, or even new core features.
 ### Mailing list
 
 If you are interested in contributing to spack, the first step is to
-join the mailing list.  We're currently using LLNL's old-fashioned
-mailing list software, so you'll need to click the links below and
-send the resulting email to subscribe or unsubscribe:
+join the mailing list.  We're using a Google Group for this, and you
+can join it here:
 
-  * **[Subscribe](mailto:majordomo@lists.llnl.gov?subject=subscribe&body=subscribe%20spack)**
-  * **[Unsubscribe](mailto:majordomo@lists.llnl.gov?subject=unsubscribe&body=unsubscribe%20spack)**
+  * [Spack Google Group](https://groups.google.com/d/forum/spack)
 
 ### Contributions
 
