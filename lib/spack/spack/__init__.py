@@ -62,6 +62,12 @@ mock_site_config = join_path(mock_config_path, "site_spackconfig")
 mock_user_config = join_path(mock_config_path, "user_spackconfig")
 
 #
+# Setup the spack.repos namespace
+#
+from spack.repo_loader import RepoNamespace
+repos = RepoNamespace()
+
+#
 # This controls how spack lays out install prefixes and
 # stage directories.
 #

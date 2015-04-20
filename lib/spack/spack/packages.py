@@ -23,10 +23,14 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import exceptions
 import sys
 import inspect
 import glob
 import imp
+import spack.config
+import re
+from contextlib import closing
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
@@ -36,13 +40,11 @@ import spack.error
 import spack.spec
 from spack.virtual import ProviderIndex
 from spack.util.naming import mod_to_class, validate_module_name
+from sets import Set
+from spack.repo_loader import RepoLoader, imported_packages_module, package_file_name
 
-# Name of module under which packages are imported
-_imported_packages_module = 'spack.packages'
-
-# Name of the package file inside a package directory
-_package_file_name = 'package.py'
-
+# Filename for package repo names
+_packagerepo_filename = 'reponame'
 
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
@@ -55,13 +57,57 @@ def _autospec(function):
 
 
 class PackageDB(object):
-    def __init__(self, root):
+    def __init__(self, default_root):
         """Construct a new package database from a root directory."""
-        self.root = root
+
+        #Collect the repos from the config file and read their names from the file system
+        repo_dirs = self._repo_list_from_config()
+        repo_dirs.append(default_root)
+        self.repos = [(self._read_reponame_from_directory(dir), dir) for dir in repo_dirs]
+
+        # Check for duplicate repo names
+        s = set()
+        dups = set(r for r in self.repos if r[0] in s or s.add(r[0]))
+        if dups:
+            reponame = list(dups)[0][0]
+            dir1 = list(dups)[0][1]
+            dir2 = dict(s)[reponame]
+            tty.die("Package repo %s in directory %s has the same name as the "
+                      "repo in directory %s" % 
+                      (reponame, dir1, dir2))
+
+        # For each repo, create a RepoLoader
+        self.repo_loaders = dict([(r[0], RepoLoader(r[0], r[1])) for r in self.repos])
+        
         self.instances = {}
         self.provider_index = None
 
 
+    def _read_reponame_from_directory(self, dir):
+        """For a packagerepo directory, read the repo name from the dir/reponame file"""
+        path = os.path.join(dir, 'reponame')
+
+        try:            
+            with closing(open(path, 'r')) as reponame_file:
+                name = reponame_file.read().lstrip().rstrip()                
+                if not re.match(r'[a-zA-Z][a-zA-Z0-9]+', name):
+                    tty.die("Package repo name '%s', read from %s, is an invalid name. "
+                            "Repo names must began with a letter and only contain letters "
+                            "and numbers." % (name, path)) 
+                return name
+        except exceptions.IOError, e:
+            tty.die("Could not read from package repo name file %s" % path)
+
+
+
+    def _repo_list_from_config(self):
+        """Read through the spackconfig and return the list of packagerepo directories"""
+        config = spack.config.get_config()
+        if not config.has_option('packagerepo', 'directories'): return []
+        dir_string = config.get('packagerepo', 'directories')
+        return dir_string.split(':')
+
+    
     @_autospec
     def get(self, spec, **kwargs):
         if spec.virtual:
@@ -130,13 +176,33 @@ class PackageDB(object):
                 # catching exceptions.
 
 
-    def dirname_for_package_name(self, pkg_name):
+    def repo_for_package_name(self, pkg_name, packagerepo_name=None):
+        """Find the dirname for a package and the packagerepo it came from
+           if packagerepo_name is not None, then search for the package in the
+           specified packagerepo"""
+        #Look for an existing package under any matching packagerepos
+        roots = [pkgrepo for pkgrepo in self.repos
+                 if not packagerepo_name or packagerepo_name == pkgrepo[0]]
+
+        if not roots:
+            tty.die("Package repo %s does not exist" % packagerepo_name)
+
+        for pkgrepo in roots:
+            path = join_path(pkgrepo[1], pkg_name)
+            if os.path.exists(path):
+                return (pkgrepo[0], path)
+        
+        repo_to_add_to = roots[-1]
+        return (repo_to_add_to[0], join_path(repo_to_add_to[1], pkg_name))
+
+
+    def dirname_for_package_name(self, pkg_name, packagerepo_name=None):
         """Get the directory name for a particular package.  This is the
            directory that contains its package.py file."""
-        return join_path(self.root, pkg_name)
+        return self.repo_for_package_name(pkg_name, packagerepo_name)[1]
 
 
-    def filename_for_package_name(self, pkg_name):
+    def filename_for_package_name(self, pkg_name, packagerepo_name=None):
         """Get the filename for the module we should load for a particular
            package.  Packages for a pacakge DB live in
            ``$root/<package_name>/package.py``
@@ -144,10 +210,15 @@ class PackageDB(object):
            This will return a proper package.py path even if the
            package doesn't exist yet, so callers will need to ensure
            the package exists before importing.
+
+           If a packagerepo is specified, then return existing
+           or new paths in the specified packagerepo directory.  If no
+           package repo is supplied, return an existing path from any
+           package repo, and new paths in the default package repo.
         """
         validate_module_name(pkg_name)
-        pkg_dir = self.dirname_for_package_name(pkg_name)
-        return join_path(pkg_dir, _package_file_name)
+        pkg_dir = self.dirname_for_package_name(pkg_name, packagerepo_name)
+        return join_path(pkg_dir, package_file_name)
 
 
     def installed_package_specs(self):
@@ -176,14 +247,19 @@ class PackageDB(object):
     @memoized
     def all_package_names(self):
         """Generator function for all packages.  This looks for
-           ``<pkg_name>/package.py`` files within the root direcotry"""
-        all_package_names = []
-        for pkg_name in os.listdir(self.root):
-            pkg_dir  = join_path(self.root, pkg_name)
-            pkg_file = join_path(pkg_dir, _package_file_name)
-            if os.path.isfile(pkg_file):
-                all_package_names.append(pkg_name)
-            all_package_names.sort()
+           ``<pkg_name>/package.py`` files within the repo direcotories"""
+        all_packages = Set()
+        for repo in self.repos:
+            dir = repo[1]
+            if not os.path.isdir(dir):
+                continue
+            for pkg_name in os.listdir(dir):
+                pkg_dir  = join_path(dir, pkg_name)
+                pkg_file = join_path(pkg_dir, package_file_name)
+                if os.path.isfile(pkg_file):
+                    all_packages.add(pkg_name)
+        all_package_names = list(all_packages)
+        all_package_names.sort()        
         return all_package_names
 
 
@@ -200,34 +276,13 @@ class PackageDB(object):
 
     @memoized
     def get_class_for_package_name(self, pkg_name):
-        """Get an instance of the class for a particular package.
+        """Get an instance of the class for a particular package."""
+        repo = self.repo_for_package_name(pkg_name)
+        module_name = imported_packages_module + '.' + repo[0] + '.' + pkg_name        
 
-           This method uses Python's ``imp`` package to load python
-           source from a Spack package's ``package.py`` file.  A
-           normal python import would only load each package once, but
-           because we do this dynamically, the method needs to be
-           memoized to ensure there is only ONE package class
-           instance, per package, per database.
-        """
-        file_path = self.filename_for_package_name(pkg_name)
-
-        if os.path.exists(file_path):
-            if not os.path.isfile(file_path):
-                tty.die("Something's wrong. '%s' is not a file!" % file_path)
-            if not os.access(file_path, os.R_OK):
-                tty.die("Cannot read '%s'!" % file_path)
-        else:
-            raise UnknownPackageError(pkg_name)
+        module = self.repo_loaders[repo[0]].get_module(pkg_name)
 
         class_name = mod_to_class(pkg_name)
-        try:
-            module_name = _imported_packages_module + '.' + pkg_name
-            module = imp.load_source(module_name, file_path)
-
-        except ImportError, e:
-            tty.die("Error while importing %s from %s:\n%s" % (
-                pkg_name, file_path, e.message))
-
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):
             tty.die("%s.%s is not a class" % (pkg_name, class_name))

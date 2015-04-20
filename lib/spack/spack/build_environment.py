@@ -157,12 +157,10 @@ def set_build_environment_variables(pkg):
     path_set("PKG_CONFIG_PATH", pkg_config_dirs)
 
 
-def set_module_variables_for_package(pkg):
+def set_module_variables_for_package(pkg, m):
     """Populate the module scope of install() with some useful functions.
        This makes things easier for package writers.
     """
-    m = pkg.module
-
     m.make  = MakeExecutable('make', pkg.parallel)
     m.gmake = MakeExecutable('gmake', pkg.parallel)
 
@@ -222,11 +220,32 @@ def get_rpaths(pkg):
     return rpaths
 
 
+def parent_class_modules(cls):
+    """Get list of super class modules that are all descend from spack.Package"""
+    if not issubclass(cls, spack.Package) or issubclass(spack.Package, cls):
+        return []
+    result = []
+    module = sys.modules.get(cls.__module__)
+    if module:
+        result = [ module ]
+    for c in cls.__bases__:
+        result.extend(parent_class_modules(c))
+    return result
+
+
 def setup_package(pkg):
     """Execute all environment setup routines."""
     set_compiler_environment_variables(pkg)
     set_build_environment_variables(pkg)
-    set_module_variables_for_package(pkg)
+
+    # If a user makes their own package repo, e.g.
+    # spack.repos.mystuff.libelf.Libelf, and they inherit from
+    # an existing class like spack.repos.original.libelf.Libelf,
+    # then set the module variables for both classes so the
+    # parent class can still use them if it gets called.
+    modules = parent_class_modules(pkg.__class__)
+    for mod in modules:
+        set_module_variables_for_package(pkg, mod)
 
     # Allow dependencies to set up environment as well.
     for dep_spec in pkg.spec.traverse(root=False):
