@@ -112,6 +112,7 @@ from spack.version import *
 from spack.util.string import *
 from spack.util.prefix import Prefix
 from spack.virtual import ProviderIndex
+from spack.repo_loader import imported_packages_module
 
 # Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
@@ -412,6 +413,7 @@ class Spec(object):
         self.dependencies = other.dependencies
         self.variants = other.variants
         self.variants.spec = self
+        self.repo = other.repo
 
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
@@ -1355,6 +1357,7 @@ class Spec(object):
         self.dependencies = DependencyMap()
         self.variants = other.variants.copy()
         self.variants.spec = self
+        self.repo = other.repo
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
@@ -1503,6 +1506,7 @@ class Spec(object):
            in the format string.  The format strings you can provide are::
 
                $_   Package name
+               $.   Long package name
                $@   Version
                $%   Compiler
                $%@  Compiler & compiler version
@@ -1550,6 +1554,9 @@ class Spec(object):
 
                 if c == '_':
                     out.write(fmt % self.name)
+                elif c == '.':
+                    longname = '%s.%s.%s' % (imported_packages_module, self.repo, self.name) if self.repo else self.name
+                    out.write(fmt % longname)
                 elif c == '@':
                     if self.versions and self.versions != _any_version:
                         write(fmt % (c + str(self.versions)), c)
@@ -1698,17 +1705,29 @@ class SpecParser(spack.parse.Parser):
     def spec(self):
         """Parse a spec out of the input.  If a spec is supplied, then initialize
            and return it instead of creating a new one."""
-        self.check_identifier()
+
+        spec_name = None
+        spec_repo = None
+        if self.token.value.startswith(imported_packages_module):
+            lst = self.token.value.split('.')
+            spec_name = lst[-1]
+            spec_repo = lst[-2]
+        else:
+            spec_name = self.token.value
+            (spec_repo, repodir) = spack.db.repo_for_package_name(spec_name)
+
+        self.check_identifier(spec_name)
 
         # This will init the spec without calling __init__.
         spec = Spec.__new__(Spec)
-        spec.name = self.token.value
+        spec.name = spec_name
         spec.versions = VersionList()
         spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
+        spec.repo = spec_repo
 
         spec._normal = False
         spec._concrete = False
@@ -1802,12 +1821,14 @@ class SpecParser(spack.parse.Parser):
         return compiler
 
 
-    def check_identifier(self):
+    def check_identifier(self, id=None):
         """The only identifiers that can contain '.' are versions, but version
            ids are context-sensitive so we have to check on a case-by-case
            basis. Call this if we detect a version id where it shouldn't be.
         """
-        if '.' in self.token.value:
+        if not id:
+            id = self.token.value
+        if '.' in id:
             self.last_token_error("Identifier cannot contain '.'")
 
 

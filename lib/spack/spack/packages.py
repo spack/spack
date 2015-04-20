@@ -73,12 +73,12 @@ class PackageDB(object):
             dir1 = list(dups)[0][1]
             dir2 = dict(s)[reponame]
             tty.die("Package repo %s in directory %s has the same name as the "
-                      "repo in directory %s" % 
+                      "repo in directory %s" %
                       (reponame, dir1, dir2))
 
         # For each repo, create a RepoLoader
         self.repo_loaders = dict([(r[0], RepoLoader(r[0], r[1])) for r in self.repos])
-        
+
         self.instances = {}
         self.provider_index = None
 
@@ -87,13 +87,13 @@ class PackageDB(object):
         """For a packagerepo directory, read the repo name from the dir/reponame file"""
         path = os.path.join(dir, 'reponame')
 
-        try:            
+        try:
             with closing(open(path, 'r')) as reponame_file:
-                name = reponame_file.read().lstrip().rstrip()                
+                name = reponame_file.read().lstrip().rstrip()
                 if not re.match(r'[a-zA-Z][a-zA-Z0-9]+', name):
                     tty.die("Package repo name '%s', read from %s, is an invalid name. "
                             "Repo names must began with a letter and only contain letters "
-                            "and numbers." % (name, path)) 
+                            "and numbers." % (name, path))
                 return name
         except exceptions.IOError, e:
             tty.die("Could not read from package repo name file %s" % path)
@@ -107,7 +107,7 @@ class PackageDB(object):
         dir_string = config.get('packagerepo', 'directories')
         return dir_string.split(':')
 
-    
+
     @_autospec
     def get(self, spec, **kwargs):
         if spec.virtual:
@@ -118,7 +118,7 @@ class PackageDB(object):
                 del self.instances[spec]
 
         if not spec in self.instances:
-            package_class = self.get_class_for_package_name(spec.name)
+            package_class = self.get_class_for_package_name(spec.name, spec.repo)
             try:
                 copy = spec.copy()
                 self.instances[copy] = package_class(copy)
@@ -191,7 +191,7 @@ class PackageDB(object):
             path = join_path(pkgrepo[1], pkg_name)
             if os.path.exists(path):
                 return (pkgrepo[0], path)
-        
+
         repo_to_add_to = roots[-1]
         return (repo_to_add_to[0], join_path(repo_to_add_to[1], pkg_name))
 
@@ -259,7 +259,7 @@ class PackageDB(object):
                 if os.path.isfile(pkg_file):
                     all_packages.add(pkg_name)
         all_package_names = list(all_packages)
-        all_package_names.sort()        
+        all_package_names.sort()
         return all_package_names
 
 
@@ -275,12 +275,12 @@ class PackageDB(object):
 
 
     @memoized
-    def get_class_for_package_name(self, pkg_name):
+    def get_class_for_package_name(self, pkg_name, reponame = None):
         """Get an instance of the class for a particular package."""
-        repo = self.repo_for_package_name(pkg_name)
-        module_name = imported_packages_module + '.' + repo[0] + '.' + pkg_name        
+        (reponame, repodir) = self.repo_for_package_name(pkg_name, reponame)
+        module_name = imported_packages_module + '.' + reponame + '.' + pkg_name
 
-        module = self.repo_loaders[repo[0]].get_module(pkg_name)
+        module = self.repo_loaders[reponame].get_module(pkg_name)
 
         class_name = mod_to_class(pkg_name)
         cls = getattr(module, class_name)
@@ -292,8 +292,13 @@ class PackageDB(object):
 
 class UnknownPackageError(spack.error.SpackError):
     """Raised when we encounter a package spack doesn't have."""
-    def __init__(self, name):
-        super(UnknownPackageError, self).__init__("Package '%s' not found." % name)
+    def __init__(self, name, repo=None):
+        msg = None
+        if repo:
+            msg = "Package %s not found in packagerepo %s." % (name, repo)
+        else:
+            msg = "Package %s not found." % name
+        super(UnknownPackageError, self).__init__(msg)
         self.name = name
 
 
