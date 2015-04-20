@@ -100,7 +100,7 @@ class RepoLoader(types.ModuleType):
             if not os.access(file_path, os.R_OK):
                 tty.die("Cannot read '%s'!" % file_path)
         else:
-            raise spack.packages.UnknownPackageError(pkg_name)
+            raise spack.packages.UnknownPackageError(pkg_name, self.reponame if self.reponame != 'original' else None)
 
         try:
             module_name = imported_packages_module + '.' + self.reponame + '.' + pkg_name

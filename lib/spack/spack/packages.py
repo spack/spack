@@ -118,7 +118,7 @@ class PackageDB(object):
                 del self.instances[spec]
 
         if not spec in self.instances:
-            package_class = self.get_class_for_package_name(spec.name)
+            package_class = self.get_class_for_package_name(spec.name, spec.repo)
             try:
                 copy = spec.copy()
                 self.instances[copy] = package_class(copy)
@@ -275,12 +275,12 @@ class PackageDB(object):
 
 
     @memoized
-    def get_class_for_package_name(self, pkg_name):
+    def get_class_for_package_name(self, pkg_name, reponame = None):
         """Get an instance of the class for a particular package."""
-        repo = self.repo_for_package_name(pkg_name)
-        module_name = imported_packages_module + '.' + repo[0] + '.' + pkg_name        
+        (reponame, repodir) = self.repo_for_package_name(pkg_name, reponame)
+        module_name = imported_packages_module + '.' + reponame + '.' + pkg_name        
 
-        module = self.repo_loaders[repo[0]].get_module(pkg_name)
+        module = self.repo_loaders[reponame].get_module(pkg_name)
 
         class_name = mod_to_class(pkg_name)
         cls = getattr(module, class_name)
@@ -292,8 +292,13 @@ class PackageDB(object):
 
 class UnknownPackageError(spack.error.SpackError):
     """Raised when we encounter a package spack doesn't have."""
-    def __init__(self, name):
-        super(UnknownPackageError, self).__init__("Package %s not found." % name)
+    def __init__(self, name, repo=None):
+        msg = None
+        if repo:
+            msg = "Package %s not found in packagerepo %s." % (name, repo)
+        else:
+            msg = "Package %s not found." % name
+        super(UnknownPackageError, self).__init__(msg)
         self.name = name
 
 
