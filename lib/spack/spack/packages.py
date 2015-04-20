@@ -44,7 +44,7 @@ from sets import Set
 from spack.repo_loader import RepoLoader, imported_packages_module, package_file_name
 
 # Filename for package repo names
-_packagerepo_filename = 'reponame'
+packagerepo_filename = 'reponame'
 
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
@@ -85,7 +85,7 @@ class PackageDB(object):
 
     def _read_reponame_from_directory(self, dir):
         """For a packagerepo directory, read the repo name from the dir/reponame file"""
-        path = os.path.join(dir, 'reponame')
+        path = os.path.join(dir, packagerepo_filename)
 
         try:            
             with closing(open(path, 'r')) as reponame_file:
