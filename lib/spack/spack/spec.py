@@ -110,6 +110,9 @@ from spack.util.string import *
 from spack.util.prefix import Prefix
 from spack.virtual import ProviderIndex
 
+# Valid pattern for an identifier in Spack
+identifier_re = r'\w[\w-]*'
+
 # Convenient names for color formats so that other things can use them
 compiler_color         = '@g'
 version_color          = '@c'
@@ -893,6 +896,11 @@ class Spec(object):
                 if not compilers.supported(spec.compiler):
                     raise UnsupportedCompilerError(spec.compiler.name)
 
+            # Ensure that variants all exist.
+            for vname, variant in spec.variants.items():
+                if vname not in spec.package.variants:
+                    raise UnknownVariantError(spec.name, vname)
+
 
     def constrain(self, other, **kwargs):
         other = self._autospec(other)
@@ -1354,6 +1362,8 @@ class SpecLexer(spack.parse.Lexer):
             (r'\~',        lambda scanner, val: self.token(OFF,   val)),
             (r'\%',        lambda scanner, val: self.token(PCT,   val)),
             (r'\=',        lambda scanner, val: self.token(EQ,    val)),
+            # This is more liberal than identifier_re (see above).
+            # Checked by check_identifier() for better error messages.
             (r'\w[\w.-]*', lambda scanner, val: self.token(ID,    val)),
             (r'\s+',       lambda scanner, val: None)])
 
@@ -1578,6 +1588,13 @@ class UnsupportedCompilerError(SpecError):
     def __init__(self, compiler_name):
         super(UnsupportedCompilerError, self).__init__(
             "The '%s' compiler is not yet supported." % compiler_name)
+
+
+class UnknownVariantError(SpecError):
+    """Raised when the same variant occurs in a spec twice."""
+    def __init__(self, pkg, variant):
+        super(UnknownVariantError, self).__init__(
+            "Package %s has no variant %s!" % (pkg, variant))
 
 
 class DuplicateArchitectureError(SpecError):

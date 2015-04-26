@@ -58,6 +58,7 @@ import spack.error
 import spack.url
 from spack.version import Version
 from spack.patch import Patch
+from spack.variant import Variant
 from spack.spec import Spec, parse_anonymous_spec
 
 
@@ -240,17 +241,17 @@ def patch(pkg, url_or_filename, **kwargs):
 
 
 @directive(dicts='variants')
-def variant(pkg, name, description=""):
-    """Define a variant for the package.  Allows the user to supply
-       +variant/-variant in a spec.  You can optionally supply an
-       initial + or - to make the variant enabled or disabled by defaut.
-    """
-    if not re.match(r'^[-~+]?[A-Za-z0-9_][A-Za-z0-9_.-]*$', name):
-        raise DirectiveError("Invalid variant name in %s: '%s'"
-                             % (pkg.name, name))
+def variant(pkg, name, **kwargs):
+    """Define a variant for the package. Packager can specify a default
+    value (on or off) as well as a text description."""
 
-    enabled = re.match(r'+', name)
-    pkg.variants[name] = enabled
+    default     = bool(kwargs.get('default', False))
+    description = str(kwargs.get('description', "")).strip()
+
+    if not re.match(spack.spec.identifier_re, name):
+        raise DirectiveError("Invalid variant name in %s: '%s'" % (pkg.name, name))
+
+    pkg.variants[name] = Variant(default, description)
 
 
 class DirectiveError(spack.error.SpackError):
