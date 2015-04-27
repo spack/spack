@@ -270,7 +270,7 @@ class CompilerSpec(object):
 
 
 @key_ordering
-class Variant(object):
+class VariantSpec(object):
     """Variants are named, build-time options for a package.  Names depend
        on the particular package being built, and each named variant can
        be enabled or disabled.
@@ -285,7 +285,7 @@ class Variant(object):
 
 
     def copy(self):
-        return Variant(self.name, self.enabled)
+        return VariantSpec(self.name, self.enabled)
 
 
     def __str__(self):
@@ -294,9 +294,27 @@ class Variant(object):
 
 
 class VariantMap(HashableMap):
-    def satisfies(self, other):
-        return all(self[key].enabled == other[key].enabled
-                   for key in other if key in self)
+    def satisfies(self, other, self_is_concrete):
+        if self_is_concrete:
+            return all(k in self and self[k].enabled == other[k].enabled
+                       for k in other)
+        else:
+            return all(self[k].enabled == other[k].enabled
+                       for k in other if k in self)
+
+
+    def constrain(self, other, other_is_concrete):
+        if other_is_concrete:
+            for k in self:
+                if k not in other:
+                    raise UnsatisfiableVariantSpecError(self[k], '<absent>')
+
+        for k in other:
+            if k in self:
+                if self[k].enabled != other[k].enabled:
+                    raise UnsatisfiableVariantSpecError(self[k], other[k])
+            else:
+                self[k] = other[k].copy()
 
 
     def __str__(self):
@@ -375,7 +393,7 @@ class Spec(object):
         """Called by the parser to add a variant."""
         if name in self.variants: raise DuplicateVariantError(
                 "Cannot specify variant '%s' twice" % name)
-        self.variants[name] = Variant(name, enabled)
+        self.variants[name] = VariantSpec(name, enabled)
 
 
     def _set_compiler(self, compiler):
@@ -607,6 +625,7 @@ class Spec(object):
                 spack.concretizer.concretize_architecture(self)
                 spack.concretizer.concretize_compiler(self)
                 spack.concretizer.concretize_version(self)
+                spack.concretizer.concretize_variants(self)
             presets[self.name] = self
 
         visited.add(self.name)
@@ -789,8 +808,7 @@ class Spec(object):
                     else:
                         required = index.providers_for(vspec.name)
                         if required:
-                            raise UnsatisfiableProviderSpecError(
-                                required[0], pkg_dep)
+                            raise UnsatisfiableProviderSpecError(required[0], pkg_dep)
                 provider_index.update(pkg_dep)
 
             if name not in spec_deps:
@@ -929,7 +947,7 @@ class Spec(object):
             self.compiler = other.compiler
 
         self.versions.intersect(other.versions)
-        self.variants.update(other.variants)
+        self.variants.constrain(other.variants, other._concrete)
         self.architecture = self.architecture or other.architecture
 
         if constrain_deps:
@@ -998,10 +1016,12 @@ class Spec(object):
         # All these attrs have satisfies criteria of their own,
         # but can be None to indicate no constraints.
         for s, o in ((self.versions, other.versions),
-                     (self.variants, other.variants),
                      (self.compiler, other.compiler)):
             if s and o and not s.satisfies(o):
                 return False
+
+        if not self.variants.satisfies(other.variants, self._concrete):
+            return False
 
         # Architecture satisfaction is currently just string equality.
         # Can be None for unconstrained, though.

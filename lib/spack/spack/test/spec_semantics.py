@@ -33,8 +33,8 @@ class SpecSematicsTest(MockPackagesTest):
     # ================================================================================
     # Utility functions to set everything up.
     # ================================================================================
-    def check_satisfies(self, spec, anon_spec):
-        left = Spec(spec)
+    def check_satisfies(self, spec, anon_spec, concrete=False):
+        left = Spec(spec, concrete=concrete)
         right = parse_anonymous_spec(anon_spec, left.name)
 
         # Satisfies is one-directional.
@@ -46,8 +46,8 @@ class SpecSematicsTest(MockPackagesTest):
         right.copy().constrain(left)
 
 
-    def check_unsatisfiable(self, spec, anon_spec):
-        left = Spec(spec)
+    def check_unsatisfiable(self, spec, anon_spec, concrete=False):
+        left = Spec(spec, concrete=concrete)
         right = parse_anonymous_spec(anon_spec, left.name)
 
         self.assertFalse(left.satisfies(right))
@@ -150,9 +150,33 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_unsatisfiable('mpileaks^mpi@3:', '^mpich@1.0')
 
 
-    def test_satisfies_variant(self):
-        self.check_satisfies('foo %gcc@4.7.3', '%gcc@4.7')
-        self.check_unsatisfiable('foo %gcc@4.7', '%gcc@4.7.3')
+    def test_satisfies_matching_variant(self):
+        self.check_satisfies('mpich+foo', 'mpich+foo')
+        self.check_satisfies('mpich~foo', 'mpich~foo')
+
+
+    def test_satisfies_unconstrained_variant(self):
+        # only asked for mpich, no constraints.  Either will do.
+        self.check_satisfies('mpich+foo', 'mpich')
+        self.check_satisfies('mpich~foo', 'mpich')
+
+
+    def test_unsatisfiable_variants(self):
+        # This case is different depending on whether the specs are concrete.
+
+        # 'mpich' is not concrete:
+        self.check_satisfies('mpich', 'mpich+foo', False)
+        self.check_satisfies('mpich', 'mpich~foo', False)
+
+        # 'mpich' is concrete:
+        self.check_unsatisfiable('mpich', 'mpich+foo', True)
+        self.check_unsatisfiable('mpich', 'mpich~foo', True)
+
+
+    def test_unsatisfiable_variant_mismatch(self):
+        # No matchi in specs
+        self.check_unsatisfiable('mpich~foo', 'mpich+foo')
+        self.check_unsatisfiable('mpich+foo', 'mpich~foo')
 
 
 

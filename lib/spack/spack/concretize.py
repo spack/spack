@@ -101,6 +101,16 @@ class DefaultConcretizer(object):
             spec.architecture = spack.architecture.sys_type()
 
 
+    def concretize_variants(self, spec):
+        """If the spec already has variants filled in, return.  Otherwise, add
+           the default variants from the package specification.
+        """
+        for name, variant in spec.package.variants.items():
+            if name not in spec.variants:
+                spec.variants[name] = spack.spec.VariantSpec(
+                    name, variant.default)
+
+
     def concretize_compiler(self, spec):
         """If the spec already has a compiler, we're done.  If not, then take
            the compiler used for the nearest ancestor with a compiler
