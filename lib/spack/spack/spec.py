@@ -294,8 +294,13 @@ class VariantSpec(object):
 
 
 class VariantMap(HashableMap):
-    def satisfies(self, other, self_is_concrete):
-        if self_is_concrete:
+    def __init__(self, spec):
+        super(VariantMap, self).__init__()
+        self.spec = spec
+
+
+    def satisfies(self, other):
+        if self.spec._concrete:
             return all(k in self and self[k].enabled == other[k].enabled
                        for k in other)
         else:
@@ -303,8 +308,8 @@ class VariantMap(HashableMap):
                        for k in other if k in self)
 
 
-    def constrain(self, other, other_is_concrete):
-        if other_is_concrete:
+    def constrain(self, other):
+        if other.spec._concrete:
             for k in self:
                 if k not in other:
                     raise UnsatisfiableVariantSpecError(self[k], '<absent>')
@@ -315,6 +320,18 @@ class VariantMap(HashableMap):
                     raise UnsatisfiableVariantSpecError(self[k], other[k])
             else:
                 self[k] = other[k].copy()
+
+    @property
+    def concrete(self):
+        return self.spec._concrete or all(
+            v in self for v in self.spec.package.variants)
+
+
+    def copy(self):
+        clone = VariantMap(None)
+        for name, variant in self.items():
+            clone[name] = variant.copy()
+        return clone
 
 
     def __str__(self):
@@ -361,10 +378,11 @@ class Spec(object):
         self.name = other.name
         self.dependents = other.dependents
         self.versions = other.versions
-        self.variants = other.variants
         self.architecture = other.architecture
         self.compiler = other.compiler
         self.dependencies = other.dependencies
+        self.variants = other.variants
+        self.variants.spec = self
 
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
@@ -457,14 +475,15 @@ class Spec(object):
     @property
     def concrete(self):
         """A spec is concrete if it can describe only ONE build of a package.
-           If any of the name, version, architecture, compiler, or depdenencies
-           are ambiguous,then it is not concrete.
+           If any of the name, version, architecture, compiler,
+           variants, or depdenencies are ambiguous,then it is not concrete.
         """
         if self._concrete:
             return True
 
         self._concrete = bool(not self.virtual
                               and self.versions.concrete
+                              and self.variants.concrete
                               and self.architecture
                               and self.compiler and self.compiler.concrete
                               and self.dependencies.concrete)
@@ -947,7 +966,7 @@ class Spec(object):
             self.compiler = other.compiler
 
         self.versions.intersect(other.versions)
-        self.variants.constrain(other.variants, other._concrete)
+        self.variants.constrain(other.variants)
         self.architecture = self.architecture or other.architecture
 
         if constrain_deps:
@@ -1020,7 +1039,7 @@ class Spec(object):
             if s and o and not s.satisfies(o):
                 return False
 
-        if not self.variants.satisfies(other.variants, self._concrete):
+        if not self.variants.satisfies(other.variants):
             return False
 
         # Architecture satisfaction is currently just string equality.
@@ -1089,11 +1108,12 @@ class Spec(object):
         # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
-        self.variants = other.variants.copy()
         self.architecture = other.architecture
         self.compiler = other.compiler.copy() if other.compiler else None
         self.dependents = DependencyMap()
         self.dependencies = DependencyMap()
+        self.variants = other.variants.copy()
+        self.variants.spec = self
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
@@ -1429,7 +1449,7 @@ class SpecParser(spack.parse.Parser):
         spec = Spec.__new__(Spec)
         spec.name = self.token.value
         spec.versions = VersionList()
-        spec.variants = VariantMap()
+        spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
         spec.dependents   = DependencyMap()
