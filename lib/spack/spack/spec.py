@@ -95,6 +95,7 @@ import itertools
 import hashlib
 from StringIO import StringIO
 from operator import attrgetter
+from external import yaml
 
 import llnl.util.tty as tty
 from llnl.util.lang import *
@@ -576,6 +577,100 @@ class Spec(object):
         full_hash = sha.hexdigest()
 
         return full_hash[:length]
+
+
+    def dag_hash(self, length=None):
+        """Return a hash of the entire spec DAG, including connectivity."""
+        sha = hashlib.sha1()
+        sha.update(self.to_node_yaml(canonical=True))
+        full_hash = sha.hexdigest()
+        return full_hash[:length]
+
+
+    def to_node_dict(self):
+        return {
+            self.name : {
+                'versions': [str(v) for v in self.versions],
+                'compiler' : None if self.compiler is None else {
+                    'name'    : self.compiler.name,
+                    'versions': [str(v) for v in self.compiler.versions],
+                },
+                'variants' : dict(
+                    (name,v.enabled) for name, v in self.variants.items()),
+                'arch' : self.architecture,
+                'dependencies' : dict((d, self.dependencies[d].dag_hash())
+                                      for d in sorted(self.dependencies))
+            }}
+
+
+    def to_node_yaml(self, **kwargs):
+        """Return spec's DAG in minimal YAML (only immediate descendents)."""
+        canonical = kwargs.pop('canonical', False)
+        check_kwargs(kwargs, self.to_yaml)
+        if canonical:
+            return yaml.dump(self.to_node_dict(),
+                             default_flow_style=True, width=sys.maxint)
+        else:
+            return yaml.dump(self.to_node_dict(),
+                             default_flow_style=False)
+
+
+    def to_dict(self):
+        return {
+            'dag' : [s.to_node_dict() for s in self.traverse(order='pre')],
+            'hash' : self.dag_hash()
+        }
+
+
+    def to_yaml(self):
+        return yaml.dump(self.to_dict(), default_flow_style=False)
+
+
+    @staticmethod
+    def from_node_dict(node):
+        name = next(iter(node))
+        node = node[name]
+
+        spec = Spec(name)
+        spec.versions = VersionList(node['versions'])
+        compiler = node['compiler']
+        spec.architecture = node['arch']
+
+        if compiler is None:
+            spec.compiler = None
+        else:
+            spec.compiler = CompilerSpec(compiler['name'], compiler['versions'])
+
+        for name, enabled in node['variants'].items():
+            spec.variants[name] = Variant(name, enabled)
+
+        return spec
+
+
+    @staticmethod
+    def from_yaml(string):
+        """Construct a spec from YAML.
+
+        TODO: currently discards hashes. Include hashes when they
+        represent more than the DAG does.
+
+        """
+        deps = {}
+        spec = None
+
+        yfile = yaml.load(string)
+        for node in yfile['dag']:
+            name = next(iter(node))
+            dep = Spec.from_node_dict(node)
+            if not spec:
+                spec = dep
+            deps[dep.name] = dep
+
+        for node in yfile['dag']:
+            name = next(iter(node))
+            for dep_name in node[name]['dependencies']:
+                deps[name].dependencies[dep_name] = deps[dep_name]
+        return spec
 
 
     def _concretize_helper(self, presets=None, visited=None):
