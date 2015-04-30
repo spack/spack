@@ -47,6 +47,7 @@ class Gcc(Package):
     depends_on("gmp")
     depends_on("mpc")     # when @4.5:
     depends_on("libelf")
+    depends_on("binutils")
 
     # Save these until we can do optional deps.
     #depends_on("isl")
@@ -73,6 +74,10 @@ class Gcc(Package):
                   "--with-stage1-ldflags=%s" % self.rpath_args,
                   "--with-boot-ldflags=%s"   % self.rpath_args,
                   "--enable-lto",
+                  "--with-gnu-ld",
+                  "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
+                  "--with-gnu-as",
+                  "--with-as=%s/bin/as" % spec['binutils'].prefix,
                   "--with-quad")
         make()
         make("install")
