@@ -28,8 +28,10 @@ import os
 import sys
 import re
 import subprocess
+import inspect
 
 import llnl.util.tty as tty
+import spack
 import spack.error
 
 class Executable(object):
@@ -37,6 +39,9 @@ class Executable(object):
     def __init__(self, name):
         self.exe = name.split(' ')
         self.returncode = None
+
+        if not self.exe:
+            raise ProcessError("Cannot construct executable for '%s'" % name)
 
 
     def add_default_arg(self, arg):
@@ -63,7 +68,9 @@ class Executable(object):
                      "Consider removing them")
 
         cmd = self.exe + list(args)
-        tty.debug(" ".join(cmd))
+
+        cmd_line = ' '.join(cmd)
+        tty.debug(cmd_line)
 
         close_error = False
         try:
@@ -79,16 +86,22 @@ class Executable(object):
             self.returncode = proc.returncode
 
             if fail_on_error and proc.returncode != 0:
-                raise ProcessError("command '%s' returned error code %d"
-                                   % (" ".join(cmd), proc.returncode))
+                raise ProcessError("Command exited with status %d:"
+                                   % proc.returncode, cmd_line)
             if return_output:
                 return out
+
+        except OSError, e:
+            raise ProcessError(
+                "%s: %s" % (self.exe[0], e.strerror),
+                "Command: " + cmd_line)
 
         except subprocess.CalledProcessError, e:
             if fail_on_error:
                 raise ProcessError(
-                    "command '%s' failed to run." % (
-                        " ".join(cmd), proc.returncode), str(e))
+                    str(e),
+                    "\nExit status %d when invoking command: %s"
+                    % (proc.returncode, cmd_line))
 
         finally:
             if close_error:
@@ -130,5 +143,27 @@ def which(name, **kwargs):
 
 
 class ProcessError(spack.error.SpackError):
-    def __init__(self, msg, *long_msg):
-        super(ProcessError, self).__init__(msg, *long_msg)
+    def __init__(self, msg, long_msg=None):
+        # Friendlier exception trace info for failed executables
+        long_msg = long_msg + "\n" if long_msg else ""
+        for f in inspect.stack():
+            frame = f[0]
+            loc = frame.f_locals
+            if 'self' in loc:
+                obj = loc['self']
+                if isinstance(obj, spack.Package):
+                    long_msg += "---\n"
+                    long_msg += "Context:\n"
+                    long_msg += "  %s:%d, in %s:\n" % (
+                        inspect.getfile(frame.f_code),
+                        frame.f_lineno,
+                        frame.f_code.co_name)
+
+                    lines, start = inspect.getsourcelines(frame)
+                    for i, line in enumerate(lines):
+                        mark = ">> " if start + i == frame.f_lineno else "   "
+                        long_msg += "  %s%-5d%s\n" % (
+                            mark, start + i, line.rstrip())
+                    break
+
+        super(ProcessError, self).__init__(msg, long_msg)

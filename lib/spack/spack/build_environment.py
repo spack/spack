@@ -52,6 +52,7 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 SPACK_ENV_PATH         = 'SPACK_ENV_PATH'
 SPACK_DEPENDENCIES     = 'SPACK_DEPENDENCIES'
 SPACK_PREFIX           = 'SPACK_PREFIX'
+SPACK_INSTALL          = 'SPACK_INSTALL'
 SPACK_DEBUG            = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
@@ -67,16 +68,16 @@ class MakeExecutable(Executable):
        Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
        everything.
     """
-    def __init__(self, name, parallel):
+    def __init__(self, name, jobs):
         super(MakeExecutable, self).__init__(name)
-        self.parallel = parallel
+        self.jobs = jobs
 
     def __call__(self, *args, **kwargs):
-        parallel = kwargs.get('parallel', self.parallel)
+        parallel = kwargs.get('parallel', self.jobs > 1)
         disable_parallel = env_flag(SPACK_NO_PARALLEL_MAKE)
 
-        if parallel and not disable_parallel:
-            jobs = "-j%d" % multiprocessing.cpu_count()
+        if self.jobs > 1 and not disable_parallel:
+            jobs = "-j%d" % self.jobs
             args = (jobs,) + args
 
         super(MakeExecutable, self).__call__(*args, **kwargs)
@@ -125,6 +126,9 @@ def set_build_environment_variables(pkg):
     # Install prefix
     os.environ[SPACK_PREFIX] = pkg.prefix
 
+    # Install root prefix
+    os.environ[SPACK_INSTALL] = spack.install_path
+
     # Remove these vars from the environment during build becaus they
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
@@ -159,14 +163,20 @@ def set_module_variables_for_package(pkg):
     """
     m = pkg.module
 
-    m.make  = MakeExecutable('make', pkg.parallel)
-    m.gmake = MakeExecutable('gmake', pkg.parallel)
+    # number of jobs spack will to build with.
+    jobs = multiprocessing.cpu_count()
+    if not pkg.parallel:
+        jobs = 1
+    elif pkg.make_jobs:
+        jobs = pkg.make_jobs
+    m.make_jobs = jobs
+
+    # TODO: make these build deps that can be installed if not found.
+    m.make  = MakeExecutable('make', jobs)
+    m.gmake = MakeExecutable('gmake', jobs)
 
     # easy shortcut to os.environ
     m.env = os.environ
-
-    # number of jobs spack prefers to build with.
-    m.make_jobs = multiprocessing.cpu_count()
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.

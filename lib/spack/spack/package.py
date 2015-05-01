@@ -333,6 +333,9 @@ class Package(object):
     """By default we build in parallel.  Subclasses can override this."""
     parallel = True
 
+    """# jobs to use for parallel make. If set, overrides default of ncpus."""
+    make_jobs = None
+
     """Most packages are NOT extendable.  Set to True if you want extensions."""
     extendable = False
 
@@ -781,9 +784,12 @@ class Package(object):
         """
         # whether to keep the prefix on failure.  Default is to destroy it.
         keep_prefix  = kwargs.get('keep_prefix', False)
-        keep_stage   = kwargs.get('keep_stage', False)
+        keep_stage   = kwargs.get('keep_stage',  False)
         ignore_deps  = kwargs.get('ignore_deps', False)
-        fake_install = kwargs.get('fake', False)
+        fake_install = kwargs.get('fake',        False)
+
+        # Override builtin number of make jobs.
+        self.make_jobs    = kwargs.get('make_jobs',   None)
 
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
