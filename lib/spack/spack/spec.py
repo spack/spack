@@ -256,6 +256,18 @@ class CompilerSpec(object):
         return (self.name, self.versions)
 
 
+    def to_dict(self):
+        d = {'name' : self.name}
+        d.update(self.versions.to_dict())
+        return { 'compiler' : d }
+
+
+    @staticmethod
+    def from_dict(d):
+        d = d['compiler']
+        return CompilerSpec(d['name'], VersionList.from_dict(d))
+
+
     def __str__(self):
         out = self.name
         if self.versions and self.versions != _any_version:
@@ -582,48 +594,35 @@ class Spec(object):
     def dag_hash(self, length=None):
         """Return a hash of the entire spec DAG, including connectivity."""
         sha = hashlib.sha1()
-        sha.update(self.to_node_yaml(canonical=True))
-        full_hash = sha.hexdigest()
-        return full_hash[:length]
+        hash_text = yaml.dump(
+            self.to_node_dict(), default_flow_style=True, width=sys.maxint)
+        sha.update(hash_text)
+        return sha.hexdigest()[:length]
 
 
     def to_node_dict(self):
-        return {
-            self.name : {
-                'versions': [str(v) for v in self.versions],
-                'compiler' : None if self.compiler is None else {
-                    'name'    : self.compiler.name,
-                    'versions': [str(v) for v in self.compiler.versions],
-                },
-                'variants' : dict(
-                    (name,v.enabled) for name, v in self.variants.items()),
-                'arch' : self.architecture,
-                'dependencies' : dict((d, self.dependencies[d].dag_hash())
-                                      for d in sorted(self.dependencies))
-            }}
-
-
-    def to_node_yaml(self, **kwargs):
-        """Return spec's DAG in minimal YAML (only immediate descendents)."""
-        canonical = kwargs.pop('canonical', False)
-        check_kwargs(kwargs, self.to_yaml)
-        if canonical:
-            return yaml.dump(self.to_node_dict(),
-                             default_flow_style=True, width=sys.maxint)
-        else:
-            return yaml.dump(self.to_node_dict(),
-                             default_flow_style=False)
-
-
-    def to_dict(self):
-        return {
-            'dag' : [s.to_node_dict() for s in self.traverse(order='pre')],
-            'hash' : self.dag_hash()
+        d = {
+            'variants' : dict(
+                (name,v.enabled) for name, v in self.variants.items()),
+            'arch' : self.architecture,
+            'dependencies' : dict((d, self.dependencies[d].dag_hash())
+                                  for d in sorted(self.dependencies))
         }
+        if self.compiler:
+            d.update(self.compiler.to_dict())
+        else:
+            d['compiler'] = None
+        d.update(self.versions.to_dict())
+        return { self.name : d }
 
 
     def to_yaml(self):
-        return yaml.dump(self.to_dict(), default_flow_style=False)
+        node_list = []
+        for s in self.traverse(order='pre'):
+            node = s.to_node_dict()
+            node[s.name]['hash'] = s.dag_hash()
+            node_list.append(node)
+        return yaml.dump({ 'spec' : node_list }, default_flow_style=False)
 
 
     @staticmethod
@@ -632,14 +631,13 @@ class Spec(object):
         node = node[name]
 
         spec = Spec(name)
-        spec.versions = VersionList(node['versions'])
-        compiler = node['compiler']
+        spec.versions = VersionList.from_dict(node)
         spec.architecture = node['arch']
 
-        if compiler is None:
+        if node['compiler'] is None:
             spec.compiler = None
         else:
-            spec.compiler = CompilerSpec(compiler['name'], compiler['versions'])
+            spec.compiler = CompilerSpec.from_dict(node)
 
         for name, enabled in node['variants'].items():
             spec.variants[name] = Variant(name, enabled)
@@ -659,14 +657,14 @@ class Spec(object):
         spec = None
 
         yfile = yaml.load(string)
-        for node in yfile['dag']:
+        for node in yfile['spec']:
             name = next(iter(node))
             dep = Spec.from_node_dict(node)
             if not spec:
                 spec = dep
             deps[dep.name] = dep
 
-        for node in yfile['dag']:
+        for node in yfile['spec']:
             name = next(iter(node))
             for dep_name in node[name]['dependencies']:
                 deps[name].dependencies[dep_name] = deps[dep_name]
