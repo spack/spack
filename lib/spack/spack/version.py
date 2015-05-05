@@ -592,7 +592,7 @@ class VersionList(object):
         if self.concrete:
             return { 'version'  : str(self[0]) }
         else:
-            return { 'versions' : str(v) for v in self }
+            return { 'versions' : [str(v) for v in self] }
 
 
     @staticmethod

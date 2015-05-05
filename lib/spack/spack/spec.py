@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -96,6 +96,7 @@ import hashlib
 from StringIO import StringIO
 from operator import attrgetter
 from external import yaml
+from external.yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
 from llnl.util.lang import *
@@ -656,7 +657,11 @@ class Spec(object):
         deps = {}
         spec = None
 
-        yfile = yaml.load(string)
+        try:
+            yfile = yaml.load(string)
+        except MarkedYAMLError, e:
+            raise SpackYAMLError("error parsing YMAL spec:", str(e))
+
         for node in yfile['spec']:
             name = next(iter(node))
             dep = Spec.from_node_dict(node)
@@ -1776,3 +1781,7 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
     def __init__(self, provided, required):
         super(UnsatisfiableDependencySpecError, self).__init__(
             provided, required, "dependency")
+
+class SpackYAMLError(spack.error.SpackError):
+    def __init__(self, msg, yaml_error):
+        super(SpackError, self).__init__(msg, str(yaml_error))

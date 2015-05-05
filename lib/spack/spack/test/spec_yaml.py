@@ -49,6 +49,12 @@ class SpecDagTest(MockPackagesTest):
         self.check_yaml_round_trip(spec)
 
 
+    def test_ambiguous_version_spec(self):
+        spec = Spec('mpileaks@1.0:5.0,6.1,7.3+debug~opt')
+        spec.normalize()
+        self.check_yaml_round_trip(spec)
+
+
     def test_concrete_spec(self):
         spec = Spec('mpileaks+debug~opt')
         spec.concretize()
