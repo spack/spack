@@ -1,4 +1,5 @@
 from spack import *
+import os
 
 class Netcdf(Package):
     """NetCDF is a set of software libraries and self-describing, machine-independent 
@@ -13,16 +14,22 @@ class Netcdf(Package):
     # Dependencies:
 	# >HDF5
     depends_on("hdf5")
+	
+    parallel = False
+
+    def setup_dependent_environment(self, module, spec, dep_spec):
+        os.environ['NETCDF'] = self.prefix
 
     def install(self, spec, prefix):    
         configure(
 		"--prefix=%s" % prefix, 
-		"--disable-dap", # Disable DAP.
-		"--disable-shared", # Don't build shared libraries (use static libs).
 		"CPPFLAGS=-I%s/include" % spec['hdf5'].prefix, # Link HDF5's include dir.
 		"LDFLAGS=-L%s/lib" % spec['hdf5'].prefix) # Link HDF5's lib dir.
 		
+        make()
+        make('check')
         make("install")
+        make('installcheck')
 
 	# Check the newly installed netcdf package. Currently disabled.
 	# make("check")

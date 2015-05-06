@@ -13,7 +13,7 @@ class Hdf5(Package):
 
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
 
-    depends_on("mpi")
+    # depends_on("mpi")
     depends_on("zlib")
 
     # TODO: currently hard-coded to use OpenMPI
@@ -22,10 +22,7 @@ class Hdf5(Package):
         configure(
             "--prefix=%s" % prefix,
             "--with-zlib=%s" % spec['zlib'].prefix,
-            "--enable-parallel",
-            "--enable-shared",
-            "CC=%s" % spec['mpich'].prefix.bin + "/mpicc",
-            "CXX=%s" % spec['mpich'].prefix.bin + "/mpic++")
+	    "--enable-shared")
 
         make()
         make("install")
