@@ -481,6 +481,12 @@ class Package(object):
         return self._stage
 
 
+    @stage.setter
+    def stage(self, stage):
+        """Allow a stage object to be set to override the default."""
+        self._stage = stage
+
+
     @property
     def fetcher(self):
         if not self.spec.versions.concrete:
@@ -787,6 +793,7 @@ class Package(object):
         keep_stage   = kwargs.get('keep_stage',  False)
         ignore_deps  = kwargs.get('ignore_deps', False)
         fake_install = kwargs.get('fake',        False)
+        skip_patch   = kwargs.get('skip_patch',  False)
 
         # Override builtin number of make jobs.
         self.make_jobs    = kwargs.get('make_jobs',   None)
@@ -805,7 +812,10 @@ class Package(object):
 
         start_time = time.time()
         if not fake_install:
-            self.do_patch()
+            if not skip_patch:
+                self.do_patch()
+            else:
+                self.do_stage()
 
         # create the install directory.  The install layout
         # handles this in case so that it can use whatever

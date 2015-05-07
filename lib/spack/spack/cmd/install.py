@@ -22,7 +22,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
 from external import argparse
 
 import llnl.util.tty as tty
@@ -64,7 +63,7 @@ def install(parser, args):
             tty.die("The -j option must be a positive integer!")
 
     if args.no_checksum:
-        spack.do_checksum = False
+        spack.do_checksum = False        # TODO: remove this global.
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
