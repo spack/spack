@@ -93,6 +93,7 @@ expansion when it is the first character in an id typed on the command line.
 import sys
 import itertools
 import hashlib
+import base64
 from StringIO import StringIO
 from operator import attrgetter
 from external import yaml
@@ -578,27 +579,12 @@ class Spec(object):
         return Prefix(spack.install_layout.path_for_spec(self))
 
 
-    def dep_hash(self, length=None):
-        """Return a hash representing all dependencies of this spec
-           (direct and indirect).
-
-           If you want this hash to be consistent, you should
-           concretize the spec first so that it is not ambiguous.
-        """
-        sha = hashlib.sha1()
-        sha.update(self.dep_string())
-        full_hash = sha.hexdigest()
-
-        return full_hash[:length]
-
-
     def dag_hash(self, length=None):
         """Return a hash of the entire spec DAG, including connectivity."""
-        sha = hashlib.sha1()
-        hash_text = yaml.dump(
+        yaml_text = yaml.dump(
             self.to_node_dict(), default_flow_style=True, width=sys.maxint)
-        sha.update(hash_text)
-        return sha.hexdigest()[:length]
+        sha = hashlib.sha1(yaml_text)
+        return base64.b32encode(sha.digest()).lower()[:length]
 
 
     def to_node_dict(self):
@@ -1363,7 +1349,7 @@ class Spec(object):
                         write(fmt % (c + str(self.architecture)), c)
                 elif c == '#':
                     if self.dependencies:
-                        out.write(fmt % ('-' + self.dep_hash(8)))
+                        out.write(fmt % ('-' + self.dag_hash(8)))
                 elif c == '$':
                     if fmt != '':
                         raise ValueError("Can't use format width with $$.")

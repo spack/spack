@@ -42,7 +42,8 @@ test_path      = join_path(module_path, "test")
 hooks_path     = join_path(module_path, "hooks")
 var_path       = join_path(prefix, "var", "spack")
 stage_path     = join_path(var_path, "stage")
-install_path   = join_path(prefix, "opt")
+opt_path       = join_path(prefix, "opt")
+install_path   = join_path(opt_path, "spack")
 share_path     = join_path(prefix, "share", "spack")
 
 #
@@ -65,8 +66,8 @@ mock_user_config = join_path(mock_config_path, "user_spackconfig")
 # This controls how spack lays out install prefixes and
 # stage directories.
 #
-from spack.directory_layout import SpecHashDirectoryLayout
-install_layout = SpecHashDirectoryLayout(install_path)
+from spack.directory_layout import YamlDirectoryLayout
+install_layout = YamlDirectoryLayout(install_path)
 
 #
 # This controls how things are concretized in spack.
