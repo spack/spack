@@ -4,7 +4,7 @@
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by François Bissey, francois.bissey@canterbury.ac.nz, All rights reserved.
+# Written by FranÃ§ois Bissey, francois.bissey@canterbury.ac.nz, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://scalability-llnl.github.io/spack
