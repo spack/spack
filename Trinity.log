@@ -1,0 +1,80 @@
+Using gnu compiler for Inchworm and Chrysalis
+cd Inchworm && (test -e configure || autoreconf) \
+                && sh ./configure --prefix=`pwd`  && make install
+checking for a BSD-compatible install... /usr/bin/install -c
+checking whether build environment is sane... yes
+checking for a thread-safe mkdir -p... /bin/mkdir -p
+checking for gawk... no
+checking for mawk... mawk
+checking whether make sets $(MAKE)... yes
+checking for C++ compiler default output file name... a.out
+checking whether the C++ compiler works... yes
+checking whether we are cross compiling... no
+checking for suffix of executables... 
+checking for suffix of object files... o
+checking whether we are using the GNU C++ compiler... yes
+checking whether c++ accepts -g... yes
+checking for style of include used by make... GNU
+checking dependency style of c++... gcc3
+checking for library containing cos... none required
+configure: creating ./config.status
+config.status: creating Makefile
+config.status: creating src/Makefile
+config.status: creating config.h
+config.status: config.h is unchanged
+config.status: executing depfiles commands
+make[1]: Entering directory `/tmp/spack-stage/spack-stage-_NPkyf/trinityrnaseq/Inchworm'
+Making install in src
+make[2]: Entering directory `/tmp/spack-stage/spack-stage-_NPkyf/trinityrnaseq/Inchworm/src'
+c++ -DHAVE_CONFIG_H -I. -I..    -m64 -g -O2 -MT IRKE.o -MD -MP -MF .deps/IRKE.Tpo -c -o IRKE.o IRKE.cpp
+In file included from /usr/include/c++/4.8/ext/hash_map:60:0,
+                 from KmerCounter.hpp:53,
+                 from IRKE.hpp:7,
+                 from IRKE.cpp:21:
+/usr/include/c++/4.8/backward/backward_warning.h:32:2: warning: #warning This file includes at least one deprecated or antiquated header which may be removed without further notice at a future date. Please use a non-deprecated interface with equivalent functionality instead. For a listing of replacement headers and interfaces, consult the file backward_warning.h. To disable this warning use -Wno-deprecated. [-Wcpp]
+ #warning \
+  ^
+IRKE.cpp:34:1: warning: ‘typedef’ was ignored in this declaration [enabled by default]
+ };
+ ^
+IRKE.cpp: In member function ‘void IRKE::populate_Kmers_from_kmers(const string&)’:
+IRKE.cpp:89:62: error: ‘omp_set_num_threads’ was not declared in this scope
+     omp_set_num_threads(IRKE_COMMON::MAX_THREADS_READ_PARSING); // place limit here because performance deteriorates beyond this value.
+                                                              ^
+IRKE.cpp: In member function ‘void IRKE::compute_sequence_assemblies(KmerCounter&, float, unsigned int, unsigned int, bool, bool, std::string)’:
+IRKE.cpp:461:53: error: ‘omp_set_num_threads’ was not declared in this scope
+         omp_set_num_threads(IRKE_COMMON::NUM_THREADS);
+                                                     ^
+IRKE.cpp:464:30: error: ‘omp_set_num_threads’ was not declared in this scope
+         omp_set_num_threads(1); // turn off multithreading for the contig building.
+                              ^
+make[2]: *** [IRKE.o] Error 1
+make[2]: Leaving directory `/tmp/spack-stage/spack-stage-_NPkyf/trinityrnaseq/Inchworm/src'
+make[1]: *** [install-recursive] Error 1
+make[1]: Leaving directory `/tmp/spack-stage/spack-stage-_NPkyf/trinityrnaseq/Inchworm'
+make: *** [inchworm_target] Error 2
+==> Installing Trinity
+==> mpich is already installed in /home/ben/spack/opt/unknown_arch/gcc@4.6/mpich@3.0.4.
+==> Already fetched /home/ben/spack/var/spack/stage/Trinity@1.0%gcc@4.6=unknown_arch-b0a31dd7/trinityrnaseq.
+==> No checksum needed when fetching with git.
+==> Already staged Trinity in /home/ben/spack/var/spack/stage/Trinity@1.0%gcc@4.6=unknown_arch-b0a31dd7.
+==> No patches needed for Trinity.
+==> Building Trinity.
+Traceback (most recent call last):
+  File "/home/ben/spack/lib/spack/spack/build_environment.py", line 267, in fork
+    function()
+  File "/home/ben/spack/lib/spack/spack/package.py", line 822, in real_work
+    self.install(self.spec, self.prefix)
+  File "/home/ben/spack/var/spack/packages/Trinity/package.py", line 13, in install
+    make()
+  File "/home/ben/spack/lib/spack/spack/build_environment.py", line 82, in __call__
+    super(MakeExecutable, self).__call__(*args, **kwargs)
+  File "/home/ben/spack/lib/spack/spack/util/executable.py", line 83, in __call__
+    % (" ".join(cmd), proc.returncode))
+spack.util.executable.ProcessError: command 'make' returned error code 2
+==> Installing Trinity
+==> mpich is already installed in /home/ben/spack/opt/unknown_arch/gcc@4.6/mpich@3.0.4.
+==> Already fetched /home/ben/spack/var/spack/stage/Trinity@1.0%gcc@4.6=unknown_arch-b0a31dd7/trinityrnaseq.
+==> No checksum needed when fetching with git.
+==> Already staged Trinity in /home/ben/spack/var/spack/stage/Trinity@1.0%gcc@4.6=unknown_arch-b0a31dd7.
+==> No patches needed for Trinity.
