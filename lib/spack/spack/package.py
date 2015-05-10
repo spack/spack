@@ -984,16 +984,11 @@ class Package(object):
         self._sanity_check_extension()
         force = kwargs.get('force', False)
 
-        # TODO: get rid of this normalize - DAG handling.
-        self.spec.normalize()
-
         spack.install_layout.check_extension_conflict(self.extendee_spec, self.spec)
 
         if not force:
             for spec in self.spec.traverse(root=False):
                 if spec.package.extends(self.extendee_spec):
-                    # TODO: fix this normalize() requirement -- revisit DAG handling.
-                    spec.package.spec.normalize()
                     if not spec.package.activated:
                         spec.package.do_activate(**kwargs)
 

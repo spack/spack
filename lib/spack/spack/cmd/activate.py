@@ -38,17 +38,11 @@ def setup_parser(subparser):
 
 
 def activate(parser, args):
-    # TODO: shouldn't have to concretize here.  Fix DAG issues.
-    specs = spack.cmd.parse_specs(args.spec, concretize=True)
+    specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
         tty.die("activate requires one spec.  %d given." % len(specs))
 
-    # TODO: remove this hack when DAG info is stored in dir layout.
-    # This ensures the ext spec is always normalized properly.
-    spack.db.get(specs[0])
-
     spec = spack.cmd.disambiguate_spec(specs[0])
-
     if not spec.package.is_extension:
         tty.die("%s is not an extension." % spec.name)
 
