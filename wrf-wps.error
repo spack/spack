@@ -1,0 +1,184 @@
+cut: write error: Broken pipe
+Makefile:44: warning: overriding commands for target `.f.o'
+/tmp/spack-stage/spack-stage-87HJfd/WPS/configure.wps:99: warning: ignoring old commands for target `.f.o'
+Makefile:48: warning: overriding commands for target `.c.o'
+/tmp/spack-stage/spack-stage-87HJfd/WPS/configure.wps:95: warning: ignoring old commands for target `.c.o'
+ar: creating libw3.a
+Makefile:67: warning: overriding commands for target `.F.o'
+/tmp/spack-stage/spack-stage-87HJfd/WPS/configure.wps:103: warning: ignoring old commands for target `.F.o'
+Makefile:72: warning: overriding commands for target `.f.o'
+/tmp/spack-stage/spack-stage-87HJfd/WPS/configure.wps:99: warning: ignoring old commands for target `.f.o'
+Makefile:75: warning: overriding commands for target `.c.o'
+/tmp/spack-stage/spack-stage-87HJfd/WPS/configure.wps:95: warning: ignoring old commands for target `.c.o'
+ar: creating libg2_4.a
+Makefile:90: warning: overriding commands for target `.F.o'
+../../configure.wps:103: warning: ignoring old commands for target `.F.o'
+Makefile:95: warning: overriding commands for target `.c.o'
+../../configure.wps:95: warning: ignoring old commands for target `.c.o'
+cio.c: In function ‘bn_seek_’:
+cio.c:148:8: warning: format ‘%d’ expects argument of type ‘int’, but argument 2 has type ‘off_t’ [-Wformat=]
+        printf(" lseek return=%d, *mode=%d\n", i, *mode);
+        ^
+ar: creating libpgu.a
+/home/ben/spack/opt/unknown_arch/gcc@4.6/jasper@1.900.1/lib/libjasper.a(jas_stream.o): In function `jas_stream_tmpfile':
+/tmp/spack-stage/spack-stage-B6H4yb/jasper-1.900.1/src/libjasper/base/jas_stream.c:368: warning: the use of `tmpnam' is dangerous, better use `mkstemp'
+Makefile:90: warning: overriding commands for target `.F.o'
+../../configure.wps:103: warning: ignoring old commands for target `.F.o'
+Makefile:95: warning: overriding commands for target `.c.o'
+../../configure.wps:95: warning: ignoring old commands for target `.c.o'
+g1print.f90:663.71:
+
+       'VSTR','M FLX','LMH','LMV','SGLYR','NLAT','ELON','UMAS','VMAS','XPRATE',&
+                                                                       1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:602.64:
+
+       'GWREC','QREC ','SNOWT','VBDSF','VDDSF','NBDSF','NDDSF','SNFALB',&
+                                                                1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:603.58:
+
+       'RLYRS','M FLX','   ','   ','     ','NLAT','ELON','FLDCAP','ACOND','SNOA
+                                                          1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:604.66:
+
+       'CCOND','LAI','SFCRH','SALBD','    ','    ','NDVI','DRIP','VBSALB','VWSA
+                                                                  1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:604.75:
+
+       'CCOND','LAI','SFCRH','SALBD','    ','    ','NDVI','DRIP','VBSALB','VWSA
+                                                                           1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:605.8:
+
+       'NBSALB','NWSALB','FRZR','FROZR','TSNOW','MTERH','   ','SBSNO','EVBS','E
+        1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:605.17:
+
+       'NBSALB','NWSALB','FRZR','FROZR','TSNOW','MTERH','   ','SBSNO','EVBS','E
+                 1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:606.16:
+
+       'VTCIN','VTCAPE','RSMIN','DSWRF','DLWRF','   ','MSTAV','SFEXC','     ','
+                1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:610.31:
+
+       'SNOWC','SNOT','POROS','SBT112','SBT113','SBT114','SBT115','     ','RCS'
+                               1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:610.40:
+
+       'SNOWC','SNOT','POROS','SBT112','SBT113','SBT114','SBT115','     ','RCS'
+                                        1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:610.49:
+
+       'SNOWC','SNOT','POROS','SBT112','SBT113','SBT114','SBT115','     ','RCS'
+                                                 1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:610.58:
+
+       'SNOWC','SNOT','POROS','SBT112','SBT113','SBT114','SBT115','     ','RCS'
+                                                          1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:578.23:
+
+       'ETSRG','RHPW','OZMAX1','OZMAX8','PDMAX1','PDMAX24','MAXREF','MXUPHL','M
+                       1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:578.32:
+
+       'ETSRG','RHPW','OZMAX1','OZMAX8','PDMAX1','PDMAX24','MAXREF','MXUPHL','M
+                                1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:578.41:
+
+       'ETSRG','RHPW','OZMAX1','OZMAX8','PDMAX1','PDMAX24','MAXREF','MXUPHL','M
+                                         1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:578.50:
+
+       'ETSRG','RHPW','OZMAX1','OZMAX8','PDMAX1','PDMAX24','MAXREF','MXUPHL','M
+                                                  1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/7)
+g1print.f90:578.60:
+
+       'ETSRG','RHPW','OZMAX1','OZMAX8','PDMAX1','PDMAX24','MAXREF','MXUPHL','M
+                                                            1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:578.69:
+
+       'ETSRG','RHPW','OZMAX1','OZMAX8','PDMAX1','PDMAX24','MAXREF','MXUPHL','M
+                                                                     1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:578.78:
+
+    'ETSRG','RHPW','OZMAX1','OZMAX8','PDMAX1','PDMAX24','MAXREF','MXUPHL','MAXU
+                                                                           1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:579.8:
+
+       'MAXDVV','MAXVIG','RETOP','VRATE','TCSRG20','TCSRG30','TCSRG40','TCSRG50
+        1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:579.17:
+
+       'MAXDVV','MAXVIG','RETOP','VRATE','TCSRG20','TCSRG30','TCSRG40','TCSRG50
+                 1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+g1print.f90:579.42:
+
+       'MAXDVV','MAXVIG','RETOP','VRATE','TCSRG20','TCSRG30','TCSRG40','TCSRG50
+                                          1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/7)
+g1print.f90:579.52:
+
+       'MAXDVV','MAXVIG','RETOP','VRATE','TCSRG20','TCSRG30','TCSRG40','TCSRG50
+                                                    1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/7)
+g1print.f90:579.62:
+
+       'MAXDVV','MAXVIG','RETOP','VRATE','TCSRG20','TCSRG30','TCSRG40','TCSRG50
+                                                              1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/7)
+g1print.f90:579.72:
+
+       'MAXDVV','MAXVIG','RETOP','VRATE','TCSRG20','TCSRG30','TCSRG40','TCSRG50
+                                                                        1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/7)
+g1print.f90:579.82:
+
+'MAXDVV','MAXVIG','RETOP','VRATE','TCSRG20','TCSRG30','TCSRG40','TCSRG50','TCSR
+                                                                           1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/7)
+g1print.f90:580.8:
+
+       'TCSRG70','TCSRG80','TCSRG90','HINDX','DIFTEN','PSPCP','MAXUW','MAXVW','
+        1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/7)
+g1print.f90:580.18:
+
+       'TCSRG70','TCSRG80','TCSRG90','HINDX','DIFTEN','PSPCP','MAXUW','MAXVW','
+                  1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/7)
+g1print.f90:580.28:
+
+       'TCSRG70','TCSRG80','TCSRG90','HINDX','DIFTEN','PSPCP','MAXUW','MAXVW','
+                            1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/7)
+g1print.f90:580.46:
+
+       'TCSRG70','TCSRG80','TCSRG90','HINDX','DIFTEN','PSPCP','MAXUW','MAXVW','
+                                              1
+Warning: Initialization string starting at (1) was truncated to fit the variable (5/6)
+Makefile:90: warning: overriding commands for target `.F.o'
+../../configure.wps:103: warning: ignoring old commands for target `.F.o'
+Makefile:95: warning: overriding commands for target `.c.o'
+../../configure.wps:95: warning: ignoring old commands for target `.c.o'
+/home/ben/spack/opt/unknown_arch/gcc@4.6/jasper@1.900.1/lib/libjasper.a(jas_stream.o): In function `jas_stream_tmpfile':
+/tmp/spack-stage/spack-stage-B6H4yb/jasper-1.900.1/src/libjasper/base/jas_stream.c:368: warning: the use of `tmpnam' is dangerous, better use `mkstemp'

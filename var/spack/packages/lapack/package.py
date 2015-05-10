@@ -16,13 +16,13 @@ class Lapack(Package):
     parallel = False
 
     # virtual
-    depends_on("blas")
+    depends_on("netlib_blas")
 
     def install(self, spec, prefix):
 	# CMake could be used if the build becomes more complex
 
 	call(['cp', 'make.inc.example', 'make.inc'])
-	blas = spec['blas']
+	blas = spec['netlib_blas']
 	# blas_path = new_path(blas.prefix.lib, 'blas_path')
 	
 	# The blas dependency must provide a 'blas.a' - but this is not gauranteed right now

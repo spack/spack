@@ -10,9 +10,10 @@ class Wrf(Package):
 
     version('3.6.1')
 
-    depends_on('netcdf')
-    depends_on('netcdf-fortran')
+    depends_on('ben-netcdf')
+    depends_on('ben-netcdf-fortran')
     depends_on('jasper')
+    # depends_on('tcsh')
 
     def install(self, spec, prefix):
         process=subprocess.Popen(['./configure'], stdin=subprocess.PIPE)
