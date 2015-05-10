@@ -152,7 +152,8 @@ class DirectoryLayoutTest(unittest.TestCase):
         # Now check that even without the package files, we know
         # enough to read a spec from the spec file.
         for spec, path in installed_specs.items():
-            spec_from_file = self.layout.read_spec(join_path(path, '.spack', 'spec'))
+            spec_from_file = self.layout.read_spec(
+                join_path(path, '.spack', 'spec.yaml'))
 
             # To satisfy these conditions, directory layouts need to
             # read in concrete specs from their install dirs somehow.

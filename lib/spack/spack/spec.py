@@ -603,13 +603,14 @@ class Spec(object):
         return { self.name : d }
 
 
-    def to_yaml(self):
+    def to_yaml(self, stream=None):
         node_list = []
         for s in self.traverse(order='pre'):
             node = s.to_node_dict()
             node[s.name]['hash'] = s.dag_hash()
             node_list.append(node)
-        return yaml.dump({ 'spec' : node_list }, default_flow_style=False)
+        return yaml.dump({ 'spec' : node_list },
+                         stream=stream, default_flow_style=False)
 
 
     @staticmethod
@@ -633,8 +634,11 @@ class Spec(object):
 
 
     @staticmethod
-    def from_yaml(string):
+    def from_yaml(stream):
         """Construct a spec from YAML.
+
+        Parameters:
+        stream -- string or file object to read from.
 
         TODO: currently discards hashes. Include hashes when they
         represent more than the DAG does.
@@ -644,7 +648,7 @@ class Spec(object):
         spec = None
 
         try:
-            yfile = yaml.load(string)
+            yfile = yaml.load(stream)
         except MarkedYAMLError, e:
             raise SpackYAMLError("error parsing YMAL spec:", str(e))
 

@@ -173,11 +173,12 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.metadata_dir   = kwargs.get('metadata_dir', '.spack')
         self.hash_len       = kwargs.get('hash_len', None)
 
-        self.spec_file_name = 'spec'
-        self.extension_file_name = 'extensions'
+        self.spec_file_name      = 'spec.yaml'
+        self.extension_file_name = 'extensions.yaml'
 
         # Cache of already written/read extension maps.
         self._extension_maps = {}
+
 
     @property
     def hidden_file_paths(self):
@@ -208,14 +209,13 @@ class YamlDirectoryLayout(DirectoryLayout):
         """Write a spec out to a file."""
         _check_concrete(spec)
         with open(path, 'w') as f:
-            f.write(spec.to_yaml())
+            spec.to_yaml(f)
 
 
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
         with open(path) as f:
-            yaml_text = f.read()
-        spec = Spec.from_yaml(yaml_text)
+            spec = Spec.from_yaml(f)
 
         # Specs read from actual installations are always concrete
         spec._normal = True
@@ -262,8 +262,19 @@ class YamlDirectoryLayout(DirectoryLayout):
     def all_specs(self):
         if not os.path.isdir(self.root):
             return []
-        spec_files = glob.glob("%s/*/*/*/.spack/spec" % self.root)
+
+        pattern = join_path(
+            self.root, '*', '*', '*', self.metadata_dir, self.spec_file_name)
+        spec_files = glob.glob(pattern)
         return [self.read_spec(s) for s in spec_files]
+
+
+    @memoized
+    def specs_by_hash(self):
+        by_hash = {}
+        for spec in self.all_specs():
+            by_hash[spec.dag_hash()] = spec
+        return by_hash
 
 
     def extension_file_path(self, spec):
@@ -272,8 +283,30 @@ class YamlDirectoryLayout(DirectoryLayout):
         return join_path(self.metadata_path(spec), self.extension_file_name)
 
 
+    def _write_extensions(self, spec, extensions):
+        path = self.extension_file_path(spec)
+
+        # Create a temp file in the same directory as the actual file.
+        dirname, basename = os.path.split(path)
+        tmp = tempfile.NamedTemporaryFile(
+            prefix=basename, dir=dirname, delete=False)
+
+        # write tmp file
+        with tmp:
+            yaml.dump({
+                'extensions' : [
+                    { ext.name : {
+                        'hash' : ext.dag_hash(),
+                        'path' : str(ext.prefix)
+                    }} for ext in sorted(extensions.values())]
+            }, tmp, default_flow_style=False)
+
+        # Atomic update by moving tmpfile on top of old one.
+        os.rename(tmp.name, path)
+
+
     def _extension_map(self, spec):
-        """Get a dict<name -> spec> for all extensions currnetly
+        """Get a dict<name -> spec> for all extensions currently
            installed for this package."""
         _check_concrete(spec)
 
@@ -283,16 +316,26 @@ class YamlDirectoryLayout(DirectoryLayout):
                 self._extension_maps[spec] = {}
 
             else:
+                by_hash = self.specs_by_hash()
                 exts = {}
                 with open(path) as ext_file:
-                    for line in ext_file:
-                        try:
-                            spec = Spec(line.strip())
-                            exts[spec.name] = spec
-                        except spack.error.SpackError, e:
-                            # TODO: do something better here -- should be
-                            # resilient to corrupt files.
-                            raise InvalidExtensionSpecError(str(e))
+                    yaml_file = yaml.load(ext_file)
+                    for entry in yaml_file['extensions']:
+                        name = next(iter(entry))
+                        dag_hash = entry[name]['hash']
+                        prefix   = entry[name]['path']
+
+                        if not dag_hash in by_hash:
+                            raise InvalidExtensionSpecError(
+                                "Spec %s not found in %s." % (dag_hash, prefix))
+
+                        ext_spec = by_hash[dag_hash]
+                        if not prefix == ext_spec.prefix:
+                            raise InvalidExtensionSpecError(
+                                "Prefix %s does not match spec with hash %s: %s"
+                                % (prefix, dag_hash, ext_spec))
+
+                        exts[ext_spec.name] = ext_spec
                 self._extension_maps[spec] = exts
 
         return self._extension_maps[spec]
@@ -300,6 +343,7 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def extension_map(self, spec):
         """Defensive copying version of _extension_map() for external API."""
+        _check_concrete(spec)
         return self._extension_map(spec).copy()
 
 
@@ -317,23 +361,6 @@ class YamlDirectoryLayout(DirectoryLayout):
         exts = self._extension_map(spec)
         if (not ext_spec.name in exts) or (ext_spec != exts[ext_spec.name]):
             raise NoSuchExtensionError(spec, ext_spec)
-
-
-    def _write_extensions(self, spec, extensions):
-        path = self.extension_file_path(spec)
-
-        # Create a temp file in the same directory as the actual file.
-        dirname, basename = os.path.split(path)
-        tmp = tempfile.NamedTemporaryFile(
-            prefix=basename, dir=dirname, delete=False)
-
-        # Write temp file.
-        with tmp:
-            for extension in sorted(extensions.values()):
-                tmp.write("%s\n" % extension)
-
-        # Atomic update by moving tmpfile on top of old one.
-        os.rename(tmp.name, path)
 
 
     def add_extension(self, spec, ext_spec):
@@ -360,7 +387,6 @@ class YamlDirectoryLayout(DirectoryLayout):
         # do the actual removing.
         del exts[ext_spec.name]
         self._write_extensions(spec, exts)
-
 
 
 class DirectoryLayoutError(SpackError):
