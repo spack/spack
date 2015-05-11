@@ -627,7 +627,7 @@ class Package(object):
 
     def remove_prefix(self):
         """Removes the prefix for a package along with any empty parent directories."""
-        spack.install_layout.remove_path_for_spec(self.spec)
+        spack.install_layout.remove_install_directory(self.spec)
 
 
     def do_fetch(self):
@@ -783,7 +783,7 @@ class Package(object):
         # create the install directory.  The install layout
         # handles this in case so that it can use whatever
         # package naming scheme it likes.
-        spack.install_layout.make_path_for_spec(self.spec)
+        spack.install_layout.create_install_directory(self.spec)
 
         def cleanup():
             if not keep_prefix:
@@ -804,11 +804,11 @@ class Package(object):
                 spack.hooks.pre_install(self)
 
                 # Set up process's build environment before running install.
-                self.stage.chdir_to_source()
                 if fake_install:
                     self.do_fake_install()
                 else:
                     # Subclasses implement install() to do the real work.
+                    self.stage.chdir_to_source()
                     self.install(self.spec, self.prefix)
 
                 # Ensure that something was actually installed.
@@ -957,16 +957,13 @@ class Package(object):
         self._sanity_check_extension()
         force = kwargs.get('force', False)
 
-        # TODO: get rid of this normalize - DAG handling.
-        self.spec.normalize()
+        spack.install_layout.check_extension_conflict(
+            self.extendee_spec, self.spec)
 
-        spack.install_layout.check_extension_conflict(self.extendee_spec, self.spec)
-
+        # Activate any package dependencies that are also extensions.
         if not force:
             for spec in self.spec.traverse(root=False):
                 if spec.package.extends(self.extendee_spec):
-                    # TODO: fix this normalize() requirement -- revisit DAG handling.
-                    spec.package.spec.normalize()
                     if not spec.package.activated:
                         spec.package.do_activate(**kwargs)
 
@@ -994,6 +991,7 @@ class Package(object):
         conflict = tree.find_conflict(self.prefix, ignore=ignore)
         if conflict:
             raise ExtensionConflictError(conflict)
+
         tree.merge(self.prefix, ignore=ignore)
 
 

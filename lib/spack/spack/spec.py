@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -93,8 +93,11 @@ expansion when it is the first character in an id typed on the command line.
 import sys
 import itertools
 import hashlib
+import base64
 from StringIO import StringIO
 from operator import attrgetter
+from external import yaml
+from external.yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
 from llnl.util.lang import *
@@ -120,6 +123,7 @@ architecture_color     = '@m'
 enabled_variant_color  = '@B'
 disabled_variant_color = '@r'
 dependency_color       = '@.'
+hash_color             = '@K'
 
 """This map determines the coloring of specs when using color output.
    We make the fields different colors to enhance readability.
@@ -129,7 +133,8 @@ color_formats = {'%' : compiler_color,
                  '=' : architecture_color,
                  '+' : enabled_variant_color,
                  '~' : disabled_variant_color,
-                 '^' : dependency_color }
+                 '^' : dependency_color,
+                 '#' : hash_color }
 
 """Regex used for splitting by spec field separators."""
 _separators = '[%s]' % ''.join(color_formats.keys())
@@ -256,6 +261,18 @@ class CompilerSpec(object):
 
     def _cmp_key(self):
         return (self.name, self.versions)
+
+
+    def to_dict(self):
+        d = {'name' : self.name}
+        d.update(self.versions.to_dict())
+        return { 'compiler' : d }
+
+
+    @staticmethod
+    def from_dict(d):
+        d = d['compiler']
+        return CompilerSpec(d['name'], VersionList.from_dict(d))
 
 
     def __str__(self):
@@ -604,18 +621,91 @@ class Spec(object):
         return Prefix(spack.install_layout.path_for_spec(self))
 
 
-    def dep_hash(self, length=None):
-        """Return a hash representing all dependencies of this spec
-           (direct and indirect).
+    def dag_hash(self, length=None):
+        """Return a hash of the entire spec DAG, including connectivity."""
+        yaml_text = yaml.dump(
+            self.to_node_dict(), default_flow_style=True, width=sys.maxint)
+        sha = hashlib.sha1(yaml_text)
+        return base64.b32encode(sha.digest()).lower()[:length]
 
-           If you want this hash to be consistent, you should
-           concretize the spec first so that it is not ambiguous.
+
+    def to_node_dict(self):
+        d = {
+            'variants' : dict(
+                (name,v.enabled) for name, v in self.variants.items()),
+            'arch' : self.architecture,
+            'dependencies' : dict((d, self.dependencies[d].dag_hash())
+                                  for d in sorted(self.dependencies))
+        }
+        if self.compiler:
+            d.update(self.compiler.to_dict())
+        else:
+            d['compiler'] = None
+        d.update(self.versions.to_dict())
+        return { self.name : d }
+
+
+    def to_yaml(self, stream=None):
+        node_list = []
+        for s in self.traverse(order='pre'):
+            node = s.to_node_dict()
+            node[s.name]['hash'] = s.dag_hash()
+            node_list.append(node)
+        return yaml.dump({ 'spec' : node_list },
+                         stream=stream, default_flow_style=False)
+
+
+    @staticmethod
+    def from_node_dict(node):
+        name = next(iter(node))
+        node = node[name]
+
+        spec = Spec(name)
+        spec.versions = VersionList.from_dict(node)
+        spec.architecture = node['arch']
+
+        if node['compiler'] is None:
+            spec.compiler = None
+        else:
+            spec.compiler = CompilerSpec.from_dict(node)
+
+        for name, enabled in node['variants'].items():
+            spec.variants[name] = VariantSpec(name, enabled)
+
+        return spec
+
+
+    @staticmethod
+    def from_yaml(stream):
+        """Construct a spec from YAML.
+
+        Parameters:
+        stream -- string or file object to read from.
+
+        TODO: currently discards hashes. Include hashes when they
+        represent more than the DAG does.
+
         """
-        sha = hashlib.sha1()
-        sha.update(self.dep_string())
-        full_hash = sha.hexdigest()
+        deps = {}
+        spec = None
 
-        return full_hash[:length]
+        try:
+            yfile = yaml.load(stream)
+        except MarkedYAMLError, e:
+            raise SpackYAMLError("error parsing YMAL spec:", str(e))
+
+        for node in yfile['spec']:
+            name = next(iter(node))
+            dep = Spec.from_node_dict(node)
+            if not spec:
+                spec = dep
+            deps[dep.name] = dep
+
+        for node in yfile['spec']:
+            name = next(iter(node))
+            for dep_name in node[name]['dependencies']:
+                deps[name].dependencies[dep_name] = deps[dep_name]
+        return spec
 
 
     def _concretize_helper(self, presets=None, visited=None):
@@ -1256,7 +1346,7 @@ class Spec(object):
                $%@  Compiler & compiler version
                $+   Options
                $=   Architecture
-               $#   Dependencies' 8-char sha1 prefix
+               $#   7-char prefix of DAG hash
                $$   $
 
            Optionally you can provide a width, e.g. $20_ for a 20-wide name.
@@ -1312,8 +1402,7 @@ class Spec(object):
                     if self.architecture:
                         write(fmt % (c + str(self.architecture)), c)
                 elif c == '#':
-                    if self.dependencies:
-                        out.write(fmt % ('-' + self.dep_hash(8)))
+                    out.write('-' + fmt % (self.dag_hash(7)))
                 elif c == '$':
                     if fmt != '':
                         raise ValueError("Can't use format width with $$.")
@@ -1359,12 +1448,15 @@ class Spec(object):
         cover  = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt    = kwargs.pop('format', '$_$@$%@$+$=')
+        prefix = kwargs.pop('prefix', None)
         check_kwargs(kwargs, self.tree)
 
         out = ""
         cur_id = 0
         ids = {}
         for d, node in self.traverse(order='pre', cover=cover, depth=True):
+            if prefix is not None:
+                out += prefix(node)
             out += " " * indent
             if depth:
                 out += "%-4d" % d
@@ -1740,3 +1832,7 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
     def __init__(self, provided, required):
         super(UnsatisfiableDependencySpecError, self).__init__(
             provided, required, "dependency")
+
+class SpackYAMLError(spack.error.SpackError):
+    def __init__(self, msg, yaml_error):
+        super(SpackError, self).__init__(msg, str(yaml_error))

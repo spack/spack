@@ -44,14 +44,9 @@ def setup_parser(subparser):
 
 
 def deactivate(parser, args):
-    # TODO: shouldn't have to concretize here.  Fix DAG issues.
-    specs = spack.cmd.parse_specs(args.spec, concretize=True)
+    specs = spack.cmd.parse_specs(args.spec)
     if len(specs) != 1:
         tty.die("deactivate requires one spec.  %d given." % len(specs))
-
-    # TODO: remove this hack when DAG info is stored properly.
-    # This ensures the ext spec is always normalized properly.
-    spack.db.get(specs[0])
 
     spec = spack.cmd.disambiguate_spec(specs[0])
     pkg = spec.package
@@ -67,9 +62,6 @@ def deactivate(parser, args):
                     ext_pkg.do_deactivate(force=True)
 
         elif pkg.is_extension:
-            # TODO: store DAG info properly (see above)
-            spec.normalize()
-
             if not args.force and not spec.package.activated:
                 tty.die("%s is not activated." % pkg.spec.short_spec)
 
@@ -81,10 +73,6 @@ def deactivate(parser, args):
             for name in topo_order:
                 espec = index[name]
                 epkg = espec.package
-
-                # TODO: store DAG info properly (see above)
-                epkg.spec.normalize()
-
                 if epkg.extends(pkg.extendee_spec):
                     if epkg.activated or args.force:
 

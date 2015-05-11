@@ -33,6 +33,9 @@ class Mpileaks(Package):
     version(2.2, 'foobarbaz')
     version(2.3, 'foobarbaz')
 
+    variant('debug', default=False, description='Debug variant')
+    variant('opt',   default=False, description='Optimized variant')
+
     depends_on("mpi")
     depends_on("callpath")
 

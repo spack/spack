@@ -587,6 +587,25 @@ class VersionList(object):
         return False
 
 
+    def to_dict(self):
+        """Generate human-readable dict for YAML."""
+        if self.concrete:
+            return { 'version'  : str(self[0]) }
+        else:
+            return { 'versions' : [str(v) for v in self] }
+
+
+    @staticmethod
+    def from_dict(dictionary):
+        """Parse dict from to_dict."""
+        if 'versions' in dictionary:
+            return VersionList(dictionary['versions'])
+        elif 'version' in dictionary:
+            return VersionList([dictionary['version']])
+        else:
+            raise ValueError("Dict must have 'version' or 'versions' in it.")
+
+
     @coerced
     def satisfies(self, other):
         """A VersionList satisfies another if some version in the list would

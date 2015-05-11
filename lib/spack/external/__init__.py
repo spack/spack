@@ -28,6 +28,11 @@ packages that are included in spack.
 
 So far:
     argparse:    We include our own version to be Python 2.6 compatible.
-    pyqver2:     External script to query required python version of python source code.
-                 Used for ensuring 2.6 compatibility.
+
+    pyqver2:     External script to query required python version of
+                 python source code. Used for ensuring 2.6 compatibility.
+
+    functools:   Used for implementation of total_ordering.
+
+    yaml:        Used for config files.
 """
