@@ -54,7 +54,6 @@ class LinkTree(object):
         """Returns the first file in dest that conflicts with src"""
         kwargs['follow_nonexisting'] = False
         for src, dest in traverse_tree(self._root, dest_root, **kwargs):
-            print src, dest
             if os.path.isdir(src):
                 if os.path.exists(dest) and not os.path.isdir(dest):
                     return dest
