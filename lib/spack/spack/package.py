@@ -984,8 +984,10 @@ class Package(object):
         self._sanity_check_extension()
         force = kwargs.get('force', False)
 
-        spack.install_layout.check_extension_conflict(self.extendee_spec, self.spec)
+        spack.install_layout.check_extension_conflict(
+            self.extendee_spec, self.spec)
 
+        # Activate any package dependencies that are also extensions.
         if not force:
             for spec in self.spec.traverse(root=False):
                 if spec.package.extends(self.extendee_spec):
@@ -1016,6 +1018,7 @@ class Package(object):
         conflict = tree.find_conflict(self.prefix, ignore=ignore)
         if conflict:
             raise ExtensionConflictError(conflict)
+
         tree.merge(self.prefix, ignore=ignore)
 
 

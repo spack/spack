@@ -139,7 +139,9 @@ class Python(Package):
 
 
     def activate(self, ext_pkg, **args):
-        args.update(ignore=self.python_ignore(ext_pkg, args))
+        ignore=self.python_ignore(ext_pkg, args)
+        args.update(ignore=ignore)
+
         super(Python, self).activate(ext_pkg, **args)
 
         exts = spack.install_layout.extension_map(self.spec)

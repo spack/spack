@@ -182,7 +182,7 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     @property
     def hidden_file_paths(self):
-        return (self.metadata_dir)
+        return (self.metadata_dir,)
 
 
     def relative_path_for_spec(self, spec):
