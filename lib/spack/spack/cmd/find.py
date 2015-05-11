@@ -41,9 +41,6 @@ description ="Find installed spack packages"
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
-        '-l', '--long', action='store_const', dest='mode', const='long',
-        help='Show dependency hashes as well as versions.')
-    format_group.add_argument(
         '-p', '--paths', action='store_const', dest='mode', const='paths',
         help='Show paths to package install directories')
     format_group.add_argument(
@@ -51,12 +48,21 @@ def setup_parser(subparser):
         help='Show full dependency DAG of installed packages')
 
     subparser.add_argument(
+        '-l', '--long', action='store_true', dest='long',
+        help='Show dependency hashes as well as versions.')
+
+    subparser.add_argument(
         'query_specs', nargs=argparse.REMAINDER,
         help='optional specs to filter results')
 
 
+def gray_hash(spec):
+    return colorize('@K{[%s]}' % spec.dag_hash(7))
+
+
 def display_specs(specs, **kwargs):
     mode = kwargs.get('mode', 'short')
+    hashes = kwargs.get('long', False)
 
     # Make a dict with specs keyed by architecture and compiler.
     index = index_by(specs, ('architecture', 'compiler'))
@@ -85,13 +91,20 @@ def display_specs(specs, **kwargs):
 
         elif mode == 'deps':
             for spec in specs:
-                print spec.tree(indent=4, format='$_$@$+$#', color=True),
+                print spec.tree(
+                    format='$_$@$+',
+                    color=True,
+                    indent=4,
+                    prefix=(lambda s: gray_hash(s)) if hashes else None)
 
-        elif mode in ('short', 'long'):
-            fmt = '$-_$@$+'
-            if mode == 'long':
-                fmt += '$#'
-            colify(s.format(fmt, color=True) for s in specs)
+        elif mode == 'short':
+            def fmt(s):
+                string = ""
+                if hashes:
+                    string += gray_hash(s) + ' '
+                string += s.format('$-_$@$+', color=True)
+                return string
+            colify(fmt(s) for s in specs)
 
         else:
             raise ValueError(
@@ -125,5 +138,4 @@ def find(parser, args):
 
     if sys.stdout.isatty():
         tty.msg("%d installed packages." % len(specs))
-    display_specs(specs, mode=args.mode)
-
+    display_specs(specs, mode=args.mode, long=args.long)

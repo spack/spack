@@ -120,6 +120,7 @@ architecture_color     = '@m'
 enabled_variant_color  = '@B'
 disabled_variant_color = '@r'
 dependency_color       = '@.'
+hash_color             = '@K'
 
 """This map determines the coloring of specs when using color output.
    We make the fields different colors to enhance readability.
@@ -129,7 +130,8 @@ color_formats = {'%' : compiler_color,
                  '=' : architecture_color,
                  '+' : enabled_variant_color,
                  '~' : disabled_variant_color,
-                 '^' : dependency_color }
+                 '^' : dependency_color,
+                 '#' : hash_color }
 
 """Regex used for splitting by spec field separators."""
 _separators = '[%s]' % ''.join(color_formats.keys())
@@ -1296,7 +1298,7 @@ class Spec(object):
                $%@  Compiler & compiler version
                $+   Options
                $=   Architecture
-               $#   Dependencies' 8-char sha1 prefix
+               $#   7-char prefix of DAG hash
                $$   $
 
            Optionally you can provide a width, e.g. $20_ for a 20-wide name.
@@ -1352,8 +1354,7 @@ class Spec(object):
                     if self.architecture:
                         write(fmt % (c + str(self.architecture)), c)
                 elif c == '#':
-                    if self.dependencies:
-                        out.write(fmt % ('-' + self.dag_hash(8)))
+                    out.write('-' + fmt % (self.dag_hash(7)))
                 elif c == '$':
                     if fmt != '':
                         raise ValueError("Can't use format width with $$.")
@@ -1399,12 +1400,15 @@ class Spec(object):
         cover  = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
         fmt    = kwargs.pop('format', '$_$@$%@$+$=')
+        prefix = kwargs.pop('prefix', None)
         check_kwargs(kwargs, self.tree)
 
         out = ""
         cur_id = 0
         ids = {}
         for d, node in self.traverse(order='pre', cover=cover, depth=True):
+            if prefix is not None:
+                out += prefix(node)
             out += " " * indent
             if depth:
                 out += "%-4d" % d
