@@ -110,6 +110,9 @@ from spack.util.string import *
 from spack.util.prefix import Prefix
 from spack.virtual import ProviderIndex
 
+# Valid pattern for an identifier in Spack
+identifier_re = r'\w[\w-]*'
+
 # Convenient names for color formats so that other things can use them
 compiler_color         = '@g'
 version_color          = '@c'
@@ -267,7 +270,7 @@ class CompilerSpec(object):
 
 
 @key_ordering
-class Variant(object):
+class VariantSpec(object):
     """Variants are named, build-time options for a package.  Names depend
        on the particular package being built, and each named variant can
        be enabled or disabled.
@@ -282,7 +285,7 @@ class Variant(object):
 
 
     def copy(self):
-        return Variant(self.name, self.enabled)
+        return VariantSpec(self.name, self.enabled)
 
 
     def __str__(self):
@@ -291,9 +294,44 @@ class Variant(object):
 
 
 class VariantMap(HashableMap):
+    def __init__(self, spec):
+        super(VariantMap, self).__init__()
+        self.spec = spec
+
+
     def satisfies(self, other):
-        return all(self[key].enabled == other[key].enabled
-                   for key in other if key in self)
+        if self.spec._concrete:
+            return all(k in self and self[k].enabled == other[k].enabled
+                       for k in other)
+        else:
+            return all(self[k].enabled == other[k].enabled
+                       for k in other if k in self)
+
+
+    def constrain(self, other):
+        if other.spec._concrete:
+            for k in self:
+                if k not in other:
+                    raise UnsatisfiableVariantSpecError(self[k], '<absent>')
+
+        for k in other:
+            if k in self:
+                if self[k].enabled != other[k].enabled:
+                    raise UnsatisfiableVariantSpecError(self[k], other[k])
+            else:
+                self[k] = other[k].copy()
+
+    @property
+    def concrete(self):
+        return self.spec._concrete or all(
+            v in self for v in self.spec.package.variants)
+
+
+    def copy(self):
+        clone = VariantMap(None)
+        for name, variant in self.items():
+            clone[name] = variant.copy()
+        return clone
 
 
     def __str__(self):
@@ -340,10 +378,11 @@ class Spec(object):
         self.name = other.name
         self.dependents = other.dependents
         self.versions = other.versions
-        self.variants = other.variants
         self.architecture = other.architecture
         self.compiler = other.compiler
         self.dependencies = other.dependencies
+        self.variants = other.variants
+        self.variants.spec = self
 
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
@@ -372,7 +411,7 @@ class Spec(object):
         """Called by the parser to add a variant."""
         if name in self.variants: raise DuplicateVariantError(
                 "Cannot specify variant '%s' twice" % name)
-        self.variants[name] = Variant(name, enabled)
+        self.variants[name] = VariantSpec(name, enabled)
 
 
     def _set_compiler(self, compiler):
@@ -436,14 +475,15 @@ class Spec(object):
     @property
     def concrete(self):
         """A spec is concrete if it can describe only ONE build of a package.
-           If any of the name, version, architecture, compiler, or depdenencies
-           are ambiguous,then it is not concrete.
+           If any of the name, version, architecture, compiler,
+           variants, or depdenencies are ambiguous,then it is not concrete.
         """
         if self._concrete:
             return True
 
         self._concrete = bool(not self.virtual
                               and self.versions.concrete
+                              and self.variants.concrete
                               and self.architecture
                               and self.compiler and self.compiler.concrete
                               and self.dependencies.concrete)
@@ -604,6 +644,7 @@ class Spec(object):
                 spack.concretizer.concretize_architecture(self)
                 spack.concretizer.concretize_compiler(self)
                 spack.concretizer.concretize_version(self)
+                spack.concretizer.concretize_variants(self)
             presets[self.name] = self
 
         visited.add(self.name)
@@ -786,8 +827,7 @@ class Spec(object):
                     else:
                         required = index.providers_for(vspec.name)
                         if required:
-                            raise UnsatisfiableProviderSpecError(
-                                required[0], pkg_dep)
+                            raise UnsatisfiableProviderSpecError(required[0], pkg_dep)
                 provider_index.update(pkg_dep)
 
             if name not in spec_deps:
@@ -893,6 +933,11 @@ class Spec(object):
                 if not compilers.supported(spec.compiler):
                     raise UnsupportedCompilerError(spec.compiler.name)
 
+            # Ensure that variants all exist.
+            for vname, variant in spec.variants.items():
+                if vname not in spec.package.variants:
+                    raise UnknownVariantError(spec.name, vname)
+
 
     def constrain(self, other, **kwargs):
         other = self._autospec(other)
@@ -921,7 +966,7 @@ class Spec(object):
             self.compiler = other.compiler
 
         self.versions.intersect(other.versions)
-        self.variants.update(other.variants)
+        self.variants.constrain(other.variants)
         self.architecture = self.architecture or other.architecture
 
         if constrain_deps:
@@ -990,10 +1035,12 @@ class Spec(object):
         # All these attrs have satisfies criteria of their own,
         # but can be None to indicate no constraints.
         for s, o in ((self.versions, other.versions),
-                     (self.variants, other.variants),
                      (self.compiler, other.compiler)):
             if s and o and not s.satisfies(o):
                 return False
+
+        if not self.variants.satisfies(other.variants):
+            return False
 
         # Architecture satisfaction is currently just string equality.
         # Can be None for unconstrained, though.
@@ -1061,11 +1108,12 @@ class Spec(object):
         # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
-        self.variants = other.variants.copy()
         self.architecture = other.architecture
         self.compiler = other.compiler.copy() if other.compiler else None
         self.dependents = DependencyMap()
         self.dependencies = DependencyMap()
+        self.variants = other.variants.copy()
+        self.variants.spec = self
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
@@ -1354,6 +1402,8 @@ class SpecLexer(spack.parse.Lexer):
             (r'\~',        lambda scanner, val: self.token(OFF,   val)),
             (r'\%',        lambda scanner, val: self.token(PCT,   val)),
             (r'\=',        lambda scanner, val: self.token(EQ,    val)),
+            # This is more liberal than identifier_re (see above).
+            # Checked by check_identifier() for better error messages.
             (r'\w[\w.-]*', lambda scanner, val: self.token(ID,    val)),
             (r'\s+',       lambda scanner, val: None)])
 
@@ -1399,7 +1449,7 @@ class SpecParser(spack.parse.Parser):
         spec = Spec.__new__(Spec)
         spec.name = self.token.value
         spec.versions = VersionList()
-        spec.variants = VariantMap()
+        spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
         spec.dependents   = DependencyMap()
@@ -1578,6 +1628,13 @@ class UnsupportedCompilerError(SpecError):
     def __init__(self, compiler_name):
         super(UnsupportedCompilerError, self).__init__(
             "The '%s' compiler is not yet supported." % compiler_name)
+
+
+class UnknownVariantError(SpecError):
+    """Raised when the same variant occurs in a spec twice."""
+    def __init__(self, pkg, variant):
+        super(UnknownVariantError, self).__init__(
+            "Package %s has no variant %s!" % (pkg, variant))
 
 
 class DuplicateArchitectureError(SpecError):

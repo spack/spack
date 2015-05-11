@@ -33,8 +33,8 @@ class SpecSematicsTest(MockPackagesTest):
     # ================================================================================
     # Utility functions to set everything up.
     # ================================================================================
-    def check_satisfies(self, spec, anon_spec):
-        left = Spec(spec)
+    def check_satisfies(self, spec, anon_spec, concrete=False):
+        left = Spec(spec, concrete=concrete)
         right = parse_anonymous_spec(anon_spec, left.name)
 
         # Satisfies is one-directional.
@@ -46,8 +46,8 @@ class SpecSematicsTest(MockPackagesTest):
         right.copy().constrain(left)
 
 
-    def check_unsatisfiable(self, spec, anon_spec):
-        left = Spec(spec)
+    def check_unsatisfiable(self, spec, anon_spec, concrete=False):
+        left = Spec(spec, concrete=concrete)
         right = parse_anonymous_spec(anon_spec, left.name)
 
         self.assertFalse(left.satisfies(right))
@@ -71,7 +71,7 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     # ================================================================================
-    # Satisfiability and constraints
+    # Satisfiability
     # ================================================================================
     def test_satisfies(self):
         self.check_satisfies('libelf@0.8.13', '@0:1')
@@ -95,6 +95,9 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_unsatisfiable('foo%pgi@4.3', '%pgi@4.4:4.6')
         self.check_unsatisfiable('foo@4.0%pgi', '@1:3%pgi')
         self.check_unsatisfiable('foo@4.0%pgi@4.5', '@1:3%pgi@4.4:4.6')
+
+        self.check_satisfies('foo %gcc@4.7.3', '%gcc@4.7')
+        self.check_unsatisfiable('foo %gcc@4.7', '%gcc@4.7.3')
 
 
     def test_satisfies_architecture(self):
@@ -147,7 +150,40 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_unsatisfiable('mpileaks^mpi@3:', '^mpich@1.0')
 
 
-    def test_constrain(self):
+    def test_satisfies_matching_variant(self):
+        self.check_satisfies('mpich+foo', 'mpich+foo')
+        self.check_satisfies('mpich~foo', 'mpich~foo')
+
+
+    def test_satisfies_unconstrained_variant(self):
+        # only asked for mpich, no constraints.  Either will do.
+        self.check_satisfies('mpich+foo', 'mpich')
+        self.check_satisfies('mpich~foo', 'mpich')
+
+
+    def test_unsatisfiable_variants(self):
+        # This case is different depending on whether the specs are concrete.
+
+        # 'mpich' is not concrete:
+        self.check_satisfies('mpich', 'mpich+foo', False)
+        self.check_satisfies('mpich', 'mpich~foo', False)
+
+        # 'mpich' is concrete:
+        self.check_unsatisfiable('mpich', 'mpich+foo', True)
+        self.check_unsatisfiable('mpich', 'mpich~foo', True)
+
+
+    def test_unsatisfiable_variant_mismatch(self):
+        # No matchi in specs
+        self.check_unsatisfiable('mpich~foo', 'mpich+foo')
+        self.check_unsatisfiable('mpich+foo', 'mpich~foo')
+
+
+
+    # ================================================================================
+    # Constraints
+    # ================================================================================
+    def test_constrain_variants(self):
         self.check_constrain('libelf@2.1:2.5', 'libelf@0:2.5', 'libelf@2.1:3')
         self.check_constrain('libelf@2.1:2.5%gcc@4.5:4.6',
                              'libelf@0:2.5%gcc@2:4.6', 'libelf@2.1:3%gcc@4.5:4.7')
@@ -158,6 +194,8 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf~foo')
         self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf+debug~foo')
 
+
+    def test_constrain_arch(self):
         self.check_constrain('libelf=bgqos_0', 'libelf=bgqos_0', 'libelf=bgqos_0')
         self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
 
@@ -170,8 +208,3 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
 
         self.check_invalid_constraint('libelf=bgqos_0', 'libelf=x86_54')
-
-
-    def test_compiler_satisfies(self):
-        self.check_satisfies('foo %gcc@4.7.3', '%gcc@4.7')
-        self.check_unsatisfiable('foo %gcc@4.7', '%gcc@4.7.3')

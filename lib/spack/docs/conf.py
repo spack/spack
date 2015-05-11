@@ -94,7 +94,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Spack'
-copyright = u'2013-2014, Lawrence Livermore National Laboratory'
+copyright = u'2013-2015, Lawrence Livermore National Laboratory.'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -203,7 +203,7 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_show_sourcelink = True
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
-#html_show_sphinx = True
+#html_show_sphinx = False
 
 # If true, "(C) Copyright ..." is shown in the HTML footer. Default is True.
 #html_show_copyright = True

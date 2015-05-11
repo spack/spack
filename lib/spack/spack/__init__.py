@@ -146,9 +146,9 @@ import llnl.util.filesystem
 from llnl.util.filesystem import *
 __all__ += llnl.util.filesystem.__all__
 
-import spack.relations
-from spack.relations import *
-__all__ += spack.relations.__all__
+import spack.directives
+from spack.directives import *
+__all__ += spack.directives.__all__
 
 import spack.util.executable
 from spack.util.executable import *
