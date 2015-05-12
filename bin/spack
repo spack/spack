@@ -93,6 +93,10 @@ def main():
     tty.set_debug(args.debug)
     spack.debug = args.debug
 
+    if spack.debug:
+        import spack.util.debug as debug
+        debug.register_interrupt_handler()
+
     spack.spack_working_dir = working_dir
     if args.mock:
         from spack.packages import PackageDB
