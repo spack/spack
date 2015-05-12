@@ -1014,9 +1014,9 @@ class Spec(object):
         any_change = False
         changed = True
 
+        pkg = spack.db.get(self.name)
         while changed:
             changed = False
-            pkg = spack.db.get(self.name)
             for dep_name in pkg.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 pkg_dep = self._evaluate_dependency_conditions(dep_name)
@@ -1132,16 +1132,19 @@ class Spec(object):
                 raise UnsatisfiableArchitectureSpecError(self.architecture,
                                                          other.architecture)
 
+        changed = False
         if self.compiler is not None and other.compiler is not None:
-            self.compiler.constrain(other.compiler)
+            changed |= self.compiler.constrain(other.compiler)
         elif self.compiler is None:
+            changed |= (self.compiler != other.compiler)
             self.compiler = other.compiler
 
-        changed = False
         changed |= self.versions.intersect(other.versions)
         changed |= self.variants.constrain(other.variants)
-        changed |= bool(self.architecture)
+
+        old = self.architecture
         self.architecture = self.architecture or other.architecture
+        changed |= (self.architecture != old)
 
         if constrain_deps:
             changed |= self._constrain_dependencies(other)

@@ -92,4 +92,3 @@ class ConcretizeTest(MockPackagesTest):
         # the whole chain.
         self.check_normalize('optional-dep-test+f',
                              Spec('optional-dep-test+f', Spec('f'), Spec('g'), Spec('mpi')))
-
