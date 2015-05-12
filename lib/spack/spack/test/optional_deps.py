@@ -84,3 +84,12 @@ class ConcretizeTest(MockPackagesTest):
                              Spec('optional-dep-test-2+mpi',
                                   Spec('optional-dep-test+mpi',
                                        Spec('mpi'))))
+
+
+    def test_transitive_chain(self):
+        # Each of these dependencies comes from a conditional
+        # dependency on another.  This requires iterating to evaluate
+        # the whole chain.
+        self.check_normalize('optional-dep-test+f',
+                             Spec('optional-dep-test+f', Spec('f'), Spec('g'), Spec('mpi')))
+

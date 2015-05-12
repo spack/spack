@@ -893,7 +893,6 @@ class Spec(object):
         dep = None
         for when_spec, dep_spec in conditions.items():
             sat = self.satisfies(when_spec, strict=True)
-#                print self, "satisfies", when_spec, ":", sat
             if sat:
                 if dep is None:
                     dep = Spec(name)
@@ -932,67 +931,104 @@ class Spec(object):
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
 
+    def _merge_dependency(self, dep, visited, spec_deps, provider_index):
+        """Merge the dependency into this spec.
+
+        This is the core of the normalize() method.  There are a few basic steps:
+
+          * If dep is virtual, evaluate whether it corresponds to an
+            existing concrete dependency, and merge if so.
+
+          * If it's real and it provides some virtual dep, see if it provides
+            what some virtual dependency wants and merge if so.
+
+          * Finally, if none of the above, merge dependency and its
+            constraints into this spec.
+
+        This method returns True if the spec was changed, False otherwise.
+        """
+        changed = False
+
+        # If it's a virtual dependency, try to find a provider and
+        # merge that.
+        if dep.virtual:
+            visited.add(dep.name)
+            provider = self._find_provider(dep, provider_index)
+            if provider:
+                dep = provider
+
+        else:
+            # if it's a real dependency, check whether it provides
+            # something already required in the spec.
+            index = ProviderIndex([dep], restrict=True)
+            for vspec in (v for v in spec_deps.values() if v.virtual):
+                if index.providers_for(vspec):
+                    vspec._replace_with(dep)
+                    del spec_deps[vspec.name]
+                    changed = True
+                else:
+                    required = index.providers_for(vspec.name)
+                    if required:
+                        raise UnsatisfiableProviderSpecError(required[0], dep)
+            provider_index.update(dep)
+
+        # If the spec isn't already in the set of dependencies, clone
+        # it from the package description.
+        if dep.name not in spec_deps:
+            spec_deps[dep.name] = dep.copy()
+
+        # Constrain package information with spec info
+        try:
+            changed |= spec_deps[dep.name].constrain(dep)
+
+        except UnsatisfiableSpecError, e:
+            e.message =  "Invalid spec: '%s'. "
+            e.message += "Package %s requires %s %s, but spec asked for %s"
+            e.message %= (spec_deps[dep.name], dep.name, e.constraint_type,
+                          e.required, e.provided)
+            raise e
+
+        # Add merged spec to my deps and recurse
+        dependency = spec_deps[dep.name]
+        if dep.name not in self.dependencies:
+            self._add_dependency(dependency)
+            changed = True
+
+        changed |= dependency._normalize_helper(visited, spec_deps, provider_index)
+        return changed
+
+
     def _normalize_helper(self, visited, spec_deps, provider_index):
         """Recursive helper function for _normalize."""
         if self.name in visited:
-            return
+            return False
         visited.add(self.name)
 
         # if we descend into a virtual spec, there's nothing more
         # to normalize.  Concretize will finish resolving it later.
         if self.virtual:
-            return
+            return False
 
-        # Combine constraints from package dependencies with
-        # constraints on the spec's dependencies.
-        pkg = spack.db.get(self.name)
-        for name in pkg.dependencies:
-            # If pkg_dep is None, no conditions matched and we don't depend on this.
-            pkg_dep = self._evaluate_dependency_conditions(name)
-            if not pkg_dep:
-                continue
+        # Combine constraints from package deps with constraints from
+        # the spec, until nothing changes.
+        any_change = False
+        changed = True
 
-            # If it's a virtual dependency, try to find a provider
-            if pkg_dep.virtual:
-                visited.add(pkg_dep.name)
-                provider = self._find_provider(pkg_dep, provider_index)
-                if provider:
-                    pkg_dep = provider
-                    name = provider.name
-            else:
-                # if it's a real dependency, check whether it provides
-                # something already required in the spec.
-                index = ProviderIndex([pkg_dep], restrict=True)
-                for vspec in (v for v in spec_deps.values() if v.virtual):
-                    if index.providers_for(vspec):
-                        vspec._replace_with(pkg_dep)
-                        del spec_deps[vspec.name]
-                    else:
-                        required = index.providers_for(vspec.name)
-                        if required:
-                            raise UnsatisfiableProviderSpecError(required[0], pkg_dep)
-                provider_index.update(pkg_dep)
+        while changed:
+            changed = False
+            pkg = spack.db.get(self.name)
+            for dep_name in pkg.dependencies:
+                # Do we depend on dep_name?  If so pkg_dep is not None.
+                pkg_dep = self._evaluate_dependency_conditions(dep_name)
 
-            if name not in spec_deps:
-                # If the spec doesn't reference a dependency that this package
-                # needs, then clone it from the package description.
-                spec_deps[name] = pkg_dep.copy()
+                # If pkg_dep is a dependency, merge it.
+                if pkg_dep:
+                    changed |= self._merge_dependency(
+                        pkg_dep, visited, spec_deps, provider_index)
 
-            try:
-                # Constrain package information with spec info
-                spec_deps[name].constrain(pkg_dep)
+            any_change |= changed
 
-            except UnsatisfiableSpecError, e:
-                e.message =  "Invalid spec: '%s'. "
-                e.message += "Package %s requires %s %s, but spec asked for %s"
-                e.message %= (spec_deps[name], name, e.constraint_type,
-                              e.required, e.provided)
-                raise e
-
-            # Add merged spec to my deps and recurse
-            dependency = spec_deps[name]
-            self._add_dependency(dependency)
-            dependency._normalize_helper(visited, spec_deps, provider_index)
+        return any_change
 
 
     def normalize(self, **kwargs):
