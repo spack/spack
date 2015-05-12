@@ -115,10 +115,7 @@ class directive(object):
 
     """
 
-    def __init__(self, **kwargs):
-        # dict argument allows directives to have storage on the package.
-        dicts = kwargs.get('dicts', None)
-
+    def __init__(self, dicts=None):
         if isinstance(dicts, basestring):
             dicts = (dicts,)
         elif type(dicts) not in (list, tuple):
@@ -154,13 +151,14 @@ class directive(object):
         return wrapped
 
 
-@directive(dicts='versions')
+@directive('versions')
 def version(pkg, ver, checksum=None, **kwargs):
     """Adds a version and metadata describing how to fetch it.
        Metadata is just stored as a dict in the package's versions
        dictionary.  Package must turn it into a valid fetch strategy
        later.
     """
+    # TODO: checksum vs md5 distinction is confusing -- fix this.
     # special case checksum for backward compatibility
     if checksum:
         kwargs['md5'] = checksum
@@ -169,18 +167,29 @@ def version(pkg, ver, checksum=None, **kwargs):
     pkg.versions[Version(ver)] = kwargs
 
 
-@directive(dicts='dependencies')
-def depends_on(pkg, *specs):
-    """Adds a dependencies local variable in the locals of
-       the calling class, based on args. """
-    for string in specs:
-        for spec in spack.spec.parse(string):
-            if pkg.name == spec.name:
-                raise CircularReferenceError('depends_on', pkg.name)
-            pkg.dependencies[spec.name] = spec
+def _depends_on(pkg, spec, when=None):
+    if when is None:
+        when = pkg.name
+    when_spec = parse_anonymous_spec(when, pkg.name)
+
+    dep_spec = Spec(spec)
+    if pkg.name == dep_spec.name:
+        raise CircularReferenceError('depends_on', pkg.name)
+
+    conditions = pkg.dependencies.setdefault(dep_spec.name, {})
+    if when_spec in conditions:
+        conditions[when_spec].constrain(dep_spec, deps=False)
+    else:
+        conditions[when_spec] = dep_spec
 
 
-@directive(dicts=('extendees', 'dependencies'))
+@directive('dependencies')
+def depends_on(pkg, spec, when=None):
+    """Creates a dict of deps with specs defining when they apply."""
+    _depends_on(pkg, spec, when=when)
+
+
+@directive(('extendees', 'dependencies'))
 def extends(pkg, spec, **kwargs):
     """Same as depends_on, but dependency is symlinked into parent prefix.
 
@@ -198,14 +207,12 @@ def extends(pkg, spec, **kwargs):
     if pkg.extendees:
         raise DirectiveError("Packages can extend at most one other package.")
 
-    spec = Spec(spec)
-    if pkg.name == spec.name:
-        raise CircularReferenceError('extends', pkg.name)
-    pkg.dependencies[spec.name] = spec
-    pkg.extendees[spec.name] = (spec, kwargs)
+    when = kwargs.pop('when', pkg.name)
+    _depends_on(pkg, spec, when=when)
+    pkg.extendees[spec] = (Spec(spec), kwargs)
 
 
-@directive(dicts='provided')
+@directive('provided')
 def provides(pkg, *specs, **kwargs):
     """Allows packages to provide a virtual dependency.  If a package provides
        'mpi', other packages can declare that they depend on "mpi", and spack
@@ -221,17 +228,17 @@ def provides(pkg, *specs, **kwargs):
             pkg.provided[provided_spec] = provider_spec
 
 
-@directive(dicts='patches')
-def patch(pkg, url_or_filename, **kwargs):
+@directive('patches')
+def patch(pkg, url_or_filename, level=1, when=None):
     """Packages can declare patches to apply to source.  You can
        optionally provide a when spec to indicate that a particular
        patch should only be applied when the package's spec meets
        certain conditions (e.g. a particular version).
     """
-    level = kwargs.get('level', 1)
-    when  = kwargs.get('when', pkg.name)
-
+    if when is None:
+        when = pkg.name
     when_spec = parse_anonymous_spec(when, pkg.name)
+
     if when_spec not in pkg.patches:
         pkg.patches[when_spec] = [Patch(pkg.name, url_or_filename, level)]
     else:
@@ -240,13 +247,13 @@ def patch(pkg, url_or_filename, **kwargs):
         pkg.patches[when_spec].append(Patch(pkg.name, url_or_filename, level))
 
 
-@directive(dicts='variants')
-def variant(pkg, name, **kwargs):
+@directive('variants')
+def variant(pkg, name, default=False, description=""):
     """Define a variant for the package. Packager can specify a default
     value (on or off) as well as a text description."""
 
-    default     = bool(kwargs.get('default', False))
-    description = str(kwargs.get('description', "")).strip()
+    default     = bool(default)
+    description = str(description).strip()
 
     if not re.match(spack.spec.identifier_re, name):
         raise DirectiveError("Invalid variant name in %s: '%s'" % (pkg.name, name))

@@ -93,12 +93,12 @@ def coerce_versions(a, b):
 def coerced(method):
     """Decorator that ensures that argument types of a method are coerced."""
     @wraps(method)
-    def coercing_method(a, b):
+    def coercing_method(a, b, *args, **kwargs):
         if type(a) == type(b) or a is None or b is None:
-            return method(a, b)
+            return method(a, b, *args, **kwargs)
         else:
             ca, cb = coerce_versions(a, b)
-            return getattr(ca, method.__name__)(cb)
+            return getattr(ca, method.__name__)(cb, *args, **kwargs)
     return coercing_method
 
 
@@ -607,14 +607,21 @@ class VersionList(object):
 
 
     @coerced
-    def satisfies(self, other):
-        """A VersionList satisfies another if some version in the list would
-           would satisfy some version in the other list.  This uses essentially
-           the same algorithm as overlaps() does for VersionList, but it calls
-           satisfies() on member Versions and VersionRanges.
+    def satisfies(self, other, strict=False):
+        """A VersionList satisfies another if some version in the list
+           would satisfy some version in the other list.  This uses
+           essentially the same algorithm as overlaps() does for
+           VersionList, but it calls satisfies() on member Versions
+           and VersionRanges.
+
+           If strict is specified, this version list must lie entirely
+           *within* the other in order to satisfy it.
         """
         if not other or not self:
             return False
+
+        if strict:
+            return self in other
 
         s = o = 0
         while s < len(self) and o < len(other):
@@ -652,9 +659,14 @@ class VersionList(object):
 
     @coerced
     def intersect(self, other):
-        isection = self.intersection(other)
-        self.versions = isection.versions
+        """Intersect this spec's list with other.
 
+        Return True if the spec changed as a result; False otherwise
+        """
+        isection = self.intersection(other)
+        changed = (isection.versions != self.versions)
+        self.versions = isection.versions
+        return changed
 
     @coerced
     def __contains__(self, other):

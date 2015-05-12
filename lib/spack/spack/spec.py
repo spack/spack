@@ -222,20 +222,24 @@ class CompilerSpec(object):
         return CompilerSpec(compiler_spec_like)
 
 
-    def satisfies(self, other):
+    def satisfies(self, other, strict=False):
         other = self._autospec(other)
         return (self.name == other.name and
-                self.versions.satisfies(other.versions))
+                self.versions.satisfies(other.versions, strict=strict))
 
 
     def constrain(self, other):
+        """Intersect self's versions with other.
+
+        Return whether the CompilerSpec changed.
+        """
         other = self._autospec(other)
 
         # ensure that other will actually constrain this spec.
         if not other.satisfies(self):
             raise UnsatisfiableCompilerSpecError(other, self)
 
-        self.versions.intersect(other.versions)
+        return self.versions.intersect(other.versions)
 
 
     @property
@@ -316,8 +320,8 @@ class VariantMap(HashableMap):
         self.spec = spec
 
 
-    def satisfies(self, other):
-        if self.spec._concrete:
+    def satisfies(self, other, strict=False):
+        if strict or self.spec._concrete:
             return all(k in self and self[k].enabled == other[k].enabled
                        for k in other)
         else:
@@ -326,17 +330,25 @@ class VariantMap(HashableMap):
 
 
     def constrain(self, other):
+        """Add all variants in other that aren't in self to self.
+
+        Raises an error if any common variants don't match.
+        Return whether the spec changed.
+        """
         if other.spec._concrete:
             for k in self:
                 if k not in other:
                     raise UnsatisfiableVariantSpecError(self[k], '<absent>')
 
+        changed = False
         for k in other:
             if k in self:
                 if self[k].enabled != other[k].enabled:
                     raise UnsatisfiableVariantSpecError(self[k], other[k])
             else:
                 self[k] = other[k].copy()
+                changed =True
+        return changed
 
     @property
     def concrete(self):
@@ -867,6 +879,59 @@ class Spec(object):
             self._add_dependency(dep)
 
 
+    def _evaluate_dependency_conditions(self, name):
+        """Evaluate all the conditions on a dependency with this name.
+
+        If the package depends on <name> in this configuration, return
+        the dependency.  If no conditions are True (and we don't
+        depend on it), return None.
+        """
+        pkg = spack.db.get(self.name)
+        conditions = pkg.dependencies[name]
+
+        # evaluate when specs to figure out constraints on the dependency.
+        dep = None
+        for when_spec, dep_spec in conditions.items():
+            sat = self.satisfies(when_spec, strict=True)
+#                print self, "satisfies", when_spec, ":", sat
+            if sat:
+                if dep is None:
+                    dep = Spec(name)
+                try:
+                    dep.constrain(dep_spec)
+                except UnsatisfiableSpecError, e:
+                    e.message = ("Conflicting conditional dependencies on package "
+                                 "%s for spec %s" % (self.name, self))
+                    raise e
+        return dep
+
+
+    def _find_provider(self, vdep, provider_index):
+        """Find provider for a virtual spec in the provider index.
+        Raise an exception if there is a conflicting virtual
+        dependency already in this spec.
+        """
+        assert(vdep.virtual)
+        providers = provider_index.providers_for(vdep)
+
+        # If there is a provider for the vpkg, then use that instead of
+        # the virtual package.
+        if providers:
+            # Can't have multiple providers for the same thing in one spec.
+            if len(providers) > 1:
+                raise MultipleProviderError(vdep, providers)
+            return providers[0]
+        else:
+            # The user might have required something insufficient for
+            # pkg_dep -- so we'll get a conflict.  e.g., user asked for
+            # mpi@:1.1 but some package required mpi@2.1:.
+            required = provider_index.providers_for(vdep.name)
+            if len(required) > 1:
+                raise MultipleProviderError(vdep, required)
+            elif required:
+                raise UnsatisfiableProviderSpecError(required[0], vdep)
+
+
     def _normalize_helper(self, visited, spec_deps, provider_index):
         """Recursive helper function for _normalize."""
         if self.name in visited:
@@ -881,34 +946,22 @@ class Spec(object):
         # Combine constraints from package dependencies with
         # constraints on the spec's dependencies.
         pkg = spack.db.get(self.name)
-        for name, pkg_dep in self.package.dependencies.items():
+        for name in pkg.dependencies:
+            # If pkg_dep is None, no conditions matched and we don't depend on this.
+            pkg_dep = self._evaluate_dependency_conditions(name)
+            if not pkg_dep:
+                continue
+
             # If it's a virtual dependency, try to find a provider
             if pkg_dep.virtual:
-                providers = provider_index.providers_for(pkg_dep)
-
-                # If there is a provider for the vpkg, then use that instead of
-                # the virtual package.
-                if providers:
-                    # Can't have multiple providers for the same thing in one spec.
-                    if len(providers) > 1:
-                        raise MultipleProviderError(pkg_dep, providers)
-
-                    pkg_dep = providers[0]
-                    name    = pkg_dep.name
-
-                else:
-                    # The user might have required something insufficient for
-                    # pkg_dep -- so we'll get a conflict.  e.g., user asked for
-                    # mpi@:1.1 but some package required mpi@2.1:.
-                    required = provider_index.providers_for(name)
-                    if len(required) > 1:
-                        raise MultipleProviderError(pkg_dep, required)
-                    elif required:
-                        raise UnsatisfiableProviderSpecError(
-                            required[0], pkg_dep)
+                visited.add(pkg_dep.name)
+                provider = self._find_provider(pkg_dep, provider_index)
+                if provider:
+                    pkg_dep = provider
+                    name = provider.name
             else:
-                # if it's a real dependency, check whether it provides something
-                # already required in the spec.
+                # if it's a real dependency, check whether it provides
+                # something already required in the spec.
                 index = ProviderIndex([pkg_dep], restrict=True)
                 for vspec in (v for v in spec_deps.values() if v.virtual):
                     if index.providers_for(vspec):
@@ -966,31 +1019,20 @@ class Spec(object):
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_names()
 
-        # Ensure that the package & dep descriptions are consistent & sane
-        if not self.virtual:
-            self.package.validate_dependencies()
-
         # Get all the dependencies into one DependencyMap
         spec_deps = self.flat_dependencies(copy=False)
 
-        # Figure out which of the user-provided deps provide virtual deps.
-        # Remove virtual deps that are already provided by something in the spec
-        spec_packages = [d.package for d in spec_deps.values() if not d.virtual]
-
+        # Initialize index of virtual dependency providers
         index = ProviderIndex(spec_deps.values(), restrict=True)
 
+        # traverse the package DAG and fill out dependencies according
+        # to package files & their 'when' specs
         visited = set()
         self._normalize_helper(visited, spec_deps, index)
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.
         extra = set(spec_deps.keys()).difference(visited)
-
-        # Also subtract out all the packags that provide a needed vpkg
-        vdeps = [v for v in self.package.virtual_dependencies()]
-
-        vpkg_providers = index.providers_for(*vdeps)
-        extra.difference_update(p.name for p in vpkg_providers)
 
         # Anything left over is not a valid part of the spec.
         if extra:
@@ -1030,6 +1072,10 @@ class Spec(object):
 
 
     def constrain(self, other, **kwargs):
+        """Merge the constraints of other with self.
+
+        Returns True if the spec changed as a result, False if not.
+        """
         other = self._autospec(other)
         constrain_deps = kwargs.get('deps', True)
 
@@ -1055,18 +1101,22 @@ class Spec(object):
         elif self.compiler is None:
             self.compiler = other.compiler
 
-        self.versions.intersect(other.versions)
-        self.variants.constrain(other.variants)
+        changed = False
+        changed |= self.versions.intersect(other.versions)
+        changed |= self.variants.constrain(other.variants)
+        changed |= bool(self.architecture)
         self.architecture = self.architecture or other.architecture
 
         if constrain_deps:
-            self._constrain_dependencies(other)
+            changed |= self._constrain_dependencies(other)
+
+        return changed
 
 
     def _constrain_dependencies(self, other):
         """Apply constraints of other spec's dependencies to this spec."""
         if not self.dependencies or not other.dependencies:
-            return
+            return False
 
         # TODO: might want more detail than this, e.g. specific deps
         # in violation. if this becomes a priority get rid of this
@@ -1075,12 +1125,17 @@ class Spec(object):
             raise UnsatisfiableDependencySpecError(other, self)
 
         # Handle common first-order constraints directly
+        changed = False
         for name in self.common_dependencies(other):
-            self[name].constrain(other[name], deps=False)
+            changed |= self[name].constrain(other[name], deps=False)
+
 
         # Update with additional constraints from other spec
         for name in other.dep_difference(self):
             self._add_dependency(other[name].copy())
+            changed = True
+
+        return changed
 
 
     def common_dependencies(self, other):
@@ -1114,46 +1169,72 @@ class Spec(object):
             return parse_anonymous_spec(spec_like, self.name)
 
 
-    def satisfies(self, other, **kwargs):
+    def satisfies(self, other, deps=True, strict=False):
+        """Determine if this spec satisfies all constraints of another.
+
+        There are two senses for satisfies:
+
+          * `loose` (default): the absence of a constraint in self
+            implies that it *could* be satisfied by other, so we only
+            check that there are no conflicts with other for
+            constraints that this spec actually has.
+
+          * `strict`: strict means that we *must* meet all the
+            constraints specified on other.
+        """
         other = self._autospec(other)
-        satisfy_deps = kwargs.get('deps', True)
 
         # First thing we care about is whether the name matches
         if self.name != other.name:
             return False
 
-        # All these attrs have satisfies criteria of their own,
-        # but can be None to indicate no constraints.
-        for s, o in ((self.versions, other.versions),
-                     (self.compiler, other.compiler)):
-            if s and o and not s.satisfies(o):
+        if self.versions and other.versions:
+            if not self.versions.satisfies(other.versions, strict=strict):
                 return False
+        elif strict and (self.versions or other.versions):
+            return False
 
-        if not self.variants.satisfies(other.variants):
+        # None indicates no constraints when not strict.
+        if self.compiler and other.compiler:
+            if not self.compiler.satisfies(other.compiler, strict=strict):
+                return False
+        elif strict and (other.compiler and not self.compiler):
+            return False
+
+        if not self.variants.satisfies(other.variants, strict=strict):
             return False
 
         # Architecture satisfaction is currently just string equality.
-        # Can be None for unconstrained, though.
-        if (self.architecture and other.architecture and
-            self.architecture != other.architecture):
+        # If not strict, None means unconstrained.
+        if self.architecture and other.architecture:
+            if self.architecture != other.architecture:
+                return False
+        elif strict and (other.architecture and not self.architecture):
             return False
 
         # If we need to descend into dependencies, do it, otherwise we're done.
-        if satisfy_deps:
-            return self.satisfies_dependencies(other)
+        if deps:
+            return self.satisfies_dependencies(other, strict=strict)
         else:
             return True
 
 
-    def satisfies_dependencies(self, other):
+    def satisfies_dependencies(self, other, strict=False):
         """This checks constraints on common dependencies against each other."""
-        # if either spec doesn't restrict dependencies then both are compatible.
-        if not self.dependencies or not other.dependencies:
+        if strict:
+            if other.dependencies and not self.dependencies:
+                return False
+
+            if not all(dep in self.dependencies for dep in other.dependencies):
+                return False
+
+        elif not self.dependencies or not other.dependencies:
+            # if either spec doesn't restrict dependencies then both are compatible.
             return True
 
         # Handle first-order constraints directly
         for name in self.common_dependencies(other):
-            if not self[name].satisfies(other[name]):
+            if not self[name].satisfies(other[name], deps=False):
                 return False
 
         # For virtual dependencies, we need to dig a little deeper.
@@ -1255,7 +1336,7 @@ class Spec(object):
         """
         spec = self._autospec(spec)
         for s in self.traverse():
-            if s.satisfies(spec):
+            if s.satisfies(spec, strict=True):
                 return True
         return False
 
@@ -1411,7 +1492,8 @@ class Spec(object):
 
             elif compiler:
                 if c == '@':
-                    if self.compiler and self.compiler.versions:
+                    if (self.compiler and self.compiler.versions and
+                        self.compiler.versions != _any_version):
                         write(c + str(self.compiler.versions), '%')
                 elif c == '$':
                     escape = True

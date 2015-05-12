@@ -50,7 +50,6 @@ from llnl.util.filesystem import *
 from llnl.util.lang import *
 
 import spack
-import spack.spec
 import spack.error
 import spack.compilers
 import spack.mirror
@@ -538,41 +537,6 @@ class Package(object):
 
             for pkg in spack.db.get(name).preorder_traversal(visited, **kwargs):
                 yield pkg
-
-
-    def validate_dependencies(self):
-        """Ensure that this package and its dependencies all have consistent
-           constraints on them.
-
-           NOTE that this will NOT find sanity problems through a virtual
-           dependency.  Virtual deps complicate the problem because we
-           don't know in advance which ones conflict with others in the
-           dependency DAG. If there's more than one virtual dependency,
-           it's a full-on SAT problem, so hold off on this for now.
-           The vdeps are actually skipped in preorder_traversal, so see
-           that for details.
-
-           TODO: investigate validating virtual dependencies.
-        """
-        # This algorithm just attempts to merge all the constraints on the same
-        # package together, loses information about the source of the conflict.
-        # What we'd really like to know is exactly which two constraints
-        # conflict, but that algorithm is more expensive, so we'll do it
-        # the simple, less informative way for now.
-        merged = spack.spec.DependencyMap()
-
-        try:
-            for pkg in self.preorder_traversal():
-                for name, spec in pkg.dependencies.iteritems():
-                    if name not in merged:
-                        merged[name] = spec.copy()
-                    else:
-                        merged[name].constrain(spec)
-
-        except spack.spec.UnsatisfiableSpecError, e:
-            raise InvalidPackageDependencyError(
-                "Package %s has inconsistent dependency constraints: %s"
-                % (self.name, e.message))
 
 
     def provides(self, vpkg_name):
@@ -1196,13 +1160,6 @@ class PackageError(spack.error.SpackError):
     """Raised when something is wrong with a package definition."""
     def __init__(self, message, long_msg=None):
         super(PackageError, self).__init__(message, long_msg)
-
-
-class InvalidPackageDependencyError(PackageError):
-    """Raised when package specification is inconsistent with requirements of
-       its dependencies."""
-    def __init__(self, message):
-        super(InvalidPackageDependencyError, self).__init__(message)
 
 
 class PackageVersionError(PackageError):

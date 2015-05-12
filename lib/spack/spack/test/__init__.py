@@ -53,7 +53,8 @@ test_names = ['versions',
               'url_extrapolate',
               'cc',
               'link_tree',
-              'spec_yaml']
+              'spec_yaml',
+              'optional_deps']
 
 
 def list_tests():

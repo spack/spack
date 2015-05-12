@@ -35,7 +35,7 @@ def set_pkg_dep(pkg, spec):
        Use this to mock up constraints.
     """
     spec = Spec(spec)
-    spack.db.get(pkg).dependencies[spec.name] = spec
+    spack.db.get(pkg).dependencies[spec.name] = { Spec(pkg) : spec }
 
 
 class MockPackagesTest(unittest.TestCase):
