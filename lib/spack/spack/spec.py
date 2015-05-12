@@ -1107,13 +1107,12 @@ class Spec(object):
                     raise UnknownVariantError(spec.name, vname)
 
 
-    def constrain(self, other, **kwargs):
+    def constrain(self, other, deps=True):
         """Merge the constraints of other with self.
 
         Returns True if the spec changed as a result, False if not.
         """
         other = self._autospec(other)
-        constrain_deps = kwargs.get('deps', True)
 
         if not self.name == other.name:
             raise UnsatisfiableSpecNameError(self.name, other.name)
@@ -1146,7 +1145,7 @@ class Spec(object):
         self.architecture = self.architecture or other.architecture
         changed |= (self.architecture != old)
 
-        if constrain_deps:
+        if deps:
             changed |= self._constrain_dependencies(other)
 
         return changed
@@ -1154,6 +1153,8 @@ class Spec(object):
 
     def _constrain_dependencies(self, other):
         """Apply constraints of other spec's dependencies to this spec."""
+        other = self._autospec(other)
+
         if not self.dependencies or not other.dependencies:
             return False
 
@@ -1260,6 +1261,8 @@ class Spec(object):
 
     def satisfies_dependencies(self, other, strict=False):
         """This checks constraints on common dependencies against each other."""
+        other = self._autospec(other)
+
         if strict:
             if other.dependencies and not self.dependencies:
                 return False

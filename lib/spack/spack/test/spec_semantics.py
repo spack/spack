@@ -64,6 +64,16 @@ class SpecSematicsTest(MockPackagesTest):
         self.assertEqual(exp, spec)
 
 
+    def check_constrain_changed(self, spec, constraint):
+        spec = Spec(spec)
+        self.assertTrue(spec.constrain(constraint))
+
+
+    def check_constrain_not_changed(self, spec, constraint):
+        spec = Spec(spec)
+        self.assertFalse(spec.constrain(constraint))
+
+
     def check_invalid_constraint(self, spec, constraint):
         spec = Spec(spec)
         constraint = Spec(constraint)
@@ -200,6 +210,11 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
 
 
+    def test_constrain_compiler(self):
+        self.check_constrain('libelf=bgqos_0', 'libelf=bgqos_0', 'libelf=bgqos_0')
+        self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
+
+
     def test_invalid_constraint(self):
         self.check_invalid_constraint('libelf@0:2.0', 'libelf@2.1:3')
         self.check_invalid_constraint('libelf@0:2.5%gcc@4.8:4.9', 'libelf@2.1:3%gcc@4.5:4.7')
@@ -208,3 +223,47 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
 
         self.check_invalid_constraint('libelf=bgqos_0', 'libelf=x86_54')
+
+
+    def test_constrain_changed(self):
+        self.check_constrain_changed('libelf', '@1.0')
+        self.check_constrain_changed('libelf', '@1.0:5.0')
+        self.check_constrain_changed('libelf', '%gcc')
+        self.check_constrain_changed('libelf%gcc', '%gcc@4.5')
+        self.check_constrain_changed('libelf', '+debug')
+        self.check_constrain_changed('libelf', '~debug')
+        self.check_constrain_changed('libelf', '=bgqos_0')
+
+
+    def test_constrain_not_changed(self):
+        self.check_constrain_not_changed('libelf', 'libelf')
+        self.check_constrain_not_changed('libelf@1.0', '@1.0')
+        self.check_constrain_not_changed('libelf@1.0:5.0', '@1.0:5.0')
+        self.check_constrain_not_changed('libelf%gcc', '%gcc')
+        self.check_constrain_not_changed('libelf%gcc@4.5', '%gcc@4.5')
+        self.check_constrain_not_changed('libelf+debug', '+debug')
+        self.check_constrain_not_changed('libelf~debug', '~debug')
+        self.check_constrain_not_changed('libelf=bgqos_0', '=bgqos_0')
+        self.check_constrain_not_changed('libelf^foo', 'libelf^foo')
+        self.check_constrain_not_changed('libelf^foo^bar', 'libelf^foo^bar')
+
+
+    def test_constrain_dependency_changed(self):
+        self.check_constrain_changed('libelf^foo', 'libelf^foo@1.0')
+        self.check_constrain_changed('libelf^foo', 'libelf^foo@1.0:5.0')
+        self.check_constrain_changed('libelf^foo', 'libelf^foo%gcc')
+        self.check_constrain_changed('libelf^foo%gcc', 'libelf^foo%gcc@4.5')
+        self.check_constrain_changed('libelf^foo', 'libelf^foo+debug')
+        self.check_constrain_changed('libelf^foo', 'libelf^foo~debug')
+        self.check_constrain_changed('libelf^foo', 'libelf^foo=bgqos_0')
+
+
+    def test_constrain_dependency_not_changed(self):
+        self.check_constrain_not_changed('libelf^foo@1.0', 'libelf^foo@1.0')
+        self.check_constrain_not_changed('libelf^foo@1.0:5.0', 'libelf^foo@1.0:5.0')
+        self.check_constrain_not_changed('libelf^foo%gcc', 'libelf^foo%gcc')
+        self.check_constrain_not_changed('libelf^foo%gcc@4.5', 'libelf^foo%gcc@4.5')
+        self.check_constrain_not_changed('libelf^foo+debug', 'libelf^foo+debug')
+        self.check_constrain_not_changed('libelf^foo~debug', 'libelf^foo~debug')
+        self.check_constrain_not_changed('libelf^foo=bgqos_0', 'libelf^foo=bgqos_0')
+
