@@ -28,452 +28,315 @@ Configuration file scopes
 ===============================
 
 When Spack runs, it pulls configuration data from several config
-files, much like bash shells.  In Spack, there are two configuration
-scopes:
+directories, each of which contains configuration files.  In Spack,
+there are two configuration scopes:
 
  1. ``site``: Spack loads site-wide configuration options from
-   ``$(prefix)/etc/spackconfig``.
+   ``$(prefix)/etc/spack/``.
 
  2. ``user``: Spack next loads per-user configuration options from
-    ~/.spackconfig.
+    ~/.spack/.
 
-If user options have the same names as site options, the user options
-take precedence.
-
+Spack may read configuration files from both of these locations.  When
+configurations conflict, the user config options take precedence over
+the site configurations.  Each configuration directory may contain
+several configuration files, such as compilers.yaml or mirrors.yaml.
 
 Configuration file format
 ===============================
 
-Configuration files are formatted using .gitconfig syntax, which is
-much like Windows .INI format.  This format is implemented by Python's
-ConfigParser class, and it's easy to read and versatile.
+Configuration files are formatted using YAML syntax.
+This format is implemented by Python's
+yaml class, and it's easy to read and versatile.
 
-The file is divided into sections, like this ``compiler`` section::
+The config files are structured as trees, like this ``compiler`` section::
 
-     [compiler]
-         cc = /usr/bin/gcc
+     compilers:
+       chaos_5_x86_64_ib:
+          gcc@4.4.7:
+            cc: /usr/bin/gcc
+            cxx: /usr/bin/g++
+            f77: /usr/bin/gfortran
+            fc: /usr/bin/gfortran
+       bgqos_0:
+          xlc@12.1:
+            cc: /usr/local/bin/mpixlc
+            ...
 
-In each section there are options (cc), and each option has a value
-(/usr/bin/gcc).
+In this example, entries like ''compilers'' and ''xlc@12.1'' are used to
+categorize entries beneath them in the tree.  At the root of the tree,
+entries like ''cc'' and ''cxx'' are specified as name/value pairs.
 
-Borrowing from git, we also allow named sections, e.g.:
+Spack returns these trees as nested dicts.  The dict for the above example
+would looks like:
 
-     [compiler "gcc@4.7.3"]
-         cc = /usr/bin/gcc
+  { 'compilers' :
+      { 'chaos_5_x86_64_ib' :
+         { 'gcc@4.4.7' :
+             { 'cc' : '/usr/bin/gcc',
+               'cxx' : '/usr/bin/g++'
+               'f77' : '/usr/bin/gfortran'
+               'fc' : '/usr/bin/gfortran' }
+         }
+     { 'bgqos_0' :
+         { 'cc' : '/usr/local/bin/mpixlc' }
+     }
+  }
 
-This is a compiler section, but it's for the specific compiler,
-``gcc@4.7.3``.  ``gcc@4.7.3`` is the name.
-
-
-Keys
-===============================
-
-Together, the section, name, and option, separated by periods, are
-called a ``key``.  Keys can be used on the command line to set
-configuration options explicitly (this is also borrowed from git).
-
-For example, to change the C compiler used by gcc@4.7.3, you could do
-this:
-
-    spack config compiler.gcc@4.7.3.cc /usr/local/bin/gcc
-
-That will create a named compiler section in the user's .spackconfig
-like the one shown above.
+Some routines, like get_mirrors_config and get_compilers_config may strip
+off the top-levels of the tree and return subtrees.
 """
 import os
-import re
-import inspect
-import ConfigParser as cp
+import exceptions
+import sys
 
 from external.ordereddict import OrderedDict
 from llnl.util.lang import memoized
 import spack.error
 
-__all__ = [
-    'SpackConfigParser', 'get_config', 'SpackConfigurationError',
-    'InvalidConfigurationScopeError', 'InvalidSectionNameError',
-    'ReadOnlySpackConfigError', 'ConfigParserError', 'NoOptionError',
-    'NoSectionError']
+from contextlib import closing
+from external import yaml
+from external.yaml.error import MarkedYAMLError
+import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
 
-_named_section_re = r'([^ ]+) "([^"]+)"'
+_config_sections = {}
+class _ConfigCategory:
+    name = None
+    filename = None
+    merge = True
+    def __init__(self, n, f, m):
+        self.name = n
+        self.filename = f
+        self.merge = m
+        self.files_read_from = []
+        self.result_dict = {}
+        _config_sections[n] = self
+
+_ConfigCategory('compilers', 'compilers.yaml', True)
+_ConfigCategory('mirrors', 'mirrors.yaml', True)
+_ConfigCategory('view', 'views.yaml', True)
+_ConfigCategory('order', 'orders.yaml', True)
 
 """Names of scopes and their corresponding configuration files."""
-_scopes = OrderedDict({
-    'site' : os.path.join(spack.etc_path, 'spackconfig'),
-    'user' : os.path.expanduser('~/.spackconfig')
-})
+config_scopes = [('site', os.path.join(spack.etc_path, 'spack')),
+                 ('user', os.path.expanduser('~/.spack'))]
 
-_field_regex = r'^([\w-]*)'        \
-               r'(?:\.(.*(?=.)))?' \
-               r'(?:\.([\w-]+))?$'
+_compiler_by_arch = {}
+_read_config_file_result = {}
+def _read_config_file(filename):
+    """Read a given YAML configuration file"""
+    global _read_config_file_result
+    if filename in _read_config_file_result:
+        return _read_config_file_result[filename]
 
-_section_regex = r'^([\w-]*)\s*' \
-                 r'\"([^"]*\)\"$'
+    try:
+        with open(filename) as f:
+            ydict = yaml.load(f)
+    except MarkedYAMLError, e:
+        tty.die("Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
+    except exceptions.IOError, e:
+        _read_config_file_result[filename] = None
+        return None
+    _read_config_file_result[filename] = ydict
+    return ydict
 
 
-# Cache of configs -- we memoize this for performance.
-_config = {}
+def clear_config_caches():
+    """Clears the caches for configuration files, which will cause them
+       to be re-read upon the next request"""
+    for key,s in _config_sections.iteritems():
+        s.files_read_from = []
+        s.result_dict = {}
+    spack.config._read_config_file_result = {}
+    spack.config._compiler_by_arch = {}
+    spack.compilers._cached_default_compiler = None
 
-def get_config(scope=None, **kwargs):
-    """Get a Spack configuration object, which can be used to set options.
 
-       With no arguments, this returns a SpackConfigParser with config
-       options loaded from all config files.  This is how client code
-       should read Spack configuration options.
+def _merge_dicts(d1, d2):
+    """Recursively merges two configuration trees, with entries
+       in d2 taking precedence over d1"""
+    if not d1:
+        return d2.copy()
+    if not d2:
+        return d1
 
-       Optionally, a scope parameter can be provided.  Valid scopes
-       are ``site`` and ``user``.  If a scope is provided, only the
-       options from that scope's configuration file are loaded.  The
-       caller can set or unset options, then call ``write()`` on the
-       config object to write it back out to the original config file.
+    for key2, val2 in d2.iteritems():
+        if not key2 in d1:
+            d1[key2] = val2
+            continue
+        val1 = d1[key2]
+        if isinstance(val1, dict) and isinstance(val2, dict):
+            d1[key2] = _merge_dicts(val1, val2)
+            continue
+        if isinstance(val1, list) and isinstance(val2, list):
+            val1.extend(val2)
+            seen = set()
+            d1[key2] = [ x for x in val1 if not (x in seen or seen.add(x)) ]
+            continue
+        d1[key2] = val2
+    return d1
 
-       By default, this will cache configurations and return the last
-       read version of the config file.  If the config file is
-       modified and you need to refresh, call get_config with the
-       refresh=True keyword argument.  This will force all files to be
-       re-read.
-    """
-    refresh = kwargs.get('refresh', False)
-    if refresh:
-        _config.clear()
 
-    if scope not in _config:
-        if scope is None:
-            _config[scope] = SpackConfigParser([path for path in _scopes.values()])
-        elif scope not in _scopes:
-            raise UnknownConfigurationScopeError(scope)
+def get_config(category_name):
+    """Get the confguration tree for the names category.  Strips off the
+       top-level category entry from the dict"""
+    global config_scopes
+    category = _config_sections[category_name]
+    if category.result_dict:
+        return category.result_dict
+
+    category.result_dict = {}
+    for scope, scope_path in config_scopes:
+        path = os.path.join(scope_path, category.filename)
+        result = _read_config_file(path)
+        if not result:
+            continue
+        if not category_name in result:
+            continue
+        category.files_read_from.insert(0, path)
+        result = result[category_name]
+        if category.merge:
+            category.result_dict = _merge_dicts(category.result_dict, result)
         else:
-            _config[scope] = SpackConfigParser(_scopes[scope])
-
-    return _config[scope]
-
-
-def get_filename(scope):
-    """Get the filename for a particular config scope."""
-    if not scope in _scopes:
-        raise UnknownConfigurationScopeError(scope)
-    return _scopes[scope]
+            category.result_dict = result
+    return category.result_dict
 
 
-def _parse_key(key):
-    """Return the section, name, and option the field describes.
-       Values are returned in a 3-tuple.
+def get_compilers_config(arch=None):
+    """Get the compiler configuration from config files for the given
+       architecture.  Strips off the architecture component of the
+       configuration"""
+    global _compiler_by_arch
+    if not arch:
+        arch = spack.architecture.sys_type()
+    if arch in _compiler_by_arch:
+        return _compiler_by_arch[arch]
 
-       e.g.:
-       The field name ``compiler.gcc@4.7.3.cc`` refers to the 'cc' key
-       in a section that looks like this:
-
-          [compiler "gcc@4.7.3"]
-              cc = /usr/local/bin/gcc
-
-       * The section is ``compiler``
-       * The name is ``gcc@4.7.3``
-       * The key is ``cc``
-    """
-    match = re.search(_field_regex, key)
-    if match:
-        return match.groups()
+    cc_config = get_config('compilers')
+    if arch in cc_config and 'all' in cc_config:
+        arch_compiler = dict(cc_config[arch])
+        _compiler_by_arch[arch] = _merge_dict(arch_compiler, cc_config['all'])
+    elif arch in cc_config:
+        _compiler_by_arch[arch] = cc_config[arch]
+    elif 'all' in cc_config:
+        _compiler_by_arch[arch] = cc_config['all']
     else:
-        raise InvalidSectionNameError(key)
+        _compiler_by_arch[arch] = {}
+    return _compiler_by_arch[arch]
 
 
-def _make_section_name(section, name):
-    if not name:
-        return section
-    return '%s "%s"' % (section, name)
+def get_mirror_config():
+    """Get the mirror configuration from config files"""
+    return get_config('mirrors')
 
 
-def _autokey(fun):
-    """Allow a function to be called with a string key like
-       'compiler.gcc.cc', or with the section, name, and option
-       separated. Function should take at least three args, e.g.:
-
-           fun(self, section, name, option, [...])
-
-       This will allow the function above to be called normally or
-       with a string key, e.g.:
-
-           fun(self, key, [...])
-    """
-    argspec = inspect.getargspec(fun)
-    fun_nargs = len(argspec[0])
-
-    def string_key_func(*args):
-        nargs = len(args)
-        if nargs == fun_nargs - 2:
-            section, name, option = _parse_key(args[1])
-            return fun(args[0], section, name, option, *args[2:])
-
-        elif nargs == fun_nargs:
-            return fun(*args)
-
-        else:
-            raise TypeError(
-                "%s takes %d or %d args (found %d)."
-                % (fun.__name__, fun_nargs - 2, fun_nargs, len(args)))
-    return string_key_func
+def get_config_scope_dirname(scope):
+    """For a scope return the config directory"""
+    global config_scopes
+    for s,p in config_scopes:
+        if s == scope:
+            return p
+    tty.die("Unknown scope %s.  Valid options are %s" %
+            (scope, ", ".join([s for s,p in config_scopes])))
 
 
-
-class SpackConfigParser(cp.RawConfigParser):
-    """Slightly modified from Python's raw config file parser to accept
-       leading whitespace and preserve comments.
-    """
-    # Slightly modify Python option expressions to allow leading whitespace
-    OPTCRE    = re.compile(r'\s*' + cp.RawConfigParser.OPTCRE.pattern)
-
-    def __init__(self, file_or_files):
-        cp.RawConfigParser.__init__(self, dict_type=OrderedDict)
-
-        if isinstance(file_or_files, basestring):
-            self.read([file_or_files])
-            self.filename = file_or_files
-
-        else:
-            self.read(file_or_files)
-            self.filename = None
+def get_config_scope_filename(scope, category_name):
+    """For some scope and category, get the name of the configuration file"""
+    if not category_name in _config_sections:
+        tty.die("Unknown config category %s.  Valid options are: %s" %
+                (category_name, ", ".join([s for s in _config_sections])))
+    return os.path.join(get_config_scope_dirname(scope), _config_sections[category_name].filename)
 
 
-    @_autokey
-    def set_value(self, section, name, option, value):
-        """Set the value for a key.  If the key is in a section or named
-           section that does not yet exist, add that section.
-        """
-        sn = _make_section_name(section, name)
-        if not self.has_section(sn):
-            self.add_section(sn)
+def add_to_config(category_name, addition_dict, scope=None):
+    """Merge a new dict into a configuration tree and write the new
+       configuration to disk"""
+    global _read_config_file_result
+    get_config(category_name)
+    category = _config_sections[category_name]
 
-        # Allow valueless config options to be set like this:
-        #     spack config set mirror https://foo.bar.com
-        #
-        # Instead of this, which parses incorrectly:
-        #     spack config set mirror.https://foo.bar.com
-        #
-        if option is None:
-            option = value
-            value = None
-
-        self.set(sn, option, value)
-
-
-    @_autokey
-    def get_value(self, section, name, option):
-        """Get the value for a key.  Raises NoOptionError or NoSectionError if
-           the key is not present."""
-        sn = _make_section_name(section, name)
-
+    #If scope is specified, use it.  Otherwise use the last config scope that
+    #we successfully parsed data from.
+    file = None
+    path = None
+    if not scope and not category.files_read_from:
+        scope = 'user'
+    if scope:
         try:
-            if not option:
-                # TODO: format this better
-                return self.items(sn)
+            dir = get_config_scope_dirname(scope)
+            if not os.path.exists(dir):
+                mkdirp(dir)
+            path = os.path.join(dir, category.filename)
+            file = open(path, 'w')
+        except exceptions.IOError, e:
+            pass
+    else:
+        for p in category.files_read_from:
+            try:
+                file = open(p, 'w')
+            except exceptions.IOError, e:
+                pass
+            if file:
+                path = p
+                break;
+    if not file:
+        tty.die('Unable to write to config file %s' % path)
 
-            return self.get(sn, option)
+    #Merge the new information into the existing file info, then write to disk
+    new_dict = _read_config_file_result[path]
+    if new_dict and category_name in new_dict:
+        new_dict = new_dict[category_name]
+    new_dict = _merge_dicts(new_dict, addition_dict)
+    new_dict = { category_name : new_dict }
+    _read_config_file_result[path] = new_dict
+    yaml.dump(new_dict, stream=file, default_flow_style=False)
+    file.close()
 
-        # Wrap ConfigParser exceptions in SpackExceptions
-        except cp.NoOptionError, e:  raise NoOptionError(e)
-        except cp.NoSectionError, e: raise NoSectionError(e)
-        except cp.Error, e:          raise ConfigParserError(e)
-
-
-    @_autokey
-    def has_value(self, section, name, option):
-        """Return whether the configuration file has a value for a
-           particular key."""
-        sn = _make_section_name(section, name)
-        return self.has_option(sn, option)
-
-
-    def has_named_section(self, section, name):
-        sn = _make_section_name(section, name)
-        return self.has_section(sn)
-
-
-    def remove_named_section(self, section, name):
-        sn = _make_section_name(section, name)
-        self.remove_section(sn)
-
-
-    def get_section_names(self, sectype):
-        """Get all named sections with the specified type.
-           A named section looks like this:
-
-               [compiler "gcc@4.7"]
-
-           Names of sections are returned as a list, e.g.:
-
-               ['gcc@4.7', 'intel@12.3', 'pgi@4.2']
-
-           You can get items in the sections like this:
-        """
-        sections = []
-        for secname in self.sections():
-            match = re.match(_named_section_re, secname)
-            if match:
-                t, name = match.groups()
-                if t == sectype:
-                    sections.append(name)
-        return sections
+    #Merge the new information into the cached results
+    category.result_dict = _merge_dicts(category.result_dict, addition_dict)
 
 
-    def write(self, path_or_fp=None):
-        """Write this configuration out to a file.
-
-           If called with no arguments, this will write the
-           configuration out to the file from which it was read.  If
-           this config was read from multiple files, e.g. site
-           configuration and then user configuration, write will
-           simply raise an error.
-
-           If called with a path or file object, this will write the
-           configuration out to the supplied path or file object.
-        """
-        if path_or_fp is None:
-            if not self.filename:
-                raise ReadOnlySpackConfigError()
-            path_or_fp = self.filename
-
-        if isinstance(path_or_fp, basestring):
-            path_or_fp = open(path_or_fp, 'w')
-
-        self._write(path_or_fp)
+def add_to_mirror_config(addition_dict, scope=None):
+    """Add mirrors to the configuration files"""
+    add_to_config('mirrors', addition_dict, scope)
 
 
-    def _read(self, fp, fpname):
-        """This is a copy of Python 2.6's _read() method, with support for
-           continuation lines removed."""
-        cursect = None                            # None, or a dictionary
-        optname = None
-        comment = 0
-        lineno = 0
-        e = None                                  # None, or an exception
-        while True:
-            line = fp.readline()
-            if not line:
-                break
-            lineno = lineno + 1
-            # comment or blank line?
-            if ((line.strip() == '' or line[0] in '#;') or
-                (line.split(None, 1)[0].lower() == 'rem' and line[0] in "rR")):
-                self._sections["comment-%d" % comment] = line
-                comment += 1
-            # a section header or option header?
-            else:
-                # is it a section header?
-                mo = self.SECTCRE.match(line)
-                if mo:
-                    sectname = mo.group('header')
-                    if sectname in self._sections:
-                        cursect = self._sections[sectname]
-                    elif sectname == cp.DEFAULTSECT:
-                        cursect = self._defaults
-                    else:
-                        cursect = self._dict()
-                        cursect['__name__'] = sectname
-                        self._sections[sectname] = cursect
-                    # So sections can't start with a continuation line
-                    optname = None
-                # no section header in the file?
-                elif cursect is None:
-                    raise cp.MissingSectionHeaderError(fpname, lineno, line)
-                # an option line?
-                else:
-                    mo = self.OPTCRE.match(line)
-                    if mo:
-                        optname, vi, optval = mo.group('option', 'vi', 'value')
-                        if vi in ('=', ':') and ';' in optval:
-                            # ';' is a comment delimiter only if it follows
-                            # a spacing character
-                            pos = optval.find(';')
-                            if pos != -1 and optval[pos-1].isspace():
-                                optval = optval[:pos]
-                        optval = optval.strip()
-                        # allow empty values
-                        if optval == '""':
-                            optval = ''
-                        optname = self.optionxform(optname.rstrip())
-                        cursect[optname] = optval
-                    else:
-                        # a non-fatal parsing error occurred.  set up the
-                        # exception but keep going. the exception will be
-                        # raised at the end of the file and will contain a
-                        # list of all bogus lines
-                        if not e:
-                            e = cp.ParsingError(fpname)
-                        e.append(lineno, repr(line))
-        # if any parsing errors occurred, raise an exception
-        if e:
-            raise e
+def add_to_compiler_config(addition_dict, scope=None, arch=None):
+    """Add compilerss to the configuration files"""
+    if not arch:
+        arch = spack.architecture.sys_type()
+    add_to_config('compilers', { arch : addition_dict }, scope)
+    clear_config_caches()
 
 
+def remove_from_config(category_name, key_to_rm, scope=None):
+    """Remove a configuration key and write a new configuration to disk"""
+    global config_scopes
+    get_config(category_name)
+    scopes_to_rm_from = [scope] if scope else [s for s,p in config_scopes]
+    category = _config_sections[category_name]
+
+    rmd_something = False
+    for s in scopes_to_rm_from:
+        path = get_config_scope_filename(scope, category_name)
+        result = _read_config_file(path)
+        if not result:
+            continue
+        if not key_to_rm in result[category_name]:
+            continue
+        with closing(open(path, 'w')) as f:
+            result[category_name].pop(key_to_rm, None)
+            yaml.dump(result, stream=f, default_flow_style=False)
+            category.result_dict.pop(key_to_rm, None)
+            rmd_something = True
+    return rmd_something
 
 
-    def _write(self, fp):
-        """Write an .ini-format representation of the configuration state.
+"""Print a configuration to stdout"""
+def print_category(category_name):
+    if not category_name in _config_sections:
+        tty.die("Unknown config category %s.  Valid options are: %s" %
+                (category_name, ", ".join([s for s in _config_sections])))
+    yaml.dump(get_config(category_name), stream=sys.stdout, default_flow_style=False)
 
-           This is taken from the default Python 2.6 source.  It writes 4
-           spaces at the beginning of lines instead of no leading space.
-        """
-        if self._defaults:
-            fp.write("[%s]\n" % cp.DEFAULTSECT)
-            for (key, value) in self._defaults.items():
-                fp.write("    %s = %s\n" % (key, str(value).replace('\n', '\n\t')))
-            fp.write("\n")
-
-        for section in self._sections:
-            # Handles comments and blank lines.
-            if isinstance(self._sections[section], basestring):
-                fp.write(self._sections[section])
-                continue
-
-            else:
-                # Allow leading whitespace
-                fp.write("[%s]\n" % section)
-                for (key, value) in self._sections[section].items():
-                    if key != "__name__":
-                        fp.write("    %s = %s\n" %
-                                 (key, str(value).replace('\n', '\n\t')))
-
-
-class SpackConfigurationError(spack.error.SpackError):
-    def __init__(self, *args):
-        super(SpackConfigurationError, self).__init__(*args)
-
-
-class InvalidConfigurationScopeError(SpackConfigurationError):
-    def __init__(self, scope):
-        super(InvalidConfigurationScopeError, self).__init__(
-            "Invalid configuration scope: '%s'" % scope,
-            "Options are: %s" % ", ".join(*_scopes.values()))
-
-
-class InvalidSectionNameError(SpackConfigurationError):
-    """Raised when the name for a section is invalid."""
-    def __init__(self, name):
-        super(InvalidSectionNameError, self).__init__(
-            "Invalid section specifier: '%s'" % name)
-
-
-class ReadOnlySpackConfigError(SpackConfigurationError):
-    """Raised when user attempts to write to a config read from multiple files."""
-    def __init__(self):
-        super(ReadOnlySpackConfigError, self).__init__(
-            "Can only write to a single-file SpackConfigParser")
-
-
-class ConfigParserError(SpackConfigurationError):
-    """Wrapper for the Python ConfigParser's errors"""
-    def __init__(self, error):
-        super(ConfigParserError, self).__init__(str(error))
-        self.error = error
-
-
-class NoOptionError(ConfigParserError):
-    """Wrapper for ConfigParser NoOptionError"""
-    def __init__(self, error):
-        super(NoOptionError, self).__init__(error)
-
-
-class NoSectionError(ConfigParserError):
-    """Wrapper for ConfigParser NoOptionError"""
-    def __init__(self, error):
-        super(NoSectionError, self).__init__(error)

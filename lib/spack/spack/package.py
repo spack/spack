@@ -50,11 +50,11 @@ from llnl.util.filesystem import *
 from llnl.util.lang import *
 
 import spack
-import spack.spec
 import spack.error
 import spack.compilers
 import spack.mirror
 import spack.hooks
+import spack.directives
 import spack.build_environment as build_env
 import spack.url as url
 import spack.fetch_strategy as fs
@@ -301,32 +301,6 @@ class Package(object):
     clean() (some of them do this), and others to provide custom behavior.
 
     """
-
-    #
-    # These variables are defaults for the various "relations".
-    #
-    """Map of information about Versions of this package.
-       Map goes: Version -> dict of attributes"""
-    versions = {}
-
-    """Specs of dependency packages, keyed by name."""
-    dependencies = {}
-
-    """Specs of virtual packages provided by this package, keyed by name."""
-    provided = {}
-
-    """Specs of conflicting packages, keyed by name. """
-    conflicted = {}
-
-    """Patches to apply to newly expanded source, if any."""
-    patches = {}
-
-    """Specs of package this one extends, or None.
-
-    Currently, ppackages can extend at most one other package.
-    """
-    extendees = {}
-
     #
     # These are default values for instance variables.
     #
@@ -350,20 +324,8 @@ class Package(object):
         if '.' in self.name:
             self.name = self.name[self.name.rindex('.') + 1:]
 
-        # Sanity check some required variables that could be
-        # overridden by package authors.
-        def ensure_has_dict(attr_name):
-            if not hasattr(self, attr_name):
-                raise PackageError("Package %s must define %s" % attr_name)
-
-            attr = getattr(self, attr_name)
-            if not isinstance(attr, dict):
-                raise PackageError("Package %s has non-dict %s attribute!"
-                                   % (self.name, attr_name))
-        ensure_has_dict('versions')
-        ensure_has_dict('dependencies')
-        ensure_has_dict('conflicted')
-        ensure_has_dict('patches')
+        # Sanity check attributes required by Spack directives.
+        spack.directives.ensure_dicts(type(self))
 
         # Check versions in the versions dict.
         for v in self.versions:
@@ -577,41 +539,6 @@ class Package(object):
                 yield pkg
 
 
-    def validate_dependencies(self):
-        """Ensure that this package and its dependencies all have consistent
-           constraints on them.
-
-           NOTE that this will NOT find sanity problems through a virtual
-           dependency.  Virtual deps complicate the problem because we
-           don't know in advance which ones conflict with others in the
-           dependency DAG. If there's more than one virtual dependency,
-           it's a full-on SAT problem, so hold off on this for now.
-           The vdeps are actually skipped in preorder_traversal, so see
-           that for details.
-
-           TODO: investigate validating virtual dependencies.
-        """
-        # This algorithm just attempts to merge all the constraints on the same
-        # package together, loses information about the source of the conflict.
-        # What we'd really like to know is exactly which two constraints
-        # conflict, but that algorithm is more expensive, so we'll do it
-        # the simple, less informative way for now.
-        merged = spack.spec.DependencyMap()
-
-        try:
-            for pkg in self.preorder_traversal():
-                for name, spec in pkg.dependencies.iteritems():
-                    if name not in merged:
-                        merged[name] = spec.copy()
-                    else:
-                        merged[name].constrain(spec)
-
-        except spack.spec.UnsatisfiableSpecError, e:
-            raise InvalidPackageDependencyError(
-                "Package %s has inconsistent dependency constraints: %s"
-                % (self.name, e.message))
-
-
     def provides(self, vpkg_name):
         """True if this package provides a virtual package with the specified name."""
         return vpkg_name in self.provided
@@ -664,7 +591,7 @@ class Package(object):
 
     def remove_prefix(self):
         """Removes the prefix for a package along with any empty parent directories."""
-        spack.install_layout.remove_path_for_spec(self.spec)
+        spack.install_layout.remove_install_directory(self.spec)
 
 
     def do_fetch(self):
@@ -820,7 +747,7 @@ class Package(object):
         # create the install directory.  The install layout
         # handles this in case so that it can use whatever
         # package naming scheme it likes.
-        spack.install_layout.make_path_for_spec(self.spec)
+        spack.install_layout.create_install_directory(self.spec)
 
         def cleanup():
             if not keep_prefix:
@@ -841,11 +768,11 @@ class Package(object):
                 spack.hooks.pre_install(self)
 
                 # Set up process's build environment before running install.
-                self.stage.chdir_to_source()
                 if fake_install:
                     self.do_fake_install()
                 else:
                     # Subclasses implement install() to do the real work.
+                    self.stage.chdir_to_source()
                     self.install(self.spec, self.prefix)
 
                 # Ensure that something was actually installed.
@@ -994,16 +921,13 @@ class Package(object):
         self._sanity_check_extension()
         force = kwargs.get('force', False)
 
-        # TODO: get rid of this normalize - DAG handling.
-        self.spec.normalize()
+        spack.install_layout.check_extension_conflict(
+            self.extendee_spec, self.spec)
 
-        spack.install_layout.check_extension_conflict(self.extendee_spec, self.spec)
-
+        # Activate any package dependencies that are also extensions.
         if not force:
             for spec in self.spec.traverse(root=False):
                 if spec.package.extends(self.extendee_spec):
-                    # TODO: fix this normalize() requirement -- revisit DAG handling.
-                    spec.package.spec.normalize()
                     if not spec.package.activated:
                         spec.package.do_activate(**kwargs)
 
@@ -1031,6 +955,7 @@ class Package(object):
         conflict = tree.find_conflict(self.prefix, ignore=ignore)
         if conflict:
             raise ExtensionConflictError(conflict)
+
         tree.merge(self.prefix, ignore=ignore)
 
 
@@ -1235,13 +1160,6 @@ class PackageError(spack.error.SpackError):
     """Raised when something is wrong with a package definition."""
     def __init__(self, message, long_msg=None):
         super(PackageError, self).__init__(message, long_msg)
-
-
-class InvalidPackageDependencyError(PackageError):
-    """Raised when package specification is inconsistent with requirements of
-       its dependencies."""
-    def __init__(self, message):
-        super(InvalidPackageDependencyError, self).__init__(message)
 
 
 class PackageVersionError(PackageError):

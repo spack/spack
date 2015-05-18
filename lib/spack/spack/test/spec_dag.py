@@ -44,8 +44,11 @@ class SpecDagTest(MockPackagesTest):
         set_pkg_dep('callpath', 'mpich@2.0')
 
         spec = Spec('mpileaks ^mpich ^callpath ^dyninst ^libelf ^libdwarf')
-        self.assertRaises(spack.package.InvalidPackageDependencyError,
-                          spec.package.validate_dependencies)
+
+        # TODO: try to do something to showt that the issue was with
+        # TODO: the user's input or with package inconsistencies.
+        self.assertRaises(spack.spec.UnsatisfiableVersionSpecError,
+                          spec.normalize)
 
 
     def test_preorder_node_traversal(self):
@@ -140,11 +143,6 @@ class SpecDagTest(MockPackagesTest):
 
     def test_conflicting_spec_constraints(self):
         mpileaks = Spec('mpileaks ^mpich ^callpath ^dyninst ^libelf ^libdwarf')
-        try:
-            mpileaks.package.validate_dependencies()
-        except spack.package.InvalidPackageDependencyError, e:
-            self.fail("validate_dependencies raised an exception: %s"
-                      % e.message)
 
         # Normalize then add conflicting constraints to the DAG (this is an
         # extremely unlikely scenario, but we test for it anyway)
@@ -240,12 +238,6 @@ class SpecDagTest(MockPackagesTest):
         set_pkg_dep('mpileaks', 'mpich%gcc@4.6')
         spec = Spec('mpileaks ^mpich%gcc@4.5 ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableCompilerSpecError, spec.normalize)
-
-
-    def test_unsatisfiable_variant(self):
-        set_pkg_dep('mpileaks', 'mpich+debug')
-        spec = Spec('mpileaks ^mpich~debug ^callpath ^dyninst ^libelf ^libdwarf')
-        self.assertRaises(spack.spec.UnsatisfiableVariantSpecError, spec.normalize)
 
 
     def test_unsatisfiable_architecture(self):

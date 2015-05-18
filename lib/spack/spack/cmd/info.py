@@ -22,11 +22,21 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import textwrap
 from llnl.util.tty.colify import *
 import spack
 import spack.fetch_strategy as fs
 
 description = "Get detailed information on a particular package"
+
+def padder(str_list, extra=0):
+    """Return a function to pad elements of a list."""
+    length = max(len(str(s)) for s in str_list) + extra
+    def pad(string):
+        string = str(string)
+        padding = max(0, length - len(string))
+        return string + (padding * ' ')
+    return pad
 
 
 def setup_parser(subparser):
@@ -42,13 +52,24 @@ def print_text_info(pkg):
     print "Safe versions:  "
 
     if not pkg.versions:
-        print("None.")
+        print("None")
     else:
-        maxlen = max(len(str(v)) for v in pkg.versions)
-        fmt = "%%-%ss" % maxlen
+        pad = padder(pkg.versions, 4)
         for v in reversed(sorted(pkg.versions)):
             f = fs.for_package_version(pkg, v)
-            print "    " + (fmt % v) + "    " + str(f)
+            print "    %s%s" % (pad(v), str(f))
+
+    print
+    print "Variants:"
+    if not pkg.variants:
+        print "None"
+    else:
+        pad = padder(pkg.variants, 4)
+        for name in sorted(pkg.variants):
+            v = pkg.variants[name]
+            print "    %s%s" % (
+                pad(('+' if v.default else '-') + name + ':'),
+                "\n".join(textwrap.wrap(v.description)))
 
     print
     print "Dependencies:"

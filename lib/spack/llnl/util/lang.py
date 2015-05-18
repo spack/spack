@@ -126,22 +126,20 @@ def caller_locals():
         del stack
 
 
-def get_calling_package_name():
+def get_calling_module_name():
     """Make sure that the caller is a class definition, and return the
-       module's name.
+       enclosing module's name.
     """
     stack = inspect.stack()
     try:
-        # get calling function name (the relation)
-        relation = stack[1][3]
-
         # Make sure locals contain __module__
         caller_locals = stack[2][0].f_locals
     finally:
         del stack
 
     if not '__module__' in caller_locals:
-        raise ScopeError(relation)
+        raise RuntimeError("Must invoke get_calling_module_name() "
+                           "from inside a class definition!")
 
     module_name = caller_locals['__module__']
     base_name = module_name.split('.')[-1]
@@ -320,6 +318,24 @@ def match_predicate(*args):
                                  "list of regexes, or callable.")
         return False
     return match
+
+
+
+def DictWrapper(dictionary):
+    """Returns a class that wraps a dictionary and enables it to be used
+       like an object."""
+    class wrapper(object):
+        def __getattr__(self, name):        return dictionary[name]
+        def __setattr__(self, name, value): dictionary[name] = value
+        def setdefault(self, *args):        return dictionary.setdefault(*args)
+        def get(self, *args):               return dictionary.get(*args)
+        def keys(self):                     return dictionary.keys()
+        def values(self):                   return dictionary.values()
+        def items(self):                    return dictionary.items()
+        def __iter__(self):                 return iter(dictionary)
+
+
+    return wrapper()
 
 
 class RequiredAttributeError(ValueError):
