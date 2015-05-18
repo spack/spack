@@ -49,13 +49,27 @@ except OSError:
 # clean up the scope and start using spack package instead.
 del SPACK_FILE, SPACK_PREFIX, SPACK_LIB_PATH
 import llnl.util.tty as tty
+from llnl.util.tty.color import *
 import spack
 from spack.error import SpackError
 from external import argparse
 
 # Command parsing
 parser = argparse.ArgumentParser(
-    description='Spack: the Supercomputing PACKage Manager.')
+    formatter_class=argparse.RawTextHelpFormatter,
+    description="Spack: the Supercomputing PACKage Manager." + colorize("""
+
+spec expressions:
+  PACKAGE [CONSTRAINTS]
+
+    CONSTRAINTS:
+      @c{@version}
+      @g{%compiler  @compiler_version}
+      @B{+variant}
+      @r{-variant} or @r{~variant}
+      @m{=architecture}
+      [^DEPENDENCY [CONSTRAINTS] ...]"""))
+
 parser.add_argument('-d', '--debug', action='store_true',
                     help="Write out debug logs during compile")
 parser.add_argument('-k', '--insecure', action='store_true',
