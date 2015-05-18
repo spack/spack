@@ -363,10 +363,6 @@ class GitFetchStrategy(VCSFetchStrategy):
             'git', 'tag', 'branch', 'commit', **kwargs)
         self._git = None
 
-        # For git fetch branches and tags the same way.
-        if not self.branch:
-            self.branch = self.tag
-
 
     @property
     def git_version(self):
@@ -421,6 +417,12 @@ class GitFetchStrategy(VCSFetchStrategy):
             args.append(self.url)
             self.git(*args)
             self.stage.chdir_to_source()
+
+            # For tags, be conservative and check them out AFTER
+            # cloning.  Later git versions can do this with clone
+            # --branch, but older ones fail.
+            if self.tag:
+                self.git('checkout', self.tag)
 
 
     def archive(self, destination):
