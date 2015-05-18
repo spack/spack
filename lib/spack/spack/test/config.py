@@ -26,44 +26,49 @@ import unittest
 import shutil
 import os
 from tempfile import mkdtemp
+import spack
+from spack.packages import PackageDB
+from spack.test.mock_packages_test import *
 
-from spack.config import *
+class ConfigTest(MockPackagesTest):
 
+    def setUp(self):
+        self.initmock()
+        self.tmp_dir = mkdtemp('.tmp', 'spack-config-test-')
+        spack.config.config_scopes = [('test_low_priority', os.path.join(self.tmp_dir, 'low')),
+                                      ('test_high_priority', os.path.join(self.tmp_dir, 'high'))]
 
-class ConfigTest(unittest.TestCase):
+    def tearDown(self):
+        self.cleanmock()
+        shutil.rmtree(self.tmp_dir, True)
 
-    @classmethod
-    def setUp(cls):
-        cls.tmp_dir = mkdtemp('.tmp', 'spack-config-test-')
-
-
-    @classmethod
-    def tearDown(cls):
-        shutil.rmtree(cls.tmp_dir, True)
-
-
-    def get_path(self):
-        return os.path.join(ConfigTest.tmp_dir, "spackconfig")
+    def check_config(self, comps):
+        config = spack.config.get_compilers_config()
+        compiler_list = ['cc', 'cxx', 'f77', 'f90']
+        for key in comps:
+            for c in compiler_list:
+                if comps[key][c] == '/bad':
+                    continue
+                self.assertEqual(comps[key][c], config[key][c])
 
 
     def test_write_key(self):
-        config = SpackConfigParser(self.get_path())
-        config.set_value('compiler.cc',  'a')
-        config.set_value('compiler.cxx', 'b')
-        config.set_value('compiler', 'gcc@4.7.3', 'cc',  'c')
-        config.set_value('compiler', 'gcc@4.7.3', 'cxx', 'd')
-        config.write()
+        a_comps =  {"gcc@4.7.3" : { "cc" : "/gcc473", "cxx" : "/g++473", "f77" : None, "f90" : None },
+         "gcc@4.5.0" : { "cc" : "/gcc450", "cxx" : "/g++450", "f77" : "/gfortran", "f90" : "/gfortran" },
+         "clang@3.3"  : { "cc" : "/bad", "cxx" : "/bad", "f77" : "/bad", "f90" : "/bad" }}
 
-        config = SpackConfigParser(self.get_path())
+        b_comps = {"icc@10.0" : { "cc" : "/icc100", "cxx" : "/icc100", "f77" : None, "f90" : None },
+         "icc@11.1" : { "cc" : "/icc111", "cxx" : "/icp111", "f77" : "/ifort", "f90" : "/ifort" },
+         "clang@3.3" : { "cc" : "/clang", "cxx" : "/clang++", "f77" :  None, "f90" : None}}
 
-        self.assertEqual(config.get_value('compiler.cc'),  'a')
-        self.assertEqual(config.get_value('compiler.cxx'), 'b')
-        self.assertEqual(config.get_value('compiler', 'gcc@4.7.3', 'cc'), 'c')
-        self.assertEqual(config.get_value('compiler', 'gcc@4.7.3', 'cxx'), 'd')
+        spack.config.add_to_compiler_config(a_comps, 'test_low_priority')
+        spack.config.add_to_compiler_config(b_comps, 'test_high_priority')
 
-        self.assertEqual(config.get_value('compiler', None, 'cc'),  'a')
-        self.assertEqual(config.get_value('compiler', None, 'cxx'), 'b')
-        self.assertEqual(config.get_value('compiler.gcc@4.7.3.cc'), 'c')
-        self.assertEqual(config.get_value('compiler.gcc@4.7.3.cxx'), 'd')
+        self.check_config(a_comps)
+        self.check_config(b_comps)
 
-        self.assertRaises(NoOptionError, config.get_value, 'compiler', None, 'fc')
+        spack.config.clear_config_caches()
+
+        self.check_config(a_comps)
+        self.check_config(b_comps)
+

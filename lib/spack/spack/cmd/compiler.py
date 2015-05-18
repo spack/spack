@@ -68,7 +68,7 @@ def compiler_add(args):
         spack.compilers.add_compilers_to_config('user', *compilers)
         n = len(compilers)
         tty.msg("Added %d new compiler%s to %s" % (
-            n, 's' if n > 1 else '', spack.config.get_filename('user')))
+            n, 's' if n > 1 else '', spack.config.get_config_scope_filename('user', 'compilers')))
         colify(reversed(sorted(c.spec for c in compilers)), indent=4)
     else:
         tty.msg("Found no new compilers")
