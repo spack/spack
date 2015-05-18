@@ -344,13 +344,9 @@ class DIYStage(object):
 
 def _get_mirrors():
     """Get mirrors from spack configuration."""
-    config = spack.config.get_config()
+    config = spack.config.get_mirror_config()
+    return [val for name, val in config.iteritems()]
 
-    mirrors = []
-    sec_names = config.get_section_names('mirror')
-    for name in sec_names:
-        mirrors.append(config.get_value('mirror', name, 'url'))
-    return mirrors
 
 
 def ensure_access(file=spack.stage_path):
