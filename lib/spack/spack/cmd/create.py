@@ -26,7 +26,6 @@ import string
 import os
 import hashlib
 import re
-from contextlib import closing
 
 from external.ordereddict import OrderedDict
 import llnl.util.tty as tty
@@ -192,7 +191,7 @@ def create(parser, args):
         tty.die("Could not fetch any tarballs for %s." % name)
 
     # Write out a template for the file
-    with closing(open(pkg_path, "w")) as pkg_file:
+    with open(pkg_path, "w") as pkg_file:
         pkg_file.write(
             package_template.substitute(
                 name=name,

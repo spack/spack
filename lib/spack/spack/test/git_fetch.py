@@ -26,7 +26,6 @@ import os
 import unittest
 import shutil
 import tempfile
-from contextlib import closing
 
 from llnl.util.filesystem import *
 

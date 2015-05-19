@@ -31,7 +31,6 @@ Spack was originally 2.7, but enough systems in 2014 are still using
 import unittest
 import os
 import re
-from contextlib import closing
 
 import llnl.util.tty as tty
 
@@ -62,7 +61,7 @@ class PythonVersionTest(unittest.TestCase):
         all_issues = {}
 
         for fn in self.spack_python_files():
-            with closing(open(fn)) as pyfile:
+            with open(fn) as pyfile:
                 versions = pyqver2.get_versions(pyfile.read())
                 for ver, reasons in versions.items():
                     if ver > spack_max_version:

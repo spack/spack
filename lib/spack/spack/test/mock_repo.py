@@ -24,7 +24,6 @@
 ##############################################################################
 import os
 import shutil
-from contextlib import closing
 
 from llnl.util.filesystem import *
 
@@ -67,7 +66,7 @@ class MockArchive(MockRepo):
         with working_dir(self.path):
             configure = join_path(self.path, 'configure')
 
-            with closing(open(configure, 'w')) as cfg_file:
+            with open(configure, 'w') as cfg_file:
                 cfg_file.write(
                     "#!/bin/sh\n"
                     "prefix=$(echo $1 | sed 's/--prefix=//')\n"

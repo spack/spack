@@ -94,7 +94,6 @@ from external.ordereddict import OrderedDict
 from llnl.util.lang import memoized
 import spack.error
 
-from contextlib import closing
 from external import yaml
 from external.yaml.error import MarkedYAMLError
 import llnl.util.tty as tty
@@ -325,7 +324,7 @@ def remove_from_config(category_name, key_to_rm, scope=None):
             continue
         if not key_to_rm in result[category_name]:
             continue
-        with closing(open(path, 'w')) as f:
+        with open(path, 'w') as f:
             result[category_name].pop(key_to_rm, None)
             yaml.dump(result, stream=f, default_flow_style=False)
             category.result_dict.pop(key_to_rm, None)
@@ -339,4 +338,3 @@ def print_category(category_name):
         tty.die("Unknown config category %s.  Valid options are: %s" %
                 (category_name, ", ".join([s for s in _config_sections])))
     yaml.dump(get_config(category_name), stream=sys.stdout, default_flow_style=False)
-

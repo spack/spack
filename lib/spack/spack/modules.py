@@ -50,7 +50,6 @@ import re
 import textwrap
 import shutil
 from glob import glob
-from contextlib import closing
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
@@ -152,7 +151,7 @@ class EnvModule(object):
         if not self.paths:
             return
 
-        with closing(open(self.file_name, 'w')) as f:
+        with open(self.file_name, 'w') as f:
             self._write(f)
 
 

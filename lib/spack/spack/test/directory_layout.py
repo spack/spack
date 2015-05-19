@@ -29,7 +29,6 @@ import unittest
 import tempfile
 import shutil
 import os
-from contextlib import closing
 
 from llnl.util.filesystem import *
 
@@ -52,7 +51,7 @@ class DirectoryLayoutTest(unittest.TestCase):
 
 
     def tearDown(self):
-        #shutil.rmtree(self.tmpdir, ignore_errors=True)
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
         self.layout = None
 
 
@@ -95,7 +94,7 @@ class DirectoryLayoutTest(unittest.TestCase):
             self.assertTrue(spec_from_file.concrete)
 
             # Ensure that specs that come out "normal" are really normal.
-            with closing(open(spec_path)) as spec_file:
+            with open(spec_path) as spec_file:
                 read_separately = Spec.from_yaml(spec_file.read())
 
                 read_separately.normalize()
