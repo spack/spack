@@ -189,18 +189,19 @@ def set_module_variables_for_package(pkg):
     m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(pkg)))
 
     # Emulate some shell commands for convenience
-    m.pwd        = os.getcwd
-    m.cd         = os.chdir
-    m.mkdir      = os.mkdir
-    m.makedirs   = os.makedirs
-    m.remove     = os.remove
-    m.removedirs = os.removedirs
-    m.symlink    = os.symlink
+    m.pwd          = os.getcwd
+    m.cd           = os.chdir
+    m.mkdir        = os.mkdir
+    m.makedirs     = os.makedirs
+    m.remove       = os.remove
+    m.removedirs   = os.removedirs
+    m.symlink      = os.symlink
 
-    m.mkdirp     = mkdirp
-    m.install    = install
-    m.rmtree     = shutil.rmtree
-    m.move       = shutil.move
+    m.mkdirp       = mkdirp
+    m.install      = install
+    m.install_tree = install_tree
+    m.rmtree       = shutil.rmtree
+    m.move         = shutil.move
 
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
