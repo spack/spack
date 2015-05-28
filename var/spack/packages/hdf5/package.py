@@ -23,7 +23,7 @@ class Hdf5(Package):
             "--prefix=%s" % prefix,
             "--with-zlib=%s" % spec['zlib'].prefix,
             "--enable-parallel",
-            "--enable-shared"
+            "--enable-shared",
             "CC=%s" % spec['mpich'].prefix.bin + "/mpicc",
             "CXX=%s" % spec['mpich'].prefix.bin + "/mpic++")
 
