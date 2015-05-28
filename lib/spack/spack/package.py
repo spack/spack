@@ -801,6 +801,7 @@ class Package(object):
 
                 # Still need to clean up b/c there was an error.
                 cleanup()
+                os._exit(1)
 
             except:
                 # other exceptions just clean up and raise.
