@@ -112,9 +112,8 @@ class PreferredPackages(object):
         elif a_index == None and b_index != None: return 1
         elif a_index != None and b_index == a_index: return -1 * cmp(a, b)
         elif a_index != None and b_index != None and a_index != b_index: return cmp(a_index, b_index)
-        elif a < b: return 1 * reverse
-        elif b < a: return -1 * reverse
-        else: return 0
+        else: return cmp(a, b) * reverse
+
 
 
     # Given a sort order specified by the pkgname/component/second_key, return
@@ -148,7 +147,7 @@ class PreferredPackages(object):
         """Return less-than-0, 0, or greater than 0 if version a of pkgname is 
            respecively less-than, equal-to, or greater-than version b of pkgname. 
            One version is less-than another if it is preferred over the other."""
-        return self._spec_compare(pkgname, 'version', a, b, False, None)
+        return self._spec_compare(pkgname, 'version', a, b, True, None)
 
     
     def variant_compare(self, pkgname, a, b):
