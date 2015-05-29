@@ -95,6 +95,7 @@ def edit(parser, args):
             path = join_path(spack.cmd.command_path, name + ".py")
             if not os.path.exists(path):
                 tty.die("No command named '%s'." % name)
+        spack.editor(path)
 
     else:
         # By default open the directory where packages or commands live.
@@ -103,4 +104,3 @@ def edit(parser, args):
             spack.editor(path)
         else:
             edit_package(name, args.force)
-
