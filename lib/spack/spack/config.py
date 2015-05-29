@@ -89,8 +89,8 @@ off the top-levels of the tree and return subtrees.
 import os
 import exceptions
 import sys
+import copy
 
-from external.ordereddict import OrderedDict
 from llnl.util.lang import memoized
 import spack.error
 
@@ -114,8 +114,7 @@ class _ConfigCategory:
 
 _ConfigCategory('compilers', 'compilers.yaml', True)
 _ConfigCategory('mirrors', 'mirrors.yaml', True)
-_ConfigCategory('view', 'views.yaml', True)
-_ConfigCategory('order', 'orders.yaml', True)
+_ConfigCategory('preferred', 'preferred.yaml', True)
 
 """Names of scopes and their corresponding configuration files."""
 config_scopes = [('site', os.path.join(spack.etc_path, 'spack')),
@@ -156,7 +155,7 @@ def _merge_dicts(d1, d2):
     """Recursively merges two configuration trees, with entries
        in d2 taking precedence over d1"""
     if not d1:
-        return d2.copy()
+        return copy.copy(d2)
     if not d2:
         return d1
 
@@ -228,6 +227,11 @@ def get_compilers_config(arch=None):
 def get_mirror_config():
     """Get the mirror configuration from config files"""
     return get_config('mirrors')
+
+
+def get_preferred_config():
+    """Get the preferred configuration from config files"""
+    return get_config('preferred')
 
 
 def get_config_scope_dirname(scope):
