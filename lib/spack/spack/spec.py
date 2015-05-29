@@ -1614,6 +1614,40 @@ class Spec(object):
         return ''.join("^" + dep.format() for dep in self.sorted_deps())
 
 
+    def __cmp__(self, other):
+        #Package name sort order is not configurable, always goes alphabetical
+        if self.name != other.name:
+            return cmp(self.name, other.name)
+        
+        #Package version is second in compare order
+        pkgname = self.name
+        if self.versions != other.versions:
+            return spack.pkgsort.version_compare(pkgname,
+                         self.versions, other.versions)
+
+        #Compiler is third
+        if self.compiler != other.compiler:
+            return spack.pkgsort.compiler_compare(pkgname,
+                         self.compiler, other.compiler)
+
+        #Variants
+        if self.variants != other.variants:
+            return spack.pkgsort.variant_compare(pkgname,
+                         self.variants, other.variants)
+
+        #Architecture
+        if self.architecture != other.architecture:
+            return spack.pkgsort.architecture_compare(pkgname,
+                         self.architecture, other.architecture)
+
+        #Dependency is not configurable
+        if self.dep_hash() != other.dep_hash():
+            return -1 if self.dep_hash() < other.dep_hash() else 1
+
+        #Equal specs
+        return 0
+
+
     def __str__(self):
         return self.format() + self.dep_string()
 
