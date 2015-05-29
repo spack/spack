@@ -796,7 +796,7 @@ class Spec(object):
 
             for spec in virtuals:
                 providers = spack.db.providers_for(spec)
-                concrete = spack.concretizer.choose_provider(spec, providers)
+                concrete = spack.concretizer.choose_provider(self, spec, providers)
                 concrete = concrete.copy()
                 spec._replace_with(concrete)
                 changed = True

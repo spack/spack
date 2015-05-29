@@ -38,6 +38,7 @@ import spack.compilers
 import spack.architecture
 import spack.error
 from spack.version import *
+from functools import partial
 
 
 
@@ -49,8 +50,8 @@ class DefaultConcretizer(object):
 
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take
-           the most recent available version, and default to the package's
-           version if there are no avaialble versions.
+           the preferred version from spackconfig, and default to the package's
+           version if there are no available versions.
 
            TODO: In many cases we probably want to look for installed
                  versions of each package and use an installed version
@@ -68,12 +69,14 @@ class DefaultConcretizer(object):
         # If there are known available versions, return the most recent
         # version that satisfies the spec
         pkg = spec.package
+        cmp_versions = partial(spack.pkgsort.version_compare, spec.name)
         valid_versions = sorted(
             [v for v in pkg.versions
-             if any(v.satisfies(sv) for sv in spec.versions)])
+             if any(v.satisfies(sv) for sv in spec.versions)],
+            cmp=cmp_versions)
 
         if valid_versions:
-            spec.versions = ver([valid_versions[-1]])
+            spec.versions = ver([valid_versions[0]])
         else:
             # We don't know of any SAFE versions that match the given
             # spec.  Grab the spec's versions and grab the highest
@@ -138,10 +141,10 @@ class DefaultConcretizer(object):
         """If the spec already has a compiler, we're done.  If not, then take
            the compiler used for the nearest ancestor with a compiler
            spec and use that.  If the ancestor's compiler is not
-           concrete, then give it a valid version.  If there is no
-           ancestor with a compiler, use the system default compiler.
+           concrete, then used the preferred compiler as specified in 
+           spackconfig.
 
-           Intuition: Use the system default if no package that depends on
+           Intuition: Use the spackconfig default if no package that depends on
            this one has a strict compiler requirement.  Otherwise, try to
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
@@ -153,40 +156,43 @@ class DefaultConcretizer(object):
             spec.compiler in all_compilers):
             return False
 
-        try:
-            nearest = next(p for p in spec.traverse(direction='parents')
-                           if p.compiler is not None).compiler
-
-            if not nearest in all_compilers:
-                # Take the newest compiler that saisfies the spec
-                matches = sorted(spack.compilers.find(nearest))
-                if not matches:
-                    raise UnavailableCompilerVersionError(nearest)
-
-                # copy concrete version into nearest spec
-                nearest.versions = matches[-1].versions.copy()
-                assert(nearest.concrete)
-
-            spec.compiler = nearest.copy()
-
-        except StopIteration:
-            spec.compiler = spack.compilers.default_compiler().copy()
-
+        # Find the parent spec that has a compiler, or the root if none do
+        parent_spec = next(p for p in spec.traverse(direction='parents')
+                           if p.compiler is not None or not p.dependents)
+        parent_compiler = parent_spec.compiler
+        assert(parent_spec)
+        
+        # Check if the compiler is already fully specified
+        if parent_compiler in all_compilers:
+            spec.compiler = parent_compiler.copy()
+            return True
+            
+        # Filter the compilers into a sorted list based on the compiler_order from spackconfig
+        compiler_list = all_compilers if not parent_compiler else spack.compilers.find(parent_compiler)
+        cmp_compilers = partial(spack.pkgsort.compiler_compare, parent_spec.name)
+        matches = sorted(compiler_list, cmp=cmp_compilers)
+        if not matches:
+            raise UnavailableCompilerVersionError(parent_compiler)
+            
+        # copy concrete version into parent_compiler
+        spec.compiler = matches[0].copy()
+        assert(spec.compiler.concrete)
         return True  # things changed.
 
 
-    def choose_provider(self, spec, providers):
+    def choose_provider(self, package_spec, spec, providers):
         """This is invoked for virtual specs.  Given a spec with a virtual name,
            say "mpi", and a list of specs of possible providers of that spec,
            select a provider and return it.
         """
         assert(spec.virtual)
         assert(providers)
+        
+        provider_cmp = partial(spack.pkgsort.provider_compare, package_spec.name, spec.name)
+        sorted_providers = sorted(providers, cmp=provider_cmp)
+        first_key = sorted_providers[0]
 
-        index = spack.spec.index_specs(providers)
-        first_key = sorted(index.keys())[0]
-        latest_version = sorted(index[first_key])[-1]
-        return latest_version
+        return first_key
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):
