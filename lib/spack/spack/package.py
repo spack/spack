@@ -36,7 +36,7 @@ README.
 import os
 import re
 import time
-import inspect
+import itertools
 import subprocess
 import platform as py_platform
 import multiprocessing
@@ -45,6 +45,7 @@ import textwrap
 from StringIO import StringIO
 
 import llnl.util.tty as tty
+from llnl.util.tty.log import log_output
 from llnl.util.link_tree import LinkTree
 from llnl.util.filesystem import *
 from llnl.util.lang import *
@@ -55,12 +56,12 @@ import spack.compilers
 import spack.mirror
 import spack.hooks
 import spack.directives
-import spack.build_environment as build_env
-import spack.url as url
+import spack.build_environment
+import spack.url
+import spack.util.web
 import spack.fetch_strategy as fs
 from spack.version import *
 from spack.stage import Stage
-from spack.util.web import get_pages
 from spack.util.compression import allowed_archive, extension
 from spack.util.executable import ProcessError
 
@@ -427,8 +428,8 @@ class Package(object):
             return version_urls[version]
 
         # If we have no idea, try to substitute the version.
-        return url.substitute_version(self.nearest_url(version),
-                                      self.url_version(version))
+        return spack.url.substitute_version(self.nearest_url(version),
+                                            self.url_version(version))
 
 
     @property
@@ -711,20 +712,28 @@ class Package(object):
         mkdirp(self.prefix.man1)
 
 
-    def do_install(self, **kwargs):
-        """This class should call this version of the install method.
-           Package implementations should override install().
+    def _build_logger(self, log_path):
+        """Create a context manager to log build output."""
+
+
+
+    def do_install(self,
+                   keep_prefix=False,  keep_stage=False, ignore_deps=False,
+                   skip_patch=False, verbose=False, make_jobs=None, fake=False):
+        """Called by commands to install a package and its dependencies.
+
+        Package implementations should override install() to describe
+        their build process.
+
+        Args:
+        keep_prefix -- Keep install prefix on failure. By default, destroys it.
+        keep_stage  -- Keep stage on successful build. By default, destroys it.
+        ignore_deps -- Do not install dependencies before installing this package.
+        fake        -- Don't really build -- install fake stub files instead.
+        skip_patch  -- Skip patch stage of build if True.
+        verbose     -- Display verbose build output (by default, suppresses it)
+        make_jobs   -- Number of make jobs to use for install.  Default is ncpus.
         """
-        # whether to keep the prefix on failure.  Default is to destroy it.
-        keep_prefix  = kwargs.get('keep_prefix', False)
-        keep_stage   = kwargs.get('keep_stage',  False)
-        ignore_deps  = kwargs.get('ignore_deps', False)
-        fake_install = kwargs.get('fake',        False)
-        skip_patch   = kwargs.get('skip_patch',  False)
-
-        # Override builtin number of make jobs.
-        self.make_jobs    = kwargs.get('make_jobs',   None)
-
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
 
@@ -735,10 +744,13 @@ class Package(object):
         tty.msg("Installing %s" % self.name)
 
         if not ignore_deps:
-            self.do_install_dependencies(**kwargs)
+            self.do_install_dependencies(
+                keep_prefix=keep_prefix, keep_stage=keep_stage, ignore_deps=ignore_deps,
+                fake=fake, skip_patch=skip_patch, verbose=verbose,
+                make_jobs=make_jobs)
 
         start_time = time.time()
-        if not fake_install:
+        if not fake:
             if not skip_patch:
                 self.do_patch()
             else:
@@ -768,15 +780,25 @@ class Package(object):
                 spack.hooks.pre_install(self)
 
                 # Set up process's build environment before running install.
-                if fake_install:
+                if fake:
                     self.do_fake_install()
                 else:
-                    # Subclasses implement install() to do the real work.
+                    # Do the real install in the source directory.
                     self.stage.chdir_to_source()
-                    self.install(self.spec, self.prefix)
+
+                    # This redirects I/O to a build log (and optionally to the terminal)
+                    log_path = join_path(os.getcwd(), 'spack-build.out')
+                    log_file = open(log_path, 'w')
+                    with log_output(log_file, verbose, sys.stdout.isatty(), True):
+                        self.install(self.spec, self.prefix)
 
                 # Ensure that something was actually installed.
                 self._sanity_check_install()
+
+                # Move build log into install directory on success
+                if not fake:
+                    log_install_path = spack.install_layout.build_log_path(self.spec)
+                    install(log_path, log_install_path)
 
                 # On successful install, remove the stage.
                 if not keep_stage:
@@ -792,6 +814,9 @@ class Package(object):
                 print_pkg(self.prefix)
 
             except ProcessError, e:
+                # Annotate with location of build log.
+                e.build_log = log_path
+
                 # One of the processes returned an error code.
                 # Suppress detailed stack trace here unless in debug mode
                 if spack.debug:
@@ -808,7 +833,7 @@ class Package(object):
                 cleanup()
                 raise
 
-        build_env.fork(self, real_work)
+        spack.build_environment.fork(self, real_work)
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_install(self)
@@ -868,9 +893,7 @@ class Package(object):
         raise InstallError("Package %s provides no install method!" % self.name)
 
 
-    def do_uninstall(self, **kwargs):
-        force = kwargs.get('force', False)
-
+    def do_uninstall(self, force=False):
         if not self.installed:
             raise InstallError(str(self.spec) + " is not installed.")
 
@@ -913,14 +936,13 @@ class Package(object):
             raise ActivationError("%s does not extend %s!" % (self.name, self.extendee.name))
 
 
-    def do_activate(self, **kwargs):
+    def do_activate(self, force=False):
         """Called on an etension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
         activate() directly.
         """
         self._sanity_check_extension()
-        force = kwargs.get('force', False)
 
         spack.install_layout.check_extension_conflict(
             self.extendee_spec, self.spec)
@@ -930,7 +952,7 @@ class Package(object):
             for spec in self.spec.traverse(root=False):
                 if spec.package.extends(self.extendee_spec):
                     if not spec.package.activated:
-                        spec.package.do_activate(**kwargs)
+                        spec.package.do_activate(force=force)
 
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
@@ -1084,12 +1106,13 @@ def find_versions_of_archive(*archive_urls, **kwargs):
     if list_url:
         list_urls.add(list_url)
     for aurl in archive_urls:
-        list_urls.add(url.find_list_url(aurl))
+        list_urls.add(spack.url.find_list_url(aurl))
 
     # Grab some web pages to scrape.
     page_map = {}
     for lurl in list_urls:
-        page_map.update(get_pages(lurl, depth=list_depth))
+        pages = spack.util.web.get_pages(lurl, depth=list_depth)
+        page_map.update(pages)
 
     # Scrape them for archive URLs
     regexes = []
@@ -1098,7 +1121,7 @@ def find_versions_of_archive(*archive_urls, **kwargs):
         # the version part of the URL.  The capture group is converted
         # to a generic wildcard, so we can use this to extract things
         # on a page that look like archive URLs.
-        url_regex = url.wildcard_version(aurl)
+        url_regex = spack.url.wildcard_version(aurl)
 
         # We'll be a bit more liberal and just look for the archive
         # part, not the full path.
