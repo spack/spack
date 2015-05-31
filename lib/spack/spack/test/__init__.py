@@ -54,7 +54,8 @@ test_names = ['versions',
               'cc',
               'link_tree',
               'spec_yaml',
-              'optional_deps']
+              'optional_deps',
+              'make_executable']
 
 
 def list_tests():

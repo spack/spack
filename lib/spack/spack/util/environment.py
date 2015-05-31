@@ -35,7 +35,8 @@ def get_path(name):
 
 def env_flag(name):
     if name in os.environ:
-        return os.environ[name].lower() == "true"
+        value = os.environ[name].lower()
+        return value == "true" or value == "1"
     return False
 
 

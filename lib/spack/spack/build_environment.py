@@ -73,14 +73,14 @@ class MakeExecutable(Executable):
         self.jobs = jobs
 
     def __call__(self, *args, **kwargs):
-        parallel = kwargs.get('parallel', self.jobs > 1)
-        disable_parallel = env_flag(SPACK_NO_PARALLEL_MAKE)
+        disable = env_flag(SPACK_NO_PARALLEL_MAKE)
+        parallel = not disable and kwargs.get('parallel', self.jobs > 1)
 
-        if self.jobs > 1 and not disable_parallel:
+        if parallel:
             jobs = "-j%d" % self.jobs
             args = (jobs,) + args
 
-        super(MakeExecutable, self).__call__(*args, **kwargs)
+        return super(MakeExecutable, self).__call__(*args, **kwargs)
 
 
 def set_compiler_environment_variables(pkg):
