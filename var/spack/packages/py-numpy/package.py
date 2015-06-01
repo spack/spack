@@ -6,6 +6,7 @@ class PyNumpy(Package):
     url      = "https://pypi.python.org/packages/source/n/numpy/numpy-1.9.1.tar.gz"
 
     version('1.9.1', '78842b73560ec378142665e712ae4ad9')
+    version('1.9.2', 'a1ed53432dbcd256398898d35bc8e645')
 
     extends('python')
     depends_on('py-nose')

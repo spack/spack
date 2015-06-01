@@ -6,6 +6,7 @@ class PyDateutil(Package):
     url      = "https://pypi.python.org/packages/source/p/python-dateutil/python-dateutil-2.4.0.tar.gz"
 
     version('2.4.0', '75714163bb96bedd07685cdb2071b8bc')
+    version('2.4.2', '4ef68e1c485b09e9f034e10473e5add2')
 
     extends('python')
     depends_on('py-setuptools')
