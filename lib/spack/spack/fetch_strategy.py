@@ -220,13 +220,22 @@ class URLFetchStrategy(FetchStrategy):
         os.chdir(tarball_container)
         decompress(self.archive_file)
 
-        # If the tarball *didn't* explode, move
-        # the expanded directory up & remove the protector directory.
+        # Check for an exploding tarball, i.e. one that doesn't expand
+        # to a single directory.  If the tarball *didn't* explode,
+        # move contents up & remove the container directory.
+        #
+        # NOTE: The tar program on Mac OS X will encode HFS metadata
+        # in hidden files, which can end up *alongside* a single
+        # top-level directory.  We ignore hidden files to accomodate
+        # these "semi-exploding" tarballs.
         files = os.listdir(tarball_container)
-        if len(files) == 1:
-            expanded_dir = os.path.join(tarball_container, files[0])
+        non_hidden = filter(lambda f: not f.startswith('.'), files)
+        if len(non_hidden) == 1:
+            expanded_dir = os.path.join(tarball_container, non_hidden[0])
             if os.path.isdir(expanded_dir):
-                shutil.move(expanded_dir, self.stage.path)
+                for f in files:
+                    shutil.move(os.path.join(tarball_container, f),
+                                os.path.join(self.stage.path, f))
                 os.rmdir(tarball_container)
 
         # Set the wd back to the stage when done.
