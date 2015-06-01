@@ -7,8 +7,9 @@ class PyH5py(Package):
     url      = "https://pypi.python.org/packages/source/h/h5py/h5py-2.4.0.tar.gz"
 
     version('2.4.0', '80c9a94ae31f84885cc2ebe1323d6758')
+    version('2.5.0', '6e4301b5ad5da0d51b0a1e5ac19e3b74')
 
-    extends('python', ignore=lambda f: re.match(r'cy*', f))
+    extends('python', ignore=lambda f: re.match(r'bin/cy*', f))
     depends_on('hdf5')
     depends_on('py-numpy')
     depends_on('py-cython')
