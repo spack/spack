@@ -50,19 +50,27 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-l', '--long', action='store_true', dest='long',
         help='Show dependency hashes as well as versions.')
+    subparser.add_argument(
+        '-L', '--very-long', action='store_true', dest='very_long',
+        help='Show dependency hashes as well as versions.')
 
     subparser.add_argument(
         'query_specs', nargs=argparse.REMAINDER,
         help='optional specs to filter results')
 
 
-def gray_hash(spec):
-    return colorize('@K{[%s]}' % spec.dag_hash(7))
+def gray_hash(spec, length):
+    return colorize('@K{%s}' % spec.dag_hash(length))
 
 
 def display_specs(specs, **kwargs):
     mode = kwargs.get('mode', 'short')
     hashes = kwargs.get('long', False)
+
+    hlen = 7
+    if kwargs.get('very_long', False):
+        hashes = True
+        hlen = None
 
     # Make a dict with specs keyed by architecture and compiler.
     index = index_by(specs, ('architecture', 'compiler'))
@@ -87,6 +95,8 @@ def display_specs(specs, **kwargs):
             format = "    %-{}s%s".format(width)
 
             for abbrv, spec in zip(abbreviated, specs):
+                if hashes:
+                    print gray_hash(spec, hlen),
                 print format % (abbrv, spec.prefix)
 
         elif mode == 'deps':
@@ -95,13 +105,13 @@ def display_specs(specs, **kwargs):
                     format='$_$@$+',
                     color=True,
                     indent=4,
-                    prefix=(lambda s: gray_hash(s)) if hashes else None)
+                    prefix=(lambda s: gray_hash(s, hlen)) if hashes else None)
 
         elif mode == 'short':
             def fmt(s):
                 string = ""
                 if hashes:
-                    string += gray_hash(s) + ' '
+                    string += gray_hash(s, hlen) + ' '
                 string += s.format('$-_$@$+', color=True)
                 return string
             colify(fmt(s) for s in specs)
@@ -138,4 +148,6 @@ def find(parser, args):
 
     if sys.stdout.isatty():
         tty.msg("%d installed packages." % len(specs))
-    display_specs(specs, mode=args.mode, long=args.long)
+    display_specs(specs, mode=args.mode,
+                  long=args.long,
+                  very_long=args.very_long)

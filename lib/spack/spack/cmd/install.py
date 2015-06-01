@@ -48,6 +48,9 @@ def setup_parser(subparser):
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="Do not check packages against checksum")
     subparser.add_argument(
+        '-v', '--verbose', action='store_true', dest='verbose',
+        help="Display verbose build output while installing.")
+    subparser.add_argument(
         '--fake', action='store_true', dest='fake',
         help="Fake install.  Just remove the prefix and touch a fake file in it.")
     subparser.add_argument(
@@ -73,4 +76,5 @@ def install(parser, args):
             keep_stage=args.keep_stage,
             ignore_deps=args.ignore_deps,
             make_jobs=args.jobs,
+            verbose=args.verbose,
             fake=args.fake)
