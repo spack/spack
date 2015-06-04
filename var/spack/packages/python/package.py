@@ -15,6 +15,7 @@ class Python(Package):
     extendable = True
 
     version('2.7.8', 'd235bdfa75b8396942e360a70487ee00')
+    version('2.7.10', 'c685ef0b8e9f27b5e3db5db12b268ac6')
 
     depends_on("openssl")
     depends_on("bzip2")

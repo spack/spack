@@ -5,16 +5,18 @@ class Stat(Package):
     homepage = "http://paradyn.org/STAT/STAT.html"
     url      = "https://github.com/lee218llnl/stat/archive/v2.0.0.tar.gz"
 
+    version('2.2.0', '26bd69dd57a15afdd5d0ebdb0b7fb6fc')
     version('2.1.0', 'ece26beaf057aa9134d62adcdda1ba91')
     version('2.0.0', 'c7494210b0ba26b577171b92838e1a9b')
 
+    depends_on('libelf')
     depends_on('libdwarf')
     depends_on('dyninst')
     depends_on('graphlib')
     depends_on('launchmon')
     depends_on('mrnet')
 
-    patch('configure_mpicxx.patch', when='@2.1.0:')
+    patch('configure_mpicxx.patch', when='@2.1.0')
 
     def install(self, spec, prefix):
         configure(
