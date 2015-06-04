@@ -7,6 +7,7 @@ class PyMatplotlib(Package):
     url      = "https://pypi.python.org/packages/source/m/matplotlib/matplotlib-1.4.2.tar.gz"
 
     version('1.4.2', '7d22efb6cce475025733c50487bd8898')
+    version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
 
     extends('python', ignore=r'bin/nosetests.*$')
 
@@ -28,7 +29,7 @@ class PyMatplotlib(Package):
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
 
-        if str(self.version) == '1.4.2':
+        if str(self.version) in ['1.4.2', '1.4.3']:
             # hack to fix configuration file
             config_file = None
             for p,d,f in os.walk(prefix.lib):

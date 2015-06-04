@@ -35,7 +35,6 @@ import llnl.util.tty as tty
 from llnl.util.lang import memoized
 from llnl.util.filesystem import join_path, mkdirp
 
-import spack
 from spack.spec import Spec
 from spack.error import SpackError
 
@@ -175,6 +174,7 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
+        self.build_log_name      = 'build.out' # TODO: use config file.
 
         # Cache of already written/read extension maps.
         self._extension_maps = {}
@@ -231,6 +231,11 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def metadata_path(self, spec):
         return join_path(self.path_for_spec(spec), self.metadata_dir)
+
+
+    def build_log_path(self, spec):
+        return join_path(self.path_for_spec(spec), self.metadata_dir,
+                         self.build_log_name)
 
 
     def create_install_directory(self, spec):

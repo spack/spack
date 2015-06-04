@@ -7,6 +7,7 @@ class PyPandas(Package):
     url      = "https://pypi.python.org/packages/source/p/pandas/pandas-0.16.0.tar.gz#md5=bfe311f05dc0c351f8955fbd1e296e73"
 
     version('0.16.0', 'bfe311f05dc0c351f8955fbd1e296e73')
+    version('0.16.1', 'fac4f25748f9610a3e00e765474bdea8')
 
     extends('python')
     depends_on('py-dateutil')

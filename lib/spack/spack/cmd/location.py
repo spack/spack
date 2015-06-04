@@ -55,6 +55,8 @@ def setup_parser(subparser):
     directories.add_argument(
         '-s', '--stage-dir', action='store_true', help="Stage directory for a spec.")
     directories.add_argument(
+        '-S', '--stages', action='store_true', help="Top level Stage directory.")
+    directories.add_argument(
         '-b', '--build-dir', action='store_true',
         help="Checked out or expanded source directory for a spec (requires it to be staged first).")
 
@@ -71,6 +73,9 @@ def location(parser, args):
 
     elif args.packages:
         print spack.db.root
+
+    elif args.stages:
+        print spack.stage_path
 
     else:
         specs = spack.cmd.parse_specs(args.spec)

@@ -30,7 +30,12 @@ class SpackError(Exception):
     def __init__(self, message, long_message=None):
         super(SpackError, self).__init__()
         self.message = message
-        self.long_message = long_message
+        self._long_message = long_message
+
+
+    @property
+    def long_message(self):
+        return self._long_message
 
 
     def __str__(self):

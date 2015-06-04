@@ -36,6 +36,14 @@ _debug   = False
 _verbose = False
 indent  = "  "
 
+def is_verbose():
+    return _verbose
+
+
+def is_debug():
+    return _debug
+
+
 def set_debug(flag):
     global _debug
     _debug = flag

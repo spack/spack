@@ -7,6 +7,7 @@ class PySip(Package):
     url      = "http://sourceforge.net/projects/pyqt/files/sip/sip-4.16.5/sip-4.16.5.tar.gz"
 
     version('4.16.5', '6d01ea966a53e4c7ae5c5e48c40e49e5')
+    version('4.16.7', '32abc003980599d33ffd789734de4c36')
 
     extends('python')
 
