@@ -1,7 +1,9 @@
 from spack import *
 
 class Arpack(Package):
-    """FIXME: put a proper description of your package here."""
+    """A collection of Fortran77 subroutines designed to solve large scale
+       eigenvalue problems.
+    """
     homepage = "http://www.caam.rice.edu/software/ARPACK/"
     url      = "http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz"
 
@@ -10,13 +12,24 @@ class Arpack(Package):
     depends_on('blas')
     depends_on('lapack')
 
+    def patch(self):
+        # Filter the cray makefile to make a spack one.
+        move('ARMAKES/ARmake.CRAY', 'ARmake.inc')
+        makefile = FileFilter('ARmake.inc')
+
+        # Be sure to use Spack F77 wrapper
+        makefile.filter('^FC.*', 'FC = f77')
+
+        # Set up some variables.
+        makefile.filter('^PLAT.*',      'PLAT = ')
+        makefile.filter('^home =.*',    'home = %s' % pwd())
+        makefile.filter('^BLASdir.*',   'BLASdir = %s' % self.spec['blas'].prefix)
+        makefile.filter('^LAPACKdir.*', 'LAPACKdir = %s' % self.spec['lapack'].prefix)
+
+        # build the library in our own prefix.
+        makefile.filter('^ARPACKLIB.*', 'ARPACKLIB = %s/lib/libarpack.a' % self.prefix)
+
+
     def install(self, spec, prefix):
-        move('./ARMAKES/ARmake.CRAY', './ARmake.inc')
-        filter_file('PLAT          = CRAY', 'PLAT = ', './ARmake.inc', string=True)
-        filter_file('home = $(HOME)/ARPACK', 'home = %s' % pwd(), './ARmake.inc', string=True)
-        filter_file('BLASdir      = $(home)/BLAS', 'BLASdir = %s' % spec['blas'].prefix, './ARmake.inc', string=True)
-        filter_file('LAPACKdir    = $(home)/LAPACK', 'LAPACKdir = %s' % spec['lapack'].prefix, './ARmake.inc', string=True)
-        filter_file('ARPACKLIB  = $(home)/libarpack_$(PLAT).a', 'ARPACKLIB = %s/lib/libarpack.a' % prefix, './ARmake.inc', string=True)
-        
-        cd('./SRC')
-        make('all')
+        with working_dir('SRC'):
+            make('all')
