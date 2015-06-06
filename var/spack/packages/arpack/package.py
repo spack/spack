@@ -1,4 +1,6 @@
 from spack import *
+import os
+import shutil
 
 class Arpack(Package):
     """A collection of Fortran77 subroutines designed to solve large scale
@@ -14,15 +16,16 @@ class Arpack(Package):
 
     def patch(self):
         # Filter the cray makefile to make a spack one.
-        move('ARMAKES/ARmake.CRAY', 'ARmake.inc')
+        shutil.move('ARMAKES/ARmake.CRAY', 'ARmake.inc')
         makefile = FileFilter('ARmake.inc')
 
         # Be sure to use Spack F77 wrapper
         makefile.filter('^FC.*', 'FC = f77')
+        makefile.filter('^FFLAGS.*', 'FFLAGS = -O2 -g')
 
         # Set up some variables.
         makefile.filter('^PLAT.*',      'PLAT = ')
-        makefile.filter('^home =.*',    'home = %s' % pwd())
+        makefile.filter('^home.*',    'home = %s' % os.getcwd())
         makefile.filter('^BLASdir.*',   'BLASdir = %s' % self.spec['blas'].prefix)
         makefile.filter('^LAPACKdir.*', 'LAPACKdir = %s' % self.spec['lapack'].prefix)
 
@@ -31,5 +34,6 @@ class Arpack(Package):
 
 
     def install(self, spec, prefix):
+        mkdirp(self.prefix.lib)
         with working_dir('SRC'):
             make('all')
