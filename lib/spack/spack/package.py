@@ -816,17 +816,8 @@ class Package(object):
             except ProcessError, e:
                 # Annotate with location of build log.
                 e.build_log = log_path
-
-                # One of the processes returned an error code.
-                # Suppress detailed stack trace here unless in debug mode
-                if spack.debug:
-                    raise e
-                else:
-                    tty.error(e)
-
-                # Still need to clean up b/c there was an error.
                 cleanup()
-                os._exit(1)
+                raise e
 
             except:
                 # other exceptions just clean up and raise.
