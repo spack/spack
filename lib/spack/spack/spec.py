@@ -498,7 +498,13 @@ class Spec(object):
            Possible idea: just use conventin and make virtual deps all
            caps, e.g., MPI vs mpi.
         """
-        return not spack.db.exists(self.name)
+        return Spec.is_virtual(self.name)
+
+
+    @staticmethod
+    def is_virtual(name):
+        """Test if a name is virtual without requiring a Spec."""
+        return not spack.db.exists(name)
 
 
     @property
@@ -1224,7 +1230,17 @@ class Spec(object):
         """
         other = self._autospec(other)
 
-        # First thing we care about is whether the name matches
+        # A concrete provider can satisfy a virtual dependency.
+        if not self.virtual and other.virtual:
+            pkg = spack.db.get(self.name)
+            if pkg.provides(other.name):
+                for provided, when_spec in pkg.provided.items():
+                    if self.satisfies(when_spec, deps=False, strict=strict):
+                        if provided.satisfies(other):
+                            return True
+            return False
+
+        # Otherwise, first thing we care about is whether the name matches
         if self.name != other.name:
             return False
 
@@ -1364,10 +1380,20 @@ class Spec(object):
 
 
     def __getitem__(self, name):
-        """TODO: reconcile __getitem__, _add_dependency, __contains__"""
+        """Get a dependency from the spec by its name."""
         for spec in self.traverse():
             if spec.name == name:
                 return spec
+
+        if Spec.is_virtual(name):
+            # TODO: this is a kind of kludgy way to find providers
+            # TODO: should we just keep virtual deps in the DAG instead of
+            # TODO: removing them on concretize?
+            for spec in self.traverse():
+                if spec.virtual:
+                    continue
+                if spec.package.provides(name):
+                    return spec
 
         raise KeyError("No spec with name %s in %s" % (name, self))
 
@@ -1380,6 +1406,7 @@ class Spec(object):
         for s in self.traverse():
             if s.satisfies(spec, strict=True):
                 return True
+
         return False
 
 

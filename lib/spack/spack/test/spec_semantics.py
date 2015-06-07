@@ -189,6 +189,67 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_unsatisfiable('mpich+foo', 'mpich~foo')
 
 
+    def test_satisfies_virtual(self):
+        self.assertTrue(Spec('mpich').satisfies(Spec('mpi')))
+        self.assertTrue(Spec('mpich2').satisfies(Spec('mpi')))
+        self.assertTrue(Spec('zmpi').satisfies(Spec('mpi')))
+
+
+    # ================================================================================
+    # Indexing specs
+    # ================================================================================
+    def test_self_index(self):
+        s = Spec('callpath')
+        self.assertTrue(s['callpath'] == s)
+
+
+    def test_dep_index(self):
+        s = Spec('callpath')
+        s.normalize()
+
+        self.assertTrue(s['callpath'] == s)
+        self.assertTrue(type(s['dyninst']) == Spec)
+        self.assertTrue(type(s['libdwarf']) == Spec)
+        self.assertTrue(type(s['libelf']) == Spec)
+        self.assertTrue(type(s['mpi']) == Spec)
+
+        self.assertTrue(s['dyninst'].name  == 'dyninst')
+        self.assertTrue(s['libdwarf'].name == 'libdwarf')
+        self.assertTrue(s['libelf'].name   == 'libelf')
+        self.assertTrue(s['mpi'].name      == 'mpi')
+
+
+    def test_spec_contains_deps(self):
+        s = Spec('callpath')
+        s.normalize()
+        self.assertTrue('dyninst' in s)
+        self.assertTrue('libdwarf' in s)
+        self.assertTrue('libelf' in s)
+        self.assertTrue('mpi' in s)
+
+
+    def test_virtual_index(self):
+        s = Spec('callpath')
+        s.concretize()
+
+        s_mpich = Spec('callpath ^mpich')
+        s_mpich.concretize()
+
+        s_mpich2 = Spec('callpath ^mpich2')
+        s_mpich2.concretize()
+
+        s_zmpi = Spec('callpath ^zmpi')
+        s_zmpi.concretize()
+
+
+        self.assertTrue(s['mpi'].name != 'mpi')
+        self.assertTrue(s_mpich['mpi'].name == 'mpich')
+        self.assertTrue(s_mpich2['mpi'].name == 'mpich2')
+        self.assertTrue(s_zmpi['zmpi'].name == 'zmpi')
+
+        for spec in [s, s_mpich, s_mpich2, s_zmpi]:
+            self.assertTrue('mpi' in spec)
+
 
     # ================================================================================
     # Constraints

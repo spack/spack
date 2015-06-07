@@ -471,13 +471,18 @@ class Package(object):
         """Spec of the extendee of this package, or None if it is not an extension."""
         if not self.extendees:
             return None
-        name = next(iter(self.extendees))
-        if not name in self.spec:
-            spec, kwargs = self.extendees[name]
-            return spec
 
-        # Need to do this to get the concrete version of the spec
-        return self.spec[name]
+        # TODO: allow more than one extendee.
+        name = next(iter(self.extendees))
+
+        # If the extendee is in the spec's deps already, return that.
+        for dep in self.spec.traverse():
+            if name == dep.name:
+                return dep
+
+        # Otherwise return the spec from the extends() directive
+        spec, kwargs = self.extendees[name]
+        return spec
 
 
     @property
@@ -542,7 +547,7 @@ class Package(object):
 
     def provides(self, vpkg_name):
         """True if this package provides a virtual package with the specified name."""
-        return vpkg_name in self.provided
+        return any(s.name == vpkg_name for s in self.provided)
 
 
     def virtual_dependencies(self, visited=None):
@@ -561,8 +566,11 @@ class Package(object):
            on this one."""
         dependents = []
         for spec in spack.db.installed_package_specs():
-            if self.name != spec.name and self.spec in spec:
-                dependents.append(spec)
+            if self.name == spec.name:
+                continue
+            for dep in spec.traverse():
+                if spec == dep:
+                    dependents.append(spec)
         return dependents
 
 
@@ -985,10 +993,13 @@ class Package(object):
 
             activated = spack.install_layout.extension_map(self.extendee_spec)
             for name, aspec in activated.items():
-                if aspec != self.spec and self.spec in aspec:
-                    raise ActivationError(
-                        "Cannot deactivate %s beacuse %s is activated and depends on it."
-                        % (self.spec.short_spec, aspec.short_spec))
+                if aspec == self.spec:
+                    continue
+                for dep in aspec.traverse():
+                    if self.spec == dep:
+                        raise ActivationError(
+                            "Cannot deactivate %s beacuse %s is activated and depends on it."
+                            % (self.spec.short_spec, aspec.short_spec))
 
         self.extendee_spec.package.deactivate(self, **self.extendee_args)
 

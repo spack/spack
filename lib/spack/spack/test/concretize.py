@@ -152,7 +152,10 @@ class ConcretizeTest(MockPackagesTest):
         spec.concretize()
 
         self.assertTrue('zmpi' in spec.dependencies)
-        self.assertFalse('mpi' in spec)
+        self.assertTrue(all(not 'mpi' in d.dependencies for d in spec.traverse()))
+        self.assertTrue('zmpi' in spec)
+        self.assertTrue('mpi' in spec)
+
         self.assertTrue('fake' in spec.dependencies['zmpi'])
 
 
@@ -168,7 +171,9 @@ class ConcretizeTest(MockPackagesTest):
         self.assertTrue('zmpi' in spec.dependencies['callpath'].dependencies)
         self.assertTrue('fake' in spec.dependencies['callpath'].dependencies['zmpi'].dependencies)
 
-        self.assertFalse('mpi' in spec)
+        self.assertTrue(all(not 'mpi' in d.dependencies for d in spec.traverse()))
+        self.assertTrue('zmpi' in spec)
+        self.assertTrue('mpi' in spec)
 
 
     def test_my_dep_depends_on_provider_of_my_virtual_dep(self):
