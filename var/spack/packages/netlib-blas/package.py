@@ -16,7 +16,7 @@ class NetlibBlas(Package):
     def install(self, spec, prefix):
         symlink('make.inc.example', 'make.inc')
         make('blaslib')
-        
+
         # Tests that blas builds correctly
         make('blas_testing')
 
@@ -24,5 +24,6 @@ class NetlibBlas(Package):
         mkdirp(prefix.lib)
         install('librefblas.a', prefix.lib)
 
-        # Blas virtual package should provide blas.a
+        # Blas virtual package should provide blas.a and libblas.a
         symlink(prefix.lib + '/librefblas.a', prefix.lib + '/blas.a')
+        symlink(prefix.lib + '/librefblas.a', prefix.lib + '/libblas.a')

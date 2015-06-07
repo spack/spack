@@ -14,6 +14,10 @@ class Atlas(Package):
     homepage = "http://math-atlas.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/math-atlas/Stable/3.10.2/atlas3.10.2.tar.bz2"
 
+    # TODO: make this provide BLAS once we have the ability to prefer dependencies.
+    # TODO: until then netlib-blas will be the default (and only) blas
+    # provides('blas')
+
     version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da')
 
     def patch(self):
