@@ -167,12 +167,15 @@ class DirectoryLayoutTest(unittest.TestCase):
     def test_find(self):
         """Test that finding specs within an install layout works."""
         packages = list(spack.db.all_packages())[:max_packages]
+
+        # Create install prefixes for all packages in the list
         installed_specs = {}
         for pkg in packages:
             spec = pkg.spec.concretized()
             installed_specs[spec.name] = spec
             self.layout.create_install_directory(spec)
 
+        # Make sure all the installed specs appear in DirectoryLayout.all_specs()
         found_specs = dict((s.name, s) for s in self.layout.all_specs())
         for name, spec in found_specs.items():
             self.assertTrue(name in found_specs)
