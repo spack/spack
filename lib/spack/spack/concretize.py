@@ -75,7 +75,23 @@ class DefaultConcretizer(object):
         if valid_versions:
             spec.versions = ver([valid_versions[-1]])
         else:
-            raise NoValidVersionError(spec)
+            # We don't know of any SAFE versions that match the given
+            # spec.  Grab the spec's versions and grab the highest
+            # *non-open* part of the range of versions it specifies.
+            # Someone else can raise an error if this happens,
+            # e.g. when we go to fetch it and don't know how.  But it
+            # *might* work.
+            if not spec.versions or spec.versions == VersionList([':']):
+                raise NoValidVersionError(spec)
+            else:
+                last = spec.versions[-1]
+                if isinstance(last, VersionRange):
+                    if last.end:
+                        spec.versions = ver([last.end])
+                    else:
+                        spec.versions = ver([last.start])
+                else:
+                    spec.versions = ver([last])
 
 
     def concretize_architecture(self, spec):
@@ -174,8 +190,8 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
 
 
 class NoValidVersionError(spack.error.SpackError):
-    """Raised when there is no available version for a package that
-       satisfies a spec."""
+    """Raised when there is no way to have a concrete version for a
+       particular spec."""
     def __init__(self, spec):
         super(NoValidVersionError, self).__init__(
-            "No available version of %s matches '%s'" % (spec.name, spec.versions))
+            "There are no valid versions for %s that match '%s'" % (spec.name, spec.versions))
