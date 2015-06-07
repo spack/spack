@@ -30,10 +30,12 @@ class Arpack(Package):
         makefile.filter('^LAPACKdir.*', 'LAPACKdir = %s' % self.spec['lapack'].prefix)
 
         # build the library in our own prefix.
-        makefile.filter('^ARPACKLIB.*', 'ARPACKLIB = %s/lib/libarpack.a' % self.prefix)
+        makefile.filter('^ARPACKLIB.*', 'ARPACKLIB = %s/libarpack.a' % os.getcwd())
 
 
     def install(self, spec, prefix):
-        mkdirp(self.prefix.lib)
         with working_dir('SRC'):
             make('all')
+
+        mkdirp(prefix.lib)
+        install('libarpack.a', prefix.lib)
