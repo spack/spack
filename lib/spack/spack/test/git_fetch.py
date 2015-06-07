@@ -26,7 +26,6 @@ import os
 import unittest
 import shutil
 import tempfile
-from contextlib import closing
 
 from llnl.util.filesystem import *
 
@@ -109,7 +108,7 @@ class GitFetchTest(MockPackagesTest):
         })
 
 
-    def ztest_fetch_branch(self):
+    def test_fetch_branch(self):
         """Test fetching a branch."""
         self.try_fetch(self.repo.branch, self.repo.branch_file, {
             'git'    : self.repo.path,
@@ -117,7 +116,7 @@ class GitFetchTest(MockPackagesTest):
         })
 
 
-    def ztest_fetch_tag(self):
+    def test_fetch_tag(self):
         """Test fetching a tag."""
         self.try_fetch(self.repo.tag, self.repo.tag_file, {
             'git' : self.repo.path,
@@ -125,7 +124,7 @@ class GitFetchTest(MockPackagesTest):
         })
 
 
-    def ztest_fetch_commit(self):
+    def test_fetch_commit(self):
         """Test fetching a particular commit."""
         self.try_fetch(self.repo.r1, self.repo.r1_file, {
             'git'    : self.repo.path,

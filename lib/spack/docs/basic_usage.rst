@@ -3,18 +3,16 @@
 Basic usage
 =====================
 
-Spack is implemented as a single command (``spack``) with many
-*subcommands*.  Only a small subset of commands is needed for typical
-usage.
+The ``spack`` command has many *subcommands*.  You'll only need a
+small subset of them for typical usage.
 
 
 Listing available packages
 ------------------------------
 
-The first thing you likely want to do with spack is to install some
-software.  Before that, you need to know what's available.  You can
-see available package names either using the :ref:`package-list`, or
-using the commands below.
+To install software with Spack, you need to know what software is
+available.  You can see a list of available package names at the
+:ref:`package-list` webpage, or using the ``spack list`` command.
 
 .. _spack-list:
 
@@ -43,36 +41,37 @@ To get more information on a particular package from `spack list`, use
 
 .. command-output:: spack info mpich
 
-Most of the information is self-explanatory.  *Safe versions* are
-versions that Spack has a checksum for, and Spack will use the
-checksum to ensure they downloaded without any errors or malicious
-attacks.  :ref:`Dependencies <sec-specs>` and :ref:`virtual
-dependencies <sec-virtual-dependencies>`, are described in more detail
-later.
+Most of the information is self-explanatory.  The *safe versions* are
+versions that Spack knows the checksum for, and it will use the
+checksum to verify that these versions download without errors or
+viruses.
+
+:ref:`Dependencies <sec-specs>` and :ref:`virtual dependencies
+<sec-virtual-dependencies>` are described in more detail later.
 
 .. _spack-versions:
 
 ``spack versions``
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-To see *more* available versions of a package, run ``spack versions``,
-for example:
+To see *more* available versions of a package, run ``spack versions``.
+For example:
 
 .. command-output:: spack versions libelf
 
-There are two sections in the output.  *Safe versions* are ones that
-have already been checksummed.  Spack goes a step further, though, and
-also shows you what versions are available out on the web---these are
-*remote versions*.  Spack gets this information by scraping it
-directly from web pages.  Depending on the package, Spack may or may
-not be able to find any remote versions.
+There are two sections in the output.  *Safe versions* are versions
+for which Spack has a checksum on file.  It can verify that these
+versions are downloaded correctly.
+
+In many cases, Spack can also show you what versions are available out
+on the web---these are *remote versions*.  Spack gets this information
+by scraping it directly from package web pages.  Depending on the
+package and how its releases are organized, Spack may or may not be
+able to find remote versions.
 
 
 Installing and uninstalling
 ------------------------------
-
-Now that you know how to list available packages and versions, you're
-ready to start installing things.
 
 .. _spack-install:
 
@@ -80,17 +79,17 @@ ready to start installing things.
 ~~~~~~~~~~~~~~~~~~~~~
 
 ``spack install`` will install any package shown by ``spack list``.
-To install the latest version of a package, along with all of its
-dependencies, simply give it a package name:
+For example, To install the latest version of the ``mpileaks``
+package, you might type this:
 
 .. code-block:: sh
 
    $ spack install mpileaks
 
-If `mpileaks` depends on other packages, Spack will install those
-first.  It then fetches the tarball for ``mpileaks``, expands it,
-verifies that it was downloaded without errors, builds it, and
-installs it in its own directory under ``$SPACK_HOME/opt``. You'll see
+If `mpileaks` depends on other packages, Spack will install the
+dependencies first.  It then fetches the ``mpileaks`` tarball, expands
+it, verifies that it was downloaded without errors, builds it, and
+installs it in its own directory under ``$SPACK_ROOT/opt``. You'll see
 a number of messages from spack, a lot of build output, and a message
 that the packages is installed:
 
@@ -139,11 +138,11 @@ an installation.  Spack is unique in that it can also configure the
 configurations of the same version of a package, one built with boost
 1.39.0, and the other version built with version 1.43.0, can coexist.
 
-This can all be done on the command line using special syntax.  Spack
-calls the descriptor used to refer to a particular package
-configuration a **spec**.  In the command lines above, both
-``mpileaks`` and ``mpileaks@3.0.4`` are specs.  Specs are described in
-detail in :ref:`sec-specs`.
+This can all be done on the command line using the *spec* syntax.
+Spack calls the descriptor used to refer to a particular package
+configuration a **spec**.  In the commands above, ``mpileaks`` and
+``mpileaks@3.0.4``.  We'll talk more about how you can use them to
+customize an installation in :ref:`sec-specs`.
 
 .. _spack-uninstall:
 

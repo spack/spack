@@ -45,7 +45,7 @@ from spack.util.environment import get_path
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 
-_default_order = ['gcc', 'intel', 'pgi', 'clang']
+_default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
 
 def _auto_compiler_spec(function):
     def converter(cspec_like):
@@ -60,24 +60,25 @@ def _get_config():
        first."""
     # If any configuration file has compilers, just stick with the
     # ones already configured.
-    config = spack.config.get_config()
+    config = spack.config.get_compilers_config()
     existing = [spack.spec.CompilerSpec(s)
-                for s in config.get_section_names('compiler')]
+                for s in config]
     if existing:
         return config
 
     compilers = find_compilers(*get_path('PATH'))
-    new_compilers = [
-        c for c in compilers if c.spec not in existing]
-    add_compilers_to_config('user', *new_compilers)
+    add_compilers_to_config('user', *compilers)
 
     # After writing compilers to the user config, return a full config
     # from all files.
-    return spack.config.get_config(refresh=True)
+    return spack.config.get_compilers_config()
 
 
-@memoized
+_cached_default_compiler = None
 def default_compiler():
+    global _cached_default_compiler
+    if _cached_default_compiler:
+        return _cached_default_compiler
     versions = []
     for name in _default_order:  # TODO: customize order.
         versions = find(name)
@@ -86,7 +87,8 @@ def default_compiler():
     if not versions:
         raise NoCompilersError()
 
-    return sorted(versions)[-1]
+    _cached_default_compiler = sorted(versions)[-1]
+    return _cached_default_compiler
 
 
 def find_compilers(*path):
@@ -122,19 +124,17 @@ def find_compilers(*path):
 
 
 def add_compilers_to_config(scope, *compilers):
-    config = spack.config.get_config(scope)
+    compiler_config_tree = {}
     for compiler in compilers:
-        add_compiler(config, compiler)
-    config.write()
+        compiler_entry = {}
+        for c in _required_instance_vars:
+            val = getattr(compiler, c)
+            if not val:
+                val = "None"
+            compiler_entry[c] = val
+        compiler_config_tree[str(compiler.spec)] = compiler_entry
+    spack.config.add_to_compiler_config(compiler_config_tree, scope)
 
-
-def add_compiler(config, compiler):
-    def setup_field(cspec, name, exe):
-        path = exe if exe else "None"
-        config.set_value('compiler', cspec, name, path)
-
-    for c in _required_instance_vars:
-        setup_field(compiler.spec, c, getattr(compiler, c))
 
 
 def supported_compilers():
@@ -157,8 +157,7 @@ def all_compilers():
        available to build with.  These are instances of CompilerSpec.
     """
     configuration = _get_config()
-    return [spack.spec.CompilerSpec(s)
-            for s in configuration.get_section_names('compiler')]
+    return [spack.spec.CompilerSpec(s) for s in configuration]
 
 
 @_auto_compiler_spec
@@ -176,7 +175,7 @@ def compilers_for_spec(compiler_spec):
     config = _get_config()
 
     def get_compiler(cspec):
-        items = dict((k,v) for k,v in config.items('compiler "%s"' % cspec))
+        items = config[str(cspec)]
 
         if not all(n in items for n in _required_instance_vars):
             raise InvalidCompilerConfigurationError(cspec)

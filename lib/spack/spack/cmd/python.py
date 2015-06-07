@@ -27,7 +27,6 @@ import sys
 import code
 from external import argparse
 import platform
-from contextlib import closing
 
 import spack
 
@@ -44,13 +43,13 @@ def python(parser, args):
     if "PYTHONSTARTUP" in os.environ:
         startup_file = os.environ["PYTHONSTARTUP"]
         if os.path.isfile(startup_file):
-            with closing(open(startup_file)) as startup:
+            with open(startup_file) as startup:
                 console.runsource(startup.read(), startup_file, 'exec')
 
     python_args = args.python_args
     if python_args:
         sys.argv = python_args
-        with closing(open(python_args[0])) as file:
+        with open(python_args[0]) as file:
             console.runsource(file.read(), python_args[0], 'exec')
     else:
         console.interact("Spack version %s\nPython %s, %s %s"""

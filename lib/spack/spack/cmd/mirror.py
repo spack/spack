@@ -75,27 +75,22 @@ def mirror_add(args):
     if url.startswith('/'):
         url = 'file://' + url
 
-    config = spack.config.get_config('user')
-    config.set_value('mirror', args.name, 'url', url)
-    config.write()
+    mirror_dict = { args.name : url }
+    spack.config.add_to_mirror_config({ args.name : url })
 
 
 def mirror_remove(args):
     """Remove a mirror by name."""
-    config = spack.config.get_config('user')
     name = args.name
 
-    if not config.has_named_section('mirror', name):
+    rmd_something = spack.config.remove_from_config('mirrors', name)
+    if not rmd_something:
         tty.die("No such mirror: %s" % name)
-    config.remove_named_section('mirror', name)
-    config.write()
 
 
 def mirror_list(args):
     """Print out available mirrors to the console."""
-    config = spack.config.get_config()
-    sec_names = config.get_section_names('mirror')
-
+    sec_names = spack.config.get_mirror_config()
     if not sec_names:
         tty.msg("No mirrors configured.")
         return
@@ -103,13 +98,12 @@ def mirror_list(args):
     max_len = max(len(s) for s in sec_names)
     fmt = "%%-%ds%%s" % (max_len + 4)
 
-    for name in sec_names:
-        val = config.get_value('mirror', name, 'url')
+    for name, val in sec_names.iteritems():
         print fmt % (name, val)
 
 
 def _read_specs_from_file(filename):
-    with closing(open(filename, "r")) as stream:
+    with open(filename, "r") as stream:
         for i, string in enumerate(stream):
             try:
                 s = Spec(string)

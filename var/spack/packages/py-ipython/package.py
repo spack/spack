@@ -6,6 +6,7 @@ class PyIpython(Package):
     url      = "https://pypi.python.org/packages/source/i/ipython/ipython-2.3.1.tar.gz"
 
     version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
+    version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
 
     extends('python')
     depends_on('py-pygments')

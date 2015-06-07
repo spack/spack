@@ -309,15 +309,44 @@ class Stage(object):
             os.chdir(os.path.dirname(self.path))
 
 
+class DIYStage(object):
+    """Simple class that allows any directory to be a spack stage."""
+    def __init__(self, path):
+        self.archive_file = None
+        self.path = path
+        self.source_path = path
+
+    def chdir(self):
+        if os.path.isdir(self.path):
+            os.chdir(self.path)
+        else:
+            tty.die("Setup failed: no such directory: " + self.path)
+
+    def chdir_to_source(self):
+        self.chdir()
+
+    def fetch(self):
+        tty.msg("No need to fetch for DIY.")
+
+    def check(self):
+        tty.msg("No checksum needed for DIY.")
+
+    def expand_archive(self):
+        tty.msg("Using source directory: %s" % self.source_path)
+
+    def restage(self):
+        tty.die("Cannot restage DIY stage.")
+
+    def destroy(self):
+        # No need to destroy DIY stage.
+        pass
+
+
 def _get_mirrors():
     """Get mirrors from spack configuration."""
-    config = spack.config.get_config()
+    config = spack.config.get_mirror_config()
+    return [val for name, val in config.iteritems()]
 
-    mirrors = []
-    sec_names = config.get_section_names('mirror')
-    for name in sec_names:
-        mirrors.append(config.get_value('mirror', name, 'url'))
-    return mirrors
 
 
 def ensure_access(file=spack.stage_path):

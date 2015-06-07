@@ -12,20 +12,30 @@ Getting spack is easy.  You can clone it from the `github repository
    $ git clone https://github.com/scalability-llnl/spack.git
 
 This will create a directory called ``spack``.  We'll assume that the
-full path to this directory is in some environment called
-``SPACK_HOME``.  Add ``$SPACK_HOME/bin`` to your path and you're ready
-to go:
+full path to this directory is in the ``SPACK_ROOT`` environment
+variable.  Add ``$SPACK_ROOT/bin`` to your path and you're ready to
+go:
 
 .. code-block:: sh
 
-   $ export PATH=spack/bin:$PATH
+   $ export PATH=$SPACK_ROOT/bin:$PATH
    $ spack install libelf
 
-In general, most of your interactions with Spack will be through the
-``spack`` command.
+For a richer experience, use Spack's `shell support
+<http://scalability-llnl.github.io/spack/basic_usage.html#environment-modules>`_:
 
+.. code-block:: sh
 
-Install
+   # For bash users
+   $ . $SPACK_ROOT/share/spack/setup-env.sh
+
+   # For tcsh or csh users (note you must set SPACK_ROOT)
+   $ setenv SPACK_ROOT /path/to/spack
+   $ source $SPACK_ROOT/share/spack/setup-env.csh
+
+This automatically adds Spack to your ``PATH``.
+
+Installation
 --------------------
 
 You don't need to install Spack; it's ready to run as soon as you
@@ -39,6 +49,7 @@ functionality.  To install spack in a new directory, simply type:
 
     $ spack bootstrap /my/favorite/prefix
 
-This will install a new spack script in /my/favorite/prefix/bin, which
-you can use just like you would the regular spack script.  Each copy
-of spack installs packages into its own ``$PREFIX/opt`` directory.
+This will install a new spack script in ``/my/favorite/prefix/bin``,
+which you can use just like you would the regular spack script.  Each
+copy of spack installs packages into its own ``$PREFIX/opt``
+directory.

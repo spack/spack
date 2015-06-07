@@ -152,7 +152,7 @@ def copy_mode(src, dest):
 
 def install(src, dest):
     """Manually install a file to a particular location."""
-    tty.info("Installing %s to %s" % (src, dest))
+    tty.debug("Installing %s to %s" % (src, dest))
     shutil.copy(src, dest)
     set_install_permissions(dest)
     copy_mode(src, dest)
@@ -160,7 +160,7 @@ def install(src, dest):
 
 def install_tree(src, dest, **kwargs):
     """Manually install a file to a particular location."""
-    tty.info("Installing %s to %s" % (src, dest))
+    tty.debug("Installing %s to %s" % (src, dest))
     shutil.copytree(src, dest, **kwargs)
 
     for s, d in traverse_tree(src, dest, follow_nonexisting=False):
