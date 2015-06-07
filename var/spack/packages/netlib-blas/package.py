@@ -1,4 +1,6 @@
 from spack import *
+import os
+
 
 class NetlibBlas(Package):
     """Netlib reference BLAS"""
@@ -13,8 +15,16 @@ class NetlibBlas(Package):
     # Doesn't always build correctly in parallel
     parallel = False
 
+    def patch(self):
+        os.symlink('make.inc.example', 'make.inc')
+
+        mf = FileFilter('make.inc')
+        mf.filter('^FORTRAN.*', 'FORTRAN = f90')
+        mf.filter('^LOADER.*',  'LOADER = f90')
+        mf.filter('^CC =.*',  'CC = cc')
+
+
     def install(self, spec, prefix):
-        symlink('make.inc.example', 'make.inc')
         make('blaslib')
 
         # Tests that blas builds correctly
@@ -25,5 +35,6 @@ class NetlibBlas(Package):
         install('librefblas.a', prefix.lib)
 
         # Blas virtual package should provide blas.a and libblas.a
-        symlink(prefix.lib + '/librefblas.a', prefix.lib + '/blas.a')
-        symlink(prefix.lib + '/librefblas.a', prefix.lib + '/libblas.a')
+        with working_dir(prefix.lib):
+            symlink('librefblas.a', 'blas.a')
+            symlink('librefblas.a', 'libblas.a')
