@@ -280,6 +280,10 @@ def fork(pkg, function):
             # Use os._exit here to avoid raising a SystemExit exception,
             # which interferes with unit tests.
             os._exit(0)
+
+        except spack.error.SpackError, e:
+            e.die()
+
         except:
             # Child doesn't raise or return to main spack code.
             # Just runs default exception handler and exits.

@@ -126,14 +126,7 @@ def main():
     try:
         return_val = command(parser, args)
     except SpackError, e:
-        if spack.debug:
-            # In debug mode, raise with a full stack trace.
-            raise
-        elif e.long_message:
-            tty.die(e.message, e.long_message)
-        else:
-            tty.die(e.message)
-
+        e.die()
     except KeyboardInterrupt:
         sys.stderr.write('\n')
         tty.die("Keyboard interrupt.")

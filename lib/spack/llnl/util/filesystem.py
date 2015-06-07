@@ -25,7 +25,7 @@
 __all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree',
            'expand_user', 'working_dir', 'touch', 'touchp', 'mkdirp',
            'force_remove', 'join_path', 'ancestor', 'can_access', 'filter_file',
-           'change_sed_delimiter', 'is_exe', 'force_symlink']
+           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink']
 
 import os
 import sys
@@ -39,7 +39,6 @@ from tempfile import NamedTemporaryFile
 
 import llnl.util.tty as tty
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
-
 
 def filter_file(regex, repl, *filenames, **kwargs):
     """Like sed, but uses python regular expressions.
@@ -95,6 +94,15 @@ def filter_file(regex, repl, *filenames, **kwargs):
         finally:
             if not backup:
                 shutil.rmtree(backup, ignore_errors=True)
+
+
+class FileFilter(object):
+    """Convenience class for calling filter_file a lot."""
+    def __init__(self, *filenames):
+        self.filenames = filenames
+
+    def filter(self, regex, repl, **kwargs):
+        return filter_file(regex, repl, *self.filenames, **kwargs)
 
 
 def change_sed_delimiter(old_delim, new_delim, *filenames):

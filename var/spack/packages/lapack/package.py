@@ -1,6 +1,4 @@
 from spack import *
-import sys
-import glob
 
 class Lapack(Package):
     """
@@ -44,5 +42,4 @@ class Lapack(Package):
         cmake(".", '-DBLAS_LIBRARIES=' + blas_libs, *std_cmake_args)
         make()
         make("install")
-
 
