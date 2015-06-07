@@ -124,6 +124,11 @@ class Executable(object):
         return "<exe: %s>" % self.exe
 
 
+    def __str__(self):
+        return ' '.join(self.exe)
+
+
+
 def which(name, **kwargs):
     """Finds an executable in the path like command-line which."""
     path     = kwargs.get('path', os.environ.get('PATH', '').split(os.pathsep))
