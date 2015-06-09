@@ -64,7 +64,7 @@ function spack {
     done
 
     # h and V flags don't require further output parsing.
-    if [[ "$_sp_flags" =~ *h* || "$_sp_flags" =~ *V* ]]; then
+    if [[ (! -z "$_sp_flags") && ("$_sp_flags" =~ '.*h.*' || "$_sp_flags" =~ '.*V.*') ]]; then
         command spack $_sp_flags "$@"
         return
     fi
