@@ -25,8 +25,42 @@ class Vim(Package):
     version('6.1',     '7fd0f915adc7c0dab89772884268b030')
     version('6.0',     '9d9ca84d489af6b3f54639dd97af3774')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    feature_sets = ('huge', 'big', 'normal', 'small', 'tiny')
+    for fs in feature_sets:
+      variant(fs, default=False, description="Use '{}' feature set".format(fs))
 
-        make()
-        make("install")
+    variant('python', default=False, description="build with Python")
+    depends_on('python', when='+python')
+
+    variant('ruby', default=False, description="build with Ruby")
+    depends_on('ruby', when='+ruby')
+
+    def install(self, spec, prefix):
+      feature_set = None
+      for fs in self.feature_sets:
+        if "+" + fs in spec:
+          if feature_set is not None:
+            tty.error("Only one feature set allowed, both {} and {} specified".format(
+              feature_set,
+              fs))
+          feature_set = fs
+      if feature_set is None:
+        feature_set = 'normal'
+
+      configure_args = []
+      configure_args.append("--with-features=" + feature_set)
+
+      if '+python' in spec:
+        configure_args.append("--enable-pythoninterp=yes")
+      else:
+        configure_args.append("--enable-pythoninterp=dynamic")
+
+      if '+ruby' in spec:
+        configure_args.append("--enable-rubyinterp=yes")
+      else:
+        configure_args.append("--enable-rubyinterp=dynamic")
+
+      configure("--prefix=%s" % prefix, *configure_args)
+
+      make()
+      make("install")
