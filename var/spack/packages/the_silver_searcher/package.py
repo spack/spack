@@ -2,7 +2,6 @@ from spack import *
 
 class TheSilverSearcher(Package):
     """Fast recursive grep alternative"""
-    # FIXME: add a proper url for your package's homepage here.
     homepage = "http://geoff.greer.fm/ag/"
     url      = "http://geoff.greer.fm/ag/releases/the_silver_searcher-0.30.0.tar.gz"
 
