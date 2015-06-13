@@ -417,11 +417,17 @@ class GitFetchStrategy(VCSFetchStrategy):
             # If we want a particular branch ask for it.
             if self.branch:
                 args.extend(['--branch', self.branch])
+            elif self.tag and self.git_version >= ver('1.8.5.2'):
+                    args.extend(['--branch', self.tag])
 
             # Try to be efficient if we're using a new enough git.
             # This checks out only one branch's history
             if self.git_version > ver('1.7.10'):
                 args.append('--single-branch')
+
+            # Yet more efficiency, only download a 1-commit deep tree
+            if self.git_version >= ver('1.7.1'):
+                args.extend(['--depth','1'])
 
             args.append(self.url)
             self.git(*args)
@@ -430,7 +436,8 @@ class GitFetchStrategy(VCSFetchStrategy):
             # For tags, be conservative and check them out AFTER
             # cloning.  Later git versions can do this with clone
             # --branch, but older ones fail.
-            if self.tag:
+            if self.tag and self.git_version < ver('1.8.5.2'):
+                self.git('pull', '--tags')
                 self.git('checkout', self.tag)
 
 
