@@ -133,10 +133,6 @@ class EnvModule(object):
             if self.spec.package.extends(spack.spec.Spec('ruby')):
               add_path('GEM_PATH', self.spec.prefix)
 
-            # Allow module path extensions from packages
-            for key, val in self.spec.package.extra_environment:
-              add_path(key, val)
-
             # short description is just the package + version
             # TODO: maybe packages can optionally provide it.
             self.short_description = self.spec.format("$_ $@")
