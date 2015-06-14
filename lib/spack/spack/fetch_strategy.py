@@ -437,7 +437,10 @@ class GitFetchStrategy(VCSFetchStrategy):
             # cloning.  Later git versions can do this with clone
             # --branch, but older ones fail.
             if self.tag and self.git_version < ver('1.8.5.2'):
-                self.git('pull', '--tags')
+                # pull --tags returns a "special" error code of 1 in
+                # older versions that we have to ignore.
+                # see: https://github.com/git/git/commit/19d122b
+                self.git('pull', '--tags', ignore_errors=1)
                 self.git('checkout', self.tag)
 
 

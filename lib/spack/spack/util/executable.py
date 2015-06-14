@@ -57,7 +57,12 @@ class Executable(object):
         """Run the executable with subprocess.check_output, return output."""
         return_output = kwargs.get("return_output", False)
         fail_on_error = kwargs.get("fail_on_error", True)
+        ignore_errors = kwargs.get("ignore_errors", ())
         error         = kwargs.get("error", sys.stderr)
+
+        # if they just want to ignore one error code, make it a tuple.
+        if isinstance(ignore_errors, int):
+            ignore_errors = (ignore_errors,)
 
         quoted_args = [arg for arg in args if re.search(r'^"|^\'|"$|\'$', arg)]
         if quoted_args:
@@ -85,7 +90,8 @@ class Executable(object):
             out, err = proc.communicate()
             self.returncode = proc.returncode
 
-            if fail_on_error and proc.returncode != 0:
+            rc = proc.returncode
+            if fail_on_error and rc != 0 and (rc not in ignore_errors):
                 raise ProcessError("Command exited with status %d:"
                                    % proc.returncode, cmd_line)
             if return_output:
