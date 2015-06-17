@@ -43,6 +43,7 @@ in order to build it.  They need to define the following methods:
 import os
 import sys
 import re
+import time
 import shutil
 from functools import wraps
 import llnl.util.tty as tty
@@ -140,12 +141,22 @@ class URLFetchStrategy(FetchStrategy):
             tty.msg("Already downloaded %s." % self.archive_file)
             return
 
+        match = re.search(r'(.*(?:sourceforge.net|sf.net)/[^?]*)\??.*$', self.url )
+        if match:
+          print "FIXING SOURCEFORGE LINK"
+          base = re.sub('/download$','',match.group(1))
+          self.url = '{base}?ts={stamp}&use_mirror=autoselect'.format(
+              base = base,
+              stamp = int(time.time()),
+              )
+
         tty.msg("Trying to fetch from %s" % self.url)
 
         curl_args = ['-O',        # save file to disk
                      '-f',        # fail on >400 errors
                      '-D', '-',   # print out HTML headers
                      '-L', self.url,]
+
 
         if sys.stdout.isatty():
             curl_args.append('-#')  # status bar when using a tty
