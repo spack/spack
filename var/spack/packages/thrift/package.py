@@ -19,7 +19,6 @@ class Thrift(Package):
     depends_on("flex")
     depends_on("jdk")
     depends_on("libtool")
-    depends_on("lua")
     depends_on("openssl")
 
     # Compilation fails for most languages, fortunately cpp installs fine
