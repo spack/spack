@@ -1,3 +1,4 @@
+from os import environ
 from spack import *
 
 class Thrift(Package):
@@ -12,6 +13,8 @@ class Thrift(Package):
 
     version('0.9.2', '89f63cc4d0100912f4a1f8a9dee63678')
 
+    extends("python")
+
     depends_on("autoconf")
     depends_on("automake")
     depends_on("bison")
@@ -20,15 +23,17 @@ class Thrift(Package):
     depends_on("jdk")
     depends_on("libtool")
     depends_on("openssl")
+    depends_on("python")
 
     # Compilation fails for most languages, fortunately cpp installs fine
     # All other languages (yes, including C) are omitted until someone needs them
     def install(self, spec, prefix):
+        environ["PY_PREFIX"] = prefix
         configure("--prefix=%s" % prefix,
                   "--with-boost=%s" % spec['boost'].prefix,
                   "--with-c=no",
                   "--with-go=no",
-                  "--with-python=no",
+                  "--with-python=yes",
                   "--with-lua=no",
                   "--with-php=no",
                   "--with-qt4=no",
