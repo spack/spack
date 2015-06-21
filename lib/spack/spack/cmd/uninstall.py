@@ -22,13 +22,17 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
 from external import argparse
 
 import llnl.util.tty as tty
+from llnl.util.tty.colify import colify
 
 import spack
 import spack.cmd
 import spack.packages
+from spack.cmd.find import display_specs
+from spack.package import PackageStillNeededError
 
 description="Remove an installed package"
 
@@ -57,13 +61,14 @@ def uninstall(parser, args):
     for spec in specs:
         matching_specs = spack.db.get_installed(spec)
         if not args.all and len(matching_specs) > 1:
-            args =  ["%s matches multiple packages." % spec,
-                     "Matching packages:"]
-            args += ["  " + str(s) for s in matching_specs]
-            args += ["You can either:",
-                     "  a) Use spack uninstall -a to uninstall ALL matching specs, or",
-                     "  b) use a more specific spec."]
-            tty.die(*args)
+            tty.error("%s matches multiple packages:" % spec)
+            print
+            display_specs(matching_specs, long=True)
+            print
+            print "You can either:"
+            print "  a) Use a more specific spec, or"
+            print "  b) use spack uninstall -a to uninstall ALL matching specs."
+            sys.exit(1)
 
         if len(matching_specs) == 0:
             if args.force: continue
@@ -86,4 +91,13 @@ def uninstall(parser, args):
 
     # Uninstall packages in order now.
     for pkg in pkgs:
-        pkg.do_uninstall(force=args.force)
+        try:
+            pkg.do_uninstall(force=args.force)
+        except PackageStillNeededError, e:
+            tty.error("Will not uninstall %s" % e.spec.format("$_$@$%@$#", color=True))
+            print
+            print "The following packages depend on it:"
+            display_specs(e.dependents, long=True)
+            print
+            print "You can use spack uninstall -f to force this action."
+            sys.exit(1)

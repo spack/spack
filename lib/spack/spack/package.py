@@ -569,7 +569,7 @@ class Package(object):
             if self.name == spec.name:
                 continue
             for dep in spec.traverse():
-                if spec == dep:
+                if self.spec == dep:
                     dependents.append(spec)
         return dependents
 
@@ -897,12 +897,9 @@ class Package(object):
             raise InstallError(str(self.spec) + " is not installed.")
 
         if not force:
-            deps = self.installed_dependents
-            formatted_deps = [s.format('$_$@$%@$+$=$#') for s in deps]
-            if deps: raise InstallError(
-                "Cannot uninstall %s." % self.spec,
-                "The following installed packages depend on it: %s" %
-                ' '.join(formatted_deps))
+            dependents = self.installed_dependents
+            if dependents:
+                raise PackageStillNeededError(self.spec, dependents)
 
         # Pre-uninstall hook runs first.
         spack.hooks.pre_uninstall(self)
@@ -1180,6 +1177,15 @@ class InstallError(spack.error.SpackError):
     """Raised when something goes wrong during install or uninstall."""
     def __init__(self, message, long_msg=None):
         super(InstallError, self).__init__(message, long_msg)
+
+
+class PackageStillNeededError(InstallError):
+    """Raised when package is still needed by another on uninstall."""
+    def __init__(self, spec, dependents):
+        super(PackageStillNeededError, self).__init__(
+            "Cannot uninstall %s" % spec)
+        self.spec = spec
+        self.dependents = dependents
 
 
 class PackageError(spack.error.SpackError):
