@@ -1,10 +1,9 @@
-from os import environ
 from spack import *
 
 class Thrift(Package):
-    """The Apache Thrift software framework, for scalable cross-language services 
-    development, combines a software stack with a code generation engine to build 
-    services that work efficiently and seamlessly between C++, Java, Python, PHP, 
+    """The Apache Thrift software framework, for scalable cross-language services
+    development, combines a software stack with a code generation engine to build
+    services that work efficiently and seamlessly between C++, Java, Python, PHP,
     Ruby, Erlang, Perl, Haskell, C#, Cocoa, JavaScript, Node.js, Smalltalk, OCaml
      and Delphi and other languages."""
 
@@ -28,7 +27,9 @@ class Thrift(Package):
     # Compilation fails for most languages, fortunately cpp installs fine
     # All other languages (yes, including C) are omitted until someone needs them
     def install(self, spec, prefix):
-        environ["PY_PREFIX"] = prefix
+        env["PY_PREFIX"]   = prefix
+        env["JAVA_PREFIX"] = prefix
+
         configure("--prefix=%s" % prefix,
                   "--with-boost=%s" % spec['boost'].prefix,
                   "--with-c=no",
