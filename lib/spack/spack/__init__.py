@@ -70,6 +70,14 @@ from spack.directory_layout import YamlDirectoryLayout
 install_layout = YamlDirectoryLayout(install_path)
 
 #
+# This controls how packages are sorted when trying to choose
+# the most preferred package.  More preferred packages are sorted
+# first.
+#
+from spack.preferred_packages import PreferredPackages
+pkgsort = PreferredPackages()
+
+#
 # This controls how things are concretized in spack.
 # Replace it with a subclass if you want different
 # policies.
