@@ -289,9 +289,9 @@ fi
 #
 # Unset pesky environment variables that could affect build sanity.
 #
-unset LD_LIBRARY_PATH
-unset LD_RUN_PATH
-unset DYLD_LIBRARY_PATH
+#unset LD_LIBRARY_PATH
+#unset LD_RUN_PATH
+#unset DYLD_LIBRARY_PATH
 
 #
 # Filter '.' and Spack environment directories out of PATH so that

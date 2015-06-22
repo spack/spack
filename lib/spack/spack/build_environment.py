@@ -132,7 +132,7 @@ def set_build_environment_variables(pkg):
     # Remove these vars from the environment during build becaus they
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
-    pop_keys(os.environ, "LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH")
+    #pop_keys(os.environ, "LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH")
 
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = ['%s/bin' % prefix for prefix in dep_prefixes]
