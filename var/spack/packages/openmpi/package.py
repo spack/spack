@@ -1,4 +1,5 @@
 from spack import *
+import os
 
 class Openmpi(Package):
     """Open MPI is a project combining technologies and resources from
@@ -11,10 +12,16 @@ class Openmpi(Package):
 
     homepage = "http://www.open-mpi.org"
 
-    version('1.8.2', 'ab538ed8e328079d566fc797792e016e',
-            url='http://www.open-mpi.org/software/ompi/v1.8/downloads/openmpi-1.8.2.tar.gz')
-    version('1.6.5', '03aed2a4aa4d0b27196962a2a65fc475',
-            url = "http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.5.tar.bz2")
+    # Install from sources
+    if os.environ.has_key("MORSE_OPENMPI_TAR") and os.environ.has_key("MORSE_OPENMPI_TAR_MD5"):
+        version('local', '%s' % os.environ['MORSE_OPENMPI_TAR_MD5'],
+                url = "file://%s" % os.environ['MORSE_OPENMPI_TAR'])
+    else:
+        version('1.8.2', 'ab538ed8e328079d566fc797792e016e',
+                url='http://www.open-mpi.org/software/ompi/v1.8/downloads/openmpi-1.8.2.tar.gz')
+        version('1.6.5', '03aed2a4aa4d0b27196962a2a65fc475',
+                url = "http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.5.tar.bz2")
+
 
     patch('ad_lustre_rwcontig_open_source.patch', when="@1.6.5")
     patch('llnl-platforms.patch', when="@1.6.5")
@@ -23,6 +30,9 @@ class Openmpi(Package):
 
     def install(self, spec, prefix):
         config_args = ["--prefix=%s" % prefix]
+
+        # enable MPI_THREAD_MULTIPLE
+        config_args.append("--enable-mpi-thread-multiple")
 
         # TODO: use variants for this, e.g. +lanl, +llnl, etc.
         # use this for LANL builds, but for LLNL builds, we need:
