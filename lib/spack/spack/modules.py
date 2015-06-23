@@ -117,12 +117,8 @@ class EnvModule(object):
                     ('PATH', self.spec.prefix.bin),
                     ('MANPATH', self.spec.prefix.man),
                     ('MANPATH', self.spec.prefix.share_man),
-                    ('LIBRARY_PATH', self.spec.prefix.lib),
-                    ('LIBRARY_PATH', self.spec.prefix.lib64),
                     ('LD_LIBRARY_PATH', self.spec.prefix.lib),
-                    ('LD_LIBRARY_PATH', self.spec.prefix.lib64),
-                    ('PKG_CONFIG_PATH', join_path(self.spec.prefix.lib, 'pkgconfig')),
-                    ('PKG_CONFIG_PATH', join_path(self.spec.prefix.lib64, 'pkgconfig'))]:
+                    ('LD_LIBRARY_PATH', self.spec.prefix.lib64)]:
 
                 if os.path.isdir(directory):
                     add_path(var, directory)
