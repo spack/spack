@@ -31,7 +31,7 @@ class Mpfr(Package):
     url      = "http://www.mpfr.org/mpfr-current/mpfr-3.1.3.tar.bz2"
 
     version('3.1.3', '5fdfa3cfa5c86514ee4a241a1affa138')
-    version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
+    # version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
