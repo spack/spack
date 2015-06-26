@@ -1,0 +1,20 @@
+from spack import *
+
+class ZoltanDistrib(Package):
+    """"""
+    # FIXME: add a proper url for your package's homepage here.
+    homepage = "http://www.example.com"
+    url      = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions/zoltan_distrib_v3.82.tar.gz"
+
+    version('3.82', '2bcc852bedee873f3d21b519611605d0')
+
+    # FIXME: Add dependencies if this package requires them.
+    # depends_on("foo")
+
+    def install(self, spec, prefix):
+        # FIXME: Modify the configure line to suit your build system here.
+        configure("--prefix=%s" % prefix)
+
+        # FIXME: Add logic to build and install here
+        make()
+        make("install")

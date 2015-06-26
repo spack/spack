@@ -1,0 +1,16 @@
+from spack import *
+
+class ZoltanDistrib(Package):
+    """The Zoltan Library provides critical data-management services to a wide range of parallel applications."""
+    homepage = "http://www.cs.sandia.gov/Zoltan/Zoltan.html"
+    url      = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions/zoltan_distrib_v3.82.tar.gz"
+
+    version('3.82', '2bcc852bedee873f3d21b519611605d0')
+
+    depends_on("parmetis")
+
+    def install(self, spec, prefix):
+        configure("--prefix=%s" % prefix)
+
+        make("everything"))
+        make("install")
