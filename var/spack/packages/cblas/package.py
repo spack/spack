@@ -26,7 +26,9 @@ class Cblas(Package):
     def install(self, spec, prefix):
         make('all')
         mkdirp(prefix.lib)
+        mkdirp(prefix.include)
 
         # Rename the generated lib file to libcblas.a
         install('./lib/cblas_LINUX.a', '%s/libcblas.a' % prefix.lib)
-
+        install('./include/cblas.h','%s' % prefix.include)
+        install('./include/cblas_f77.h','%s' % prefix.include)
