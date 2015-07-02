@@ -29,6 +29,7 @@ import os
 import re
 import select
 import inspect
+
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 
@@ -43,6 +44,59 @@ def _strip(line):
 class _SkipWithBlock():
     """Special exception class used to skip a with block."""
     pass
+
+
+class keyboard_input(object):
+    """Disable canonical input and echo on a stream within a with block.
+
+    Use this with sys.stdin for keyboard input, e.g.:
+
+        with keyboard_input(sys.stdin):
+            r, w, x = select.select([sys.stdin], [], [])
+            # ... do something with keypresses ...
+
+    When the with block completes, this will restore settings before
+    canonical and echo were disabled.
+    """
+    def __init__(self, stream):
+        self.stream = stream
+
+
+    def __enter__(self):
+        self.old_cfg = None
+
+        # Ignore all this if the input stream is not a tty.
+        if not self.stream.isatty():
+            return
+
+        try:
+            # import and mark whether it worked.
+            import termios
+
+            # save old termios settings
+            fd = self.stream.fileno()
+            self.old_cfg = termios.tcgetattr(fd)
+
+            # create new settings with canonical input and echo
+            # disabled, so keypresses are immediate & don't echo.
+            self.new_cfg = termios.tcgetattr(fd)
+            self.new_cfg[3] &= ~termios.ICANON
+            self.new_cfg[3] &= ~termios.ECHO
+
+            # Apply new settings for terminal
+            termios.tcsetattr(fd, termios.TCSADRAIN, self.new_cfg)
+
+        except Exception, e:
+            pass  # Some OS's do not support termios, so ignore.
+
+
+    def __exit__(self, exc_type, exception, traceback):
+        # If termios was avaialble, restore old settings after the
+        # with block
+        if self.old_cfg:
+            import termios
+            termios.tcsetattr(
+                self.stream.fileno(), termios.TCSADRAIN, self.old_cfg)
 
 
 class log_output(object):
@@ -94,21 +148,30 @@ class log_output(object):
 
             read_file = os.fdopen(read, 'r', 0)
             with self.stream as log_file:
-                while True:
-                    rlist, w, x = select.select([read_file], [], [])
-                    if not rlist:
-                        break
+                with keyboard_input(sys.stdin):
+                    while True:
+                        rlist, w, x = select.select([read_file, sys.stdin], [], [])
+                        if not rlist:
+                            break
 
-                    line = read_file.readline()
-                    if not line:
-                        break
+                        # Allow user to toggle echo with 'v' key.
+                        # Currently ignores other chars.
+                        if sys.stdin in rlist:
+                            if sys.stdin.read(1) == 'v':
+                                self.echo = not self.echo
 
-                    # Echo to stdout if requested.
-                    if self.echo:
-                        sys.stdout.write(line)
+                        # handle output from the with block process.
+                        if read_file in rlist:
+                            line = read_file.readline()
+                            if not line:
+                                break
 
-                    # Stripped output to log file.
-                    log_file.write(_strip(line))
+                            # Echo to stdout if requested.
+                            if self.echo:
+                                sys.stdout.write(line)
+
+                            # Stripped output to log file.
+                            log_file.write(_strip(line))
 
             read_file.flush()
             read_file.close()
