@@ -103,21 +103,35 @@ class ConfigureGuesser(object):
         """Try to guess the type of build system used by the project, and return
            an appropriate configure line.
         """
+        autotools = "configure('--prefix=%s' % prefix)"
+        cmake     = "cmake('.', *std_cmake_args)"
+        python    = "python('setup.py', 'install', '--prefix=%s' % prefix)"
+
+        config_lines = ((r'/configure$',      'autotools', autotools),
+                        (r'/CMakeLists.txt$', 'cmake',     cmake),
+                        (r'/setup.py$',       'python',    python))
+
+        # Peek inside the tarball.
         tar = which('tar')
         output = tar(
             "--exclude=*/*/*", "-tf", stage.archive_file, return_output=True)
+        lines = output.split("\n")
 
-        autotools = 'configure("--prefix=%s" % prefix)'
-        cmake     = 'cmake(".", *std_cmake_args)'
-        lines = output.split('\n')
-
-        if any(re.search(r'/configure$', l) for l in lines):
-            self.configure = autotools
-        elif  any(re.search(r'/CMakeLists.txt$', l) for l in lines):
-            self.configure = cmake
+        # Set the configure line to the one that matched.
+        for pattern, bs, cl in config_lines:
+            if any(re.search(pattern, l) for l in lines):
+                config_line = cl
+                build_system = bs
+                break
         else:
-            # Both, with cmake commented out
-            self.configure = '%s\n        # %s' % (autotools, cmake)
+            # None matched -- just put both, with cmake commented out
+            config_line =  "# FIXME: Spack couldn't guess one, so here are some options:\n"
+            config_line += "        # " + autotools + "\n"
+            config_line += "        # " + cmake
+            build_system = 'unknown'
+
+        self.configure = config_line
+        self.build_system = build_system
 
 
 def make_version_calls(ver_hash_tuples):
@@ -152,13 +166,6 @@ def create(parser, args):
     tty.msg("This looks like a URL for %s version %s." % (name, version))
     tty.msg("Creating template for package %s" % name)
 
-    # Create a directory for the new package.
-    pkg_path = spack.db.filename_for_package_name(name)
-    if os.path.exists(pkg_path) and not args.force:
-        tty.die("%s already exists." % pkg_path)
-    else:
-        mkdirp(os.path.dirname(pkg_path))
-
     versions = spack.package.find_versions_of_archive(url)
     rkeys = sorted(versions.keys(), reverse=True)
     versions = OrderedDict(zip(rkeys, (versions[v] for v in rkeys)))
@@ -189,6 +196,17 @@ def create(parser, args):
 
     if not ver_hash_tuples:
         tty.die("Could not fetch any tarballs for %s." % name)
+
+    # Prepend 'py-' to python package names, by convention.
+    if guesser.build_system == 'python':
+        name = 'py-%s' % name
+
+    # Create a directory for the new package.
+    pkg_path = spack.db.filename_for_package_name(name)
+    if os.path.exists(pkg_path) and not args.force:
+        tty.die("%s already exists." % pkg_path)
+    else:
+        mkdirp(os.path.dirname(pkg_path))
 
     # Write out a template for the file
     with open(pkg_path, "w") as pkg_file:
