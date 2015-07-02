@@ -38,9 +38,5 @@ class Launchmon(Package):
             "--with-bootfabric=cobo",
             "--with-rm=slurm")
 
-        # TODO: remove once Jira SPACK-19 is fixed
-        import shutil
-        shutil.copy2('/usr/bin/libtool', 'libtool')
-
         make()
         make("install")
