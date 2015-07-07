@@ -26,6 +26,7 @@ import os
 import re
 import shutil
 import tempfile
+import sys
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
@@ -344,9 +345,7 @@ class DIYStage(object):
 
 def _get_mirrors():
     """Get mirrors from spack configuration."""
-    config = spack.config.get_mirror_config()
-    return [val for name, val in config.iteritems()]
-
+    return [path for name, path in spack.config.get_mirror_config()]
 
 
 def ensure_access(file=spack.stage_path):
