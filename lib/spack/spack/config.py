@@ -98,6 +98,7 @@ from external import yaml
 from external.yaml.error import MarkedYAMLError
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
+import copy
 
 _config_sections = {}
 class _ConfigCategory:
@@ -159,21 +160,19 @@ def _merge_dicts(d1, d2):
     if not d2:
         return d1
 
-    for key2, val2 in d2.iteritems():
-        if not key2 in d1:
-            d1[key2] = val2
-            continue
-        val1 = d1[key2]
-        if isinstance(val1, dict) and isinstance(val2, dict):
-            d1[key2] = _merge_dicts(val1, val2)
-            continue
-        if isinstance(val1, list) and isinstance(val2, list):
-            val1.extend(val2)
-            seen = set()
-            d1[key2] = [ x for x in val1 if not (x in seen or seen.add(x)) ]
-            continue
-        d1[key2] = val2
-    return d1
+    if (type(d1) is list) and (type(d2) is list):
+        d1.extend(d2)
+        return d1
+
+    if (type(d1) is dict) and (type(d2) is dict):
+        for key2, val2 in d2.iteritems():
+            if not key2 in d1:
+                d1[key2] = val2
+            else:
+                d1[key2] = _merge_dicts(d1[key2], val2)
+        return d1
+
+    return d2
 
 
 def get_config(category_name):
@@ -225,8 +224,8 @@ def get_compilers_config(arch=None):
 
 
 def get_mirror_config():
-    """Get the mirror configuration from config files"""
-    return get_config('mirrors')
+    """Get the mirror configuration from config files as a list of name/location tuples"""
+    return [x.items()[0] for x in get_config('mirrors')]
 
 
 def get_preferred_config():
