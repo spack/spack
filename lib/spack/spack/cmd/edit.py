@@ -78,9 +78,18 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', dest='force', action='store_true',
         help="Open a new file in $EDITOR even if package doesn't exist.")
-    subparser.add_argument(
-        '-c', '--command', dest='edit_command', action='store_true',
-        help="Edit the command with the supplied name instead of a package.")
+
+    filetypes = subparser.add_mutually_exclusive_group()
+    filetypes.add_argument(
+        '-c', '--command', dest='path', action='store_const',
+        const=spack.cmd.command_path, help="Edit the command with the supplied name.")
+    filetypes.add_argument(
+        '-t', '--test', dest='path', action='store_const',
+        const=spack.test_path, help="Edit the test with the supplied name.")
+    filetypes.add_argument(
+        '-m', '--module', dest='path', action='store_const',
+        const=spack.module_path, help="Edit the main spack module with the supplied name.")
+
     subparser.add_argument(
         'name', nargs='?', default=None, help="name of package to edit")
 
@@ -88,19 +97,17 @@ def setup_parser(subparser):
 def edit(parser, args):
     name = args.name
 
-    if args.edit_command:
-        if not name:
-            path = spack.cmd.command_path
-        else:
-            path = join_path(spack.cmd.command_path, name + ".py")
-            if not os.path.exists(path):
+    path = spack.packages_path
+    if args.path:
+        path = args.path
+        if name:
+            path = join_path(path, name + ".py")
+            if not args.force and not os.path.exists(path):
                 tty.die("No command named '%s'." % name)
         spack.editor(path)
 
+    elif name:
+        edit_package(name, args.force)
     else:
         # By default open the directory where packages or commands live.
-        if not name:
-            path = spack.packages_path
-            spack.editor(path)
-        else:
-            edit_package(name, args.force)
+        spack.editor(path)
