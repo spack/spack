@@ -56,11 +56,16 @@ class PythonVersionTest(unittest.TestCase):
                         yield os.path.join(root, filename)
 
 
-    def test_python_versions(self):
+    def all_package_py_files(self):
+        for name in spack.db.all_package_names():
+            yield spack.db.filename_for_package_name(name)
+
+
+    def check_python_versions(self, files):
         # dict version -> filename -> reasons
         all_issues = {}
 
-        for fn in self.spack_python_files():
+        for fn in files:
             with open(fn) as pyfile:
                 versions = pyqver2.get_versions(pyfile.read())
                 for ver, reasons in versions.items():
@@ -93,3 +98,11 @@ class PythonVersionTest(unittest.TestCase):
                 print fmt % msg
 
         self.assertTrue(len(all_issues) == 0)
+
+
+    def test_core_module_compatibility(self):
+        self.check_python_versions(self.spack_python_files())
+
+
+    def test_package_module_compatibility(self):
+        self.check_python_versions(self.all_package_py_files())
