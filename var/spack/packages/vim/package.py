@@ -27,7 +27,6 @@ class Vim(Package):
 
     feature_sets = ('huge', 'big', 'normal', 'small', 'tiny')
     for fs in feature_sets:
-      print fs
       variant(fs, default=False, description="Use '%s' feature set" % fs)
 
     variant('python', default=False, description="build with Python")
