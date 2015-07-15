@@ -13,7 +13,7 @@ class Moab(Package):
 
     depends_on("cgm")
     depends_on("hdf5")
-    depends_on("zoltan")
+    depends_on("zoltan_distrib")
     depends_on("parmetis")
     depends_on("netcdf")
 
@@ -28,7 +28,7 @@ class Moab(Package):
                   "--with-cgm=%s" % spec['cgm'].prefix, 
                   "--enable-igeom", 
                   "--with-hdf5=%s" % spec['hdf5'].prefix, 
-                  "--with-zoltan=%s" % spec['zoltan'].prefix, 
+                  "--with-zoltan=%s" % spec['zoltan_distrib'].prefix, 
                   "--with-parmetis=%s" % spec['parmetis'].prefix, 
                   "--with-netcdf=%s" % spec['netcdf'].prefix, 
                   "--disable-fortran")
