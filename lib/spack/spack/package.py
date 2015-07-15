@@ -832,6 +832,10 @@ class Package(object):
                 cleanup()
                 raise
 
+        # Set parallelism before starting build.
+        self.make_jobs = make_jobs
+
+        # Do the build.
         spack.build_environment.fork(self, real_work)
 
         # Once everything else is done, run post install hooks
