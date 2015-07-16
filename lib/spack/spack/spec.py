@@ -736,26 +736,31 @@ class Spec(object):
         if visited is None: visited = set()
 
         if self.name in visited:
-            return
+            return False
+
+        changed = False
 
         # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self.dependencies.keys()):
-            self.dependencies[name]._concretize_helper(presets, visited)
+            changed |= self.dependencies[name]._concretize_helper(presets, visited)
 
         if self.name in presets:
-            self.constrain(presets[self.name])
+            changed |= self.constrain(presets[self.name])
+
         else:
             # Concretize virtual dependencies last.  Because they're added
             # to presets below, their constraints will all be merged, but we'll
             # still need to select a concrete package later.
             if not self.virtual:
-                spack.concretizer.concretize_architecture(self)
-                spack.concretizer.concretize_compiler(self)
-                spack.concretizer.concretize_version(self)
-                spack.concretizer.concretize_variants(self)
+                changed |= any(
+                    (spack.concretizer.concretize_architecture(self),
+                     spack.concretizer.concretize_compiler(self),
+                     spack.concretizer.concretize_version(self),
+                     spack.concretizer.concretize_variants(self)))
             presets[self.name] = self
 
         visited.add(self.name)
+        return changed
 
 
     def _replace_with(self, concrete):
@@ -783,20 +788,22 @@ class Spec(object):
               this are infrequent, but should implement this before it is
               a problem.
         """
+        changed = False
         while True:
             virtuals =[v for v in self.traverse() if v.virtual]
             if not virtuals:
-                return
+                return changed
 
             for spec in virtuals:
                 providers = spack.db.providers_for(spec)
                 concrete = spack.concretizer.choose_provider(spec, providers)
                 concrete = concrete.copy()
                 spec._replace_with(concrete)
+                changed = True
 
             # If there are duplicate providers or duplicate provider deps, this
             # consolidates them and merge constraints.
-            self.normalize(force=True)
+            changed |= self.normalize(force=True)
 
 
     def concretize(self):
@@ -814,9 +821,16 @@ class Spec(object):
         if self._concrete:
             return
 
-        self.normalize()
-        self._expand_virtual_packages()
-        self._concretize_helper()
+        changed = True
+        force = False
+
+        while changed:
+            changes = (self.normalize(force=force),
+                       self._expand_virtual_packages(),
+                       self._concretize_helper())
+            changed = any(changes)
+            force=True
+
         self._concrete = True
 
 
@@ -982,6 +996,7 @@ class Spec(object):
         # it from the package description.
         if dep.name not in spec_deps:
             spec_deps[dep.name] = dep.copy()
+            changed = True
 
         # Constrain package information with spec info
         try:
@@ -998,7 +1013,6 @@ class Spec(object):
         dependency = spec_deps[dep.name]
         if dep.name not in self.dependencies:
             self._add_dependency(dependency)
-            changed = True
 
         changed |= dependency._normalize_helper(visited, spec_deps, provider_index)
         return changed
@@ -1031,13 +1045,12 @@ class Spec(object):
                 if pkg_dep:
                     changed |= self._merge_dependency(
                         pkg_dep, visited, spec_deps, provider_index)
-
             any_change |= changed
 
         return any_change
 
 
-    def normalize(self, **kwargs):
+    def normalize(self, force=False):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
@@ -1050,13 +1063,13 @@ class Spec(object):
                 package that provides a virtual package that is in the spec,
                 then we replace the virtual package with the non-virtual one.
 
-           4. The spec DAG matches package DAG.
+           4. The spec DAG matches package DAG, including default variant values.
 
            TODO: normalize should probably implement some form of cycle detection,
            to ensure that the spec is actually a DAG.
         """
-        if self._normal and not kwargs.get('force', False):
-            return
+        if self._normal and not force:
+            return False
 
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_names()
@@ -1070,19 +1083,18 @@ class Spec(object):
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         visited = set()
-        self._normalize_helper(visited, spec_deps, index)
+        any_change = self._normalize_helper(visited, spec_deps, index)
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.
         extra = set(spec_deps.keys()).difference(visited)
-
-        # Anything left over is not a valid part of the spec.
         if extra:
             raise InvalidDependencyException(
                 self.name + " does not depend on " + comma_or(extra))
 
         # Mark the spec as normal once done.
         self._normal = True
+        return any_change
 
 
     def normalized(self):

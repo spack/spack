@@ -63,9 +63,9 @@ class DefaultConcretizer(object):
         """
         # return if already concrete.
         if spec.versions.concrete:
-            return
+            return False
 
-        # If there are known avaialble versions, return the most recent
+        # If there are known available versions, return the most recent
         # version that satisfies the spec
         pkg = spec.package
         valid_versions = sorted(
@@ -93,6 +93,8 @@ class DefaultConcretizer(object):
                 else:
                     spec.versions = ver([last])
 
+        return True   # Things changed
+
 
     def concretize_architecture(self, spec):
         """If the spec already had an architecture, return.  Otherwise if
@@ -109,22 +111,27 @@ class DefaultConcretizer(object):
            they're not explicit.
         """
         if spec.architecture is not None:
-            return
+            return False
 
         if spec.root.architecture:
             spec.architecture = spec.root.architecture
         else:
             spec.architecture = spack.architecture.sys_type()
 
+        assert(spec.architecture is not None)
+        return True   # changed
+
 
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return.  Otherwise, add
            the default variants from the package specification.
         """
+        changed = False
         for name, variant in spec.package.variants.items():
             if name not in spec.variants:
-                spec.variants[name] = spack.spec.VariantSpec(
-                    name, variant.default)
+                spec.variants[name] = spack.spec.VariantSpec(name, variant.default)
+                changed = True
+        return changed
 
 
     def concretize_compiler(self, spec):
@@ -144,7 +151,7 @@ class DefaultConcretizer(object):
         if (spec.compiler and
             spec.compiler.concrete and
             spec.compiler in all_compilers):
-            return
+            return False
 
         try:
             nearest = next(p for p in spec.traverse(direction='parents')
@@ -164,6 +171,8 @@ class DefaultConcretizer(object):
 
         except StopIteration:
             spec.compiler = spack.compilers.default_compiler().copy()
+
+        return True  # things changed.
 
 
     def choose_provider(self, spec, providers):
