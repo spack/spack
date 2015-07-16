@@ -81,7 +81,16 @@ class ProviderIndex(object):
                     provider_map[provided_spec] = set()
 
                 if self.restrict:
-                    provider_map[provided_spec].add(spec)
+                    provider_set = provider_map[provided_spec]
+
+                    # If this package existed in the index before,
+                    # need to take the old versions out, as they're
+                    # now more constrained.
+                    old = set([s for s in provider_set if s.name == spec.name])
+                    provider_set.difference_update(old)
+
+                    # Now add the new version.
+                    provider_set.add(spec)
 
                 else:
                     # Before putting the spec in the map, constrain it so that
