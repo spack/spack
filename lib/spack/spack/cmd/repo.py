@@ -32,7 +32,7 @@ from llnl.util.filesystem import join_path, mkdirp
 import spack.spec
 import spack.config
 from spack.util.environment import get_path
-from spack.packages import packagerepo_filename
+from spack.packages import repo_config
 
 import os
 import exceptions
@@ -42,43 +42,48 @@ description = "Manage package sources"
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(
-        metavar='SUBCOMMAND', dest='packagerepo_command')
+        metavar='SUBCOMMAND', dest='repo_command')
 
-    add_parser = sp.add_parser('add', help=packagerepo_add.__doc__)
+    add_parser = sp.add_parser('add', help=repo_add.__doc__)
     add_parser.add_argument('directory', help="Directory containing the packages.")
 
-    create_parser = sp.add_parser('create', help=packagerepo_create.__doc__)
+    create_parser = sp.add_parser('create', help=repo_create.__doc__)
     create_parser.add_argument('directory', help="Directory containing the packages.")
     create_parser.add_argument('name', help="Name of new package repository.")
+<<<<<<< HEAD:lib/spack/spack/cmd/packagerepo.py
     
     remove_parser = sp.add_parser('remove', help=packagerepo_remove.__doc__)
+=======
+
+    remove_parser = sp.add_parser('remove', help=repo_remove.__doc__)
+>>>>>>> Save changes to external repo integration:lib/spack/spack/cmd/repo.py
     remove_parser.add_argument('name')
 
-    list_parser = sp.add_parser('list', help=packagerepo_list.__doc__)
+    list_parser = sp.add_parser('list', help=repo_list.__doc__)
 
 
 def add_to_config(dir):
     config = spack.config.get_config()
     user_config = spack.config.get_config('user')
     orig = None
-    if config.has_value('packagerepo', '', 'directories'):
-        orig = config.get_value('packagerepo', '', 'directories')
+    if config.has_value('repo', '', 'directories'):
+        orig = config.get_value('repo', '', 'directories')
     if orig and dir in orig.split(':'):
         return False
 
     newsetting = orig + ':' + dir if orig else dir
-    user_config.set_value('packagerepo', '', 'directories', newsetting)
+    user_config.set_value('repo', '', 'directories', newsetting)
     user_config.write()
     return True
 
 
-def packagerepo_add(args):
+def repo_add(args):
     """Add package sources to the Spack configuration."""
     if not add_to_config(args.directory):
         tty.die('Repo directory %s already exists in the repo list' % dir)
         
 
-def packagerepo_create(args):
+def repo_create(args):
     """Create a new package repo at a directory and name"""
     dir = args.directory
     name = args.name
@@ -90,7 +95,7 @@ def packagerepo_create(args):
             mkdirp(dir)
         except exceptions.OSError, e:
             tty.die('Failed to create new directory %s' % dir)
-    path = os.path.join(dir, packagerepo_filename)
+    path = os.path.join(dir, repo_config)
     try:
         with closing(open(path, 'w')) as repofile:
             repofile.write(name + '\n')
@@ -101,12 +106,12 @@ def packagerepo_create(args):
         tty.warn('Repo directory %s already exists in the repo list' % dir)
 
 
-def packagerepo_remove(args):
+def repo_remove(args):
     """Remove a package source from the Spack configuration"""
     pass
 
 
-def packagerepo_list(args):
+def repo_list(args):
     """List package sources and their mnemoics"""
     root_names = spack.db.repos
     max_len = max(len(s[0]) for s in root_names)
@@ -116,9 +121,9 @@ def packagerepo_list(args):
         
     
 
-def packagerepo(parser, args):
-    action = { 'add'    : packagerepo_add,
-               'create' : packagerepo_create,
-               'remove' : packagerepo_remove,
-               'list'   : packagerepo_list }
-    action[args.packagerepo_command](args)
+def repo(parser, args):
+    action = { 'add'    : repo_add,
+               'create' : repo_create,
+               'remove' : repo_remove,
+               'list'   : repo_list }
+    action[args.repo_command](args)

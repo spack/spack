@@ -30,7 +30,9 @@ import glob
 import imp
 import spack.config
 import re
-from contextlib import closing
+import itertools
+import traceback
+from external import yaml
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
@@ -44,7 +46,7 @@ from sets import Set
 from spack.repo_loader import RepoLoader, imported_packages_module, package_file_name
 
 # Filename for package repo names
-packagerepo_filename = 'reponame'
+repo_config = 'repo.yaml'
 
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
@@ -56,56 +58,85 @@ def _autospec(function):
     return converter
 
 
+def sliding_window(seq, n):
+    it = iter(seq)
+    result = tuple(itertools.islice(it, n))
+    if len(result) == n:
+        yield result
+    for elem in it:
+        result = result[1:] + (elem,)
+        yield result
+
+
 class PackageDB(object):
-    def __init__(self, default_root):
-        """Construct a new package database from a root directory."""
+    def __init__(self, *repo_dirs):
+        """Construct a new package database from a list of directories.
 
-        #Collect the repos from the config file and read their names from the file system
-        repo_dirs = self._repo_list_from_config()
-        repo_dirs.append(default_root)
-        self.repos = [(self._read_reponame_from_directory(dir), dir) for dir in repo_dirs]
+        Args:
+          repo_dirs   List of directories containing packages.
 
-        # Check for duplicate repo names
-        s = set()
-        dups = set(r for r in self.repos if r[0] in s or s.add(r[0]))
-        if dups:
-            reponame = list(dups)[0][0]
-            dir1 = list(dups)[0][1]
-            dir2 = dict(s)[reponame]
-            tty.die("Package repo %s in directory %s has the same name as the "
-                      "repo in directory %s" %
-                      (reponame, dir1, dir2))
+        If ``repo_dirs`` is empty, gets repository list from Spack configuration.
+        """
+        if not repo_dirs:
+            repo_dirs = spack.config.get_repos_config()
+            if not repo_dirs:
+                tty.die("Spack configuration contains no package repositories.")
+
+        # Collect the repos from the config file and read their names
+        # from the file system
+        repo_dirs = [spack.config.substitute_spack_prefix(rd) for rd in repo_dirs]
+
+        self.repos = []
+        for rdir in repo_dirs:
+            rname = self._read_reponame_from_directory(rdir)
+            if rname:
+                self.repos.append((self._read_reponame_from_directory(rdir), rdir))
+
+
+        by_path = sorted(self.repos, key=lambda r:r[1])
+        by_name = sorted(self.repos, key=lambda r:r[0])
+
+        for r1, r2 in by_path:
+            if r1[1] == r2[1]:
+                tty.die("Package repos are the same:",
+                        "  %20s  %s" % r1, "  %20s %s" % r2)
+
+        for r1, r2 in by_name:
+            if r1[0] == r2[0]:
+                tty.die("Package repos cannot have the same name:",
+                        "  %20s  %s" % r1, "  %20s %s" % r2)
 
         # For each repo, create a RepoLoader
-        self.repo_loaders = dict([(r[0], RepoLoader(r[0], r[1])) for r in self.repos])
+        self.repo_loaders = dict((name, RepoLoader(name, path))
+                                 for name, path in self.repos)
 
         self.instances = {}
         self.provider_index = None
 
 
     def _read_reponame_from_directory(self, dir):
-        """For a packagerepo directory, read the repo name from the dir/reponame file"""
-        path = os.path.join(dir, packagerepo_filename)
+        """For a packagerepo directory, read the repo name from the
+        $root/repo.yaml file"""
+        path = os.path.join(dir, repo_config)
 
         try:
-            with closing(open(path, 'r')) as reponame_file:
-                name = reponame_file.read().lstrip().rstrip()
-                if not re.match(r'[a-zA-Z][a-zA-Z0-9]+', name):
-                    tty.die("Package repo name '%s', read from %s, is an invalid name. "
-                            "Repo names must began with a letter and only contain letters "
-                            "and numbers." % (name, path))
+            with open(path) as reponame_file:
+                yaml_data = yaml.load(reponame_file)
+
+                if (not yaml_data or
+                    'repo' not in yaml_data or
+                    'namespace' not in yaml_data['repo']):
+                    tty.die("Invalid %s in %s" % (repo_config, dir))
+
+                name = yaml_data['repo']['namespace']
+                if not re.match(r'[a-zA-Z][a-zA-Z0-9_.]+', name):
+                    tty.die(
+                        "Package repo name '%s', read from %s, is an invalid name. "
+                        "Repo names must began with a letter and only contain "
+                        "letters and numbers." % (name, path))
                 return name
         except exceptions.IOError, e:
-            tty.die("Could not read from package repo name file %s" % path)
-
-
-
-    def _repo_list_from_config(self):
-        """Read through the spackconfig and return the list of packagerepo directories"""
-        config = spack.config.get_config()
-        if not config.has_option('packagerepo', 'directories'): return []
-        dir_string = config.get('packagerepo', 'directories')
-        return dir_string.split(':')
+            tty.die("Error reading %s when opening %s" % (repo_config, dir))
 
 
     @_autospec
@@ -125,7 +156,7 @@ class PackageDB(object):
             except Exception, e:
                 if spack.debug:
                     sys.excepthook(*sys.exc_info())
-                raise FailedConstructorError(spec.name, e)
+                raise FailedConstructorError(spec.name, *sys.exc_info())
 
         return self.instances[spec]
 
@@ -304,8 +335,10 @@ class UnknownPackageError(spack.error.SpackError):
 
 class FailedConstructorError(spack.error.SpackError):
     """Raised when a package's class constructor fails."""
-    def __init__(self, name, reason):
+    def __init__(self, name, exc_type, exc_obj, exc_tb):
         super(FailedConstructorError, self).__init__(
             "Class constructor failed for package '%s'." % name,
-            str(reason))
+            '\nCaused by:\n' +
+            ('%s: %s\n' % (exc_type.__name__, exc_obj)) +
+            ''.join(traceback.format_tb(exc_tb)))
         self.name = name

@@ -1,8 +1,10 @@
-import spack
-import spack.repos
 import re
+import sys
 import types
+import traceback
+
 from llnl.util.lang import *
+import spack
 
 # Name of module under which packages are imported
 imported_packages_module = 'spack.repos'
@@ -13,14 +15,30 @@ package_file_name = 'package.py'
 import sys
 class LazyLoader:
     """The LazyLoader handles cases when repo modules or classes
-       are imported.  It watches for 'spack.repos.*' loads, then 
+       are imported.  It watches for 'spack.repos.*' loads, then
        redirects the load to the appropriate module."""
     def find_module(self, fullname, pathname):
         if not fullname.startswith(imported_packages_module):
             return None
+
+        print "HERE ==="
+        print
+        for line in traceback.format_stack():
+            print "    ", line.strip()
+        print
+        print "full: ", fullname
+        print "path: ", pathname
+        print
+
         partial_name = fullname[len(imported_packages_module)+1:]
-        repo = partial_name.split('.')[0]        
-        module = partial_name.split('.')[1]
+
+        print "partial: ", partial_name
+        print
+
+        last_dot = partial_name.rfind('.')
+        repo = partial_name[:last_dot]
+        module = partial_name[last_dot+1:]
+
         repo_loader = spack.db.repo_loaders.get(repo)
         if repo_loader:
             try:
@@ -43,7 +61,7 @@ class RepoNamespace(types.ModuleType):
     def __init__(self):
         import sys
         sys.modules[imported_packages_module] = self
-        
+
     def __getattr__(self, name):
         if name in _reponames:
             return _reponames[name]
@@ -62,7 +80,7 @@ class RepoLoader(types.ModuleType):
     """Each RepoLoader is associated with a repository, and the RepoLoader is
        responsible for loading packages out of that repository.  For example,
        a RepoLoader may be responsible for spack.repos.original, and when someone
-       references spack.repos.original.libelf that RepoLoader will load the 
+       references spack.repos.original.libelf that RepoLoader will load the
        libelf package."""
     def __init__(self, reponame, repopath):
         self.path = repopath
@@ -70,7 +88,6 @@ class RepoLoader(types.ModuleType):
         self.module_name = imported_packages_module + '.' + reponame
         if not reponame in _reponames:
             _reponames[reponame] = self
-        spack.repos.add_repo(reponame, self)
 
         import sys
         sys.modules[self.module_name] = self
@@ -111,5 +128,3 @@ class RepoLoader(types.ModuleType):
                 pkg_name, file_path, e.message))
 
         return module
-
-

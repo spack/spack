@@ -47,11 +47,17 @@ install_path   = join_path(opt_path, "spack")
 share_path     = join_path(prefix, "share", "spack")
 
 #
-# Set up the packages database.
+# Setup the spack.repos namespace
+#
+from spack.repo_loader import RepoNamespace
+repos = RepoNamespace()
+
+#
+# Set up the default packages database.
 #
 from spack.packages import PackageDB
 packages_path = join_path(var_path, "packages")
-db = PackageDB(packages_path)
+db = PackageDB()
 
 #
 # Paths to mock files for testing.
@@ -61,12 +67,6 @@ mock_packages_path = join_path(var_path, "mock_packages")
 mock_config_path = join_path(var_path, "mock_configs")
 mock_site_config = join_path(mock_config_path, "site_spackconfig")
 mock_user_config = join_path(mock_config_path, "user_spackconfig")
-
-#
-# Setup the spack.repos namespace
-#
-from spack.repo_loader import RepoNamespace
-repos = RepoNamespace()
 
 #
 # This controls how spack lays out install prefixes and
