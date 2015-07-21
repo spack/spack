@@ -38,6 +38,8 @@ class Dyninst(Package):
     version('8.1.1', 'd1a04e995b7aa70960cd1d1fac8bd6ac',
             url="http://www.paradyn.org/release8.1/DyninstAPI-8.1.1.tgz")
 
+    variant('krelloptions', default=False, description="build dyninst includes into include/dyninst.")
+
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("boost@1.42:")
@@ -48,15 +50,29 @@ class Dyninst(Package):
         libdwarf = spec['libdwarf'].prefix
 
         with working_dir('spack-build', create=True):
-            cmake('..',
-                  '-DBoost_INCLUDE_DIR=%s' % spec['boost'].prefix.include,
-                  '-DBoost_LIBRARY_DIR=%s' % spec['boost'].prefix.lib,
-                  '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                  '-DLIBELF_INCLUDE_DIR=%s'   % join_path(libelf.include, 'libelf'),
-                  '-DLIBELF_LIBRARIES=%s'     % join_path(libelf.lib, 'libelf.so'),
-                  '-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include,
-                  '-DLIBDWARF_LIBRARIES=%s'   % join_path(libdwarf.lib, 'libdwarf.so'),
-                  *std_cmake_args)
+            # cbtf-krell and openspeedshop expect to reference dyninst/include, so adding include specification to that end
+            if '+krelloptions' in spec:
+                cmake('..',
+                      '-DINSTALL_INCLUDE_DIR=%s'  % join_path(self.prefix.include, 'dyninst'),
+                      '-DBoost_INCLUDE_DIR=%s'    % spec['boost'].prefix.include,
+                      '-DBoost_LIBRARY_DIR=%s'    % spec['boost'].prefix.lib,
+                      '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                      '-DLIBELF_INCLUDE_DIR=%s'   % join_path(libelf.include, 'libelf'),
+                      '-DLIBELF_LIBRARIES=%s'     % join_path(libelf.lib, 'libelf.so'),
+                      '-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include,
+                      '-DLIBDWARF_LIBRARIES=%s'   % join_path(libdwarf.lib, 'libdwarf.so'),
+                      *std_cmake_args)
+            else:
+                cmake('..',
+                      '-DBoost_INCLUDE_DIR=%s'    % spec['boost'].prefix.include,
+                      '-DBoost_LIBRARY_DIR=%s'    % spec['boost'].prefix.lib,
+                      '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                      '-DLIBELF_INCLUDE_DIR=%s'   % join_path(libelf.include, 'libelf'),
+                      '-DLIBELF_LIBRARIES=%s'     % join_path(libelf.lib, 'libelf.so'),
+                      '-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include,
+                      '-DLIBDWARF_LIBRARIES=%s'   % join_path(libdwarf.lib, 'libdwarf.so'),
+                      *std_cmake_args)
+
             make()
             make("install")
 
