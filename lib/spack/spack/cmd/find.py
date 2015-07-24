@@ -92,7 +92,7 @@ def display_specs(specs, **kwargs):
             # Print one spec per line along with prefix path
             width = max(len(s) for s in abbreviated)
             width += 2
-            format = "    %-{}s%s".format(width)
+            format = "    %%-%ds%%s" % width
 
             for abbrv, spec in zip(abbreviated, specs):
                 if hashes:
