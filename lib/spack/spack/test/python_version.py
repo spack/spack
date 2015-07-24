@@ -41,12 +41,9 @@ spack_max_version = (2,6)
 
 class PythonVersionTest(unittest.TestCase):
 
-    def spack_python_files(self):
+    def pyfiles(self, *search_paths):
         # first file is the spack script.
         yield spack.spack_file
-
-        # Next files are all the source files and package files.
-        search_paths = [spack.lib_path, spack.var_path]
 
         # Iterate through the whole spack source tree.
         for path in search_paths:
@@ -56,16 +53,20 @@ class PythonVersionTest(unittest.TestCase):
                         yield os.path.join(root, filename)
 
 
-    def all_package_py_files(self):
+    def package_py_files(self):
         for name in spack.db.all_package_names():
             yield spack.db.filename_for_package_name(name)
 
 
-    def check_python_versions(self, files):
+    def check_python_versions(self, *files):
         # dict version -> filename -> reasons
         all_issues = {}
 
         for fn in files:
+            if fn != '/Users/gamblin2/src/spack/var/spack/packages/vim/package.py':
+                continue
+            print fn
+
             with open(fn) as pyfile:
                 versions = pyqver2.get_versions(pyfile.read())
                 for ver, reasons in versions.items():
@@ -101,8 +102,8 @@ class PythonVersionTest(unittest.TestCase):
 
 
     def test_core_module_compatibility(self):
-        self.check_python_versions(self.spack_python_files())
+        self.check_python_versions(*self.pyfiles(spack.lib_path))
 
 
     def test_package_module_compatibility(self):
-        self.check_python_versions(self.all_package_py_files())
+        self.check_python_versions(*self.pyfiles(spack.packages_path))
