@@ -425,12 +425,21 @@ class GitFetchStrategy(VCSFetchStrategy):
             if self.git_version > ver('1.7.10'):
                 args.append('--single-branch')
 
+            cloned = False
             # Yet more efficiency, only download a 1-commit deep tree
             if self.git_version >= ver('1.7.1'):
-                args.extend(['--depth','1'])
+                try:
+                    self.git(*(args + ['--depth','1', self.url]))
+                    cloned = True
+                except spack.error.SpackError:
+                    # This will fail with the dumb HTTP transport
+                    # continue and try without depth, cleanup first
+                    pass
 
-            args.append(self.url)
-            self.git(*args)
+            if not cloned:
+                args.append(self.url)
+                self.git(*args)
+
             self.stage.chdir_to_source()
 
             # For tags, be conservative and check them out AFTER
