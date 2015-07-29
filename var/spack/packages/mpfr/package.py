@@ -32,6 +32,8 @@ class Mpfr(Package):
 
     version('3.1.2', 'ee2c3ac63bf0c2359bf08fc3ee094c19')
 
+    depends_on('gmp')
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
