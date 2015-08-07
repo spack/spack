@@ -16,6 +16,10 @@ class PyPandas(Package):
     depends_on('py-scipy')
     depends_on('py-setuptools')
     depends_on('py-pytz')
+    depends_on('libdrm')
+    depends_on('libpciaccess')
+    depends_on('llvm')
+    depends_on('mesa')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
