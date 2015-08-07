@@ -35,9 +35,11 @@ class Vim(Package):
     variant('ruby', default=False, description="build with Ruby")
     depends_on('ruby', when='+ruby')
 
-    variant('cscope', default=False, description="build cscope support")
+    variant('cscope', default=False, description="build with cscope support")
+    depends_on('cscope', when='+cscope')
 
-    variant('gui', default=False, description="build gui (gvim)")
+    variant('gui', default=False, description="build with gui (gvim)")
+    # virtual dependency?
 
     def install(self, spec, prefix):
       feature_set = None
