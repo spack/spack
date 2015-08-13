@@ -46,14 +46,14 @@ class Vim(Package):
       for fs in self.feature_sets:
         if "+" + fs in spec:
           if feature_set is not None:
-            tty.error("Only one feature set allowed, both {} and {} specified".format(
-              feature_set,
-              fs))
+            tty.error("Only one feature set allowed, both %s and %s specified"
+                      % (feature_set, fs))
           feature_set = fs
       if '+gui' in spec:
         if feature_set is not None:
           if feature_set is not 'huge':
-            tty.error("+gui variant requires 'huge' feature set, {} was specified".format(feature_set))
+            tty.error("+gui variant requires 'huge' feature set, %s was specified"
+                      % feature_set)
         feature_set = 'huge'
       if feature_set is None:
         feature_set = 'normal'
