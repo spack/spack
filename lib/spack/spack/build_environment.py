@@ -88,10 +88,10 @@ def set_compiler_environment_variables(pkg):
     compiler = pkg.compiler
 
     # Set compiler variables used by CMake and autotools
-    os.environ['CC']  = 'cc'
-    os.environ['CXX'] = 'c++'
-    os.environ['F77'] = 'f77'
-    os.environ['FC']  = 'f90'
+    os.environ['CC']  = join_path(spack.build_env_path, 'cc')
+    os.environ['CXX'] = join_path(spack.build_env_path, 'c++')
+    os.environ['F77'] = join_path(spack.build_env_path, 'f77')
+    os.environ['FC']  = join_path(spack.build_env_path, 'f90')
 
     # Set SPACK compiler variables so that our wrapper knows what to call
     if compiler.cc:

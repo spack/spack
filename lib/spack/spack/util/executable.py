@@ -34,6 +34,7 @@ import llnl.util.tty as tty
 import spack
 import spack.error
 
+
 class Executable(object):
     """Class representing a program that can be run on the command line."""
     def __init__(self, name):
@@ -58,7 +59,20 @@ class Executable(object):
         return_output = kwargs.get("return_output", False)
         fail_on_error = kwargs.get("fail_on_error", True)
         ignore_errors = kwargs.get("ignore_errors", ())
+
+        output        = kwargs.get("output", sys.stdout)
         error         = kwargs.get("error", sys.stderr)
+        input         = kwargs.get("input", None)
+
+        def streamify(arg, mode):
+            if isinstance(arg, basestring):
+                return open(arg, mode), True
+            elif arg is None and mode != 'r':
+                return open(os.devnull, mode), True
+            return arg, False
+        output, ostream = streamify(output, 'w')
+        error,  estream = streamify(error,  'w')
+        input,  istream = streamify(input,  'r')
 
         # if they just want to ignore one error code, make it a tuple.
         if isinstance(ignore_errors, int):
@@ -77,16 +91,12 @@ class Executable(object):
         cmd_line = ' '.join(cmd)
         tty.debug(cmd_line)
 
-        close_error = False
         try:
-            if error is None:
-                error = open(os.devnull, 'w')
-                close_error = True
-
             proc = subprocess.Popen(
                 cmd,
+                stdin=input,
                 stderr=error,
-                stdout=subprocess.PIPE if return_output else sys.stdout)
+                stdout=subprocess.PIPE if return_output else output)
             out, err = proc.communicate()
             self.returncode = proc.returncode
 
@@ -110,8 +120,9 @@ class Executable(object):
                     % (proc.returncode, cmd_line))
 
         finally:
-            if close_error:
-                error.close()
+            if ostream: output.close()
+            if estream: error.close()
+            if istream: input.close()
 
 
     def __eq__(self, other):
