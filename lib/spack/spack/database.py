@@ -28,6 +28,9 @@ import inspect
 import glob
 import imp
 
+import time
+import copy
+
 from external import yaml
 from external.yaml.error import MarkedYAMLError
 
@@ -43,8 +46,18 @@ from spack.virtual import ProviderIndex
 from spack.util.naming import mod_to_class, validate_module_name
 
 
+def _autospec(function):
+    """Decorator that automatically converts the argument of a single-arg
+       function to a Spec."""
+    def converter(self, spec_like, **kwargs):
+        if not isinstance(spec_like, spack.spec.Spec):
+            spec_like = spack.spec.Spec(spec_like)
+        return function(self, spec_like, **kwargs)
+    return converter
+
+
 class Database(object):
-    def __init__(self,file_name="specDB.yaml"):
+    def __init__(self,root,file_name="specDB.yaml"):
         """
         Create an empty Database
         Location defaults to root/specDB.yaml
@@ -53,13 +66,16 @@ class Database(object):
         path: the path to the install of that package
         dep_hash: a hash of the dependence DAG for that package
         """
+        self.root = root
         self.file_name = file_name
+        self.file_path = join_path(self.root,self.file_name)
         self.data = []
+        self.last_write_time = 0
 
 
     def from_yaml(self,stream):
         """
-        Fill database from YAML
+        Fill database from YAML, do not maintain old data
         Translate the spec portions from node-dict form to spec from
         """
         try:
@@ -70,6 +86,7 @@ class Database(object):
         if file==None:
             return
 
+        self.data = []
         for sp in file['database']:
             spec = Spec.from_node_dict(sp['spec'])
             path = sp['path']
@@ -78,19 +95,14 @@ class Database(object):
             self.data.append(db_entry)
 
 
-    @staticmethod
-    def read_database(root):
-        """Create a Database from the data in the standard location"""
-        database = Database()
-        full_path = join_path(root,database.file_name)
-        if os.path.isfile(full_path):
-            with open(full_path,'r') as f:
-                database.from_yaml(f)
+    def read_database(self):
+        """Reread Database from the data in the set location"""
+        if os.path.isfile(self.file_path):
+            with open(self.file_path,'r') as f:
+                self.from_yaml(f)
         else:
-            with open(full_path,'w+') as f:
-                database.from_yaml(f)
-
-        return database
+            #The file doesn't exist, construct empty data.
+            self.data = []
 
 
     def write_database_to_yaml(self,stream):
@@ -110,48 +122,104 @@ class Database(object):
                          stream=stream, default_flow_style=False)
 
 
-    def write(self,root):
+    def write(self):
         """Write the database to the standard location"""
-        full_path = join_path(root,self.file_name)
-        #test for file existence
-        with open(full_path,'w') as f:
+        #creates file if necessary
+        with open(self.file_path,'w') as f:
+            self.last_write_time = int(time.time())
             self.write_database_to_yaml(f)
 
 
-    @staticmethod
-    def add(root, spec, path):
-        """Read the database from the standard location
+    def is_dirty(self):
+        """
+        Returns true iff the database file exists
+        and was most recently written to by another spack instance.
+        """
+        return (os.path.isfile(self.file_path) and (os.path.getmtime(self.file_path) > self.last_write_time))
+
+
+#    @_autospec
+    def add(self, spec, path):
+        """Re-read the database from the set location if data is dirty
         Add the specified entry as a dict
         Write the database back to memory
-
-        TODO: Caching databases
         """
-        database = Database.read_database(root)
+        if self.is_dirty():
+            self.read_database()
 
         sph = {}
         sph['spec']=spec
         sph['path']=path
         sph['hash']=spec.dag_hash()
 
-        database.data.append(sph)
+        self.data.append(sph)
 
-        database.write(root)
+        self.write()
 
 
-    @staticmethod
-    def remove(root, spec):
+    @_autospec
+    def remove(self, spec):
         """
-        Reads the database from the standard location
+        Re-reads the database from the set location if data is dirty
         Searches for and removes the specified spec
         Writes the database back to memory
-
-        TODO: Caching databases
         """
-        database = Database.read_database(root)
+        if self.is_dirty():
+            self.read_database()
 
-        for sp in database.data:
-            #This requires specs w/o dependencies, is that sustainable?
-            if sp['spec'] == spec:
-                database.data.remove(sp)
+        for sp in self.data:
 
-        database.write(root)
+            if sp['hash'] == spec.dag_hash() and sp['spec'] == Spec.from_node_dict(spec.to_node_dict()):
+                self.data.remove(sp)
+
+        self.write()
+
+
+    @_autospec
+    def get_installed(self, spec):
+        """
+        Get all the installed specs that satisfy the provided spec constraint
+        """
+        return [s for s in self.installed_package_specs() if s.satisfies(spec)]
+
+
+    @_autospec
+    def installed_extensions_for(self, extendee_spec):
+        """
+        Return the specs of all packages that extend
+        the given spec
+        """
+        for s in self.installed_package_specs():
+            try:
+                if s.package.extends(extendee_spec):
+                    yield s.package
+            except UnknownPackageError, e:
+                continue
+            #skips unknown packages
+            #TODO: conditional way to do this instead of catching exceptions
+
+
+    def installed_package_specs(self):
+        """
+        Read installed package names from the database
+        and return their specs
+        """
+        if self.is_dirty():
+            self.read_database()
+
+        installed = []
+        for sph in self.data:
+            sph['spec'].normalize()
+            sph['spec'].concretize()
+            installed.append(sph['spec'])
+        return installed
+
+
+    def installed_known_package_specs(self):
+        """
+        Read installed package names from the database.
+        Return only the specs for which the package is known
+        to this version of spack
+        """
+        return [s for s in self.installed_package_specs() if spack.db.exists(s.name)]
+

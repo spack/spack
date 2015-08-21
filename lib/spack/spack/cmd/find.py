@@ -138,9 +138,9 @@ def find(parser, args):
 
     # Get all the specs the user asked for
     if not query_specs:
-        specs = set(spack.db.installed_package_specs())
+        specs = set(spack.installed_db.installed_package_specs())
     else:
-        results = [set(spack.db.get_installed(qs)) for qs in query_specs]
+        results = [set(spack.installed_db.get_installed(qs)) for qs in query_specs]
         specs = set.union(*results)
 
     if not args.mode:

@@ -59,7 +59,7 @@ def uninstall(parser, args):
     # Fail and ask user to be unambiguous if it doesn't
     pkgs = []
     for spec in specs:
-        matching_specs = spack.db.get_installed(spec)
+        matching_specs = spack.installed_db.get_installed(spec)
         if not args.all and len(matching_specs) > 1:
             tty.error("%s matches multiple packages:" % spec)
             print
