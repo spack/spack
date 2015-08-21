@@ -48,11 +48,15 @@ class Database(object):
         """
         Create an empty Database
         Location defaults to root/specDB.yaml
+        The individual data are dicts containing
+        spec: the top level spec of a package
+        path: the path to the install of that package
+        dep_hash: a hash of the dependence DAG for that package
         """
         self.file_name = file_name
         self.data = []
 
-    
+
     def from_yaml(self,stream):
         """
         Fill database from YAML
@@ -69,10 +73,11 @@ class Database(object):
         for sp in file['database']:
             spec = Spec.from_node_dict(sp['spec'])
             path = sp['path']
-            db_entry = {'spec': spec, 'path': path}
+            dep_hash = sp['hash']
+            db_entry = {'spec': spec, 'path': path, 'hash':dep_hash}
             self.data.append(db_entry)
 
-                                      
+
     @staticmethod
     def read_database(root):
         """Create a Database from the data in the standard location"""
@@ -87,7 +92,7 @@ class Database(object):
 
         return database
 
-    
+
     def write_database_to_yaml(self,stream):
         """
         Replace each spec with its dict-node form
@@ -97,7 +102,8 @@ class Database(object):
         for sp in self.data:
             node = {}
             node['spec']=Spec.to_node_dict(sp['spec'])
-            node['spec'][sp['spec'].name]['hash']=sp['spec'].dag_hash()
+#            node['spec'][sp['spec'].name]['hash']=sp['spec'].dag_hash()
+            node['hash']=sp['hash']
             node['path']=sp['path']
             node_list.append(node)
         return yaml.dump({ 'database' : node_list},
@@ -121,13 +127,14 @@ class Database(object):
         TODO: Caching databases
         """
         database = Database.read_database(root)
-        
-        spec_and_path = {}
-        spec_and_path['spec']=spec
-        spec_and_path['path']=path
-        
-        database.data.append(spec_and_path)
-        
+
+        sph = {}
+        sph['spec']=spec
+        sph['path']=path
+        sph['hash']=spec.dag_hash()
+
+        database.data.append(sph)
+
         database.write(root)
 
 
