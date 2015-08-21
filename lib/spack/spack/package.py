@@ -779,6 +779,15 @@ class Package(object):
                          "Manually remove this directory to fix:",
                          self.prefix)
 
+            if not (keep_prefix and keep_stage):
+                self.do_clean()
+            else:
+                tty.warn("Keeping stage in place despite error.",
+                         "Spack will refuse to uninstall dependencies of this package." +
+                         "Manually remove this directory to fix:",
+                         self.stage.path)
+
+
         def real_work():
             try:
                 tty.msg("Building %s." % self.name)
@@ -807,6 +816,9 @@ class Package(object):
                 if not fake:
                     log_install_path = spack.install_layout.build_log_path(self.spec)
                     install(log_path, log_install_path)
+
+                #Update the database once we know install successful
+                spack.install_layout.add_to_database(self.spec)
 
                 # On successful install, remove the stage.
                 if not keep_stage:

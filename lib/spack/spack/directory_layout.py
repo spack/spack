@@ -37,6 +37,7 @@ from llnl.util.filesystem import join_path, mkdirp
 
 from spack.spec import Spec
 from spack.error import SpackError
+from spack.database import Database
 
 
 def _check_concrete(spec):
@@ -152,6 +153,8 @@ class DirectoryLayout(object):
                 os.rmdir(path)
             path = os.path.dirname(path)
 
+        Database.remove(self.root,spec)
+
 
 class YamlDirectoryLayout(DirectoryLayout):
     """Lays out installation directories like this::
@@ -261,6 +264,11 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         mkdirp(self.metadata_path(spec))
         self.write_spec(spec, spec_file_path)
+
+
+    def add_to_database(self, spec):
+        """Simply adds a spec to the database"""
+        Database.add(self.root, spec, self.path_for_spec(spec))
 
 
     @memoized
