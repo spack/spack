@@ -24,18 +24,15 @@ class Cbtf(Package):
        networks into sequential and distributed network tools."""
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home"
 
-    url      = "http://sourceforge.net/projects/cbtf/files/cbtf-1.5/cbtf-1.5.tar.gz/download"
-    version('1.5', '75a97e0161d19b3a12305ed1ffb3d3e2')
-
     # Mirror access template example
-    #url      = "file:/opt/spack-mirror-2015-02-27/cbtf/cbtf-1.5.tar.gz"
-    #version('1.5', '1ca88a8834759c4c74452cb97fe7b70a')
+    #url      = "file:/g/g24/jeg/cbtf-1.5.tar.gz"
+    #version('1.6', '1ca88a8834759c4c74452cb97fe7b70a')
 
     # Use when the git repository is available
-    #version('1.5', branch='master', git='http://git.code.sf.net/p/cbtf/cbtf')
+    version('1.6', branch='master', git='http://git.code.sf.net/p/cbtf/cbtf')
 
     depends_on("cmake")
-    depends_on("boost@1.41:")
+    depends_on("boost@1.42:")
     depends_on("mrnet@4.1.0+krelloptions")
     depends_on("xerces-c@3.1.1:")
     depends_on("libxml2")

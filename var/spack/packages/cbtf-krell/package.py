@@ -25,12 +25,11 @@ class CbtfKrell(Package):
        HPC levels of scale."""
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    url      = "http://sourceforge.net/projects/cbtf/files/cbtf-1.5/cbtf-krell-1.5.tar.gz/download"
-    version('1.5', '86cca5aa48a65206d3ac5502fcbd3ef6')
-
     # optional mirror access template
-    #url      = "file:/opt/spack-mirror-2015-02-27/cbtf-krell/cbtf-krell-1.5.tar.gz"
+    #url      = "file:/g/g24/jeg/cbtf-krell-1.5.tar.gz"
     #version('1.5', 'b13f6df6a93c44149d977773dd776d2f')
+
+    version('1.6', branch='master', git='http://git.code.sf.net/p/cbtf-krell/cbtf-krell')
 
 
     # Dependencies for cbtf-krell
@@ -39,7 +38,7 @@ class CbtfKrell(Package):
     depends_on("binutils@2.24+krellpatch")
 
     # collectionTool
-    depends_on("boost@1.41:")
+    depends_on("boost@1.42:")
     depends_on("dyninst@8.2.1:+krelloptions")
     depends_on("mrnet@4.1.0:+krelloptions")
     depends_on("xerces-c@3.1.1:")
@@ -66,6 +65,8 @@ class CbtfKrell(Package):
         # FIXME - hard code path until external package support is available
         # Need to change this path and/or add additional paths for MPI experiment support on different platforms
         openmpi_prefix_path = "/opt/openmpi-1.8.2"
+        mvapich_prefix_path = "/usr/local/tools/mvapich-gnu"
+
         # Other possibilities, they will need a -DMVAPICH_DIR=, etc clause in the cmake command to be recognized
         # mvapich_prefix_path = "<mvapich install path>"
         # mvapich2_prefix_path = "<mvapich2 install path>"
@@ -106,6 +107,7 @@ class CbtfKrell(Package):
                   '-DCUDA_DIR=%s'               % cuda_prefix_path,
                   '-DCUPTI_DIR=%s'              % cupti_prefix_path,
                   '-DOPENMPI_DIR=%s'            % openmpi_prefix_path,
+                  '-DMVAPICH_DIR=%s'            % mvapich_prefix_path,
                   *std_cmake_args)
 
             make("clean")

@@ -23,14 +23,13 @@ class CbtfArgonavis(Package):
        libraries that was done as a result of a DOE SBIR grant."""
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    url      = "http://sourceforge.net/projects/cbtf/files/cbtf-1.5/cbtf-argonavis-1.5.tar.gz/download"
-    version('1.5', '8708197dbc08980fcd7b1a3a3a40a2c9')
-
     # Mirror access template example
-    #url      = "file:/opt/spack-mirror-2015-02-27/cbtf-argonavis/cbtf-argonavis-1.5.tar.gz"
+    #url      = "file:/g/g24/jeg/cbtf-argonavis-1.5.tar.gz"
     #version('1.5', '1f7f6512f55409ed2135cfceabe26b82')
 
-    depends_on("cmake")
+    version('1.6', branch='master', git='http://git.code.sf.net/p/cbtf-argonavis/cbtf-argonavis')
+
+    depends_on("cmake@3.0.2:")
     depends_on("papi")
     depends_on("cbtf")
     depends_on("cbtf-krell")
@@ -44,8 +43,9 @@ class CbtfArgonavis(Package):
        cmake_prefix_path = join_path(spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
 
        # FIXME, hard coded for testing purposes, we will alter when the external package feature is available
-       cuda_prefix_path = "/usr/local/cuda-6.0"
-       cupti_prefix_path = "/usr/local/cuda-6.0/extras/CUPTI"
+       cuda_prefix_path = "/opt/cudatoolkit-6.5"
+       cupti_prefix_path = "/opt/cudatoolkit-6.5/extras/CUPTI"
+
 
        with working_dir('CUDA'):
          with working_dir('build', create=True):

@@ -22,15 +22,16 @@ class CbtfLanl(Package):
     """CBTF LANL project contains a memory tool and data center type system command monitoring tool."""
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home/"
 
-    url      = "http://sourceforge.net/projects/cbtf/files/cbtf-1.5/cbtf-lanl-1.5.tar.gz/download"
-    version('1.5', '78d42050f9ec7127e8d0a93d87a66702')
 
     # Mirror access template example
-    #url      = "file:/opt/spack-mirror-2015-02-27/cbtf-lanl/cbtf-lanl-1.5.tar.gz"
+    #url      = "file:/g/g24/jeg/cbtf-lanl-1.5.tar.gz"
     #version('1.5', 'c3f78f967b0a42c6734ce4be0e602426')
 
+    version('1.6', branch='master', git='http://git.code.sf.net/p/cbtf-lanl/cbtf-lanl')
+
+
     # Dependencies for cbtf-krell
-    depends_on("boost@1.41:")
+    depends_on("boost@1.42:")
     depends_on("mrnet@4.1.0+krelloptions")
     depends_on("xerces-c@3.1.1:")
     depends_on("cbtf")

@@ -30,11 +30,13 @@ class Openspeedshop(Package):
 
     homepage = "http://www.openspeedshop.org"
     url      = "http://sourceforge.net/projects/openss/files/openss/openspeedshop-2.1/openspeedshop-2.1.tar.gz/download"
-    version('2.1', '85ab0f883f16ea23815a670b5ec8e5d6')
+    version('2.1', '64ee17166519838c7b94a1adc138e94f')
 
     # optional mirror template
-    #url      = "file:/home/jeg/OpenSpeedShop_ROOT/SOURCES/openspeedshop-2.1.tar.gz"
-    #version('2.1', '85ab0f883f16ea23815a670b5ec8e5d6')
+    #url      = "file:/g/g24/jeg/openspeedshop-2.1.tar.gz"
+    #version('2.1', '64ee17166519838c7b94a1adc138e94f')
+
+
 
     parallel = False
 
@@ -56,7 +58,7 @@ class Openspeedshop(Package):
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("sqlite")
-    depends_on("boost@1.41:")
+    depends_on("boost@1.42:")
     depends_on("dyninst@8.2.1:+krelloptions")
     depends_on("python")
     depends_on("qt@3.3.8b+krellpatch")
@@ -72,14 +74,14 @@ class Openspeedshop(Package):
     # Dependencies only for the openspeedshop cbtf package.
     depends_on("cbtf", when='+cbtf')
     depends_on("cbtf-krell", when='+cbtf')
-    depends_on("cbtf-argonavis", when='+cbtf')
+    #depends_on("cbtf-argonavis", when='+cbtf')
     depends_on("mrnet@4.1.0:+krelloptions", when='+cbtf')
 
     def install(self, spec, prefix):
 
         openmpi_prefix_path = "/opt/openmpi-1.8.2"
+        mvapich_prefix_path = "/usr/local/tools/mvapich-gnu"
                           #'-DOPENMPI_DIR=%s'            % spec['openmpi'].prefix,
-                          #'-DMPICH_DIR=%s'              % spec['mpich'].prefix,
 
         # FIXME: How do we make this dynamic in spack?   That is, can we specify the paths to cuda dynamically?
         # WAITING for external package support. 
@@ -99,6 +101,7 @@ class Openspeedshop(Package):
                           '-DLIBUNWIND_DIR=%s'          % spec['libunwind'].prefix,
                           '-DPAPI_DIR=%s'               % spec['papi'].prefix,
                           '-DOPENMPI_DIR=%s'            % openmpi_prefix_path,
+                          '-DMVAPICH_DIR=%s'            % mvapich_prefix_path,
                           *std_cmake_args)
                     make("clean")
                     make()
@@ -106,6 +109,8 @@ class Openspeedshop(Package):
             else:
                 cmake_prefix_path = join_path(spec['dyninst'].prefix)
                 with working_dir('build', create=True):
+                    #python_vers=join_path(spec['python'].version[:2])
+                    python_vers='%d.%d' % spec['python'].version[:2]
                     cmake('..',
                           '-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
                           '-DCMAKE_LIBRARY_PATH=%s'     % prefix.lib64,
@@ -119,10 +124,14 @@ class Openspeedshop(Package):
                           '-DPAPI_DIR=%s'               % spec['papi'].prefix,
                           '-DSQLITE3_DIR=%s'            % spec['sqlite'].prefix,
                           '-DQTLIB_DIR=%s'              % spec['qt'].prefix,
-                          '-DPYTHON_DIR=%s'             % spec['python'].prefix,
-                          '-DBOOST_DIR=%s'              % spec['boost'].prefix,
+                          '-DPYTHON_EXECUTABLE=%s'      % join_path(spec['python'].prefix + '/bin/python'),
+                          '-DPYTHON_INCLUDE_DIR=%s'     % join_path(spec['python'].prefix.include) + '/python' + python_vers,
+                          '-DPYTHON_LIBRARY=%s'         % join_path(spec['python'].prefix.lib) + '/libpython' + python_vers + '.so',
+                          '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                          '-DBOOST_ROOT=%s'             % spec['boost'].prefix,
                           '-DDYNINST_DIR=%s'            % spec['dyninst'].prefix,
                           '-DOPENMPI_DIR=%s'            % openmpi_prefix_path,
+                          '-DMVAPICH_DIR=%s'            % mvapich_prefix_path,
                           *std_cmake_args)
                     make("clean")
                     make()
@@ -133,6 +142,7 @@ class Openspeedshop(Package):
             cmake_prefix_path = join_path(spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix) + ':' + join_path(spec['dyninst'].prefix)
             if '+runtime' in spec:
                 with working_dir('build_cbtf_runtime', create=True):
+                    python_vers='%d.%d' % spec['python'].version[:2]
                     cmake('..',
                           '-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
                           '-DCMAKE_LIBRARY_PATH=%s'     % prefix.lib64,
@@ -143,8 +153,11 @@ class Openspeedshop(Package):
                           '-DLIBDWARF_DIR=%s'           % spec['libdwarf'].prefix,
                           '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
                           '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
-                          '-DPYTHON_DIR=%s'             % spec['python'].prefix,
-                          '-DBOOST_DIR=%s'              % spec['boost'].prefix,
+                          '-DPYTHON_EXECUTABLE=%s'      % join_path(spec['python'].prefix + '/bin/python'),
+                          '-DPYTHON_INCLUDE_DIR=%s'     % join_path(spec['python'].prefix.include) + '/python' + python_vers,
+                          '-DPYTHON_LIBRARY=%s'         % join_path(spec['python'].prefix.lib) + '/libpython' + python_vers + '.so',
+                          '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                          '-DBOOST_ROOT=%s'             % spec['boost'].prefix,
                           '-DDYNINST_DIR=%s'            % spec['dyninst'].prefix,
                           '-DMRNET_DIR=%s'              % spec['mrnet'].prefix,
                           *std_cmake_args)
@@ -154,6 +167,8 @@ class Openspeedshop(Package):
 
             else:
                 with working_dir('build_cbtf', create=True):
+                    python_vers='%d.%d' % spec['python'].version[:2]
+                    #python_vers=join_path(spec['python'].version[:2])
                     cmake('..',
                           '-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
                           '-DCMAKE_LIBRARY_PATH=%s'     % prefix.lib64,
@@ -166,8 +181,11 @@ class Openspeedshop(Package):
                           '-DCBTF_DIR=%s'               % spec['cbtf'].prefix,
                           '-DCBTF_KRELL_DIR=%s'         % spec['cbtf-krell'].prefix,
                           '-DQTLIB_DIR=%s'              % spec['qt'].prefix,
-                          '-DPYTHON_DIR=%s'             % spec['python'].prefix,
-                          '-DBOOST_DIR=%s'              % spec['boost'].prefix,
+                          '-DPYTHON_EXECUTABLE=%s'      % join_path(spec['python'].prefix + '/bin/python'),
+                          '-DPYTHON_INCLUDE_DIR=%s'     % join_path(spec['python'].prefix.include) + '/python' + python_vers,
+                          '-DPYTHON_LIBRARY=%s'         % join_path(spec['python'].prefix.lib) + '/libpython' + python_vers + '.so',
+                          '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                          '-DBOOST_ROOT=%s'             % spec['boost'].prefix,
                           '-DDYNINST_DIR=%s'            % spec['dyninst'].prefix,
                           '-DMRNET_DIR=%s'              % spec['mrnet'].prefix,
                           *std_cmake_args)
