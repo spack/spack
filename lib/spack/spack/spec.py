@@ -1714,7 +1714,7 @@ class SpecParser(spack.parse.Parser):
             spec_repo = lst[-2]
         else:
             spec_name = self.token.value
-            (spec_repo, repodir) = spack.db.repo_for_package_name(spec_name)
+            spec_repo = 'gov.llnl.spack'
 
         self.check_identifier(spec_name)
 

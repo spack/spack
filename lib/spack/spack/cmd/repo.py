@@ -32,7 +32,7 @@ from llnl.util.filesystem import join_path, mkdirp
 import spack.spec
 import spack.config
 from spack.util.environment import get_path
-from spack.packages import repo_config
+from spack.packages import repo_config_filename
 
 import os
 import exceptions
@@ -50,13 +50,8 @@ def setup_parser(subparser):
     create_parser = sp.add_parser('create', help=repo_create.__doc__)
     create_parser.add_argument('directory', help="Directory containing the packages.")
     create_parser.add_argument('name', help="Name of new package repository.")
-<<<<<<< HEAD:lib/spack/spack/cmd/packagerepo.py
-    
-    remove_parser = sp.add_parser('remove', help=packagerepo_remove.__doc__)
-=======
 
     remove_parser = sp.add_parser('remove', help=repo_remove.__doc__)
->>>>>>> Save changes to external repo integration:lib/spack/spack/cmd/repo.py
     remove_parser.add_argument('name')
 
     list_parser = sp.add_parser('list', help=repo_list.__doc__)
@@ -81,7 +76,7 @@ def repo_add(args):
     """Add package sources to the Spack configuration."""
     if not add_to_config(args.directory):
         tty.die('Repo directory %s already exists in the repo list' % dir)
-        
+
 
 def repo_create(args):
     """Create a new package repo at a directory and name"""
@@ -95,13 +90,13 @@ def repo_create(args):
             mkdirp(dir)
         except exceptions.OSError, e:
             tty.die('Failed to create new directory %s' % dir)
-    path = os.path.join(dir, repo_config)
+    path = os.path.join(dir, repo_config_filename)
     try:
         with closing(open(path, 'w')) as repofile:
             repofile.write(name + '\n')
     except exceptions.IOError, e:
         tty.die('Could not create new file %s' % path)
-            
+
     if not add_to_config(args.directory):
         tty.warn('Repo directory %s already exists in the repo list' % dir)
 
@@ -118,8 +113,8 @@ def repo_list(args):
     fmt = "%%-%ds%%s" % (max_len + 4)
     for root in root_names:
         print fmt % (root[0], root[1])
-        
-    
+
+
 
 def repo(parser, args):
     action = { 'add'    : repo_add,

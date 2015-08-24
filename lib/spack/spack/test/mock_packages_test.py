@@ -22,11 +22,12 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
 import unittest
 
 import spack
 import spack.config
-from spack.packages import PackageDB
+from spack.packages import PackageFinder
 from spack.spec import Spec
 
 
@@ -43,8 +44,8 @@ class MockPackagesTest(unittest.TestCase):
         # Use the mock packages database for these tests.  This allows
         # us to set up contrived packages that don't interfere with
         # real ones.
-        self.real_db = spack.db
-        spack.db = PackageDB(spack.mock_packages_path)
+        self.db = PackageFinder(spack.mock_packages_path)
+        spack.db.swap(self.db)
 
         spack.config.clear_config_caches()
         self.real_scopes = spack.config.config_scopes
@@ -55,7 +56,8 @@ class MockPackagesTest(unittest.TestCase):
 
     def cleanmock(self):
         """Restore the real packages path after any test."""
-        spack.db = self.real_db
+        spack.db.swap(self.db)
+
         spack.config.config_scopes = self.real_scopes
         spack.config.clear_config_caches()
 
@@ -66,5 +68,3 @@ class MockPackagesTest(unittest.TestCase):
 
     def tearDown(self):
         self.cleanmock()
-
-

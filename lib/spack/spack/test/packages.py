@@ -44,7 +44,8 @@ class PackagesTest(MockPackagesTest):
 
 
     def test_package_filename(self):
-        filename = spack.db.filename_for_package_name('mpich')
+        repo = spack.db.get_repo('gov.llnl.spack.mock')
+        filename = repo.filename_for_package_name('mpich')
         self.assertEqual(filename, join_path(spack.mock_packages_path, 'mpich', 'package.py'))
 
 
@@ -54,7 +55,8 @@ class PackagesTest(MockPackagesTest):
 
 
     def test_nonexisting_package_filename(self):
-        filename = spack.db.filename_for_package_name('some-nonexisting-package')
+        repo = spack.db.get_repo('gov.llnl.spack.mock')
+        filename = repo.filename_for_package_name('some-nonexisting-package')
         self.assertEqual(filename, join_path(spack.mock_packages_path, 'some-nonexisting-package', 'package.py'))
 
 

@@ -220,6 +220,13 @@ def colify(elts, **options):
 
 
 def colify_table(table, **options):
+    """Version of colify() for data expressed in rows, (list of lists).
+
+       Same as regular colify but takes a list of lists, where each
+       sub-list must be the same length, and each is interpreted as a
+       row in a table.  Regular colify displays a sequential list of
+       values in columns.
+    """
     if table is None:
         raise TypeError("Can't call colify_table on NoneType")
     elif not table or not table[0]:

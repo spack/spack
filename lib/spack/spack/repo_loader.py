@@ -12,7 +12,6 @@ imported_packages_module = 'spack.repos'
 # Name of the package file inside a package directory
 package_file_name = 'package.py'
 
-import sys
 class LazyLoader:
     """The LazyLoader handles cases when repo modules or classes
        are imported.  It watches for 'spack.repos.*' loads, then
@@ -20,15 +19,6 @@ class LazyLoader:
     def find_module(self, fullname, pathname):
         if not fullname.startswith(imported_packages_module):
             return None
-
-        print "HERE ==="
-        print
-        for line in traceback.format_stack():
-            print "    ", line.strip()
-        print
-        print "full: ", fullname
-        print "path: ", pathname
-        print
 
         partial_name = fullname[len(imported_packages_module)+1:]
 
@@ -50,7 +40,7 @@ class LazyLoader:
     def load_module(self, fullname):
         return self.mod
 
-sys.meta_path.append(LazyLoader())
+#sys.meta_path.append(LazyLoader())
 
 _reponames = {}
 class RepoNamespace(types.ModuleType):
@@ -59,7 +49,6 @@ class RepoNamespace(types.ModuleType):
        this class will use __getattr__ to translate the 'original'
        into one of spack's known repositories"""
     def __init__(self):
-        import sys
         sys.modules[imported_packages_module] = self
 
     def __getattr__(self, name):
@@ -89,7 +78,6 @@ class RepoLoader(types.ModuleType):
         if not reponame in _reponames:
             _reponames[reponame] = self
 
-        import sys
         sys.modules[self.module_name] = self
 
 
@@ -110,14 +98,6 @@ class RepoLoader(types.ModuleType):
         import imp
         import llnl.util.tty as tty
 
-        file_path = os.path.join(self.path, pkg_name, package_file_name)
-        if os.path.exists(file_path):
-            if not os.path.isfile(file_path):
-                tty.die("Something's wrong. '%s' is not a file!" % file_path)
-            if not os.access(file_path, os.R_OK):
-                tty.die("Cannot read '%s'!" % file_path)
-        else:
-            raise spack.packages.UnknownPackageError(pkg_name, self.reponame if self.reponame != 'original' else None)
 
         try:
             module_name = imported_packages_module + '.' + self.reponame + '.' + pkg_name

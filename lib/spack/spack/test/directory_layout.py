@@ -34,7 +34,7 @@ from llnl.util.filesystem import *
 
 import spack
 from spack.spec import Spec
-from spack.packages import PackageDB
+from spack.packages import PackageFinder
 from spack.directory_layout import YamlDirectoryLayout
 
 # number of packages to test (to reduce test time)
@@ -123,7 +123,7 @@ class DirectoryLayoutTest(unittest.TestCase):
            information about installed packages' specs to uninstall
            or query them again if the package goes away.
         """
-        mock_db = PackageDB(spack.mock_packages_path)
+        mock_db = PackageFinder(spack.mock_packages_path)
 
         not_in_mock = set.difference(
             set(spack.db.all_package_names()),
@@ -145,8 +145,7 @@ class DirectoryLayoutTest(unittest.TestCase):
             self.layout.create_install_directory(spec)
             installed_specs[spec] = self.layout.path_for_spec(spec)
 
-        tmp = spack.db
-        spack.db = mock_db
+        spack.db.swap(mock_db)
 
         # Now check that even without the package files, we know
         # enough to read a spec from the spec file.
@@ -161,7 +160,7 @@ class DirectoryLayoutTest(unittest.TestCase):
             self.assertTrue(spec.eq_dag(spec_from_file))
             self.assertEqual(spec.dag_hash(), spec_from_file.dag_hash())
 
-        spack.db = tmp
+        spack.db.swap(mock_db)
 
 
     def test_find(self):

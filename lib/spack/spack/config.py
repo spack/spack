@@ -269,7 +269,9 @@ def get_repos_config():
     config = get_config()
     if 'repos' not in config:
         return []
-    return config['repos']
+
+    repo_list = config['repos']
+    return [substitute_spack_prefix(repo) for repo in repo_list]
 
 
 def get_mirror_config():

@@ -23,8 +23,10 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 import tempfile
 from llnl.util.filesystem import *
+import llnl.util.tty as tty
 
 # This lives in $prefix/lib/spack/spack/__file__
 prefix = ancestor(__file__, 4)
@@ -42,6 +44,7 @@ test_path      = join_path(module_path, "test")
 hooks_path     = join_path(module_path, "hooks")
 var_path       = join_path(prefix, "var", "spack")
 stage_path     = join_path(var_path, "stage")
+packages_path  = join_path(var_path, "packages")
 opt_path       = join_path(prefix, "opt")
 install_path   = join_path(opt_path, "spack")
 share_path     = join_path(prefix, "share", "spack")
@@ -55,9 +58,12 @@ repos = RepoNamespace()
 #
 # Set up the default packages database.
 #
-from spack.packages import PackageDB
-packages_path = join_path(var_path, "packages")
-db = PackageDB()
+import spack.packages
+_repo_paths = spack.config.get_repos_config()
+if not _repo_paths:
+    tty.die("Spack configuration contains no package repositories.")
+db = spack.packages.PackageFinder(*_repo_paths)
+sys.meta_path.append(db)
 
 #
 # Paths to mock files for testing.

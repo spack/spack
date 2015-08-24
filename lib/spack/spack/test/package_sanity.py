@@ -47,10 +47,10 @@ class PackageSanityTest(unittest.TestCase):
 
     def test_get_all_mock_packages(self):
         """Get the mock packages once each too."""
-        tmp = spack.db
-        spack.db = PackageDB(spack.mock_packages_path)
+        db = PackageFinder(spack.mock_packages_path)
+        spack.db.swap(db)
         self.check_db()
-        spack.db = tmp
+        spack.db.swap(db)
 
 
     def test_url_versions(self):
