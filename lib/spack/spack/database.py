@@ -30,6 +30,7 @@ import imp
 
 import time
 import copy
+import errno
 
 from external import yaml
 from external.yaml.error import MarkedYAMLError
@@ -69,6 +70,10 @@ class Database(object):
         self.root = root
         self.file_name = file_name
         self.file_path = join_path(self.root,self.file_name)
+
+        self.lock_name = "db_lock"
+        self.lock_path = join_path(self.root,self.lock_name)
+
         self.data = []
         self.last_write_time = 0
 
@@ -86,23 +91,46 @@ class Database(object):
         if file==None:
             return
 
-        self.data = []
-        for sp in file['database']:
+        data = {}
+        for index, sp in file['database'].items():
             spec = Spec.from_node_dict(sp['spec'])
+            deps = sp['dependency_indices']
             path = sp['path']
             dep_hash = sp['hash']
-            db_entry = {'spec': spec, 'path': path, 'hash':dep_hash}
-            self.data.append(db_entry)
+            db_entry = {'deps':deps, 'spec': spec, 'path': path, 'hash':dep_hash}
+            data[index] = db_entry
+
+        for sph in data.values():
+            for idx in sph['deps']:
+                sph['spec'].dependencies[data[idx]['spec'].name] = data[idx]['spec']
+
+        self.data = data.values()
 
 
     def read_database(self):
-        """Reread Database from the data in the set location"""
+        """
+        Re-read Database from the data in the set location
+        If the cache is fresh, return immediately.
+        Implemented with mkdir locking for the database file.
+        """
+        if not self.is_dirty():
+            return
+        """
+        while True:
+            try:
+                os.mkdir(self.lock_path)
+                break
+            except OSError as err:
+                pass
+                """
         if os.path.isfile(self.file_path):
             with open(self.file_path,'r') as f:
                 self.from_yaml(f)
         else:
             #The file doesn't exist, construct empty data.
             self.data = []
+
+#        os.rmdir(self.lock_path)
 
 
     def write_database_to_yaml(self,stream):
@@ -111,23 +139,53 @@ class Database(object):
         Then stream all data to YAML
         """
         node_list = []
-        for sp in self.data:
+        spec_list = [sph['spec'] for sph in self.data]
+
+        for sph in self.data:
             node = {}
-            node['spec']=Spec.to_node_dict(sp['spec'])
-#            node['spec'][sp['spec'].name]['hash']=sp['spec'].dag_hash()
-            node['hash']=sp['hash']
-            node['path']=sp['path']
+            deps = []
+            for name,spec in sph['spec'].dependencies.items():
+                deps.append(spec_list.index(spec))
+            node['spec']=Spec.to_node_dict(sph['spec'])
+            node['hash']=sph['hash']
+            node['path']=sph['path']
+            node['dependency_indices']=deps
             node_list.append(node)
-        return yaml.dump({ 'database' : node_list},
+
+        node_dict = dict(enumerate(node_list))
+        return yaml.dump({ 'database' : node_dict},
                          stream=stream, default_flow_style=False)
 
 
     def write(self):
-        """Write the database to the standard location"""
-        #creates file if necessary
+        """
+        Write the database to the standard location
+        Implements mkdir locking for the database file
+        """
+        """
+        while True:
+            try:
+                os.mkdir(self.lock_path)
+                break
+            except OSError as err:
+                pass
+                """
         with open(self.file_path,'w') as f:
             self.last_write_time = int(time.time())
             self.write_database_to_yaml(f)
+
+ #       os.rmdir(self.lock_path)
+
+
+    def get_index_of(self, spec):
+        """
+        Returns the index of a spec in the database
+        If unable to find the spec it returns -1
+        """
+        for index, sph in enumerate(self.data):
+            if sph['spec'] == spec:
+                return index
+        return -1
 
 
     def is_dirty(self):
@@ -140,12 +198,11 @@ class Database(object):
 
 #    @_autospec
     def add(self, spec, path):
-        """Re-read the database from the set location if data is dirty
+        """Read the database from the set location
         Add the specified entry as a dict
         Write the database back to memory
         """
-        if self.is_dirty():
-            self.read_database()
+        self.read_database()
 
         sph = {}
         sph['spec']=spec
@@ -160,16 +217,14 @@ class Database(object):
     @_autospec
     def remove(self, spec):
         """
-        Re-reads the database from the set location if data is dirty
+        Reads the database from the set location
         Searches for and removes the specified spec
         Writes the database back to memory
         """
-        if self.is_dirty():
-            self.read_database()
+        self.read_database()
 
         for sp in self.data:
-
-            if sp['hash'] == spec.dag_hash() and sp['spec'] == Spec.from_node_dict(spec.to_node_dict()):
+            if sp['hash'] == spec.dag_hash() and sp['spec'] == spec:
                 self.data.remove(sp)
 
         self.write()
@@ -204,13 +259,10 @@ class Database(object):
         Read installed package names from the database
         and return their specs
         """
-        if self.is_dirty():
-            self.read_database()
+        self.read_database()
 
         installed = []
         for sph in self.data:
-            sph['spec'].normalize()
-            sph['spec'].concretize()
             installed.append(sph['spec'])
         return installed
 

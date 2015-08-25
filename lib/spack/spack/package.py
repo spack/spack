@@ -557,6 +557,7 @@ class Package(object):
 
     @property
     def installed(self):
+        print self.prefix
         return os.path.isdir(self.prefix)
 
 
