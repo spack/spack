@@ -427,6 +427,7 @@ class Spec(object):
             spec = dep if isinstance(dep, Spec) else Spec(dep)
             self._add_dependency(spec)
 
+
     #
     # Private routines here are called by the parser when building a spec.
     #

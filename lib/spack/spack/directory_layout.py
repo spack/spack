@@ -37,7 +37,6 @@ from llnl.util.filesystem import join_path, mkdirp
 
 from spack.spec import Spec
 from spack.error import SpackError
-from spack.database import Database
 
 
 def _check_concrete(spec):
@@ -152,7 +151,6 @@ class DirectoryLayout(object):
                     return
                 os.rmdir(path)
             path = os.path.dirname(path)
-
 
 
 class YamlDirectoryLayout(DirectoryLayout):
