@@ -115,22 +115,29 @@ class Database(object):
         """
         if not self.is_dirty():
             return
-        """
-        while True:
+
+        lock=0
+        while lock==0:
             try:
                 os.mkdir(self.lock_path)
-                break
+                lock=1
             except OSError as err:
                 pass
-                """
-        if os.path.isfile(self.file_path):
-            with open(self.file_path,'r') as f:
-                self.from_yaml(f)
-        else:
-            #The file doesn't exist, construct empty data.
-            self.data = []
 
-#        os.rmdir(self.lock_path)
+        #The try statement ensures that a failure won't leave the
+        #database locked to other processes.
+        try:
+            if os.path.isfile(self.file_path):
+                with open(self.file_path,'r') as f:
+                    self.from_yaml(f)
+            else:
+            #The file doesn't exist, construct empty data.
+                self.data = []
+        except:
+            os.rmdir(self.lock_path)
+            raise
+
+        os.rmdir(self.lock_path)
 
 
     def write_database_to_yaml(self,stream):
@@ -162,19 +169,25 @@ class Database(object):
         Write the database to the standard location
         Implements mkdir locking for the database file
         """
-        """
-        while True:
+        lock=0
+        while lock==0:
             try:
                 os.mkdir(self.lock_path)
-                break
+                lock=1
             except OSError as err:
                 pass
-                """
-        with open(self.file_path,'w') as f:
-            self.last_write_time = int(time.time())
-            self.write_database_to_yaml(f)
 
- #       os.rmdir(self.lock_path)
+        #The try statement ensures that a failure won't leave the
+        #database locked to other processes.
+        try:
+            with open(self.file_path,'w') as f:
+                self.last_write_time = int(time.time())
+                self.write_database_to_yaml(f)
+        except:
+            os.rmdir(self.lock_path)
+            raise
+
+        os.rmdir(self.lock_path)
 
 
     def get_index_of(self, spec):
