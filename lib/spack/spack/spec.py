@@ -642,7 +642,6 @@ class Spec(object):
     def dag_hash(self, length=None):
         """
         Return a hash of the entire spec DAG, including connectivity.
-        Stores the hash iff the spec is concrete.
         """
         yaml_text = yaml.dump(
             self.to_node_dict(), default_flow_style=True, width=sys.maxint)
