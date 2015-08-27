@@ -11,6 +11,8 @@ class PyScipy(Package):
     extends('python')
     depends_on('py-nose')
     depends_on('py-numpy')
+    depends_on('blas')
+    depends_on('lapack')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
