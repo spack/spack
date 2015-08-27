@@ -1,10 +1,13 @@
 from spack import *
 
 class Pidx(Package):
-    """PIDX Parallel I/O Library"""
+    """PIDX Parallel I/O Library.
+
+    PIDX is an efficient parallel I/O library that reads and writes
+    multiresolution IDX data files.
+    """
 
     homepage = "http://www.cedmav.com/pidx"
-    #url      = "http://www.example.com/pidx-1.0.tar.gz"
 
     version('1.0', git='https://github.com/sci-visus/PIDX.git',
             commit='6afa1cf71d1c41263296dc049c8fabaf73c296da')
