@@ -779,14 +779,6 @@ class Package(object):
                          "Manually remove this directory to fix:",
                          self.prefix)
 
-            if not (keep_prefix and keep_stage):
-                self.do_clean()
-            else:
-                tty.warn("Keeping stage in place despite error.",
-                         "Spack will refuse to uninstall dependencies of this package." +
-                         "Manually remove this directory to fix:",
-                         self.stage.path)
-
 
         def real_work():
             try:
