@@ -38,6 +38,7 @@ from external.yaml.error import MarkedYAMLError
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
 from llnl.util.lang import *
+from llnl.util.lock import *
 
 import spack.error
 import spack.spec
@@ -58,7 +59,7 @@ def _autospec(function):
 
 
 class Database(object):
-    def __init__(self,root,file_name="specDB.yaml"):
+    def __init__(self,root,file_name="_index.yaml"):
         """
         Create an empty Database
         Location defaults to root/specDB.yaml
@@ -67,28 +68,31 @@ class Database(object):
         path: the path to the install of that package
         dep_hash: a hash of the dependence DAG for that package
         """
-        self.root = root
-        self.file_name = file_name
-        self.file_path = join_path(self.root,self.file_name)
+        self._root = root
+        self._file_name = file_name
+        self._file_path = join_path(self._root,self._file_name)
 
-        self.lock_name = "db_lock"
-        self.lock_path = join_path(self.root,self.lock_name)
+        self._lock_name = "_db_lock"
+        self._lock_path = join_path(self._root,self._lock_name)
+        if not os.path.exists(self._lock_path):
+            open(self._lock_path,'w').close()
+        self.lock = Lock(self._lock_path)
 
-        self.data = []
-        self.last_write_time = 0
+        self._data = []
+        self._last_write_time = 0
 
 
-    def from_yaml(self,stream):
+    def _read_from_yaml(self,stream):
         """
         Fill database from YAML, do not maintain old data
-        Translate the spec portions from node-dict form to spec from
+        Translate the spec portions from node-dict form to spec form
         """
         try:
             file = yaml.load(stream)
         except MarkedYAMLError, e:
             raise SpackYAMLError("error parsing YAML database:", str(e))
 
-        if file==None:
+        if file is None:
             return
 
         data = {}
@@ -104,51 +108,34 @@ class Database(object):
             for idx in sph['deps']:
                 sph['spec'].dependencies[data[idx]['spec'].name] = data[idx]['spec']
 
-        self.data = data.values()
+        self._data = data.values()
 
 
     def read_database(self):
         """
         Re-read Database from the data in the set location
         If the cache is fresh, return immediately.
-        Implemented with mkdir locking for the database file.
         """
         if not self.is_dirty():
             return
 
-        lock=0
-        while lock==0:
-            try:
-                os.mkdir(self.lock_path)
-                lock=1
-            except OSError as err:
-                pass
-
-        #The try statement ensures that a failure won't leave the
-        #database locked to other processes.
-        try:
-            if os.path.isfile(self.file_path):
-                with open(self.file_path,'r') as f:
-                    self.from_yaml(f)
-            else:
+        if os.path.isfile(self._file_path):
+            with open(self._file_path,'r') as f:
+                self._read_from_yaml(f)
+        else:
             #The file doesn't exist, construct empty data.
-                self.data = []
-        except:
-            os.rmdir(self.lock_path)
-            raise
-
-        os.rmdir(self.lock_path)
+            self._data = []
 
 
-    def write_database_to_yaml(self,stream):
+    def _write_database_to_yaml(self,stream):
         """
         Replace each spec with its dict-node form
         Then stream all data to YAML
         """
         node_list = []
-        spec_list = [sph['spec'] for sph in self.data]
+        spec_list = [sph['spec'] for sph in self._data]
 
-        for sph in self.data:
+        for sph in self._data:
             node = {}
             deps = []
             for name,spec in sph['spec'].dependencies.items():
@@ -167,46 +154,23 @@ class Database(object):
     def write(self):
         """
         Write the database to the standard location
-        Implements mkdir locking for the database file
+        Everywhere that the database is written it is read
+        within the same lock, so there is no need to refresh
+        the database within write()
         """
-        lock=0
-        while lock==0:
-            try:
-                os.mkdir(self.lock_path)
-                lock=1
-            except OSError as err:
-                pass
-
-        #The try statement ensures that a failure won't leave the
-        #database locked to other processes.
-        try:
-            with open(self.file_path,'w') as f:
-                self.last_write_time = int(time.time())
-                self.write_database_to_yaml(f)
-        except:
-            os.rmdir(self.lock_path)
-            raise
-
-        os.rmdir(self.lock_path)
-
-
-    def get_index_of(self, spec):
-        """
-        Returns the index of a spec in the database
-        If unable to find the spec it returns -1
-        """
-        for index, sph in enumerate(self.data):
-            if sph['spec'] == spec:
-                return index
-        return -1
-
+        temp_name = os.getpid() + socket.getfqdn() + ".temp"
+        temp_file = path.join(self._root,temp_name)
+        with open(self.temp_path,'w') as f:
+            self._last_write_time = int(time.time())
+            self._write_database_to_yaml(f)
+            os.rename(temp_name,self._file_path)
 
     def is_dirty(self):
         """
         Returns true iff the database file exists
         and was most recently written to by another spack instance.
         """
-        return (os.path.isfile(self.file_path) and (os.path.getmtime(self.file_path) > self.last_write_time))
+        return (os.path.isfile(self._file_path) and (os.path.getmtime(self._file_path) > self._last_write_time))
 
 
 #    @_autospec
@@ -215,16 +179,15 @@ class Database(object):
         Add the specified entry as a dict
         Write the database back to memory
         """
-        self.read_database()
-
         sph = {}
         sph['spec']=spec
         sph['path']=path
         sph['hash']=spec.dag_hash()
 
-        self.data.append(sph)
-
-        self.write()
+        with Write_Lock_Instance(self.lock,60):
+            self.read_database()
+            self._data.append(sph)
+            self.write()
 
 
     @_autospec
@@ -234,13 +197,15 @@ class Database(object):
         Searches for and removes the specified spec
         Writes the database back to memory
         """
-        self.read_database()
+        with Write_Lock_Instance(self.lock,60):
+            self.read_database()
 
-        for sp in self.data:
-            if sp['hash'] == spec.dag_hash() and sp['spec'] == spec:
-                self.data.remove(sp)
+            for sp in self._data:
+                #Not sure the hash comparison is necessary
+                if sp['hash'] == spec.dag_hash() and sp['spec'] == spec:
+                    self._data.remove(sp)
 
-        self.write()
+            self.write()
 
 
     @_autospec
@@ -272,10 +237,11 @@ class Database(object):
         Read installed package names from the database
         and return their specs
         """
-        self.read_database()
+        with Read_Lock_Instance(self.lock,60):
+            self.read_database()
 
         installed = []
-        for sph in self.data:
+        for sph in self._data:
             installed.append(sph['spec'])
         return installed
 
