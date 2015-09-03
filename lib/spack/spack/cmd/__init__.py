@@ -28,6 +28,7 @@ import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import attr_setdefault
+from llnl.util.lock import *
 
 import spack
 import spack.spec
@@ -124,15 +125,16 @@ def elide_list(line_list, max_num=10):
 
 
 def disambiguate_spec(spec):
-    matching_specs = spack.installed_db.get_installed(spec)
-    if not matching_specs:
-        tty.die("Spec '%s' matches no installed packages." % spec)
+    with Read_Lock_Instance(spack.installed_db.lock,1800):
+        matching_specs = spack.installed_db.get_installed(spec)
+        if not matching_specs:
+            tty.die("Spec '%s' matches no installed packages." % spec)
 
-    elif len(matching_specs) > 1:
-        args =  ["%s matches multiple packages." % spec,
-                 "Matching packages:"]
-        args += ["  " + str(s) for s in matching_specs]
-        args += ["Use a more specific spec."]
-        tty.die(*args)
+        elif len(matching_specs) > 1:
+            args =  ["%s matches multiple packages." % spec,
+                     "Matching packages:"]
+            args += ["  " + str(s) for s in matching_specs]
+            args += ["Use a more specific spec."]
+            tty.die(*args)
 
     return matching_specs[0]

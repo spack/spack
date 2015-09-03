@@ -27,6 +27,7 @@ from external import argparse
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
+from llnl.util.lock import *
 
 import spack
 import spack.cmd
@@ -80,7 +81,8 @@ def extensions(parser, args):
     colify(ext.name for ext in extensions)
 
     # List specs of installed extensions.
-    installed  = [s.spec for s in spack.installed_db.installed_extensions_for(spec)]
+    with Read_Lock_Instance(spack.installed_db.lock,1800):
+        installed  = [s.spec for s in spack.installed_db.installed_extensions_for(spec)]
     print
     if not installed:
         tty.msg("None installed.")

@@ -27,6 +27,7 @@ import os
 from external import argparse
 
 import llnl.util.tty as tty
+from llnl.util.lock import *
 
 import spack
 import spack.cmd
@@ -54,40 +55,41 @@ def diy(self, args):
     if not args.spec:
         tty.die("spack diy requires a package spec argument.")
 
-    specs = spack.cmd.parse_specs(args.spec)
-    if len(specs) > 1:
-        tty.die("spack diy only takes one spec.")
+    with Write_Lock_Instance(spack.installed_db.lock,1800):
+        specs = spack.cmd.parse_specs(args.spec)
+        if len(specs) > 1:
+            tty.die("spack diy only takes one spec.")
 
-    spec = specs[0]
-    if not spack.db.exists(spec.name):
-        tty.warn("No such package: %s" % spec.name)
-        create = tty.get_yes_or_no("Create this package?", default=False)
-        if not create:
-            tty.msg("Exiting without creating.")
+        spec = specs[0]
+        if not spack.db.exists(spec.name):
+            tty.warn("No such package: %s" % spec.name)
+            create = tty.get_yes_or_no("Create this package?", default=False)
+            if not create:
+                tty.msg("Exiting without creating.")
+                sys.exit(1)
+            else:
+                tty.msg("Running 'spack edit -f %s'" % spec.name)
+                edit_package(spec.name, True)
+                return
+
+        if not spec.version.concrete:
+            tty.die("spack diy spec must have a single, concrete version.")
+
+        spec.concretize()
+        package = spack.db.get(spec)
+
+        if package.installed:
+            tty.error("Already installed in %s" % package.prefix)
+            tty.msg("Uninstall or try adding a version suffix for this DIY build.")
             sys.exit(1)
-        else:
-            tty.msg("Running 'spack edit -f %s'" % spec.name)
-            edit_package(spec.name, True)
-            return
 
-    if not spec.version.concrete:
-        tty.die("spack diy spec must have a single, concrete version.")
-
-    spec.concretize()
-    package = spack.db.get(spec)
-
-    if package.installed:
-        tty.error("Already installed in %s" % package.prefix)
-        tty.msg("Uninstall or try adding a version suffix for this DIY build.")
-        sys.exit(1)
-
-    # Forces the build to run out of the current directory.
-    package.stage = DIYStage(os.getcwd())
+        # Forces the build to run out of the current directory.
+        package.stage = DIYStage(os.getcwd())
 
     # TODO: make this an argument, not a global.
-    spack.do_checksum = False
+        spack.do_checksum = False
 
-    package.do_install(
-        keep_prefix=args.keep_prefix,
-        ignore_deps=args.ignore_deps,
-        keep_stage=True)   # don't remove source dir for DIY.
+        package.do_install(
+            keep_prefix=args.keep_prefix,
+            ignore_deps=args.ignore_deps,
+            keep_stage=True)   # don't remove source dir for DIY.

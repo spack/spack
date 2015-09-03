@@ -158,12 +158,12 @@ class Database(object):
         within the same lock, so there is no need to refresh
         the database within write()
         """
-        temp_name = os.getpid() + socket.getfqdn() + ".temp"
-        temp_file = path.join(self._root,temp_name)
-        with open(self.temp_path,'w') as f:
+        temp_name = str(os.getpid()) + socket.getfqdn() + ".temp"
+        temp_file = join_path(self._root,temp_name)
+        with open(temp_file,'w') as f:
             self._last_write_time = int(time.time())
             self._write_database_to_yaml(f)
-            os.rename(temp_name,self._file_path)
+        os.rename(temp_file,self._file_path)
 
     def is_dirty(self):
         """
@@ -184,6 +184,7 @@ class Database(object):
         sph['path']=path
         sph['hash']=spec.dag_hash()
 
+        #Should always already be locked
         with Write_Lock_Instance(self.lock,60):
             self.read_database()
             self._data.append(sph)
@@ -197,6 +198,7 @@ class Database(object):
         Searches for and removes the specified spec
         Writes the database back to memory
         """
+        #Should always already be locked
         with Write_Lock_Instance(self.lock,60):
             self.read_database()
 
@@ -237,6 +239,7 @@ class Database(object):
         Read installed package names from the database
         and return their specs
         """
+        #Should always already be locked
         with Read_Lock_Instance(self.lock,60):
             self.read_database()
 
