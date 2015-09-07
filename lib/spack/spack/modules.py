@@ -134,6 +134,13 @@ class EnvModule(object):
                 if site_packages:
                     add_path('PYTHONPATH', site_packages[0])
 
+            # Add perl path unless it's an actual perl installation
+            # TODO: is there a better way to do this?
+            if self.spec.name != 'perl':
+                site_packages = glob(join_path(self.spec.prefix.lib, "site_perl/*"))
+                if site_packages:
+                    add_path('PERL5LIB', site_packages[0])
+
             if self.spec.package.extends(spack.spec.Spec('ruby')):
               add_path('GEM_PATH', self.spec.prefix)
 
