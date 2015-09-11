@@ -23,7 +23,7 @@ class PerlExtutilsMakemaker(Package):
     def install(self, spec, prefix):
         perl = which('perl')
         perl('Makefile.PL',
-             'PREFIX=' + prefix)
+             'INSTALL_BASE=' + prefix)
 
         make()
         make("install")
