@@ -26,8 +26,8 @@
 These tests check the database is functioning properly,
 both in memory and in its file
 """
-import os.path
 import multiprocessing
+import os.path
 
 import spack
 from llnl.util.filesystem import join_path
@@ -88,16 +88,16 @@ class DatabaseTest(MockDatabase):
         # query specs with multiple configurations
         mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
         callpath_specs = [s for s in all_specs if s.satisfies('callpath')]
-        mpi_specs      = [s for s in all_specs if s.satisfies('mpi')]
+        mpi_specs = [s for s in all_specs if s.satisfies('mpi')]
 
         self.assertEqual(len(mpileaks_specs), 3)
         self.assertEqual(len(callpath_specs), 3)
         self.assertEqual(len(mpi_specs),      3)
 
         # query specs with single configurations
-        dyninst_specs  = [s for s in all_specs if s.satisfies('dyninst')]
+        dyninst_specs = [s for s in all_specs if s.satisfies('dyninst')]
         libdwarf_specs = [s for s in all_specs if s.satisfies('libdwarf')]
-        libelf_specs   = [s for s in all_specs if s.satisfies('libelf')]
+        libelf_specs = [s for s in all_specs if s.satisfies('libelf')]
 
         self.assertEqual(len(dyninst_specs),  1)
         self.assertEqual(len(libdwarf_specs), 1)
@@ -163,16 +163,16 @@ class DatabaseTest(MockDatabase):
         # query specs with multiple configurations
         mpileaks_specs = self.installed_db.query('mpileaks')
         callpath_specs = self.installed_db.query('callpath')
-        mpi_specs      = self.installed_db.query('mpi')
+        mpi_specs = self.installed_db.query('mpi')
 
         self.assertEqual(len(mpileaks_specs), 3)
         self.assertEqual(len(callpath_specs), 3)
         self.assertEqual(len(mpi_specs),      3)
 
         # query specs with single configurations
-        dyninst_specs  = self.installed_db.query('dyninst')
+        dyninst_specs = self.installed_db.query('dyninst')
         libdwarf_specs = self.installed_db.query('libdwarf')
-        libelf_specs   = self.installed_db.query('libelf')
+        libelf_specs = self.installed_db.query('libelf')
 
         self.assertEqual(len(dyninst_specs),  1)
         self.assertEqual(len(libdwarf_specs), 1)
