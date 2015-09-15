@@ -123,8 +123,15 @@ class Database(object):
             with open(self._file_path,'r') as f:
                 self._read_from_yaml(f)
         else:
-            #The file doesn't exist, construct empty data.
+            #The file doesn't exist, construct from file paths
             self._data = []
+            specs = spack.install_layout.all_specs()
+            for spec in specs:
+                sph = {}
+                sph['spec']=spec
+                sph['hash']=spec.dag_hash()
+                sph['path']=spack.install_layout.path_for_spec(spec)
+                self._data.append(sph)
 
 
     def _write_database_to_yaml(self,stream):
@@ -167,10 +174,13 @@ class Database(object):
 
     def is_dirty(self):
         """
-        Returns true iff the database file exists
-        and was most recently written to by another spack instance.
+        Returns true iff the database file does not exist
+        or was most recently written to by another spack instance.
         """
-        return (os.path.isfile(self._file_path) and (os.path.getmtime(self._file_path) > self._last_write_time))
+        if not os.path.isfile(self._file_path):
+            return True
+        else:
+            return (os.path.getmtime(self._file_path) > self._last_write_time)
 
 
 #    @_autospec
