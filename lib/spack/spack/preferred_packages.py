@@ -35,9 +35,10 @@ class PreferredPackages(object):
 
     #Given a package name, sort component (e.g, version, compiler, ...), and
     # a second_key (used by providers), return the list 
-    def _order_for_package(self, pkgname, component, second_key):
+    def _order_for_package(self, pkgname, component, second_key, test_all=True):
         pkglist = [pkgname]
-        pkglist.append('all')
+        if test_all:
+            pkglist.append('all')
         for pkg in pkglist:
             if not pkg in self.preferred:
                 continue
@@ -141,6 +142,11 @@ class PreferredPackages(object):
            For example, provider_compare('scorep', 'mpi', 'mvapich', 'openmpi') would return -1 if
            mvapich should be preferred over openmpi for scorep."""
         return self._spec_compare(pkgname, 'providers', a, b, False, provider_str)
+
+
+    def spec_has_preferred_provider(self, pkgname, provider_str):
+        """Return True iff the named package has a list of preferred provider"""
+        return bool(self._order_for_package(pkgname, 'providers', provider_str, False))
 
 
     def version_compare(self, pkgname, a, b):

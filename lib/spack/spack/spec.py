@@ -419,6 +419,7 @@ class Spec(object):
         # package.py files for.
         self._normal = kwargs.get('normal', False)
         self._concrete = kwargs.get('concrete', False)
+        self.external = None
 
         # This allows users to construct a spec DAG with literals.
         # Note that given two specs a and b, Spec(a) copies a, but
@@ -426,7 +427,7 @@ class Spec(object):
         for dep in dep_like:
             spec = dep if isinstance(dep, Spec) else Spec(dep)
             self._add_dependency(spec)
-
+        
 
     #
     # Private routines here are called by the parser when building a spec.
@@ -751,12 +752,11 @@ class Spec(object):
             # Concretize virtual dependencies last.  Because they're added
             # to presets below, their constraints will all be merged, but we'll
             # still need to select a concrete package later.
-            if not self.virtual:
-                changed |= any(
-                    (spack.concretizer.concretize_architecture(self),
-                     spack.concretizer.concretize_compiler(self),
-                     spack.concretizer.concretize_version(self),
-                     spack.concretizer.concretize_variants(self)))
+            changed |= any(
+                (spack.concretizer.concretize_architecture(self),
+                 spack.concretizer.concretize_compiler(self),
+                 spack.concretizer.concretize_version(self),
+                 spack.concretizer.concretize_variants(self)))
             presets[self.name] = self
 
         visited.add(self.name)
@@ -789,21 +789,18 @@ class Spec(object):
               a problem.
         """
         changed = False
-        while True:
-            virtuals =[v for v in self.traverse() if v.virtual]
-            if not virtuals:
-                return changed
+        done = False
+        while not done:
+            done = True
+            for spec in list(self.traverse()):
+                if spack.concretizer.concretize_virtual_and_external(spec):
+                    done = False
+                    changed = True
 
-            for spec in virtuals:
-                providers = spack.db.providers_for(spec)
-                concrete = spack.concretizer.choose_provider(self, spec, providers)
-                concrete = concrete.copy()
-                spec._replace_with(concrete)
-                changed = True
-
-            # If there are duplicate providers or duplicate provider deps, this
-            # consolidates them and merge constraints.
-            changed |= self.normalize(force=True)
+        # If there are duplicate providers or duplicate provider deps, this
+        # consolidates them and merge constraints.
+        changed |= self.normalize(force=True)
+        return changed
 
 
     def concretize(self):
@@ -830,7 +827,6 @@ class Spec(object):
                        self._concretize_helper())
             changed = any(changes)
             force=True
-
         self._concrete = True
 
 
@@ -1346,15 +1342,26 @@ class Spec(object):
                Whether deps should be copied too.  Set to false to copy a
                spec but not its dependencies.
         """
+
+        # We don't count dependencies as changes here
+        changed = True
+        if hasattr(self, 'name'):
+            changed = (self.name != other.name and self.versions != other.versions and \
+                       self.architecture != other.architecture and self.compiler != other.compiler and \
+                       self.variants != other.variants and self._normal != other._normal and \
+                       self.concrete != other.concrete and self.external != other.external)
+                                       
         # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
         self.architecture = other.architecture
         self.compiler = other.compiler.copy() if other.compiler else None
-        self.dependents = DependencyMap()
-        self.dependencies = DependencyMap()
+        if kwargs.get('cleardeps', True):
+            self.dependents = DependencyMap()
+            self.dependencies = DependencyMap()
         self.variants = other.variants.copy()
         self.variants.spec = self
+        self.external = other.external
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
@@ -1372,6 +1379,8 @@ class Spec(object):
         # Since we preserved structure, we can copy _normal safely.
         self._normal = other._normal
         self._concrete = other._concrete
+        self.external = other.external
+        return changed
 
 
     def copy(self, **kwargs):
@@ -1796,6 +1805,7 @@ class SpecParser(spack.parse.Parser):
         spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
+        spec.external = None
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
 

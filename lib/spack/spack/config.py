@@ -90,9 +90,12 @@ import os
 import exceptions
 import sys
 import copy
-
-from llnl.util.lang import memoized
+import inspect
+import glob
+import imp
+import spack.spec
 import spack.error
+from llnl.util.lang import memoized
 
 from external import yaml
 from external.yaml.error import MarkedYAMLError
@@ -116,6 +119,9 @@ class _ConfigCategory:
 _ConfigCategory('compilers', 'compilers.yaml', True)
 _ConfigCategory('mirrors', 'mirrors.yaml', True)
 _ConfigCategory('preferred', 'preferred.yaml', True)
+_ConfigCategory('view', 'views.yaml', True)
+_ConfigCategory('preferred', 'preferred.yaml', True)
+_ConfigCategory('packages', 'packages.yaml', True)
 
 """Names of scopes and their corresponding configuration files."""
 config_scopes = [('site', os.path.join(spack.etc_path, 'spack')),
@@ -232,6 +238,55 @@ def get_preferred_config():
     """Get the preferred configuration from config files"""
     return get_config('preferred')
 
+
+@memoized
+def get_packages_config():
+    """Get the externals configuration from config files"""
+    package_config = get_config('packages')
+    if not package_config:
+        return {}
+    indexed_packages = {}
+    for p in package_config:
+        package_name = spack.spec.Spec(p.keys()[0]).name
+        if package_name not in indexed_packages:
+            indexed_packages[package_name] = []
+        indexed_packages[package_name].append({ spack.spec.Spec(key) : val for key, val in p.iteritems() })
+    return indexed_packages
+
+
+def is_spec_nobuild(spec):
+    """Return true if the spec pkgspec is configured as nobuild"""
+    allpkgs = get_packages_config()
+    name = spec.name
+    if not name in allpkgs:
+        return False
+    for itm in allpkgs[name]:
+        for pkg,conf in itm.iteritems():
+            if pkg.satisfies(spec):
+                if conf.get('nobuild', False):
+                    return True
+    return False
+
+
+def spec_externals(spec):
+    """Return a list of spec, directory pairs for each external location for spec"""
+    allpkgs = get_packages_config()
+    name = spec.name
+    spec_locations = []
+    
+    if not name in allpkgs:
+        return []
+    for itm in allpkgs[name]:
+        for pkg,conf in itm.iteritems():
+            if not pkg.satisfies(spec):
+                continue
+            path = conf.get('path', None)
+            if not path:
+                continue
+            spec_locations.append( (pkg, path) )
+    return spec_locations
+        
+    
 
 def get_config_scope_dirname(scope):
     """For a scope return the config directory"""

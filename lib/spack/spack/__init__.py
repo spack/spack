@@ -78,6 +78,12 @@ from spack.preferred_packages import PreferredPackages
 pkgsort = PreferredPackages()
 
 #
+# This tests ABI compatibility between packages
+#
+from spack.abi import ABI
+abi = ABI()
+
+#
 # This controls how things are concretized in spack.
 # Replace it with a subclass if you want different
 # policies.
