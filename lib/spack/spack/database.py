@@ -44,6 +44,8 @@ _db_dirname = '.spack-db'
 # DB version.  This is stuck in the DB file to track changes in format.
 _db_version = Version('0.9')
 
+# Default timeout for spack database locks is 5 min.
+_db_lock_timeout = 300
 
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
@@ -100,14 +102,14 @@ class Database(object):
         self._last_write_time = 0
 
 
-    def write_lock(self):
+    def write_lock(self, timeout=_db_lock_timeout):
         """Get a write lock context for use in a `with` block."""
-        return self.lock.write_lock()
+        return self.lock.write_lock(timeout)
 
 
-    def read_lock(self):
+    def read_lock(self, timeout=_db_lock_timeout):
         """Get a read lock context for use in a `with` block."""
-        return self.lock.read_lock()
+        return self.lock.read_lock(timeout)
 
 
     def _write_to_yaml(self, stream):
