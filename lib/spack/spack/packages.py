@@ -172,7 +172,7 @@ class PackageFinder(object):
 
 
     def providers_for(self, vpkg_name):
-        # TODO: USE MORE THAN FIRST REPO
+        # TODO: THIS IS WRONG; shoudl use more than first repo
         return self.repos[0].providers_for(vpkg_name)
 
 
@@ -252,12 +252,20 @@ class PackageFinder(object):
         return module
 
 
-    @_autospec
-    def get(self, spec, new=False):
+    def _find_repo_for_spec(self, spec):
+        """Find a repo that contains the supplied spec's package.
+
+           Raises UnknownPackageErrorfor if not found.
+        """
         for repo in self.repos:
             if spec.name in repo:
-                return repo.get(spec, new)
+                return repo
         raise UnknownPackageError(spec.name)
+
+
+    @_autospec
+    def get(self, spec, new=False):
+        return self._find_repo_for_spec(spec).get(spec, new)
 
 
     def get_repo(self, namespace):
@@ -343,7 +351,7 @@ class PackageDB(object):
                 del self._instances[spec]
 
         if not spec in self._instances:
-            package_class = self.get_class_for_package_name(spec.name, spec.repo)
+            package_class = self.get_class_for_package_name(spec.name, spec.namespace)
             try:
                 copy = spec.copy()
                 self._instances[copy] = package_class(copy)

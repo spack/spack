@@ -112,7 +112,6 @@ from spack.version import *
 from spack.util.string import *
 from spack.util.prefix import Prefix
 from spack.virtual import ProviderIndex
-from spack.repo_loader import imported_packages_module
 
 # Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
@@ -413,7 +412,7 @@ class Spec(object):
         self.dependencies = other.dependencies
         self.variants = other.variants
         self.variants.spec = self
-        self.repo = other.repo
+        self.namespace = other.namespace
 
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
@@ -1357,7 +1356,7 @@ class Spec(object):
         self.dependencies = DependencyMap()
         self.variants = other.variants.copy()
         self.variants.spec = self
-        self.repo = other.repo
+        self.namespace = other.namespace
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
@@ -1555,7 +1554,7 @@ class Spec(object):
                 if c == '_':
                     out.write(fmt % self.name)
                 elif c == '.':
-                    longname = '%s.%s.%s' % (imported_packages_module, self.repo, self.name) if self.repo else self.name
+                    longname = '%s.%s.%s' % (self.namespace, self.name) if self.namespace else self.name
                     out.write(fmt % longname)
                 elif c == '@':
                     if self.versions and self.versions != _any_version:
@@ -1706,15 +1705,9 @@ class SpecParser(spack.parse.Parser):
         """Parse a spec out of the input.  If a spec is supplied, then initialize
            and return it instead of creating a new one."""
 
-        spec_name = None
-        spec_repo = None
-        if self.token.value.startswith(imported_packages_module):
-            lst = self.token.value.split('.')
-            spec_name = lst[-1]
-            spec_repo = lst[-2]
-        else:
-            spec_name = self.token.value
-            spec_repo = 'gov.llnl.spack'
+        spec_namespace, dot, spec_name = self.token.value.rpartition('.')
+        if not spec_namespace:
+            spec_namespace = None
 
         self.check_identifier(spec_name)
 
@@ -1727,7 +1720,7 @@ class SpecParser(spack.parse.Parser):
         spec.compiler = None
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
-        spec.repo = spec_repo
+        spec.namespace = spec_namespace
 
         spec._normal = False
         spec._concrete = False

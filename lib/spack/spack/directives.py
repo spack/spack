@@ -240,11 +240,11 @@ def patch(pkg, url_or_filename, level=1, when=None):
     when_spec = parse_anonymous_spec(when, pkg.name)
 
     if when_spec not in pkg.patches:
-        pkg.patches[when_spec] = [Patch(pkg.name, url_or_filename, level)]
+        pkg.patches[when_spec] = [Patch(pkg, pkg.name, url_or_filename, level)]
     else:
         # if this spec is identical to some other, then append this
         # patch to the existing list.
-        pkg.patches[when_spec].append(Patch(pkg.name, url_or_filename, level))
+        pkg.patches[when_spec].append(Patch(pkg, pkg.name, url_or_filename, level))
 
 
 @directive('variants')

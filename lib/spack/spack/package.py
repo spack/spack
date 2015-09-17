@@ -712,6 +712,12 @@ class Package(object):
         tty.msg("Patched %s" % self.name)
 
 
+    @property
+    def namespace(self):
+        namespace, dot, module = self.__module__.rpartition('.')
+        return namespace
+
+
     def do_fake_install(self):
         """Make a fake install directory contaiing a 'fake' file in bin."""
         mkdirp(self.prefix.bin)

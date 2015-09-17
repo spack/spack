@@ -31,14 +31,6 @@ from spack.packages import PackageFinder
 from spack.spec import Spec
 
 
-def set_pkg_dep(pkg, spec):
-    """Alters dependence information for a package.
-       Use this to mock up constraints.
-    """
-    spec = Spec(spec)
-    spack.db.get(pkg).dependencies[spec.name] = { Spec(pkg) : spec }
-
-
 class MockPackagesTest(unittest.TestCase):
     def initmock(self):
         # Use the mock packages database for these tests.  This allows
@@ -53,13 +45,38 @@ class MockPackagesTest(unittest.TestCase):
             ('site', spack.mock_site_config),
             ('user', spack.mock_user_config)]
 
+        # Store changes to the package's dependencies so we can
+        # restore later.
+        self.saved_deps = {}
+
+
+    def set_pkg_dep(self, pkg_name, spec):
+        """Alters dependence information for a package.
+
+        Adds a dependency on <spec> to pkg.
+        Use this to mock up constraints.
+        """
+        spec = Spec(spec)
+
+        # Save original dependencies before making any changes.
+        pkg = spack.db.get(pkg_name)
+        if pkg_name not in self.saved_deps:
+            self.saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
+
+        # Change dep spec
+        pkg.dependencies[spec.name] = { Spec(pkg_name) : spec }
+
 
     def cleanmock(self):
         """Restore the real packages path after any test."""
         spack.db.swap(self.db)
-
         spack.config.config_scopes = self.real_scopes
         spack.config.clear_config_caches()
+
+        # Restore dependency changes that happened during the test
+        for pkg_name, (pkg, deps) in self.saved_deps.items():
+            pkg.dependencies.clear()
+            pkg.dependencies.update(deps)
 
 
     def setUp(self):

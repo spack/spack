@@ -41,7 +41,11 @@ class Patch(object):
     """This class describes a patch to be applied to some expanded
        source code."""
 
-    def __init__(self, pkg_name, path_or_url, level):
+    def __init__(self, pkg, pkg_name, path_or_url, level):
+        print pkg, pkg.name, type(pkg)
+        print "pkg:", dir(pkg.__module__)
+        print "NAMESPACE", pkg.namespace()
+
         self.pkg_name = pkg_name
         self.path_or_url = path_or_url
         self.path = None
