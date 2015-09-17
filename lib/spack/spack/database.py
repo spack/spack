@@ -24,13 +24,14 @@
 ##############################################################################
 import os
 import time
+import socket
 
 from external import yaml
 from external.yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
-from llnl.util.lock import *
+from llnl.util.lock import Lock
 
 import spack.spec
 from spack.version import Version
@@ -97,6 +98,16 @@ class Database(object):
         self.lock = Lock(self._lock_path)
         self._data = {}
         self._last_write_time = 0
+
+
+    def write_lock(self):
+        """Get a write lock context for use in a `with` block."""
+        return self.lock.write_lock()
+
+
+    def read_lock(self):
+        """Get a read lock context for use in a `with` block."""
+        return self.lock.read_lock()
 
 
     def _write_to_yaml(self, stream):
@@ -198,13 +209,14 @@ class Database(object):
 
     def reindex(self, directory_layout):
         """Build database index from scratch based from a directory layout."""
-        with Write_Lock_Instance(self.lock, 60):
+        with self.write_lock():
             data = {}
             for spec in directory_layout.all_specs():
                 path = directory_layout.path_for_spec(spec)
                 hash_key = spec.dag_hash()
                 data[hash_key] = InstallRecord(spec, path)
             self._data = data
+
             self.write()
 
 
@@ -264,7 +276,7 @@ class Database(object):
         Write the database back to memory
         """
         # Should always already be locked
-        with Write_Lock_Instance(self.lock, 60):
+        with self.write_lock():
             self.read()
             self._data[spec.dag_hash()] = InstallRecord(spec, path)
             self.write()
@@ -278,7 +290,7 @@ class Database(object):
         Writes the database back to memory
         """
         # Should always already be locked
-        with Write_Lock_Instance(self.lock, 60):
+        with self.write_lock():
             self.read()
             hash_key = spec.dag_hash()
             if hash_key in self._data:
@@ -314,7 +326,7 @@ class Database(object):
         and return their specs
         """
         # Should always already be locked
-        with Read_Lock_Instance(self.lock, 60):
+        with self.read_lock():
             self.read()
         return sorted(rec.spec for rec in self._data.values())
 

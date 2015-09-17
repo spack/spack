@@ -28,7 +28,6 @@ import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import attr_setdefault
-from llnl.util.lock import *
 
 import spack
 import spack.spec
@@ -125,7 +124,7 @@ def elide_list(line_list, max_num=10):
 
 
 def disambiguate_spec(spec):
-    with Read_Lock_Instance(spack.installed_db.lock,1800):
+    with spack.installed_db.read_lock():
         matching_specs = spack.installed_db.get_installed(spec)
         if not matching_specs:
             tty.die("Spec '%s' matches no installed packages." % spec)

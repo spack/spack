@@ -25,7 +25,6 @@
 from external import argparse
 
 import llnl.util.tty as tty
-from llnl.util.lock import *
 
 import spack
 import spack.cmd
@@ -69,7 +68,7 @@ def install(parser, args):
     if args.no_checksum:
         spack.do_checksum = False        # TODO: remove this global.
 
-    with Write_Lock_Instance(spack.installed_db.lock,1800):
+    with spack.installed_db.write_lock():
         specs = spack.cmd.parse_specs(args.packages, concretize=True)
         for spec in specs:
             package = spack.db.get(spec)

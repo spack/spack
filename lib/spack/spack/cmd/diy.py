@@ -27,7 +27,6 @@ import os
 from external import argparse
 
 import llnl.util.tty as tty
-from llnl.util.lock import *
 
 import spack
 import spack.cmd
@@ -55,7 +54,7 @@ def diy(self, args):
     if not args.spec:
         tty.die("spack diy requires a package spec argument.")
 
-    with Write_Lock_Instance(spack.installed_db.lock,1800):
+    with spack.installed_db.write_lock():
         specs = spack.cmd.parse_specs(args.spec)
         if len(specs) > 1:
             tty.die("spack diy only takes one spec.")

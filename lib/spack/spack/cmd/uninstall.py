@@ -27,7 +27,6 @@ from external import argparse
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
-from llnl.util.lock import *
 
 import spack
 import spack.cmd
@@ -54,7 +53,7 @@ def uninstall(parser, args):
     if not args.packages:
         tty.die("uninstall requires at least one package argument.")
 
-    with Write_Lock_Instance(spack.installed_db.lock,1800):
+    with spack.installed_db.write_lock():
         specs = spack.cmd.parse_specs(args.packages)
 
         # For each spec provided, make sure it refers to only one package.

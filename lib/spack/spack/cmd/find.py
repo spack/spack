@@ -32,7 +32,6 @@ import llnl.util.tty as tty
 from llnl.util.tty.colify import *
 from llnl.util.tty.color import *
 from llnl.util.lang import *
-from llnl.util.lock import *
 
 import spack
 import spack.spec
@@ -139,11 +138,11 @@ def find(parser, args):
 
     # Get all the specs the user asked for
     if not query_specs:
-        with Read_Lock_Instance(spack.installed_db.lock, 1800):
+        with spack.installed_db.read_lock():
             specs = set(spack.installed_db.installed_package_specs())
 
     else:
-        with Read_Lock_Instance(spack.installed_db.lock, 1800):
+        with spack.installed_db.read_lock():
             results = [set(spack.installed_db.get_installed(qs)) for qs in query_specs]
         specs = set.union(*results)
 

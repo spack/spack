@@ -24,7 +24,6 @@
 ##############################################################################
 from external import argparse
 import llnl.util.tty as tty
-from llnl.util.lock import *
 
 import spack
 import spack.cmd
@@ -55,7 +54,7 @@ def deactivate(parser, args):
     if args.all:
         if pkg.extendable:
             tty.msg("Deactivating all extensions of %s" % pkg.spec.short_spec)
-            with Read_Lock_Instance(spack.installed_db.lock,1800):
+            with spack.installed_db.read_lock():
                 ext_pkgs = spack.installed_db.installed_extensions_for(spec)
 
                 for ext_pkg in ext_pkgs:

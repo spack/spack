@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,21 +23,10 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from external import argparse
-
-from llnl.util.lock import *
-
 import spack
-import os
 
 description = "Correct database irregularities"
 
-#Very basic version of spack fsck
+# Very basic version of spack fsck
 def fsck(parser, args):
-    with Write_Lock_Instance(spack.installed_db.lock,1800):
-        #remove database file
-        if os.path.exists(spack.installed_db._file_path):
-            os.remove(spack.installed_db._file_path)
-        #read database
-        spack.installed_db.read_database()
-        #write database
-        spack.installed_db.write()
+    spack.installed_db.reindex(spack.install_layout)

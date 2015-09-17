@@ -29,13 +29,15 @@ import errno
 import time
 import socket
 
+# Default timeout for locks.
+DEFAULT_TIMEOUT = 60
 
-class Read_Lock_Instance(object):
-    """
-    A context manager for getting shared access to the object lock
+class _ReadLockContext(object):
+    """Context manager that takes and releases a read lock.
+
     Arguments are lock and timeout (default 5 minutes)
     """
-    def __init__(self, lock, timeout=300):
+    def __init__(self, lock, timeout=DEFAULT_TIMEOUT):
         self._lock = lock
         self._timeout = timeout
 
@@ -46,12 +48,12 @@ class Read_Lock_Instance(object):
         self._lock.release_read()
 
 
-class Write_Lock_Instance(object):
-    """
-    A context manager for getting exclusive access to the object lock
+class _WriteLockContext(object):
+    """Context manager that takes and releases a write lock.
+
     Arguments are lock and timeout (default 5 minutes)
     """
-    def __init__(self, lock, timeout=300):
+    def __init__(self, lock, timeout=DEFAULT_TIMEOUT):
         self._lock = lock
         self._timeout = timeout
 
@@ -72,7 +74,17 @@ class Lock(object):
         self._writes = 0
 
 
-    def acquire_read(self,timeout):
+    def write_lock(self, timeout=DEFAULT_TIMEOUT):
+        """Convenience method that returns a write lock context."""
+        return _WriteLockContext(self, timeout)
+
+
+    def read_lock(self, timeout=DEFAULT_TIMEOUT):
+        """Convenience method that returns a read lock context."""
+        return _ReadLockContext(self, timeout)
+
+
+    def acquire_read(self, timeout):
         """
         Implements recursive lock. If held in both read and write mode,
         the write lock will be maintained until all locks are released
