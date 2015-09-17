@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -23,95 +23,192 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import sys
-import inspect
-import glob
-import imp
-
 import time
-import copy
-import errno
 
 from external import yaml
-from external.yaml.error import MarkedYAMLError
+from external.yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
-from llnl.util.lang import *
+from llnl.util.filesystem import *
 from llnl.util.lock import *
 
-import spack.error
 import spack.spec
+from spack.version import Version
 from spack.spec import Spec
 from spack.error import SpackError
-from spack.virtual import ProviderIndex
-from spack.util.naming import mod_to_class, validate_module_name
+
+# DB goes in this directory underneath the root
+_db_dirname = '.spack-db'
+
+# DB version.  This is stuck in the DB file to track changes in format.
+_db_version = Version('0.9')
 
 
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
        function to a Spec."""
-    def converter(self, spec_like, **kwargs):
+    def converter(self, spec_like, *args, **kwargs):
         if not isinstance(spec_like, spack.spec.Spec):
             spec_like = spack.spec.Spec(spec_like)
-        return function(self, spec_like, **kwargs)
+        return function(self, spec_like, *args, **kwargs)
     return converter
 
 
+class InstallRecord(object):
+    """A record represents one installation in the DB."""
+    def __init__(self, spec, path):
+        self.spec = spec
+        self.path = path
+
+    def to_dict(self):
+        return { 'spec' : self.spec.to_node_dict(),
+                 'path' : self.path }
+
+    @classmethod
+    def from_dict(cls, d):
+        return InstallRecord(d['spec'], d['path'])
+
+
 class Database(object):
-    def __init__(self,root,file_name="_index.yaml"):
-        """
-        Create an empty Database
-        Location defaults to root/specDB.yaml
+    def __init__(self, root):
+        """Create an empty Database.
+
+        Location defaults to root/_index.yaml
         The individual data are dicts containing
         spec: the top level spec of a package
         path: the path to the install of that package
         dep_hash: a hash of the dependence DAG for that package
         """
         self._root = root
-        self._file_name = file_name
-        self._file_path = join_path(self._root,self._file_name)
 
-        self._lock_name = "_db_lock"
-        self._lock_path = join_path(self._root,self._lock_name)
+        # Set up layout of database files.
+        self._db_dir     = join_path(self._root, _db_dirname)
+        self._index_path = join_path(self._db_dir, 'index.yaml')
+        self._lock_path  = join_path(self._db_dir, 'lock')
+
+        # Create needed directories and files
+        if not os.path.exists(self._db_dir):
+            mkdirp(self._db_dir)
+
         if not os.path.exists(self._lock_path):
-            open(self._lock_path,'w').close()
-        self.lock = Lock(self._lock_path)
+            touch(self._lock_path)
 
-        self._data = []
+        # initialize rest of state.
+        self.lock = Lock(self._lock_path)
+        self._data = {}
         self._last_write_time = 0
 
 
-    def _read_from_yaml(self,stream):
+    def _write_to_yaml(self, stream):
+        """Write out the databsae to a YAML file."""
+        # map from per-spec hash code to installation record.
+        installs = dict((k, v.to_dict()) for k, v in self._data.items())
+
+        # databaes includes installation list and version.
+
+        # NOTE: this DB version does not handle multiple installs of
+        # the same spec well.  If there are 2 identical specs with
+        # different paths, it can't differentiate.
+        # TODO: fix this before we support multiple install locations.
+        database = {
+            'database' : {
+                'installs' : installs,
+                'version' : str(_db_version)
+            }
+        }
+
+        try:
+            return yaml.dump(database, stream=stream, default_flow_style=False)
+        except YAMLError as e:
+            raise SpackYAMLError("error writing YAML database:", str(e))
+
+
+    def _read_spec_from_yaml(self, hash_key, installs):
+        """Recursively construct a spec from a hash in a YAML database."""
+        # TODO: check validity of hash_key records here.
+        spec_dict = installs[hash_key]['spec']
+
+        # Build spec from dict first.
+        spec = Spec.from_node_dict(spec_dict)
+
+        # Add dependencies from other records in the install DB to
+        # form a full spec.
+        for dep_hash in spec_dict[spec.name]['dependencies'].values():
+            spec._add_dependency(self._read_spec_from_yaml(dep_hash, installs))
+
+        return spec
+
+
+    def _read_from_yaml(self, stream):
         """
         Fill database from YAML, do not maintain old data
         Translate the spec portions from node-dict form to spec form
         """
         try:
-            file = yaml.load(stream)
-        except MarkedYAMLError, e:
+            if isinstance(stream, basestring):
+                with open(stream, 'r') as f:
+                    yfile = yaml.load(f)
+            else:
+                yfile = yaml.load(stream)
+
+        except MarkedYAMLError as e:
             raise SpackYAMLError("error parsing YAML database:", str(e))
 
-        if file is None:
+        if yfile is None:
             return
 
+        def check(cond, msg):
+            if not cond: raise CorruptDatabaseError(self._index_path, msg)
+
+        check('database' in yfile, "No 'database' attribute in YAML.")
+
+        # High-level file checks.
+        db = yfile['database']
+        check('installs' in db, "No 'installs' in YAML DB.")
+        check('version'  in db, "No 'version' in YAML DB.")
+
+        # TODO: better version check.
+        version = Version(db['version'])
+        if version != _db_version:
+            raise InvalidDatabaseVersionError(_db_version, version)
+
+        # Iterate through database and check each record.
+        installs = db['installs']
         data = {}
-        for index, sp in file['database'].items():
-            spec = Spec.from_node_dict(sp['spec'])
-            deps = sp['dependency_indices']
-            path = sp['path']
-            dep_hash = sp['hash']
-            db_entry = {'deps':deps, 'spec': spec, 'path': path, 'hash':dep_hash}
-            data[index] = db_entry
+        for hash_key, rec in installs.items():
+            try:
+                spec = self._read_spec_from_yaml(hash_key, installs)
+                spec_hash = spec.dag_hash()
+                if not spec_hash == hash_key:
+                    tty.warn("Hash mismatch in database: %s -> spec with hash %s"
+                             % (hash_key, spec_hash))
+                    continue
 
-        for sph in data.values():
-            for idx in sph['deps']:
-                sph['spec'].dependencies[data[idx]['spec'].name] = data[idx]['spec']
+                data[hash_key] = InstallRecord(spec, rec['path'])
 
-        self._data = data.values()
+            except Exception as e:
+                tty.warn("Invalid database reecord:",
+                         "file:  %s" % self._index_path,
+                         "hash:  %s" % hash_key,
+                         "cause: %s" % str(e))
+                raise
+
+        self._data = data
 
 
-    def read_database(self):
+    def reindex(self, directory_layout):
+        """Build database index from scratch based from a directory layout."""
+        with Write_Lock_Instance(self.lock, 60):
+            data = {}
+            for spec in directory_layout.all_specs():
+                path = directory_layout.path_for_spec(spec)
+                hash_key = spec.dag_hash()
+                data[hash_key] = InstallRecord(spec, path)
+            self._data = data
+            self.write()
+
+
+    def read(self):
         """
         Re-read Database from the data in the set location
         If the cache is fresh, return immediately.
@@ -119,43 +216,12 @@ class Database(object):
         if not self.is_dirty():
             return
 
-        if os.path.isfile(self._file_path):
-            with open(self._file_path,'r') as f:
-                self._read_from_yaml(f)
+        if os.path.isfile(self._index_path):
+            # Read from YAML file if a database exists
+            self._read_from_yaml(self._index_path)
         else:
-            #The file doesn't exist, construct from file paths
-            self._data = []
-            specs = spack.install_layout.all_specs()
-            for spec in specs:
-                sph = {}
-                sph['spec']=spec
-                sph['hash']=spec.dag_hash()
-                sph['path']=spack.install_layout.path_for_spec(spec)
-                self._data.append(sph)
-
-
-    def _write_database_to_yaml(self,stream):
-        """
-        Replace each spec with its dict-node form
-        Then stream all data to YAML
-        """
-        node_list = []
-        spec_list = [sph['spec'] for sph in self._data]
-
-        for sph in self._data:
-            node = {}
-            deps = []
-            for name,spec in sph['spec'].dependencies.items():
-                deps.append(spec_list.index(spec))
-            node['spec']=Spec.to_node_dict(sph['spec'])
-            node['hash']=sph['hash']
-            node['path']=sph['path']
-            node['dependency_indices']=deps
-            node_list.append(node)
-
-        node_dict = dict(enumerate(node_list))
-        return yaml.dump({ 'database' : node_dict},
-                         stream=stream, default_flow_style=False)
+            # The file doesn't exist, try to traverse the directory.
+            self.reindex(spack.install_layout)
 
 
     def write(self):
@@ -165,39 +231,42 @@ class Database(object):
         within the same lock, so there is no need to refresh
         the database within write()
         """
-        temp_name = str(os.getpid()) + socket.getfqdn() + ".temp"
-        temp_file = join_path(self._root,temp_name)
-        with open(temp_file,'w') as f:
-            self._last_write_time = int(time.time())
-            self._write_database_to_yaml(f)
-        os.rename(temp_file,self._file_path)
+        temp_name = '%s.%s.temp' % (socket.getfqdn(), os.getpid())
+        temp_file = join_path(self._db_dir, temp_name)
+
+        # Write a temporary database file them move it into place
+        try:
+            with open(temp_file, 'w') as f:
+                self._last_write_time = int(time.time())
+                self._write_to_yaml(f)
+            os.rename(temp_file, self._index_path)
+
+        except:
+            # Clean up temp file if something goes wrong.
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+            raise
+
 
     def is_dirty(self):
         """
         Returns true iff the database file does not exist
         or was most recently written to by another spack instance.
         """
-        if not os.path.isfile(self._file_path):
-            return True
-        else:
-            return (os.path.getmtime(self._file_path) > self._last_write_time)
+        return (not os.path.isfile(self._index_path) or
+                (os.path.getmtime(self._index_path) > self._last_write_time))
 
 
-#    @_autospec
+    @_autospec
     def add(self, spec, path):
         """Read the database from the set location
         Add the specified entry as a dict
         Write the database back to memory
         """
-        sph = {}
-        sph['spec']=spec
-        sph['path']=path
-        sph['hash']=spec.dag_hash()
-
-        #Should always already be locked
-        with Write_Lock_Instance(self.lock,60):
-            self.read_database()
-            self._data.append(sph)
+        # Should always already be locked
+        with Write_Lock_Instance(self.lock, 60):
+            self.read()
+            self._data[spec.dag_hash()] = InstallRecord(spec, path)
             self.write()
 
 
@@ -208,23 +277,18 @@ class Database(object):
         Searches for and removes the specified spec
         Writes the database back to memory
         """
-        #Should always already be locked
-        with Write_Lock_Instance(self.lock,60):
-            self.read_database()
-
-            for sp in self._data:
-                #Not sure the hash comparison is necessary
-                if sp['hash'] == spec.dag_hash() and sp['spec'] == spec:
-                    self._data.remove(sp)
-
+        # Should always already be locked
+        with Write_Lock_Instance(self.lock, 60):
+            self.read()
+            hash_key = spec.dag_hash()
+            if hash_key in self._data:
+                del self._data[hash_key]
             self.write()
 
 
     @_autospec
     def get_installed(self, spec):
-        """
-        Get all the installed specs that satisfy the provided spec constraint
-        """
+        """Get installed specs that satisfy the provided spec constraint."""
         return [s for s in self.installed_package_specs() if s.satisfies(spec)]
 
 
@@ -238,10 +302,10 @@ class Database(object):
             try:
                 if s.package.extends(extendee_spec):
                     yield s.package
-            except UnknownPackageError, e:
+            except UnknownPackageError as e:
                 continue
-            #skips unknown packages
-            #TODO: conditional way to do this instead of catching exceptions
+            # skips unknown packages
+            # TODO: conditional way to do this instead of catching exceptions
 
 
     def installed_package_specs(self):
@@ -249,14 +313,10 @@ class Database(object):
         Read installed package names from the database
         and return their specs
         """
-        #Should always already be locked
-        with Read_Lock_Instance(self.lock,60):
-            self.read_database()
-
-        installed = []
-        for sph in self._data:
-            installed.append(sph['spec'])
-        return installed
+        # Should always already be locked
+        with Read_Lock_Instance(self.lock, 60):
+            self.read()
+        return sorted(rec.spec for rec in self._data.values())
 
 
     def installed_known_package_specs(self):
@@ -265,5 +325,18 @@ class Database(object):
         Return only the specs for which the package is known
         to this version of spack
         """
-        return [s for s in self.installed_package_specs() if spack.db.exists(s.name)]
+        return [s for s in self.installed_package_specs()
+                if spack.db.exists(s.name)]
 
+
+class CorruptDatabaseError(SpackError):
+    def __init__(self, path, msg=''):
+        super(CorruptDatabaseError, self).__init__(
+            "Spack database is corrupt: %s.  %s" %(path, msg))
+
+
+class InvalidDatabaseVersionError(SpackError):
+    def __init__(self, expected, found):
+        super(InvalidDatabaseVersionError, self).__init__(
+            "Expected database version %s but found version %s"
+            % (expected, found))

@@ -22,6 +22,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+"""Lock implementation for shared filesystems."""
 import os
 import fcntl
 import errno
@@ -34,11 +35,13 @@ class Read_Lock_Instance(object):
     A context manager for getting shared access to the object lock
     Arguments are lock and timeout (default 5 minutes)
     """
-    def __init__(self,lock,timeout = 300):
+    def __init__(self, lock, timeout=300):
         self._lock = lock
         self._timeout = timeout
+
     def __enter__(self):
         self._lock.acquire_read(self._timeout)
+
     def __exit__(self,type,value,traceback):
         self._lock.release_read()
 
@@ -48,17 +51,21 @@ class Write_Lock_Instance(object):
     A context manager for getting exclusive access to the object lock
     Arguments are lock and timeout (default 5 minutes)
     """
-    def __init__(self,lock,timeout = 300):
+    def __init__(self, lock, timeout=300):
         self._lock = lock
         self._timeout = timeout
+
     def __enter__(self):
         self._lock.acquire_write(self._timeout)
+
     def __exit__(self,type,value,traceback):
         self._lock.release_write()
 
 
 class Lock(object):
-    def __init__(self,file_path):
+    """Distributed file-based lock using ``flock``."""
+
+    def __init__(self, file_path):
         self._file_path = file_path
         self._fd = os.open(file_path,os.O_RDWR)
         self._reads = 0
@@ -71,20 +78,20 @@ class Lock(object):
         the write lock will be maintained until all locks are released
         """
         if self._reads == 0 and self._writes == 0:
-            self._lock(fcntl.LOCK_SH,timeout)
+            self._lock(fcntl.LOCK_SH, timeout)
         self._reads += 1
 
 
-    def acquire_write(self,timeout):
+    def acquire_write(self, timeout):
         """
         Implements recursive lock
         """
         if self._writes == 0:
-            self._lock(fcntl.LOCK_EX,timeout)
+            self._lock(fcntl.LOCK_EX, timeout)
         self._writes += 1
 
 
-    def _lock(self,op,timeout):
+    def _lock(self, op, timeout):
         """
         The timeout is implemented using nonblocking flock()
         to avoid using signals for timing
@@ -96,8 +103,8 @@ class Lock(object):
             try:
                 fcntl.flock(self._fd, op | fcntl.LOCK_NB)
                 if op == fcntl.LOCK_EX:
-                    with open(self._file_path,'w') as f:
-                        f.write("pid = "+str(os.getpid())+", host = "+socket.getfqdn())
+                    with open(self._file_path, 'w') as f:
+                        f.write("pid = " + str(os.getpid()) + ", host = " + socket.getfqdn())
                 return
             except IOError as error:
                 if error.errno == errno.EAGAIN or error.errno == EACCES:
@@ -133,4 +140,4 @@ class Lock(object):
         Releases the lock regardless of mode. Note that read locks may be
         masquerading as write locks at times, but this removes either.
         """
-        fcntl.flock(self._fd,fcntl.LOCK_UN)
+        fcntl.flock(self._fd, fcntl.LOCK_UN)
