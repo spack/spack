@@ -50,6 +50,8 @@ SPACK_SHORT_SPEC"
 
 # The compiler input variables are checked for sanity later:
 #   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
+# The default compiler flags are passed from the config files:
+#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FFLAGS, SPACK_LDFLAGS
 # Debug flag is optional; set to true for debug logging:
 #   SPACK_DEBUG
 # Test command is used to unit test the compiler script.
@@ -87,19 +89,19 @@ done
 command=$(basename "$0")
 case "$command" in
     cc|gcc|c89|c99|clang|xlc)
-        command="$SPACK_CC"
+        command="$SPACK_CC $SPACK_CFLAGS"
         language="C"
         ;;
     c++|CC|g++|clang++|xlC)
-        command="$SPACK_CXX"
+        command="$SPACK_CXX SPACK_CXXFLAGS"
         language="C++"
         ;;
     f77|xlf)
-        command="$SPACK_F77"
+        command="$SPACK_F77 $SPACK_FFLAGS"
         language="Fortran 77"
         ;;
     fc|f90|f95|xlf90)
-        command="$SPACK_FC"
+        command="$SPACK_FC $SPACK_FFLAGS"
         language="Fortran 90"
         ;;
     cpp)
@@ -107,6 +109,7 @@ case "$command" in
         ;;
     ld)
         mode=ld
+        command+=" $LDFLAGS"
         ;;
     *)
         die "Unkown compiler: $command"
@@ -116,6 +119,7 @@ esac
 # Finish setting up the mode.
 if [ -z "$mode" ]; then
     mode=ccld
+    command+=" $SPACK_LDFLAGS"
     for arg in "$@"; do
         if [ "$arg" = -v -o "$arg" = -V -o "$arg" = --version -o "$arg" = -dumpversion ]; then
             mode=vcheck

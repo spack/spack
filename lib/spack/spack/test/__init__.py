@@ -59,7 +59,8 @@ test_names = ['versions',
               'configure_guess',
               'unit_install',
               'lock',
-              'database']
+              'database',
+              'cflags']
 
 
 def list_tests():

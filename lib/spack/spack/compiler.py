@@ -98,7 +98,7 @@ class Compiler(object):
     cxx11_flag = "-std=c++11"
 
 
-    def __init__(self, cspec, cc, cxx, f77, fc):
+    def __init__(self, cspec, cc, cxx, f77, fc, cflags=None, cxxflags=None, fflags=None, ldflags=None):
         def check(exe):
             if exe is None:
                 return None
@@ -109,6 +109,11 @@ class Compiler(object):
         self.cxx = check(cxx)
         self.f77 = check(f77)
         self.fc  = check(fc)
+
+        self.cflags = cflags
+        self.cxxflags = cxxflags
+        self.fflags = fflags
+        self.ldflags = ldflags
 
         self.spec = cspec
 
@@ -253,6 +258,24 @@ class Compiler(object):
             compilers[ver] = cls(spec, *paths)
 
         return list(compilers.values())
+
+    def update_flags(self,c=None,cxx=None,f=None,ld=None):
+        """Update any flag values provided. Cannot be used to erase values"""
+        if c:
+            self.cflags=c
+        if cxx:
+            self.cxxflags=cxx
+        if f:
+            self.fflags=f
+        if ld:
+            self.ldflags=ld
+
+    def erase_flags(self):
+        """Erase the flag settings"""
+        self.cflags=None
+        self.cxxflags=None
+        self.fflags=None
+        self.ldflags=None
 
 
     def __repr__(self):

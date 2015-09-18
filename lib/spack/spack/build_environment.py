@@ -103,6 +103,17 @@ def set_compiler_environment_variables(pkg):
     if compiler.fc:
         os.environ['SPACK_FC']  = compiler.fc
 
+    # Set SPACK compiler flags so our wrapper can add default flags
+    if compiler.cflags:
+        os.environ['SPACK_CFLAGS'] = compiler.cflags
+    if compiler.cxxflags:
+        os.environ['SPACK_CXXFLAGS'] = compiler.cxxflags
+    if compiler.cflags:
+        os.environ['SPACK_FFLAGS'] = compiler.fflags
+    if compiler.ldflags:
+        os.environ['SPACK_LDFLAGS'] = compiler.ldflags
+
+
     os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
 
 

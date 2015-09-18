@@ -44,6 +44,7 @@ from spack.util.environment import get_path
 
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
+_optional_flag_vars = ['cflags', 'cxxflags', 'fflags', 'ldflags']
 
 _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
 
@@ -163,7 +164,7 @@ def all_compilers():
 @_auto_compiler_spec
 def find(compiler_spec):
     """Return specs of available compilers that match the supplied
-       compiler spec.  Return an list if nothing found."""
+       compiler spec.  Return an empty list if nothing found."""
     return [c for c in all_compilers() if c.satisfies(compiler_spec)]
 
 
@@ -181,15 +182,20 @@ def compilers_for_spec(compiler_spec):
             raise InvalidCompilerConfigurationError(cspec)
 
         cls  = class_for_compiler_name(cspec.name)
-        compiler_paths = []
+        compiler_params = []
         for c in _required_instance_vars:
             compiler_path = items[c]
             if compiler_path != "None":
-                compiler_paths.append(compiler_path)
+                compiler_params.append(compiler_path)
             else:
-                compiler_paths.append(None)
+                compiler_params.append(None)
 
-        return cls(cspec, *compiler_paths)
+        for c in _optional_flag_vars:
+            if c not in items:
+                items[c]=None
+            compiler_params.append(items[c])
+
+        return cls(cspec, *compiler_params)
 
     matches = find(compiler_spec)
     return [get_compiler(cspec) for cspec in matches]
