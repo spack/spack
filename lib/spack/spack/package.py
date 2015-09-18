@@ -563,9 +563,12 @@ class Package(object):
     @property
     def installed_dependents(self):
         """Return a list of the specs of all installed packages that depend
-           on this one."""
+           on this one.
+
+        TODO: move this method to database.py?
+        """
         dependents = []
-        for spec in spack.installed_db.installed_package_specs():
+        for spec in spack.installed_db.query():
             if self.name == spec.name:
                 continue
             for dep in spec.traverse():

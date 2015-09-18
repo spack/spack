@@ -22,6 +22,23 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+"""Spack's installation tracking database.
+
+The database serves two purposes:
+
+  1. It implements a cache on top of a potentially very large Spack
+     directory hierarchy, speeding up many operations that would
+     otherwise require filesystem access.
+
+  2. It will allow us to track external installations as well as lost
+     packages and their dependencies.
+
+Prior ot the implementation of this store, a direcotry layout served
+as the authoritative database of packages in Spack.  This module
+provides a cache and a sanity checking mechanism for what is in the
+filesystem.
+
+"""
 import os
 import time
 import socket
@@ -58,18 +75,37 @@ def _autospec(function):
 
 
 class InstallRecord(object):
-    """A record represents one installation in the DB."""
-    def __init__(self, spec, path):
+    """A record represents one installation in the DB.
+
+    The record keeps track of the spec for the installation, its
+    install path, AND whether or not it is installed.  We need the
+    installed flag in case a user either:
+
+        a) blew away a directory, or
+        b) used spack uninstall -f to get rid of it
+
+    If, in either case, the package was removed but others still
+    depend on it, we still need to track its spec, so we don't
+    actually remove from the database until a spec has no installed
+    dependents left.
+
+    """
+    def __init__(self, spec, path, installed):
         self.spec = spec
         self.path = path
+        self.installed = installed
+        self.ref_count = 0
 
     def to_dict(self):
-        return { 'spec' : self.spec.to_node_dict(),
-                 'path' : self.path }
+        return { 'spec'      : self.spec.to_node_dict(),
+                 'path'      : self.path,
+                 'installed' : self.installed,
+                 'ref_count' : self.ref_count }
 
     @classmethod
     def from_dict(cls, d):
-        return InstallRecord(d['spec'], d['path'])
+        # TODO: check the dict more rigorously.
+        return InstallRecord(d['spec'], d['path'], d['installed'], d['ref_count'])
 
 
 class Database(object):
@@ -136,9 +172,11 @@ class Database(object):
             raise SpackYAMLError("error writing YAML database:", str(e))
 
 
-    def _read_spec_from_yaml(self, hash_key, installs):
+    def _read_spec_from_yaml(self, hash_key, installs, parent_key=None):
         """Recursively construct a spec from a hash in a YAML database."""
-        # TODO: check validity of hash_key records here.
+        if hash_key not in installs:
+            parent = read_spec(installs[parent_key]['path'])
+
         spec_dict = installs[hash_key]['spec']
 
         # Build spec from dict first.
@@ -147,7 +185,8 @@ class Database(object):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         for dep_hash in spec_dict[spec.name]['dependencies'].values():
-            spec._add_dependency(self._read_spec_from_yaml(dep_hash, installs))
+            child = self._read_spec_from_yaml(dep_hash, installs, hash_key)
+            spec._add_dependency(child)
 
         return spec
 
@@ -175,12 +214,12 @@ class Database(object):
 
         check('database' in yfile, "No 'database' attribute in YAML.")
 
-        # High-level file checks.
+        # High-level file checks
         db = yfile['database']
         check('installs' in db, "No 'installs' in YAML DB.")
         check('version'  in db, "No 'version' in YAML DB.")
 
-        # TODO: better version check.
+        # TODO: better version checking semantics.
         version = Version(db['version'])
         if version != _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
@@ -190,14 +229,21 @@ class Database(object):
         data = {}
         for hash_key, rec in installs.items():
             try:
+                # This constructs a spec DAG from the list of all installs
                 spec = self._read_spec_from_yaml(hash_key, installs)
+
+                # Validate the spec by ensuring the stored and actual
+                # hashes are the same.
                 spec_hash = spec.dag_hash()
                 if not spec_hash == hash_key:
                     tty.warn("Hash mismatch in database: %s -> spec with hash %s"
                              % (hash_key, spec_hash))
-                    continue
+                    continue    # TODO: is skipping the right thing to do?
 
-                data[hash_key] = InstallRecord(spec, rec['path'])
+                # Insert the brand new spec in the database.  Each
+                # spec has its own copies of its dependency specs.
+                # TODO: would a more immmutable spec implementation simplify this?
+                data[hash_key] = InstallRecord(spec, rec['path'], rec['installed'])
 
             except Exception as e:
                 tty.warn("Invalid database reecord:",
@@ -213,12 +259,29 @@ class Database(object):
         """Build database index from scratch based from a directory layout."""
         with self.write_lock():
             data = {}
+
+            # Ask the directory layout to traverse the filesystem.
             for spec in directory_layout.all_specs():
+                # Create a spec for each known package and add it.
                 path = directory_layout.path_for_spec(spec)
                 hash_key = spec.dag_hash()
-                data[hash_key] = InstallRecord(spec, path)
+                data[hash_key] = InstallRecord(spec, path, True)
+
+                # Recursively examine dependencies and add them, even
+                # if they are NOT installed.  This ensures we know
+                # about missing dependencies.
+                for dep in spec.traverse(root=False):
+                    dep_hash = dep.dag_hash()
+                    if dep_hash not in data:
+                        path = directory_layout.path_for_spec(dep)
+                        installed = os.path.isdir(path)
+                        data[dep_hash] = InstallRecord(dep.copy(), path, installed)
+                    data[dep_hash].ref_count += 1
+
+            # Assuming everything went ok, replace this object's data.
             self._data = data
 
+            # write out, blowing away the old version if necessary
             self.write()
 
 
@@ -274,22 +337,37 @@ class Database(object):
     @_autospec
     def add(self, spec, path):
         """Read the database from the set location
-        Add the specified entry as a dict
-        Write the database back to memory
+
+        Add the specified entry as a dict, then write the database
+        back to memory. This assumes that ALL dependencies are already in
+        the database.  Should not be called otherwise.
+
         """
         # Should always already be locked
         with self.write_lock():
             self.read()
-            self._data[spec.dag_hash()] = InstallRecord(spec, path)
+            self._data[spec.dag_hash()] = InstallRecord(spec, path, True)
+
+            # sanity check the dependencies in case something went
+            # wrong during install()
+            # TODO: ensure no races during distributed install.
+            for dep in spec.traverse(root=False):
+                assert dep.dag_hash() in self._data
+
             self.write()
 
 
     @_autospec
     def remove(self, spec):
-        """
-        Reads the database from the set location
-        Searches for and removes the specified spec
-        Writes the database back to memory
+        """Removes a spec from the database.  To be called on uninstall.
+
+        Reads the database, then:
+
+          1. Marks the spec as not installed.
+          2. Removes the spec if it has no more dependents.
+          3. If removed, recursively updates dependencies' ref counts
+             and remvoes them if they are no longer needed.
+
         """
         # Should always already be locked
         with self.write_lock():
@@ -301,18 +379,12 @@ class Database(object):
 
 
     @_autospec
-    def get_installed(self, spec):
-        """Get installed specs that satisfy the provided spec constraint."""
-        return [s for s in self.installed_package_specs() if s.satisfies(spec)]
-
-
-    @_autospec
     def installed_extensions_for(self, extendee_spec):
         """
         Return the specs of all packages that extend
         the given spec
         """
-        for s in self.installed_package_specs():
+        for s in self.query():
             try:
                 if s.package.extends(extendee_spec):
                     yield s.package
@@ -322,25 +394,59 @@ class Database(object):
             # TODO: conditional way to do this instead of catching exceptions
 
 
-    def installed_package_specs(self):
+    def query(self, query_spec=any, known=any, installed=True):
+        """Run a query on the database.
+
+        ``query_spec``
+            Queries iterate through specs in the database and return
+            those that satisfy the supplied ``query_spec``.  If
+            query_spec is `any`, This will match all specs in the
+            database.  If it is a spec, we'll evaluate
+            ``spec.satisfies(query_spec)``.
+
+        The query can be constrained by two additional attributes:
+
+        ``known``
+            Possible values: True, False, any
+
+            Specs that are "known" are those for which Spack can
+            locate a ``package.py`` file -- i.e., Spack "knows" how to
+            install them.  Specs that are unknown may represent
+            packages that existed in a previous version of Spack, but
+            have since either changed their name or been removed.
+
+        ``installed``
+            Possible values: True, False, any
+
+            Specs for which a prefix exists are "installed". A spec
+            that is NOT installed will be in the database if some
+            other spec depends on it but its installation has gone
+            away since Spack installed it.
+
+        TODO: Specs are a lot like queries.  Should there be a
+              wildcard spec object, and should specs have attributes
+              like installed and known that can be queried?  Or are
+              these really special cases that only belong here?
+
         """
-        Read installed package names from the database
-        and return their specs
-        """
-        # Should always already be locked
         with self.read_lock():
             self.read()
-        return sorted(rec.spec for rec in self._data.values())
+
+        results = []
+        for key, rec in self._data.items():
+            if installed is not any and rec.installed != installed:
+                continue
+            if known is not any and spack.db.exists(rec.spec.name) != known:
+                continue
+            if query_spec is any or rec.spec.satisfies(query_spec):
+                results.append(rec.spec)
+
+        return sorted(results)
 
 
-    def installed_known_package_specs(self):
-        """
-        Read installed package names from the database.
-        Return only the specs for which the package is known
-        to this version of spack
-        """
-        return [s for s in self.installed_package_specs()
-                if spack.db.exists(s.name)]
+    def missing(self, spec):
+        key =  spec.dag_hash()
+        return key in self._data and not self._data[key].installed
 
 
 class CorruptDatabaseError(SpackError):

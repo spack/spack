@@ -65,7 +65,7 @@ def module_find(mtype, spec_array):
         tty.die("You can only pass one spec.")
     spec = specs[0]
 
-    specs = [s for s in spack.installed_db.installed_package_specs() if s.satisfies(spec)]
+    specs = spack.installed_db.query(spec)
     if len(specs) == 0:
         tty.die("No installed packages match spec %s" % spec)
 
@@ -86,7 +86,7 @@ def module_find(mtype, spec_array):
 def module_refresh():
     """Regenerate all module files for installed packages known to
        spack (some packages may no longer exist)."""
-    specs = [s for s in spack.installed_db.installed_known_package_specs()]
+    specs = [s for s in spack.installed_db.query(installed=True, known=True)]
 
     for name, cls in module_types.items():
         tty.msg("Regenerating %s module files." % name)

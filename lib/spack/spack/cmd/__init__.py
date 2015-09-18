@@ -125,7 +125,7 @@ def elide_list(line_list, max_num=10):
 
 def disambiguate_spec(spec):
     with spack.installed_db.read_lock():
-        matching_specs = spack.installed_db.get_installed(spec)
+        matching_specs = spack.installed_db.query(spec)
         if not matching_specs:
             tty.die("Spec '%s' matches no installed packages." % spec)
 
