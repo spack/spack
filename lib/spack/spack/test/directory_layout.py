@@ -29,14 +29,17 @@ import unittest
 import tempfile
 import shutil
 import os
-from contextlib import closing
 
 from llnl.util.filesystem import *
 
 import spack
 from spack.spec import Spec
 from spack.packages import PackageDB
-from spack.directory_layout import SpecHashDirectoryLayout
+from spack.directory_layout import YamlDirectoryLayout
+
+# number of packages to test (to reduce test time)
+max_packages = 10
+
 
 class DirectoryLayoutTest(unittest.TestCase):
     """Tests that a directory layout works correctly and produces a
@@ -44,7 +47,7 @@ class DirectoryLayoutTest(unittest.TestCase):
 
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
-        self.layout = SpecHashDirectoryLayout(self.tmpdir)
+        self.layout = YamlDirectoryLayout(self.tmpdir)
 
 
     def tearDown(self):
@@ -59,7 +62,9 @@ class DirectoryLayoutTest(unittest.TestCase):
            finally that the directory can be removed by the directory
            layout.
         """
-        for pkg in spack.db.all_packages():
+        packages = list(spack.db.all_packages())[:max_packages]
+
+        for pkg in packages:
             spec = pkg.spec
 
             # If a spec fails to concretize, just skip it.  If it is a
@@ -69,7 +74,7 @@ class DirectoryLayoutTest(unittest.TestCase):
             except:
                 continue
 
-            self.layout.make_path_for_spec(spec)
+            self.layout.create_install_directory(spec)
 
             install_dir = self.layout.path_for_spec(spec)
             spec_path = self.layout.spec_file_path(spec)
@@ -89,8 +94,8 @@ class DirectoryLayoutTest(unittest.TestCase):
             self.assertTrue(spec_from_file.concrete)
 
             # Ensure that specs that come out "normal" are really normal.
-            with closing(open(spec_path)) as spec_file:
-                read_separately = Spec(spec_file.read())
+            with open(spec_path) as spec_file:
+                read_separately = Spec.from_yaml(spec_file.read())
 
                 read_separately.normalize()
                 self.assertEqual(read_separately, spec_from_file)
@@ -98,11 +103,11 @@ class DirectoryLayoutTest(unittest.TestCase):
                 read_separately.concretize()
                 self.assertEqual(read_separately, spec_from_file)
 
-            # Make sure the dep hash of the read-in spec is the same
-            self.assertEqual(spec.dep_hash(), spec_from_file.dep_hash())
+            # Make sure the hash of the read-in spec is the same
+            self.assertEqual(spec.dag_hash(), spec_from_file.dag_hash())
 
             # Ensure directories are properly removed
-            self.layout.remove_path_for_spec(spec)
+            self.layout.remove_install_directory(spec)
             self.assertFalse(os.path.isdir(install_dir))
             self.assertFalse(os.path.exists(install_dir))
 
@@ -120,12 +125,14 @@ class DirectoryLayoutTest(unittest.TestCase):
         """
         mock_db = PackageDB(spack.mock_packages_path)
 
-        not_in_mock = set(spack.db.all_package_names()).difference(
+        not_in_mock = set.difference(
+            set(spack.db.all_package_names()),
             set(mock_db.all_package_names()))
+        packages = list(not_in_mock)[:max_packages]
 
         # Create all the packages that are not in mock.
         installed_specs = {}
-        for pkg_name in not_in_mock:
+        for pkg_name in packages:
             spec = spack.db.get(pkg_name).spec
 
             # If a spec fails to concretize, just skip it.  If it is a
@@ -135,7 +142,7 @@ class DirectoryLayoutTest(unittest.TestCase):
             except:
                 continue
 
-            self.layout.make_path_for_spec(spec)
+            self.layout.create_install_directory(spec)
             installed_specs[spec] = self.layout.path_for_spec(spec)
 
         tmp = spack.db
@@ -144,12 +151,32 @@ class DirectoryLayoutTest(unittest.TestCase):
         # Now check that even without the package files, we know
         # enough to read a spec from the spec file.
         for spec, path in installed_specs.items():
-            spec_from_file = self.layout.read_spec(join_path(path, '.spec'))
+            spec_from_file = self.layout.read_spec(
+                join_path(path, '.spack', 'spec.yaml'))
 
             # To satisfy these conditions, directory layouts need to
             # read in concrete specs from their install dirs somehow.
             self.assertEqual(path, self.layout.path_for_spec(spec_from_file))
             self.assertEqual(spec, spec_from_file)
-            self.assertEqual(spec.dep_hash(), spec_from_file.dep_hash())
+            self.assertTrue(spec.eq_dag(spec_from_file))
+            self.assertEqual(spec.dag_hash(), spec_from_file.dag_hash())
 
         spack.db = tmp
+
+
+    def test_find(self):
+        """Test that finding specs within an install layout works."""
+        packages = list(spack.db.all_packages())[:max_packages]
+
+        # Create install prefixes for all packages in the list
+        installed_specs = {}
+        for pkg in packages:
+            spec = pkg.spec.concretized()
+            installed_specs[spec.name] = spec
+            self.layout.create_install_directory(spec)
+
+        # Make sure all the installed specs appear in DirectoryLayout.all_specs()
+        found_specs = dict((s.name, s) for s in self.layout.all_specs())
+        for name, spec in found_specs.items():
+            self.assertTrue(name in found_specs)
+            self.assertTrue(found_specs[name].eq_dag(spec))

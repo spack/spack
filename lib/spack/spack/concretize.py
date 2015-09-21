@@ -63,9 +63,9 @@ class DefaultConcretizer(object):
         """
         # return if already concrete.
         if spec.versions.concrete:
-            return
+            return False
 
-        # If there are known avaialble versions, return the most recent
+        # If there are known available versions, return the most recent
         # version that satisfies the spec
         pkg = spec.package
         valid_versions = sorted(
@@ -75,7 +75,25 @@ class DefaultConcretizer(object):
         if valid_versions:
             spec.versions = ver([valid_versions[-1]])
         else:
-            raise NoValidVersionError(spec)
+            # We don't know of any SAFE versions that match the given
+            # spec.  Grab the spec's versions and grab the highest
+            # *non-open* part of the range of versions it specifies.
+            # Someone else can raise an error if this happens,
+            # e.g. when we go to fetch it and don't know how.  But it
+            # *might* work.
+            if not spec.versions or spec.versions == VersionList([':']):
+                raise NoValidVersionError(spec)
+            else:
+                last = spec.versions[-1]
+                if isinstance(last, VersionRange):
+                    if last.end:
+                        spec.versions = ver([last.end])
+                    else:
+                        spec.versions = ver([last.start])
+                else:
+                    spec.versions = ver([last])
+
+        return True   # Things changed
 
 
     def concretize_architecture(self, spec):
@@ -93,12 +111,27 @@ class DefaultConcretizer(object):
            they're not explicit.
         """
         if spec.architecture is not None:
-            return
+            return False
 
         if spec.root.architecture:
             spec.architecture = spec.root.architecture
         else:
             spec.architecture = spack.architecture.sys_type()
+
+        assert(spec.architecture is not None)
+        return True   # changed
+
+
+    def concretize_variants(self, spec):
+        """If the spec already has variants filled in, return.  Otherwise, add
+           the default variants from the package specification.
+        """
+        changed = False
+        for name, variant in spec.package.variants.items():
+            if name not in spec.variants:
+                spec.variants[name] = spack.spec.VariantSpec(name, variant.default)
+                changed = True
+        return changed
 
 
     def concretize_compiler(self, spec):
@@ -118,7 +151,7 @@ class DefaultConcretizer(object):
         if (spec.compiler and
             spec.compiler.concrete and
             spec.compiler in all_compilers):
-            return
+            return False
 
         try:
             nearest = next(p for p in spec.traverse(direction='parents')
@@ -138,6 +171,8 @@ class DefaultConcretizer(object):
 
         except StopIteration:
             spec.compiler = spack.compilers.default_compiler().copy()
+
+        return True  # things changed.
 
 
     def choose_provider(self, spec, providers):
@@ -164,8 +199,8 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
 
 
 class NoValidVersionError(spack.error.SpackError):
-    """Raised when there is no available version for a package that
-       satisfies a spec."""
+    """Raised when there is no way to have a concrete version for a
+       particular spec."""
     def __init__(self, spec):
         super(NoValidVersionError, self).__init__(
-            "No available version of %s matches '%s'" % (spec.name, spec.versions))
+            "There are no valid versions for %s that match '%s'" % (spec.name, spec.versions))

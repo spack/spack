@@ -220,13 +220,22 @@ class URLFetchStrategy(FetchStrategy):
         os.chdir(tarball_container)
         decompress(self.archive_file)
 
-        # If the tarball *didn't* explode, move
-        # the expanded directory up & remove the protector directory.
+        # Check for an exploding tarball, i.e. one that doesn't expand
+        # to a single directory.  If the tarball *didn't* explode,
+        # move contents up & remove the container directory.
+        #
+        # NOTE: The tar program on Mac OS X will encode HFS metadata
+        # in hidden files, which can end up *alongside* a single
+        # top-level directory.  We ignore hidden files to accomodate
+        # these "semi-exploding" tarballs.
         files = os.listdir(tarball_container)
-        if len(files) == 1:
-            expanded_dir = os.path.join(tarball_container, files[0])
+        non_hidden = filter(lambda f: not f.startswith('.'), files)
+        if len(non_hidden) == 1:
+            expanded_dir = os.path.join(tarball_container, non_hidden[0])
             if os.path.isdir(expanded_dir):
-                shutil.move(expanded_dir, self.stage.path)
+                for f in files:
+                    shutil.move(os.path.join(tarball_container, f),
+                                os.path.join(self.stage.path, f))
                 os.rmdir(tarball_container)
 
         # Set the wd back to the stage when done.
@@ -363,10 +372,6 @@ class GitFetchStrategy(VCSFetchStrategy):
             'git', 'tag', 'branch', 'commit', **kwargs)
         self._git = None
 
-        # For git fetch branches and tags the same way.
-        if not self.branch:
-            self.branch = self.tag
-
 
     @property
     def git_version(self):
@@ -412,15 +417,40 @@ class GitFetchStrategy(VCSFetchStrategy):
             # If we want a particular branch ask for it.
             if self.branch:
                 args.extend(['--branch', self.branch])
+            elif self.tag and self.git_version >= ver('1.8.5.2'):
+                    args.extend(['--branch', self.tag])
 
             # Try to be efficient if we're using a new enough git.
             # This checks out only one branch's history
             if self.git_version > ver('1.7.10'):
                 args.append('--single-branch')
 
-            args.append(self.url)
-            self.git(*args)
+            cloned = False
+            # Yet more efficiency, only download a 1-commit deep tree
+            if self.git_version >= ver('1.7.1'):
+                try:
+                    self.git(*(args + ['--depth','1', self.url]))
+                    cloned = True
+                except spack.error.SpackError:
+                    # This will fail with the dumb HTTP transport
+                    # continue and try without depth, cleanup first
+                    pass
+
+            if not cloned:
+                args.append(self.url)
+                self.git(*args)
+
             self.stage.chdir_to_source()
+
+            # For tags, be conservative and check them out AFTER
+            # cloning.  Later git versions can do this with clone
+            # --branch, but older ones fail.
+            if self.tag and self.git_version < ver('1.8.5.2'):
+                # pull --tags returns a "special" error code of 1 in
+                # older versions that we have to ignore.
+                # see: https://github.com/git/git/commit/19d122b
+                self.git('pull', '--tags', ignore_errors=1)
+                self.git('checkout', self.tag)
 
 
     def archive(self, destination):

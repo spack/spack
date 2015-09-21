@@ -49,25 +49,39 @@ except OSError:
 # clean up the scope and start using spack package instead.
 del SPACK_FILE, SPACK_PREFIX, SPACK_LIB_PATH
 import llnl.util.tty as tty
+from llnl.util.tty.color import *
 import spack
 from spack.error import SpackError
 from external import argparse
 
 # Command parsing
 parser = argparse.ArgumentParser(
-    description='Spack: the Supercomputing PACKage Manager.')
-parser.add_argument('-V', '--version', action='version',
-                    version="%s" % spack.spack_version)
-parser.add_argument('-v', '--verbose', action='store_true',
-                    help="Print additional output during builds")
+    formatter_class=argparse.RawTextHelpFormatter,
+    description="Spack: the Supercomputing PACKage Manager." + colorize("""
+
+spec expressions:
+  PACKAGE [CONSTRAINTS]
+
+    CONSTRAINTS:
+      @c{@version}
+      @g{%compiler  @compiler_version}
+      @B{+variant}
+      @r{-variant} or @r{~variant}
+      @m{=architecture}
+      [^DEPENDENCY [CONSTRAINTS] ...]"""))
+
 parser.add_argument('-d', '--debug', action='store_true',
                     help="Write out debug logs during compile")
 parser.add_argument('-k', '--insecure', action='store_true',
-                    help="Do not check ssl certificates when downloading archives.")
+                    help="Do not check ssl certificates when downloading.")
 parser.add_argument('-m', '--mock', action='store_true',
                     help="Use mock packages instead of real ones.")
 parser.add_argument('-p', '--profile', action='store_true',
                     help="Profile execution using cProfile.")
+parser.add_argument('-v', '--verbose', action='store_true',
+                    help="Print additional output during builds")
+parser.add_argument('-V', '--version', action='version',
+                    version="%s" % spack.spack_version)
 
 # each command module implements a parser() function, to which we pass its
 # subparser for setup.
@@ -93,6 +107,10 @@ def main():
     tty.set_debug(args.debug)
     spack.debug = args.debug
 
+    if spack.debug:
+        import spack.util.debug as debug
+        debug.register_interrupt_handler()
+
     spack.spack_working_dir = working_dir
     if args.mock:
         from spack.packages import PackageDB
@@ -108,14 +126,7 @@ def main():
     try:
         return_val = command(parser, args)
     except SpackError, e:
-        if spack.debug:
-            # In debug mode, raise with a full stack trace.
-            raise
-        elif e.long_message:
-            tty.die(e.message, e.long_message)
-        else:
-            tty.die(e.message)
-
+        e.die()
     except KeyboardInterrupt:
         sys.stderr.write('\n')
         tty.die("Keyboard interrupt.")

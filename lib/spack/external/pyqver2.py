@@ -165,12 +165,24 @@ class NodeChecker(object):
         def rollup(n):
             if isinstance(n, compiler.ast.Name):
                 return n.name
+            elif isinstance(n, compiler.ast.Const):
+                return type(n.value).__name__
             elif isinstance(n, compiler.ast.Getattr):
                 r = rollup(n.expr)
                 if r:
                     return r + "." + n.attrname
         name = rollup(node.node)
         if name:
+            # Special handling for empty format strings, which aren't
+            # allowed in Python 2.6
+            if name in ('unicode.format', 'str.format'):
+                n = node.node
+                if isinstance(n, compiler.ast.Getattr):
+                    n = n.expr
+                    if isinstance(n, compiler.ast.Const):
+                        if '{}' in n.value:
+                            self.add(node, (2,7), name + ' with {} format string')
+
             v = Functions.get(name)
             if v is not None:
                 self.add(node, v, name)

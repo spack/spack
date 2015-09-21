@@ -23,7 +23,6 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import hashlib
-from contextlib import closing
 
 """Set of acceptable hashes that Spack will use."""
 _acceptable_hashes = [
@@ -44,7 +43,7 @@ def checksum(hashlib_algo, filename, **kwargs):
     """
     block_size = kwargs.get('block_size', 2**20)
     hasher = hashlib_algo()
-    with closing(open(filename)) as file:
+    with open(filename) as file:
         while True:
             data = file.read(block_size)
             if not data:

@@ -108,7 +108,7 @@ class PackageDB(object):
 
         providers = self.provider_index.providers_for(vpkg_spec)
         if not providers:
-            raise UnknownPackageError("No such virtual package: %s" % vpkg_spec)
+            raise UnknownPackageError(vpkg_spec.name)
         return providers
 
 
@@ -238,7 +238,7 @@ class PackageDB(object):
 class UnknownPackageError(spack.error.SpackError):
     """Raised when we encounter a package spack doesn't have."""
     def __init__(self, name):
-        super(UnknownPackageError, self).__init__("Package %s not found." % name)
+        super(UnknownPackageError, self).__init__("Package '%s' not found." % name)
         self.name = name
 
 

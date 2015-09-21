@@ -52,7 +52,11 @@ test_names = ['versions',
               'mirror',
               'url_extrapolate',
               'cc',
-              'link_tree']
+              'link_tree',
+              'spec_yaml',
+              'optional_deps',
+              'make_executable',
+              'configure_guess']
 
 
 def list_tests():

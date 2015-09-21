@@ -43,42 +43,27 @@ def setup_parser(subparser):
 
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='config_command')
 
-    set_parser = sp.add_parser('set', help='Set configuration values.')
-    set_parser.add_argument('key', help="Key to set value for.")
-    set_parser.add_argument('value', nargs='?', default=None,
-                            help="Value to associate with key")
-
-    get_parser = sp.add_parser('get', help='Get configuration values.')
-    get_parser.add_argument('key', help="Key to get value for.")
+    get_parser = sp.add_parser('get', help='Print configuration values.')
+    get_parser.add_argument('category', help="Configuration category to print.")
 
     edit_parser = sp.add_parser('edit', help='Edit configuration file.')
-
-
-def config_set(args):
-    # default scope for writing is 'user'
-    if not args.scope:
-        args.scope = 'user'
-
-    config = spack.config.get_config(args.scope)
-    config.set_value(args.key, args.value)
-    config.write()
+    edit_parser.add_argument('category', help="Configuration category to edit")
 
 
 def config_get(args):
-    config = spack.config.get_config(args.scope)
-    print config.get_value(args.key)
+    spack.config.print_category(args.category)
 
 
 def config_edit(args):
     if not args.scope:
         args.scope = 'user'
-    config_file = spack.config.get_filename(args.scope)
+    if not args.category:
+        args.category = None
+    config_file = spack.config.get_config_scope_filename(args.scope, args.category)
     spack.editor(config_file)
 
 
 def config(parser, args):
-    action = { 'set'  : config_set,
-               'get'  : config_get,
+    action = { 'get' : config_get,
                'edit' : config_edit }
     action[args.config_command](args)
-

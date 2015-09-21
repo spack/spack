@@ -76,7 +76,7 @@ class StageTest(unittest.TestCase):
         mkdirp(archive_dir_path)
         mkdirp(test_tmp_path)
 
-        with closing(open(test_readme, 'w')) as readme:
+        with open(test_readme, 'w') as readme:
             readme.write(readme_text)
 
         with working_dir(test_files_dir):
@@ -161,7 +161,7 @@ class StageTest(unittest.TestCase):
         readme = join_path(stage_path, archive_dir, readme_name)
         self.assertTrue(os.path.isfile(readme))
 
-        with closing(open(readme)) as file:
+        with open(readme) as file:
             self.assertEqual(readme_text, file.read())
 
 
@@ -289,7 +289,7 @@ class StageTest(unittest.TestCase):
         self.check_chdir_to_source(stage, stage_name)
 
         # Try to make a file in the old archive dir
-        with closing(open('foobar', 'w')) as file:
+        with open('foobar', 'w') as file:
             file.write("this file is to be destroyed.")
 
         self.assertTrue('foobar' in os.listdir(stage.source_path))

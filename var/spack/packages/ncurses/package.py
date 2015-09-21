@@ -21,3 +21,11 @@ class Ncurses(Package):
         make()
         make("install")
 
+        configure("--prefix=%s" % prefix,
+                  "--with-shared",
+                  "--disable-widec",
+                  "--disable-pc-files",
+                  "--without-ada")
+        make()
+        make("install")
+

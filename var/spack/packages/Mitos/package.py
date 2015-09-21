@@ -7,9 +7,10 @@ class Mitos(Package):
     homepage = "https://github.com/scalability-llnl/Mitos"
     url      = "https://github.com/scalability-llnl/Mitos"
 
-    version('0.7', git='https://github.com/scalability-llnl/Mitos.git', tag='v0.7')
+    version('0.9.1', 'c6cb57f3cae54f5157affd97ef7ef79e', git='https://github.com/scalability-llnl/Mitos.git', tag='v0.9.1')
 
-    depends_on('dyninst')
+    depends_on('dyninst@8.2.1:')
+    depends_on('hwloc')
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):

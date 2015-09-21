@@ -35,7 +35,13 @@ class ConcretizeTest(MockPackagesTest):
             self.assertEqual(abstract.versions, concrete.versions)
 
         if abstract.variants:
-            self.assertEqual(abstract.versions, concrete.versions)
+            for name in abstract.variants:
+                avariant = abstract.variants[name]
+                cvariant = concrete.variants[name]
+                self.assertEqual(avariant.enabled, cvariant.enabled)
+
+        for name in abstract.package.variants:
+            self.assertTrue(name in concrete.variants)
 
         if abstract.compiler and abstract.compiler.concrete:
             self.assertEqual(abstract.compiler, concrete.compiler)
@@ -64,6 +70,12 @@ class ConcretizeTest(MockPackagesTest):
         self.check_concretize('callpath')
         self.check_concretize('mpileaks')
         self.check_concretize('libelf')
+
+
+    def test_concretize_variant(self):
+        self.check_concretize('mpich+debug')
+        self.check_concretize('mpich~debug')
+        self.check_concretize('mpich')
 
 
     def test_concretize_with_virtual(self):
@@ -140,7 +152,10 @@ class ConcretizeTest(MockPackagesTest):
         spec.concretize()
 
         self.assertTrue('zmpi' in spec.dependencies)
-        self.assertFalse('mpi' in spec)
+        self.assertTrue(all(not 'mpi' in d.dependencies for d in spec.traverse()))
+        self.assertTrue('zmpi' in spec)
+        self.assertTrue('mpi' in spec)
+
         self.assertTrue('fake' in spec.dependencies['zmpi'])
 
 
@@ -156,7 +171,9 @@ class ConcretizeTest(MockPackagesTest):
         self.assertTrue('zmpi' in spec.dependencies['callpath'].dependencies)
         self.assertTrue('fake' in spec.dependencies['callpath'].dependencies['zmpi'].dependencies)
 
-        self.assertFalse('mpi' in spec)
+        self.assertTrue(all(not 'mpi' in d.dependencies for d in spec.traverse()))
+        self.assertTrue('zmpi' in spec)
+        self.assertTrue('mpi' in spec)
 
 
     def test_my_dep_depends_on_provider_of_my_virtual_dep(self):

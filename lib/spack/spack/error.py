@@ -22,6 +22,10 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+import sys
+import llnl.util.tty as tty
+import spack
 
 class SpackError(Exception):
     """This is the superclass for all Spack errors.
@@ -30,7 +34,23 @@ class SpackError(Exception):
     def __init__(self, message, long_message=None):
         super(SpackError, self).__init__()
         self.message = message
-        self.long_message = long_message
+        self._long_message = long_message
+
+
+    @property
+    def long_message(self):
+        return self._long_message
+
+
+    def die(self):
+        if spack.debug:
+            sys.excepthook(*sys.exc_info())
+            os._exit(1)
+        else:
+            tty.error(self.message)
+            if self.long_message:
+                print self.long_message
+            os._exit(1)
 
 
     def __str__(self):

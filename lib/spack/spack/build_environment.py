@@ -52,6 +52,7 @@ SPACK_NO_PARALLEL_MAKE = 'SPACK_NO_PARALLEL_MAKE'
 SPACK_ENV_PATH         = 'SPACK_ENV_PATH'
 SPACK_DEPENDENCIES     = 'SPACK_DEPENDENCIES'
 SPACK_PREFIX           = 'SPACK_PREFIX'
+SPACK_INSTALL          = 'SPACK_INSTALL'
 SPACK_DEBUG            = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
@@ -67,19 +68,19 @@ class MakeExecutable(Executable):
        Note that if the SPACK_NO_PARALLEL_MAKE env var is set it overrides
        everything.
     """
-    def __init__(self, name, parallel):
+    def __init__(self, name, jobs):
         super(MakeExecutable, self).__init__(name)
-        self.parallel = parallel
+        self.jobs = jobs
 
     def __call__(self, *args, **kwargs):
-        parallel = kwargs.get('parallel', self.parallel)
-        disable_parallel = env_flag(SPACK_NO_PARALLEL_MAKE)
+        disable = env_flag(SPACK_NO_PARALLEL_MAKE)
+        parallel = not disable and kwargs.get('parallel', self.jobs > 1)
 
-        if parallel and not disable_parallel:
-            jobs = "-j%d" % multiprocessing.cpu_count()
+        if parallel:
+            jobs = "-j%d" % self.jobs
             args = (jobs,) + args
 
-        super(MakeExecutable, self).__call__(*args, **kwargs)
+        return super(MakeExecutable, self).__call__(*args, **kwargs)
 
 
 def set_compiler_environment_variables(pkg):
@@ -87,10 +88,10 @@ def set_compiler_environment_variables(pkg):
     compiler = pkg.compiler
 
     # Set compiler variables used by CMake and autotools
-    os.environ['CC']  = 'cc'
-    os.environ['CXX'] = 'c++'
-    os.environ['F77'] = 'f77'
-    os.environ['FC']  = 'f90'
+    os.environ['CC']  = join_path(spack.build_env_path, 'cc')
+    os.environ['CXX'] = join_path(spack.build_env_path, 'c++')
+    os.environ['F77'] = join_path(spack.build_env_path, 'f77')
+    os.environ['FC']  = join_path(spack.build_env_path, 'f90')
 
     # Set SPACK compiler variables so that our wrapper knows what to call
     if compiler.cc:
@@ -124,6 +125,9 @@ def set_build_environment_variables(pkg):
 
     # Install prefix
     os.environ[SPACK_PREFIX] = pkg.prefix
+
+    # Install root prefix
+    os.environ[SPACK_INSTALL] = spack.install_path
 
     # Remove these vars from the environment during build becaus they
     # can affect how some packages find libraries.  We want to make
@@ -159,14 +163,20 @@ def set_module_variables_for_package(pkg):
     """
     m = pkg.module
 
-    m.make  = MakeExecutable('make', pkg.parallel)
-    m.gmake = MakeExecutable('gmake', pkg.parallel)
+    # number of jobs spack will to build with.
+    jobs = multiprocessing.cpu_count()
+    if not pkg.parallel:
+        jobs = 1
+    elif pkg.make_jobs:
+        jobs = pkg.make_jobs
+    m.make_jobs = jobs
+
+    # TODO: make these build deps that can be installed if not found.
+    m.make  = MakeExecutable('make', jobs)
+    m.gmake = MakeExecutable('gmake', jobs)
 
     # easy shortcut to os.environ
     m.env = os.environ
-
-    # number of jobs spack prefers to build with.
-    m.make_jobs = multiprocessing.cpu_count()
 
     # Find the configure script in the archive path
     # Don't use which for this; we want to find it in the current dir.
@@ -270,6 +280,10 @@ def fork(pkg, function):
             # Use os._exit here to avoid raising a SystemExit exception,
             # which interferes with unit tests.
             os._exit(0)
+
+        except spack.error.SpackError, e:
+            e.die()
+
         except:
             # Child doesn't raise or return to main spack code.
             # Just runs default exception handler and exits.

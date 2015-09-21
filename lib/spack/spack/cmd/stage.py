@@ -36,7 +36,6 @@ def setup_parser(subparser):
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="Do not check downloaded packages against checksum")
 
-    dir_parser = subparser.add_mutually_exclusive_group()
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages to stage")
 
@@ -52,4 +51,3 @@ def stage(parser, args):
     for spec in specs:
         package = spack.db.get(spec)
         package.do_stage()
-

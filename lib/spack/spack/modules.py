@@ -50,7 +50,6 @@ import re
 import textwrap
 import shutil
 from glob import glob
-from contextlib import closing
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
@@ -118,8 +117,12 @@ class EnvModule(object):
                     ('PATH', self.spec.prefix.bin),
                     ('MANPATH', self.spec.prefix.man),
                     ('MANPATH', self.spec.prefix.share_man),
+                    ('LIBRARY_PATH', self.spec.prefix.lib),
+                    ('LIBRARY_PATH', self.spec.prefix.lib64),
                     ('LD_LIBRARY_PATH', self.spec.prefix.lib),
-                    ('LD_LIBRARY_PATH', self.spec.prefix.lib64)]:
+                    ('LD_LIBRARY_PATH', self.spec.prefix.lib64),
+                    ('PKG_CONFIG_PATH', join_path(self.spec.prefix.lib, 'pkgconfig')),
+                    ('PKG_CONFIG_PATH', join_path(self.spec.prefix.lib64, 'pkgconfig'))]:
 
                 if os.path.isdir(directory):
                     add_path(var, directory)
@@ -130,6 +133,9 @@ class EnvModule(object):
                 site_packages = glob(join_path(self.spec.prefix.lib, "python*/site-packages"))
                 if site_packages:
                     add_path('PYTHONPATH', site_packages[0])
+
+            if self.spec.package.extends(spack.spec.Spec('ruby')):
+              add_path('GEM_PATH', self.spec.prefix)
 
             # short description is just the package + version
             # TODO: maybe packages can optionally provide it.
@@ -152,7 +158,7 @@ class EnvModule(object):
         if not self.paths:
             return
 
-        with closing(open(self.file_name, 'w')) as f:
+        with open(self.file_name, 'w') as f:
             self._write(f)
 
 

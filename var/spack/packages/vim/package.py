@@ -25,8 +25,59 @@ class Vim(Package):
     version('6.1',     '7fd0f915adc7c0dab89772884268b030')
     version('6.0',     '9d9ca84d489af6b3f54639dd97af3774')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    feature_sets = ('huge', 'big', 'normal', 'small', 'tiny')
+    for fs in feature_sets:
+      variant(fs, default=False, description="Use '%s' feature set" % fs)
 
-        make()
-        make("install")
+    variant('python', default=False, description="build with Python")
+    depends_on('python', when='+python')
+
+    variant('ruby', default=False, description="build with Ruby")
+    depends_on('ruby', when='+ruby')
+
+    variant('cscope', default=False, description="build with cscope support")
+    depends_on('cscope', when='+cscope')
+
+    variant('gui', default=False, description="build with gui (gvim)")
+    # virtual dependency?
+
+    def install(self, spec, prefix):
+      feature_set = None
+      for fs in self.feature_sets:
+        if "+" + fs in spec:
+          if feature_set is not None:
+            tty.error("Only one feature set allowed, both %s and %s specified"
+                      % (feature_set, fs))
+          feature_set = fs
+      if '+gui' in spec:
+        if feature_set is not None:
+          if feature_set is not 'huge':
+            tty.error("+gui variant requires 'huge' feature set, %s was specified"
+                      % feature_set)
+        feature_set = 'huge'
+      if feature_set is None:
+        feature_set = 'normal'
+
+      configure_args = []
+      configure_args.append("--with-features=" + feature_set)
+
+      if '+python' in spec:
+        configure_args.append("--enable-pythoninterp=yes")
+      else:
+        configure_args.append("--enable-pythoninterp=dynamic")
+
+      if '+ruby' in spec:
+        configure_args.append("--enable-rubyinterp=yes")
+      else:
+        configure_args.append("--enable-rubyinterp=dynamic")
+
+      if '+gui' in spec:
+        configure_args.append("--enable-gui=auto")
+
+      if '+cscope' in spec:
+        configure_args.append("--enable-cscope")
+
+      configure("--prefix=%s" % prefix, *configure_args)
+
+      make()
+      make("install")

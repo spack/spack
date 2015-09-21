@@ -31,16 +31,17 @@ class Launchmon(Package):
     url      = "http://downloads.sourceforge.net/project/launchmon/launchmon/1.0.1%20release/launchmon-1.0.1.tar.gz"
 
     version('1.0.1', '2f12465803409fd07f91174a4389eb2b')
+    version('1.0.1-2', git='https://github.com/scalability-llnl/launchmon.git', commit='ff7e22424b8f375318951eb1c9282fcbbfa8aadf')
+
+    depends_on('autoconf')
+    depends_on('automake')
+    depends_on('libtool')
 
     def install(self, spec, prefix):
         configure(
             "--prefix=" + prefix,
             "--with-bootfabric=cobo",
             "--with-rm=slurm")
-
-        # TODO: remove once Jira SPACK-19 is fixed
-        import shutil
-        shutil.copy2('/usr/bin/libtool', 'libtool')
 
         make()
         make("install")
