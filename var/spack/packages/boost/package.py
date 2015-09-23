@@ -14,6 +14,10 @@ class Boost(Package):
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 2
 
+    version('1.59.0', '6aa9a5c6a4ca1016edd0ed1178e3cb87')
+    version('1.58.0', 'b8839650e61e9c1c0a89f371dd475546')
+    version('1.57.0', '1be49befbdd9a5ce9def2983ba3e7b76')
+    version('1.56.0', 'a744cf167b05d72335f27c88115f211d')
     version('1.55.0', 'd6eef4b4cacb2183f2bf265a5a03a354')
     version('1.54.0', '15cb8c0803064faef0c4ddf5bc5ca279')
     version('1.53.0', 'a00d22605d5dbcfb4c9936a9b35bc4c2')
