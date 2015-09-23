@@ -1680,10 +1680,11 @@ class SpecParser(spack.parse.Parser):
 
                 elif self.accept(DEP):
                     if not specs:
-                        self.last_token_error("Dependency has no package")
+                        specs.append(self.empty_spec())
                     self.expect(ID)
                     specs[-1]._add_dependency(self.spec())
-
+                    for spec in specs:
+                        print spec
                 else:
                     self.unexpected_token()
         except spack.parse.ParseError, e:
@@ -1696,6 +1697,34 @@ class SpecParser(spack.parse.Parser):
         self.setup(text)
         return self.compiler()
 
+
+    def empty_spec(self):
+        """Create a Null spec from which dependency constraints can be hung"""
+        spec = Spec.__new__(Spec)
+        spec.name = "any-pkg-name"
+#        spec.name = None
+        spec.versions = VersionList()
+        spec.variants = VariantMap(spec)
+        spec.architecture = None
+        spec.compiler = None
+        spec.dependents   = DependencyMap()
+        spec.dependencies = DependencyMap()
+
+        #Should we be able to add cflags eventually?
+        while self.next:
+            if self.accept(ON):
+                spec._add_variant(self.variant(), True)
+
+            elif self.accept(OFF):
+                spec._add_variant(self.variant(), False)
+
+            elif self.accept(PCT):
+                spec._set_compiler(self.compiler())
+
+            else:
+                break
+
+        return spec
 
     def spec(self):
         """Parse a spec out of the input.  If a spec is supplied, then initialize
