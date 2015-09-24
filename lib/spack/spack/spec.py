@@ -108,6 +108,7 @@ import spack.parse
 import spack.error
 import spack.compilers as compilers
 
+from spack.cmd.find import display_specs
 from spack.version import *
 from spack.util.string import *
 from spack.util.prefix import Prefix
@@ -504,7 +505,7 @@ class Spec(object):
     @staticmethod
     def is_virtual(name):
         """Test if a name is virtual without requiring a Spec."""
-        return not spack.db.exists(name)
+        return name != "any-pkg-name" and not spack.db.exists(name)
 
 
     @property
@@ -820,6 +821,9 @@ class Spec(object):
            with requirements of its pacakges.  See flatten() and normalize() for
            more details on this.
         """
+        if self.name == "any-pkg-name":
+            raise SpecError("Attempting to concretize anonymous spec")
+
         if self._concrete:
             return
 
@@ -1255,7 +1259,7 @@ class Spec(object):
             return False
 
         # Otherwise, first thing we care about is whether the name matches
-        if self.name != other.name:
+        if self.name != other.name and self.name != "any-pkg-name" and other.name != "any-pkg-name":
             return False
 
         if self.versions and other.versions:
@@ -1271,7 +1275,10 @@ class Spec(object):
         elif strict and (other.compiler and not self.compiler):
             return False
 
-        if not self.variants.satisfies(other.variants, strict=strict):
+        var_strict = strict
+        if self.name == "any-pkg-name" or other.name == "any-pkg-name":
+            var_strict = True
+        if not self.variants.satisfies(other.variants, strict=var_strict):
             return False
 
         # Architecture satisfaction is currently just string equality.
@@ -1284,7 +1291,10 @@ class Spec(object):
 
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
-            return self.satisfies_dependencies(other, strict=strict)
+            deps_strict = strict
+            if self.name == "any-pkg-name" or other.name == "any-pkg-name":
+                deps_strict=True
+            return self.satisfies_dependencies(other, strict=deps_strict)
         else:
             return True
 
@@ -1644,12 +1654,13 @@ class Spec(object):
 #
 # These are possible token types in the spec grammar.
 #
-DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID = range(9)
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID = range(10)
 
 class SpecLexer(spack.parse.Lexer):
     """Parses tokens that make up spack specs."""
     def __init__(self):
         super(SpecLexer, self).__init__([
+            (r'/',         lambda scanner, val: self.token(HASH,  val)),
             (r'\^',        lambda scanner, val: self.token(DEP,   val)),
             (r'\@',        lambda scanner, val: self.token(AT,    val)),
             (r'\:',        lambda scanner, val: self.token(COLON, val)),
@@ -1678,15 +1689,33 @@ class SpecParser(spack.parse.Parser):
                 if self.accept(ID):
                     specs.append(self.spec())
 
+                elif self.accept(HASH):
+                    specs.append(self.spec_by_hash())
+
                 elif self.accept(DEP):
                     if not specs:
                         specs.append(self.empty_spec())
-                    self.expect(ID)
-                    specs[-1]._add_dependency(self.spec())
-                    for spec in specs:
-                        print spec
+                    if self.accept(HASH):
+                        specs[-1]._add_dependency(self.spec_by_hash())
+                    else:
+                        self.expect(ID)
+                        specs[-1]._add_dependency(self.spec())
+
+                elif self.accept(PCT):
+                    specs.append(self.empty_spec())
+                    specs[-1]._set_compiler(self.compiler())
+
+                elif self.accept(ON):
+                    specs.append(self.empty_spec())
+                    specs[-1]._add_variant(self.variant(), True)
+
+                elif self.accept(OFF):
+                    specs.append(self.empty_spec())
+                    specs[-1]._add_variant(self.variant(), False)
+
                 else:
                     self.unexpected_token()
+
         except spack.parse.ParseError, e:
             raise SpecParseError(e)
 
@@ -1698,12 +1727,33 @@ class SpecParser(spack.parse.Parser):
         return self.compiler()
 
 
+    def spec_by_hash(self):
+        self.expect(ID)
+
+        specs = spack.installed_db.query()
+        matches = [spec for spec in specs if
+                   spec.dag_hash()[:len(self.token.value)] == self.token.value]
+
+        if not matches:
+            tty.die("%s does not match any installed packages." %self.token.value)
+
+        if len(matches) != 1:
+            tty.error("%s matches multiple installed packages:" %self.token.value)
+            print
+            display_specs(matches, long=True)
+            print
+            print "You can either:"
+            print "  a) Use a more specific hash, or"
+            print "  b) Specify the package by name."
+            sys.exit(1)
+
+        return matches[0]
+
     def empty_spec(self):
         """Create a Null spec from which dependency constraints can be hung"""
         spec = Spec.__new__(Spec)
         spec.name = "any-pkg-name"
-#        spec.name = None
-        spec.versions = VersionList()
+        spec.versions = VersionList(':')
         spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
@@ -1863,6 +1913,8 @@ def parse_anonymous_spec(spec_like, pkg_name):
     if isinstance(spec_like, str):
         try:
             anon_spec = Spec(spec_like)
+            if anon_spec.name != pkg_name:
+                raise SpecParseError(spack.parse.ParseError("","","anon spec created without proper name"))
         except SpecParseError:
             anon_spec = Spec(pkg_name + spec_like)
             if anon_spec.name != pkg_name: raise ValueError(
