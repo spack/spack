@@ -92,19 +92,19 @@ class MultiMethodTest(MockPackagesTest):
 
 
     def test_architecture_match(self):
-        pkg = spack.db.get('multimethod=x86_64')
+        pkg = spack.db.get('multimethod+arch=x86_64')
         self.assertEqual(pkg.different_by_architecture(), 'x86_64')
 
-        pkg = spack.db.get('multimethod=ppc64')
+        pkg = spack.db.get('multimethod+arch=ppc64')
         self.assertEqual(pkg.different_by_architecture(), 'ppc64')
 
-        pkg = spack.db.get('multimethod=ppc32')
+        pkg = spack.db.get('multimethod+arch=ppc32')
         self.assertEqual(pkg.different_by_architecture(), 'ppc32')
 
-        pkg = spack.db.get('multimethod=arm64')
+        pkg = spack.db.get('multimethod+arch=arm64')
         self.assertEqual(pkg.different_by_architecture(), 'arm64')
 
-        pkg = spack.db.get('multimethod=macos')
+        pkg = spack.db.get('multimethod+arch=macos')
         self.assertRaises(NoSuchMethodError, pkg.different_by_architecture)
 
 

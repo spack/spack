@@ -70,6 +70,7 @@ class SpecSyntaxTest(unittest.TestCase):
             spec = expected
         output = spack.spec.parse(spec)
         parsed = (" ".join(str(spec) for spec in output))
+        print output, parsed
         self.assertEqual(expected, parsed)
 
 

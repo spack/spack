@@ -72,7 +72,7 @@ Here is the EBNF grammar for a spec::
   dep_list     = { ^ spec }
   spec         = id [ options ]
   options      = { @version-list | +variant | -variant | ~variant |
-                   %compiler | =architecture }
+                   %compiler | +arch=architecture | +flag=value}
   variant      = id
   architecture = id
   compiler     = id [ version-list ]
@@ -297,22 +297,25 @@ class VariantSpec(object):
        on the particular package being built, and each named variant can
        be enabled or disabled.
     """
-    def __init__(self, name, enabled):
+    def __init__(self, name, value):
         self.name = name
-        self.enabled = enabled
+        self.value = value
 
 
     def _cmp_key(self):
-        return (self.name, self.enabled)
+        return (self.name, self.value)
 
 
     def copy(self):
-        return VariantSpec(self.name, self.enabled)
+        return VariantSpec(self.name, self.value)
 
 
     def __str__(self):
-        out = '+' if self.enabled else '~'
-        return out + self.name
+        if self.value in [True,False]:
+            out = '+' if self.value else '~'
+            return out + self.name
+        else:
+            return '+' + self.name + "=" + self.value
 
 
 class VariantMap(HashableMap):
@@ -323,10 +326,10 @@ class VariantMap(HashableMap):
 
     def satisfies(self, other, strict=False):
         if strict or self.spec._concrete:
-            return all(k in self and self[k].enabled == other[k].enabled
+            return all(k in self and self[k].value == other[k].value
                        for k in other)
         else:
-            return all(self[k].enabled == other[k].enabled
+            return all(self[k].value == other[k].value
                        for k in other if k in self)
 
 
@@ -344,7 +347,7 @@ class VariantMap(HashableMap):
         changed = False
         for k in other:
             if k in self:
-                if self[k].enabled != other[k].enabled:
+                if self[k].value != other[k].value:
                     raise UnsatisfiableVariantSpecError(self[k], other[k])
             else:
                 self[k] = other[k].copy()
@@ -437,12 +440,20 @@ class Spec(object):
         self.versions.add(version)
 
 
-    def _add_variant(self, name, enabled):
+    def _add_variant(self, name, value):
         """Called by the parser to add a variant."""
         if name in self.variants: raise DuplicateVariantError(
                 "Cannot specify variant '%s' twice" % name)
-        self.variants[name] = VariantSpec(name, enabled)
+        self.variants[name] = VariantSpec(name, value)
 
+    def _add_flag(self, name, value):
+        """Called by the parser to add a known flag.
+        Known flags currently include "arch"
+        """
+        if name == 'arch':
+            self._set_architecture(value)
+        else:
+            raise SpecError("Invalid flag specified")
 
     def _set_compiler(self, compiler):
         """Called by the parser to set the compiler."""
@@ -653,7 +664,7 @@ class Spec(object):
     def to_node_dict(self):
         d = {
             'variants' : dict(
-                (name,v.enabled) for name, v in self.variants.items()),
+                (name,v.value) for name, v in self.variants.items()),
             'arch' : self.architecture,
             'dependencies' : dict((d, self.dependencies[d].dag_hash())
                                   for d in sorted(self.dependencies))
@@ -690,8 +701,8 @@ class Spec(object):
         else:
             spec.compiler = CompilerSpec.from_dict(node)
 
-        for name, enabled in node['variants'].items():
-            spec.variants[name] = VariantSpec(name, enabled)
+        for name, value in node['variants'].items():
+            spec.variants[name] = VariantSpec(name, value)
 
         return spec
 
@@ -803,6 +814,7 @@ class Spec(object):
                 concrete = concrete.copy()
                 spec._replace_with(concrete)
                 changed = True
+
 
             # If there are duplicate providers or duplicate provider deps, this
             # consolidates them and merge constraints.
@@ -1138,7 +1150,7 @@ class Spec(object):
         """
         other = self._autospec(other)
 
-        if not self.name == other.name:
+        if not (self.name == other.name or self.name == "any-pkg-name" or other.name == "any-pkg-name"):
             raise UnsatisfiableSpecNameError(self.name, other.name)
 
         if not self.versions.overlaps(other.versions):
@@ -1146,7 +1158,7 @@ class Spec(object):
 
         for v in other.variants:
             if (v in self.variants and
-                self.variants[v].enabled != other.variants[v].enabled):
+                self.variants[v].value != other.variants[v].value):
                 raise UnsatisfiableVariantSpecError(self.variants[v],
                                                     other.variants[v])
 
@@ -1228,7 +1240,10 @@ class Spec(object):
             return spec_like
 
         try:
-            return spack.spec.Spec(spec_like)
+            spec = spack.spec.Spec(spec_like)
+            if spec.name == "any-pkg-name":
+                raise SpecError("anonymous package -- this will always be handled")
+            return spec
         except SpecError:
             return parse_anonymous_spec(spec_like, self.name)
 
@@ -1248,7 +1263,7 @@ class Spec(object):
         """
         other = self._autospec(other)
 
-        # A concrete provider can satisfy a virtual dependency.
+       # A concrete provider can satisfy a virtual dependency.
         if not self.virtual and other.virtual:
             pkg = spack.db.get(self.name)
             if pkg.provides(other.name):
@@ -1622,7 +1637,7 @@ class Spec(object):
         showid = kwargs.pop('ids',   False)
         cover  = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
-        fmt    = kwargs.pop('format', '$_$@$%@$+$=')
+        fmt    = kwargs.pop('format', '$_$@$%@$+$+arch=')
         prefix = kwargs.pop('prefix', None)
         check_kwargs(kwargs, self.tree)
 
@@ -1707,11 +1722,18 @@ class SpecParser(spack.parse.Parser):
 
                 elif self.accept(ON):
                     specs.append(self.empty_spec())
-                    specs[-1]._add_variant(self.variant(), True)
+                    self.expect(ID)
+                    self.check_identifier()
+                    name = self.token.value
+                    if self.accept(EQ):
+                        self.expect(ID)
+                        specs[-1]._add_flag(name,self.token.value)
+                    else:
+                        specs[-1]._add_variant(self.variant(name),True)
 
                 elif self.accept(OFF):
                     specs.append(self.empty_spec())
-                    specs[-1]._add_variant(self.variant(), False)
+                    specs[-1]._add_variant(self.variant(),False)
 
                 else:
                     self.unexpected_token()
@@ -1719,6 +1741,10 @@ class SpecParser(spack.parse.Parser):
         except spack.parse.ParseError, e:
             raise SpecParseError(e)
 
+        for top_spec in specs:
+            for spec in top_spec.traverse():
+                if 'arch' in spec.variants:
+                    spec.architecture = spec.variants['arch']
         return specs
 
 
@@ -1763,10 +1789,17 @@ class SpecParser(spack.parse.Parser):
         #Should we be able to add cflags eventually?
         while self.next:
             if self.accept(ON):
-                spec._add_variant(self.variant(), True)
+                self.expect(ID)
+                self.check_identifier()
+                name = self.token.value
+                if self.accept(EQ):
+                    self.expect(ID)
+                    spec._add_flag(name,self.token.value)
+                else:
+                    spec._add_variant(self.variant(name),True)
 
             elif self.accept(OFF):
-                spec._add_variant(self.variant(), False)
+                spec._add_variant(self.variant(),False)
 
             elif self.accept(PCT):
                 spec._set_compiler(self.compiler())
@@ -1805,17 +1838,22 @@ class SpecParser(spack.parse.Parser):
                     spec._add_version(version)
                 added_version = True
 
+
             elif self.accept(ON):
-                spec._add_variant(self.variant(), True)
+                self.expect(ID)
+                self.check_identifier()
+                name = self.token.value
+                if self.accept(EQ):
+                    self.expect(ID)
+                    spec._add_flag(name,self.token.value)
+                else:
+                    spec._add_variant(self.variant(name),True)
 
             elif self.accept(OFF):
-                spec._add_variant(self.variant(), False)
+                spec._add_variant(self.variant(),False)
 
             elif self.accept(PCT):
                 spec._set_compiler(self.compiler())
-
-            elif self.accept(EQ):
-                spec._set_architecture(self.architecture())
 
             else:
                 break
@@ -1827,13 +1865,17 @@ class SpecParser(spack.parse.Parser):
         return spec
 
 
-    def variant(self):
-        self.expect(ID)
-        self.check_identifier()
-        return self.token.value
-
+    def variant(self,name=None):
+        #TODO: Make generalized variants possible
+        if name:
+            return name
+        else:
+            self.expect(ID)
+            self.check_identifier()
+            return self.token.value
 
     def architecture(self):
+        #TODO: Make this work properly as a subcase of variant (includes adding names to grammar)
         self.expect(ID)
         return self.token.value
 

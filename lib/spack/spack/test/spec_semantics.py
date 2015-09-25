@@ -111,11 +111,11 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     def test_satisfies_architecture(self):
-        self.check_satisfies('foo=chaos_5_x86_64_ib', '=chaos_5_x86_64_ib')
-        self.check_satisfies('foo=bgqos_0', '=bgqos_0')
+        self.check_satisfies('foo+arch=chaos_5_x86_64_ib', '+arch=chaos_5_x86_64_ib')
+        self.check_satisfies('foo+arch=bgqos_0', '+arch=bgqos_0')
 
-        self.check_unsatisfiable('foo=bgqos_0', '=chaos_5_x86_64_ib')
-        self.check_unsatisfiable('foo=chaos_5_x86_64_ib', '=bgqos_0')
+        self.check_unsatisfiable('foo+arch=bgqos_0', '+arch=chaos_5_x86_64_ib')
+        self.check_unsatisfiable('foo+arch=chaos_5_x86_64_ib', '+arch=bgqos_0')
 
 
     def test_satisfies_dependencies(self):
@@ -267,13 +267,13 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     def test_constrain_arch(self):
-        self.check_constrain('libelf=bgqos_0', 'libelf=bgqos_0', 'libelf=bgqos_0')
-        self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
+        self.check_constrain('libelf+arch=bgqos_0', 'libelf+arch=bgqos_0', 'libelf+arch=bgqos_0')
+        self.check_constrain('libelf+arch=bgqos_0', 'libelf', 'libelf+arch=bgqos_0')
 
 
     def test_constrain_compiler(self):
-        self.check_constrain('libelf=bgqos_0', 'libelf=bgqos_0', 'libelf=bgqos_0')
-        self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
+        self.check_constrain('libelf+arch=bgqos_0', 'libelf+arch=bgqos_0', 'libelf+arch=bgqos_0')
+        self.check_constrain('libelf+arch=bgqos_0', 'libelf', 'libelf+arch=bgqos_0')
 
 
     def test_invalid_constraint(self):
@@ -283,7 +283,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_invalid_constraint('libelf+debug', 'libelf~debug')
         self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
 
-        self.check_invalid_constraint('libelf=bgqos_0', 'libelf=x86_54')
+        self.check_invalid_constraint('libelf+arch=bgqos_0', 'libelf+arch=x86_54')
 
 
     def test_constrain_changed(self):
@@ -293,7 +293,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf%gcc', '%gcc@4.5')
         self.check_constrain_changed('libelf', '+debug')
         self.check_constrain_changed('libelf', '~debug')
-        self.check_constrain_changed('libelf', '=bgqos_0')
+        self.check_constrain_changed('libelf', '+arch=bgqos_0')
 
 
     def test_constrain_not_changed(self):
@@ -304,7 +304,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf%gcc@4.5', '%gcc@4.5')
         self.check_constrain_not_changed('libelf+debug', '+debug')
         self.check_constrain_not_changed('libelf~debug', '~debug')
-        self.check_constrain_not_changed('libelf=bgqos_0', '=bgqos_0')
+        self.check_constrain_not_changed('libelf+arch=bgqos_0', '+arch=bgqos_0')
         self.check_constrain_not_changed('libelf^foo', 'libelf^foo')
         self.check_constrain_not_changed('libelf^foo^bar', 'libelf^foo^bar')
 
@@ -316,7 +316,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf^foo%gcc', 'libelf^foo%gcc@4.5')
         self.check_constrain_changed('libelf^foo', 'libelf^foo+debug')
         self.check_constrain_changed('libelf^foo', 'libelf^foo~debug')
-        self.check_constrain_changed('libelf^foo', 'libelf^foo=bgqos_0')
+        self.check_constrain_changed('libelf^foo', 'libelf^foo+arch=bgqos_0')
 
 
     def test_constrain_dependency_not_changed(self):
@@ -326,5 +326,5 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf^foo%gcc@4.5', 'libelf^foo%gcc@4.5')
         self.check_constrain_not_changed('libelf^foo+debug', 'libelf^foo+debug')
         self.check_constrain_not_changed('libelf^foo~debug', 'libelf^foo~debug')
-        self.check_constrain_not_changed('libelf^foo=bgqos_0', 'libelf^foo=bgqos_0')
+        self.check_constrain_not_changed('libelf^foo+arch=bgqos_0', 'libelf^foo+arch=bgqos_0')
 

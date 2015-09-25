@@ -38,7 +38,7 @@ class ConcretizeTest(MockPackagesTest):
             for name in abstract.variants:
                 avariant = abstract.variants[name]
                 cvariant = concrete.variants[name]
-                self.assertEqual(avariant.enabled, cvariant.enabled)
+                self.assertEqual(avariant.value, cvariant.value)
 
         for name in abstract.package.variants:
             self.assertTrue(name in concrete.variants)

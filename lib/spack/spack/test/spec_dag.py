@@ -241,8 +241,8 @@ class SpecDagTest(MockPackagesTest):
 
 
     def test_unsatisfiable_architecture(self):
-        set_pkg_dep('mpileaks', 'mpich=bgqos_0')
-        spec = Spec('mpileaks ^mpich=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
+        set_pkg_dep('mpileaks', 'mpich+arch=bgqos_0')
+        spec = Spec('mpileaks ^mpich+arch=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
 
 
@@ -426,6 +426,7 @@ class SpecDagTest(MockPackagesTest):
         orig.concretize()
         copy = orig.copy()
 
+        print orig
         self.check_links(copy)
 
         self.assertEqual(orig, copy)
