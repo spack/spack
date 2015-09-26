@@ -42,15 +42,19 @@ class Gcc(Package):
     version('4.7.4', '4c696da46297de6ae77a82797d2abe28')
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
+    
+    variant('binutils', default=False, description='Add a dependency on binutils')
+    variant('libelf', default=False, description='Add a dependency on libelf')
+    variant('isl', default=True, description='Add a dependency on isl')
 
     depends_on("mpfr")
     depends_on("gmp")
     depends_on("mpc")     # when @4.5:
-    depends_on("libelf")
-    depends_on("binutils")
+    depends_on("libelf", when='+libelf')
+    depends_on("binutils",when="+binutils")
 
     # Save these until we can do optional deps.
-    #depends_on("isl")
+    depends_on("isl", when='@5.0:+isl')
     #depends_on("ppl")
     #depends_on("cloog")
 
@@ -62,23 +66,38 @@ class Gcc(Package):
         if spec.satisfies("@4.7.1:"):
             enabled_languages.add('go')
 
+        # Generic options to compile GCC
+        options = ["--prefix=%s" % prefix,
+                   "--libdir=%s/lib64" % prefix,
+                   "--disable-multilib",
+                   "--enable-languages=" + ','.join(enabled_languages),
+                   "--with-mpc=%s"    % spec['mpc'].prefix,
+                   "--with-mpfr=%s"   % spec['mpfr'].prefix,
+                   "--with-gmp=%s"    % spec['gmp'].prefix,
+                   "--enable-lto",
+                   "--with-gnu-ld",
+                   "--with-gnu-as",
+                   "--with-quad"]
+        # Libelf
+        if '+libelf' in spec:
+            libelf_options = ["--with-libelf=%s" % spec['libelf'].prefix]
+            options.extend(libelf_options)
+
+        # Binutils
+        if '+binutils' in spec:
+            binutils_options = ["--with-stage1-ldflags=%s" % self.rpath_args,
+                                "--with-boot-ldflags=%s"   % self.rpath_args,
+                                "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
+                                "--with-as=%s/bin/as" % spec['binutils'].prefix]
+            options.extend(binutils_options)
+            
+        # Isl
+        if spec.satisfies('@5.0:+isl'):
+            isl_options = ["--with-isl=%s" % spec['isl'].prefix]
+            options.extend(isl_options)
+
         # Rest of install is straightforward.
-        configure("--prefix=%s" % prefix,
-                  "--libdir=%s/lib64" % prefix,
-                  "--disable-multilib",
-                  "--enable-languages=" + ','.join(enabled_languages),
-                  "--with-mpc=%s"    % spec['mpc'].prefix,
-                  "--with-mpfr=%s"   % spec['mpfr'].prefix,
-                  "--with-gmp=%s"    % spec['gmp'].prefix,
-                  "--with-libelf=%s" % spec['libelf'].prefix,
-                  "--with-stage1-ldflags=%s" % self.rpath_args,
-                  "--with-boot-ldflags=%s"   % self.rpath_args,
-                  "--enable-lto",
-                  "--with-gnu-ld",
-                  "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
-                  "--with-gnu-as",
-                  "--with-as=%s/bin/as" % spec['binutils'].prefix,
-                  "--with-quad")
+        configure(*options)
         make()
         make("install")
 
