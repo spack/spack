@@ -37,6 +37,7 @@ import spack.spec
 import spack.config
 
 from spack.util.multiproc import parmap
+import spack.compiler as Comp
 from spack.compiler import Compiler
 from spack.util.executable import which
 from spack.util.naming import mod_to_class
@@ -44,7 +45,6 @@ from spack.util.environment import get_path
 
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
-_optional_flag_vars = ['cflags', 'cxxflags', 'fflags', 'ldflags']
 
 _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
 
@@ -182,20 +182,19 @@ def compilers_for_spec(compiler_spec):
             raise InvalidCompilerConfigurationError(cspec)
 
         cls  = class_for_compiler_name(cspec.name)
-        compiler_params = []
+        compiler_paths = []
         for c in _required_instance_vars:
             compiler_path = items[c]
             if compiler_path != "None":
-                compiler_params.append(compiler_path)
+                compiler_paths.append(compiler_path)
             else:
-                compiler_params.append(None)
+                compiler_paths.append(None)
 
-        for c in _optional_flag_vars:
-            if c not in items:
-                items[c]=None
-            compiler_params.append(items[c])
-
-        return cls(cspec, *compiler_params)
+        flags = {}
+        for f in Comp.valid_compiler_flags():
+            if f in items:
+                flags[f] = items[f]
+        return cls(cspec, *compiler_paths, **flags)
 
     matches = find(compiler_spec)
     return [get_compiler(cspec) for cspec in matches]

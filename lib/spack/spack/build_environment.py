@@ -36,6 +36,7 @@ from llnl.util.filesystem import *
 
 import spack
 import spack.compilers as compilers
+import spack.compiler as Compiler
 from spack.util.executable import Executable, which
 from spack.util.environment import *
 
@@ -56,7 +57,6 @@ SPACK_INSTALL          = 'SPACK_INSTALL'
 SPACK_DEBUG            = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
-
 
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can
@@ -86,6 +86,7 @@ class MakeExecutable(Executable):
 def set_compiler_environment_variables(pkg):
     assert(pkg.spec.concrete)
     compiler = pkg.compiler
+    flags = pkg.spec.compiler_flags
 
     # Set compiler variables used by CMake and autotools
     os.environ['CC']  = join_path(spack.build_env_path, 'cc')
@@ -103,16 +104,17 @@ def set_compiler_environment_variables(pkg):
     if compiler.fc:
         os.environ['SPACK_FC']  = compiler.fc
 
-    # Set SPACK compiler flags so our wrapper can add default flags
-    if compiler.cflags:
-        os.environ['SPACK_CFLAGS'] = compiler.cflags
-    if compiler.cxxflags:
-        os.environ['SPACK_CXXFLAGS'] = compiler.cxxflags
-    if compiler.fflags:
-        os.environ['SPACK_FFLAGS'] = compiler.fflags
-    if compiler.ldflags:
-        os.environ['SPACK_LDFLAGS'] = compiler.ldflags
+    # Encorporate the compiler default flags into the set of flags
+    for flag in flags:
+        if flag in compiler.flags:
+            compiler.flags[flag] += ' '+flags[flag]
+        else:
+            compiler.flags[flag] = flags[flag]
 
+    # Add every valid compiler flag to the environment, prefaced by "SPACK_"
+    for flag in Compiler.valid_compiler_flags():
+        if flag in compiler.flags:
+            os.environ['SPACK_'+flag.upper()] = compiler.flags[flag]
 
     os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
 

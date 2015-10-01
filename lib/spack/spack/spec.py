@@ -107,6 +107,7 @@ import spack
 import spack.parse
 import spack.error
 import spack.compilers as compilers
+import spack.compiler as Compiler
 
 from spack.cmd.find import display_specs
 from spack.version import *
@@ -143,7 +144,6 @@ _separators = '[%s]' % ''.join(color_formats.keys())
 """Versionlist constant so we don't have to build a list
    every time we call str()"""
 _any_version = VersionList([':'])
-
 
 def index_specs(specs):
     """Take a list of specs and return a dict of lists.  Dict is
@@ -192,10 +192,12 @@ class CompilerSpec(object):
                 c = SpecParser().parse_compiler(arg)
                 self.name = c.name
                 self.versions = c.versions
+#                self.flags = c.flags
 
             elif isinstance(arg, CompilerSpec):
                 self.name = arg.name
                 self.versions = arg.versions.copy()
+#                self.flags = arg.flags.copy()
 
             else:
                 raise TypeError(
@@ -207,10 +209,18 @@ class CompilerSpec(object):
             self.name = name
             self.versions = VersionList()
             self.versions.add(ver(version))
+#            self.flags = {'cflags':None,'cxxflags':None,'fflags':None,'ldflags':None}
+
+#        elif nargs == 3:
+#            name, version, flags = args
+#            self.name = name
+#            self.versions = VersionList()
+#            self.versions.add(ver(version))
+#            self.flags = flags
 
         else:
             raise TypeError(
-                "__init__ takes 1 or 2 arguments. (%d given)" % nargs)
+                "__init__ takes 1, 2, or 3 arguments. (%d given)" % nargs)
 
 
     def _add_version(self, version):
@@ -226,8 +236,20 @@ class CompilerSpec(object):
     def satisfies(self, other, strict=False):
         other = self._autospec(other)
         return (self.name == other.name and
-                self.versions.satisfies(other.versions, strict=strict))
+                self.versions.satisfies(other.versions, strict=strict))# and
+#                self.flags_satisfy(other, strict=strict))
 
+
+#    def flags_satisfy(self,other,strict = False):
+#        if strict:
+#            for flag in self.flags:
+#                if not self.flags[flag] == other.flags[flag]:
+#                    return False
+#        else:
+#            for flag in self.flags:
+#                if other.flags[flag] and (not self.flags[flag] or other.flags[flag] not in self.flags[flag]):
+#                    return False
+#        return True
 
     def constrain(self, other):
         """Intersect self's versions with other.
@@ -261,23 +283,25 @@ class CompilerSpec(object):
         clone = CompilerSpec.__new__(CompilerSpec)
         clone.name = self.name
         clone.versions = self.versions.copy()
+#        clone.flags = self.flags.copy()
         return clone
 
 
     def _cmp_key(self):
-        return (self.name, self.versions)
+        return (self.name, self.versions)#, str(sorted(self.flags.items())))
 
 
     def to_dict(self):
         d = {'name' : self.name}
         d.update(self.versions.to_dict())
+#        d['flags'] = self.flags
         return { 'compiler' : d }
 
 
     @staticmethod
     def from_dict(d):
         d = d['compiler']
-        return CompilerSpec(d['name'], VersionList.from_dict(d))
+        return CompilerSpec(d['name'], VersionList.from_dict(d))#, d['flags'])
 
 
     def __str__(self):
@@ -285,6 +309,11 @@ class CompilerSpec(object):
         if self.versions and self.versions != _any_version:
             vlist = ",".join(str(v) for v in self.versions)
             out += "@%s" % vlist
+#        if self.flags:
+#            for flag, value in self.flags.items():
+#                if value is not None:
+#                    out += "+" + flag + "=" + value
+#                    print "outing"
         return out
 
     def __repr__(self):
@@ -372,6 +401,59 @@ class VariantMap(HashableMap):
         return ''.join(str(self[key]) for key in sorted_keys)
 
 
+class FlagMap(HashableMap):
+    def __init__(self, spec):
+        super(FlagMap, self).__init__()
+        self.spec = spec
+
+
+    def satisfies(self, other, strict=False):
+        #"strict" makes no sense if this works, but it matches how we need it. Maybe
+        if strict:
+            return all(k in self and self[k] == other[k]
+                       for k in other)
+        else:
+            return self == other
+
+    def constrain(self, other):
+        """Add all flags in other that aren't in self to self.
+
+        Return whether the spec changed.
+        """
+        changed = False
+        for k in other:
+            if k in self:
+                if self[k] != other[k]:
+                    #This will not properly recognize incompatible flags
+                    self[k] += other[k]
+                    changed = True
+            else:
+                self[k] = other[k]
+                changed = True
+        return changed
+
+
+    @property
+    def concrete(self):
+        return self.spec._concrete
+
+
+    def copy(self):
+        clone = FlagMap(None)
+        for name, value in self.items():
+            clone[name] = value
+        return clone
+
+
+    def _cmp_key(self):
+        return ''.join(str(key)+str(value) for key, value in sorted(self.items()))
+
+
+    def __str__(self):
+        sorted_keys = sorted(self.keys())
+        return '+' + '+'.join(str(key) + '=\"' + str(self[key]) + '\"' for key in sorted_keys)
+
+
 class DependencyMap(HashableMap):
     """Each spec has a DependencyMap containing specs for its dependencies.
        The DependencyMap is keyed by name. """
@@ -413,6 +495,7 @@ class Spec(object):
         self.versions = other.versions
         self.architecture = other.architecture
         self.compiler = other.compiler
+        self.compiler_flags = other.compiler_flags
         self.dependencies = other.dependencies
         self.variants = other.variants
         self.variants.spec = self
@@ -446,14 +529,19 @@ class Spec(object):
                 "Cannot specify variant '%s' twice" % name)
         self.variants[name] = VariantSpec(name, value)
 
+
     def _add_flag(self, name, value):
         """Called by the parser to add a known flag.
         Known flags currently include "arch"
         """
+        valid_flags = Compiler.valid_compiler_flags()
         if name == 'arch':
             self._set_architecture(value)
+        elif name in valid_flags:
+            assert(self.compiler_flags is not None)
+            self.compiler_flags[name] = value
         else:
-            raise SpecError("Invalid flag specified")
+            self._add_variant(self,name,value)
 
     def _set_compiler(self, compiler):
         """Called by the parser to set the compiler."""
@@ -533,6 +621,7 @@ class Spec(object):
                               and self.variants.concrete
                               and self.architecture
                               and self.compiler and self.compiler.concrete
+#                              and self.compiler_flags.concrete
                               and self.dependencies.concrete)
         return self._concrete
 
@@ -667,7 +756,8 @@ class Spec(object):
                 (name,v.value) for name, v in self.variants.items()),
             'arch' : self.architecture,
             'dependencies' : dict((d, self.dependencies[d].dag_hash())
-                                  for d in sorted(self.dependencies))
+                                  for d in sorted(self.dependencies)),
+            'compiler_flags' : dict((name, value) for name, value in self.compiler_flags.items())
         }
         if self.compiler:
             d.update(self.compiler.to_dict())
@@ -703,6 +793,9 @@ class Spec(object):
 
         for name, value in node['variants'].items():
             spec.variants[name] = VariantSpec(name, value)
+
+        for name, value in node['compiler_flags'].items():
+            spec.compiler_flags[name] = value
 
         return spec
 
@@ -769,6 +862,7 @@ class Spec(object):
                 changed |= any(
                     (spack.concretizer.concretize_architecture(self),
                      spack.concretizer.concretize_compiler(self),
+                     spack.concretizer.concretize_compiler_flags(self),#has to be concretized after compiler
                      spack.concretizer.concretize_version(self),
                      spack.concretizer.concretize_variants(self)))
             presets[self.name] = self
@@ -843,9 +937,19 @@ class Spec(object):
         force = False
 
         while changed:
-            changes = (self.normalize(force=force),
-                       self._expand_virtual_packages(),
-                       self._concretize_helper())
+#debugging code
+#            print self, "raw"
+            a = self.normalize(force=force)
+#            print self, "normal"
+            b = self._expand_virtual_packages()
+#            print self, "expanded"
+            c = self._concretize_helper()
+#            print self, "concrete-ish"
+            changes = (a,b,c)
+#            print a, b, c
+#            changes = (self.normalize(force=force),
+#                       self._expand_virtual_packages(),
+#                       self._concretize_helper())
             changed = any(changes)
             force=True
 
@@ -1058,7 +1162,6 @@ class Spec(object):
             for dep_name in pkg.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 pkg_dep = self._evaluate_dependency_conditions(dep_name)
-
                 # If pkg_dep is a dependency, merge it.
                 if pkg_dep:
                     changed |= self._merge_dependency(
@@ -1176,6 +1279,8 @@ class Spec(object):
 
         changed |= self.versions.intersect(other.versions)
         changed |= self.variants.constrain(other.variants)
+
+        changed |= self.compiler_flags.constrain(other.compiler_flags)
 
         old = self.architecture
         self.architecture = self.architecture or other.architecture
@@ -1304,6 +1409,9 @@ class Spec(object):
         elif strict and (other.architecture and not self.architecture):
             return False
 
+        if not self.compiler_flags.satisfies(other.compiler_flags, strict=strict):
+            return False
+
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
             deps_strict = strict
@@ -1378,6 +1486,7 @@ class Spec(object):
         self.versions = other.versions.copy()
         self.architecture = other.architecture
         self.compiler = other.compiler.copy() if other.compiler else None
+        self.compiler_flags = other.compiler_flags.copy()
         self.dependents = DependencyMap()
         self.dependencies = DependencyMap()
         self.variants = other.variants.copy()
@@ -1499,9 +1608,11 @@ class Spec(object):
 
     def _cmp_node(self):
         """Comparison key for just *this node* and not its deps."""
+#        if self.compiler:
+#            return (self.name, self.versions, self.variants,
+#                    self.architecture, self.compiler._cmp_key())
         return (self.name, self.versions, self.variants,
-                self.architecture, self.compiler)
-
+                self.architecture, self.compiler, self.compiler_flags)
 
     def eq_node(self, other):
         """Equality with another spec, not including dependencies."""
@@ -1518,7 +1629,7 @@ class Spec(object):
            considering structure.  This is the default, as
            normalization will restore structure.
         """
-        return self._cmp_node() + (self.sorted_deps(),)
+        return self._cmp_node() + (self.sorted_deps())
 
 
     def colorized(self):
@@ -1533,7 +1644,7 @@ class Spec(object):
                $@   Version
                $%   Compiler
                $%@  Compiler & compiler version
-               $+   Options
+               $+   Options & compiler flags
                $=   Architecture
                $#   7-char prefix of DAG hash
                $$   $
@@ -1587,9 +1698,11 @@ class Spec(object):
                 elif c == '+':
                     if self.variants:
                         write(fmt % str(self.variants), c)
+                    if self.compiler_flags:
+                        write(fmt % str(self.compiler_flags), '%')
                 elif c == '=':
                     if self.architecture:
-                        write(fmt % (c + str(self.architecture)), c)
+                        write(fmt % ('+arch' + c + str(self.architecture)), c)
                 elif c == '#':
                     out.write('-' + fmt % (self.dag_hash(7)))
                 elif c == '$':
@@ -1669,7 +1782,7 @@ class Spec(object):
 #
 # These are possible token types in the spec grammar.
 #
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID = range(10)
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, QT, ID = range(11)
 
 class SpecLexer(spack.parse.Lexer):
     """Parses tokens that make up spack specs."""
@@ -1687,6 +1800,8 @@ class SpecLexer(spack.parse.Lexer):
             (r'\=',        lambda scanner, val: self.token(EQ,    val)),
             # This is more liberal than identifier_re (see above).
             # Checked by check_identifier() for better error messages.
+            (r'([\"\'])(?:(?=(\\?))\2.)*?\1',lambda scanner, val: self.token(QT, val)),
+#            (r'([\"\'])([^\1]+?)(\1)',lambda scanner, val: self.token(QT, val)),
             (r'\w[\w.-]*', lambda scanner, val: self.token(ID,    val)),
             (r'\s+',       lambda scanner, val: None)])
 
@@ -1726,7 +1841,10 @@ class SpecParser(spack.parse.Parser):
                     self.check_identifier()
                     name = self.token.value
                     if self.accept(EQ):
-                        self.expect(ID)
+                        if self.accept(QT):
+                            self.token.value = self.token.value[1:-1]
+                        else:
+                            self.expect(ID)
                         specs[-1]._add_flag(name,self.token.value)
                     else:
                         specs[-1]._add_variant(self.variant(name),True)
@@ -1741,10 +1859,10 @@ class SpecParser(spack.parse.Parser):
         except spack.parse.ParseError, e:
             raise SpecParseError(e)
 
-        for top_spec in specs:
-            for spec in top_spec.traverse():
-                if 'arch' in spec.variants:
-                    spec.architecture = spec.variants['arch']
+#        for top_spec in specs:
+#            for spec in top_spec.traverse():
+#                if 'arch' in spec.variants:
+#                    spec.architecture = spec.variants['arch']
         return specs
 
 
@@ -1783,6 +1901,7 @@ class SpecParser(spack.parse.Parser):
         spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
+        spec.compiler_flags = FlagMap(spec)
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
 
@@ -1793,7 +1912,10 @@ class SpecParser(spack.parse.Parser):
                 self.check_identifier()
                 name = self.token.value
                 if self.accept(EQ):
-                    self.expect(ID)
+                    if self.accept(QT):
+                        self.token.value = self.token.value[1:-1]
+                    else:
+                        self.expect(ID)
                     spec._add_flag(name,self.token.value)
                 else:
                     spec._add_variant(self.variant(name),True)
@@ -1821,6 +1943,7 @@ class SpecParser(spack.parse.Parser):
         spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
+        spec.compiler_flags = FlagMap(spec)
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
 
@@ -1844,7 +1967,10 @@ class SpecParser(spack.parse.Parser):
                 self.check_identifier()
                 name = self.token.value
                 if self.accept(EQ):
-                    self.expect(ID)
+                    if self.accept(QT):
+                        self.token.value = self.token.value[1:-1]
+                    else:
+                        self.expect(ID)
                     spec._add_flag(name,self.token.value)
                 else:
                     spec._add_variant(self.variant(name),True)
@@ -1916,6 +2042,7 @@ class SpecParser(spack.parse.Parser):
         compiler = CompilerSpec.__new__(CompilerSpec)
         compiler.name = self.token.value
         compiler.versions = VersionList()
+#        compiler.flags = {'cflags':None,'cxxflags':None,'fflags':None,'ldflags':None}
         if self.accept(AT):
             vlist = self.version_list()
             for version in vlist:

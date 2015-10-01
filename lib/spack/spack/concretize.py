@@ -175,6 +175,26 @@ class DefaultConcretizer(object):
         return True  # things changed.
 
 
+    def concretize_compiler_flags(self, spec):
+        """
+        The compiler flags are updated to match those of the spec whose
+        compiler is used, defaulting to no compiler flags in the spec.
+        Default specs set at the compiler level will still be added later.
+        """
+        try:
+            nearest = next(p for p in spec.traverse(direction='parents')
+                           if p.compiler == spec.compiler and p is not spec)
+            if spec.compiler_flags == nearest.compiler_flags:
+                return False
+            spec.compiler_flags = nearest.compiler_flags.copy()
+
+        except StopIteration:
+            return False
+
+        return True  # things changed.
+
+
+
     def choose_provider(self, spec, providers):
         """This is invoked for virtual specs.  Given a spec with a virtual name,
            say "mpi", and a list of specs of possible providers of that spec,

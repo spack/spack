@@ -426,7 +426,6 @@ class SpecDagTest(MockPackagesTest):
         orig.concretize()
         copy = orig.copy()
 
-        print orig
         self.check_links(copy)
 
         self.assertEqual(orig, copy)
