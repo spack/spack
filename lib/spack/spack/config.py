@@ -174,8 +174,12 @@ def _merge_dicts(d1, d2):
         for key2, val2 in d2.iteritems():
             if not key2 in d1:
                 d1[key2] = val2
-            else:
+            elif type(d1[key2]) is dict and type(val2) is dict:
                 d1[key2] = _merge_dicts(d1[key2], val2)
+            elif (type(d1) is list) and (type(d2) is list):
+                d1.extend(d2)
+            else:
+                d1[key2] = val2
         return d1
 
     return d2
@@ -360,7 +364,7 @@ def add_to_mirror_config(addition_dict, scope=None):
 
 
 def add_to_compiler_config(addition_dict, scope=None, arch=None):
-    """Add compilerss to the configuration files"""
+    """Add compilers to the configuration files"""
     if not arch:
         arch = spack.architecture.sys_type()
     add_to_config('compilers', { arch : addition_dict }, scope)
