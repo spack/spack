@@ -89,31 +89,44 @@ done
 command=$(basename "$0")
 case "$command" in
     cc|gcc|c89|c99|clang|xlc)
-        command="$SPACK_CC"
-#        command="$SPACK_CC $SPACK_CFLAGS"
+        command=("$SPACK_CC")
+        if [ "$SPACK_CFLAGS" ]; then
+        command+=("$SPACK_CFLAGS")
+        fi
         language="C"
         ;;
     c++|CC|g++|clang++|xlC)
-        command="$SPACK_CXX"
-#        command="$SPACK_CXX SPACK_CXXFLAGS"
+        command=("$SPACK_CXX")
+        if [ "$SPACK_CXXFLAGS" ]; then
+        command+=("$SPACK_CXXFLAGS")
+        fi
         language="C++"
         ;;
     f77|xlf)
-        command="$SPACK_F77"
-#        command="$SPACK_F77 $SPACK_FFLAGS"
+        command=("$SPACK_F77")
+        if [ "$SPACK_FFLAGS" ]; then
+        command+=("$SPACK_FFLAGS")
+        fi
         language="Fortran 77"
         ;;
     fc|f90|f95|xlf90)
         command="$SPACK_FC"
-#        command="$SPACK_FC $SPACK_FFLAGS"
+        if [ "$SPACK_FFLAGS" ]; then
+        command+=("$SPACK_FFLAGS")
+        fi
         language="Fortran 90"
         ;;
     cpp)
         mode=cpp
+        if [ "$SPACK_CPPFLAGS" ]; then
+        command+=("$SPACK_CPPFLAGS")
+        fi
         ;;
     ld)
         mode=ld
- #       command+=" $LDFLAGS"
+        if [ "$SPACK_LDFLAGS" ]; then
+        command+=("$SPACK_LDFLAGS")
+        fi
         ;;
     *)
         die "Unkown compiler: $command"
@@ -123,7 +136,9 @@ esac
 # Finish setting up the mode.
 if [ -z "$mode" ]; then
     mode=ccld
-#    command+=" $SPACK_LDFLAGS"
+    if [ "$SPACK_LDFLAGS" ]; then
+    command+=("$SPACK_LDFLAGS")
+    fi
     for arg in "$@"; do
         if [ "$arg" = -v -o "$arg" = -V -o "$arg" = --version -o "$arg" = -dumpversion ]; then
             mode=vcheck
@@ -324,7 +339,8 @@ for dir in "${env_path[@]}"; do
 done
 export PATH
 
-full_command=("$command")
+full_command=("${command[@]}")
+#full_command+=("$SPACK_CFLAGS")
 full_command+=("${args[@]}")
 
 #
@@ -337,4 +353,7 @@ if [ "$SPACK_DEBUG" = "TRUE" ]; then
     echo "$mode       ${full_command[@]}" >> $output_log
 fi
 
+echo "---------------------------" > /g/g0/becker33/cflag_test
+echo "${full_command[@]}" >> /g/g0/becker33/cflag_test
+echo "---------------------------" >> /g/g0/becker33/cflag_test
 exec "${full_command[@]}"

@@ -1142,6 +1142,12 @@ class Spec(object):
 
     def _normalize_helper(self, visited, spec_deps, provider_index):
         """Recursive helper function for _normalize."""
+        print self,"self help"
+#        print
+#        from spack.graph import graph_ascii
+#        graph_ascii(self)
+#        print
+        print spec_deps
         if self.name in visited:
             return False
         visited.add(self.name)
@@ -1205,6 +1211,10 @@ class Spec(object):
         # to package files & their 'when' specs
         visited = set()
         any_change = self._normalize_helper(visited, spec_deps, index)
+
+        print self, "self norm"
+        print spec_deps
+        print visited
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.

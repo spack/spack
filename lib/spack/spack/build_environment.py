@@ -104,7 +104,7 @@ def set_compiler_environment_variables(pkg):
     if compiler.fc:
         os.environ['SPACK_FC']  = compiler.fc
 
-    # Encorporate the compiler default flags into the set of flags
+    # Incorporate the compiler default flags into the set of flags
     for flag in flags:
         if flag in compiler.flags:
             compiler.flags[flag] += ' '+flags[flag]

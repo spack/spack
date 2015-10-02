@@ -189,7 +189,9 @@ class DefaultConcretizer(object):
             spec.compiler_flags = nearest.compiler_flags.copy()
 
         except StopIteration:
-            return False
+            if spec.compiler_flags == spec.root.compiler_flags:
+                return False
+            spec.compiler_flags = spec.root.compiler_flags
 
         return True  # things changed.
 
