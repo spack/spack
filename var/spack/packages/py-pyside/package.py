@@ -8,12 +8,9 @@ class PyPyside(Package):
 
     version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d')
 
-    # TODO: make build dependency
-    # depends_on("cmake")
-
     extends('python')
     depends_on('py-setuptools')
-    depends_on('qt@:4')
+    depends_on('qt@5.4.0')
 
     def patch(self):
         """Undo PySide RPATH handling and add Spack RPATH."""
