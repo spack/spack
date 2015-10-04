@@ -7,6 +7,7 @@ class PyAstropy(Package):
             url="https://pypi.python.org/packages/source/a/astropy/astropy-0.4.2.tar.gz")
 
     extends("python")
+    depends_on("py-numpy")
 
     def install(self, spec, prefix):
         python("setup.py", "install", "--prefix=%s" % prefix)
