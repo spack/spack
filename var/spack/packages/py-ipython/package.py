@@ -24,8 +24,4 @@ class PyIpython(Package):
     depends_on('py-jinja2')
 
     def install(self, spec, prefix):
-        import os
-        # os.system("spack activate py-setuptools@18.1")
-        # os.system("easy_install pip")
-        # os.system("pip install ipython[notebook]")
         python('setup.py', 'install', '--prefix=%s' % prefix)
