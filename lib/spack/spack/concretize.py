@@ -85,8 +85,8 @@ class DefaultConcretizer(object):
             provider_cmp = partial(spack.pkgsort.provider_compare, spec_w_preferred_providers.name, spec.name)
             packages = sorted(providers, cmp=provider_cmp)
         else:
-            if not spec_externals(spec) or spec.external:
-                return None
+            if spec.external:
+                return False
             packages = [spec]
 
         # For each candidate package, if it has externals add those to the candidates
@@ -129,7 +129,7 @@ class DefaultConcretizer(object):
                 #Try a looser ABI matching
                 candidate = next((c for c in candidates if spack.abi.compatible(c[0], other_spec, loose=True)), None)
         if not candidate:
-            #Pick the first choice
+            #No ABI matches. Pick the top choice based on the orignal preferences.
             candidate = candidates[0]
         external = candidate[1]
         candidate_spec = candidate[0]
@@ -144,10 +144,11 @@ class DefaultConcretizer(object):
         if not spec.external and external:
             spec.external = external
             changed = True
+
         #If we're external then trim the dependencies
         if external and spec.dependencies:
             changed = True
-            spec.depencencies = DependencyMap()
+            spec.dependencies = DependencyMap()
         
         return changed
         

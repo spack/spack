@@ -1022,7 +1022,7 @@ class Spec(object):
 
         # if we descend into a virtual spec, there's nothing more
         # to normalize.  Concretize will finish resolving it later.
-        if self.virtual:
+        if self.virtual or self.external:
             return False
 
         # Combine constraints from package deps with constraints from
