@@ -54,6 +54,79 @@ more elements to the list to indicate where your own site's temporary
 directory is.
 
 
+External Packages
+~~~~~~~~~~~~~~~~~~~~~
+It's possible for Spack to use certain externally-installed 
+packages rather than always rebuilding packages. This may be desirable
+if machines ship with system packages, such as a customized MPI
+that should be used instead of Spack building its own MPI.
+
+External packages are configured through the ``packages.yaml`` file found
+in a Spack installation's ``etc/spack/`` or a user's ``~/.spack/``
+directory. Here's an example of an external configuration::
+
+.. code-block:: yaml
+
+  packages:
+    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib:
+        path: /opt/openmpi-1.4.3
+    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug:
+        path: /opt/openmpi-1.4.3-debug
+    - openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib:
+        path: /opt/openmpi-1.6.5-intel
+
+This example lists three installations of OpenMPI, one built with gcc,
+one built with gcc and debug information, and another built with OpenMPI.
+If Spack is asked to build a package that uses one of these MPIs as a 
+dependency, it link the package to the pre-installed OpenMPI in
+the given directory.  
+
+Each ``packages.yaml`` should begin with a ``packages:`` token, followed
+by a list of package specs.  Specs in the ``packages.yaml`` have at most
+one ``path`` tag, which specifies the top-level directory where the 
+spec is installed.  
+
+Each spec should be as well-defined as reasonably possible.  If a 
+package lacks a spec component, such as missing a compiler or 
+package version, then Spack will guess the missing component based 
+on its most-favored packages, and it may guess incorrectly.
+
+All package versions and compilers listed in ``packages.yaml`` should 
+have entries in Spack's packages and compiler configuration, even
+the package and compiler may not actually be used.
+
+The packages configuration can tell Spack to use an external location
+for certain package versions, but it does not restrict Spack to using
+external packages.  In the above example, if an OpenMPI 1.8.4 became
+available Spack may choose to start building and linking with that version
+rather than continue using the pre-installed OpenMPI versions.
+
+To prevent this, the ``packages.yaml`` configuration also allows packages
+to be flagged as non-buildable.  The previous example could be modified to
+be::
+
+.. code-block:: yaml
+
+  packages:
+    - openmpi:
+        nobuild: True
+    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib:
+        path: /opt/openmpi-1.4.3
+    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug:
+        path: /opt/openmpi-1.4.3-debug
+    - openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib:
+        path: /opt/openmpi-1.6.5-intel
+
+The addition of the ``nobuild`` flag tells Spack that it should never build
+its own version of OpenMPI, and it will instead always rely on a pre-built
+OpenMPI.  Similar to ``path``, ``nobuild`` is specified as a property under
+a spec and will prevent building of anything that satisfies that spec.
+
+The ``nobuild`` does not need to be paired with external packages.  
+It could also be used alone to forbid versions of packages that may be 
+buggy or otherwise undesirable.
+  
+
 Profiling
 ~~~~~~~~~~~~~~~~~~~~~
 
