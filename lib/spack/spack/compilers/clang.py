@@ -39,7 +39,7 @@ class Clang(Compiler):
 
 
     @classmethod
-    def default_version(self, comp):
+    def default_version(cls, comp):
         """The '--version' option works for clang compilers.
            Output looks like this::
 
