@@ -122,12 +122,11 @@ class Gcc(Package):
             return
 
         gcc = Executable(join_path(self.prefix.bin, 'gcc'))
-        lines = gcc('-dumpspecs', return_output=True).split("\n")
+        lines = gcc('-dumpspecs', return_output=True).strip().split("\n")
         specs_file = join_path(self.spec_dir, 'specs')
         with closing(open(specs_file, 'w')) as out:
             for line in lines:
-                if line.startswith("*link:"):
-                    out.write(line + "\n")
-                    out.write("-rpath %s/lib:%s/lib64 \\\n"% (self.prefix, self.prefix))
                 out.write(line + "\n")
+                if line.startswith("*link:"):
+                    out.write("-rpath %s/lib:%s/lib64 \\\n"% (self.prefix, self.prefix))
         set_install_permissions(specs_file)
