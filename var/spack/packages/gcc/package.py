@@ -36,8 +36,11 @@ class Gcc(Package):
     list_url = 'http://open-source-box.org/gcc/'
     list_depth = 2
 
+    version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
+    version('4.9.3', '6f831b4d251872736e8e9cc09746f327')
     version('4.9.2', '4df8ee253b7f3863ad0b86359cd39c43')
     version('4.9.1', 'fddf71348546af523353bd43d34919c1')
+    version('4.8.5', '80d2c2982a3392bb0b89673ff136e223')
     version('4.8.4', '5a84a30839b2aca22a2d723de2a626ec')
     version('4.7.4', '4c696da46297de6ae77a82797d2abe28')
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
@@ -120,12 +123,11 @@ class Gcc(Package):
 
         gcc = Executable(join_path(self.prefix.bin, 'gcc'))
         lines = gcc('-dumpspecs', return_output=True).split("\n")
-        for i, line in enumerate(lines):
-            if line.startswith("*link:"):
-                specs_file = join_path(self.spec_dir, 'specs')
-                with closing(open(specs_file, 'w')) as out:
-                    out.write(lines[i] + "\n")
-                    out.write("-rpath %s/lib:%s/lib64 \\\n"
-                                % (self.prefix, self.prefix))
-                    out.write(lines[i+1] + "\n")
-                set_install_permissions(specs_file)
+        specs_file = join_path(self.spec_dir, 'specs')
+        with closing(open(specs_file, 'w')) as out:
+            for line in lines:
+                if line.startswith("*link:"):
+                    out.write(line + "\n")
+                    out.write("-rpath %s/lib:%s/lib64 \\\n"% (self.prefix, self.prefix))
+                out.write(line + "\n")
+        set_install_permissions(specs_file)
