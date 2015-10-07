@@ -37,6 +37,9 @@ class Pgi(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['pgf95', 'pgf90']
 
+    PrgEnv = 'pgi'
+    PrgEnv_compiler = 'pgi'
+
     @classmethod
     def default_version(cls, comp):
         """The '-V' option works for all the PGI compilers.

@@ -44,6 +44,7 @@ from spack.util.environment import get_path
 
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
+_optional_instance_vars = ['module']
 
 _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
 
@@ -127,11 +128,18 @@ def add_compilers_to_config(scope, *compilers):
     compiler_config_tree = {}
     for compiler in compilers:
         compiler_entry = {}
+
         for c in _required_instance_vars:
             val = getattr(compiler, c)
             if not val:
                 val = "None"
             compiler_entry[c] = val
+
+        for c in _optional_instance_vars:
+            val = getattr(compiler, c)
+            if val:
+                compiler_entry[c] = val
+
         compiler_config_tree[str(compiler.spec)] = compiler_entry
     spack.config.add_to_compiler_config(compiler_config_tree, scope)
 
@@ -220,6 +228,7 @@ def class_for_compiler_name(compiler_name):
 
 
 def all_compiler_types():
+#    return [class_for_compiler_name(c) for c in ['gcc']]
     return [class_for_compiler_name(c) for c in supported_compilers()]
 
 

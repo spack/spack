@@ -57,6 +57,9 @@ SPACK_DEBUG            = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
 
+SPACK_CRAYPE           = 'SPACK_CRAYPE'
+SPACK_COMP_MODULE      = 'SPACK_COMP_MODULE'
+
 
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can
@@ -104,6 +107,12 @@ def set_compiler_environment_variables(pkg):
         os.environ['SPACK_FC']  = compiler.fc
 
     os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
+
+    if compiler.PrgEnv:
+        os.environ['SPACK_CRAYPE']       = compiler.PrgEnv
+        os.environ['SPACK_COMP_MODULE']  = compiler.module
+
+
 
 
 def set_build_environment_variables(pkg):

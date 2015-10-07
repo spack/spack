@@ -25,6 +25,7 @@
 import os
 import re
 import itertools
+import subprocess
 from datetime import datetime
 
 import llnl.util.tty as tty
@@ -98,7 +99,14 @@ class Compiler(object):
     cxx11_flag = "-std=c++11"
 
 
-    def __init__(self, cspec, cc, cxx, f77, fc):
+    # Cray PrgEnv name that can be used to load this compiler
+    PrgEnv = None
+
+    # Name of module used to switch versions of this compiler
+    PrgEnv_compiler = None
+
+
+    def __init__(self, cspec, cc, cxx, f77, fc, module=None):
         def check(exe):
             if exe is None:
                 return None
@@ -111,6 +119,8 @@ class Compiler(object):
         self.fc  = check(fc)
 
         self.spec = cspec
+        self.module = module
+
 
 
     @property
@@ -253,6 +263,61 @@ class Compiler(object):
             compilers[ver] = cls(spec, *paths)
 
         return list(compilers.values())
+
+
+    @classmethod
+    def find_in_modules(cls):
+        compilers = []
+
+        if cls.PrgEnv:
+            if not cls.PrgEnv_compiler:
+                tty.die('Must supply PrgEnv_compiler with PrgEnv')
+
+            output = _shell('module avail %s' % cls.PrgEnv_compiler)
+            matches = re.findall(r'(%s)/([^\s(]*)' % cls.PrgEnv_compiler, output)
+
+            for name, version in matches:
+                v = version + '-craype'
+                comp = cls(spack.spec.CompilerSpec(name + '@' + v),
+                           'cc', 'CC', 'ftn', 'ftn', name +'/' + v)
+
+                compilers.append(comp)
+
+        return compilers
+
+
+def _cur_prgenv():
+    out, err = subprocess.Popen(
+        ['module list'], shell=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    matches = re.findall(r'(PrgEnv-[^/]*)/', err)
+    return matches[0]
+
+
+def _module_shell(module, *args):
+    cmd =  'module swap %s %s;' % (_cur_prgenv(), module)
+    cmd += 'module load %s;'    % compiler
+    cmd += 'module unload cray-libsci;'
+
+#  +
+#            'module load craype-network-gemini;' +
+#            'module load %s;' % module +
+#            'module swap gcc/4.6.1;' +
+#            'module load eswrap; ' +
+#            'module load craype-mc12; ' +
+#            'module load cray-shmem; ' +
+#            'module load cray-mpich; ')
+    cmd += ' '.join(args)
+    out, err = subprocess.Popen([cmd + ' '.join(args)], shell=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    return out
+
+
+def _shell(*args):
+    return subprocess.Popen([' '.join(args)], shell=True,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[1]
+
+
 
 
     def __repr__(self):

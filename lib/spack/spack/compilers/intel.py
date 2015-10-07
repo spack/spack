@@ -37,6 +37,9 @@ class Intel(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['ifort']
 
+    PrgEnv = 'intel'
+    PrgEnv_compiler = 'intel'
+
     @property
     def cxx11_flag(self):
         if self.version < ver('11.1'):
