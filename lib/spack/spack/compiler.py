@@ -272,9 +272,11 @@ class Compiler(object):
         if cls.PrgEnv:
             if not cls.PrgEnv_compiler:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
-
-            output = _shell('module avail %s' % cls.PrgEnv_compiler)
-            matches = re.findall(r'(%s)/([^\s(]*)' % cls.PrgEnv_compiler, output)
+            
+            loaded_modules = os.environ["LOADEDMODULES"].split(":")
+            #output = _shell('module avail %s' % cls.PrgEnv_compiler)
+            for module in loaded_modules:
+                match = re.findall(r'(%s)/([^\s(]*)' % cls.PrgEnv_compiler, module)
 
             for name, version in matches:
                 v = version + '-craype'
