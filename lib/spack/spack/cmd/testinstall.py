@@ -64,24 +64,43 @@ def setup_parser(subparser):
     #    help="Fake install.  Just remove the prefix and touch a fake file in it.")
     
     subparser.add_argument(
-        'outputdir', help="test output goes in this directory, 1 file per package")
+        'output', help="test output goes in this file")
     
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
 
 
-class JunitTestResult(object):
+class JunitResultFormat(object):
     def __init__(self):
-        self.root = Element('testsuite')
+        self.root = ET.Element('testsuite')
         self.tests = []
         
-    def addTest(self, identifier, passed=True, output=None):
-        self.tests.append((identifier, passed, output))
+    def addTest(self, buildId, passed=True, buildLog=None):
+        self.tests.append((buildId, passed, buildLog))
     
-    def output(self):
+    def writeTo(self, stream):
         self.root.set('tests', '{0}'.format(len(self.tests)))
-        
-        
+        for buildId, passed, buildLog in self.tests:
+            testcase = ET.SubElement(self.root, 'testcase')
+            testcase.set('classname', buildId.name)
+            testcase.set('name', buildId.stringId())
+            if not passed:
+                failure = ET.SubElement(testcase, 'failure')
+                failure.set('type', "Build Error")
+                failure.text = buildLog
+        ET.ElementTree(self.root).write(stream)
+
+
+class BuildId(object):
+    def __init__(self, name, version, hashId):
+        self.name = name
+        self.version = version
+        self.hashId = hashId
+    
+    def stringId(self):
+        return "-".join(str(x) for x in (self.name, self.version, self.hashId))
+
+     
 def testinstall(parser, args):
     if not args.packages:
         tty.die("install requires at least one package argument")
@@ -92,8 +111,6 @@ def testinstall(parser, args):
 
     if args.no_checksum:
         spack.do_checksum = False        # TODO: remove this global.
-
-    print "Output to:", args.outputdir
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     try:
@@ -108,13 +125,12 @@ def testinstall(parser, args):
                 verbose=args.verbose,
                 fake=False)
     finally:
+        jrf = JunitResultFormat()
         for spec in specs:
             package = spack.db.get(spec)
             #import pdb; pdb.set_trace()
 
-            print spec.name
-            print spec.version
-            print spec.dag_hash()
+            bId = BuildId(spec.name, spec.version, spec.dag_hash())
 
             if package.installed:
                 installLog = spack.install_layout.build_log_path(spec)
@@ -124,6 +140,8 @@ def testinstall(parser, args):
                 installLog = join_path(package.stage.source_path, 'spack-build.out')            
 
             with open(installLog, 'rb') as F:
-                for line in F.readlines()[:10]:
-                    print "\t{0}".format(line.strip())
-            
+                buildLog = F.read() #TODO: this may not return all output
+                jrf.addTest(bId, package.installed, buildLog)
+
+        with open(args.output, 'wb') as F:
+            jrf.writeTo(F)
