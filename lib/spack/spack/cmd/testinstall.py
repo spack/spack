@@ -113,23 +113,23 @@ def testinstall(parser, args):
         spack.do_checksum = False        # TODO: remove this global.
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
+    newInstalls = list()
     try:
         for spec in specs:
-            #import pdb; pdb.set_trace()
             package = spack.db.get(spec)
-            package.do_install(
-                keep_prefix=False,
-                keep_stage=False,
-                ignore_deps=False,
-                make_jobs=args.jobs,
-                verbose=args.verbose,
-                fake=False)
+            if not package.installed:
+                newInstalls.append(spec)
+                package.do_install(
+                    keep_prefix=False,
+                    keep_stage=False,
+                    ignore_deps=False,
+                    make_jobs=args.jobs,
+                    verbose=args.verbose,
+                    fake=False)
     finally:
         jrf = JunitResultFormat()
-        for spec in specs:
+        for spec in newInstalls:
             package = spack.db.get(spec)
-            #import pdb; pdb.set_trace()
-
             bId = BuildId(spec.name, spec.version, spec.dag_hash())
 
             if package.installed:
