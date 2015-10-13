@@ -75,19 +75,19 @@ class JunitResultFormat(object):
         self.root = ET.Element('testsuite')
         self.tests = []
         
-    def addTest(self, buildId, passed=True, buildLog=None):
-        self.tests.append((buildId, passed, buildLog))
+    def addTest(self, buildId, passed=True, buildInfo=None):
+        self.tests.append((buildId, passed, buildInfo))
     
     def writeTo(self, stream):
         self.root.set('tests', '{0}'.format(len(self.tests)))
-        for buildId, passed, buildLog in self.tests:
+        for buildId, passed, buildInfo in self.tests:
             testcase = ET.SubElement(self.root, 'testcase')
             testcase.set('classname', buildId.name)
             testcase.set('name', buildId.stringId())
             if not passed:
                 failure = ET.SubElement(testcase, 'failure')
                 failure.set('type', "Build Error")
-                failure.text = buildLog
+                failure.text = buildInfo
         ET.ElementTree(self.root).write(stream)
 
 
@@ -133,15 +133,18 @@ def testinstall(parser, args):
             bId = BuildId(spec.name, spec.version, spec.dag_hash())
 
             if package.installed:
-                installLog = spack.install_layout.build_log_path(spec)
+                buildLogPath = spack.install_layout.build_log_path(spec)
             else:
                 #TODO: search recursively under stage.path instead of only within
                 #    stage.source_path
-                installLog = join_path(package.stage.source_path, 'spack-build.out')            
+                buildLogPath = join_path(package.stage.source_path, 'spack-build.out')            
 
-            with open(installLog, 'rb') as F:
+            with open(buildLogPath, 'rb') as F:
                 buildLog = F.read() #TODO: this may not return all output
-                jrf.addTest(bId, package.installed, buildLog)
+                #TODO: add the whole build log? it could be several thousand
+                #    lines. It may be better to look for errors.
+                jrf.addTest(bId, package.installed, buildLogPath + '\n' +
+                    spec.to_yaml() + buildLog)
 
         with open(args.output, 'wb') as F:
             jrf.writeTo(F)
