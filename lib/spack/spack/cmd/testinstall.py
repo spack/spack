@@ -24,6 +24,7 @@
 ##############################################################################
 from external import argparse
 import xml.etree.ElementTree as ET
+import itertools
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
@@ -100,7 +101,37 @@ class BuildId(object):
     def stringId(self):
         return "-".join(str(x) for x in (self.name, self.version, self.hashId))
 
-     
+
+def createTestOutput(spec, handled, output):
+    if spec in handled:
+        return handled[spec]
+    
+    childSuccesses = list(createTestOutput(dep, handled, output) 
+            for dep in spec.dependencies.itervalues())
+    package = spack.db.get(spec)
+    handled[spec] = package.installed
+    
+    if all(childSuccesses):
+        bId = BuildId(spec.name, spec.version, spec.dag_hash())
+
+        if package.installed:
+            buildLogPath = spack.install_layout.build_log_path(spec)
+        else:
+            #TODO: search recursively under stage.path instead of only within
+            #    stage.source_path
+            buildLogPath = join_path(package.stage.source_path, 'spack-build.out')            
+
+        with open(buildLogPath, 'rb') as F:
+            buildLog = F.read() #TODO: this may not return all output
+            #TODO: add the whole build log? it could be several thousand
+            #    lines. It may be better to look for errors.
+            output.addTest(bId, package.installed, buildLogPath + '\n' +
+                spec.to_yaml() + buildLog)
+    #TODO: create a failed test if a dependency didn't install?
+
+    return handled[spec]
+
+
 def testinstall(parser, args):
     if not args.packages:
         tty.die("install requires at least one package argument")
@@ -113,12 +144,17 @@ def testinstall(parser, args):
         spack.do_checksum = False        # TODO: remove this global.
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
-    newInstalls = list()
+    newInstalls = set()
+    for spec in itertools.chain.from_iterable(spec.traverse() 
+            for spec in specs):
+        package = spack.db.get(spec)
+        if not package.installed:
+            newInstalls.add(spec)
+    
     try:
         for spec in specs:
             package = spack.db.get(spec)
             if not package.installed:
-                newInstalls.append(spec)
                 package.do_install(
                     keep_prefix=False,
                     keep_stage=False,
@@ -127,24 +163,19 @@ def testinstall(parser, args):
                     verbose=args.verbose,
                     fake=False)
     finally:
+        #TODO: note if multiple packages are specified and a prior one fails, 
+        #    it will prevent any of the others from succeeding even if they
+        #    don't share any dependencies. i.e. the results may be strange if
+        #    you run testinstall with >1 top-level package
+        
+        #Find all packages that are not a dependency of another package
+        topLevelNewInstalls = newInstalls - set(itertools.chain.from_iterable(
+                spec.dependencies for spec in newInstalls))
+        
         jrf = JunitResultFormat()
-        for spec in newInstalls:
-            package = spack.db.get(spec)
-            bId = BuildId(spec.name, spec.version, spec.dag_hash())
-
-            if package.installed:
-                buildLogPath = spack.install_layout.build_log_path(spec)
-            else:
-                #TODO: search recursively under stage.path instead of only within
-                #    stage.source_path
-                buildLogPath = join_path(package.stage.source_path, 'spack-build.out')            
-
-            with open(buildLogPath, 'rb') as F:
-                buildLog = F.read() #TODO: this may not return all output
-                #TODO: add the whole build log? it could be several thousand
-                #    lines. It may be better to look for errors.
-                jrf.addTest(bId, package.installed, buildLogPath + '\n' +
-                    spec.to_yaml() + buildLog)
+        handled = {}
+        for spec in topLevelNewInstalls:
+            createTestOutput(spec, handled, jrf)
 
         with open(args.output, 'wb') as F:
             jrf.writeTo(F)
