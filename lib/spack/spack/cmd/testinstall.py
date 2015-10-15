@@ -76,10 +76,10 @@ class JunitResultFormat(object):
         self.root = ET.Element('testsuite')
         self.tests = []
         
-    def addTest(self, buildId, passed=True, buildInfo=None):
+    def add_test(self, buildId, passed=True, buildInfo=None):
         self.tests.append((buildId, passed, buildInfo))
     
-    def writeTo(self, stream):
+    def write_to(self, stream):
         self.root.set('tests', '{0}'.format(len(self.tests)))
         for buildId, passed, buildInfo in self.tests:
             testcase = ET.SubElement(self.root, 'testcase')
@@ -102,11 +102,11 @@ class BuildId(object):
         return "-".join(str(x) for x in (self.name, self.version, self.hashId))
 
 
-def createTestOutput(spec, handled, output):
+def create_test_output(spec, handled, output):
     if spec in handled:
         return handled[spec]
     
-    childSuccesses = list(createTestOutput(dep, handled, output) 
+    childSuccesses = list(create_test_output(dep, handled, output) 
             for dep in spec.dependencies.itervalues())
     package = spack.db.get(spec)
     handled[spec] = package.installed
@@ -125,7 +125,7 @@ def createTestOutput(spec, handled, output):
             buildLog = F.read() #TODO: this may not return all output
             #TODO: add the whole build log? it could be several thousand
             #    lines. It may be better to look for errors.
-            output.addTest(bId, package.installed, buildLogPath + '\n' +
+            output.add_test(bId, package.installed, buildLogPath + '\n' +
                 spec.to_yaml() + buildLog)
     #TODO: create a failed test if a dependency didn't install?
 
@@ -171,7 +171,7 @@ def testinstall(parser, args):
         jrf = JunitResultFormat()
         handled = {}
         for spec in topLevelNewInstalls:
-            createTestOutput(spec, handled, jrf)
+            create_test_output(spec, handled, jrf)
 
         with open(args.output, 'wb') as F:
-            jrf.writeTo(F)
+            jrf.write_to(F)
