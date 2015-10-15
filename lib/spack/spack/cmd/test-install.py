@@ -97,21 +97,14 @@ def create_test_output(topSpec, newInstalls, output):
         bId = BuildId(spec.name, spec.version, spec.dag_hash())
 
         package = spack.db.get(spec)
-        if package.installed:
-            buildLogPath = spack.install_layout.build_log_path(spec)
-        else:
-            #TODO: search recursively under stage.path instead of only within
-            #    stage.source_path
-            buildLogPath = join_path(package.stage.source_path, 'spack-build.out')            
-
-        with open(buildLogPath, 'rb') as F:
+        with open(package.build_log_path, 'rb') as F:
             lines = F.readlines()
             errMessages = list(line for line in lines if
                 re.search('error:', line, re.IGNORECASE))
             errOutput = errMessages if errMessages else lines[-10:]
             errOutput = '\n'.join(itertools.chain(
                     [spec.to_yaml(), "Errors:"], errOutput, 
-                    ["Build Log:", buildLogPath]))
+                    ["Build Log:", package.build_log_path]))
             
             output.add_test(bId, package.installed, errOutput)
         

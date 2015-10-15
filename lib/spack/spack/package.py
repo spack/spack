@@ -864,6 +864,14 @@ class Package(object):
 
 
     @property
+    def build_log_path(self):
+        if self.installed:
+            return spack.install_layout.build_log_path(spec)
+        else:
+            return join_path(self.stage.source_path, 'spack-build.out')   
+
+
+    @property
     def module(self):
         """Use this to add variables to the class's module's scope.
            This lets us use custom syntax in the install method.
