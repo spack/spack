@@ -81,18 +81,21 @@ class BuildId(object):
         return "-".join(str(x) for x in (self.name, self.version, self.hashId))
 
 
-def create_test_output(spec, handled, output):
-    if spec in handled:
-        return handled[spec]
-    
-    childSuccesses = list(create_test_output(dep, handled, output) 
-            for dep in spec.dependencies.itervalues())
-    package = spack.db.get(spec)
-    handled[spec] = package.installed
-    
-    if all(childSuccesses):
+def create_test_output(topSpec, newInstalls, output):
+    # Post-order traversal is not strictly required but it makes sense to output 
+    # tests for dependencies first.
+    for spec in topSpec.traverse(order='post'):
+        if spec not in newInstalls:
+            continue
+
+        if not all(spack.db.get(childSpec).installed for childSpec in 
+                spec.dependencies.itervalues()):
+            #TODO: create a failed test if a dependency didn't install?
+            continue
+                
         bId = BuildId(spec.name, spec.version, spec.dag_hash())
 
+        package = spack.db.get(spec)
         if package.installed:
             buildLogPath = spack.install_layout.build_log_path(spec)
         else:
@@ -106,10 +109,7 @@ def create_test_output(spec, handled, output):
             #    lines. It may be better to look for errors.
             output.add_test(bId, package.installed, buildLogPath + '\n' +
                 spec.to_yaml() + buildLog)
-    #TODO: create a failed test if a dependency didn't install?
-
-    return handled[spec]
-
+        
 
 def test_install(parser, args):
     if not args.package:
@@ -143,14 +143,10 @@ def test_install(parser, args):
                     verbose=True,
                     fake=False)
     finally:        
-        #Find all packages that are not a dependency of another package
-        topLevelNewInstalls = newInstalls - set(itertools.chain.from_iterable(
-                spec.dependencies for spec in newInstalls))
-        
         jrf = JunitResultFormat()
         handled = {}
-        for spec in topLevelNewInstalls:
-            create_test_output(spec, handled, jrf)
+        for spec in specs:
+            create_test_output(spec, newInstalls, jrf)
 
         with open(args.output, 'wb') as F:
             jrf.write_to(F)
