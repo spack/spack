@@ -132,7 +132,7 @@ def create_test_output(spec, handled, output):
     return handled[spec]
 
 
-def testinstall(parser, args):
+def test_install(parser, args):
     if not args.package:
         tty.die("install requires a package argument")
 
