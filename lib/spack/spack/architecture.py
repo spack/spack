@@ -57,10 +57,20 @@ class Architecture(object):
         for n in self.arch_name:
             if 'cray' in n.lower():
                 self.arch_dict[n] = "MODULES"
-            if 'linux' in n.lower() or 'x86_64' in n.lower():
+            elif 'linux' in n.lower() or 'x86_64' in n.lower():
                 self.arch_dict[n] = "PATH"
             else:
                 self.arch_dict[n] = None 
+    
+    def get_arch_dict(self):
+        """ Grab the dictionary from the Architecture class, rather than access the internal Architecture attributes """
+        return self.arch_dict
+    
+    def __eq__(self, other):
+        if self.arch_dict != {} and other.arch_dict != {}:
+            return self.arch_dict == other.arch_dict
+        else:
+            return self.arch_name == self.arch_name
 
 def get_sys_type_from_spack_globals():
     """Return the SYS_TYPE from spack globals, or None if it isn't set. Front-end"""
@@ -95,29 +105,43 @@ def get_sys_type_from_uname():
 
 def get_sys_type_from_config_file():
     """ Should read in a sys_type from the config yaml file. This should be the first thing looked at since
-        The user can specify that the architecture is a cray-xc40
+        The user can specify that the architecture is a cray-xc40. A template yaml should be created when spack 
+        is installed. Similar to .spackconfig
     """
       
-    home_dir = os.environ["HOME"]   
-    yaml_file = os.path.join(home_dir, ".spack/architecture.yaml")
-    if os.path.isfile(yaml_file):
-        with open(yaml_file) as config:
-            config_dict = config['architecture']
-            front_end = config_dict['front']            
-            back_end = config_dict['back']
-    return Architecture(front_end)
+    spack_home_dir = os.environ["HOME"] + "/.spack" 
+    yaml_file = os.path.join(spack_home_dir, "architecture.yaml")
+    
+    try:
+        config_dict = yaml.load(open(yaml_file))  # Fix this to have yaml.load()
+        arch = config_dict['architecture']
+        front = arch['front']
+        back = arch['back']
+    
+    except:
+        print "No architecture.yaml config file found"
+    
+    return Architecture(front,back)
 
 @memoized
 def sys_type():
-    """Returns a SysType for the current machine. Should return output to an 
-       Architecture class
+    """Priority of gathering sys-type.
+       1. YAML file that the user specifies the name of the architecture. e.g Cray-XC40 or Cray-XC30
+       2. UNAME
+       3. GLOBALS
+       4. MAC OSX
+       Yaml should be a priority here because we want the user to be able to specify the type of architecture to use.
+       If there is no yaml present then it should move on to the next function and stop immediately once it gets a 
+       arch name
+
     """
-    methods = [get_sys_type_from_spack_globals,
-               get_sys_type_from_environment,
-               get_mac_sys_type]
+    methods = [get_sys_type_from_config_file, 
+              get_sys_type_from_uname, 
+              get_sys_type_from_spack_globals,
+              get_mac_sys_type]
 
     # search for a method that doesn't return None
-    sys_type = (None,None)
+    sys_type = None
     for method in methods:
         sys_type = method()
         if sys_type: break
