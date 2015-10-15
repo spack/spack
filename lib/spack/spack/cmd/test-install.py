@@ -35,34 +35,13 @@ import spack.cmd
 description = "Build and install packages"
 
 def setup_parser(subparser):
-    #subparser.add_argument(
-    #    '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
-    #    help="Do not try to install dependencies of requested packages.")
-    
     subparser.add_argument(
         '-j', '--jobs', action='store', type=int,
         help="Explicitly set number of make jobs.  Default is #cpus.")
-        
-    #always false for test
-    #subparser.add_argument(
-    #    '--keep-prefix', action='store_true', dest='keep_prefix',
-    #    help="Don't remove the install prefix if installation fails.")
-    
-    #always true for test
-    #subparser.add_argument(
-    #    '--keep-stage', action='store_true', dest='keep_stage',
-    #    help="Don't remove the build stage if installation succeeds.")
     
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="Do not check packages against checksum")
-    subparser.add_argument(
-        '-v', '--verbose', action='store_true', dest='verbose',
-        help="Display verbose build output while installing.")
-    
-    #subparser.add_argument(
-    #    '--fake', action='store_true', dest='fake',
-    #    help="Fake install.  Just remove the prefix and touch a fake file in it.")
     
     subparser.add_argument(
         'output', help="test output goes in this file")
@@ -161,7 +140,7 @@ def test_install(parser, args):
                     keep_stage=False,
                     ignore_deps=False,
                     make_jobs=args.jobs,
-                    verbose=args.verbose,
+                    verbose=True,
                     fake=False)
     finally:        
         #Find all packages that are not a dependency of another package
