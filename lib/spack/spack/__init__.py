@@ -27,24 +27,26 @@ import tempfile
 from llnl.util.filesystem import *
 
 # This lives in $prefix/lib/spack/spack/__file__
-prefix = ancestor(__file__, 4)
+spack_root = ancestor(__file__, 4)
 
 # The spack script itself
-spack_file = join_path(prefix, "bin", "spack")
+spack_file = join_path(spack_root, "bin", "spack")
 
 # spack directory hierarchy
-etc_path       = join_path(prefix, "etc")
-lib_path       = join_path(prefix, "lib", "spack")
+lib_path       = join_path(spack_root, "lib", "spack")
 build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
 compilers_path = join_path(module_path, "compilers")
 test_path      = join_path(module_path, "test")
 hooks_path     = join_path(module_path, "hooks")
-var_path       = join_path(prefix, "var", "spack")
+var_path       = join_path(spack_root, "var", "spack")
 stage_path     = join_path(var_path, "stage")
+share_path     = join_path(spack_root, "share", "spack")
+
+prefix = spack_root
 opt_path       = join_path(prefix, "opt")
 install_path   = join_path(opt_path, "spack")
-share_path     = join_path(prefix, "share", "spack")
+etc_path       = join_path(prefix, "etc")
 
 #
 # Set up the packages database.
