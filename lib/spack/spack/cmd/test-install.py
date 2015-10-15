@@ -25,6 +25,7 @@
 from external import argparse
 import xml.etree.ElementTree as ET
 import itertools
+import re
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
@@ -104,11 +105,15 @@ def create_test_output(topSpec, newInstalls, output):
             buildLogPath = join_path(package.stage.source_path, 'spack-build.out')            
 
         with open(buildLogPath, 'rb') as F:
-            buildLog = F.read() #TODO: this may not return all output
-            #TODO: add the whole build log? it could be several thousand
-            #    lines. It may be better to look for errors.
-            output.add_test(bId, package.installed, buildLogPath + '\n' +
-                spec.to_yaml() + buildLog)
+            lines = F.readlines()
+            errMessages = list(line for line in lines if
+                re.search('error:', line, re.IGNORECASE))
+            errOutput = errMessages if errMessages else lines[-10:]
+            errOutput = '\n'.join(itertools.chain(
+                    [spec.to_yaml(), "Errors:"], errOutput, 
+                    ["Build Log:", buildLogPath]))
+            
+            output.add_test(bId, package.installed, errOutput)
         
 
 def test_install(parser, args):
