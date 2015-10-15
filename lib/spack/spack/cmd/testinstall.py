@@ -68,7 +68,7 @@ def setup_parser(subparser):
         'output', help="test output goes in this file")
     
     subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
+        'package', help="spec of package to install")
 
 
 class JunitResultFormat(object):
@@ -133,8 +133,8 @@ def createTestOutput(spec, handled, output):
 
 
 def testinstall(parser, args):
-    if not args.packages:
-        tty.die("install requires at least one package argument")
+    if not args.package:
+        tty.die("install requires a package argument")
 
     if args.jobs is not None:
         if args.jobs <= 0:
@@ -143,7 +143,8 @@ def testinstall(parser, args):
     if args.no_checksum:
         spack.do_checksum = False        # TODO: remove this global.
 
-    specs = spack.cmd.parse_specs(args.packages, concretize=True)
+    #TODO: should a single argument be wrapped in a list?
+    specs = spack.cmd.parse_specs(args.package, concretize=True)
     newInstalls = set()
     for spec in itertools.chain.from_iterable(spec.traverse() 
             for spec in specs):
@@ -162,12 +163,7 @@ def testinstall(parser, args):
                     make_jobs=args.jobs,
                     verbose=args.verbose,
                     fake=False)
-    finally:
-        #TODO: note if multiple packages are specified and a prior one fails, 
-        #    it will prevent any of the others from succeeding even if they
-        #    don't share any dependencies. i.e. the results may be strange if
-        #    you run testinstall with >1 top-level package
-        
+    finally:        
         #Find all packages that are not a dependency of another package
         topLevelNewInstalls = newInstalls - set(itertools.chain.from_iterable(
                 spec.dependencies for spec in newInstalls))
