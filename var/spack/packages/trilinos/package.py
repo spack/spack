@@ -1,19 +1,3 @@
-# FIXME:
-# This is a template package file for Spack.  We've conveniently
-# put "FIXME" labels next to all the things you'll want to change.
-#
-# Once you've edited all the FIXME's, delete this whole message,
-# save this file, and test out your package like this:
-#
-#     spack install trilinos
-#
-# You can always get back here to change things with:
-#
-#     spack edit trilinos
-#
-# See the spack documentation for more information on building
-# packages.
-#
 from spack import *
 
 
@@ -48,7 +32,8 @@ class Trilinos(Package):
 
         options = [
             '-DTrilinos_ENABLE_ALL_PACKAGES:BOOL=ON',
-            '-DTrilinos_ENABLE_TESTS:BOOL=ON',
+            '-DTrilinos_ENABLE_TESTS:BOOL=OFF',
+            '-DTrilinos_ENABLE_EXAMPLES:BOOL=OFF',
             '-DBUILD_SHARED_LIBS:BOOL=ON',
             '-DBLAS_LIBRARY_DIRS:PATH=%s' % spec['blas'].prefix,
             '-DLAPACK_LIBRARY_DIRS:PATH=%s' % spec['lapack'].prefix
