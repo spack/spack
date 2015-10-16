@@ -26,6 +26,7 @@ from external import argparse
 import xml.etree.ElementTree as ET
 import itertools
 import re
+import os
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
@@ -45,7 +46,7 @@ def setup_parser(subparser):
         help="Do not check packages against checksum")
     
     subparser.add_argument(
-        'output', help="test output goes in this file")
+        '-o', '--output', action='store', help="test output goes in this file")
     
     subparser.add_argument(
         'package', help="spec of package to install")
@@ -73,10 +74,10 @@ class JunitResultFormat(object):
 
 
 class BuildId(object):
-    def __init__(self, name, version, hashId):
-        self.name = name
-        self.version = version
-        self.hashId = hashId
+    def __init__(self, spec):
+        self.name = spec.name
+        self.version = spec.version
+        self.hashId = spec.dag_hash()
     
     def stringId(self):
         return "-".join(str(x) for x in (self.name, self.version, self.hashId))
@@ -94,7 +95,7 @@ def create_test_output(topSpec, newInstalls, output):
             #TODO: create a failed test if a dependency didn't install?
             continue
                 
-        bId = BuildId(spec.name, spec.version, spec.dag_hash())
+        bId = BuildId(spec)
 
         package = spack.db.get(spec)
         with open(package.build_log_path, 'rb') as F:
@@ -120,14 +121,23 @@ def test_install(parser, args):
     if args.no_checksum:
         spack.do_checksum = False        # TODO: remove this global.
 
-    #TODO: should a single argument be wrapped in a list?
+    # TODO: should a single argument be wrapped in a list?
     specs = spack.cmd.parse_specs(args.package, concretize=True)
+    
+    # There is 1 top-level package
+    topSpec = iter(specs).next()
+    
     newInstalls = set()
-    for spec in itertools.chain.from_iterable(spec.traverse() 
-            for spec in specs):
+    for spec in topSpec.traverse():
         package = spack.db.get(spec)
         if not package.installed:
             newInstalls.add(spec)
+    
+    if not args.output:
+        bId = BuildId(topSpec)
+        outputFpath = join_path(os.getcwd(), "{0}.xml".format(bId.stringId()))
+    else:
+        outputFpath = args.output
     
     try:
         for spec in specs:
@@ -135,7 +145,7 @@ def test_install(parser, args):
             if not package.installed:
                 package.do_install(
                     keep_prefix=False,
-                    keep_stage=False,
+                    keep_stage=True,
                     ignore_deps=False,
                     make_jobs=args.jobs,
                     verbose=True,
@@ -146,5 +156,5 @@ def test_install(parser, args):
         for spec in specs:
             create_test_output(spec, newInstalls, jrf)
 
-        with open(args.output, 'wb') as F:
+        with open(outputFpath, 'wb') as F:
             jrf.write_to(F)

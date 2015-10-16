@@ -866,7 +866,7 @@ class Package(object):
     @property
     def build_log_path(self):
         if self.installed:
-            return spack.install_layout.build_log_path(spec)
+            return spack.install_layout.build_log_path(self.spec)
         else:
             return join_path(self.stage.source_path, 'spack-build.out')   
 
