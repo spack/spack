@@ -21,7 +21,9 @@ class Openmpi(Package):
     patch('ad_lustre_rwcontig_open_source.patch', when="@1.6.5")
     patch('llnl-platforms.patch', when="@1.6.5")
 
-    provides('mpi@:2')
+    provides('mpi@:2.2', when='@1.6.5')    # Open MPI 1.6.5 supports MPI-2.2
+    provides('mpi@:3.0', when='@1.8.8')    # Open MPI 1.8.8 supports MPI-3.0
+    provides('mpi@:3.0', when='@1.10.0')   # Open MPI 1.10.0 supports MPI-3.0
 
     def install(self, spec, prefix):
         config_args = ["--prefix=%s" % prefix]
