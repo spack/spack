@@ -49,7 +49,7 @@ def setup_parser(subparser):
         '-o', '--output', action='store', help="test output goes in this file")
     
     subparser.add_argument(
-        'package', help="spec of package to install")
+        'package', nargs=argparse.REMAINDER, help="spec of package to install")
 
 
 class JunitResultFormat(object):
@@ -120,11 +120,10 @@ def test_install(parser, args):
 
     if args.no_checksum:
         spack.do_checksum = False        # TODO: remove this global.
-
-    # TODO: should a single argument be wrapped in a list?
-    specs = spack.cmd.parse_specs(args.package, concretize=True)
     
-    # There is 1 top-level package
+    specs = spack.cmd.parse_specs(args.package, concretize=True)
+    if len(specs) > 1:
+        tty.die("Only 1 top-level package can be specified")
     topSpec = iter(specs).next()
     
     newInstalls = set()
