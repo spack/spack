@@ -82,8 +82,23 @@ class BuildId(object):
     def stringId(self):
         return "-".join(str(x) for x in (self.name, self.version, self.hashId))
 
+    def __hash__(self):
+        return hash((self.name, self.version, self.hashId))
+    
+    def __eq__(self, other):
+        if not isinstance(other, BuildId):
+            return False
+            
+        return ((self.name, self.version, self.hashId) == 
+            (other.name, other.version, other.hashId))
 
-def create_test_output(topSpec, newInstalls, output):
+
+def fetch_log(path):
+    with open(path, 'rb') as F:
+        return list(F.readlines())
+
+
+def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
     # Post-order traversal is not strictly required but it makes sense to output 
     # tests for dependencies first.
     for spec in topSpec.traverse(order='post'):
@@ -98,17 +113,16 @@ def create_test_output(topSpec, newInstalls, output):
         bId = BuildId(spec)
 
         package = spack.db.get(spec)
-        with open(package.build_log_path, 'rb') as F:
-            lines = F.readlines()
-            errMessages = list(line for line in lines if
-                re.search('error:', line, re.IGNORECASE))
-            errOutput = errMessages if errMessages else lines[-10:]
-            errOutput = '\n'.join(itertools.chain(
-                    [spec.to_yaml(), "Errors:"], errOutput, 
-                    ["Build Log:", package.build_log_path]))
-            
-            output.add_test(bId, package.installed, errOutput)
+        lines = getLogFunc(package.build_log_path)
+        errMessages = list(line for line in lines if
+            re.search('error:', line, re.IGNORECASE))
+        errOutput = errMessages if errMessages else lines[-10:]
+        errOutput = '\n'.join(itertools.chain(
+                [spec.to_yaml(), "Errors:"], errOutput, 
+                ["Build Log:", package.build_log_path]))
         
+        output.add_test(bId, package.installed, errOutput)
+
 
 def test_install(parser, args):
     if not args.package:
