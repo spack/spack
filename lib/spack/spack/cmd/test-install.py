@@ -34,7 +34,7 @@ from llnl.util.filesystem import *
 import spack
 import spack.cmd
 
-description = "Build and install packages"
+description = "Treat package installations as unit tests and output formatted test results"
 
 def setup_parser(subparser):
     subparser.add_argument(
