@@ -152,8 +152,7 @@ def test_install(parser, args):
     finally:        
         jrf = JunitResultFormat()
         handled = {}
-        for spec in specs:
-            create_test_output(spec, newInstalls, jrf)
+        create_test_output(topSpec, newInstalls, jrf)
 
         with open(outputFpath, 'wb') as F:
             jrf.write_to(F)
