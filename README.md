@@ -62,21 +62,9 @@ latest stable release.
 
 Authors
 ----------------
-Spack was written by Todd Gamblin, tgamblin@llnl.gov.
+Many thanks go to Spack's [contributors](https://github.com/scalability-llnl/spack/graphs/contributors).
 
-Significant contributions were also made by:
-
-  * David Beckingsale
-  * David Boehme
-  * Alfredo Gimenez
-  * Luc Jaulmes
-  * Matt Legendre
-  * Greg Lee
-  * Adam Moody
-  * Saravan Pantham
-  * Joachim Protze
-  * Bob Robey
-  * Justin Too
+Spack was originally written by Todd Gamblin, tgamblin@llnl.gov.
 
 Release
 ----------------
