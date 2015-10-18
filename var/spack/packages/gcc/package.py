@@ -47,7 +47,7 @@ class Gcc(Package):
     depends_on("gmp")
     depends_on("mpc")     # when @4.5:
     depends_on("libelf")
-    depends_on("binutils")
+    depends_on("binutils~libiberty")
 
     # Save these until we can do optional deps.
     #depends_on("isl")
