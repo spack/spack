@@ -1,5 +1,5 @@
-Spack
-===========
+![image](share/spack/logo/spack-logo-text-64.png "Spack")
+============
 
 Spack is a package management tool designed to support multiple
 versions and configurations of software on a wide variety of platforms
