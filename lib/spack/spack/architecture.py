@@ -49,18 +49,24 @@ class Architecture(object):
     """
     
     def __init__(self, front=None, back=None):
-        """ Constructor for the architecture class. Should return a dictionary of name (grabbed from uname) 
-            and a strategy for searching for that architecture's compiler. 
-            The target passed to it should be a dictionary of names and strategies.
-        """
-        names = []
-        names.append(front)
-        names.append(back)
+        """ Constructor for the architecture class. It will create a list from the given arguments and iterate
+            through that list. It will then create a dictionary of {arch_name : strategy}
+            Takes in two parameters:
 
-        def add_compiler_strategy(names):
+            front = None     defaults to None. Should be the front-end architecture of the machine
+            back = None      defaults to None. Should be the back-end architecture of the machine
+        
+            If no arguments are given it will return an empty dictionary
+        """
+        _names = []
+        _names.append(front)
+        _names.append(back)
+
+        def _add_compiler_strategy(names):
             """ Create a dictionary of {'arch-name': 'strategy'}
                 This will tell Spack whether to look in the $PATH
                 or $MODULES location for compilers
+                Else it will return No Strategy
             """
             #TODO: Look for other strategies
             d = {}
@@ -74,7 +80,7 @@ class Architecture(object):
                         d[n] = 'No Strategy'
             return d
         
-        self.arch_dict = add_compiler_strategy(names)
+        self.arch_dict = _add_compiler_strategy(_names)
 
 def get_sys_type_from_spack_globals():
     """Return the SYS_TYPE from spack globals, or None if it isn't set."""
@@ -85,20 +91,20 @@ def get_sys_type_from_spack_globals():
     else:
         return Architecture(spack.sys_type) # Else use the attributed which defaults to None
 
+
 # This is livermore dependent. Hard coded for livermore
 #def get_sys_type_from_environment():
 #    """Return $SYS_TYPE or None if it's not defined."""
 #    return os.environ.get('SYS_TYPE')
 
+
 def get_mac_sys_type():
     """Return a Mac OS SYS_TYPE or None if this isn't a mac.
        Front-end config
     """
-
     mac_ver = py_platform.mac_ver()[0]
     if not mac_ver:
         return None
-
     return Architecture("macosx_%s_%s" % (Version(mac_ver).up_to(2), py_platform.machine()))
 
 
@@ -113,11 +119,9 @@ def get_sys_type_from_config_file():
     """ Should read in a sys_type from the config yaml file. This should be the first thing looked at since
         The user can specify that the architecture is a cray-xc40. A template yaml should be created when spack 
         is installed. Similar to .spackconfig
-    """
-      
+    """ 
     spack_home_dir = os.environ["HOME"] + "/.spack" 
     yaml_file = os.path.join(spack_home_dir, 'architecture.yaml')
-    
     try:
         config_dict = yaml.load(open(yaml_file))  # Fix this to have yaml.load()
         arch = config_dict['architecture']
@@ -131,7 +135,7 @@ def get_sys_type_from_config_file():
 
 
 @memoized
-def sys_type(): # This function is going to give me issues isn't it??
+def sys_type():
     """Priority of gathering sys-type.
        1. YAML file that the user specifies the name of the architecture. e.g Cray-XC40 or Cray-XC30
        2. UNAME
@@ -146,14 +150,18 @@ def sys_type(): # This function is going to give me issues isn't it??
                  get_sys_type_from_uname, 
                  get_sys_type_from_spack_globals,
                  get_mac_sys_type]
-    
-    # TODO: Test for mac OSX system type but I'm sure it will be okay
+   
+    sys_type = None 
     for func in functions:
-        sys_type = None
         sys_type = func()
-        
         if sys_type:
-            break
+            break 
     
+    if sys_type is None:
+        return Architecture("unknown_arch")
+
+    if not isinstance(sys_type, Architecture):
+        raise InvalidSysTypeError(sys_type)
+
     return sys_type
 
