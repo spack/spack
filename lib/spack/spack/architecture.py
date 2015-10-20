@@ -34,47 +34,50 @@ from external import yaml
 
 class InvalidSysTypeError(serr.SpackError):
     def __init__(self, sys_type):
-        super(InvalidSysTypeError, self).__init__(
-            "Invalid sys_type value for Spack: " + sys_type)
+        super(InvalidSysTypeError, self).__init__("Invalid sys_type value for Spack: " + sys_type)
 
 
 class NoSysTypeError(serr.SpackError):
     def __init__(self):
-        super(NoSysTypeError, self).__init__(
-            "Could not determine sys_type for this machine.")
+        super(NoSysTypeError, self).__init__("Could not determine sys_type for this machine.")
+
 
 class Architecture(object):
-    def __init__(self, *arch_name):
+    """ Architecture class that contains a dictionary of architecture name and compiler search strategy methods.
+        The idea is to create an object that Spack can interact with and know how to search for the compiler
+        If it is on a Cray architecture it should look in modules. If it is anything else search $PATH.
+    """
+    
+    def __init__(self, front=None, back=None):
         
-        """ Constructor for the architecture class. Should return a dictionary of name (grabbed from uname) and a strategy for 
-            searching for that architecture's compiler. The target passed to it should be a dictionary of names and strategies.
+        """ Constructor for the architecture class. Should return a dictionary of name (grabbed from uname) 
+            and a strategy for searching for that architecture's compiler. 
+            The target passed to it should be a dictionary of names and strategies.
         """
-        self.arch_dict = {}
-        self.arch_name = arch_name
+        names = []
+        names.append(front)
+        names.append(back)
 
-    def add_arch_strategy(self):
-        """ Create a dictionary using the tuples of arch_names"""
-        for n in self.arch_name:
-            if 'cray' in n.lower():
-                self.arch_dict[n] = "MODULES"
-            elif 'linux' in n.lower() or 'x86_64' in n.lower():
-                self.arch_dict[n] = "PATH"
-            else:
-                self.arch_dict[n] = "" 
-    
-    def get_arch_dict(self):
-        """ Grab the dictionary from the Architecture class, rather than access the internal Architecture attributes """
-        return self.arch_dict
-    
-    def __eq__(self, other):
-        if self.arch_dict != {} and other.arch_dict != {}:
-            return self.arch_dict == other.arch_dict
-        else:
-            return self.arch_name == self.arch_name
+        def add_compiler_strategy(names):
+            """ Create a dictionary of {'arch-name': 'strategy'}
+                This will tell Spack whether to look in the $PATH
+                or $MODULES location for compilers
+            """
+            d = {}
+            for n in names:
+                if n:
+                    if 'cray' in n.lower():
+                        d[n] = "MODULES"
+                    elif 'linux' in n.lower():
+                        d[n] = "PATH"
+                    else:
+                        d[n] = 'No Strategy'
+            return d
+        
+        self.arch_dict = add_compiler_strategy(names)
 
-
-def get_sys_type_from_spack_globals():
-    """Return the SYS_TYPE from spack globals, or None if it isn't set. Front-end"""
+def get_sys_type_from_spack_globals(): #TODO: Figure out how this function works
+    """Return the SYS_TYPE from spack globals, or None if it isn't set."""
     if not hasattr(spack, "sys_type"):
         return None 
     elif hasattr(spack.sys_type, "__call__"):
@@ -104,7 +107,7 @@ def get_sys_type_from_uname():
     """ Returns a sys_type from the uname argument 
         Front-end config
     """
-    return Architecture(os.uname()[0] + " " + os.uname()[-1])
+    return Architecture(os.uname()[0])
 
 
 def get_sys_type_from_config_file():
@@ -149,6 +152,7 @@ def sys_type(): # This function is going to give me issues isn't it??
     for func in functions:
         sys_type = None
         sys_type = func()
+        
         if sys_type:
             break
     
