@@ -49,7 +49,6 @@ class Architecture(object):
     """
     
     def __init__(self, front=None, back=None):
-        
         """ Constructor for the architecture class. Should return a dictionary of name (grabbed from uname) 
             and a strategy for searching for that architecture's compiler. 
             The target passed to it should be a dictionary of names and strategies.
@@ -63,6 +62,7 @@ class Architecture(object):
                 This will tell Spack whether to look in the $PATH
                 or $MODULES location for compilers
             """
+            #TODO: Look for other strategies
             d = {}
             for n in names:
                 if n:
@@ -76,20 +76,19 @@ class Architecture(object):
         
         self.arch_dict = add_compiler_strategy(names)
 
-def get_sys_type_from_spack_globals(): #TODO: Figure out how this function works
+def get_sys_type_from_spack_globals():
     """Return the SYS_TYPE from spack globals, or None if it isn't set."""
     if not hasattr(spack, "sys_type"):
         return None 
     elif hasattr(spack.sys_type, "__call__"):
-        return Architecture(spack.sys_type())
+        return Architecture(spack.sys_type()) #If in __init__.py there is a sys_type() then call that
     else:
-        return Architecture(spack.sys_type)
+        return Architecture(spack.sys_type) # Else use the attributed which defaults to None
 
 # This is livermore dependent. Hard coded for livermore
 #def get_sys_type_from_environment():
 #    """Return $SYS_TYPE or None if it's not defined."""
 #    return os.environ.get('SYS_TYPE')
-
 
 def get_mac_sys_type():
     """Return a Mac OS SYS_TYPE or None if this isn't a mac.
