@@ -40,8 +40,8 @@ class Mpich(Package):
     version('3.1', '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
 
-    provides('mpi@:3', when='@3:')
-    provides('mpi@:1', when='@1:')
+    provides('mpi@:3.0', when='@3:')
+    provides('mpi@:1.3', when='@1:')
 
     def setup_dependent_environment(self, module, spec, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""
