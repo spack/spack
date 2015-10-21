@@ -48,6 +48,21 @@ class Architecture(object):
         If it is on a Cray architecture it should look in modules. If it is anything else search $PATH.
     """
     
+    def add_compiler_strategy(self, front,back):
+        names = []
+        names.append(front) 
+        names.append(back) 
+        d = {}
+        for n in names:
+            if n:
+                if 'cray' in n.lower():
+                    d[n] = "MODULES"
+                elif 'linux' in n.lower():
+                    d[n] = "PATH"
+                else:
+                    d[n] = 'No Strategy'
+        return d 
+        
     def __init__(self, front=None, back=None):
         """ Constructor for the architecture class. It will create a list from the given arguments and iterate
             through that list. It will then create a dictionary of {arch_name : strategy}
@@ -59,23 +74,9 @@ class Architecture(object):
             If no arguments are given it will return an empty dictionary
             Uses the _add_compiler_strategy(front, back) to create the dictionary
         """
-        
-        def _add_compiler_strategy(front,back):
-            names = []
-            names.append(front) 
-            names.append(back) 
-            d = {}
-            for n in names:
-                if n:
-                    if 'cray' in n.lower():
-                        d[n] = "MODULES"
-                    elif 'linux' in n.lower():
-                        d[n] = "PATH"
-                    else:
-                        d[n] = 'No Strategy'
-            return d
-        
-        self.arch_dict = _add_compiler_strategy(front, back)
+        self.front = front
+        self.back = back
+        self.arch_dict = self.add_compiler_strategy(front, back) 
 
 
 def get_sys_type_from_spack_globals():
