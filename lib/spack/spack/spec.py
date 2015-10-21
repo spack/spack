@@ -192,12 +192,10 @@ class CompilerSpec(object):
                 c = SpecParser().parse_compiler(arg)
                 self.name = c.name
                 self.versions = c.versions
-#                self.flags = c.flags
 
             elif isinstance(arg, CompilerSpec):
                 self.name = arg.name
                 self.versions = arg.versions.copy()
-#                self.flags = arg.flags.copy()
 
             else:
                 raise TypeError(
@@ -209,14 +207,6 @@ class CompilerSpec(object):
             self.name = name
             self.versions = VersionList()
             self.versions.add(ver(version))
-#            self.flags = {'cflags':None,'cxxflags':None,'fflags':None,'ldflags':None}
-
-#        elif nargs == 3:
-#            name, version, flags = args
-#            self.name = name
-#            self.versions = VersionList()
-#            self.versions.add(ver(version))
-#            self.flags = flags
 
         else:
             raise TypeError(
@@ -236,20 +226,8 @@ class CompilerSpec(object):
     def satisfies(self, other, strict=False):
         other = self._autospec(other)
         return (self.name == other.name and
-                self.versions.satisfies(other.versions, strict=strict))# and
-#                self.flags_satisfy(other, strict=strict))
+                self.versions.satisfies(other.versions, strict=strict))
 
-
-#    def flags_satisfy(self,other,strict = False):
-#        if strict:
-#            for flag in self.flags:
-#                if not self.flags[flag] == other.flags[flag]:
-#                    return False
-#        else:
-#            for flag in self.flags:
-#                if other.flags[flag] and (not self.flags[flag] or other.flags[flag] not in self.flags[flag]):
-#                    return False
-#        return True
 
     def constrain(self, other):
         """Intersect self's versions with other.
@@ -283,25 +261,23 @@ class CompilerSpec(object):
         clone = CompilerSpec.__new__(CompilerSpec)
         clone.name = self.name
         clone.versions = self.versions.copy()
-#        clone.flags = self.flags.copy()
         return clone
 
 
     def _cmp_key(self):
-        return (self.name, self.versions)#, str(sorted(self.flags.items())))
+        return (self.name, self.versions)
 
 
     def to_dict(self):
         d = {'name' : self.name}
         d.update(self.versions.to_dict())
-#        d['flags'] = self.flags
         return { 'compiler' : d }
 
 
     @staticmethod
     def from_dict(d):
         d = d['compiler']
-        return CompilerSpec(d['name'], VersionList.from_dict(d))#, d['flags'])
+        return CompilerSpec(d['name'], VersionList.from_dict(d))
 
 
     def __str__(self):
@@ -309,11 +285,6 @@ class CompilerSpec(object):
         if self.versions and self.versions != _any_version:
             vlist = ",".join(str(v) for v in self.versions)
             out += "@%s" % vlist
-#        if self.flags:
-#            for flag, value in self.flags.items():
-#                if value is not None:
-#                    out += "+" + flag + "=" + value
-#                    print "outing"
         return out
 
     def __repr__(self):
@@ -405,13 +376,15 @@ class FlagMap(HashableMap):
     def __init__(self, spec):
         super(FlagMap, self).__init__()
         self.spec = spec
+        for flag in Compiler.valid_compiler_flags():
+            self[flag] = ""
 
 
     def satisfies(self, other, strict=False):
         #"strict" makes no sense if this works, but it matches how we need it. Maybe
         if strict:
             return all(k in self and self[k] == other[k]
-                       for k in other)
+                       for k in other if other[k] != "")
         else:
             return self == other
 
@@ -450,8 +423,9 @@ class FlagMap(HashableMap):
 
 
     def __str__(self):
-        sorted_keys = sorted(self.keys())
-        return '+' + '+'.join(str(key) + '=\"' + str(self[key]) + '\"' for key in sorted_keys)
+        sorted_keys = filter(lambda flag: self[flag] != "", sorted(self.keys()))
+        cond_symbol = '+' if len(sorted_keys)>0 else ''
+        return cond_symbol + '+'.join(str(key) + '=\"' + str(self[key]) + '\"' for key in sorted_keys)
 
 
 class DependencyMap(HashableMap):

@@ -114,8 +114,9 @@ class Compiler(object):
         self.f77 = check(f77)
         self.fc  = check(fc)
 
-        #Unfortunately have to make sure these params are accepted in the same order the are returned
-        #by sorted(flags) in compilers/__init__.py
+        # Unfortunately have to make sure these params are accepted
+        # in the same order they are returned by sorted(flags)
+        # in compilers/__init__.py
         self.flags = {}
         for flag in _valid_compiler_flags:
             value = kwargs.get(flag, None)
