@@ -57,18 +57,13 @@ class Architecture(object):
             back = None      defaults to None. Should be the back-end architecture of the machine
         
             If no arguments are given it will return an empty dictionary
+            Uses the _add_compiler_strategy(front, back) to create the dictionary
         """
-        _names = []
-        _names.append(front)
-        _names.append(back)
-
-        def _add_compiler_strategy(names):
-            """ Create a dictionary of {'arch-name': 'strategy'}
-                This will tell Spack whether to look in the $PATH
-                or $MODULES location for compilers
-                Else it will return No Strategy
-            """
-            #TODO: Look for other strategies
+        
+        def _add_compiler_strategy(front,back):
+            names = []
+            names.append(front) 
+            names.append(back) 
             d = {}
             for n in names:
                 if n:
@@ -80,7 +75,8 @@ class Architecture(object):
                         d[n] = 'No Strategy'
             return d
         
-        self.arch_dict = _add_compiler_strategy(_names)
+        self.arch_dict = _add_compiler_strategy(front, back)
+
 
 def get_sys_type_from_spack_globals():
     """Return the SYS_TYPE from spack globals, or None if it isn't set."""
