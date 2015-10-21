@@ -119,7 +119,7 @@ class Compiler(object):
         self.fc  = check(fc)
 
         self.spec = cspec
-        self.module = module
+        self.modules = modules.split()
 
 
 
