@@ -65,11 +65,21 @@ def print_text_info(pkg):
         print "None"
     else:
         pad = padder(pkg.variants, 4)
+
+        maxv = max(len(v) for v in sorted(pkg.variants))
+        fmt = "%%-%ss%%-10s%%s" % (maxv + 4)
+
+        print "    " + fmt % ('Name',   'Default',   'Description')
+        print
         for name in sorted(pkg.variants):
             v = pkg.variants[name]
-            print "    %s%s" % (
-                pad(('+' if v.default else '-') + name + ':'),
-                "\n".join(textwrap.wrap(v.description)))
+            default = 'on' if v.default else 'off'
+
+            lines = textwrap.wrap(v.description)
+            lines[1:] = ["      " + (" " * maxv) + l for l in lines[1:]]
+            desc = "\n".join(lines)
+
+            print "    " + fmt % (name, default, desc)
 
     print
     print "Dependencies:"

@@ -438,9 +438,16 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
+            # Construct a mirror path (TODO: get this out of package.py)
             mp = spack.mirror.mirror_archive_path(self.spec)
-            self._stage = Stage(
-                self.fetcher, mirror_path=mp, name=self.spec.short_spec)
+
+            # Construct a path where the stage should build..
+            s = self.spec
+            stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
+
+            # Build the stage
+            self._stage = Stage(self.fetcher, mirror_path=mp, name=stage_name)
+
         return self._stage
 
 

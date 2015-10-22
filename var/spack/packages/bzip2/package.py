@@ -22,8 +22,10 @@ class Bzip2(Package):
 
         bzip2_exe = join_path(prefix.bin, 'bzip2')
         install('bzip2-shared', bzip2_exe)
-        for libfile in glob('libbz2.so*'):
+        for i, libfile in enumerate(glob('libbz2.so*')):
             install(libfile, prefix.lib)
+            if i == 0:
+                symlink(join_path(prefix.lib, libfile), join_path(prefix.lib, 'libbz2.so'))
 
         bunzip2 = join_path(prefix.bin, 'bunzip2')
         remove(bunzip2)

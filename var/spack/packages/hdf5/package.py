@@ -10,7 +10,8 @@ class Hdf5(Package):
     url      = "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.13/src/hdf5-1.8.13.tar.gz"
     list_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
-
+    
+    version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
 
     depends_on("mpi")

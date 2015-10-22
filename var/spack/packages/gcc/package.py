@@ -47,17 +47,15 @@ class Gcc(Package):
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
     
     variant('binutils', default=False, description='Add a dependency on binutils')
-    variant('libelf', default=False, description='Add a dependency on libelf')
-    variant('isl', default=True, description='Add a dependency on isl')
-
+    
     depends_on("mpfr")
     depends_on("gmp")
     depends_on("mpc")     # when @4.5:
-    depends_on("libelf", when='+libelf')
-    depends_on("binutils",when="+binutils")
+    depends_on("libelf")
+    depends_on("binutils~libiberty", when="+binutils")
 
     # Save these until we can do optional deps.
-    depends_on("isl", when='@5.0:+isl')
+    depends_on("isl", when='@5.0:')
     #depends_on("ppl")
     #depends_on("cloog")
 

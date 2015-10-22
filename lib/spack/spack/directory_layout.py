@@ -187,14 +187,9 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
-        enabled_variants = (
-            '-' + v.name for v in spec.variants.values()
-            if v.enabled)
-
-        dir_name = "%s-%s%s-%s" % (
+        dir_name = "%s-%s-%s" % (
             spec.name,
             spec.version,
-            ''.join(enabled_variants),
             spec.dag_hash(self.hash_len))
 
         path = join_path(

@@ -1,0 +1,20 @@
+--- Makefile	2015-02-03 08:27:34.000000000 -0800
++++ Makefile.new	2015-07-21 10:38:27.881406892 -0700
+@@ -26,7 +26,7 @@
+ CFLAGS   = -g -Wall -O2
+ LDFLAGS  =
+ LDLIBS   =
+-DFLAGS=     -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_CURSES_LIB=1
++DFLAGS=     -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_CURSES_LIB=0
+ LOBJS=      bam_aux.o bam.o bam_import.o sam.o \
+             sam_header.o bam_plbuf.o
+ AOBJS=      bam_index.o bam_plcmd.o sam_view.o \
+@@ -37,7 +37,7 @@
+             faidx.o stats.o stats_isize.o bam_flags.o bam_split.o \
+             bam_tview.o bam_tview_curses.o bam_tview_html.o bam_lpileup.o
+ INCLUDES=   -I. -I$(HTSDIR)
+-LIBCURSES=  -lcurses # -lXCurses
++#LIBCURSES=  -lcurses # -lXCurses
+ 
+ prefix      = /usr/local
+ exec_prefix = $(prefix)

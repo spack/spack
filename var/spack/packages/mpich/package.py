@@ -33,10 +33,15 @@ class Mpich(Package):
     list_url   = "http://www.mpich.org/static/downloads/"
     list_depth = 2
 
+    version('3.1.4', '2ab544607986486562e076b83937bba2')
+    version('3.1.3', '93cb17f91ac758cbf9174ecb03563778')
+    version('3.1.2', '7fbf4b81dcb74b07ae85939d1ceee7f1')
+    version('3.1.1', '40dc408b1e03cc36d80209baaa2d32b7')
+    version('3.1', '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
 
-    provides('mpi@:3', when='@3:')
-    provides('mpi@:1', when='@1:')
+    provides('mpi@:3.0', when='@3:')
+    provides('mpi@:1.3', when='@1:')
 
     def setup_dependent_environment(self, module, spec, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""

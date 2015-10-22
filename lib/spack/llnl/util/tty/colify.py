@@ -33,8 +33,7 @@ import struct
 from StringIO import StringIO
 
 from llnl.util.tty import terminal_size
-from llnl.util.tty.color import clen
-
+from llnl.util.tty.color import clen, cextra
 
 class ColumnConfig:
     def __init__(self, cols):
@@ -42,7 +41,6 @@ class ColumnConfig:
         self.line_length = 0
         self.valid = True
         self.widths = [0] * cols   # does not include ansi colors
-        self.cwidths = [0] * cols  # includes ansi colors
 
     def __repr__(self):
         attrs = [(a,getattr(self, a)) for a in dir(self) if not a.startswith("__")]
@@ -66,8 +64,6 @@ def config_variable_cols(elts, console_width, padding, cols=0):
     # Get a bound on the most columns we could possibly have.
     # 'clen' ignores length of ansi color sequences.
     lengths = [clen(e) for e in elts]
-    clengths = [len(e) for e in elts]
-
     max_cols = max(1, console_width / (min(lengths) + padding))
     max_cols = min(len(elts), max_cols)
 
@@ -85,7 +81,6 @@ def config_variable_cols(elts, console_width, padding, cols=0):
                 if conf.widths[col] < (length + p):
                     conf.line_length += length + p - conf.widths[col]
                     conf.widths[col]  = length + p
-                    conf.cwidths[col] = clengths[i] + p
                     conf.valid = (conf.line_length < console_width)
 
     try:
@@ -118,7 +113,6 @@ def config_uniform_cols(elts, console_width, padding, cols=0):
 
     config = ColumnConfig(cols)
     config.widths = [max_len] * cols
-    config.cwidths = [max_clen] * cols
 
     return config
 
@@ -147,9 +141,6 @@ def colify(elts, **options):
     method=<string>   Method to use to fit columns.  Options are variable or uniform.
                       Variable-width columns are tighter, uniform columns are all the
                       same width and fit less data on the screen.
-
-    len=<func>        Function to use for calculating string length.
-                      Useful for ignoring ansi color. Default is 'len'.
     """
     # Get keyword arguments or set defaults
     cols         = options.pop("cols", 0)
@@ -199,9 +190,6 @@ def colify(elts, **options):
         raise ValueError("method must be one of: " + allowed_methods)
 
     cols = config.cols
-    formats = ["%%-%ds" % width for width in config.cwidths[:-1]]
-    formats.append("%s")  # last column has no trailing space
-
     rows = (len(elts) + cols - 1) / cols
     rows_last_col = len(elts) % rows
 
@@ -209,7 +197,9 @@ def colify(elts, **options):
         output.write(" " * indent)
         for col in xrange(cols):
             elt = col * rows + row
-            output.write(formats[col] % elts[elt])
+            width = config.widths[col] + cextra(elts[elt])
+            fmt = '%%-%ds' % width
+            output.write(fmt % elts[elt])
 
         output.write("\n")
         row += 1

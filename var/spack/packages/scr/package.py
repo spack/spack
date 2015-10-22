@@ -28,12 +28,14 @@ class Scr(Package):
     """SCR caches checkpoint data in storage on the compute nodes of a
        Linux cluster to provide a fast, scalable checkpoint/restart
        capability for MPI codes"""
+
     homepage = "https://computation.llnl.gov/project/scr/"
-    url      = "http://downloads.sourceforge.net/project/scalablecr/releases/scr-1.1-7.tar.gz"
 
     depends_on("mpi")
+#    depends_on("dtcmp")
 
-    version('1.1-7', 'a5930e9ab27d1b7049447c2fd7734ebd')
+    version('1.1-7', 'a5930e9ab27d1b7049447c2fd7734ebd', url='http://downloads.sourceforge.net/project/scalablecr/releases/scr-1.1-7.tar.gz')
+    version('1.1.8', '6a0f11ad18e27fcfc00a271ff587b06e', url='https://github.com/hpc/scr/releases/download/v1.1.8/scr-1.1.8.tar.gz')
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix,
