@@ -57,21 +57,31 @@ class JunitResultFormat(object):
         self.root = ET.Element('testsuite')
         self.tests = []
         
-    def add_test(self, buildId, passed=True, buildInfo=None):
-        self.tests.append((buildId, passed, buildInfo))
+    def add_test(self, buildId, testResult, buildInfo=None):
+        self.tests.append((buildId, testResult, buildInfo))
     
     def write_to(self, stream):
         self.root.set('tests', '{0}'.format(len(self.tests)))
-        for buildId, passed, buildInfo in self.tests:
+        for buildId, testResult, buildInfo in self.tests:
             testcase = ET.SubElement(self.root, 'testcase')
             testcase.set('classname', buildId.name)
             testcase.set('name', buildId.stringId())
-            if not passed:
+            if testResult == TestResult.FAILED:
                 failure = ET.SubElement(testcase, 'failure')
                 failure.set('type', "Build Error")
                 failure.text = buildInfo
+            elif testResult == TestResult.SKIPPED:
+                skipped = ET.SubElement(testcase, 'skipped')
+                skipped.set('type', "Skipped Build")
+                skipped.text = buildInfo
         ET.ElementTree(self.root).write(stream)
 
+
+class TestResult(object):
+    PASSED = 0
+    FAILED = 1
+    SKIPPED = 2
+    
 
 class BuildId(object):
     def __init__(self, spec):
@@ -94,6 +104,8 @@ class BuildId(object):
 
 
 def fetch_log(path):
+    if not os.path.exists(path):
+        return list()
     with open(path, 'rb') as F:
         return list(F.readlines())
 
@@ -105,23 +117,31 @@ def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
         if spec not in newInstalls:
             continue
 
-        if not all(spack.db.get(childSpec).installed for childSpec in 
-                spec.dependencies.itervalues()):
-            #TODO: create a failed test if a dependency didn't install?
-            continue
-                
-        bId = BuildId(spec)
-
+        failedDeps = set(childSpec for childSpec in 
+            spec.dependencies.itervalues() if not 
+            spack.db.get(childSpec).installed)
         package = spack.db.get(spec)
-        lines = getLogFunc(package.build_log_path)
-        errMessages = list(line for line in lines if
-            re.search('error:', line, re.IGNORECASE))
-        errOutput = errMessages if errMessages else lines[-10:]
-        errOutput = '\n'.join(itertools.chain(
-                [spec.to_yaml(), "Errors:"], errOutput, 
-                ["Build Log:", package.build_log_path]))
+        if failedDeps:
+            result = TestResult.SKIPPED
+            dep = iter(failedDeps).next()
+            depBID = BuildId(dep)
+            errOutput = "Skipped due to failed dependency: {0}".format(
+                depBID.stringId())
+        elif not package.installed:
+            result = TestResult.FAILED
+            lines = getLogFunc(package.build_log_path)
+            errMessages = list(line for line in lines if
+                re.search('error:', line, re.IGNORECASE))
+            errOutput = errMessages if errMessages else lines[-10:]
+            errOutput = '\n'.join(itertools.chain(
+                    [spec.to_yaml(), "Errors:"], errOutput, 
+                    ["Build Log:", package.build_log_path]))
+        else:
+            result = TestResult.PASSED
+            errOutput = None
         
-        output.add_test(bId, package.installed, errOutput)
+        bId = BuildId(spec)
+        output.add_test(bId, result, errOutput)
 
 
 def test_install(parser, args):
