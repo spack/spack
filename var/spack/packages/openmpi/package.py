@@ -1,4 +1,7 @@
+import os
+
 from spack import *
+
 
 class Openmpi(Package):
     """Open MPI is a project combining technologies and resources from
@@ -21,6 +24,14 @@ class Openmpi(Package):
 
     provides('mpi@:2')
 
+
+    def setup_dependent_environment(self, module, spec, dep_spec):
+        """For dependencies, make mpicc's use spack wrapper."""
+        os.environ['OMPI_CC']  = 'cc'
+        os.environ['OMPI_CXX'] = 'c++'
+        os.environ['OMPI_FC'] = 'f90'
+
+
     def install(self, spec, prefix):
         config_args = ["--prefix=%s" % prefix]
 
@@ -39,3 +50,37 @@ class Openmpi(Package):
         configure(*config_args)
         make()
         make("install")
+
+        self.filter_compilers()
+
+
+    def filter_compilers(self):
+        """Run after install to make the MPI compilers use the
+           compilers that Spack built the package with.
+
+           If this isn't done, they'll have CC, CXX, F77, and FC set
+           to Spack's generic cc, c++, f77, and f90.  We want them to
+           be bound to whatever compiler they were built with.
+        """
+        kwargs = { 'ignore_absent' : True, 'backup' : False, 'string' : False }
+        dir = os.path.join(self.prefix, 'share/openmpi/')
+
+        cc_wrappers = ['mpicc-vt-wrapper-data.txt', 'mpicc-wrapper-data.txt',
+                       'ortecc-wrapper-data.txt', 'shmemcc-wrapper-data.txt']
+
+        cxx_wrappers = ['mpic++-vt-wrapper-data.txt', 'mpic++-wrapper-data.txt']
+
+        fc_wrappers = ['mpifort-vt-wrapper-data.txt',
+                       'mpifort-wrapper-data.txt', 'shmemfort-wrapper-data.txt']
+
+        for wrapper in cc_wrappers:
+            filter_file('compiler=.*', 'compiler=%s' % self.compiler.cc,
+                        os.path.join(dir, wrapper), **kwargs)
+
+        for wrapper in cxx_wrappers:
+            filter_file('compiler=.*', 'compiler=%s' % self.compiler.cxx,
+                        os.path.join(dir, wrapper), **kwargs)
+
+        for wrapper in fc_wrappers:
+            filter_file('compiler=.*', 'compiler=%s' % self.compiler.fc,
+                        os.path.join(dir, wrapper), **kwargs)
