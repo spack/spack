@@ -7,7 +7,8 @@ class Apex(Package):
     url      = "http://github.com/khuck/xpress-apex"
 
     #version('0.1', '6e039c224387348296739f6bf360d081')
-    version('master', branch='master', git='https://github.com/khuck/xpress-apex.git')
+    #version('master', branch='master', git='https://github.com/khuck/xpress-apex.git')
+    version('10-21-2015', git='https://github.com/khuck/xpress-apex.git', commit='d2e66ddde689120472fc57fc546d8cd80aab745c')
 
     depends_on("binutils+libiberty")
     depends_on("boost@1.54:")
