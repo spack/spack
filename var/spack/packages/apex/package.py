@@ -14,6 +14,7 @@ class Apex(Package):
     depends_on("boost@1.54:")
     depends_on("cmake@2.8.12:")
     depends_on("activeharmony@4.5:")
+    depends_on("ompt-openmp")
 
     def install(self, spec, prefix):
 
@@ -26,6 +27,8 @@ class Apex(Package):
                 '-DBFD_ROOT=%s' % spec['binutils'].prefix,
                 '-DUSE_ACTIVEHARMONY=TRUE', 
                 '-DACTIVEHARMONY_ROOT=%s' % spec['activeharmony'].prefix,
+                '-DUSE_OMPT=TRUE', 
+                '-DOMPT_ROOT=%s' % spec['ompt-openmp'].prefix,
                 '..', *std_cmake_args)
             make()
             make("install")
