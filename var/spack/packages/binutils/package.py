@@ -18,6 +18,7 @@ class Binutils(Package):
             '--disable-dependency-tracking',
             '--enable-interwork',
             '--enable-multilib',
+            '--enable-shared',
             '--enable-64-bit-bfd',
             '--enable-targets=all']
 
