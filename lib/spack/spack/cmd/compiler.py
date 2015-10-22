@@ -29,6 +29,8 @@ from llnl.util.tty.color import colorize
 from llnl.util.tty.colify import colify
 from llnl.util.lang import index_by
 
+import spack.architecture
+import spack.compiler
 import spack.compilers
 import spack.spec
 import spack.config
@@ -36,13 +38,12 @@ from spack.util.environment import get_path
 from spack.spec import CompilerSpec
 
 description = "Manage compilers"
+ARCHITECTURE = spack.architecture.sys_type()
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(
-        metavar='SUBCOMMAND', dest='compiler_command')
+    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='compiler_command')
 
-    update_parser = sp.add_parser(
-        'add', help='Add compilers to the Spack configuration.')
+    update_parser = sp.add_parser('add', help='Add compilers to the Spack configuration.')
     update_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
 
     remove_parser = sp.add_parser('remove', help='remove compiler')
@@ -55,23 +56,33 @@ def setup_parser(subparser):
 
 
 def compiler_add(args):
-    """Search either $PATH or a list of paths for compilers and add them
+    """Search either $PATH or a list of paths OR MODULES for compilers and add them
        to Spack's configuration."""
-    paths = args.add_paths
-    if not paths:
-        paths = get_path('PATH')
 
-    compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
-                 if c.spec not in spack.compilers.all_compilers()]
+    strategies = ARCHITECTURE.strategy()
+    
+    for strategy in strategies:
+        if strategy == 'PATH':
+            paths = args.add_paths # This might be a parser method. Parsing method to add_paths 
+            if not paths:
+                paths = get_path('PATH')
+            
+            compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
+                        if c.spec not in spack.compilers.all_compilers()]
+        
+        elif strategy == "MODULES":
+            from spack.compilers.cray import Cray
+            compilers = Cray.find_in_modules()  
+            #TODO: Find a way to locate the executables
 
-    if compilers:
-        spack.compilers.add_compilers_to_config('user', *compilers)
-        n = len(compilers)
-        tty.msg("Added %d new compiler%s to %s" % (
-            n, 's' if n > 1 else '', spack.config.get_config_scope_filename('user', 'compilers')))
-        colify(reversed(sorted(c.spec for c in compilers)), indent=4)
-    else:
-        tty.msg("Found no new compilers")
+        if compilers:
+            spack.compilers.add_compilers_to_config('user', *compilers)
+            n = len(compilers)
+            tty.msg("Added %d new compiler%s to %s" % (
+                n, 's' if n > 1 else '', spack.config.get_config_scope_filename('user', 'compilers')))
+            colify(reversed(sorted(c.spec for c in compilers)), indent=4)
+        else:
+            tty.msg("Found no new compilers")
 
 
 def compiler_remove(args):
