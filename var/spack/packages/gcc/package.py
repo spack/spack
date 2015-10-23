@@ -48,12 +48,10 @@ class Gcc(Package):
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
     
-    variant('binutils', default=False, description='Add a dependency on binutils')
-
     depends_on("mpfr")
     depends_on("gmp")
     depends_on("mpc")     # when @4.5:
-    depends_on("binutils~libiberty", when="+binutils")
+    depends_on("binutils~libiberty")
 
     # Save these until we can do optional deps.
     depends_on("isl", when=DEPENDS_ON_ISL_PREDICATE)
@@ -81,13 +79,11 @@ class Gcc(Package):
                    "--with-gnu-as",
                    "--with-quad"]
         # Binutils
-        if '+binutils' in spec:
-            binutils_options = ["--with-stage1-ldflags=%s" % self.rpath_args,
-                                "--with-boot-ldflags=%s"   % self.rpath_args,
-                                "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
-                                "--with-as=%s/bin/as" % spec['binutils'].prefix]
-            options.extend(binutils_options)
-            
+        binutils_options = ["--with-stage1-ldflags=%s" % self.rpath_args,
+                            "--with-boot-ldflags=%s"   % self.rpath_args,
+                            "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
+                            "--with-as=%s/bin/as" % spec['binutils'].prefix]
+        options.extend(binutils_options)
         # Isl
         if spec.satisfies(Gcc.DEPENDS_ON_ISL_PREDICATE):
             isl_options = ["--with-isl=%s" % spec['isl'].prefix]
