@@ -36,6 +36,7 @@ from llnl.util.filesystem import *
 
 import spack
 import spack.compilers as compilers
+from spack.error import SpackError
 from spack.util.executable import Executable, which
 from spack.util.environment import *
 
@@ -296,8 +297,9 @@ def fork(pkg, function):
         # message.  Just make the parent exit with an error code.
         pid, returncode = os.waitpid(pid, 0)
         if returncode != 0:
-            raise CommandError(returncode)
+            raise InstallError("Installation process had nonzero exit code."
+                .format(str(returncode)))
 
 
-class CommandError(StandardError):
-    pass
+class InstallError(SpackError):
+    """Raised when a package fails to install"""

@@ -32,7 +32,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import *
 
 import spack
-from spack.build_environment import CommandError
+from spack.build_environment import InstallError
 import spack.cmd
 
 description = "Treat package installations as unit tests and output formatted test results"
@@ -190,7 +190,7 @@ def test_install(parser, args):
                     make_jobs=args.jobs,
                     verbose=True,
                     fake=False)
-            except CommandError:
+            except InstallError:
                 pass
    
     jrf = JunitResultFormat()
