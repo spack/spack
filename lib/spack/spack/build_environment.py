@@ -296,4 +296,8 @@ def fork(pkg, function):
         # message.  Just make the parent exit with an error code.
         pid, returncode = os.waitpid(pid, 0)
         if returncode != 0:
-            sys.exit(1)
+            raise CommandError(returncode)
+
+
+class CommandError(StandardError):
+    pass

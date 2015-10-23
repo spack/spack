@@ -32,6 +32,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import *
 
 import spack
+from spack.build_environment import CommandError
 import spack.cmd
 
 description = "Treat package installations as unit tests and output formatted test results"
@@ -107,7 +108,12 @@ def fetch_log(path):
     if not os.path.exists(path):
         return list()
     with open(path, 'rb') as F:
-        return list(F.readlines())
+        return list(line.strip() for line in F.readlines())
+
+
+def failed_dependencies(spec):
+    return set(childSpec for childSpec in spec.dependencies.itervalues() if not 
+        spack.db.get(childSpec).installed)
 
 
 def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
@@ -117,9 +123,7 @@ def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
         if spec not in newInstalls:
             continue
 
-        failedDeps = set(childSpec for childSpec in 
-            spec.dependencies.itervalues() if not 
-            spack.db.get(childSpec).installed)
+        failedDeps = failed_dependencies(spec)
         package = spack.db.get(spec)
         if failedDeps:
             result = TestResult.SKIPPED
@@ -172,10 +176,13 @@ def test_install(parser, args):
     else:
         outputFpath = args.output
     
-    try:
-        for spec in specs:
-            package = spack.db.get(spec)
-            if not package.installed:
+    for spec in topSpec.traverse(order='post'):
+        # Calling do_install for the top-level package would be sufficient but
+        # this attempts to keep going if any package fails (other packages which
+        # are not dependents may succeed)
+        package = spack.db.get(spec)
+        if (not failed_dependencies(spec)) and (not package.installed):
+            try:
                 package.do_install(
                     keep_prefix=False,
                     keep_stage=True,
@@ -183,10 +190,12 @@ def test_install(parser, args):
                     make_jobs=args.jobs,
                     verbose=True,
                     fake=False)
-    finally:        
-        jrf = JunitResultFormat()
-        handled = {}
-        create_test_output(topSpec, newInstalls, jrf)
+            except CommandError:
+                pass
+   
+    jrf = JunitResultFormat()
+    handled = {}
+    create_test_output(topSpec, newInstalls, jrf)
 
-        with open(outputFpath, 'wb') as F:
+    with open(outputFpath, 'wb') as F:
             jrf.write_to(F)
