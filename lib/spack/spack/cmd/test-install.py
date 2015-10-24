@@ -27,6 +27,7 @@ import xml.etree.ElementTree as ET
 import itertools
 import re
 import os
+import codecs
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
@@ -107,7 +108,7 @@ class BuildId(object):
 def fetch_log(path):
     if not os.path.exists(path):
         return list()
-    with open(path, 'rb') as F:
+    with codecs.open(path, 'rb', 'utf-8') as F:
         return list(line.strip() for line in F.readlines())
 
 
