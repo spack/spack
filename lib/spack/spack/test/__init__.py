@@ -57,6 +57,7 @@ test_names = ['versions',
               'optional_deps',
               'make_executable',
               'configure_guess',
+              'lock',
               'database']
 
 
@@ -77,7 +78,7 @@ def run(names, verbose=False):
             if test not in test_names:
                 tty.error("%s is not a valid spack test name." % test,
                           "Valid names are:")
-                colify(test_names, indent=4)
+                colify(sorted(test_names), indent=4)
                 sys.exit(1)
 
     runner = unittest.TextTestRunner(verbosity=verbosity)

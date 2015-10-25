@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,134 +22,135 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""Lock implementation for shared filesystems."""
 import os
 import fcntl
 import errno
 import time
 import socket
 
-# Default timeout for locks.
-DEFAULT_TIMEOUT = 60
+# Default timeout in seconds, after which locks will raise exceptions.
+_default_timeout = 60
 
-class _ReadLockContext(object):
-    """Context manager that takes and releases a read lock.
-
-    Arguments are lock and timeout (default 5 minutes)
-    """
-    def __init__(self, lock, timeout=DEFAULT_TIMEOUT):
-        self._lock = lock
-        self._timeout = timeout
-
-    def __enter__(self):
-        self._lock.acquire_read(self._timeout)
-
-    def __exit__(self,type,value,traceback):
-        self._lock.release_read()
-
-
-class _WriteLockContext(object):
-    """Context manager that takes and releases a write lock.
-
-    Arguments are lock and timeout (default 5 minutes)
-    """
-    def __init__(self, lock, timeout=DEFAULT_TIMEOUT):
-        self._lock = lock
-        self._timeout = timeout
-
-    def __enter__(self):
-        self._lock.acquire_write(self._timeout)
-
-    def __exit__(self,type,value,traceback):
-        self._lock.release_write()
+# Sleep time per iteration in spin loop (in seconds)
+_sleep_time = 1e-5
 
 
 class Lock(object):
-    """Distributed file-based lock using ``flock``."""
-
-    def __init__(self, file_path):
+    def __init__(self,file_path):
         self._file_path = file_path
-        self._fd = os.open(file_path,os.O_RDWR)
+        self._fd = None
         self._reads = 0
         self._writes = 0
 
 
-    def write_lock(self, timeout=DEFAULT_TIMEOUT):
-        """Convenience method that returns a write lock context."""
-        return _WriteLockContext(self, timeout)
+    def _lock(self, op, timeout):
+        """This takes a lock using POSIX locks (``fnctl.lockf``).
 
+        The lock is implemented as a spin lock using a nonblocking
+        call to lockf().
 
-    def read_lock(self, timeout=DEFAULT_TIMEOUT):
-        """Convenience method that returns a read lock context."""
-        return _ReadLockContext(self, timeout)
+        On acquiring an exclusive lock, the lock writes this process's
+        pid and host to the lock file, in case the holding process
+        needs to be killed later.
 
-
-    def acquire_read(self, timeout):
+        If the lock times out, it raises a ``LockError``.
         """
-        Implements recursive lock. If held in both read and write mode,
-        the write lock will be maintained until all locks are released
+        start_time = time.time()
+        while (time.time() - start_time) < timeout:
+            try:
+                if self._fd is None:
+                    self._fd = os.open(self._file_path, os.O_RDWR)
+
+                fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
+                if op == fcntl.LOCK_EX:
+                    os.write(self._fd, "pid=%s,host=%s" % (os.getpid(), socket.getfqdn()))
+                return
+
+            except IOError as error:
+                if error.errno == errno.EAGAIN or error.errno == errno.EACCES:
+                    pass
+                else:
+                    raise
+            time.sleep(_sleep_time)
+
+        raise LockError("Timed out waiting for lock.")
+
+
+    def _unlock(self):
+        """Releases a lock using POSIX locks (``fcntl.lockf``)
+
+        Releases the lock regardless of mode. Note that read locks may
+        be masquerading as write locks, but this removes either.
+
+        """
+        fcntl.lockf(self._fd,fcntl.LOCK_UN)
+        os.close(self._fd)
+        self._fd = None
+
+
+    def acquire_read(self, timeout=_default_timeout):
+        """Acquires a recursive, shared lock for reading.
+
+        Read and write locks can be acquired and released in arbitrary
+        order, but the POSIX lock is held until all local read and
+        write locks are released.
+
         """
         if self._reads == 0 and self._writes == 0:
             self._lock(fcntl.LOCK_SH, timeout)
         self._reads += 1
 
 
-    def acquire_write(self, timeout):
-        """
-        Implements recursive lock
+    def acquire_write(self, timeout=_default_timeout):
+        """Acquires a recursive, exclusive lock for writing.
+
+        Read and write locks can be acquired and released in arbitrary
+        order, but the POSIX lock is held until all local read and
+        write locks are released.
         """
         if self._writes == 0:
             self._lock(fcntl.LOCK_EX, timeout)
         self._writes += 1
 
 
-    def _lock(self, op, timeout):
-        """
-        The timeout is implemented using nonblocking flock()
-        to avoid using signals for timing
-        Write locks store pid and host information to the lock file
-        Read locks do not store data
-        """
-        total_time = 0
-        while total_time < timeout:
-            try:
-                fcntl.flock(self._fd, op | fcntl.LOCK_NB)
-                if op == fcntl.LOCK_EX:
-                    with open(self._file_path, 'w') as f:
-                        f.write("pid = " + str(os.getpid()) + ", host = " + socket.getfqdn())
-                return
-            except IOError as error:
-                if error.errno == errno.EAGAIN or error.errno == EACCES:
-                    pass
-                else:
-                    raise
-            time.sleep(0.1)
-            total_time += 0.1
-
-
     def release_read(self):
-        """
-        Assert there is a lock of the right type to release, recursive lock
+        """Releases a read lock.
+
+        Returns True if the last recursive lock was released, False if
+        there are still outstanding locks.
+
+        Does limited correctness checking: if a read lock is released
+        when none are held, this will raise an assertion error.
+
         """
         assert self._reads > 0
-        if self._reads == 1 and self._writes == 0:
-            self._unlock()
+
         self._reads -= 1
+        if self._reads == 0 and self._writes == 0:
+            self._unlock()
+            return True
+        return False
 
 
     def release_write(self):
-        """
-        Assert there is a lock of the right type to release, recursive lock
+        """Releases a write lock.
+
+        Returns True if the last recursive lock was released, False if
+        there are still outstanding locks.
+
+        Does limited correctness checking: if a read lock is released
+        when none are held, this will raise an assertion error.
+
         """
         assert self._writes > 0
-        if self._writes == 1 and self._reads == 0:
-            self._unlock()
+
         self._writes -= 1
+        if self._writes == 0 and self._reads == 0:
+            self._unlock()
+            return True
+        return False
 
 
-    def _unlock(self):
-        """
-        Releases the lock regardless of mode. Note that read locks may be
-        masquerading as write locks at times, but this removes either.
-        """
-        fcntl.flock(self._fd, fcntl.LOCK_UN)
+class LockError(Exception):
+    """Raised when an attempt to acquire a lock times out."""
+    pass
