@@ -73,10 +73,8 @@ class ProviderIndex(object):
         for provided_spec, provider_spec in pkg.provided.iteritems():
             if provider_spec.satisfies(spec, deps=False):
                 provided_name = provided_spec.name
-                if provided_name not in self.providers:
-                    self.providers[provided_name] = {}
 
-                provider_map = self.providers[provided_name]
+                provider_map = self.providers.setdefault(provided_name, {})
                 if not provided_spec in provider_map:
                     provider_map[provided_spec] = set()
 
@@ -133,9 +131,7 @@ class ProviderIndex(object):
                 if lp_spec.name == rp_spec.name:
                     try:
                         const = lp_spec.copy().constrain(rp_spec,deps=False)
-                        if constrained not in result:
-                            result[constrained] = set()
-                        result[constrained].add(const)
+                        result.setdefault(constrained, set()).add(const)
                     except spack.spec.UnsatisfiableSpecError:
                         continue
         return result
