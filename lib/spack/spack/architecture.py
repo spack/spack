@@ -24,6 +24,7 @@
 ##############################################################################
 import os
 import platform as py_platform
+import subprocess
 
 from llnl.util.lang import memoized
 
@@ -69,12 +70,24 @@ def get_mac_sys_type():
         Version(mac_ver).up_to(2), py_platform.machine())
 
 
+def get_sys_type_from_uname():
+    """Return the architecture from uname."""
+    try:
+        arch_proc = subprocess.Popen(['uname', '-i'],
+            stdout=subprocess.PIPE)
+        arch, _ = arch_proc.communicate()
+        return arch.strip()
+    except:
+        return None
+
+
 @memoized
 def sys_type():
     """Returns a SysType for the current machine."""
     methods = [get_sys_type_from_spack_globals,
                get_sys_type_from_environment,
-               get_mac_sys_type]
+               get_mac_sys_type,
+               get_sys_type_from_uname]
 
     # search for a method that doesn't return None
     sys_type = None
