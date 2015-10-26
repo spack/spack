@@ -36,7 +36,6 @@ from llnl.util.filesystem import *
 
 import spack
 import spack.compilers as compilers
-from spack.error import SpackError
 from spack.util.executable import Executable, which
 from spack.util.environment import *
 
@@ -301,5 +300,5 @@ def fork(pkg, function):
                 .format(str(returncode)))
 
 
-class InstallError(SpackError):
+class InstallError(spack.error.SpackError):
     """Raised when a package fails to install"""
