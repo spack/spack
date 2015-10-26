@@ -173,7 +173,10 @@ def test_install(parser, args):
     
     if not args.output:
         bId = BuildId(topSpec)
-        outputFpath = join_path(os.getcwd(), "{0}.xml".format(bId.stringId()))
+        outputDir = join_path(os.getcwd(), "test-output")
+        if not os.path.exists(outputDir):
+            os.mkdir(outputDir)
+        outputFpath = join_path(outputDir, "test-{0}.xml".format(bId.stringId()))
     else:
         outputFpath = args.output
     
