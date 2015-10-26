@@ -23,14 +23,12 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import platform as py_platform
 import subprocess
 
 from llnl.util.lang import memoized
 
 import spack
 import spack.error as serr
-from spack.version import Version
 
 
 class InvalidSysTypeError(serr.SpackError):
@@ -60,16 +58,6 @@ def get_sys_type_from_environment():
     return os.environ.get('SYS_TYPE')
 
 
-def get_mac_sys_type():
-    """Return a Mac OS SYS_TYPE or None if this isn't a mac."""
-    mac_ver = py_platform.mac_ver()[0]
-    if not mac_ver:
-        return None
-
-    return "macosx_%s_%s" % (
-        Version(mac_ver).up_to(2), py_platform.machine())
-
-
 def get_sys_type_from_uname():
     """Return the architecture from uname."""
     try:
@@ -86,7 +74,6 @@ def sys_type():
     """Returns a SysType for the current machine."""
     methods = [get_sys_type_from_spack_globals,
                get_sys_type_from_environment,
-               get_mac_sys_type,
                get_sys_type_from_uname]
 
     # search for a method that doesn't return None
