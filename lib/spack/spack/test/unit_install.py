@@ -105,6 +105,8 @@ class UnitInstallTest(unittest.TestCase):
         
         self.assertEqual(mo.results, {bIdX:test_install.TestResult.PASSED})
 
+    #TODO: add test(s) where Y fails to install
+
 class MockPackageDb(object):
     def __init__(self, init=None):
         self.specToPkg = {}

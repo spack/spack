@@ -34,6 +34,7 @@ from llnl.util.filesystem import *
 
 import spack
 from spack.build_environment import InstallError
+from spack.fetch_strategy import FetchError
 import spack.cmd
 
 description = "Treat package installations as unit tests and output formatted test results"
@@ -132,6 +133,9 @@ def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
             depBID = BuildId(dep)
             errOutput = "Skipped due to failed dependency: {0}".format(
                 depBID.stringId())
+        elif (not package.installed) and (not package.stage.archive_file):
+            result = TestResult.FAILED
+            errOutput = "Failure to fetch package resources."
         elif not package.installed:
             result = TestResult.FAILED
             lines = getLogFunc(package.build_log_path)
@@ -195,6 +199,8 @@ def test_install(parser, args):
                     verbose=True,
                     fake=False)
             except InstallError:
+                pass
+            except FetchError:
                 pass
    
     jrf = JunitResultFormat()
