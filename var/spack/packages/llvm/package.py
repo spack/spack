@@ -39,15 +39,15 @@ class Llvm(Package):
     version('3.6.2', '0c1ee3597d75280dee603bae9cbf5cc2', url='http://llvm.org/releases/3.6.2/llvm-3.6.2.src.tar.xz')
     version('3.5.1', '2d3d8004f38852aa679e5945b8ce0b14', url='http://llvm.org/releases/3.5.1/llvm-3.5.1.src.tar.xz')
 
+    depends_on('python@2.7:')
+
     def install(self, spec, prefix):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
 
         with working_dir('spack-build', create=True):
             cmake('..',
                   '-DLLVM_REQUIRES_RTTI=1',
-                  '-DPYTHON_EXECUTABLE=/usr/bin/python',
-                  '-DPYTHON_INCLUDE_DIR=/usr/include/python2.6',
-                  '-DPYTHON_LIBRARY=/usr/lib64/libpython2.6.so',
+                  '-DPYTHON_EXECUTABLE=%s/bin/python' % spec['python'].prefix,
                   *std_cmake_args)
             make()
             make("install")
