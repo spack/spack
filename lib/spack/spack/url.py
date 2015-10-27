@@ -209,8 +209,8 @@ def parse_version_offset(path):
         # e.g. foobar-4.5.1
         (r'-((\d+\.)*\d+)$', stem),
 
-        # e.g. foobar-4.5.1b
-        (r'-((\d+\.)*\d+\-?([a-z]|rc|RC|tp|TP)\d*)$', stem),
+        # e.g. foobar-4.5.1b, foobar4.5RC, foobar.v4.5.1b
+        (r'[-._]?v?((\d+\.)*\d+[-._]?([a-z]|rc|RC|tp|TP?)\d*)$', stem),
 
         # e.g. foobar-4.5.0-beta1, or foobar-4.50-beta
         (r'-((\d+\.)*\d+-beta(\d+)?)$', stem),
