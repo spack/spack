@@ -54,11 +54,12 @@ def diy(self, args):
     if not args.spec:
         tty.die("spack diy requires a package spec argument.")
 
-    with spack.installed_db.write_lock():
-        specs = spack.cmd.parse_specs(args.spec)
-        if len(specs) > 1:
-            tty.die("spack diy only takes one spec.")
+    specs = spack.cmd.parse_specs(args.spec)
+    if len(specs) > 1:
+        tty.die("spack diy only takes one spec.")
 
+    # Take a write lock before checking for existence.
+    with spack.installed_db.write_lock():
         spec = specs[0]
         if not spack.db.exists(spec.name):
             tty.warn("No such package: %s" % spec.name)
@@ -85,7 +86,7 @@ def diy(self, args):
         # Forces the build to run out of the current directory.
         package.stage = DIYStage(os.getcwd())
 
-    # TODO: make this an argument, not a global.
+        # TODO: make this an argument, not a global.
         spack.do_checksum = False
 
         package.do_install(

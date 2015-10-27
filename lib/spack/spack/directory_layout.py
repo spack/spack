@@ -32,7 +32,6 @@ import tempfile
 from external import yaml
 
 import llnl.util.tty as tty
-from llnl.util.lang import memoized
 from llnl.util.filesystem import join_path, mkdirp
 
 from spack.spec import Spec
@@ -263,7 +262,6 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.write_spec(spec, spec_file_path)
 
 
-    @memoized
     def all_specs(self):
         if not os.path.isdir(self.root):
             return []
@@ -274,7 +272,6 @@ class YamlDirectoryLayout(DirectoryLayout):
         return [self.read_spec(s) for s in spec_files]
 
 
-    @memoized
     def specs_by_hash(self):
         by_hash = {}
         for spec in self.all_specs():

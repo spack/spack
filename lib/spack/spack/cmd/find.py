@@ -158,12 +158,11 @@ def find(parser, args):
     q_args = { 'installed' : installed, 'known' : known }
 
     # Get all the specs the user asked for
-    with spack.installed_db.read_lock():
-        if not query_specs:
-            specs = set(spack.installed_db.query(**q_args))
-        else:
-            results = [set(spack.installed_db.query(qs, **q_args)) for qs in query_specs]
-            specs = set.union(*results)
+    if not query_specs:
+        specs = set(spack.installed_db.query(**q_args))
+    else:
+        results = [set(spack.installed_db.query(qs, **q_args)) for qs in query_specs]
+        specs = set.union(*results)
 
     if not args.mode:
         args.mode = 'short'

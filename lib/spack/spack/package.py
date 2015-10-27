@@ -845,7 +845,7 @@ class Package(object):
 
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
-        spack.installed_db.add(self.spec, spack.install_layout.path_for_spec(self.spec))
+        spack.installed_db.add(self.spec, self.prefix)
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_install(self)

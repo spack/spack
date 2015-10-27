@@ -48,7 +48,7 @@ from external.yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
-from llnl.util.lock import Lock
+from llnl.util.lock import *
 
 import spack.spec
 from spack.version import Version
@@ -62,7 +62,8 @@ _db_dirname = '.spack-db'
 _db_version = Version('0.9')
 
 # Default timeout for spack database locks is 5 min.
-_db_lock_timeout = 300
+_db_lock_timeout = 60
+
 
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
@@ -90,11 +91,11 @@ class InstallRecord(object):
     dependents left.
 
     """
-    def __init__(self, spec, path, installed):
+    def __init__(self, spec, path, installed, ref_count=0):
         self.spec = spec
         self.path = path
         self.installed = installed
-        self.ref_count = 0
+        self.ref_count = ref_count
 
     def to_dict(self):
         return { 'spec'      : self.spec.to_node_dict(),
@@ -103,25 +104,42 @@ class InstallRecord(object):
                  'ref_count' : self.ref_count }
 
     @classmethod
-    def from_dict(cls, d):
-        # TODO: check the dict more rigorously.
-        return InstallRecord(d['spec'], d['path'], d['installed'], d['ref_count'])
+    def from_dict(cls, spec, dictionary):
+        d = dictionary
+        return InstallRecord(spec, d['path'], d['installed'], d['ref_count'])
 
 
 class Database(object):
-    def __init__(self, root):
-        """Create an empty Database.
+    def __init__(self, root, db_dir=None):
+        """Create a Database for Spack installations under ``root``.
 
-        Location defaults to root/_index.yaml
-        The individual data are dicts containing
-        spec: the top level spec of a package
-        path: the path to the install of that package
-        dep_hash: a hash of the dependence DAG for that package
+        A Database is a cache of Specs data from ``$prefix/spec.yaml``
+        files in Spack installation directories.
+
+        By default, Database files (data and lock files) are stored
+        under ``root/.spack-db``, which is created if it does not
+        exist.  This is the ``db_dir``.
+
+        The Database will attempt to read an ``index.yaml`` file in
+        ``db_dir``.  If it does not find one, it will be created when
+        needed by scanning the entire Database root for ``spec.yaml``
+        files according to Spack's ``DirectoryLayout``.
+
+        Caller may optionally provide a custom ``db_dir`` parameter
+        where data will be stored.  This is intended to be used for
+        testing the Database class.
+
         """
-        self._root = root
+        self.root = root
 
-        # Set up layout of database files.
-        self._db_dir     = join_path(self._root, _db_dirname)
+        if db_dir is None:
+            # If the db_dir is not provided, default to within the db root.
+            self._db_dir = join_path(self.root, _db_dirname)
+        else:
+            # Allow customizing the database directory location for testing.
+            self._db_dir = db_dir
+
+        # Set up layout of database files within the db dir
         self._index_path = join_path(self._db_dir, 'index.yaml')
         self._lock_path  = join_path(self._db_dir, 'lock')
 
@@ -135,21 +153,23 @@ class Database(object):
         # initialize rest of state.
         self.lock = Lock(self._lock_path)
         self._data = {}
-        self._last_write_time = 0
 
 
-    def write_lock(self, timeout=_db_lock_timeout):
-        """Get a write lock context for use in a `with` block."""
-        return self.lock.write_lock(timeout)
+    def write_transaction(self, timeout=_db_lock_timeout):
+        """Get a write lock context manager for use in a `with` block."""
+        return WriteTransaction(self, self._read, self._write, timeout)
 
 
-    def read_lock(self, timeout=_db_lock_timeout):
-        """Get a read lock context for use in a `with` block."""
-        return self.lock.read_lock(timeout)
+    def read_transaction(self, timeout=_db_lock_timeout):
+        """Get a read lock context manager for use in a `with` block."""
+        return ReadTransaction(self, self._read, None, timeout)
 
 
     def _write_to_yaml(self, stream):
-        """Write out the databsae to a YAML file."""
+        """Write out the databsae to a YAML file.
+
+        This function does not do any locking or transactions.
+        """
         # map from per-spec hash code to installation record.
         installs = dict((k, v.to_dict()) for k, v in self._data.items())
 
@@ -173,7 +193,10 @@ class Database(object):
 
 
     def _read_spec_from_yaml(self, hash_key, installs, parent_key=None):
-        """Recursively construct a spec from a hash in a YAML database."""
+        """Recursively construct a spec from a hash in a YAML database.
+
+        Does not do any locking.
+        """
         if hash_key not in installs:
             parent = read_spec(installs[parent_key]['path'])
 
@@ -195,6 +218,8 @@ class Database(object):
         """
         Fill database from YAML, do not maintain old data
         Translate the spec portions from node-dict form to spec form
+
+        Does not do any locking.
         """
         try:
             if isinstance(stream, basestring):
@@ -243,7 +268,7 @@ class Database(object):
                 # Insert the brand new spec in the database.  Each
                 # spec has its own copies of its dependency specs.
                 # TODO: would a more immmutable spec implementation simplify this?
-                data[hash_key] = InstallRecord(spec, rec['path'], rec['installed'])
+                data[hash_key] = InstallRecord.from_dict(spec, rec)
 
             except Exception as e:
                 tty.warn("Invalid database reecord:",
@@ -256,57 +281,60 @@ class Database(object):
 
 
     def reindex(self, directory_layout):
-        """Build database index from scratch based from a directory layout."""
-        with self.write_lock():
-            data = {}
+        """Build database index from scratch based from a directory layout.
 
-            # Ask the directory layout to traverse the filesystem.
-            for spec in directory_layout.all_specs():
-                # Create a spec for each known package and add it.
-                path = directory_layout.path_for_spec(spec)
-                hash_key = spec.dag_hash()
-                data[hash_key] = InstallRecord(spec, path, True)
+        Locks the DB if it isn't locked already.
 
-                # Recursively examine dependencies and add them, even
-                # if they are NOT installed.  This ensures we know
-                # about missing dependencies.
-                for dep in spec.traverse(root=False):
-                    dep_hash = dep.dag_hash()
-                    if dep_hash not in data:
-                        path = directory_layout.path_for_spec(dep)
-                        installed = os.path.isdir(path)
-                        data[dep_hash] = InstallRecord(dep.copy(), path, installed)
-                    data[dep_hash].ref_count += 1
-
-            # Assuming everything went ok, replace this object's data.
-            self._data = data
-
-            # write out, blowing away the old version if necessary
-            self.write()
-
-
-    def read(self):
         """
-        Re-read Database from the data in the set location
-        If the cache is fresh, return immediately.
+        with self.write_transaction():
+            old_data = self._data
+            try:
+                self._data = {}
+
+                # Ask the directory layout to traverse the filesystem.
+                for spec in directory_layout.all_specs():
+                    # Create a spec for each known package and add it.
+                    path = directory_layout.path_for_spec(spec)
+                    self._add(spec, path, directory_layout)
+
+                self._check_ref_counts()
+
+            except:
+                # If anything explodes, restore old data, skip write.
+                self._data = old_data
+                raise
+
+
+    def _check_ref_counts(self):
+        """Ensure consistency of reference counts in the DB.
+
+        Raise an AssertionError if something is amiss.
+
+        Does no locking.
         """
-        if not self.is_dirty():
-            return
+        counts = {}
+        for key, rec in self._data.items():
+            counts.setdefault(key, 0)
+            for dep in rec.spec.dependencies.values():
+                dep_key = dep.dag_hash()
+                counts.setdefault(dep_key, 0)
+                counts[dep_key] += 1
 
-        if os.path.isfile(self._index_path):
-            # Read from YAML file if a database exists
-            self._read_from_yaml(self._index_path)
-        else:
-            # The file doesn't exist, try to traverse the directory.
-            self.reindex(spack.install_layout)
+        for rec in self._data.values():
+            key = rec.spec.dag_hash()
+            expected = counts[key]
+            found = rec.ref_count
+            if not expected == found:
+                raise AssertionError(
+                    "Invalid ref_count: %s: %d (expected %d), in DB %s."
+                    % (key, found, expected, self._index_path))
 
 
-    def write(self):
-        """
-        Write the database to the standard location
-        Everywhere that the database is written it is read
-        within the same lock, so there is no need to refresh
-        the database within write()
+    def _write(self):
+        """Write the in-memory database index to its file path.
+
+        Does no locking.
+
         """
         temp_name = '%s.%s.temp' % (socket.getfqdn(), os.getpid())
         temp_file = join_path(self._db_dir, temp_name)
@@ -314,7 +342,6 @@ class Database(object):
         # Write a temporary database file them move it into place
         try:
             with open(temp_file, 'w') as f:
-                self._last_write_time = int(time.time())
                 self._write_to_yaml(f)
             os.rename(temp_file, self._index_path)
 
@@ -325,36 +352,137 @@ class Database(object):
             raise
 
 
-    def is_dirty(self):
-        """
-        Returns true iff the database file does not exist
-        or was most recently written to by another spack instance.
-        """
-        return (not os.path.isfile(self._index_path) or
-                (os.path.getmtime(self._index_path) > self._last_write_time))
+    def _read(self):
+        """Re-read Database from the data in the set location.
 
+        This does no locking.
+        """
+        if os.path.isfile(self._index_path):
+            # Read from YAML file if a database exists
+            self._read_from_yaml(self._index_path)
+
+        else:
+            # The file doesn't exist, try to traverse the directory.
+            # reindex() takes its own write lock, so no lock here.
+            self.reindex(spack.install_layout)
+
+
+    def read(self):
+        with self.read_transaction(): pass
+
+
+    def write(self):
+        with self.write_transaction(): pass
+
+
+    def _add(self, spec, path, directory_layout=None):
+        """Add an install record for spec at path to the database.
+
+        This assumes that the spec is not already installed. It
+        updates the ref counts on dependencies of the spec in the DB.
+
+        This operation is in-memory, and does not lock the DB.
+
+        """
+        key = spec.dag_hash()
+        if key in self._data:
+            rec = self._data[key]
+            rec.installed = True
+
+            # TODO: this overwrites a previous install path (when path !=
+            # self._data[key].path), and the old path still has a
+            # dependent in the DB. We could consider re-RPATH-ing the
+            # dependents.  This case is probably infrequent and may not be
+            # worth fixing, but this is where we can discover it.
+            rec.path = path
+
+        else:
+            self._data[key] = InstallRecord(spec, path, True)
+            for dep in spec.dependencies.values():
+                self._increment_ref_count(dep, directory_layout)
+
+
+    def _increment_ref_count(self, spec, directory_layout=None):
+        """Recursively examine dependencies and update their DB entries."""
+        key = spec.dag_hash()
+        if key not in self._data:
+            installed = False
+            path = None
+            if directory_layout:
+                path = directory_layout.path_for_spec(spec)
+                installed = os.path.isdir(path)
+
+            self._data[key] = InstallRecord(spec.copy(), path, installed)
+
+            for dep in spec.dependencies.values():
+                self._increment_ref_count(dep)
+
+        self._data[key].ref_count += 1
 
     @_autospec
     def add(self, spec, path):
-        """Read the database from the set location
+        """Add spec at path to database, locking and reading DB to sync.
 
-        Add the specified entry as a dict, then write the database
-        back to memory. This assumes that ALL dependencies are already in
-        the database.  Should not be called otherwise.
+        ``add()`` will lock and read from the DB on disk.
 
         """
-        # Should always already be locked
-        with self.write_lock():
-            self.read()
-            self._data[spec.dag_hash()] = InstallRecord(spec, path, True)
+        # TODO: ensure that spec is concrete?
+        # Entire add is transactional.
+        with self.write_transaction():
+            self._add(spec, path)
 
-            # sanity check the dependencies in case something went
-            # wrong during install()
-            # TODO: ensure no races during distributed install.
-            for dep in spec.traverse(root=False):
-                assert dep.dag_hash() in self._data
 
-            self.write()
+    def _get_matching_spec_key(self, spec, **kwargs):
+        """Get the exact spec OR get a single spec that matches."""
+        key = spec.dag_hash()
+        if not key in self._data:
+            match = self.query_one(spec, **kwargs)
+            if match:
+                return match.dag_hash()
+            raise KeyError("No such spec in database! %s" % spec)
+        return key
+
+
+    @_autospec
+    def get_record(self, spec, **kwargs):
+        key = self._get_matching_spec_key(spec, **kwargs)
+        return self._data[key]
+
+
+    def _decrement_ref_count(self, spec):
+        key = spec.dag_hash()
+
+        if not key in self._data:
+            # TODO: print something here?  DB is corrupt, but
+            # not much we can do.
+            return
+
+        rec = self._data[key]
+        rec.ref_count -= 1
+
+        if rec.ref_count == 0 and not rec.installed:
+            del self._data[key]
+            for dep in spec.dependencies.values():
+                self._decrement_ref_count(dep)
+
+
+    def _remove(self, spec):
+        """Non-locking version of remove(); does real work.
+        """
+        key = self._get_matching_spec_key(spec)
+        rec = self._data[key]
+
+        if rec.ref_count > 0:
+            rec.installed = False
+            return rec.spec
+
+        del self._data[key]
+        for dep in rec.spec.dependencies.values():
+            self._decrement_ref_count(dep)
+
+        # Returns the concrete spec so we know it in the case where a
+        # query spec was passed in.
+        return rec.spec
 
 
     @_autospec
@@ -369,13 +497,9 @@ class Database(object):
              and remvoes them if they are no longer needed.
 
         """
-        # Should always already be locked
-        with self.write_lock():
-            self.read()
-            hash_key = spec.dag_hash()
-            if hash_key in self._data:
-                del self._data[hash_key]
-            self.write()
+        # Take a lock around the entire removal.
+        with self.write_transaction():
+            return self._remove(spec)
 
 
     @_autospec
@@ -429,24 +553,75 @@ class Database(object):
               these really special cases that only belong here?
 
         """
-        with self.read_lock():
-            self.read()
+        with self.read_transaction():
+            results = []
+            for key, rec in self._data.items():
+                if installed is not any and rec.installed != installed:
+                    continue
+                if known is not any and spack.db.exists(rec.spec.name) != known:
+                    continue
+                if query_spec is any or rec.spec.satisfies(query_spec):
+                    results.append(rec.spec)
 
-        results = []
-        for key, rec in self._data.items():
-            if installed is not any and rec.installed != installed:
-                continue
-            if known is not any and spack.db.exists(rec.spec.name) != known:
-                continue
-            if query_spec is any or rec.spec.satisfies(query_spec):
-                results.append(rec.spec)
+            return sorted(results)
 
-        return sorted(results)
+
+    def query_one(self, query_spec, known=any, installed=True):
+        """Query for exactly one spec that matches the query spec.
+
+        Raises an assertion error if more than one spec matches the
+        query. Returns None if no installed package matches.
+
+        """
+        concrete_specs = self.query(query_spec, known, installed)
+        assert len(concrete_specs) <= 1
+        return concrete_specs[0] if concrete_specs else None
 
 
     def missing(self, spec):
-        key =  spec.dag_hash()
-        return key in self._data and not self._data[key].installed
+        with self.read_transaction():
+            key =  spec.dag_hash()
+            return key in self._data and not self._data[key].installed
+
+
+class _Transaction(object):
+    """Simple nested transaction context manager that uses a file lock.
+
+    This class can trigger actions when the lock is acquired for the
+    first time and released for the last.
+
+    Timeout for lock is customizable.
+    """
+    def __init__(self, db, acquire_fn=None, release_fn=None,
+                 timeout=_db_lock_timeout):
+        self._db = db
+        self._timeout = timeout
+        self._acquire_fn = acquire_fn
+        self._release_fn = release_fn
+
+    def __enter__(self):
+        if self._enter() and self._acquire_fn:
+            self._acquire_fn()
+
+    def __exit__(self, type, value, traceback):
+        if self._exit() and self._release_fn:
+            self._release_fn()
+
+
+class ReadTransaction(_Transaction):
+    def _enter(self):
+        return self._db.lock.acquire_read(self._timeout)
+
+    def _exit(self):
+        return self._db.lock.release_read()
+
+
+class WriteTransaction(_Transaction):
+    def _enter(self):
+        return self._db.lock.acquire_write(self._timeout)
+
+    def _exit(self):
+        return self._db.lock.release_write()
 
 
 class CorruptDatabaseError(SpackError):

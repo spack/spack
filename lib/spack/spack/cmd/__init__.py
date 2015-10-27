@@ -124,16 +124,15 @@ def elide_list(line_list, max_num=10):
 
 
 def disambiguate_spec(spec):
-    with spack.installed_db.read_lock():
-        matching_specs = spack.installed_db.query(spec)
-        if not matching_specs:
-            tty.die("Spec '%s' matches no installed packages." % spec)
+    matching_specs = spack.installed_db.query(spec)
+    if not matching_specs:
+        tty.die("Spec '%s' matches no installed packages." % spec)
 
-        elif len(matching_specs) > 1:
-            args =  ["%s matches multiple packages." % spec,
-                     "Matching packages:"]
-            args += ["  " + str(s) for s in matching_specs]
-            args += ["Use a more specific spec."]
-            tty.die(*args)
+    elif len(matching_specs) > 1:
+        args =  ["%s matches multiple packages." % spec,
+                 "Matching packages:"]
+        args += ["  " + str(s) for s in matching_specs]
+        args += ["Use a more specific spec."]
+        tty.die(*args)
 
     return matching_specs[0]

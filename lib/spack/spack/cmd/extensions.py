@@ -80,8 +80,7 @@ def extensions(parser, args):
     colify(ext.name for ext in extensions)
 
     # List specs of installed extensions.
-    with spack.installed_db.read_lock():
-        installed  = [s.spec for s in spack.installed_db.installed_extensions_for(spec)]
+    installed = [s.spec for s in spack.installed_db.installed_extensions_for(spec)]
     print
     if not installed:
         tty.msg("None installed.")

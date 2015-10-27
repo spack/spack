@@ -68,10 +68,10 @@ def install(parser, args):
     if args.no_checksum:
         spack.do_checksum = False        # TODO: remove this global.
 
-    with spack.installed_db.write_lock():
-        specs = spack.cmd.parse_specs(args.packages, concretize=True)
-        for spec in specs:
-            package = spack.db.get(spec)
+    specs = spack.cmd.parse_specs(args.packages, concretize=True)
+    for spec in specs:
+        package = spack.db.get(spec)
+        with spack.installed_db.write_lock():
             package.do_install(
                 keep_prefix=args.keep_prefix,
                 keep_stage=args.keep_stage,

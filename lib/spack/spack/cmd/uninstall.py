@@ -84,21 +84,21 @@ def uninstall(parser, args):
                     # The package.py file has gone away -- but still want to uninstall.
                     spack.Package(s).do_uninstall(force=True)
 
-    # Sort packages to be uninstalled by the number of installed dependents
-    # This ensures we do things in the right order
-    def num_installed_deps(pkg):
-        return len(pkg.installed_dependents)
-    pkgs.sort(key=num_installed_deps)
+        # Sort packages to be uninstalled by the number of installed dependents
+        # This ensures we do things in the right order
+        def num_installed_deps(pkg):
+            return len(pkg.installed_dependents)
+        pkgs.sort(key=num_installed_deps)
 
-    # Uninstall packages in order now.
-    for pkg in pkgs:
-        try:
-            pkg.do_uninstall(force=args.force)
-        except PackageStillNeededError, e:
-            tty.error("Will not uninstall %s" % e.spec.format("$_$@$%@$#", color=True))
-            print
-            print "The following packages depend on it:"
-            display_specs(e.dependents, long=True)
-            print
-            print "You can use spack uninstall -f to force this action."
-            sys.exit(1)
+        # Uninstall packages in order now.
+        for pkg in pkgs:
+            try:
+                pkg.do_uninstall(force=args.force)
+            except PackageStillNeededError, e:
+                tty.error("Will not uninstall %s" % e.spec.format("$_$@$%@$#", color=True))
+                print
+                print "The following packages depend on it:"
+                display_specs(e.dependents, long=True)
+                print
+                print "You can use spack uninstall -f to force this action."
+                sys.exit(1)
