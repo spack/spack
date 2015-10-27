@@ -95,10 +95,15 @@ class Lock(object):
         order, but the POSIX lock is held until all local read and
         write locks are released.
 
+        Returns True if it is the first acquire and actually acquires
+        the POSIX lock, False if it is a nested transaction.
+
         """
-        if self._reads == 0 and self._writes == 0:
-            self._lock(fcntl.LOCK_SH, timeout)
         self._reads += 1
+        if self._reads == 1 and self._writes == 0:
+            self._lock(fcntl.LOCK_SH, timeout)
+            return True
+        return False
 
 
     def acquire_write(self, timeout=_default_timeout):
@@ -107,10 +112,16 @@ class Lock(object):
         Read and write locks can be acquired and released in arbitrary
         order, but the POSIX lock is held until all local read and
         write locks are released.
+
+        Returns True if it is the first acquire and actually acquires
+        the POSIX lock, False if it is a nested transaction.
+
         """
-        if self._writes == 0:
-            self._lock(fcntl.LOCK_EX, timeout)
         self._writes += 1
+        if self._writes == 1:
+            self._lock(fcntl.LOCK_EX, timeout)
+            return True
+        return False
 
 
     def release_read(self):
