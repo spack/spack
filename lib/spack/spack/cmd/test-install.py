@@ -133,7 +133,7 @@ def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
             depBID = BuildId(dep)
             errOutput = "Skipped due to failed dependency: {0}".format(
                 depBID.stringId())
-        elif (not package.installed) and (not package.stage.archive_file):
+        elif (not package.installed) and (not package.stage.source_path):
             result = TestResult.FAILED
             errOutput = "Failure to fetch package resources."
         elif not package.installed:
