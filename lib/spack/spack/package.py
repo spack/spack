@@ -606,6 +606,7 @@ class Package(object):
         spack.install_layout.remove_install_directory(self.spec)
         spack.installed_db.remove(self.spec)
 
+
     def do_fetch(self):
         """Creates a stage directory and downloads the taball for this package.
            Working directory will be set to the stage directory.
@@ -812,9 +813,6 @@ class Package(object):
                     log_install_path = spack.install_layout.build_log_path(self.spec)
                     install(log_path, log_install_path)
 
-                #Update the database once we know install successful
-                spack.installed_db.add(self.spec, spack.install_layout.path_for_spec(self.spec))
-
                 # On successful install, remove the stage.
                 if not keep_stage:
                     self.stage.destroy()
@@ -844,6 +842,10 @@ class Package(object):
 
         # Do the build.
         spack.build_environment.fork(self, real_work)
+
+        # note: PARENT of the build process adds the new package to
+        # the database, so that we don't need to re-read from file.
+        spack.installed_db.add(self.spec, spack.install_layout.path_for_spec(self.spec))
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_install(self)

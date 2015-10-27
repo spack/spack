@@ -41,14 +41,6 @@ from spack.util.multiproc import Barrier
 barrier_timeout = 5
 
 
-def order_processes(*functions):
-    """Order some processes using simple barrier synchronization."""
-    b = Barrier(len(functions), timeout=barrier_timeout)
-    procs = [Process(target=f, args=(b,)) for f in functions]
-    for p in procs: p.start()
-    for p in procs: p.join()
-
-
 class LockTest(unittest.TestCase):
 
     def setUp(self):
@@ -59,6 +51,16 @@ class LockTest(unittest.TestCase):
 
     def tearDown(self):
          shutil.rmtree(self.tempdir, ignore_errors=True)
+
+
+    def multiproc_test(self, *functions):
+        """Order some processes using simple barrier synchronization."""
+        b = Barrier(len(functions), timeout=barrier_timeout)
+        procs = [Process(target=f, args=(b,)) for f in functions]
+        for p in procs: p.start()
+        for p in procs:
+            p.join()
+            self.assertEqual(p.exitcode, 0)
 
 
     #
@@ -94,13 +96,13 @@ class LockTest(unittest.TestCase):
     # exclusive lock is held.
     #
     def test_write_lock_timeout_on_write(self):
-        order_processes(self.acquire_write, self.timeout_write)
+        self.multiproc_test(self.acquire_write, self.timeout_write)
 
     def test_write_lock_timeout_on_write_2(self):
-        order_processes(self.acquire_write, self.timeout_write, self.timeout_write)
+        self.multiproc_test(self.acquire_write, self.timeout_write, self.timeout_write)
 
     def test_write_lock_timeout_on_write_3(self):
-        order_processes(self.acquire_write, self.timeout_write, self.timeout_write, self.timeout_write)
+        self.multiproc_test(self.acquire_write, self.timeout_write, self.timeout_write, self.timeout_write)
 
 
     #
@@ -108,42 +110,42 @@ class LockTest(unittest.TestCase):
     # exclusive lock is held.
     #
     def test_read_lock_timeout_on_write(self):
-        order_processes(self.acquire_write, self.timeout_read)
+        self.multiproc_test(self.acquire_write, self.timeout_read)
 
     def test_read_lock_timeout_on_write_2(self):
-        order_processes(self.acquire_write, self.timeout_read, self.timeout_read)
+        self.multiproc_test(self.acquire_write, self.timeout_read, self.timeout_read)
 
     def test_read_lock_timeout_on_write_3(self):
-        order_processes(self.acquire_write, self.timeout_read, self.timeout_read, self.timeout_read)
+        self.multiproc_test(self.acquire_write, self.timeout_read, self.timeout_read, self.timeout_read)
 
 
     #
     # Test that exclusive locks time out when shared locks are held.
     #
     def test_write_lock_timeout_on_read(self):
-        order_processes(self.acquire_read, self.timeout_write)
+        self.multiproc_test(self.acquire_read, self.timeout_write)
 
     def test_write_lock_timeout_on_read_2(self):
-        order_processes(self.acquire_read, self.timeout_write, self.timeout_write)
+        self.multiproc_test(self.acquire_read, self.timeout_write, self.timeout_write)
 
     def test_write_lock_timeout_on_read_3(self):
-        order_processes(self.acquire_read, self.timeout_write, self.timeout_write, self.timeout_write)
+        self.multiproc_test(self.acquire_read, self.timeout_write, self.timeout_write, self.timeout_write)
 
 
     #
     # Test that exclusive locks time while lots of shared locks are held.
     #
     def test_write_lock_timeout_with_multiple_readers_2_1(self):
-        order_processes(self.acquire_read, self.acquire_read, self.timeout_write)
+        self.multiproc_test(self.acquire_read, self.acquire_read, self.timeout_write)
 
     def test_write_lock_timeout_with_multiple_readers_2_2(self):
-        order_processes(self.acquire_read, self.acquire_read, self.timeout_write, self.timeout_write)
+        self.multiproc_test(self.acquire_read, self.acquire_read, self.timeout_write, self.timeout_write)
 
     def test_write_lock_timeout_with_multiple_readers_3_1(self):
-        order_processes(self.acquire_read, self.acquire_read, self.acquire_read, self.timeout_write)
+        self.multiproc_test(self.acquire_read, self.acquire_read, self.acquire_read, self.timeout_write)
 
     def test_write_lock_timeout_with_multiple_readers_3_2(self):
-        order_processes(self.acquire_read, self.acquire_read, self.acquire_read, self.timeout_write, self.timeout_write)
+        self.multiproc_test(self.acquire_read, self.acquire_read, self.acquire_read, self.timeout_write, self.timeout_write)
 
 
     #
@@ -261,4 +263,4 @@ class LockTest(unittest.TestCase):
             barrier.wait() # ---------------------------------------- 13
             lock.release_read()
 
-        order_processes(p1, p2, p3)
+        self.multiproc_test(p1, p2, p3)

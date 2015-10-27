@@ -99,11 +99,13 @@ class Lock(object):
         the POSIX lock, False if it is a nested transaction.
 
         """
-        self._reads += 1
-        if self._reads == 1 and self._writes == 0:
-            self._lock(fcntl.LOCK_SH, timeout)
+        if self._reads == 0 and self._writes == 0:
+            self._lock(fcntl.LOCK_SH, timeout)   # can raise LockError.
+            self._reads += 1
             return True
-        return False
+        else:
+            self._reads += 1
+            return False
 
 
     def acquire_write(self, timeout=_default_timeout):
@@ -117,11 +119,13 @@ class Lock(object):
         the POSIX lock, False if it is a nested transaction.
 
         """
-        self._writes += 1
-        if self._writes == 1:
-            self._lock(fcntl.LOCK_EX, timeout)
+        if self._writes == 0:
+            self._lock(fcntl.LOCK_EX, timeout)   # can raise LockError.
+            self._writes += 1
             return True
-        return False
+        else:
+            self._writes += 1
+            return False
 
 
     def release_read(self):
@@ -136,11 +140,13 @@ class Lock(object):
         """
         assert self._reads > 0
 
-        self._reads -= 1
-        if self._reads == 0 and self._writes == 0:
-            self._unlock()
+        if self._reads == 1 and self._writes == 0:
+            self._unlock()      # can raise LockError.
+            self._reads -= 1
             return True
-        return False
+        else:
+            self._reads -= 1
+            return False
 
 
     def release_write(self):
@@ -155,11 +161,13 @@ class Lock(object):
         """
         assert self._writes > 0
 
-        self._writes -= 1
-        if self._writes == 0 and self._reads == 0:
-            self._unlock()
+        if self._writes == 1 and self._reads == 0:
+            self._unlock()      # can raise LockError.
+            self._writes -= 1
             return True
-        return False
+        else:
+            self._writes -= 1
+            return False
 
 
 class LockError(Exception):
