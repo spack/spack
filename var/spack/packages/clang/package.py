@@ -28,11 +28,16 @@ class Clang(Package):
     """The goal of the Clang project is to create a new C, C++,
        Objective C and Objective C++ front-end for the LLVM compiler.
     """
-    homepage = "http://clang.llvm.org"
-    list_url = "http://llvm.org/releases/download.html"
+    homepage = 'http://clang.llvm.org'
+    url = 'http://llvm.org/releases/3.7.0/cfe-3.7.0.src.tar.xz'
 
-    depends_on("llvm")
-    version('3.4.2', '87945973b7c73038871c5f849a818588', url='http://llvm.org/releases/3.4.2/cfe-3.4.2.src.tar.xz')
+    depends_on('llvm@3.7.0', when='@3.7.0')
+    depends_on('llvm@3.6.2', when='@3.6.2')
+    depends_on('llvm@3.5.1', when='@3.5.1')
+
+    version('3.7.0', '8f9d27335e7331cf0a4711e952f21f01', url='http://llvm.org/releases/3.7.0/cfe-3.7.0.src.tar.xz')
+    version('3.6.2', 'ff862793682f714bb7862325b9c06e20', url='http://llvm.org/releases/3.6.2/cfe-3.6.2.src.tar.xz')
+    version('3.5.1', '93f9532f8f7e6f1d8e5c1116907051cb', url='http://llvm.org/releases/3.5.1/cfe-3.5.1.src.tar.xz')
 
     def install(self, spec, prefix):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
