@@ -572,7 +572,7 @@ class Package(object):
         """Return a list of the specs of all installed packages that depend
            on this one."""
         dependents = []
-        for spec in spack.db.installed_package_specs():
+        for spec in spack.installed_db.installed_package_specs():
             if self.name == spec.name:
                 continue
             for dep in spec.traverse():
@@ -608,7 +608,7 @@ class Package(object):
     def remove_prefix(self):
         """Removes the prefix for a package along with any empty parent directories."""
         spack.install_layout.remove_install_directory(self.spec)
-
+        spack.installed_db.remove(self.spec)
 
     def do_fetch(self):
         """Creates a stage directory and downloads the taball for this package.
@@ -786,6 +786,7 @@ class Package(object):
                          "Manually remove this directory to fix:",
                          self.prefix)
 
+
         def real_work():
             try:
                 tty.msg("Building %s." % self.name)
@@ -814,6 +815,9 @@ class Package(object):
                 if not fake:
                     log_install_path = spack.install_layout.build_log_path(self.spec)
                     install(log_path, log_install_path)
+
+                #Update the database once we know install successful
+                spack.installed_db.add(self.spec, spack.install_layout.path_for_spec(self.spec))
 
                 # On successful install, remove the stage.
                 if not keep_stage:
