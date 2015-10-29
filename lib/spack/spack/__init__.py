@@ -56,6 +56,12 @@ packages_path = join_path(var_path, "packages")
 db = PackageDB(packages_path)
 
 #
+# Set up the installed packages database
+#
+from spack.database import Database
+installed_db = Database(install_path)
+
+#
 # Paths to mock files for testing.
 #
 mock_packages_path = join_path(var_path, "mock_packages")
