@@ -2,7 +2,7 @@ from spack import *
 
 
 class Mvapich2(Package):
-    """mvapich2 is an MPI implmenetation for infiniband networks."""
+    """MVAPICH2 is an MPI implementation for Infiniband networks."""
     homepage = "http://mvapich.cse.ohio-state.edu/"
 
     version('2.2a', 'b8ceb4fc5f5a97add9b3ff1b9cbe39d2',
@@ -13,6 +13,7 @@ class Mvapich2(Package):
 
     version('1.9', '5dc58ed08fd3142c260b70fe297e127c',
             url="http://mvapich.cse.ohio-state.edu/download/mvapich2/mv2/mvapich2-1.9.tgz")
+    # FIXME: the statement doesn't seem to take 'when' into account when applying patches
     patch('ad_lustre_rwcontig_open_source.patch', when='@1.9')
 
     provides('mpi@:2.2', when='@1.9')  # MVAPICH2-1.9 supports MPI 2.2
