@@ -1,11 +1,15 @@
 from spack import *
 
 class Zsh(Package):
-    """ The ZSH shell """
+    """
+    Zsh is a shell designed for interactive use, although it is also a powerful
+    scripting language. Many of the useful features of bash, ksh, and tcsh were
+    incorporated into zsh; many original features were added.
+    """
     homepage = "http://www.zsh.org"
-    url      = "http://www.zsh.org/pub/zsh-5.0.8.tar.bz2"
+    url = "http://downloads.sourceforge.net/project/zsh/zsh/5.1.1/zsh-5.1.1.tar.gz"
 
-    version('5.0.8', 'e6759e8dd7b714d624feffd0a73ba0fe')
+    version('5.1.1', checksum='8ba28a9ef82e40c3a271602f18343b2f')
 
     depends_on("pcre")
 
