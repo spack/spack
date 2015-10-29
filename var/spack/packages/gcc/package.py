@@ -36,21 +36,25 @@ class Gcc(Package):
     list_url = 'http://open-source-box.org/gcc/'
     list_depth = 2
 
+    DEPENDS_ON_ISL_PREDICATE = '@5.0:'
+
+    version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
+    version('4.9.3', '6f831b4d251872736e8e9cc09746f327')
     version('4.9.2', '4df8ee253b7f3863ad0b86359cd39c43')
     version('4.9.1', 'fddf71348546af523353bd43d34919c1')
+    version('4.8.5', '80d2c2982a3392bb0b89673ff136e223')
     version('4.8.4', '5a84a30839b2aca22a2d723de2a626ec')
     version('4.7.4', '4c696da46297de6ae77a82797d2abe28')
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
-
+    
     depends_on("mpfr")
     depends_on("gmp")
     depends_on("mpc")     # when @4.5:
-    depends_on("libelf")
     depends_on("binutils~libiberty")
 
     # Save these until we can do optional deps.
-    #depends_on("isl")
+    depends_on("isl", when=DEPENDS_ON_ISL_PREDICATE)
     #depends_on("ppl")
     #depends_on("cloog")
 
@@ -62,23 +66,31 @@ class Gcc(Package):
         if spec.satisfies("@4.7.1:"):
             enabled_languages.add('go')
 
+        # Generic options to compile GCC
+        options = ["--prefix=%s" % prefix,
+                   "--libdir=%s/lib64" % prefix,
+                   "--disable-multilib",
+                   "--enable-languages=" + ','.join(enabled_languages),
+                   "--with-mpc=%s"    % spec['mpc'].prefix,
+                   "--with-mpfr=%s"   % spec['mpfr'].prefix,
+                   "--with-gmp=%s"    % spec['gmp'].prefix,
+                   "--enable-lto",
+                   "--with-gnu-ld",
+                   "--with-gnu-as",
+                   "--with-quad"]
+        # Binutils
+        binutils_options = ["--with-stage1-ldflags=%s" % self.rpath_args,
+                            "--with-boot-ldflags=%s"   % self.rpath_args,
+                            "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
+                            "--with-as=%s/bin/as" % spec['binutils'].prefix]
+        options.extend(binutils_options)
+        # Isl
+        if spec.satisfies(Gcc.DEPENDS_ON_ISL_PREDICATE):
+            isl_options = ["--with-isl=%s" % spec['isl'].prefix]
+            options.extend(isl_options)
+
         # Rest of install is straightforward.
-        configure("--prefix=%s" % prefix,
-                  "--libdir=%s/lib64" % prefix,
-                  "--disable-multilib",
-                  "--enable-languages=" + ','.join(enabled_languages),
-                  "--with-mpc=%s"    % spec['mpc'].prefix,
-                  "--with-mpfr=%s"   % spec['mpfr'].prefix,
-                  "--with-gmp=%s"    % spec['gmp'].prefix,
-                  "--with-libelf=%s" % spec['libelf'].prefix,
-                  "--with-stage1-ldflags=%s" % self.rpath_args,
-                  "--with-boot-ldflags=%s"   % self.rpath_args,
-                  "--enable-lto",
-                  "--with-gnu-ld",
-                  "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
-                  "--with-gnu-as",
-                  "--with-as=%s/bin/as" % spec['binutils'].prefix,
-                  "--with-quad")
+        configure(*options)
         make()
         make("install")
 
@@ -100,13 +112,11 @@ class Gcc(Package):
             return
 
         gcc = Executable(join_path(self.prefix.bin, 'gcc'))
-        lines = gcc('-dumpspecs', return_output=True).split("\n")
-        for i, line in enumerate(lines):
-            if line.startswith("*link:"):
-                specs_file = join_path(self.spec_dir, 'specs')
-                with closing(open(specs_file, 'w')) as out:
-                    out.write(lines[i] + "\n")
-                    out.write("-rpath %s/lib:%s/lib64 \\\n"
-                                % (self.prefix, self.prefix))
-                    out.write(lines[i+1] + "\n")
-                set_install_permissions(specs_file)
+        lines = gcc('-dumpspecs', return_output=True).strip().split("\n")
+        specs_file = join_path(self.spec_dir, 'specs')
+        with closing(open(specs_file, 'w')) as out:
+            for line in lines:
+                out.write(line + "\n")
+                if line.startswith("*link:"):
+                    out.write("-rpath %s/lib:%s/lib64 \\\n"% (self.prefix, self.prefix))
+        set_install_permissions(specs_file)
