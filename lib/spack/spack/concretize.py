@@ -122,6 +122,34 @@ class DefaultConcretizer(object):
         return True   # changed
 
 
+    def new_concretize_architecture(self, spec):
+        """If the spec already has an architecture and it is a an architecture type,
+        return. Otherwise, if it has an architecture that is a string type, generate an
+        architecture based on that type. If it has no architecture and the root of the
+        DAG has an architecture, then use that. Otherwise, take the system's default
+        architecture.
+        """
+        if spec.architecture is not None:
+            if isinstance(spec.architecture,spack.architecture.Target):
+                return False
+            else:
+                arch = spack.architecture.sys_type()
+                spec.architecture = arch.target(spec.architecture)
+                return True #changed
+
+        if spec.root.architecture:
+            if isinstance(spec.root.architecture,spack.architecture.Target):
+                spec.architecture = spec.root.architecture
+            else:
+                arch = spack.architecture.sys_type()
+                spec.architecture = arch.target(spec.root.architecture)
+        else:
+            arch = spack.architecture.sys_type()
+            spec.architecture = arch.target('default')
+        
+        return True #changed
+
+
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return.  Otherwise, add
            the default variants from the package specification.
