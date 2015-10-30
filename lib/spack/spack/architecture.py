@@ -23,11 +23,16 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import imp
 import platform as py_platform
+import inspect
 
-from llnl.util.lang import memoized
+from llnl.util.lang import memoized, list_modules
+from llnl.util.filesystem import join_path
+import llnl.util.tty as tty
 
 import spack
+from spack.util.naming import mod_to_class
 import spack.error as serr
 from spack.version import Version
 from external import yaml
@@ -42,41 +47,55 @@ class NoSysTypeError(serr.SpackError):
         super(NoSysTypeError, self).__init__("Could not determine sys_type for this machine.")
 
 
-class Architecture(object):
-    """ Architecture class that contains a dictionary of architecture name and compiler search strategy methods.
-        The idea is to create an object that Spack can interact with and know how to search for the compiler
-        If it is on a Cray architecture it should look in modules. If it is anything else search $PATH.
-    """
-    
-    def add_compiler_strategy(self, front,back):
-        names = []
-        names.append(front) 
-        names.append(back) 
-        d = {}
-        for n in names:
-            if n:
-                if 'cray' in n.lower():
-                    d[n] = "MODULES"
-                elif 'linux' in n.lower():
-                    d[n] = "PATH"
-                else:
-                    d[n] = 'No Strategy'
-        return d 
-        
-    def __init__(self, front=None, back=None):
-        """ Constructor for the architecture class. It will create a list from the given arguments and iterate
-            through that list. It will then create a dictionary of {arch_name : strategy}
-            Takes in two parameters:
+class Target(object):
+    """ This is the processor type e.g. cray-ivybridge """
+    # Front end or back end target. Target needs to know which one this is
+    # Should autodetect from the machine
+    # features of a target
+    # - a module name
+    # -a compiler finding strategy
+    # -a name
+    # architecture classes handling the aliasing for front-end, back-end and default
 
-            front = None     defaults to None. Should be the front-end architecture of the machine
-            back = None      defaults to None. Should be the back-end architecture of the machine
+    def __init__(self,name, module_name=None):
+        self.name = name # case of cray "ivybridge but if it's x86_64
+        self.module_name = module_name # craype-ivybridge
+
+    def compiler_strategy(self):
+        if self.module_name: # If there is a module_name given then use MODULES
+            return "MODULES"
+        else:
+            return "PATH"
+    
+class Architecture(object):
+    """ Abstract class that each type of Architecture will subclass. Will return a instance of it once it 
+        is returned
+    """
+
+    priority        = None # Subclass needs to set this number. This controls order in which arch is detected.
+    front           = None
+    back            = None
+    default_front   = None # The default front end target. On cray sandybridge
+    default_back    = None # The default back end target. On cray ivybridge
+
+    def __init__(self, name):
+        self.targets = {}
+        self.name = name
+
+    def add_target(self, name, target):
+        self.targets[name] = target  
         
-            If no arguments are given it will return an empty dictionary
-            Uses the _add_compiler_strategy(front, back) to create the dictionary
+    
+    @classmethod
+    def detect(self):
+        """ Subclass is responsible for implementing this method. 
+            Returns True if the architecture detects if it is the current architecture
+            and False if it's not.
         """
-        self.front = front
-        self.back = back
-        self.arch_dict = self.add_compiler_strategy(front, back) 
+        raise NotImplementedError()
+    
+    def __str__(self):
+        return self.name
 
 
 def get_sys_type_from_spack_globals():
@@ -84,9 +103,9 @@ def get_sys_type_from_spack_globals():
     if not hasattr(spack, "sys_type"):
         return None 
     elif hasattr(spack.sys_type, "__call__"):
-        return Architecture(spack.sys_type()) #If in __init__.py there is a sys_type() then call that
+        return spack.sys_type() #If in __init__.py there is a sys_type() then call that
     else:
-        return Architecture(spack.sys_type) # Else use the attributed which defaults to None
+        return spack.sys_type # Else use the attributed which defaults to None
 
 
 # This is livermore dependent. Hard coded for livermore
@@ -102,15 +121,19 @@ def get_mac_sys_type():
     mac_ver = py_platform.mac_ver()[0]
     if not mac_ver:
         return None
-    return Architecture("macosx_%s_%s" % (Version(mac_ver).up_to(2), py_platform.machine()))
+    return "macosx_%s_%s" % (Version(mac_ver).up_to(2), py_platform.machine())
 
 
 def get_sys_type_from_uname():
     """ Returns a sys_type from the uname argument 
         Front-end config
     """
-    return Architecture(os.uname()[0])
-
+    try:
+        arch_proc = subprocess.Popen(['uname', '-i'], stdout = subprocess.PIPE)
+        arch, _ = arch_proc.communicate()
+        return arch.strip()
+    except:
+        return None
 
 def get_sys_type_from_config_file():
     """ Should read in a sys_type from the config yaml file. This should be the first thing looked at since
@@ -132,33 +155,39 @@ def get_sys_type_from_config_file():
 
 
 @memoized
+def all_architectures():
+    modules = []
+    for name in list_modules(spack.arch_path):
+        mod_name = 'spack.architectures.' + name
+        path = join_path(spack.arch_path, name) + ".py"
+        mod = imp.load_source(mod_name, path)
+        class_name = mod_to_class(name)
+        if not hasattr(mod, class_name):
+            tty.die('No class %s defined in %s' % (class_name, mod_name)) 
+        cls = getattr(mod, class_name)
+        if not inspect.isclass(cls):
+            tty.die('%s.%s is not a class' % (mod_name, class_name))
+
+        modules.append(cls)
+
+    return modules
+
+@memoized
 def sys_type():
     """Priority of gathering sys-type.
        1. YAML file that the user specifies the name of the architecture. e.g Cray-XC40 or Cray-XC30
        2. UNAME
        3. GLOBALS
-       4. MAC OSX
+       4. MAC OSX 
        Yaml should be a priority here because we want the user to be able to specify the type of architecture to use.
        If there is no yaml present then it should move on to the next function and stop immediately once it gets a 
        arch name
     """
     # Try to create an architecture object using the config file FIRST
-    functions = [get_sys_type_from_config_file,
-                 get_sys_type_from_uname, 
-                 get_sys_type_from_spack_globals,
-                 get_mac_sys_type]
-   
-    sys_type = None 
-    for func in functions:
-        sys_type = func()
-        if sys_type:
-            break 
+    architecture_list = all_architectures() 
+    architecture_list.sort(key = lambda a: a.priority) 
     
-    if sys_type is None:
-        return Architecture("unknown_arch")
-
-    if not isinstance(sys_type, Architecture):
-        raise InvalidSysTypeError(sys_type)
-
-    return sys_type
+    for arch in architecture_list:
+        if arch.detect():
+            return arch()
 
