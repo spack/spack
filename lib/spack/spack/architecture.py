@@ -92,9 +92,9 @@ class Architecture(object):
         """
         if name == 'default':
             name = default
-        elif name == 'front_end':
+        elif name == 'front_end' or name == 'fe':
             name = front-end
-        elif name == 'back_end':
+        elif name == 'back_end' or name == 'be':
             name = back-end
         return self.targets[name]
 
