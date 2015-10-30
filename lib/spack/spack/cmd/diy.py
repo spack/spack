@@ -59,7 +59,7 @@ def diy(self, args):
         tty.die("spack diy only takes one spec.")
 
     # Take a write lock before checking for existence.
-    with spack.installed_db.write_lock():
+    with spack.installed_db.write_transaction():
         spec = specs[0]
         if not spack.db.exists(spec.name):
             tty.warn("No such package: %s" % spec.name)
