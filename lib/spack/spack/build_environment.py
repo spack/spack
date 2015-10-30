@@ -104,18 +104,11 @@ def set_compiler_environment_variables(pkg):
     if compiler.fc:
         os.environ['SPACK_FC']  = compiler.fc
 
-    # Incorporate the compiler default flags into the set of flags
-    for flag in flags:#This is all valid flags as well because it's concrete
-        if flag in compiler.flags and compiler.flags[flag] != "":
-            compiler.flags[flag] += ' '+flags[flag]
-        else:
-            compiler.flags[flag] = flags[flag]
-
     # Add every valid compiler flag to the environment, prefaced by "SPACK_"
     for flag in Compiler.valid_compiler_flags():
-        #The previous block and concreteness guarantee key safety here
-        if compiler.flags[flag] != "":
-            os.environ['SPACK_'+flag.upper()] = compiler.flags[flag]
+        # Concreteness guarantees key safety here
+        if flags[flag] != '':
+            os.environ['SPACK_'+flag.upper()] = flags[flag]
 
     os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
 

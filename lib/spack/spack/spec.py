@@ -394,11 +394,14 @@ class FlagMap(HashableMap):
         Return whether the spec changed.
         """
         changed = False
-        for k in other:
-            if k in self:
+
+        # Others_set removes flags set to '' from the comparison
+        others_set = (k for k in other if other[k] != '')
+        for k in others_set:
+            if k in self and self[k] != '':
                 if self[k] != other[k]:
-                    #This will not properly recognize incompatible flags
-                    self[k] += other[k]
+                    # This will not recognize incompatible flags, merely concatenates
+                    self[k] += ' ' + other[k]
                     changed = True
             else:
                 self[k] = other[k]
@@ -912,7 +915,6 @@ class Spec(object):
 
         while changed:
 #debugging code
-#            print self, "raw"
             a = self.normalize(force=force)
 #            print self, "normal"
             b = self._expand_virtual_packages()
@@ -926,6 +928,16 @@ class Spec(object):
 #                       self._concretize_helper())
             changed = any(changes)
             force=True
+
+        # Include the compiler flag defaults from the config files
+        # This ensures that spack will detect conflicts that stemp from a change
+        # in default compiler flags.
+        pkg = spack.db.get(self)
+        for flag in pkg.compiler.flags:
+            if self.compiler_flags[flag] == '':
+                self.compiler_flags[flag] += pkg.compiler.flags[flag]
+            else:
+                self.compiler_flags[flag] += ' ' + pkg.compiler.flags[flag]
 
         self._concrete = True
 
@@ -1116,12 +1128,6 @@ class Spec(object):
 
     def _normalize_helper(self, visited, spec_deps, provider_index):
         """Recursive helper function for _normalize."""
-        print self,"self help"
-#        print
-#        from spack.graph import graph_ascii
-#        graph_ascii(self)
-#        print
-        print spec_deps
         if self.name in visited:
             return False
         visited.add(self.name)
@@ -1185,10 +1191,6 @@ class Spec(object):
         # to package files & their 'when' specs
         visited = set()
         any_change = self._normalize_helper(visited, spec_deps, index)
-
-        print self, "self norm"
-        print spec_deps
-        print visited
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.
