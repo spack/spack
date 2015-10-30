@@ -58,9 +58,10 @@ class Target(object):
     # architecture classes handling the aliasing for front-end, back-end and default
 
     def __init__(self,name, module_name=None):
-        self.name = name # case of cray "ivybridge but if it's x86_64
+        self.name = name # case of cray "ivybridge" but if it's x86_64
         self.module_name = module_name # craype-ivybridge
 
+    @property
     def compiler_strategy(self):
         if self.module_name: # If there is a module_name given then use MODULES
             return "MODULES"
@@ -73,10 +74,9 @@ class Architecture(object):
     """
 
     priority        = None # Subclass needs to set this number. This controls order in which arch is detected.
-    front           = None
-    back            = None
-    default_front   = None # The default front end target. On cray sandybridge
-    default_back    = None # The default back end target. On cray ivybridge
+    front-end       = None
+    back-end        = None
+    default         = None # The default back end target. On cray ivybridge
 
     def __init__(self, name):
         self.targets = {}
@@ -85,7 +85,19 @@ class Architecture(object):
     def add_target(self, name, target):
         self.targets[name] = target  
         
-    
+    def target(self, name):
+        """This is a getter method for the target dictionary that handles defaulting based
+        on the values provided by default, front-end, and back-end. This can be overwritten
+        by a subclass for which we want to provide further aliasing options.
+        """
+        if name == 'default':
+            name = default
+        elif name == 'front_end':
+            name = front-end
+        elif name == 'back_end':
+            name = back-end
+        return self.targets[name]
+
     @classmethod
     def detect(self):
         """ Subclass is responsible for implementing this method. 
