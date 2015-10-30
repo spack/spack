@@ -53,6 +53,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-L', '--very-long', action='store_true', dest='very_long',
         help='Show dependency hashes as well as versions.')
+    subparser.add_argument(
+        '-f', '--show-flags', action='store_true', dest='show_flags',
+        help='Show spec compiler flags.')
 
     subparser.add_argument(
         '-u', '--unknown', action='store_true', dest='unknown',
@@ -76,11 +79,17 @@ def gray_hash(spec, length):
 def display_specs(specs, **kwargs):
     mode = kwargs.get('mode', 'short')
     hashes = kwargs.get('long', False)
+    print hashes
 
     hlen = 7
     if kwargs.get('very_long', False):
         hashes = True
         hlen = None
+
+    format_string = '$_$@$+'
+    flags = kwargs.get('show_flags', False)
+    if flags:
+        format_string = '$_$@$%+$+'
 
     # Make a dict with specs keyed by architecture and compiler.
     index = index_by(specs, ('architecture', 'compiler'))
@@ -97,7 +106,7 @@ def display_specs(specs, **kwargs):
         specs = index[(architecture,compiler)]
         specs.sort()
 
-        abbreviated = [s.format('$_$@$+', color=True) for s in specs]
+        abbreviated = [s.format(format_string, color=True) for s in specs]
         if mode == 'paths':
             # Print one spec per line along with prefix path
             width = max(len(s) for s in abbreviated)
@@ -112,20 +121,28 @@ def display_specs(specs, **kwargs):
         elif mode == 'deps':
             for spec in specs:
                 print spec.tree(
-                    format='$_$@$+',
+                    format=format_string,
                     color=True,
                     indent=4,
                     prefix=(lambda s: gray_hash(s, hlen)) if hashes else None)
 
         elif mode == 'short':
-            def fmt(s):
-                string = ""
-                if hashes:
-                    string += gray_hash(s, hlen) + ' '
-                string += s.format('$-_$@$+', color=True)
+            # Print columns of output if not printing flags
+            if not flags:
+                def fmt(s):
+                    string = ""
+                    if hashes:
+                        string += gray_hash(s, hlen) + ' '
+                    string += s.format('$-_$@$+', color=True)
 
-                return string
-            colify(fmt(s) for s in specs)
+                    return string
+                colify(fmt(s) for s in specs)
+            # Print one entry per line if including flags
+            else:
+                for spec in specs:
+                    # Print the hash if necessary
+                    hsh = gray_hash(spec, hlen) + ' ' if hashes else ''
+                    print hsh + spec.format(format_string, color=True) + '\n'
 
         else:
             raise ValueError(
@@ -171,4 +188,5 @@ def find(parser, args):
         tty.msg("%d installed packages." % len(specs))
     display_specs(specs, mode=args.mode,
                   long=args.long,
-                  very_long=args.very_long)
+                  very_long=args.very_long,
+                  show_flags=args.show_flags)

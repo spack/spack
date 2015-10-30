@@ -1630,7 +1630,9 @@ class Spec(object):
                $@   Version
                $%   Compiler
                $%@  Compiler & compiler version
-               $+   Options & compiler flags
+               $%+  Compiler and compiler flags
+               $%@+ Compiler, compiler version, and compiler flags
+               $+   Options
                $=   Architecture
                $#   7-char prefix of DAG hash
                $$   $
@@ -1684,8 +1686,6 @@ class Spec(object):
                 elif c == '+':
                     if self.variants:
                         write(fmt % str(self.variants), c)
-                    if self.compiler_flags:
-                        write(fmt % str(self.compiler_flags), '%')
                 elif c == '=':
                     if self.architecture:
                         write(fmt % ('+arch' + c + str(self.architecture)), c)
@@ -1702,11 +1702,17 @@ class Spec(object):
                     if (self.compiler and self.compiler.versions and
                         self.compiler.versions != _any_version):
                         write(c + str(self.compiler.versions), '%')
+                elif c == '+':
+                    if self.compiler_flags:
+                        write(fmt % str(self.compiler_flags), '%')
+                    compiler = False
                 elif c == '$':
                     escape = True
+                    compiler = False
                 else:
                     out.write(c)
-                compiler = False
+                    compiler = False
+
 
             elif c == '$':
                 escape = True
