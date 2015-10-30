@@ -86,6 +86,28 @@ class MakeExecutable(Executable):
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
 
+def load_module(mod):
+    """Takes a module name and removes modules until it is possible to
+    load that module. It then loads the provided module. Depends on the 
+    modulecmd implementation of modules used in cray and lmod.
+    """
+    #Create an executable of the module command that will output python code
+    modulecmd = which('modulecmd')
+    modulecmd.add_default_arg('python')
+    
+    # Read the module and remove any conflicting modules
+    # We do this without checking that they are already installed
+    # for ease of programming because unloading a module that is not
+    # loaded does nothing.
+    text = modulecmd('show', mod, return_oe=True).split()
+    for i, word in enumerate(text):
+        if word == 'conflict':
+            exec(compile(modulecmd('unload', text[i+1], return_oe=True), '<string>', 'exec'))    
+    # Load the module now that there are no conflicts
+    load = modulecmd('load', mod, return_oe=True)
+    exec(compile(load, '<string>', 'exec'))
+
+
 def set_compiler_environment_variables(pkg):
     assert(pkg.spec.concrete)
     compiler = pkg.compiler
@@ -108,11 +130,9 @@ def set_compiler_environment_variables(pkg):
 
     os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
 
-    if compiler.PrgEnv:
-        os.environ['SPACK_CRAYPE']       = compiler.PrgEnv
-        os.environ['SPACK_COMP_MODULE']  = compiler.module
-
-
+    if compiler.modules:
+        for mod in compiler.modules:
+            load_module(mod)
 
 
 def set_build_environment_variables(pkg):
@@ -163,8 +183,10 @@ def set_build_environment_variables(pkg):
             pcdir = join_path(p, libdir, 'pkgconfig')
             if os.path.isdir(pcdir):
                 pkg_config_dirs.append(pcdir)
-    path_set("PKG_CONFIG_PATH", pkg_config_dirs)
+    path_put_first("PKG_CONFIG_PATH", pkg_config_dirs)
 
+    if pkg.spec.architecture.compiler_strategy.lower() == 'module':
+        load_module(pkg.spec.architecture.module_name)
 
 def set_module_variables_for_package(pkg):
     """Populate the module scope of install() with some useful functions.
@@ -239,8 +261,8 @@ def get_rpaths(pkg):
 
 def setup_package(pkg):
     """Execute all environment setup routines."""
-    set_compiler_environment_variables(pkg)
     set_build_environment_variables(pkg)
+    set_compiler_environment_variables(pkg)
     set_module_variables_for_package(pkg)
 
     # Allow dependencies to set up environment as well.
