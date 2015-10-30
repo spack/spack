@@ -74,8 +74,8 @@ class Architecture(object):
     """
 
     priority        = None # Subclass needs to set this number. This controls order in which arch is detected.
-    front-end       = None
-    back-end        = None
+    front_end       = None
+    back_end        = None
     default         = None # The default back end target. On cray ivybridge
 
     def __init__(self, name):
