@@ -71,7 +71,7 @@ def install(parser, args):
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
         package = spack.db.get(spec)
-        with spack.installed_db.write_lock():
+        with spack.installed_db.write_transaction():
             package.do_install(
                 keep_prefix=args.keep_prefix,
                 keep_stage=args.keep_stage,

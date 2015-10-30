@@ -53,7 +53,7 @@ def uninstall(parser, args):
     if not args.packages:
         tty.die("uninstall requires at least one package argument.")
 
-    with spack.installed_db.write_lock():
+    with spack.installed_db.write_transaction():
         specs = spack.cmd.parse_specs(args.packages)
 
         # For each spec provided, make sure it refers to only one package.
