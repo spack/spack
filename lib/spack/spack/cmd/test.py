@@ -40,6 +40,12 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="verbose output")
+    subparser.add_argument(
+        '--junitXmlOutput', action='store_true', dest='junitXmlOutput',
+        help="Create JUnit XML output")
+    subparser.add_argument(
+        '--outputFile', dest='outputFile',
+        help="Write test output to a file other than the default")        
 
 
 def test(parser, args):

@@ -23,7 +23,6 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from external import argparse
-import xml.etree.ElementTree as ET
 import itertools
 import re
 import os
@@ -35,6 +34,7 @@ from llnl.util.filesystem import *
 import spack
 from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
+from spack.test.testutils import JunitResultFormat, TestResult, TestId
 import spack.cmd
 
 description = "Treat package installations as unit tests and output formatted test results"
@@ -55,37 +55,6 @@ def setup_parser(subparser):
         'package', nargs=argparse.REMAINDER, help="spec of package to install")
 
 
-class JunitResultFormat(object):
-    def __init__(self):
-        self.root = ET.Element('testsuite')
-        self.tests = []
-        
-    def add_test(self, buildId, testResult, buildInfo=None):
-        self.tests.append((buildId, testResult, buildInfo))
-    
-    def write_to(self, stream):
-        self.root.set('tests', '{0}'.format(len(self.tests)))
-        for buildId, testResult, buildInfo in self.tests:
-            testcase = ET.SubElement(self.root, 'testcase')
-            testcase.set('classname', buildId.name)
-            testcase.set('name', buildId.stringId())
-            if testResult == TestResult.FAILED:
-                failure = ET.SubElement(testcase, 'failure')
-                failure.set('type', "Build Error")
-                failure.text = buildInfo
-            elif testResult == TestResult.SKIPPED:
-                skipped = ET.SubElement(testcase, 'skipped')
-                skipped.set('type', "Skipped Build")
-                skipped.text = buildInfo
-        ET.ElementTree(self.root).write(stream)
-
-
-class TestResult(object):
-    PASSED = 0
-    FAILED = 1
-    SKIPPED = 2
-    
-
 class BuildId(object):
     def __init__(self, spec):
         self.name = spec.name
@@ -94,6 +63,9 @@ class BuildId(object):
     
     def stringId(self):
         return "-".join(str(x) for x in (self.name, self.version, self.hashId))
+
+    def testId(self):
+        return TestId(self.stringId(), self.name)
 
     def __hash__(self):
         return hash((self.name, self.version, self.hashId))
@@ -150,7 +122,7 @@ def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
             errOutput = None
         
         bId = BuildId(spec)
-        output.add_test(bId, result, errOutput)
+        output.add_test(bId.testId(), result, errOutput)
 
 
 def test_install(parser, args):
