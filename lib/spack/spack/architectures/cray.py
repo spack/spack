@@ -4,9 +4,9 @@ from spack.architecture import Architecture
 
 class Cray(Architecture):
     priority    = 20
-    front_end   = None
-    back_end    = None
-    default     = None
+    front_end   = 'sandybridge' 
+    back_end    = 'ivybridge'
+    default     = os.environ["CRAY_CPU_TARGET"] 
 
     def __init__(self):
         super(Cray, self).__init__('cray')
