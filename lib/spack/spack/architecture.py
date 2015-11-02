@@ -49,13 +49,6 @@ class NoSysTypeError(serr.SpackError):
 
 class Target(object):
     """ This is the processor type e.g. cray-ivybridge """
-    # Front end or back end target. Target needs to know which one this is
-    # Should autodetect from the machine
-    # features of a target
-    # - a module name
-    # -a compiler finding strategy
-    # -a name
-    # architecture classes handling the aliasing for front-end, back-end and default
 
     def __init__(self,name, module_name=None):
         self.name = name # case of cray "ivybridge" but if it's x86_64
@@ -67,7 +60,8 @@ class Target(object):
             return "MODULES"
         else:
             return "PATH"
-    
+
+
 class Architecture(object):
     """ Abstract class that each type of Architecture will subclass. Will return a instance of it once it 
         is returned
@@ -85,17 +79,19 @@ class Architecture(object):
     def add_target(self, name, target):
         self.targets[name] = target  
         
+    
     def target(self, name):
         """This is a getter method for the target dictionary that handles defaulting based
         on the values provided by default, front-end, and back-end. This can be overwritten
         by a subclass for which we want to provide further aliasing options.
         """
         if name == 'default':
-            name = default
+            name = self.default
         elif name == 'front_end' or name == 'fe':
-            name = front-end
+            name = self.front_end
         elif name == 'back_end' or name == 'be':
-            name = back-end
+            name = self.back_end
+
         return self.targets[name]
 
     @classmethod
@@ -148,10 +144,7 @@ def get_sys_type_from_uname():
         return None
 
 def get_sys_type_from_config_file():
-    """ Should read in a sys_type from the config yaml file. This should be the first thing looked at since
-        The user can specify that the architecture is a cray-xc40. A template yaml should be created when spack 
-        is installed. Similar to .spackconfig
-    """ 
+     
     spack_home_dir = os.environ["HOME"] + "/.spack" 
     yaml_file = os.path.join(spack_home_dir, 'architecture.yaml')
     try:
