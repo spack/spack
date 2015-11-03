@@ -28,7 +28,7 @@ import itertools
 import spack
 test_install = __import__("spack.cmd.test-install", 
     fromlist=["BuildId", "create_test_output"])
-from spack.test.testutils import TestResult
+from spack.test.testutils import TestStatus
 
 class MockOutput(object):
     def __init__(self):
@@ -94,8 +94,8 @@ class UnitInstallTest(unittest.TestCase):
         test_install.create_test_output(specX, [specX, specY], mo, getLogFunc=test_fetch_log)
         
         self.assertEqual(mo.results, 
-            {bIdX.testId():TestResult.PASSED, 
-            bIdY.testId():TestResult.PASSED})
+            {bIdX.testId():TestStatus.PASSED, 
+            bIdY.testId():TestStatus.PASSED})
 
     def test_dependency_already_installed(self):
         mo = MockOutput()
@@ -104,7 +104,7 @@ class UnitInstallTest(unittest.TestCase):
         pkgY.installed = True
         test_install.create_test_output(specX, [specX], mo, getLogFunc=test_fetch_log)
         
-        self.assertEqual(mo.results, {bIdX.testId():TestResult.PASSED})
+        self.assertEqual(mo.results, {bIdX.testId():TestStatus.PASSED})
 
     #TODO: add test(s) where Y fails to install
 

@@ -23,37 +23,77 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import xml.etree.ElementTree as ET
+import itertools
+import os
+
+from llnl.util.filesystem import *
 
 class JunitResultFormat(object):
     def __init__(self):
         self.root = ET.Element('testsuite')
         self.tests = []
         
-    def add_test(self, testId, testResult, testInfo=None):
-        self.tests.append((testId, testResult, testInfo))
+    def add_test(self, testId, testStatus, testInfo=None):
+        self.tests.append((testId, testStatus, testInfo))
     
     def write_to(self, stream):
         self.root.set('tests', '{0}'.format(len(self.tests)))
-        for testId, testResult, testInfo in self.tests:
+        for testId, testStatus, testInfo in self.tests:
             testcase = ET.SubElement(self.root, 'testcase')
             testcase.set('classname', testId.groupId)
             testcase.set('name', testId.name)
-            if testResult == TestResult.FAILED:
+            if testStatus == TestStatus.FAILED:
                 failure = ET.SubElement(testcase, 'failure')
-                failure.set('type', "Build Error")
+                failure.set('type', "Test Failure")
                 failure.text = testInfo
-            elif testResult == TestResult.SKIPPED:
+            elif testStatus == TestStatus.SKIPPED:
                 skipped = ET.SubElement(testcase, 'skipped')
-                skipped.set('type', "Skipped Build")
+                skipped.set('type', "Test Skipped")
                 skipped.text = testInfo
+            elif testStatus == TestStatus.ERROR:
+                error = ET.SubElement(testcase, 'error')
+                error.set('type', "Test Error")
+                error.text = testInfo
         ET.ElementTree(self.root).write(stream)
 
 
-class TestResult(object):
+def generate_output_format(suite, testResult, output):
+    allTests = set(itertools.chain.from_iterable(suite))
+
+    for testCase, tracebackMsg in testResult.failures:
+        testId = TestId(str(testCase), testCase.__class__.__name__)
+        output.add_test(testId, TestStatus.FAILED, tracebackMsg)
+    
+    for testCase, tracebackMsg in testResult.errors:
+        testId = TestId(str(testCase), testCase.__class__.__name__)
+        output.add_test(testId, TestStatus.ERROR, tracebackMsg)
+
+    
+    successfulTests = allTests - set(x for x, y in itertools.chain(
+            testResult.failures, testResult.errors))
+    
+    for testCase in successfulTests:
+        testId = TestId(str(testCase), testCase.__class__.__name__)
+        output.add_test(testId, TestStatus.PASSED)
+
+
+class TestStatus(object):
     PASSED = 0
     FAILED = 1
     SKIPPED = 2
+    ERROR = 3
     
+
+def test_output_path(fileName):
+    """
+    Given a file name, return a full path to a test file. Does not check if the
+    file already exists.
+    """
+    outputDir = join_path(os.getcwd(), "test-output")
+    if not os.path.exists(outputDir):
+        os.mkdir(outputDir)
+    return join_path(outputDir, fileName)
+
 
 class TestId(object):
     def __init__(self, name, groupId=None):

@@ -29,12 +29,11 @@ import os
 import codecs
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
 
 import spack
 from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
-from spack.test.testutils import JunitResultFormat, TestResult, TestId
+from spack.test.testutils import JunitResultFormat, TestStatus, TestId, test_output_path
 import spack.cmd
 
 description = "Treat package installations as unit tests and output formatted test results"
@@ -100,16 +99,16 @@ def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
         failedDeps = failed_dependencies(spec)
         package = spack.db.get(spec)
         if failedDeps:
-            result = TestResult.SKIPPED
+            result = TestStatus.SKIPPED
             dep = iter(failedDeps).next()
             depBID = BuildId(dep)
             errOutput = "Skipped due to failed dependency: {0}".format(
                 depBID.stringId())
         elif (not package.installed) and (not package.stage.source_path):
-            result = TestResult.FAILED
+            result = TestStatus.FAILED
             errOutput = "Failure to fetch package resources."
         elif not package.installed:
-            result = TestResult.FAILED
+            result = TestStatus.FAILED
             lines = getLogFunc(package.build_log_path)
             errMessages = list(line for line in lines if
                 re.search('error:', line, re.IGNORECASE))
@@ -118,7 +117,7 @@ def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
                     [spec.to_yaml(), "Errors:"], errOutput, 
                     ["Build Log:", package.build_log_path]))
         else:
-            result = TestResult.PASSED
+            result = TestStatus.PASSED
             errOutput = None
         
         bId = BuildId(spec)
@@ -149,10 +148,7 @@ def test_install(parser, args):
     
     if not args.output:
         bId = BuildId(topSpec)
-        outputDir = join_path(os.getcwd(), "test-output")
-        if not os.path.exists(outputDir):
-            os.mkdir(outputDir)
-        outputFpath = join_path(outputDir, "test-{0}.xml".format(bId.stringId()))
+        outputFpath = test_output_path("test-{0}.xml".format(bId.stringId()))
     else:
         outputFpath = args.output
     
