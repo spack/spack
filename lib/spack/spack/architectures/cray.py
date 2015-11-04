@@ -10,6 +10,11 @@ class Cray(Architecture):
 
     def __init__(self):
         super(Cray, self).__init__('cray')
+        # Back End compiler needs the proper target module loaded.
+        self.add_target('ivybridge','craype-ivybridge')
+        # Could switch to use modules and fe targets for front end
+        # Currently using compilers by path for front end.
+        self.add_target('sandybridge')
 
     @classmethod
     def detect(self):
