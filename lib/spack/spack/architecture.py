@@ -77,9 +77,14 @@ class Architecture(object):
         self.name = name
 
     def add_target(self, name, target):
-        self.targets[name] = target  
-        
-    
+        """Used by the architecture specific subclass to list available targets. Raises an error
+        if the architecture specifies a name that is reserved by spack as an alias.
+        """
+        if name in ['front_end', 'fe', 'back_end', 'be', 'default']:
+            raise ValueError("%s is a spack reserved alias and cannot be the name of a target" % name)
+        self.targets[name] = target
+
+
     def target(self, name):
         """This is a getter method for the target dictionary that handles defaulting based
         on the values provided by default, front-end, and back-end. This can be overwritten
