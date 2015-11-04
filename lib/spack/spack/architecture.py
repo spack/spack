@@ -48,19 +48,28 @@ class NoSysTypeError(serr.SpackError):
 
 
 class Target(object):
-    """ This is the processor type e.g. cray-ivybridge """
+    """ Target is the processor of the host machine. The host machine may have different front-end
+        and back-end targets, especially if it is a Cray machine. The target will have a name and
+        also the module_name (e.g craype-compiler). Targets will also recognize which architecture
+        they came from using the set_architecture method. Targets will have compiler finding strategies
+        """
+    default_strategy = None # Can probably add a compiler path here
 
     def __init__(self,name, module_name=None):
         self.name = name # case of cray "ivybridge" but if it's x86_64
         self.module_name = module_name # craype-ivybridge
 
+    def set_architecture(self, architecture): # Target should get the architecture class.
+        self.architecture = architecture
+        
     @property
     def compiler_strategy(self):
-        if self.module_name: # If there is a module_name given then use MODULES
+        if default_strategy:
+            return default_strategy
+        elif self.module_name: # If there is a module_name given then use MODULES
             return "MODULES"
         else:
             return "PATH"
-
 
 class Architecture(object):
     """ Abstract class that each type of Architecture will subclass. Will return a instance of it once it 
@@ -77,8 +86,8 @@ class Architecture(object):
         self.name = name
 
     def add_target(self, name, target):
-        self.targets[name] = target  
-        
+        target.set_architecture(self)
+        self.targets[name] = target          
     
     def target(self, name):
         """This is a getter method for the target dictionary that handles defaulting based
@@ -163,7 +172,7 @@ def get_sys_type_from_config_file():
 def all_architectures():
     modules = []
     for name in list_modules(spack.arch_path):
-        mod_name = 'spack.architectures.' + name
+        mod_name = 'spack.architectures' + name
         path = join_path(spack.arch_path, name) + ".py"
         mod = imp.load_source(mod_name, path)
         class_name = mod_to_class(name)
