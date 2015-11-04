@@ -1,20 +1,20 @@
 import os
 
-from spack.architecture import Architecture
+from spack.architecture import Architecture, Target
 
 class Cray(Architecture):
     priority    = 20
     front_end   = 'sandybridge' 
     back_end    = 'ivybridge'
-    default     = os.environ["CRAY_CPU_TARGET"] 
+    default     = 'ivybridge'
 
     def __init__(self):
         super(Cray, self).__init__('cray')
         # Back End compiler needs the proper target module loaded.
-        self.add_target('ivybridge','craype-ivybridge')
+        self.add_target('ivybridge', Target('ivybridge','craype-ivybridge'))
         # Could switch to use modules and fe targets for front end
         # Currently using compilers by path for front end.
-        self.add_target('sandybridge')
+        self.add_target('sandybridge', Target('sandybridge'))
 
     @classmethod
     def detect(self):
