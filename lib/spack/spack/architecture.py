@@ -23,7 +23,8 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import subprocess
+import re
+import platform
 
 from llnl.util.lang import memoized
 
@@ -58,15 +59,11 @@ def get_sys_type_from_environment():
     return os.environ.get('SYS_TYPE')
 
 
-def get_sys_type_from_uname():
-    """Return the architecture from uname."""
-    try:
-        arch_proc = subprocess.Popen(['uname', '-i'],
-            stdout=subprocess.PIPE)
-        arch, _ = arch_proc.communicate()
-        return arch.strip()
-    except:
-        return None
+def get_sys_type_from_platform():
+    """Return the architecture from Python's platform module."""
+    sys_type = platform.system() + '-' + platform.machine()
+    sys_type = re.sub(r'[^\w-]', '_', sys_type)
+    return sys_type.lower()
 
 
 @memoized
@@ -74,7 +71,7 @@ def sys_type():
     """Returns a SysType for the current machine."""
     methods = [get_sys_type_from_spack_globals,
                get_sys_type_from_environment,
-               get_sys_type_from_uname]
+               get_sys_type_from_platform]
 
     # search for a method that doesn't return None
     sys_type = None
