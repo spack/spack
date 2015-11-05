@@ -38,7 +38,7 @@ import spack.compilers
 import spack.architecture
 import spack.error
 from spack.version import *
-
+import spack.compiler as Compiler
 
 
 class DefaultConcretizer(object):
@@ -181,20 +181,27 @@ class DefaultConcretizer(object):
         compiler is used, defaulting to no compiler flags in the spec.
         Default specs set at the compiler level will still be added later.
         """
-        try:
-            nearest = next(p for p in spec.traverse(direction='parents')
-                           if p.compiler == spec.compiler and p is not spec)
-            if spec.compiler_flags == nearest.compiler_flags:
-                return False
-            spec.compiler_flags = nearest.compiler_flags.copy()
+        ret = False
+        for flag in Compiler.valid_compiler_flags():
+            print flag
+            try:
+                nearest = next(p for p in spec.traverse(direction='parents')
+                               if p.compiler == spec.compiler and p is not spec
+                               and flag in p.compiler_flags)
+                if ((not flag in spec.compiler_flags) or
+                    spec.compiler_flags[flag] != p.compiler_flags[flag]):
+                    spec.compiler_flags[flag] = p.compiler_flags[flag]
+                    ret = True
 
-        except StopIteration:
-            if spec.compiler_flags == spec.root.compiler_flags:
-                return False
-            spec.compiler_flags = spec.root.compiler_flags
+            except StopIteration:
+                if (flag in spec.root.compiler_flags and ((not flag in spec.compiler_flags) or
+                    spec.compiler_flags[flag] != spec.root.compiler_flags[flag])):
+                    spec.compiler_flags[flag] = spec.root.compiler_flags[flag]
+                    ret = True
+                else:
+                    spec.compiler_flags[flag] = ''
 
-        return True  # things changed.
-
+        return ret
 
 
     def choose_provider(self, spec, providers):

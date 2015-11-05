@@ -67,8 +67,8 @@ class ProviderIndex(object):
         if type(spec) != spack.spec.Spec:
             spec = spack.spec.Spec(spec)
 
-        if spec.name == "any-pkg-name":
-            #The "any" name does not have a package
+        if spec.name == "":
+            # Empty specs do not have a package
             return
 
         assert(not spec.virtual)

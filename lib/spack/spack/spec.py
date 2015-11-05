@@ -376,8 +376,6 @@ class FlagMap(HashableMap):
     def __init__(self, spec):
         super(FlagMap, self).__init__()
         self.spec = spec
-        for flag in Compiler.valid_compiler_flags():
-            self[flag] = ""
 
 
     def satisfies(self, other, strict=False):
@@ -386,7 +384,9 @@ class FlagMap(HashableMap):
             return all(k in self and self[k] == other[k]
                        for k in other if other[k] != "")
         else:
-            return self == other
+            return all(k in self and self[k] == other[k]
+                       for k in other)
+
 
     def constrain(self, other):
         """Add all flags in other that aren't in self to self.
@@ -581,7 +581,7 @@ class Spec(object):
     @staticmethod
     def is_virtual(name):
         """Test if a name is virtual without requiring a Spec."""
-        return name != "any-pkg-name" and not spack.db.exists(name)
+        return name != "" and not spack.db.exists(name)
 
 
     @property
@@ -904,7 +904,7 @@ class Spec(object):
            with requirements of its pacakges.  See flatten() and normalize() for
            more details on this.
         """
-        if self.name == "any-pkg-name":
+        if self.name == "":
             raise SpecError("Attempting to concretize anonymous spec")
 
         if self._concrete:
@@ -1239,7 +1239,7 @@ class Spec(object):
         """
         other = self._autospec(other)
 
-        if not (self.name == other.name or self.name == "any-pkg-name" or other.name == "any-pkg-name"):
+        if not (self.name == other.name or self.name == "" or other.name == ""):
             raise UnsatisfiableSpecNameError(self.name, other.name)
 
         if not self.versions.overlaps(other.versions):
@@ -1332,7 +1332,7 @@ class Spec(object):
 
         try:
             spec = spack.spec.Spec(spec_like)
-            if spec.name == "any-pkg-name":
+            if spec.name == "":
                 raise SpecError("anonymous package -- this will always be handled")
             return spec
         except SpecError:
@@ -1365,7 +1365,7 @@ class Spec(object):
             return False
 
         # Otherwise, first thing we care about is whether the name matches
-        if self.name != other.name and self.name != "any-pkg-name" and other.name != "any-pkg-name":
+        if self.name != other.name and self.name != "" and other.name != "":
             return False
 
         if self.versions and other.versions:
@@ -1382,7 +1382,7 @@ class Spec(object):
             return False
 
         var_strict = strict
-        if self.name == "any-pkg-name" or other.name == "any-pkg-name":
+        if self.name == "" or other.name == "":
             var_strict = True
         if not self.variants.satisfies(other.variants, strict=var_strict):
             return False
@@ -1401,7 +1401,7 @@ class Spec(object):
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
             deps_strict = strict
-            if self.name == "any-pkg-name" or other.name == "any-pkg-name":
+            if self.name == "" or other.name == "":
                 deps_strict=True
             return self.satisfies_dependencies(other, strict=deps_strict)
         else:
@@ -1888,7 +1888,7 @@ class SpecParser(spack.parse.Parser):
     def empty_spec(self):
         """Create a Null spec from which dependency constraints can be hung"""
         spec = Spec.__new__(Spec)
-        spec.name = "any-pkg-name"
+        spec.name = ""
         spec.versions = VersionList(':')
         spec.variants = VariantMap(spec)
         spec.architecture = None
