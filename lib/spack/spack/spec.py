@@ -1175,6 +1175,9 @@ class Spec(object):
            TODO: normalize should probably implement some form of cycle detection,
            to ensure that the spec is actually a DAG.
         """
+        if self.name == "":
+            raise SpecError("Attempting to normalize anonymous spec")
+
         if self._normal and not force:
             return False
 
@@ -1217,8 +1220,8 @@ class Spec(object):
            UnsupportedCompilerError.
         """
         for spec in self.traverse():
-            # Don't get a package for a virtual name.
-            if not spec.virtual:
+            # Don't get a package for a virtual name or an anonymous name
+            if (not spec.virtual) and spack.db.exists(spec.name):
                 spack.db.get(spec.name)
 
             # validate compiler in addition to the package name.
@@ -1896,6 +1899,9 @@ class SpecParser(spack.parse.Parser):
         spec.compiler_flags = FlagMap(spec)
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
+
+        spec._normal = False
+        spec._concrete = False
 
         #Should we be able to add cflags eventually?
         while self.next:

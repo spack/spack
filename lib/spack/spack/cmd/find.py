@@ -79,7 +79,6 @@ def gray_hash(spec, length):
 def display_specs(specs, **kwargs):
     mode = kwargs.get('mode', 'short')
     hashes = kwargs.get('long', False)
-    print hashes
 
     hlen = 7
     if kwargs.get('very_long', False):
@@ -154,7 +153,7 @@ def find(parser, args):
     # Filter out specs that don't exist.
     query_specs = spack.cmd.parse_specs(args.query_specs)
     query_specs, nonexisting = partition_list(
-        query_specs, lambda s: spack.db.exists(s.name))
+        query_specs, lambda s: spack.db.exists(s.name) or s.name == "")
 
     if nonexisting:
         msg = "No such package%s: " % ('s' if len(nonexisting) > 1 else '')
