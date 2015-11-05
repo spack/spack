@@ -611,7 +611,6 @@ class Package(object):
     def remove_prefix(self):
         """Removes the prefix for a package along with any empty parent directories."""
         spack.install_layout.remove_install_directory(self.spec)
-        spack.installed_db.remove(self.spec)
 
 
     def do_fetch(self):
@@ -877,7 +876,7 @@ class Package(object):
         if self.installed:
             return spack.install_layout.build_log_path(self.spec)
         else:
-            return join_path(self.stage.source_path, 'spack-build.out')   
+            return join_path(self.stage.source_path, 'spack-build.out')
 
 
     @property
@@ -934,6 +933,7 @@ class Package(object):
 
         # Uninstalling in Spack only requires removing the prefix.
         self.remove_prefix()
+        spack.installed_db.remove(self.spec)
         tty.msg("Successfully uninstalled %s." % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks

@@ -148,6 +148,15 @@ class DatabaseTest(MockPackagesTest):
         spack.installed_db = self.spack_installed_db
 
 
+    def test_005_db_exists(self):
+        """Make sure db cache file exists after creating."""
+        index_file = join_path(self.install_path, '.spack-db', 'index.yaml')
+        lock_file = join_path(self.install_path, '.spack-db', 'lock')
+
+        self.assertTrue(os.path.exists(index_file))
+        self.assertTrue(os.path.exists(lock_file))
+
+
     def test_010_all_install_sanity(self):
         """Ensure that the install layout reflects what we think it does."""
         all_specs = spack.install_layout.all_specs()
@@ -182,8 +191,6 @@ class DatabaseTest(MockPackagesTest):
         with spack.installed_db.write_transaction():
             specs = spack.installed_db.query()
             recs = [spack.installed_db.get_record(s) for s in specs]
-            spack.installed_db.write()
-        spack.installed_db.read()
 
         for spec, rec in zip(specs, recs):
             new_rec = spack.installed_db.get_record(spec)

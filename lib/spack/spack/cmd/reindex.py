@@ -25,8 +25,7 @@
 from external import argparse
 import spack
 
-description = "Correct database irregularities"
+description = "Rebuild Spack's package database."
 
-# Very basic version of spack fsck
-def fsck(parser, args):
+def reindex(parser, args):
     spack.installed_db.reindex(spack.install_layout)

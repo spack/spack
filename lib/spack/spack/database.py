@@ -93,8 +93,8 @@ class InstallRecord(object):
     """
     def __init__(self, spec, path, installed, ref_count=0):
         self.spec = spec
-        self.path = path
-        self.installed = installed
+        self.path = str(path)
+        self.installed = bool(installed)
         self.ref_count = ref_count
 
     def to_dict(self):
@@ -173,7 +173,7 @@ class Database(object):
         # map from per-spec hash code to installation record.
         installs = dict((k, v.to_dict()) for k, v in self._data.items())
 
-        # databaes includes installation list and version.
+        # database includes installation list and version.
 
         # NOTE: this DB version does not handle multiple installs of
         # the same spec well.  If there are 2 identical specs with
@@ -336,15 +336,14 @@ class Database(object):
         Does no locking.
 
         """
-        temp_name = '%s.%s.temp' % (socket.getfqdn(), os.getpid())
-        temp_file = join_path(self._db_dir, temp_name)
+        temp_file = self._index_path + (
+            '.%s.%s.temp' % (socket.getfqdn(), os.getpid()))
 
         # Write a temporary database file them move it into place
         try:
             with open(temp_file, 'w') as f:
                 self._write_to_yaml(f)
             os.rename(temp_file, self._index_path)
-
         except:
             # Clean up temp file if something goes wrong.
             if os.path.exists(temp_file):
@@ -365,14 +364,6 @@ class Database(object):
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
             self.reindex(spack.install_layout)
-
-
-    def read(self):
-        with self.read_transaction(): pass
-
-
-    def write(self):
-        with self.write_transaction(): pass
 
 
     def _add(self, spec, path, directory_layout=None):
