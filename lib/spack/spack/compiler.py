@@ -227,14 +227,32 @@ class Compiler(object):
         for d in dicts:
             all_keys.update(d)
 
-        compilers = []
+        compilers = {}
         for k in all_keys:
             ver, pre, suf = k
+
+            # Skip compilers with unknown version.
+            if ver == 'unknown':
+                continue
+
             paths = tuple(pn[k] if k in pn else None for pn in dicts)
             spec = spack.spec.CompilerSpec(cls.name, ver)
-            compilers.append(cls(spec, *paths))
 
-        return compilers
+            if ver in compilers:
+                prev = compilers[ver]
+
+                # prefer the one with more compilers.
+                prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
+                newcount  = len([p for p in paths      if p is not None])
+                prevcount = len([p for p in prev_paths if p is not None])
+
+                # Don't add if it's not an improvement over prev compiler.
+                if newcount <= prevcount:
+                    continue
+
+            compilers[ver] = cls(spec, *paths)
+
+        return list(compilers.values())
 
 
     def __repr__(self):

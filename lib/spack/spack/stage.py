@@ -261,7 +261,8 @@ class Stage(object):
                 tty.debug(e)
                 continue
         else:
-            tty.die("All fetchers failed for %s" % self.name)
+            errMessage = "All fetchers failed for %s" % self.name
+            raise fs.FetchError(errMessage, None)
 
 
     def check(self):

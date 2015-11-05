@@ -11,6 +11,8 @@ class Ncurses(Package):
 
     version('5.9', '8cb9c412e5f2d96bc6f459aa8c6282a1',
             url='http://ftp.gnu.org/pub/gnu/ncurses/ncurses-5.9.tar.gz')
+    version('6.0', 'ee13d052e1ead260d7c28071f46eefb1',
+            url='http://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.0.tar.gz')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,

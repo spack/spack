@@ -38,6 +38,8 @@ class Swig(Package):
 
     version('3.0.2', '62f9b0d010cef36a13a010dc530d0d41')
 
+    depends_on('pcre')
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()

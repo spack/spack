@@ -55,6 +55,16 @@ def setup_parser(subparser):
         help='Show dependency hashes as well as versions.')
 
     subparser.add_argument(
+        '-u', '--unknown', action='store_true', dest='unknown',
+        help='Show only specs Spack does not have a package for.')
+    subparser.add_argument(
+        '-m', '--missing', action='store_true', dest='missing',
+        help='Show missing dependencies as well as installed specs.')
+    subparser.add_argument(
+        '-M', '--only-missing', action='store_true', dest='only_missing',
+        help='Show only missing dependencies.')
+
+    subparser.add_argument(
         'query_specs', nargs=argparse.REMAINDER,
         help='optional specs to filter results')
 
@@ -113,6 +123,7 @@ def display_specs(specs, **kwargs):
                 if hashes:
                     string += gray_hash(s, hlen) + ' '
                 string += s.format('$-_$@$+', color=True)
+
                 return string
             colify(fmt(s) for s in specs)
 
@@ -136,11 +147,21 @@ def find(parser, args):
         if not query_specs:
             return
 
+    # Set up query arguments.
+    installed, known = True, any
+    if args.only_missing:
+        installed = False
+    elif args.missing:
+        installed = any
+    if args.unknown:
+        known = False
+    q_args = { 'installed' : installed, 'known' : known }
+
     # Get all the specs the user asked for
     if not query_specs:
-        specs = set(spack.db.installed_package_specs())
+        specs = set(spack.installed_db.query(**q_args))
     else:
-        results = [set(spack.db.get_installed(qs)) for qs in query_specs]
+        results = [set(spack.installed_db.query(qs, **q_args)) for qs in query_specs]
         specs = set.union(*results)
 
     if not args.mode:

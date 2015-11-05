@@ -641,7 +641,9 @@ class Spec(object):
 
 
     def dag_hash(self, length=None):
-        """Return a hash of the entire spec DAG, including connectivity."""
+        """
+        Return a hash of the entire spec DAG, including connectivity.
+        """
         yaml_text = yaml.dump(
             self.to_node_dict(), default_flow_style=True, width=sys.maxint)
         sha = hashlib.sha1(yaml_text)
@@ -711,7 +713,7 @@ class Spec(object):
         try:
             yfile = yaml.load(stream)
         except MarkedYAMLError, e:
-            raise SpackYAMLError("error parsing YMAL spec:", str(e))
+            raise SpackYAMLError("error parsing YAML spec:", str(e))
 
         for node in yfile['spec']:
             name = next(iter(node))
@@ -2012,4 +2014,4 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
 
 class SpackYAMLError(spack.error.SpackError):
     def __init__(self, msg, yaml_error):
-        super(SpackError, self).__init__(msg, str(yaml_error))
+        super(SpackYAMLError, self).__init__(msg, str(yaml_error))

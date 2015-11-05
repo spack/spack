@@ -10,8 +10,21 @@ class Binutils(Package):
     version('2.23.2', '4f8fa651e35ef262edc01d60fb45702e')
     version('2.20.1', '2b9dc8f2b7dbd5ec5992c6e29de0b764')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    variant('libiberty', default=False, description='Also install libiberty.')
 
+    def install(self, spec, prefix):
+        configure_args = [
+            '--prefix=%s' % prefix,
+            '--disable-dependency-tracking',
+            '--enable-interwork',
+            '--enable-multilib',
+            '--enable-shared',
+            '--enable-64-bit-bfd',
+            '--enable-targets=all']
+
+        if '+libiberty' in spec:
+            configure_args.append('--enable-install-libiberty')
+
+        configure(*configure_args)
         make()
         make("install")

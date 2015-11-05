@@ -363,6 +363,11 @@ class PackageDB(object):
         return self._instances[spec]
 
 
+    def purge(self):
+        """Clear entire package instance cache."""
+        self._instances.clear()
+
+
     @_autospec
     def providers_for(self, vpkg_spec):
         if self._provider_index is None:
@@ -396,6 +401,7 @@ class PackageDB(object):
         """
         validate_module_name(pkg_name)
         pkg_dir = self.dirname_for_package_name(pkg_name)
+
         return join_path(pkg_dir, package_file_name)
 
 

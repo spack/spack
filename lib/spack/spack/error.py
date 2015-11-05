@@ -55,8 +55,8 @@ class SpackError(Exception):
 
     def __str__(self):
         msg = self.message
-        if self.long_message:
-            msg += "\n    %s" % self.long_message
+        if self._long_message:
+            msg += "\n    %s" % self._long_message
         return msg
 
 class UnsupportedPlatformError(SpackError):

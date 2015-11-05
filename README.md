@@ -1,5 +1,5 @@
-Spack
-===========
+![image](share/spack/logo/spack-logo-text-64.png "Spack")
+============
 
 Spack is a package management tool designed to support multiple
 versions and configurations of software on a wide variety of platforms
@@ -13,7 +13,7 @@ can coexist on the same system.
 Most importantly, Spack is simple. It offers a simple spec syntax so
 that users can specify versions and configuration options
 concisely. Spack is also simple for package authors: package files are
-writtin in pure Python, and specs allow package authors to write a
+written in pure Python, and specs allow package authors to write a
 single build script for many different builds of the same package.
 
 See the
@@ -62,21 +62,9 @@ latest stable release.
 
 Authors
 ----------------
-Spack was written by Todd Gamblin, tgamblin@llnl.gov.
+Many thanks go to Spack's [contributors](https://github.com/scalability-llnl/spack/graphs/contributors).
 
-Significant contributions were also made by:
-
-  * David Beckingsale
-  * David Boehme
-  * Alfredo Gimenez
-  * Luc Jaulmes
-  * Matt Legendre
-  * Greg Lee
-  * Adam Moody
-  * Saravan Pantham
-  * Joachim Protze
-  * Bob Robey
-  * Justin Too
+Spack was originally written by Todd Gamblin, tgamblin@llnl.gov.
 
 Release
 ----------------

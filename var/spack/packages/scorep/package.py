@@ -1,11 +1,10 @@
 # FIXME: Add copyright statement
 
 from spack import *
-from contextlib import closing
 
 class Scorep(Package):
-    """The Score-P measurement infrastructure is a highly scalable and 
-       easy-to-use tool suite for profiling, event tracing, and online 
+    """The Score-P measurement infrastructure is a highly scalable and
+       easy-to-use tool suite for profiling, event tracing, and online
        analysis of HPC applications."""
 
     # FIXME: add a proper url for your package's homepage here.
@@ -20,7 +19,7 @@ class Scorep(Package):
     depends_on("mpi")
     depends_on("papi")
     # depends_on("otf2@1.2:1.2.1") # only Score-P 1.2.x
-    depends_on("otf2") 
+    depends_on("otf2")
     depends_on("opari2")
     depends_on("cube@4.2:4.2.3")
 
@@ -53,12 +52,12 @@ MPI_CXXFLAGS=-fPIC
         # Use a custom compiler configuration, otherwise the score-p
         # build system messes with spack's compiler settings.
         # Create these three files in the build directory
-        with closing(open("platform-backend-user-provided", "w")) as backend_file:
+        with open("platform-backend-user-provided", "w") as backend_file:
             backend_file.write(self.backend_user_provided)
-        with closing(open("platform-frontend-user-provided", "w")) as frontend_file:
+        with open("platform-frontend-user-provided", "w") as frontend_file:
             frontend_file.write(self.frontend_user_provided)
-        with closing(open("platform-mpi-user-provided", "w")) as mpi_file:
-            mpi_file.write(self.mpi_user_provided)            
+        with open("platform-mpi-user-provided", "w") as mpi_file:
+            mpi_file.write(self.mpi_user_provided)
 
         configure_args = ["--prefix=%s" % prefix,
                           "--with-custom-compilers",

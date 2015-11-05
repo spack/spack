@@ -54,7 +54,7 @@ def deactivate(parser, args):
     if args.all:
         if pkg.extendable:
             tty.msg("Deactivating all extensions of %s" % pkg.spec.short_spec)
-            ext_pkgs = spack.db.installed_extensions_for(spec)
+            ext_pkgs = spack.installed_db.installed_extensions_for(spec)
 
             for ext_pkg in ext_pkgs:
                 ext_pkg.spec.normalize()
