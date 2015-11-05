@@ -14,7 +14,8 @@ class Libxml2(Package):
     depends_on('xz')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure("--prefix=%s" % prefix, 
+                  "--with-python=%s" % spec['python'].prefix)
 
         make()
         make("install")
