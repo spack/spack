@@ -13,19 +13,22 @@ class Binutils(Package):
     variant('krellpatch', default=False, description="build with openspeedshop based patch.")
     patch('binutilskrell-2.24.patch', when='@2.24+krellpatch')
 
+    variant('libiberty', default=False, description='Also install libiberty.')
+
     def install(self, spec, prefix):
 
-        # Add additional configuration options for use in the OpenSpeedShop project
-        if '+krellpatch' in spec:
-            configure('--prefix', self.prefix,
-                      '--libdir', self.prefix.lib,
-                      '--enable-shared',
-                      '--enable-install-libiberty',
-                      '--disable-multilib'
-                      )
-        else:
-            configure("--prefix=%s" % prefix)
+        configure_args = [
+            '--prefix=%s' % prefix,
+            '--disable-dependency-tracking',
+            '--enable-interwork',
+            '--enable-multilib',
+            '--enable-shared',
+            '--enable-64-bit-bfd',
+            '--enable-targets=all']
 
+        if '+libiberty' in spec:
+            configure_args.append('--enable-install-libiberty')
 
+        configure(*configure_args)
         make()
         make("install")
