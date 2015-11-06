@@ -32,7 +32,8 @@ class Cbtf(Package):
     version('1.6', branch='master', git='http://git.code.sf.net/p/cbtf/cbtf')
 
     depends_on("cmake")
-    depends_on("boost@1.42:")
+    #depends_on("boost@1.42:")
+    depends_on("boost@1.50")
     depends_on("mrnet@4.1.0+krelloptions")
     depends_on("xerces-c@3.1.1:")
     depends_on("libxml2")
