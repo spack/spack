@@ -17,8 +17,9 @@ class Binutils(Package):
 
     variant('libiberty', default=False, description='Also install libiberty.')
 
-    def install(self, spec, prefix):
+    variant('libiberty', default=False, description='Also install libiberty.')
 
+    def install(self, spec, prefix):
         configure_args = [
             '--prefix=%s' % prefix,
             '--disable-dependency-tracking',
