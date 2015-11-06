@@ -30,7 +30,7 @@ class Openspeedshop(Package):
 
     homepage = "http://www.openspeedshop.org"
     url      = "http://sourceforge.net/projects/openss/files/openss/openspeedshop-2.1/openspeedshop-2.1.tar.gz/download"
-    version('2.1', '64ee17166519838c7b94a1adc138e94f')
+    version('2.1', 'bdaa57c1a0db9d0c3e0303fd8496c507')
 
     # optional mirror template
     #url      = "file:/g/g24/jeg/openspeedshop-2.1.tar.gz"
