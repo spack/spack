@@ -118,7 +118,7 @@ def main():
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
-        tty.warn("You asked for --insecure, which does not check SSL certificates or checksums.")
+        tty.warn("You asked for --insecure, which does not check SSL certificates.")
         spack.curl.add_default_arg('-k')
 
     # Try to load the particular command asked for and run it

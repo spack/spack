@@ -19,6 +19,8 @@ class Binutils(Package):
 
     variant('libiberty', default=False, description='Also install libiberty.')
 
+    variant('libiberty', default=False, description='Also install libiberty.')
+
     def install(self, spec, prefix):
         configure_args = [
             '--prefix=%s' % prefix,

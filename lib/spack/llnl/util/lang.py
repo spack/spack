@@ -87,10 +87,7 @@ def index_by(objects, *funcs):
     result = {}
     for o in objects:
         key = f(o)
-        if key not in result:
-            result[key] = [o]
-        else:
-            result[key].append(o)
+        result.setdefault(key, []).append(o)
 
     for key, objects in result.items():
         result[key] = index_by(objects, *funcs[1:])

@@ -222,7 +222,7 @@ def working_dir(dirname, **kwargs):
 
 def touch(path):
     """Creates an empty file at the specified path."""
-    with closing(open(path, 'a')) as file:
+    with open(path, 'a') as file:
         os.utime(path, None)
 
 

@@ -438,9 +438,16 @@ class Package(object):
             raise ValueError("Can only get a stage for a concrete package.")
 
         if self._stage is None:
+            # Construct a mirror path (TODO: get this out of package.py)
             mp = spack.mirror.mirror_archive_path(self.spec)
-            self._stage = Stage(
-                self.fetcher, mirror_path=mp, name=self.spec.short_spec)
+
+            # Construct a path where the stage should build..
+            s = self.spec
+            stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
+
+            # Build the stage
+            self._stage = Stage(self.fetcher, mirror_path=mp, name=stage_name)
+
         return self._stage
 
 
@@ -563,9 +570,12 @@ class Package(object):
     @property
     def installed_dependents(self):
         """Return a list of the specs of all installed packages that depend
-           on this one."""
+           on this one.
+
+        TODO: move this method to database.py?
+        """
         dependents = []
-        for spec in spack.db.installed_package_specs():
+        for spec in spack.installed_db.query():
             if self.name == spec.name:
                 continue
             for dep in spec.traverse():
@@ -779,6 +789,7 @@ class Package(object):
                          "Manually remove this directory to fix:",
                          self.prefix)
 
+
         def real_work():
             try:
                 tty.msg("Building %s." % self.name)
@@ -838,6 +849,10 @@ class Package(object):
         # Do the build.
         spack.build_environment.fork(self, real_work)
 
+        # note: PARENT of the build process adds the new package to
+        # the database, so that we don't need to re-read from file.
+        spack.installed_db.add(self.spec, self.prefix)
+
         # Once everything else is done, run post install hooks
         spack.hooks.post_install(self)
 
@@ -854,6 +869,14 @@ class Package(object):
         # Pass along paths of dependencies here
         for dep in self.spec.dependencies.values():
             dep.package.do_install(**kwargs)
+
+
+    @property
+    def build_log_path(self):
+        if self.installed:
+            return spack.install_layout.build_log_path(self.spec)
+        else:
+            return join_path(self.stage.source_path, 'spack-build.out')
 
 
     @property
@@ -910,6 +933,7 @@ class Package(object):
 
         # Uninstalling in Spack only requires removing the prefix.
         self.remove_prefix()
+        spack.installed_db.remove(self.spec)
         tty.msg("Successfully uninstalled %s." % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks

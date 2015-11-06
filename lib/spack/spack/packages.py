@@ -96,12 +96,6 @@ class PackageDB(object):
 
 
     @_autospec
-    def get_installed(self, spec):
-        """Get all the installed specs that satisfy the provided spec constraint."""
-        return [s for s in self.installed_package_specs() if s.satisfies(spec)]
-
-
-    @_autospec
     def providers_for(self, vpkg_spec):
         if self.provider_index is None:
             self.provider_index = ProviderIndex(self.all_package_names())
@@ -115,19 +109,6 @@ class PackageDB(object):
     @_autospec
     def extensions_for(self, extendee_spec):
         return [p for p in self.all_packages() if p.extends(extendee_spec)]
-
-
-    @_autospec
-    def installed_extensions_for(self, extendee_spec):
-        for s in self.installed_package_specs():
-            try:
-                if s.package.extends(extendee_spec):
-                    yield s.package
-            except UnknownPackageError, e:
-                # Skip packages we know nothing about
-                continue
-                # TODO: add some conditional way to do this instead of
-                # catching exceptions.
 
 
     def dirname_for_package_name(self, pkg_name):
@@ -148,29 +129,6 @@ class PackageDB(object):
         validate_module_name(pkg_name)
         pkg_dir = self.dirname_for_package_name(pkg_name)
         return join_path(pkg_dir, _package_file_name)
-
-
-    def installed_package_specs(self):
-        """Read installed package names straight from the install directory
-           layout.
-        """
-        # Get specs from the directory layout but ensure that they're
-        # all normalized properly.
-        installed = []
-        for spec in spack.install_layout.all_specs():
-            spec.normalize()
-            installed.append(spec)
-        return installed
-
-
-    def installed_known_package_specs(self):
-        """Read installed package names straight from the install
-           directory layout, but return only specs for which the
-           package is known to this version of spack.
-        """
-        for spec in spack.install_layout.all_specs():
-            if self.exists(spec.name):
-                yield spec
 
 
     @memoized

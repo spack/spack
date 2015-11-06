@@ -296,4 +296,9 @@ def fork(pkg, function):
         # message.  Just make the parent exit with an error code.
         pid, returncode = os.waitpid(pid, 0)
         if returncode != 0:
-            sys.exit(1)
+            raise InstallError("Installation process had nonzero exit code."
+                .format(str(returncode)))
+
+
+class InstallError(spack.error.SpackError):
+    """Raised when a package fails to install"""
