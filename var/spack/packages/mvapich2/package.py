@@ -61,7 +61,7 @@ class Mvapich2(Package):
         """
         return '+' + x
 
-    def set_build_type_flags(self, spec, configure_args):
+    def set_build_type(self, spec, configure_args):
         """
         Appends to configure_args the flags that depends only on the build type (i.e. release or debug)
 
@@ -140,14 +140,12 @@ class Mvapich2(Package):
             "--enable-shared",
             "--enable-romio",
             "--disable-silent-rules",
-            "--enable-debuginfo",
-            "--enable-g=dbg"
         ]
         if not self.compiler.f77 and not self.compiler.fc:
             configure_args.append("--enable-fortran=none")
 
-        # Set flags that depend only on the type of the build (debug, release)
-        self.set_build_type_flags(spec, configure_args)
+        # Set the type of the build (debug, release)
+        self.set_build_type(spec, configure_args)
         # Set the process manager
         self.set_process_manager(spec, configure_args)
         # Determine network type by variant
