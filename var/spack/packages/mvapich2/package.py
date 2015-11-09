@@ -23,22 +23,43 @@ class Mvapich2(Package):
     ##########
     # TODO : Process managers should be grouped into the same variant, as soon as variant capabilities will be extended
     # See https://groups.google.com/forum/#!topic/spack/F8-f8B4_0so
-    variant('slurm', default=False, description='Sets slurm as the only process manager')
-    variant('hydra', default=False, description='Sets hydra as one of the process managers')
-    variant('gforker', default=False, description='Sets gforker as one of the process managers')
-    variant('remshell', default=False, description='Sets remshell as one of the process managers')
+    SLURM = 'slurm'
+    HYDRA = 'hydra'
+    GFORKER = 'gforker'
+    REMSHELL = 'remshell'
+    SLURM_INCOMPATIBLE_PMS = (HYDRA, GFORKER, REMSHELL)
+    variant(SLURM, default=False, description='Sets slurm as the only process manager')
+    variant(HYDRA, default=False, description='Sets hydra as one of the process managers')
+    variant(GFORKER, default=False, description='Sets gforker as one of the process managers')
+    variant(REMSHELL, default=False, description='Sets remshell as one of the process managers')
     ##########
 
     ##########
     # TODO : Network types should be grouped into the same variant, as soon as variant capabilities will be extended
-    variant('psm', default=False, description='Configures a build for QLogic PSM-CH3')
-    variant('sock', default=False, description='Configures a build for TCP/IP-CH3')
-    variant('nemesisibtcp', default=False, description='Configures a build for both OFA-IB-Nemesis and TCP/IP-Nemesis')
-    variant('nemesisib', default=False, description='Configures a build for OFA-IB-Nemesis')
-    variant('nemesis', default=False, description='Configures a build for TCP/IP-Nemesis')
+    PSM = 'psm'
+    SOCK = 'sock'
+    NEMESISIBTCP = 'nemesisibtcp'
+    NEMESISIB = 'nemesisib'
+    NEMESIS = 'nemesis'
+    SUPPORTED_NETWORKS = (PSM, SOCK, NEMESIS, NEMESISIB, NEMESISIBTCP)
+    variant(PSM, default=False, description='Configures a build for QLogic PSM-CH3')
+    variant(SOCK, default=False, description='Configures a build for TCP/IP-CH3')
+    variant(NEMESISIBTCP, default=False, description='Configures a build for both OFA-IB-Nemesis and TCP/IP-Nemesis')
+    variant(NEMESISIB, default=False, description='Configures a build for OFA-IB-Nemesis')
+    variant(NEMESIS, default=False, description='Configures a build for TCP/IP-Nemesis')
     ##########
 
-    # TODO : CUDA support is missing
+    # FIXME : CUDA support is missing
+
+    @staticmethod
+    def enabled(x):
+        """
+        Given a variant name returns the string that means the variant is enabled
+
+        :param x: variant name
+        :return:
+        """
+        return '+' + x
 
     def set_build_type_flags(self, spec, configure_args):
         """
@@ -67,56 +88,45 @@ class Mvapich2(Package):
         :param configure_args: list of current configure arguments
         """
         # Check that slurm variant is not activated together with other pm variants
-        has_slurm_incompatible_variant = any((x in spec for x in ['+hydra', '+gforker', '+remshell']))
-        if '+slurm' in spec and has_slurm_incompatible_variant:
+        has_slurm_incompatible_variants = any(self.enabled(x) in spec for x in Mvapich2.SLURM_INCOMPATIBLE_PMS)
+        if self.enabled(Mvapich2.SLURM) in spec and has_slurm_incompatible_variants:
             raise RuntimeError(" %s : 'slurm' cannot be activated together with other process managers" % self.name)
 
         process_manager_options = []
-        if '+slurm' in spec:
+        if self.enabled(Mvapich2.SLURM) in spec:
             process_manager_options = [
                 "--with-pm=slurm"
             ]
-        elif has_slurm_incompatible_variant:
-            pm = []
-            if '+hydra' in spec:
-                pm.append('hydra')
-            if '+gforker' in spec:
-                pm.append('gforker')
-            if '+remshell' in spec:
-                pm.append('remshell')
-
+        elif has_slurm_incompatible_variants:
+            pms = []
+            # The variant name is equal to the process manager name in the configuration options
+            for x in Mvapich2.SLURM_INCOMPATIBLE_PMS:
+                if self.enabled(x) in spec:
+                    pms.append(x)
             process_manager_options = [
-                "--with-pm=%s" % ':'.join(pm)
+                "--with-pm=%s" % ':'.join(pms)
             ]
         configure_args.extend(process_manager_options)
 
     def set_network_type(self, spec, configure_args):
         # Check that at most one variant has been activated
-        # FIXME : ugly, as it does not scale at all (and is full of conditionals)
         count = 0
-        if '+psm' in spec:
-            count += 1
-        if '+sock' in spec:
-            count += 1
-        if '+nemesisibtcp' in spec:
-            count += 1
-        if '+nemesisib' in spec:
-            count += 1
-        if '+nemesis' in spec:
-            count += 1
+        for x in Mvapich2.SUPPORTED_NETWORKS:
+            if self.enabled(x) in spec:
+                count += 1
         if count > 1:
-            raise RuntimeError('MVAPICH2 network variants are mutually exclusive : only one can be selected at a time')
+            raise RuntimeError('network variants are mutually exclusive (only one can be selected at a time)')
 
         # From here on I can suppose that ony one variant has been selected
-        if '+psm' in spec:
+        if self.enabled(Mvapich2.PSM) in spec:
             network_options = ["--with-device=ch3:psm"]
-        elif '+sock' in spec:
+        elif self.enabled(Mvapich2.SOCK) in spec:
             network_options = ["--with-device=ch3:sock"]
-        elif '+nemesisibtcp' in spec:
+        elif self.enabled(Mvapich2.NEMESISIBTCP) in spec:
             network_options = ["--with-device=ch3:nemesis:ib,tcp"]
-        elif '+nemesisib' in spec:
+        elif self.enabled(Mvapich2.NEMESISIB) in spec:
             network_options = ["--with-device=ch3:nemesis:ib"]
-        elif '+nemesis' in spec:
+        elif self.enabled(Mvapich2.NEMESIS) in spec:
             network_options = ["--with-device=ch3:nemesis"]
         else:
             network_options = ["--with-device=ch3:mrail", "--with-rdma=gen2"]
