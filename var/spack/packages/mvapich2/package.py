@@ -29,11 +29,16 @@ class Mvapich2(Package):
     variant('remshell', default=False, description='Sets remshell as one of the process managers')
     ##########
 
-    # FIXME: those variants are mutually exclusive. A variant enum would fit here.
+    ##########
+    # TODO : Network types should be grouped into the same variant, as soon as variant capabilities will be extended
     variant('psm', default=False, description='Configures a build for QLogic PSM-CH3')
     variant('sock', default=False, description='Configures a build for TCP/IP-CH3')
-    # TODO : a lot of network variants are still missing.
-    # See http://mvapich.cse.ohio-state.edu/static/media/mvapich/mvapich2-2.0-userguide.html
+    variant('nemesisibtcp', default=False, description='Configures a build for both OFA-IB-Nemesis and TCP/IP-Nemesis')
+    variant('nemesisib', default=False, description='Configures a build for OFA-IB-Nemesis')
+    variant('nemesis', default=False, description='Configures a build for TCP/IP-Nemesis')
+    ##########
+
+    # TODO : CUDA support is missing
 
     def set_build_type_flags(self, spec, configure_args):
         """
@@ -46,7 +51,8 @@ class Mvapich2(Package):
             build_type_options = [
                 "--disable-fast",
                 "--enable-error-checking=runtime",
-                "--enable-error-messages=all"
+                "--enable-error-messages=all",
+                "--enable-g=dbg", "--enable-debuginfo"  # Permits debugging with TotalView
             ]
         else:
             build_type_options = ["--enable-fast=all"]
@@ -92,14 +98,26 @@ class Mvapich2(Package):
             count += 1
         if '+sock' in spec:
             count += 1
+        if '+nemesisibtcp' in spec:
+            count += 1
+        if '+nemesisib' in spec:
+            count += 1
+        if '+nemesis' in spec:
+            count += 1
         if count > 1:
-            raise RuntimeError('MVAPICH2 variants are mutually exclusive : only one can be selected at a time')
+            raise RuntimeError('MVAPICH2 network variants are mutually exclusive : only one can be selected at a time')
 
         # From here on I can suppose that ony one variant has been selected
         if '+psm' in spec:
             network_options = ["--with-device=ch3:psm"]
         elif '+sock' in spec:
             network_options = ["--with-device=ch3:sock"]
+        elif '+nemesisibtcp' in spec:
+            network_options = ["--with-device=ch3:nemesis:ib,tcp"]
+        elif '+nemesisib' in spec:
+            network_options = ["--with-device=ch3:nemesis:ib"]
+        elif '+nemesis' in spec:
+            network_options = ["--with-device=ch3:nemesis"]
         else:
             network_options = ["--with-device=ch3:mrail", "--with-rdma=gen2"]
 
