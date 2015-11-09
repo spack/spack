@@ -13,14 +13,21 @@ class Mvapich2(Package):
 
     version('1.9', '5dc58ed08fd3142c260b70fe297e127c',
             url="http://mvapich.cse.ohio-state.edu/download/mvapich2/mv2/mvapich2-1.9.tgz")
-    # FIXME: the statement doesn't seem to take 'when' into account when applying patches
     patch('ad_lustre_rwcontig_open_source.patch', when='@1.9')
 
     provides('mpi@:2.2', when='@1.9')  # MVAPICH2-1.9 supports MPI 2.2
     provides('mpi@:3.0', when='@2.0:')  # MVAPICH2-2.0 supports MPI 3.0
 
+    variant('debug', default=False, description='Enables debug information and error messages at run-time')
 
-    variant('slurm', default=True, description='Sets SLURM as the process manager')
+    ##########
+    # TODO : Process managers should be grouped into the same variant, as soon as variant capabilities will be extended
+    # See https://groups.google.com/forum/#!topic/spack/F8-f8B4_0so
+    variant('slurm', default=False, description='Sets slurm as the only process manager')
+    variant('hydra', default=False, description='Sets hydra as one of the process managers')
+    variant('gforker', default=False, description='Sets gforker as one of the process managers')
+    variant('remshell', default=False, description='Sets remshell as one of the process managers')
+    ##########
 
     # FIXME: those variants are mutually exclusive. A variant enum would fit here.
     variant('psm', default=False, description='Configures a build for QLogic PSM-CH3')
@@ -41,25 +48,41 @@ class Mvapich2(Package):
                 "--enable-error-checking=runtime",
                 "--enable-error-messages=all"
             ]
-
         else:
             build_type_options = ["--enable-fast=all"]
+
         configure_args.extend(build_type_options)
 
     def set_process_manager(self, spec, configure_args):
         """
-        Appends to configure_args the flags that will select the process manager
+        Appends to configure_args the flags that will enable the appropriate process managers
 
         :param spec: spec
         :param configure_args: list of current configure arguments
         """
-        # FIXME : supports only slurm so far
+        # Check that slurm variant is not activated together with other pm variants
+        has_slurm_incompatible_variant = any((x in spec for x in ['+hydra', '+gforker', '+remshell']))
+        if '+slurm' in spec and has_slurm_incompatible_variant:
+            raise RuntimeError(" %s : 'slurm' cannot be activated together with other process managers" % self.name)
+
+        process_manager_options = []
         if '+slurm' in spec:
             process_manager_options = [
-                "--with-pm=no",
-                "--with-pmi=slurm"
+                "--with-pm=slurm"
             ]
-            configure_args.extend(process_manager_options)
+        elif has_slurm_incompatible_variant:
+            pm = []
+            if '+hydra' in spec:
+                pm.append('hydra')
+            if '+gforker' in spec:
+                pm.append('gforker')
+            if '+remshell' in spec:
+                pm.append('remshell')
+
+            process_manager_options = [
+                "--with-pm=%s" % ':'.join(pm)
+            ]
+        configure_args.extend(process_manager_options)
 
     def set_network_type(self, spec, configure_args):
         # Check that at most one variant has been activated
