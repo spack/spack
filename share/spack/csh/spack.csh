@@ -101,7 +101,7 @@ case unload:
     breaksw
 
 default:
-    \spack $_sp_args
+    \spack $_sp_flags $_sp_args
     breaksw
 endsw
 
