@@ -12,6 +12,7 @@ class Samrai(Package):
     list_url = homepage
 
     version('3.9.1',      '232d04d0c995f5abf20d94350befd0b2')
+    version('3.8.0',      'c18fcffa706346bfa5828b36787ce5fe')
     version('3.7.3',      '12d574eacadf8c9a70f1bb4cd1a69df6')
     version('3.7.2',      'f6a716f171c9fdbf3cb12f71fa6e2737')
     version('3.6.3-beta', 'ef0510bf2893042daedaca434e5ec6ce')
@@ -37,8 +38,6 @@ class Samrai(Package):
 
         configure(
             "--prefix=%s" % prefix,
-            "--with-CXX=%s" % spec[mpi].prefix.bin + "/mpic++",
-            "--with-CC=%s" % spec[mpi].prefix.bin + "/mpicc",
             "--with-hdf5=%s" % spec['hdf5'].prefix,
             "--with-boost=%s" % spec['boost'].prefix,
             "--with-zlib=%s" % spec['zlib'].prefix,
