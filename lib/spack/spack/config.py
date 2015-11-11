@@ -199,6 +199,7 @@ def get_config(category_name):
             category.result_dict = _merge_dicts(category.result_dict, result)
         else:
             category.result_dict = result
+
     return category.result_dict
 
 
@@ -208,7 +209,7 @@ def get_compilers_config(arch=None):
        configuration"""
     global _compiler_by_arch
     if not arch:
-        arch = spack.architecture.sys_type()
+        arch = str(spack.architecture.sys_type())
     if arch in _compiler_by_arch:
         return _compiler_by_arch[arch]
 
@@ -305,7 +306,7 @@ def add_to_compiler_config(addition_dict, scope=None, arch=None):
     """Add compilerss to the configuration files"""
     if not arch:
         arch = spack.architecture.sys_type()
-    add_to_config('compilers', { arch : addition_dict }, scope)
+    add_to_config('compilers', { str(arch) : addition_dict }, scope)
     clear_config_caches()
 
 

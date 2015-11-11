@@ -61,18 +61,20 @@ class Target(object):
 
     def set_architecture(self, architecture): # Target should get the architecture class.
         self.architecture = architecture
-        
+
     @property
     def compiler_strategy(self):
-        if default_strategy:
-            return default_strategy
-        elif self.module_name: # If there is a module_name given then use MODULES
+        if self.module_name: # If there is a module_name given then use MODULES
             return "MODULES"
         else:
             return "PATH"
 
+    def __str__(self):
+        return self.name
+
+
 class Architecture(object):
-    """ Abstract class that each type of Architecture will subclass. Will return a instance of it once it 
+    """ Abstract class that each type of Architecture will subclass. Will return a instance of it once it
         is returned
     """
 
@@ -110,12 +112,15 @@ class Architecture(object):
 
     @classmethod
     def detect(self):
-        """ Subclass is responsible for implementing this method. 
+        """ Subclass is responsible for implementing this method.
             Returns True if the architecture detects if it is the current architecture
             and False if it's not.
         """
         raise NotImplementedError()
-    
+
+    def __repr__(self):
+        return self.__str__
+
     def __str__(self):
         return self.name
 
@@ -123,7 +128,7 @@ class Architecture(object):
 def get_sys_type_from_spack_globals():
     """Return the SYS_TYPE from spack globals, or None if it isn't set."""
     if not hasattr(spack, "sys_type"):
-        return None 
+        return None
     elif hasattr(spack.sys_type, "__call__"):
         return spack.sys_type() #If in __init__.py there is a sys_type() then call that
     else:
@@ -147,7 +152,7 @@ def get_mac_sys_type():
 
 
 def get_sys_type_from_uname():
-    """ Returns a sys_type from the uname argument 
+    """ Returns a sys_type from the uname argument
         Front-end config
     """
     try:
@@ -158,8 +163,8 @@ def get_sys_type_from_uname():
         return None
 
 def get_sys_type_from_config_file():
-     
-    spack_home_dir = os.environ["HOME"] + "/.spack" 
+
+    spack_home_dir = os.environ["HOME"] + "/.spack"
     yaml_file = os.path.join(spack_home_dir, 'architecture.yaml')
     try:
         config_dict = yaml.load(open(yaml_file))  # Fix this to have yaml.load()
@@ -167,7 +172,7 @@ def get_sys_type_from_config_file():
         front = arch['front']
         back = arch['back']
         return Architecture(front,back)
-    
+
     except:
         print "No architecture.yaml config file found"
         return None
@@ -182,7 +187,7 @@ def all_architectures():
         mod = imp.load_source(mod_name, path)
         class_name = mod_to_class(name)
         if not hasattr(mod, class_name):
-            tty.die('No class %s defined in %s' % (class_name, mod_name)) 
+            tty.die('No class %s defined in %s' % (class_name, mod_name))
         cls = getattr(mod, class_name)
         if not inspect.isclass(cls):
             tty.die('%s.%s is not a class' % (mod_name, class_name))
@@ -197,15 +202,15 @@ def sys_type():
        1. YAML file that the user specifies the name of the architecture. e.g Cray-XC40 or Cray-XC30
        2. UNAME
        3. GLOBALS
-       4. MAC OSX 
+       4. MAC OSX
        Yaml should be a priority here because we want the user to be able to specify the type of architecture to use.
-       If there is no yaml present then it should move on to the next function and stop immediately once it gets a 
+       If there is no yaml present then it should move on to the next function and stop immediately once it gets a
        arch name
     """
     # Try to create an architecture object using the config file FIRST
-    architecture_list = all_architectures() 
-    architecture_list.sort(key = lambda a: a.priority) 
-    
+    architecture_list = all_architectures()
+    architecture_list.sort(key = lambda a: a.priority)
+
     for arch in architecture_list:
         if arch.detect():
             return arch()
