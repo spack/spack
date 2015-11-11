@@ -29,6 +29,8 @@ from llnl.util.tty.color import colorize
 from llnl.util.tty.colify import colify
 from llnl.util.lang import index_by
 
+import spack.architecture
+import spack.compiler
 import spack.compilers
 import spack.spec
 import spack.config
@@ -38,11 +40,9 @@ from spack.spec import CompilerSpec
 description = "Manage compilers"
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(
-        metavar='SUBCOMMAND', dest='compiler_command')
+    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='compiler_command')
 
-    update_parser = sp.add_parser(
-        'add', help='Add compilers to the Spack configuration.')
+    update_parser = sp.add_parser('add', help='Add compilers to the Spack configuration.')
     update_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
 
     remove_parser = sp.add_parser('remove', help='remove compiler')
@@ -55,14 +55,17 @@ def setup_parser(subparser):
 
 
 def compiler_add(args):
-    """Search either $PATH or a list of paths for compilers and add them
+    """Search either $PATH or a list of paths OR MODULES for compilers and add them
        to Spack's configuration."""
-    paths = args.add_paths
+
+    
+    paths = args.add_paths # This might be a parser method. Parsing method to add_paths 
     if not paths:
         paths = get_path('PATH')
-
+    
     compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
-                 if c.spec not in spack.compilers.all_compilers()]
+                if c.spec not in spack.compilers.all_compilers()]
+
 
     if compilers:
         spack.compilers.add_compilers_to_config('user', *compilers)

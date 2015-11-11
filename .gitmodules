@@ -1,0 +1,3 @@
+[submodule "lib/spack/spack/util/python_recipe_parser"]
+	path = lib/spack/spack/util/python_recipe_parser
+	url = git@github.com:karenyyng/spack_python_package_parser.git
