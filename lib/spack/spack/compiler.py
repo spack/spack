@@ -106,17 +106,20 @@ class Compiler(object):
     PrgEnv_compiler = None
 
 
-    def __init__(self, cspec, cc, cxx, f77, fc, modules=None):
+    def __init__(self, cspec, paths, modules=None):
         def check(exe):
             if exe is None:
                 return None
             _verify_executables(exe)
             return exe
 
-        self.cc  = check(cc)
-        self.cxx = check(cxx)
-        self.f77 = check(f77)
-        self.fc  = check(fc)
+        self.cc  = check(paths[0])
+        self.cxx = check(paths[1])
+        self.f77 = check(paths[2])
+        if len(paths) == 3:
+            self.fc = self.f77
+        else:
+            self.fc  = check(paths[3])
 
         self.spec = cspec
         self.modules = modules
@@ -264,7 +267,7 @@ class Compiler(object):
                 if newcount <= prevcount:
                     continue
 
-            compilers[ver] = cls(spec, *paths)
+            compilers[ver] = cls(spec, paths)
 
         return list(compilers.values())
 
@@ -277,58 +280,24 @@ class Compiler(object):
             if not cls.PrgEnv_compiler:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
-#            output = _shell('module avail %s' % cls.PrgEnv_compiler)
             modulecmd = which('modulecmd')
-            modulecmd
+            modulecmd.add_default_arg('python')
+            output = modulecmd('avail', return_oe=True)
             matches = re.findall(r'(%s)/([^\s(]*)' % cls.PrgEnv_compiler, output)
 
-            loaded_modules = os.environ["LOADEDMODULES"].split(":")
+#            loaded_modules = os.environ["LOADEDMODULES"].split(":")
             #output = _shell('module avail %s' % cls.PrgEnv_compiler)
-            for module in loaded_modules:
-                match = re.findall(r'(%s)/([^\s(]*)' % cls.PrgEnv_compiler, module)
+#            for module in loaded_modules:
+#                match = re.findall(r'(%s)/([^\s(]*)' % cls.PrgEnv_compiler, module)
 
             for name, version in matches:
                 v = version + '-craype'
                 comp = cls(spack.spec.CompilerSpec(name + '@' + v),
-                           'cc', 'CC', 'ftn', 'ftn', name +'/' + v)
+                           ['cc', 'CC', 'ftn'], [cls.PrgEnv, name +'/' + v])
 
                 compilers.append(comp)
 
         return compilers
-
-
-def _cur_prgenv():
-    out, err = subprocess.Popen(
-        ['module list'], shell=True,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-    matches = re.findall(r'(PrgEnv-[^/]*)/', err)
-    return matches[0]
-
-
-def _module_shell(module, *args):
-    cmd =  'module swap %s %s;' % (_cur_prgenv(), module)
-    cmd += 'module load %s;'    % compiler
-    cmd += 'module unload cray-libsci;'
-
-#  +
-#            'module load craype-network-gemini;' +
-#            'module load %s;' % module +
-#            'module swap gcc/4.6.1;' +
-#            'module load eswrap; ' +
-#            'module load craype-mc12; ' +
-#            'module load cray-shmem; ' +
-#            'module load cray-mpich; ')
-    cmd += ' '.join(args)
-    out, err = subprocess.Popen([cmd + ' '.join(args)], shell=True,
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-    return out
-
-
-def _shell(*args):
-    return subprocess.Popen([' '.join(args)], shell=True,
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[1]
-
-
 
 
     def __repr__(self):
