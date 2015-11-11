@@ -1834,6 +1834,7 @@ class SpecParser(spack.parse.Parser):
         except spack.parse.ParseError, e:
             raise SpecParseError(e)
 
+
         return specs
 
 
@@ -1900,15 +1901,16 @@ class SpecParser(spack.parse.Parser):
             elif self.accept(ON):
                 self.expect(ID)
                 self.check_identifier()
-                input = self.token.value
+                option = self.token.value
                 if self.accept(EQ):
                     if self.accept(QT):
                         self.token.value = self.token.value[1:-1]
                     else:
                         self.expect(ID)
-                    spec._add_flag(input,self.token.value)
+                    print "about to add", option, "=", self.token.value
+                    spec._add_flag(option,self.token.value)
                 else:
-                    spec._add_variant(self.variant(input),True)
+                    spec._add_variant(self.variant(option),True)
                 check_valid_token = False
 
             elif self.accept(OFF):
