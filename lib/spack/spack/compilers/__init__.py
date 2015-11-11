@@ -44,15 +44,15 @@ from spack.util.environment import get_path
 
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
-_optional_instance_vars = ['module']
+_optional_instance_vars = ['modules']
 
 _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
 
 def _auto_compiler_spec(function):
-    def converter(cspec_like):
+    def converter(cspec_like, *args):
         if not isinstance(cspec_like, spack.spec.CompilerSpec):
             cspec_like = spack.spec.CompilerSpec(cspec_like)
-        return function(cspec_like)
+        return function(cspec_like, *args)
     return converter
 
 

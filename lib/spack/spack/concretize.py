@@ -97,32 +97,6 @@ class DefaultConcretizer(object):
 
 
     def concretize_architecture(self, spec):
-        """If the spec already had an architecture, return.  Otherwise if
-           the root of the DAG has an architecture, then use that.
-           Otherwise take the system's default architecture.
-
-           Intuition: Architectures won't be set a lot, and generally you
-           want the host system's architecture.  When architectures are
-           mised in a spec, it is likely because the tool requries a
-           cross-compiled component, e.g. for tools that run on BlueGene
-           or Cray machines.  These constraints will likely come directly
-           from packages, so require the user to be explicit if they want
-           to mess with the architecture, and revert to the default when
-           they're not explicit.
-        """
-        if spec.architecture is not None:
-            return False
-
-        if spec.root.architecture:
-            spec.architecture = spec.root.architecture
-        else:
-            spec.architecture = spack.architecture.sys_type()
-
-        assert(spec.architecture is not None)
-        return True   # changed
-
-
-    def new_concretize_architecture(self, spec):
         """If the spec already has an architecture and it is a an architecture type,
         return. Otherwise, if it has an architecture that is a string type, generate an
         architecture based on that type. If it has no architecture and the root of the
@@ -146,7 +120,7 @@ class DefaultConcretizer(object):
         else:
             arch = spack.architecture.sys_type()
             spec.architecture = arch.target('default')
-        
+
         return True #changed
 
 

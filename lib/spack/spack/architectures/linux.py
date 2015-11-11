@@ -1,14 +1,15 @@
-import subprocess 
-from spack.architecture import Architecture
+import subprocess
+from spack.architecture import Architecture, Target
 
 class Linux(Architecture):
-    priority    = 60 
-    front_end   = "x86_64"
-    back_end    = "x86_64"
-    default     = "x86_64"
+    priority    = 60
+    front_end   = 'linux'
+    back_end    = 'linux'
+    default     = 'linux'
 
     def __init__(self):
         super(Linux, self).__init__('linux')
+        self.add_target('linux', Target('linux'))
 
     @classmethod
     def detect(self):
