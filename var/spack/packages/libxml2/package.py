@@ -9,12 +9,11 @@ class Libxml2(Package):
 
     version('2.9.2', '9e6a9aca9d155737868b3dc5fd82f788')
 
-    extends('python')
     depends_on('zlib')
     depends_on('xz')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-
+        configure("--prefix=%s" % prefix,
+                  "--without-python")
         make()
         make("install")

@@ -56,7 +56,11 @@ class Executable(object):
 
     def __call__(self, *args, **kwargs):
         """Run the executable with subprocess.check_output, return output."""
-        return_output = kwargs.get("return_output", False)
+        # Return oe returns a combined stream, setting both output and error 
+        # without setting return oe returns them concatenated by a double line break
+        return_oe    = kwargs.get("return_oe", False)
+        return_output = True if return_oe else kwargs.get("return_output", False)
+        return_error  = True if return_oe else kwargs.get("return_error", False)
         fail_on_error = kwargs.get("fail_on_error", True)
         ignore_errors = kwargs.get("ignore_errors", ())
 
@@ -95,8 +99,8 @@ class Executable(object):
             proc = subprocess.Popen(
                 cmd,
                 stdin=input,
-                stderr=error,
-                stdout=subprocess.PIPE if return_output else output)
+                stdout=subprocess.PIPE if return_output else output,
+                stderr=subprocess.STDOUT if return_oe else (subprocess.PIPE if return_error else error))
             out, err = proc.communicate()
             self.returncode = proc.returncode
 
@@ -104,8 +108,15 @@ class Executable(object):
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
                 raise ProcessError("Command exited with status %d:"
                                    % proc.returncode, cmd_line)
-            if return_output:
-                return out
+            # Return out or error if specified. Return combined stream if requested,
+            # otherwise return them concatenated by double line break if both requested.
+            if return_output or return_error:
+                if return_oe or not return_error:
+                    return out
+                elif return_output:
+                    return out+'\n\n'+err
+                else:
+                    return err
 
         except OSError, e:
             raise ProcessError(
