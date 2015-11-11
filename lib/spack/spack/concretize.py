@@ -183,14 +183,13 @@ class DefaultConcretizer(object):
         """
         ret = False
         for flag in Compiler.valid_compiler_flags():
-            print flag
             try:
                 nearest = next(p for p in spec.traverse(direction='parents')
-                               if p.compiler == spec.compiler and p is not spec
-                               and flag in p.compiler_flags)
+                               if ((p.compiler == spec.compiler and p is not spec)
+                               and flag in p.compiler_flags))
                 if ((not flag in spec.compiler_flags) or
-                    spec.compiler_flags[flag] != p.compiler_flags[flag]):
-                    spec.compiler_flags[flag] = p.compiler_flags[flag]
+                    spec.compiler_flags[flag] != nearest.compiler_flags[flag]):
+                    spec.compiler_flags[flag] = nearest.compiler_flags[flag]
                     ret = True
 
             except StopIteration:

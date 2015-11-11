@@ -1812,52 +1812,28 @@ class SpecParser(spack.parse.Parser):
         try:
             while self.next:
                 if self.accept(ID):
-                    specs.append(self.spec())
+                    specs.append(self.spec(self.token.value))
 
                 elif self.accept(HASH):
                     specs.append(self.spec_by_hash())
 
                 elif self.accept(DEP):
                     if not specs:
-                        specs.append(self.empty_spec())
+                        specs.append(self.spec(''))
                     if self.accept(HASH):
                         specs[-1]._add_dependency(self.spec_by_hash())
                     else:
                         self.expect(ID)
-                        specs[-1]._add_dependency(self.spec())
-
-                elif self.accept(PCT):
-                    specs.append(self.empty_spec())
-                    specs[-1]._set_compiler(self.compiler())
-
-                elif self.accept(ON):
-                    specs.append(self.empty_spec())
-                    self.expect(ID)
-                    self.check_identifier()
-                    name = self.token.value
-                    if self.accept(EQ):
-                        if self.accept(QT):
-                            self.token.value = self.token.value[1:-1]
-                        else:
-                            self.expect(ID)
-                        specs[-1]._add_flag(name,self.token.value)
-                    else:
-                        specs[-1]._add_variant(self.variant(name),True)
-
-                elif self.accept(OFF):
-                    specs.append(self.empty_spec())
-                    specs[-1]._add_variant(self.variant(),False)
+                        specs[-1]._add_dependency(self.spec(self.token.value))
 
                 else:
-                    self.unexpected_token()
+                    # Attempt to construct an anonymous spec, but check that the first token is valid
+                    # TODO: Is this check even necessary, or will it all be Lex errors now?
+                    specs.append(self.spec('',True))
 
         except spack.parse.ParseError, e:
             raise SpecParseError(e)
 
-#        for top_spec in specs:
-#            for spec in top_spec.traverse():
-#                if 'arch' in spec.variants:
-#                    spec.architecture = spec.variants['arch']
         return specs
 
 
@@ -1888,55 +1864,16 @@ class SpecParser(spack.parse.Parser):
 
         return matches[0]
 
-    def empty_spec(self):
-        """Create a Null spec from which dependency constraints can be hung"""
-        spec = Spec.__new__(Spec)
-        spec.name = ""
-        spec.versions = VersionList(':')
-        spec.variants = VariantMap(spec)
-        spec.architecture = None
-        spec.compiler = None
-        spec.compiler_flags = FlagMap(spec)
-        spec.dependents   = DependencyMap()
-        spec.dependencies = DependencyMap()
 
-        spec._normal = False
-        spec._concrete = False
-
-        #Should we be able to add cflags eventually?
-        while self.next:
-            if self.accept(ON):
-                self.expect(ID)
-                self.check_identifier()
-                name = self.token.value
-                if self.accept(EQ):
-                    if self.accept(QT):
-                        self.token.value = self.token.value[1:-1]
-                    else:
-                        self.expect(ID)
-                    spec._add_flag(name,self.token.value)
-                else:
-                    spec._add_variant(self.variant(name),True)
-
-            elif self.accept(OFF):
-                spec._add_variant(self.variant(),False)
-
-            elif self.accept(PCT):
-                spec._set_compiler(self.compiler())
-
-            else:
-                break
-
-        return spec
-
-    def spec(self):
+    def spec(self, name, check_valid_token = False):
         """Parse a spec out of the input.  If a spec is supplied, then initialize
            and return it instead of creating a new one."""
-        self.check_identifier()
+        if name != '':
+            self.check_identifier()
 
         # This will init the spec without calling __init__.
         spec = Spec.__new__(Spec)
-        spec.name = self.token.value
+        spec.name = name
         spec.versions = VersionList()
         spec.variants = VariantMap(spec)
         spec.architecture = None
@@ -1958,28 +1895,33 @@ class SpecParser(spack.parse.Parser):
                 for version in vlist:
                     spec._add_version(version)
                 added_version = True
-
+                check_valid_token = False
 
             elif self.accept(ON):
                 self.expect(ID)
                 self.check_identifier()
-                name = self.token.value
+                input = self.token.value
                 if self.accept(EQ):
                     if self.accept(QT):
                         self.token.value = self.token.value[1:-1]
                     else:
                         self.expect(ID)
-                    spec._add_flag(name,self.token.value)
+                    spec._add_flag(input,self.token.value)
                 else:
-                    spec._add_variant(self.variant(name),True)
+                    spec._add_variant(self.variant(input),True)
+                check_valid_token = False
 
             elif self.accept(OFF):
                 spec._add_variant(self.variant(),False)
+                check_valid_token = False
 
             elif self.accept(PCT):
                 spec._set_compiler(self.compiler())
+                check_valid_token = False
 
             else:
+                if check_valid_token:
+                    self.unexpected_token()
                 break
 
         # If there was no version in the spec, consier it an open range
