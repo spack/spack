@@ -197,18 +197,27 @@ def compilers_for_spec(compiler_spec):
             else:
                 compiler_paths.append(None)
 
-        return cls(cspec, *compiler_paths)
+        for m in _optional_instance_vars:
+            if m not in items:
+                items[m] = None
+            mods = items[m]
+
+        return cls(cspec, compiler_paths, mods)
 
     matches = find(compiler_spec)
     return [get_compiler(cspec) for cspec in matches]
 
 
 @_auto_compiler_spec
-def compiler_for_spec(compiler_spec):
+def compiler_for_spec(compiler_spec, target):
     """Get the compiler that satisfies compiler_spec.  compiler_spec must
        be concrete."""
     assert(compiler_spec.concrete)
     compilers = compilers_for_spec(compiler_spec)
+    if target.compiler_strategy == "PATH":
+        filter(lambda c: c.modules is None, compilers)
+    elif target.compiler_strategy == "MODULES":
+        filter(lambda c: c.modules is not None, compilers)
     assert(len(compilers) == 1)
     return compilers[0]
 
