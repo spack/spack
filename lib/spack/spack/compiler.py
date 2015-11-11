@@ -106,7 +106,7 @@ class Compiler(object):
     PrgEnv_compiler = None
 
 
-    def __init__(self, cspec, cc, cxx, f77, fc, module=None):
+    def __init__(self, cspec, cc, cxx, f77, fc, modules=None):
         def check(exe):
             if exe is None:
                 return None
@@ -119,7 +119,7 @@ class Compiler(object):
         self.fc  = check(fc)
 
         self.spec = cspec
-        self.modules = modules.split()
+        self.modules = modules
 
 
 
@@ -216,6 +216,10 @@ class Compiler(object):
 
     @classmethod
     def find(cls, *path):
+        return cls.find_in_path(*path) + cls.find_in_modules()
+
+    @classmethod
+    def find_in_path(cls, *path):
         """Try to find this type of compiler in the user's
            environment. For each set of compilers found, this returns
            compiler objects with the cc, cxx, f77, fc paths and the
@@ -273,7 +277,9 @@ class Compiler(object):
             if not cls.PrgEnv_compiler:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
-            output = _shell('module avail %s' % cls.PrgEnv_compiler)
+#            output = _shell('module avail %s' % cls.PrgEnv_compiler)
+            modulecmd = which('modulecmd')
+            modulecmd
             matches = re.findall(r'(%s)/([^\s(]*)' % cls.PrgEnv_compiler, output)
 
             for name, version in matches:
