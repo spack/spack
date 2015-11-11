@@ -1998,4 +1998,4 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
 
 class SpackYAMLError(spack.error.SpackError):
     def __init__(self, msg, yaml_error):
-        super(SpackError, self).__init__(msg, str(yaml_error))
+        super(SpackYAMLError, self).__init__(msg, str(yaml_error))
