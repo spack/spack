@@ -651,7 +651,7 @@ class Spec(object):
         d = {
             'variants' : dict(
                 (name,v.enabled) for name, v in self.variants.items()),
-            'arch' : self.architecture,
+            'arch' : self.architecture.to_dict(),
             'dependencies' : dict((d, self.dependencies[d].dag_hash())
                                   for d in sorted(self.dependencies))
         }
@@ -680,7 +680,7 @@ class Spec(object):
 
         spec = Spec(name)
         spec.versions = VersionList.from_dict(node)
-        spec.architecture = node['arch']
+        spec.architecture = spack.architecture.Target.from_dict(node['arch'])
 
         if node['compiler'] is None:
             spec.compiler = None

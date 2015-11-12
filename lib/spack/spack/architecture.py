@@ -69,6 +69,25 @@ class Target(object):
         else:
             return "PATH"
 
+    def to_dict(self):
+        print "to_dict"
+        d = {}
+        d['name'] = self.name
+        d['module_name'] = self.module_name
+        if self.architecture:
+            d['architecture'] = self.architecture
+        return d
+
+    @staticmethod
+    def from_dict(d):
+        print "from_dict"
+        target = Target.__new__(Target)
+        target.name = d['name']
+        target.module_name = d['module_name']
+        if 'architecture' in d:
+            target.architecture = d['architecture']
+        return target
+
     def __str__(self):
         return self.name
 
