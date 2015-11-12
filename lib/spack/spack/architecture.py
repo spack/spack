@@ -79,7 +79,6 @@ class Target(object):
 
     @staticmethod
     def from_dict(d):
-        print "from_dict"
         target = Target.__new__(Target)
         target.name = d['name']
         target.module_name = d['module_name']
