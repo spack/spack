@@ -90,12 +90,12 @@ import os
 import exceptions
 import sys
 
-from external.ordereddict import OrderedDict
+from ordereddict_backport import OrderedDict
 from llnl.util.lang import memoized
 import spack.error
 
-from external import yaml
-from external.yaml.error import MarkedYAMLError
+import yaml
+from yaml.error import MarkedYAMLError
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 

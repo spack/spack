@@ -96,8 +96,8 @@ import hashlib
 import base64
 from StringIO import StringIO
 from operator import attrgetter
-from external import yaml
-from external.yaml.error import MarkedYAMLError
+import yaml
+from yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
 from llnl.util.lang import *
