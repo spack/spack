@@ -27,7 +27,7 @@ import imp
 import platform as py_platform
 import inspect
 
-from llnl.util.lang import memoized, list_modules
+from llnl.util.lang import memoized, list_modules, key_ordering
 from llnl.util.filesystem import join_path
 import llnl.util.tty as tty
 
@@ -47,6 +47,7 @@ class NoSysTypeError(serr.SpackError):
         super(NoSysTypeError, self).__init__("Could not determine sys_type for this machine.")
 
 
+@key_ordering
 class Target(object):
     """ Target is the processor of the host machine. The host machine may have different front-end
         and back-end targets, especially if it is a Cray machine. The target will have a name and
@@ -85,6 +86,10 @@ class Target(object):
 #        if 'architecture' in d:
 #            target.architecture = d['architecture']
         return target
+
+
+    def _cmp_key(self):
+        return (self.name, self.module_name)
 
     def __repr__(self):
         return self.__str__()
