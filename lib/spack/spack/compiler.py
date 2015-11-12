@@ -291,7 +291,7 @@ class Compiler(object):
 #                match = re.findall(r'(%s)/([^\s(]*)' % cls.PrgEnv_compiler, module)
 
             for name, version in matches:
-                v = version + '-craype'
+                v = version
                 comp = cls(spack.spec.CompilerSpec(name + '@' + v),
                            ['cc', 'CC', 'ftn'], [cls.PrgEnv, name +'/' + v])
 
