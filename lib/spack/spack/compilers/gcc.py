@@ -42,7 +42,7 @@ class Gcc(Compiler):
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     suffixes = [r'-mp-\d\.\d']
 
-    PrgEnv = 'gnu'
+    PrgEnv = 'PrgEnv-gnu'
     PrgEnv_compiler = 'gcc'
 
     @property

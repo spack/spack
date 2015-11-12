@@ -37,7 +37,7 @@ class Pgi(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['pgf95', 'pgf90']
 
-    PrgEnv = 'pgi'
+    PrgEnv = 'PrgEnv-pgi'
     PrgEnv_compiler = 'pgi'
 
     @classmethod

@@ -37,7 +37,7 @@ class Intel(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['ifort']
 
-    PrgEnv = 'intel'
+    PrgEnv = 'PrgEnv-intel'
     PrgEnv_compiler = 'intel'
 
     @property
