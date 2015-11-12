@@ -24,7 +24,9 @@
 ##############################################################################
 import sys
 import unittest
+import nose
 
+from spack.test.tally_plugin import Tally
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -81,28 +83,23 @@ def run(names, verbose=False):
                           "Valid names are:")
                 colify(sorted(test_names), indent=4)
                 sys.exit(1)
-
-    runner = unittest.TextTestRunner(verbosity=verbosity)
-
-    testsRun = errors = failures = 0
+    
+    tally = Tally()
+    tally.enabled = True
     for test in names:
         module = 'spack.test.' + test
         print module
-        suite = unittest.defaultTestLoader.loadTestsFromName(module)
-
+        
         tty.msg("Running test: %s" % test)
-        result = runner.run(suite)
-        testsRun += result.testsRun
-        errors   += len(result.errors)
-        failures += len(result.failures)
+        result = nose.run(argv=["", module], plugins=[tally])
 
-    succeeded = not errors and not failures
+    succeeded = not tally.failCount and not tally.errorCount
     tty.msg("Tests Complete.",
-            "%5d tests run" % testsRun,
-            "%5d failures" % failures,
-            "%5d errors" % errors)
+            "%5d tests run" % tally.numberOfTests,
+            "%5d failures" % tally.failCount,
+            "%5d errors" % tally.errorCount)
 
-    if not errors and not failures:
+    if succeeded:
         tty.info("OK", format='g')
     else:
         tty.info("FAIL", format='r')

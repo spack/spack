@@ -95,10 +95,13 @@ class Executable(object):
             proc = subprocess.Popen(
                 cmd,
                 stdin=input,
-                stderr=error,
-                stdout=subprocess.PIPE if return_output else output)
+                stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE)
             out, err = proc.communicate()
             self.returncode = proc.returncode
+
+            output.write(out)
+            error.write(err)
 
             rc = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
