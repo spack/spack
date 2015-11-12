@@ -3,11 +3,12 @@ from __future__ import absolute_import
 import string
 import itertools
 import re
+from StringIO import StringIO
 
 import spack
 
 __all__ = ['mod_to_class', 'spack_module_to_python_module', 'valid_module_name',
-           'validate_module_name', 'possible_spack_module_names']
+           'validate_module_name', 'possible_spack_module_names', 'NamespaceTrie']
 
 # Valid module names can contain '-' but can't start with it.
 _valid_module_re = r'^\w[\w-]*$'
@@ -90,3 +91,69 @@ class InvalidModuleNameError(spack.error.SpackError):
         super(InvalidModuleNameError, self).__init__(
             "Invalid module name: " + name)
         self.name = name
+
+
+class NamespaceTrie(object):
+    class Element(object):
+        def __init__(self, value):
+            self.value = value
+
+
+    def __init__(self, separator='.'):
+        self._subspaces = {}
+        self._value = None
+        self._sep = separator
+
+
+    def __setitem__(self, namespace, value):
+        first, sep, rest = namespace.partition(self._sep)
+
+        if not first:
+            self._value = NamespaceTrie.Element(value)
+            return
+
+        if first not in self._subspaces:
+            self._subspaces[first] = NamespaceTrie()
+
+        self._subspaces[first][rest] = value
+
+
+    def _get_helper(self, namespace, full_name):
+        first, sep, rest = namespace.partition(self._sep)
+        if not first:
+            if not self._value:
+                raise KeyError("Can't find namespace '%s' in trie" % full_name)
+            return self._value.value
+        elif first not in self._subspaces:
+            raise KeyError("Can't find namespace '%s' in trie" % full_name)
+        else:
+            return self._subspaces[first]._get_helper(rest, full_name)
+
+
+    def __getitem__(self, namespace):
+        return self._get_helper(namespace, namespace)
+
+
+    def __contains__(self, namespace):
+        first, sep, rest = namespace.partition(self._sep)
+        if not first:
+            return self._value is not None
+        elif first not in self._subspaces:
+            return False
+        else:
+            return rest in self._subspaces[first]
+
+
+    def _str_helper(self, stream, level=0):
+        indent = (level * '    ')
+        for name in sorted(self._subspaces):
+            stream.write(indent + name + '\n')
+            if self._value:
+                stream.write(indent + '  ' + repr(self._value.value))
+            stream.write(self._subspaces[name]._str_helper(stream, level+1))
+
+
+    def __str__(self):
+        stream = StringIO()
+        self._str_helper(stream)
+        return stream.getvalue()

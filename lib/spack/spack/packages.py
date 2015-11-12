@@ -58,45 +58,6 @@ def _autospec(function):
     return converter
 
 
-class NamespaceTrie(object):
-    def __init__(self):
-        self._elements = {}
-
-
-    def __setitem__(self, namespace, repo):
-        parts = namespace.split('.')
-        cur = self._elements
-        for p in parts[:-1]:
-            if p not in cur:
-                cur[p] = {}
-            cur = cur[p]
-
-        cur[parts[-1]] = repo
-
-
-    def __getitem__(self, namespace):
-        parts = namespace.split('.')
-        cur = self._elements
-        for p in parts:
-            if p not in cur:
-                raise KeyError("Can't find namespace %s in trie" % namespace)
-            cur = cur[p]
-        return cur
-
-
-    def __contains__(self, namespace):
-        parts = namespace.split('.')
-        cur = self._elements
-        for p in parts:
-            if not isinstance(cur, dict):
-                return False
-            if p not in cur:
-                return False
-            cur  = cur[p]
-        return True
-
-
-
 class PackageFinder(object):
     """A PackageFinder is a wrapper around a list of PackageDBs.
 
@@ -172,7 +133,7 @@ class PackageFinder(object):
 
 
     def providers_for(self, vpkg_name):
-        # TODO: THIS IS WRONG; shoudl use more than first repo
+        # TODO: THIS IS WRONG; should use more than first repo
         return self.repos[0].providers_for(vpkg_name)
 
 
