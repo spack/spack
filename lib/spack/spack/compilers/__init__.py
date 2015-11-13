@@ -46,7 +46,7 @@ _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 _optional_instance_vars = ['modules']
 
-_default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
+_default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc','craype']
 
 def _auto_compiler_spec(function):
     def converter(cspec_like, *args):
@@ -180,6 +180,7 @@ def compilers_for_spec(compiler_spec):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
+    # cray issue might be located here
     config = _get_config()
 
     def get_compiler(cspec):
