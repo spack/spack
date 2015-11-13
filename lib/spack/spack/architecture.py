@@ -97,7 +97,7 @@ class Target(object):
     def __str__(self):
         return self.name
 
-
+@key_ordering
 class Architecture(object):
     """ Abstract class that each type of Architecture will subclass. Will return a instance of it once it
         is returned
@@ -148,7 +148,9 @@ class Architecture(object):
 
     def __str__(self):
         return self.name
-
+    
+    def _cmp_key(self):
+        return (self.name, (_cmp_key(t) for t in self.targets.values()))
 
 def get_sys_type_from_spack_globals():
     """Return the SYS_TYPE from spack globals, or None if it isn't set."""
