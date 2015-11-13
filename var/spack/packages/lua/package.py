@@ -22,5 +22,7 @@ class Lua(Package):
     def install(self, spec, prefix):
         make('INSTALL_TOP=%s' % prefix,
              'MYLDFLAGS=-L%s/lib' % spec['ncurses'].prefix,
-             'linux',
+             'linux')
+        make('INSTALL_TOP=%s' % prefix,
+             'MYLDFLAGS=-L%s/lib' % spec['ncurses'].prefix,
              'install')
