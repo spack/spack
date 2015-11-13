@@ -283,13 +283,9 @@ class Compiler(object):
             modulecmd = which('modulecmd')
             modulecmd.add_default_arg('python')
             output = modulecmd('avail', return_oe=True)
-            matches = re.findall(r'(%s)/([^\s(]*)' % cls.PrgEnv_compiler, output)
-
-#            loaded_modules = os.environ["LOADEDMODULES"].split(":")
-            #output = _shell('module avail %s' % cls.PrgEnv_compiler)
-#            for module in loaded_modules:
-#                match = re.findall(r'(%s)/([^\s(]*)' % cls.PrgEnv_compiler, module)
-
+            matches = re.findall(r'(%s)/(\d+[\.\d]+)' % cls.PrgEnv_compiler, output)
+#           It's finding a weird third attribute
+            print matches
             for name, version in matches:
                 v = version
                 comp = cls(spack.spec.CompilerSpec(name + '@' + v),
