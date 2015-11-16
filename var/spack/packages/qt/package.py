@@ -22,7 +22,7 @@ class Qt(Package):
     #depends_on("openssl")
 
     depends_on("glib")
-    depends_on("gtkplus")
+    #depends_on("gtkplus")
     depends_on("libxml2")
     depends_on("zlib")
     depends_on("dbus")
