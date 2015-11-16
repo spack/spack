@@ -9,10 +9,13 @@ class PyMatplotlib(Package):
     version('1.4.2', '7d22efb6cce475025733c50487bd8898')
     version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
 
+    variant('gui', default=False, description='Enable GUI')
+    variant('ipython', default=False, description='Enable ipython support')
+
     extends('python', ignore=r'bin/nosetests.*$')
 
-    depends_on('py-pyside')
-    depends_on('py-ipython')
+    depends_on('py-pyside', when='+gui')
+    depends_on('py-ipython', when='+ipython')
     depends_on('py-pyparsing')
     depends_on('py-six')
     depends_on('py-dateutil')
@@ -20,10 +23,10 @@ class PyMatplotlib(Package):
     depends_on('py-nose')
     depends_on('py-numpy')
 
-    depends_on('qt')
+    depends_on('qt', when='+gui')
     depends_on('bzip2')
-    depends_on('tcl')
-    depends_on('tk')
+    depends_on('tcl', when='+gui')
+    depends_on('tk', when='+gui')
     depends_on('qhull')
 
     def install(self, spec, prefix):
