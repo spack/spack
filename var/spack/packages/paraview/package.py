@@ -49,7 +49,11 @@ class Paraview(Package):
             feature_args = std_cmake_args[:]
             feature_args.append('-DPARAVIEW_BUILD_QT_GUI:BOOL=%s' % feature_to_bool('+qt'))
             feature_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=%s' % feature_to_bool('+python'))
+            if '+python' in spec:
+                feature_args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s/bin/python' % spec['python'].prefix)
             feature_args.append('-DPARAVIEW_USE_MPI:BOOL=%s' % feature_to_bool('+mpi'))
+            if '+mpi' in spec:
+                feature_args.append('-DMPIEXEC:FILEPATH=%s/bin/mpiexec' % spec['mpi'].prefix)
             feature_args.append('-DVTK_ENABLE_TCL_WRAPPING:BOOL=%s' % feature_to_bool('+tcl'))
             feature_args.append('-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % feature_to_bool('+osmesa'))
             feature_args.append('-DVTK_USE_X:BOOL=%s' % nfeature_to_bool('+osmesa'))
