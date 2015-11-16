@@ -22,7 +22,7 @@ class Paraview(Package):
     depends_on('py-matplotlib', when='+python+matplotlib')
     depends_on('tcl', when='+tcl')
     depends_on('mpi', when='+mpi')
-    depends_on('qt', when='+qt')
+    depends_on('qt@:4', when='+qt')
 
     depends_on('bzip2')
     depends_on('freetype')
