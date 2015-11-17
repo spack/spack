@@ -7,8 +7,6 @@ class Rsync(Package):
 
     version('3.1.1', '43bd6676f0b404326eee2d63be3cdcfe')
 
-    # depends_on("foo")
-
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)
 
