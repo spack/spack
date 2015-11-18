@@ -25,8 +25,8 @@ class Hdf5(Package):
             "--with-zlib=%s" % spec['zlib'].prefix,
             "--enable-parallel",
             "--enable-shared",
-            "CC=%s" % spec['mpich'].prefix.bin + "/mpicc",
-            "CXX=%s" % spec['mpich'].prefix.bin + "/mpic++")
+            "CC=%s" % spec['mpi'].prefix.bin + "/mpicc",
+            "CXX=%s" % spec['mpi'].prefix.bin + "/mpic++")
 
         make()
         make("install")
