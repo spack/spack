@@ -1,10 +1,17 @@
 from spack import *
 
 class Cleverleaf(Package):
-    homepage = "http://www.example.com"
-    url      = "http://www.example.com/cleverleaf-1.0.tar.gz"
+    """
+    CleverLeaf is a hydrodynamics mini-app that extends CloverLeaf with Adaptive
+    Mesh Refinement using the SAMRAI toolkit from Lawrence Livermore National
+    Laboratory. The primary goal of CleverLeaf is to evaluate the application of
+    AMR to the Lagrangian-Eulerian hydrodynamics scheme used by CloverLeaf.
+    """
 
-    version('develop', git='git@github.com:UK-MAC/CleverLeaf_ref.git', branch='develop')
+    homepage = "http://uk-mac.github.io/CleverLeaf/"
+    url      = "https://github.com/UK-MAC/CleverLeaf/tarball/master"
+
+    version('develop', git='https://github.com/UK-MAC/CleverLeaf_ref.git', branch='develop')
 
     depends_on("SAMRAI@3.8.0")
 
