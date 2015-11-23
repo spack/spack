@@ -31,6 +31,7 @@ import imp
 import re
 import itertools
 import traceback
+from bisect import bisect_left
 from external import yaml
 
 import llnl.util.tty as tty
@@ -58,11 +59,19 @@ def _autospec(function):
     return converter
 
 
-class PackageFinder(object):
-    """A PackageFinder is a wrapper around a list of PackageDBs.
+def _make_namespace_module(ns):
+    module = imp.new_module(ns)
+    module.__file__ = "(spack namespace)"
+    module.__path__ = []
+    module.__package__ = ns
+    return module
 
-       It functions exactly like a PackageDB, but it operates on the
-       combined results of the PackageDBs in its list instead of on a
+
+class PackageFinder(object):
+    """A PackageFinder is a wrapper around a list of Repos.
+
+       It functions exactly like a Repo, but it operates on the
+       combined results of the Repos in its list instead of on a
        single package repository.
     """
     def __init__(self, *repo_dirs):
@@ -70,61 +79,74 @@ class PackageFinder(object):
         self.by_namespace = NamespaceTrie()
         self.by_path = {}
 
+        self._all_package_names = []
+        self._provider_index = None
+
         for root in repo_dirs:
-            repo = PackageDB(root)
+            repo = Repo(root)
             self.put_last(repo)
 
 
-    def _check_repo(self, repo):
+    def swap(self, other):
+        """Convenience function to make swapping repostiories easier.
+
+        This is currently used by mock tests.
+        TODO: Maybe there is a cleaner way.
+
+        """
+        attrs = ['repos', 'by_namespace', 'by_path', '_all_package_names', '_provider_index']
+        for attr in attrs:
+            tmp = getattr(self, attr)
+            setattr(self, attr, getattr(other, attr))
+            setattr(other, attr, tmp)
+
+
+    def _add(self, repo):
+        """Add a repository to the namespace and path indexes.
+
+        Checks for duplicates -- two repos can't have the same root
+        directory, and they provide have the same namespace.
+
+        """
         if repo.root in self.by_path:
             raise DuplicateRepoError("Package repos are the same",
                                      repo, self.by_path[repo.root])
 
         if repo.namespace in self.by_namespace:
-            tty.error("Package repos cannot have the same name",
-                      repo, self.by_namespace[repo.namespace])
+            raise DuplicateRepoError("Package repos cannot have the same name",
+                                     repo, self.by_namespace[repo.namespace])
 
-
-    def _add(self, repo):
-        self._check_repo(repo)
+        # Add repo to the pkg indexes
         self.by_namespace[repo.namespace] = repo
         self.by_path[repo.root] = repo
 
+        # add names to the cached name list
+        new_pkgs = set(repo.all_package_names())
+        new_pkgs.update(set(self._all_package_names))
+        self._all_package_names = sorted(new_pkgs, key=lambda n:n.lower())
+
 
     def put_first(self, repo):
+        """Add repo first in the search path."""
         self._add(repo)
         self.repos.insert(0, repo)
 
 
     def put_last(self, repo):
+        """Add repo last in the search path."""
         self._add(repo)
         self.repos.append(repo)
 
 
     def remove(self, repo):
+        """Remove a repo from the search path."""
         if repo in self.repos:
             self.repos.remove(repo)
 
 
-    def swap(self, other):
-        repos = self.repos
-        by_namespace = self.by_namespace
-        by_path = self.by_path
-
-        self.repos = other.repos
-        self.by_namespace = other.by_namespace
-        self.by_pah = other.by_path
-
-        other.repos = repos
-        other.by_namespace = by_namespace
-        other.by_path = by_path
-
-
     def all_package_names(self):
-        all_pkgs = set()
-        for repo in self.repos:
-            all_pkgs.update(set(repo.all_package_names()))
-        return all_pkgs
+        """Return all unique package names in all repositories."""
+        return self._all_package_names
 
 
     def all_packages(self):
@@ -132,109 +154,82 @@ class PackageFinder(object):
             yield self.get(name)
 
 
-    def providers_for(self, vpkg_name):
-        # TODO: THIS IS WRONG; should use more than first repo
-        return self.repos[0].providers_for(vpkg_name)
+    @_autospec
+    def providers_for(self, vpkg_spec):
+        if self._provider_index is None:
+            self._provider_index = ProviderIndex(self.all_package_names())
+
+        providers = self._provider_index.providers_for(vpkg_spec)
+        if not providers:
+            raise UnknownPackageError(vpkg_spec.name)
+        return providers
 
 
-    def _get_spack_pkg_name(self, repo, py_module_name):
-        """Allow users to import Spack packages using legal Python identifiers.
+    def find_module(self, fullname, path=None):
+        """Implements precedence for overlaid namespaces.
 
-        A python identifier might map to many different Spack package
-        names due to hyphen/underscore ambiguity.
+        Loop checks each namespace in self.repos for packages, and
+        also handles loading empty containing namespaces.
 
-        Easy example:
-            num3proxy   -> 3proxy
-
-        Ambiguous:
-            foo_bar -> foo_bar, foo-bar
-
-        More ambiguous:
-            foo_bar_baz -> foo_bar_baz, foo-bar-baz, foo_bar-baz, foo-bar_baz
         """
-        if py_module_name in repo:
-            return py_module_name
+        # namespaces are added to repo, and package modules are leaves.
+        namespace, dot, module_name = fullname.rpartition('.')
 
-        options = possible_spack_module_names(py_module_name)
-        options.remove(py_module_name)
-        for name in options:
-            if name in repo:
-                return name
+        # If it's a module in some repo, or if it is the repo's
+        # namespace, let the repo handle it.
+        for repo in self.repos:
+            if namespace == repo.namespace:
+                if repo.real_name(module_name):
+                    return repo
+            elif fullname == repo.namespace:
+                return repo
+
+        # No repo provides the namespace, but it is a valid prefix of
+        # something in the PackageFinder.
+        if self.by_namespace.is_prefix(fullname):
+            return self
 
         return None
 
 
-    def find_module(self, fullname, path=None):
-        if fullname in self.by_namespace:
-            return self
-
-        namespace, dot, module_name = fullname.rpartition('.')
-        if namespace not in self.by_namespace:
-            return None
-
-        repo = self.by_namespace[namespace]
-        name = self._get_spack_pkg_name(repo, module_name)
-        if not name:
-            return None
-
-        return self
-
-
     def load_module(self, fullname):
+        """Loads containing namespaces when necessary.
+
+        See ``Repo`` for how actual package modules are loaded.
+        """
         if fullname in sys.modules:
             return sys.modules[fullname]
 
-        if fullname in self.by_namespace:
-            ns = self.by_namespace[fullname]
-            module = imp.new_module(fullname)
-            module.__file__ = "<spack-namespace>"
-            module.__path__ = []
-            module.__package__ = fullname
+        # partition fullname into prefix and module name.
+        namespace, dot, module_name = fullname.rpartition('.')
 
-        else:
-            namespace, dot, module_name = fullname.rpartition('.')
-            if namespace not in self.by_namespace:
-                raise ImportError(
-                    "No Spack repository with namespace %s" % namespace)
+        if not self.by_namespace.is_prefix(fullname):
+            raise ImportError("No such Spack repo: %s" % fullname)
 
-            repo = self.by_namespace[namespace]
-            name = self._get_spack_pkg_name(repo, module_name)
-            if not name:
-                raise ImportError(
-                    "No module %s in Spack repository %s" % (module_name, repo))
-
-            fullname = namespace + '.' + name
-            file_path = os.path.join(repo.root, name, package_file_name)
-            module = imp.load_source(fullname, file_path)
-            module.__package__ = namespace
-
+        module = _make_namespace_module(namespace)
         module.__loader__ = self
         sys.modules[fullname] = module
         return module
 
 
-    def _find_repo_for_spec(self, spec):
-        """Find a repo that contains the supplied spec's package.
-
-           Raises UnknownPackageErrorfor if not found.
-        """
+    def repo_for_pkg(self, pkg_name):
         for repo in self.repos:
-            if spec.name in repo:
+            if pkg_name in repo:
                 return repo
-        raise UnknownPackageError(spec.name)
+        raise UnknownPackageError(pkg_name)
 
 
     @_autospec
     def get(self, spec, new=False):
-        return self._find_repo_for_spec(spec).get(spec, new)
+        """Find a repo that contains the supplied spec's package.
+
+           Raises UnknownPackageError if not found.
+        """
+        return self.repo_for_pkg(spec.name).get(spec)
 
 
-    def get_repo(self, namespace):
-        if namespace in self.by_namespace:
-            repo = self.by_namespace[namespace]
-            if isinstance(repo, PackageDB):
-                return repo
-        return None
+    def dirname_for_package_name(self, pkg_name):
+        return self.repo_for_pkg(pkg_name).dirname_for_package_name(pkg_name)
 
 
     def exists(self, pkg_name):
@@ -246,7 +241,7 @@ class PackageFinder(object):
 
 
 
-class PackageDB(object):
+class Repo(object):
     """Class representing a package repository in the filesystem.
 
     Each package repository must have a top-level configuration file
@@ -278,10 +273,107 @@ class PackageDB(object):
             tty.die(("Invalid namespace '%s' in '%s'. Namespaces must be "
                      "valid python identifiers separated by '.'")
                     % (self.namespace, self.root))
+        self._names = self.namespace.split('.')
 
         # These are internal cache variables.
+        self._modules = {}
+        self._classes = {}
         self._instances = {}
+
         self._provider_index = None
+        self._all_package_names = None
+
+        # make sure the namespace for packages in this repo exists.
+        self._create_namespace()
+
+
+    def _create_namespace(self):
+        """Create this repo's namespace module and insert it into sys.modules.
+
+        Ensures that modules loaded via the repo have a home, and that
+        we don't get runtime warnings from Python's module system.
+
+        """
+        for l in range(1, len(self._names)+1):
+            ns = '.'.join(self._names[:l])
+            if not ns in sys.modules:
+                sys.modules[ns] = _make_namespace_module(ns)
+                sys.modules[ns].__loader__ = self
+
+
+    def real_name(self, import_name):
+        """Allow users to import Spack packages using Python identifiers.
+
+        A python identifier might map to many different Spack package
+        names due to hyphen/underscore ambiguity.
+
+        Easy example:
+            num3proxy   -> 3proxy
+
+        Ambiguous:
+            foo_bar -> foo_bar, foo-bar
+
+        More ambiguous:
+            foo_bar_baz -> foo_bar_baz, foo-bar-baz, foo_bar-baz, foo-bar_baz
+        """
+        if import_name in self:
+            return import_name
+
+        options = possible_spack_module_names(import_name)
+        options.remove(import_name)
+        for name in options:
+            if name in self:
+                return name
+        return None
+
+
+    def is_prefix(self, fullname):
+        """True if fullname is a prefix of this Repo's namespace."""
+        parts = fullname.split('.')
+        return self._names[:len(parts)] == parts
+
+
+    def find_module(self, fullname, path=None):
+        """Python find_module import hook.
+
+        Returns this Repo if it can load the module; None if not.
+        """
+        if self.is_prefix(fullname):
+            return self
+
+        namespace, dot, module_name = fullname.rpartition('.')
+        if namespace == self.namespace:
+            if self.real_name(module_name):
+                return self
+
+        return None
+
+
+    def load_module(self, fullname):
+        """Python importer load hook.
+
+        Tries to load the module; raises an ImportError if it can't.
+        """
+        if fullname in sys.modules:
+            return sys.modules[fullname]
+
+        namespace, dot, module_name = fullname.rpartition('.')
+
+        if self.is_prefix(fullname):
+            module = _make_namespace_module(fullname)
+
+        elif namespace == self.namespace:
+            real_name = self.real_name(module_name)
+            if not real_name:
+                raise ImportError("No module %s in repo %s" % (module_name, namespace))
+            module = self._get_pkg_module(real_name)
+
+        else:
+            raise ImportError("No module %s in repo %s" % (fullname, self.namespace))
+
+        module.__loader__ = self
+        sys.modules[fullname] = module
+        return module
 
 
     def _read_config(self):
@@ -307,15 +399,14 @@ class PackageDB(object):
         if spec.virtual:
             raise UnknownPackageError(spec.name)
 
-        if new:
-            if spec in self._instances:
-                del self._instances[spec]
+        if new and spec in self._instances:
+            del self._instances[spec]
 
         if not spec in self._instances:
-            package_class = self.get_class_for_package_name(spec.name, spec.namespace)
+            PackageClass = self._get_pkg_class(spec.name)
             try:
                 copy = spec.copy()
-                self._instances[copy] = package_class(copy)
+                self._instances[copy] = PackageClass(copy)
             except Exception, e:
                 if spack.debug:
                     sys.excepthook(*sys.exc_info())
@@ -353,7 +444,7 @@ class PackageDB(object):
 
     def filename_for_package_name(self, pkg_name):
         """Get the filename for the module we should load for a particular
-           package.  Packages for a pacakge DB live in
+           package.  Packages for a Repo live in
            ``$root/<package_name>/package.py``
 
            This will return a proper package.py path even if the
@@ -366,19 +457,20 @@ class PackageDB(object):
         return join_path(pkg_dir, package_file_name)
 
 
-    @memoized
     def all_package_names(self):
-        """Generator function for all packages.  This looks for
-           ``<pkg_name>/package.py`` files within the repo direcotories"""
-        all_package_names = []
+        """Returns a sorted list of all package names in the Repo."""
+        if self._all_package_names is None:
+            self._all_package_names = []
 
-        for pkg_name in os.listdir(self.root):
-            pkg_dir  = join_path(self.root, pkg_name)
-            pkg_file = join_path(pkg_dir, package_file_name)
-            if os.path.isfile(pkg_file):
-                all_package_names.append(pkg_name)
+            for pkg_name in os.listdir(self.root):
+                pkg_dir  = join_path(self.root, pkg_name)
+                pkg_file = join_path(pkg_dir, package_file_name)
+                if os.path.isfile(pkg_file):
+                    self._all_package_names.append(pkg_name)
 
-        return sorted(all_package_names)
+            self._all_package_names.sort()
+
+        return self._all_package_names
 
 
     def all_packages(self):
@@ -386,27 +478,54 @@ class PackageDB(object):
             yield self.get(name)
 
 
-    @memoized
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists."""
-        return os.path.exists(self.filename_for_package_name(pkg_name))
+        # This does a binary search in the sorted list.
+        idx = bisect_left(self.all_package_names(), pkg_name)
+        return self._all_package_names[idx] == pkg_name
 
 
-    @memoized
-    def get_class_for_package_name(self, pkg_name, reponame = None):
-        """Get an instance of the class for a particular package."""
-        file_path = self.filename_for_package_name(pkg_name)
+    def _get_pkg_module(self, pkg_name):
+        """Create a module for a particular package.
 
-        if os.path.exists(file_path):
+        This caches the module within this Repo *instance*.  It does
+        *not* add it to ``sys.modules``.  So, you can construct
+        multiple Repos for testing and ensure that the module will be
+        loaded once per repo.
+
+        """
+        if pkg_name not in self._modules:
+            file_path = self.filename_for_package_name(pkg_name)
+
+            if not os.path.exists(file_path):
+                raise UnknownPackageError(pkg_name, self.namespace)
+
             if not os.path.isfile(file_path):
                 tty.die("Something's wrong. '%s' is not a file!" % file_path)
+
             if not os.access(file_path, os.R_OK):
                 tty.die("Cannot read '%s'!" % file_path)
-        else:
-            raise UnknownPackageError(pkg_name, self.namespace)
 
+            fullname = "%s.%s" % (self.namespace, pkg_name)
+
+            module = imp.load_source(fullname, file_path)
+            module.__package__ = self.namespace
+            module.__loader__ = self
+            self._modules[pkg_name] = module
+
+        return self._modules[pkg_name]
+
+
+    def _get_pkg_class(self, pkg_name):
+        """Get the class for the package out of its module.
+
+        First loads (or fetches from cache) a module for the
+        package. Then extracts the package class from the module
+        according to Spack's naming convention.
+        """
         class_name = mod_to_class(pkg_name)
-        module = __import__(self.namespace + '.' + pkg_name, fromlist=[class_name])
+        module = self._get_pkg_module(pkg_name)
+
         cls = getattr(module, class_name)
         if not inspect.isclass(cls):
             tty.die("%s.%s is not a class" % (pkg_name, class_name))
@@ -415,7 +534,7 @@ class PackageDB(object):
 
 
     def __str__(self):
-        return "<PackageDB '%s' from '%s'>" % (self.namespace, self.root)
+        return "<Repo '%s' from '%s'>" % (self.namespace, self.root)
 
 
     def __repr__(self):

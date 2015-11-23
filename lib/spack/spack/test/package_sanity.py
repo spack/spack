@@ -28,7 +28,6 @@ This test does sanity checks on Spack's builtin package database.
 import unittest
 
 import spack
-import spack.url as url
 from spack.packages import PackageFinder
 
 
@@ -45,7 +44,7 @@ class PackageSanityTest(unittest.TestCase):
         self.check_db()
 
 
-    def test_get_all_mock_packages(self):
+    def ztest_get_all_mock_packages(self):
         """Get the mock packages once each too."""
         db = PackageFinder(spack.mock_packages_path)
         spack.db.swap(db)
@@ -53,7 +52,7 @@ class PackageSanityTest(unittest.TestCase):
         spack.db.swap(db)
 
 
-    def test_url_versions(self):
+    def ztest_url_versions(self):
         """Check URLs for regular packages, if they are explicitly defined."""
         for pkg in spack.db.all_packages():
             for v, vattrs in pkg.versions.items():

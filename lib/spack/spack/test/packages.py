@@ -27,7 +27,7 @@ import unittest
 from llnl.util.filesystem import join_path
 
 import spack
-import spack.packages as packages
+from spack.packages import Repo
 from spack.util.naming import mod_to_class
 from spack.test.mock_packages_test import *
 
@@ -44,7 +44,7 @@ class PackagesTest(MockPackagesTest):
 
 
     def test_package_filename(self):
-        repo = spack.db.get_repo('gov.llnl.spack.mock')
+        repo = Repo(spack.mock_packages_path)
         filename = repo.filename_for_package_name('mpich')
         self.assertEqual(filename, join_path(spack.mock_packages_path, 'mpich', 'package.py'))
 
@@ -55,7 +55,7 @@ class PackagesTest(MockPackagesTest):
 
 
     def test_nonexisting_package_filename(self):
-        repo = spack.db.get_repo('gov.llnl.spack.mock')
+        repo = Repo(spack.mock_packages_path)
         filename = repo.filename_for_package_name('some-nonexisting-package')
         self.assertEqual(filename, join_path(spack.mock_packages_path, 'some-nonexisting-package', 'package.py'))
 

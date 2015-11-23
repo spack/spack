@@ -52,12 +52,6 @@ install_path   = join_path(opt_path, "spack")
 etc_path       = join_path(prefix, "etc")
 
 #
-# Setup the spack.repos namespace
-#
-from spack.repo_loader import RepoNamespace
-repos = RepoNamespace()
-
-#
 # Set up the default packages database.
 #
 import spack.packages

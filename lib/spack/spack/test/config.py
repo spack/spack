@@ -27,7 +27,6 @@ import shutil
 import os
 from tempfile import mkdtemp
 import spack
-from spack.packages import PackageDB
 from spack.test.mock_packages_test import *
 
 # Some sample compiler config data

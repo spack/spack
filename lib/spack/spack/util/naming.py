@@ -134,14 +134,42 @@ class NamespaceTrie(object):
         return self._get_helper(namespace, namespace)
 
 
-    def __contains__(self, namespace):
+    def is_prefix(self, namespace):
+        """True if the namespace has a value, or if it's the prefix of one that does."""
+        first, sep, rest = namespace.partition(self._sep)
+        if not first:
+            return True
+        elif first not in self._subspaces:
+            return False
+        else:
+            return self._subspaces[first].is_prefix(rest)
+
+
+    def is_leaf(self, namespace):
+        """True if this namespace has no children in the trie."""
+        first, sep, rest = namespace.partition(self._sep)
+        if not first:
+            return bool(self._subspaces)
+        elif first not in self._subspaces:
+            return False
+        else:
+            return self._subspaces[first].is_leaf(rest)
+
+
+    def has_value(self, namespace):
+        """True if there is a value set for the given namespace."""
         first, sep, rest = namespace.partition(self._sep)
         if not first:
             return self._value is not None
         elif first not in self._subspaces:
             return False
         else:
-            return rest in self._subspaces[first]
+            return self._subspaces[first].has_value(rest)
+
+
+    def __contains__(self, namespace):
+        """Returns whether a value has been set for the namespace."""
+        return self.has_value(namespace)
 
 
     def _str_helper(self, stream, level=0):
