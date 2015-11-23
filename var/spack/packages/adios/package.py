@@ -1,8 +1,10 @@
-from spack import *
+import os
 
+from spack import *
 class Adios(Package):
     """The Adaptable IO System (ADIOS) provides a simple, 
-        flexible way for scientists to describe the data in their code that may need to be written, 
+        flexible way for scientists to describe the 
+        data in their code that may need to be written, 
         read, or processed outside of the running simulation
     """
     
@@ -19,10 +21,12 @@ class Adios(Package):
     depends_on('mxml')
 
     def install(self, spec, prefix):
-        configure_args = ["--prefix=%s" % prefix, "--with-mxml=%s" % spec['mxml'].prefix, 
-                          "--with-hdf5=%s" % spec['hdf5'].prefix, "--with-netcdf=%s" % os.environ['NETCDF_DIR'], 
+        configure_args = ["--prefix=%s" % prefix, 
+                          "--with-mxml=%s" % spec['mxml'].prefix, 
+                          "--with-hdf5="+os.environ["HDF5_DIR"],
+                          "--with-netcdf="+os.environ["NETCDF_DIR"],
                           "--with-infiniband=no"]
-         
+             
         configure(*configure_args)
         make()
         make("install")
