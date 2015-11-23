@@ -13,6 +13,7 @@ class Papi(Package):
     homepage = "http://icl.cs.utk.edu/papi/index.html"
     url      = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.3.0.tar.gz"
 
+    version('5.4.1', '9134a99219c79767a11463a76b0b01a2')
     version('5.3.0', '367961dd0ab426e5ae367c2713924ffb')
 
     def install(self, spec, prefix):
@@ -20,13 +21,10 @@ class Papi(Package):
 
         configure_args=["--prefix=%s" % prefix]
 
-		# need to force consistency in the use of compilers
-        if spec.satisfies('%gcc'):
-            configure_args.append('CC=gcc')
-            configure_args.append('MPICH_CC=gcc')
-        if spec.satisfies('%intel'):
-            configure_args.append('CC=icc')
-            configure_args.append('MPICH_CC=icc')
+        # PAPI uses MPI if MPI is present; since we don't require an
+        # MPI package, we ensure that all attempts to use MPI fail, so
+        # that PAPI does not get confused
+        configure_args.append('MPICC=:')
 
         configure(*configure_args)
 
