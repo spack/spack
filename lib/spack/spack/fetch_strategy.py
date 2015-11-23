@@ -190,7 +190,7 @@ class URLFetchStrategy(FetchStrategy):
         if content_types and 'text/html' in content_types[-1]:
             tty.warn("The contents of " + self.archive_file + " look like HTML.",
                      "The checksum will likely be bad.  If it is, you can use",
-                     "'spack clean --dist' to remove the bad archive, then fix",
+                     "'spack clean <package>' to remove the bad archive, then fix",
                      "your internet gateway issue and install again.")
 
         if not self.archive_file:
