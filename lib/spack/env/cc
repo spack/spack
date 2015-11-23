@@ -126,6 +126,11 @@ if [ -z "$mode" ]; then
         elif [ "$arg" = -c ]; then
             mode=cc
             break
+        elif [ "$arg" = -S ]; then
+            mode=as
+	    echo "spac cc mode as" "$@"
+	    exit 1
+            break
         fi
     done
 fi
@@ -155,6 +160,7 @@ libraries=()
 libs=()
 rpaths=()
 other_args=()
+all_args=("$@")
 
 while [ -n "$1" ]; do
     case "$1" in
@@ -178,6 +184,8 @@ while [ -n "$1" ]; do
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             if [[ "$arg" = -rpath=* ]]; then
                 rpaths+=("${arg#-rpath=}")
+            elif [[ "$arg" = -rpath,* ]]; then
+                rpaths+=("${arg#-rpath,}")
             elif [[ "$arg" = -rpath ]]; then
                 shift; arg="$1"
                 if [[ "$arg" != -Wl,* ]]; then
@@ -193,6 +201,8 @@ while [ -n "$1" ]; do
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             if [[ "$arg" = -rpath=* ]]; then
                 rpaths+=("${arg#-rpath=}")
+            elif [[ "$arg" = -rpath,* ]]; then
+                rpaths+=("${arg#-rpath,}")
             elif [[ "$arg" = -rpath ]]; then
                 shift; arg="$1"
                 if [[ "$arg" != -Xlinker,* ]]; then
@@ -247,25 +257,46 @@ IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
 for dep in "${deps[@]}"; do
     if [ -d "$dep/include" ]; then
         includes+=("$dep/include")
+	all_args=("-I$dep/include" ${all_args[@]})
     fi
 
     if [ -d "$dep/lib" ]; then
         libraries+=("$dep/lib")
         rpaths+=("$dep/lib")
+	if [ "$mode" = ccld ]; then
+	    all_args=("-L$dep/lib" "-Wl,-rpath,$dep/lib" ${all_args[@]})
+	elif [ "$mode" = ld ]; then
+	    all_args=("-L$dep/lib" "-rpath" "$dep/lib" ${all_args[@]})
+	fi
     fi
 
     if [ -d "$dep/lib64" ]; then
         libraries+=("$dep/lib64")
         rpaths+=("$dep/lib64")
+        if [ "$mode" = ccld ]; then
+	    all_args=("-L$dep/lib" "-Wl,-rpath,$dep/lib" ${all_args[@]})
+        elif [ "$mode" = ld ]; then
+	    all_args=("-L$dep/lib" "-rpath" "$dep/lib" ${all_args[@]})
+	fi
     fi
 done
 
 # Include all -L's and prefix/whatever dirs in rpath
 for dir in "${libraries[@]}"; do
     [[ dir = $SPACK_INSTALL* ]] && rpaths+=("$dir")
+    if [ "$mode" = ccld ]; then
+	[[ dir = $SPACK_INSTALL* ]] && all_args=("-Wl,-rpath,$dir" ${all_args[@]})
+    elif [ "$mode" = ld ]; then
+	[[ dir = $SPACK_INSTALL* ]] && all_args=("-rpath" "$dir" ${all_args[@]})
+    fi
 done
 rpaths+=("$SPACK_PREFIX/lib")
 rpaths+=("$SPACK_PREFIX/lib64")
+if [ "$mode" = ccld ]; then
+    all_args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" ${all_args[@]})
+elif [ "$mode" = ld ]; then
+    all_args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" ${all_args[@]})
+fi
 
 # Put the arguments together
 args=()
@@ -317,7 +348,8 @@ done
 export PATH
 
 full_command=("$command")
-full_command+=("${args[@]}")
+# full_command+=("${args[@]}")
+full_command+=("${all_args[@]}")
 
 #
 # Write the input and output commands to debug logs if it's asked for.
