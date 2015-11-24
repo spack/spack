@@ -57,9 +57,6 @@ class Tally(Plugin):
     def configure(self, options, conf):
         super(Tally, self).configure(options, conf)
 
-    def begin(self):
-        print ">>> TALLY PLUGIN BEGIN"
-
     def addSuccess(self, test):
         self.successes.add(test)
         

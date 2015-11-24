@@ -85,13 +85,14 @@ def run(names, verbose=False):
                 sys.exit(1)
     
     tally = Tally()
-    tally.enabled = True
     for test in names:
         module = 'spack.test.' + test
         print module
         
         tty.msg("Running test: %s" % test)
-        result = nose.run(argv=["", module], plugins=[tally])
+        
+        activateTally = "--with-%s" % spack.test.tally_plugin.Tally.name
+        result = nose.run(argv=["", activateTally, module], addplugins=[tally])
 
     succeeded = not tally.failCount and not tally.errorCount
     tty.msg("Tests Complete.",
