@@ -3,12 +3,9 @@ from spack.util.environment import *
 
 class Apex(Package):
     homepage = "http://github.com/khuck/xpress-apex"
-    #url      = "http://github.com/khuck/xpress-apex/archive/v0.1-release-candidate.tar.gz"
-    url      = "http://github.com/khuck/xpress-apex"
+    url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
 
-    #version('0.1', '6e039c224387348296739f6bf360d081')
-    #version('master', branch='master', git='https://github.com/khuck/xpress-apex.git')
-    version('2015-10-21', git='https://github.com/khuck/xpress-apex.git', commit='d2e66ddde689120472fc57fc546d8cd80aab745c')
+    version('0.1', '8b95f0c0313da1575960d3ad69f18e75')
 
     depends_on("binutils+libiberty")
     depends_on("boost@1.54:")
