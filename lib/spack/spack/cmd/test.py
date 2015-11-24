@@ -29,6 +29,7 @@ from llnl.util.lang import list_modules
 
 import spack
 import spack.test
+from spack.test.testutils import JunitResultFormat, test_output_path
 
 description ="Run unit tests"
 
@@ -40,6 +41,12 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="verbose output")
+    subparser.add_argument(
+        '--junitXmlOutput', action='store_true', dest='junitXmlOutput',
+        help="Create JUnit XML output")
+    subparser.add_argument(
+        '--outputPath', dest='outputPath',
+        help="Write test output to a file other than the default")        
 
 
 def test(parser, args):
@@ -48,4 +55,14 @@ def test(parser, args):
         colify(spack.test.list_tests(), indent=2)
 
     else:
-        spack.test.run(args.names, args.verbose)
+        if args.junitXmlOutput:
+            output = JunitResultFormat()
+            # Note some unit tests change the CWD, so using test_output_path
+            # to create the directory after running spack.test.run can choose
+            # a path that is not relative the the CWD where "spack test" is run
+            outputFpath = args.outputPath or test_output_path('unit_tests.xml')
+            spack.test.run(args.names, args.verbose, output)
+            with open(outputFpath, 'wb') as F:
+                output.write_to(F)
+        else:
+            spack.test.run(args.names, args.verbose)

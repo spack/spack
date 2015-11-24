@@ -67,7 +67,7 @@ def list_tests():
     return test_names
 
 
-def run(names, verbose=False):
+def run(names, verbose=False, output=None):
     """Run tests with the supplied names.  Names should be a list.  If
        it's empty, run ALL of Spack's tests."""
     verbosity = 1 if not verbose else 2
@@ -95,6 +95,8 @@ def run(names, verbose=False):
         testsRun += result.testsRun
         errors   += len(result.errors)
         failures += len(result.failures)
+        
+        if output: testutils.generate_output_format(suite, result, output)
 
     succeeded = not errors and not failures
     tty.msg("Tests Complete.",
@@ -106,4 +108,3 @@ def run(names, verbose=False):
         tty.info("OK", format='g')
     else:
         tty.info("FAIL", format='r')
-        sys.exit(1)
