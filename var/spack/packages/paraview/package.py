@@ -7,8 +7,6 @@ class Paraview(Package):
     version('4.4.0', 'fa1569857dd680ebb4d7ff89c2227378', url='http://www.paraview.org/files/v4.4/ParaView-v4.4.0-source.tar.gz')
 
     variant('python', default=False, description='Enable Python support')
-    variant('matplotlib', default=False, description='Enable Matplotlib support')
-    variant('numpy', default=False, description='Enable NumPy support')
 
     variant('tcl', default=False, description='Enable TCL support')
 
@@ -18,8 +16,8 @@ class Paraview(Package):
     variant('qt', default=False, description='Enable Qt support')
 
     depends_on('python', when='+python')
-    depends_on('py-numpy', when='+python+numpy')
-    depends_on('py-matplotlib', when='+python+matplotlib')
+    depends_on('py-numpy', when='+python')
+    depends_on('py-matplotlib', when='+python')
     depends_on('tcl', when='+tcl')
     depends_on('mpi', when='+mpi')
     depends_on('qt', when='+qt')

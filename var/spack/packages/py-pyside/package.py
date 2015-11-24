@@ -2,7 +2,7 @@ from spack import *
 import os
 
 class PyPyside(Package):
-    """array processing for numbers, strings, records, and objects."""
+    """Python bindings for Qt."""
     homepage = "https://pypi.python.org/pypi/pyside"
     url      = "https://pypi.python.org/packages/source/P/PySide/PySide-1.2.2.tar.gz"
 
