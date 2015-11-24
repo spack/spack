@@ -16,8 +16,6 @@ class Openssl(Package):
     parallel = False
 
     def install(self, spec, prefix):
-        env['KERNEL_BITS'] = '64' # Only on 64-bit Mac
-
         config = Executable("./config")
         config("--prefix=%s" % prefix,
                "--openssldir=%s/etc/openssl" % prefix,
