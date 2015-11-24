@@ -23,7 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-from external import argparse
+import argparse
 import llnl.util.tty as tty
 import spack.cmd
 import spack.build_environment as build_env

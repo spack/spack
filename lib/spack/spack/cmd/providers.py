@@ -23,7 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-from external import argparse
+import argparse
 
 from llnl.util.tty.colify import colify
 

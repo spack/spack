@@ -24,7 +24,7 @@
 ##############################################################################
 import sys
 import os
-from external import argparse
+import argparse
 
 import llnl.util.tty as tty
 

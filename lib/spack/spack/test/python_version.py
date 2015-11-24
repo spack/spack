@@ -34,7 +34,7 @@ import re
 
 import llnl.util.tty as tty
 
-from external import pyqver2
+import pyqver2
 import spack
 
 spack_max_version = (2,6)

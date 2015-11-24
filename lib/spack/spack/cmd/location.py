@@ -24,7 +24,7 @@
 ##############################################################################
 import os
 import sys
-from external import argparse
+import argparse
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path

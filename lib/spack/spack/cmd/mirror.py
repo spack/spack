@@ -26,7 +26,7 @@ import os
 import sys
 from datetime import datetime
 
-from external import argparse
+import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 

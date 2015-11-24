@@ -43,8 +43,8 @@ import os
 import time
 import socket
 
-from external import yaml
-from external.yaml.error import MarkedYAMLError, YAMLError
+import yaml
+from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *

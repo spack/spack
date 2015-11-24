@@ -25,7 +25,7 @@
 import os
 import sys
 import code
-from external import argparse
+import argparse
 import platform
 
 import spack
