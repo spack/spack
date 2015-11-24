@@ -26,6 +26,7 @@ class Python(Package):
     def install(self, spec, prefix):
         # Need this to allow python build to find the Python installation.
         env['PYTHONHOME'] = prefix
+        env['MACOSX_DEPLOYMENT_TARGET'] = '10.6'
 
         # Rest of install is pretty standard.
         configure("--prefix=%s" % prefix,

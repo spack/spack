@@ -5,8 +5,8 @@ class Hypre(Package):
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
 
-    homepage = "https://computation.llnl.gov/project/linear_solvers/software.php"
-    url      = "https://computation.llnl.gov/project/linear_solvers/download/hypre-2.10.0b.tar.gz"
+    homepage = "http://computation.llnl.gov/project/linear_solvers/software.php"
+    url      = "http://computation.llnl.gov/project/linear_solvers/download/hypre-2.10.0b.tar.gz"
 
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
 

@@ -37,7 +37,7 @@ description = "List extensions for package."
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
-        '-l', '--long', action='store_const', dest='mode', const='long',
+        '-l', '--long', action='store_true', dest='long',
         help='Show dependency hashes as well as versions.')
     format_group.add_argument(
         '-p', '--paths', action='store_const', dest='mode', const='paths',
@@ -95,4 +95,4 @@ def extensions(parser, args):
         tty.msg("None activated.")
         return
     tty.msg("%d currently activated:" % len(activated))
-    spack.cmd.find.display_specs(activated.values(), mode=args.mode)
+    spack.cmd.find.display_specs(activated.values(), mode=args.mode, long=args.long)
