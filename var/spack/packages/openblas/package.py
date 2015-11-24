@@ -11,9 +11,6 @@ class Openblas(Package):
     provides('blas')
     provides('lapack')
 
-    # Doesn't always build correctly in parallel
-    # parallel = False
-
     def install(self, spec, prefix):
         make('libs', 'netlib', 'shared', 'CC=cc', 'FC=f77')
         make('install', "PREFIX='%s'" % prefix)
