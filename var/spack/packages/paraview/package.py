@@ -28,7 +28,7 @@ class Paraview(Package):
     depends_on('jpeg')
     depends_on('libpng')
     depends_on('libtiff')
-    #depends_on('libxml2') # drags in python
+    depends_on('libxml2')
     depends_on('netcdf')
     #depends_on('protobuf') # version mismatches?
     #depends_on('sqlite') # external version not supported
@@ -65,7 +65,7 @@ class Paraview(Package):
                 '-DVTK_USER_SYSTEM_FREETYPE:BOOL=ON',
                 '-DVTK_USER_SYSTEM_HDF5:BOOL=ON',
                 '-DVTK_USER_SYSTEM_JPEG:BOOL=ON',
-                #'-DVTK_USER_SYSTEM_LIBXML2:BOOL=ON',
+                '-DVTK_USER_SYSTEM_LIBXML2:BOOL=ON',
                 '-DVTK_USER_SYSTEM_NETCDF:BOOL=ON',
                 '-DVTK_USER_SYSTEM_TIFF:BOOL=ON',
                 '-DVTK_USER_SYSTEM_ZLIB:BOOL=ON',
