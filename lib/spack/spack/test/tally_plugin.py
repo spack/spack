@@ -31,21 +31,9 @@ class Tally(Plugin):
 
     def __init__(self):
         super(Tally, self).__init__()
-        self.successes = set()
-        self.failures = set()
-        self.errors = set()
-
-    @property
-    def successCount(self):
-        return len(self.successes)
-    
-    @property
-    def failCount(self):
-        return len(self.failures)
-    
-    @property
-    def errorCount(self):
-        return len(self.errors)
+        self.successCount = 0
+        self.failCount = 0
+        self.errorCount = 0
     
     @property
     def numberOfTests(self):
@@ -58,13 +46,13 @@ class Tally(Plugin):
         super(Tally, self).configure(options, conf)
 
     def addSuccess(self, test):
-        self.successes.add(test)
+        self.successCount += 1
         
     def addError(self, test, err):
-        self.errors.add(test)
+        self.errorCount += 1
             
     def addFailure(self, test, err):
-        test.failures.add(test)
+        self.failCount += 1
 
     def finalize(self, result):
         pass
