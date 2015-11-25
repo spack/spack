@@ -27,6 +27,7 @@ import unittest
 import nose
 
 from spack.test.tally_plugin import Tally
+from llnl.util.filesystem import join_path
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -69,7 +70,7 @@ def list_tests():
     return test_names
 
 
-def run(names, verbose=False):
+def run(names, outputDir, verbose=False):
     """Run tests with the supplied names.  Names should be a list.  If
        it's empty, run ALL of Spack's tests."""
     verbosity = 1 if not verbose else 2
@@ -91,8 +92,13 @@ def run(names, verbose=False):
         
         tty.msg("Running test: %s" % test)
         
-        activateTally = "--with-%s" % spack.test.tally_plugin.Tally.name
-        result = nose.run(argv=["", activateTally, module], addplugins=[tally])
+        xmlOutputFname = "unittests-{0}.xml".format(test)
+        xmlOutputPath = join_path(outputDir, xmlOutputFname)
+        runOpts = ["--with-%s" % spack.test.tally_plugin.Tally.name, 
+            "--with-xunit", 
+            "--xunit-file={0}".format(xmlOutputPath)]
+        argv = [""] + runOpts + [module]
+        result = nose.run(argv=argv, addplugins=[tally])
 
     succeeded = not tally.failCount and not tally.errorCount
     tty.msg("Tests Complete.",
