@@ -100,7 +100,8 @@ class Executable(object):
             out, err = proc.communicate()
             self.returncode = proc.returncode
 
-            output.write(out)
+            if not return_output:
+                output.write(out)
             error.write(err)
 
             rc = proc.returncode
