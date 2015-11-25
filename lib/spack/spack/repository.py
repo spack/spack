@@ -67,8 +67,8 @@ def _make_namespace_module(ns):
     return module
 
 
-class PackageFinder(object):
-    """A PackageFinder is a wrapper around a list of Repos.
+class RepoPath(object):
+    """A RepoPath is a list of repos that function as one.
 
        It functions exactly like a Repo, but it operates on the
        combined results of the Repos in its list instead of on a
@@ -83,7 +83,10 @@ class PackageFinder(object):
         self._provider_index = None
 
         for root in repo_dirs:
-            repo = Repo(root)
+            # Try to make it a repo if it's not one.
+            if not isinstance(root, Repo):
+                repo = Repo(root)
+            # Add the repo to the path.
             self.put_last(repo)
 
 
@@ -94,7 +97,11 @@ class PackageFinder(object):
         TODO: Maybe there is a cleaner way.
 
         """
-        attrs = ['repos', 'by_namespace', 'by_path', '_all_package_names', '_provider_index']
+        attrs = ['repos',
+                 'by_namespace',
+                 'by_path',
+                 '_all_package_names',
+                 '_provider_index']
         for attr in attrs:
             tmp = getattr(self, attr)
             setattr(self, attr, getattr(other, attr))
@@ -185,7 +192,7 @@ class PackageFinder(object):
                 return repo
 
         # No repo provides the namespace, but it is a valid prefix of
-        # something in the PackageFinder.
+        # something in the RepoPath.
         if self.by_namespace.is_prefix(fullname):
             return self
 
@@ -603,7 +610,7 @@ class UnknownPackageError(spack.error.SpackError):
 
 
 class DuplicateRepoError(spack.error.SpackError):
-    """Raised when duplicate repos are added to a PackageFinder."""
+    """Raised when duplicate repos are added to a RepoPath."""
     def __init__(self, msg, repo1, repo2):
         super(UnknownPackageError, self).__init__(
             "%s: %s, %s" % (msg, repo1, repo2))

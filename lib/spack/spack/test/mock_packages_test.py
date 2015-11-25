@@ -27,7 +27,7 @@ import unittest
 
 import spack
 import spack.config
-from spack.packages import PackageFinder
+from spack.repository import RepoPath
 from spack.spec import Spec
 
 
@@ -36,7 +36,7 @@ class MockPackagesTest(unittest.TestCase):
         # Use the mock packages database for these tests.  This allows
         # us to set up contrived packages that don't interfere with
         # real ones.
-        self.db = PackageFinder(spack.mock_packages_path)
+        self.db = RepoPath(spack.mock_packages_path)
         spack.db.swap(self.db)
 
         spack.config.clear_config_caches()

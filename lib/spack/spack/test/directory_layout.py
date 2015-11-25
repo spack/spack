@@ -34,7 +34,7 @@ from llnl.util.filesystem import *
 
 import spack
 from spack.spec import Spec
-from spack.packages import PackageFinder
+from spack.repository import RepoPath
 from spack.directory_layout import YamlDirectoryLayout
 
 # number of packages to test (to reduce test time)
@@ -123,7 +123,7 @@ class DirectoryLayoutTest(unittest.TestCase):
            information about installed packages' specs to uninstall
            or query them again if the package goes away.
         """
-        mock_db = PackageFinder(spack.mock_packages_path)
+        mock_db = RepoPath(spack.mock_packages_path)
 
         not_in_mock = set.difference(
             set(spack.db.all_package_names()),

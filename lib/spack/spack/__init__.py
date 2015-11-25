@@ -54,11 +54,11 @@ etc_path       = join_path(prefix, "etc")
 #
 # Set up the default packages database.
 #
-import spack.packages
+import spack.repository
 _repo_paths = spack.config.get_repos_config()
 if not _repo_paths:
     tty.die("Spack configuration contains no package repositories.")
-db = spack.packages.PackageFinder(*_repo_paths)
+db = spack.repository.RepoPath(*_repo_paths)
 sys.meta_path.append(db)
 
 #

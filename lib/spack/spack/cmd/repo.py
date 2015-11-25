@@ -32,7 +32,7 @@ from llnl.util.filesystem import join_path, mkdirp
 import spack.spec
 import spack.config
 from spack.util.environment import get_path
-from spack.packages import repo_config_filename
+from spack.repository import repo_config_filename
 
 import os
 import exceptions

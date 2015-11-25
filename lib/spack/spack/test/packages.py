@@ -27,7 +27,7 @@ import unittest
 from llnl.util.filesystem import join_path
 
 import spack
-from spack.packages import Repo
+from spack.repository import Repo
 from spack.util.naming import mod_to_class
 from spack.test.mock_packages_test import *
 

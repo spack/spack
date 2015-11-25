@@ -28,7 +28,7 @@ This test does sanity checks on Spack's builtin package database.
 import unittest
 
 import spack
-from spack.packages import PackageFinder
+from spack.repository import RepoPath
 
 
 class PackageSanityTest(unittest.TestCase):
@@ -46,7 +46,7 @@ class PackageSanityTest(unittest.TestCase):
 
     def ztest_get_all_mock_packages(self):
         """Get the mock packages once each too."""
-        db = PackageFinder(spack.mock_packages_path)
+        db = RepoPath(spack.mock_packages_path)
         spack.db.swap(db)
         self.check_db()
         spack.db.swap(db)
