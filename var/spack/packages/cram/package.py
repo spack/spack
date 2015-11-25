@@ -7,6 +7,7 @@ class Cram(Package):
 
     version('1.0.1', 'c73711e945cf5dc603e44395f6647f5e')
 
+    extends('python')
     depends_on("mpi")
 
     def install(self, spec, prefix):
