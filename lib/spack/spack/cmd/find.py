@@ -137,7 +137,7 @@ def find(parser, args):
     # Filter out specs that don't exist.
     query_specs = spack.cmd.parse_specs(args.query_specs)
     query_specs, nonexisting = partition_list(
-        query_specs, lambda s: spack.db.exists(s.name))
+        query_specs, lambda s: spack.repo.exists(s.name))
 
     if nonexisting:
         msg = "No such package%s: " % ('s' if len(nonexisting) > 1 else '')

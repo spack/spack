@@ -71,7 +71,7 @@ def extensions(parser, args):
         args.mode = 'short'
 
     # List package names of extensions
-    extensions = spack.db.extensions_for(spec)
+    extensions = spack.repo.extensions_for(spec)
     if not extensions:
         tty.msg("%s has no extensions." % spec.cshort_spec)
         return

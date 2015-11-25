@@ -58,8 +58,8 @@ import spack.repository
 _repo_paths = spack.config.get_repos_config()
 if not _repo_paths:
     tty.die("Spack configuration contains no package repositories.")
-db = spack.repository.RepoPath(*_repo_paths)
-sys.meta_path.append(db)
+repo = spack.repository.RepoPath(*_repo_paths)
+sys.meta_path.append(repo)
 
 #
 # Set up the installed packages database
@@ -146,7 +146,7 @@ sys_type = None
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
 # Spack internal code should call 'import spack' and accesses other
-# variables (spack.db, paths, etc.) directly.
+# variables (spack.repo, paths, etc.) directly.
 #
 # TODO: maybe this should be separated out and should go in build_environment.py?
 # TODO: it's not clear where all the stuff that needs to be included in packages

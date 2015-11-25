@@ -54,7 +54,7 @@ class ${class_name}(Package):
 
 
 def edit_package(name, force=False):
-    path = spack.db.filename_for_package_name(name)
+    path = spack.repo.filename_for_package_name(name)
 
     if os.path.exists(path):
         if not os.path.isfile(path):

@@ -115,7 +115,7 @@ def fetch_log(path):
 
 def failed_dependencies(spec):
     return set(childSpec for childSpec in spec.dependencies.itervalues() if not 
-        spack.db.get(childSpec).installed)
+        spack.repo.get(childSpec).installed)
 
 
 def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
@@ -126,7 +126,7 @@ def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
             continue
 
         failedDeps = failed_dependencies(spec)
-        package = spack.db.get(spec)
+        package = spack.repo.get(spec)
         if failedDeps:
             result = TestResult.SKIPPED
             dep = iter(failedDeps).next()
@@ -171,7 +171,7 @@ def test_install(parser, args):
     
     newInstalls = set()
     for spec in topSpec.traverse():
-        package = spack.db.get(spec)
+        package = spack.repo.get(spec)
         if not package.installed:
             newInstalls.add(spec)
     
@@ -188,7 +188,7 @@ def test_install(parser, args):
         # Calling do_install for the top-level package would be sufficient but
         # this attempts to keep going if any package fails (other packages which
         # are not dependents may succeed)
-        package = spack.db.get(spec)
+        package = spack.repo.get(spec)
         if (not failed_dependencies(spec)) and (not package.installed):
             try:
                 package.do_install(

@@ -108,7 +108,7 @@ def repo_remove(args):
 
 def repo_list(args):
     """List package sources and their mnemoics"""
-    root_names = spack.db.repos
+    root_names = spack.repo.repos
     max_len = max(len(s[0]) for s in root_names)
     fmt = "%%-%ds%%s" % (max_len + 4)
     for root in root_names:

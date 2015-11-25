@@ -35,8 +35,8 @@ class PackageSanityTest(unittest.TestCase):
 
     def check_db(self):
         """Get all packages in a DB to make sure they work."""
-        for name in spack.db.all_package_names():
-            spack.db.get(name)
+        for name in spack.repo.all_package_names():
+            spack.repo.get(name)
 
 
     def test_get_all_packages(self):
@@ -47,14 +47,14 @@ class PackageSanityTest(unittest.TestCase):
     def ztest_get_all_mock_packages(self):
         """Get the mock packages once each too."""
         db = RepoPath(spack.mock_packages_path)
-        spack.db.swap(db)
+        spack.repo.swap(db)
         self.check_db()
-        spack.db.swap(db)
+        spack.repo.swap(db)
 
 
     def ztest_url_versions(self):
         """Check URLs for regular packages, if they are explicitly defined."""
-        for pkg in spack.db.all_packages():
+        for pkg in spack.repo.all_packages():
             for v, vattrs in pkg.versions.items():
                 if 'url' in vattrs:
                     # If there is a url for the version check it.

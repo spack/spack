@@ -79,15 +79,15 @@ class UnitInstallTest(unittest.TestCase):
         pkgX.installed = False
         pkgY.installed = False
 
-        self.saved_db = spack.db
+        self.saved_db = spack.repo
         pkgDb = MockPackageDb({specX:pkgX, specY:pkgY})
-        spack.db = pkgDb
+        spack.repo = pkgDb
 
 
     def tearDown(self):
         super(UnitInstallTest, self).tearDown()
 
-        spack.db = self.saved_db
+        spack.repo = self.saved_db
 
     def test_installing_both(self):
         mo = MockOutput()

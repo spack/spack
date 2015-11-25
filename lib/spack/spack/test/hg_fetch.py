@@ -47,7 +47,7 @@ class HgFetchTest(MockPackagesTest):
 
         spec = Spec('hg-test')
         spec.concretize()
-        self.pkg = spack.db.get(spec, new=True)
+        self.pkg = spack.repo.get(spec, new=True)
 
 
     def tearDown(self):

@@ -70,7 +70,7 @@ def install(parser, args):
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
-        package = spack.db.get(spec)
+        package = spack.repo.get(spec)
         with spack.installed_db.write_transaction():
             package.do_install(
                 keep_prefix=args.keep_prefix,

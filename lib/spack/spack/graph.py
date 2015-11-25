@@ -523,7 +523,7 @@ def graph_dot(*specs, **kwargs):
         return '"%s"' % string
 
     if not specs:
-        specs = [p.name for p in spack.db.all_packages()]
+        specs = [p.name for p in spack.repo.all_packages()]
     else:
         roots = specs
         specs = set()

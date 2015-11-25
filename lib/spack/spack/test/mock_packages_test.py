@@ -37,7 +37,7 @@ class MockPackagesTest(unittest.TestCase):
         # us to set up contrived packages that don't interfere with
         # real ones.
         self.db = RepoPath(spack.mock_packages_path)
-        spack.db.swap(self.db)
+        spack.repo.swap(self.db)
 
         spack.config.clear_config_caches()
         self.real_scopes = spack.config.config_scopes
@@ -59,7 +59,7 @@ class MockPackagesTest(unittest.TestCase):
         spec = Spec(spec)
 
         # Save original dependencies before making any changes.
-        pkg = spack.db.get(pkg_name)
+        pkg = spack.repo.get(pkg_name)
         if pkg_name not in self.saved_deps:
             self.saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
 
@@ -69,7 +69,7 @@ class MockPackagesTest(unittest.TestCase):
 
     def cleanmock(self):
         """Restore the real packages path after any test."""
-        spack.db.swap(self.db)
+        spack.repo.swap(self.db)
         spack.config.config_scopes = self.real_scopes
         spack.config.clear_config_caches()
 

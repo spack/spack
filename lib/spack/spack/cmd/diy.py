@@ -61,7 +61,7 @@ def diy(self, args):
     # Take a write lock before checking for existence.
     with spack.installed_db.write_transaction():
         spec = specs[0]
-        if not spack.db.exists(spec.name):
+        if not spack.repo.exists(spec.name):
             tty.warn("No such package: %s" % spec.name)
             create = tty.get_yes_or_no("Create this package?", default=False)
             if not create:
@@ -76,7 +76,7 @@ def diy(self, args):
             tty.die("spack diy spec must have a single, concrete version.")
 
         spec.concretize()
-        package = spack.db.get(spec)
+        package = spack.repo.get(spec)
 
         if package.installed:
             tty.error("Already installed in %s" % package.prefix)

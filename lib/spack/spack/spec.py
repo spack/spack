@@ -487,7 +487,7 @@ class Spec(object):
 
     @property
     def package(self):
-        return spack.db.get(self)
+        return spack.repo.get(self)
 
 
     @property
@@ -505,7 +505,7 @@ class Spec(object):
     @staticmethod
     def is_virtual(name):
         """Test if a name is virtual without requiring a Spec."""
-        return not spack.db.exists(name)
+        return not spack.repo.exists(name)
 
 
     @property
@@ -798,7 +798,7 @@ class Spec(object):
                 return changed
 
             for spec in virtuals:
-                providers = spack.db.providers_for(spec)
+                providers = spack.repo.providers_for(spec)
                 concrete = spack.concretizer.choose_provider(spec, providers)
                 concrete = concrete.copy()
                 spec._replace_with(concrete)
@@ -909,7 +909,7 @@ class Spec(object):
         the dependency.  If no conditions are True (and we don't
         depend on it), return None.
         """
-        pkg = spack.db.get(self.name)
+        pkg = spack.repo.get(self.name)
         conditions = pkg.dependencies[name]
 
         # evaluate when specs to figure out constraints on the dependency.
@@ -1037,7 +1037,7 @@ class Spec(object):
         any_change = False
         changed = True
 
-        pkg = spack.db.get(self.name)
+        pkg = spack.repo.get(self.name)
         while changed:
             changed = False
             for dep_name in pkg.dependencies:
@@ -1115,7 +1115,7 @@ class Spec(object):
         for spec in self.traverse():
             # Don't get a package for a virtual name.
             if not spec.virtual:
-                spack.db.get(spec.name)
+                spack.repo.get(spec.name)
 
             # validate compiler in addition to the package name.
             if spec.compiler:
@@ -1247,7 +1247,7 @@ class Spec(object):
 
         # A concrete provider can satisfy a virtual dependency.
         if not self.virtual and other.virtual:
-            pkg = spack.db.get(self.name)
+            pkg = spack.repo.get(self.name)
             if pkg.provides(other.name):
                 for provided, when_spec in pkg.provided.items():
                     if self.satisfies(when_spec, deps=False, strict=strict):

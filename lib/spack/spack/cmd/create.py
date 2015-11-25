@@ -172,7 +172,7 @@ def create(parser, args):
     tty.msg("Creating template for package %s" % name)
 
     # Create a directory for the new package.
-    pkg_path = spack.db.filename_for_package_name(name, package_repo)
+    pkg_path = spack.repo.filename_for_package_name(name, package_repo)
     if os.path.exists(pkg_path) and not args.force:
         tty.die("%s already exists." % pkg_path)
     else:
@@ -214,7 +214,7 @@ def create(parser, args):
         name = 'py-%s' % name
 
     # Create a directory for the new package.
-    pkg_path = spack.db.filename_for_package_name(name)
+    pkg_path = spack.repo.filename_for_package_name(name)
     if os.path.exists(pkg_path) and not args.force:
         tty.die("%s already exists." % pkg_path)
     else:

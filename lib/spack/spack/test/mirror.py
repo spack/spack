@@ -55,7 +55,7 @@ class MirrorTest(MockPackagesTest):
         spec.concretize()
 
         # Get the package and fix its fetch args to point to a mock repo
-        pkg = spack.db.get(spec)
+        pkg = spack.repo.get(spec)
         repo = MockRepoClass()
         self.repos[name] = repo
 

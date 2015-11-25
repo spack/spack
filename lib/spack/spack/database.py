@@ -549,7 +549,7 @@ class Database(object):
             for key, rec in self._data.items():
                 if installed is not any and rec.installed != installed:
                     continue
-                if known is not any and spack.db.exists(rec.spec.name) != known:
+                if known is not any and spack.repo.exists(rec.spec.name) != known:
                     continue
                 if query_spec is any or rec.spec.satisfies(query_spec):
                     results.append(rec.spec)

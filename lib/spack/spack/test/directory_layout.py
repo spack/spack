@@ -62,7 +62,7 @@ class DirectoryLayoutTest(unittest.TestCase):
            finally that the directory can be removed by the directory
            layout.
         """
-        packages = list(spack.db.all_packages())[:max_packages]
+        packages = list(spack.repo.all_packages())[:max_packages]
 
         for pkg in packages:
             spec = pkg.spec
@@ -126,14 +126,14 @@ class DirectoryLayoutTest(unittest.TestCase):
         mock_db = RepoPath(spack.mock_packages_path)
 
         not_in_mock = set.difference(
-            set(spack.db.all_package_names()),
+            set(spack.repo.all_package_names()),
             set(mock_db.all_package_names()))
         packages = list(not_in_mock)[:max_packages]
 
         # Create all the packages that are not in mock.
         installed_specs = {}
         for pkg_name in packages:
-            spec = spack.db.get(pkg_name).spec
+            spec = spack.repo.get(pkg_name).spec
 
             # If a spec fails to concretize, just skip it.  If it is a
             # real error, it will be caught by concretization tests.
@@ -145,7 +145,7 @@ class DirectoryLayoutTest(unittest.TestCase):
             self.layout.create_install_directory(spec)
             installed_specs[spec] = self.layout.path_for_spec(spec)
 
-        spack.db.swap(mock_db)
+        spack.repo.swap(mock_db)
 
         # Now check that even without the package files, we know
         # enough to read a spec from the spec file.
@@ -160,12 +160,12 @@ class DirectoryLayoutTest(unittest.TestCase):
             self.assertTrue(spec.eq_dag(spec_from_file))
             self.assertEqual(spec.dag_hash(), spec_from_file.dag_hash())
 
-        spack.db.swap(mock_db)
+        spack.repo.swap(mock_db)
 
 
     def test_find(self):
         """Test that finding specs within an install layout works."""
-        packages = list(spack.db.all_packages())[:max_packages]
+        packages = list(spack.repo.all_packages())[:max_packages]
 
         # Create install prefixes for all packages in the list
         installed_specs = {}

@@ -125,22 +125,22 @@ class ConcretizeTest(MockPackagesTest):
            we ask for some advanced version.
         """
         self.assertTrue(not any(spec.satisfies('mpich2@:1.0')
-                                for spec in spack.db.providers_for('mpi@2.1')))
+                                for spec in spack.repo.providers_for('mpi@2.1')))
 
         self.assertTrue(not any(spec.satisfies('mpich2@:1.1')
-                                for spec in spack.db.providers_for('mpi@2.2')))
+                                for spec in spack.repo.providers_for('mpi@2.2')))
 
         self.assertTrue(not any(spec.satisfies('mpich2@:1.1')
-                                for spec in spack.db.providers_for('mpi@2.2')))
+                                for spec in spack.repo.providers_for('mpi@2.2')))
 
         self.assertTrue(not any(spec.satisfies('mpich@:1')
-                                for spec in spack.db.providers_for('mpi@2')))
+                                for spec in spack.repo.providers_for('mpi@2')))
 
         self.assertTrue(not any(spec.satisfies('mpich@:1')
-                                for spec in spack.db.providers_for('mpi@3')))
+                                for spec in spack.repo.providers_for('mpi@3')))
 
         self.assertTrue(not any(spec.satisfies('mpich2')
-                                for spec in spack.db.providers_for('mpi@3')))
+                                for spec in spack.repo.providers_for('mpi@3')))
 
 
     def test_virtual_is_fully_expanded_for_callpath(self):

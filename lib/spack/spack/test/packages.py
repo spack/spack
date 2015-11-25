@@ -35,11 +35,11 @@ from spack.test.mock_packages_test import *
 class PackagesTest(MockPackagesTest):
 
     def test_load_package(self):
-        pkg = spack.db.get('mpich')
+        pkg = spack.repo.get('mpich')
 
 
     def test_package_name(self):
-        pkg = spack.db.get('mpich')
+        pkg = spack.repo.get('mpich')
         self.assertEqual(pkg.name, 'mpich')
 
 
@@ -50,7 +50,7 @@ class PackagesTest(MockPackagesTest):
 
 
     def test_package_name(self):
-        pkg = spack.db.get('mpich')
+        pkg = spack.repo.get('mpich')
         self.assertEqual(pkg.name, 'mpich')
 
 
