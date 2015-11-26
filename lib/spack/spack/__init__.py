@@ -44,9 +44,9 @@ stage_path     = join_path(var_path, "stage")
 share_path     = join_path(spack_root, "share", "spack")
 
 prefix = spack_root
-opt_path       = join_path(prefix, "opt")
-install_path   = join_path(opt_path, "spack")
-etc_path       = join_path(prefix, "etc")
+opt_path       = os.environ.get("SPACK_OPT", join_path(prefix, "opt"))
+install_path   = os.environ.get("SPACK_INSTALL", join_path(opt_path, "spack"))
+etc_path       = os.environ.get("SPACK_ETC", join_path(prefix, "etc"))
 
 #
 # Set up the packages database.
