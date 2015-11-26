@@ -44,11 +44,12 @@ The available directives are:
   * ``variant``
 
 """
-__all__ = [ 'depends_on', 'extends', 'provides', 'patch', 'version',
-            'variant' ]
+__all__ = ['depends_on', 'extends', 'provides', 'patch', 'version',
+           'variant', 'resource']
 
 import re
 import inspect
+import functools
 
 from llnl.util.lang import *
 
@@ -60,7 +61,8 @@ from spack.version import Version
 from spack.patch import Patch
 from spack.variant import Variant
 from spack.spec import Spec, parse_anonymous_spec
-
+from spack.resource import Resource
+from spack.fetch_strategy import URLFetchStrategy
 
 #
 # This is a list of all directives, built up as they are defined in
@@ -79,8 +81,8 @@ class directive(object):
     """Decorator for Spack directives.
 
     Spack directives allow you to modify a package while it is being
-    defined, e.g. to add version or depenency information.  Directives
-    are one of the key pieces of Spack's package "langauge", which is
+    defined, e.g. to add version or dependency information.  Directives
+    are one of the key pieces of Spack's package "language", which is
     embedded in python.
 
     Here's an example directive:
@@ -141,6 +143,7 @@ class directive(object):
     def __call__(self, directive_function):
         directives[directive_function.__name__] = self
 
+        @functools.wraps(directive_function)
         def wrapped(*args, **kwargs):
             pkg = DictWrapper(caller_locals())
             self.ensure_dicts(pkg)
@@ -258,6 +261,29 @@ def variant(pkg, name, default=False, description=""):
 
     pkg.variants[name] = Variant(default, description)
 
+
+@directive('resources')
+def resource(pkg, **kwargs):
+    """
+    Define an external resource to be fetched and staged when building the package. Based on the keywords present in the
+    dictionary the appropriate FetchStrategy will be used for the resource.
+
+    List of recognized keywords:
+
+    * 'when' : represents the condition upon which the resource is needed (optional)
+    * 'destination' : path where to extract / checkout the resource (optional)
+
+    """
+    when = kwargs.get('when', pkg.name)
+    # FIXME : currently I assume destination to be a relative path (rooted at pkg.stage.source_path)
+    destination = kwargs.get('destination', "")
+    when_spec = parse_anonymous_spec(when, pkg.name)
+    resources = pkg.resources.setdefault(when_spec, [])
+    # FIXME : change URLFetchStrategy with a factory that selects based on kwargs
+    fetcher = URLFetchStrategy(**kwargs)
+    # FIXME : should we infer the name somehow if not passed ?
+    name = kwargs.get('name')
+    resources.append(Resource(name, fetcher, destination))
 
 class DirectiveError(spack.error.SpackError):
     """This is raised when something is wrong with a package directive."""

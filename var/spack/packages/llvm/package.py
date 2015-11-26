@@ -41,13 +41,24 @@ class Llvm(Package):
 
     depends_on('python@2.7:')
 
+    ##########
+    # @3.7.0
+    # TODO : Add support for libc++ <- libc++ABI <- libunwind with variant?
+    resource(name='compiler-rt',
+             url='http://llvm.org/releases/3.7.0/compiler-rt-3.7.0.src.tar.xz', md5='383c10affd513026f08936b5525523f5',
+             destination='projects', when='@3.7.0')
+    resource(name='openmp',
+             url='http://llvm.org/releases/3.7.0/openmp-3.7.0.src.tar.xz', md5='f482c86fdead50ba246a1a2b0bbf206f',
+             destination='projects', when='@3.7.0')
+    ##########
+
     def install(self, spec, prefix):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
 
         with working_dir('spack-build', create=True):
             cmake('..',
-                  '-DLLVM_REQUIRES_RTTI=1',
-                  '-DPYTHON_EXECUTABLE=%s/bin/python' % spec['python'].prefix,
+                  '-DLLVM_REQUIRES_RTTI:BOOL=ON',
+                  '-DPYTHON_EXECUTABLE:PATH=%s/bin/python' % spec['python'].prefix,
                   *std_cmake_args)
             make()
             make("install")

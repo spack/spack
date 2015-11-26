@@ -39,6 +39,13 @@ class Clang(Package):
     version('3.6.2', 'ff862793682f714bb7862325b9c06e20', url='http://llvm.org/releases/3.6.2/cfe-3.6.2.src.tar.xz')
     version('3.5.1', '93f9532f8f7e6f1d8e5c1116907051cb', url='http://llvm.org/releases/3.5.1/cfe-3.5.1.src.tar.xz')
 
+    ##########
+    # @3.7.0
+    resource(name='clang-tools-extra',
+             url='http://llvm.org/releases/3.7.0/clang-tools-extra-3.7.0.src.tar.xz',
+             md5='d5a87dacb65d981a427a536f6964642e', destination='tools', when='@3.7.0')
+    ##########
+
     def install(self, spec, prefix):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
 

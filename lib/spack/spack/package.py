@@ -639,11 +639,23 @@ class Package(object):
                     "Will not fetch %s." % self.spec.format('$_$@'), checksum_msg)
 
         self.stage.fetch()
+
+        ##########
+        # Fetch resources
+        resources = self._get_resources()
+        # FIXME : choose the unique name appropriately. Is there a function somewhere for the base name ?
+        pieces = [self.name, str(self.version), self.spec.dag_hash()]
+        for resource in resources:
+            resource_stage_folder = '-'.join(pieces + [resource.name])
+            stage = Stage(resource.fetcher, name=resource_stage_folder)
+            resource.fetcher.set_stage(stage)
+            resource.fetcher.fetch()
+        ##########
+
         self._fetch_time = time.time() - start_time
 
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
-
 
     def do_stage(self):
         """Unpacks the fetched tarball, then changes into the expanded tarball
@@ -651,14 +663,29 @@ class Package(object):
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
-        self.do_fetch()
+        def _expand_archive(stage, name=self.name):
+            archive_dir = stage.source_path
+            if not archive_dir:
+                stage.expand_archive()
+                tty.msg("Created stage in %s." % stage.path)
+            else:
+                tty.msg("Already staged %s in %s." % (name, stage.path))
 
-        archive_dir = self.stage.source_path
-        if not archive_dir:
-            self.stage.expand_archive()
-            tty.msg("Created stage in %s." % self.stage.path)
-        else:
-            tty.msg("Already staged %s in %s." % (self.name, self.stage.path))
+
+        self.do_fetch()
+        _expand_archive(self.stage)
+
+        ##########
+        # Stage resources in appropriate path
+        resources = self._get_resources()
+        for resource in resources:
+            stage = resource.fetcher.stage
+            _expand_archive(stage, resource.name)
+            link_path = join_path(self.stage.source_path, resource.destination, os.path.basename(stage.source_path))
+            if not os.path.exists(link_path):
+                # Create a symlink
+                os.symlink(stage.source_path, link_path)
+        ##########
         self.stage.chdir_to_source()
 
 
@@ -729,6 +756,14 @@ class Package(object):
         mkdirp(self.prefix.lib)
         mkdirp(self.prefix.man1)
 
+
+    def _get_resources(self):
+        resources = []
+        # Select the resources that are needed for this build
+        for when_spec, resource_list in self.resources.items():
+            if when_spec in self.spec:
+                resources.extend(resource_list)
+        return resources
 
     def _build_logger(self, log_path):
         """Create a context manager to log build output."""
