@@ -35,9 +35,9 @@ class Tally(Plugin):
         self.failCount = 0
         self.errorCount = 0
     
-    # TODO: this doesn't account for the possibility of skipped tests
     @property
-    def numberOfTests(self):
+    def numberOfTestsRun(self):
+        """Excludes skipped tests"""
         return self.errorCount + self.failCount + self.successCount
 
     def options(self, parser, env=os.environ):

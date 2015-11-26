@@ -104,7 +104,7 @@ def run(names, outputDir, verbose=False):
 
     succeeded = not tally.failCount and not tally.errorCount
     tty.msg("Tests Complete.",
-            "%5d tests run" % tally.numberOfTests,
+            "%5d tests run" % tally.numberOfTestsRun,
             "%5d failures" % tally.failCount,
             "%5d errors" % tally.errorCount)
 
