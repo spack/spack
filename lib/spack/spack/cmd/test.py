@@ -39,9 +39,12 @@ def setup_parser(subparser):
         'names', nargs='*', help="Names of tests to run.")
     subparser.add_argument(
         '-l', '--list', action='store_true', dest='list', help="Show available tests")
-    # TODO: make XML output optional
     subparser.add_argument(
-        '-d', '--outputDir', dest='outputDir', help="Nose creates XML files in this directory")
+        '--createXmlOutput', action='store_true', dest='createXmlOutput', 
+        help="Create JUnit XML from test results")
+    subparser.add_argument(
+        '--xmlOutputDir', dest='xmlOutputDir', 
+        help="Nose creates XML files in this directory")
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="verbose output")
@@ -53,10 +56,14 @@ def test(parser, args):
         colify(spack.test.list_tests(), indent=2)
 
     else:
-        if not args.outputDir:
-            outputDir = join_path(os.getcwd(), "test-output")
+        if not args.createXmlOutput:
+            outputDir = None
         else:
-            outputDir = args.outputDir
-        if not os.path.exists(outputDir):
-            mkdirp(outputDir)
+            if not args.xmlOutputDir:
+                outputDir = join_path(os.getcwd(), "test-output")
+            else:
+                outputDir = os.path.abspath(args.xmlOutputDir)
+            
+            if not os.path.exists(outputDir):
+                mkdirp(outputDir)
         spack.test.run(args.names, outputDir, args.verbose)

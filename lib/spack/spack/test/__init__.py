@@ -92,11 +92,13 @@ def run(names, outputDir, verbose=False):
         
         tty.msg("Running test: %s" % test)
         
-        xmlOutputFname = "unittests-{0}.xml".format(test)
-        xmlOutputPath = join_path(outputDir, xmlOutputFname)
-        runOpts = ["--with-%s" % spack.test.tally_plugin.Tally.name, 
-            "--with-xunit", 
-            "--xunit-file={0}".format(xmlOutputPath)]
+        runOpts = ["--with-%s" % spack.test.tally_plugin.Tally.name]
+        
+        if outputDir:
+            xmlOutputFname = "unittests-{0}.xml".format(test)
+            xmlOutputPath = join_path(outputDir, xmlOutputFname)
+            runOpts += ["--with-xunit", 
+                "--xunit-file={0}".format(xmlOutputPath)]
         argv = [""] + runOpts + [module]
         result = nose.run(argv=argv, addplugins=[tally])
 

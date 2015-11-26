@@ -35,6 +35,7 @@ class Tally(Plugin):
         self.failCount = 0
         self.errorCount = 0
     
+    # TODO: this doesn't account for the possibility of skipped tests
     @property
     def numberOfTests(self):
         return self.errorCount + self.failCount + self.successCount
