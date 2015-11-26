@@ -43,7 +43,7 @@ test_path      = join_path(module_path, "test")
 hooks_path     = join_path(module_path, "hooks")
 var_path       = join_path(spack_root, "var", "spack")
 stage_path     = join_path(var_path, "stage")
-packages_path  = join_path(var_path, "packages")
+repos_path     = join_path(var_path, "repos")
 share_path     = join_path(spack_root, "share", "spack")
 
 prefix = spack_root
@@ -58,8 +58,12 @@ import spack.repository
 _repo_paths = spack.config.get_repos_config()
 if not _repo_paths:
     tty.die("Spack configuration contains no package repositories.")
-repo = spack.repository.RepoPath(*_repo_paths)
-sys.meta_path.append(repo)
+
+try:
+    repo = spack.repository.RepoPath(*_repo_paths)
+    sys.meta_path.append(repo)
+except spack.repository.BadRepoError, e:
+    tty.die('Bad repository. %s' % e.message)
 
 #
 # Set up the installed packages database
@@ -68,9 +72,10 @@ from spack.database import Database
 installed_db = Database(install_path)
 
 #
-# Paths to mock files for testing.
+# Paths to built-in Spack repositories.
 #
-mock_packages_path = join_path(var_path, "mock_packages")
+packages_path      = join_path(repos_path, "builtin")
+mock_packages_path = join_path(repos_path, "builtin.mock")
 
 mock_config_path = join_path(var_path, "mock_configs")
 mock_site_config = join_path(mock_config_path, "site_spackconfig")
