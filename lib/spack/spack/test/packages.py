@@ -46,7 +46,8 @@ class PackagesTest(MockPackagesTest):
     def test_package_filename(self):
         repo = Repo(spack.mock_packages_path)
         filename = repo.filename_for_package_name('mpich')
-        self.assertEqual(filename, join_path(spack.mock_packages_path, 'mpich', 'package.py'))
+        self.assertEqual(filename,
+                         join_path(spack.mock_packages_path, 'packages', 'mpich', 'package.py'))
 
 
     def test_package_name(self):
@@ -57,7 +58,9 @@ class PackagesTest(MockPackagesTest):
     def test_nonexisting_package_filename(self):
         repo = Repo(spack.mock_packages_path)
         filename = repo.filename_for_package_name('some-nonexisting-package')
-        self.assertEqual(filename, join_path(spack.mock_packages_path, 'some-nonexisting-package', 'package.py'))
+        self.assertEqual(
+            filename,
+            join_path(spack.mock_packages_path, 'packages', 'some-nonexisting-package', 'package.py'))
 
 
     def test_package_class_names(self):
@@ -66,3 +69,38 @@ class PackagesTest(MockPackagesTest):
         self.assertEqual('PmgrCollective', mod_to_class('pmgr-collective'))
         self.assertEqual('Pmgrcollective', mod_to_class('PmgrCollective'))
         self.assertEqual('_3db',        mod_to_class('3db'))
+
+
+    #
+    # Below tests target direct imports of spack packages from the
+    # spack.pkg namespace
+    #
+
+    def test_import_package(self):
+        import spack.pkg.builtin.mock.mpich
+
+
+    def test_import_package_as(self):
+        import spack.pkg.builtin.mock.mpich as mp
+
+
+    def test_import_class_from_package(self):
+        from spack.pkg.builtin.mock.mpich import Mpich
+
+
+    def test_import_module_from_package(self):
+        from spack.pkg.builtin.mock import mpich
+
+
+    def test_import_namespace_container_modules(self):
+        import spack.pkg
+        import spack.pkg as p
+        from spack import pkg
+
+        import spack.pkg.builtin
+        import spack.pkg.builtin as b
+        from spack.pkg import builtin
+
+        import spack.pkg.builtin.mock
+        import spack.pkg.builtin.mock as m
+        from spack.pkg.builtin import mock
