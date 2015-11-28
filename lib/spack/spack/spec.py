@@ -1207,6 +1207,13 @@ class Spec(object):
         return common
 
 
+    def constrained(self, other, deps=True):
+        """Return a constrained copy without modifying this spec."""
+        clone = self.copy(deps=deps)
+        clone.constrain(other, deps)
+        return clone
+
+
     def dep_difference(self, other):
         """Returns dependencies in self that are not in other."""
         mine = set(s.name for s in self.traverse(root=False))

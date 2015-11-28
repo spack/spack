@@ -117,12 +117,13 @@ class ProviderIndex(object):
         return sorted(providers)
 
 
-    # TODO: this is pretty darned nasty, and inefficient.
+    # TODO: this is pretty darned nasty, and inefficient, but there
+    # are not that many vdeps in most specs.
     def _cross_provider_maps(self, lmap, rmap):
         result = {}
         for lspec, rspec in itertools.product(lmap, rmap):
             try:
-                constrained = lspec.copy().constrain(rspec)
+                constrained = lspec.constrained(rspec)
             except spack.spec.UnsatisfiableSpecError:
                 continue
 
@@ -130,7 +131,7 @@ class ProviderIndex(object):
             for lp_spec, rp_spec in itertools.product(lmap[lspec], rmap[rspec]):
                 if lp_spec.name == rp_spec.name:
                     try:
-                        const = lp_spec.copy().constrain(rp_spec,deps=False)
+                        const = lp_spec.constrained(rp_spec, deps=False)
                         result.setdefault(constrained, set()).add(const)
                     except spack.spec.UnsatisfiableSpecError:
                         continue
@@ -157,4 +158,4 @@ class ProviderIndex(object):
             if crossed:
                 result[name] = crossed
 
-        return bool(result)
+        return all(c in result for c in common)
