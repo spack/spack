@@ -22,103 +22,114 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+import re
+import shutil
+
 from external import argparse
 import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
-from llnl.util.tty.colify import colify
-from llnl.util.lang import index_by
 from llnl.util.filesystem import join_path, mkdirp
 
 import spack.spec
 import spack.config
 from spack.util.environment import get_path
-from spack.repository import repo_config_name
+from spack.repository import packages_dir_name, repo_config_name, Repo
 
-import os
-import exceptions
-from contextlib import closing
-
-description = "Manage package sources"
+description = "Manage package source repositories."
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(
-        metavar='SUBCOMMAND', dest='repo_command')
+    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='repo_command')
 
-    add_parser = sp.add_parser('add', help=repo_add.__doc__)
-    add_parser.add_argument('directory', help="Directory containing the packages.")
-
+    # Create
     create_parser = sp.add_parser('create', help=repo_create.__doc__)
-    create_parser.add_argument('directory', help="Directory containing the packages.")
-    create_parser.add_argument('name', help="Name of new package repository.")
+    create_parser.add_argument(
+        'namespace', help="Namespace to identify packages in the repository.")
+    create_parser.add_argument(
+        'directory', help="Directory to create the repo in.  Defaults to same as namespace.", nargs='?')
 
-    remove_parser = sp.add_parser('remove', help=repo_remove.__doc__)
-    remove_parser.add_argument('name')
-
+    # List
     list_parser = sp.add_parser('list', help=repo_list.__doc__)
 
 
-def add_to_config(dir):
-    config = spack.config.get_config()
-    user_config = spack.config.get_config('user')
-    orig = None
-    if config.has_value('repo', '', 'directories'):
-        orig = config.get_value('repo', '', 'directories')
-    if orig and dir in orig.split(':'):
-        return False
+def repo_create(args):
+    """Create a new package repo for a particular namespace."""
+    namespace = args.namespace
+    if not re.match(r'\w[\.\w-]*', namespace):
+        tty.die("Invalid namespace: '%s'" % namespace)
 
-    newsetting = orig + ':' + dir if orig else dir
-    user_config.set_value('repo', '', 'directories', newsetting)
-    user_config.write()
-    return True
+    root = args.directory
+    if not root:
+        root = namespace
+
+    existed = False
+    if os.path.exists(root):
+        if os.path.isfile(root):
+            tty.die('File %s already exists and is not a directory' % root)
+        elif os.path.isdir(root):
+            if not os.access(root, os.R_OK | os.W_OK):
+                tty.die('Cannot create new repo in %s: cannot access directory.' % root)
+            if os.listdir(root):
+                tty.die('Cannot create new repo in %s: directory is not empty.' % root)
+        existed = True
+
+    full_path = os.path.realpath(root)
+    parent = os.path.dirname(full_path)
+    if not os.access(parent, os.R_OK | os.W_OK):
+        tty.die("Cannot create repository in %s: can't access parent!" % root)
+
+    try:
+        config_path = os.path.join(root, repo_config_name)
+        packages_path = os.path.join(root, packages_dir_name)
+
+        mkdirp(packages_path)
+        with open(config_path, 'w') as config:
+            config.write("repo:\n")
+            config.write("  namespace: '%s'\n" % namespace)
+
+    except (IOError, OSError) as e:
+        tty.die('Failed to create new repository in %s.' % root,
+                "Caused by %s: %s" % (type(e), e))
+
+        # try to clean up.
+        if existed:
+            shutil.rmtree(config_path, ignore_errors=True)
+            shutil.rmtree(packages_path, ignore_errors=True)
+        else:
+            shutil.rmtree(root, ignore_errors=True)
+
+    tty.msg("Created repo with namespace '%s'." % namespace)
+    tty.msg("To register it with Spack, add a line like this to ~/.spack/repos.yaml:",
+            'repos:',
+            '  - ' + full_path)
 
 
 def repo_add(args):
-    """Add package sources to the Spack configuration."""
-    if not add_to_config(args.directory):
-        tty.die('Repo directory %s already exists in the repo list' % dir)
-
-
-def repo_create(args):
-    """Create a new package repo at a directory and name"""
-    dir = args.directory
-    name = args.name
-
-    if os.path.exists(dir) and not os.path.isdir(dir):
-        tty.die('File %s already exists and is not a directory' % dir)
-    if not os.path.exists(dir):
-        try:
-            mkdirp(dir)
-        except exceptions.OSError, e:
-            tty.die('Failed to create new directory %s' % dir)
-    path = os.path.join(dir, repo_config_filename)
-    try:
-        with closing(open(path, 'w')) as repofile:
-            repofile.write(name + '\n')
-    except exceptions.IOError, e:
-        tty.die('Could not create new file %s' % path)
-
-    if not add_to_config(args.directory):
-        tty.warn('Repo directory %s already exists in the repo list' % dir)
+    """Remove a package source from the Spack configuration"""
+    # FIXME: how to deal with this with the current config architecture?
+    # FIXME: Repos do not have mnemonics, which I assumed would be simpler... should they have them after all?
 
 
 def repo_remove(args):
     """Remove a package source from the Spack configuration"""
-    pass
+    # FIXME: see above.
 
 
 def repo_list(args):
     """List package sources and their mnemoics"""
-    root_names = spack.repo.repos
-    max_len = max(len(s[0]) for s in root_names)
-    fmt = "%%-%ds%%s" % (max_len + 4)
-    for root in root_names:
-        print fmt % (root[0], root[1])
+    roots = spack.config.get_repos_config()
+    repos = [Repo(r) for r in roots]
 
+    msg = "%d package repositor" % len(repos)
+    msg += "y." if len(repos) == 1 else "ies."
+    tty.msg(msg)
+
+    max_ns_len = max(len(r.namespace) for r in repos)
+    for repo in repos:
+        fmt = "%%-%ds%%s" % (max_ns_len + 4)
+        print fmt % (repo.namespace, repo.root)
 
 
 def repo(parser, args):
-    action = { 'add'    : repo_add,
-               'create' : repo_create,
-               'remove' : repo_remove,
+    action = { 'create' : repo_create,
                'list'   : repo_list }
     action[args.repo_command](args)
