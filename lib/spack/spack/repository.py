@@ -238,7 +238,16 @@ class RepoPath(object):
 
            Raises UnknownPackageError if not found.
         """
-        return self.repo_for_pkg(spec.name).get(spec)
+        # if the spec has a fully qualified namespace, we grab it
+        # directly and ignore overlay precedence.
+        if spec.namespace:
+            fullspace = '%s.%s' % (self.super_namespace, spec.namespace)
+            if not fullspace in self.by_namespace:
+                raise UnknownPackageError(
+                    "No configured repository contains package %s." % spec.fullname)
+            return self.by_namespace[fullspace].get(spec)
+        else:
+            return self.repo_for_pkg(spec.name).get(spec)
 
 
     def dirname_for_package_name(self, pkg_name):
@@ -454,20 +463,24 @@ class Repo(object):
         if spec.virtual:
             raise UnknownPackageError(spec.name)
 
-        if new and spec in self._instances:
-            del self._instances[spec]
+        if spec.namespace and spec.namespace != self.namespace:
+            raise UnknownPackageError("Repository %s does not contain package %s."
+                                      % (self.namespace, spec.fullname))
 
-        if not spec in self._instances:
+        if new or spec not in self._instances:
             PackageClass = self._get_pkg_class(spec.name)
             try:
-                copy = spec.copy()
-                self._instances[copy] = PackageClass(copy)
+                package = PackageClass(spec.copy())
+                self._instances[spec] = package
+                return package
+
             except Exception, e:
                 if spack.debug:
                     sys.excepthook(*sys.exc_info())
-                raise FailedConstructorError(spec.name, *sys.exc_info())
+                raise FailedConstructorError(spec.fullname, *sys.exc_info())
 
-        return self._instances[spec]
+        else:
+            return self._instances[spec]
 
 
     def purge(self):

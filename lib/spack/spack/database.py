@@ -211,6 +211,8 @@ class Database(object):
             child = self._read_spec_from_yaml(dep_hash, installs, hash_key)
             spec._add_dependency(child)
 
+        spec._normal = True
+        spec._concrete = True
         return spec
 
 

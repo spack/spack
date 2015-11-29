@@ -115,7 +115,7 @@ class _ConfigCategory:
         self.result_dict = {}
         _config_sections[name] = self
 
-_ConfigCategory('config',    'config.yaml',    True, False)
+_ConfigCategory('repos',     'repos.yaml',     True,  True)
 _ConfigCategory('compilers', 'compilers.yaml', True,  True)
 _ConfigCategory('mirrors',   'mirrors.yaml',   True,  True)
 _ConfigCategory('view',      'views.yaml',     True,  True)
@@ -212,7 +212,7 @@ def substitute_spack_prefix(path):
     return path.replace('$spack', spack.prefix)
 
 
-def get_config(category='config'):
+def get_config(category):
     """Get the confguration tree for a category.
 
     Strips off the top-level category entry from the dict
@@ -232,6 +232,10 @@ def get_config(category='config'):
             if not category.name in result:
                 continue
             result = result[category.name]
+
+            # ignore empty sections for easy commenting of single-line configs.
+            if result is None:
+                continue
 
         category.files_read_from.insert(0, path)
         if category.merge:
@@ -266,12 +270,18 @@ def get_compilers_config(arch=None):
 
 
 def get_repos_config():
-    config = get_config()
-    if 'repos' not in config:
+    repo_list = get_config('repos')
+    if repo_list is None:
         return []
 
-    repo_list = config['repos']
-    return [substitute_spack_prefix(repo) for repo in repo_list]
+    if not isinstance(repo_list, list):
+        tty.die("Bad repository configuration. 'repos' element does not contain a list.")
+
+    def expand_repo_path(path):
+        path = substitute_spack_prefix(path)
+        path = os.path.expanduser(path)
+        return path
+    return [expand_repo_path(repo) for repo in repo_list]
 
 
 def get_mirror_config():
