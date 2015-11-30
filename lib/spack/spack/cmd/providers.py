@@ -39,4 +39,4 @@ def setup_parser(subparser):
 
 def providers(parser, args):
     for spec in spack.cmd.parse_specs(args.vpkg_spec):
-        colify(sorted(spack.db.providers_for(spec)), indent=4)
+        colify(sorted(spack.repo.providers_for(spec)), indent=4)

@@ -412,6 +412,7 @@ class Spec(object):
         self.dependencies = other.dependencies
         self.variants = other.variants
         self.variants.spec = self
+        self.namespace = other.namespace
 
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
@@ -464,6 +465,13 @@ class Spec(object):
         self.dependencies[spec.name] = spec
         spec.dependents[self.name] = self
 
+    #
+    # Public interface
+    #
+    @property
+    def fullname(self):
+        return '%s.%s' % (self.namespace, self.name) if self.namespace else self.name
+
 
     @property
     def root(self):
@@ -486,7 +494,7 @@ class Spec(object):
 
     @property
     def package(self):
-        return spack.db.get(self)
+        return spack.repo.get(self)
 
 
     @property
@@ -504,7 +512,7 @@ class Spec(object):
     @staticmethod
     def is_virtual(name):
         """Test if a name is virtual without requiring a Spec."""
-        return not spack.db.exists(name)
+        return not spack.repo.exists(name)
 
 
     @property
@@ -517,6 +525,7 @@ class Spec(object):
             return True
 
         self._concrete = bool(not self.virtual
+                              and self.namespace is not None
                               and self.versions.concrete
                               and self.variants.concrete
                               and self.architecture
@@ -657,6 +666,12 @@ class Spec(object):
             'dependencies' : dict((d, self.dependencies[d].dag_hash())
                                   for d in sorted(self.dependencies))
         }
+
+        # Older concrete specs do not have a namespace.  Omit for
+        # consistent hashing.
+        if not self.concrete or self.namespace:
+            d['namespace'] = self.namespace
+
         if self.compiler:
             d.update(self.compiler.to_dict())
         else:
@@ -681,6 +696,7 @@ class Spec(object):
         node = node[name]
 
         spec = Spec(name)
+        spec.namespace = node.get('namespace', None)
         spec.versions = VersionList.from_dict(node)
         spec.architecture = node['arch']
 
@@ -797,7 +813,7 @@ class Spec(object):
                 return changed
 
             for spec in virtuals:
-                providers = spack.db.providers_for(spec)
+                providers = spack.repo.providers_for(spec)
                 concrete = spack.concretizer.choose_provider(spec, providers)
                 concrete = concrete.copy()
                 spec._replace_with(concrete)
@@ -833,7 +849,20 @@ class Spec(object):
             changed = any(changes)
             force=True
 
-        self._concrete = True
+        for s in self.traverse():
+            # After concretizing, assign namespaces to anything left.
+            # Note that this doesn't count as a "change".  The repository
+            # configuration is constant throughout a spack run, and
+            # normalize and concretize evaluate Packages using Repo.get(),
+            # which respects precedence.  So, a namespace assignment isn't
+            # changing how a package name would have been interpreted and
+            # we can do it as late as possible to allow as much
+            # compatibility across repositories as possible.
+            if s.namespace is None:
+                s.namespace = spack.repo.repo_for_pkg(s.name).namespace
+
+            # Mark everything in the spec as concrete, as well.
+            s._concrete = True
 
 
     def concretized(self):
@@ -908,7 +937,7 @@ class Spec(object):
         the dependency.  If no conditions are True (and we don't
         depend on it), return None.
         """
-        pkg = spack.db.get(self.name)
+        pkg = spack.repo.get(self.fullname)
         conditions = pkg.dependencies[name]
 
         # evaluate when specs to figure out constraints on the dependency.
@@ -1036,7 +1065,7 @@ class Spec(object):
         any_change = False
         changed = True
 
-        pkg = spack.db.get(self.name)
+        pkg = spack.repo.get(self.fullname)
         while changed:
             changed = False
             for dep_name in pkg.dependencies:
@@ -1057,18 +1086,17 @@ class Spec(object):
            the root, and ONLY the ones that were explicitly provided are there.
            Normalization turns a partial flat spec into a DAG, where:
 
-           1. ALL dependencies of the root package are in the DAG.
-           2. Each node's dependencies dict only contains its direct deps.
+           1. Known dependencies of the root package are in the DAG.
+           2. Each node's dependencies dict only contains its known direct deps.
            3. There is only ONE unique spec for each package in the DAG.
 
               * This includes virtual packages.  If there a non-virtual
                 package that provides a virtual package that is in the spec,
                 then we replace the virtual package with the non-virtual one.
 
-           4. The spec DAG matches package DAG, including default variant values.
-
            TODO: normalize should probably implement some form of cycle detection,
            to ensure that the spec is actually a DAG.
+
         """
         if self._normal and not force:
             return False
@@ -1114,7 +1142,7 @@ class Spec(object):
         for spec in self.traverse():
             # Don't get a package for a virtual name.
             if not spec.virtual:
-                spack.db.get(spec.name)
+                spack.repo.get(spec.fullname)
 
             # validate compiler in addition to the package name.
             if spec.compiler:
@@ -1136,6 +1164,10 @@ class Spec(object):
 
         if not self.name == other.name:
             raise UnsatisfiableSpecNameError(self.name, other.name)
+
+        if other.namespace is not None:
+            if self.namespace is not None and other.namespace != self.namespace:
+                raise UnsatisfiableSpecNameError(self.fullname, other.fullname)
 
         if not self.versions.overlaps(other.versions):
             raise UnsatisfiableVersionSpecError(self.versions, other.versions)
@@ -1180,7 +1212,7 @@ class Spec(object):
 
         # TODO: might want more detail than this, e.g. specific deps
         # in violation. if this becomes a priority get rid of this
-        # check and be more specici about what's wrong.
+        # check and be more specific about what's wrong.
         if not other.satisfies_dependencies(self):
             raise UnsatisfiableDependencySpecError(other, self)
 
@@ -1253,7 +1285,7 @@ class Spec(object):
 
         # A concrete provider can satisfy a virtual dependency.
         if not self.virtual and other.virtual:
-            pkg = spack.db.get(self.name)
+            pkg = spack.repo.get(self.fullname)
             if pkg.provides(other.name):
                 for provided, when_spec in pkg.provided.items():
                     if self.satisfies(when_spec, deps=False, strict=strict):
@@ -1264,6 +1296,11 @@ class Spec(object):
         # Otherwise, first thing we care about is whether the name matches
         if self.name != other.name:
             return False
+
+        # namespaces either match, or other doesn't require one.
+        if other.namespace is not None:
+            if self.namespace is not None and self.namespace != other.namespace:
+                return False
 
         if self.versions and other.versions:
             if not self.versions.satisfies(other.versions, strict=strict):
@@ -1364,6 +1401,7 @@ class Spec(object):
         self.dependencies = DependencyMap()
         self.variants = other.variants.copy()
         self.variants.spec = self
+        self.namespace = other.namespace
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
@@ -1481,8 +1519,8 @@ class Spec(object):
 
     def _cmp_node(self):
         """Comparison key for just *this node* and not its deps."""
-        return (self.name, self.versions, self.variants,
-                self.architecture, self.compiler)
+        return (self.name, self.namespace, self.versions,
+                self.variants, self.architecture, self.compiler)
 
 
     def eq_node(self, other):
@@ -1512,6 +1550,7 @@ class Spec(object):
            in the format string.  The format strings you can provide are::
 
                $_   Package name
+               $.   Full package name (with namespace)
                $@   Version
                $%   Compiler
                $%@  Compiler & compiler version
@@ -1559,6 +1598,8 @@ class Spec(object):
 
                 if c == '_':
                     out.write(fmt % self.name)
+                elif c == '.':
+                    out.write(fmt % self.fullname)
                 elif c == '@':
                     if self.versions and self.versions != _any_version:
                         write(fmt % (c + str(self.versions)), c)
@@ -1707,17 +1748,23 @@ class SpecParser(spack.parse.Parser):
     def spec(self):
         """Parse a spec out of the input.  If a spec is supplied, then initialize
            and return it instead of creating a new one."""
-        self.check_identifier()
+
+        spec_namespace, dot, spec_name = self.token.value.rpartition('.')
+        if not spec_namespace:
+            spec_namespace = None
+
+        self.check_identifier(spec_name)
 
         # This will init the spec without calling __init__.
         spec = Spec.__new__(Spec)
-        spec.name = self.token.value
+        spec.name = spec_name
         spec.versions = VersionList()
         spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
+        spec.namespace = spec_namespace
 
         spec._normal = False
         spec._concrete = False
@@ -1811,12 +1858,14 @@ class SpecParser(spack.parse.Parser):
         return compiler
 
 
-    def check_identifier(self):
+    def check_identifier(self, id=None):
         """The only identifiers that can contain '.' are versions, but version
            ids are context-sensitive so we have to check on a case-by-case
            basis. Call this if we detect a version id where it shouldn't be.
         """
-        if '.' in self.token.value:
+        if not id:
+            id = self.token.value
+        if '.' in id:
             self.last_token_error("Identifier cannot contain '.'")
 
 

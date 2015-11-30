@@ -35,7 +35,10 @@ class SpecSematicsTest(MockPackagesTest):
     # ================================================================================
     def check_satisfies(self, spec, anon_spec, concrete=False):
         left = Spec(spec, concrete=concrete)
-        right = parse_anonymous_spec(anon_spec, left.name)
+        try:
+            right = Spec(anon_spec)  # if it's not anonymous, allow it.
+        except:
+            right = parse_anonymous_spec(anon_spec, left.name)
 
         # Satisfies is one-directional.
         self.assertTrue(left.satisfies(right))
@@ -48,7 +51,10 @@ class SpecSematicsTest(MockPackagesTest):
 
     def check_unsatisfiable(self, spec, anon_spec, concrete=False):
         left = Spec(spec, concrete=concrete)
-        right = parse_anonymous_spec(anon_spec, left.name)
+        try:
+            right = Spec(anon_spec)  # if it's not anonymous, allow it.
+        except:
+            right = parse_anonymous_spec(anon_spec, left.name)
 
         self.assertFalse(left.satisfies(right))
         self.assertFalse(left.satisfies(anon_spec))
@@ -86,6 +92,28 @@ class SpecSematicsTest(MockPackagesTest):
     def test_satisfies(self):
         self.check_satisfies('libelf@0.8.13', '@0:1')
         self.check_satisfies('libdwarf^libelf@0.8.13', '^libelf@0:1')
+
+
+    def test_satisfies_namespace(self):
+        self.check_satisfies('builtin.mpich', 'mpich')
+        self.check_satisfies('builtin.mock.mpich', 'mpich')
+
+        # TODO: only works for deps now, but shouldn't we allow this for root spec?
+        # self.check_satisfies('builtin.mock.mpich', 'mpi')
+
+        self.check_satisfies('builtin.mock.mpich', 'builtin.mock.mpich')
+
+        self.check_unsatisfiable('builtin.mock.mpich', 'builtin.mpich')
+
+
+    def test_satisfies_namespaced_dep(self):
+        """Ensure spec from same or unspecified namespace satisfies namespace constraint."""
+        self.check_satisfies('mpileaks ^builtin.mock.mpich', '^mpich')
+
+        self.check_satisfies('mpileaks ^builtin.mock.mpich', '^mpi')
+        self.check_satisfies('mpileaks ^builtin.mock.mpich', '^builtin.mock.mpich')
+
+        self.check_unsatisfiable('mpileaks ^builtin.mock.mpich', '^builtin.mpich')
 
 
     def test_satisfies_compiler(self):

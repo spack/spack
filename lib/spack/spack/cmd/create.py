@@ -94,6 +94,9 @@ def setup_parser(subparser):
         '-n', '--name', dest='alternate_name', default=None,
         help="Override the autodetected name for the created package.")
     subparser.add_argument(
+        '-p', '--package-repo', dest='package_repo', default=None,
+        help="Create the package in the specified packagerepo.")
+    subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
         help="Overwrite any existing package file with the same name.")
 
@@ -160,11 +163,20 @@ def create(parser, args):
             tty.die("Couldn't guess a name for this package. Try running:", "",
                     "spack create --name <name> <url>")
 
+    package_repo = args.package_repo
+
     if not valid_module_name(name):
         tty.die("Package name can only contain A-Z, a-z, 0-9, '_' and '-'")
 
     tty.msg("This looks like a URL for %s version %s." % (name, version))
     tty.msg("Creating template for package %s" % name)
+
+    # Create a directory for the new package.
+    pkg_path = spack.repo.filename_for_package_name(name, package_repo)
+    if os.path.exists(pkg_path) and not args.force:
+        tty.die("%s already exists." % pkg_path)
+    else:
+        mkdirp(os.path.dirname(pkg_path))
 
     versions = spack.package.find_versions_of_archive(url)
     rkeys = sorted(versions.keys(), reverse=True)
@@ -202,7 +214,7 @@ def create(parser, args):
         name = 'py-%s' % name
 
     # Create a directory for the new package.
-    pkg_path = spack.db.filename_for_package_name(name)
+    pkg_path = spack.repo.filename_for_package_name(name)
     if os.path.exists(pkg_path) and not args.force:
         tty.die("%s already exists." % pkg_path)
     else:

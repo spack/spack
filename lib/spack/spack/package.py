@@ -372,7 +372,7 @@ class Package(object):
         self._total_time = 0.0
 
         if self.is_extension:
-            spack.db.get(self.extendee_spec)._check_extendable()
+            spack.repo.get(self.extendee_spec)._check_extendable()
 
 
     @property
@@ -548,7 +548,7 @@ class Package(object):
                     yield spec
                 continue
 
-            for pkg in spack.db.get(name).preorder_traversal(visited, **kwargs):
+            for pkg in spack.repo.get(name).preorder_traversal(visited, **kwargs):
                 yield pkg
 
 
@@ -720,6 +720,12 @@ class Package(object):
             self.patch()
 
         tty.msg("Patched %s" % self.name)
+
+
+    @property
+    def namespace(self):
+        namespace, dot, module = self.__module__.rpartition('.')
+        return namespace
 
 
     def do_fake_install(self):

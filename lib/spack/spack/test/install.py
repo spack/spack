@@ -78,7 +78,7 @@ class InstallTest(MockPackagesTest):
         self.assertTrue(spec.concrete)
 
         # Get the package
-        pkg = spack.db.get(spec)
+        pkg = spack.repo.get(spec)
 
         # Fake the URL for the package so it downloads from a file.
         pkg.fetcher = URLFetchStrategy(self.repo.url)

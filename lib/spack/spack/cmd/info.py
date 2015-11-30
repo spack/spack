@@ -105,5 +105,5 @@ def print_text_info(pkg):
 
 
 def info(parser, args):
-    pkg = spack.db.get(args.name)
+    pkg = spack.repo.get(args.name)
     print_text_info(pkg)

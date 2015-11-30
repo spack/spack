@@ -40,8 +40,8 @@ from spack.test.mock_packages_test import *
 class SpecDagTest(MockPackagesTest):
 
     def test_conflicting_package_constraints(self):
-        set_pkg_dep('mpileaks', 'mpich@1.0')
-        set_pkg_dep('callpath', 'mpich@2.0')
+        self.set_pkg_dep('mpileaks', 'mpich@1.0')
+        self.set_pkg_dep('callpath', 'mpich@2.0')
 
         spec = Spec('mpileaks ^mpich ^callpath ^dyninst ^libelf ^libdwarf')
 
@@ -223,25 +223,25 @@ class SpecDagTest(MockPackagesTest):
 
 
     def test_unsatisfiable_version(self):
-        set_pkg_dep('mpileaks', 'mpich@1.0')
+        self.set_pkg_dep('mpileaks', 'mpich@1.0')
         spec = Spec('mpileaks ^mpich@2.0 ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableVersionSpecError, spec.normalize)
 
 
     def test_unsatisfiable_compiler(self):
-        set_pkg_dep('mpileaks', 'mpich%gcc')
+        self.set_pkg_dep('mpileaks', 'mpich%gcc')
         spec = Spec('mpileaks ^mpich%intel ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableCompilerSpecError, spec.normalize)
 
 
     def test_unsatisfiable_compiler_version(self):
-        set_pkg_dep('mpileaks', 'mpich%gcc@4.6')
+        self.set_pkg_dep('mpileaks', 'mpich%gcc@4.6')
         spec = Spec('mpileaks ^mpich%gcc@4.5 ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableCompilerSpecError, spec.normalize)
 
 
     def test_unsatisfiable_architecture(self):
-        set_pkg_dep('mpileaks', 'mpich=bgqos_0')
+        self.set_pkg_dep('mpileaks', 'mpich=bgqos_0')
         spec = Spec('mpileaks ^mpich=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
 
