@@ -190,9 +190,21 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     def test_satisfies_virtual(self):
+        # Don't use check_satisfies: it checks constrain() too, and
+        # you can't constrain a non-virtual by a virtual.
         self.assertTrue(Spec('mpich').satisfies(Spec('mpi')))
         self.assertTrue(Spec('mpich2').satisfies(Spec('mpi')))
         self.assertTrue(Spec('zmpi').satisfies(Spec('mpi')))
+
+
+    def test_satisfies_virtual_dep_with_virtual_constraint(self):
+        """Ensure we can satisfy virtual constraints when there are multiple
+           vdep providers in the specs."""
+        self.assertTrue(Spec('netlib-lapack ^openblas').satisfies('netlib-lapack ^openblas'))
+        self.assertFalse(Spec('netlib-lapack ^netlib-blas').satisfies('netlib-lapack ^openblas'))
+
+        self.assertFalse(Spec('netlib-lapack ^openblas').satisfies('netlib-lapack ^netlib-blas'))
+        self.assertTrue(Spec('netlib-lapack ^netlib-blas').satisfies('netlib-lapack ^netlib-blas'))
 
 
     # ================================================================================
@@ -327,4 +339,3 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf^foo+debug', 'libelf^foo+debug')
         self.check_constrain_not_changed('libelf^foo~debug', 'libelf^foo~debug')
         self.check_constrain_not_changed('libelf^foo=bgqos_0', 'libelf^foo=bgqos_0')
-
