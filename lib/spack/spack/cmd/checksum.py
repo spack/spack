@@ -81,7 +81,7 @@ def get_checksums(versions, urls, **kwargs):
 
 def checksum(parser, args):
     # get the package we're going to generate checksums for
-    pkg = spack.db.get(args.package)
+    pkg = spack.repo.get(args.package)
 
     # If the user asked for specific versions, use those.
     if args.versions:

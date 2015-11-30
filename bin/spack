@@ -130,8 +130,8 @@ def main():
 
     spack.spack_working_dir = working_dir
     if args.mock:
-        from spack.packages import PackageDB
-        spack.db = PackageDB(spack.mock_packages_path)
+        from spack.repository import RepoPath
+        spack.repo.swap(RepoPath(spack.mock_packages_path))
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:

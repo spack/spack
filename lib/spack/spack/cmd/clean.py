@@ -42,5 +42,5 @@ def clean(parser, args):
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
-        package = spack.db.get(spec)
+        package = spack.repo.get(spec)
         package.do_clean()

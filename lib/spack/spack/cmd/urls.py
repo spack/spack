@@ -41,7 +41,7 @@ def setup_parser(subparser):
 
 def urls(parser, args):
     urls = set()
-    for pkg in spack.db.all_packages():
+    for pkg in spack.repo.all_packages():
         url = getattr(pkg.__class__, 'url', None)
         if url:
             urls.add(url)

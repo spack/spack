@@ -23,8 +23,10 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 import tempfile
 from llnl.util.filesystem import *
+import llnl.util.tty as tty
 
 # This lives in $prefix/lib/spack/spack/__file__
 spack_root = ancestor(__file__, 4)
@@ -41,6 +43,7 @@ test_path      = join_path(module_path, "test")
 hooks_path     = join_path(module_path, "hooks")
 var_path       = join_path(spack_root, "var", "spack")
 stage_path     = join_path(var_path, "stage")
+repos_path     = join_path(var_path, "repos")
 share_path     = join_path(spack_root, "share", "spack")
 
 prefix = spack_root
@@ -49,11 +52,18 @@ install_path   = os.environ.get("SPACK_INSTALL", join_path(opt_path, "spack"))
 etc_path       = os.environ.get("SPACK_ETC", join_path(prefix, "etc"))
 
 #
-# Set up the packages database.
+# Set up the default packages database.
 #
-from spack.packages import PackageDB
-packages_path = join_path(var_path, "packages")
-db = PackageDB(packages_path)
+import spack.repository
+_repo_paths = spack.config.get_repos_config()
+if not _repo_paths:
+    tty.die("Spack configuration contains no package repositories.")
+
+try:
+    repo = spack.repository.RepoPath(*_repo_paths)
+    sys.meta_path.append(repo)
+except spack.repository.BadRepoError, e:
+    tty.die('Bad repository. %s' % e.message)
 
 #
 # Set up the installed packages database
@@ -62,9 +72,10 @@ from spack.database import Database
 installed_db = Database(install_path)
 
 #
-# Paths to mock files for testing.
+# Paths to built-in Spack repositories.
 #
-mock_packages_path = join_path(var_path, "mock_packages")
+packages_path      = join_path(repos_path, "builtin")
+mock_packages_path = join_path(repos_path, "builtin.mock")
 
 mock_config_path = join_path(var_path, "mock_configs")
 mock_site_config = join_path(mock_config_path, "site_spackconfig")
@@ -140,7 +151,7 @@ sys_type = None
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
 # Spack internal code should call 'import spack' and accesses other
-# variables (spack.db, paths, etc.) directly.
+# variables (spack.repo, paths, etc.) directly.
 #
 # TODO: maybe this should be separated out and should go in build_environment.py?
 # TODO: it's not clear where all the stuff that needs to be included in packages

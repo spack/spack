@@ -45,11 +45,11 @@ several configuration files, such as compilers.yaml or mirrors.yaml.
 Configuration file format
 ===============================
 
-Configuration files are formatted using YAML syntax.
-This format is implemented by Python's
-yaml class, and it's easy to read and versatile.
+Configuration files are formatted using YAML syntax.  This format is
+implemented by libyaml (included with Spack as an external module),
+and it's easy to read and versatile.
 
-The config files are structured as trees, like this ``compiler`` section::
+Config files are structured as trees, like this ``compiler`` section::
 
      compilers:
        chaos_5_x86_64_ib:
@@ -83,62 +83,77 @@ would looks like:
      }
   }
 
-Some routines, like get_mirrors_config and get_compilers_config may strip
-off the top-levels of the tree and return subtrees.
+Some convenience functions, like get_mirrors_config and
+``get_compilers_config`` may strip off the top-levels of the tree and
+return subtrees.
+
 """
 import os
-import exceptions
 import sys
-
+import copy
 from ordereddict_backport import OrderedDict
 from llnl.util.lang import memoized
 import spack.error
 
 import yaml
 from yaml.error import MarkedYAMLError
+
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
+from llnl.util.lang import memoized
+
+import spack
+
 
 _config_sections = {}
 class _ConfigCategory:
     name = None
     filename = None
     merge = True
-    def __init__(self, n, f, m):
-        self.name = n
-        self.filename = f
-        self.merge = m
+    def __init__(self, name, filename, merge, strip):
+        self.name = name
+        self.filename = filename
+        self.merge = merge
+        self.strip = strip
         self.files_read_from = []
         self.result_dict = {}
-        _config_sections[n] = self
+        _config_sections[name] = self
 
-_ConfigCategory('compilers', 'compilers.yaml', True)
-_ConfigCategory('mirrors', 'mirrors.yaml', True)
-_ConfigCategory('view', 'views.yaml', True)
-_ConfigCategory('order', 'orders.yaml', True)
+_ConfigCategory('repos',     'repos.yaml',     True,  True)
+_ConfigCategory('compilers', 'compilers.yaml', True,  True)
+_ConfigCategory('mirrors',   'mirrors.yaml',   True,  True)
+_ConfigCategory('view',      'views.yaml',     True,  True)
+_ConfigCategory('order',     'orders.yaml',    True,  True)
 
 """Names of scopes and their corresponding configuration files."""
 config_scopes = [('site', os.path.join(spack.etc_path, 'spack')),
                  ('user', os.path.expanduser('~/.spack'))]
 
 _compiler_by_arch = {}
-_read_config_file_result = {}
+
+@memoized
 def _read_config_file(filename):
-    """Read a given YAML configuration file"""
-    global _read_config_file_result
-    if filename in _read_config_file_result:
-        return _read_config_file_result[filename]
+    """Read a YAML configuration file"""
+
+    # Ignore nonexisting files.
+    if not os.path.exists(filename):
+        return None
+
+    elif not os.path.isfile(filename):
+        tty.die("Invlaid configuration.  %s exists but is not a file." % filename)
+
+    elif not os.access(filename, os.R_OK):
+        tty.die("Configuration file %s is not readable." % filename)
 
     try:
         with open(filename) as f:
-            ydict = yaml.load(f)
+            return yaml.load(f)
+
     except MarkedYAMLError, e:
         tty.die("Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
-    except exceptions.IOError, e:
-        _read_config_file_result[filename] = None
-        return None
-    _read_config_file_result[filename] = ydict
-    return ydict
+
+    except IOError, e:
+        tty.die("Error reading configuration file %s: %s" % (filename, str(e)))
 
 
 def clear_config_caches():
@@ -147,41 +162,66 @@ def clear_config_caches():
     for key,s in _config_sections.iteritems():
         s.files_read_from = []
         s.result_dict = {}
-    spack.config._read_config_file_result = {}
+
+    _read_config_file.clear()
     spack.config._compiler_by_arch = {}
     spack.compilers._cached_default_compiler = None
 
 
-def _merge_dicts(d1, d2):
-    """Recursively merges two configuration trees, with entries
-       in d2 taking precedence over d1"""
-    if not d1:
-        return d2.copy()
-    if not d2:
-        return d1
+def _merge_yaml(dest, source):
+    """Merges source into dest; entries in source take precedence over dest.
 
-    for key2, val2 in d2.iteritems():
-        if not key2 in d1:
-            d1[key2] = val2
-            continue
-        val1 = d1[key2]
-        if isinstance(val1, dict) and isinstance(val2, dict):
-            d1[key2] = _merge_dicts(val1, val2)
-            continue
-        if isinstance(val1, list) and isinstance(val2, list):
-            val1.extend(val2)
-            seen = set()
-            d1[key2] = [ x for x in val1 if not (x in seen or seen.add(x)) ]
-            continue
-        d1[key2] = val2
-    return d1
+    Config file authors can optionally end any attribute in a dict
+    with `::` instead of `:`, and the key will override that of the
+    parent instead of merging.
+    """
+    def they_are(t):
+        return isinstance(dest, t) and isinstance(source, t)
+
+    # If both are None, handle specially and return None.
+    if source is None and dest is None:
+        return None
+
+    # If source is None, overwrite with source.
+    elif source is None:
+        return None
+
+    # Source list is prepended (for precedence)
+    if they_are(list):
+        seen = set(source)
+        dest[:] = source + [x for x in dest if x not in seen]
+        return dest
+
+    # Source dict is merged into dest. Extra ':' means overwrite.
+    elif they_are(dict):
+        for sk, sv in source.iteritems():
+            # allow total override with, e.g., repos::
+            override = sk.endswith(':')
+            if override:
+                sk = sk.rstrip(':')
+
+            if override or not sk in dest:
+                dest[sk] = copy.copy(sv)
+            else:
+                dest[sk] = _merge_yaml(dest[sk], source[sk])
+        return dest
+
+    # In any other case, overwrite with a copy of the source value.
+    else:
+        return copy.copy(source)
 
 
-def get_config(category_name):
-    """Get the confguration tree for the names category.  Strips off the
-       top-level category entry from the dict"""
-    global config_scopes
-    category = _config_sections[category_name]
+def substitute_spack_prefix(path):
+    """Replaces instances of $spack with Spack's prefix."""
+    return path.replace('$spack', spack.prefix)
+
+
+def get_config(category):
+    """Get the confguration tree for a category.
+
+    Strips off the top-level category entry from the dict
+    """
+    category = _config_sections[category]
     if category.result_dict:
         return category.result_dict
 
@@ -191,14 +231,22 @@ def get_config(category_name):
         result = _read_config_file(path)
         if not result:
             continue
-        if not category_name in result:
-            continue
+
+        if category.strip:
+            if not category.name in result:
+                continue
+            result = result[category.name]
+
+            # ignore empty sections for easy commenting of single-line configs.
+            if result is None:
+                continue
+
         category.files_read_from.insert(0, path)
-        result = result[category_name]
         if category.merge:
-            category.result_dict = _merge_dicts(category.result_dict, result)
+            category.result_dict = _merge_yaml(category.result_dict, result)
         else:
             category.result_dict = result
+
     return category.result_dict
 
 
@@ -215,7 +263,7 @@ def get_compilers_config(arch=None):
     cc_config = get_config('compilers')
     if arch in cc_config and 'all' in cc_config:
         arch_compiler = dict(cc_config[arch])
-        _compiler_by_arch[arch] = _merge_dict(arch_compiler, cc_config['all'])
+        _compiler_by_arch[arch] = _merge_yaml(arch_compiler, cc_config['all'])
     elif arch in cc_config:
         _compiler_by_arch[arch] = cc_config[arch]
     elif 'all' in cc_config:
@@ -225,6 +273,21 @@ def get_compilers_config(arch=None):
     return _compiler_by_arch[arch]
 
 
+def get_repos_config():
+    repo_list = get_config('repos')
+    if repo_list is None:
+        return []
+
+    if not isinstance(repo_list, list):
+        tty.die("Bad repository configuration. 'repos' element does not contain a list.")
+
+    def expand_repo_path(path):
+        path = substitute_spack_prefix(path)
+        path = os.path.expanduser(path)
+        return path
+    return [expand_repo_path(repo) for repo in repo_list]
+
+
 def get_mirror_config():
     """Get the mirror configuration from config files"""
     return get_config('mirrors')
@@ -232,7 +295,6 @@ def get_mirror_config():
 
 def get_config_scope_dirname(scope):
     """For a scope return the config directory"""
-    global config_scopes
     for s,p in config_scopes:
         if s == scope:
             return p
@@ -251,16 +313,16 @@ def get_config_scope_filename(scope, category_name):
 def add_to_config(category_name, addition_dict, scope=None):
     """Merge a new dict into a configuration tree and write the new
        configuration to disk"""
-    global _read_config_file_result
     get_config(category_name)
     category = _config_sections[category_name]
 
-    #If scope is specified, use it.  Otherwise use the last config scope that
-    #we successfully parsed data from.
+    # If scope is specified, use it.  Otherwise use the last config scope that
+    # we successfully parsed data from.
     file = None
     path = None
     if not scope and not category.files_read_from:
         scope = 'user'
+
     if scope:
         try:
             dir = get_config_scope_dirname(scope)
@@ -268,32 +330,37 @@ def add_to_config(category_name, addition_dict, scope=None):
                 mkdirp(dir)
             path = os.path.join(dir, category.filename)
             file = open(path, 'w')
-        except exceptions.IOError, e:
+        except IOError, e:
             pass
     else:
         for p in category.files_read_from:
             try:
                 file = open(p, 'w')
-            except exceptions.IOError, e:
+            except IOError, e:
                 pass
             if file:
                 path = p
                 break;
+
     if not file:
         tty.die('Unable to write to config file %s' % path)
 
-    #Merge the new information into the existing file info, then write to disk
-    new_dict = _read_config_file_result[path]
+    # Merge the new information into the existing file info, then write to disk
+    new_dict = _read_config_file(path)
+
     if new_dict and category_name in new_dict:
         new_dict = new_dict[category_name]
-    new_dict = _merge_dicts(new_dict, addition_dict)
+
+    new_dict = _merge_yaml(new_dict, addition_dict)
     new_dict = { category_name : new_dict }
-    _read_config_file_result[path] = new_dict
+
+    # Install new dict as memoized value, and dump to disk
+    _read_config_file.cache[path] = new_dict
     yaml.dump(new_dict, stream=file, default_flow_style=False)
     file.close()
 
-    #Merge the new information into the cached results
-    category.result_dict = _merge_dicts(category.result_dict, addition_dict)
+    # Merge the new information into the cached results
+    category.result_dict = _merge_yaml(category.result_dict, addition_dict)
 
 
 def add_to_mirror_config(addition_dict, scope=None):
@@ -311,7 +378,6 @@ def add_to_compiler_config(addition_dict, scope=None, arch=None):
 
 def remove_from_config(category_name, key_to_rm, scope=None):
     """Remove a configuration key and write a new configuration to disk"""
-    global config_scopes
     get_config(category_name)
     scopes_to_rm_from = [scope] if scope else [s for s,p in config_scopes]
     category = _config_sections[category_name]

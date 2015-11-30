@@ -43,7 +43,7 @@ def setup_parser(subparser):
 
 def list(parser, args):
     # Start with all package names.
-    pkgs = spack.db.all_package_names()
+    pkgs = spack.repo.all_package_names()
 
     # filter if a filter arg was provided
     if args.filter:

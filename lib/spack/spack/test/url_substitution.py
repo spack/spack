@@ -29,7 +29,6 @@ import unittest
 
 import spack
 import spack.url as url
-from spack.packages import PackageDB
 
 
 class PackageSanityTest(unittest.TestCase):
