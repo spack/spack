@@ -733,9 +733,10 @@ class Package(object):
 
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.
-        archive_dir = self.stage.source_path
-        good_file = join_path(archive_dir, '.spack_patched')
-        bad_file  = join_path(archive_dir, '.spack_patch_failed')
+        archive_dir     = self.stage.source_path
+        good_file       = join_path(archive_dir, '.spack_patched')
+        no_patches_file = join_path(archive_dir, '.spack_no_patches')
+        bad_file        = join_path(archive_dir, '.spack_patch_failed')
 
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
@@ -749,29 +750,46 @@ class Package(object):
         if os.path.isfile(good_file):
             tty.msg("Already patched %s" % self.name)
             return
+        elif os.path.isfile(no_patches_file):
+            tty.msg("No patches needed for %s." % self.name)
+            return
 
         # Apply all the patches for specs that match this one
+        patched = False
         for spec, patch_list in self.patches.items():
             if self.spec.satisfies(spec):
                 for patch in patch_list:
-                    tty.msg('Applying patch %s' % patch.path_or_url)
                     try:
                         patch.apply(self.stage)
+                        tty.msg('Applied patch %s' % patch.path_or_url)
+                        patched = True
                     except:
                         # Touch bad file if anything goes wrong.
+                        tty.msg('Patch %s failed.' % patch.path_or_url)
                         touch(bad_file)
                         raise
 
-        # patch succeeded.  Get rid of failed file & touch good file so we
-        # don't try to patch again again next time.
+        if has_patch_fun:
+            try:
+                self.patch()
+                tty.msg("Ran patch() for %s." % self.name)
+                patched = True
+            except:
+                tty.msg("patch() function failed for %s." % self.name)
+                touch(bad_file)
+                raise
+
+        # Get rid of any old failed file -- patches have either succeeded
+        # or are not needed.  This is mostly defensive -- it's needed
+        # if the restage() method doesn't clean *everything* (e.g., for a repo)
         if os.path.isfile(bad_file):
             os.remove(bad_file)
-        touch(good_file)
 
-        if has_patch_fun:
-            self.patch()
-
-        tty.msg("Patched %s" % self.name)
+        # touch good or no patches file so that we skip next time.
+        if patched:
+            touch(good_file)
+        else:
+            touch(no_patches_file)
 
 
     def do_fake_install(self):
