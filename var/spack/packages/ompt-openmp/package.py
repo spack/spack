@@ -5,7 +5,7 @@ class OmptOpenmp(Package):
     homepage = "https://github.com/OpenMPToolsInterface/LLVM-openmp"
     url      = "http://github.com/khuck/LLVM-openmp/archive/v0.1.tar.gz"
 
-    version('0.1', 'cc004c28b6c0d564340ed6174045b370')
+    version('0.1', '2334e6a84b52da41b27afd9831ed5370')
 
     # depends_on("foo")
 
