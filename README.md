@@ -1,6 +1,8 @@
 ![image](share/spack/logo/spack-logo-text-64.png "Spack")
 ============
 
+[![Build Status](https://travis-ci.org/scalability-llnl/spack.png?branch=develop)](https://travis-ci.org/scalability-llnl/spack)
+
 Spack is a package management tool designed to support multiple
 versions and configurations of software on a wide variety of platforms
 and environments. It was designed for large supercomputing centers,
