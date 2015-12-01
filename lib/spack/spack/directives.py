@@ -42,6 +42,7 @@ The available directives are:
   * ``extends``
   * ``patch``
   * ``variant``
+  * ``resource``
 
 """
 __all__ = ['depends_on', 'extends', 'provides', 'patch', 'version',
@@ -49,9 +50,11 @@ __all__ = ['depends_on', 'extends', 'provides', 'patch', 'version',
 
 import re
 import inspect
+import os.path
 import functools
 
 from llnl.util.lang import *
+from llnl.util.filesystem import join_path
 
 import spack
 import spack.spec
@@ -271,16 +274,27 @@ def resource(pkg, **kwargs):
     List of recognized keywords:
 
     * 'when' : represents the condition upon which the resource is needed (optional)
-    * 'destination' : path where to extract / checkout the resource (optional)
+    * 'destination' : path where to extract / checkout the resource (optional). This path must be a relative path,
+    and it must fall inside the stage area of the main package.
 
     """
     when = kwargs.get('when', pkg.name)
-    # FIXME : currently I assume destination to be a relative path (rooted at pkg.stage.source_path)
     destination = kwargs.get('destination', "")
+    # Check if the path is relative
+    if os.path.isabs(destination):
+        message = "The destination keyword of a resource directive can't be an absolute path.\n"
+        message += "\tdestination : '{dest}\n'".format(dest=destination)
+        raise RuntimeError(message)
+    # Check if the path falls within the main package stage area
+    test_path = 'stage_folder_root/'
+    normalized_destination = os.path.normpath(join_path(test_path, destination))  # Normalized absolute path
+    if test_path not in normalized_destination:
+        message = "The destination folder of a resource must fall within the main package stage directory.\n"
+        message += "\tdestination : '{dest}'\n".format(dest=destination)
+        raise RuntimeError(message)
     when_spec = parse_anonymous_spec(when, pkg.name)
     resources = pkg.resources.setdefault(when_spec, [])
     fetcher = from_kwargs(**kwargs)
-    # FIXME : should we infer the name somehow if not passed ?
     name = kwargs.get('name')
     resources.append(Resource(name, fetcher, destination))
 
