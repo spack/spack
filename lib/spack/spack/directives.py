@@ -62,7 +62,7 @@ from spack.patch import Patch
 from spack.variant import Variant
 from spack.spec import Spec, parse_anonymous_spec
 from spack.resource import Resource
-from spack.fetch_strategy import URLFetchStrategy
+from spack.fetch_strategy import from_kwargs
 
 #
 # This is a list of all directives, built up as they are defined in
@@ -279,8 +279,7 @@ def resource(pkg, **kwargs):
     destination = kwargs.get('destination', "")
     when_spec = parse_anonymous_spec(when, pkg.name)
     resources = pkg.resources.setdefault(when_spec, [])
-    # FIXME : change URLFetchStrategy with a factory that selects based on kwargs
-    fetcher = URLFetchStrategy(**kwargs)
+    fetcher = from_kwargs(**kwargs)
     # FIXME : should we infer the name somehow if not passed ?
     name = kwargs.get('name')
     resources.append(Resource(name, fetcher, destination))

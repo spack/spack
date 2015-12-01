@@ -634,6 +634,22 @@ def from_url(url):
     return URLFetchStrategy(url)
 
 
+def from_kwargs(**kwargs):
+    """
+    Construct the appropriate FetchStrategy from the given keyword arguments.
+
+    :param kwargs: dictionary of keyword arguments
+    :return: fetcher or raise a FetchError exception
+    """
+    for fetcher in all_strategies:
+        if fetcher.matches(kwargs):
+            return fetcher(**kwargs)
+    # Raise an error in case we can't instantiate any known strategy
+    message = "Cannot instantiate any FetchStrategy"
+    long_message = message + " from the given arguments : {arguments}".format(srguments=kwargs)
+    raise FetchError(message, long_message)
+
+
 def args_are_for(args, fetcher):
     fetcher.matches(args)
 
