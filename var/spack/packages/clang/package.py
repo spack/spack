@@ -50,9 +50,15 @@ class Clang(Package):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
 
         with working_dir('spack-build', create=True):
+
+            options = []
+            if '@3.7.0:' in spec:
+                options.append('-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp')
+            options.extend(std_cmake_args)
+
             cmake('..',
-                  '-DCLANG_PATH_TO_LLVM_BUILD=%s' % spec['llvm'].prefix,
-                  '-DLLVM_MAIN_SRC_DIR=%s' % spec['llvm'].prefix,
-                  *std_cmake_args)
+                  '-DCLANG_PATH_TO_LLVM_BUILD:PATH=%s' % spec['llvm'].prefix,
+                  '-DLLVM_MAIN_SRC_DIR:PATH=%s' % spec['llvm'].prefix,
+                  *options)
             make()
             make("install")
