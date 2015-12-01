@@ -643,10 +643,9 @@ class Package(object):
         ##########
         # Fetch resources
         resources = self._get_resources()
-        # FIXME : choose the unique name appropriately. Is there a function somewhere for the base name ?
-        pieces = [self.name, str(self.version), self.spec.dag_hash()]
         for resource in resources:
-            resource_stage_folder = '-'.join(pieces + [resource.name])
+            pieces = ['resource', resource.name, self.spec.dag_hash()]
+            resource_stage_folder = '-'.join(pieces)
             stage = Stage(resource.fetcher, name=resource_stage_folder)
             resource.fetcher.set_stage(stage)
             resource.fetcher.fetch()
