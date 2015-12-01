@@ -19,14 +19,19 @@ class Adios(Package):
     # module load cray-hdf5/1.8.14
     # module load python/2.7.10
     depends_on('mxml')
-
+    
     def install(self, spec, prefix):
         configure_args = ["--prefix=%s" % prefix, 
                           "--with-mxml=%s" % spec['mxml'].prefix, 
-                          "--with-hdf5="+os.environ["HDF5_DIR"],
-                          "--with-netcdf="+os.environ["NETCDF_DIR"],
-                          "--with-infiniband=no"]
-             
+                          "--with-hdf5=%s" % os.environ["HDF5_DIR"],
+                          "--with-netcdf=%s" % os.environ["NETCDF_DIR"],
+                          "--with-infiniband=no",
+                          "MPICC=cc","MPICXX=CC","MPIFC=ftn",
+                          "CPPFLAGS=-DMPICH_IGNORE_CXX_SEEK"] 
+
+        if spec.satisfies('%gcc'):
+            configure_args.extend(["CC=gcc", "CXX=g++", "FC=gfortran"])
+
         configure(*configure_args)
         make()
         make("install")
