@@ -1,9 +1,11 @@
+import os
 from spack import *
 
 class Mxml(Package):
     """Mini-XML is a small XML library that you can use to read and write XML 
        and XML-like data files in your application without requiring large 
-       non-standard libraries"""
+       non-standard libraries
+    """
 
     homepage = "http://www.msweet.org"
     url      = "http://www.msweet.org/files/project3/mxml-2.9.tar.gz"
@@ -18,7 +20,7 @@ class Mxml(Package):
     # Case statement to change CC and CXX flags
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix, "--disable-shared")
+        configure('--prefix=%s' % prefix, "--disable-shared", 'CFLAGS=-static')
         make()
         make("install")
 
