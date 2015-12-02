@@ -43,6 +43,7 @@ class Boost(Package):
     version('1.34.1', '2d938467e8a448a2c9763e0a9f8ca7e5')
     version('1.34.0', 'ed5b9291ffad776f8757a916e1726ad0')
 
+    variant('debug', default=False, description='Switch to the debug version of Boost')
     variant('python', default=False, description='Activate the component Boost.Python')
     variant('mpi', default=False, description='Activate the component Boost.MPI')
     variant('compression', default=True, description='Activate the compression Boost.iostreams')
