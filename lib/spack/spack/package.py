@@ -649,6 +649,7 @@ class Package(object):
             stage = Stage(resource.fetcher, name=resource_stage_folder)
             resource.fetcher.set_stage(stage)
             resource.fetcher.fetch()
+            resource.fetcher.check()
         ##########
 
         self._fetch_time = time.time() - start_time
