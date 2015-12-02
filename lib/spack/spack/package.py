@@ -644,12 +644,14 @@ class Package(object):
         # Fetch resources
         resources = self._get_resources()
         for resource in resources:
-            pieces = ['resource', resource.name, self.spec.dag_hash()]
-            resource_stage_folder = '-'.join(pieces)
-            stage = Stage(resource.fetcher, name=resource_stage_folder)
-            resource.fetcher.set_stage(stage)
-            resource.fetcher.fetch()
-            resource.fetcher.check()
+            resource_stage_folder = self._resource_stage(resource)
+            # FIXME : works only for URLFetchStrategy
+            resource_mirror = join_path(self.name, os.path.basename(resource.fetcher.url))
+            resource_stage = Stage(resource.fetcher, name=resource_stage_folder, mirror_path=resource_mirror)
+            resource.fetcher.set_stage(resource_stage)
+            # Delegate to stage object to trigger mirror logic
+            resource_stage.fetch()
+            resource_stage.check()
         ##########
 
         self._fetch_time = time.time() - start_time
@@ -765,6 +767,11 @@ class Package(object):
             if when_spec in self.spec:
                 resources.extend(resource_list)
         return resources
+
+    def _resource_stage(self, resource):
+        pieces = ['resource', resource.name, self.spec.dag_hash()]
+        resource_stage_folder = '-'.join(pieces)
+        return resource_stage_folder
 
     def _build_logger(self, log_path):
         """Create a context manager to log build output."""
