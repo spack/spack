@@ -54,7 +54,6 @@ class Target(object):
         also the module_name (e.g craype-compiler). Targets will also recognize which architecture
         they came from using the set_architecture method. Targets will have compiler finding strategies
         """
-    default_strategy = None # Can probably add a compiler path here
 
     def __init__(self,name, module_name=None):
         self.name = name # case of cray "ivybridge" but if it's x86_64
@@ -99,7 +98,8 @@ class Target(object):
 
 @key_ordering
 class Architecture(object):
-    """ Abstract class that each type of Architecture will subclass. Will return a instance of it once it
+    """ Abstract class that each type of Architecture will subclass. 
+        Will return a instance of it once it
         is returned
     """
 
