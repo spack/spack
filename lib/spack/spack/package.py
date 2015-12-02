@@ -681,7 +681,8 @@ class Package(object):
         for resource in resources:
             stage = resource.fetcher.stage
             _expand_archive(stage, resource.name)
-            link_path = join_path(self.stage.source_path, resource.destination, os.path.basename(stage.source_path))
+            basename = os.path.basename(stage.source_path) if resource.basename is None else resource.basename
+            link_path = join_path(self.stage.source_path, resource.destination, basename)
             if not os.path.exists(link_path):
                 # Create a symlink
                 os.symlink(stage.source_path, link_path)

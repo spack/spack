@@ -27,11 +27,13 @@ Describes an optional resource needed for a build. Typically a bunch of sources 
 package to enable optional features.
 """
 
+
 class Resource(object):
     """
     Represents an optional resource. Aggregates a name, a fetcher and a destination.
     """
-    def __init__(self, name, fetcher, destination):
+    def __init__(self, name, fetcher, destination, basename):
         self.name = name
         self.fetcher = fetcher
         self.destination = destination
+        self.basename = basename
