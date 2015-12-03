@@ -11,8 +11,8 @@ class PyBasemap(Package):
     extends('python')
     depends_on('py-setuptools')
     depends_on('py-numpy')
-    depends_on('py-matplotlib')
-    depends_on('py-pil')
+    depends_on('py-matplotlib+gui')
+    depends_on('py-pillow')
     depends_on("geos")
 
     def install(self, spec, prefix):
