@@ -46,7 +46,7 @@ import warnings
 # spack. Note this must be done after Spack's external libs directory is added 
 # to sys.path. 
 with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
+    warnings.filterwarnings("ignore", ".*nose was already imported")
     import nose
 
 # Quick and dirty check to clean orphaned .pyc files left over from
