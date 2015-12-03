@@ -11,6 +11,7 @@ class Openssl(Package):
 
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
     version('1.0.2d', '38dd619b2e77cbac69b99f52a053d25a')
+    version('1.0.2e', '5262bfa25b60ed9de9f28d5d52d77fc5')
 
     depends_on("zlib")
     parallel = False

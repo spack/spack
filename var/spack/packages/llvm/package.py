@@ -38,6 +38,7 @@ class Llvm(Package):
     version('3.7.0', 'b98b9495e5655a672d6cb83e1a180f8e', url='http://llvm.org/releases/3.7.0/llvm-3.7.0.src.tar.xz')
     version('3.6.2', '0c1ee3597d75280dee603bae9cbf5cc2', url='http://llvm.org/releases/3.6.2/llvm-3.6.2.src.tar.xz')
     version('3.5.1', '2d3d8004f38852aa679e5945b8ce0b14', url='http://llvm.org/releases/3.5.1/llvm-3.5.1.src.tar.xz')
+    version('3.0', 'a8e5f5f1c1adebae7b4a654c376a6005', url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz') # currently required by mesa package
 
     depends_on('python@2.7:')
 
