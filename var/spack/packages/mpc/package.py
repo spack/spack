@@ -31,6 +31,7 @@ class Mpc(Package):
     homepage = "http://www.multiprecision.org"
     url      = "ftp://ftp.gnu.org/gnu/mpc/mpc-1.0.2.tar.gz"
 
+    version('1.0.3', 'd6a1d5f8ddea3abd2cc3e98f58352d26')
     version('1.0.2', '68fadff3358fb3e7976c7a398a0af4c3')
 
     depends_on("gmp")
