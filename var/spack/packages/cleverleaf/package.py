@@ -13,7 +13,7 @@ class Cleverleaf(Package):
 
     version('develop', git='https://github.com/UK-MAC/CleverLeaf_ref.git', branch='develop')
 
-    depends_on("SAMRAI@3.8.0")
+    depends_on("SAMRAI@3.8.0:")
     depends_on("hdf5")
     depends_on("boost")
 
