@@ -79,8 +79,9 @@ class Gcc(Package):
                    "--with-gnu-as",
                    "--with-quad"]
         # Binutils
-        binutils_options = ["--with-stage1-ldflags=%s" % self.rpath_args,
-                            "--with-boot-ldflags=%s"   % self.rpath_args,
+        static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
+        binutils_options = ["--with-stage1-ldflags=%s %s" % (self.rpath_args, static_bootstrap_flags),
+                            "--with-boot-ldflags=%s %s"   % (self.rpath_args, static_bootstrap_flags),
                             "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
                             "--with-as=%s/bin/as" % spec['binutils'].prefix]
         options.extend(binutils_options)
@@ -89,11 +90,13 @@ class Gcc(Package):
             isl_options = ["--with-isl=%s" % spec['isl'].prefix]
             options.extend(isl_options)
 
-        # Rest of install is straightforward.
-        configure(*options)
-        make()
-        make("install")
-
+        with working_dir('spack-build', create=True):
+            # Rest of install is straightforward.
+            configure = Executable('../configure')
+            configure(*options)
+            make()
+            make("install")
+            
         self.write_rpath_specs()
 
 
