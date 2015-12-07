@@ -38,6 +38,8 @@ class Samrai(Package):
 
         configure(
             "--prefix=%s" % prefix,
+            "--with-CXX=%s" % spec[mpi].prefix.bin + "/mpic++",
+            "--with-CC=%s" % spec[mpi].prefix.bin + "/mpicc",
             "--with-hdf5=%s" % spec['hdf5'].prefix,
             "--with-boost=%s" % spec['boost'].prefix,
             "--with-zlib=%s" % spec['zlib'].prefix,
