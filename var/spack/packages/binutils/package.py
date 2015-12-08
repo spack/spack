@@ -20,7 +20,8 @@ class Binutils(Package):
             '--enable-multilib',
             '--enable-shared',
             '--enable-64-bit-bfd',
-            '--enable-targets=all']
+            '--enable-targets=all',
+            '--with-sysroot=/']
 
         if '+libiberty' in spec:
             configure_args.append('--enable-install-libiberty')
