@@ -43,6 +43,7 @@ import subprocess
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('exts'))
+sys.path.insert(0, os.path.abspath('../external'))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
 spack_root = '../../..'
