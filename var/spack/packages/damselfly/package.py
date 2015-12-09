@@ -2,10 +2,10 @@ from spack import *
 
 class Damselfly(Package):
     """Damselfly is a model-based parallel network simulator."""
-    homepage = "https://github.com/scalability-llnl/damselfly"
-    url      = "https://github.com/scalability-llnl/damselfly"
+    homepage = "https://github.com/llnl/damselfly"
+    url      = "https://github.com/llnl/damselfly"
 
-    version('1.0', '05cf7e2d8ece4408c0f2abb7ab63fd74c0d62895', git='https://github.com/scalability-llnl/damselfly.git', tag='v1.0')
+    version('1.0', '05cf7e2d8ece4408c0f2abb7ab63fd74c0d62895', git='https://github.com/llnl/damselfly.git', tag='v1.0')
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
