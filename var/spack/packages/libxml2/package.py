@@ -1,4 +1,5 @@
 from spack import *
+import os
 
 class Libxml2(Package):
     """Libxml2 is the XML C parser and toolkit developed for the Gnome
@@ -11,18 +12,19 @@ class Libxml2(Package):
 
     variant('python', default=False, description='Enable Python support')
 
-    extends('python', when='+python')
+    extends('python', when='+python', ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|(lib/xml2.*$)|(lib/cmake.*$)')
     depends_on('zlib')
     depends_on('xz')
 
     def install(self, spec, prefix):
         if '+python' in spec:
-            python_arg = "--with-python=%s" % spec['python'].prefix
+            site_packages_dir = os.path.join(prefix, 'lib/python%s.%s/site-packages' %(spec['python'].version[:2]))
+            python_args = ["--with-python=%s" % spec['python'].prefix, "--with-python-install-dir=%s" % site_packages_dir]
         else:
-            python_arg = "--without-python"
+            python_args = ["--without-python"]
 
         configure("--prefix=%s" % prefix,
-                  python_arg)
+                  *python_args)
 
         make()
         make("install")
