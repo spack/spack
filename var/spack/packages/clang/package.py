@@ -22,7 +22,12 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
+
 from spack import *
+
+import os
+import os.path
 
 class Clang(Package):
     """The goal of the Clang project is to create a new C, C++,
@@ -62,3 +67,29 @@ class Clang(Package):
                   *options)
             make()
             make("install")
+            # CLang doesn't look in llvm folders for system headers...
+            self.link_llvm_directories(spec)
+
+    def link_llvm_directories(self, spec):
+
+        def clang_include_dir_at(root):
+            return join_path(root, 'include')
+
+        def clang_lib_dir_at(root):
+            return join_path(root, 'lib/clang/', str(self.version), 'include')
+
+        def do_link(source_dir, destination_dir):
+            if os.path.exists(source_dir):
+                for name in os.listdir(source_dir):
+                    source = join_path(source_dir, name)
+                    link = join_path(destination_dir, name)
+                    os.symlink(source, link)
+
+        # Link folder and files in include
+        llvm_dir = clang_include_dir_at(spec['llvm'].prefix)
+        clang_dir = clang_include_dir_at(self.prefix)
+        do_link(llvm_dir, clang_dir)
+        # Link folder and files in lib
+        llvm_dir = clang_lib_dir_at(spec['llvm'].prefix)
+        clang_dir = clang_lib_dir_at(self.prefix)
+        do_link(llvm_dir, clang_dir)

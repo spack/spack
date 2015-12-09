@@ -53,10 +53,10 @@ class Llvm(Package):
              destination='projects', when='@3.7.0')
     resource(name='libcxx',
              url='http://llvm.org/releases/3.7.0/libcxx-3.7.0.src.tar.xz', md5='46aa5175cbe1ad42d6e9c995968e56dd',
-             destination='projects', basename='libcxx', when='+libcxx@3.7.0')
+             destination='projects', placement='libcxx', when='+libcxx@3.7.0')
     resource(name='libcxxabi',
              url='http://llvm.org/releases/3.7.0/libcxxabi-3.7.0.src.tar.xz', md5='5aa769e2fca79fa5335cfae8f6258772',
-             destination='projects', basename='libcxxabi', when='+libcxx@3.7.0')
+             destination='projects', placement='libcxxabi', when='+libcxx@3.7.0')
     ##########
 
     def install(self, spec, prefix):

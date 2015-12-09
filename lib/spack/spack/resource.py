@@ -30,10 +30,10 @@ package to enable optional features.
 
 class Resource(object):
     """
-    Represents an optional resource. Aggregates a name, a fetcher and a destination.
+    Represents an optional resource. Aggregates a name, a fetcher, a destination and a placement
     """
-    def __init__(self, name, fetcher, destination, basename):
+    def __init__(self, name, fetcher, destination, placement):
         self.name = name
         self.fetcher = fetcher
         self.destination = destination
-        self.basename = basename
+        self.placement = placement
