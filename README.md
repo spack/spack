@@ -1,7 +1,7 @@
 ![image](share/spack/logo/spack-logo-text-64.png "Spack")
 ============
 
-[![Build Status](https://travis-ci.org/scalability-llnl/spack.png?branch=develop)](https://travis-ci.org/scalability-llnl/spack)
+[![Build Status](https://travis-ci.org/llnl/spack.png?branch=develop)](https://travis-ci.org/llnl/spack)
 
 Spack is a package management tool designed to support multiple
 versions and configurations of software on a wide variety of platforms
@@ -19,19 +19,19 @@ written in pure Python, and specs allow package authors to write a
 single build script for many different builds of the same package.
 
 See the
-[Feature Overview](http://scalability-llnl.github.io/spack/features.html)
+[Feature Overview](http://llnl.github.io/spack/features.html)
 for examples and highlights.
 
 To install spack and install your first package:
 
-    $ git clone https://github.com/scalability-llnl/spack.git
+    $ git clone https://github.com/llnl/spack.git
     $ cd spack/bin
     $ ./spack install libelf
 
 Documentation
 ----------------
 
-[**Full documentation**](http://scalability-llnl.github.io/spack) for Spack is
+[**Full documentation**](http://llnl.github.io/spack) for Spack is
 the first place to look.
 
 See also:
@@ -70,7 +70,7 @@ latest stable release.
 
 Authors
 ----------------
-Many thanks go to Spack's [contributors](https://github.com/scalability-llnl/spack/graphs/contributors).
+Many thanks go to Spack's [contributors](https://github.com/llnl/spack/graphs/contributors).
 
 Spack was originally written by Todd Gamblin, tgamblin@llnl.gov.
 
