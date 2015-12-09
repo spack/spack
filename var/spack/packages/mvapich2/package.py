@@ -1,5 +1,5 @@
 from spack import *
-
+import os
 
 class Mvapich2(Package):
     """MVAPICH2 is an MPI implementation for Infiniband networks."""
@@ -154,3 +154,31 @@ class Mvapich2(Package):
         configure(*configure_args)
         make()
         make("install")
+
+        self.filter_compilers()
+
+
+    def filter_compilers(self):
+        """Run after install to make the MPI compilers use the
+           compilers that Spack built the package with.
+
+           If this isn't done, they'll have CC, CXX, F77, and FC set
+           to Spack's generic cc, c++, f77, and f90.  We want them to
+           be bound to whatever compiler they were built with.
+        """
+        bin = self.prefix.bin
+        mpicc  = os.path.join(bin, 'mpicc')
+        mpicxx = os.path.join(bin, 'mpicxx')
+        mpif77 = os.path.join(bin, 'mpif77')
+        mpif90 = os.path.join(bin, 'mpif90')
+
+        spack_cc  = os.environ['CC']
+        spack_cxx = os.environ['CXX']
+        spack_f77 = os.environ['F77']
+        spack_fc  = os.environ['FC']
+
+        kwargs = { 'ignore_absent' : True, 'backup' : False, 'string' : True }
+        filter_file('CC="%s"' % spack_cc , 'CC="%s"'  % self.compiler.cc,  mpicc,  **kwargs)
+        filter_file('CXX="%s"'% spack_cxx, 'CXX="%s"' % self.compiler.cxx, mpicxx, **kwargs)
+        filter_file('F77="%s"'% spack_f77, 'F77="%s"' % self.compiler.f77, mpif77, **kwargs)
+        filter_file('FC="%s"' % spack_fc , 'FC="%s"'  % self.compiler.fc,  mpif90, **kwargs)
