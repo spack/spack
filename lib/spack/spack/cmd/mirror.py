@@ -136,6 +136,7 @@ def mirror_create(args):
     if args.dependencies:
         new_specs = set()
         for spec in specs:
+            spec.concretize()
             for s in spec.traverse():
                 new_specs.add(s)
         specs = list(new_specs)
