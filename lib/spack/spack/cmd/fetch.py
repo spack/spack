@@ -36,7 +36,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-m', '--missing', action='store_true', help="Also fetch all missing dependencies")
     subparser.add_argument(
-        '-d', '--dependencies', action='store_true', help="Also fetch all dependencies")
+        '-D', '--dependencies', action='store_true', help="Also fetch all dependencies")
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to fetch")
 
