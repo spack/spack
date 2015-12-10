@@ -18,7 +18,7 @@ class Petsc(Package):
     depends_on("hypre")
     depends_on("parmetis")
     depends_on("metis")
-    depends_on("hdf5")
+    depends_on("hdf5+mpi")
     depends_on("mpi")
 
     def install(self, spec, prefix):

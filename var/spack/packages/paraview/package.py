@@ -25,6 +25,7 @@ class Paraview(Package):
     depends_on('bzip2')
     depends_on('freetype')
     depends_on('hdf5')
+    depends_on('hdf5+mpi', when='+mpi')
     depends_on('jpeg')
     depends_on('libpng')
     depends_on('libtiff')
