@@ -34,8 +34,11 @@ def setup_parser(subparser):
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="Do not check packages against checksum")
     subparser.add_argument(
+        '-m', '--missing', action='store_true', help="Also fetch all missing dependencies")
+    subparser.add_argument(
+        '-d', '--dependencies', action='store_true', help="Also fetch all dependencies")
+    subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to fetch")
-
 
 def fetch(parser, args):
     if not args.packages:
@@ -46,5 +49,13 @@ def fetch(parser, args):
 
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
+        if args.missing or args.dependencies:
+            to_fetch = set()
+            for s in spec.traverse():
+                package = spack.db.get(s)
+                if args.missing and package.installed:
+                    continue
+                package.do_fetch()
+
         package = spack.db.get(spec)
         package.do_fetch()
