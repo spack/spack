@@ -189,22 +189,6 @@ def get_sys_type_from_uname():
     except:
         return None
 
-def get_sys_type_from_config_file():
-
-    spack_home_dir = os.environ["HOME"] + "/.spack"
-    yaml_file = os.path.join(spack_home_dir, 'architecture.yaml')
-    try:
-        config_dict = yaml.load(open(yaml_file))  # Fix this to have yaml.load()
-        arch = config_dict['architecture']
-        front = arch['front']
-        back = arch['back']
-        return Architecture(front,back)
-
-    except:
-        print "No architecture.yaml config file found"
-        return None
-
-
 @memoized
 def all_architectures():
     modules = []
@@ -225,14 +209,10 @@ def all_architectures():
 
 @memoized
 def sys_type():
-    """Priority of gathering sys-type.
-       1. YAML file that the user specifies the name of the architecture. e.g Cray-XC40 or Cray-XC30
-       2. UNAME
-       3. GLOBALS
-       4. MAC OSX
-       Yaml should be a priority here because we want the user to be able to specify the type of architecture to use.
-       If there is no yaml present then it should move on to the next function and stop immediately once it gets a
-       arch name
+    """ Gather a list of all available subclasses of architectures.
+        Sorts the list according to their priority looking. Priority is
+        an arbitrarily set number. Detects arch either using uname or
+        a file path (/opt/cray...)
     """
     # Try to create an architecture object using the config file FIRST
     architecture_list = all_architectures()
