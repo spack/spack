@@ -67,27 +67,28 @@ class PackageDB(object):
         if spec.virtual:
             raise UnknownPackageError(spec.name)
 
+        dhash = spec.dag_hash()
         if kwargs.get('new', False):
-            if spec in self.instances:
-                del self.instances[spec]
+            if dhash in self.instances:
+                del self.instances[dhash]
 
-        if not spec in self.instances:
+        if not dhash in self.instances:
             package_class = self.get_class_for_package_name(spec.name)
             try:
-                copy = spec.copy()
-                self.instances[copy] = package_class(copy)
+                copy = spec.copy() # defensive copy.  Package owns its spec.
+                self.instances[dhash] = package_class(copy)
             except Exception, e:
                 if spack.debug:
                     sys.excepthook(*sys.exc_info())
                 raise FailedConstructorError(spec.name, e)
 
-        return self.instances[spec]
+        return self.instances[dhash]
 
 
     @_autospec
     def delete(self, spec):
         """Force a package to be recreated."""
-        del self.instances[spec]
+        del self.instances[spec.dag_hash()]
 
 
     def purge(self):
