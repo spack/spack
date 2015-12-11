@@ -67,22 +67,22 @@ class PackageDB(object):
         if spec.virtual:
             raise UnknownPackageError(spec.name)
 
-        dhash = spec.dag_hash()
+        key = hash(spec)
         if kwargs.get('new', False):
-            if dhash in self.instances:
-                del self.instances[dhash]
+            if key in self.instances:
+                del self.instances[key]
 
-        if not dhash in self.instances:
+        if not key in self.instances:
             package_class = self.get_class_for_package_name(spec.name)
             try:
                 copy = spec.copy() # defensive copy.  Package owns its spec.
-                self.instances[dhash] = package_class(copy)
+                self.instances[key] = package_class(copy)
             except Exception, e:
                 if spack.debug:
                     sys.excepthook(*sys.exc_info())
                 raise FailedConstructorError(spec.name, e)
 
-        return self.instances[dhash]
+        return self.instances[key]
 
 
     @_autospec
