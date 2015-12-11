@@ -24,9 +24,9 @@
 ##############################################################################
 import llnl.util.tty as tty
 
-from spack.build_environment import load_module
+#from spack.build_environment import load_module
 from spack.compiler import *
-from spack.version import ver
+#from spack.version import ver
 
 class Craype(Compiler):
     # Subclasses use possible names of C compiler
@@ -47,9 +47,9 @@ class Craype(Compiler):
     PrgEnv = 'PrgEnv-cray'
     PrgEnv_compiler = 'craype'
 
-    @property
-    def cxx11_flag(self):
-        return "-hstd=c++11"
+#    @property
+#    def cxx11_flag(self):
+#        return "-hstd=c++11"
     
     @classmethod
     def default_version(cls, comp):
