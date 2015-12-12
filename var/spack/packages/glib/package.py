@@ -11,6 +11,7 @@ class Glib(Package):
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
 
     depends_on("libffi")
+    depends_on("zlib")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

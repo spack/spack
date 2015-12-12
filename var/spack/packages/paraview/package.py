@@ -7,8 +7,6 @@ class Paraview(Package):
     version('4.4.0', 'fa1569857dd680ebb4d7ff89c2227378', url='http://www.paraview.org/files/v4.4/ParaView-v4.4.0-source.tar.gz')
 
     variant('python', default=False, description='Enable Python support')
-    variant('matplotlib', default=False, description='Enable Matplotlib support')
-    variant('numpy', default=False, description='Enable NumPy support')
 
     variant('tcl', default=False, description='Enable TCL support')
 
@@ -18,11 +16,11 @@ class Paraview(Package):
     variant('qt', default=False, description='Enable Qt support')
 
     depends_on('python', when='+python')
-    depends_on('py-numpy', when='+python+numpy')
-    depends_on('py-matplotlib', when='+python+matplotlib')
+    depends_on('py-numpy', when='+python')
+    depends_on('py-matplotlib', when='+python')
     depends_on('tcl', when='+tcl')
     depends_on('mpi', when='+mpi')
-    depends_on('qt', when='+qt')
+    depends_on('qt@:4', when='+qt')
 
     depends_on('bzip2')
     depends_on('freetype')
@@ -30,7 +28,7 @@ class Paraview(Package):
     depends_on('jpeg')
     depends_on('libpng')
     depends_on('libtiff')
-    #depends_on('libxml2') # drags in python
+    depends_on('libxml2')
     depends_on('netcdf')
     #depends_on('protobuf') # version mismatches?
     #depends_on('sqlite') # external version not supported
@@ -49,7 +47,11 @@ class Paraview(Package):
             feature_args = std_cmake_args[:]
             feature_args.append('-DPARAVIEW_BUILD_QT_GUI:BOOL=%s' % feature_to_bool('+qt'))
             feature_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=%s' % feature_to_bool('+python'))
+            if '+python' in spec:
+                feature_args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s/bin/python' % spec['python'].prefix)
             feature_args.append('-DPARAVIEW_USE_MPI:BOOL=%s' % feature_to_bool('+mpi'))
+            if '+mpi' in spec:
+                feature_args.append('-DMPIEXEC:FILEPATH=%s/bin/mpiexec' % spec['mpi'].prefix)
             feature_args.append('-DVTK_ENABLE_TCL_WRAPPING:BOOL=%s' % feature_to_bool('+tcl'))
             feature_args.append('-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % feature_to_bool('+osmesa'))
             feature_args.append('-DVTK_USE_X:BOOL=%s' % nfeature_to_bool('+osmesa'))
@@ -63,7 +65,7 @@ class Paraview(Package):
                 '-DVTK_USER_SYSTEM_FREETYPE:BOOL=ON',
                 '-DVTK_USER_SYSTEM_HDF5:BOOL=ON',
                 '-DVTK_USER_SYSTEM_JPEG:BOOL=ON',
-                #'-DVTK_USER_SYSTEM_LIBXML2:BOOL=ON',
+                '-DVTK_USER_SYSTEM_LIBXML2:BOOL=ON',
                 '-DVTK_USER_SYSTEM_NETCDF:BOOL=ON',
                 '-DVTK_USER_SYSTEM_TIFF:BOOL=ON',
                 '-DVTK_USER_SYSTEM_ZLIB:BOOL=ON',

@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -38,6 +38,7 @@ class Gcc(Package):
 
     DEPENDS_ON_ISL_PREDICATE = '@5.0:'
 
+    version('5.3.0', 'c9616fd448f980259c31de613e575719')
     version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
     version('4.9.3', '6f831b4d251872736e8e9cc09746f327')
     version('4.9.2', '4df8ee253b7f3863ad0b86359cd39c43')
@@ -79,8 +80,10 @@ class Gcc(Package):
                    "--with-gnu-as",
                    "--with-quad"]
         # Binutils
-        binutils_options = ["--with-stage1-ldflags=%s" % self.rpath_args,
-                            "--with-boot-ldflags=%s"   % self.rpath_args,
+        static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
+        binutils_options = ["--with-sysroot=/",
+                            "--with-stage1-ldflags=%s %s" % (self.rpath_args, static_bootstrap_flags),
+                            "--with-boot-ldflags=%s %s"   % (self.rpath_args, static_bootstrap_flags),
                             "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
                             "--with-as=%s/bin/as" % spec['binutils'].prefix]
         options.extend(binutils_options)
@@ -89,11 +92,14 @@ class Gcc(Package):
             isl_options = ["--with-isl=%s" % spec['isl'].prefix]
             options.extend(isl_options)
 
-        # Rest of install is straightforward.
-        configure(*options)
-        make()
-        make("install")
-
+        build_dir = join_path(self.stage.path, 'spack-build')
+        configure = Executable( join_path(self.stage.source_path, 'configure') )
+        with working_dir(build_dir, create=True):
+            # Rest of install is straightforward.
+            configure(*options)
+            make()
+            make("install")
+            
         self.write_rpath_specs()
 
 

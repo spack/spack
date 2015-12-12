@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -48,7 +48,7 @@ import sys
 import re
 from bisect import bisect_left
 from functools import wraps
-from external.functools import total_ordering
+from functools_backport import total_ordering
 
 # Valid version characters
 VALID_VERSION = r'[A-Za-z0-9_.-]'

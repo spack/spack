@@ -22,7 +22,8 @@ class Dbus(Package):
     def install(self, spec, prefix):
         configure(
             "--prefix=%s" % prefix,
-            "--disable-systemd")
+            "--disable-systemd",
+            "--disable-launchd")
         make()
         make("install")
 

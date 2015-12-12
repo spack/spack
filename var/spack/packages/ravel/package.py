@@ -4,8 +4,8 @@ class Ravel(Package):
     """Ravel is a parallel communication trace visualization tool that
        orders events according to logical time."""
 
-    homepage = "https://github.com/scalability-llnl/ravel"
-    url = 'https://github.com/scalability-llnl/ravel/archive/v1.0.0.tar.gz'
+    homepage = "https://github.com/llnl/ravel"
+    url = 'https://github.com/llnl/ravel/archive/v1.0.0.tar.gz'
 
     version('1.0.0', 'b25fece58331c2adfcce76c5036485c2')
 

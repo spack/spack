@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
-from external import argparse
+import argparse
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -37,7 +37,7 @@ description = "List extensions for package."
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
-        '-l', '--long', action='store_const', dest='mode', const='long',
+        '-l', '--long', action='store_true', dest='long',
         help='Show dependency hashes as well as versions.')
     format_group.add_argument(
         '-p', '--paths', action='store_const', dest='mode', const='paths',
@@ -95,4 +95,4 @@ def extensions(parser, args):
         tty.msg("None activated.")
         return
     tty.msg("%d currently activated:" % len(activated))
-    spack.cmd.find.display_specs(activated.values(), mode=args.mode)
+    spack.cmd.find.display_specs(activated.values(), mode=args.mode, long=args.long)

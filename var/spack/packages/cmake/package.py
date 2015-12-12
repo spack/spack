@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,6 +34,9 @@ class Cmake(Package):
  
     version('3.0.2', 'db4c687a31444a929d2fdc36c4dfb95f',
             url = 'http://www.cmake.org/files/v3.0/cmake-3.0.2.tar.gz')
+ 
+    version('3.4.0', 'cd3034e0a44256a0917e254167217fc8',
+            url = 'https://cmake.org/files/v3.4/cmake-3.4.0.tar.gz')
 
 #    version('3.0.1', 'e2e05d84cb44a42f1371d9995631dcf5')
 #    version('3.0.0', '21a1c85e1a3b803c4b48e7ff915a863e')

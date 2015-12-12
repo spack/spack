@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@ import hashlib
 import shutil
 import glob
 import tempfile
-from external import yaml
+import yaml
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp

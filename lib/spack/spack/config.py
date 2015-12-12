@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -90,12 +90,12 @@ import os
 import exceptions
 import sys
 
-from external.ordereddict import OrderedDict
+from ordereddict_backport import OrderedDict
 from llnl.util.lang import memoized
 import spack.error
 
-from external import yaml
-from external.yaml.error import MarkedYAMLError
+import yaml
+from yaml.error import MarkedYAMLError
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 

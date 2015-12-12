@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -96,8 +96,8 @@ import hashlib
 import base64
 from StringIO import StringIO
 from operator import attrgetter
-from external import yaml
-from external.yaml.error import MarkedYAMLError
+import yaml
+from yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
 from llnl.util.lang import *
@@ -1205,6 +1205,13 @@ class Spec(object):
         common.intersection_update(
             s.name for s in other.traverse(root=False))
         return common
+
+
+    def constrained(self, other, deps=True):
+        """Return a constrained copy without modifying this spec."""
+        clone = self.copy(deps=deps)
+        clone.constrain(other, deps)
+        return clone
 
 
     def dep_difference(self, other):

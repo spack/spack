@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -28,8 +28,8 @@ class Callpath(Package):
     """Library for representing callpaths consistently in
        distributed-memory performance tools."""
 
-    homepage = "https://github.com/scalability-llnl/callpath"
-    url      = "https://github.com/scalability-llnl/callpath/archive/v1.0.1.tar.gz"
+    homepage = "https://github.com/llnl/callpath"
+    url      = "https://github.com/llnl/callpath/archive/v1.0.1.tar.gz"
 
     version('1.0.2', 'b1994d5ee7c7db9d27586fc2dcf8f373')
     version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')

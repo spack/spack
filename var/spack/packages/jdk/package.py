@@ -14,8 +14,8 @@ class Jdk(Package):
        in the form of a binary product aimed at Java developers."""
     homepage = "http://www.oracle.com/technetwork/java/javase/downloads/index.html"
 
-    version('8u25-linux-x64', 'e145c03a7edc845215092786bcfba77e',
-        url="http://download.oracle.com/otn-pub/java/jdk/8u25-b17/jdk-8u25-linux-x64.tar.gz")
+    version('8u66-linux-x64', '88f31f3d642c3287134297b8c10e61bf',
+        url="http://download.oracle.com/otn-pub/java/jdk/8u66-b17/jdk-8u66-linux-x64.tar.gz")
 
     # Oracle requires that you accept their License Agreement in order
     # to access the Java packages in download.oracle.com. In order to
