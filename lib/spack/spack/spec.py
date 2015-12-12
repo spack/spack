@@ -1506,7 +1506,8 @@ class Spec(object):
           2. The hash of each of this node's dependencies' cmp_keys.
         """
         return self._cmp_node() + (
-            tuple(sorted(hash(d) for d in self.dependencies.values())),)
+            tuple(hash(self.dependencies[name])
+                  for name in sorted(self.dependencies)),)
 
 
     def colorized(self):
