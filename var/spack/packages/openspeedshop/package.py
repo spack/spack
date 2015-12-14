@@ -28,9 +28,14 @@ class Openspeedshop(Package):
     as open source code primarily under LGPL.
     """
 
+
     homepage = "http://www.openspeedshop.org"
-    url      = "http://sourceforge.net/projects/openss/files/openss/openspeedshop-2.1/openspeedshop-2.1.tar.gz/download"
-    version('2.1', 'bdaa57c1a0db9d0c3e0303fd8496c507')
+    url      = "http://sourceforge.net/projects/openss/files/openss/openspeedshop-2.2/openspeedshop-2.2.tar.gz/download"
+    version('2.2', '16cb051179c2038de4e8a845edf1d573')
+
+    #homepage = "http://www.openspeedshop.org"
+    #url      = "http://sourceforge.net/projects/openss/files/openss/openspeedshop-2.1/openspeedshop-2.1.tar.gz/download"
+    #version('2.1', 'bdaa57c1a0db9d0c3e0303fd8496c507')
 
     # optional mirror template
     #url      = "file:/g/g24/jeg/openspeedshop-2.1.tar.gz"
@@ -40,7 +45,7 @@ class Openspeedshop(Package):
 
     parallel = False
 
-    variant('offline', default=False, description="build with offline instrumentor enabled.")
+    variant('offline', default=True, description="build with offline instrumentor enabled.")
     variant('cbtf', default=False, description="build with cbtf instrumentor enabled.")
     variant('runtime', default=False, description="build only the runtime libraries and collectors.")
     variant('frontend', default=False, description="build only the front-end tool using the runtime_dir to point to the target build.")
@@ -58,8 +63,8 @@ class Openspeedshop(Package):
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("sqlite")
-    depends_on("boost@1.42:")
-    depends_on("dyninst@8.2.1:+krelloptions")
+    depends_on("boost@1.50")
+    depends_on("dyninst@8.2.1")
     depends_on("python")
     depends_on("qt@3.3.8b+krellpatch")
 
@@ -79,15 +84,17 @@ class Openspeedshop(Package):
 
     def install(self, spec, prefix):
 
-        openmpi_prefix_path = "/opt/openmpi-1.8.2"
-        mvapich_prefix_path = "/usr/local/tools/mvapich-gnu"
+        #openmpi_prefix_path = "/opt/openmpi-1.8.2"
+        #mvapich_prefix_path = "/usr/local/tools/mvapich-gnu"
                           #'-DOPENMPI_DIR=%s'            % spec['openmpi'].prefix,
+                          #'-DOPENMPI_DIR=%s'            % openmpi_prefix_path,
+                          #'-DMVAPICH_DIR=%s'            % mvapich_prefix_path,
 
         # FIXME: How do we make this dynamic in spack?   That is, can we specify the paths to cuda dynamically?
         # WAITING for external package support. 
-        if '+cuda' in spec:
-            cuda_prefix_path = "/usr/local/cuda-6.0"
-            cupti_prefix_path = "/usr/local/cuda-6.0/extras/CUPTI"
+        #if '+cuda' in spec:
+        #    cuda_prefix_path = "/usr/local/cuda-6.0"
+        #    cupti_prefix_path = "/usr/local/cuda-6.0/extras/CUPTI"
 
         if '+offline' in spec:
             instrumentor_setting = "offline"
@@ -100,8 +107,6 @@ class Openspeedshop(Package):
                           '-DLIBMONITOR_DIR=%s'         % spec['libmonitor'].prefix,
                           '-DLIBUNWIND_DIR=%s'          % spec['libunwind'].prefix,
                           '-DPAPI_DIR=%s'               % spec['papi'].prefix,
-                          '-DOPENMPI_DIR=%s'            % openmpi_prefix_path,
-                          '-DMVAPICH_DIR=%s'            % mvapich_prefix_path,
                           *std_cmake_args)
                     make("clean")
                     make()
@@ -110,6 +115,8 @@ class Openspeedshop(Package):
                 cmake_prefix_path = join_path(spec['dyninst'].prefix)
                 with working_dir('build', create=True):
                     #python_vers=join_path(spec['python'].version[:2])
+                    #'-DOPENMPI_DIR=%s'            % openmpi_prefix_path,
+                    #'-DMVAPICH_DIR=%s'            % mvapich_prefix_path,
                     python_vers='%d.%d' % spec['python'].version[:2]
                     cmake('..',
                           '-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
@@ -130,8 +137,6 @@ class Openspeedshop(Package):
                           '-DBoost_NO_SYSTEM_PATHS=TRUE',
                           '-DBOOST_ROOT=%s'             % spec['boost'].prefix,
                           '-DDYNINST_DIR=%s'            % spec['dyninst'].prefix,
-                          '-DOPENMPI_DIR=%s'            % openmpi_prefix_path,
-                          '-DMVAPICH_DIR=%s'            % mvapich_prefix_path,
                           *std_cmake_args)
                     make("clean")
                     make()

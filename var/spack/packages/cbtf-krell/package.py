@@ -38,8 +38,8 @@ class CbtfKrell(Package):
     depends_on("binutils@2.24+krellpatch")
 
     # collectionTool
-    depends_on("boost@1.42:")
-    depends_on("dyninst@8.2.1:+krelloptions")
+    depends_on("boost@1.50")
+    depends_on("dyninst@8.2.1")
     depends_on("mrnet@4.1.0:+krelloptions")
     depends_on("xerces-c@3.1.1:")
     depends_on("cbtf")
@@ -64,8 +64,8 @@ class CbtfKrell(Package):
 
         # FIXME - hard code path until external package support is available
         # Need to change this path and/or add additional paths for MPI experiment support on different platforms
-        openmpi_prefix_path = "/opt/openmpi-1.8.2"
-        mvapich_prefix_path = "/usr/local/tools/mvapich-gnu"
+        #openmpi_prefix_path = "/opt/openmpi-1.8.2"
+        #mvapich_prefix_path = "/usr/local/tools/mvapich-gnu"
 
         # Other possibilities, they will need a -DMVAPICH_DIR=, etc clause in the cmake command to be recognized
         # mvapich_prefix_path = "<mvapich install path>"
@@ -76,18 +76,22 @@ class CbtfKrell(Package):
 
         # Add in paths for cuda if requested via the cuda variant
         # FIXME - hard code path until external package support is available
-        if '+cuda' in spec:
-            cuda_prefix_path = "/usr/local/cuda-6.0"
-            cupti_prefix_path = "/usr/local/cuda-6.0/extras/CUPTI"
-        else:
-            cuda_prefix_path = ""
-            cupti_prefix_path = ""
+        #if '+cuda' in spec:
+        #    cuda_prefix_path = "/usr/local/cuda-6.0"
+        #    cupti_prefix_path = "/usr/local/cuda-6.0/extras/CUPTI"
+        #else:
+        #    cuda_prefix_path = ""
+        #    cupti_prefix_path = ""
 
-                  #'-DMVAPICH2_DIR=%s'           % spec['mvapich2'].prefix,
-                  #'-DOPENMPI_DIR=%s'            % spec['openmpi'].prefix,
-                  #'-DMPICH_DIR=%s'              % spec['mpich'].prefix,
-                  #'-DCMAKE_LIBRARY_PATH=%s'	% prefix.lib64,
-                  #'-DLIB_SUFFIX=64',
+        #'-DMVAPICH2_DIR=%s'           % spec['mvapich2'].prefix,
+        #'-DOPENMPI_DIR=%s'            % spec['openmpi'].prefix,
+        #'-DMPICH_DIR=%s'              % spec['mpich'].prefix,
+        #'-DCMAKE_LIBRARY_PATH=%s'	% prefix.lib64,
+        #'-DOPENMPI_DIR=%s'            % openmpi_prefix_path,
+        #'-DMVAPICH_DIR=%s'            % mvapich_prefix_path,
+        #'-DLIB_SUFFIX=64',
+        #'-DCUDA_DIR=%s'               % cuda_prefix_path,
+        #'-DCUPTI_DIR=%s'              % cupti_prefix_path,
 
         # Build cbtf-krell with cmake 
         with working_dir('build_cbtf_krell', create=True):
@@ -104,10 +108,6 @@ class CbtfKrell(Package):
                   '-DDYNINST_DIR=%s'		% spec['dyninst'].prefix,
                   '-DXERCESC_DIR=%s'            % spec['xerces-c'].prefix,
                   '-DCMAKE_PREFIX_PATH=%s'	% cmake_prefix_path,
-                  '-DCUDA_DIR=%s'               % cuda_prefix_path,
-                  '-DCUPTI_DIR=%s'              % cupti_prefix_path,
-                  '-DOPENMPI_DIR=%s'            % openmpi_prefix_path,
-                  '-DMVAPICH_DIR=%s'            % mvapich_prefix_path,
                   *std_cmake_args)
 
             make("clean")
