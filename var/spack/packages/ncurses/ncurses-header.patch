@@ -1,0 +1,187 @@
+# ncurses 6.0 - patch 20150810 - Thomas E. Dickey
+#
+# ------------------------------------------------------------------------------
+#
+# Ncurses 6.0 is at
+# 	ftp.gnu.org:/pub/gnu
+#
+# Patches for ncurses 6.0 are in the subdirectory
+# 	ftp://invisible-island.net/ncurses/6.0
+#
+# ------------------------------------------------------------------------------
+# ftp://invisible-island.net/ncurses/5.9/ncurses-6.0-20150810.patch.gz
+# patch by Thomas E. Dickey <dickey@invisible-island.net>
+# created  Mon Aug 10 09:27:53 UTC 2015
+# ------------------------------------------------------------------------------
+# NEWS                             |    7 ++++++-
+# VERSION                          |    2 +-
+# dist.mk                          |    4 ++--
+# ncurses/base/MKlib_gen.sh        |    4 ++--
+# package/debian-mingw/changelog   |    4 ++--
+# package/debian-mingw64/changelog |    4 ++--
+# package/debian/changelog         |    4 ++--
+# package/mingw-ncurses.nsi        |    4 ++--
+# package/mingw-ncurses.spec       |    2 +-
+# package/ncurses.spec             |    2 +-
+# 10 files changed, 21 insertions(+), 16 deletions(-)
+# ------------------------------------------------------------------------------
+Index: NEWS
+Prereq:  1.2476 
+--- ncurses-6.0-20150808+/NEWS	2015-08-08 23:29:51.000000000 +0000
++++ ncurses-6.0-20150810/NEWS	2015-08-10 09:27:32.000000000 +0000
+@@ -25,7 +25,7 @@
+ -- sale, use or other dealings in this Software without prior written        --
+ -- authorization.                                                            --
+ -------------------------------------------------------------------------------
+--- $Id: NEWS,v 1.2476 2015/08/08 23:29:51 tom Exp $
++-- $Id: NEWS,v 1.2478 2015/08/10 09:27:32 tom Exp $
+ -------------------------------------------------------------------------------
+ 
+ This is a log of changes that ncurses has gone through since Zeyd started
+@@ -45,6 +45,11 @@
+ Changes through 1.9.9e did not credit all contributions;
+ it is not possible to add this information.
+ 
++20150810
++	+ workaround for Debian #65617, which was fixed in mawk's upstream
++	  releases in 2009 (report by Sven Joachim).  See
++	  	http://invisible-island.net/mawk/CHANGES.html#t20090727
++
+ 20150808 6.0 release for upload to ftp.gnu.org
+ 
+ 20150808
+Index: VERSION
+--- ncurses-6.0-20150808+/VERSION	2015-08-06 23:13:39.000000000 +0000
++++ ncurses-6.0-20150810/VERSION	2015-08-10 09:10:29.000000000 +0000
+@@ -1 +1 @@
+-5:0:9	6.0	20150808
++5:0:9	6.0	20150810
+Index: dist.mk
+Prereq:  1.1064 
+--- ncurses-6.0-20150808+/dist.mk	2015-08-06 23:13:39.000000000 +0000
++++ ncurses-6.0-20150810/dist.mk	2015-08-10 09:10:29.000000000 +0000
+@@ -25,7 +25,7 @@
+ # use or other dealings in this Software without prior written               #
+ # authorization.                                                             #
+ ##############################################################################
+-# $Id: dist.mk,v 1.1064 2015/08/06 23:13:39 tom Exp $
++# $Id: dist.mk,v 1.1065 2015/08/10 09:10:29 tom Exp $
+ # Makefile for creating ncurses distributions.
+ #
+ # This only needs to be used directly as a makefile by developers, but
+@@ -37,7 +37,7 @@
+ # These define the major/minor/patch versions of ncurses.
+ NCURSES_MAJOR = 6
+ NCURSES_MINOR = 0
+-NCURSES_PATCH = 20150808
++NCURSES_PATCH = 20150810
+ 
+ # We don't append the patch to the version, since this only applies to releases
+ VERSION = $(NCURSES_MAJOR).$(NCURSES_MINOR)
+Index: ncurses/base/MKlib_gen.sh
+Prereq:  1.50 
+--- ncurses-6.0-20150808+/ncurses/base/MKlib_gen.sh	2015-08-07 00:48:24.000000000 +0000
++++ ncurses-6.0-20150810/ncurses/base/MKlib_gen.sh	2015-08-10 08:56:39.000000000 +0000
+@@ -2,7 +2,7 @@
+ #
+ # MKlib_gen.sh -- generate sources from curses.h macro definitions
+ #
+-# ($Id: MKlib_gen.sh,v 1.50 2015/08/07 00:48:24 tom Exp $)
++# ($Id: MKlib_gen.sh,v 1.51 2015/08/10 08:56:39 tom Exp $)
+ #
+ ##############################################################################
+ # Copyright (c) 1998-2014,2015 Free Software Foundation, Inc.                #
+@@ -72,7 +72,7 @@
+ # appears in gcc 5.0 and (with modification) in 5.1, making it necessary to
+ # determine if we are using gcc, and if so, what version because the proposed
+ # solution uses a nonstandard option.
+-PRG=`echo "$1" | $AWK '{ sub(/^[[:space:]]*/,""); sub(/[[:space:]].*$/, ""); print; }' || exit 0`
++PRG=`echo "$1" | $AWK '{ sub(/^[ 	]*/,""); sub(/[ 	].*$/, ""); print; }' || exit 0`
+ FSF=`"$PRG" --version 2>/dev/null || exit 0 | fgrep "Free Software Foundation" | head -n 1`
+ ALL=`"$PRG" -dumpversion 2>/dev/null || exit 0`
+ ONE=`echo "$ALL" | sed -e 's/\..*$//'`
+Index: package/debian-mingw/changelog
+--- ncurses-6.0-20150808+/package/debian-mingw/changelog	2015-08-06 23:13:39.000000000 +0000
++++ ncurses-6.0-20150810/package/debian-mingw/changelog	2015-08-10 09:10:30.000000000 +0000
+@@ -1,8 +1,8 @@
+-ncurses6 (6.0+20150808) unstable; urgency=low
++ncurses6 (6.0+20150810) unstable; urgency=low
+ 
+   * latest weekly patch
+ 
+- -- Thomas E. Dickey <dickey@invisible-island.net>  Thu, 06 Aug 2015 19:13:39 -0400
++ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 10 Aug 2015 05:10:30 -0400
+ 
+ ncurses6 (5.9-20131005) unstable; urgency=low
+ 
+Index: package/debian-mingw64/changelog
+--- ncurses-6.0-20150808+/package/debian-mingw64/changelog	2015-08-06 23:13:39.000000000 +0000
++++ ncurses-6.0-20150810/package/debian-mingw64/changelog	2015-08-10 09:10:30.000000000 +0000
+@@ -1,8 +1,8 @@
+-ncurses6 (6.0+20150808) unstable; urgency=low
++ncurses6 (6.0+20150810) unstable; urgency=low
+ 
+   * latest weekly patch
+ 
+- -- Thomas E. Dickey <dickey@invisible-island.net>  Thu, 06 Aug 2015 19:13:39 -0400
++ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 10 Aug 2015 05:10:30 -0400
+ 
+ ncurses6 (5.9-20131005) unstable; urgency=low
+ 
+Index: package/debian/changelog
+--- ncurses-6.0-20150808+/package/debian/changelog	2015-08-06 23:13:39.000000000 +0000
++++ ncurses-6.0-20150810/package/debian/changelog	2015-08-10 09:10:29.000000000 +0000
+@@ -1,8 +1,8 @@
+-ncurses6 (6.0+20150808) unstable; urgency=low
++ncurses6 (6.0+20150810) unstable; urgency=low
+ 
+   * latest weekly patch
+ 
+- -- Thomas E. Dickey <dickey@invisible-island.net>  Thu, 06 Aug 2015 19:13:39 -0400
++ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 10 Aug 2015 05:10:29 -0400
+ 
+ ncurses6 (5.9-20120608) unstable; urgency=low
+ 
+Index: package/mingw-ncurses.nsi
+Prereq:  1.117 
+--- ncurses-6.0-20150808+/package/mingw-ncurses.nsi	2015-08-06 23:13:39.000000000 +0000
++++ ncurses-6.0-20150810/package/mingw-ncurses.nsi	2015-08-10 09:10:30.000000000 +0000
+@@ -1,4 +1,4 @@
+-; $Id: mingw-ncurses.nsi,v 1.117 2015/08/06 23:13:39 tom Exp $
++; $Id: mingw-ncurses.nsi,v 1.118 2015/08/10 09:10:30 tom Exp $
+ 
+ ; TODO add examples
+ ; TODO bump ABI to 6
+@@ -10,7 +10,7 @@
+ !define VERSION_MAJOR "6"
+ !define VERSION_MINOR "0"
+ !define VERSION_YYYY  "2015"
+-!define VERSION_MMDD  "0808"
++!define VERSION_MMDD  "0810"
+ !define VERSION_PATCH ${VERSION_YYYY}${VERSION_MMDD}
+ 
+ !define MY_ABI   "5"
+Index: package/mingw-ncurses.spec
+--- ncurses-6.0-20150808+/package/mingw-ncurses.spec	2015-08-06 23:13:39.000000000 +0000
++++ ncurses-6.0-20150810/package/mingw-ncurses.spec	2015-08-10 09:10:29.000000000 +0000
+@@ -3,7 +3,7 @@
+ Summary: shared libraries for terminal handling
+ Name: mingw32-ncurses6
+ Version: 6.0
+-Release: 20150808
++Release: 20150810
+ License: X11
+ Group: Development/Libraries
+ Source: ncurses-%{version}-%{release}.tgz
+Index: package/ncurses.spec
+--- ncurses-6.0-20150808+/package/ncurses.spec	2015-08-06 23:13:39.000000000 +0000
++++ ncurses-6.0-20150810/package/ncurses.spec	2015-08-10 09:10:29.000000000 +0000
+@@ -1,7 +1,7 @@
+ Summary: shared libraries for terminal handling
+ Name: ncurses6
+ Version: 6.0
+-Release: 20150808
++Release: 20150810
+ License: X11
+ Group: Development/Libraries
+ Source: ncurses-%{version}-%{release}.tgz
