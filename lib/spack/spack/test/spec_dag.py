@@ -340,16 +340,18 @@ class SpecDagTest(MockPackagesTest):
         self.assertEqual(spec, expected_flat)
         self.assertTrue(spec.eq_dag(expected_flat))
 
-        self.assertEqual(spec, expected_normalized)
+        # Normalized has different DAG structure, so NOT equal.
+        self.assertNotEqual(spec, expected_normalized)
         self.assertFalse(spec.eq_dag(expected_normalized))
 
-        self.assertEqual(spec, non_unique_nodes)
+        # Again, different DAG structure so not equal.
+        self.assertNotEqual(spec, non_unique_nodes)
         self.assertFalse(spec.eq_dag(non_unique_nodes))
 
         spec.normalize()
 
         # After normalizing, spec_dag_equal should match the normalized spec.
-        self.assertEqual(spec, expected_flat)
+        self.assertNotEqual(spec, expected_flat)
         self.assertFalse(spec.eq_dag(expected_flat))
 
         self.assertEqual(spec, expected_normalized)

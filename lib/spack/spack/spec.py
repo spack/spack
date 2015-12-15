@@ -1481,8 +1481,11 @@ class Spec(object):
 
     def _cmp_node(self):
         """Comparison key for just *this node* and not its deps."""
-        return (self.name, self.versions, self.variants,
-                self.architecture, self.compiler)
+        return (self.name,
+                self.versions,
+                self.variants,
+                self.architecture,
+                self.compiler)
 
 
     def eq_node(self, other):
@@ -1496,11 +1499,15 @@ class Spec(object):
 
 
     def _cmp_key(self):
-        """Comparison key for this node and all dependencies *without*
-           considering structure.  This is the default, as
-           normalization will restore structure.
+        """This returns a key for the spec *including* DAG structure.
+
+        The key is the concatenation of:
+          1. A tuple describing this node in the DAG.
+          2. The hash of each of this node's dependencies' cmp_keys.
         """
-        return self._cmp_node() + (self.sorted_deps(),)
+        return self._cmp_node() + (
+            tuple(hash(self.dependencies[name])
+                  for name in sorted(self.dependencies)),)
 
 
     def colorized(self):
