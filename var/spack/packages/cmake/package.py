@@ -43,6 +43,7 @@ class Cmake(Package):
 
     def install(self, spec, prefix):
         configure('--prefix='   + prefix,
-                  '--parallel=' + str(make_jobs))
+                  '--parallel=' + str(make_jobs),
+                  '--', '-DCMAKE_USE_OPENSSL=ON')
         make()
         make('install')
