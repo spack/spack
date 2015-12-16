@@ -212,9 +212,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             spec = Spec.from_yaml(f)
 
         # Specs read from actual installations are always concrete
-        for s in spec.traverse():
-            s._normal = True
-            s._concrete = True
+        spec._mark_concrete()
 
         return spec
 

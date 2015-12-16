@@ -833,7 +833,18 @@ class Spec(object):
             changed = any(changes)
             force=True
 
-        self._concrete = True
+        self._mark_concrete()
+
+
+    def _mark_concrete(self):
+        """Mark this spec and its dependencies as concrete.
+
+        Only for internal use -- client code should use "concretize"
+        unless there is a need to force a spec to be concrete.
+        """
+        for s in self.traverse():
+            s._normal = True
+            s._concrete = True
 
 
     def concretized(self):
