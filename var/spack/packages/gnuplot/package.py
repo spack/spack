@@ -45,7 +45,9 @@ class Gnuplot(Package):
     depends_on('libgd')
     depends_on('cairo')
     depends_on('pango')
-    depends_on('wx')
+    depends_on('wx', when='+wx')
+
+    variant('wx', default=False, description='Activates wxWidgets terminal')
 
     def install(self, spec, prefix):
         # It seems there's an open bug for wxWidgets support
