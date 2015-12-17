@@ -36,6 +36,8 @@ class Gcc(Package):
     list_url = 'http://open-source-box.org/gcc/'
     list_depth = 2
 
+    # Binutils does not build properly on OSX
+    DEPENDS_ON_BINUTILS_PREDICATE = '=linux'
     DEPENDS_ON_ISL_PREDICATE = '@5.0:'
 
     version('5.3.0', 'c9616fd448f980259c31de613e575719')
@@ -48,11 +50,12 @@ class Gcc(Package):
     version('4.7.4', '4c696da46297de6ae77a82797d2abe28')
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
+
+    depends_on("binutils~libiberty", when=DEPENDS_ON_BINUTILS_PREDICATE)
     
     depends_on("mpfr")
     depends_on("gmp")
     depends_on("mpc")     # when @4.5:
-    depends_on("binutils~libiberty")
 
     # Save these until we can do optional deps.
     depends_on("isl", when=DEPENDS_ON_ISL_PREDICATE)
@@ -64,7 +67,8 @@ class Gcc(Package):
         filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure', string=True)
 
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
-        if spec.satisfies("@4.7.1:"):
+        # The Go frontend is not supported on OSX
+        if spec.satisfies("=linux @4.7.1:"):
             enabled_languages.add('go')
 
         # Generic options to compile GCC
@@ -75,18 +79,19 @@ class Gcc(Package):
                    "--with-mpc=%s"    % spec['mpc'].prefix,
                    "--with-mpfr=%s"   % spec['mpfr'].prefix,
                    "--with-gmp=%s"    % spec['gmp'].prefix,
-                   "--enable-lto",
-                   "--with-gnu-ld",
-                   "--with-gnu-as",
                    "--with-quad"]
+        if True: #TODO spec.satisfies("=linux"):
+            # LTO does not work on OSX
+            options.append("--enable-lto")
         # Binutils
-        static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
-        binutils_options = ["--with-sysroot=/",
-                            "--with-stage1-ldflags=%s %s" % (self.rpath_args, static_bootstrap_flags),
-                            "--with-boot-ldflags=%s %s"   % (self.rpath_args, static_bootstrap_flags),
-                            "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
-                            "--with-as=%s/bin/as" % spec['binutils'].prefix]
-        options.extend(binutils_options)
+        if spec.satisfies(Gcc.DEPENDS_ON_BINUTILS_PREDICATE):
+            static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
+            binutils_options = ["--with-sysroot=/",
+                                "--with-stage1-ldflags=%s %s" % (self.rpath_args, static_bootstrap_flags),
+                                "--with-boot-ldflags=%s %s"   % (self.rpath_args, static_bootstrap_flags),
+                                "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
+                                "--with-as=%s/bin/as" % spec['binutils'].prefix]
+            options.extend(binutils_options)
         # Isl
         if spec.satisfies(Gcc.DEPENDS_ON_ISL_PREDICATE):
             isl_options = ["--with-isl=%s" % spec['isl'].prefix]
