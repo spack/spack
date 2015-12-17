@@ -651,10 +651,13 @@ class Spec(object):
         d = {
             'variants' : dict(
                 (name,v.enabled) for name, v in self.variants.items()),
-            'arch' : self.architecture.to_dict(),
             'dependencies' : dict((d, self.dependencies[d].dag_hash())
                                   for d in sorted(self.dependencies))
         }
+        if self.architecture:
+            d['arch'] = self.architecture.to_dict()
+        else:
+            d['arch'] = None
         if self.compiler:
             d.update(self.compiler.to_dict())
         else:

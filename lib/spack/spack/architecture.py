@@ -79,6 +79,8 @@ class Target(object):
 
     @staticmethod
     def from_dict(d):
+        if d is None:
+            return None
         target = Target.__new__(Target)
         target.name = d['name']
         target.module_name = d['module_name']
