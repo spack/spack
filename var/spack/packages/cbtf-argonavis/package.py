@@ -33,7 +33,7 @@ class CbtfArgonavis(Package):
     depends_on("papi")
     depends_on("cbtf")
     depends_on("cbtf-krell")
-    #depends_on("cuda")
+    depends_on("cuda")
 
     parallel = False
 
@@ -43,8 +43,8 @@ class CbtfArgonavis(Package):
        cmake_prefix_path = join_path(spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
 
        # FIXME, hard coded for testing purposes, we will alter when the external package feature is available
-       cuda_prefix_path = "/opt/cudatoolkit-6.5"
-       cupti_prefix_path = "/opt/cudatoolkit-6.5/extras/CUPTI"
+       cuda_prefix_path = "/usr/local/cudatoolkit-6.0"
+       cupti_prefix_path = "/usr/local/cudatoolkit-6.0/extras/CUPTI"
 
 
        with working_dir('CUDA'):
@@ -56,6 +56,7 @@ class CbtfArgonavis(Package):
                  '-DCUDA_INSTALL_PATH=%s'	% cuda_prefix_path,
                  '-DCUDA_ROOT=%s'		% cuda_prefix_path,
                  '-DCUPTI_ROOT=%s'		% cupti_prefix_path,
+                 '-DCUDA_DIR=%s'                % cuda_prefix_path,
                  '-DPAPI_ROOT=%s'		% spec['papi'].prefix,
                  '-DCBTF_PREFIX=%s'		% spec['cbtf'].prefix,
                  *std_cmake_args)

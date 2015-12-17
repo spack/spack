@@ -58,8 +58,7 @@ class Boost(Package):
         parts = [str(p) for p in Version(version)]
         dots = ".".join(parts)
         underscores = "_".join(parts)
-        #return "http://downloads.sourceforge.net/project/boost/boost/%s/boost_%s.tar.bz2" % (
-        return "http://downloads.sourceforge.net/project/boost/boost/%s.0/boost_%s_0.tar.bz2" % (
+        return "http://downloads.sourceforge.net/project/boost/boost/%s/boost_%s.tar.bz2" % (
             dots, underscores)
 
     def determine_toolset(self):

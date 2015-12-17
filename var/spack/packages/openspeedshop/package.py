@@ -63,7 +63,7 @@ class Openspeedshop(Package):
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("sqlite")
-    depends_on("boost@1.50")
+    depends_on("boost@1.50.0")
     depends_on("dyninst@8.2.1")
     depends_on("python")
     depends_on("qt@3.3.8b+krellpatch")
@@ -79,8 +79,8 @@ class Openspeedshop(Package):
     # Dependencies only for the openspeedshop cbtf package.
     depends_on("cbtf", when='+cbtf')
     depends_on("cbtf-krell", when='+cbtf')
-    #depends_on("cbtf-argonavis", when='+cbtf')
-    depends_on("mrnet@4.1.0:+krelloptions", when='+cbtf')
+    depends_on("cbtf-argonavis", when='+cbtf')
+    depends_on("mrnet@4.1.0:+lwthreads", when='+cbtf')
 
     def install(self, spec, prefix):
 

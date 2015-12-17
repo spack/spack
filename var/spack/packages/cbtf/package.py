@@ -32,9 +32,9 @@ class Cbtf(Package):
     version('1.6', branch='master', git='http://git.code.sf.net/p/cbtf/cbtf')
 
     depends_on("cmake")
-    #depends_on("boost@1.42:")
-    depends_on("boost@1.50")
-    depends_on("mrnet@4.1.0+krelloptions")
+    #depends_on("boost@1.42.0:")
+    depends_on("boost@1.50.0")
+    depends_on("mrnet@4.1.0+lwthreads")
     depends_on("xerces-c@3.1.1:")
     depends_on("libxml2")
 
@@ -42,7 +42,6 @@ class Cbtf(Package):
 
     def install(self, spec, prefix):
       with working_dir('build', create=True):
-
 
           # Boost_NO_SYSTEM_PATHS  Set to TRUE to suppress searching   
           # in system paths (or other locations outside of BOOST_ROOT
