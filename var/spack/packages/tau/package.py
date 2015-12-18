@@ -44,22 +44,22 @@ class Tau(Package):
     version('2.24', '57ce33539c187f2e5ec68f0367c76db4')
     version('2.23.1', '6593b47ae1e7a838e632652f0426fe72')
 
-    # FIXME : shmem variant missing
-    variant('download', default=True, description='Downloads and builds various dependencies')
+    # TODO : shmem variant missing
+    variant('download', default=False, description='Downloads and builds various dependencies')
     variant('openmp', default=True, description='Use OpenMP threads')
     variant('mpi', default=True, description='Specify use of TAU MPI wrapper library')
     variant('phase', default=True, description='Generate phase based profiles')
     variant('comm', default=True, description=' Generate profiles with MPI communicator info')
 
+    # TODO : Try to build direct OTF2 support? Some parts of the OTF support library in TAU are non-conformant,
+    # TODO : and fail at compile-time. Further, SCOREP is compiled with OTF2 support.
     depends_on('pdt')  # Required for TAU instrumentation
     depends_on('scorep')
-    #depends_on('otf2', when='%gcc')  # FIXME : still missing logic for intel and other compilers
     depends_on('binutils', when='~download')
     depends_on('mpi', when='+mpi')
 
     def set_compiler_options(self):
 
-        name = self.compiler.name  # Name of the current toolchain
         useropt = ["-O2", self.rpath_args]
 
         ##########
@@ -77,11 +77,6 @@ class Tau(Package):
                             '-cc=%s' % self.compiler.cc_names[0]]
         if self.compiler.fc:
             compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
-        # It turns out that some parts of the OTF support library in TAU are non-conformant, so if we want
-        # to compile them we must suppress some warnings. With Clang it seems impossible to do so, so OTF
-        # support is not built
-        #if name == 'gcc':
-        #    useropt.append("-fpermissive")
         ##########
 
         # Construct the string of custom compiler flags and append it to compiler related options
@@ -102,9 +97,6 @@ class Tau(Package):
                    "-iowrapper",
                    "-pdt=%s" % spec['pdt'].prefix,
                    "-scorep=%s" % spec['scorep'].prefix]
-        # FIXME : I give up trying to compile OTF support with clang, as it seems there is no easy way to ignore errors
-        #if 'otf2' in spec:
-        #    options.append("-otf=%s" % spec['otf2'].prefix)
         # If download is active, download and build suggested dependencies
         if '+download' in spec:
             options.extend(['-bfd=download',

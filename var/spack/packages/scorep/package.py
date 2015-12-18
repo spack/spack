@@ -37,9 +37,8 @@ class Scorep(Package):
 
     version('1.4.2', '3b9a042b13bdd5836452354e6567f71e',
             url='http://www.vi-hps.org/upload/packages/scorep/scorep-1.4.2.tar.gz')
-    #version('1.3', '9db6f957b7f51fa01377a9537867a55c',
-    #        url='http://www.vi-hps.org/upload/packages/scorep/scorep-1.3.tar.gz')
-    #version('1.2.3', '4978084e7cbd05b94517aa8beaea0817')
+    version('1.3', '9db6f957b7f51fa01377a9537867a55c',
+            url='http://www.vi-hps.org/upload/packages/scorep/scorep-1.3.tar.gz')
 
     ##########
     # Dependencies for SCORE-P are quite tight. See the homepage for more information.
@@ -48,13 +47,10 @@ class Scorep(Package):
     depends_on('opari2@1.1.4', when='@1.4.2')
     depends_on('cube@4.3:4.4', when='@1.4.2')
     # SCOREP 1.3
-
+    depends_on("otf2@1.4", when='@1.3')
+    depends_on("opari2@1.1.4", when='@1.3')
+    depends_on("cube@4.2.3", when='@1.3')
     ##########
-
-    # FIXME : check version for 1.3
-    #depends_on("otf2")
-    #depends_on("opari2")
-    #depends_on("cube")
 
     depends_on("mpi")
     depends_on("papi")
