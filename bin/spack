@@ -89,6 +89,8 @@ spec expressions:
 
 parser.add_argument('-d', '--debug', action='store_true',
                     help="Write out debug logs during compile")
+parser.add_argument('-D', '--pdb', action='store_true',
+                    help="Run spack under the pdb debugger")
 parser.add_argument('-k', '--insecure', action='store_true',
                     help="Do not check ssl certificates when downloading.")
 parser.add_argument('-m', '--mock', action='store_true',
@@ -159,5 +161,8 @@ def main():
 if args.profile:
     import cProfile
     cProfile.run('main()', sort='tottime')
+elif args.pdb:
+    import pdb
+    pdb.run('main()')
 else:
     main()

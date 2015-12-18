@@ -25,7 +25,7 @@ class Samrai(Package):
 
     depends_on("mpi")
     depends_on("zlib")
-    depends_on("hdf5")
+    depends_on("hdf5+mpi")
     depends_on("boost")
 
     # don't build tools with gcc

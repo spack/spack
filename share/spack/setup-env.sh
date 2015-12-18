@@ -56,6 +56,12 @@
 # spack dotfiles.
 ########################################################################
 function spack {
+    # save raw arguments into an array before butchering them
+    args=()
+    for a in "$@"; do
+        # yup, this is awful, blame bash2 compat
+        args=("${args[@]}" "$a")
+    done
     # accumulate initial flags for main spack command
     _sp_flags=""
     while [[ "$1" =~ ^- ]]; do
@@ -116,7 +122,7 @@ function spack {
             esac
             ;;
         *)
-            command spack $_sp_flags $_sp_subcommand $_sp_spec
+            command spack "${args[@]}"
             ;;
     esac
 }

@@ -211,6 +211,10 @@ class Database(object):
             child = self._read_spec_from_yaml(dep_hash, installs, hash_key)
             spec._add_dependency(child)
 
+        # Specs from the database need to be marked concrete because
+        # they represent actual installations.
+        spec._mark_concrete()
+
         return spec
 
 
