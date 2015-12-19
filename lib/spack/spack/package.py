@@ -487,9 +487,15 @@ class Package(object):
             if name == dep.name:
                 return dep
 
-        # Otherwise return the spec from the extends() directive
-        spec, kwargs = self.extendees[name]
-        return spec
+        # if the spec is concrete already, then it extends something
+        # that is an *optional* dependency, and the dep isn't there.
+        if self.spec._concrete:
+            return None
+        else:
+            # If it's not concrete, then return the spec from the
+            # extends() directive since that is all we know so far.
+            spec, kwargs = self.extendees[name]
+            return spec
 
 
     @property
@@ -497,18 +503,28 @@ class Package(object):
         """Spec of the extendee of this package, or None if it is not an extension."""
         if not self.extendees:
             return None
+
+        # TODO: allow multiple extendees.
         name = next(iter(self.extendees))
         return self.extendees[name][1]
 
 
     @property
     def is_extension(self):
-        return len(self.extendees) > 0
+        # if it is concrete, it's only an extension if it actually
+        # dependes on the extendee.
+        if self.spec._concrete:
+            return self.extendee_spec is not None
+        else:
+            # If not, then it's an extension if it *could* be an extension
+            return bool(self.extendees)
 
 
     def extends(self, spec):
-        return (spec.name in self.extendees and
-                spec.satisfies(self.extendees[spec.name][0]))
+        if not spec.name in self.extendees:
+            return False
+        s = self.extendee_spec
+        return s and s.satisfies(spec)
 
 
     @property

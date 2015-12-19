@@ -54,6 +54,7 @@ import spack.spec
 from spack.version import Version
 from spack.spec import Spec
 from spack.error import SpackError
+from spack.packages import UnknownPackageError
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
