@@ -86,21 +86,21 @@ done
 #
 command=$(basename "$0")
 case "$command" in
-    cc|gcc|c89|c99|clang|xlc)
+    cc|c89|c99|gcc|clang|icc|pgcc|xlc)
         command="$SPACK_CC"
         language="C"
         ;;
-    c++|CC|g++|clang++|xlC)
+    c++|CC|g++|clang++|icpc|pgCC|xlc++)
         command="$SPACK_CXX"
         language="C++"
         ;;
-    f77|xlf)
-        command="$SPACK_F77"
-        language="Fortran 77"
-        ;;
-    fc|f90|f95|xlf90)
+    f90|fc|f95|gfortran|ifort|pgf90|xlf90)
         command="$SPACK_FC"
         language="Fortran 90"
+        ;;
+    f77|gfortran|ifort|pgf77|xlf)
+        command="$SPACK_F77"
+        language="Fortran 77"
         ;;
     cpp)
         mode=cpp

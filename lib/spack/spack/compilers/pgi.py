@@ -37,6 +37,12 @@ class Pgi(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['pgf95', 'pgf90']
 
+    # Named wrapper links within spack.build_env_path
+    link_paths = { 'cc'  : 'pgi/pgcc',
+                   'cxx' : 'pgi/case-insensitive/pgCC',
+                   'f77' : 'pgi/pgf77',
+                   'fc'  : 'pgi/pgf90' }
+
     @classmethod
     def default_version(cls, comp):
         """The '-V' option works for all the PGI compilers.

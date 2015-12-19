@@ -37,6 +37,12 @@ class Clang(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = []
 
+    # Named wrapper links within spack.build_env_path
+    link_paths = { 'cc'  : 'clang/clang',
+                   'cxx' : 'clang/clang++',
+                   # Use default wrappers for fortran, in case provided in compilers.yaml
+                   'f77' : 'f77',
+                   'fc'  : 'f90' }
 
     @classmethod
     def default_version(self, comp):
