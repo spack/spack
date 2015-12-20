@@ -11,6 +11,10 @@ class Otf2(Package):
     homepage = "http://www.vi-hps.org/score-p"
     url      = "http://www.vi-hps.org/upload/packages/otf2/otf2-1.4.tar.gz"
 
+    version('2.0', '5b546188b25bc1c4e285e06dddf75dfc',
+            url="http://www.vi-hps.org/upload/packages/otf2/otf2-2.0.tar.gz")
+    version('1.5.1', '16a9df46e0da78e374f5d12c8cdc1109',
+            url='http://www.vi-hps.org/upload/packages/otf2/otf2-1.5.1.tar.gz')
     version('1.4',   'a23c42e936eb9209c4e08b61c3cf5092',
             url="http://www.vi-hps.org/upload/packages/otf2/otf2-1.4.tar.gz")
     version('1.3.1', 'd0ffc4e858455ace4f596f910e68c9f2',
