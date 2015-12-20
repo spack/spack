@@ -46,6 +46,7 @@ class Tau(Package):
 
     # TODO : shmem variant missing
     variant('download', default=False, description='Downloads and builds various dependencies')
+    variant('scorep', default=False, description='Activates SCOREP support')
     variant('openmp', default=True, description='Use OpenMP threads')
     variant('mpi', default=True, description='Specify use of TAU MPI wrapper library')
     variant('phase', default=True, description='Generate phase based profiles')
@@ -54,7 +55,7 @@ class Tau(Package):
     # TODO : Try to build direct OTF2 support? Some parts of the OTF support library in TAU are non-conformant,
     # TODO : and fail at compile-time. Further, SCOREP is compiled with OTF2 support.
     depends_on('pdt')  # Required for TAU instrumentation
-    depends_on('scorep')
+    depends_on('scorep', when='+scorep')
     depends_on('binutils', when='~download')
     depends_on('mpi', when='+mpi')
 
@@ -95,8 +96,7 @@ class Tau(Package):
         # As such it has a few #peculiarities# that make this build quite hackish.
         options = ["-prefix=%s" % prefix,
                    "-iowrapper",
-                   "-pdt=%s" % spec['pdt'].prefix,
-                   "-scorep=%s" % spec['scorep'].prefix]
+                   "-pdt=%s" % spec['pdt'].prefix]
         # If download is active, download and build suggested dependencies
         if '+download' in spec:
             options.extend(['-bfd=download',
@@ -105,6 +105,9 @@ class Tau(Package):
         else:
             options.extend(["-bfd=%s" % spec['binutils'].prefix])
             # TODO : unwind and asmdex are still missing
+
+        if '+scorep' in spec:
+            options.append("-scorep=%s" % spec['scorep'].prefix)
 
         if '+openmp' in spec:
             options.append('-openmp')
