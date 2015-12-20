@@ -9,11 +9,10 @@ class Cfitsio(Package):
     version('3.370', 'abebd2d02ba5b0503c633581e3bfa116')
 
     def url_for_version(self, v):
-        url = 'ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio{}.tar.gz'
+        url = 'ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio{0}.tar.gz'
         return url.format(str(v).replace('.', ''))
 
     def install(self, spec, prefix):
         configure('--prefix=' + prefix)
         make()
         make('install')
-
