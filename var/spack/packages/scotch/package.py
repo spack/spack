@@ -72,8 +72,7 @@ class Scotch(Package):
            
         makefile_inc.append('LDFLAGS   = %s' % ' '.join(ldflags))
 
-            
-    def write_make_inc(self):
+    def patch(self):
         makefile_inc = []
         defines = [ 
             '-DCOMMON_RANDOM_FIXED_SEED',
@@ -101,12 +100,9 @@ class Scotch(Package):
             ''
             ])
 
-        with open('Makefile.inc', 'w') as fh:
-            fh.write('\n'.join(makefile_inc))
-
-    def patch(self):
         with working_dir('src'):
-            self.write_make_inc()
+            with open('Makefile.inc', 'w') as fh:
+                fh.write('\n'.join(makefile_inc))
             
     def install(self, spec, prefix):
         targets = ['scotch']
