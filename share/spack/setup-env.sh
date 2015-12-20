@@ -173,8 +173,8 @@ fi
 #
 _sp_share_dir=$(cd "$(dirname $_sp_source_file)" && pwd)
 _sp_prefix=$(cd "$(dirname $(dirname $_sp_share_dir))" && pwd)
-
-# TODO: fix SYS_TYPE to something non-LLNL-specific
-_spack_pathadd DK_NODE    "${_sp_share_dir%/}/dotkit/$SYS_TYPE"
-_spack_pathadd MODULEPATH "${_sp_share_dir%/}/modules/$SYS_TYPE"
 _spack_pathadd PATH       "${_sp_prefix%/}/bin"
+
+_sp_sys_type=$(spack-python -c 'print(spack.architecture.sys_type())')
+_spack_pathadd DK_NODE    "${_sp_share_dir%/}/dotkit/$_sp_sys_type"
+_spack_pathadd MODULEPATH "${_sp_share_dir%/}/modules/$_sp_sys_type"
