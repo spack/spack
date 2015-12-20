@@ -63,10 +63,6 @@ class PythonVersionTest(unittest.TestCase):
         all_issues = {}
 
         for fn in files:
-            if fn != '/Users/gamblin2/src/spack/var/spack/packages/vim/package.py':
-                continue
-            print fn
-
             with open(fn) as pyfile:
                 versions = pyqver2.get_versions(pyfile.read())
                 for ver, reasons in versions.items():
