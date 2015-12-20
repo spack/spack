@@ -104,6 +104,10 @@ class Scotch(Package):
         with open('Makefile.inc', 'w') as fh:
             fh.write('\n'.join(makefile_inc))
 
+    def patch(self):
+        with working_dir('src'):
+            self.write_make_inc()
+            
     def install(self, spec, prefix):
         targets = ['scotch']
         if '+mpi' in self.spec:
@@ -115,7 +119,6 @@ class Scotch(Package):
                 targets.append('ptesmumps')
 
         with working_dir('src'):
-            self.write_make_inc()
             for app in targets:
                 make(app, parallel=(not app=='ptesmumps'))
 
