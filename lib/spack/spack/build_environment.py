@@ -145,7 +145,7 @@ def set_build_environment_variables(pkg):
     # Install root prefix
     os.environ[SPACK_INSTALL] = spack.install_path
 
-    # Remove these vars from the environment during build becaus they
+    # Remove these vars from the environment during build because they
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
     pop_keys(os.environ, "LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH")
