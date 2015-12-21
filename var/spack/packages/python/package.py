@@ -22,13 +22,19 @@ class Python(Package):
     depends_on("readline")
     depends_on("ncurses")
     depends_on("sqlite")
+    depends_on("zlib")
 
     def install(self, spec, prefix):
         # Need this to allow python build to find the Python installation.
         env['PYTHONHOME'] = prefix
         env['MACOSX_DEPLOYMENT_TARGET'] = '10.6'
 
-        # Rest of install is pretty standard.
+        # Make sure the zlib, bz2, etc. modules get built; setup.py searches
+        # the include and library paths to decide which modules to build.
+        dep_prefixes = [dep.prefix for dep in spec.traverse(root=False)]
+        env['CPPFLAGS'] = ' '.join('-I' + p.include for p in dep_prefixes)
+        env['LDFLAGS'] = ' '.join('-L' + p.lib for p in dep_prefixes)
+
         configure("--prefix=%s" % prefix,
                   "--with-threads",
                   "--enable-shared")
