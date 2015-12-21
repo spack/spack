@@ -49,14 +49,15 @@ class Dyninst(Package):
 
         with working_dir('spack-build', create=True):
             cmake('..',
-                  '-DBoost_INCLUDE_DIR=%s' % spec['boost'].prefix.include,
-                  '-DBoost_LIBRARY_DIR=%s' % spec['boost'].prefix.lib,
+                  '-DBoost_INCLUDE_DIR=%s'    % spec['boost'].prefix.include,
+                  '-DBoost_LIBRARY_DIR=%s'    % spec['boost'].prefix.lib,
                   '-DBoost_NO_SYSTEM_PATHS=TRUE',
                   '-DLIBELF_INCLUDE_DIR=%s'   % join_path(libelf.include, 'libelf'),
                   '-DLIBELF_LIBRARIES=%s'     % join_path(libelf.lib, 'libelf.so'),
                   '-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include,
                   '-DLIBDWARF_LIBRARIES=%s'   % join_path(libdwarf.lib, 'libdwarf.so'),
                   *std_cmake_args)
+
             make()
             make("install")
 

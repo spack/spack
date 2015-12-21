@@ -4,7 +4,7 @@ class PyCffi(Package):
     """Foreign Function Interface for Python calling C code"""
     homepage = "http://cffi.readthedocs.org/en/latest/"
     # base https://pypi.python.org/pypi/cffi
-    url      = "https://pypi.python.org/packages/source/c/cffi/cffi-1.1.2.tar.gz#md5="
+    url      = "https://pypi.python.org/packages/source/c/cffi/cffi-1.1.2.tar.gz"
 
     version('1.1.2', 'ca6e6c45b45caa87aee9adc7c796eaea')
 

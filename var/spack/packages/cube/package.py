@@ -12,6 +12,9 @@ class Cube(Package):
     homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
     url      = "http://apps.fz-juelich.de/scalasca/releases/cube/4.2/dist/cube-4.2.3.tar.gz"
 
+    version('4.3.3', '07e109248ed8ffc7bdcce614264a2909',
+            url='http://apps.fz-juelich.de/scalasca/releases/cube/4.3/dist/cube-4.3.3.tar.gz')
+
     version('4.2.3', '8f95b9531f5a8f8134f279c2767c9b20')
 
     version('4.3TP1', 'a2090fbc7b2ba394bd5c09ba971e237f', 

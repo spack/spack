@@ -88,10 +88,14 @@ def set_compiler_environment_variables(pkg):
     compiler = pkg.compiler
 
     # Set compiler variables used by CMake and autotools
-    os.environ['CC']  = join_path(spack.build_env_path, 'cc')
-    os.environ['CXX'] = join_path(spack.build_env_path, 'c++')
-    os.environ['F77'] = join_path(spack.build_env_path, 'f77')
-    os.environ['FC']  = join_path(spack.build_env_path, 'f90')
+    assert all(key in pkg.compiler.link_paths
+               for key in ('cc', 'cxx', 'f77', 'fc'))
+
+    link_dir = spack.build_env_path
+    os.environ['CC']  = join_path(link_dir, pkg.compiler.link_paths['cc'])
+    os.environ['CXX'] = join_path(link_dir, pkg.compiler.link_paths['cxx'])
+    os.environ['F77'] = join_path(link_dir, pkg.compiler.link_paths['f77'])
+    os.environ['FC']  = join_path(link_dir, pkg.compiler.link_paths['fc'])
 
     # Set SPACK compiler variables so that our wrapper knows what to call
     if compiler.cc:
@@ -110,11 +114,23 @@ def set_build_environment_variables(pkg):
     """This ensures a clean install environment when we build packages.
     """
     # Add spack build environment path with compiler wrappers first in
-    # the path.  We handle case sensitivity conflicts like "CC" and
-    # "cc" by putting one in the <build_env_path>/case-insensitive
+    # the path. We add both spack.env_path, which includes default
+    # wrappers (cc, c++, f77, f90), AND a subdirectory containing
+    # compiler-specific symlinks.  The latter ensures that builds that
+    # are sensitive to the *name* of the compiler see the right name
+    # when we're building wtih the wrappers.
+    #
+    # Conflicts on case-insensitive systems (like "CC" and "cc") are
+    # handled by putting one in the <build_env_path>/case-insensitive
     # directory.  Add that to the path too.
-    env_paths = [spack.build_env_path,
-                 join_path(spack.build_env_path, 'case-insensitive')]
+    env_paths = []
+    def add_env_path(path):
+        env_paths.append(path)
+        ci = join_path(path, 'case-insensitive')
+        if os.path.isdir(ci): env_paths.append(ci)
+    add_env_path(spack.build_env_path)
+    add_env_path(join_path(spack.build_env_path, pkg.compiler.name))
+
     path_put_first("PATH", env_paths)
     path_set(SPACK_ENV_PATH, env_paths)
 

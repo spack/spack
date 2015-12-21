@@ -38,6 +38,12 @@ class Xl(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['xlf90','xlf90_r','xlf95','xlf95_r','xlf2003','xlf2003_r','xlf2008','xlf2008_r']
 
+    # Named wrapper links within spack.build_env_path
+    link_paths = { 'cc'  : 'xl/xlc',
+                   'cxx' : 'xl/xlc++',
+                   'f77' : 'xl/xlf',
+                   'fc'  : 'xl/xlf90' }
+
     @property
     def cxx11_flag(self):
         if self.version < ver('13.1'):

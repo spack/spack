@@ -146,7 +146,7 @@ def create(path, specs, **kwargs):
         stage = None
         try:
             # create a subdirectory for the current package@version
-            archive_path = os.path.abspath(join_path(path, mirror_archive_path(spec)))
+            archive_path = os.path.abspath(join_path(mirror_root, mirror_archive_path(spec)))
             subdir = os.path.dirname(archive_path)
             mkdirp(subdir)
 

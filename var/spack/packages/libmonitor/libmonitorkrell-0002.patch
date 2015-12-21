@@ -1,0 +1,106 @@
+--- libmonitor-20130218/src/pmpi.c	2013-02-18 11:34:17.000000000 -0700
++++ libmonitor-20130218-fixed/src/pmpi.c	2013-04-11 10:03:59.300550393 -0600
+@@ -355,7 +355,7 @@
+  */
+ 
+ int
+-MONITOR_WRAP_NAME(PMPI_Pcontrol)(int level)
++MONITOR_WRAP_NAME(PMPI_Pcontrol)(int level, int *ierror ) 
+ {
+     int ret;
+ 
+@@ -375,19 +375,19 @@
+     monitor_mpi_pcontrol(level);
+ 
+ int
+-MONITOR_WRAP_NAME(pmpi_pcontrol)(int level)
++MONITOR_WRAP_NAME(pmpi_pcontrol)(int level, int *ierror )
+ {
+     FORTRAN_PCONTROL_BODY(real_pmpi_pcontrol_f0, pmpi_pcontrol);
+ }
+ 
+ int
+-MONITOR_WRAP_NAME(pmpi_pcontrol_)(int level)
++MONITOR_WRAP_NAME(pmpi_pcontrol_)(int level, int *ierror )
+ {
+     FORTRAN_PCONTROL_BODY(real_pmpi_pcontrol_f1, pmpi_pcontrol_);
+ }
+ 
+ int
+-MONITOR_WRAP_NAME(pmpi_pcontrol__)(int level)
++MONITOR_WRAP_NAME(pmpi_pcontrol__)(int level, int *ierror )
+ {
+     FORTRAN_PCONTROL_BODY(real_pmpi_pcontrol_f2, pmpi_pcontrol__);
+ }
+--- libmonitor-20130218/src/mpi_pcontrol_f0.c	2013-02-18 11:34:17.000000000 -0700
++++ libmonitor-20130218-fixed/src/mpi_pcontrol_f0.c	2013-04-11 10:13:47.783002000 -0600
+@@ -7,18 +7,18 @@
+ #include "common.h"
+ #include "monitor.h"
+ 
+-typedef void mpi_pcontrol_fcn_t(int level);
++typedef void mpi_pcontrol_fcn_t(int level, int *ierror);
+ #ifdef MONITOR_STATIC
+ extern mpi_pcontrol_fcn_t  __real_mpi_pcontrol;
+ #endif
+ static mpi_pcontrol_fcn_t  *real_mpi_pcontrol = NULL;
+ 
+ int
+-MONITOR_WRAP_NAME(mpi_pcontrol)(int level)
++MONITOR_WRAP_NAME(mpi_pcontrol)(int level, int *ierror)
+ {
+     int count;
+ 
+     MONITOR_DEBUG1("\n");
+     MONITOR_GET_REAL_NAME_WRAP(real_mpi_pcontrol, mpi_pcontrol);
+-    (*real_mpi_pcontrol)(level);
++    (*real_mpi_pcontrol)(level, ierror);
+ }
+--- libmonitor-20130218/src/mpi_pcontrol_f1.c	2013-02-18 11:34:17.000000000 -0700
++++ libmonitor-20130218-fixed/src/mpi_pcontrol_f1.c	2013-04-11 10:14:08.039214000 -0600
+@@ -7,18 +7,18 @@
+ #include "common.h"
+ #include "monitor.h"
+ 
+-typedef void mpi_pcontrol_fcn_t(int level);
++typedef void mpi_pcontrol_fcn_t(int level, int *ierror);
+ #ifdef MONITOR_STATIC
+ extern mpi_pcontrol_fcn_t  __real_mpi_pcontrol_;
+ #endif
+ static mpi_pcontrol_fcn_t  *real_mpi_pcontrol = NULL;
+ 
+ int
+-MONITOR_WRAP_NAME(mpi_pcontrol_)(int level)
++MONITOR_WRAP_NAME(mpi_pcontrol_)(int level, int *ierror)
+ {
+     int count;
+ 
+     MONITOR_DEBUG1("\n");
+     MONITOR_GET_REAL_NAME_WRAP(real_mpi_pcontrol, mpi_pcontrol_);
+-    (*real_mpi_pcontrol)(level);
++    (*real_mpi_pcontrol)(level, ierror);
+ }
+--- libmonitor-20130218/src/mpi_pcontrol_f2.c	2013-02-18 11:34:17.000000000 -0700
++++ libmonitor-20130218-fixed/src/mpi_pcontrol_f2.c	2013-04-11 10:14:19.000960000 -0600
+@@ -7,18 +7,18 @@
+ #include "common.h"
+ #include "monitor.h"
+ 
+-typedef void mpi_pcontrol_fcn_t(int level);
++typedef void mpi_pcontrol_fcn_t(int level, int *ierror);
+ #ifdef MONITOR_STATIC
+ extern mpi_pcontrol_fcn_t  __real_mpi_pcontrol__;
+ #endif
+ static mpi_pcontrol_fcn_t  *real_mpi_pcontrol = NULL;
+ 
+ int
+-MONITOR_WRAP_NAME(mpi_pcontrol__)(int level)
++MONITOR_WRAP_NAME(mpi_pcontrol__)(int level, int *ierror)
+ {
+     int count;
+ 
+     MONITOR_DEBUG1("\n");
+     MONITOR_GET_REAL_NAME_WRAP(real_mpi_pcontrol, mpi_pcontrol__);
+-    (*real_mpi_pcontrol)(level);
++    (*real_mpi_pcontrol)(level, ierror);
+ }

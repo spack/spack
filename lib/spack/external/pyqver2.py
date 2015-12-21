@@ -30,7 +30,8 @@ import sys
 StandardModules = {
     "__future__":       (2, 1),
     "abc":              (2, 6),
-    "argparse":         (2, 7),
+# skip argparse now that it's in lib/spack/external
+#    "argparse":         (2, 7),
     "ast":              (2, 6),
     "atexit":           (2, 0),
     "bz2":              (2, 3),
