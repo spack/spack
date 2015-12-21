@@ -15,15 +15,17 @@ class Hwloc(Package):
     homepage = "http://www.open-mpi.org/projects/hwloc/"
     url      = "http://www.open-mpi.org/software/hwloc/v1.9/downloads/hwloc-1.9.tar.gz"
 
+    version('1.11.2', '486169cbe111cdea57be12638828ebbf',
+            url='http://www.open-mpi.org/software/hwloc/v1.11/downloads/hwloc-1.11.2.tar.bz2')
     version('1.11.1', '002742efd3a8431f98d6315365a2b543',
             url='http://www.open-mpi.org/software/hwloc/v1.11/downloads/hwloc-1.11.1.tar.bz2')
     version('1.9', '1f9f9155682fe8946a97c08896109508')
 
-    depends_on('libpciaccess')
+    # libpciaccess is not supported on OS X
+    depends_on('libpciaccess', when='=linux')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
 
         make()
         make("install")
-
