@@ -112,7 +112,7 @@ def partition_list(elements, predicate):
 
 def caller_locals():
     """This will return the locals of the *parent* of the caller.
-       This allows a fucntion to insert variables into its caller's
+       This allows a function to insert variables into its caller's
        scope.  Yes, this is some black magic, and yes it's useful
        for implementing things like depends_on and provides.
     """
