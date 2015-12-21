@@ -42,6 +42,12 @@ class Gcc(Compiler):
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
     suffixes = [r'-mp-\d\.\d']
 
+    # Named wrapper links within spack.build_env_path
+    link_paths = {'cc'  : 'gcc/gcc',
+                  'cxx' : 'gcc/g++',
+                  'f77' : 'gcc/gfortran',
+                  'fc'  : 'gcc/gfortran' }
+
     @property
     def cxx11_flag(self):
         if self.version < ver('4.3'):
