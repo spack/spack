@@ -65,7 +65,7 @@ function die {
 }
 
 for param in $parameters; do
-    if [ -z "${!param}" ]; then
+    if [[ -z ${!param} ]]; then
         die "Spack compiler must be run from spack!  Input $param was missing!"
     fi
 done
@@ -114,104 +114,118 @@ case "$command" in
 esac
 
 # Finish setting up the mode.
-if [ -z "$mode" ]; then
+if [[ -z $mode ]]; then
     mode=ccld
     for arg in "$@"; do
-        if [ "$arg" = -v -o "$arg" = -V -o "$arg" = --version -o "$arg" = -dumpversion ]; then
-            mode=vcheck
-            break
-        elif [ "$arg" = -E ]; then
-            mode=cpp
-            break
-        elif [ "$arg" = -c ]; then
-            mode=cc
-            break
-        fi
+        case "$arg" in
+            -v|-V|--version|-dumpversion)
+                mode=vcheck
+                break
+                ;;
+            -E)
+                mode=cpp
+                break
+                ;;
+            -c)
+                mode=cc
+                break
+                ;;
+            -S)
+                mode=as
+                break
+                ;;
+        esac
     done
 fi
 
 # Dump the version and exist if we're in testing mode.
-if [ "$SPACK_TEST_COMMAND" = "dump-mode" ]; then
+if [[ $SPACK_TEST_COMMAND = dump-mode ]]; then
     echo "$mode"
     exit
 fi
 
 # Check that at least one of the real commands was actually selected,
 # otherwise we don't know what to execute.
-if [ -z "$command" ]; then
+if [[ -z $command ]]; then
     die "ERROR: Compiler '$SPACK_COMPILER_SPEC' does not support compiling $language programs."
 fi
 
 # Save original command for debug logging
 input_command="$@"
-
-#
-# Now do real parsing of the command line args, trying hard to keep
-# non-rpath linker arguments in the proper order w.r.t. other command
-# line arguments.  This is important for things like groups.
-#
-includes=()
-libraries=()
-libs=()
-rpaths=()
-other_args=()
-
-while [ -n "$1" ]; do
-    case "$1" in
-        -I*)
-            arg="${1#-I}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            includes+=("$arg")
-            ;;
-        -L*)
-            arg="${1#-L}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            libraries+=("$arg")
-            ;;
-        -l*)
-            arg="${1#-l}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            libs+=("$arg")
-            ;;
-        -Wl,*)
-            arg="${1#-Wl,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if [[ "$arg" = -rpath=* ]]; then
-                rpaths+=("${arg#-rpath=}")
-            elif [[ "$arg" = -rpath ]]; then
-                shift; arg="$1"
-                if [[ "$arg" != -Wl,* ]]; then
-                    die "-Wl,-rpath was not followed by -Wl,*"
-                fi
-                rpaths+=("${arg#-Wl,}")
-            else
-                other_args+=("-Wl,$arg")
-            fi
-            ;;
-        -Xlinker,*)
-            arg="${1#-Xlinker,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if [[ "$arg" = -rpath=* ]]; then
-                rpaths+=("${arg#-rpath=}")
-            elif [[ "$arg" = -rpath ]]; then
-                shift; arg="$1"
-                if [[ "$arg" != -Xlinker,* ]]; then
-                    die "-Xlinker,-rpath was not followed by -Xlinker,*"
-                fi
-                rpaths+=("${arg#-Xlinker,}")
-            else
-                other_args+=("-Xlinker,$arg")
-            fi
-            ;;
-        *)
-            other_args+=("$1")
-            ;;
-    esac
-    shift
-done
+args=("$@")
 
 # Dump parsed values for unit testing if asked for
-if [ -n "$SPACK_TEST_COMMAND" ]; then
+if [[ -n $SPACK_TEST_COMMAND ]]; then
+
+    #
+    # Now do real parsing of the command line args, trying hard to keep
+    # non-rpath linker arguments in the proper order w.r.t. other command line
+    # arguments.  This is important for things like groups.
+    #
+    includes=()
+    libraries=()
+    libs=()
+    rpaths=()
+    other_args=()
+
+    while [[ -n $1 ]]; do
+        case "$1" in
+            -I*)
+                arg="${1#-I}"
+                if [[ -z $arg ]]; then shift; arg="$1"; fi
+                includes+=("$arg")
+                ;;
+            -L*)
+                arg="${1#-L}"
+                if [[ -z $arg ]]; then shift; arg="$1"; fi
+                libraries+=("$arg")
+                ;;
+            -l*)
+                arg="${1#-l}"
+                if [[ -z $arg ]]; then shift; arg="$1"; fi
+                libs+=("$arg")
+                ;;
+            -Wl,*)
+                arg="${1#-Wl,}"
+                if [[ -z $arg ]]; then shift; arg="$1"; fi
+                if [[ $arg = -rpath=* ]]; then
+                    rpaths+=("${arg#-rpath=}")
+                elif [[ $arg = -rpath,* ]]; then
+                    rpaths+=("${arg#-rpath,}")
+                elif [[ $arg = -rpath ]]; then
+                    shift; arg="$1"
+                    if [[ $arg != -Wl,* ]]; then
+                        die "-Wl,-rpath was not followed by -Wl,*"
+                    fi
+                    rpaths+=("${arg#-Wl,}")
+                else
+                    other_args+=("-Wl,$arg")
+                fi
+                ;;
+            -Xlinker,*)
+                arg="${1#-Xlinker,}"
+                if [[ -z $arg ]]; then shift; arg="$1"; fi
+                if [[ $arg = -rpath=* ]]; then
+                    rpaths+=("${arg#-rpath=}")
+                elif [[ $arg = -rpath,* ]]; then
+                    rpaths+=("${arg#-rpath,}")
+                elif [[ $arg = -rpath ]]; then
+                    shift; arg="$1"
+                    if [[ $arg != -Xlinker,* ]]; then
+                        die "-Xlinker,-rpath was not followed by -Xlinker,*"
+                    fi
+                    rpaths+=("${arg#-Xlinker,}")
+                else
+                    other_args+=("-Xlinker,$arg")
+                fi
+                ;;
+            *)
+                other_args+=("$1")
+                ;;
+        esac
+        shift
+    done
+
     IFS=$'\n'
     case "$SPACK_TEST_COMMAND" in
         dump-includes)   echo "${includes[*]}";;
@@ -236,8 +250,8 @@ if [ -n "$SPACK_TEST_COMMAND" ]; then
             echo "${other_args[*]}"
             ;;
         *)
-            echo "ERROR: Unknown test command"
-            exit 1 ;;
+            die "ERROR: Unknown test command"
+            ;;
     esac
     exit
 fi
@@ -245,45 +259,44 @@ fi
 # Read spack dependencies from the path environment variable
 IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
 for dep in "${deps[@]}"; do
-    if [ -d "$dep/include" ]; then
-        includes+=("$dep/include")
+    if [[ -d $dep/include ]]; then
+        args=("-I$dep/include" "${args[@]}")
     fi
 
-    if [ -d "$dep/lib" ]; then
-        libraries+=("$dep/lib")
-        rpaths+=("$dep/lib")
+    if [[ -d $dep/lib ]]; then
+        # libraries+=("$dep/lib")
+	    if [[ $mode = ccld ]]; then
+            args=("-L$dep/lib" "-Wl,-rpath,$dep/lib" "${args[@]}")
+        elif [[ $mode = ld ]]; then
+            args=("-L$dep/lib" "-rpath" "$dep/lib" "${args[@]}")
+        fi
     fi
 
-    if [ -d "$dep/lib64" ]; then
-        libraries+=("$dep/lib64")
-        rpaths+=("$dep/lib64")
+    if [[ -d $dep/lib64 ]]; then
+        # libraries+=("$dep/lib64")
+        if [[ $mode = ccld ]]; then
+            args=("-L$dep/lib" "-Wl,-rpath,$dep/lib" "${args[@]}")
+        elif [[ $mode = ld ]]; then
+            args=("-L$dep/lib" "-rpath" "$dep/lib" "${args[@]}")
+        fi
     fi
 done
 
 # Include all -L's and prefix/whatever dirs in rpath
-for dir in "${libraries[@]}"; do
-    [[ dir = $SPACK_INSTALL* ]] && rpaths+=("$dir")
-done
-rpaths+=("$SPACK_PREFIX/lib")
-rpaths+=("$SPACK_PREFIX/lib64")
-
-# Put the arguments together
-args=()
-for dir in "${includes[@]}";  do args+=("-I$dir"); done
-args+=("${other_args[@]}")
-for dir in "${libraries[@]}"; do args+=("-L$dir"); done
-for lib in "${libs[@]}";      do args+=("-l$lib"); done
-
-if [ "$mode" = ccld ]; then
-    for dir in "${rpaths[@]}"; do
-        args+=("-Wl,-rpath")
-        args+=("-Wl,$dir");
-    done
-elif [ "$mode" = ld ]; then
-    for dir in "${rpaths[@]}"; do
-        args+=("-rpath")
-        args+=("$dir");
-    done
+if [[ $mode = ccld ]]; then
+    # for dir in "${libraries[@]}"; do
+    #     if [[ dir = $SPACK_INSTALL* ]]; then
+    #         args=("-Wl,-rpath,$dir" "${args[@]}")
+    #     fi
+    # done
+    args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" ${args[@]})
+elif [[ $mode = ld ]]; then
+    # for dir in "${libraries[@]}"; do
+    #     if [[ dir = $SPACK_INSTALL* ]]; then
+    #         args=("-rpath" "$dir" "${args[@]}")
+    #     fi
+    # done
+    args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" ${args[@]})
 fi
 
 #
@@ -299,19 +312,15 @@ unset DYLD_LIBRARY_PATH
 #
 IFS=':' read -ra env_path <<< "$PATH"
 IFS=':' read -ra spack_env_dirs <<< "$SPACK_ENV_PATH"
-spack_env_dirs+=(".")
+spack_env_dirs+=("" ".")
 PATH=""
 for dir in "${env_path[@]}"; do
     remove=""
     for rm_dir in "${spack_env_dirs[@]}"; do
-        if [ "$dir" = "$rm_dir" ]; then remove=True; fi
+        if [[ $dir = $rm_dir ]]; then remove=True; fi
     done
-    if [ -z "$remove" ]; then
-        if [ -z "$PATH" ]; then
-            PATH="$dir"
-        else
-            PATH="$PATH:$dir"
-        fi
+    if [[ -z $remove ]]; then
+        PATH="${PATH:+$PATH:}$dir"
     fi
 done
 export PATH
@@ -322,10 +331,10 @@ full_command+=("${args[@]}")
 #
 # Write the input and output commands to debug logs if it's asked for.
 #
-if [ "$SPACK_DEBUG" = "TRUE" ]; then
+if [[ $SPACK_DEBUG = TRUE ]]; then
     input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.in.log"
     output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.out.log"
-    echo "$input_command"     >> $input_log
+    echo "$input_command" >> $input_log
     echo "$mode       ${full_command[@]}" >> $output_log
 fi
 
