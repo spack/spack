@@ -44,7 +44,7 @@ class Scalasca(Package):
 
     depends_on("mpi")
     ##########
-    # Fix dependencies for Scalasca according to what stated in the release page
+    # Hard-code dependencies for Scalasca according to what stated in the release page
     # The OTF2 library path should be detected automatically from SCOREP
     # SCALASCA 2.2.2
     depends_on("scorep@1.4:", when='@2.2.2')
