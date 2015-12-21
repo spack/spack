@@ -112,8 +112,9 @@ use_tmp_stage = True
 tmp_dirs = []
 _default_tmp = tempfile.gettempdir()
 if _default_tmp != os.getcwd():
-    tmp_dirs.append(os.path.join(_default_tmp, 'spack-stage'))
-tmp_dirs.append('/nfs/tmp2/%u/spack-stage')
+    tmp_dirs = [ join_path(_default_tmp, '%u', 'spack-stage'),
+                 join_path(_default_tmp, 'spack-stage') ]
+tmp_dirs.append('/nfs/tmp2/%u/spack-stage') # TODO: remove
 
 # Whether spack should allow installation of unsafe versions of
 # software.  "Unsafe" versions are ones it doesn't have a checksum
