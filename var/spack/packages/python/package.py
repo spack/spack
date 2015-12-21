@@ -17,7 +17,9 @@ class Python(Package):
 
     version('2.7.8', 'd235bdfa75b8396942e360a70487ee00')
     version('2.7.10', 'c685ef0b8e9f27b5e3db5db12b268ac6')
+    version('2.7.11', '1dbcc848b4cd8399a8199d000f9f823c')
     version('3.5.0', 'd149d2812f10cbe04c042232e7964171')
+    version('3.5.1', 'e9ea6f2623fffcdd871b7b19113fde80')
 
     depends_on("openssl")
     depends_on("bzip2")
