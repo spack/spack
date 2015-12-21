@@ -2,6 +2,7 @@ import os
 import re
 from contextlib import closing
 from llnl.util.lang import match_predicate
+from spack.util.environment import *
 
 from spack import *
 import spack
@@ -16,22 +17,33 @@ class Python(Package):
 
     version('2.7.8', 'd235bdfa75b8396942e360a70487ee00')
     version('2.7.10', 'c685ef0b8e9f27b5e3db5db12b268ac6')
+    version('3.5.0', 'd149d2812f10cbe04c042232e7964171')
 
     depends_on("openssl")
     depends_on("bzip2")
     depends_on("readline")
     depends_on("ncurses")
     depends_on("sqlite")
+    depends_on("zlib")
 
     def install(self, spec, prefix):
         # Need this to allow python build to find the Python installation.
         env['PYTHONHOME'] = prefix
         env['MACOSX_DEPLOYMENT_TARGET'] = '10.6'
 
-        # Rest of install is pretty standard.
+        # Rest of install is pretty standard except setup.py needs to be able to read the CPPFLAGS
+        # and LDFLAGS as it scans for the library and headers to build
         configure("--prefix=%s" % prefix,
                   "--with-threads",
-                  "--enable-shared")
+                  "--enable-shared",
+                  "CPPFLAGS=-I%s/include -I%s/include -I%s/include -I%s/include -I%s/include -I%s/include" % (
+                       spec['openssl'].prefix, spec['bzip2'].prefix,
+                       spec['readline'].prefix, spec['ncurses'].prefix,
+                       spec['sqlite'].prefix, spec['zlib'].prefix),
+                  "LDFLAGS=-L%s/lib -L%s/lib -L%s/lib -L%s/lib -L%s/lib -L%s/lib" % (
+                       spec['openssl'].prefix, spec['bzip2'].prefix,
+                       spec['readline'].prefix, spec['ncurses'].prefix,
+                       spec['sqlite'].prefix, spec['zlib'].prefix))
         make()
         make("install")
 
@@ -63,7 +75,10 @@ class Python(Package):
             python('setup.py', 'install', '--prefix=%s' % prefix)
         """
         # Python extension builds can have a global python executable function
-        module.python = Executable(join_path(spec.prefix.bin, 'python'))
+        if self.version >= Version("3.0.0") and self.version < Version("4.0.0"):
+            module.python = Executable(join_path(spec.prefix.bin, 'python3'))
+        else:
+            module.python = Executable(join_path(spec.prefix.bin, 'python'))
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
         module.python_lib_dir     = os.path.join(ext_spec.prefix, self.python_lib_dir)
