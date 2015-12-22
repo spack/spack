@@ -21,8 +21,7 @@ class Hwloc(Package):
             url='http://www.open-mpi.org/software/hwloc/v1.11/downloads/hwloc-1.11.1.tar.bz2')
     version('1.9', '1f9f9155682fe8946a97c08896109508')
 
-    # libpciaccess is not supported on OS X
-    depends_on('libpciaccess', when='=linux')
+    depends_on('libpciaccess')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
