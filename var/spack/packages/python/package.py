@@ -17,7 +17,9 @@ class Python(Package):
 
     version('2.7.8', 'd235bdfa75b8396942e360a70487ee00')
     version('2.7.10', 'c685ef0b8e9f27b5e3db5db12b268ac6')
+    version('2.7.11', '1dbcc848b4cd8399a8199d000f9f823c', preferred=True)
     version('3.5.0', 'd149d2812f10cbe04c042232e7964171')
+    version('3.5.1', 'e9ea6f2623fffcdd871b7b19113fde80')
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -33,7 +35,8 @@ class Python(Package):
 
         # Rest of install is pretty standard except setup.py needs to be able to read the CPPFLAGS
         # and LDFLAGS as it scans for the library and headers to build
-        configure("--prefix=%s" % prefix,
+        configure_args= [
+                  "--prefix=%s" % prefix,
                   "--with-threads",
                   "--enable-shared",
                   "CPPFLAGS=-I%s/include -I%s/include -I%s/include -I%s/include -I%s/include -I%s/include" % (
@@ -43,7 +46,11 @@ class Python(Package):
                   "LDFLAGS=-L%s/lib -L%s/lib -L%s/lib -L%s/lib -L%s/lib -L%s/lib" % (
                        spec['openssl'].prefix, spec['bzip2'].prefix,
                        spec['readline'].prefix, spec['ncurses'].prefix,
-                       spec['sqlite'].prefix, spec['zlib'].prefix))
+                       spec['sqlite'].prefix, spec['zlib'].prefix)
+                  ]
+        if spec.satisfies('@3:'):
+            configure_args.append('--without-ensurepip')
+        configure(*configure_args)
         make()
         make("install")
 
@@ -110,7 +117,7 @@ class Python(Package):
 
         # Ignore pieces of setuptools installed by other packages.
         if ext_pkg.name != 'py-setuptools':
-            patterns.append(r'/site\.pyc?$')
+            patterns.append(r'/site[^/]*\.pyc?$')
             patterns.append(r'setuptools\.pth')
             patterns.append(r'bin/easy_install[^/]*$')
             patterns.append(r'setuptools.*egg$')

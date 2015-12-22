@@ -13,13 +13,6 @@ class PyNumpy(Package):
     depends_on('netlib-blas+fpic')
     depends_on('netlib-lapack+shared')
 
-    def patch(self):
-        filter_file(
-            "possible_executables = \['(gfortran|g77|ifort|efl)",
-            "possible_executables = ['fc",
-            "numpy/distutils/fcompiler/gnu.py",
-            "numpy/distutils/fcompiler/intel.py")
-
     def install(self, spec, prefix):
         with open('site.cfg', 'w') as f:
             f.write('[DEFAULT]\n')
