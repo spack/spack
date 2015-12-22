@@ -1,4 +1,5 @@
 from spack import *
+import os.path
 
 class Libpciaccess(Package):
     """Generic PCI access library."""
@@ -13,6 +14,12 @@ class Libpciaccess(Package):
     depends_on('libtool')
 
     def install(self, spec, prefix):
+        # libpciaccess does not support OS X
+        if spec.satisfies('=darwin-x86_64'):
+            # create a dummy directory
+            mkdir(prefix.lib)
+            return
+
         from subprocess import call
         call(["./autogen.sh"])
         configure("--prefix=%s" % prefix)
