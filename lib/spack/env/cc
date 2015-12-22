@@ -265,7 +265,7 @@ for dep in "${deps[@]}"; do
 
     if [[ -d $dep/lib ]]; then
         # libraries+=("$dep/lib")
-	    if [[ $mode = ccld ]]; then
+        if [[ $mode = ccld ]]; then
             args=("-L$dep/lib" "-Wl,-rpath,$dep/lib" "${args[@]}")
         elif [[ $mode = ld ]]; then
             args=("-L$dep/lib" "-rpath" "$dep/lib" "${args[@]}")
@@ -289,14 +289,14 @@ if [[ $mode = ccld ]]; then
     #         args=("-Wl,-rpath,$dir" "${args[@]}")
     #     fi
     # done
-    args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" ${args[@]})
+    args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" "${args[@]}")
 elif [[ $mode = ld ]]; then
     # for dir in "${libraries[@]}"; do
     #     if [[ dir = $SPACK_INSTALL* ]]; then
     #         args=("-rpath" "$dir" "${args[@]}")
     #     fi
     # done
-    args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" ${args[@]})
+    args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
 fi
 
 #
@@ -325,8 +325,7 @@ for dir in "${env_path[@]}"; do
 done
 export PATH
 
-full_command=("$command")
-full_command+=("${args[@]}")
+full_command=("$command" "${args[@]}")
 
 #
 # Write the input and output commands to debug logs if it's asked for.
