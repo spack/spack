@@ -40,7 +40,6 @@ import spack.error
 from spack.version import *
 
 
-
 class DefaultConcretizer(object):
     """This class doesn't have any state, it just provides some methods for
        concretization.  You can subclass it to override just some of the
@@ -68,9 +67,17 @@ class DefaultConcretizer(object):
         # If there are known available versions, return the most recent
         # version that satisfies the spec
         pkg = spec.package
+
+        # Key function to sort versions first by whether they were
+        # marked `preferred=True`, then by most recent.
+        def preferred_key(v):
+            prefer = pkg.versions[v].get('preferred', False)
+            return (prefer, v)
+
         valid_versions = sorted(
             [v for v in pkg.versions
-             if any(v.satisfies(sv) for sv in spec.versions)])
+             if any(v.satisfies(sv) for sv in spec.versions)],
+            key=preferred_key)
 
         if valid_versions:
             spec.versions = ver([valid_versions[-1]])
