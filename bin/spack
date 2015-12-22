@@ -150,7 +150,7 @@ def main():
         sys.stderr.write('\n')
         tty.die("Keyboard interrupt.")
 
-    # Allow commands to return values if they want to exit with some ohter code.
+    # Allow commands to return values if they want to exit with some other code.
     if return_val is None:
         sys.exit(0)
     elif isinstance(return_val, int):

@@ -42,13 +42,31 @@ class Llvm(Package):
 
     depends_on('python@2.7:')
 
+    variant('libcxx', default=False, description="Builds the LLVM Standard C++ library targeting C++11")
+
+    ##########
+    # @3.7.0
+    resource(name='compiler-rt',
+             url='http://llvm.org/releases/3.7.0/compiler-rt-3.7.0.src.tar.xz', md5='383c10affd513026f08936b5525523f5',
+             destination='projects', when='@3.7.0')
+    resource(name='openmp',
+             url='http://llvm.org/releases/3.7.0/openmp-3.7.0.src.tar.xz', md5='f482c86fdead50ba246a1a2b0bbf206f',
+             destination='projects', when='@3.7.0')
+    resource(name='libcxx',
+             url='http://llvm.org/releases/3.7.0/libcxx-3.7.0.src.tar.xz', md5='46aa5175cbe1ad42d6e9c995968e56dd',
+             destination='projects', placement='libcxx', when='+libcxx@3.7.0')
+    resource(name='libcxxabi',
+             url='http://llvm.org/releases/3.7.0/libcxxabi-3.7.0.src.tar.xz', md5='5aa769e2fca79fa5335cfae8f6258772',
+             destination='projects', placement='libcxxabi', when='+libcxx@3.7.0')
+    ##########
+
     def install(self, spec, prefix):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
 
         with working_dir('spack-build', create=True):
             cmake('..',
-                  '-DLLVM_REQUIRES_RTTI=1',
-                  '-DPYTHON_EXECUTABLE=%s/bin/python' % spec['python'].prefix,
+                  '-DLLVM_REQUIRES_RTTI:BOOL=ON',
+                  '-DPYTHON_EXECUTABLE:PATH=%s/bin/python' % spec['python'].prefix,
                   *std_cmake_args)
             make()
             make("install")

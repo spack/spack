@@ -26,16 +26,14 @@ class Hdf5(Package):
         if '+mpi' in spec:
             extra_args.extend([
                 "--enable-parallel",
-                "CC=%s" % spec['mpich'].prefix.bin + "/mpicc",
-                "CXX=%s" % spec['mpich'].prefix.bin + "/mpic++",
+                "CC=%s" % spec['mpi'].prefix.bin + "/mpicc",
+                "CXX=%s" % spec['mpi'].prefix.bin + "/mpic++",
             ])
 
         configure(
             "--prefix=%s" % prefix,
             "--with-zlib=%s" % spec['zlib'].prefix,
             "--enable-shared",
-            "CC=%s" % spec['mpi'].prefix.bin + "/mpicc",
-            "CXX=%s" % spec['mpi'].prefix.bin + "/mpic++",
             *extra_args)
 
         make()
