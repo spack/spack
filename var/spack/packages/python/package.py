@@ -35,7 +35,8 @@ class Python(Package):
 
         # Rest of install is pretty standard except setup.py needs to be able to read the CPPFLAGS
         # and LDFLAGS as it scans for the library and headers to build
-        configure("--prefix=%s" % prefix,
+        configure_args= [
+                  "--prefix=%s" % prefix,
                   "--with-threads",
                   "--enable-shared",
                   "CPPFLAGS=-I%s/include -I%s/include -I%s/include -I%s/include -I%s/include -I%s/include" % (
@@ -45,7 +46,11 @@ class Python(Package):
                   "LDFLAGS=-L%s/lib -L%s/lib -L%s/lib -L%s/lib -L%s/lib -L%s/lib" % (
                        spec['openssl'].prefix, spec['bzip2'].prefix,
                        spec['readline'].prefix, spec['ncurses'].prefix,
-                       spec['sqlite'].prefix, spec['zlib'].prefix))
+                       spec['sqlite'].prefix, spec['zlib'].prefix)
+                  ]
+        if spec.satisfies('@3:'):
+            configure_args.append('--without-ensurepip')
+        configure(*configure_args)
         make()
         make("install")
 
@@ -116,6 +121,7 @@ class Python(Package):
             patterns.append(r'setuptools\.pth')
             patterns.append(r'bin/easy_install[^/]*$')
             patterns.append(r'setuptools.*egg$')
+        patterns.append(r'__pycache__/.*.pyc$')
 
         return match_predicate(ignore_arg, patterns)
 
