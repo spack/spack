@@ -24,6 +24,7 @@
 ##############################################################################
 import os
 import tempfile
+import getpass
 from llnl.util.filesystem import *
 
 # This lives in $prefix/lib/spack/spack/__file__
@@ -111,10 +112,17 @@ use_tmp_stage = True
 # that it can create.
 tmp_dirs = []
 _default_tmp = tempfile.gettempdir()
-if _default_tmp != os.getcwd():
-    tmp_dirs = [ join_path(_default_tmp, '%u', 'spack-stage'),
-                 join_path(_default_tmp, 'spack-stage') ]
-tmp_dirs.append('/nfs/tmp2/%u/spack-stage') # TODO: remove
+_tmp_user = getpass.getuser()
+
+_tmp_candidates = (_default_tmp, '/nfs/tmp2', '/tmp', '/var/tmp')
+for path in _tmp_candidates:
+    # don't add a second username if it's already unique by user.
+    if not _tmp_user in path:
+        tmp_dirs.append(join_path(path, '%u', 'spack-stage'))
+
+for path in _tmp_candidates:
+    if not path in tmp_dirs:
+        tmp_dirs.append(join_path(path, 'spack-stage'))
 
 # Whether spack should allow installation of unsafe versions of
 # software.  "Unsafe" versions are ones it doesn't have a checksum
