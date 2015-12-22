@@ -117,11 +117,10 @@ class Python(Package):
 
         # Ignore pieces of setuptools installed by other packages.
         if ext_pkg.name != 'py-setuptools':
-            patterns.append(r'/site\.pyc?$')
+            patterns.append(r'/site.*\.pyc?$')
             patterns.append(r'setuptools\.pth')
             patterns.append(r'bin/easy_install[^/]*$')
             patterns.append(r'setuptools.*egg$')
-        patterns.append(r'__pycache__/.*.pyc$')
 
         return match_predicate(ignore_arg, patterns)
 
