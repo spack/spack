@@ -17,12 +17,24 @@ class Openssl(Package):
     parallel = False
 
     def install(self, spec, prefix):
-        config = Executable("./config")
-        config("--prefix=%s" % prefix,
-               "--openssldir=%s/etc/openssl" % prefix,
-               "zlib",
-               "no-krb5",
-               "shared")
+        if spec.satisfies("=darwin-x86_64"):
+            perl = which('perl')
+            perl("./Configure",
+                 "--prefix=%s" % prefix,
+                 "--openssldir=%s/etc/openssl" % prefix,
+                 "zlib",
+                 "no-krb5",
+                 "shared",
+                 "darwin64-x86_64-cc")
+            perl('-pi', '-e', 's/-arch x86_64//g', 'Makefile')
+        else:
+            exit(1)
+            config = Executable("./config")
+            config("--prefix=%s" % prefix,
+                   "--openssldir=%s/etc/openssl" % prefix,
+                   "zlib",
+                   "no-krb5",
+                   "shared")
 
         make()
         make("install")
