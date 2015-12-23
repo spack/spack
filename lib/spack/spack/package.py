@@ -1224,9 +1224,10 @@ def find_versions_of_archive(*archive_urls, **kwargs):
     for page_url, content in page_map.iteritems():
         # extract versions from matches.
         for regex in regexes:
-            versions.update(
-                (Version(m.group(1)), urljoin(page_url, m.group(0)))
-                for m in re.finditer(regex, content))
+            for m in re.finditer(regex, content):
+                url = urljoin(page_url, m.group(0))
+                ver = spack.url.parse_version(url)
+                versions[ver] = url
 
     return versions
 
