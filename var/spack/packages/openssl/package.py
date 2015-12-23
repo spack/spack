@@ -28,7 +28,6 @@ class Openssl(Package):
                  "darwin64-x86_64-cc")
             perl('-pi', '-e', 's/-arch x86_64//g', 'Makefile')
         else:
-            exit(1)
             config = Executable("./config")
             config("--prefix=%s" % prefix,
                    "--openssldir=%s/etc/openssl" % prefix,
