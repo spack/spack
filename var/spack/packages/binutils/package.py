@@ -16,6 +16,16 @@ class Binutils(Package):
     variant('libiberty', default=False, description='Also install libiberty.')
 
     def install(self, spec, prefix):
+        # Binutils are only partially supported on Darwin. Important tools (as,
+        # ld) do not work. Since there are also some build problems I couldn't
+        # figure out, I'm disabling binutils on Darwin completely. On Darwin,
+        # one should generally use either Apple's systems tools, or -- since
+        # Apple supports LLVM -- the ones provided by LLVM.
+        if spec.satisfies("=darwin-x86_64"):
+            # "Install" a dummy directory
+            mkdirp(prefix.lib)
+            return
+
         configure_args = [
             '--prefix=%s' % prefix,
             '--disable-dependency-tracking',

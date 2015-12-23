@@ -36,9 +36,7 @@ class Gcc(Package):
     list_url = 'http://open-source-box.org/gcc/'
     list_depth = 2
 
-    # Binutils does not build properly on OS X
-    DEPENDS_ON_BINUTILS_PREDICATE = '=linux'
-    DEPENDS_ON_ISL_PREDICATE = '@5.0:'
+    want_isl = '@5.0:'
 
     version('5.3.0', 'c9616fd448f980259c31de613e575719')
     version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
@@ -51,14 +49,14 @@ class Gcc(Package):
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
-    depends_on("binutils~libiberty", when=DEPENDS_ON_BINUTILS_PREDICATE)
+    depends_on("binutils~libiberty")
 
     depends_on("mpfr")
     depends_on("gmp")
     depends_on("mpc")     # when @4.5:
 
     # Save these until we can do optional deps.
-    depends_on("isl", when=DEPENDS_ON_ISL_PREDICATE)
+    depends_on("isl", when=want_isl)
     #depends_on("ppl")
     #depends_on("cloog")
 
@@ -68,7 +66,7 @@ class Gcc(Package):
             string=True)
 
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
-        # The Go frontend is not supported on OSX
+        # The Go frontend is not supported on Darwin
         if spec.satisfies("=linux @4.7.1:"):
             enabled_languages.add('go')
 
@@ -77,14 +75,15 @@ class Gcc(Package):
                    "--libdir=%s/lib64" % prefix,
                    "--disable-multilib",
                    "--enable-lto",
-                   "--enable-languages=" + ','.join(enabled_languages),
+                   "--enable-languages=%s" % ','.join(enabled_languages),
                    "--with-mpc=%s" % spec['mpc'].prefix,
                    "--with-mpfr=%s" % spec['mpfr'].prefix,
                    "--with-gmp=%s" % spec['gmp'].prefix,
                    "--with-quad"]
 
         # Binutils
-        if spec.satisfies(Gcc.DEPENDS_ON_BINUTILS_PREDICATE):
+        if not spec.satisfies("=darwin-x86_64"):
+            # Binutils are neither necessary nor working on Darwin
             static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
             binutils_options = ["--with-sysroot=/",
                                 "--with-stage1-ldflags=%s %s" %
@@ -94,9 +93,9 @@ class Gcc(Package):
                                 "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
                                 "--with-as=%s/bin/as" % spec['binutils'].prefix]
             options.extend(binutils_options)
-        # Isl
 
-        if spec.satisfies(Gcc.DEPENDS_ON_ISL_PREDICATE):
+        # ISL
+        if spec.satisfies(Gcc.want_isl):
             isl_options = ["--with-isl=%s" % spec['isl'].prefix]
             options.extend(isl_options)
 
