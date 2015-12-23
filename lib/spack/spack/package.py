@@ -1164,7 +1164,7 @@ class Package(object):
             raise VersionFetchError(self.__class__)
 
         try:
-            return find_versions_of_archive(
+            return spack.util.web.find_versions_of_archive(
                 *self.all_urls, list_url=self.list_url, list_depth=self.list_depth)
         except spack.error.NoNetworkConnectionError, e:
             tty.die("Package.fetch_versions couldn't connect to:",
@@ -1186,50 +1186,6 @@ class Package(object):
     def rpath_args(self):
         """Get the rpath args as a string, with -Wl,-rpath= for each element."""
         return " ".join("-Wl,-rpath=%s" % p for p in self.rpath)
-
-
-def find_versions_of_archive(*archive_urls, **kwargs):
-    list_url   = kwargs.get('list_url', None)
-    list_depth = kwargs.get('list_depth', 1)
-
-    # Generate a list of list_urls based on archive urls and any
-    # explicitly listed list_url in the package
-    list_urls = set()
-    if list_url:
-        list_urls.add(list_url)
-    for aurl in archive_urls:
-        list_urls.add(spack.url.find_list_url(aurl))
-
-    # Grab some web pages to scrape.
-    page_map = {}
-    for lurl in list_urls:
-        pages = spack.util.web.get_pages(lurl, depth=list_depth)
-        page_map.update(pages)
-
-    # Scrape them for archive URLs
-    regexes = []
-    for aurl in archive_urls:
-        # This creates a regex from the URL with a capture group for
-        # the version part of the URL.  The capture group is converted
-        # to a generic wildcard, so we can use this to extract things
-        # on a page that look like archive URLs.
-        url_regex = spack.url.wildcard_version(aurl)
-
-        # We'll be a bit more liberal and just look for the archive
-        # part, not the full path.
-        regexes.append(os.path.basename(url_regex))
-
-    # Build a version list from all the matches we find
-    versions = {}
-    for page_url, content in page_map.iteritems():
-        # extract versions from matches.
-        for regex in regexes:
-            for m in re.finditer(regex, content):
-                url = urljoin(page_url, m.group(0))
-                ver = spack.url.parse_version(url)
-                versions[ver] = url
-
-    return versions
 
 
 def validate_package_url(url_string):
