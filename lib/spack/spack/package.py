@@ -1200,8 +1200,6 @@ def find_versions_of_archive(*archive_urls, **kwargs):
     for aurl in archive_urls:
         list_urls.add(spack.url.find_list_url(aurl))
 
-    print list_urls
-
     # Grab some web pages to scrape.
     page_map = {}
     for lurl in list_urls:
@@ -1226,9 +1224,6 @@ def find_versions_of_archive(*archive_urls, **kwargs):
     for page_url, content in page_map.iteritems():
         # extract versions from matches.
         for regex in regexes:
-            print regex
-            print
-
             for m in re.finditer(regex, content):
                 url = urljoin(page_url, m.group(0))
                 ver = spack.url.parse_version(url)
