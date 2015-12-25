@@ -26,7 +26,7 @@ class Openssl(Package):
                  "no-krb5",
                  "shared",
                  "darwin64-x86_64-cc")
-            perl('-pi', '-e', 's/-arch x86_64//g', 'Makefile')
+            filter_file(r'-arch x86_64', '', 'Makefile')
         else:
             config = Executable("./config")
             config("--prefix=%s" % prefix,
