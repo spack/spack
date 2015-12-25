@@ -27,6 +27,7 @@ import shutil
 import os
 from tempfile import mkdtemp
 import spack
+import spack.config
 from spack.test.mock_packages_test import *
 
 # Some sample compiler config data
@@ -72,9 +73,9 @@ class ConfigTest(MockPackagesTest):
         super(ConfigTest, self).setUp()
         self.tmp_dir = mkdtemp('.tmp', 'spack-config-test-')
         spack.config.config_scopes = [
-            ('test_low_priority', os.path.join(self.tmp_dir, 'low')),
-            ('test_high_priority', os.path.join(self.tmp_dir, 'high'))]
-
+            spack.config.ConfigScope('test_low_priority', os.path.join(self.tmp_dir, 'low')),
+            spack.config.ConfigScope('test_high_priority', os.path.join(self.tmp_dir, 'high'))]
+        spack.config.valid_scopes = ('test_low_priority', 'test_high_priority')
 
     def tearDown(self):
         super(ConfigTest, self).tearDown()
@@ -83,17 +84,19 @@ class ConfigTest(MockPackagesTest):
 
     def check_config(self, comps, *compiler_names):
         """Check that named compilers in comps match Spack's config."""
-        config = spack.config.get_compilers_config()
+        config = spack.config.get_config('compilers')
         compiler_list = ['cc', 'cxx', 'f77', 'f90']
         for key in compiler_names:
             for c in compiler_list:
-                self.assertEqual(comps[key][c], config[key][c])
+                expected = comps[key][c]
+                actual = config[key][c]
+                self.assertEqual(expected, actual)
 
 
     def test_write_key_in_memory(self):
         # Write b_comps "on top of" a_comps.
-        spack.config.add_to_compiler_config(a_comps, 'test_low_priority')
-        spack.config.add_to_compiler_config(b_comps, 'test_high_priority')
+        spack.config.update_config('compilers', a_comps, 'test_low_priority')
+        spack.config.update_config('compilers', b_comps, 'test_high_priority')
 
         # Make sure the config looks how we expect.
         self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
@@ -102,8 +105,8 @@ class ConfigTest(MockPackagesTest):
 
     def test_write_key_to_disk(self):
         # Write b_comps "on top of" a_comps.
-        spack.config.add_to_compiler_config(a_comps, 'test_low_priority')
-        spack.config.add_to_compiler_config(b_comps, 'test_high_priority')
+        spack.config.update_config('compilers', a_comps, 'test_low_priority')
+        spack.config.update_config('compilers', b_comps, 'test_high_priority')
 
         # Clear caches so we're forced to read from disk.
         spack.config.clear_config_caches()

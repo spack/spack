@@ -242,7 +242,8 @@ class Stage(object):
 
         # TODO: move mirror logic out of here and clean it up!
         if self.mirror_path:
-            urls = ["%s/%s" % (m, self.mirror_path) for m in _get_mirrors()]
+            urls = ["%s/%s" % (u, self.mirror_path)
+                    for name, u in spack.config.get_config('mirrors')]
 
             digest = None
             if isinstance(self.fetcher, fs.URLFetchStrategy):
@@ -345,7 +346,7 @@ class DIYStage(object):
 
 def _get_mirrors():
     """Get mirrors from spack configuration."""
-    config = spack.config.get_mirror_config()
+    config = spack.config.get_config('mirrors')
     return [val for name, val in config.iteritems()]
 
 

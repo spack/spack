@@ -79,7 +79,8 @@ class DatabaseTest(MockPackagesTest):
 
     def _mock_install(self, spec):
         s = Spec(spec)
-        pkg = spack.repo.get(s.concretized())
+        s.concretize()
+        pkg = spack.repo.get(s)
         pkg.do_install(fake=True)
 
 

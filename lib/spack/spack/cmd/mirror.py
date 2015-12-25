@@ -76,7 +76,7 @@ def mirror_add(args):
         url = 'file://' + url
 
     mirror_dict = { args.name : url }
-    spack.config.add_to_mirror_config({ args.name : url })
+    spack.config.update_config('mirrors', { args.name : url }, 'user')
 
 
 def mirror_remove(args):
@@ -90,7 +90,7 @@ def mirror_remove(args):
 
 def mirror_list(args):
     """Print out available mirrors to the console."""
-    sec_names = spack.config.get_mirror_config()
+    sec_names = spack.config.get_config('mirrors')
     if not sec_names:
         tty.msg("No mirrors configured.")
         return

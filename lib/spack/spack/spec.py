@@ -531,6 +531,7 @@ class Spec(object):
                               and self.architecture
                               and self.compiler and self.compiler.concrete
                               and self.dependencies.concrete)
+
         return self._concrete
 
 
