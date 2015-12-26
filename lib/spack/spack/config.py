@@ -193,8 +193,16 @@ valid_scopes = (s.name for s in config_scopes)
 
 
 def check_scope(scope):
+    """Ensure that scope is valid, and return a valid scope if it is None.
+
+       This should be used by routines in ``config.py`` to validate
+       scope name arguments, and to determine a default scope where no
+       scope is specified.
+
+    """
     if scope is None:
-        return 'user'
+        # default to the scope with highest precedence.
+        return config_scopes[-1]
     elif scope not in valid_scopes:
         raise ValueError("Invalid config scope: '%s'.  Must be one of %s."
                          % (scope, valid_scopes))

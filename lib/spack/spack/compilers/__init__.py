@@ -84,7 +84,7 @@ def get_compiler_config(arch=None):
         compilers = find_compilers(*get_path('PATH'))
         for compiler in compilers:
             config[arch].update(_to_dict(compiler))
-        spack.config.update_config('compilers', config, 'user')
+        spack.config.update_config('compilers', config)
 
     # Merge 'all' compilers with arch-specific ones.
     merged_config = config.get('all', {})
