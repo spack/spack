@@ -687,7 +687,7 @@ def for_package_version(pkg, version):
 
 
 class FetchError(spack.error.SpackError):
-    def __init__(self, msg, long_msg):
+    def __init__(self, msg, long_msg=None):
         super(FetchError, self).__init__(msg, long_msg)
 
 
@@ -705,7 +705,7 @@ class NoArchiveFileError(FetchError):
 
 
 class NoDigestError(FetchError):
-    def __init__(self, msg, long_msg):
+    def __init__(self, msg, long_msg=None):
         super(NoDigestError, self).__init__(msg, long_msg)
 
 
