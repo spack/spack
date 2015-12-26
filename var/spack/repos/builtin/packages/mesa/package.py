@@ -14,7 +14,7 @@ class Mesa(Package):
     # mesa 7.x, 8.x, 9.x
     depends_on("libdrm@2.4.33")
     depends_on("llvm@3.0")
-    depends_on("libxml2")
+    depends_on("libxml2+python")
 
     # patch("llvm-fixes.patch") # using newer llvm
 

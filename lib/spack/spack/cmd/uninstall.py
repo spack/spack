@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
-from external import argparse
+import argparse
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -42,9 +42,9 @@ def setup_parser(subparser):
         help="Remove regardless of whether other packages depend on this one.")
     subparser.add_argument(
         '-a', '--all', action='store_true', dest='all',
-        help="USE CAREFULLY.  Remove ALL installed packages that match each supplied spec. " +
-        "i.e., if you say uninstall libelf, ALL versions of libelf are uninstalled. " +
-        "This is both useful and dangerous, like rm -r.")
+        help="USE CAREFULLY. Remove ALL installed packages that match each " +
+        "supplied spec. i.e., if you say uninstall libelf, ALL versions of " +
+        "libelf are uninstalled. This is both useful and dangerous, like rm -r.")
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to uninstall")
 
@@ -79,9 +79,9 @@ def uninstall(parser, args):
                 try:
                     # should work if package is known to spack
                     pkgs.append(s.package)
-
                 except spack.repository.UnknownPackageError, e:
-                    # The package.py file has gone away -- but still want to uninstall.
+                    # The package.py file has gone away -- but still
+                    # want to uninstall.
                     spack.Package(s).do_uninstall(force=True)
 
         # Sort packages to be uninstalled by the number of installed dependents

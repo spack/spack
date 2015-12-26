@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@
 This file contains code for creating spack mirror directories.  A
 mirror is an organized hierarchy containing specially named archive
 files.  This enabled spack to know where to find files in a mirror if
-the main server for a particualr package is down.  Or, if the computer
+the main server for a particular package is down.  Or, if the computer
 where spack is run is not connected to the internet, it allows spack
 to download packages directly from a mirror (e.g., on an intranet).
 """
@@ -42,7 +42,7 @@ import spack.fetch_strategy as fs
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.version import *
-from spack.util.compression import extension
+from spack.util.compression import extension, allowed_archive
 
 
 def mirror_archive_filename(spec):
@@ -87,9 +87,24 @@ def get_matching_versions(specs, **kwargs):
             if v.satisfies(spec.versions):
                 s = Spec(pkg.name)
                 s.versions = VersionList([v])
+                s.variants = spec.variants.copy()
                 matching.append(s)
 
     return matching
+
+
+def suggest_archive_basename(resource):
+    """
+    Return a tentative basename for an archive. Raise an exception if the name is among the allowed archive types.
+
+    :param fetcher:
+    :return:
+    """
+    basename = os.path.basename(resource.fetcher.url)
+    if not allowed_archive(basename):
+        raise RuntimeError("%s is not an allowed archive tye" % basename)
+    return basename
+
 
 
 def create(path, specs, **kwargs):
@@ -108,7 +123,7 @@ def create(path, specs, **kwargs):
 
        Return Value:
          Returns a tuple of lists: (present, mirrored, error)
-         * present:  Package specs that were already prsent.
+         * present:  Package specs that were already present.
          * mirrored: Package specs that were successfully mirrored.
          * error:    Package specs that failed to mirror due to some error.
 
@@ -140,38 +155,60 @@ def create(path, specs, **kwargs):
     error    = []
 
     # Iterate through packages and download all the safe tarballs for each of them
+    everything_already_exists = True
     for spec in version_specs:
         pkg = spec.package
 
         stage = None
         try:
             # create a subdirectory for the current package@version
-            archive_path = os.path.abspath(join_path(path, mirror_archive_path(spec)))
+            archive_path = os.path.abspath(join_path(mirror_root, mirror_archive_path(spec)))
             subdir = os.path.dirname(archive_path)
             mkdirp(subdir)
 
             if os.path.exists(archive_path):
                 tty.msg("Already added %s" % spec.format("$_$@"))
+            else:
+                everything_already_exists = False
+                # Set up a stage and a fetcher for the download
+                unique_fetch_name = spec.format("$_$@")
+                fetcher = fs.for_package_version(pkg, pkg.version)
+                stage = Stage(fetcher, name=unique_fetch_name)
+                fetcher.set_stage(stage)
+
+                # Do the fetch and checksum if necessary
+                fetcher.fetch()
+                if not kwargs.get('no_checksum', False):
+                    fetcher.check()
+                    tty.msg("Checksum passed for %s@%s" % (pkg.name, pkg.version))
+
+                # Fetchers have to know how to archive their files.  Use
+                # that to move/copy/create an archive in the mirror.
+                fetcher.archive(archive_path)
+                tty.msg("Added %s." % spec.format("$_$@"))
+
+            # Fetch resources if they are associated with the spec
+            resources = pkg._get_resources()
+            for resource in resources:
+                resource_archive_path = join_path(subdir, suggest_archive_basename(resource))
+                if os.path.exists(resource_archive_path):
+                    tty.msg("Already added resource %s (%s@%s)." % (resource.name, pkg.name, pkg.version))
+                    continue
+                everything_already_exists = False
+                resource_stage_folder = pkg._resource_stage(resource)
+                resource_stage = Stage(resource.fetcher, name=resource_stage_folder)
+                resource.fetcher.set_stage(resource_stage)
+                resource.fetcher.fetch()
+                if not kwargs.get('no_checksum', False):
+                    resource.fetcher.check()
+                    tty.msg("Checksum passed for the resource %s (%s@%s)" % (resource.name, pkg.name, pkg.version))
+                resource.fetcher.archive(resource_archive_path)
+                tty.msg("Added resource %s (%s@%s)." % (resource.name, pkg.name, pkg.version))
+
+            if everything_already_exists:
                 present.append(spec)
-                continue
-
-            # Set up a stage and a fetcher for the download
-            unique_fetch_name = spec.format("$_$@")
-            fetcher = fs.for_package_version(pkg, pkg.version)
-            stage = Stage(fetcher, name=unique_fetch_name)
-            fetcher.set_stage(stage)
-
-            # Do the fetch and checksum if necessary
-            fetcher.fetch()
-            if not kwargs.get('no_checksum', False):
-                fetcher.check()
-                tty.msg("Checksum passed for %s@%s" % (pkg.name, pkg.version))
-
-            # Fetchers have to know how to archive their files.  Use
-            # that to move/copy/create an archive in the mirror.
-            fetcher.archive(archive_path)
-            tty.msg("Added %s." % spec.format("$_$@"))
-            mirrored.append(spec)
+            else:
+                mirrored.append(spec)
 
         except Exception, e:
             if spack.debug:

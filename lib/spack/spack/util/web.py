@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
+import os
 import sys
 import subprocess
 import urllib2, cookielib
@@ -70,7 +71,9 @@ def _spider(args):
     """
     url, visited, root, opener, depth, max_depth, raise_on_error = args
 
-    pages = {}
+    pages = {}     # dict from page URL -> text content.
+    links = set()  # set of all links seen on visited pages.
+
     try:
         # Make a HEAD request first to check the content type.  This lets
         # us ignore tarballs and gigantic files.
@@ -99,42 +102,45 @@ def _spider(args):
         page = response.read()
         pages[response_url] = page
 
-        # If we're not at max depth, parse out the links in the page
+        # Parse out the links in the page
+        link_parser = LinkParser()
+        subcalls = []
+        link_parser.feed(page)
+
+        while link_parser.links:
+            raw_link = link_parser.links.pop()
+            abs_link = urlparse.urljoin(response_url, raw_link)
+
+            links.add(abs_link)
+
+            # Skip stuff that looks like an archive
+            if any(raw_link.endswith(suf) for suf in ALLOWED_ARCHIVE_TYPES):
+                continue
+
+            # Skip things outside the root directory
+            if not abs_link.startswith(root):
+                continue
+
+            # Skip already-visited links
+            if abs_link in visited:
+                continue
+
+        # If we're not at max depth, follow links.
         if depth < max_depth:
-            link_parser = LinkParser()
-            subcalls = []
-            link_parser.feed(page)
+            subcalls.append((abs_link, visited, root, None,
+                             depth+1, max_depth, raise_on_error))
+            visited.add(abs_link)
 
-            while link_parser.links:
-                raw_link = link_parser.links.pop()
-
-                # Skip stuff that looks like an archive
-                if any(raw_link.endswith(suf) for suf in ALLOWED_ARCHIVE_TYPES):
-                    continue
-
-                # Evaluate the link relative to the page it came from.
-                abs_link = urlparse.urljoin(response_url, raw_link)
-
-                # Skip things outside the root directory
-                if not abs_link.startswith(root):
-                    continue
-
-                # Skip already-visited links
-                if abs_link in visited:
-                    continue
-
-                subcalls.append((abs_link, visited, root, None, depth+1, max_depth, raise_on_error))
-                visited.add(abs_link)
-
-            if subcalls:
-                try:
-                    pool = Pool(processes=len(subcalls))
-                    dicts = pool.map(_spider, subcalls)
-                    for d in dicts:
-                        pages.update(d)
-                finally:
-                    pool.terminate()
-                    pool.join()
+        if subcalls:
+            try:
+                pool = Pool(processes=len(subcalls))
+                results = pool.map(_spider, subcalls)
+                for sub_pages, sub_links in results:
+                    pages.update(sub_pages)
+                    links.update(sub_links)
+            finally:
+                pool.terminate()
+                pool.join()
 
     except urllib2.URLError, e:
         tty.debug(e)
@@ -155,10 +161,10 @@ def _spider(args):
         # Other types of errors are completely ignored, except in debug mode.
         tty.debug("Error in _spider: %s" % e)
 
-    return pages
+    return pages, links
 
 
-def get_pages(root_url, **kwargs):
+def spider(root_url, **kwargs):
     """Gets web pages from a root URL.
        If depth is specified (e.g., depth=2), then this will also fetches pages
        linked from the root and its children up to depth.
@@ -167,5 +173,69 @@ def get_pages(root_url, **kwargs):
        performance over a sequential fetch.
     """
     max_depth = kwargs.setdefault('depth', 1)
-    pages =  _spider((root_url, set(), root_url, None, 1, max_depth, False))
-    return pages
+    pages, links =  _spider((root_url, set(), root_url, None, 1, max_depth, False))
+    return pages, links
+
+
+def find_versions_of_archive(*archive_urls, **kwargs):
+    """Scrape web pages for new versions of a tarball.
+
+    Arguments:
+      archive_urls:
+          URLs for different versions of a package. Typically these
+          are just the tarballs from the package file itself.  By
+          default, this searches the parent directories of archives.
+
+    Keyword Arguments:
+      list_url:
+
+          URL for a listing of archives.  Spack wills scrape these
+          pages for download links that look like the archive URL.
+
+      list_depth:
+          Max depth to follow links on list_url pages.
+
+    """
+    list_url   = kwargs.get('list_url', None)
+    list_depth = kwargs.get('list_depth', 1)
+
+    # Generate a list of list_urls based on archive urls and any
+    # explicitly listed list_url in the package
+    list_urls = set()
+    if list_url:
+        list_urls.add(list_url)
+    for aurl in archive_urls:
+        list_urls.add(spack.url.find_list_url(aurl))
+
+    # Grab some web pages to scrape.
+    pages = {}
+    links = set()
+    for lurl in list_urls:
+        p, l = spider(lurl, depth=list_depth)
+        pages.update(p)
+        links.update(l)
+
+    # Scrape them for archive URLs
+    regexes = []
+    for aurl in archive_urls:
+        # This creates a regex from the URL with a capture group for
+        # the version part of the URL.  The capture group is converted
+        # to a generic wildcard, so we can use this to extract things
+        # on a page that look like archive URLs.
+        url_regex = spack.url.wildcard_version(aurl)
+
+        # We'll be a bit more liberal and just look for the archive
+        # part, not the full path.
+        regexes.append(os.path.basename(url_regex))
+
+    # Build a dict version -> URL from any links that match the wildcards.
+    versions = {}
+    for url in links:
+        if any(re.search(r, url) for r in regexes):
+            try:
+                ver = spack.url.parse_version(url)
+                versions[ver] = url
+            except spack.url.UndetectableVersionError as e:
+                continue
+
+    return versions

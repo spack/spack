@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,11 +29,11 @@ The various types of modules are installed by post-install hooks and
 removed after an uninstall by post-uninstall hooks.  This class
 consolidates the logic for creating an abstract description of the
 information that module systems need.  Currently that includes a
-number directories to be appended to paths in the user's environment:
+number of directories to be appended to paths in the user's environment:
 
   * /bin directories to be appended to PATH
   * /lib* directories for LD_LIBRARY_PATH
-  * /man* and /share/man* directories for LD_LIBRARY_PATH
+  * /man* and /share/man* directories for MANPATH
   * the package prefix for CMAKE_PREFIX_PATH
 
 This module also includes logic for coming up with unique names for

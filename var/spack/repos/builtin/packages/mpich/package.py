@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -85,8 +85,13 @@ class Mpich(Package):
         mpif77 = os.path.join(bin, 'mpif77')
         mpif90 = os.path.join(bin, 'mpif90')
 
+        spack_cc  = os.environ['CC']
+        spack_cxx = os.environ['CXX']
+        spack_f77 = os.environ['F77']
+        spack_fc  = os.environ['FC']
+
         kwargs = { 'ignore_absent' : True, 'backup' : False, 'string' : True }
-        filter_file('CC="cc"',   'CC="%s"'  % self.compiler.cc,  mpicc,  **kwargs)
-        filter_file('CXX="c++"', 'CXX="%s"' % self.compiler.cxx, mpicxx, **kwargs)
-        filter_file('F77="f77"', 'F77="%s"' % self.compiler.f77, mpif77, **kwargs)
-        filter_file('FC="f90"',  'FC="%s"'  % self.compiler.fc,  mpif90, **kwargs)
+        filter_file('CC="%s"' % spack_cc , 'CC="%s"'  % self.compiler.cc,  mpicc,  **kwargs)
+        filter_file('CXX="%s"'% spack_cxx, 'CXX="%s"' % self.compiler.cxx, mpicxx, **kwargs)
+        filter_file('F77="%s"'% spack_f77, 'F77="%s"' % self.compiler.f77, mpif77, **kwargs)
+        filter_file('FC="%s"' % spack_fc , 'FC="%s"'  % self.compiler.fc,  mpif90, **kwargs)

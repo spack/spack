@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -96,8 +96,8 @@ import hashlib
 import base64
 from StringIO import StringIO
 from operator import attrgetter
-from external import yaml
-from external.yaml.error import MarkedYAMLError
+import yaml
+from yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
 from llnl.util.lang import *
@@ -862,7 +862,18 @@ class Spec(object):
             if s.namespace is None:
                 s.namespace = spack.repo.repo_for_pkg(s.name).namespace
 
-            # Mark everything in the spec as concrete, as well.
+        # Mark everything in the spec as concrete, as well.
+        self._mark_concrete()
+
+
+    def _mark_concrete(self):
+        """Mark this spec and its dependencies as concrete.
+
+        Only for internal use -- client code should use "concretize"
+        unless there is a need to force a spec to be concrete.
+        """
+        for s in self.traverse():
+            s._normal = True
             s._concrete = True
 
 
@@ -1240,6 +1251,13 @@ class Spec(object):
         return common
 
 
+    def constrained(self, other, deps=True):
+        """Return a constrained copy without modifying this spec."""
+        clone = self.copy(deps=deps)
+        clone.constrain(other, deps)
+        return clone
+
+
     def dep_difference(self, other):
         """Returns dependencies in self that are not in other."""
         mine = set(s.name for s in self.traverse(root=False))
@@ -1513,8 +1531,12 @@ class Spec(object):
 
     def _cmp_node(self):
         """Comparison key for just *this node* and not its deps."""
-        return (self.name, self.namespace, self.versions,
-                self.variants, self.architecture, self.compiler)
+        return (self.name,
+                self.namespace,
+                self.versions,
+                self.variants,
+                self.architecture,
+                self.compiler)
 
 
     def eq_node(self, other):
@@ -1528,11 +1550,15 @@ class Spec(object):
 
 
     def _cmp_key(self):
-        """Comparison key for this node and all dependencies *without*
-           considering structure.  This is the default, as
-           normalization will restore structure.
+        """This returns a key for the spec *including* DAG structure.
+
+        The key is the concatenation of:
+          1. A tuple describing this node in the DAG.
+          2. The hash of each of this node's dependencies' cmp_keys.
         """
-        return self._cmp_node() + (self.sorted_deps(),)
+        return self._cmp_node() + (
+            tuple(hash(self.dependencies[name])
+                  for name in sorted(self.dependencies)),)
 
 
     def colorized(self):

@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,6 +29,13 @@ class Libmonitor(Package):
     homepage = "http://hpctoolkit.org"
 
     version('20130218', svn='http://libmonitor.googlecode.com/svn/trunk/', revision=146)
+    variant('krellpatch', default=False, description="build with openspeedshop based patch.")
+
+
+    patch('libmonitorkrell-0000.patch', when='@20130218+krellpatch')
+    patch('libmonitorkrell-0001.patch', when='@20130218+krellpatch')
+    patch('libmonitorkrell-0002.patch', when='@20130218+krellpatch')
+
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix)

@@ -14,6 +14,8 @@ class Ncurses(Package):
     version('6.0', 'ee13d052e1ead260d7c28071f46eefb1',
             url='http://ftp.gnu.org/pub/gnu/ncurses/ncurses-6.0.tar.gz')
 
+    patch('patch_gcc_5.txt', when='%gcc@5.0:')
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,
                   "--with-shared",

@@ -5,7 +5,7 @@ class Tmuxinator(Package):
     homepage = "https://github.com/tmuxinator/tmuxinator"
     url      = "https://github.com/tmuxinator/tmuxinator"
 
-    version('0.6.11', 
+    version('0.6.11',
         git='https://github.com/tmuxinator/tmuxinator',
         tag='v0.6.11')
 
@@ -13,5 +13,4 @@ class Tmuxinator(Package):
 
     def install(self, spec, prefix):
       gem('build', 'tmuxinator.gemspec')
-      gem('install', 'tmuxinator-{}.gem'.format(self.version))
-
+      gem('install', 'tmuxinator-{0}.gem'.format(self.version))

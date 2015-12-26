@@ -5,11 +5,11 @@ Download
 --------------------
 
 Getting spack is easy.  You can clone it from the `github repository
-<https://github.com/scalability-llnl/spack>`_ using this command:
+<https://github.com/llnl/spack>`_ using this command:
 
 .. code-block:: sh
 
-   $ git clone https://github.com/scalability-llnl/spack.git
+   $ git clone https://github.com/llnl/spack.git
 
 This will create a directory called ``spack``.  We'll assume that the
 full path to this directory is in the ``SPACK_ROOT`` environment
@@ -22,7 +22,7 @@ go:
    $ spack install libelf
 
 For a richer experience, use Spack's `shell support
-<http://scalability-llnl.github.io/spack/basic_usage.html#environment-modules>`_:
+<http://llnl.github.io/spack/basic_usage.html#environment-modules>`_:
 
 .. code-block:: sh
 

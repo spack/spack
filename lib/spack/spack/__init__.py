@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,6 +25,7 @@
 import os
 import sys
 import tempfile
+import getpass
 from llnl.util.filesystem import *
 import llnl.util.tty as tty
 
@@ -122,9 +123,17 @@ use_tmp_stage = True
 # that it can create.
 tmp_dirs = []
 _default_tmp = tempfile.gettempdir()
-if _default_tmp != os.getcwd():
-    tmp_dirs.append(os.path.join(_default_tmp, 'spack-stage'))
-tmp_dirs.append('/nfs/tmp2/%u/spack-stage')
+_tmp_user = getpass.getuser()
+
+_tmp_candidates = (_default_tmp, '/nfs/tmp2', '/tmp', '/var/tmp')
+for path in _tmp_candidates:
+    # don't add a second username if it's already unique by user.
+    if not _tmp_user in path:
+        tmp_dirs.append(join_path(path, '%u', 'spack-stage'))
+
+for path in _tmp_candidates:
+    if not path in tmp_dirs:
+        tmp_dirs.append(join_path(path, 'spack-stage'))
 
 # Whether spack should allow installation of unsafe versions of
 # software.  "Unsafe" versions are ones it doesn't have a checksum

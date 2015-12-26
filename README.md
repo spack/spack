@@ -1,6 +1,8 @@
 ![image](share/spack/logo/spack-logo-text-64.png "Spack")
 ============
 
+[![Build Status](https://travis-ci.org/LLNL/spack.png?branch=develop)](https://travis-ci.org/LLNL/spack)
+
 Spack is a package management tool designed to support multiple
 versions and configurations of software on a wide variety of platforms
 and environments. It was designed for large supercomputing centers,
@@ -17,20 +19,26 @@ written in pure Python, and specs allow package authors to write a
 single build script for many different builds of the same package.
 
 See the
-[Feature Overview](http://scalability-llnl.github.io/spack/features.html)
+[Feature Overview](http://llnl.github.io/spack/features.html)
 for examples and highlights.
 
 To install spack and install your first package:
 
-    $ git clone https://github.com/scalability-llnl/spack.git
+    $ git clone https://github.com/llnl/spack.git
     $ cd spack/bin
     $ ./spack install libelf
 
 Documentation
 ----------------
 
-[Full documentation](http://scalability-llnl.github.io/spack)
-for Spack is also available.
+[**Full documentation**](http://llnl.github.io/spack) for Spack is
+the first place to look.
+
+See also:
+  * [Technical paper](http://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf) and
+    [slides](https://tgamblin.github.io/files/Gamblin-Spack-SC15-Talk.pdf) on Spack's design and implementation.
+  * [Short presentation](https://tgamblin.github.io/files/Gamblin-Spack-Lightning-Talk-BOF-SC15.pdf) from the *Getting Scientific Software Installed* BOF session at Supercomputing 2015.
+
 
 Get Involved!
 ------------------------
@@ -62,9 +70,18 @@ latest stable release.
 
 Authors
 ----------------
-Many thanks go to Spack's [contributors](https://github.com/scalability-llnl/spack/graphs/contributors).
+Many thanks go to Spack's [contributors](https://github.com/llnl/spack/graphs/contributors).
 
 Spack was originally written by Todd Gamblin, tgamblin@llnl.gov.
+
+### Citing Spack
+
+If you are referencing Spack in a publication, please cite the following paper:
+
+ * Todd Gamblin, Matthew P. LeGendre, Michael R. Collette, Gregory L. Lee,
+   Adam Moody, Bronis R. de Supinski, and W. Scott Futral.
+   [**The Spack Package Manager: Bringing Order to HPC Software Chaos**](http://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf).
+   In *Supercomputing 2015 (SC’15)*, Austin, Texas, November 15-20 2015. LLNL-CONF-669890.
 
 Release
 ----------------

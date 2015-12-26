@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,8 +36,8 @@ class Automaded(Package):
        finding the process (or group of processes) that caused the hang.
     """
 
-    homepage = "https://github.com/scalability-llnl/AutomaDeD"
-    url      = "https://github.com/scalability-llnl/AutomaDeD/archive/v1.0.tar.gz"
+    homepage = "https://github.com/llnl/AutomaDeD"
+    url      = "https://github.com/llnl/AutomaDeD/archive/v1.0.tar.gz"
 
     version('1.0', '16a3d4def2c4c77d0bc4b21de8b3ab03')
 

@@ -6,7 +6,7 @@
 # Written by Matthew LeGendre, legendre1@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,7 @@ class Launchmon(Package):
     url      = "http://downloads.sourceforge.net/project/launchmon/launchmon/1.0.1%20release/launchmon-1.0.1.tar.gz"
 
     version('1.0.1', '2f12465803409fd07f91174a4389eb2b')
-    version('1.0.1-2', git='https://github.com/scalability-llnl/launchmon.git', commit='ff7e22424b8f375318951eb1c9282fcbbfa8aadf')
+    version('1.0.1-2', git='https://github.com/llnl/launchmon.git', commit='ff7e22424b8f375318951eb1c9282fcbbfa8aadf')
 
     depends_on('autoconf')
     depends_on('automake')

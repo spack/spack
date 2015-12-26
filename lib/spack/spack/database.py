@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -43,8 +43,8 @@ import os
 import time
 import socket
 
-from external import yaml
-from external.yaml.error import MarkedYAMLError, YAMLError
+import yaml
+from yaml.error import MarkedYAMLError, YAMLError
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
@@ -54,6 +54,7 @@ import spack.spec
 from spack.version import Version
 from spack.spec import Spec
 from spack.error import SpackError
+from spack.repository import UnknownPackageError
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -211,8 +212,9 @@ class Database(object):
             child = self._read_spec_from_yaml(dep_hash, installs, hash_key)
             spec._add_dependency(child)
 
-        spec._normal = True
-        spec._concrete = True
+        # Specs from the database need to be marked concrete because
+        # they represent actual installations.
+        spec._mark_concrete()
         return spec
 
 

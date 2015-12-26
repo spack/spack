@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@ import re
 
 import llnl.util.tty as tty
 
-from external import pyqver2
+import pyqver2
 import spack
 
 spack_max_version = (2,6)
@@ -63,10 +63,6 @@ class PythonVersionTest(unittest.TestCase):
         all_issues = {}
 
         for fn in files:
-            if fn != '/Users/gamblin2/src/spack/var/spack/packages/vim/package.py':
-                continue
-            print fn
-
             with open(fn) as pyfile:
                 versions = pyqver2.get_versions(pyfile.read())
                 for ver, reasons in versions.items():

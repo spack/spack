@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@ class Gmp(Package):
     homepage = "https://gmplib.org"
     url      = "https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2"
 
+    version('6.1.0' , '86ee6e54ebfc4a90b643a65e402c4048')
     version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
     version('6.0.0' , '6ef5869ae735db9995619135bd856b84')
 

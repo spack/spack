@@ -16,6 +16,8 @@ class Wx(Package):
     version('3.0.1', 'dad1f1cd9d4c370cbc22700dc492da31',
             url="https://sourceforge.net/projects/wxwindows/files/3.0.1/wxWidgets-3.0.1.tar.bz2")
 
+    depends_on('gtkplus')
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix, "--enable-unicode", "--disable-precomp-headers")
 

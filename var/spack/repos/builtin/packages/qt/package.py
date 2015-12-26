@@ -10,13 +10,22 @@ class Qt(Package):
 
     version('5.4.0', 'e8654e4b37dd98039ba20da7a53877e6',
             url='http://download.qt-project.org/official_releases/qt/5.4/5.4.0/single/qt-everywhere-opensource-src-5.4.0.tar.gz')
+
     version('5.3.2', 'febb001129927a70174467ecb508a682',
             url='http://download.qt.io/archive/qt/5.3/5.3.2/single/qt-everywhere-opensource-src-5.3.2.tar.gz')
 
     version('5.2.1', 'a78408c887c04c34ce615da690e0b4c8',
             url='http://download.qt.io/archive/qt/5.2/5.2.1/single/qt-everywhere-opensource-src-5.2.1.tar.gz')
+
     version('4.8.6', '2edbe4d6c2eff33ef91732602f3518eb',
             url="http://download.qt-project.org/official_releases/qt/4.8/4.8.6/qt-everywhere-opensource-src-4.8.6.tar.gz")
+
+    version('3.3.8b', '9f05b4125cfe477cc52c9742c3c09009',
+            url="http://download.qt.io/archive/qt/3/qt-x11-free-3.3.8b.tar.gz")
+
+    # Add patch for compile issues with qt3 found with use in the OpenSpeedShop project
+    variant('krellpatch', default=False, description="build with openspeedshop based patch.")
+    patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
     # Use system openssl for security.
     #depends_on("openssl")
@@ -25,7 +34,7 @@ class Qt(Package):
     depends_on("gtkplus")
     depends_on("libxml2")
     depends_on("zlib")
-    depends_on("dbus")
+    depends_on("dbus", when='@4:')
     depends_on("libtiff")
     depends_on("libpng")
     depends_on("libmng")
@@ -39,7 +48,7 @@ class Qt(Package):
     # depends_on("icu4c")
 
     # OpenGL hardware acceleration
-    depends_on("mesa")
+    depends_on("mesa", when='@4:')
     depends_on("libxcb")
 
 
@@ -85,6 +94,15 @@ class Qt(Package):
     # Don't disable all the database drivers, but should
     # really get them into spack at some point.
 
+    @when('@3')
+    def configure(self):
+        configure('-prefix', self.prefix,
+                  '-v',
+                  '-thread',
+                  '-shared',
+                  '-release',
+                  '-fast'
+                  )
 
     @when('@4')
     def configure(self):

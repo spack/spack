@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -56,6 +56,12 @@
 # spack dotfiles.
 ########################################################################
 function spack {
+    # save raw arguments into an array before butchering them
+    args=()
+    for a in "$@"; do
+        # yup, this is awful, blame bash2 compat
+        args=("${args[@]}" "$a")
+    done
     # accumulate initial flags for main spack command
     _sp_flags=""
     while [[ "$1" =~ ^- ]]; do
@@ -116,7 +122,7 @@ function spack {
             esac
             ;;
         *)
-            command spack $_sp_flags $_sp_subcommand $_sp_spec
+            command spack "${args[@]}"
             ;;
     esac
 }
@@ -167,8 +173,8 @@ fi
 #
 _sp_share_dir=$(cd "$(dirname $_sp_source_file)" && pwd)
 _sp_prefix=$(cd "$(dirname $(dirname $_sp_share_dir))" && pwd)
+_spack_pathadd PATH       "${_sp_prefix%/}/bin"
 
-# TODO: fix SYS_TYPE to something non-LLNL-specific
-_spack_pathadd DK_NODE    "$_sp_share_dir/dotkit/$SYS_TYPE"
-_spack_pathadd MODULEPATH "$_sp_share_dir/modules/$SYS_TYPE"
-_spack_pathadd PATH       "$_sp_prefix/bin"
+_sp_sys_type=$(spack-python -c 'print(spack.architecture.sys_type())')
+_spack_pathadd DK_NODE    "${_sp_share_dir%/}/dotkit/$_sp_sys_type"
+_spack_pathadd MODULEPATH "${_sp_share_dir%/}/modules/$_sp_sys_type"

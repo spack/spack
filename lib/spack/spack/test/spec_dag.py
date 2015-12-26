@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -340,16 +340,18 @@ class SpecDagTest(MockPackagesTest):
         self.assertEqual(spec, expected_flat)
         self.assertTrue(spec.eq_dag(expected_flat))
 
-        self.assertEqual(spec, expected_normalized)
+        # Normalized has different DAG structure, so NOT equal.
+        self.assertNotEqual(spec, expected_normalized)
         self.assertFalse(spec.eq_dag(expected_normalized))
 
-        self.assertEqual(spec, non_unique_nodes)
+        # Again, different DAG structure so not equal.
+        self.assertNotEqual(spec, non_unique_nodes)
         self.assertFalse(spec.eq_dag(non_unique_nodes))
 
         spec.normalize()
 
         # After normalizing, spec_dag_equal should match the normalized spec.
-        self.assertEqual(spec, expected_flat)
+        self.assertNotEqual(spec, expected_flat)
         self.assertFalse(spec.eq_dag(expected_flat))
 
         self.assertEqual(spec, expected_normalized)

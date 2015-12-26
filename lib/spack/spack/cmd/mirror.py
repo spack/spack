@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,7 +26,7 @@ import os
 import sys
 from datetime import datetime
 
-from external import argparse
+import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -54,6 +54,8 @@ def setup_parser(subparser):
         'specs', nargs=argparse.REMAINDER, help="Specs of packages to put in mirror")
     create_parser.add_argument(
         '-f', '--file', help="File with specs of packages to put in mirror.")
+    create_parser.add_argument(
+        '-D', '--dependencies', action='store_true', help="Also fetch all dependencies")
     create_parser.add_argument(
         '-o', '--one-version-per-spec', action='store_const', const=1, default=0,
         help="Only fetch one 'preferred' version per spec, not all known versions.")
@@ -118,7 +120,7 @@ def mirror_create(args):
     """Create a directory to be used as a spack mirror, and fill it with
        package archives."""
     # try to parse specs from the command line first.
-    specs = spack.cmd.parse_specs(args.specs)
+    specs = spack.cmd.parse_specs(args.specs, concretize=True)
 
     # If there is a file, parse each line as a spec and add it to the list.
     if args.file:
@@ -130,6 +132,14 @@ def mirror_create(args):
     if not specs:
         specs = [Spec(n) for n in spack.repo.all_package_names()]
         specs.sort(key=lambda s: s.format("$_$@").lower())
+
+    if args.dependencies:
+        new_specs = set()
+        for spec in specs:
+            spec.concretize()
+            for s in spec.traverse():
+                new_specs.add(s)
+        specs = list(new_specs)
 
     # Default name for directory is spack-mirror-<DATESTAMP>
     directory = args.directory

@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://llnl.github.io/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -254,6 +254,10 @@ class RepoPath(object):
         return self.repo_for_pkg(pkg_name).dirname_for_package_name(pkg_name)
 
 
+    def filename_for_package_name(self, pkg_name):
+        return self.repo_for_pkg(pkg_name).filename_for_package_name(pkg_name)
+
+
     def exists(self, pkg_name):
         return any(repo.exists(pkg_name) for repo in self.repos)
 
@@ -467,20 +471,18 @@ class Repo(object):
             raise UnknownPackageError("Repository %s does not contain package %s."
                                       % (self.namespace, spec.fullname))
 
-        if new or spec not in self._instances:
-            PackageClass = self._get_pkg_class(spec.name)
+        key = hash(spec)
+        if new or key not in self._instances:
+            package_class = self._get_pkg_class(spec.name)
             try:
-                package = PackageClass(spec.copy())
-                self._instances[spec] = package
-                return package
-
+                copy = spec.copy() # defensive copy.  Package owns its spec.
+                self._instances[key] = package_class(copy)
             except Exception, e:
                 if spack.debug:
                     sys.excepthook(*sys.exc_info())
                 raise FailedConstructorError(spec.fullname, *sys.exc_info())
 
-        else:
-            return self._instances[spec]
+        return self._instances[key]
 
 
     def purge(self):
@@ -625,51 +627,6 @@ class Repo(object):
 
     def __contains__(self, pkg_name):
         return self.exists(pkg_name)
-
-
-    #
-    # Below functions deal with installed packages, and should be
-    # moved to some other part of Spack (conbine with
-    # directory_layout?)
-    #
-    @_autospec
-    def get_installed(self, spec):
-        """Get all the installed specs that satisfy the provided spec constraint."""
-        return [s for s in self.installed_package_specs() if s.satisfies(spec)]
-
-
-    @_autospec
-    def installed_extensions_for(self, extendee_spec):
-        for s in self.installed_package_specs():
-            try:
-                if s.package.extends(extendee_spec):
-                    yield s.package
-            except UnknownPackageError, e:
-                # Skip packages we know nothing about
-                continue
-
-
-    def installed_package_specs(self):
-        """Read installed package names straight from the install directory
-           layout.
-        """
-        # Get specs from the directory layout but ensure that they're
-        # all normalized properly.
-        installed = []
-        for spec in spack.install_layout.all_specs():
-            spec.normalize()
-            installed.append(spec)
-        return installed
-
-
-    def installed_known_package_specs(self):
-        """Read installed package names straight from the install
-           directory layout, but return only specs for which the
-           package is known to this version of spack.
-        """
-        for spec in spack.install_layout.all_specs():
-            if self.exists(spec.name):
-                yield spec
 
 
 class BadRepoError(spack.error.SpackError):

@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -218,9 +218,21 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     def test_satisfies_virtual(self):
+        # Don't use check_satisfies: it checks constrain() too, and
+        # you can't constrain a non-virtual by a virtual.
         self.assertTrue(Spec('mpich').satisfies(Spec('mpi')))
         self.assertTrue(Spec('mpich2').satisfies(Spec('mpi')))
         self.assertTrue(Spec('zmpi').satisfies(Spec('mpi')))
+
+
+    def test_satisfies_virtual_dep_with_virtual_constraint(self):
+        """Ensure we can satisfy virtual constraints when there are multiple
+           vdep providers in the specs."""
+        self.assertTrue(Spec('netlib-lapack ^openblas').satisfies('netlib-lapack ^openblas'))
+        self.assertFalse(Spec('netlib-lapack ^netlib-blas').satisfies('netlib-lapack ^openblas'))
+
+        self.assertFalse(Spec('netlib-lapack ^openblas').satisfies('netlib-lapack ^netlib-blas'))
+        self.assertTrue(Spec('netlib-lapack ^netlib-blas').satisfies('netlib-lapack ^netlib-blas'))
 
 
     # ================================================================================
