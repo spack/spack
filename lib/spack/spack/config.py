@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -120,8 +120,10 @@ the site configuration will be ignored.
 import os
 import sys
 import copy
+
 import yaml
 from yaml.error import MarkedYAMLError
+from ordereddict_backport import OrderedDict
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -129,11 +131,20 @@ from llnl.util.filesystem import mkdirp
 import spack
 from spack.error import SpackError
 
-"""List of valid config sections."""
-valid_sections = ('compilers', 'mirrors', 'repos')
+# Hacked yaml for configuration files preserves line numbers.
+import spack.util.spack_yaml as syaml
 
 
-def check_section(section):
+"""Dict from section names -> function to check section YAML format."""
+valid_sections = ['compilers', 'mirrors', 'repos']
+
+"""OrderedDict of config scopes keyed by name.
+   Later scopes will override earlier scopes.
+"""
+config_scopes = OrderedDict()
+
+
+def validate_section(section):
     """Raise a ValueError if the section is not a valid section."""
     if section not in valid_sections:
         raise ValueError("Invalid config section: '%s'.  Options are %s."
@@ -146,14 +157,19 @@ class ConfigScope(object):
        A scope is one directory containing named configuration files.
        Each file is a config "section" (e.g., mirrors, compilers, etc).
     """
+
     def __init__(self, name, path):
         self.name = name           # scope name.
         self.path = path           # path to directory containing configs.
         self.sections = {}         # sections read from config files.
 
+        # Register in a dict of all ConfigScopes
+        # TODO: make this cleaner.  Mocking up for testing is brittle.
+        global config_scopes
+        config_scopes[name] = self
 
     def get_section_filename(self, section):
-        check_section(section)
+        validate_section(section)
         return os.path.join(self.path, "%s.yaml" % section)
 
 
@@ -161,7 +177,10 @@ class ConfigScope(object):
         if not section in self.sections:
             path = self.get_section_filename(section)
             data = _read_config_file(path)
-            self.sections[section] = {} if data is None else data
+            if data is None:
+                self.sections[section] = {}
+            else:
+                self.sections[section] = data
         return self.sections[section]
 
 
@@ -171,7 +190,7 @@ class ConfigScope(object):
         try:
             mkdirp(self.path)
             with open(filename, 'w') as f:
-                yaml.dump(data, stream=f, default_flow_style=False)
+                syaml.dump(data, stream=f, default_flow_style=False)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError("Error writing to config file: '%s'" % str(e))
 
@@ -181,18 +200,11 @@ class ConfigScope(object):
         self.sections = {}
 
 
-"""List of config scopes by name.
-   Later scopes in the list will override earlier scopes.
-"""
-config_scopes = [
-    ConfigScope('site', os.path.join(spack.etc_path, 'spack')),
-    ConfigScope('user', os.path.expanduser('~/.spack'))]
-
-"""List of valid scopes, for convenience."""
-valid_scopes = (s.name for s in config_scopes)
+ConfigScope('site', os.path.join(spack.etc_path, 'spack')),
+ConfigScope('user', os.path.expanduser('~/.spack'))
 
 
-def check_scope(scope):
+def validate_scope(scope):
     """Ensure that scope is valid, and return a valid scope if it is None.
 
        This should be used by routines in ``config.py`` to validate
@@ -202,16 +214,14 @@ def check_scope(scope):
     """
     if scope is None:
         # default to the scope with highest precedence.
-        return config_scopes[-1]
-    elif scope not in valid_scopes:
+        return config_scopes.values()[-1]
+
+    elif scope in config_scopes:
+        return config_scopes[scope]
+
+    else:
         raise ValueError("Invalid config scope: '%s'.  Must be one of %s."
-                         % (scope, valid_scopes))
-    return scope
-
-
-def get_scope(scope):
-    scope = check_scope(scope)
-    return next(s for s in config_scopes if s.name == scope)
+                         % (scope, config_scopes.keys()))
 
 
 def _read_config_file(filename):
@@ -229,7 +239,7 @@ def _read_config_file(filename):
 
     try:
         with open(filename) as f:
-            return yaml.load(f)
+            return syaml.load(f)
 
     except MarkedYAMLError, e:
         raise ConfigFileError(
@@ -243,7 +253,7 @@ def _read_config_file(filename):
 def clear_config_caches():
     """Clears the caches for configuration files, which will cause them
        to be re-read upon the next request"""
-    for scope in config_scopes:
+    for scope in config_scopes.values():
         scope.clear()
 
 
@@ -306,10 +316,10 @@ def get_config(section):
 
        Strips off the top-level section name from the YAML dict.
     """
-    check_section(section)
+    validate_section(section)
     merged_section = {}
 
-    for scope in config_scopes:
+    for scope in config_scopes.values():
         # read potentially cached data from the scope.
         data = scope.get_section(section)
         if not data or not section in data:
@@ -345,7 +355,7 @@ def get_repos_config():
 
 def get_config_filename(scope, section):
     """For some scope and section, get the name of the configuration file"""
-    scope = get_scope(scope)
+    scope = validate_scope(scope)
     return scope.get_section_filename(section)
 
 
@@ -363,8 +373,8 @@ def update_config(section, update_data, scope=None):
     # read in the config to ensure we've got current data
     get_config(section)
 
-    check_section(section)     # validate section name
-    scope = get_scope(scope)   # get ConfigScope object from string.
+    validate_section(section)     # validate section name
+    scope = validate_scope(scope)   # get ConfigScope object from string.
 
     # read only the requested section's data.
     data = scope.get_section(section)
@@ -382,7 +392,7 @@ def remove_from_config(section, key_to_rm, scope=None):
     get_config(section)
 
     # check args and get the objects we need.
-    scope = get_scope(scope)
+    scope = validate_scope(scope)
     data = scope.get_section(section)
     filename = scope.get_section_filename(section)
 
@@ -411,3 +421,4 @@ def print_section(section):
 
 class ConfigError(SpackError): pass
 class ConfigFileError(ConfigError): pass
+class ConfigFormatError(ConfigError): pass

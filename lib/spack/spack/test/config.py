@@ -26,6 +26,7 @@ import unittest
 import shutil
 import os
 from tempfile import mkdtemp
+from ordereddict_backport import OrderedDict
 import spack
 import spack.config
 from spack.test.mock_packages_test import *
@@ -72,10 +73,9 @@ class ConfigTest(MockPackagesTest):
     def setUp(self):
         super(ConfigTest, self).setUp()
         self.tmp_dir = mkdtemp('.tmp', 'spack-config-test-')
-        spack.config.config_scopes = [
-            spack.config.ConfigScope('test_low_priority', os.path.join(self.tmp_dir, 'low')),
-            spack.config.ConfigScope('test_high_priority', os.path.join(self.tmp_dir, 'high'))]
-        spack.config.valid_scopes = ('test_low_priority', 'test_high_priority')
+        spack.config.config_scopes = OrderedDict()
+        spack.config.ConfigScope('test_low_priority', os.path.join(self.tmp_dir, 'low'))
+        spack.config.ConfigScope('test_high_priority', os.path.join(self.tmp_dir, 'high'))
 
     def tearDown(self):
         super(ConfigTest, self).tearDown()

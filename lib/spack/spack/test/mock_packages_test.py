@@ -24,6 +24,7 @@
 ##############################################################################
 import sys
 import unittest
+from ordereddict_backport import OrderedDict
 
 import spack
 import spack.config
@@ -41,10 +42,12 @@ class MockPackagesTest(unittest.TestCase):
 
         spack.config.clear_config_caches()
         self.real_scopes = spack.config.config_scopes
-        self.real_valid_scopes = spack.config.valid_scopes
-        spack.config.config_scopes = [
-            spack.config.ConfigScope('site', spack.mock_site_config),
-            spack.config.ConfigScope('user', spack.mock_user_config)]
+
+        # TODO: Mocking this up is kind of brittle b/c ConfigScope
+        # TODO: constructor modifies config_scopes.  Make it cleaner.
+        spack.config.config_scopes = OrderedDict()
+        spack.config.ConfigScope('site', spack.mock_site_config)
+        spack.config.ConfigScope('user', spack.mock_user_config)
 
         # Store changes to the package's dependencies so we can
         # restore later.
@@ -72,7 +75,6 @@ class MockPackagesTest(unittest.TestCase):
         """Restore the real packages path after any test."""
         spack.repo.swap(self.db)
         spack.config.config_scopes = self.real_scopes
-        spack.config.valid_scopes = self.real_valid_scopes
         spack.config.clear_config_caches()
 
         # Restore dependency changes that happened during the test
