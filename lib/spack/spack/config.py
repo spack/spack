@@ -311,7 +311,7 @@ def substitute_spack_prefix(path):
     return path.replace('$spack', spack.prefix)
 
 
-def get_config(section):
+def get_config(section, scope=None):
     """Get configuration settings for a section.
 
        Strips off the top-level section name from the YAML dict.
@@ -319,7 +319,12 @@ def get_config(section):
     validate_section(section)
     merged_section = {}
 
-    for scope in config_scopes.values():
+    if scope is None:
+        scopes = config_scopes.values()
+    else:
+        scopes = [validate_scope(scope)]
+
+    for scope in scopes:
         # read potentially cached data from the scope.
         data = scope.get_section(section)
         if not data or not section in data:
@@ -362,52 +367,22 @@ def get_config_filename(scope, section):
 def update_config(section, update_data, scope=None):
     """Update the configuration file for a particular scope.
 
-       Merges contents of update_data into the scope's data for the
-       specified section, then writes out the config file.
+       Overwrites contents of a section in a scope with update_data,
+       then writes out the config file.
 
-       update_data shoudl contain only the section's data, with the
-       top-level name stripped off.  This can be a list, dict, or any
+       update_data should have the top-level section name stripped off
+       (it will be re-added).  Data itself can be a list, dict, or any
        other yaml-ish structure.
 
     """
     # read in the config to ensure we've got current data
     get_config(section)
 
-    validate_section(section)     # validate section name
+    validate_section(section)       # validate section name
     scope = validate_scope(scope)   # get ConfigScope object from string.
 
     # read only the requested section's data.
-    data = scope.get_section(section)
-    data = _merge_yaml(data, { section : update_data })
-    scope.write_section(section)
-
-
-def remove_from_config(section, key_to_rm, scope=None):
-    """Remove a configuration key and write updated configuration to disk.
-
-       Return True if something was removed, False otherwise.
-
-    """
-    # ensure configs are current by reading in.
-    get_config(section)
-
-    # check args and get the objects we need.
-    scope = validate_scope(scope)
-    data = scope.get_section(section)
-    filename = scope.get_section_filename(section)
-
-    # do some checks
-    if not data:
-        return False
-
-    if not section in data:
-        raise ConfigFileError("Invalid configuration file: '%s'" % filename)
-
-    if key_to_rm not in section[section]:
-        return False
-
-    # remove the key from the section's configuration
-    del data[section][key_to_rm]
+    scope.sections[section] = { section : update_data }
     scope.write_section(section)
 
 
