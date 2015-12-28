@@ -78,10 +78,6 @@ installed_db = Database(install_path)
 packages_path      = join_path(repos_path, "builtin")
 mock_packages_path = join_path(repos_path, "builtin.mock")
 
-mock_config_path = join_path(var_path, "mock_configs")
-mock_site_config = join_path(mock_config_path, "site_spackconfig")
-mock_user_config = join_path(mock_config_path, "user_spackconfig")
-
 #
 # This controls how spack lays out install prefixes and
 # stage directories.

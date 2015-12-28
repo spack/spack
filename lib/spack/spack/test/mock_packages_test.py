@@ -23,14 +23,32 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
+import os
 import unittest
+import tempfile
 from ordereddict_backport import OrderedDict
+
+from llnl.util.filesystem import mkdirp
 
 import spack
 import spack.config
 from spack.repository import RepoPath
 from spack.spec import Spec
 
+mock_compiler_config = """\
+compilers:
+  all:
+    clang@3.3:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    gcc@4.5.0:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+"""
 
 class MockPackagesTest(unittest.TestCase):
     def initmock(self):
@@ -43,11 +61,21 @@ class MockPackagesTest(unittest.TestCase):
         spack.config.clear_config_caches()
         self.real_scopes = spack.config.config_scopes
 
+        # Mock up temporary configuration directories
+        self.temp_config = tempfile.mkdtemp()
+        self.mock_site_config = os.path.join(self.temp_config, 'site')
+        self.mock_user_config = os.path.join(self.temp_config, 'user')
+        mkdirp(self.mock_site_config)
+        mkdirp(self.mock_user_config)
+        comp_yaml = os.path.join(self.mock_site_config, 'compilers.yaml')
+        with open(comp_yaml, 'w') as f:
+            f.write(mock_compiler_config)
+
         # TODO: Mocking this up is kind of brittle b/c ConfigScope
         # TODO: constructor modifies config_scopes.  Make it cleaner.
         spack.config.config_scopes = OrderedDict()
-        spack.config.ConfigScope('site', spack.mock_site_config)
-        spack.config.ConfigScope('user', spack.mock_user_config)
+        spack.config.ConfigScope('site', self.mock_site_config)
+        spack.config.ConfigScope('user', self.mock_user_config)
 
         # Store changes to the package's dependencies so we can
         # restore later.
