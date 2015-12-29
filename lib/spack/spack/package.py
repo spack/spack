@@ -705,10 +705,17 @@ class Package(object):
                 placement = {'': placement}
             # Make the paths in the dictionary absolute and link
             for key, value in placement.iteritems():
-                link_path = join_path(self.stage.source_path, resource.destination, value)
+                target_path = join_path(self.stage.source_path, resource.destination)
+                link_path = join_path(target_path, value)
                 source_path = join_path(stage.source_path, key)
                 if not os.path.exists(link_path):
                     # Create a symlink
+                    try:
+                        os.makedirs(target_path)
+                    except OSError as err:
+                        if err.errno == errno.EEXIST and os.path.isdir(target_path):
+                            pass
+                        else: raise
                     os.symlink(source_path, link_path)
         ##########
         self.stage.chdir_to_source()
