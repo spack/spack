@@ -34,6 +34,7 @@ rundown on spack and how it differs from homebrew, look at the
 README.
 """
 import os
+import errno
 import re
 import time
 import itertools
