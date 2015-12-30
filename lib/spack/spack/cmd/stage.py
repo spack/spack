@@ -35,6 +35,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="Do not check downloaded packages against checksum")
+    subparser.add_argument(
+        '-p', '--path', dest='path',
+        help="Path to stage package, does not add to spack tree")
 
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages to stage")
@@ -50,4 +53,7 @@ def stage(parser, args):
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
     for spec in specs:
         package = spack.repo.get(spec)
-        package.do_stage()
+        if args.path:
+            package.do_stage(path=args.path)
+        else:
+            package.do_stage()

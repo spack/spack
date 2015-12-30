@@ -709,14 +709,18 @@ class Package(object):
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
 
-
-    def do_stage(self, mirror_only=False):
+    def do_stage(self, mirror_only=False, path=None):
         """Unpacks the fetched tarball, then changes into the expanded tarball
            directory."""
+
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
         self.do_fetch(mirror_only)
+
+        if path is not None:
+            self.stage.path = path
+
         self.stage.expand_archive()
         self.stage.chdir_to_source()
 
