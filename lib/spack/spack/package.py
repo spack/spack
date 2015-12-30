@@ -697,7 +697,9 @@ class Package(object):
         ##########
         # Stage resources in appropriate path
         resources = self._get_resources()
-        for resource in resources:
+        # TODO: this is to allow nested resources, a better solution would be
+        # good
+        for resource in sorted(resources, key=lambda res: len(res.destination)):
             stage = resource.fetcher.stage
             _expand_archive(stage, resource.name)
             # Turn placement into a dict with relative paths
