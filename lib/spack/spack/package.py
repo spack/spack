@@ -36,6 +36,7 @@ README.
 import os
 import errno
 import re
+import shutil
 import time
 import itertools
 import subprocess
@@ -711,15 +712,20 @@ class Package(object):
                 target_path = join_path(self.stage.source_path, resource.destination)
                 link_path = join_path(target_path, value)
                 source_path = join_path(stage.source_path, key)
+
+                try:
+                    os.makedirs(target_path)
+                except OSError as err:
+                    if err.errno == errno.EEXIST and os.path.isdir(target_path):
+                        pass
+                    else: raise
+
+                # NOTE: a reasonable fix for the TODO above might be to have
+                # these expand in place, but expand_archive does not offer
+                # this
+
                 if not os.path.exists(link_path):
-                    # Create a symlink
-                    try:
-                        os.makedirs(target_path)
-                    except OSError as err:
-                        if err.errno == errno.EEXIST and os.path.isdir(target_path):
-                            pass
-                        else: raise
-                    os.symlink(source_path, link_path)
+                    shutil.move(source_path, link_path)
         ##########
         self.stage.chdir_to_source()
 
