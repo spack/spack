@@ -55,6 +55,7 @@
 # avoids the need to come up with a user-friendly naming scheme for
 # spack dotfiles.
 ########################################################################
+arrtest[0]='test' || (echo 'Failure: arrays not supported in this version of bash.' && exit 2)
 
 function spack {
     # save raw arguments into an array before butchering them

@@ -11,7 +11,6 @@ class Binutils(Package):
 
     # Add a patch that creates binutils libiberty_pic.a which is preferred by OpenSpeedShop and cbtf-krell
     variant('krellpatch', default=False, description="build with openspeedshop based patch.")
-    variant('gold', default=True, description="build the gold linker")
     patch('binutilskrell-2.24.patch', when='@2.24+krellpatch')
 
     variant('libiberty', default=False, description='Also install libiberty.')
@@ -26,10 +25,6 @@ class Binutils(Package):
             '--enable-64-bit-bfd',
             '--enable-targets=all',
             '--with-sysroot=/']
-
-        if '+gold' in spec:
-            configure_args.append('--enable-gold')
-            configure_args.append('--enable-plugins')
 
         if '+libiberty' in spec:
             configure_args.append('--enable-install-libiberty')

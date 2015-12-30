@@ -52,45 +52,19 @@ class Gcc(Package):
     depends_on("mpfr")
     depends_on("gmp")
     depends_on("mpc")     # when @4.5:
-    depends_on("binutils~libiberty+gold")
+    depends_on("binutils~libiberty")
 
     # Save these until we can do optional deps.
     depends_on("isl", when=DEPENDS_ON_ISL_PREDICATE)
     #depends_on("ppl")
     #depends_on("cloog")
 
-    variant('lang_go',      default=True,  description="Include support for the go language")
-    variant('lang_fortran', default=True,  description="Include support for the Fortran language")
-    variant('lang_c',       default=True,  description="Include support for the C language")
-    variant('lang_cxx',     default=True,  description="Include support for the C++ language")
-    variant('lang_ada',     default=False, description="Include support for the ada language")
-    variant('lang_java',    default=False, description="Include support for the java language")
-    variant('lang_objc',    default=True,  description="Include support for the Objective-C language")
-    variant('lang_objcxx',  default=True,  description="Include support for the Objective-C++ language")
-    variant('jit',          default=False, description="Include support for JIT")
-
     def install(self, spec, prefix):
         # libjava/configure needs a minor fix to install into spack paths.
         filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure', string=True)
 
-        enabled_languages = set()#('c', 'c++', 'fortran', 'java', 'objc')
-        if '+lang_fortran' in spec:
-            enabled_languages.add('fortran')
-        if '+lang_c' in spec:
-            enabled_languages.add('c')
-        if '+lang_cxx' in spec:
-            enabled_languages.add('c++')
-        if '+lang_java' in spec:
-            enabled_languages.add('java')
-        if '+lang_objc' in spec:
-            enabled_languages.add('objc')
-        if '+lang_objcxx' in spec:
-            enabled_languages.add('obj-c++')
-        if '+lang_ada' in spec:
-            enabled_languages.add('ada')
-        if '+jit' in spec:
-            enabled_languages.add('jit')
-        if spec.satisfies("@4.7.1:") and '+lang_go' in spec:
+        enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
+        if spec.satisfies("@4.7.1:"):
             enabled_languages.add('go')
 
         # Generic options to compile GCC
