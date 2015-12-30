@@ -3,8 +3,9 @@
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by David Beckingsale, david@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
+# Written by David Beckingsale, david@llnl.gov
+# Heavily modified by others, including Tom Scogland, scogland1@llnl.gov
+# All rights reserved. LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
@@ -23,6 +24,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Llvm(Package):
@@ -40,33 +42,147 @@ class Llvm(Package):
     version('3.5.1', '2d3d8004f38852aa679e5945b8ce0b14', url='http://llvm.org/releases/3.5.1/llvm-3.5.1.src.tar.xz')
     version('3.0', 'a8e5f5f1c1adebae7b4a654c376a6005', url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz') # currently required by mesa package
 
+    variant('debug', default=False, description="Build a debug version of LLVM, this increases binary size considerably")
+    variant('clang', default=True, description="Build the LLVM C/C++/Objective-C compiler frontend")
+    variant('clang_extra', default=True, description="Build the clang extra tools")
+    variant('lldb', default=True, description="Build the LLVM debugger")
+    variant('internal_unwind', default=True, description="Build and use the libcxxabi built-in unwinder")
+    variant('compiler-rt', default=False, description="Compiler runtime including sanitizers and unwinding libraries")
+    variant('gold', default=True, description="Add support for the gold linker and build the gold linker plugin for LTO")
+
+    # Universal dependency
     depends_on('python@2.7:')
 
-    variant('libcxx', default=False, description="Builds the LLVM Standard C++ library targeting C++11")
+    # lldb dependencies
+    depends_on('ncurses', when='+lldb')
+    depends_on('swig', when='+lldb')
+    depends_on('libedit', when='+lldb')
 
-    ##########
-    # @3.7.0
-    resource(name='compiler-rt',
-             url='http://llvm.org/releases/3.7.0/compiler-rt-3.7.0.src.tar.xz', md5='383c10affd513026f08936b5525523f5',
-             destination='projects', when='@3.7.0')
-    resource(name='openmp',
-             url='http://llvm.org/releases/3.7.0/openmp-3.7.0.src.tar.xz', md5='f482c86fdead50ba246a1a2b0bbf206f',
-             destination='projects', when='@3.7.0')
-    resource(name='libcxx',
-             url='http://llvm.org/releases/3.7.0/libcxx-3.7.0.src.tar.xz', md5='46aa5175cbe1ad42d6e9c995968e56dd',
-             destination='projects', placement='libcxx', when='+libcxx@3.7.0')
-    resource(name='libcxxabi',
-             url='http://llvm.org/releases/3.7.0/libcxxabi-3.7.0.src.tar.xz', md5='5aa769e2fca79fa5335cfae8f6258772',
-             destination='projects', placement='libcxxabi', when='+libcxx@3.7.0')
-    ##########
+    # gold support
+    depends_on('binutils+gold', when='+gold')
+
+    base_url =  'http://llvm.org/releases/%%(version)s/%(pkg)s-%%(version)s.src.tar.xz'
+    llvm_url = base_url % { 'pkg' : 'llvm'}
+
+    resources = {
+                    'compiler-rt' : {
+                        'url' : base_url % { 'pkg' : 'compiler-rt'},
+                        'destination' : 'projects',
+                        'placement' : 'compiler-rt',
+                    },
+                    'openmp' : {
+                        'url' : base_url % { 'pkg' : 'openmp'},
+                        'destination' : 'projects',
+                        'placement' : 'openmp',
+                    },
+                    'libcxx' : {
+                        'url' : base_url % { 'pkg' : 'libcxx'},
+                        'destination' : 'projects',
+                        'placement' : 'libcxx',
+                    },
+                    'libcxxabi' : {
+                        'url' :  base_url % { 'pkg' : 'libcxxabi'},
+                        'destination' : 'projects',
+                        'placement' : 'libcxxabi',
+                    },
+                    'clang' : {
+                        'url' :  base_url % { 'pkg' : 'cfe'},
+                        'destination' : 'tools',
+                        'placement' : 'clang',
+                    },
+                    'clang-tools-extra' : {
+                        'url' :  base_url % { 'pkg' : 'clang-tools-extra'},
+                        'destination' : 'tools/clang/tools',
+                        'placement' : 'clang-tools-extra',
+                    },
+                    'lldb' : {
+                        'url' :  base_url % { 'pkg' : 'lldb'},
+                        'destination' : 'tools',
+                        'placement' : 'lldb',
+                    },
+                    'polly' : {
+                        'url' :  base_url % { 'pkg' : 'polly'},
+                        'destination' : 'tools',
+                        'placement' : 'polly',
+                    },
+                    'llvm-libunwind' : {
+                        'url' :  base_url % { 'pkg' : 'libunwind'},
+                        'destination' : 'projects',
+                        'placement' : 'libunwind',
+                    },
+                }
+    releases = [ 
+                  {
+                    'version' : '3.7.0',
+                    'md5':'b98b9495e5655a672d6cb83e1a180f8e',
+                    'resources' : { 
+                        # FIXME: compiler-rt 
+                        # 'compiler-rt' : '383c10affd513026f08936b5525523f5',
+                        'openmp' : 'f482c86fdead50ba246a1a2b0bbf206f',
+                        'polly' : '32f93ffc9cc7e042df22089761558f8b',
+                        'libcxx' : '46aa5175cbe1ad42d6e9c995968e56dd',
+                        'libcxxabi' : '5aa769e2fca79fa5335cfae8f6258772',
+                        'clang' : '8f9d27335e7331cf0a4711e952f21f01',
+                        'clang-tools-extra' : 'd5a87dacb65d981a427a536f6964642e',
+                        'lldb' : 'e5931740400d1dc3e7db4c7ba2ceff68',
+                        'llvm-libunwind' : '9a75392eb7eb8ed5c0840007e212baf5',
+                        }
+                  },
+                  {
+                    'version' : '3.6.2',
+                    'md5':'0c1ee3597d75280dee603bae9cbf5cc2',
+                    'resources' : { 
+                        'compiler-rt' : 'e3bc4eb7ba8c39a6fe90d6c988927f3c',
+                        'openmp' : '65dd5863b9b270960a96817e9152b123',
+                        'libcxx' : '22214c90697636ef960a49aef7c1823a',
+                        'libcxxabi' : '17518e361e4e228f193dd91e8ef54ba2',
+                        'clang' : 'ff862793682f714bb7862325b9c06e20',
+                        'clang-tools-extra' : '3ebc1dc41659fcec3db1b47d81575e06',
+                        'lldb' : '51e5eb552f777b950bb0ff326e60d5f0',
+                        }
+                  },
+                  {
+                    'version' : '3.5.1',
+                    'md5':'2d3d8004f38852aa679e5945b8ce0b14',
+                    'resources' : { 
+                        'compiler-rt' : 'd626cfb8a9712cb92b820798ab5bc1f8',
+                        'openmp' : '121ddb10167d7fc38b1f7e4b029cf059',
+                        'libcxx' : '406f09b1dab529f3f7879f4d548329d2',
+                        'libcxxabi' : 'b22c707e8d474a99865ad3c521c3d464',
+                        'clang' : '93f9532f8f7e6f1d8e5c1116907051cb',
+                        'clang-tools-extra' : 'f13f31ed3038acadc6fa63fef812a246',
+                        'lldb' : 'cc5ea8a414c62c33e760517f8929a204',
+                        }
+                  },
+               ]
+
+    for release in releases:
+        version(release['version'], release['md5'], url=llvm_url % release)
+
+        for name, md5 in release['resources'].items():
+            resource(name=name,
+                     url=resources[name]['url'] % release,
+                     md5=md5,
+                     destination=resources[name]['destination'],
+                     when='@%(version)s' % release,
+                     placement=resources[name].get('placement', None))
 
     def install(self, spec, prefix):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
+        build_type = 'Debug'  if '+debug' in spec else 'Release'
+
+        if  '+clang' not in spec:
+            if '+clang_extra' in spec:
+                raise SpackException('The clang_extra variant requires the clang variant to be selected')
+            if '+lldb' in spec:
+                raise SpackException('The lldb variant requires the clang variant to be selected')
 
         with working_dir('spack-build', create=True):
             cmake('..',
+                  '-DCMAKE_RELEASE_TYPE=' + build_type,
                   '-DLLVM_REQUIRES_RTTI:BOOL=ON',
                   '-DPYTHON_EXECUTABLE:PATH=%s/bin/python' % spec['python'].prefix,
                   *std_cmake_args)
-            make()
+            make("VERBOSE=1")
             make("install")
+

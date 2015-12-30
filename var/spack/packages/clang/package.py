@@ -36,20 +36,42 @@ class Clang(Package):
     homepage = 'http://clang.llvm.org'
     url = 'http://llvm.org/releases/3.7.0/cfe-3.7.0.src.tar.xz'
 
-    depends_on('llvm@3.7.0', when='@3.7.0')
-    depends_on('llvm@3.6.2', when='@3.6.2')
-    depends_on('llvm@3.5.1', when='@3.5.1')
+    clang_url = 'http://llvm.org/releases/%(version)s/cfe-%(version)s.src.tar.xz'
 
-    version('3.7.0', '8f9d27335e7331cf0a4711e952f21f01', url='http://llvm.org/releases/3.7.0/cfe-3.7.0.src.tar.xz')
-    version('3.6.2', 'ff862793682f714bb7862325b9c06e20', url='http://llvm.org/releases/3.6.2/cfe-3.6.2.src.tar.xz')
-    version('3.5.1', '93f9532f8f7e6f1d8e5c1116907051cb', url='http://llvm.org/releases/3.5.1/cfe-3.5.1.src.tar.xz')
+    resources = {
+                    'clang-tools-extra' : {
+                        'url' : 'http://llvm.org/releases/%(version)s/clang-tools-extra-%(version)s.src.tar.xz',
+                        'destination' : 'tools'
+                    },
+                }
+    releases = [ 
+                  {
+                    'version' : '3.7.0',
+                    'md5':'8f9d27335e7331cf0a4711e952f21f01',
+                    'resources' : { 'clang-tools-extra' : 'd5a87dacb65d981a427a536f6964642e' }
+                  },
+                  {
+                    'version' : '3.6.2',
+                    'md5':'ff862793682f714bb7862325b9c06e20',
+                    'resources' : { 'clang-tools-extra' : '3ebc1dc41659fcec3db1b47d81575e06' }
+                  },
+                  {
+                    'version' : '3.5.1',
+                    'md5':'93f9532f8f7e6f1d8e5c1116907051cb',
+                    'resources' : { 'clang-tools-extra' : 'f13f31ed3038acadc6fa63fef812a246' }
+                  },
+               ]
 
-    ##########
-    # @3.7.0
-    resource(name='clang-tools-extra',
-             url='http://llvm.org/releases/3.7.0/clang-tools-extra-3.7.0.src.tar.xz',
-             md5='d5a87dacb65d981a427a536f6964642e', destination='tools', when='@3.7.0')
-    ##########
+    for release in releases:
+        version(release['version'], release['md5'], url=clang_url % release)
+        depends_on('llvm@%(version)s' % release, when='@%(version)s' % release)
+
+        for name, md5 in release['resources'].items():
+            resource(name=name,
+                     url=resources[name]['url'] % release,
+                     md5=md5,
+                     destination=resources[name]['destination'],
+                     when='@%(version)s' % release)
 
     def install(self, spec, prefix):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
