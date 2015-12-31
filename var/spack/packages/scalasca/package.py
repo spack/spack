@@ -1,65 +1,63 @@
-# FIXME: Add copyright
+##############################################################################
+# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License (as published by
+# the Free Software Foundation) version 2.1 dated February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 
 from spack import *
 
+
 class Scalasca(Package):
-    """Scalasca is a software tool that supports the performance optimization
-       of parallel programs by measuring and analyzing their runtime behavior. 
-       The analysis identifies potential performance bottlenecks - in 
-       particular those concerning communication and synchronization - and 
-       offers guidance in exploring their causes."""
+    """
+    Scalasca is a software tool that supports the performance optimization of parallel programs by measuring and
+    analyzing their runtime behavior. The analysis identifies potential performance bottlenecks - in particular those
+    concerning communication and synchronization - and offers guidance in exploring their causes.
+    """
 
-    # FIXME: add a proper url for your package's homepage here.
     homepage = "http://www.scalasca.org"
-    url      = "http://apps.fz-juelich.de/scalasca/releases/scalasca/2.1/dist/scalasca-2.1.tar.gz"
+    url = "http://apps.fz-juelich.de/scalasca/releases/scalasca/2.1/dist/scalasca-2.1.tar.gz"
 
-    version('2.1', 'bab9c2b021e51e2ba187feec442b96e6', 
-            url = 'http://apps.fz-juelich.de/scalasca/releases/scalasca/2.1/dist/scalasca-2.1.tar.gz' )
+    version('2.2.2', '2bafce988b0522d18072f7771e491ab9',
+            url='http://apps.fz-juelich.de/scalasca/releases/scalasca/2.2/dist/scalasca-2.2.2.tar.gz')
+
+    version('2.1', 'bab9c2b021e51e2ba187feec442b96e6',
+            url='http://apps.fz-juelich.de/scalasca/releases/scalasca/2.1/dist/scalasca-2.1.tar.gz')
 
     depends_on("mpi")
-    depends_on("otf2@1.4")
-    depends_on("cube@4.2.3")
-
-    backend_user_provided = """\
-CC=cc
-CXX=c++
-F77=f77
-FC=f90
-CFLAGS=-fPIC
-CXXFLAGS=-fPIC
-"""
-    frontend_user_provided = """\
-CC_FOR_BUILD=cc
-CXX_FOR_BUILD=c++
-F77_FOR_BUILD=f70
-FC_FOR_BUILD=f90
-CFLAGS_FOR_BUILD=-fPIC
-CXXFLAGS_FOR_BUILD=-fPIC
-"""
-    mpi_user_provided = """\
-MPICC=mpicc
-MPICXX=mpicxx
-MPIF77=mpif77
-MPIFC=mpif90
-MPI_CFLAGS=-fPIC
-MPI_CXXFLAGS=-fPIC
-"""
+    ##########
+    # Hard-code dependencies for Scalasca according to what stated in the release page
+    # The OTF2 library path should be detected automatically from SCOREP
+    # SCALASCA 2.2.2
+    depends_on("scorep@1.4:", when='@2.2.2')
+    depends_on("cube@4.3:", when='@2.2.2')
+    # SCALASCA 2.1
+    depends_on("scorep@1.3", when='@2.1')
+    depends_on("cube@4.2:", when='@2.1')
+    ##########
 
     def install(self, spec, prefix):
         configure_args = ["--prefix=%s" % prefix,
-                          "--with-custom-compilers", 
-                          "--with-otf2=%s" % spec['otf2'].prefix.bin,
                           "--with-cube=%s" % spec['cube'].prefix.bin,
                           "--enable-shared"]
-
         configure(*configure_args)
-
-        make()
-        make("install")
-
-        # FIXME: Modify the configure line to suit your build system here.
-        configure("--prefix=%s" % prefix)
-
-        # FIXME: Add logic to build and install here
         make()
         make("install")

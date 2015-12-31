@@ -28,9 +28,9 @@ from spack import *
 
 class Scorep(Package):
     """
-    The Score-P measurement infrastructure is a highly scalable and
-       easy-to-use tool suite for profiling, event tracing, and online
-       analysis of HPC applications."""
+    The Score-P measurement infrastructure is a highly scalable and easy-to-use tool suite for profiling, event
+    tracing, and online analysis of HPC applications.
+    """
 
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/scorep/scorep-1.2.3.tar.gz"
@@ -55,15 +55,6 @@ class Scorep(Package):
     depends_on("mpi")
     depends_on("papi")
 
-    def get_compiler_config_line(self):
-        backend_user_provided = ['CC=%s' % self.compiler.cc_names[0],
-                                 'CXX=%s' % self.compiler.cxx_names[0],
-                                 'F77=%s' % self.compiler.f77_names[0] if len(self.compiler.f77_names) else "",
-                                 'FC=%s' % self.compiler.fc_names[0] if len(self.compiler.fc_names) else "",
-                                 'CFLAGS=-fPIC %s' % self.rpath_args,
-                                 'CXXFLAGS=-fPIC %s'% self.rpath_args]
-        return backend_user_provided
-
     def install(self, spec, prefix):
         configure = Executable( join_path(self.stage.source_path, 'configure') )
         with working_dir('spack-build', create=True):
@@ -73,8 +64,9 @@ class Scorep(Package):
                               "--with-cube=%s" % spec['cube'].prefix.bin,
                               "--with-papi-header=%s" % spec['papi'].prefix.include,
                               "--with-papi-lib=%s" % spec['papi'].prefix.lib,
-                              "--enable-shared"]
-            configure_args.extend(self.get_compiler_config_line())
+                              "--enable-shared",
+                              "CFLAGS=-fPIC",
+                              "CXXFLAGS=-fPIC"]
             configure(*configure_args)
             make()
             make("install")
