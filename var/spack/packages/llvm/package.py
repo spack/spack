@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os, shutil
 
 
 class Llvm(Package):
@@ -182,7 +183,7 @@ class Llvm(Package):
         if '+lto' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' + os.path.join( spec['binutils'].prefix, 'include'))
         if '+polly' in spec:
-            cmake_args.append('-DPOLLY_LINK_INTO_TOOLS:Bool=ON')
+            cmake_args.append('-DLINK_POLLY_INTO_TOOLS:Bool=ON')
         else:
             cmake_args.append('-DLLVM_EXTERNAL_POLLY_BUILD:Bool=OFF')
 
@@ -205,6 +206,10 @@ class Llvm(Package):
                 raise SpackException('The lldb variant requires the clang variant to be selected')
 
         with working_dir('spack-build', create=True):
-            cmake(*cmake_args)
-            make()
+            # cmake(*cmake_args)
+            # make()
             make("install")
+            query_path = os.path.join('bin', 'clang-query')
+            # Manually install clang-query, because llvm doesn't...
+            if os.path.exists(query_path):
+                shutil.copy(query_path, os.path.join(prefix, 'bin'))
