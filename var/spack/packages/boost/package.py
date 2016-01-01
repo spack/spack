@@ -14,6 +14,7 @@ class Boost(Package):
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 2
 
+    version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
     version('1.59.0', '6aa9a5c6a4ca1016edd0ed1178e3cb87')
     version('1.58.0', 'b8839650e61e9c1c0a89f371dd475546')
     version('1.57.0', '1be49befbdd9a5ce9def2983ba3e7b76')
@@ -48,11 +49,11 @@ class Boost(Package):
     variant('mpi', default=False, description='Activate the component Boost.MPI')
     variant('compression', default=True, description='Activate the compression Boost.iostreams')
 
-    depends_on('mpi', when='+mpi')
     depends_on('python', when='+python')
-    depends_on('zlib', when='+compression')
+    depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+compression')
-    
+    depends_on('zlib', when='+compression')
+
     def url_for_version(self, version):
         """Handle Boost's weird URLs, which write the version two different ways."""
         parts = [str(p) for p in Version(version)]
@@ -61,20 +62,23 @@ class Boost(Package):
         return "http://downloads.sourceforge.net/project/boost/boost/%s/boost_%s.tar.bz2" % (
             dots, underscores)
 
-    def determine_toolset(self):
-        toolsets = {'gcc': 'gcc',
+    def determine_toolset(self, spec):
+        if spec.satisfies("=darwin-x86_64"):
+            return 'darwin'
+
+        toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang'}
 
         for cc, toolset in toolsets.iteritems():
-            if(cc in self.compiler.cxx_names):
+            if cc in self.compiler.cxx_names:
                 return toolset
 
         # fallback to gcc if no toolset found
         return 'gcc'
 
     def determine_bootstrap_options(self, spec, options):
-        options.append('--with-toolset=%s' % self.determine_toolset())
+        options.append('--with-toolset=%s' % self.determine_toolset(spec))
 
         without_libs = []
         if '~mpi' in spec:
@@ -82,17 +86,20 @@ class Boost(Package):
         if '~python' in spec:
             without_libs.append('python')
         else:
-            options.append('--with-python=%s' % (spec['python'].prefix.bin + '/python'))
+            options.append('--with-python=%s' %
+                join_path(spec['python'].prefix.bin, 'python'))
 
         if without_libs:
             options.append('--without-libraries=%s' % ','.join(without_libs))
 
         with open('user-config.jam', 'w') as f:
             if '+mpi' in spec:
-                f.write('using mpi : %s ;\n' % (spec['mpi'].prefix.bin + '/mpicxx'))
+                f.write('using mpi : %s ;\n' %
+                    joinpath(spec['mpi'].prefix.bin, 'mpicxx'))
             if '+python' in spec:
-                f.write('using python : %s : %s ;\n' % (spec['python'].version,
-                                                      (spec['python'].prefix.bin + '/python')))
+                f.write('using python : %s : %s ;\n' %
+                    (spec['python'].version,
+                    joinpath(spec['python'].prefix.bin, 'python')))
 
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
@@ -101,22 +108,26 @@ class Boost(Package):
             options.append('variant=release')
 
         if '~compression' in spec:
-            options.extend(['-s NO_BZIP2=1',
-                            '-s NO_ZLIB=1',
-            ])
+            options.extend([
+                '-s', 'NO_BZIP2=1',
+                '-s', 'NO_ZLIB=1'])
 
         if '+compression' in spec:
-            options.extend(['-s BZIP2_INCLUDE=%s' % spec['bzip2'].prefix.include,
-                            '-s BZIP2_LIBPATH=%s' % spec['bzip2'].prefix.lib,
-                            '-s ZLIB_INCLUDE=%s' % spec['zlib'].prefix.include,
-                            '-s ZLIB_LIBPATH=%s' % spec['zlib'].prefix.lib])
+            options.extend([
+                '-s', 'BZIP2_INCLUDE=%s' % spec['bzip2'].prefix.include,
+                '-s', 'BZIP2_LIBPATH=%s' % spec['bzip2'].prefix.lib,
+                '-s', 'ZLIB_INCLUDE=%s' % spec['zlib'].prefix.include,
+                '-s', 'ZLIB_LIBPATH=%s' % spec['zlib'].prefix.lib,
+                ])
 
-        options.extend(['toolset=%s' % self.determine_toolset(),
-                       'link=static,shared',
-                       '--layout=tagged'])
+        options.extend([
+            'toolset=%s' % self.determine_toolset(spec),
+            'link=static,shared',
+            'threading=single,multi',
+            '--layout=tagged'])
 
     def install(self, spec, prefix):
-        # to make him find the user-config.jam
+        # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = './'
 
         bootstrap = Executable('./bootstrap.sh')
@@ -130,9 +141,8 @@ class Boost(Package):
         b2name = './b2' if spec.satisfies('@1.47:') else './bjam'
 
         b2 = Executable(b2name)
-        b2_options = ['-j %s' % make_jobs]
+        b2_options = ['-j', '%s' % make_jobs]
 
         self.determine_b2_options(spec, b2_options)
 
-        b2('install', 'threading=single', *b2_options)
-        b2('install', 'threading=multi', *b2_options)
+        b2('install', *b2_options)
