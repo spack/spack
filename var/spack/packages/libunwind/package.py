@@ -33,6 +33,12 @@ class Libunwind(Package):
     version('1.1', 'fb4ea2f6fbbe45bf032cd36e586883ce')
 
     def install(self, spec, prefix):
+        if not (spec.satisfies("=linux-x86_64") or
+                spec.satisfies("=linux-i686")):
+            # libunwind only works on Linux
+            mkdirp(prefix.lib)
+            return
+
         configure("--prefix=" + prefix)
         make()
         make("install")
