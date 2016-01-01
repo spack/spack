@@ -45,12 +45,11 @@ from spack.version import *
 from spack.util.compression import extension, allowed_archive
 
 
-def mirror_archive_filename(spec):
+def mirror_archive_filename(spec, fetcher):
     """Get the name of the spec's archive in the mirror."""
     if not spec.version.concrete:
         raise ValueError("mirror.path requires spec with concrete version.")
 
-    fetcher = spec.package.fetcher
     if isinstance(fetcher, fs.URLFetchStrategy):
         # If we fetch this version with a URLFetchStrategy, use URL's archive type
         ext = url.downloaded_file_extension(fetcher.url)
@@ -61,9 +60,9 @@ def mirror_archive_filename(spec):
     return "%s-%s.%s" % (spec.package.name, spec.version, ext)
 
 
-def mirror_archive_path(spec):
+def mirror_archive_path(spec, fetcher):
     """Get the relative path to the spec's archive within a mirror."""
-    return join_path(spec.name, mirror_archive_filename(spec))
+    return join_path(spec.name, mirror_archive_filename(spec, fetcher))
 
 
 def get_matching_versions(specs, **kwargs):
@@ -158,68 +157,47 @@ def create(path, specs, **kwargs):
     everything_already_exists = True
     for spec in version_specs:
         pkg = spec.package
-
-        stage = None
+        tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
         try:
-            # create a subdirectory for the current package@version
-            archive_path = os.path.abspath(join_path(mirror_root, mirror_archive_path(spec)))
-            subdir = os.path.dirname(archive_path)
-            mkdirp(subdir)
+            for ii, stage in enumerate(pkg.stage):
+                fetcher = stage.fetcher
+                if ii == 0:
+                    # create a subdirectory for the current package@version
+                    archive_path = os.path.abspath(join_path(mirror_root, mirror_archive_path(spec, fetcher)))
+                    name = spec.format("$_$@")
+                else:
+                    resource = stage.resource
+                    archive_path = join_path(subdir, suggest_archive_basename(resource))
+                    name = "{resource} ({pkg}).".format(resource=resource.name, pkg=spec.format("$_$@"))
+                subdir = os.path.dirname(archive_path)
+                mkdirp(subdir)
 
-            if os.path.exists(archive_path):
-                tty.msg("Already added %s" % spec.format("$_$@"))
-            else:
-                everything_already_exists = False
-                # Set up a stage and a fetcher for the download
-                unique_fetch_name = spec.format("$_$@")
-                fetcher = fs.for_package_version(pkg, pkg.version)
-                stage = Stage(fetcher, name=unique_fetch_name)
-                fetcher.set_stage(stage)
+                if os.path.exists(archive_path):
+                    tty.msg("{name} : already added".format(name=name))
+                else:
+                    everything_already_exists = False
+                    fetcher.fetch()
+                    if not kwargs.get('no_checksum', False):
+                        fetcher.check()
+                        tty.msg("{name} : checksum passed".format(name=name))
 
-                # Do the fetch and checksum if necessary
-                fetcher.fetch()
-                if not kwargs.get('no_checksum', False):
-                    fetcher.check()
-                    tty.msg("Checksum passed for %s@%s" % (pkg.name, pkg.version))
-
-                # Fetchers have to know how to archive their files.  Use
-                # that to move/copy/create an archive in the mirror.
-                fetcher.archive(archive_path)
-                tty.msg("Added %s." % spec.format("$_$@"))
-
-            # Fetch resources if they are associated with the spec
-            resources = pkg._get_resources()
-            for resource in resources:
-                resource_archive_path = join_path(subdir, suggest_archive_basename(resource))
-                if os.path.exists(resource_archive_path):
-                    tty.msg("Already added resource %s (%s@%s)." % (resource.name, pkg.name, pkg.version))
-                    continue
-                everything_already_exists = False
-                resource_stage_folder = pkg._resource_stage(resource)
-                resource_stage = Stage(resource.fetcher, name=resource_stage_folder)
-                resource.fetcher.set_stage(resource_stage)
-                resource.fetcher.fetch()
-                if not kwargs.get('no_checksum', False):
-                    resource.fetcher.check()
-                    tty.msg("Checksum passed for the resource %s (%s@%s)" % (resource.name, pkg.name, pkg.version))
-                resource.fetcher.archive(resource_archive_path)
-                tty.msg("Added resource %s (%s@%s)." % (resource.name, pkg.name, pkg.version))
+                    # Fetchers have to know how to archive their files.  Use
+                    # that to move/copy/create an archive in the mirror.
+                    fetcher.archive(archive_path)
+                    tty.msg("{name} : added".format(name=name))
 
             if everything_already_exists:
                 present.append(spec)
             else:
                 mirrored.append(spec)
-
         except Exception, e:
             if spack.debug:
                 sys.excepthook(*sys.exc_info())
             else:
                 tty.warn("Error while fetching %s." % spec.format('$_$@'), e.message)
             error.append(spec)
-
         finally:
-            if stage:
-                stage.destroy()
+            pkg.stage.destroy()
 
     return (present, mirrored, error)
 

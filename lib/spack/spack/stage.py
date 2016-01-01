@@ -30,6 +30,8 @@ import tempfile
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
 
+import spack.util.pattern as pattern
+
 import spack
 import spack.config
 import spack.fetch_strategy as fs
@@ -40,7 +42,7 @@ STAGE_PREFIX = 'spack-stage-'
 
 
 class Stage(object):
-    """A Stage object manaages a directory where some source code is
+    """A Stage object manages a directory where some source code is
        downloaded and built before being installed.  It handles
        fetching the source code, either as an archive to be expanded
        or by checking it out of a repository.  A stage's lifecycle
@@ -276,7 +278,12 @@ class Stage(object):
            archive.  Fail if the stage is not set up or if the archive is not yet
            downloaded.
         """
-        self.fetcher.expand()
+        archive_dir = self.source_path
+        if not archive_dir:
+            self.fetcher.expand()
+            tty.msg("Created stage in %s." % self.path)
+        else:
+            tty.msg("Already staged %s in %s." % (self.name, self.path))
 
 
     def chdir_to_source(self):
@@ -308,6 +315,46 @@ class Stage(object):
             os.getcwd()
         except OSError:
             os.chdir(os.path.dirname(self.path))
+
+
+class ResourceStage(Stage):
+    def __init__(self, url_or_fetch_strategy, root, resource, **kwargs):
+        super(ResourceStage, self).__init__(url_or_fetch_strategy, **kwargs)
+        self.root_stage = root
+        self.resource = resource
+
+    def expand_archive(self):
+        super(ResourceStage, self).expand_archive()
+        root_stage = self.root_stage
+        resource = self.resource
+        placement = os.path.basename(self.source_path) if resource.placement is None else resource.placement
+        if not isinstance(placement, dict):
+            placement = {'': placement}
+        # Make the paths in the dictionary absolute and link
+        for key, value in placement.iteritems():
+            link_path = join_path(root_stage.source_path, resource.destination, value)
+            source_path = join_path(self.source_path, key)
+            if not os.path.exists(link_path):
+                # Create a symlink
+                os.symlink(source_path, link_path)
+
+
+@pattern.composite(method_list=['fetch', 'check', 'expand_archive', 'restage', 'destroy'])
+class StageComposite:
+    """
+    Composite for Stage type objects. The first item in this composite is considered to be the root package, and
+    operations that return a value are forwarded to it.
+    """
+    @property
+    def source_path(self):
+        return self[0].source_path
+
+    @property
+    def path(self):
+        return self[0].path
+
+    def chdir_to_source(self):
+        return self[0].chdir_to_source()
 
 
 class DIYStage(object):
