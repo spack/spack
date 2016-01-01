@@ -15,8 +15,8 @@ class Hdf5(Package):
     version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
 
-    variant('cxx', default=False, description='Enable C++ support')
-    variant('fortran', default=False, description='Enable Fortran support')
+    variant('cxx', default=True, description='Enable C++ support')
+    variant('fortran', default=True, description='Enable Fortran support')
     variant('mpi', default=False, description='Enable MPI support')
     variant('threadsafe', default=False, description='Enable multithreading')
 
