@@ -31,7 +31,7 @@ from llnl.util.filesystem import *
 
 import spack
 from spack.stage import Stage
-from spack.fetch_strategy import URLFetchStrategy
+from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.directory_layout import YamlDirectoryLayout
 from spack.util.executable import which
 from spack.test.mock_packages_test import *
@@ -81,7 +81,10 @@ class InstallTest(MockPackagesTest):
         pkg = spack.db.get(spec)
 
         # Fake the URL for the package so it downloads from a file.
-        pkg.fetcher = URLFetchStrategy(self.repo.url)
+
+        fetcher = FetchStrategyComposite()
+        fetcher.append(URLFetchStrategy(self.repo.url))
+        pkg.fetcher = fetcher
 
         try:
             pkg.do_install()
