@@ -24,6 +24,7 @@
 ##############################################################################
 import sys
 import os
+import shutil
 import unittest
 import tempfile
 from ordereddict_backport import OrderedDict
@@ -103,6 +104,7 @@ class MockPackagesTest(unittest.TestCase):
         """Restore the real packages path after any test."""
         spack.repo.swap(self.db)
         spack.config.config_scopes = self.real_scopes
+        shutil.rmtree(self.temp_config, ignore_errors=True)
         spack.config.clear_config_caches()
 
         # Restore dependency changes that happened during the test

@@ -46,6 +46,7 @@ from spack.util.environment import get_path
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 
+# TODO: customize order in config file
 _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
 
 def _auto_compiler_spec(function):
@@ -132,7 +133,7 @@ def remove_compiler_from_config(compiler_spec, arch=None, scope=None):
     spack.config.update_config('compilers', update, scope)
 
 
-def all_compilers(arch=None, scope=None):
+def all_compilers_config(arch=None, scope=None):
     """Return a set of specs for all the compiler versions currently
        available to build with.  These are instances of CompilerSpec.
     """
@@ -144,25 +145,25 @@ def all_compilers(arch=None, scope=None):
     merged_config = get_compiler_config('all', scope=scope)
     merged_config = spack.config._merge_yaml(merged_config, arch_config)
 
-    # Return compiler specs for the result.
-    return [spack.spec.CompilerSpec(s) for s in merged_config]
+    return merged_config
 
 
-_cached_default_compiler = None
+def all_compilers(arch=None, scope=None):
+    # Return compiler specs from the merged config.
+    return [spack.spec.CompilerSpec(s)
+            for s in all_compilers_config(arch, scope)]
+
+
 def default_compiler():
-    global _cached_default_compiler
-    if _cached_default_compiler:
-        return _cached_default_compiler
     versions = []
-    for name in _default_order:  # TODO: customize order.
+    for name in _default_order:
         versions = find(name)
-        if versions: break
-
-    if not versions:
+        if versions:
+            break
+    else:
         raise NoCompilersError()
 
-    _cached_default_compiler = sorted(versions)[-1]
-    return _cached_default_compiler
+    return sorted(versions)[-1]
 
 
 def find_compilers(*path):
@@ -224,7 +225,7 @@ def compilers_for_spec(compiler_spec, arch=None, scope=None):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
-    config = get_compiler_config(arch, scope)
+    config = all_compilers_config(arch, scope)
 
     def get_compiler(cspec):
         items = config[str(cspec)]
