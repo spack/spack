@@ -193,10 +193,11 @@ class when(object):
        platform-specific versions.  There's not much we can do to get
        around this because of the way decorators work.
     """
-class when(object):
     def __init__(self, spec):
         pkg = get_calling_module_name()
-        self.spec = parse_anonymous_spec(spec, pkg)
+        if spec is True:
+            spec = pkg
+        self.spec = parse_anonymous_spec(spec, pkg) if spec is not False else None
 
     def __call__(self, method):
         # Get the first definition of the method in the calling scope
@@ -207,7 +208,9 @@ class when(object):
         if not type(original_method) == SpecMultiMethod:
             original_method = SpecMultiMethod(original_method)
 
-        original_method.register(self.spec, method)
+        if self.spec is not None:
+            original_method.register(self.spec, method)
+
         return original_method
 
 
