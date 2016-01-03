@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os.path
 
 class Libunwind(Package):
     """A portable and efficient C programming interface (API) to determine
@@ -32,10 +33,25 @@ class Libunwind(Package):
 
     version('1.1', 'fb4ea2f6fbbe45bf032cd36e586883ce')
 
+    def detect_elf(self):
+        """
+            Determine whether the current system supports ELF,
+            i.e. whether the file "elf.h" can be included
+        """
+        with working_dir('check-for-elf', create=True):
+            with open('elf.c', 'w') as f:
+                f.write("#include <elf.h>\n")
+            with open('Makefile', 'w') as f:
+                f.write("elf.o: elf.c; cc -c elf.c\n")
+            try:
+                make()
+            except:
+                pass
+            return os.path.exists('elf.o')
+
     def install(self, spec, prefix):
-        if not (spec.satisfies("=linux-x86_64") or
-                spec.satisfies("=linux-i686")):
-            # libunwind only works on Linux
+        if not self.detect_elf():
+            # libunwind requires an ELF system
             mkdirp(prefix.lib)
             return
 
