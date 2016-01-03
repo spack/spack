@@ -42,25 +42,31 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='compiler_command')
 
+    scopes = spack.config.config_scopes
+
+    # Add
     add_parser = sp.add_parser('add', help='Add compilers to the Spack configuration.')
     add_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
-    add_parser.add_argument('--scope', choices=spack.config.config_scopes,
+    add_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_modify_scope,
                             help="Configuration scope to modify.")
 
-    remove_parser = sp.add_parser('remove', help='Remove compiler by spec.')
+    # Remove
+    remove_parser = sp.add_parser('remove', aliases=['rm'], help='Remove compiler by spec.')
     remove_parser.add_argument(
         '-a', '--all', action='store_true', help='Remove ALL compilers that match spec.')
     remove_parser.add_argument('compiler_spec')
-    remove_parser.add_argument('--scope', choices=spack.config.config_scopes,
+    remove_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_modify_scope,
                                help="Configuration scope to modify.")
 
+    # List
     list_parser = sp.add_parser('list', help='list available compilers')
-    list_parser.add_argument('--scope', choices=spack.config.config_scopes,
+    list_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_list_scope,
                              help="Configuration scope to read from.")
 
+    # Info
     info_parser = sp.add_parser('info', help='Show compiler paths.')
     info_parser.add_argument('compiler_spec')
-    info_parser.add_argument('--scope', choices=spack.config.config_scopes,
+    info_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_list_scope,
                              help="Configuration scope to read from.")
 
 
@@ -132,6 +138,7 @@ def compiler_list(args):
 def compiler(parser, args):
     action = { 'add'    : compiler_add,
                'remove' : compiler_remove,
+               'rm'     : compiler_remove,
                'info'   : compiler_info,
                'list'   : compiler_list }
     action[args.compiler_command](args)

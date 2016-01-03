@@ -56,15 +56,12 @@ etc_path       = join_path(prefix, "etc")
 # Set up the default packages database.
 #
 import spack.repository
-_repo_paths = spack.config.get_repos_config()
-if not _repo_paths:
-    tty.die("Spack configuration contains no package repositories.")
-
 try:
-    repo = spack.repository.RepoPath(*_repo_paths)
+    repo = spack.repository.RepoPath()
     sys.meta_path.append(repo)
-except spack.repository.BadRepoError, e:
-    tty.die('Bad repository. %s' % e.message)
+except spack.repository.RepoError, e:
+    tty.error('while initializing Spack RepoPath:')
+    tty.die(e.message)
 
 #
 # Set up the installed packages database

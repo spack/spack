@@ -244,8 +244,7 @@ class Stage(object):
         # TODO: move mirror logic out of here and clean it up!
         if self.mirror_path:
             mirrors = spack.config.get_config('mirrors')
-            mirrors = [(n,u) for m in mirrors for n,u in m.items()]
-            urls = [urljoin(u, self.mirror_path) for name, u in mirrors]
+            urls = [urljoin(u, self.mirror_path) for name, u in mirrors.items()]
 
             digest = None
             if isinstance(self.fetcher, fs.URLFetchStrategy):

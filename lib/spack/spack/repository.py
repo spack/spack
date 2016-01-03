@@ -36,6 +36,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
 
 import spack.error
+import spack.config
 import spack.spec
 from spack.virtual import ProviderIndex
 from spack.util.naming import *
@@ -53,6 +54,7 @@ repo_config_name   = 'repo.yaml'   # Top-level filename for repo config.
 packages_dir_name  = 'packages'    # Top-level repo directory containing pkgs.
 package_file_name  = 'package.py'  # Filename for packages in a repository.
 
+
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
        function to a Spec."""
@@ -69,6 +71,11 @@ def _make_namespace_module(ns):
     module.__path__ = []
     module.__package__ = ns
     return module
+
+
+def substitute_spack_prefix(path):
+    """Replaces instances of $spack with Spack's prefix."""
+    return path.replace('$spack', spack.prefix)
 
 
 class RepoPath(object):
@@ -89,10 +96,20 @@ class RepoPath(object):
         self._all_package_names = []
         self._provider_index = None
 
+        # If repo_dirs is empty, just use the configuration
+        if not repo_dirs:
+            repo_dirs = spack.config.get_config('repos')
+            if not repo_dirs:
+                raise NoRepoConfiguredError(
+                    "Spack configuration contains no package repositories.")
+
         # Add each repo to this path.
         for root in repo_dirs:
-            repo = Repo(root, self.super_namespace)
-            self.put_last(repo)
+            try:
+                repo = Repo(root, self.super_namespace)
+                self.put_last(repo)
+            except RepoError as e:
+                tty.warn("Failed to initialize repository at '%s'." % root, e.message)
 
 
     def swap(self, other):
@@ -121,12 +138,12 @@ class RepoPath(object):
 
         """
         if repo.root in self.by_path:
-            raise DuplicateRepoError("Package repos are the same",
-                                     repo, self.by_path[repo.root])
+            raise DuplicateRepoError("Duplicate repository: '%s'" % repo.root)
 
         if repo.namespace in self.by_namespace:
-            raise DuplicateRepoError("Package repos cannot provide the same namespace",
-                                     repo, self.by_namespace[repo.namespace])
+            raise DuplicateRepoError(
+                "Package repos '%s' and '%s' both provide namespace %s."
+                % (repo.root, self.by_namespace[repo.namespace].root, repo.namespace))
 
         # Add repo to the pkg indexes
         self.by_namespace[repo.full_namespace] = repo
@@ -292,7 +309,8 @@ class Repo(object):
 
         """
         # Root directory, containing _repo.yaml and package dirs
-        self.root = root
+        # Allow roots to by spack-relative by starting with '$spack'
+        self.root = substitute_spack_prefix(root)
 
         # super-namespace for all packages in the Repo
         self.super_namespace = namespace
@@ -629,13 +647,27 @@ class Repo(object):
         return self.exists(pkg_name)
 
 
-class BadRepoError(spack.error.SpackError):
+class RepoError(spack.error.SpackError):
+    """Superclass for repository-related errors."""
+
+
+class NoRepoConfiguredError(RepoError):
+    """Raised when there are no repositories configured."""
+
+
+class BadRepoError(RepoError):
     """Raised when repo layout is invalid."""
-    def __init__(self, msg):
-        super(BadRepoError, self).__init__(msg)
 
 
-class UnknownPackageError(spack.error.SpackError):
+class DuplicateRepoError(RepoError):
+    """Raised when duplicate repos are added to a RepoPath."""
+
+
+class PackageLoadError(spack.error.SpackError):
+    """Superclass for errors related to loading packages."""
+
+
+class UnknownPackageError(PackageLoadError):
     """Raised when we encounter a package spack doesn't have."""
     def __init__(self, name, repo=None):
         msg = None
@@ -647,14 +679,7 @@ class UnknownPackageError(spack.error.SpackError):
         self.name = name
 
 
-class DuplicateRepoError(spack.error.SpackError):
-    """Raised when duplicate repos are added to a RepoPath."""
-    def __init__(self, msg, repo1, repo2):
-        super(UnknownPackageError, self).__init__(
-            "%s: %s, %s" % (msg, repo1, repo2))
-
-
-class FailedConstructorError(spack.error.SpackError):
+class FailedConstructorError(PackageLoadError):
     """Raised when a package's class constructor fails."""
     def __init__(self, name, exc_type, exc_obj, exc_tb):
         super(FailedConstructorError, self).__init__(

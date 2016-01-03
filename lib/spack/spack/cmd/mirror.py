@@ -36,6 +36,7 @@ import spack.config
 import spack.mirror
 from spack.spec import Spec
 from spack.error import SpackError
+from spack.util.spack_yaml import syaml_dict
 
 description = "Manage mirrors."
 
@@ -47,6 +48,7 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='mirror_command')
 
+    # Create
     create_parser = sp.add_parser('create', help=mirror_create.__doc__)
     create_parser.add_argument('-d', '--directory', default=None,
                                help="Directory in which to create mirror.")
@@ -60,22 +62,29 @@ def setup_parser(subparser):
         '-o', '--one-version-per-spec', action='store_const', const=1, default=0,
         help="Only fetch one 'preferred' version per spec, not all known versions.")
 
+    scopes = spack.config.config_scopes
 
+    # Add
     add_parser = sp.add_parser('add', help=mirror_add.__doc__)
     add_parser.add_argument('name', help="Mnemonic name for mirror.")
     add_parser.add_argument(
         'url', help="URL of mirror directory created by 'spack mirror create'.")
-    add_parser.add_argument('--scope', choices=spack.config.config_scopes,
-                            help="Configuration scope to modify.")
+    add_parser.add_argument(
+        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        help="Configuration scope to modify.")
 
-    remove_parser = sp.add_parser('remove', help=mirror_remove.__doc__)
+    # Remove
+    remove_parser = sp.add_parser('remove', aliases=['rm'], help=mirror_remove.__doc__)
     remove_parser.add_argument('name')
-    remove_parser.add_argument('--scope', choices=spack.config.config_scopes,
-                               help="Configuration scope to modify.")
+    remove_parser.add_argument(
+        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        help="Configuration scope to modify.")
 
+    # List
     list_parser = sp.add_parser('list', help=mirror_list.__doc__)
-    list_parser.add_argument('--scope', choices=spack.config.config_scopes,
-                             help="Configuration scope to read from.")
+    list_parser.add_argument(
+        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
+        help="Configuration scope to read from.")
 
 
 def mirror_add(args):
@@ -86,17 +95,18 @@ def mirror_add(args):
 
     mirrors = spack.config.get_config('mirrors', scope=args.scope)
     if not mirrors:
-        mirrors = []
+        mirrors = syaml_dict()
 
-    for m in mirrors:
-        for name, u in m.items():
-            if name == args.name:
-                tty.die("Mirror with name %s already exists." % name)
-            if u == url:
-                tty.die("Mirror with url %s already exists." % url)
-            # should only be one item per mirror dict.
+    for name, u in mirrors.items():
+        if name == args.name:
+            tty.die("Mirror with name %s already exists." % name)
+        if u == url:
+            tty.die("Mirror with url %s already exists." % url)
+        # should only be one item per mirror dict.
 
-    mirrors.insert(0, { args.name : url })
+    items = [(n,u) for n,u in mirrors.items()]
+    items.insert(0, (args.name, url))
+    mirrors = syaml_dict(items)
     spack.config.update_config('mirrors', mirrors, scope=args.scope)
 
 
@@ -106,15 +116,14 @@ def mirror_remove(args):
 
     mirrors = spack.config.get_config('mirrors', scope=args.scope)
     if not mirrors:
-        mirrors = []
+        mirrors = syaml_dict()
 
-    names = [n for m in mirrors for n,u in m.items()]
-    if not name in names:
+    if not name in mirrors:
         tty.die("No mirror with name %s" % name)
 
-    old_mirror = mirrors.pop(names.index(name))
+    old_value = mirrors.pop(name)
     spack.config.update_config('mirrors', mirrors, scope=args.scope)
-    tty.msg("Removed mirror %s with url %s." % old_mirror.popitem())
+    tty.msg("Removed mirror %s with url %s." % (name, old_value))
 
 
 def mirror_list(args):
@@ -124,14 +133,11 @@ def mirror_list(args):
         tty.msg("No mirrors configured.")
         return
 
-    names = [n for m in mirrors for n,u in m.items()]
-    max_len = max(len(n) for n in names)
+    max_len = max(len(n) for n in mirrors.keys())
     fmt = "%%-%ds%%s" % (max_len + 4)
 
-    for m in mirrors:
-        for name, url in m.items():
-            print fmt % (name, url)
-            # should only be one item per mirror dict.
+    for name in mirrors:
+        print fmt % (name, mirrors[name])
 
 
 def _read_specs_from_file(filename):
@@ -205,6 +211,7 @@ def mirror(parser, args):
     action = { 'create' : mirror_create,
                'add'    : mirror_add,
                'remove' : mirror_remove,
+               'rm'     : mirror_remove,
                'list'   : mirror_list }
 
     action[args.mirror_command](args)

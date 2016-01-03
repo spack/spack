@@ -204,6 +204,11 @@ ConfigScope('site', os.path.join(spack.etc_path, 'spack')),
 ConfigScope('user', os.path.expanduser('~/.spack'))
 
 
+def highest_precedence_scope():
+    """Get the scope with highest precedence (prefs will override others)."""
+    return config_scopes.values()[-1]
+
+
 def validate_scope(scope):
     """Ensure that scope is valid, and return a valid scope if it is None.
 
@@ -214,7 +219,7 @@ def validate_scope(scope):
     """
     if scope is None:
         # default to the scope with highest precedence.
-        return config_scopes.values()[-1]
+        return highest_precedence_scope()
 
     elif scope in config_scopes:
         return config_scopes[scope]
@@ -287,15 +292,10 @@ def _merge_yaml(dest, source):
         dest[:] = source + [x for x in dest if x not in seen]
         return dest
 
-    # Source dict is merged into dest. Extra ':' means overwrite.
+    # Source dict is merged into dest.
     elif they_are(dict):
         for sk, sv in source.iteritems():
-            # allow total override with, e.g., repos::
-            override = sk.endswith(':')
-            if override:
-                sk = sk.rstrip(':')
-
-            if override or not sk in dest:
+            if not sk in dest:
                 dest[sk] = copy.copy(sv)
             else:
                 dest[sk] = _merge_yaml(dest[sk], source[sk])
@@ -306,18 +306,13 @@ def _merge_yaml(dest, source):
         return copy.copy(source)
 
 
-def substitute_spack_prefix(path):
-    """Replaces instances of $spack with Spack's prefix."""
-    return path.replace('$spack', spack.prefix)
-
-
 def get_config(section, scope=None):
     """Get configuration settings for a section.
 
        Strips off the top-level section name from the YAML dict.
     """
     validate_section(section)
-    merged_section = {}
+    merged_section = syaml.syaml_dict()
 
     if scope is None:
         scopes = config_scopes.values()
@@ -327,35 +322,23 @@ def get_config(section, scope=None):
     for scope in scopes:
         # read potentially cached data from the scope.
         data = scope.get_section(section)
-        if not data or not section in data:
+
+        # Skip empty configs
+        if not data or not isinstance(data, dict):
             continue
 
-        # extract data under the section name header
-        data = data[section]
-
-        # ignore empty sections for easy commenting of single-line configs.
-        if not data:
+        # Allow complete override of site config with '<section>::'
+        override_key = section + ':'
+        if not (section in data or override_key in data):
+            tty.warn("Skipping bad configuration file: '%s'" % scope.path)
             continue
 
-        # merge config data from scopes.
-        merged_section = _merge_yaml(merged_section, data)
+        if override_key in data:
+            merged_section = data[override_key]
+        else:
+            merged_section = _merge_yaml(merged_section, data[section])
 
     return merged_section
-
-
-def get_repos_config():
-    repo_list = get_config('repos')
-    if repo_list is None:
-        return []
-
-    if not isinstance(repo_list, list):
-        tty.die("Bad repository configuration. 'repos' element does not contain a list.")
-
-    def expand_repo_path(path):
-        path = substitute_spack_prefix(path)
-        path = os.path.expanduser(path)
-        return path
-    return [expand_repo_path(repo) for repo in repo_list]
 
 
 def get_config_filename(scope, section):

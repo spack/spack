@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -33,12 +33,13 @@ from llnl.util.filesystem import join_path, mkdirp
 import spack.spec
 import spack.config
 from spack.util.environment import get_path
-from spack.repository import packages_dir_name, repo_config_name, Repo
+from spack.repository import *
 
 description = "Manage package source repositories."
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='repo_command')
+    scopes = spack.config.config_scopes
 
     # Create
     create_parser = sp.add_parser('create', help=repo_create.__doc__)
@@ -49,6 +50,25 @@ def setup_parser(subparser):
 
     # List
     list_parser = sp.add_parser('list', help=repo_list.__doc__)
+    list_parser.add_argument(
+        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
+        help="Configuration scope to read from.")
+
+    # Add
+    add_parser = sp.add_parser('add', help=repo_add.__doc__)
+    add_parser.add_argument('path', help="Path to a Spack package repository directory.")
+    add_parser.add_argument(
+        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        help="Configuration scope to modify.")
+
+    # Remove
+    remove_parser = sp.add_parser('remove', help=repo_remove.__doc__, aliases=['rm'])
+    remove_parser.add_argument(
+        'path_or_namespace',
+        help="Path or namespace of a Spack package repository.")
+    remove_parser.add_argument(
+        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        help="Configuration scope to modify.")
 
 
 def repo_create(args):
@@ -104,24 +124,86 @@ def repo_create(args):
 
 
 def repo_add(args):
-    """Remove a package source from the Spack configuration"""
-    # FIXME: how to deal with this with the current config architecture?
-    # FIXME: Repos do not have mnemonics, which I assumed would be simpler... should they have them after all?
+    """Add a package source to the Spack configuration"""
+    path = args.path
+
+    # check if the path is relative to the spack directory.
+    real_path = path
+    if path.startswith('$spack'):
+        real_path = spack.repository.substitute_spack_prefix(path)
+    elif not os.path.isabs(real_path):
+        real_path = os.path.abspath(real_path)
+        path = real_path
+
+    # check if the path exists
+    if not os.path.exists(real_path):
+        tty.die("No such file or directory: '%s'." % path)
+
+    # Make sure the path is a directory.
+    if not os.path.isdir(real_path):
+        tty.die("Not a Spack repository: '%s'." % path)
+
+    # Make sure it's actually a spack repository by constructing it.
+    repo = Repo(real_path)
+
+    # If that succeeds, finally add it to the configuration.
+    repos = spack.config.get_config('repos', args.scope)
+    if not repos: repos = []
+
+    if repo.root in repos or path in repos:
+        tty.die("Repository is already registered with Spack: '%s'" % path)
+
+    repos.insert(0, path)
+    spack.config.update_config('repos', repos, args.scope)
+    tty.msg("Created repo with namespace '%s'." % repo.namespace)
 
 
 def repo_remove(args):
-    """Remove a package source from the Spack configuration"""
-    # FIXME: see above.
+    """Remove a repository from the Spack configuration."""
+    repos = spack.config.get_config('repos', args.scope)
+    path_or_namespace = args.path_or_namespace
+
+    # If the argument is a path, remove that repository from config.
+    path = os.path.abspath(path_or_namespace)
+    if path in repos:
+        repos.remove(path)
+        spack.config.update_config('repos', repos, args.scope)
+        tty.msg("Removed repository '%s'." % path)
+        return
+
+    # If it is a namespace, remove corresponding repo
+    for path in repos:
+        try:
+            repo = Repo(path)
+            if repo.namespace == path_or_namespace:
+                repos.remove(repo.root)
+                spack.config.update_config('repos', repos, args.scope)
+                tty.msg("Removed repository '%s' with namespace %s."
+                        % (repo.root, repo.namespace))
+                return
+        except RepoError as e:
+            continue
+
+    tty.die("No repository with path or namespace: '%s'"
+            % path_or_namespace)
 
 
 def repo_list(args):
     """List package sources and their mnemoics"""
-    roots = spack.config.get_repos_config()
-    repos = [Repo(r) for r in roots]
+    roots = spack.config.get_config('repos', args.scope)
+    repos = []
+    for r in roots:
+        try:
+            repos.append(Repo(r))
+        except RepoError as e:
+            continue
 
     msg = "%d package repositor" % len(repos)
     msg += "y." if len(repos) == 1 else "ies."
     tty.msg(msg)
+
+    if not repos:
+        return
 
     max_ns_len = max(len(r.namespace) for r in repos)
     for repo in repos:
@@ -131,5 +213,8 @@ def repo_list(args):
 
 def repo(parser, args):
     action = { 'create' : repo_create,
-               'list'   : repo_list }
+               'list'   : repo_list,
+               'add'    : repo_add,
+               'remove' : repo_remove,
+               'rm'     : repo_remove}
     action[args.repo_command](args)
