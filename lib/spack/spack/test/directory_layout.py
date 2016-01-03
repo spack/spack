@@ -36,21 +36,25 @@ import spack
 from spack.spec import Spec
 from spack.repository import RepoPath
 from spack.directory_layout import YamlDirectoryLayout
+from spack.test.mock_packages_test import *
+
 
 # number of packages to test (to reduce test time)
 max_packages = 10
 
 
-class DirectoryLayoutTest(unittest.TestCase):
+class DirectoryLayoutTest(MockPackagesTest):
     """Tests that a directory layout works correctly and produces a
        consistent install path."""
 
     def setUp(self):
+        super(DirectoryLayoutTest, self).setUp()
         self.tmpdir = tempfile.mkdtemp()
         self.layout = YamlDirectoryLayout(self.tmpdir)
 
 
     def tearDown(self):
+        super(DirectoryLayoutTest, self).tearDown()
         shutil.rmtree(self.tmpdir, ignore_errors=True)
         self.layout = None
 
