@@ -420,6 +420,7 @@ class Spec(object):
         self._normal = kwargs.get('normal', False)
         self._concrete = kwargs.get('concrete', False)
         self.external = None
+        self.external_module = None
 
         # This allows users to construct a spec DAG with literals.
         # Note that given two specs a and b, Spec(a) copies a, but
@@ -1352,8 +1353,9 @@ class Spec(object):
             changed = (self.name != other.name and self.versions != other.versions and \
                        self.architecture != other.architecture and self.compiler != other.compiler and \
                        self.variants != other.variants and self._normal != other._normal and \
-                       self.concrete != other.concrete and self.external != other.external)
-                                       
+                       self.concrete != other.concrete and self.external != other.external and \
+                       self.external_module != other.external_module)
+
         # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
@@ -1365,6 +1367,7 @@ class Spec(object):
         self.variants = other.variants.copy()
         self.variants.spec = self
         self.external = other.external
+        self.external_module = other.external_module
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
@@ -1383,6 +1386,7 @@ class Spec(object):
         self._normal = other._normal
         self._concrete = other._concrete
         self.external = other.external
+        self.external_module = other.external_module
         return changed
 
 
@@ -1809,6 +1813,7 @@ class SpecParser(spack.parse.Parser):
         spec.architecture = None
         spec.compiler = None
         spec.external = None
+        spec.external_module = None
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
 

@@ -103,6 +103,8 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 import copy
 
+from spack.build_environment import get_path_from_module
+
 _config_sections = {}
 class _ConfigCategory:
     name = None
@@ -255,7 +257,8 @@ def get_packages_config():
         package_name = spack.spec.Spec(p.keys()[0]).name
         if package_name not in indexed_packages:
             indexed_packages[package_name] = []
-        indexed_packages[package_name].append({ spack.spec.Spec(key) : val for key, val in p.iteritems() })
+        pkg_dict = dict([ (spack.spec.Spec(key), val) for key, val in p.iteritems()])
+        indexed_packages[package_name].append( pkg_dict )
     return indexed_packages
 
 
@@ -286,9 +289,13 @@ def spec_externals(spec):
             if not pkg.satisfies(spec):
                 continue
             path = conf.get('path', None)
+            module = conf.get('module', None)
             if not path:
-                continue
-            spec_locations.append( (pkg, path) )
+                if not module:
+                    continue
+                else:
+                    path = get_path_from_module(module)
+            spec_locations.append( (pkg, path, module) )
     return spec_locations
         
     

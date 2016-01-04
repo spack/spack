@@ -97,7 +97,7 @@ class DefaultConcretizer(object):
             externals = spec_externals(pkg)
             buildable = not is_spec_nobuild(pkg)
             if buildable:
-                result.append((pkg, None))
+                result.append((pkg, None, None))
             if externals:
                 sorted_externals = sorted(externals, cmp=lambda a,b: a[0].__cmp__(b[0]))
                 for external in sorted_externals:
@@ -131,6 +131,7 @@ class DefaultConcretizer(object):
         if not candidate:
             #No ABI matches. Pick the top choice based on the orignal preferences.
             candidate = candidates[0]
+        external_module = candidate[2]
         external = candidate[1]
         candidate_spec = candidate[0]
         
@@ -143,6 +144,9 @@ class DefaultConcretizer(object):
             changed = True
         if not spec.external and external:
             spec.external = external
+            changed = True
+        if not spec.external_module and external_module:
+            spec.external_module = external_module
             changed = True
 
         #If we're external then trim the dependencies
