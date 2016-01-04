@@ -46,6 +46,7 @@ class Mpich(Package):
         os.environ['MPICH_F77'] = 'f77'
         os.environ['MPICH_F90'] = 'f90'
 
+        module.mpicc = join_path(self.prefix.bin, 'mpicc')
 
     def install(self, spec, prefix):
         config_args = ["--prefix=" + prefix,

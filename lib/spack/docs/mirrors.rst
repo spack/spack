@@ -205,12 +205,11 @@ And, if you want to remove a mirror, just remove it by name::
 Mirror precedence
 ----------------------------
 
-Adding a mirror really just adds a section in ``~/.spackconfig``::
+Adding a mirror really just adds a section in ``~/.spack/mirrors.yaml``::
 
-   [mirror "local_filesystem"]
-       url = file:///Users/gamblin2/spack-mirror-2014-06-24
-   [mirror "remote_server"]
-       url = https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
+   mirrors:
+   - local_filesystem: file:///Users/gamblin2/spack-mirror-2014-06-24
+   - remote_server: https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
 
 If you want to change the order in which mirrors are searched for
 packages, you can edit this file and reorder the sections.  Spack will

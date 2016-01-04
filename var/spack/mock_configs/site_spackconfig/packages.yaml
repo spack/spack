@@ -1,0 +1,13 @@
+packages:
+  - externaltool:
+      nobuild: True
+  - externaltool@1.0%gcc@4.5.0:
+      path: /path/to/external_tool
+  - externalvirtual@2.0%clang@3.3:
+      path: /path/to/external_virtual_clang
+      nobuild: True
+  - externalvirtual@1.0%gcc@4.5.0:
+      path: /path/to/external_virtual_gcc
+      nobuild: True
+
+
