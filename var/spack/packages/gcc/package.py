@@ -48,11 +48,14 @@ class Gcc(Package):
     version('4.7.4', '4c696da46297de6ae77a82797d2abe28')
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
+
+    variant('gold', default=True, description="Build the gold linker plugin for ld-based LTO")
     
     depends_on("mpfr")
     depends_on("gmp")
     depends_on("mpc")     # when @4.5:
-    depends_on("binutils~libiberty")
+    depends_on("binutils~libiberty", when='~gold')
+    depends_on("binutils~libiberty+gold", when='+gold')
 
     # Save these until we can do optional deps.
     depends_on("isl", when=DEPENDS_ON_ISL_PREDICATE)

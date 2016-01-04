@@ -45,7 +45,7 @@ class Llvm(Package):
     variant('polly', default=True, description="Build the LLVM polyhedral optimization plugin, only builds for 3.7.0+")
     variant('libcxx', default=True, description="Build the LLVM C++ standard library")
     variant('compiler-rt', default=True, description="Build the LLVM compiler runtime, including sanitizers")
-    variant('lto', default=True, description="Add support for LTO with the gold linker plugin")
+    variant('gold', default=True, description="Add support for LTO with the gold linker plugin")
 
 
     # Universal dependency
@@ -57,7 +57,7 @@ class Llvm(Package):
     depends_on('libedit', when='+lldb')
 
     # gold support
-    depends_on('binutils+gold', when='+lto')
+    depends_on('binutils+gold', when='+gold')
 
     # polly plugin
     depends_on('gmp', when='+polly')
@@ -180,7 +180,7 @@ class Llvm(Package):
                 '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
                 '-DPYTHON_EXECUTABLE:PATH=%s/bin/python' % spec['python'].prefix ])
 
-        if '+lto' in spec:
+        if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' + os.path.join( spec['binutils'].prefix, 'include'))
         if '+polly' in spec:
             cmake_args.append('-DLINK_POLLY_INTO_TOOLS:Bool=ON')
