@@ -89,15 +89,19 @@ off the top-levels of the tree and return subtrees.
 import os
 import exceptions
 import sys
-
-from external.ordereddict import OrderedDict
-from llnl.util.lang import memoized
+import copy
+import inspect
+import glob
+import imp
+import spack.spec
 import spack.error
+from llnl.util.lang import memoized
 
 from external import yaml
 from external.yaml.error import MarkedYAMLError
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
+import copy
 
 _config_sections = {}
 class _ConfigCategory:
@@ -114,8 +118,10 @@ class _ConfigCategory:
 
 _ConfigCategory('compilers', 'compilers.yaml', True)
 _ConfigCategory('mirrors', 'mirrors.yaml', True)
+_ConfigCategory('preferred', 'preferred.yaml', True)
 _ConfigCategory('view', 'views.yaml', True)
-_ConfigCategory('order', 'orders.yaml', True)
+_ConfigCategory('preferred', 'preferred.yaml', True)
+_ConfigCategory('packages', 'packages.yaml', True)
 
 """Names of scopes and their corresponding configuration files."""
 config_scopes = [('site', os.path.join(spack.etc_path, 'spack')),
@@ -156,25 +162,27 @@ def _merge_dicts(d1, d2):
     """Recursively merges two configuration trees, with entries
        in d2 taking precedence over d1"""
     if not d1:
-        return d2.copy()
+        return copy.copy(d2)
     if not d2:
         return d1
 
-    for key2, val2 in d2.iteritems():
-        if not key2 in d1:
-            d1[key2] = val2
-            continue
-        val1 = d1[key2]
-        if isinstance(val1, dict) and isinstance(val2, dict):
-            d1[key2] = _merge_dicts(val1, val2)
-            continue
-        if isinstance(val1, list) and isinstance(val2, list):
-            val1.extend(val2)
-            seen = set()
-            d1[key2] = [ x for x in val1 if not (x in seen or seen.add(x)) ]
-            continue
-        d1[key2] = val2
-    return d1
+    if (type(d1) is list) and (type(d2) is list):
+        d1.extend(d2)
+        return d1
+
+    if (type(d1) is dict) and (type(d2) is dict):
+        for key2, val2 in d2.iteritems():
+            if not key2 in d1:
+                d1[key2] = val2
+            elif type(d1[key2]) is dict and type(val2) is dict:
+                d1[key2] = _merge_dicts(d1[key2], val2)
+            elif (type(d1) is list) and (type(d2) is list):
+                d1.extend(d2)
+            else:
+                d1[key2] = val2
+        return d1
+
+    return d2
 
 
 def get_config(category_name):
@@ -227,9 +235,63 @@ def get_compilers_config(arch=None):
 
 
 def get_mirror_config():
-    """Get the mirror configuration from config files"""
-    return get_config('mirrors')
+    """Get the mirror configuration from config files as a list of name/location tuples"""
+    return [x.items()[0] for x in get_config('mirrors')]
 
+
+def get_preferred_config():
+    """Get the preferred configuration from config files"""
+    return get_config('preferred')
+
+
+@memoized
+def get_packages_config():
+    """Get the externals configuration from config files"""
+    package_config = get_config('packages')
+    if not package_config:
+        return {}
+    indexed_packages = {}
+    for p in package_config:
+        package_name = spack.spec.Spec(p.keys()[0]).name
+        if package_name not in indexed_packages:
+            indexed_packages[package_name] = []
+        indexed_packages[package_name].append({ spack.spec.Spec(key) : val for key, val in p.iteritems() })
+    return indexed_packages
+
+
+def is_spec_nobuild(spec):
+    """Return true if the spec pkgspec is configured as nobuild"""
+    allpkgs = get_packages_config()
+    name = spec.name
+    if not name in allpkgs:
+        return False
+    for itm in allpkgs[name]:
+        for pkg,conf in itm.iteritems():
+            if pkg.satisfies(spec):
+                if conf.get('nobuild', False):
+                    return True
+    return False
+
+
+def spec_externals(spec):
+    """Return a list of spec, directory pairs for each external location for spec"""
+    allpkgs = get_packages_config()
+    name = spec.name
+    spec_locations = []
+    
+    if not name in allpkgs:
+        return []
+    for itm in allpkgs[name]:
+        for pkg,conf in itm.iteritems():
+            if not pkg.satisfies(spec):
+                continue
+            path = conf.get('path', None)
+            if not path:
+                continue
+            spec_locations.append( (pkg, path) )
+    return spec_locations
+        
+    
 
 def get_config_scope_dirname(scope):
     """For a scope return the config directory"""
@@ -303,7 +365,7 @@ def add_to_mirror_config(addition_dict, scope=None):
 
 
 def add_to_compiler_config(addition_dict, scope=None, arch=None):
-    """Add compilerss to the configuration files"""
+    """Add compilers to the configuration files"""
     if not arch:
         arch = spack.architecture.sys_type()
     add_to_config('compilers', { str(arch) : addition_dict }, scope)

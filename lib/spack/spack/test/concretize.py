@@ -192,3 +192,31 @@ class ConcretizeTest(MockPackagesTest):
         # TODO: not exactly the syntax I would like.
         self.assertTrue(spec['libdwarf'].compiler.satisfies('clang'))
         self.assertTrue(spec['libelf'].compiler.satisfies('clang'))
+
+
+    def test_external_package(self):
+        spec = Spec('externaltool')
+        spec.concretize()
+
+        self.assertEqual(spec['externaltool'].external, '/path/to/external_tool')
+        self.assertFalse('externalprereq' in spec)
+        self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
+
+
+    def test_nobuild_package(self):
+        got_error = False
+        spec = Spec('externaltool%clang')
+        try:
+            spec.concretize()
+        except spack.concretize.NoBuildError:
+            got_error = True
+        self.assertTrue(got_error)
+
+
+    def test_external_and_virtual(self):
+        spec = Spec('externaltest')
+        spec.concretize()
+        self.assertTrue(spec['externaltool'].external, '/path/to/external_tool')
+        self.assertTrue(spec['stuff'].external, '/path/to/external_virtual_gcc')
+        self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
+        self.assertTrue(spec['stuff'].compiler.satisfies('gcc'))

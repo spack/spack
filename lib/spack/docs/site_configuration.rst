@@ -54,88 +54,78 @@ more elements to the list to indicate where your own site's temporary
 directory is.
 
 
-.. _concretization-policies:
+External Packages
+~~~~~~~~~~~~~~~~~~~~~
+It's possible for Spack to use certain externally-installed 
+packages rather than always rebuilding packages. This may be desirable
+if machines ship with system packages, such as a customized MPI
+that should be used instead of Spack building its own MPI.
 
-Concretization policies
-----------------------------
+External packages are configured through the ``packages.yaml`` file found
+in a Spack installation's ``etc/spack/`` or a user's ``~/.spack/``
+directory. Here's an example of an external configuration::
 
-When a user asks for a package like ``mpileaks`` to be installed,
-Spack has to make decisions like what version should be installed,
-what compiler to use, and how its dependencies should be configured.
-This process is called *concretization*, and it's covered in detail in
-:ref:`its own section <abstract-and-concrete>`.
+.. code-block:: yaml
 
-The default concretization policies are in the
-:py:mod:`spack.concretize` module, specifically in the
-:py:class:`spack.concretize.DefaultConcretizer` class.  These are the
-important methods used in the concretization process:
+  packages:
+    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib:
+        path: /opt/openmpi-1.4.3
+    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug:
+        path: /opt/openmpi-1.4.3-debug
+    - openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib:
+        path: /opt/openmpi-1.6.5-intel
 
-* :py:meth:`concretize_version(self, spec) <spack.concretize.DefaultConcretizer.concretize_version>`
-* :py:meth:`concretize_architecture(self, spec) <spack.concretize.DefaultConcretizer.concretize_architecture>`
-* :py:meth:`concretize_compiler(self, spec) <spack.concretize.DefaultConcretizer.concretize_compiler>`
-* :py:meth:`choose_provider(self, spec, providers) <spack.concretize.DefaultConcretizer.choose_provider>`
+This example lists three installations of OpenMPI, one built with gcc,
+one built with gcc and debug information, and another built with OpenMPI.
+If Spack is asked to build a package that uses one of these MPIs as a 
+dependency, it link the package to the pre-installed OpenMPI in
+the given directory.  
 
-The first three take a :py:class:`Spec <spack.spec.Spec>` object and
-modify it by adding constraints for the version.  For example, if the
-input spec had a version range like `1.0:5.0.3`, then the
-``concretize_version`` method should set the spec's version to a
-*single* version in that range.  Likewise, ``concretize_architecture``
-selects an architecture when the input spec does not have one, and
-``concretize_compiler`` needs to set both a concrete compiler and a
-concrete compiler version.
+Each ``packages.yaml`` should begin with a ``packages:`` token, followed
+by a list of package specs.  Specs in the ``packages.yaml`` have at most
+one ``path`` tag, which specifies the top-level directory where the 
+spec is installed.  
 
-``choose_provider()`` affects how concrete implementations are chosen
-based on a virtual dependency spec.  The input spec is some virtual
-dependency and the ``providers`` index is a :py:class:`ProviderIndex
-<spack.packages.ProviderIndex>` object.  The ``ProviderIndex`` maps
-the virtual spec to specs for possible implementations, and
-``choose_provider()`` should simply choose one of these.  The
-``concretize_*`` methods will be called on the chosen implementation
-later, so there is no need to fully concretize the spec when returning
-it.
+Each spec should be as well-defined as reasonably possible.  If a 
+package lacks a spec component, such as missing a compiler or 
+package version, then Spack will guess the missing component based 
+on its most-favored packages, and it may guess incorrectly.
 
-The ``DefaultConcretizer`` is intended to provide sensible defaults
-for each policy, but there are certain choices that it can't know
-about.  For example, one site might prefer ``OpenMPI`` over ``MPICH``,
-or another might prefer an old version of some packages.  These types
-of special cases can be integrated with custom concretizers.
+All package versions and compilers listed in ``packages.yaml`` should 
+have entries in Spack's packages and compiler configuration, even
+the package and compiler may not actually be used.
 
-Writing a custom concretizer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The packages configuration can tell Spack to use an external location
+for certain package versions, but it does not restrict Spack to using
+external packages.  In the above example, if an OpenMPI 1.8.4 became
+available Spack may choose to start building and linking with that version
+rather than continue using the pre-installed OpenMPI versions.
 
-To write your own concretizer, you need only subclass
-``DefaultConcretizer`` and override the methods you want to change.
-For example, you might write a class like this to change *only* the
-``concretize_version()`` behavior:
+To prevent this, the ``packages.yaml`` configuration also allows packages
+to be flagged as non-buildable.  The previous example could be modified to
+be::
 
-.. code-block:: python
+.. code-block:: yaml
 
-   from spack.concretize import DefaultConcretizer
+  packages:
+    - openmpi:
+        nobuild: True
+    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib:
+        path: /opt/openmpi-1.4.3
+    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug:
+        path: /opt/openmpi-1.4.3-debug
+    - openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib:
+        path: /opt/openmpi-1.6.5-intel
 
-   class MyConcretizer(DefaultConcretizer):
-       def concretize_version(self, spec):
-           # implement custom logic here.
+The addition of the ``nobuild`` flag tells Spack that it should never build
+its own version of OpenMPI, and it will instead always rely on a pre-built
+OpenMPI.  Similar to ``path``, ``nobuild`` is specified as a property under
+a spec and will prevent building of anything that satisfies that spec.
 
-Once you have written your custom concretizer, you can make Spack use
-it by editing ``globals.py``.  Find this part of the file:
-
-.. code-block:: python
-
-   #
-   # This controls how things are concretized in spack.
-   # Replace it with a subclass if you want different
-   # policies.
-   #
-   concretizer = DefaultConcretizer()
-
-Set concretizer to *your own* class instead of the default:
-
-.. code-block:: python
-
-   concretizer = MyConcretizer()
-
-The next time you run Spack, your changes should take effect.
-
+The ``nobuild`` does not need to be paired with external packages.  
+It could also be used alone to forbid versions of packages that may be 
+buggy or otherwise undesirable.
+  
 
 Profiling
 ~~~~~~~~~~~~~~~~~~~~~
