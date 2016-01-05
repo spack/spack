@@ -17,15 +17,22 @@ class Cray(Architecture):
 
         # Handle the default here so we can check for a key error
         if 'CRAY_CPU_TARGET' in os.environ:
-            default = os.environ['CRAY_CPU_TARGET']
+            self.default = os.environ['CRAY_CPU_TARGET']
 
-        # Back End compiler needs the proper target module loaded.
-        self.add_target(self.back_end, Target(self.front_end,'craype-'+ self.back_end))
-        self.add_target(self.default, Target(self.default,'craype-' + self.default))
+        # Change the defaults to haswell if we're on an XC40
+        if self.default == 'haswell':
+            self.front_end = self.default
+            self.back_end = self.default
+
         # Could switch to use modules and fe targets for front end
         # Currently using compilers by path for front end.
         self.add_target(self.front_end, Target(self.front_end))
-
+        # Back End compiler needs the proper target module loaded.
+        self.add_target(self.back_end, Target(self.front_end,'craype-'+ self.back_end))
+        self.add_target(self.default, Target(self.default,'craype-' + self.default))
+        # This is kludgy and the order matters when the targets are all haswell
+        # This is because the last one overwrites the others when they have the
+        # same name.
 
     @classmethod
     def detect(self):
