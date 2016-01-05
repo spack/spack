@@ -216,9 +216,9 @@ def compiler_for_spec(compiler_spec, target):
     assert(compiler_spec.concrete)
     compilers = compilers_for_spec(compiler_spec)
     if target.compiler_strategy == "PATH":
-        filter(lambda c: c.modules is None, compilers)
+        compilers = [c for c in compilers if c.modules is None]
     elif target.compiler_strategy == "MODULES":
-        filter(lambda c: c.modules is not None, compilers)
+        compilers = [c for c in compilers if c.modules is not None]
     assert(len(compilers) == 1)
     return compilers[0]
 
