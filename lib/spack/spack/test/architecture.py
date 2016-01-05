@@ -2,18 +2,34 @@
     the functions are looking for the correct architecture name
 """
 import unittest
+import os
+import platform
 import spack
 from spack.architecture import *
+from spack.architectures.cray import Cray
+from spack.architectures.linux import Linux
+from spack.architectures.bgq import Bgq
 
 class ArchitectureTest(unittest.TestCase):
 
-    def test_Architecture_class(self):
-        a = Architecture('Cray-XC40')
-        a.add_arch_strategy()
-        self.assertEquals(a.get_arch_dict(), {'Cray-XC40': 'MODULES'})
+    def test_Architecture_class_and_compiler_strategies(self):
+        a = Cray()
+        t = a.target('default')
+        self.assertEquals(t.compiler_strategy, 'MODULES')
+        b = Linux()
+        s = b.target('default')
+        self.assertEquals(s.compiler_strategy, 'PATH')
 
-    def test_get_sys_type_from_config_file(self):
-        output_arch_class = get_sys_type_from_config_file()
-        my_arch_class = Architecture('Linux x86_64','Cray-xc40')
+    def test_sys_type(self):
+        output_arch_class = sys_type()
+        my_arch_class = None
+        if os.path.exists('/opt/cray/craype'):
+            my_arch_class = Cray()
+        elif os.path.exists('/bgsys'):
+            my_arch_class = Bgq()
+        elif 'Linux' in platform.system():
+            my_arch_class = Linux()
+#        elif 'Darwin' in platform.system():
+#            my_arch_class = Darwin()
 
-        self.assertEqual(output_arch_class, my_arch_class)
+        self.assertEqual(str(output_arch_class), str(my_arch_class))

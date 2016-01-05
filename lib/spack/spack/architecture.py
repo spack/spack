@@ -96,11 +96,13 @@ class Target(object):
         return self.__str__()
 
     def __str__(self):
+        if self.module_name:
+            return self.name + ' module: ' + self.module_name
         return self.name
 
 @key_ordering
 class Architecture(object):
-    """ Abstract class that each type of Architecture will subclass. 
+    """ Abstract class that each type of Architecture will subclass.
         Will return a instance of it once it
         is returned
     """
@@ -150,7 +152,7 @@ class Architecture(object):
 
     def __str__(self):
         return self.name
-    
+
     def _cmp_key(self):
         return (self.name, (_cmp_key(t) for t in self.targets.values()))
 
