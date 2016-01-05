@@ -27,7 +27,9 @@ class Openssl(Package):
                "zlib",
                "no-krb5",
                "shared")
-        # Remove non-standard compiler options if present
+        # Remove non-standard compiler options if present. These options are
+        # present e.g. on Darwin. They are non-standard, i.e. most compilers
+        # (e.g. gcc) will not accept them.
         filter_file(r'-arch x86_64', '', 'Makefile')
 
         make()
