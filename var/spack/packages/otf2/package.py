@@ -1,12 +1,35 @@
-# FIXME: Add copyright
+##############################################################################
+# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License (as published by
+# the Free Software Foundation) version 2.1 dated February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 
 from spack import *
-from contextlib import closing
-import os
+
 
 class Otf2(Package):
-    """The Open Trace Format 2 is a highly scalable, memory efficient event
-       trace data format plus support library."""
+    """
+    The Open Trace Format 2 is a highly scalable, memory efficient event trace data format plus support library.
+    """
 
     homepage = "http://www.vi-hps.org/score-p"
     url      = "http://www.vi-hps.org/upload/packages/otf2/otf2-1.4.tar.gz"
@@ -22,57 +45,11 @@ class Otf2(Package):
     version('1.2.1', '8fb3e11fb7489896596ae2c7c83d7fc8',
             url="http://www.vi-hps.org/upload/packages/otf2/otf2-1.2.1.tar.gz")
 
-    backend_user_provided = """\
-CC=cc
-CXX=c++
-F77=f77
-FC=f90
-CFLAGS=-fPIC
-CXXFLAGS=-fPIC
-"""
-    frontend_user_provided = """\
-CC_FOR_BUILD=cc
-CXX_FOR_BUILD=c++
-F77_FOR_BUILD=f70
-FC_FOR_BUILD=f90
-CFLAGS_FOR_BUILD=-fPIC
-CXXFLAGS_FOR_BUILD=-fPIC
-"""
-    mpi_user_provided = """\
-MPICC=cc
-MPICXX=c++
-MPIF77=f77
-MPIFC=f90
-MPI_CFLAGS=-fPIC
-MPI_CXXFLAGS=-fPIC
-"""
-
-    @when('@:1.2.1')
-    def version_specific_args(self):
-        return ["--with-platform=disabled", "CC=cc", "CXX=c++", "F77=f77", "F90=f90", "CFLAGS=-fPIC", "CXXFLAGS=-fPIC"]
-
-    @when('@1.3:')
-    def version_specific_args(self):
-        # TODO: figure out what scorep's build does as of otf2 1.3
-        return ["--with-custom-compilers"]
-
     def install(self, spec, prefix):
-        # Use a custom compiler configuration, otherwise the score-p
-        # build system messes with spack's compiler settings.
-        # Create these three files in the build directory
-        with closing(open("platform-backend-user-provided", "w")) as backend_file:
-            backend_file.write(self.backend_user_provided)
-        with closing(open("platform-frontend-user-provided", "w")) as frontend_file:
-            frontend_file.write(self.frontend_user_provided)
-        with closing(open("platform-mpi-user-provided", "w")) as mpi_file:
-            mpi_file.write(self.mpi_user_provided)            
-
         configure_args=["--prefix=%s" % prefix,
-                        "--enable-shared"]
-
-        configure_args.extend(self.version_specific_args())
-
+                        "--enable-shared",
+                        "CFLAGS=-fPIC",
+                        "CXXFLAGS=-fPIC"]
         configure(*configure_args)
-
         make()
         make("install")

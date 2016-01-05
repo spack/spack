@@ -39,54 +39,21 @@ class Fftw(Package):
 
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
 
-    ##########
-    # Floating point precision
-    FLOAT = 'float'
-    LONG_DOUBLE = 'long_double'
-    QUAD_PRECISION = 'quad'
-    PRECISION_OPTIONS = {
-        FLOAT: '--enable-float',
-        LONG_DOUBLE: '--enable--long-double',
-        QUAD_PRECISION: '--enable-quad-precision'
-    }
-    variant(FLOAT, default=False, description='Produces a single precision version of the library')
-    variant(LONG_DOUBLE, default=False, description='Produces a long double precision version of the library')
-    variant(QUAD_PRECISION, default=False, description='Produces a quad precision version of the library (works only with GCC and libquadmath)')
-    ##########
+    variant('float', default=True, description='Produces a single precision version of the library')
+    variant('long_double', default=True, description='Produces a long double precision version of the library')
+    variant('quad', default=False, description='Produces a quad precision version of the library (works only with GCC and libquadmath)')
 
     variant('mpi', default=False, description='Activate MPI support')
 
     depends_on('mpi', when='+mpi')
 
-    @staticmethod
-    def enabled(x):
-        """
-        Given a variant name returns the string that means the variant is enabled
-
-        :param x: variant name
-        """
-        # FIXME : duplicated from MVAPICH2
-        return '+' + x
-
-    def check_fortran_availability(self, options):
-        if not self.compiler.f77 or not self.compiler.fc:
-            options.append("--disable-fortran")
-
-    def set_floating_point_precision(self, spec, options):
-        l = [option for variant, option in Fftw.PRECISION_OPTIONS.iteritems() if self.enabled(variant) in spec]
-        if len(l) > 1:
-            raise RuntimeError('At most one floating point precision variant may activated per build.')
-        options.extend(l)
-
     def install(self, spec, prefix):
-
         options = ['--prefix=%s' % prefix,
                    '--enable-shared',
                    '--enable-threads',
                    '--enable-openmp']
-        self.check_fortran_availability(options)
-        self.set_floating_point_precision(spec, options)
-
+        if not self.compiler.f77 or not self.compiler.fc:
+            options.append("--disable-fortran")
         if '+mpi' in spec:
             options.append('--enable-mpi')
 
@@ -94,3 +61,15 @@ class Fftw(Package):
         make()
         make("install")
 
+        if '+float' in spec:
+            configure('--enable-float', *options)
+            make()
+            make("install")
+        if '+long_double' in spec:
+            configure('--enable-long-double', *options)
+            make()
+            make("install")
+        if '+quad' in spec:
+            configure('--enable-quad-precision', *options)
+            make()
+            make("install")

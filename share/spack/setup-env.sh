@@ -55,13 +55,11 @@
 # avoids the need to come up with a user-friendly naming scheme for
 # spack dotfiles.
 ########################################################################
+
 function spack {
     # save raw arguments into an array before butchering them
-    args=()
-    for a in "$@"; do
-        # yup, this is awful, blame bash2 compat
-        args=("${args[@]}" "$a")
-    done
+    args=( "$@" )
+
     # accumulate initial flags for main spack command
     _sp_flags=""
     while [[ "$1" =~ ^- ]]; do
