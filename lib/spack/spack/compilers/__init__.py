@@ -206,6 +206,7 @@ def compilers_for_spec(compiler_spec):
         return cls(cspec, compiler_paths, mods)
 
     matches = find(compiler_spec)
+    print matches, 'matches'
     return [get_compiler(cspec) for cspec in matches]
 
 
