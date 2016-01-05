@@ -95,11 +95,11 @@ class Boost(Package):
         with open('user-config.jam', 'w') as f:
             if '+mpi' in spec:
                 f.write('using mpi : %s ;\n' %
-                    joinpath(spec['mpi'].prefix.bin, 'mpicxx'))
+                    join_path(spec['mpi'].prefix.bin, 'mpicxx'))
             if '+python' in spec:
                 f.write('using python : %s : %s ;\n' %
                     (spec['python'].version,
-                    joinpath(spec['python'].prefix.bin, 'python')))
+                    join_path(spec['python'].prefix.bin, 'python')))
 
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
