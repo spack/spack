@@ -277,7 +277,7 @@ def is_spec_nobuild(spec):
 
 
 def spec_externals(spec):
-    """Return a list of spec, directory pairs for each external location for spec"""
+    """Return a list of spec, directory, module triples for each external location for spec"""
     allpkgs = get_packages_config()
     name = spec.name
     spec_locations = []

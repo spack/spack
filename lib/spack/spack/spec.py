@@ -771,8 +771,9 @@ class Spec(object):
         """Replace this virtual spec with a concrete spec."""
         assert(self.virtual)
         for name, dependent in self.dependents.items():
-            del dependent.dependencies[self.name]
-            dependent._add_dependency(concrete)
+            if not dependent.external:
+                del dependent.dependencies[self.name]
+                dependent._add_dependency(concrete)
 
 
     def _expand_virtual_packages(self):
