@@ -96,8 +96,6 @@ class Target(object):
         return self.__str__()
 
     def __str__(self):
-        if self.module_name:
-            return self.name + ' module: ' + self.module_name
         return self.name
 
 @key_ordering
