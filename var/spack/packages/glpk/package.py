@@ -37,7 +37,17 @@ class Glpk(Package):
 
     version('4.57', '237531a54f73155842f8defe51aedb0f')
 
+    variant('gmp', default=False, description='Activates support for GMP library')
+
+    depends_on('gmp', when='+gmp')
+
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+
+        options = ['--prefix=%s' % prefix]
+
+        if '+gmp' in spec:
+            options.append('--with-gmp')
+
+        configure(*options)
         make()
         make("install")
