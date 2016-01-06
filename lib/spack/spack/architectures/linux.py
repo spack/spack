@@ -9,7 +9,7 @@ class Linux(Architecture):
 
     def __init__(self):
         super(Linux, self).__init__('linux')
-        self.add_target(self.default, Target(self.default))
+        self.add_target(self.default, Target(self.default, 'PATH'))
 
     @classmethod
     def detect(self):

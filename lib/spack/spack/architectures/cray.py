@@ -26,10 +26,10 @@ class Cray(Architecture):
 
         # Could switch to use modules and fe targets for front end
         # Currently using compilers by path for front end.
-        self.add_target(self.front_end, Target(self.front_end))
+        self.add_target(self.front_end, Target(self.front_end, 'PATH'))
         # Back End compiler needs the proper target module loaded.
-        self.add_target(self.back_end, Target(self.front_end,'craype-'+ self.back_end))
-        self.add_target(self.default, Target(self.default,'craype-' + self.default))
+#        self.add_target(self.back_end, Target(self.front_end, 'MODULES', 'craype-'+ self.back_end))
+        self.add_target(self.default, Target(self.default, 'MODULES', 'craype-' + self.default))
         # This is kludgy and the order matters when the targets are all haswell
         # This is because the last one overwrites the others when they have the
         # same name.

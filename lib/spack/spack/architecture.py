@@ -55,19 +55,20 @@ class Target(object):
         they came from using the set_architecture method. Targets will have compiler finding strategies
         """
 
-    def __init__(self,name, module_name=None):
+    def __init__(self, name, compiler_strategy, module_name=None):
         self.name = name # case of cray "ivybridge" but if it's x86_64
+        self.compiler_strategy = compiler_strategy
         self.module_name = module_name # craype-ivybridge
 
     def set_architecture(self, architecture): # Target should get the architecture class.
         self.architecture = architecture
 
-    @property
-    def compiler_strategy(self):
-        if self.module_name: # If there is a module_name given then use MODULES
-            return "MODULES"
-        else:
-            return "PATH"
+#    @property
+#    def compiler_strategy(self):
+#        if self.module_name: # If there is a module_name given then use MODULES
+#            return "MODULES"
+#        else:
+#            return "PATH"
 
     def to_dict(self):
         d = {}

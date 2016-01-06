@@ -9,7 +9,7 @@ class Darwin(Architecture):
 
     def __init__(self):
         super(Darwin, self).__init__('darwin')
-        self.add_target(self.default, Target(self.default))
+        self.add_target(self.default, Target(self.default, 'PATH'))
 
     @classmethod
     def detect(self):
