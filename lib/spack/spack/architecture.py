@@ -60,22 +60,17 @@ class Target(object):
         self.compiler_strategy = compiler_strategy
         self.module_name = module_name # craype-ivybridge
 
-    def set_architecture(self, architecture): # Target should get the architecture class.
-        self.architecture = architecture
-
-#    @property
-#    def compiler_strategy(self):
-#        if self.module_name: # If there is a module_name given then use MODULES
-#            return "MODULES"
-#        else:
-#            return "PATH"
+    # Sets only the architecture name to avoid recursiveness
+    def set_architecture(self, architecture):
+        self.architecture_name = architecture.name
 
     def to_dict(self):
         d = {}
         d['name'] = self.name
+        d['compiler_strategy'] = self.compiler_strategy
         d['module_name'] = self.module_name
-#        if self.architecture:
-#            d['architecture'] = self.architecture
+        if self.architecture_name:
+            d['architecture'] = self.architecture_name
         return d
 
     @staticmethod
@@ -84,14 +79,15 @@ class Target(object):
             return None
         target = Target.__new__(Target)
         target.name = d['name']
+        target.compiler_strategy = d['compiler_strategy']
         target.module_name = d['module_name']
-#        if 'architecture' in d:
-#            target.architecture = d['architecture']
+        if 'architecture' in d:
+            target.architecture_name = d['architecture']
         return target
 
 
     def _cmp_key(self):
-        return (self.name, self.module_name)
+        return (self.name, self.compiler_strategy, self.module_name)
 
     def __repr__(self):
         return self.__str__()
