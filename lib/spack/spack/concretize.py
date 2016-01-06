@@ -260,8 +260,27 @@ class DefaultConcretizer(object):
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
         """
+        # Pass on concretizing the compiler if the architecture is not yet determined
+        if not spec.architecture:
+            #Although this usually means changed, this means awaiting other changes
+            return True
+
+        # Examine only those compilers found by the proper compiler strategy for this architecture
+        # Takes advantage of the proper logic already existing in compiler_for_spec
+        # Should be redone more efficiently if this works
         all_compilers = spack.compilers.all_compilers()
         
+        def _proper_compiler_style(cspec, target):
+            compilers = spack.compilers.compilers_for_spec(cspec)
+            if target.compiler_strategy == 'PATH':
+                filter(lambda c: not c.modules, compilers)
+            if target.compiler_strategy == 'MODULES':
+                filter(lambda c: c.modules, compilers)
+            return compilers
+
+        filter(lambda c: _proper_compiler_style(c, spec.architecture), all_compilers)
+
+
         if (spec.compiler and
             spec.compiler.concrete and
             spec.compiler in all_compilers):
@@ -287,7 +306,7 @@ class DefaultConcretizer(object):
             raise UnavailableCompilerVersionError(other_compiler)
             
         # copy concrete version into other_compiler
-        spec.compiler = matches[len(matches)-1].copy()
+        spec.compiler = matches[0].copy()
         assert(spec.compiler.concrete)
         return True  # things changed.
 
