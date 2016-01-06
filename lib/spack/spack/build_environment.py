@@ -226,7 +226,7 @@ def set_build_environment_variables(pkg):
                 pkg_config_dirs.append(pcdir)
     path_put_first("PKG_CONFIG_PATH", pkg_config_dirs)
 
-    if pkg.spec.architecture.compiler_strategy.lower() == 'module':
+    if pkg.spec.architecture.module_name:
         load_module(pkg.spec.architecture.module_name)
 
 def set_module_variables_for_package(pkg):
