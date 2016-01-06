@@ -284,8 +284,7 @@ class Compiler(object):
             modulecmd.add_default_arg('python')
             output = modulecmd('avail', return_oe=True)
             matches = re.findall(r'(%s)/(\d+[\.\d]+)' % cls.PrgEnv_compiler, output)
-#           It's finding a weird third attribute
-            print matches
+
             for name, version in matches:
                 v = version
                 comp = cls(spack.spec.CompilerSpec(name + '@' + v),
