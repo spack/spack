@@ -12,5 +12,5 @@ class Atop(Package):
         mkdirp(prefix.bin)
         install("atop", join_path(prefix.bin, "atop"))
         mkdirp(join_path(prefix.man, "man1"))
-	install(join_path("man", "atop.1"),
-            join_path(prefix.man, "man1", "atop.1"))
+        install(join_path("man", "atop.1"),
+        join_path(prefix.man, "man1", "atop.1"))
