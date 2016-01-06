@@ -17,12 +17,20 @@ class Openssl(Package):
     parallel = False
 
     def install(self, spec, prefix):
+        if spec.satisfies("=darwin-x86_64") or spec.satisfies("=ppc64"):
+            # This needs to be done for all 64-bit architectures (except Linux,
+            # where it happens automatically?)
+            env['KERNEL_BITS'] = '64'
         config = Executable("./config")
         config("--prefix=%s" % prefix,
-               "--openssldir=%s/etc/openssl" % prefix,
+               "--openssldir=%s" % join_path(prefix, 'etc', 'openssl'),
                "zlib",
                "no-krb5",
                "shared")
+        # Remove non-standard compiler options if present. These options are
+        # present e.g. on Darwin. They are non-standard, i.e. most compilers
+        # (e.g. gcc) will not accept them.
+        filter_file(r'-arch x86_64', '', 'Makefile')
 
         make()
         make("install")
