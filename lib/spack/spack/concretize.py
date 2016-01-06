@@ -265,11 +265,9 @@ class DefaultConcretizer(object):
             #Although this usually means changed, this means awaiting other changes
             return True
 
-        # Examine only those compilers found by the proper compiler strategy for this architecture
+        # Only use a matching compiler if it is of the proper style
         # Takes advantage of the proper logic already existing in compiler_for_spec
-        # Should be redone more efficiently if this works
-        all_compilers = spack.compilers.all_compilers()
-        
+        # Should think whether this can be more efficient
         def _proper_compiler_style(cspec, target):
             compilers = spack.compilers.compilers_for_spec(cspec)
             if target.compiler_strategy == 'PATH':
@@ -278,8 +276,8 @@ class DefaultConcretizer(object):
                 filter(lambda c: c.modules, compilers)
             return compilers
 
-        filter(lambda c: _proper_compiler_style(c, spec.architecture), all_compilers)
-
+        
+        all_compilers = spack.compilers.all_compilers()
 
         if (spec.compiler and
             spec.compiler.concrete and
@@ -306,7 +304,12 @@ class DefaultConcretizer(object):
             raise UnavailableCompilerVersionError(other_compiler)
             
         # copy concrete version into other_compiler
-        spec.compiler = matches[-1].copy()
+        index = len(matches)-1
+        while not _proper_compiler_style(matches[index], spec.architecture):
+            index -= 1
+            if index == 0:
+                raise NoValidVersionError(spec)
+        spec.compiler = matches[index].copy()
         assert(spec.compiler.concrete)
         return True  # things changed.
 
