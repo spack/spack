@@ -282,7 +282,7 @@ class Compiler(object):
 
             modulecmd = which('modulecmd')
             modulecmd.add_default_arg('python')
-            output = modulecmd('avail', return_oe=True)
+            output = modulecmd('avail', cls.PrgEnv_compiler, return_oe=True)
             matches = re.findall(r'(%s)/(\d+[\.\d]+)' % cls.PrgEnv_compiler, output)
 
             for name, version in matches:
