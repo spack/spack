@@ -306,7 +306,7 @@ class DefaultConcretizer(object):
             raise UnavailableCompilerVersionError(other_compiler)
             
         # copy concrete version into other_compiler
-        spec.compiler = matches[0].copy()
+        spec.compiler = matches[-1].copy()
         assert(spec.compiler.concrete)
         return True  # things changed.
 
