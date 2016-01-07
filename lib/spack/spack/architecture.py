@@ -93,6 +93,8 @@ class Target(object):
         return self.__str__()
 
     def __str__(self):
+        if self.platform_name:
+            return self.platform_name + '-' + self.name
         return self.name
 
 @key_ordering
