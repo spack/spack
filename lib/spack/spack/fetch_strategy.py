@@ -641,6 +641,11 @@ def from_kwargs(**kwargs):
     :param kwargs: dictionary of keyword arguments
     :return: fetcher or raise a FetchError exception
     """
+    # 'name' may be a kwarg if called from 'resource' (instead of 'version').
+    # The routines above use an argument called 'name' and hence don't accept a
+    # kwarg 'name'.
+    if 'name' in kwargs:
+        del kwargs['name']
     for fetcher in all_strategies:
         if fetcher.matches(kwargs):
             return fetcher(**kwargs)
