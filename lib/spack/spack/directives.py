@@ -289,7 +289,7 @@ def resource(pkg, **kwargs):
         message += "\tdestination : '{dest}\n'".format(dest=destination)
         raise RuntimeError(message)
     # Check if the path falls within the main package stage area
-    test_path = 'stage_folder_root/'
+    test_path = 'stage_folder_root'
     normalized_destination = os.path.normpath(join_path(test_path, destination))  # Normalized absolute path
     if test_path not in normalized_destination:
         message = "The destination folder of a resource must fall within the main package stage directory.\n"
