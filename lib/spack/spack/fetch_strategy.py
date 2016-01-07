@@ -299,6 +299,7 @@ class VCSFetchStrategy(FetchStrategy):
         self.url = kwargs.get(name, None)
         if not self.url: raise ValueError(
             "%s requires %s argument." % (self.__class__, name))
+        self.subdir = kwargs.get('subdir', None)
 
         # Ensure that there's only one of the rev_types
         if sum(k in kwargs for k in rev_types) > 1:
@@ -403,10 +404,18 @@ class GitFetchStrategy(VCSFetchStrategy):
             args.append('on branch %s' % self.branch)
         tty.msg("Trying to clone git repository:", self.url, *args)
 
+        if self.subdir:
+            if '/' in self.subdir:
+                raise FetchError('Subdirectory name "%s" is a path, not a simple directory name' % self.subdir)
+            args.append(self.subdir)
+
         if self.commit:
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
-            self.git('clone', self.url)
+            args = ['clone', self.url]
+            if self.subdir:
+                args.append(self.subdir)
+            self.git(*args)
             self.stage.chdir_to_source()
             self.git('checkout', self.commit)
 
@@ -418,7 +427,7 @@ class GitFetchStrategy(VCSFetchStrategy):
             if self.branch:
                 args.extend(['--branch', self.branch])
             elif self.tag and self.git_version >= ver('1.8.5.2'):
-                    args.extend(['--branch', self.tag])
+                args.extend(['--branch', self.tag])
 
             # Try to be efficient if we're using a new enough git.
             # This checks out only one branch's history
@@ -429,15 +438,21 @@ class GitFetchStrategy(VCSFetchStrategy):
             # Yet more efficiency, only download a 1-commit deep tree
             if self.git_version >= ver('1.7.1'):
                 try:
-                    self.git(*(args + ['--depth','1', self.url]))
+                    oldargs = list(args)
+                    args += ['--depth', '1', self.url]
+                    if self.subdir:
+                        args.append(self.subdir)
+                    self.git(*args)
                     cloned = True
                 except spack.error.SpackError:
                     # This will fail with the dumb HTTP transport
                     # continue and try without depth, cleanup first
-                    pass
+                    args = oldargs
 
             if not cloned:
                 args.append(self.url)
+                if self.subdir:
+                    args.append(self.subdir)
                 self.git(*args)
 
             self.stage.chdir_to_source()
@@ -511,6 +526,10 @@ class SvnFetchStrategy(VCSFetchStrategy):
         if self.revision:
             args += ['-r', self.revision]
         args.append(self.url)
+        if self.subdir:
+            if '/' in self.subdir:
+                raise FetchError('Subdirectory name "%s" is a path, not a simple directory name' % self.subdir)
+            args.append(self.subdir)
 
         self.svn(*args)
         self.stage.chdir_to_source()
@@ -594,6 +613,8 @@ class HgFetchStrategy(VCSFetchStrategy):
         args = ['clone', self.url]
         if self.revision:
             args += ['-r', self.revision]
+        if self.subdir:
+            args.append(self.subdir)
 
         self.hg(*args)
 
