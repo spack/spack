@@ -33,11 +33,13 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
+from llnl.util.filesystem import join_path
 import spack
 import spack.spec
 import spack.compilers
 import spack.architecture
 import spack.error
+from spack.util.naming import mod_to_class
 from spack.version import *
 from functools import partial
 from spec import DependencyMap
@@ -207,6 +209,36 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
+    def class_from_platform_name(self, platform_name):
+        file_path = join_path(spack.platform_path, platform_name)
+        platform_mod = imp.load_source('spack.platforms', file_path + '.py')
+        cls = getattr(platform_mod, mod_to_class(platform_name))
+        
+        return cls
+
+    def spec_add_target_from_string(self, spec, target):
+        """If only a target is provided, spack will assume the default architecture.
+        A platform-target pair can be input delimited by a '-'. If either portion of
+        a platform-target pair is empty, spack will supply a default, in the case of
+        a blank target the default will be dependent on the platform.
+        E.g. x86_64        -> 64 bit x86
+             bgq-          -> default bgq target (back end/powerpc)
+             cray-hawswell -> haswell target on cray platform
+        """
+        if '-' in target:
+            platform, target = target.split('-')
+        else:
+            platform = ''
+            
+        if platform != '':
+            cls = self.class_from_platform_name(platform)
+            platform = cls()
+        else:
+            platform = spack.architecture.sys_type()
+        if target != '':
+            spec.target = platform.target(target)
+        else:
+            spec.target = platform.target('default')
 
     def concretize_target(self, spec):
         """If the spec already has an target and it is a an target type,
@@ -219,16 +251,14 @@ class DefaultConcretizer(object):
             if isinstance(spec.target,spack.architecture.Target):
                 return False
             else:
-                platform = spack.architecture.sys_type()
-                spec.target = platform.target(spec.target)
+                self.spec_add_target_from_string(spec, spec.target)
                 return True #changed
 
         if spec.root.target:
             if isinstance(spec.root.target,spack.architecture.Target):
                 spec.target = spec.root.target
             else:
-                platform = spack.architecture.sys_type()
-                spec.target = platform.target(spec.root.target)
+                self.spec_add_target_from_string(spec, spec.root.target)
         else:
             platform = spack.architecture.sys_type()
             spec.target = platform.target('default')
