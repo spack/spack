@@ -193,7 +193,7 @@ class Dotkit(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(Dotkit.path, self.spec.architecture,
+        return join_path(Dotkit.path, self.spec.target,
                          self.spec.format('$_$@$%@$+$#.dk'))
 
     @property
@@ -230,7 +230,7 @@ class TclModule(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(TclModule.path, self.spec.architecture, self.use_name)
+        return join_path(TclModule.path, self.spec.target, self.use_name)
 
 
     @property

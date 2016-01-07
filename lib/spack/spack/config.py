@@ -129,7 +129,7 @@ _ConfigCategory('packages', 'packages.yaml', True)
 config_scopes = [('site', os.path.join(spack.etc_path, 'spack')),
                  ('user', os.path.expanduser('~/.spack'))]
 
-_compiler_by_arch = {}
+_compiler_by_platform = {}
 _read_config_file_result = {}
 def _read_config_file(filename):
     """Read a given YAML configuration file"""
@@ -156,7 +156,7 @@ def clear_config_caches():
         s.files_read_from = []
         s.result_dict = {}
     spack.config._read_config_file_result = {}
-    spack.config._compiler_by_arch = {}
+    spack.config._compiler_by_platform = {}
     spack.compilers._cached_default_compiler = None
 
 
@@ -213,27 +213,27 @@ def get_config(category_name):
     return category.result_dict
 
 
-def get_compilers_config(arch=None):
+def get_compilers_config(platform=None):
     """Get the compiler configuration from config files for the given
-       architecture.  Strips off the architecture component of the
+       platform.  Strips off the platform component of the
        configuration"""
-    global _compiler_by_arch
-    if not arch:
-        arch = str(spack.architecture.sys_type())
-    if arch in _compiler_by_arch:
-        return _compiler_by_arch[arch]
+    global _compiler_by_platform
+    if not platform:
+        platform = str(spack.architecture.sys_type())
+    if platform in _compiler_by_platform:
+        return _compiler_by_platform[platform]
 
     cc_config = get_config('compilers')
-    if arch in cc_config and 'all' in cc_config:
-        arch_compiler = dict(cc_config[arch])
-        _compiler_by_arch[arch] = _merge_dict(arch_compiler, cc_config['all'])
-    elif arch in cc_config:
-        _compiler_by_arch[arch] = cc_config[arch]
+    if platform in cc_config and 'all' in cc_config:
+        platform_compiler = dict(cc_config[platform])
+        _compiler_by_platform[platform] = _merge_dict(platform_compiler, cc_config['all'])
+    elif platform in cc_config:
+        _compiler_by_platform[platform] = cc_config[platform]
     elif 'all' in cc_config:
-        _compiler_by_arch[arch] = cc_config['all']
+        _compiler_by_platform[platform] = cc_config['all']
     else:
-        _compiler_by_arch[arch] = {}
-    return _compiler_by_arch[arch]
+        _compiler_by_platform[platform] = {}
+    return _compiler_by_platform[platform]
 
 
 def get_mirror_config():
@@ -371,11 +371,11 @@ def add_to_mirror_config(addition_dict, scope=None):
     add_to_config('mirrors', addition_dict, scope)
 
 
-def add_to_compiler_config(addition_dict, scope=None, arch=None):
+def add_to_compiler_config(addition_dict, scope=None, platform=None):
     """Add compilers to the configuration files"""
-    if not arch:
-        arch = spack.architecture.sys_type()
-    add_to_config('compilers', { str(arch) : addition_dict }, scope)
+    if not platform:
+        platform = spack.architecture.sys_type()
+    add_to_config('compilers', { str(platform) : addition_dict }, scope)
     clear_config_caches()
 
 

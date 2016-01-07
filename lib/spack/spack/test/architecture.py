@@ -6,13 +6,14 @@ import os
 import platform
 import spack
 from spack.architecture import *
-from spack.architectures.cray import Cray
-from spack.architectures.linux import Linux
-from spack.architectures.bgq import Bgq
+from spack.platforms.cray import Cray
+from spack.platforms.linux import Linux
+from spack.platforms.bgq import Bgq
+from spack.platforms.darwin import Darwin
 
 class ArchitectureTest(unittest.TestCase):
 
-    def test_Architecture_class_and_compiler_strategies(self):
+    def test_platform_class_and_compiler_strategies(self):
         a = Cray()
         t = a.target('default')
         self.assertEquals(t.compiler_strategy, 'MODULES')
@@ -21,15 +22,15 @@ class ArchitectureTest(unittest.TestCase):
         self.assertEquals(s.compiler_strategy, 'PATH')
 
     def test_sys_type(self):
-        output_arch_class = sys_type()
+        output_platform_class = sys_type()
         my_arch_class = None
         if os.path.exists('/opt/cray/craype'):
-            my_arch_class = Cray()
+            my_platform_class = Cray()
         elif os.path.exists('/bgsys'):
-            my_arch_class = Bgq()
+            my_platform_class = Bgq()
         elif 'Linux' in platform.system():
-            my_arch_class = Linux()
-#        elif 'Darwin' in platform.system():
-#            my_arch_class = Darwin()
+            my_platform_class = Linux()
+        elif 'Darwin' in platform.system():
+            my_platform_class = Darwin()
 
-        self.assertEqual(str(output_arch_class), str(my_arch_class))
+        self.assertEqual(str(output_platform_class), str(my_platform_class))

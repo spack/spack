@@ -163,11 +163,11 @@ class PreferredPackages(object):
         return self._component_compare(pkgname, 'variant', a, b, False, None)
 
 
-    def architecture_compare(self, pkgname, a, b):
-        """Return less-than-0, 0, or greater than 0 if architecture a of pkgname is 
-           respecively less-than, equal-to, or greater-than architecture b of pkgname. 
-           One architecture is less-than another if it is preferred over the other."""
-        return self._component_compare(pkgname, 'architecture', a, b, False, None)
+    def target_compare(self, pkgname, a, b):
+        """Return less-than-0, 0, or greater than 0 if target a of pkgname is 
+           respecively less-than, equal-to, or greater-than target b of pkgname. 
+           One target is less-than another if it is preferred over the other."""
+        return self._component_compare(pkgname, 'target', a, b, False, None)
 
 
     def compiler_compare(self, pkgname, a, b):

@@ -1,8 +1,8 @@
 import os
 
-from spack.architecture import Architecture, Target
+from spack.architecture import Platform, Target
 
-class Cray(Architecture):
+class Cray(Platform):
     priority    = 20
     front_end   = 'sandybridge'
     back_end    = 'ivybridge'

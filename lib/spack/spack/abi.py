@@ -34,9 +34,9 @@ class ABI(object):
     """This class provides methods to test ABI compatibility between specs.
        The current implementation is rather rough and could be improved."""
 
-    def architecture_compatible(self, parent, child):
-        """Returns true iff the parent and child specs have ABI compatible architectures."""
-        return not parent.architecture or not child.architecture or parent.architecture == child.architecture
+    def target_compatible(self, parent, child):
+        """Returns true iff the parent and child specs have ABI compatible targets."""
+        return not parent.target or not child.target or parent.target == child.target
 
 
     @memoized
@@ -123,6 +123,6 @@ class ABI(object):
     def compatible(self, parent, child, **kwargs):
         """Returns true iff a parent and child spec are ABI compatible"""
         loosematch = kwargs.get('loose', False)
-        return self.architecture_compatible(parent, child) and \
+        return self.target_compatible(parent, child) and \
                self.compiler_compatible(parent, child, loose=loosematch)
     

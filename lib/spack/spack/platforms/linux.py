@@ -1,7 +1,7 @@
 import subprocess
-from spack.architecture import Architecture, Target
+from spack.architecture import Platform, Target
 
-class Linux(Architecture):
+class Linux(Platform):
     priority    = 90
     front_end   = 'x86_64'
     back_end    = 'x86_64'
@@ -13,6 +13,6 @@ class Linux(Architecture):
 
     @classmethod
     def detect(self):
-        arch = subprocess.Popen(['uname', '-a'], stdout = subprocess.PIPE)
-        arch, _ = arch.communicate()
-        return 'linux' in arch.strip().lower()
+        platform = subprocess.Popen(['uname', '-a'], stdout = subprocess.PIPE)
+        platform, _ = platform.communicate()
+        return 'linux' in platform.strip().lower()

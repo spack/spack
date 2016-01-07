@@ -240,10 +240,10 @@ class SpecDagTest(MockPackagesTest):
         self.assertRaises(spack.spec.UnsatisfiableCompilerSpecError, spec.normalize)
 
 
-    def test_unsatisfiable_architecture(self):
+    def test_unsatisfiable_target(self):
         set_pkg_dep('mpileaks', 'mpich=bgqos_0')
         spec = Spec('mpileaks ^mpich=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
-        self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
+        self.assertRaises(spack.spec.UnsatisfiableTargetSpecError, spec.normalize)
 
 
     def test_invalid_dep(self):

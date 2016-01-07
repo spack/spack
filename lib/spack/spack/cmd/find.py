@@ -72,19 +72,19 @@ def display_specs(specs, **kwargs):
         hashes = True
         hlen = None
 
-    # Make a dict with specs keyed by architecture and compiler.
-    index = index_by(specs, ('architecture', 'compiler'))
+    # Make a dict with specs keyed by target and compiler.
+    index = index_by(specs, ('target', 'compiler'))
 
     # Traverse the index and print out each package
-    for i, (architecture, compiler) in enumerate(sorted(index)):
+    for i, (target, compiler) in enumerate(sorted(index)):
         if i > 0: print
 
         header = "%s{%s} / %s{%s}" % (
-            spack.spec.architecture_color, architecture,
+            spack.spec.target_color, target,
             spack.spec.compiler_color, compiler)
         tty.hline(colorize(header), char='-')
 
-        specs = index[(architecture,compiler)]
+        specs = index[(target,compiler)]
         specs.sort()
 
         abbreviated = [s.format('$_$@$+', color=True) for s in specs]

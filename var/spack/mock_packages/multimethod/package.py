@@ -101,22 +101,22 @@ class Multimethod(Package):
 
 
     #
-    # Make sure we can switch methods on different architectures
+    # Make sure we can switch methods on different target
     #
     @when('=x86_64')
-    def different_by_architecture(self):
+    def different_by_target(self):
         return 'x86_64'
 
     @when('=ppc64')
-    def different_by_architecture(self):
+    def different_by_target(self):
         return 'ppc64'
 
     @when('=ppc32')
-    def different_by_architecture(self):
+    def different_by_target(self):
         return 'ppc32'
 
     @when('=arm64')
-    def different_by_architecture(self):
+    def different_by_target(self):
         return 'arm64'
 
 

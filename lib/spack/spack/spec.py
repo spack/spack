@@ -63,7 +63,7 @@ line is a spec for a particular installation of the mpileaks package.
    if it comes immediately after the compiler name.  Otherwise it will be
    associated with the current package spec.
 
-6. The architecture to build with.  This is needed on machines where
+6. The target to build with.  This is needed on machines where
    cross-compilation is required
 
 Here is the EBNF grammar for a spec::
@@ -72,9 +72,9 @@ Here is the EBNF grammar for a spec::
   dep_list     = { ^ spec }
   spec         = id [ options ]
   options      = { @version-list | +variant | -variant | ~variant |
-                   %compiler | =architecture }
+                   %compiler | =target }
   variant      = id
-  architecture = id
+  target       = id
   compiler     = id [ version-list ]
   version-list = version [ { , version } ]
   version      = id | id: | :id | id:id
@@ -119,7 +119,7 @@ identifier_re = r'\w[\w-]*'
 # Convenient names for color formats so that other things can use them
 compiler_color         = '@g'
 version_color          = '@c'
-architecture_color     = '@m'
+target_color           = '@m'
 enabled_variant_color  = '@B'
 disabled_variant_color = '@r'
 dependency_color       = '@.'
@@ -130,7 +130,7 @@ hash_color             = '@K'
    See spack.color for descriptions of the color codes. """
 color_formats = {'%' : compiler_color,
                  '@' : version_color,
-                 '=' : architecture_color,
+                 '=' : target_color,
                  '+' : enabled_variant_color,
                  '~' : disabled_variant_color,
                  '^' : dependency_color,
@@ -407,7 +407,7 @@ class Spec(object):
         self.name = other.name
         self.dependents = other.dependents
         self.versions = other.versions
-        self.architecture = other.architecture
+        self.target = other.target
         self.compiler = other.compiler
         self.dependencies = other.dependencies
         self.variants = other.variants
@@ -452,11 +452,11 @@ class Spec(object):
         self.compiler = compiler
 
 
-    def _set_architecture(self, architecture):
-        """Called by the parser to set the architecture."""
-        if self.architecture: raise DuplicateArchitectureError(
-                "Spec for '%s' cannot have two architectures." % self.name)
-        self.architecture = architecture
+    def _set_target(self, target):
+        """Called by the parser to set the target."""
+        if self.target: raise DuplicateTargetError(
+                "Spec for '%s' cannot have two targets." % self.name)
+        self.target = target
 
 
     def _add_dependency(self, spec):
@@ -512,7 +512,7 @@ class Spec(object):
     @property
     def concrete(self):
         """A spec is concrete if it can describe only ONE build of a package.
-           If any of the name, version, architecture, compiler,
+           If any of the name, version, target, compiler,
            variants, or depdenencies are ambiguous,then it is not concrete.
         """
         if self._concrete:
@@ -521,7 +521,7 @@ class Spec(object):
         self._concrete = bool(not self.virtual
                               and self.versions.concrete
                               and self.variants.concrete
-                              and self.architecture
+                              and self.target
                               and self.compiler and self.compiler.concrete
                               and self.dependencies.concrete)
         return self._concrete
@@ -656,10 +656,10 @@ class Spec(object):
             'dependencies' : dict((d, self.dependencies[d].dag_hash())
                                   for d in sorted(self.dependencies))
         }
-        if self.architecture:
-            d['arch'] = self.architecture.to_dict()
+        if self.target:
+            d['target'] = self.target.to_dict()
         else:
-            d['arch'] = None
+            d['target'] = None
         if self.compiler:
             d.update(self.compiler.to_dict())
         else:
@@ -685,7 +685,7 @@ class Spec(object):
 
         spec = Spec(name)
         spec.versions = VersionList.from_dict(node)
-        spec.architecture = spack.architecture.Target.from_dict(node['arch'])
+        spec.target = spack.architecture.Target.from_dict(node['target'])
 
         if node['compiler'] is None:
             spec.compiler = None
@@ -757,7 +757,7 @@ class Spec(object):
             # to presets below, their constraints will all be merged, but we'll
             # still need to select a concrete package later.
             changed |= any(
-                (spack.concretizer.concretize_architecture(self),
+                (spack.concretizer.concretize_target(self),
                  spack.concretizer.concretize_compiler(self),
                  spack.concretizer.concretize_version(self),
                  spack.concretizer.concretize_variants(self)))
@@ -1145,10 +1145,10 @@ class Spec(object):
                 raise UnsatisfiableVariantSpecError(self.variants[v],
                                                     other.variants[v])
 
-        if self.architecture is not None and other.architecture is not None:
-            if self.architecture != other.architecture:
-                raise UnsatisfiableArchitectureSpecError(self.architecture,
-                                                         other.architecture)
+        if self.target is not None and other.target is not None:
+            if self.target != other.target:
+                raise UnsatisfiableTargetSpecError(self.target,
+                                                         other.target)
 
         changed = False
         if self.compiler is not None and other.compiler is not None:
@@ -1160,9 +1160,9 @@ class Spec(object):
         changed |= self.versions.intersect(other.versions)
         changed |= self.variants.constrain(other.variants)
 
-        old = self.architecture
-        self.architecture = self.architecture or other.architecture
-        changed |= (self.architecture != old)
+        old = self.target
+        self.target = self.target or other.target
+        changed |= (self.target != old)
 
         if deps:
             changed |= self._constrain_dependencies(other)
@@ -1273,12 +1273,12 @@ class Spec(object):
         if not self.variants.satisfies(other.variants, strict=strict):
             return False
 
-        # Architecture satisfaction is currently just string equality.
+        # Target satisfaction is currently just class equality.
         # If not strict, None means unconstrained.
-        if self.architecture and other.architecture:
-            if self.architecture != other.architecture:
+        if self.target and other.target:
+            if self.target != other.target:
                 return False
-        elif strict and (other.architecture and not self.architecture):
+        elif strict and (other.target and not self.target):
             return False
 
         # If we need to descend into dependencies, do it, otherwise we're done.
@@ -1352,7 +1352,7 @@ class Spec(object):
         changed = True
         if hasattr(self, 'name'):
             changed = (self.name != other.name and self.versions != other.versions and \
-                       self.architecture != other.architecture and self.compiler != other.compiler and \
+                       self.target != other.target and self.compiler != other.compiler and \
                        self.variants != other.variants and self._normal != other._normal and \
                        self.concrete != other.concrete and self.external != other.external and \
                        self.external_module != other.external_module)
@@ -1360,7 +1360,7 @@ class Spec(object):
         # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
-        self.architecture = other.architecture
+        self.target = other.target
         self.compiler = other.compiler.copy() if other.compiler else None
         if kwargs.get('cleardeps', True):
             self.dependents = DependencyMap()
@@ -1490,7 +1490,7 @@ class Spec(object):
     def _cmp_node(self):
         """Comparison key for just *this node* and not its deps."""
         return (self.name, self.versions, self.variants,
-                self.architecture, self.compiler)
+                self.target, self.compiler)
 
 
     def eq_node(self, other):
@@ -1524,7 +1524,7 @@ class Spec(object):
                $%   Compiler with '%' prefix
                $%@  Compiler with '%' prefix & compiler version with '@' prefix
                $+   Options 
-               $=   Architecture with '=' prefix
+               $=   Target with '=' prefix
                $#   7-char prefix of DAG hash with '-' prefix
                $$   $
 
@@ -1536,7 +1536,7 @@ class Spec(object):
                ${COMPILERNAME}  Compiler name
                ${COMPILERVER}   Compiler version
                ${OPTIONS}       Options
-               ${ARCHITECTURE}  Architecture
+               ${TARGET}        Target
                ${SHA1}          Dependencies 8-char sha1 prefix
 
                ${SPACK_ROOT}    The spack root directory
@@ -1549,7 +1549,7 @@ class Spec(object):
            Anything else is copied verbatim into the output stream.
 
            *Example:*  ``$_$@$+`` translates to the name, version, and options
-           of the package, but no dependencies, arch, or compiler.
+           of the package, but no dependencies, target, or compiler.
 
            TODO: allow, e.g., $6# to customize short hash length
            TODO: allow, e.g., $## for full hash.
@@ -1593,8 +1593,8 @@ class Spec(object):
                     if self.variants:
                         write(fmt % str(self.variants), c)
                 elif c == '=':
-                    if self.architecture:
-                        write(fmt % (c + str(self.architecture)), c)
+                    if self.target:
+                        write(fmt % (c + str(self.target)), c)
                 elif c == '#':
                     out.write('-' + fmt % (self.dag_hash(7)))
                 elif c == '$':
@@ -1641,9 +1641,9 @@ class Spec(object):
                 elif named_str == 'OPTIONS':
                     if self.variants:
                         write(fmt % str(self.variants), '+')
-                elif named_str == 'ARCHITECTURE':
-                    if self.architecture:
-                        write(fmt % str(self.architecture), '=')
+                elif named_str == 'TARGET':
+                    if self.target:
+                        write(fmt % str(self.target), '=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % str(self.dep_hash(8)))
@@ -1691,10 +1691,10 @@ class Spec(object):
             return spack.pkgsort.variant_compare(pkgname,
                          self.variants, other.variants)
 
-        #Architecture
-        if self.architecture != other.architecture:
-            return spack.pkgsort.architecture_compare(pkgname,
-                         self.architecture, other.architecture)
+        #Target
+        if self.target != other.target:
+            return spack.pkgsort.target_compare(pkgname,
+                         self.target, other.target)
 
         #Dependency is not configurable
         if self.dep_hash() != other.dep_hash():
@@ -1811,7 +1811,7 @@ class SpecParser(spack.parse.Parser):
         spec.name = self.token.value
         spec.versions = VersionList()
         spec.variants = VariantMap(spec)
-        spec.architecture = None
+        spec.target = None
         spec.compiler = None
         spec.external = None
         spec.external_module = None
@@ -1842,7 +1842,7 @@ class SpecParser(spack.parse.Parser):
                 spec._set_compiler(self.compiler())
 
             elif self.accept(EQ):
-                spec._set_architecture(self.architecture())
+                spec._set_target(self.target())
 
             else:
                 break
@@ -1860,7 +1860,7 @@ class SpecParser(spack.parse.Parser):
         return self.token.value
 
 
-    def architecture(self):
+    def target(self):
         self.expect(ID)
         return self.token.value
 
@@ -2000,10 +2000,10 @@ class UnknownVariantError(SpecError):
             "Package %s has no variant %s!" % (pkg, variant))
 
 
-class DuplicateArchitectureError(SpecError):
-    """Raised when the same architecture occurs in a spec twice."""
+class DuplicateTargetError(SpecError):
+    """Raised when the same target occurs in a spec twice."""
     def __init__(self, message):
-        super(DuplicateArchitectureError, self).__init__(message)
+        super(DuplicateTargetError, self).__init__(message)
 
 
 class InconsistentSpecError(SpecError):
@@ -2082,11 +2082,11 @@ class UnsatisfiableVariantSpecError(UnsatisfiableSpecError):
             provided, required, "variant")
 
 
-class UnsatisfiableArchitectureSpecError(UnsatisfiableSpecError):
-    """Raised when a spec architecture conflicts with package constraints."""
+class UnsatisfiableTargetSpecError(UnsatisfiableSpecError):
+    """Raised when a spec target conflicts with package constraints."""
     def __init__(self, provided, required):
-        super(UnsatisfiableArchitectureSpecError, self).__init__(
-            provided, required, "architecture")
+        super(UnsatisfiableTargetSpecError, self).__init__(
+            provided, required, "target")
 
 
 class UnsatisfiableProviderSpecError(UnsatisfiableSpecError):
