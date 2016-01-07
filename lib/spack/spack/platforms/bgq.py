@@ -1,8 +1,8 @@
 import os
 
-from spack.architecture import Architecture, Target
+from spack.architecture import Platform, Target
 
-class Bgq(Architecture):
+class Bgq(Platform):
     priority    = 30
     front_end   = 'power7'
     back_end    = 'powerpc'

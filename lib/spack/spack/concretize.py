@@ -208,30 +208,30 @@ class DefaultConcretizer(object):
         return True   # Things changed
 
 
-    def concretize_architecture(self, spec):
-        """If the spec already has an architecture and it is a an architecture type,
-        return. Otherwise, if it has an architecture that is a string type, generate an
-        architecture based on that type. If it has no architecture and the root of the
-        DAG has an architecture, then use that. Otherwise, take the system's default
-        architecture.
+    def concretize_target(self, spec):
+        """If the spec already has an target and it is a an target type,
+        return. Otherwise, if it has a target that is a string type, generate a
+        target based on that type. If it has no target and the root of the
+        DAG has an target, then use that. Otherwise, take the system's default
+        target.
         """
-        if spec.architecture is not None:
-            if isinstance(spec.architecture,spack.architecture.Target):
+        if spec.target is not None:
+            if isinstance(spec.target,spack.architecture.Target):
                 return False
             else:
-                arch = spack.architecture.sys_type()
-                spec.architecture = arch.target(spec.architecture)
+                platform = spack.architecture.sys_type()
+                spec.target = platform.target(spec.target)
                 return True #changed
 
-        if spec.root.architecture:
-            if isinstance(spec.root.architecture,spack.architecture.Target):
-                spec.architecture = spec.root.architecture
+        if spec.root.target:
+            if isinstance(spec.root.target,spack.architecture.Target):
+                spec.target = spec.root.target
             else:
-                arch = spack.architecture.sys_type()
-                spec.architecture = arch.target(spec.root.architecture)
+                platform = spack.architecture.sys_type()
+                spec.target = platform.target(spec.root.target)
         else:
-            arch = spack.architecture.sys_type()
-            spec.architecture = arch.target('default')
+            platform = spack.architecture.sys_type()
+            spec.target = platform.target('default')
 
         return True #changed
 
@@ -260,8 +260,8 @@ class DefaultConcretizer(object):
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
         """
-        # Pass on concretizing the compiler if the architecture is not yet determined
-        if not spec.architecture:
+        # Pass on concretizing the compiler if the target is not yet determined
+        if not spec.target:
             #Although this usually means changed, this means awaiting other changes
             return True
 
@@ -305,7 +305,7 @@ class DefaultConcretizer(object):
             
         # copy concrete version into other_compiler
         index = len(matches)-1
-        while not _proper_compiler_style(matches[index], spec.architecture):
+        while not _proper_compiler_style(matches[index], spec.target):
             index -= 1
             if index == 0:
                 raise NoValidVersionError(spec)

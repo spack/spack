@@ -110,7 +110,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_unsatisfiable('foo %gcc@4.7', '%gcc@4.7.3')
 
 
-    def test_satisfies_architecture(self):
+    def test_satisfies_target(self):
         self.check_satisfies('foo=chaos_5_x86_64_ib', '=chaos_5_x86_64_ib')
         self.check_satisfies('foo=bgqos_0', '=bgqos_0')
 
@@ -266,7 +266,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf+debug~foo')
 
 
-    def test_constrain_arch(self):
+    def test_constrain_target(self):
         self.check_constrain('libelf=bgqos_0', 'libelf=bgqos_0', 'libelf=bgqos_0')
         self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
 

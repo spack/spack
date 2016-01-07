@@ -51,8 +51,8 @@ class NoSysTypeError(serr.SpackError):
 class Target(object):
     """ Target is the processor of the host machine. The host machine may have different front-end
         and back-end targets, especially if it is a Cray machine. The target will have a name and
-        also the module_name (e.g craype-compiler). Targets will also recognize which architecture
-        they came from using the set_architecture method. Targets will have compiler finding strategies
+        also the module_name (e.g craype-compiler). Targets will also recognize which platform
+        they came from using the set_platform method. Targets will have compiler finding strategies
         """
 
     def __init__(self, name, compiler_strategy, module_name=None):
@@ -60,17 +60,17 @@ class Target(object):
         self.compiler_strategy = compiler_strategy
         self.module_name = module_name # craype-ivybridge
 
-    # Sets only the architecture name to avoid recursiveness
-    def set_architecture(self, architecture):
-        self.architecture_name = architecture.name
+    # Sets only the platform name to avoid recursiveness
+    def set_platform(self, platform):
+        self.platform_name = platform.name
 
     def to_dict(self):
         d = {}
         d['name'] = self.name
         d['compiler_strategy'] = self.compiler_strategy
         d['module_name'] = self.module_name
-        if self.architecture_name:
-            d['architecture'] = self.architecture_name
+        if self.platform_name:
+            d['platform'] = self.platform_name
         return d
 
     @staticmethod
@@ -81,8 +81,8 @@ class Target(object):
         target.name = d['name']
         target.compiler_strategy = d['compiler_strategy']
         target.module_name = d['module_name']
-        if 'architecture' in d:
-            target.architecture_name = d['architecture']
+        if 'platform' in d:
+            target.platform_name = d['platform']
         return target
 
 
@@ -96,13 +96,13 @@ class Target(object):
         return self.name
 
 @key_ordering
-class Architecture(object):
-    """ Abstract class that each type of Architecture will subclass.
+class Platform(object):
+    """ Abstract class that each type of Platform will subclass.
         Will return a instance of it once it
         is returned
     """
 
-    priority        = None # Subclass needs to set this number. This controls order in which arch is detected.
+    priority        = None # Subclass needs to set this number. This controls order in which platform is detected.
     front_end       = None
     back_end        = None
     default         = None # The default back end target. On cray ivybridge
@@ -112,12 +112,12 @@ class Architecture(object):
         self.name = name
 
     def add_target(self, name, target):
-        """Used by the architecture specific subclass to list available targets. Raises an error
-        if the architecture specifies a name that is reserved by spack as an alias.
+        """Used by the platform specific subclass to list available targets. Raises an error
+        if the platform specifies a name that is reserved by spack as an alias.
         """
         if name in ['front_end', 'fe', 'back_end', 'be', 'default']:
             raise ValueError("%s is a spack reserved alias and cannot be the name of a target" % name)
-        target.set_architecture(self)
+        target.set_platform(self)
         self.targets[name] = target
 
     def target(self, name):
@@ -137,7 +137,7 @@ class Architecture(object):
     @classmethod
     def detect(self):
         """ Subclass is responsible for implementing this method.
-            Returns True if the architecture detects if it is the current architecture
+            Returns True if the Platform class detects that it is the current platform
             and False if it's not.
         """
         raise NotImplementedError()
@@ -182,18 +182,18 @@ def get_sys_type_from_uname():
         Front-end config
     """
     try:
-        arch_proc = subprocess.Popen(['uname', '-i'], stdout = subprocess.PIPE)
-        arch, _ = arch_proc.communicate()
-        return arch.strip()
+        platform_proc = subprocess.Popen(['uname', '-i'], stdout = subprocess.PIPE)
+        platform, _ = platform_proc.communicate()
+        return platform.strip()
     except:
         return None
 
 @memoized
-def all_architectures():
+def all_platforms():
     modules = []
-    for name in list_modules(spack.arch_path):
-        mod_name = 'spack.architectures' + name
-        path = join_path(spack.arch_path, name) + ".py"
+    for name in list_modules(spack.platform_path):
+        mod_name = 'spack.platformss' + name
+        path = join_path(spack.platform_path, name) + ".py"
         mod = imp.load_source(mod_name, path)
         class_name = mod_to_class(name)
         if not hasattr(mod, class_name):
@@ -208,16 +208,16 @@ def all_architectures():
 
 @memoized
 def sys_type():
-    """ Gather a list of all available subclasses of architectures.
+    """ Gather a list of all available subclasses of platforms.
         Sorts the list according to their priority looking. Priority is
-        an arbitrarily set number. Detects arch either using uname or
+        an arbitrarily set number. Detects platform either using uname or
         a file path (/opt/cray...)
     """
-    # Try to create an architecture object using the config file FIRST
-    architecture_list = all_architectures()
-    architecture_list.sort(key = lambda a: a.priority)
+    # Try to create a Platform object using the config file FIRST
+    platform_list = all_platforms()
+    platform_list.sort(key = lambda a: a.priority)
 
-    for arch in architecture_list:
-        if arch.detect():
-            return arch()
+    for platform in platform_list:
+        if platform.detect():
+            return platform()
 
