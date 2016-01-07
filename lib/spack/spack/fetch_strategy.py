@@ -302,7 +302,7 @@ class VCSFetchStrategy(FetchStrategy):
 
         # Ensure that there's only one of the rev_types
         if sum(k in kwargs for k in rev_types) > 1:
-            raise FetchStrategyError(
+            raise FetchError(
                 "Supply only one of %s to fetch with %s." % (
                     comma_or(rev_types), name))
 
