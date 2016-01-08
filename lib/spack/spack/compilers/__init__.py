@@ -219,7 +219,10 @@ def compiler_for_spec(compiler_spec, target):
         compilers = [c for c in compilers if c.modules is None]
     elif target.compiler_strategy == "MODULES":
         compilers = [c for c in compilers if c.modules is not None]
-    assert(len(compilers) == 1)
+    if len(compilers) < 1:
+        raise NoCompilerForSpecError(compiler_spec, target)
+    if len(compilers) > 1:
+        raise CompilerSpecInsufficientlySpecificError(compiler_spec)
     return compilers[0]
 
 
@@ -253,3 +256,13 @@ class InvalidCompilerConfigurationError(spack.error.SpackError):
 class NoCompilersError(spack.error.SpackError):
     def __init__(self):
         super(NoCompilersError, self).__init__("Spack could not find any compilers!")
+
+class NoCompilerForSpecError(spack.error.SpackError):
+    def __init__(self, compiler_spec, target):
+        super(NoCompilerForSpecError, self).__init__("No compilers for target %s satisfy spec %s",
+                                                     compiler_spec, target)
+
+class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
+    def __init__(self, compiler_spec):
+        super(CompilerSpecInsufficientlySpecificError, self).__init__("Multiple compilers satisfy spec %s",
+                                                                      compiler_spec)
