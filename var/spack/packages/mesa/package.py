@@ -1,7 +1,7 @@
 from spack import *
 
 class Mesa(Package):
-    """Mesa is an open-source implementation of the OpenGL 
+    """Mesa is an open-source implementation of the OpenGL
     specification - a system for rendering interactive 3D graphics."""
 
     homepage = "http://www.mesa3d.org"
@@ -11,9 +11,10 @@ class Mesa(Package):
     # version('10.4.4', '8d863a3c209bf5116b2babfccccc68ce')
     version('8.0.5', 'cda5d101f43b8784fa60bdeaca4056f2')
 
-    # mesa 7.x, 8.x, 9.x 
+    # mesa 7.x, 8.x, 9.x
     depends_on("libdrm@2.4.33")
     depends_on("llvm@3.0")
+    depends_on("libxml2")
 
     # patch("llvm-fixes.patch") # using newer llvm
 

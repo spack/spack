@@ -12,6 +12,7 @@ class PyMatplotlib(Package):
     extends('python', ignore=r'bin/nosetests.*$')
 
     depends_on('py-pyside')
+    depends_on('py-ipython')
     depends_on('py-pyparsing')
     depends_on('py-six')
     depends_on('py-dateutil')

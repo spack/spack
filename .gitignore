@@ -8,4 +8,3 @@
 /etc/spackconfig
 /share/spack/dotkit
 /share/spack/modules
-*.ropeproject

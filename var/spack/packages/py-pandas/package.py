@@ -6,8 +6,6 @@ class PyPandas(Package):
     homepage = "http://pandas.pydata.org/"
     url      = "https://pypi.python.org/packages/source/p/pandas/pandas-0.16.0.tar.gz#md5=bfe311f05dc0c351f8955fbd1e296e73"
 
-    version('0.15.1','f6fd8d49fc801f6f3fa48f9117a6290b',
-           url='https://pypi.python.org/packages/source/p/pandas/pandas-0.15.1.tar.gz')
     version('0.16.0', 'bfe311f05dc0c351f8955fbd1e296e73')
     version('0.16.1', 'fac4f25748f9610a3e00e765474bdea8')
 

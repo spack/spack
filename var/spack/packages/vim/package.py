@@ -35,15 +35,26 @@ class Vim(Package):
     variant('ruby', default=False, description="build with Ruby")
     depends_on('ruby', when='+ruby')
 
+    variant('cscope', default=False, description="build with cscope support")
+    depends_on('cscope', when='+cscope')
+
+    variant('gui', default=False, description="build with gui (gvim)")
+    # virtual dependency?
+
     def install(self, spec, prefix):
       feature_set = None
       for fs in self.feature_sets:
         if "+" + fs in spec:
           if feature_set is not None:
-            tty.error("Only one feature set allowed, both {} and {} specified".format(
-              feature_set,
-              fs))
+            tty.error("Only one feature set allowed, both %s and %s specified"
+                      % (feature_set, fs))
           feature_set = fs
+      if '+gui' in spec:
+        if feature_set is not None:
+          if feature_set is not 'huge':
+            tty.error("+gui variant requires 'huge' feature set, %s was specified"
+                      % feature_set)
+        feature_set = 'huge'
       if feature_set is None:
         feature_set = 'normal'
 
@@ -59,6 +70,12 @@ class Vim(Package):
         configure_args.append("--enable-rubyinterp=yes")
       else:
         configure_args.append("--enable-rubyinterp=dynamic")
+
+      if '+gui' in spec:
+        configure_args.append("--enable-gui=auto")
+
+      if '+cscope' in spec:
+        configure_args.append("--enable-cscope")
 
       configure("--prefix=%s" % prefix, *configure_args)
 

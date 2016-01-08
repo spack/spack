@@ -1,0 +1,16 @@
+--- Makefile	2015-02-26 10:50:00.000000000 -0800
++++ Makefile.new	2015-07-29 18:03:59.891357399 -0700
+@@ -22,10 +22,10 @@
+ #
+ 
+ INC =
+-GCC_PREFIX = $(shell dirname `which gcc`)
++GCC_PREFIX =
+ GCC_SUFFIX =
+-CC = $(GCC_PREFIX)/gcc$(GCC_SUFFIX)
+-CPP = $(GCC_PREFIX)/g++$(GCC_SUFFIX)
++CC = cc 
++CPP = c++
+ CXX = $(CPP)
+ HEADERS = $(wildcard *.h)
+ BOWTIE_MM = 1

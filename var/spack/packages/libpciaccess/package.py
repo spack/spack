@@ -1,16 +1,21 @@
 from spack import *
 
 class Libpciaccess(Package):
-    """Generic PCI access library"""
-    homepage = "http://cgit.freedesktop.org/xorg/lib/libpciaccess/"
-    url      = "http://pkgs.fedoraproject.org/repo/pkgs/libpciaccess/libpciaccess-0.13.2.tar.bz2/b7c0d3afce14eedca57312a3141ec13a/libpciaccess-0.13.2.tar.bz2"
+    """Generic PCI access library."""
 
-    version('0.13.2', 'b7c0d3afce14eedca57312a3141ec13a')
+    homepage = "http://cgit.freedesktop.org/xorg/lib/libpciaccess/"
+    url      = "http://cgit.freedesktop.org/xorg/lib/libpciaccess/"
+
+    version('0.13.4', git='http://anongit.freedesktop.org/git/xorg/lib/libpciaccess.git',
+            tag='libpciaccess-0.13.4')
+
+    depends_on('autoconf')
+    depends_on('libtool')
 
     def install(self, spec, prefix):
-        import os
-        os.system("autoconf")
-        configure('--prefix=%s' % prefix)
+        from subprocess import call
+        call(["./autogen.sh"])
+        configure("--prefix=%s" % prefix)
 
         make()
         make("install")
