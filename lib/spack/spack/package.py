@@ -708,6 +708,7 @@ class Package(object):
                 link_path = join_path(self.stage.source_path, resource.destination, value)
                 source_path = join_path(stage.source_path, key)
                 if not os.path.exists(link_path):
+                    mkdirp(ancestor(link_path))
                     # Create a symlink
                     os.symlink(source_path, link_path)
         ##########

@@ -5,12 +5,10 @@ class Libpciaccess(Package):
     """Generic PCI access library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libpciaccess/"
-    url      = "http://cgit.freedesktop.org/xorg/lib/libpciaccess/"
+    url      = "http://xorg.freedesktop.org/archive/individual/lib/libpciaccess-0.13.4.tar.bz2"
 
-    version('0.13.4', git='http://anongit.freedesktop.org/git/xorg/lib/libpciaccess.git',
-            tag='libpciaccess-0.13.4')
+    version('0.13.4', 'ace78aec799b1cf6dfaea55d3879ed9f')
 
-    depends_on('autoconf')
     depends_on('libtool')
 
     def install(self, spec, prefix):
@@ -20,9 +18,6 @@ class Libpciaccess(Package):
             mkdir(prefix.lib)
             return
 
-        from subprocess import call
-        call(["./autogen.sh"])
         configure("--prefix=%s" % prefix)
-
         make()
         make("install")
