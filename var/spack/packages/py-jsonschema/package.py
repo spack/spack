@@ -11,8 +11,6 @@ class PyJsonschema(Package):
 
     extends("python")
     depends_on("py-setuptools@18.1")
-    depends_on("py-vcversioner")
-    depends_on("py-functools32")
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
