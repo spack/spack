@@ -38,7 +38,6 @@ class Mpich(Package):
     provides('mpi@:3', when='@3:')
     provides('mpi@:1', when='@1:')
 
-
     def setup_dependent_environment(self, module, spec, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""
         os.environ['MPICH_CC']  = 'cc'
