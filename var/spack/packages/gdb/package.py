@@ -32,13 +32,13 @@ class Gdb(Package):
     -- or what another program was doing at the moment it crashed.
     """
     homepage = "https://www.gnu.org/software/gdb"
-    url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.xz"
+    url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
 
-    version('7.10.1', '39e654460c9cdd80200a29ac020cfe11')
-    version('7.10', '2a35bac41fa8e10bf04f3a0dd7f7f363')
-    version('7.9.1', '35374c77a70884eb430c97061053a36e')
-    version('7.9', 'e6279f26559d839f0b4218a482bcb43e')
-    version('7.8.2', 'a80cf252ed2e775d4e4533341bbf2459')
+    version('7.10.1', 'b93a2721393e5fa226375b42d567d90b')
+    version('7.10', 'fa6827ad0fd2be1daa418abb11a54d86')
+    version('7.9.1', 'f3b97de919a9dba84490b2e076ec4cb0')
+    version('7.9', '8f8ced422fe462a00e0135a643544f17')
+    version('7.8.2', '8b0ea8b3559d3d90b3ff4952f0aeafbc')
 
     depends_on('texinfo')
 
