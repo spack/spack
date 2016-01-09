@@ -92,21 +92,15 @@ class MultiMethodTest(MockPackagesTest):
 
 
     def test_target_match(self):
-        pkg = spack.db.get('multimethod=x86_64')
-        self.assertEqual(pkg.different_by_target(), 'x86_64')
+        platform = spack.architecture.sys_type()
+        targets = platform.targets.values()
+        for target in targets[:-1]:
+            print target
+            pkg = spack.db.get('multimethod='+target.name)
+            self.assertEqual(pkg.different_by_target(), target.name)
 
-        pkg = spack.db.get('multimethod=ppc64')
-        self.assertEqual(pkg.different_by_target(), 'ppc64')
-
-        pkg = spack.db.get('multimethod=ppc32')
-        self.assertEqual(pkg.different_by_target(), 'ppc32')
-
-        pkg = spack.db.get('multimethod=arm64')
-        self.assertEqual(pkg.different_by_target(), 'arm64')
-
-        pkg = spack.db.get('multimethod=macos')
+        pkg = spack.db.get('multimethod='+targets[-1].name)
         self.assertRaises(NoSuchMethodError, pkg.different_by_target)
-
 
     def test_dependency_match(self):
         pkg = spack.db.get('multimethod^zmpi')

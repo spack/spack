@@ -23,7 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-
+import spack.architecture
 
 class Multimethod(Package):
     """This package is designed for use with Spack's multimethod test.
@@ -103,21 +103,12 @@ class Multimethod(Package):
     #
     # Make sure we can switch methods on different target
     #
-    @when('=x86_64')
-    def different_by_target(self):
-        return 'x86_64'
-
-    @when('=ppc64')
-    def different_by_target(self):
-        return 'ppc64'
-
-    @when('=ppc32')
-    def different_by_target(self):
-        return 'ppc32'
-
-    @when('=arm64')
-    def different_by_target(self):
-        return 'arm64'
+    platform = spack.architecture.sys_type()
+    targets = platform.targets.values()
+    for target in targets[:-1]:
+        @when('='+target.name)
+        def different_by_target(self):
+            return self.spec.target.name
 
 
     #
