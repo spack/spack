@@ -1228,6 +1228,36 @@ class Spec(object):
             return parse_anonymous_spec(spec_like, self.name)
 
 
+    def add_target_from_string(self, target):
+        """If only a target is provided, spack will assume the default architecture.
+        A platform-target pair can be input delimited by a '-'. If either portion of
+        a platform-target pair is empty, spack will supply a default, in the case of
+        a blank target the default will be dependent on the platform.
+        E.g. x86_64        -> 64 bit x86
+             bgq-          -> default bgq target (back end/powerpc)
+             cray-hawswell -> haswell target on cray platform
+        """
+        if target is None:
+            return
+        if '-' in target:
+            platform, target = target.split('-')
+        else:
+            platform = ''
+            
+        if platform != '':
+            # Find the class for the platform name given
+            file_path = join_path(spack.platform_path, platform_name)
+            platform_mod = imp.load_source('spack.platforms', file_path + '.py')
+            cls = getattr(platform_mod, mod_to_class(platform_name))
+            platform = cls()
+        else:
+            platform = spack.architecture.sys_type()
+        if target != '':
+            self.target = platform.target(target)
+        else:
+            self.target = platform.target('default')
+
+
     def satisfies(self, other, deps=True, strict=False):
         """Determine if this spec satisfies all constraints of another.
 
@@ -1275,6 +1305,11 @@ class Spec(object):
 
         # Target satisfaction is currently just class equality.
         # If not strict, None means unconstrained.
+        if not isinstance(self.target, spack.architecture.Target):
+            self.add_target_from_string(self.target)
+        if not isinstance(other.target, spack.architecture.Target):
+            other.add_target_from_string(other.target)
+
         if self.target and other.target:
             if self.target != other.target:
                 return False
