@@ -22,6 +22,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import imp
+from llnl.util.filesystem import join_path
+from spack.util.naming import mod_to_class
 from spack import *
 import spack.architecture
 
@@ -103,8 +106,15 @@ class Multimethod(Package):
     #
     # Make sure we can switch methods on different target
     #
+#    for platform_name in ['cray_xc', 'darwin', 'linux']:
+#        file_path = join_path(spack.platform_path, platform_name)
+#        platform_mod = imp.load_source('spack.platforms', file_path + '.py')
+#        cls = getattr(platform_mod, mod_to_class(platform_name))
+        
+#        platform = cls()
     platform = spack.architecture.sys_type()
     targets = platform.targets.values()
+    
     for target in targets[:-1]:
         @when('='+target.name)
         def different_by_target(self):

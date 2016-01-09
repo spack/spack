@@ -100,7 +100,11 @@ class MultiMethodTest(MockPackagesTest):
             self.assertEqual(pkg.different_by_target(), target.name)
 
         pkg = spack.db.get('multimethod='+targets[-1].name)
-        self.assertRaises(NoSuchMethodError, pkg.different_by_target)
+        if len(targets) == 1:
+            self.assertEqual(pkg.different_by_target(), targets[-1].name)
+        else:
+            self.assertRaises(NoSuchMethodError, pkg.different_by_target)
+
 
     def test_dependency_match(self):
         pkg = spack.db.get('multimethod^zmpi')
