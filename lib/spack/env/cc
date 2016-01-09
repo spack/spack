@@ -70,7 +70,6 @@ for param in $parameters; do
     fi
 done
 
-
 #
 # Figure out the type of compiler, the language, and the mode so that
 # the compiler script knows what to do.
