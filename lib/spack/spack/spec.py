@@ -91,6 +91,7 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import sys
+import imp
 import itertools
 import hashlib
 import base64
@@ -100,6 +101,7 @@ from external import yaml
 from external.yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 
@@ -109,6 +111,7 @@ import spack.error
 import spack.compilers as compilers
 
 from spack.version import *
+from spack.util.naming import mod_to_class
 from spack.util.string import *
 from spack.util.prefix import Prefix
 from spack.virtual import ProviderIndex
@@ -1246,9 +1249,9 @@ class Spec(object):
             
         if platform != '':
             # Find the class for the platform name given
-            file_path = join_path(spack.platform_path, platform_name)
+            file_path = join_path(spack.platform_path, platform)
             platform_mod = imp.load_source('spack.platforms', file_path + '.py')
-            cls = getattr(platform_mod, mod_to_class(platform_name))
+            cls = getattr(platform_mod, mod_to_class(platform))
             platform = cls()
         else:
             platform = spack.architecture.sys_type()
