@@ -72,22 +72,6 @@ done
 
 
 #
-# Cray module environment-related stuff.
-#
-if [ ! -z "$SPACK_CRAYPE" ]; then
-    cur_pe=$(module list 2>&1 | grep PrgEnv | grep -o 'PrgEnv-[^/]*')
-    if [ ! -z "$cur_pe" ]; then
-        module swap $cur_pe $SPACK_CRAYPE
-    else
-        module load $SPACK_CRAYPE
-    fi
-fi
-
-if [ ! -z "$SPACK_COMP_MODULE" ]; then
-    module load $SPACK_COMP_MODULE
-fi
-
-#
 # Figure out the type of compiler, the language, and the mode so that
 # the compiler script knows what to do.
 #
