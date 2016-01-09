@@ -8,6 +8,8 @@ class Julia(Package):
 
     version('0.4.2', 'ccfeb4f4090c8b31083f5e1ccb03eb06')
 
+    patch('gc.patch')
+
     # Build-time dependencies
     depends_on("cmake @2.8:")
     # depends_on("awk")
