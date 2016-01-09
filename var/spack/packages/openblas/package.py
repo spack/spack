@@ -19,3 +19,7 @@ class Openblas(Package):
         with working_dir(prefix.lib):
             symlink('libopenblas.a', 'blas.a')
             symlink('libopenblas.a', 'libblas.a')
+
+        # Lapack virtual package should provide liblapack.a
+        with working_dir(prefix.lib):
+            symlink('libopenblas.a', 'liblapack.a')
