@@ -9,7 +9,7 @@ class Julia(Package):
     version('0.4.2', 'ccfeb4f4090c8b31083f5e1ccb03eb06')
 
     # Build-time dependencies
-    # depends_on("cmake")
+    depends_on("cmake")
     # depends_on("awk")
     # depends_on("m4")
     # depends_on("pkg-config")
