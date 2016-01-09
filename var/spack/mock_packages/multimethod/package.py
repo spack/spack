@@ -114,8 +114,10 @@ class Multimethod(Package):
 #        platform = cls()
     platform = spack.architecture.sys_type()
     targets = platform.targets.values()
+    if len(targets) > 1:
+        targets = targets[:-1]
     
-    for target in targets[:-1]:
+    for target in targets:
         @when('='+target.name)
         def different_by_target(self):
             return self.spec.target.name
