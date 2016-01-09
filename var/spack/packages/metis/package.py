@@ -12,6 +12,7 @@ class Metis(Package):
 
     version('5.1.0', '5465e67079419a69e0116de24fce58fe')
 
+    depends_on("cmake @2.8:")   # build-time dependency
     depends_on('mpi')
 
     def install(self, spec, prefix):
