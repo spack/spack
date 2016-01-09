@@ -220,14 +220,14 @@ class DefaultConcretizer(object):
             if isinstance(spec.target,spack.architecture.Target):
                 return False
             else:
-                spec.add_target_from_string(spec, spec.target)
+                spec.add_target_from_string(spec.target)
                 return True #changed
 
         if spec.root.target:
             if isinstance(spec.root.target,spack.architecture.Target):
                 spec.target = spec.root.target
             else:
-                spec.add_target_from_string(spec, spec.root.target)
+                spec.add_target_from_string(spec.root.target)
         else:
             platform = spack.architecture.sys_type()
             spec.target = platform.target('default')

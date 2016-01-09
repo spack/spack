@@ -259,8 +259,8 @@ class NoCompilersError(spack.error.SpackError):
 
 class NoCompilerForSpecError(spack.error.SpackError):
     def __init__(self, compiler_spec, target):
-        super(NoCompilerForSpecError, self).__init__("No compilers for target %s satisfy spec %s",
-                                                     compiler_spec, target)
+        super(NoCompilerForSpecError, self).__init__("No compilers for target %s satisfy spec %s" % (
+                                                     target, compiler_spec))
 
 class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
     def __init__(self, compiler_spec):
