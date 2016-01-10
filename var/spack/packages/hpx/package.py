@@ -7,6 +7,8 @@ class Hpx(Package):
 
     version('0.9.11', '77767298f57805ee9eb710a2044ba829')
 
+    patch('Werror.patch')
+
     # Highly recommended
     variant("gperftools", default=True)
     variant("libunwind", default=True)
