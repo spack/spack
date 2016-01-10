@@ -1,9 +1,9 @@
--- old/CMakeLists.txt
-++ new/CMakeLists.txt
-@@ -961,36 +962,36
+--- old/CMakeLists.txt
++++ new/CMakeLists.txt
+@@ -961,21 +961,21 @@
        hpx_add_compile_flag_if_available(-Wcast-align)
      endif()
-
+ 
 -    hpx_add_compile_flag_if_available(-Werror=trampolines)
 -    hpx_add_compile_flag_if_available(-Werror=parentheses)
 -    hpx_add_compile_flag_if_available(-Werror=reorder)
@@ -14,14 +14,14 @@
 +    # hpx_add_compile_flag_if_available(-Werror=reorder)
 +    # hpx_add_compile_flag_if_available(-Werror=return-type)
 +    # hpx_add_compile_flag_if_available(-Werror=sequence-point)
-
-     if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7 )
+ 
+     if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
        # Uninitialized variables are bad, earlier compilers issue spurious
        # warnings
 -      hpx_add_compile_flag_if_available(-Werror=uninitialized)
 +      # hpx_add_compile_flag_if_available(-Werror=uninitialized)
      endif()
-
+ 
 -    hpx_add_compile_flag_if_available(-Werror=format)
 -    hpx_add_compile_flag_if_available(-Werror=missing-braces)
 -    hpx_add_compile_flag_if_available(-Werror=sign-compare)
@@ -30,22 +30,26 @@
 +    # hpx_add_compile_flag_if_available(-Werror=sign-compare)
    endif()
  endif()
-
- # Diagnostics
- if(MSVC)
-   # Display full paths in diagnostics
-   hpx_add_compile_flag(-FC LANGUAGES C CXX)
- else()
-   # Show the flags that toggle each warning
-   hpx_add_compile_flag_if_available(-fdiagnostics-show-option LANGUAGES CXX C F ortran)
-
+ 
+@@ -988,10 +988,10 @@
+   hpx_add_compile_flag_if_available(-fdiagnostics-show-option LANGUAGES CXX C Fortran)
+ 
    # VLAs are a GNU extensions that we forbid as they are not supported on MSVC
 -  hpx_add_compile_flag_if_available(-Werror=vla)
 +  # hpx_add_compile_flag_if_available(-Werror=vla)
-   # No return statement in a non-void function can lead to garbage return value s
+   # No return statement in a non-void function can lead to garbage return values
    # in GCC.
 -  hpx_add_compile_flag_if_available(-Werror=return-type LANGUAGES CXX C)
 +  # hpx_add_compile_flag_if_available(-Werror=return-type LANGUAGES CXX C)
-
+ 
    # We get false positives all over the place with this. Also, detection for
    # this flag fails with GCC 4.4 and 4.5.
+@@ -999,7 +999,7 @@
+     hpx_add_compile_flag_if_available(-Wno-unused-but-set-parameter LANGUAGES CXX C)
+     hpx_add_compile_flag_if_available(-Wno-unused-but-set-variable LANGUAGES CXX C)
+     # Uninitialized variables are bad, earlier compilers issue spurious warnings
+-    hpx_add_compile_flag_if_available(-Werror=uninitialized LANGUAGES CXX C)
++    # hpx_add_compile_flag_if_available(-Werror=uninitialized LANGUAGES CXX C)
+     hpx_add_compile_flag_if_available(-Wno-unused-local-typedefs LANGUAGES CXX C)
+   endif()
+ 
