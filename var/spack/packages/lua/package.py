@@ -18,11 +18,12 @@ class Lua(Package):
     version('5.1.3', 'a70a8dfaa150e047866dc01a46272599')
 
     depends_on('ncurses')
+    depends_on('readline')
 
     def install(self, spec, prefix):
         make('INSTALL_TOP=%s' % prefix,
-             'MYLDFLAGS="-L%s/lib -Wl,-rpath,%s"' % (spec['ncurses'].prefix,spec['ncurses'].prefix),
+             'MYLDFLAGS=-L%s -lncurses' % spec['ncurses'].prefix.lib,
              'linux')
         make('INSTALL_TOP=%s' % prefix,
-             'MYLDFLAGS="-L%s/lib -Wl,-rpath,%s"' % (spec['ncurses'].prefix,spec['ncurses'].prefix),
+             'MYLDFLAGS=-L%s -lncurses' % spec['ncurses'].prefix.lib,
              'install')
