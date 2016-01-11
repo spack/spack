@@ -8,11 +8,14 @@ class Julia(Package):
 
     version('0.4.2', 'ccfeb4f4090c8b31083f5e1ccb03eb06')
 
+    patch('gc.patch')
+
     # Build-time dependencies
-    # depends_on("cmake")
+    depends_on("cmake @2.8:")
     # depends_on("awk")
     # depends_on("m4")
     # depends_on("pkg-config")
+    depends_on("python @2.6:2.9")
 
     # I think that Julia requires the dependencies above, but it builds find (on
     # my system) without these. We should enable them as necessary.
