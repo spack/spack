@@ -22,9 +22,13 @@ class Lua(Package):
     depends_on('readline')
 
     def install(self, spec, prefix):
+        if spec.satisfies("=darwin-i686") or spec.satisfies("=darwin-x86_64"):
+            target = 'macosx'
+        else:
+            target = 'linux'
         make('INSTALL_TOP=%s' % prefix,
              'MYLDFLAGS=-L%s -lncurses' % spec['ncurses'].prefix.lib,
-             'linux')
+             target)
         make('INSTALL_TOP=%s' % prefix,
              'MYLDFLAGS=-L%s -lncurses' % spec['ncurses'].prefix.lib,
              'install')
