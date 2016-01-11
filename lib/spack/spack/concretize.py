@@ -183,6 +183,8 @@ class DefaultConcretizer(object):
         """
         ret = False
         for flag in Compiler.valid_compiler_flags():
+            if flag in spec.compiler_flags:
+                continue
             try:
                 nearest = next(p for p in spec.traverse(direction='parents')
                                if ((p.compiler == spec.compiler and p is not spec)

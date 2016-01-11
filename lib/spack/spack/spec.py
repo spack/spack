@@ -1745,7 +1745,7 @@ class Spec(object):
         showid = kwargs.pop('ids',   False)
         cover  = kwargs.pop('cover', 'nodes')
         indent = kwargs.pop('indent', 0)
-        fmt    = kwargs.pop('format', '$_$@$%@$+$+arch=')
+        fmt    = kwargs.pop('format', '$_$@$%@+$+$=')
         prefix = kwargs.pop('prefix', None)
         check_kwargs(kwargs, self.tree)
 
