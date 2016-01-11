@@ -20,7 +20,7 @@ class Openssl(Package):
         # OpenSSL uses a variable APPS in its Makefile. If it happens to be set
         # in the environment, then this will override what is set in the
         # Makefile, leading to build errors.
-        del env['APPS']
+        env.pop('APPS', None)
         if spec.satisfies("=darwin-x86_64") or spec.satisfies("=ppc64"):
             # This needs to be done for all 64-bit architectures (except Linux,
             # where it happens automatically?)
