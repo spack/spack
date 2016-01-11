@@ -6,6 +6,7 @@ class Lua(Package):
     homepage = "http://www.lua.org"
     url      = "http://www.lua.org/ftp/lua-5.1.5.tar.gz"
 
+    version('5.3.2', '33278c2ab5ee3c1a875be8d55c1ca2a1')
     version('5.3.1', '797adacada8d85761c079390ff1d9961')
     version('5.3.0', 'a1b0a7e92d0c85bbff7a8d27bf29f8af')
     version('5.2.4', '913fdb32207046b273fdb17aad70be13')
