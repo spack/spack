@@ -38,8 +38,9 @@ class Cmake(Package):
     version('3.4.0', 'cd3034e0a44256a0917e254167217fc8',
             url = 'https://cmake.org/files/v3.4/cmake-3.4.0.tar.gz')
 
-#    version('3.0.1', 'e2e05d84cb44a42f1371d9995631dcf5')
-#    version('3.0.0', '21a1c85e1a3b803c4b48e7ff915a863e')
+    variant('ncurses', default=True, description='Enables the build of the ncurses gui')
+
+    depends_on('ncurses', when='+ncurses')
 
     def install(self, spec, prefix):
         configure('--prefix='   + prefix,

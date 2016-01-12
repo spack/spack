@@ -6,6 +6,7 @@ class Lua(Package):
     homepage = "http://www.lua.org"
     url      = "http://www.lua.org/ftp/lua-5.1.5.tar.gz"
 
+    version('5.3.2', '33278c2ab5ee3c1a875be8d55c1ca2a1')
     version('5.3.1', '797adacada8d85761c079390ff1d9961')
     version('5.3.0', 'a1b0a7e92d0c85bbff7a8d27bf29f8af')
     version('5.2.4', '913fdb32207046b273fdb17aad70be13')
@@ -18,11 +19,16 @@ class Lua(Package):
     version('5.1.3', 'a70a8dfaa150e047866dc01a46272599')
 
     depends_on('ncurses')
+    depends_on('readline')
 
     def install(self, spec, prefix):
+        if spec.satisfies("=darwin-i686") or spec.satisfies("=darwin-x86_64"):
+            target = 'macosx'
+        else:
+            target = 'linux'
         make('INSTALL_TOP=%s' % prefix,
-             'MYLDFLAGS="-L%s/lib -Wl,-rpath,%s"' % (spec['ncurses'].prefix,spec['ncurses'].prefix),
-             'linux')
+             'MYLDFLAGS=-L%s -lncurses' % spec['ncurses'].prefix.lib,
+             target)
         make('INSTALL_TOP=%s' % prefix,
-             'MYLDFLAGS="-L%s/lib -Wl,-rpath,%s"' % (spec['ncurses'].prefix,spec['ncurses'].prefix),
+             'MYLDFLAGS=-L%s -lncurses' % spec['ncurses'].prefix.lib,
              'install')

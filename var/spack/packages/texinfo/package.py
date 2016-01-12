@@ -33,12 +33,12 @@ class Texinfo(Package):
     used by many non-GNU projects as well.FIXME: put a proper description of your package here.
     """
     homepage = "https://www.gnu.org/software/texinfo/"
-    url      = "http://ftp.gnu.org/gnu/texinfo/texinfo-6.0.tar.xz"
+    url      = "http://ftp.gnu.org/gnu/texinfo/texinfo-6.0.tar.gz"
 
-    version('6.0', '02818e62a5b8ae0213a7ff572991bb50')
-    version('5.2', 'cb489df8a7ee9d10a236197aefdb32c5')
-    version('5.1', '52ee905a3b705020d2a1b6ec36d53ca6')
-    version('5.0', 'ef2fad34c71ddc95b20c7d6a08c0d7a6')
+    version('6.0', 'e1a2ef5dce5018b53f0f6eed45b247a7')
+    version('5.2', '1b8f98b80a8e6c50422125e07522e8db')
+    version('5.1', '54e250014fe698fb4832016158747c03')
+    version('5.0', '918432285abe6fe96c98355594c5656a')
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)
