@@ -93,4 +93,4 @@ class Parmetis(Package):
             make("install")
             # Parmetis build system doesn't allow for an external metis to be used, but doesn't copy the required
             # metis header either
-            shutil.copy(metis_header, join_path(self.prefix, 'include'))
+            install(metis_header, self.prefix.include)
