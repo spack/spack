@@ -381,11 +381,11 @@ class FlagMap(HashableMap):
     def satisfies(self, other, strict=False):
         #"strict" makes no sense if this works, but it matches how we need it. Maybe
         if strict:
-            return all(k in self and self[k] == other[k]
-                       for k in other if other[k] != "")
+            return all(f in self and set(self[f]) == set(other[f])
+                       for f in other if other[f] != [])
         else:
-            return all(k in self and self[k] == other[k]
-                       for k in other)
+            return all(f in self and set(self[f]) >= set(other[f])
+                       for f in other)
 
 
     def constrain(self, other):
@@ -396,13 +396,11 @@ class FlagMap(HashableMap):
         changed = False
 
         # Others_set removes flags set to '' from the comparison
-        others_set = (k for k in other if other[k] != '')
+        others_set = (k for k in other if other[k] != [])
         for k in others_set:
-            if k in self and self[k] != '':
-                if self[k] != other[k]:
-                    # This will not recognize incompatible flags, merely concatenates
-                    self[k] += ' ' + other[k]
-                    changed = True
+            if k in self and self[k] != other[k]:
+                self[k] = list(set(self[k]) | set(other[k]))
+                changed = True
             else:
                 self[k] = other[k]
                 changed = True
@@ -422,13 +420,13 @@ class FlagMap(HashableMap):
 
 
     def _cmp_key(self):
-        return ''.join(str(key)+str(value) for key, value in sorted(self.items()))
+        return ''.join(str(key) + ' '.join(str(v) for v in value) for key, value in sorted(self.items()))
 
 
     def __str__(self):
-        sorted_keys = filter(lambda flag: self[flag] != "", sorted(self.keys()))
+        sorted_keys = filter(lambda flag: self[flag] != [], sorted(self.keys()))
         cond_symbol = '+' if len(sorted_keys)>0 else ''
-        return cond_symbol + '+'.join(str(key) + '=\"' + str(self[key]) + '\"' for key in sorted_keys)
+        return cond_symbol + '+'.join(str(key) + '=\"' + ' '.join(str(f) for f in self[key]) + '\"' for key in sorted_keys)
 
 
 class DependencyMap(HashableMap):
@@ -516,7 +514,7 @@ class Spec(object):
             self._set_architecture(value)
         elif name in valid_flags:
             assert(self.compiler_flags is not None)
-            self.compiler_flags[name] = value
+            self.compiler_flags[name] = value.split()
         else:
             self._add_variant(self,name,value)
 
@@ -816,6 +814,7 @@ class Spec(object):
            concretized, they're added to the presets, and ancestors
            will prefer the settings of their children.
         """
+
         if presets is None: presets = {}
         if visited is None: visited = set()
 
@@ -928,16 +927,6 @@ class Spec(object):
 #                       self._concretize_helper())
             changed = any(changes)
             force=True
-
-        # Include the compiler flag defaults from the config files
-        # This ensures that spack will detect conflicts that stemp from a change
-        # in default compiler flags.
-        pkg = spack.db.get(self)
-        for flag in pkg.compiler.flags:
-            if self.compiler_flags[flag] == '':
-                self.compiler_flags[flag] += pkg.compiler.flags[flag]
-            else:
-                self.compiler_flags[flag] += ' ' + pkg.compiler.flags[flag]
 
         self._concrete = True
 
@@ -1907,7 +1896,6 @@ class SpecParser(spack.parse.Parser):
                         self.token.value = self.token.value[1:-1]
                     else:
                         self.expect(ID)
-                    print "about to add", option, "=", self.token.value
                     spec._add_flag(option,self.token.value)
                 else:
                     spec._add_variant(self.variant(option),True)

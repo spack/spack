@@ -108,7 +108,7 @@ def set_compiler_environment_variables(pkg):
     for flag in Compiler.valid_compiler_flags():
         # Concreteness guarantees key safety here
         if flags[flag] != '':
-            os.environ['SPACK_'+flag.upper()] = flags[flag]
+            os.environ['SPACK_'+flag.upper()] = ' '.join(f for f in flags[flag])
 
     os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
 

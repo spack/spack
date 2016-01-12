@@ -183,24 +183,47 @@ class DefaultConcretizer(object):
         """
         ret = False
         for flag in Compiler.valid_compiler_flags():
-            if flag in spec.compiler_flags:
-                continue
+#            if flag in spec.compiler_flags:
+#                continue
             try:
                 nearest = next(p for p in spec.traverse(direction='parents')
                                if ((p.compiler == spec.compiler and p is not spec)
                                and flag in p.compiler_flags))
                 if ((not flag in spec.compiler_flags) or
-                    spec.compiler_flags[flag] != nearest.compiler_flags[flag]):
-                    spec.compiler_flags[flag] = nearest.compiler_flags[flag]
+                    sorted(spec.compiler_flags[flag]) != sorted(nearest.compiler_flags[flag])):
+                    if flag in spec.compiler_flags:
+                        spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
+                                                         set(nearest.compiler_flags[flag]))
+                    else:
+                        spec.compielr_flags[flag] = nearest.compiler_flags[flag]
                     ret = True
 
             except StopIteration:
                 if (flag in spec.root.compiler_flags and ((not flag in spec.compiler_flags) or
-                    spec.compiler_flags[flag] != spec.root.compiler_flags[flag])):
-                    spec.compiler_flags[flag] = spec.root.compiler_flags[flag]
+                    sorted(spec.compiler_flags[flag]) != sorted(spec.root.compiler_flags[flag]))):
+                    if flag in spec.compiler_flags:
+                        spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
+                                                         set(spec.root.compiler_flags[flag]))
+                    else:
+                        spec.compiler_flags[flag] = spec.root.compiler_flags[flag]
                     ret = True
                 else:
-                    spec.compiler_flags[flag] = ''
+                    if not flag in spec.compiler_flags:
+                        spec.compiler_flags[flag] = []
+
+        # Include the compiler flag defaults from the config files
+        # This ensures that spack will detect conflicts that stem from a change
+        # in default compiler flags.
+        compiler = spack.compilers.compiler_for_spec(spec.compiler)
+        for flag in compiler.flags:
+            if flag not in spec.compiler_flags or spec.compiler_flags[flag] == []:
+                spec.compiler_flags[flag] = compiler.flags[flag]
+                ret = True
+            else:
+                if (sorted(spec.compiler_flags[flag]) != sorted(compiler.flags[flag])) and (not set(spec.compiler_flags[flag]) >= set(compiler.flags[flag])):
+                    ret = True
+                    spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
+                                                     set(compiler.flags[flag]))
 
         return ret
 

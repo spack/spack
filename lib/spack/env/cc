@@ -91,41 +91,53 @@ case "$command" in
     cc|gcc|c89|c99|clang|xlc)
         command=("$SPACK_CC")
         if [ "$SPACK_CFLAGS" ]; then
-        command+=("$SPACK_CFLAGS")
+            for flag in ${SPACK_CFLAGS[@]}; do
+                command+=("$flag");
+            done
         fi
         language="C"
         ;;
     c++|CC|g++|clang++|xlC)
         command=("$SPACK_CXX")
         if [ "$SPACK_CXXFLAGS" ]; then
-        command+=("$SPACK_CXXFLAGS")
+            for flag in ${SPACK_CXXFLAGS[@]}; do
+                command+=("$flag");
+            done
         fi
         language="C++"
         ;;
     f77|xlf)
         command=("$SPACK_F77")
         if [ "$SPACK_FFLAGS" ]; then
-        command+=("$SPACK_FFLAGS")
+            for flag in ${SPACK_FFLAGS[@]}; do
+                command+=("$flag");
+            done
         fi
         language="Fortran 77"
         ;;
     fc|f90|f95|xlf90)
         command="$SPACK_FC"
         if [ "$SPACK_FFLAGS" ]; then
-        command+=("$SPACK_FFLAGS")
+            for flag in ${SPACK_FFLAGS[@]}; do
+                command+=("$flag");
+            done
         fi
         language="Fortran 90"
         ;;
     cpp)
         mode=cpp
         if [ "$SPACK_CPPFLAGS" ]; then
-        command+=("$SPACK_CPPFLAGS")
+            for flag in ${SPACK_CPPFLAGS[@]}; do
+                command+=("$flag");
+            done
         fi
         ;;
     ld)
         mode=ld
         if [ "$SPACK_LDFLAGS" ]; then
-        command+=("$SPACK_LDFLAGS")
+            for flag in ${SPACK_LDFLAGS[@]}; do
+                command+=("$flag");
+            done
         fi
         ;;
     *)
@@ -137,7 +149,9 @@ esac
 if [ -z "$mode" ]; then
     mode=ccld
     if [ "$SPACK_LDFLAGS" ]; then
-    command+=("$SPACK_LDFLAGS")
+        for flag in ${SPACK_LDFLAGS[@]}; do
+            command+=("$flag");
+        done
     fi
     for arg in "$@"; do
         if [ "$arg" = -v -o "$arg" = -V -o "$arg" = --version -o "$arg" = -dumpversion ]; then
@@ -340,7 +354,6 @@ done
 export PATH
 
 full_command=("${command[@]}")
-#full_command+=("$SPACK_CFLAGS")
 full_command+=("${args[@]}")
 
 #
@@ -353,7 +366,11 @@ if [ "$SPACK_DEBUG" = "TRUE" ]; then
     echo "$mode       ${full_command[@]}" >> $output_log
 fi
 
-echo "---------------------------" > /g/g0/becker33/cflag_test
-echo "${full_command[@]}" >> /g/g0/becker33/cflag_test
-echo "---------------------------" >> /g/g0/becker33/cflag_test
+#echo "---------------------------"
+#echo "---------------------------"
+#echo "---------------------------"
+#echo "${full_command[@]}"
+#echo "---------------------------"
+#echo "---------------------------"
+#echo "---------------------------"
 exec "${full_command[@]}"
