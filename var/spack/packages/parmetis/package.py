@@ -24,7 +24,6 @@
 ##############################################################################
 
 from spack import *
-import shutil
 
 # FIXME : lot of code is duplicated from packages/metis/package.py . Inheriting from there may reduce
 # FIXME : the installation rules to just a few lines
