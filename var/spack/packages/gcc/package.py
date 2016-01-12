@@ -48,10 +48,10 @@ class Gcc(Package):
     version('4.7.4', '4c696da46297de6ae77a82797d2abe28')
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
-    
-    depends_on("mpfr")
-    depends_on("gmp")
-    depends_on("mpc")     # when @4.5:
+
+    depends_on("mpfr@2.4.2:")
+    depends_on("gmp@4.3.2:")
+    depends_on("mpc@0.8.1:")     # when @4.5:
     depends_on("binutils~libiberty")
 
     # Save these until we can do optional deps.
@@ -99,7 +99,7 @@ class Gcc(Package):
             configure(*options)
             make()
             make("install")
-            
+
         self.write_rpath_specs()
 
 
