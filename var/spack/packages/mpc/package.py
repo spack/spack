@@ -34,8 +34,14 @@ class Mpc(Package):
     version('1.0.3', 'd6a1d5f8ddea3abd2cc3e98f58352d26')
     version('1.0.2', '68fadff3358fb3e7976c7a398a0af4c3')
 
-    depends_on("gmp")
-    depends_on("mpfr")
+    depends_on("gmp@4.3.2:")
+    depends_on("mpfr@2.4.2:")
+
+    def url_for_version(self, version):
+        if version < Version("1.0.1"):
+            return "http://www.multiprecision.org/mpc/download/mpc-%s.tar.gz" % version
+        else:
+            return "ftp://ftp.gnu.org/gnu/mpc/mpc-%s.tar.gz" % version
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
