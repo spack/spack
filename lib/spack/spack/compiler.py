@@ -63,10 +63,6 @@ def dumpversion(compiler_path):
     """Simple default dumpversion method -- this is what gcc does."""
     return get_compiler_version(compiler_path, '-dumpversion')
 
-_valid_compiler_flags = ['cflags', 'cxxflags', 'fflags', 'ldflags', 'cppflags']
-def valid_compiler_flags():
-    return _valid_compiler_flags
-
 
 class Compiler(object):
     """This class encapsulates a Spack "compiler", which includes C,
@@ -118,10 +114,10 @@ class Compiler(object):
         # in the same order they are returned by sorted(flags)
         # in compilers/__init__.py
         self.flags = {}
-        for flag in _valid_compiler_flags:
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
             value = kwargs.get(flag, None)
             if value is not None:
-                self.flags[flag] = value
+                self.flags[flag] = value.split()
 
         self.spec = cspec
 

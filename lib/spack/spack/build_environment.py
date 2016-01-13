@@ -105,7 +105,7 @@ def set_compiler_environment_variables(pkg):
         os.environ['SPACK_FC']  = compiler.fc
 
     # Add every valid compiler flag to the environment, prefaced by "SPACK_"
-    for flag in Compiler.valid_compiler_flags():
+    for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Concreteness guarantees key safety here
         if flags[flag] != '':
             os.environ['SPACK_'+flag.upper()] = ' '.join(f for f in flags[flag])

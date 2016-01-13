@@ -191,7 +191,7 @@ def compilers_for_spec(compiler_spec):
                 compiler_paths.append(None)
 
         flags = {}
-        for f in Comp.valid_compiler_flags():
+        for f in spack.spec.FlagMap.valid_compiler_flags():
             if f in items:
                 flags[f] = items[f]
         return cls(cspec, *compiler_paths, **flags)

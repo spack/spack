@@ -372,6 +372,7 @@ class VariantMap(HashableMap):
         return ''.join(str(self[key]) for key in sorted_keys)
 
 
+_valid_compiler_flags = ['cflags', 'cxxflags', 'fflags', 'ldflags', 'cppflags']
 class FlagMap(HashableMap):
     def __init__(self, spec):
         super(FlagMap, self).__init__()
@@ -384,8 +385,12 @@ class FlagMap(HashableMap):
             return all(f in self and set(self[f]) == set(other[f])
                        for f in other if other[f] != [])
         else:
-            return all(f in self and set(self[f]) >= set(other[f])
-                       for f in other)
+            if other.spec and other.spec.concrete:
+                return all(f in self and set(self[f]) == set(other[f])
+                           for f in other)
+            else:
+                return all(f in self and set(self[f]) >= set(other[f])
+                           for f in other)
 
 
     def constrain(self, other):
@@ -406,10 +411,13 @@ class FlagMap(HashableMap):
                 changed = True
         return changed
 
+    @staticmethod
+    def valid_compiler_flags():
+        return _valid_compiler_flags
 
     @property
     def concrete(self):
-        return self.spec._concrete
+        return all(flag in self for flag in _valid_compiler_flags)
 
 
     def copy(self):
@@ -509,7 +517,7 @@ class Spec(object):
         """Called by the parser to add a known flag.
         Known flags currently include "arch"
         """
-        valid_flags = Compiler.valid_compiler_flags()
+        valid_flags = FlagMap.valid_compiler_flags()
         if name == 'arch':
             self._set_architecture(value)
         elif name in valid_flags:
@@ -596,7 +604,7 @@ class Spec(object):
                               and self.variants.concrete
                               and self.architecture
                               and self.compiler and self.compiler.concrete
-#                              and self.compiler_flags.concrete
+                              and self.compiler_flags.concrete
                               and self.dependencies.concrete)
         return self._concrete
 
