@@ -38,12 +38,13 @@ class Gmsh(Package):
 
     version('2.11.0', 'f15b6e7ac9ca649c9a74440e1259d0db')
 
-    # FIXME : Misses dependencies on gmm, PetsC, TetGen, HDF5
+    # FIXME : Misses dependencies on gmm, PetsC, TetGen
 
     variant('shared', default=True, description='Enables the build of shared libraries')
     variant('debug', default=False, description='Builds the library in debug mode')
     variant('mpi', default=False, description='Builds MPI support for parser and solver')
     variant('fltk', default=False, description='Enables the build of the FLTK GUI')
+    variant('hdf5', default=False, description='Enables HDF5 support')
     variant('compression', default=True, description='Enables IO compression through zlib')
 
     depends_on('blas')
@@ -51,6 +52,7 @@ class Gmsh(Package):
     depends_on('gmp')
     depends_on('mpi', when='+mpi')
     depends_on('fltk', when='+fltk')  # Assumes OpenGL with GLU is already provided by the system
+    depends_on('hdf5', when='+hdf5')
     depends_on('zlib', when='+compression')
 
     def install(self, spec, prefix):
