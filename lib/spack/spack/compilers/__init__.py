@@ -45,7 +45,7 @@ from spack.util.environment import get_path
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 
-_default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
+_default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc', 'nag']
 
 def _auto_compiler_spec(function):
     def converter(cspec_like):
