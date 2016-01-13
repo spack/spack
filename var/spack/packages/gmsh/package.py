@@ -27,7 +27,7 @@ from spack import *
 
 class Gmsh(Package):
     """
-    Gmsh is a free 3D finite element grid generator with a build-in CAD engine and post-processor. Its design goal is
+    Gmsh is a free 3D finite element grid generator with a built-in CAD engine and post-processor. Its design goal is
     to provide a fast, light and user-friendly meshing tool with parametric input and advanced visualization
     capabilities. Gmsh is built around four modules: geometry, mesh, solver and post-processing. The specification of
     any input to these modules is done either interactively using the graphical user interface or in ASCII text files
@@ -38,17 +38,19 @@ class Gmsh(Package):
 
     version('2.11.0', 'f15b6e7ac9ca649c9a74440e1259d0db')
 
-    # FIXME : Misses dependencies on gmm, FLTK, PetsC, TetGen, HDF5
+    # FIXME : Misses dependencies on gmm, PetsC, TetGen, HDF5
 
     variant('shared', default=True, description='Enables the build of shared libraries')
     variant('debug', default=False, description='Builds the library in debug mode')
     variant('mpi', default=False, description='Builds MPI support for parser and solver')
+    variant('fltk', default=False, description='Enables the build of the FLTK GUI')
     variant('compression', default=True, description='Enables IO compression through zlib')
 
     depends_on('blas')
     depends_on('lapack')
     depends_on('gmp')
     depends_on('mpi', when='+mpi')
+    depends_on('fltk', when='+fltk')  # Assumes OpenGL with GLU is already provided by the system
     depends_on('zlib', when='+compression')
 
     def install(self, spec, prefix):
