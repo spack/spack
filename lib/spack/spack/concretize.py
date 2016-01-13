@@ -182,7 +182,7 @@ class DefaultConcretizer(object):
         Default specs set at the compiler level will still be added later.
         """
         ret = False
-        for flag in Compiler.valid_compiler_flags():
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
 #            if flag in spec.compiler_flags:
 #                continue
             try:

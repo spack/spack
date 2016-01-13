@@ -1801,7 +1801,7 @@ class SpecLexer(spack.parse.Lexer):
 class SpecParser(spack.parse.Parser):
     def __init__(self):
         super(SpecParser, self).__init__(SpecLexer())
-
+        self.previous = None
 
     def do_parse(self):
         specs = []
@@ -1809,13 +1809,23 @@ class SpecParser(spack.parse.Parser):
         try:
             while self.next:
                 if self.accept(ID):
-                    specs.append(self.spec(self.token.value))
-
+                    self.previous = self.token
+                    if self.accept(EQ):
+                        if not specs:
+                            specs.append(self.spec(''))
+                        if self.accept(QT):
+                            self.token.value = self.token.value[1:-1]
+                        else:
+                            self.expect(ID)
+                        specs[-1]._add_flag(self.previous.value, self.token.value)
+                    else:
+                        specs.append(self.spec(self.previous.value))
                 elif self.accept(HASH):
                     specs.append(self.spec_by_hash())
 
                 elif self.accept(DEP):
                     if not specs:
+                        self.previous = self.token
                         specs.append(self.spec(''))
                     if self.accept(HASH):
                         specs[-1]._add_dependency(self.spec_by_hash())
@@ -1887,6 +1897,13 @@ class SpecParser(spack.parse.Parser):
         # unspecified or not.
         added_version = False
 
+        if self.previous.value == DEP:
+            if self.accept(HASH):
+                spec.add_dependency(self.spec_by_hash())
+            else:
+                self.expect(ID)
+                spec.add_dependency(self.spec(self.token.value))
+
         while self.next:
             if self.accept(AT):
                 vlist = self.version_list()
@@ -1896,17 +1913,18 @@ class SpecParser(spack.parse.Parser):
                 check_valid_token = False
 
             elif self.accept(ON):
-                self.expect(ID)
-                self.check_identifier()
-                option = self.token.value
-                if self.accept(EQ):
-                    if self.accept(QT):
-                        self.token.value = self.token.value[1:-1]
-                    else:
-                        self.expect(ID)
-                    spec._add_flag(option,self.token.value)
-                else:
-                    spec._add_variant(self.variant(option),True)
+#                self.expect(ID)
+#                self.check_identifier()
+#                option = self.token.value
+#                if self.accept(EQ):
+#                    if self.accept(QT):
+#                        self.token.value = self.token.value[1:-1]
+#                    else:
+#                        self.expect(ID)
+#                    spec._add_flag(option,self.token.value)
+#                else:
+#                spec._add_variant(self.variant(option),True)
+                spec._add_variant(self.variatn(), True)
                 check_valid_token = False
 
             elif self.accept(OFF):
