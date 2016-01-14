@@ -33,39 +33,43 @@ from spack.test.mock_packages_test import *
 
 # Some sample compiler config data
 a_comps =  {
-    "gcc@4.7.3" : {
-        "cc"  : "/gcc473",
-        "cxx" : "/g++473",
-        "f77" : None,
-        "f90" : None },
-    "gcc@4.5.0" : {
-        "cc"  : "/gcc450",
-        "cxx" : "/g++450",
-        "f77" : "/gfortran",
-        "f90" : "/gfortran" },
-    "clang@3.3"  : {
-        "cc"  : "<overwritten>",
-        "cxx" : "<overwritten>",
-        "f77" : "<overwritten>",
-        "f90" : "<overwritten>" }
+    "all": {
+        "gcc@4.7.3" : {
+            "cc" : "/gcc473",
+            "cxx": "/g++473",
+            "f77": None,
+            "fc" : None },
+        "gcc@4.5.0" : {
+            "cc" : "/gcc450",
+            "cxx": "/g++450",
+            "f77": "/gfortran",
+            "fc" : "/gfortran" },
+        "clang@3.3"  : {
+            "cc" : "<overwritten>",
+            "cxx": "<overwritten>",
+            "f77": "<overwritten>",
+            "fc" : "<overwritten>" }
+    }
 }
 
 b_comps = {
-    "icc@10.0" : {
-        "cc"  : "/icc100",
-        "cxx" : "/icc100",
-        "f77" : None,
-        "f90" : None },
-    "icc@11.1" : {
-        "cc"  : "/icc111",
-        "cxx" : "/icp111",
-        "f77" : "/ifort",
-        "f90" : "/ifort" },
-    "clang@3.3" : {
-        "cc"  : "/clang",
-        "cxx" : "/clang++",
-        "f77" : None,
-        "f90" : None}
+    "all": {
+        "icc@10.0" : {
+            "cc" : "/icc100",
+            "cxx": "/icc100",
+            "f77": None,
+            "fc" : None },
+        "icc@11.1" : {
+            "cc" : "/icc111",
+            "cxx": "/icp111",
+            "f77": "/ifort",
+            "fc" : "/ifort" },
+        "clang@3.3" : {
+            "cc" : "/clang",
+            "cxx": "/clang++",
+            "f77": None,
+            "fc" : None}
+    }
 }
 
 class ConfigTest(MockPackagesTest):
@@ -85,11 +89,11 @@ class ConfigTest(MockPackagesTest):
     def check_config(self, comps, *compiler_names):
         """Check that named compilers in comps match Spack's config."""
         config = spack.config.get_config('compilers')
-        compiler_list = ['cc', 'cxx', 'f77', 'f90']
+        compiler_list = ['cc', 'cxx', 'f77', 'fc']
         for key in compiler_names:
             for c in compiler_list:
-                expected = comps[key][c]
-                actual = config[key][c]
+                expected = comps['all'][key][c]
+                actual = config['all'][key][c]
                 self.assertEqual(expected, actual)
 
 
