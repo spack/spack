@@ -123,7 +123,6 @@ class Boost(Package):
         options.extend([
             'toolset=%s' % self.determine_toolset(spec),
             'link=static,shared',
-            'threading=single,multi',
             '--layout=tagged'])
 
     def install(self, spec, prefix):
@@ -145,4 +144,7 @@ class Boost(Package):
 
         self.determine_b2_options(spec, b2_options)
 
-        b2('install', *b2_options)
+        # In theory it could be done on one call but it fails on
+        # Boost.MPI if not separated.
+        b2('install', 'threading=single', *b2_options)
+        b2('install', 'threading=multi', *b2_options)
