@@ -48,6 +48,9 @@ class Llvm(Package):
     variant('gold', default=True, description="Add support for LTO with the gold linker plugin")
 
 
+    # Build dependency
+    depends_on('cmake @2.8.12.2:')
+
     # Universal dependency
     depends_on('python@2.7:')
 
@@ -60,8 +63,8 @@ class Llvm(Package):
     depends_on('binutils+gold', when='+gold')
 
     # polly plugin
-    depends_on('gmp', when='+polly')
-    depends_on('isl', when='+polly')
+    depends_on('gmp', when='@:3.6.999 +polly')
+    depends_on('isl', when='@:3.6.999 +polly')
 
     base_url =  'http://llvm.org/releases/%%(version)s/%(pkg)s-%%(version)s.src.tar.xz'
     llvm_url = base_url % { 'pkg' : 'llvm'}
@@ -172,7 +175,7 @@ class Llvm(Package):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
         cmake_args = [ arg for arg in std_cmake_args if 'BUILD_TYPE' not in arg ]
 
-        build_type = 'RelWithDebInfo'  if '+debug' in spec else 'Release'
+        build_type = 'RelWithDebInfo' if '+debug' in spec else 'Release'
         cmake_args.extend([
                 '..',
                 '-DCMAKE_BUILD_TYPE=' + build_type,
