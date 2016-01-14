@@ -297,7 +297,10 @@ class ConfigScope(object):
         try:
             mkdirp(self.path)
             with open(filename, 'w') as f:
+                validate_section(data, section_schemas[section])
                 syaml.dump(data, stream=f, default_flow_style=False)
+        except jsonschema.ValidationError as e:
+            raise ConfigSanityError(e, data)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError("Error writing to config file: '%s'" % str(e))
 
@@ -533,3 +536,6 @@ class ConfigFormatError(ConfigError):
 
         message = '%s: %s' % (location, validation_error.message)
         super(ConfigError, self).__init__(message)
+
+class ConfigSanityError(ConfigFormatError):
+    """Same as ConfigFormatError, raised when config is written by Spack."""
