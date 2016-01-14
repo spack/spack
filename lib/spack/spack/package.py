@@ -858,7 +858,7 @@ class Package(object):
                 tty.warn("Keeping install prefix in place despite error.",
                          "Spack will think this package is installed." +
                          "Manually remove this directory to fix:",
-                         self.prefix)
+                         self.prefix, wrap=True)
 
 
         def real_work():

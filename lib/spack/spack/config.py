@@ -135,8 +135,34 @@ from spack.error import SpackError
 import spack.util.spack_yaml as syaml
 
 
-"""Dict from section names -> function to check section YAML format."""
-valid_sections = ['compilers', 'mirrors', 'repos']
+"""Dict from section names -> schema for that section."""
+section_schemas = {
+    'compilers' : {
+        '$schema': 'http://json-schema.org/schema#',
+        'title' : 'Spack compiler configuration file schema',
+        'type' : 'object',
+        'properties' : {
+            'compilers' : {
+                'type' : 'map',
+            },
+        },
+    },
+
+    'mirrors' : {
+        '$schema': 'http://json-schema.org/schema#',
+        'title' : 'Spack mirror configuration file schema',
+        'type' : 'map',
+        'properties' : {
+            'mirrors' : {
+
+            }
+        },
+    },
+
+    'repos' : {
+        '$schema': 'http://json-schema.org/schema#',
+        'title' : 'Spack repository configuration file schema',
+    }}
 
 """OrderedDict of config scopes keyed by name.
    Later scopes will override earlier scopes.
@@ -146,9 +172,9 @@ config_scopes = OrderedDict()
 
 def validate_section(section):
     """Raise a ValueError if the section is not a valid section."""
-    if section not in valid_sections:
+    if section not in section_schemas:
         raise ValueError("Invalid config section: '%s'.  Options are %s."
-                         % (section, valid_sections))
+                         % (section, section_schemas))
 
 
 class ConfigScope(object):
@@ -369,10 +395,12 @@ def update_config(section, update_data, scope=None):
     scope.write_section(section)
 
 
-"""Print a configuration to stdout"""
 def print_section(section):
+    """Print a configuration to stdout."""
     try:
-        yaml.dump(get_config(section), stream=sys.stdout, default_flow_style=False)
+        data = syaml.syaml_dict()
+        data[section] = get_config(section)
+        syaml.dump(data, stream=sys.stdout, default_flow_style=False)
     except (yaml.YAMLError, IOError) as e:
         raise ConfigError("Error reading configuration: %s" % section)
 
