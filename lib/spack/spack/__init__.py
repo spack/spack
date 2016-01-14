@@ -59,9 +59,8 @@ import spack.repository
 try:
     repo = spack.repository.RepoPath()
     sys.meta_path.append(repo)
-except spack.repository.RepoError, e:
-    tty.error('while initializing Spack RepoPath:')
-    tty.die(e.message)
+except spack.error.SpackError, e:
+    tty.die('while initializing Spack RepoPath:', e.message)
 
 #
 # Set up the installed packages database

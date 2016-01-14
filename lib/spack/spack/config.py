@@ -118,9 +118,11 @@ the site configuration will be ignored.
 
 """
 import os
+import re
 import sys
 import copy
-
+import jsonschema
+from jsonschema import Draft4Validator, validators
 import yaml
 from yaml.error import MarkedYAMLError
 from ordereddict_backport import OrderedDict
@@ -137,32 +139,62 @@ import spack.util.spack_yaml as syaml
 
 """Dict from section names -> schema for that section."""
 section_schemas = {
-    'compilers' : {
+    'compilers': {
         '$schema': 'http://json-schema.org/schema#',
-        'title' : 'Spack compiler configuration file schema',
-        'type' : 'object',
-        'properties' : {
-            'compilers' : {
-                'type' : 'map',
-            },
-        },
-    },
+        'title': 'Spack compiler configuration file schema',
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            'compilers:?': { # optional colon for overriding site config.
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'patternProperties': {
+                    r'\w[\w-]*': {           # architecture
+                        'type': 'object',
+                        'additionalProperties': False,
+                        'patternProperties': {
+                            r'\w[\w-]*@\w[\w-]*': {   # compiler spec
+                                'type': 'object',
+                                'additionalProperties': False,
+                                'required': ['cc', 'cxx', 'f77', 'fc'],
+                                'properties': {
+                                    'cc':  { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cxx': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'f77': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'fc':  { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                },},},},},},},},
 
-    'mirrors' : {
+    'mirrors': {
         '$schema': 'http://json-schema.org/schema#',
-        'title' : 'Spack mirror configuration file schema',
-        'type' : 'map',
-        'properties' : {
-            'mirrors' : {
+        'title': 'Spack mirror configuration file schema',
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            r'mirrors:?': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'patternProperties': {
+                    r'\w[\w-]*': {
+                        'type': 'string'},},},},},
 
-            }
-        },
-    },
-
-    'repos' : {
+    'repos': {
         '$schema': 'http://json-schema.org/schema#',
-        'title' : 'Spack repository configuration file schema',
-    }}
+        'title': 'Spack repository configuration file schema',
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            r'repos:?': {
+                'type': 'array',
+                'default': [],
+                'items': {
+                    'type': 'string'},},},},
+}
 
 """OrderedDict of config scopes keyed by name.
    Later scopes will override earlier scopes.
@@ -170,11 +202,62 @@ section_schemas = {
 config_scopes = OrderedDict()
 
 
-def validate_section(section):
+def validate_section_name(section):
     """Raise a ValueError if the section is not a valid section."""
     if section not in section_schemas:
         raise ValueError("Invalid config section: '%s'.  Options are %s."
                          % (section, section_schemas))
+
+
+def extend_with_default(validator_class):
+    """Add support for the 'default' attribute for properties and patternProperties.
+
+       jsonschema does not handle this out of the box -- it only
+       validates.  This allows us to set default values for configs
+       where certain fields are `None` b/c they're deleted or
+       commented out.
+
+    """
+    validate_properties = validator_class.VALIDATORS["properties"]
+    validate_pattern_properties = validator_class.VALIDATORS["patternProperties"]
+
+    def set_defaults(validator, properties, instance, schema):
+        for property, subschema in properties.iteritems():
+            if "default" in subschema:
+                instance.setdefault(property, subschema["default"])
+        for err in validate_properties(validator, properties, instance, schema):
+            yield err
+
+    def set_pp_defaults(validator, properties, instance, schema):
+        for property, subschema in properties.iteritems():
+            if "default" in subschema:
+                if isinstance(instance, dict):
+                    for key, val in instance.iteritems():
+                        if re.match(property, key) and val is None:
+                            instance[key] = subschema["default"]
+
+        for err in validate_pattern_properties(validator, properties, instance, schema):
+            yield err
+
+    return validators.extend(validator_class, {
+        "properties" : set_defaults,
+        "patternProperties" : set_pp_defaults
+    })
+
+
+DefaultSettingValidator = extend_with_default(Draft4Validator)
+
+def validate_section(data, schema):
+    """Validate data read in from a Spack YAML file.
+
+    This leverages the line information (start_mark, end_mark) stored
+    on Spack YAML structures.
+
+    """
+    try:
+        DefaultSettingValidator(schema).validate(data)
+    except jsonschema.ValidationError as e:
+        raise ConfigFormatError(e, data)
 
 
 class ConfigScope(object):
@@ -195,18 +278,16 @@ class ConfigScope(object):
         config_scopes[name] = self
 
     def get_section_filename(self, section):
-        validate_section(section)
+        validate_section_name(section)
         return os.path.join(self.path, "%s.yaml" % section)
 
 
     def get_section(self, section):
         if not section in self.sections:
-            path = self.get_section_filename(section)
-            data = _read_config_file(path)
-            if data is None:
-                self.sections[section] = {}
-            else:
-                self.sections[section] = data
+            path   = self.get_section_filename(section)
+            schema = section_schemas[section]
+            data   = _read_config_file(path, schema)
+            self.sections[section] = data
         return self.sections[section]
 
 
@@ -255,7 +336,7 @@ def validate_scope(scope):
                          % (scope, config_scopes.keys()))
 
 
-def _read_config_file(filename):
+def _read_config_file(filename, schema):
     """Read a YAML configuration file."""
     # Ignore nonexisting files.
     if not os.path.exists(filename):
@@ -269,8 +350,13 @@ def _read_config_file(filename):
         raise ConfigFileError("Config file is not readable: %s." % filename)
 
     try:
+        tty.debug("Reading config file %s" % filename)
         with open(filename) as f:
-            return syaml.load(f)
+            data = syaml.load(f)
+
+        validate_section(data, schema)
+
+        return data
 
     except MarkedYAMLError, e:
         raise ConfigFileError(
@@ -337,7 +423,7 @@ def get_config(section, scope=None):
 
        Strips off the top-level section name from the YAML dict.
     """
-    validate_section(section)
+    validate_section_name(section)
     merged_section = syaml.syaml_dict()
 
     if scope is None:
@@ -387,7 +473,7 @@ def update_config(section, update_data, scope=None):
     # read in the config to ensure we've got current data
     get_config(section)
 
-    validate_section(section)       # validate section name
+    validate_section_name(section)       # validate section name
     scope = validate_scope(scope)   # get ConfigScope object from string.
 
     # read only the requested section's data.
@@ -407,4 +493,43 @@ def print_section(section):
 
 class ConfigError(SpackError): pass
 class ConfigFileError(ConfigError): pass
-class ConfigFormatError(ConfigError): pass
+
+def get_path(path, data):
+    if path:
+        return get_path(path[1:], data[path[0]])
+    else:
+        return data
+
+class ConfigFormatError(ConfigError):
+    """Raised when a configuration format does not match its schema."""
+    def __init__(self, validation_error, data):
+        # Try to get line number from erroneous instance and its parent
+        instance_mark = getattr(validation_error.instance, '_start_mark', None)
+        parent_mark = getattr(validation_error.parent, '_start_mark', None)
+        path = getattr(validation_error, 'path', None)
+
+        # Try really hard to get the parent (which sometimes is not
+        # set) This digs it out of the validated structure if it's not
+        # on the validation_error.
+        if not parent_mark:
+            parent_path = list(path)[:-1]
+            parent = get_path(parent_path, data)
+            if path[-1] in parent:
+                if isinstance(parent, dict):
+                    keylist = parent.keys()
+                elif isinstance(parent, list):
+                    keylist = parent
+                idx = keylist.index(path[-1])
+                parent_mark = getattr(keylist[idx], '_start_mark', None)
+
+        if instance_mark:
+            location = '%s:%d' % (instance_mark.name, instance_mark.line + 1)
+        elif parent_mark:
+            location = '%s:%d' % (parent_mark.name, parent_mark.line + 1)
+        elif path:
+            location = 'At ' + ':'.join(path)
+        else:
+            location = '<unknown line>'
+
+        message = '%s: %s' % (location, validation_error.message)
+        super(ConfigError, self).__init__(message)

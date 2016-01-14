@@ -118,9 +118,8 @@ def repo_create(args):
             shutil.rmtree(root, ignore_errors=True)
 
     tty.msg("Created repo with namespace '%s'." % namespace)
-    tty.msg("To register it with Spack, add a line like this to ~/.spack/repos.yaml:",
-            'repos:',
-            '  - ' + full_path)
+    tty.msg("To register it with spack, run this command:",
+            'spack repo add %s' % full_path)
 
 
 def repo_add(args):
