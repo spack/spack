@@ -17,19 +17,14 @@ class Ncurses(Package):
     patch('patch_gcc_5.txt', when='%gcc@5.0:')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-shared",
-                  "--enable-widec",
-                  "--disable-pc-files",
-                  "--without-ada")
+        opts = [
+            "--prefix=%s" % prefix,
+            "--with-shared",
+            "--with-cxx-shared",
+            "--enable-widec",
+            "--enable-overwrite",
+            "--disable-lib-suffixes",
+            "--without-ada"]
+        configure(*opts)
         make()
         make("install")
-
-        configure("--prefix=%s" % prefix,
-                  "--with-shared",
-                  "--disable-widec",
-                  "--disable-pc-files",
-                  "--without-ada")
-        make()
-        make("install")
-
