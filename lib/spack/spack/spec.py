@@ -403,10 +403,10 @@ class FlagMap(HashableMap):
         # Others_set removes flags set to '' from the comparison
         others_set = (k for k in other if other[k] != [])
         for k in others_set:
-            if k in self and self[k] != other[k]:
+            if k in self and not set(self[k]) >= set(other[k]):
                 self[k] = list(set(self[k]) | set(other[k]))
                 changed = True
-            else:
+            elif k not in self:
                 self[k] = other[k]
                 changed = True
         return changed
@@ -434,6 +434,7 @@ class FlagMap(HashableMap):
     def __str__(self):
         sorted_keys = filter(lambda flag: self[flag] != [], sorted(self.keys()))
         cond_symbol = '+' if len(sorted_keys)>0 else ''
+#        return '+' + '+'.join(str(key) + '=\"' + ' '.join(str(f) for f in self[key]) + '\"' for key in self)
         return cond_symbol + '+'.join(str(key) + '=\"' + ' '.join(str(f) for f in self[key]) + '\"' for key in sorted_keys)
 
 
@@ -524,7 +525,7 @@ class Spec(object):
             assert(self.compiler_flags is not None)
             self.compiler_flags[name] = value.split()
         else:
-            self._add_variant(self,name,value)
+            self._add_variant(name,value)
 
     def _set_compiler(self, compiler):
         """Called by the parser to set the compiler."""
@@ -822,7 +823,6 @@ class Spec(object):
            concretized, they're added to the presets, and ancestors
            will prefer the settings of their children.
         """
-
         if presets is None: presets = {}
         if visited is None: visited = set()
 
@@ -922,17 +922,18 @@ class Spec(object):
 
         while changed:
 #debugging code
-            a = self.normalize(force=force)
+#            print "pre-a"
+#            a = self.normalize(force=force)
 #            print self, "normal"
-            b = self._expand_virtual_packages()
+#            b = self._expand_virtual_packages()
 #            print self, "expanded"
-            c = self._concretize_helper()
+#            c = self._concretize_helper()
 #            print self, "concrete-ish"
-            changes = (a,b,c)
+#            changes = (a,b,c)
 #            print a, b, c
-#            changes = (self.normalize(force=force),
-#                       self._expand_virtual_packages(),
-#                       self._concretize_helper())
+            changes = (self.normalize(force=force),
+                       self._expand_virtual_packages(),
+                       self._concretize_helper())
             changed = any(changes)
             force=True
 
@@ -1081,7 +1082,6 @@ class Spec(object):
             provider = self._find_provider(dep, provider_index)
             if provider:
                 dep = provider
-
         else:
             # if it's a real dependency, check whether it provides
             # something already required in the spec.
@@ -1096,13 +1096,11 @@ class Spec(object):
                     if required:
                         raise UnsatisfiableProviderSpecError(required[0], dep)
             provider_index.update(dep)
-
         # If the spec isn't already in the set of dependencies, clone
         # it from the package description.
         if dep.name not in spec_deps:
             spec_deps[dep.name] = dep.copy()
             changed = True
-
         # Constrain package information with spec info
         try:
             changed |= spec_deps[dep.name].constrain(dep)
@@ -1622,7 +1620,7 @@ class Spec(object):
         return colorize_spec(self)
 
 
-    def format(self, format_string='$_$@$%@$+$=', **kwargs):
+    def format(self, format_string='$_$@$%@+$+$=', **kwargs):
         """Prints out particular pieces of a spec, depending on what is
            in the format string.  The format strings you can provide are::
 
@@ -1897,7 +1895,7 @@ class SpecParser(spack.parse.Parser):
         # unspecified or not.
         added_version = False
 
-        if self.previous.value == DEP:
+        if self.previous and self.previous.value == DEP:
             if self.accept(HASH):
                 spec.add_dependency(self.spec_by_hash())
             else:
@@ -1924,7 +1922,7 @@ class SpecParser(spack.parse.Parser):
 #                    spec._add_flag(option,self.token.value)
 #                else:
 #                spec._add_variant(self.variant(option),True)
-                spec._add_variant(self.variatn(), True)
+                spec._add_variant(self.variant(), True)
                 check_valid_token = False
 
             elif self.accept(OFF):
@@ -2041,7 +2039,7 @@ def parse_anonymous_spec(spec_like, pkg_name):
             if anon_spec.name != pkg_name:
                 raise SpecParseError(spack.parse.ParseError("","","anon spec created without proper name"))
         except SpecParseError:
-            anon_spec = Spec(pkg_name + spec_like)
+            anon_spec = Spec(pkg_name + ' ' +  spec_like)
             if anon_spec.name != pkg_name: raise ValueError(
                     "Invalid spec for package %s: %s" % (pkg_name, spec_like))
     else:

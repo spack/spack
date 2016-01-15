@@ -195,7 +195,7 @@ class DefaultConcretizer(object):
                         spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
                                                          set(nearest.compiler_flags[flag]))
                     else:
-                        spec.compielr_flags[flag] = nearest.compiler_flags[flag]
+                        spec.compiler_flags[flag] = nearest.compiler_flags[flag]
                     ret = True
 
             except StopIteration:
@@ -216,9 +216,10 @@ class DefaultConcretizer(object):
         # in default compiler flags.
         compiler = spack.compilers.compiler_for_spec(spec.compiler)
         for flag in compiler.flags:
-            if flag not in spec.compiler_flags or spec.compiler_flags[flag] == []:
+            if flag not in spec.compiler_flags:
                 spec.compiler_flags[flag] = compiler.flags[flag]
-                ret = True
+                if compiler.flags[flag] != []:
+                    ret = True
             else:
                 if (sorted(spec.compiler_flags[flag]) != sorted(compiler.flags[flag])) and (not set(spec.compiler_flags[flag]) >= set(compiler.flags[flag])):
                     ret = True
