@@ -20,9 +20,9 @@ class Espresso(Package):
     """FIXME: put a proper description of your package here."""
     # FIXME: add a proper url for your package's homepage here.
     homepage = "http://quantum-espresso.org"
-    url      = "http://www.qe-forge.org/gf/download/frsrelease/199/855/espresso-5.2.1.tar.gz"
+    url      = "http://www.qe-forge.org/gf/download/frsrelease/204/912/espresso-5.3.0.tar.gz"
 
-    version('5.2.1', 'da3ec5302e4343804e65de60f6004c2d')
+    version('5.3.0', '6848fcfaeb118587d6be36bd10b7f2c3')
     variant('mpi', default=True, description='Build Quantum-ESPRESSO with mpi support')
     variant('openmp', default=False, description='Build Quantum-ESPRESSO with mpi openmp')
     variant('scalapack', default=False, description='Build Quantum-ESPRESSO with mpi openmp')
