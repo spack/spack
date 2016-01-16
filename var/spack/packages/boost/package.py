@@ -138,18 +138,20 @@ class Boost(Package):
         if '+shared' in spec:
             linkTypes.append('shared')
         
-        #TODO: at least one of these two options must be active
         threadingOpts = []
         if '+multithreaded' in spec:
             threadingOpts.append('multi')
         if '+singlethreaded' in spec:
             threadingOpts.append('single')
+        if not threadingOpts:
+            raise RuntimeError("At least one of {singlethreaded, multithreaded} must be enabled")
         
         options.extend([
             'toolset=%s' % self.determine_toolset(spec),
             'link=%s' % ','.join(linkTypes),
-            'threading=%s' % ','.join(threadingOpts),
             '--layout=tagged'])
+        
+        return threadingOpts
 
     def install(self, spec, prefix):
         withLibs = list()
@@ -181,6 +183,10 @@ class Boost(Package):
         b2 = Executable(b2name)
         b2_options = ['-j', '%s' % make_jobs]
 
-        self.determine_b2_options(spec, b2_options)
+        threadingOpts = self.determine_b2_options(spec, b2_options)
 
-        b2('install', *b2_options)
+        # In theory it could be done on one call but it fails on
+        # Boost.MPI if the threading options are not separated.
+        for threadingOpt in threadingOpts:
+            b2('install', 'threading=%s' % threadingOpt, *b2_options)
+        
