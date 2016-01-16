@@ -1929,7 +1929,10 @@ class SpecParser(spack.parse.Parser):
             elif self.accept(ID):
                 self.previous = self.token
                 if self.accept(EQ):
-                    self.expect(ID)
+                    if self.accept(QT):
+                        self.token.value = self.token.value[1:-1]
+                    else:
+                        self.expect(ID)
                     spec._add_flag(self.previous.value, self.token.value)
                     self.previous = None
                 else:
