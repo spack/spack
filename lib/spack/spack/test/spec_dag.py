@@ -243,9 +243,6 @@ class SpecDagTest(MockPackagesTest):
     def test_unsatisfiable_architecture(self):
         set_pkg_dep('mpileaks', 'mpich arch=bgqos_0')
         spec = Spec('mpileaks ^mpich arch=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
-        print spec
-        spec.normalize()
-        print spec
         self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
 
 
@@ -339,7 +336,7 @@ class SpecDagTest(MockPackagesTest):
             self.assertEqual(lhs, rhs)
             self.assertEqual(str(lhs), str(rhs))
 
-        # Test that equal and equal_dag are doing the right thing
+        # test that equal and equal_dag are doing the right thing
         self.assertEqual(spec, expected_flat)
         self.assertTrue(spec.eq_dag(expected_flat))
 
@@ -440,3 +437,5 @@ class SpecDagTest(MockPackagesTest):
         orig_ids = set(id(s) for s in orig.traverse())
         copy_ids = set(id(s) for s in copy.traverse())
         self.assertFalse(orig_ids.intersection(copy_ids))
+
+#  LocalWords:  libdwarf

@@ -1806,6 +1806,8 @@ class SpecParser(spack.parse.Parser):
 
         try:
             while self.next:
+                if self.previous:
+                    specs.append(self.previous.value)
                 if self.accept(ID):
                     self.previous = self.token
                     if self.accept(EQ):
@@ -1818,6 +1820,7 @@ class SpecParser(spack.parse.Parser):
                         specs[-1]._add_flag(self.previous.value, self.token.value)
                     else:
                         specs.append(self.spec(self.previous.value))
+                    self.previous = None
                 elif self.accept(HASH):
                     specs.append(self.spec_by_hash())
 
@@ -1825,6 +1828,7 @@ class SpecParser(spack.parse.Parser):
                     if not specs:
                         self.previous = self.token
                         specs.append(self.spec(''))
+                        self.previous = None
                     if self.accept(HASH):
                         specs[-1]._add_dependency(self.spec_by_hash())
                     else:
@@ -1911,17 +1915,6 @@ class SpecParser(spack.parse.Parser):
                 check_valid_token = False
 
             elif self.accept(ON):
-#                self.expect(ID)
-#                self.check_identifier()
-#                option = self.token.value
-#                if self.accept(EQ):
-#                    if self.accept(QT):
-#                        self.token.value = self.token.value[1:-1]
-#                    else:
-#                        self.expect(ID)
-#                    spec._add_flag(option,self.token.value)
-#                else:
-#                spec._add_variant(self.variant(option),True)
                 spec._add_variant(self.variant(), True)
                 check_valid_token = False
 
@@ -1932,6 +1925,15 @@ class SpecParser(spack.parse.Parser):
             elif self.accept(PCT):
                 spec._set_compiler(self.compiler())
                 check_valid_token = False
+
+            elif self.accept(ID):
+                self.previous = self.token
+                if self.accept(EQ):
+                    self.expect(ID)
+                    spec._add_flag(self.previous.value, self.token.value)
+                    self.previous = None
+                else:
+                    return spec
 
             else:
                 if check_valid_token:
