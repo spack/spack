@@ -38,18 +38,18 @@ class SpecDagTest(MockPackagesTest):
         self.assertTrue(spec.eq_dag(spec_from_yaml))
 
 
-    def _test_simple_spec(self):
+    def test_simple_spec(self):
         spec = Spec('mpileaks')
         self.check_yaml_round_trip(spec)
 
 
-    def _test_normal_spec(self):
+    def test_normal_spec(self):
         spec = Spec('mpileaks+debug~opt')
         spec.normalize()
         self.check_yaml_round_trip(spec)
 
 
-    def _test_ambiguous_version_spec(self):
+    def test_ambiguous_version_spec(self):
         spec = Spec('mpileaks@1.0:5.0,6.1,7.3+debug~opt')
         spec.normalize()
         self.check_yaml_round_trip(spec)
@@ -61,7 +61,7 @@ class SpecDagTest(MockPackagesTest):
         self.check_yaml_round_trip(spec)
 
 
-    def _test_yaml_subdag(self):
+    def test_yaml_subdag(self):
         spec = Spec('mpileaks^mpich+debug')
         spec.concretize()
 

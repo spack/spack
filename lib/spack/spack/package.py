@@ -352,7 +352,6 @@ class Package(object):
         # Fix up self.url if this package fetches with a URLFetchStrategy.
         # This makes self.url behave sanely.
         if self.spec.versions.concrete:
-
             # TODO: this is a really roundabout way of determining the type
             # TODO: of fetch to do. figure out a more sane fetch strategy/package
             # TODO: init order (right now it's conflated with stage, package, and
@@ -588,7 +587,6 @@ class Package(object):
     @property
     def prefix(self):
         """Get the prefix into which this package should be installed."""
-#        print self.spec, self.spec.prefix
         return self.spec.prefix
 
 

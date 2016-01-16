@@ -88,7 +88,6 @@ def parse_specs(args, **kwargs):
     if isinstance(args, (python_list, tuple)):
         args = " ".join(args)
 
-
     try:
         specs = spack.spec.parse(args)
         for spec in specs:
