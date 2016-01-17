@@ -13,6 +13,8 @@ class Mbedtls(Package):
     version('2.1.3' , '7eb4cf1dfa68578a2c8dbd0b6fa752dd')
     version('1.3.16', '4144d7320c691f721aeb9e67a1bc38e0')
 
+    depends_on('cmake')
+
     def install(self, spec, prefix):
         cmake('.', *std_cmake_args)
 
