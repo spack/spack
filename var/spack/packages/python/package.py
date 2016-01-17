@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 from contextlib import closing
 from llnl.util.lang import match_predicate
 from spack.util.environment import *
@@ -51,6 +52,8 @@ class Python(Package):
                   ]
         if spec.satisfies('@3:'):
             configure_args.append('--without-ensurepip')
+        if sys.platform == 'darwin':
+            configure_args.append("CC=/usr/bin/cc")
         configure(*configure_args)
         make()
         make("install")
