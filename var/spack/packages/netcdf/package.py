@@ -13,6 +13,7 @@ class Netcdf(Package):
     patch('netcdf-4.3.3-mpi.patch')
 
     # Dependencies:
+    depends_on("cmake @2.8.12:")
         # >HDF5
     depends_on("hdf5")
 
