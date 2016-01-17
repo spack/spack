@@ -1,5 +1,8 @@
 from spack import *
 
+import os
+import sys
+
 class Boost(Package):
     """Boost provides free peer-reviewed portable C++ source
        libraries, emphasizing libraries that work well with the C++
@@ -127,6 +130,16 @@ class Boost(Package):
             '--layout=tagged'])
 
     def install(self, spec, prefix):
+        # On Darwin, Boost expects the Darwin libtool. However, one of the
+        # dependencies may have pulled in Spack's GNU libtool, and these two are
+        # not compatible. We thus create a symlink to Darwin's libtool and add
+        # it at the beginning of PATH.
+        if sys.platform == 'darwin':
+            newdir = os.path.abspath('darwin-libtool')
+            mkdirp(newdir)
+            force_symlink('/usr/bin/libtool', join_path(newdir, 'libtool'))
+            env['PATH'] = newdir + ':' + env['PATH']
+
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = './'
 
