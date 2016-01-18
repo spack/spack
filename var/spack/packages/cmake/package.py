@@ -31,12 +31,12 @@ class Cmake(Package):
 
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c',
             url = 'http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz')
- 
+
     version('3.0.2', 'db4c687a31444a929d2fdc36c4dfb95f',
             url = 'http://www.cmake.org/files/v3.0/cmake-3.0.2.tar.gz')
- 
+
     version('3.4.0', 'cd3034e0a44256a0917e254167217fc8',
-            url = 'https://cmake.org/files/v3.4/cmake-3.4.0.tar.gz')
+            url = 'http://cmake.org/files/v3.4/cmake-3.4.0.tar.gz')
 
     variant('ncurses', default=True, description='Enables the build of the ncurses gui')
 
