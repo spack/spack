@@ -20,6 +20,9 @@ class Qhull(Package):
     version('1.0', 'd0f978c0d8dfb2e919caefa56ea2953c',
             url="http://www.qhull.org/download/qhull-2012.1-src.tgz")
 
+    # https://github.com/qhull/qhull/pull/5
+    patch('qhull-iterator.patch')
+
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake('..', *std_cmake_args)
