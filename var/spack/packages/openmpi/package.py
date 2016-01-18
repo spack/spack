@@ -13,27 +13,31 @@ class Openmpi(Package):
     """
 
     homepage = "http://www.open-mpi.org"
+    url = "http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.1.tar.bz2"
+    list_url = "http://www.open-mpi.org/software/ompi/"
+    list_depth = 3
 
-    version('1.10.1', 'f0fcd77ed345b7eafb431968124ba16e',
-            url = "http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.1.tar.bz2")
-    version('1.10.0', '280cf952de68369cebaca886c5ce0304',
-            url = "http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.0.tar.bz2")
-    version('1.8.8', '0dab8e602372da1425e9242ae37faf8c',
-            url = 'http://www.open-mpi.org/software/ompi/v1.8/downloads/openmpi-1.8.8.tar.bz2')
-    version('1.6.5', '03aed2a4aa4d0b27196962a2a65fc475',
-            url = "http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.5.tar.bz2")
+    version('1.10.1', 'f0fcd77ed345b7eafb431968124ba16e')
+    version('1.10.0', '280cf952de68369cebaca886c5ce0304')
+    version('1.8.8',  '0dab8e602372da1425e9242ae37faf8c')
+    version('1.6.5',  '03aed2a4aa4d0b27196962a2a65fc475')
 
     patch('ad_lustre_rwcontig_open_source.patch', when="@1.6.5")
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.0:")
 
-    provides('mpi@:2.2', when='@1.6.5')    # Open MPI 1.6.5 supports MPI-2.2
-    provides('mpi@:3.0', when='@1.8.8')    # Open MPI 1.8.8 supports MPI-3.0
-    provides('mpi@:3.0', when='@1.10.0')   # Open MPI 1.10.0 supports MPI-3.0
-    provides('mpi@:3.0', when='@1.10.1')   # Open MPI 1.10.1 supports MPI-3.0
+    variant('psm',   default=False, description='Build support for the PSM library.')
+    variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
+
+    provides('mpi@:2.2', when='@1.6.5')
+    provides('mpi@:3.0', when='@1.7.5:')
 
 
     depends_on('hwloc')
+
+
+    def url_for_version(self, version):
+        return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)
 
 
     def setup_dependent_environment(self, module, spec, dep_spec):
@@ -45,9 +49,23 @@ class Openmpi(Package):
 
 
     def install(self, spec, prefix):
-        config_args = ["--prefix=%s" % prefix]
+        config_args = ["--prefix=%s" % prefix,
+                       "--with-hwloc=%s" % spec['hwloc'].prefix,
+                       "--with-tm",  # necessary for Torque support
+                       "--enable-shared",
+                       "--enable-static"]
 
-        config_args.append("--with-hwloc=%s" % spec['hwloc'].prefix)
+        # Variants
+        if '+psm' in spec:
+            config_args.append("--with-psm")
+
+        if '+verbs' in spec:
+            # Up through version 1.6, this option was previously named --with-openib
+            if spec.satisfies('@:1.6'):
+                config_args.append("--with-openib")
+            # In version 1.7, it was renamed to be --with-verbs
+            elif spec.satisfies('@1.7:'):
+                config_args.append("--with-verbs")
 
         # TODO: use variants for this, e.g. +lanl, +llnl, etc.
         # use this for LANL builds, but for LLNL builds, we need:

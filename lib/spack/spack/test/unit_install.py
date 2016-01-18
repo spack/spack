@@ -90,7 +90,7 @@ class UnitInstallTest(unittest.TestCase):
         
         pkgX.installed = True
         pkgY.installed = True
-        test_install.create_test_output(specX, [specX, specY], mo, getLogFunc=test_fetch_log)
+        test_install.create_test_output(specX, [specX, specY], mo, getLogFunc=mock_fetch_log)
         
         self.assertEqual(mo.results, 
             {bIdX:test_install.TestResult.PASSED, 
@@ -101,7 +101,7 @@ class UnitInstallTest(unittest.TestCase):
         
         pkgX.installed = True
         pkgY.installed = True
-        test_install.create_test_output(specX, [specX], mo, getLogFunc=test_fetch_log)
+        test_install.create_test_output(specX, [specX], mo, getLogFunc=mock_fetch_log)
         
         self.assertEqual(mo.results, {bIdX:test_install.TestResult.PASSED})
 
@@ -116,6 +116,6 @@ class MockPackageDb(object):
     def get(self, spec):
         return self.specToPkg[spec]
 
-def test_fetch_log(path):
+def mock_fetch_log(path):
     return []
 
