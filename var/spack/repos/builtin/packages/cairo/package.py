@@ -14,6 +14,7 @@ class Cairo(Package):
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,
+                  "--disable-trace", # can cause problems with libiberty
                   "--enable-tee")
         make()
         make("install")
