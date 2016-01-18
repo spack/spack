@@ -14,6 +14,8 @@ class Binutils(Package):
     variant('gold', default=True, description="build the gold linker")
     patch('binutilskrell-2.24.patch', when='@2.24+krellpatch')
 
+    patch('cr16.patch')
+
     variant('libiberty', default=False, description='Also install libiberty.')
 
     def install(self, spec, prefix):
