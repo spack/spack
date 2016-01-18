@@ -54,6 +54,9 @@ repo_config_name   = 'repo.yaml'   # Top-level filename for repo config.
 packages_dir_name  = 'packages'    # Top-level repo directory containing pkgs.
 package_file_name  = 'package.py'  # Filename for packages in a repository.
 
+# Guaranteed unused default value for some functions.
+NOT_PROVIDED = object()
+
 
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
@@ -75,7 +78,15 @@ def _make_namespace_module(ns):
 
 def substitute_spack_prefix(path):
     """Replaces instances of $spack with Spack's prefix."""
-    return path.replace('$spack', spack.prefix)
+    return re.sub(r'^\$spack', spack.prefix, path)
+
+
+def canonicalize_path(path):
+    """Substitute $spack, expand user home, take abspath."""
+    path = substitute_spack_prefix(path)
+    path = os.path.expanduser(path)
+    path = os.path.abspath(path)
+    return path
 
 
 class RepoPath(object):
@@ -109,7 +120,10 @@ class RepoPath(object):
                 repo = Repo(root, self.super_namespace)
                 self.put_last(repo)
             except RepoError as e:
-                tty.warn("Failed to initialize repository at '%s'." % root, e.message)
+                tty.warn("Failed to initialize repository at '%s'." % root,
+                         e.message,
+                         "To remove the bad repository, run this command:",
+                         "    spack repo rm %s" % root)
 
 
     def swap(self, other):
@@ -173,6 +187,31 @@ class RepoPath(object):
             self.repos.remove(repo)
 
 
+    def get_repo(self, namespace, default=NOT_PROVIDED):
+        """Get a repository by namespace.
+        Arguments
+          namespace
+            Look up this namespace in the RepoPath, and return
+            it if found.
+
+        Optional Arguments
+          default
+            If default is provided, return it when the namespace
+            isn't found.  If not, raise an UnknownNamespaceError.
+        """
+        fullspace = '%s.%s' % (self.super_namespace, namespace)
+        if fullspace not in self.by_namespace:
+            if default == NOT_PROVIDED:
+                raise UnknownNamespaceError(namespace)
+            return default
+        return self.by_namespace[fullspace]
+
+
+    def first_repo(self):
+        """Get the first repo in precedence order."""
+        return self.repos[0] if self.repos else None
+
+
     def all_package_names(self):
         """Return all unique package names in all repositories."""
         return self._all_package_names
@@ -229,7 +268,6 @@ class RepoPath(object):
         if fullname in sys.modules:
             return sys.modules[fullname]
 
-
         # partition fullname into prefix and module name.
         namespace, dot, module_name = fullname.rpartition('.')
 
@@ -242,11 +280,23 @@ class RepoPath(object):
         return module
 
 
-    def repo_for_pkg(self, pkg_name):
+    @_autospec
+    def repo_for_pkg(self, spec):
+        """Given a spec, get the repository for its package."""
+        # If the spec already has a namespace, then return the
+        # corresponding repo if we know about it.
+        if spec.namespace:
+            fullspace = '%s.%s' % (self.super_namespace, spec.namespace)
+            if fullspace not in self.by_namespace:
+                raise UnknownNamespaceError(spec.namespace)
+            return self.by_namespace[fullspace]
+
+        # If there's no namespace, search in the RepoPath.
         for repo in self.repos:
-            if pkg_name in repo:
+            if spec.name in repo:
                 return repo
-        raise UnknownPackageError(pkg_name)
+        else:
+            raise UnknownPackageError(spec.name)
 
 
     @_autospec
@@ -255,16 +305,7 @@ class RepoPath(object):
 
            Raises UnknownPackageError if not found.
         """
-        # if the spec has a fully qualified namespace, we grab it
-        # directly and ignore overlay precedence.
-        if spec.namespace:
-            fullspace = '%s.%s' % (self.super_namespace, spec.namespace)
-            if not fullspace in self.by_namespace:
-                raise UnknownPackageError(
-                    "No configured repository contains package %s." % spec.fullname)
-            return self.by_namespace[fullspace].get(spec)
-        else:
-            return self.repo_for_pkg(spec.name).get(spec)
+        return self.repo_for_pkg(spec).get(spec)
 
 
     def dirname_for_package_name(self, pkg_name):
@@ -310,7 +351,7 @@ class Repo(object):
         """
         # Root directory, containing _repo.yaml and package dirs
         # Allow roots to by spack-relative by starting with '$spack'
-        self.root = substitute_spack_prefix(root)
+        self.root = canonicalize_path(root)
 
         # super-namespace for all packages in the Repo
         self.super_namespace = namespace
@@ -330,7 +371,7 @@ class Repo(object):
         # Read configuration and validate namespace
         config = self._read_config()
         check('namespace' in config, '%s must define a namespace.'
-              % join_path(self.root, repo_config_name))
+              % join_path(root, repo_config_name))
 
         self.namespace = config['namespace']
         check(re.match(r'[a-zA-Z][a-zA-Z0-9_.]+', self.namespace),
@@ -524,13 +565,22 @@ class Repo(object):
         return [p for p in self.all_packages() if p.extends(extendee_spec)]
 
 
-    def dirname_for_package_name(self, pkg_name):
+    def _check_namespace(self, spec):
+        """Check that the spec's namespace is the same as this repository's."""
+        if spec.namespace and spec.namespace != self.namespace:
+            raise UnknownNamespaceError(spec.namespace)
+
+
+    @_autospec
+    def dirname_for_package_name(self, spec):
         """Get the directory name for a particular package.  This is the
            directory that contains its package.py file."""
-        return join_path(self.packages_path, pkg_name)
+        self._check_namespace(spec)
+        return join_path(self.packages_path, spec.name)
 
 
-    def filename_for_package_name(self, pkg_name):
+    @_autospec
+    def filename_for_package_name(self, spec):
         """Get the filename for the module we should load for a particular
            package.  Packages for a Repo live in
            ``$root/<package_name>/package.py``
@@ -539,8 +589,8 @@ class Repo(object):
            package doesn't exist yet, so callers will need to ensure
            the package exists before importing.
         """
-        validate_module_name(pkg_name)
-        pkg_dir = self.dirname_for_package_name(pkg_name)
+        self._check_namespace(spec)
+        pkg_dir = self.dirname_for_package_name(spec.name)
         return join_path(pkg_dir, package_file_name)
 
 
@@ -677,6 +727,13 @@ class UnknownPackageError(PackageLoadError):
             msg = "Package %s not found." % name
         super(UnknownPackageError, self).__init__(msg)
         self.name = name
+
+
+class UnknownNamespaceError(PackageLoadError):
+    """Raised when we encounter an unknown namespace"""
+    def __init__(self, namespace):
+        super(UnknownNamespaceError, self).__init__(
+            "Unknown namespace: %s" % namespace)
 
 
 class FailedConstructorError(PackageLoadError):

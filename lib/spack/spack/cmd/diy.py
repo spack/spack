@@ -69,7 +69,7 @@ def diy(self, args):
                 sys.exit(1)
             else:
                 tty.msg("Running 'spack edit -f %s'" % spec.name)
-                edit_package(spec.name, True)
+                edit_package(spec.name, spack.repo.first_repo(), None, True)
                 return
 
         if not spec.version.concrete:

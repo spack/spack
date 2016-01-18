@@ -44,9 +44,10 @@ def setup_parser(subparser):
     # Create
     create_parser = sp.add_parser('create', help=repo_create.__doc__)
     create_parser.add_argument(
-        'namespace', help="Namespace to identify packages in the repository.")
+        'directory', help="Directory to create the repo in.")
     create_parser.add_argument(
-        'directory', help="Directory to create the repo in.  Defaults to same as namespace.", nargs='?')
+        'namespace', help="Namespace to identify packages in the repository. "
+        "Defaults to the directory name.", nargs='?')
 
     # List
     list_parser = sp.add_parser('list', help=repo_list.__doc__)
@@ -72,14 +73,15 @@ def setup_parser(subparser):
 
 
 def repo_create(args):
-    """Create a new package repo for a particular namespace."""
+    """Create a new package repository."""
+    root = canonicalize_path(args.directory)
     namespace = args.namespace
-    if not re.match(r'\w[\.\w-]*', namespace):
-        tty.die("Invalid namespace: '%s'" % namespace)
 
-    root = args.directory
-    if not root:
-        root = namespace
+    if not args.namespace:
+        namespace = os.path.basename(root)
+
+    if not re.match(r'\w[\.\w-]*', namespace):
+        tty.die("'%s' is not a valid namespace." % namespace)
 
     existed = False
     if os.path.exists(root):
@@ -123,27 +125,22 @@ def repo_create(args):
 
 
 def repo_add(args):
-    """Add a package source to the Spack configuration"""
+    """Add a package source to Spack's configuration."""
     path = args.path
 
-    # check if the path is relative to the spack directory.
-    real_path = path
-    if path.startswith('$spack'):
-        real_path = spack.repository.substitute_spack_prefix(path)
-    elif not os.path.isabs(real_path):
-        real_path = os.path.abspath(real_path)
-        path = real_path
+    # real_path is absolute and handles substitution.
+    canon_path = canonicalize_path(path)
 
     # check if the path exists
-    if not os.path.exists(real_path):
+    if not os.path.exists(canon_path):
         tty.die("No such file or directory: '%s'." % path)
 
     # Make sure the path is a directory.
-    if not os.path.isdir(real_path):
+    if not os.path.isdir(canon_path):
         tty.die("Not a Spack repository: '%s'." % path)
 
     # Make sure it's actually a spack repository by constructing it.
-    repo = Repo(real_path)
+    repo = Repo(canon_path)
 
     # If that succeeds, finally add it to the configuration.
     repos = spack.config.get_config('repos', args.scope)
@@ -152,30 +149,32 @@ def repo_add(args):
     if repo.root in repos or path in repos:
         tty.die("Repository is already registered with Spack: '%s'" % path)
 
-    repos.insert(0, path)
+    repos.insert(0, canon_path)
     spack.config.update_config('repos', repos, args.scope)
     tty.msg("Created repo with namespace '%s'." % repo.namespace)
 
 
 def repo_remove(args):
-    """Remove a repository from the Spack configuration."""
+    """Remove a repository from Spack's configuration."""
     repos = spack.config.get_config('repos', args.scope)
     path_or_namespace = args.path_or_namespace
 
     # If the argument is a path, remove that repository from config.
-    path = os.path.abspath(path_or_namespace)
-    if path in repos:
-        repos.remove(path)
-        spack.config.update_config('repos', repos, args.scope)
-        tty.msg("Removed repository '%s'." % path)
-        return
+    canon_path = canonicalize_path(path_or_namespace)
+    for repo_path in repos:
+        repo_canon_path = canonicalize_path(repo_path)
+        if canon_path == repo_canon_path:
+            repos.remove(repo_path)
+            spack.config.update_config('repos', repos, args.scope)
+            tty.msg("Removed repository '%s'." % repo_path)
+            return
 
     # If it is a namespace, remove corresponding repo
     for path in repos:
         try:
             repo = Repo(path)
             if repo.namespace == path_or_namespace:
-                repos.remove(repo.root)
+                repos.remove(path)
                 spack.config.update_config('repos', repos, args.scope)
                 tty.msg("Removed repository '%s' with namespace %s."
                         % (repo.root, repo.namespace))
@@ -188,7 +187,7 @@ def repo_remove(args):
 
 
 def repo_list(args):
-    """List package sources and their mnemoics"""
+    """Show registered repositories and their namespaces."""
     roots = spack.config.get_config('repos', args.scope)
     repos = []
     for r in roots:

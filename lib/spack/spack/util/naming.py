@@ -8,10 +8,14 @@ from StringIO import StringIO
 import spack
 
 __all__ = ['mod_to_class', 'spack_module_to_python_module', 'valid_module_name',
+           'valid_fully_qualified_module_name', 'validate_fully_qualified_module_name',
            'validate_module_name', 'possible_spack_module_names', 'NamespaceTrie']
 
 # Valid module names can contain '-' but can't start with it.
 _valid_module_re = r'^\w[\w-]*$'
+
+# Valid module names can contain '-' but can't start with it.
+_valid_fully_qualified_module_re = r'^(\w[\w-]*)(\.\w[\w-]*)*$'
 
 
 def mod_to_class(mod_name):
@@ -75,8 +79,13 @@ def possible_spack_module_names(python_mod_name):
 
 
 def valid_module_name(mod_name):
-    """Return whether the mod_name is valid for use in Spack."""
+    """Return whether mod_name is valid for use in Spack."""
     return bool(re.match(_valid_module_re, mod_name))
+
+
+def valid_fully_qualified_module_name(mod_name):
+    """Return whether mod_name is a valid namespaced module name."""
+    return bool(re.match(_valid_fully_qualified_module_re, mod_name))
 
 
 def validate_module_name(mod_name):
@@ -85,11 +94,25 @@ def validate_module_name(mod_name):
         raise InvalidModuleNameError(mod_name)
 
 
+def validate_fully_qualified_module_name(mod_name):
+    """Raise an exception if mod_name is not a valid namespaced module name."""
+    if not valid_fully_qualified_module_name(mod_name):
+        raise InvalidFullyQualifiedModuleNameError(mod_name)
+
+
 class InvalidModuleNameError(spack.error.SpackError):
     """Raised when we encounter a bad module name."""
     def __init__(self, name):
         super(InvalidModuleNameError, self).__init__(
             "Invalid module name: " + name)
+        self.name = name
+
+
+class InvalidFullyQualifiedModuleNameError(spack.error.SpackError):
+    """Raised when we encounter a bad full package name."""
+    def __init__(self, name):
+        super(InvalidFullyQualifiedModuleNameError, self).__init__(
+            "Invalid fully qualified package name: " + name)
         self.name = name
 
 
