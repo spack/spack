@@ -27,6 +27,7 @@ system and configuring Spack to use multiple compilers.
 """
 import imp
 import os
+import platform
 
 from llnl.util.lang import memoized, list_modules
 from llnl.util.filesystem import join_path
@@ -47,7 +48,11 @@ _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 
 # TODO: customize order in config file
-_default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
+if platform.system() == 'Darwin':
+    _default_order = ['clang', 'gcc', 'intel']
+else:
+    _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
+
 
 def _auto_compiler_spec(function):
     def converter(cspec_like, *args, **kwargs):
