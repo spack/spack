@@ -357,8 +357,8 @@ def _read_config_file(filename, schema):
         with open(filename) as f:
             data = syaml.load(f)
 
-        validate_section(data, schema)
-
+        if data:
+            validate_section(data, schema)
         return data
 
     except MarkedYAMLError, e:
@@ -514,7 +514,7 @@ class ConfigFormatError(ConfigError):
         # Try really hard to get the parent (which sometimes is not
         # set) This digs it out of the validated structure if it's not
         # on the validation_error.
-        if not parent_mark:
+        if path and not parent_mark:
             parent_path = list(path)[:-1]
             parent = get_path(parent_path, data)
             if path[-1] in parent:
