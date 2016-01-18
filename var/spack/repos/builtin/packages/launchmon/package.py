@@ -37,6 +37,16 @@ class Launchmon(Package):
     depends_on('automake')
     depends_on('libtool')
 
+
+    def patch(self):
+        # This patch makes libgcrypt compile correctly with newer gcc versions.
+        mf = FileFilter('tools/libgcrypt/tests/Makefile.in')
+        mf.filter(r'(basic_LDADD\s*=\s*.*)',     r'\1 -lgpg-error')
+        mf.filter(r'(tsexp_LDADD\s*=\s*.*)',     r'\1 -lgpg-error')
+        mf.filter(r'(keygen_LDADD\s*=\s*.*)',    r'\1 -lgpg-error')
+        mf.filter(r'(benchmark_LDADD\s*=\s*.*)', r'\1 -lgpg-error')
+
+
     def install(self, spec, prefix):
         configure(
             "--prefix=" + prefix,
