@@ -41,6 +41,8 @@ class Mpich(Package):
     version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
 
+    variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
+
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
@@ -56,14 +58,20 @@ class Mpich(Package):
         config_args = ["--prefix=" + prefix,
                        "--enable-shared"]
 
+        # Variants
+        if '+verbs' in spec:
+            config_args.append("--with-ibverbs")
+        else:
+            config_args.append("--without-ibverbs")
+
         # TODO: Spack should make it so that you can't actually find
         # these compilers if they're "disabled" for the current
         # compiler configuration.
         if not self.compiler.f77:
-            config_args.append("--disable-f77")
+            config_args.append("--disable-fortran=f77")
 
         if not self.compiler.fc:
-            config_args.append("--disable-fc")
+            config_args.append("--disable-fortran=fc")
 
         configure(*config_args)
         make()
