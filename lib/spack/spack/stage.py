@@ -26,6 +26,7 @@ import os
 import re
 import shutil
 import tempfile
+from urlparse import urljoin
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
@@ -250,7 +251,8 @@ class Stage(object):
         # TODO: CompositeFetchStrategy here.
         self.skip_checksum_for_mirror = True
         if self.mirror_path:
-            urls = ["%s/%s" % (m, self.mirror_path) for m in _get_mirrors()]
+            mirrors = spack.config.get_config('mirrors')
+            urls = [urljoin(u, self.mirror_path) for name, u in mirrors.items()]
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -370,7 +372,7 @@ class DIYStage(object):
 
 def _get_mirrors():
     """Get mirrors from spack configuration."""
-    config = spack.config.get_mirror_config()
+    config = spack.config.get_config('mirrors')
     return [val for name, val in config.iteritems()]
 
 
