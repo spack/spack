@@ -6,21 +6,32 @@ python:
 # Use new Travis infrastructure (Docker can't sudo yet)
 sudo: false
 
-# No need to install any deps.
-install: true
+# Install coveralls to obtain code coverage
+install:
+  - "pip install coveralls"
+  - "pip install pep8"
 
 before_install:
   # Need this for the git tests to succeed.
   - git config --global user.email "spack@example.com"
   - git config --global user.name "Test User"
+  # Need this to be able to compute the list of changed files
+  - git fetch origin develop:develop
 
 script:
   - . share/spack/setup-env.sh
-  - spack test
+  # Run unit tests with code coverage
+  - coverage run --source=lib --omit=lib/spack/spack/test/*,lib/spack/env/*,lib/spack/docs/* bin/spack test
+  # Checks if the file that have been changed are pep8 conformant
+  - CHANGED_PYTHON_FILES=`git diff develop... --name-only | perl -ne 'print if /\.py/g'`
+  - if [[ ${CHANGED_PYTHON_FILES} ]] ; then pep8 --max-line-length=120 ${CHANGED_PYTHON_FILES} ; fi
+
+after_success:
+  - coveralls
 
 notifications:
   email:
     recipients:
-      - tgamblin@llnl.gov
+      - massimiliano.culpo@gmail.com
     on_success: change
     on_failure: always
