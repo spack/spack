@@ -10,6 +10,7 @@ sudo: false
 install:
   - "pip install coveralls"
   - "pip install pep8"
+  - "pip install flake8"
 
 before_install:
   # Need this for the git tests to succeed.
@@ -25,6 +26,8 @@ script:
   # Checks if the file that have been changed are pep8 conformant
   - CHANGED_PYTHON_FILES=`git diff develop... --name-only | perl -ne 'print if /\.py/g'`
   - if [[ ${CHANGED_PYTHON_FILES} ]] ; then pep8 --max-line-length=120 ${CHANGED_PYTHON_FILES} ; fi
+  - if [[ ${CHANGED_PYTHON_FILES} ]] ; then flake8 --format pylint --config flake8.ini ${CHANGED_PYTHON_FILES} ; fi
+
 
 after_success:
   - coveralls
