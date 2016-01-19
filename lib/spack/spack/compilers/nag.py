@@ -1,3 +1,5 @@
+from spack.compiler import *
+
 class Nag(Compiler):
     # Subclasses use possible names of C compiler
     cc_names = []
@@ -10,6 +12,13 @@ class Nag(Compiler):
 
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['nagfor']
+
+    # Named wrapper links within spack.build_env_path
+    link_paths = { # Use default wrappers for C and C++, in case provided in compilers.yaml
+                   'cc'  : 'cc',
+                   'cxx' : 'cxx',
+                   'f77' : 'nag/nagfor',
+                   'fc'  : 'nag/nagfor' }
 
     @classmethod
     def default_version(self, comp):
