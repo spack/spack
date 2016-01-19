@@ -644,10 +644,10 @@ class Package(object):
         for name in sorted(self.dependencies.keys()):
             spec = self.dependencies[name]
 
-            # currently, we do not descend into virtual dependencies, as this
+            # Currently, we do not descend into virtual dependencies, as this
             # makes doing a sensible traversal much harder.  We just assume
             # that ANY of the virtual deps will work, which might not be true
-            # (due to conflicts or unsatisfiable specs).  For now this is ok
+            # (due to conflicts or unsatisfiable specs).  For now this is ok,
             # but we might want to reinvestigate if we start using a lot of
             # complicated virtual dependencies
             # TODO: reinvestigate this.
@@ -1270,7 +1270,7 @@ class Package(object):
                                   (self.name, self.extendee.name))
 
     def do_activate(self, force=False):
-        """Called on an etension to invoke the extendee's activate method.
+        """Called on an extension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
         activate() directly.

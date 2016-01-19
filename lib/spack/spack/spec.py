@@ -1790,7 +1790,7 @@ class Spec(object):
         raise KeyError("No spec with name %s in %s" % (name, self))
 
     def __contains__(self, spec):
-        """True if this spec satisfis the provided spec, or if any dependency
+        """True if this spec satisfies the provided spec, or if any dependency
            does.  If the spec has no name, then we parse this one first.
         """
         spec = self._autospec(spec)
