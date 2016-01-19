@@ -62,7 +62,9 @@ test_names = ['versions',
               'configure_guess',
               'unit_install',
               'lock',
-              'database']
+              'database',
+              'namespace_trie',
+              'yaml']
 
 
 def list_tests():

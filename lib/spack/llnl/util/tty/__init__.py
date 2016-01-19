@@ -63,35 +63,46 @@ def msg(message, *args):
 def info(message, *args, **kwargs):
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
+    wrap   = kwargs.get('wrap', False)
 
     cprint("@%s{==>} %s" % (format, cescape(str(message))), stream=stream)
     for arg in args:
-        lines = textwrap.wrap(
-            str(arg), initial_indent=indent, subsequent_indent=indent)
-        for line in lines:
-            stream.write(line + '\n')
+        if wrap:
+            lines = textwrap.wrap(
+                str(arg), initial_indent=indent, subsequent_indent=indent)
+            for line in lines:
+                stream.write(line + '\n')
+        else:
+            stream.write(indent + str(arg) + '\n')
 
 
-def verbose(message, *args):
+def verbose(message, *args, **kwargs):
     if _verbose:
-        info(message, *args, format='c')
+        kwargs.setdefault('format', 'c')
+        info(message, *args, **kwargs)
 
 
-def debug(message, *args):
+def debug(message, *args, **kwargs):
     if _debug:
-        info(message, *args, format='g', stream=sys.stderr)
+        kwargs.setdefault('format', 'g')
+        kwargs.setdefault('stream', sys.stderr)
+        info(message, *args, **kwargs)
 
 
-def error(message, *args):
-    info("Error: " + str(message), *args, format='*r', stream=sys.stderr)
+def error(message, *args, **kwargs):
+    kwargs.setdefault('format', '*r')
+    kwargs.setdefault('stream', sys.stderr)
+    info("Error: " + str(message), *args, **kwargs)
 
 
-def warn(message, *args):
-    info("Warning: " + str(message), *args, format='*Y', stream=sys.stderr)
+def warn(message, *args, **kwargs):
+    kwargs.setdefault('format', '*Y')
+    kwargs.setdefault('stream', sys.stderr)
+    info("Warning: " + str(message), *args, **kwargs)
 
 
-def die(message, *args):
-    error(message, *args)
+def die(message, *args, **kwargs):
+    error(message, *args, **kwargs)
     sys.exit(1)
 
 

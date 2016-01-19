@@ -60,16 +60,16 @@ class Executable(object):
         fail_on_error = kwargs.get("fail_on_error", True)
         ignore_errors = kwargs.get("ignore_errors", ())
 
-        output        = kwargs.get("output", sys.stdout)
-        error         = kwargs.get("error", sys.stderr)
+        # Default values of None says to keep parent's file descriptors.
+        output        = kwargs.get("output", None)
+        error         = kwargs.get("error", None)
         input         = kwargs.get("input", None)
 
         def streamify(arg, mode):
             if isinstance(arg, basestring):
                 return open(arg, mode), True
-            elif arg is None and mode != 'r':
-                return open(os.devnull, mode), True
-            return arg, False
+            else:
+                return arg, False
         output, ostream = streamify(output, 'w')
         error,  estream = streamify(error,  'w')
         input,  istream = streamify(input,  'r')
@@ -92,19 +92,14 @@ class Executable(object):
         tty.debug(cmd_line)
 
         try:
+            if return_output:
+                output = subprocess.PIPE
+
             proc = subprocess.Popen(
-                cmd,
-                stdin=input,
-                stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE)
+                cmd, stdin=input, stderr=error, stdout=output)
             out, err = proc.communicate()
-            self.returncode = proc.returncode
 
-            if not return_output:
-                output.write(out)
-            error.write(err)
-
-            rc = proc.returncode
+            rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
                 raise ProcessError("Command exited with status %d:"
                                    % proc.returncode, cmd_line)
