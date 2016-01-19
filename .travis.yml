@@ -35,6 +35,6 @@ after_success:
 notifications:
   email:
     recipients:
-      - massimiliano.culpo@gmail.com
+      - tgamblin@llnl.gov
     on_success: change
     on_failure: always
