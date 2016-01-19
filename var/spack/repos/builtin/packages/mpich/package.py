@@ -68,10 +68,10 @@ class Mpich(Package):
         # these compilers if they're "disabled" for the current
         # compiler configuration.
         if not self.compiler.f77:
-            config_args.append("--disable-fortran=f77")
+            config_args.append("--disable-f77")
 
         if not self.compiler.fc:
-            config_args.append("--disable-fortran=fc")
+            config_args.append("--disable-fc")
 
         configure(*config_args)
         make()
