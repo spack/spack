@@ -30,7 +30,7 @@ from llnl.util.tty.colify import colify
 
 import spack
 import spack.cmd
-import spack.packages
+import spack.repository
 from spack.cmd.find import display_specs
 from spack.package import PackageStillNeededError
 
@@ -79,10 +79,9 @@ def uninstall(parser, args):
                 try:
                     # should work if package is known to spack
                     pkgs.append(s.package)
-
-                except spack.packages.UnknownPackageError, e:
-                    # The package.py file has gone away -- but still want to
-                    # uninstall.
+                except spack.repository.UnknownPackageError, e:
+                    # The package.py file has gone away -- but still
+                    # want to uninstall.
                     spack.Package(s).do_uninstall(force=True)
 
         # Sort packages to be uninstalled by the number of installed dependents
