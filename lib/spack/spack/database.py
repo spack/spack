@@ -54,7 +54,7 @@ import spack.spec
 from spack.version import Version
 from spack.spec import Spec
 from spack.error import SpackError
-from spack.packages import UnknownPackageError
+from spack.repository import UnknownPackageError
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -215,7 +215,6 @@ class Database(object):
         # Specs from the database need to be marked concrete because
         # they represent actual installations.
         spec._mark_concrete()
-
         return spec
 
 
@@ -554,7 +553,7 @@ class Database(object):
             for key, rec in self._data.items():
                 if installed is not any and rec.installed != installed:
                     continue
-                if known is not any and spack.db.exists(rec.spec.name) != known:
+                if known is not any and spack.repo.exists(rec.spec.name) != known:
                     continue
                 if query_spec is any or rec.spec.satisfies(query_spec):
                     results.append(rec.spec)
