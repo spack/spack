@@ -48,7 +48,7 @@ def rst_table(elts):
 
 def print_rst_package_list():
     """Print out information on all packages in restructured text."""
-    pkgs = sorted(spack.db.all_packages(), key=lambda s:s.name.lower())
+    pkgs = sorted(spack.repo.all_packages(), key=lambda s:s.name.lower())
 
     print ".. _package-list:"
     print
