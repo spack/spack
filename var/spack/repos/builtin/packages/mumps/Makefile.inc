@@ -23,9 +23,6 @@ LIBPAR  = $(SCALAP)
 
 LIBOTHERS = -lpthread
 
-#Preprocessor defs for calling Fortran from C (-DAdd_ or -DAdd__ or -DUPPER)
-CDEFS   = -DAdd_
-
 #Sequential:
 ifeq ($(MUMPS_TYPE),seq)
 INCS = $(INCSEQ)

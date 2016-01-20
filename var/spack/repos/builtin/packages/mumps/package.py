@@ -15,11 +15,10 @@ class Mumps(Package):
     variant('ptscotch', default=False, description='Activate PT-Scotch as a possible ordering library')
     variant('metis', default=False, description='Activate Metis as a possible ordering library')
     variant('parmetis', default=False, description='Activate Parmetis as a possible ordering library')
-    variant('double', default=True, description='Activate dmumps')
-    variant('float', default=True, description='Activate smumps')
-    variant('complex', default=True, description='Activate cmumps and/or zmumps')
+    variant('double', default=True, description='Activate the compilation of dmumps')
+    variant('float', default=True, description='Activate the compilation of smumps')
+    variant('complex', default=True, description='Activate the compilation of cmumps and/or zmumps')
     variant('idx64', default=False, description='Use int64_t/integer*8 as default index type')
-    variant('double', default=False, description='Use double precision floating point types')
 
     
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
@@ -27,10 +26,16 @@ class Mumps(Package):
     depends_on('metis', when='~parmetis+metis')
     depends_on('parmetis', when="+parmetis")
     depends_on('blas')
+    depends_on('lapack')
     depends_on('scalapack', when='+mpi')
     depends_on('mpi', when='+mpi')
-    
-    def patch(self):
+
+    # this function is not a patch function because in case scalapack
+    # is needed it uses self.spec['scalapack'].fc_link set by the
+    # setup_dependent_environment in scalapck. This happen after patch
+    # end before install
+    # def patch(self):
+    def write_makefile_inc(self):
         if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and '+mpi' not in self.spec:
             raise RuntimeError('You cannot use the variants parmetis or ptscotch without mpi')
         
@@ -61,8 +66,13 @@ class Mumps(Package):
 
         makefile_conf.append("ORDERINGSF = %s" % (' '.join(orderings)))
 
+        # TODO: test this part, it needs a full blas, scalapack and
+        # partitionning environment with 64bit integers
         if '+idx64' in self.spec:
             makefile_conf.extend(
+                # the fortran compilation flags most probably are
+                # working only for intel and gnu compilers this is
+                # perhaps something the compiler should provide
                 ['OPTF    = -O  -DALLOW_NON_INIT %s' % '-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8',
                  'OPTL    = -O ',
                  'OPTC    = -O -DINTSIZE64'])
@@ -78,7 +88,8 @@ class Mumps(Package):
                 ["CC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpicc'),
                  "FC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
                  "FL = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
-                 "SCALAP = %s" % self.spec['scalapack'].fc_link])
+                 "SCALAP = %s" % self.spec['scalapack'].fc_link,
+                 "MUMPS_TYPE = par"])
         else:
             makefile_conf.extend(
                 ["CC = cc",
@@ -86,6 +97,11 @@ class Mumps(Package):
                  "FL = fc",
                  "MUMPS_TYPE = seq"])
 
+        # TODO: change the value to the correct one according to the
+        # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
+        makefile_conf.append("CDEFS   = -DAdd_")
+
+        
         makefile_inc_template = join_path(os.path.dirname(self.module.__file__),
                                           'Makefile.inc')
         with open(makefile_inc_template, "r") as fh:
@@ -113,6 +129,8 @@ class Mumps(Package):
             if '+complex' in spec:
                 make_libs.append('zexamples')
 
+        self.write_makefile_inc()
+                
         make(*make_libs)
 
         install_tree('lib', prefix.lib)
