@@ -24,6 +24,7 @@
 ##############################################################################
 import os
 import re
+import subprocess
 import itertools
 from datetime import datetime
 
@@ -51,7 +52,7 @@ _version_cache = {}
 def get_compiler_version(compiler_path, version_arg, regex='(.*)'):
     if not compiler_path in _version_cache:
         compiler = Executable(compiler_path)
-        output = compiler(version_arg, return_output=True, error=os.devnull)
+        output = compiler(version_arg, return_output=True, error=subprocess.STDOUT)
 
         match = re.search(regex, output)
         _version_cache[compiler_path] = match.group(1) if match else 'unknown'
