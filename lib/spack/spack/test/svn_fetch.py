@@ -65,7 +65,7 @@ class SvnFetchTest(MockPackagesTest):
     def assert_rev(self, rev):
         """Check that the current revision is equal to the supplied rev."""
         def get_rev():
-            output = svn('info', return_output=True)
+            output = svn('info', output=str)
             self.assertTrue("Revision" in output)
             for line in output.split('\n'):
                 match = re.match(r'Revision: (\d+)', line)

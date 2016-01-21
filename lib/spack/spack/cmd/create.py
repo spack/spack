@@ -132,7 +132,7 @@ class ConfigureGuesser(object):
         # Peek inside the tarball.
         tar = which('tar')
         output = tar(
-            "--exclude=*/*/*", "-tf", stage.archive_file, return_output=True)
+            "--exclude=*/*/*", "-tf", stage.archive_file, output=str)
         lines = output.split("\n")
 
         # Set the configure line to the one that matched.

@@ -50,7 +50,7 @@ class Gcc(Package):
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
     variant('gold', default=True, description="Build the gold linker plugin for ld-based LTO")
-    
+
     depends_on("mpfr")
     depends_on("gmp")
     depends_on("mpc")     # when @4.5:
@@ -102,7 +102,7 @@ class Gcc(Package):
             configure(*options)
             make()
             make("install")
-            
+
         self.write_rpath_specs()
 
 
@@ -121,7 +121,7 @@ class Gcc(Package):
             return
 
         gcc = Executable(join_path(self.prefix.bin, 'gcc'))
-        lines = gcc('-dumpspecs', return_output=True).strip().split("\n")
+        lines = gcc('-dumpspecs', output=str).strip().split("\n")
         specs_file = join_path(self.spec_dir, 'specs')
         with closing(open(specs_file, 'w')) as out:
             for line in lines:
