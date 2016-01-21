@@ -32,7 +32,7 @@ from llnl.util.filesystem import join_path
 import spack
 import spack.cmd
 
-description="Print out locations of various diectories used by Spack"
+description="Print out locations of various directories used by Spack"
 
 def setup_parser(subparser):
     global directories

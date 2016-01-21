@@ -51,7 +51,7 @@ _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 if platform.system() == 'Darwin':
     _default_order = ['clang', 'gcc', 'intel']
 else:
-    _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
+    _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc', 'nag']
 
 
 def _auto_compiler_spec(function):
