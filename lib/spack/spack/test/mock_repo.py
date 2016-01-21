@@ -141,7 +141,7 @@ class MockGitRepo(MockVCSRepo):
             self.url = self.path
 
     def rev_hash(self, rev):
-        return git('rev-parse', rev, return_output=True).strip()
+        return git('rev-parse', rev, output=str).strip()
 
 
 class MockSvnRepo(MockVCSRepo):
@@ -193,4 +193,4 @@ class MockHgRepo(MockVCSRepo):
 
     def get_rev(self):
         """Get current mercurial revision."""
-        return hg('id', '-i', return_output=True).strip()
+        return hg('id', '-i', output=str).strip()
