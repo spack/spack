@@ -36,11 +36,20 @@ class Elpa(Package):
 
     version('2015.11.001', 'de0f35b7ee7c971fd0dca35c900b87e6', url='http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz')
 
+    variant('openmp', default=False, description='Activates OpenMP support')
+
     depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('scalapack')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+
+        options = ["--prefix=%s" % prefix]
+
+        if '+openmp' in spec:
+            options.append("--enable-openmp")
+
+        configure(*options)
         make()
         make("install")
