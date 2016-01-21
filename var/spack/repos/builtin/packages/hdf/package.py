@@ -12,7 +12,7 @@ class Hdf(Package):
     version('4.2.11', '063f9928f3a19cc21367b71c3b8bbf19')
 
     depends_on("jpeg")
-    depends_on("szip@2.1")
+    depends_on("szip")
     depends_on("zlib")
 
 
