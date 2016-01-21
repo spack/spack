@@ -54,4 +54,4 @@ class Clang(Compiler):
                Thread model: posix
         """
         return get_compiler_version(
-            comp, '--version', r'(?:clang version|based on LLVM) ([^ )]+)')
+            comp, '--version', r'(?:clang version|based on LLVM|LLVM version) ([^ )]+)')
