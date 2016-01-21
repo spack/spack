@@ -17,6 +17,7 @@ class Openmpi(Package):
     list_url = "http://www.open-mpi.org/software/ompi/"
     list_depth = 3
 
+    version('1.10.2', 'b2f43d9635d2d52826e5ef9feb97fd4c')
     version('1.10.1', 'f0fcd77ed345b7eafb431968124ba16e')
     version('1.10.0', '280cf952de68369cebaca886c5ce0304')
     version('1.8.8', '0dab8e602372da1425e9242ae37faf8c')
@@ -24,7 +25,7 @@ class Openmpi(Package):
 
     patch('ad_lustre_rwcontig_open_source.patch', when="@1.6.5")
     patch('llnl-platforms.patch', when="@1.6.5")
-    patch('configure.patch', when="@1.10.0:")
+    patch('configure.patch', when="@1.10.0:1.10.1")
 
     variant('psm', default=False, description='Build support for the PSM library.')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
