@@ -50,10 +50,10 @@ class Gcc(Package):
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
     variant('gold', default=True, description="Build the gold linker plugin for ld-based LTO")
-    
-    depends_on("mpfr")
-    depends_on("gmp")
-    depends_on("mpc")     # when @4.5:
+
+    depends_on("mpfr@2.4.2:")
+    depends_on("gmp@4.3.2:")
+    depends_on("mpc@0.8.1:")     # when @4.5:
     depends_on("binutils~libiberty", when='~gold')
     depends_on("binutils~libiberty+gold", when='+gold')
 
@@ -102,7 +102,7 @@ class Gcc(Package):
             configure(*options)
             make()
             make("install")
-            
+
         self.write_rpath_specs()
 
 
