@@ -72,7 +72,7 @@ class Boost(Package):
     all_libs = default_install_libs | default_noinstall_libs
 
     for lib in all_libs:
-        variant(lib, default=(lib in default_install_libs), 
+        variant(lib, default=(lib not in default_noinstall_libs), 
             description="Compile with {0} library".format(lib))
 
     variant('debug', default=False, description='Switch to the debug version of Boost')
