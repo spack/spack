@@ -163,7 +163,7 @@ class Boost(Package):
 
     def install(self, spec, prefix):
         withLibs = list()
-        for lib in Boost.libs:
+        for lib in Boost.all_libs:
             if "+{0}".format(lib) in spec:
                 withLibs.append(lib)
         if not withLibs:
