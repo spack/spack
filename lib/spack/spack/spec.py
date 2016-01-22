@@ -804,8 +804,6 @@ class Spec(object):
         for name, dependent in self.dependents.items():
             del dependent.dependencies[self.name]
             dependent._add_dependency(concrete)
-            # Associates the variants to be forwarded with the concrete spec
-            dependent.package.forwarded_variants[concrete.name] = dependent.package.forwarded_variants.pop(self.name)
 
     def _expand_virtual_packages(self):
         """Find virtual packages in this spec, replace them with providers,
@@ -1035,6 +1033,9 @@ class Spec(object):
             visited.add(dep.name)
             provider = self._find_provider(dep, provider_index)
             if provider:
+                if dep.name in self.package.forwarded_variants:
+                    # Associates the variants to be forwarded with the concrete spec
+                    self.package.forwarded_variants[provider.name] = self.package.forwarded_variants.pop(dep.name)
                 dep = provider
 
         else:
