@@ -54,6 +54,9 @@ class Boost(Package):
     depends_on('bzip2', when='+compression')
     depends_on('zlib', when='+compression')
 
+    # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
+    patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
+
     def url_for_version(self, version):
         """Handle Boost's weird URLs, which write the version two different ways."""
         parts = [str(p) for p in Version(version)]
