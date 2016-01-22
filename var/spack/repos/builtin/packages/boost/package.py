@@ -45,24 +45,28 @@ class Boost(Package):
     version('1.34.1', '2d938467e8a448a2c9763e0a9f8ca7e5')
     version('1.34.0', 'ed5b9291ffad776f8757a916e1726ad0')
 
-    default_install_libs = set(['chrono', 
+    default_install_libs = set(['atomic', 
+        'chrono', 
         'date_time', 
         'filesystem', 
         'graph',
         'iostreams',
+        'locale',
         'log',
         'math', 
+        'program_options',
         'random', 
         'regex', 
         'serialization', 
         'signals', 
         'system', 
+        'test', 
         'thread', 
         'wave'])
 
-    # These are not installed by default because they pull in many dependencies
-    # and/or because there is a great deal of customization possible (and it
-    # would be difficult or tedious to choose sensible defaults here).
+    # mpi/python are not installed by default because they pull in many 
+    # dependencies and/or because there is a great deal of customization 
+    # possible (and it would be difficult to choose sensible defaults)
     default_noinstall_libs = set(['mpi', 'python'])
 
     all_libs = default_install_libs | default_noinstall_libs
@@ -75,9 +79,9 @@ class Boost(Package):
     variant('shared', default=True, description="Additionally build shared libraries")
     variant('multithreaded', default=True, description="Build multi-threaded versions of libraries")
     variant('singlethreaded', default=True, description="Build single-threaded versions of libraries")
-    variant('regex_icu', default=False, description="Include regex ICU support (by default false even if regex library is compiled)")
+    variant('icu_support', default=False, description="Include ICU support (for regex/locale libraries)")
 
-    depends_on('icu', when='+regex_icu')
+    depends_on('icu', when='+icu_support')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
@@ -133,6 +137,9 @@ class Boost(Package):
             options.append('variant=debug')
         else:
             options.append('variant=release')
+
+        if '+icu_support' in spec:
+            options.extend(['-s', 'ICU_PATH=%s' % spec['icu'].prefix])
 
         if '+iostreams' in spec:
             options.extend([
