@@ -24,7 +24,7 @@ class NetlibLapack(Package):
     provides('lapack')
 
     # blas is a virtual dependency.
-    depends_on('blas')
+    depends_on('blas', forward='shared')
 
     depends_on('cmake')
 

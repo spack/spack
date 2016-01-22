@@ -173,29 +173,48 @@ def version(pkg, ver, checksum=None, **kwargs):
     pkg.versions[Version(ver)] = kwargs
 
 
-def _depends_on(pkg, spec, when=None):
+def _depends_on(pkg, spec, when=None, forward=None):
     if when is None:
         when = pkg.name
     when_spec = parse_anonymous_spec(when, pkg.name)
+
+    def setify(forward):
+        _forward = set()
+        if forward is not None:
+            if isinstance(forward, str):
+                _forward.add(forward)
+            else:
+                for item in forward:
+                    _forward.add(item)
+        return _forward
 
     dep_spec = Spec(spec)
     if pkg.name == dep_spec.name:
         raise CircularReferenceError('depends_on', pkg.name)
 
     conditions = pkg.dependencies.setdefault(dep_spec.name, {})
+
+    forwarded_variants = setify(forward)
+    for item in forwarded_variants:
+        if item not in pkg.variants:
+            raise RuntimeError('cannot forward a non-existing variant')
+    forward_conditions = pkg.forwarded_variants.setdefault(dep_spec.name, {})
+
     if when_spec in conditions:
         conditions[when_spec].constrain(dep_spec, deps=False)
+        forward_conditions[when_spec].union(forwarded_variants)
     else:
         conditions[when_spec] = dep_spec
+        forward_conditions[when_spec] = forwarded_variants
 
 
-@directive('dependencies')
-def depends_on(pkg, spec, when=None):
+@directive(('dependencies', 'forwarded_variants'))
+def depends_on(pkg, spec, when=None, forward=None):
     """Creates a dict of deps with specs defining when they apply."""
-    _depends_on(pkg, spec, when=when)
+    _depends_on(pkg, spec, when=when, forward=forward)
 
 
-@directive(('extendees', 'dependencies'))
+@directive(('extendees', 'dependencies', 'forwarded_variants'))
 def extends(pkg, spec, **kwargs):
     """Same as depends_on, but dependency is symlinked into parent prefix.
 
@@ -214,7 +233,8 @@ def extends(pkg, spec, **kwargs):
         raise DirectiveError("Packages can extend at most one other package.")
 
     when = kwargs.pop('when', pkg.name)
-    _depends_on(pkg, spec, when=when)
+    forward = kwargs.pop('forward', None)
+    _depends_on(pkg, spec, when=when, forward=forward)
     pkg.extendees[spec] = (Spec(spec), kwargs)
 
 

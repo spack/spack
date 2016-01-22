@@ -744,6 +744,16 @@ class Spec(object):
                 deps[name].dependencies[dep_name] = deps[dep_name]
         return spec
 
+    def _forward_variants(self, variants, dependency):
+        for name in variants:
+            # If the dependency has the variant already specified, that takes precedence over forwarding
+            if name in dependency.variants:
+                continue
+            default = spack.spec.VariantSpec(name, self.package.variants[name].default)
+            variant = self.variants[name] if name in self.variants else default
+            message = 'Forwarding variant "{name}" from package {parent} to package {package} : {value}'
+            tty.info(message.format(name=name, parent=self.name, package=dependency.name, value=variant))
+            dependency.variants[name] = variant
 
     def _concretize_helper(self, presets=None, visited=None):
         """Recursive helper function for concretize().
@@ -761,6 +771,13 @@ class Spec(object):
 
         # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self.dependencies.keys()):
+            ##########
+            # TODO : Add variant manipulation here?!?
+            current_dependency = self.dependencies[name]
+            for condition, variants in self.package.forwarded_variants[name].iteritems():
+                if self.satisfies(condition):
+                    self._forward_variants(variants, current_dependency)
+            ##########
             changed |= self.dependencies[name]._concretize_helper(presets, visited)
 
         if self.name in presets:
@@ -781,14 +798,14 @@ class Spec(object):
         visited.add(self.name)
         return changed
 
-
     def _replace_with(self, concrete):
         """Replace this virtual spec with a concrete spec."""
         assert(self.virtual)
         for name, dependent in self.dependents.items():
             del dependent.dependencies[self.name]
             dependent._add_dependency(concrete)
-
+            # Associates the variants to be forwarded with the concrete spec
+            dependent.package.forwarded_variants[concrete.name] = dependent.package.forwarded_variants.pop(self.name)
 
     def _expand_virtual_packages(self):
         """Find virtual packages in this spec, replace them with providers,

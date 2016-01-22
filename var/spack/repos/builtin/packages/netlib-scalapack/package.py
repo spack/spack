@@ -18,7 +18,7 @@ class NetlibScalapack(Package):
     provides('scalapack')
     
     depends_on('mpi')
-    depends_on('lapack')
+    depends_on('lapack', forward='shared')
     
     def install(self, spec, prefix):       
         options = [
