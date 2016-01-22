@@ -45,28 +45,36 @@ class Boost(Package):
     version('1.34.1', '2d938467e8a448a2c9763e0a9f8ca7e5')
     version('1.34.0', 'ed5b9291ffad776f8757a916e1726ad0')
 
-    libs = ['chrono', 
+    default_install_libs = set(['chrono', 
         'date_time', 
         'filesystem', 
-        'iostreams', 
+        'graph',
+        'iostreams',
+        'log',
+        'math', 
         'random', 
         'regex', 
         'serialization', 
         'signals', 
         'system', 
         'thread', 
-        'wave', 
-        'mpi', 
-        'python']
+        'wave'])
 
-    for lib in libs:
-        variant(lib, default=False, description="Compile with {0} library"
-            .format(lib))
+    # These are not installed by default because they pull in many dependencies
+    # and/or because there is a great deal of customization possible (and it
+    # would be difficult or tedious to choose sensible defaults here).
+    default_noinstall_libs = set(['mpi', 'python'])
+
+    all_libs = default_install_libs | default_noinstall_libs
+
+    for lib in all_libs:
+        variant(lib, default=(lib in default_install_libs), 
+            description="Compile with {0} library".format(lib))
 
     variant('debug', default=False, description='Switch to the debug version of Boost')
     variant('shared', default=True, description="Additionally build shared libraries")
     variant('multithreaded', default=True, description="Build multi-threaded versions of libraries")
-    variant('singlethreaded', default=False, description="Build single-threaded versions of libraries")
+    variant('singlethreaded', default=True, description="Build single-threaded versions of libraries")
     variant('regex_icu', default=False, description="Include regex ICU support (by default false even if regex library is compiled)")
 
     depends_on('icu', when='+regex_icu')
