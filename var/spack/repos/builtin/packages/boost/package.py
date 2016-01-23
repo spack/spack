@@ -1,4 +1,5 @@
 from spack import *
+import spack
 
 import os
 import sys
@@ -47,15 +48,50 @@ class Boost(Package):
     version('1.34.1', '2d938467e8a448a2c9763e0a9f8ca7e5')
     version('1.34.0', 'ed5b9291ffad776f8757a916e1726ad0')
 
-    variant('debug', default=False, description='Switch to the debug version of Boost')
-    variant('python', default=False, description='Activate the component Boost.Python')
-    variant('mpi', default=False, description='Activate the component Boost.MPI')
-    variant('compression', default=True, description='Activate the compression Boost.iostreams')
+    default_install_libs = set(['atomic',
+        'chrono',
+        'date_time',
+        'filesystem',
+        'graph',
+        'iostreams',
+        'locale',
+        'log',
+        'math',
+        'program_options',
+        'random',
+        'regex',
+        'serialization',
+        'signals',
+        'system',
+        'test',
+        'thread',
+        'wave'])
 
+    # mpi/python are not installed by default because they pull in many
+    # dependencies and/or because there is a great deal of customization
+    # possible (and it would be difficult to choose sensible defaults)
+    default_noinstall_libs = set(['mpi', 'python'])
+
+    all_libs = default_install_libs | default_noinstall_libs
+
+    for lib in all_libs:
+        variant(lib, default=(lib not in default_noinstall_libs),
+            description="Compile with {0} library".format(lib))
+
+    variant('debug', default=False, description='Switch to the debug version of Boost')
+    variant('shared', default=True, description="Additionally build shared libraries")
+    variant('multithreaded', default=True, description="Build multi-threaded versions of libraries")
+    variant('singlethreaded', default=True, description="Build single-threaded versions of libraries")
+    variant('icu_support', default=False, description="Include ICU support (for regex/locale libraries)")
+
+    depends_on('icu', when='+icu_support')
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
-    depends_on('bzip2', when='+compression')
-    depends_on('zlib', when='+compression')
+    depends_on('bzip2', when='+iostreams')
+    depends_on('zlib', when='+iostreams')
+
+    # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
+    patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
     def url_for_version(self, version):
         """Handle Boost's weird URLs, which write the version two different ways."""
@@ -80,22 +116,20 @@ class Boost(Package):
         # fallback to gcc if no toolset found
         return 'gcc'
 
-    def determine_bootstrap_options(self, spec, options):
-        options.append('--with-toolset=%s' % self.determine_toolset(spec))
+    def determine_bootstrap_options(self, spec, withLibs, options):
+        boostToolsetId = self.determine_toolset(spec)
+        options.append('--with-toolset=%s' % boostToolsetId)
+        options.append("--with-libraries=%s" % ','.join(withLibs))
 
-        without_libs = []
-        if '~mpi' in spec:
-            without_libs.append('mpi')
-        if '~python' in spec:
-            without_libs.append('python')
-        else:
+        if '+python' in spec:
             options.append('--with-python=%s' %
                 join_path(spec['python'].prefix.bin, 'python'))
 
-        if without_libs:
-            options.append('--without-libraries=%s' % ','.join(without_libs))
-
         with open('user-config.jam', 'w') as f:
+            compiler_wrapper = join_path(spack.build_env_path, 'c++')
+            f.write("using {0} : : {1} ;\n".format(boostToolsetId,
+                compiler_wrapper))
+
             if '+mpi' in spec:
                 f.write('using mpi : %s ;\n' %
                     join_path(spec['mpi'].prefix.bin, 'mpicxx'))
@@ -110,12 +144,10 @@ class Boost(Package):
         else:
             options.append('variant=release')
 
-        if '~compression' in spec:
-            options.extend([
-                '-s', 'NO_BZIP2=1',
-                '-s', 'NO_ZLIB=1'])
+        if '+icu_support' in spec:
+            options.extend(['-s', 'ICU_PATH=%s' % spec['icu'].prefix])
 
-        if '+compression' in spec:
+        if '+iostreams' in spec:
             options.extend([
                 '-s', 'BZIP2_INCLUDE=%s' % spec['bzip2'].prefix.include,
                 '-s', 'BZIP2_LIBPATH=%s' % spec['bzip2'].prefix.lib,
@@ -123,11 +155,24 @@ class Boost(Package):
                 '-s', 'ZLIB_LIBPATH=%s' % spec['zlib'].prefix.lib,
                 ])
 
+        linkTypes = ['static']
+        if '+shared' in spec:
+            linkTypes.append('shared')
+
+        threadingOpts = []
+        if '+multithreaded' in spec:
+            threadingOpts.append('multi')
+        if '+singlethreaded' in spec:
+            threadingOpts.append('single')
+        if not threadingOpts:
+            raise RuntimeError("At least one of {singlethreaded, multithreaded} must be enabled")
+
         options.extend([
             'toolset=%s' % self.determine_toolset(spec),
-            'link=static,shared',
-            'threading=single,multi',
+            'link=%s' % ','.join(linkTypes),
             '--layout=tagged'])
+
+        return threadingOpts
 
     def install(self, spec, prefix):
         # On Darwin, Boost expects the Darwin libtool. However, one of the
@@ -140,13 +185,26 @@ class Boost(Package):
             force_symlink('/usr/bin/libtool', join_path(newdir, 'libtool'))
             env['PATH'] = newdir + ':' + env['PATH']
 
+        withLibs = list()
+        for lib in Boost.all_libs:
+            if "+{0}".format(lib) in spec:
+                withLibs.append(lib)
+        if not withLibs:
+            # if no libraries are specified for compilation, then you dont have
+            # to configure/build anything, just copy over to the prefix directory.
+            src = join_path(self.stage.source_path, 'boost')
+            mkdirp(join_path(prefix, 'include'))
+            dst = join_path(prefix, 'include', 'boost')
+            install_tree(src, dst)
+            return
+    
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = './'
 
         bootstrap = Executable('./bootstrap.sh')
 
         bootstrap_options = ['--prefix=%s' % prefix]
-        self.determine_bootstrap_options(spec, bootstrap_options)
+        self.determine_bootstrap_options(spec, withLibs, bootstrap_options)
 
         bootstrap(*bootstrap_options)
 
@@ -156,6 +214,9 @@ class Boost(Package):
         b2 = Executable(b2name)
         b2_options = ['-j', '%s' % make_jobs]
 
-        self.determine_b2_options(spec, b2_options)
+        threadingOpts = self.determine_b2_options(spec, b2_options)
 
-        b2('install', *b2_options)
+        # In theory it could be done on one call but it fails on
+        # Boost.MPI if the threading options are not separated.
+        for threadingOpt in threadingOpts:
+            b2('install', 'threading=%s' % threadingOpt, *b2_options)
