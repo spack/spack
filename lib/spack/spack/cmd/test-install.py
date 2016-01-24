@@ -37,20 +37,20 @@ from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
 import spack.cmd
 
-description = "Treat package installations as unit tests and output formatted test results"
+description = "Run package installation as a unit test, output formatted results."
 
 def setup_parser(subparser):
     subparser.add_argument(
         '-j', '--jobs', action='store', type=int,
         help="Explicitly set number of make jobs.  Default is #cpus.")
-    
+
     subparser.add_argument(
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="Do not check packages against checksum")
-    
+
     subparser.add_argument(
         '-o', '--output', action='store', help="test output goes in this file")
-    
+
     subparser.add_argument(
         'package', nargs=argparse.REMAINDER, help="spec of package to install")
 
@@ -59,10 +59,10 @@ class JunitResultFormat(object):
     def __init__(self):
         self.root = ET.Element('testsuite')
         self.tests = []
-        
+
     def add_test(self, buildId, testResult, buildInfo=None):
         self.tests.append((buildId, testResult, buildInfo))
-    
+
     def write_to(self, stream):
         self.root.set('tests', '{0}'.format(len(self.tests)))
         for buildId, testResult, buildInfo in self.tests:
@@ -84,25 +84,25 @@ class TestResult(object):
     PASSED = 0
     FAILED = 1
     SKIPPED = 2
-    
+
 
 class BuildId(object):
     def __init__(self, spec):
         self.name = spec.name
         self.version = spec.version
         self.hashId = spec.dag_hash()
-    
+
     def stringId(self):
         return "-".join(str(x) for x in (self.name, self.version, self.hashId))
 
     def __hash__(self):
         return hash((self.name, self.version, self.hashId))
-    
+
     def __eq__(self, other):
         if not isinstance(other, BuildId):
             return False
-            
-        return ((self.name, self.version, self.hashId) == 
+
+        return ((self.name, self.version, self.hashId) ==
             (other.name, other.version, other.hashId))
 
 
@@ -114,12 +114,12 @@ def fetch_log(path):
 
 
 def failed_dependencies(spec):
-    return set(childSpec for childSpec in spec.dependencies.itervalues() if not 
+    return set(childSpec for childSpec in spec.dependencies.itervalues() if not
         spack.repo.get(childSpec).installed)
 
 
 def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
-    # Post-order traversal is not strictly required but it makes sense to output 
+    # Post-order traversal is not strictly required but it makes sense to output
     # tests for dependencies first.
     for spec in topSpec.traverse(order='post'):
         if spec not in newInstalls:
@@ -143,12 +143,12 @@ def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
                 re.search('error:', line, re.IGNORECASE))
             errOutput = errMessages if errMessages else lines[-10:]
             errOutput = '\n'.join(itertools.chain(
-                    [spec.to_yaml(), "Errors:"], errOutput, 
+                    [spec.to_yaml(), "Errors:"], errOutput,
                     ["Build Log:", package.build_log_path]))
         else:
             result = TestResult.PASSED
             errOutput = None
-        
+
         bId = BuildId(spec)
         output.add_test(bId, result, errOutput)
 
@@ -163,18 +163,18 @@ def test_install(parser, args):
 
     if args.no_checksum:
         spack.do_checksum = False        # TODO: remove this global.
-    
+
     specs = spack.cmd.parse_specs(args.package, concretize=True)
     if len(specs) > 1:
         tty.die("Only 1 top-level package can be specified")
     topSpec = iter(specs).next()
-    
+
     newInstalls = set()
     for spec in topSpec.traverse():
         package = spack.repo.get(spec)
         if not package.installed:
             newInstalls.add(spec)
-    
+
     if not args.output:
         bId = BuildId(topSpec)
         outputDir = join_path(os.getcwd(), "test-output")
@@ -183,7 +183,7 @@ def test_install(parser, args):
         outputFpath = join_path(outputDir, "test-{0}.xml".format(bId.stringId()))
     else:
         outputFpath = args.output
-    
+
     for spec in topSpec.traverse(order='post'):
         # Calling do_install for the top-level package would be sufficient but
         # this attempts to keep going if any package fails (other packages which
@@ -202,7 +202,7 @@ def test_install(parser, args):
                 pass
             except FetchError:
                 pass
-   
+
     jrf = JunitResultFormat()
     handled = {}
     create_test_output(topSpec, newInstalls, jrf)
