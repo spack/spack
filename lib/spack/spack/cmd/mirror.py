@@ -172,6 +172,7 @@ def mirror_create(args):
         specs = [Spec(n) for n in spack.repo.all_package_names()]
         specs.sort(key=lambda s: s.format("$_$@").lower())
 
+    # If the user asked for dependencies, traverse spec DAG get them.
     if args.dependencies:
         new_specs = set()
         for spec in specs:

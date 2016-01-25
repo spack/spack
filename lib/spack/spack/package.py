@@ -631,7 +631,7 @@ class Package(object):
         spack.install_layout.remove_install_directory(self.spec)
 
 
-    def do_fetch(self):
+    def do_fetch(self, mirror_only=False):
         """Creates a stage directory and downloads the taball for this package.
            Working directory will be set to the stage directory.
         """
@@ -656,7 +656,7 @@ class Package(object):
                 raise FetchError(
                     "Will not fetch %s." % self.spec.format('$_$@'), checksum_msg)
 
-        self.stage.fetch()
+        self.stage.fetch(mirror_only)
 
         ##########
         # Fetch resources
@@ -677,7 +677,8 @@ class Package(object):
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
 
-    def do_stage(self):
+
+    def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
            directory."""
         if not self.spec.concrete:
@@ -691,8 +692,7 @@ class Package(object):
             else:
                 tty.msg("Already staged %s in %s." % (name, stage.path))
 
-
-        self.do_fetch()
+        self.do_fetch(mirror_only)
         _expand_archive(self.stage)
 
         ##########
@@ -834,10 +834,6 @@ class Package(object):
         pieces = ['resource', resource.name, self.spec.dag_hash()]
         resource_stage_folder = '-'.join(pieces)
         return resource_stage_folder
-
-    def _build_logger(self, log_path):
-        """Create a context manager to log build output."""
-
 
 
     def do_install(self,
