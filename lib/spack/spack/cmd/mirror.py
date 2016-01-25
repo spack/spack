@@ -144,15 +144,17 @@ def mirror_list(args):
 
 
 def _read_specs_from_file(filename):
+    specs = []
     with open(filename, "r") as stream:
         for i, string in enumerate(stream):
             try:
                 s = Spec(string)
                 s.package
-                args.specs.append(s)
+                specs.append(s)
             except SpackError, e:
                 tty.die("Parse error in %s, line %d:" % (args.file, i+1),
                         ">>> " + string, str(e))
+    return specs
 
 
 def mirror_create(args):

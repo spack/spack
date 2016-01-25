@@ -78,6 +78,7 @@ def get_matching_versions(specs, **kwargs):
             continue
 
         num_versions = kwargs.get('num_versions', 0)
+        matching_spec = []
         for i, v in enumerate(reversed(sorted(pkg.versions))):
             # Generate no more than num_versions versions for each spec.
             if num_versions and i >= num_versions:
@@ -88,7 +89,11 @@ def get_matching_versions(specs, **kwargs):
                 s = Spec(pkg.name)
                 s.versions = VersionList([v])
                 s.variants = spec.variants.copy()
-                matching.append(s)
+                matching_spec.append(s)
+
+        if not matching_spec:
+            tty.warn("No known version matches spec: %s" % spec)
+        matching.extend(matching_spec)
 
     return matching
 
