@@ -97,7 +97,6 @@ class Stage(object):
 
         self.name = kwargs.get('name')
         self.mirror_path = kwargs.get('mirror_path')
-
         self.tmp_root = find_tmp_root()
 
         self.path = None
@@ -240,11 +239,13 @@ class Stage(object):
             tty.die("Setup failed: no such directory: " + self.path)
 
 
-    def fetch(self):
+    def fetch(self, mirror_only=False):
         """Downloads an archive or checks out code from a repository."""
         self.chdir()
 
-        fetchers = [self.default_fetcher]
+        fetchers = []
+        if not mirror_only:
+            fetchers.append(self.default_fetcher)
 
         # TODO: move mirror logic out of here and clean it up!
         # TODO: Or @alalazo may have some ideas about how to use a
@@ -252,7 +253,13 @@ class Stage(object):
         self.skip_checksum_for_mirror = True
         if self.mirror_path:
             mirrors = spack.config.get_config('mirrors')
-            urls = [urljoin(u, self.mirror_path) for name, u in mirrors.items()]
+
+            # Join URLs of mirror roots with mirror paths. Because
+            # urljoin() will strip everything past the final '/' in
+            # the root, so we add a '/' if it is not present.
+            mirror_roots = [root if root.endswith('/') else root + '/'
+                            for root in mirrors.values()]
+            urls = [urljoin(root, self.mirror_path) for root in mirror_roots]
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -261,10 +268,11 @@ class Stage(object):
             if isinstance(self.default_fetcher, fs.URLFetchStrategy):
                 digest = self.default_fetcher.digest
 
-            # Have to skip the checkesum for things archived from
+            # Have to skip the checksum for things archived from
             # repositories.  How can this be made safer?
             self.skip_checksum_for_mirror = not bool(digest)
 
+            # Add URL strategies for all the mirrors with the digest
             for url in urls:
                 fetchers.insert(0, fs.URLFetchStrategy(url, digest))
 
