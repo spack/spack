@@ -252,7 +252,13 @@ class Stage(object):
         self.skip_checksum_for_mirror = True
         if self.mirror_path:
             mirrors = spack.config.get_config('mirrors')
-            urls = [urljoin(u, self.mirror_path) for name, u in mirrors.items()]
+
+            # Join URLs of mirror roots with mirror paths. Because
+            # urljoin() will strip everything past the final '/' in
+            # the root, so we add a '/' if it is not present.
+            mirror_roots = [root if root.endswith('/') else root + '/'
+                            for root in mirrors.values()]
+            urls = [urljoin(root, self.mirror_path) for root in mirror_roots]
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
