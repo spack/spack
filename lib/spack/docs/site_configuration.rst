@@ -76,9 +76,9 @@ directory. Here's an example of an external configuration::
         path: /opt/openmpi-1.6.5-intel
 
 This example lists three installations of OpenMPI, one built with gcc,
-one built with gcc and debug information, and another built with OpenMPI.
+one built with gcc and debug information, and another built with Intel.
 If Spack is asked to build a package that uses one of these MPIs as a 
-dependency, it link the package to the pre-installed OpenMPI in
+dependency, it links the package to the pre-installed OpenMPI in
 the given directory.  
 
 Each ``packages.yaml`` should begin with a ``packages:`` token, followed
