@@ -92,6 +92,7 @@ expansion when it is the first character in an id typed on the command line.
 """
 import sys
 import itertools
+import copy
 import hashlib
 import base64
 from StringIO import StringIO
@@ -534,6 +535,11 @@ class Spec(object):
 
         return self._concrete
 
+    @property
+    def forwarded_variants(self):
+        if not hasattr(self, '_forwarded_variants'):
+            self._forwarded_variants = copy.copy(self.package.forwarded_variants)
+        return self._forwarded_variants
 
     def traverse(self, visited=None, d=0, **kwargs):
         """Generic traversal of the DAG represented by this spec.
@@ -771,13 +777,11 @@ class Spec(object):
 
         # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self.dependencies.keys()):
-            ##########
-            # TODO : Add variant manipulation here?!?
             current_dependency = self.dependencies[name]
-            for condition, variants in self.package.forwarded_variants[name].iteritems():
+            # Forward variants where needed
+            for condition, variants in self.forwarded_variants[name].iteritems():
                 if self.satisfies(condition):
                     self._forward_variants(variants, current_dependency)
-            ##########
             changed |= self.dependencies[name]._concretize_helper(presets, visited)
 
         if self.name in presets:
@@ -1033,9 +1037,9 @@ class Spec(object):
             visited.add(dep.name)
             provider = self._find_provider(dep, provider_index)
             if provider:
-                if dep.name in self.package.forwarded_variants:
+                if dep.name in self.forwarded_variants:
                     # Associates the variants to be forwarded with the concrete spec
-                    self.package.forwarded_variants[provider.name] = self.package.forwarded_variants.pop(dep.name)
+                    self.forwarded_variants[provider.name] = self.forwarded_variants.pop(dep.name)
                 dep = provider
 
         else:
