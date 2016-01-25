@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -65,17 +65,17 @@ class CompilerTest(unittest.TestCase):
 
     def check_cc(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(self.cc(*args, return_output=True).strip(), expected)
+        self.assertEqual(self.cc(*args, output=str).strip(), expected)
 
 
     def check_ld(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(self.ld(*args, return_output=True).strip(), expected)
+        self.assertEqual(self.ld(*args, output=str).strip(), expected)
 
 
     def check_cpp(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(self.cpp(*args, return_output=True).strip(), expected)
+        self.assertEqual(self.cpp(*args, output=str).strip(), expected)
 
 
     def test_vcheck_mode(self):

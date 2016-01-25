@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 import sys
 import collections
 import itertools
-from external import argparse
+import argparse
 from StringIO import StringIO
 
 import llnl.util.tty as tty
@@ -41,6 +41,9 @@ description ="Find installed spack packages"
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
+        '-s', '--short', action='store_const', dest='mode', const='short',
+        help='Show only specs (default)')
+    format_group.add_argument(
         '-p', '--paths', action='store_const', dest='mode', const='paths',
         help='Show paths to package install directories')
     format_group.add_argument(
@@ -48,11 +51,24 @@ def setup_parser(subparser):
         help='Show full dependency DAG of installed packages')
 
     subparser.add_argument(
-        '-l', '--long', action='store_true', dest='long',
+        '-l', '--long', action='store_true',
         help='Show dependency hashes as well as versions.')
     subparser.add_argument(
-        '-L', '--very-long', action='store_true', dest='very_long',
+        '-L', '--very-long', action='store_true',
         help='Show dependency hashes as well as versions.')
+
+    subparser.add_argument(
+        '-u', '--unknown', action='store_true',
+        help='Show only specs Spack does not have a package for.')
+    subparser.add_argument(
+        '-m', '--missing', action='store_true',
+        help='Show missing dependencies as well as installed specs.')
+    subparser.add_argument(
+        '-M', '--only-missing', action='store_true',
+        help='Show only missing dependencies.')
+    subparser.add_argument(
+        '-N', '--namespace', action='store_true',
+        help='Show fully qualified package names.')
 
     subparser.add_argument(
         'query_specs', nargs=argparse.REMAINDER,
@@ -66,6 +82,7 @@ def gray_hash(spec, length):
 def display_specs(specs, **kwargs):
     mode = kwargs.get('mode', 'short')
     hashes = kwargs.get('long', False)
+    namespace = kwargs.get('namespace', False)
 
     hlen = 7
     if kwargs.get('very_long', False):
@@ -87,7 +104,8 @@ def display_specs(specs, **kwargs):
         specs = index[(architecture,compiler)]
         specs.sort()
 
-        abbreviated = [s.format('$_$@$+', color=True) for s in specs]
+        nfmt = '.' if namespace else '_'
+        abbreviated = [s.format('$%s$@$+' % nfmt, color=True) for s in specs]
         if mode == 'paths':
             # Print one spec per line along with prefix path
             width = max(len(s) for s in abbreviated)
@@ -102,7 +120,7 @@ def display_specs(specs, **kwargs):
         elif mode == 'deps':
             for spec in specs:
                 print spec.tree(
-                    format='$_$@$+',
+                    format='$%s$@$+' % nfmt,
                     color=True,
                     indent=4,
                     prefix=(lambda s: gray_hash(s, hlen)) if hashes else None)
@@ -112,7 +130,8 @@ def display_specs(specs, **kwargs):
                 string = ""
                 if hashes:
                     string += gray_hash(s, hlen) + ' '
-                string += s.format('$-_$@$+', color=True)
+                string += s.format('$-%s$@$+' % nfmt, color=True)
+
                 return string
             colify(fmt(s) for s in specs)
 
@@ -126,7 +145,7 @@ def find(parser, args):
     # Filter out specs that don't exist.
     query_specs = spack.cmd.parse_specs(args.query_specs)
     query_specs, nonexisting = partition_list(
-        query_specs, lambda s: spack.db.exists(s.name))
+        query_specs, lambda s: spack.repo.exists(s.name))
 
     if nonexisting:
         msg = "No such package%s: " % ('s' if len(nonexisting) > 1 else '')
@@ -136,11 +155,21 @@ def find(parser, args):
         if not query_specs:
             return
 
+    # Set up query arguments.
+    installed, known = True, any
+    if args.only_missing:
+        installed = False
+    elif args.missing:
+        installed = any
+    if args.unknown:
+        known = False
+    q_args = { 'installed' : installed, 'known' : known }
+
     # Get all the specs the user asked for
     if not query_specs:
-        specs = set(spack.db.installed_package_specs())
+        specs = set(spack.installed_db.query(**q_args))
     else:
-        results = [set(spack.db.get_installed(qs)) for qs in query_specs]
+        results = [set(spack.installed_db.query(qs, **q_args)) for qs in query_specs]
         specs = set.union(*results)
 
     if not args.mode:
@@ -150,4 +179,5 @@ def find(parser, args):
         tty.msg("%d installed packages." % len(specs))
     display_specs(specs, mode=args.mode,
                   long=args.long,
-                  very_long=args.very_long)
+                  very_long=args.very_long,
+                  namespace=args.namespace)

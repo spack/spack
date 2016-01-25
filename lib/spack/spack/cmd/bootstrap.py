@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -42,7 +42,7 @@ def get_origin_url():
     git = which('git', required=True)
     origin_url = git(
         '--git-dir=%s' % git_dir, 'config', '--get', 'remote.origin.url',
-        return_output=True)
+        output=str)
     return origin_url.strip()
 
 

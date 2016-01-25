@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -156,6 +156,11 @@ def colorize(string, **kwargs):
 def clen(string):
     """Return the length of a string, excluding ansi color sequences."""
     return len(re.sub(r'\033[^m]*m', '', string))
+
+
+def cextra(string):
+    """"Length of extra color characters in a string"""
+    return len(''.join(re.findall(r'\033[^m]*m', string)))
 
 
 def cwrite(string, stream=sys.stdout, color=None):

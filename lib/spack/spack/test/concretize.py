@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -125,22 +125,22 @@ class ConcretizeTest(MockPackagesTest):
            we ask for some advanced version.
         """
         self.assertTrue(not any(spec.satisfies('mpich2@:1.0')
-                                for spec in spack.db.providers_for('mpi@2.1')))
+                                for spec in spack.repo.providers_for('mpi@2.1')))
 
         self.assertTrue(not any(spec.satisfies('mpich2@:1.1')
-                                for spec in spack.db.providers_for('mpi@2.2')))
+                                for spec in spack.repo.providers_for('mpi@2.2')))
 
         self.assertTrue(not any(spec.satisfies('mpich2@:1.1')
-                                for spec in spack.db.providers_for('mpi@2.2')))
+                                for spec in spack.repo.providers_for('mpi@2.2')))
 
         self.assertTrue(not any(spec.satisfies('mpich@:1')
-                                for spec in spack.db.providers_for('mpi@2')))
+                                for spec in spack.repo.providers_for('mpi@2')))
 
         self.assertTrue(not any(spec.satisfies('mpich@:1')
-                                for spec in spack.db.providers_for('mpi@3')))
+                                for spec in spack.repo.providers_for('mpi@3')))
 
         self.assertTrue(not any(spec.satisfies('mpich2')
-                                for spec in spack.db.providers_for('mpi@3')))
+                                for spec in spack.repo.providers_for('mpi@3')))
 
 
     def test_virtual_is_fully_expanded_for_callpath(self):
@@ -216,7 +216,7 @@ class ConcretizeTest(MockPackagesTest):
     def test_external_and_virtual(self):
         spec = Spec('externaltest')
         spec.concretize()
-        self.assertTrue(spec['externaltool'].external, '/path/to/external_tool')
-        self.assertTrue(spec['stuff'].external, '/path/to/external_virtual_gcc')
+        self.assertEqual(spec['externaltool'].external, '/path/to/external_tool')
+        self.assertEqual(spec['stuff'].external, '/path/to/external_virtual_gcc')
         self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
         self.assertTrue(spec['stuff'].compiler.satisfies('gcc'))

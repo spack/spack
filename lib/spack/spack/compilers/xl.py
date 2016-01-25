@@ -7,7 +7,7 @@
 # Written by François Bissey, francois.bissey@canterbury.ac.nz, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -37,6 +37,12 @@ class Xl(Compiler):
 
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['xlf90','xlf90_r','xlf95','xlf95_r','xlf2003','xlf2003_r','xlf2008','xlf2008_r']
+
+    # Named wrapper links within spack.build_env_path
+    link_paths = { 'cc'  : 'xl/xlc',
+                   'cxx' : 'xl/xlc++',
+                   'f77' : 'xl/xlf',
+                   'fc'  : 'xl/xlf90' }
 
     @property
     def cxx11_flag(self):

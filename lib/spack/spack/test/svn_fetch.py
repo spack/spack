@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -49,7 +49,7 @@ class SvnFetchTest(MockPackagesTest):
 
         spec = Spec('svn-test')
         spec.concretize()
-        self.pkg = spack.db.get(spec, new=True)
+        self.pkg = spack.repo.get(spec, new=True)
 
 
     def tearDown(self):
@@ -65,7 +65,7 @@ class SvnFetchTest(MockPackagesTest):
     def assert_rev(self, rev):
         """Check that the current revision is equal to the supplied rev."""
         def get_rev():
-            output = svn('info', return_output=True)
+            output = svn('info', output=str)
             self.assertTrue("Revision" in output)
             for line in output.split('\n'):
                 match = re.match(r'Revision: (\d+)', line)

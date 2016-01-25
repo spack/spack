@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,12 @@ class Intel(Compiler):
 
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['ifort']
+
+    # Named wrapper links within spack.build_env_path
+    link_paths = { 'cc'  : 'intel/icc',
+                   'cxx' : 'intel/icpc',
+                   'f77' : 'intel/ifort',
+                   'fc'  : 'intel/ifort' }
 
     @property
     def cxx11_flag(self):

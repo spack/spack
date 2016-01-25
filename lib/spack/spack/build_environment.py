@@ -88,10 +88,14 @@ def set_compiler_environment_variables(pkg):
     compiler = pkg.compiler
 
     # Set compiler variables used by CMake and autotools
-    os.environ['CC']  = join_path(spack.build_env_path, 'cc')
-    os.environ['CXX'] = join_path(spack.build_env_path, 'c++')
-    os.environ['F77'] = join_path(spack.build_env_path, 'f77')
-    os.environ['FC']  = join_path(spack.build_env_path, 'f90')
+    assert all(key in pkg.compiler.link_paths
+               for key in ('cc', 'cxx', 'f77', 'fc'))
+
+    link_dir = spack.build_env_path
+    os.environ['CC']  = join_path(link_dir, pkg.compiler.link_paths['cc'])
+    os.environ['CXX'] = join_path(link_dir, pkg.compiler.link_paths['cxx'])
+    os.environ['F77'] = join_path(link_dir, pkg.compiler.link_paths['f77'])
+    os.environ['FC']  = join_path(link_dir, pkg.compiler.link_paths['fc'])
 
     # Set SPACK compiler variables so that our wrapper knows what to call
     if compiler.cc:
@@ -110,11 +114,23 @@ def set_build_environment_variables(pkg):
     """This ensures a clean install environment when we build packages.
     """
     # Add spack build environment path with compiler wrappers first in
-    # the path.  We handle case sensitivity conflicts like "CC" and
-    # "cc" by putting one in the <build_env_path>/case-insensitive
+    # the path. We add both spack.env_path, which includes default
+    # wrappers (cc, c++, f77, f90), AND a subdirectory containing
+    # compiler-specific symlinks.  The latter ensures that builds that
+    # are sensitive to the *name* of the compiler see the right name
+    # when we're building wtih the wrappers.
+    #
+    # Conflicts on case-insensitive systems (like "CC" and "cc") are
+    # handled by putting one in the <build_env_path>/case-insensitive
     # directory.  Add that to the path too.
-    env_paths = [spack.build_env_path,
-                 join_path(spack.build_env_path, 'case-insensitive')]
+    env_paths = []
+    def add_env_path(path):
+        env_paths.append(path)
+        ci = join_path(path, 'case-insensitive')
+        if os.path.isdir(ci): env_paths.append(ci)
+    add_env_path(spack.build_env_path)
+    add_env_path(join_path(spack.build_env_path, pkg.compiler.name))
+
     path_put_first("PATH", env_paths)
     path_set(SPACK_ENV_PATH, env_paths)
 
@@ -129,7 +145,7 @@ def set_build_environment_variables(pkg):
     # Install root prefix
     os.environ[SPACK_INSTALL] = spack.install_path
 
-    # Remove these vars from the environment during build becaus they
+    # Remove these vars from the environment during build because they
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
     pop_keys(os.environ, "LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH")
@@ -157,7 +173,7 @@ def set_build_environment_variables(pkg):
     path_set("PKG_CONFIG_PATH", pkg_config_dirs)
 
 
-def set_module_variables_for_package(pkg):
+def set_module_variables_for_package(pkg, m):
     """Populate the module scope of install() with some useful functions.
        This makes things easier for package writers.
     """
@@ -228,11 +244,32 @@ def get_rpaths(pkg):
     return rpaths
 
 
+def parent_class_modules(cls):
+    """Get list of super class modules that are all descend from spack.Package"""
+    if not issubclass(cls, spack.Package) or issubclass(spack.Package, cls):
+        return []
+    result = []
+    module = sys.modules.get(cls.__module__)
+    if module:
+        result = [ module ]
+    for c in cls.__bases__:
+        result.extend(parent_class_modules(c))
+    return result
+
+
 def setup_package(pkg):
     """Execute all environment setup routines."""
     set_compiler_environment_variables(pkg)
     set_build_environment_variables(pkg)
-    set_module_variables_for_package(pkg)
+
+    # If a user makes their own package repo, e.g.
+    # spack.repos.mystuff.libelf.Libelf, and they inherit from
+    # an existing class like spack.repos.original.libelf.Libelf,
+    # then set the module variables for both classes so the
+    # parent class can still use them if it gets called.
+    modules = parent_class_modules(pkg.__class__)
+    for mod in modules:
+        set_module_variables_for_package(pkg, mod)
 
     # Allow dependencies to set up environment as well.
     for dep_spec in pkg.spec.traverse(root=False):
@@ -296,4 +333,9 @@ def fork(pkg, function):
         # message.  Just make the parent exit with an error code.
         pid, returncode = os.waitpid(pid, 0)
         if returncode != 0:
-            sys.exit(1)
+            raise InstallError("Installation process had nonzero exit code."
+                .format(str(returncode)))
+
+
+class InstallError(spack.error.SpackError):
+    """Raised when a package fails to install"""

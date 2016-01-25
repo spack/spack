@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -154,7 +154,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # Run curl but grab the mime type from the http headers
         headers = spack.curl(
-            *curl_args, return_output=True, fail_on_error=False)
+            *curl_args, output=str, fail_on_error=False)
 
         if spack.curl.returncode != 0:
             # clean up archive on failure.
@@ -190,7 +190,7 @@ class URLFetchStrategy(FetchStrategy):
         if content_types and 'text/html' in content_types[-1]:
             tty.warn("The contents of " + self.archive_file + " look like HTML.",
                      "The checksum will likely be bad.  If it is, you can use",
-                     "'spack clean --dist' to remove the bad archive, then fix",
+                     "'spack clean <package>' to remove the bad archive, then fix",
                      "your internet gateway issue and install again.")
 
         if not self.archive_file:
@@ -375,7 +375,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def git_version(self):
-        vstring = self.git('--version', return_output=True).lstrip('git version ')
+        vstring = self.git('--version', output=str).lstrip('git version ')
         return Version(vstring)
 
 
@@ -518,7 +518,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     def _remove_untracked_files(self):
         """Removes untracked files in an svn repository."""
-        status = self.svn('status', '--no-ignore', return_output=True)
+        status = self.svn('status', '--no-ignore', output=str)
         self.svn('status', '--no-ignore')
         for line in status.split('\n'):
             if not re.match('^[I?]', line):
@@ -634,6 +634,22 @@ def from_url(url):
     return URLFetchStrategy(url)
 
 
+def from_kwargs(**kwargs):
+    """
+    Construct the appropriate FetchStrategy from the given keyword arguments.
+
+    :param kwargs: dictionary of keyword arguments
+    :return: fetcher or raise a FetchError exception
+    """
+    for fetcher in all_strategies:
+        if fetcher.matches(kwargs):
+            return fetcher(**kwargs)
+    # Raise an error in case we can't instantiate any known strategy
+    message = "Cannot instantiate any FetchStrategy"
+    long_message = message + " from the given arguments : {arguments}".format(srguments=kwargs)
+    raise FetchError(message, long_message)
+
+
 def args_are_for(args, fetcher):
     fetcher.matches(args)
 
@@ -671,7 +687,7 @@ def for_package_version(pkg, version):
 
 
 class FetchError(spack.error.SpackError):
-    def __init__(self, msg, long_msg):
+    def __init__(self, msg, long_msg=None):
         super(FetchError, self).__init__(msg, long_msg)
 
 
@@ -689,7 +705,7 @@ class NoArchiveFileError(FetchError):
 
 
 class NoDigestError(FetchError):
-    def __init__(self, msg, long_msg):
+    def __init__(self, msg, long_msg=None):
         super(NoDigestError, self).__init__(msg, long_msg)
 
 

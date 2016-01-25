@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -141,7 +141,7 @@ class MockGitRepo(MockVCSRepo):
             self.url = self.path
 
     def rev_hash(self, rev):
-        return git('rev-parse', rev, return_output=True).strip()
+        return git('rev-parse', rev, output=str).strip()
 
 
 class MockSvnRepo(MockVCSRepo):
@@ -193,4 +193,4 @@ class MockHgRepo(MockVCSRepo):
 
     def get_rev(self):
         """Get current mercurial revision."""
-        return hg('id', '-i', return_output=True).strip()
+        return hg('id', '-i', output=str).strip()

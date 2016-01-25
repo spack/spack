@@ -1,0 +1,26 @@
+language: python
+python:
+  - "2.6"
+  - "2.7"
+
+# Use new Travis infrastructure (Docker can't sudo yet)
+sudo: false
+
+# No need to install any deps.
+install: true
+
+before_install:
+  # Need this for the git tests to succeed.
+  - git config --global user.email "spack@example.com"
+  - git config --global user.name "Test User"
+
+script:
+  - . share/spack/setup-env.sh
+  - spack test
+
+notifications:
+  email:
+    recipients:
+      - tgamblin@llnl.gov
+    on_success: change
+    on_failure: always

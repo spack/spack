@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -73,10 +73,8 @@ class ProviderIndex(object):
         for provided_spec, provider_spec in pkg.provided.iteritems():
             if provider_spec.satisfies(spec, deps=False):
                 provided_name = provided_spec.name
-                if provided_name not in self.providers:
-                    self.providers[provided_name] = {}
 
-                provider_map = self.providers[provided_name]
+                provider_map = self.providers.setdefault(provided_name, {})
                 if not provided_spec in provider_map:
                     provider_map[provided_spec] = set()
 
@@ -119,12 +117,13 @@ class ProviderIndex(object):
         return sorted(providers)
 
 
-    # TODO: this is pretty darned nasty, and inefficient.
+    # TODO: this is pretty darned nasty, and inefficient, but there
+    # are not that many vdeps in most specs.
     def _cross_provider_maps(self, lmap, rmap):
         result = {}
         for lspec, rspec in itertools.product(lmap, rmap):
             try:
-                constrained = lspec.copy().constrain(rspec)
+                constrained = lspec.constrained(rspec)
             except spack.spec.UnsatisfiableSpecError:
                 continue
 
@@ -132,10 +131,8 @@ class ProviderIndex(object):
             for lp_spec, rp_spec in itertools.product(lmap[lspec], rmap[rspec]):
                 if lp_spec.name == rp_spec.name:
                     try:
-                        const = lp_spec.copy().constrain(rp_spec,deps=False)
-                        if constrained not in result:
-                            result[constrained] = set()
-                        result[constrained].add(const)
+                        const = lp_spec.constrained(rp_spec, deps=False)
+                        result.setdefault(constrained, set()).add(const)
                     except spack.spec.UnsatisfiableSpecError:
                         continue
         return result
@@ -161,4 +158,4 @@ class ProviderIndex(object):
             if crossed:
                 result[name] = crossed
 
-        return bool(result)
+        return all(c in result for c in common)

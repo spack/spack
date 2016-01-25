@@ -30,7 +30,7 @@ class PreferredPackages(object):
     _default_order = {'compiler' : [ 'gcc', 'intel', 'clang', 'pgi', 'xlc' ] }, #Arbitrary, but consistent
 
     def __init__(self):
-        self.preferred = spack.config.get_preferred_config()
+        self.preferred = spack.config.get_config('packages')
         self._spec_for_pkgname_cache = {}
 
     #Given a package name, sort component (e.g, version, compiler, ...), and
@@ -40,22 +40,12 @@ class PreferredPackages(object):
         if test_all:
             pkglist.append('all')
         for pkg in pkglist:
-            if not pkg in self.preferred:
-                continue
-            orders = self.preferred[pkg]
-            if not type(orders) is dict:
-                continue
-            if not component in orders:
-                continue
-            order = orders[component]
+            order = self.preferred.get(pkg, {}).get(component, {})
             if type(order) is dict:
-                if not second_key in order:
-                    continue;
-                order = order[second_key]
-            if not type(order) is str:
-                tty.die('Expected version list in preferred config, but got %s' % str(order))
-            order_list = order.split(',')
-            return [s.strip() for s in order_list]
+                order = order.get(second_key, {})
+            if not order:
+                continue
+            return [s.strip() for s in order]
         return []
             
 
@@ -63,6 +53,10 @@ class PreferredPackages(object):
     # component, return less-than-0, 0, or greater-than-0 if 
     # a is respectively less-than, equal to, or greater than b.
     def _component_compare(self, pkgname, component, a, b, reverse_natural_compare, second_key):
+        if a is None:
+            return -1
+        if b is None:
+            return 1
         orderlist = self._order_for_package(pkgname, component, second_key)
         a_in_list = str(a) in orderlist
         b_in_list = str(b) in orderlist
@@ -95,6 +89,10 @@ class PreferredPackages(object):
     # a and b are considered to match entries in the sorting list if they
     # satisfy the list component.  
     def _spec_compare(self, pkgname, component, a, b, reverse_natural_compare, second_key):
+        if not a or not a.concrete:
+            return -1
+        if not b or not b.concrete:
+            return 1
         specs = self._spec_for_pkgname(pkgname, component, second_key)
         a_index = None
         b_index = None

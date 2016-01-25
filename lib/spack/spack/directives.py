@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -42,15 +42,19 @@ The available directives are:
   * ``extends``
   * ``patch``
   * ``variant``
+  * ``resource``
 
 """
-__all__ = [ 'depends_on', 'extends', 'provides', 'patch', 'version',
-            'variant' ]
+__all__ = ['depends_on', 'extends', 'provides', 'patch', 'version',
+           'variant', 'resource']
 
 import re
 import inspect
+import os.path
+import functools
 
 from llnl.util.lang import *
+from llnl.util.filesystem import join_path
 
 import spack
 import spack.spec
@@ -60,7 +64,8 @@ from spack.version import Version
 from spack.patch import Patch
 from spack.variant import Variant
 from spack.spec import Spec, parse_anonymous_spec
-
+from spack.resource import Resource
+from spack.fetch_strategy import from_kwargs
 
 #
 # This is a list of all directives, built up as they are defined in
@@ -79,8 +84,8 @@ class directive(object):
     """Decorator for Spack directives.
 
     Spack directives allow you to modify a package while it is being
-    defined, e.g. to add version or depenency information.  Directives
-    are one of the key pieces of Spack's package "langauge", which is
+    defined, e.g. to add version or dependency information.  Directives
+    are one of the key pieces of Spack's package "language", which is
     embedded in python.
 
     Here's an example directive:
@@ -141,6 +146,7 @@ class directive(object):
     def __call__(self, directive_function):
         directives[directive_function.__name__] = self
 
+        @functools.wraps(directive_function)
         def wrapped(*args, **kwargs):
             pkg = DictWrapper(caller_locals())
             self.ensure_dicts(pkg)
@@ -238,13 +244,10 @@ def patch(pkg, url_or_filename, level=1, when=None):
     if when is None:
         when = pkg.name
     when_spec = parse_anonymous_spec(when, pkg.name)
-
-    if when_spec not in pkg.patches:
-        pkg.patches[when_spec] = [Patch(pkg.name, url_or_filename, level)]
-    else:
-        # if this spec is identical to some other, then append this
-        # patch to the existing list.
-        pkg.patches[when_spec].append(Patch(pkg.name, url_or_filename, level))
+    cur_patches = pkg.patches.setdefault(when_spec, [])
+    # if this spec is identical to some other, then append this
+    # patch to the existing list.
+    cur_patches.append(Patch(pkg, url_or_filename, level))
 
 
 @directive('variants')
@@ -259,6 +262,43 @@ def variant(pkg, name, default=False, description=""):
         raise DirectiveError("Invalid variant name in %s: '%s'" % (pkg.name, name))
 
     pkg.variants[name] = Variant(default, description)
+
+
+@directive('resources')
+def resource(pkg, **kwargs):
+    """
+    Define an external resource to be fetched and staged when building the package. Based on the keywords present in the
+    dictionary the appropriate FetchStrategy will be used for the resource. Resources are fetched and staged in their
+    own folder inside spack stage area, and then linked into the stage area of the package that needs them.
+
+    List of recognized keywords:
+
+    * 'when' : (optional) represents the condition upon which the resource is needed
+    * 'destination' : (optional) path where to link the resource. This path must be relative to the main package stage
+    area.
+    * 'placement' : (optional) gives the possibility to fine tune how the resource is linked into the main package stage
+    area.
+    """
+    when = kwargs.get('when', pkg.name)
+    destination = kwargs.get('destination', "")
+    placement = kwargs.get('placement', None)
+    # Check if the path is relative
+    if os.path.isabs(destination):
+        message = "The destination keyword of a resource directive can't be an absolute path.\n"
+        message += "\tdestination : '{dest}\n'".format(dest=destination)
+        raise RuntimeError(message)
+    # Check if the path falls within the main package stage area
+    test_path = 'stage_folder_root/'
+    normalized_destination = os.path.normpath(join_path(test_path, destination))  # Normalized absolute path
+    if test_path not in normalized_destination:
+        message = "The destination folder of a resource must fall within the main package stage directory.\n"
+        message += "\tdestination : '{dest}'\n".format(dest=destination)
+        raise RuntimeError(message)
+    when_spec = parse_anonymous_spec(when, pkg.name)
+    resources = pkg.resources.setdefault(when_spec, [])
+    fetcher = from_kwargs(**kwargs)
+    name = kwargs.get('name')
+    resources.append(Resource(name, fetcher, destination, placement))
 
 
 class DirectiveError(spack.error.SpackError):

@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@ def setup_parser(subparser):
 
 
 def versions(parser, args):
-    pkg = spack.db.get(args.package)
+    pkg = spack.repo.get(args.package)
 
     safe_versions = pkg.versions
     fetched_versions = pkg.fetch_remote_versions()

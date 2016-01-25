@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -29,10 +29,9 @@ import hashlib
 import shutil
 import glob
 import tempfile
-from external import yaml
+import yaml
 
 import llnl.util.tty as tty
-from llnl.util.lang import memoized
 from llnl.util.filesystem import join_path, mkdirp
 
 from spack.spec import Spec
@@ -221,8 +220,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             spec = Spec.from_yaml(f)
 
         # Specs read from actual installations are always concrete
-        spec._normal = True
-        spec._concrete = True
+        spec._mark_concrete()
         return spec
 
 
@@ -266,7 +264,6 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.write_spec(spec, spec_file_path)
 
 
-    @memoized
     def all_specs(self):
         if not os.path.isdir(self.root):
             return []
@@ -277,7 +274,6 @@ class YamlDirectoryLayout(DirectoryLayout):
         return [self.read_spec(s) for s in spec_files]
 
 
-    @memoized
     def specs_by_hash(self):
         by_hash = {}
         for spec in self.all_specs():

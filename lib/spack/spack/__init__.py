@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,44 +23,56 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import sys
 import tempfile
+import getpass
 from llnl.util.filesystem import *
+import llnl.util.tty as tty
 
 # This lives in $prefix/lib/spack/spack/__file__
-prefix = ancestor(__file__, 4)
+spack_root = ancestor(__file__, 4)
 
 # The spack script itself
-spack_file = join_path(prefix, "bin", "spack")
+spack_file = join_path(spack_root, "bin", "spack")
 
 # spack directory hierarchy
-etc_path       = join_path(prefix, "etc")
-lib_path       = join_path(prefix, "lib", "spack")
+lib_path       = join_path(spack_root, "lib", "spack")
 build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
 compilers_path = join_path(module_path, "compilers")
 test_path      = join_path(module_path, "test")
 hooks_path     = join_path(module_path, "hooks")
-var_path       = join_path(prefix, "var", "spack")
+var_path       = join_path(spack_root, "var", "spack")
 stage_path     = join_path(var_path, "stage")
+repos_path     = join_path(var_path, "repos")
+share_path     = join_path(spack_root, "share", "spack")
+
+prefix = spack_root
 opt_path       = join_path(prefix, "opt")
 install_path   = join_path(opt_path, "spack")
-share_path     = join_path(prefix, "share", "spack")
+etc_path       = join_path(prefix, "etc")
 
 #
-# Set up the packages database.
+# Set up the default packages database.
 #
-from spack.packages import PackageDB
-packages_path = join_path(var_path, "packages")
-db = PackageDB(packages_path)
+import spack.repository
+try:
+    repo = spack.repository.RepoPath()
+    sys.meta_path.append(repo)
+except spack.error.SpackError, e:
+    tty.die('while initializing Spack RepoPath:', e.message)
 
 #
-# Paths to mock files for testing.
+# Set up the installed packages database
 #
-mock_packages_path = join_path(var_path, "mock_packages")
+from spack.database import Database
+installed_db = Database(install_path)
 
-mock_config_path = join_path(var_path, "mock_configs")
-mock_site_config = join_path(mock_config_path, "site_spackconfig")
-mock_user_config = join_path(mock_config_path, "user_spackconfig")
+#
+# Paths to built-in Spack repositories.
+#
+packages_path      = join_path(repos_path, "builtin")
+mock_packages_path = join_path(repos_path, "builtin.mock")
 
 #
 # This controls how spack lays out install prefixes and
@@ -117,9 +129,17 @@ use_tmp_stage = True
 # that it can create.
 tmp_dirs = []
 _default_tmp = tempfile.gettempdir()
-if _default_tmp != os.getcwd():
-    tmp_dirs.append(os.path.join(_default_tmp, 'spack-stage'))
-tmp_dirs.append('/nfs/tmp2/%u/spack-stage')
+_tmp_user = getpass.getuser()
+
+_tmp_candidates = (_default_tmp, '/nfs/tmp2', '/tmp', '/var/tmp')
+for path in _tmp_candidates:
+    # don't add a second username if it's already unique by user.
+    if not _tmp_user in path:
+        tmp_dirs.append(join_path(path, '%u', 'spack-stage'))
+
+for path in _tmp_candidates:
+    if not path in tmp_dirs:
+        tmp_dirs.append(join_path(path, 'spack-stage'))
 
 # Whether spack should allow installation of unsafe versions of
 # software.  "Unsafe" versions are ones it doesn't have a checksum
@@ -146,7 +166,7 @@ sys_type = None
 # When packages call 'from spack import *', this extra stuff is brought in.
 #
 # Spack internal code should call 'import spack' and accesses other
-# variables (spack.db, paths, etc.) directly.
+# variables (spack.repo, paths, etc.) directly.
 #
 # TODO: maybe this should be separated out and should go in build_environment.py?
 # TODO: it's not clear where all the stuff that needs to be included in packages

@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -65,11 +65,21 @@ def print_text_info(pkg):
         print "None"
     else:
         pad = padder(pkg.variants, 4)
+
+        maxv = max(len(v) for v in sorted(pkg.variants))
+        fmt = "%%-%ss%%-10s%%s" % (maxv + 4)
+
+        print "    " + fmt % ('Name',   'Default',   'Description')
+        print
         for name in sorted(pkg.variants):
             v = pkg.variants[name]
-            print "    %s%s" % (
-                pad(('+' if v.default else '-') + name + ':'),
-                "\n".join(textwrap.wrap(v.description)))
+            default = 'on' if v.default else 'off'
+
+            lines = textwrap.wrap(v.description)
+            lines[1:] = ["      " + (" " * maxv) + l for l in lines[1:]]
+            desc = "\n".join(lines)
+
+            print "    " + fmt % (name, default, desc)
 
     print
     print "Dependencies:"
@@ -95,5 +105,5 @@ def print_text_info(pkg):
 
 
 def info(parser, args):
-    pkg = spack.db.get(args.name)
+    pkg = spack.repo.get(args.name)
     print_text_info(pkg)

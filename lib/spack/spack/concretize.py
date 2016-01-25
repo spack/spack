@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -44,7 +44,6 @@ from spec import DependencyMap
 from itertools import chain
 from spack.config import *
 
-
 class DefaultConcretizer(object):
     """This class doesn't have any state, it just provides some methods for
        concretization.  You can subclass it to override just some of the
@@ -66,16 +65,15 @@ class DefaultConcretizer(object):
         if condition(spec):
             return spec
         return None
-                                   
 
+    
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of spec/external-path pairs for both virtuals and externals
            that can concretize this spec.""" 
-
         # Get a list of candidate packages that could satisfy this spec
         packages = []
         if spec.virtual:
-            providers = spack.db.providers_for(spec)
+            providers = spack.repo.providers_for(spec)
             if not providers:
                 raise UnsatisfiableProviderSpecError(providers[0], spec)
             spec_w_preferred_providers = self._find_other_spec(spec, \
@@ -85,8 +83,6 @@ class DefaultConcretizer(object):
             provider_cmp = partial(spack.pkgsort.provider_compare, spec_w_preferred_providers.name, spec.name)
             packages = sorted(providers, cmp=provider_cmp)
         else:
-            if spec.external:
-                return False
             packages = [spec]
 
         # For each candidate package, if it has externals add those to the candidates
@@ -98,13 +94,23 @@ class DefaultConcretizer(object):
             buildable = not is_spec_nobuild(pkg)
             if buildable:
                 result.append((pkg, None))
-            if externals:
-                sorted_externals = sorted(externals, cmp=lambda a,b: a[0].__cmp__(b[0]))
-                for external in sorted_externals:
-                    if external[0].satisfies(spec):
-                        result.append(external)
+            for ext in externals:
+                if ext[0].satisfies(spec):
+                    result.append(ext)
         if not result:
             raise NoBuildError(spec)
+
+        def cmp_externals(a, b):
+            result = a[0].__cmp__(b[0])
+            if result != 0: return result
+            if not a[1] and b[1]:
+                return 1
+            if not b[1] and a[1]:
+                return -1
+            return a[1].__cmp__(b[1])
+
+        #result = sorted(result, cmp=lambda a,b: a[0].__cmp__(b[0]))
+        result = sorted(result, cmp=cmp_externals)
         return result
 
 
@@ -115,7 +121,7 @@ class DefaultConcretizer(object):
         if not candidates:
             return False
 
-        #Find the another spec in the dag that has a compiler.  We'll use that
+        #Find the nearest spec in the dag that has a compiler.  We'll use that
         # spec to test compiler compatibility.
         other_spec = self._find_other_spec(spec, lambda(x): x.compiler)
         if not other_spec:
@@ -131,25 +137,36 @@ class DefaultConcretizer(object):
         if not candidate:
             #No ABI matches. Pick the top choice based on the orignal preferences.
             candidate = candidates[0]
-        external = candidate[1]
         candidate_spec = candidate[0]
+        external = candidate[1]
+        changed = False
+
+        #If we're external then trim the dependencies
+        if external:
+            if (spec.dependencies):
+                changed = True
+            spec.dependencies = DependencyMap()
+            candidate_spec.dependencies = DependencyMap()
+
+        def fequal(candidate_field, spec_field):
+            return (not candidate_field) or (candidate_field == spec_field)
+        if fequal(candidate_spec.name, spec.name) and \
+           fequal(candidate_spec.versions, spec.versions) and \
+           fequal(candidate_spec.compiler, spec.compiler) and \
+           fequal(candidate_spec.architecture, spec.architecture) and \
+           fequal(candidate_spec.dependencies, spec.dependencies) and \
+           fequal(candidate_spec.variants, spec.variants) and \
+           fequal(external, spec.external):
+            return changed
         
         #Refine this spec to the candidate.
-        changed = False
         if spec.virtual:
             spec._replace_with(candidate_spec)
             changed = True
         if spec._dup(candidate_spec, deps=False, cleardeps=False):
             changed = True
-        if not spec.external and external:
-            spec.external = external
-            changed = True
+        spec.external = external        
 
-        #If we're external then trim the dependencies
-        if external and spec.dependencies:
-            changed = True
-            spec.dependencies = DependencyMap()
-        
         return changed
         
         
@@ -284,21 +301,6 @@ class DefaultConcretizer(object):
         spec.compiler = matches[0].copy()
         assert(spec.compiler.concrete)
         return True  # things changed.
-
-
-    def choose_provider(self, package_spec, spec, providers):
-        """This is invoked for virtual specs.  Given a spec with a virtual name,
-           say "mpi", and a list of specs of possible providers of that spec,
-           select a provider and return it.
-        """
-        assert(spec.virtual)
-        assert(providers)
-        
-        provider_cmp = partial(spack.pkgsort.provider_compare, package_spec.name, spec.name)
-        sorted_providers = sorted(providers, cmp=provider_cmp)
-        first_key = sorted_providers[0]
-
-        return first_key
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):

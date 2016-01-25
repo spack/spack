@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -70,7 +70,7 @@ def find_list_url(url):
     """
 
     url_types = [
-        # e.g. https://github.com/scalability-llnl/callpath/archive/v1.0.1.tar.gz
+        # e.g. https://github.com/llnl/callpath/archive/v1.0.1.tar.gz
         (r'^(https://github.com/[^/]+/[^/]+)/archive/', lambda m: m.group(1) + '/releases')
         ]
 
@@ -209,8 +209,8 @@ def parse_version_offset(path):
         # e.g. foobar-4.5.1
         (r'-((\d+\.)*\d+)$', stem),
 
-        # e.g. foobar-4.5.1b
-        (r'-((\d+\.)*\d+\-?([a-z]|rc|RC|tp|TP)\d*)$', stem),
+        # e.g. foobar-4.5.1b, foobar4.5RC, foobar.v4.5.1b
+        (r'[-._]?v?((\d+\.)*\d+[-._]?([a-z]|rc|RC|tp|TP?)\d*)$', stem),
 
         # e.g. foobar-4.5.0-beta1, or foobar-4.50-beta
         (r'-((\d+\.)*\d+-beta(\d+)?)$', stem),

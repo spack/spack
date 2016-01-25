@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,10 @@
 ##############################################################################
 import sys
 import unittest
+import nose
 
+from spack.test.tally_plugin import Tally
+from llnl.util.filesystem import join_path
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -56,7 +59,12 @@ test_names = ['versions',
               'spec_yaml',
               'optional_deps',
               'make_executable',
-              'configure_guess']
+              'configure_guess',
+              'unit_install',
+              'lock',
+              'database',
+              'namespace_trie',
+              'yaml']
 
 
 def list_tests():
@@ -64,7 +72,7 @@ def list_tests():
     return test_names
 
 
-def run(names, verbose=False):
+def run(names, outputDir, verbose=False):
     """Run tests with the supplied names.  Names should be a list.  If
        it's empty, run ALL of Spack's tests."""
     verbosity = 1 if not verbose else 2
@@ -76,30 +84,33 @@ def run(names, verbose=False):
             if test not in test_names:
                 tty.error("%s is not a valid spack test name." % test,
                           "Valid names are:")
-                colify(test_names, indent=4)
+                colify(sorted(test_names), indent=4)
                 sys.exit(1)
-
-    runner = unittest.TextTestRunner(verbosity=verbosity)
-
-    testsRun = errors = failures = 0
+    
+    tally = Tally()
     for test in names:
         module = 'spack.test.' + test
         print module
-        suite = unittest.defaultTestLoader.loadTestsFromName(module)
-
+        
         tty.msg("Running test: %s" % test)
-        result = runner.run(suite)
-        testsRun += result.testsRun
-        errors   += len(result.errors)
-        failures += len(result.failures)
+        
+        runOpts = ["--with-%s" % spack.test.tally_plugin.Tally.name]
+        
+        if outputDir:
+            xmlOutputFname = "unittests-{0}.xml".format(test)
+            xmlOutputPath = join_path(outputDir, xmlOutputFname)
+            runOpts += ["--with-xunit", 
+                "--xunit-file={0}".format(xmlOutputPath)]
+        argv = [""] + runOpts + [module]
+        result = nose.run(argv=argv, addplugins=[tally])
 
-    succeeded = not errors and not failures
+    succeeded = not tally.failCount and not tally.errorCount
     tty.msg("Tests Complete.",
-            "%5d tests run" % testsRun,
-            "%5d failures" % failures,
-            "%5d errors" % errors)
+            "%5d tests run" % tally.numberOfTestsRun,
+            "%5d failures" % tally.failCount,
+            "%5d errors" % tally.errorCount)
 
-    if not errors and not failures:
+    if succeeded:
         tty.info("OK", format='g')
     else:
         tty.info("FAIL", format='r')
