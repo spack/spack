@@ -44,8 +44,16 @@ class MirrorTest(MockPackagesTest):
         self.repos = {}
 
 
+    def tearDown(self):
+        """Destroy all the stages created by the repos in setup."""
+        super(MirrorTest, self).tearDown()
+        for repo in self.repos.values():
+            repo.destroy()
+        self.repos.clear()
+
+
     def set_up_package(self, name, MockRepoClass, url_attr):
-        """Use this to set up a mock package to be mirrored.
+        """Set up a mock package to be mirrored.
            Each package needs us to:
              1. Set up a mock repo/archive to fetch from.
              2. Point the package's version args at that repo.
@@ -63,17 +71,6 @@ class MirrorTest(MockPackagesTest):
         assert(len(pkg.versions) == 1)
         v = next(iter(pkg.versions))
         pkg.versions[v][url_attr] = repo.url
-
-
-    def tearDown(self):
-        """Destroy all the stages created by the repos in setup."""
-        super(MirrorTest, self).tearDown()
-
-        for name, repo in self.repos.items():
-            if repo.stage:
-                pass #repo.stage.destroy()
-
-        self.repos.clear()
 
 
     def check_mirror(self):
@@ -129,7 +126,7 @@ class MirrorTest(MockPackagesTest):
                     self.assertTrue(all(l in exclude for l in dcmp.left_only))
 
         finally:
-            pass #stage.destroy()
+            stage.destroy()
 
 
     def test_git_mirror(self):

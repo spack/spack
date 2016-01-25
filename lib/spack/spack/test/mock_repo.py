@@ -55,6 +55,12 @@ class MockRepo(object):
         mkdirp(self.path)
 
 
+    def destroy(self):
+        """Destroy resources associated with this mock repo."""
+        if self.stage:
+            self.stage.destroy()
+
+
 class MockArchive(MockRepo):
     """Creates a very simple archive directory with a configure script and a
        makefile that installs to a prefix.  Tars it up into an archive."""
