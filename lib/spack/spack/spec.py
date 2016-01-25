@@ -155,6 +155,9 @@ _separators = '[%s]' % ''.join(color_formats.keys())
    every time we call str()"""
 _any_version = VersionList([':'])
 
+alldeps = ('build', 'link', 'run')
+nolink = ('build', 'run')
+
 
 def index_specs(specs):
     """Take a list of specs and return a dict of lists.  Dict is
@@ -289,6 +292,27 @@ class CompilerSpec(object):
 
     def __repr__(self):
         return str(self)
+
+
+@key_ordering
+class DependencySpec(object):
+    """
+    Dependencies have conditions in which they apply.
+
+    This stores both what is depended on and why it is a dependency.
+    """
+    def __init__(self, spec, deptypes):
+        self.spec = spec
+        self.deptypes = deptypes
+
+    def _cmp_key(self):
+        return self.spec
+
+    def copy(self):
+        return DependencySpec(self.spec.copy(), self.deptype)
+
+    def __str__(self):
+        return str(self.spec)
 
 
 @key_ordering
@@ -440,11 +464,11 @@ class DependencyMap(HashableMap):
        The DependencyMap is keyed by name. """
     @property
     def concrete(self):
-        return all(d.concrete for d in self.values())
+        return all(d.spec.concrete for d in self.values())
 
     def __str__(self):
         return ''.join(
-            ["^" + str(self[name]) for name in sorted(self.keys())])
+            ["^" + str(self[name].spec) for name in sorted(self.keys())])
 
 
 @key_ordering
@@ -472,13 +496,13 @@ class Spec(object):
         # writes directly into this Spec object.
         other = spec_list[0]
         self.name = other.name
-        self.dependents = other.dependents
         self.versions = other.versions
         self.architecture = other.architecture
         self.compiler = other.compiler
         self.compiler_flags = other.compiler_flags
         self.compiler_flags.spec = self
-        self.dependencies = other.dependencies
+        self._dependencies = other._dependencies
+        self._dependents = other._dependents
         self.variants = other.variants
         self.variants.spec = self
         self.namespace = other.namespace
@@ -500,7 +524,49 @@ class Spec(object):
         # Spec(a, b) will copy a but just add b as a dep.
         for dep in dep_like:
             spec = dep if isinstance(dep, Spec) else Spec(dep)
-            self._add_dependency(spec)
+            # XXX(deptype): default deptypes
+            self._add_dependency(spec, ('build', 'link'))
+
+    def get_dependency(self, name):
+        dep = self._dependencies.get(name)
+        if dep is not None:
+            return dep
+        raise InvalidDependencyException(
+            self.name + " does not depend on " + comma_or(name))
+
+    def _deptype_norm(self, deptype):
+        if deptype is None:
+            return alldeps
+        # Force deptype to be a set object so that we can do set intersections.
+        if isinstance(deptype, str):
+            return (deptype,)
+        return deptype
+
+    def _find_deps(self, where, deptype):
+        deptype = self._deptype_norm(deptype)
+
+        return [dep.spec
+                for dep in where.values()
+                if deptype and any(d in deptype for d in dep.deptypes)]
+
+    def dependencies(self, deptype=None):
+        return self._find_deps(self._dependencies, deptype)
+
+    def dependents(self, deptype=None):
+        return self._find_deps(self._dependents, deptype)
+
+    def _find_deps_dict(self, where, deptype):
+        deptype = self._deptype_norm(deptype)
+
+        return [(dep.spec.name, dep)
+                for dep in where.values()
+                if deptype and any(d in deptype for d in dep.deptypes)]
+
+    def dependencies_dict(self, deptype=None):
+        return dict(self._find_deps_dict(self._dependencies, deptype))
+
+    def dependents_dict(self, deptype=None):
+        return dict(self._find_deps_dict(self._dependents, deptype))
 
     #
     # Private routines here are called by the parser when building a spec.
@@ -609,13 +675,13 @@ class Spec(object):
         if self.architecture.platform:
             self.architecture.target = self.architecture.platform.target(value)
 
-    def _add_dependency(self, spec):
+    def _add_dependency(self, spec, deptypes):
         """Called by the parser to add another spec as a dependency."""
-        if spec.name in self.dependencies:
+        if spec.name in self._dependencies:
             raise DuplicateDependencyError(
                 "Cannot depend on '%s' twice" % spec)
-        self.dependencies[spec.name] = spec
-        spec.dependents[self.name] = self
+        self._dependencies[spec.name] = DependencySpec(spec, deptypes)
+        spec._dependents[self.name] = DependencySpec(self, deptypes)
 
     #
     # Public interface
@@ -632,15 +698,15 @@ class Spec(object):
            installed).  This will throw an assertion error if that is not
            the case.
         """
-        if not self.dependents:
+        if not self._dependents:
             return self
 
         # If the spec has multiple dependents, ensure that they all
         # lead to the same place.  Spack shouldn't deal with any DAGs
         # with multiple roots, so something's wrong if we find one.
-        depiter = iter(self.dependents.values())
-        first_root = next(depiter).root
-        assert(all(first_root is d.root for d in depiter))
+        depiter = iter(self._dependents.values())
+        first_root = next(depiter).spec.root
+        assert(all(first_root is d.spec.root for d in depiter))
         return first_root
 
     @property
@@ -687,10 +753,21 @@ class Spec(object):
                               and self.architecture.concrete
                               and self.compiler and self.compiler.concrete
                               and self.compiler_flags.concrete
-                              and self.dependencies.concrete)
+                              and self._dependencies.concrete)
         return self._concrete
 
-    def traverse(self, visited=None, d=0, **kwargs):
+    def traverse(self, visited=None, deptype=None, **kwargs):
+        traversal = self.traverse_with_deptype(visited=visited,
+                                               deptype=deptype,
+                                               **kwargs)
+        if kwargs.get('depth', False):
+            return [(s[0], s[1].spec) for s in traversal]
+        else:
+            return [s.spec for s in traversal]
+
+    def traverse_with_deptype(self, visited=None, d=0, deptype=None,
+                              deptype_query=None, _self_deptype=None,
+                              **kwargs):
         """Generic traversal of the DAG represented by this spec.
            This will yield each node in the spec.  Options:
 
@@ -742,6 +819,12 @@ class Spec(object):
         direction = kwargs.get('direction', 'children')
         order = kwargs.get('order', 'pre')
 
+        if deptype is None:
+            deptype = alldeps
+
+        if deptype_query is None:
+            deptype_query = ('link', 'run')
+
         # Make sure kwargs have legal values; raise ValueError if not.
         def validate(name, val, allowed_values):
             if val not in allowed_values:
@@ -759,30 +842,37 @@ class Spec(object):
         if key in visited and cover == 'nodes':
             return
 
-        # Determine whether and what to yield for this node.
+        def return_val(res):
+            return (d, res) if depth else res
+
         yield_me = yield_root or d > 0
-        result = (d, self) if depth else self
 
         # Preorder traversal yields before successors
         if yield_me and order == 'pre':
-            yield result
+            yield return_val(DependencySpec(self, _self_deptype))
+
+        deps = self.dependencies_dict(deptype)
 
         # Edge traversal yields but skips children of visited nodes
         if not (key in visited and cover == 'edges'):
             # This code determines direction and yields the children/parents
-            successors = self.dependencies
+            successors = deps
             if direction == 'parents':
-                successors = self.dependents
+                successors = self.dependents_dict()
 
             visited.add(key)
             for name in sorted(successors):
                 child = successors[name]
-                for elt in child.traverse(visited, d + 1, **kwargs):
+                children = child.spec.traverse_with_deptype(
+                        visited, d=d + 1, deptype=deptype_query,
+                        deptype_query=deptype_query,
+                        _self_deptype=child.deptypes, **kwargs)
+                for elt in children:
                     yield elt
 
         # Postorder traversal yields after successors
         if yield_me and order == 'post':
-            yield result
+            yield return_val(DependencySpec(self, _self_deptype))
 
     @property
     def short_spec(self):
@@ -807,6 +897,7 @@ class Spec(object):
         if self._hash:
             return self._hash[:length]
         else:
+            # XXX(deptype): ignore 'build' dependencies here
             yaml_text = yaml.dump(
                 self.to_node_dict(), default_flow_style=True, width=sys.maxint)
             sha = hashlib.sha1(yaml_text)
@@ -819,11 +910,13 @@ class Spec(object):
         params = dict((name, v.value) for name, v in self.variants.items())
         params.update(dict((name, value)
                       for name, value in self.compiler_flags.items()))
+        deps = self.dependencies_dict(deptype=('link', 'run'))
         d = {
-            'parameters' : params,
-            'arch' : self.architecture,
-            'dependencies' : dict((d, self.dependencies[d].dag_hash())
-                                  for d in sorted(self.dependencies))
+            'parameters': params,
+            'arch': self.architecture,
+            'dependencies': dict((d, (deps[d].spec.dag_hash(),
+                                      deps[d].deptypes))
+                                 for d in sorted(deps.keys()))
         }
 
         # Older concrete specs do not have a namespace.  Omit for
@@ -848,7 +941,7 @@ class Spec(object):
 
     def to_yaml(self, stream=None):
         node_list = []
-        for s in self.traverse(order='pre'):
+        for s in self.traverse(order='pre', deptype=('link', 'run')):
             node = s.to_node_dict()
             node[s.name]['hash'] = s.dag_hash()
             node_list.append(node)
@@ -889,6 +982,11 @@ class Spec(object):
             raise SpackRecordError(
                 "Did not find a valid format for variants in YAML file")
 
+        # XXX(deptypes): why are dependencies not meant to be read here?
+        #for name, dep_info in node['dependencies'].items():
+        #    (dag_hash, deptypes) = dep_info
+        #    spec._dependencies[name] = DependencySpec(dag_hash, deptypes)
+
         return spec
 
     @staticmethod
@@ -919,8 +1017,10 @@ class Spec(object):
 
         for node in yfile['spec']:
             name = next(iter(node))
-            for dep_name in node[name]['dependencies']:
-                deps[name].dependencies[dep_name] = deps[dep_name]
+            for dep_name, (dep, deptypes) in \
+                    node[name]['dependencies'].items():
+                deps[name]._dependencies[dep_name] = \
+                        DependencySpec(deps[dep_name], deptypes)
         return spec
 
     def _concretize_helper(self, presets=None, visited=None):
@@ -940,8 +1040,9 @@ class Spec(object):
         changed = False
 
         # Concretize deps first -- this is a bottom-up process.
-        for name in sorted(self.dependencies.keys()):
-            changed |= self.dependencies[name]._concretize_helper(presets, visited)
+        for name in sorted(self._dependencies.keys()):
+            changed |= self._dependencies[
+                name].spec._concretize_helper(presets, visited)
 
         if self.name in presets:
             changed |= self.constrain(presets[self.name])
@@ -965,13 +1066,16 @@ class Spec(object):
     def _replace_with(self, concrete):
         """Replace this virtual spec with a concrete spec."""
         assert(self.virtual)
-        for name, dependent in self.dependents.items():
+        for name, dep_spec in self._dependents.items():
+            dependent = dep_spec.spec
+            deptypes = dep_spec.deptypes
+
             # remove self from all dependents.
-            del dependent.dependencies[self.name]
+            del dependent._dependencies[self.name]
 
             # add the replacement, unless it is already a dep of dependent.
-            if concrete.name not in dependent.dependencies:
-                dependent._add_dependency(concrete)
+            if concrete.name not in dependent._dependencies:
+                dependent._add_dependency(concrete, deptypes)
 
     def _replace_node(self, replacement):
         """Replace this spec with another.
@@ -982,13 +1086,15 @@ class Spec(object):
         to be normalized.
 
         """
-        for name, dependent in self.dependents.items():
-            del dependent.dependencies[self.name]
-            dependent._add_dependency(replacement)
+        for name, dep_spec in self._dependents.items():
+            dependent = dep_spec.spec
+            deptypes = dep_spec.deptypes
+            del dependent._dependencies[self.name]
+            dependent._add_dependency(replacement, deptypes)
 
-        for name, dep in self.dependencies.items():
-            del dep.dependents[self.name]
-            del self.dependencies[dep.name]
+        for name, dep_spec in self._dependencies.items():
+            del dep_spec.spec.dependents[self.name]
+            del self._dependencies[dep.name]
 
     def _expand_virtual_packages(self):
         """Find virtual packages in this spec, replace them with providers,
@@ -1008,13 +1114,14 @@ class Spec(object):
               a problem.
         """
         # Make an index of stuff this spec already provides
+        # XXX(deptype): 'link' and 'run'?
         self_index = ProviderIndex(self.traverse(), restrict=True)
         changed = False
         done = False
 
         while not done:
             done = True
-
+            # XXX(deptype): 'link' and 'run'?
             for spec in list(self.traverse()):
                 replacement = None
                 if spec.virtual:
@@ -1054,10 +1161,10 @@ class Spec(object):
 
                 # If replacement is external then trim the dependencies
                 if replacement.external or replacement.external_module:
-                    if (spec.dependencies):
+                    if (spec._dependencies):
                         changed = True
-                        spec.dependencies = DependencyMap()
-                    replacement.dependencies = DependencyMap()
+                        spec._dependencies = DependencyMap()
+                    replacement._dependencies = DependencyMap()
                     replacement.architecture = self.architecture
 
                 # TODO: could this and the stuff in _dup be cleaned up?
@@ -1068,7 +1175,7 @@ class Spec(object):
                     feq(replacement.versions, spec.versions) and
                     feq(replacement.compiler, spec.compiler) and
                     feq(replacement.architecture, spec.architecture) and
-                    feq(replacement.dependencies, spec.dependencies) and
+                    feq(replacement._dependencies, spec._dependencies) and
                     feq(replacement.variants, spec.variants) and
                     feq(replacement.external, spec.external) and
                     feq(replacement.external_module, spec.external_module)):
@@ -1146,7 +1253,7 @@ class Spec(object):
         Only for internal use -- client code should use "concretize"
         unless there is a need to force a spec to be concrete.
         """
-        for s in self.traverse():
+        for s in self.traverse(deptype_query=alldeps):
             s._normal = True
             s._concrete = True
 
@@ -1159,6 +1266,13 @@ class Spec(object):
         return clone
 
     def flat_dependencies(self, **kwargs):
+        flat_deps = DependencyMap()
+        flat_deps_deptypes = self.flat_dependencies_with_deptype(**kwargs)
+        for name, depspec in flat_deps_deptypes.items():
+            flat_deps[name] = depspec.spec
+        return flat_deps
+
+    def flat_dependencies_with_deptype(self, **kwargs):
         """Return a DependencyMap containing all of this spec's
            dependencies with their constraints merged.
 
@@ -1169,23 +1283,31 @@ class Spec(object):
            returns them.
         """
         copy = kwargs.get('copy', True)
+        deptype_query = kwargs.get('deptype_query')
 
         flat_deps = DependencyMap()
         try:
-            for spec in self.traverse(root=False):
+            deptree = self.traverse_with_deptype(root=False,
+                                                 deptype_query=deptype_query)
+            for depspec in deptree:
+                spec = depspec.spec
+                deptypes = depspec.deptypes
+
                 if spec.name not in flat_deps:
                     if copy:
-                        flat_deps[spec.name] = spec.copy(deps=False)
+                        dep_spec = DependencySpec(spec.copy(deps=False),
+                                                  deptypes)
                     else:
-                        flat_deps[spec.name] = spec
+                        dep_spec = DependencySpec(spec, deptypes)
+                    flat_deps[spec.name] = dep_spec
                 else:
-                    flat_deps[spec.name].constrain(spec)
+                    flat_deps[spec.name].spec.constrain(spec)
 
             if not copy:
-                for dep in flat_deps.values():
-                    dep.dependencies.clear()
-                    dep.dependents.clear()
-                self.dependencies.clear()
+                for depspec in flat_deps.values():
+                    depspec.spec._dependencies.clear()
+                    depspec.spec._dependents.clear()
+                self._dependencies.clear()
 
             return flat_deps
 
@@ -1200,16 +1322,10 @@ class Spec(object):
         """Return DependencyMap that points to all the dependencies in this
            spec."""
         dm = DependencyMap()
+        # XXX(deptype): use a deptype kwarg.
         for spec in self.traverse():
             dm[spec.name] = spec
         return dm
-
-    def flatten(self):
-        """Pull all dependencies up to the root (this spec).
-           Merge constraints for dependencies with the same name, and if they
-           conflict, throw an exception. """
-        for dep in self.flat_dependencies(copy=False):
-            self._add_dependency(dep)
 
     def _evaluate_dependency_conditions(self, name):
         """Evaluate all the conditions on a dependency with this name.
@@ -1267,7 +1383,8 @@ class Spec(object):
             elif required:
                 raise UnsatisfiableProviderSpecError(required[0], vdep)
 
-    def _merge_dependency(self, dep, visited, spec_deps, provider_index):
+    def _merge_dependency(self, dep, deptypes, visited, spec_deps,
+                          provider_index):
         """Merge the dependency into this spec.
 
         This is the core of normalize().  There are some basic steps:
@@ -1294,7 +1411,9 @@ class Spec(object):
                 dep = provider
         else:
             index = ProviderIndex([dep], restrict=True)
-            for vspec in (v for v in spec_deps.values() if v.virtual):
+            for vspec in (v.spec
+                          for v in spec_deps.values()
+                          if v.spec.virtual):
                 if index.providers_for(vspec):
                     vspec._replace_with(dep)
                     del spec_deps[vspec.name]
@@ -1307,25 +1426,25 @@ class Spec(object):
         # If the spec isn't already in the set of dependencies, clone
         # it from the package description.
         if dep.name not in spec_deps:
-            spec_deps[dep.name] = dep.copy()
+            spec_deps[dep.name] = DependencySpec(dep.copy(), deptypes)
             changed = True
         # Constrain package information with spec info
         try:
-            changed |= spec_deps[dep.name].constrain(dep)
+            changed |= spec_deps[dep.name].spec.constrain(dep)
 
         except UnsatisfiableSpecError, e:
             e.message = "Invalid spec: '%s'. "
             e.message += "Package %s requires %s %s, but spec asked for %s"
-            e.message %= (spec_deps[dep.name], dep.name, e.constraint_type,
-                          e.required, e.provided)
+            e.message %= (spec_deps[dep.name].spec, dep.name,
+                          e.constraint_type, e.required, e.provided)
             raise e
 
         # Add merged spec to my deps and recurse
         dependency = spec_deps[dep.name]
-        if dep.name not in self.dependencies:
-            self._add_dependency(dependency)
+        if dep.name not in self._dependencies:
+            self._add_dependency(dependency.spec, dependency.deptypes)
 
-        changed |= dependency._normalize_helper(
+        changed |= dependency.spec._normalize_helper(
             visited, spec_deps, provider_index)
         return changed
 
@@ -1351,10 +1470,11 @@ class Spec(object):
             for dep_name in pkg.dependencies:
                 # Do we depend on dep_name?  If so pkg_dep is not None.
                 pkg_dep = self._evaluate_dependency_conditions(dep_name)
+                deptypes = pkg._deptypes[dep_name]
                 # If pkg_dep is a dependency, merge it.
                 if pkg_dep:
                     changed |= self._merge_dependency(
-                        pkg_dep, visited, spec_deps, provider_index)
+                        pkg_dep, deptypes, visited, spec_deps, provider_index)
             any_change |= changed
 
         return any_change
@@ -1385,11 +1505,13 @@ class Spec(object):
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_names()
         # Get all the dependencies into one DependencyMap
-        spec_deps = self.flat_dependencies(copy=False)
+        spec_deps = self.flat_dependencies_with_deptype(copy=False,
+                                                        deptype_query=alldeps)
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
-        provider_index = ProviderIndex(spec_deps.values(), restrict=True)
+        provider_index = ProviderIndex([s.spec for s in spec_deps.values()],
+                                       restrict=True)
 
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
@@ -1510,7 +1632,7 @@ class Spec(object):
         """Apply constraints of other spec's dependencies to this spec."""
         other = self._autospec(other)
 
-        if not self.dependencies or not other.dependencies:
+        if not self._dependencies or not other._dependencies:
             return False
 
         # TODO: might want more detail than this, e.g. specific deps
@@ -1526,13 +1648,17 @@ class Spec(object):
 
         # Update with additional constraints from other spec
         for name in other.dep_difference(self):
-            self._add_dependency(other[name].copy())
+            dep_spec_copy = other.get_dependency(name)
+            dep_copy = dep_spec_copy.spec
+            deptypes = dep_spec_copy.deptypes
+            self._add_dependency(dep_copy.copy(), deptypes)
             changed = True
 
         return changed
 
     def common_dependencies(self, other):
         """Return names of dependencies that self an other have in common."""
+        # XXX(deptype): handle deptypes via deptype kwarg.
         common = set(
             s.name for s in self.traverse(root=False))
         common.intersection_update(
@@ -1657,13 +1783,14 @@ class Spec(object):
         other = self._autospec(other)
 
         if strict:
-            if other.dependencies and not self.dependencies:
+            if other._dependencies and not self._dependencies:
                 return False
 
-            if not all(dep in self.dependencies for dep in other.dependencies):
+            if not all(dep in self._dependencies
+                       for dep in other._dependencies):
                 return False
 
-        elif not self.dependencies or not other.dependencies:
+        elif not self._dependencies or not other._dependencies:
             # if either spec doesn't restrict dependencies then both are
             # compatible.
             return True
@@ -1726,8 +1853,8 @@ class Spec(object):
         self.architecture = other.architecture
         self.compiler = other.compiler.copy() if other.compiler else None
         if kwargs.get('cleardeps', True):
-            self.dependents = DependencyMap()
-            self.dependencies = DependencyMap()
+            self._dependents = DependencyMap()
+            self._dependencies = DependencyMap()
         self.compiler_flags = other.compiler_flags.copy()
         self.variants = other.variants.copy()
         self.variants.spec = self
@@ -1739,15 +1866,30 @@ class Spec(object):
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
             # This copies the deps from other using _dup(deps=False)
-            new_nodes = other.flat_dependencies()
+            # XXX(deptype): We can keep different instances of specs here iff
+            #               it is only a 'build' dependency (from its parent).
+            #               All other instances must be shared (due to symbol
+            #               and PATH contention). These should probably search
+            #               for any existing installation which can satisfy the
+            #               build and latch onto that because if 3 things need
+            #               the same build dependency and it is *not*
+            #               available, we only want to build it once.
+            new_nodes = other.flat_dependencies(deptype_query=alldeps)
             new_nodes[self.name] = self
 
-            # Hook everything up properly here by traversing.
-            for spec in other.traverse(cover='nodes'):
-                parent = new_nodes[spec.name]
-                for child in spec.dependencies:
-                    if child not in parent.dependencies:
-                        parent._add_dependency(new_nodes[child])
+            stack = [other]
+            while stack:
+                cur_spec = stack.pop(0)
+                new_spec = new_nodes[cur_spec.name]
+
+                for depspec in cur_spec._dependencies.values():
+                    stack.append(depspec.spec)
+
+                    # XXX(deptype): add any new deptypes that may have appeared
+                    #               here.
+                    if depspec.spec.name not in new_spec._dependencies:
+                        new_spec._add_dependency(
+                                new_nodes[depspec.spec.name], depspec.deptypes)
 
         # Since we preserved structure, we can copy _normal safely.
         self._normal = other._normal
@@ -1814,13 +1956,13 @@ class Spec(object):
         if self.ne_node(other):
             return False
 
-        if len(self.dependencies) != len(other.dependencies):
+        if len(self._dependencies) != len(other._dependencies):
             return False
 
-        ssorted = [self.dependencies[name]
-                   for name in sorted(self.dependencies)]
-        osorted = [other.dependencies[name]
-                   for name in sorted(other.dependencies)]
+        ssorted = [self._dependencies[name].spec
+                   for name in sorted(self._dependencies)]
+        osorted = [other._dependencies[name].spec
+                   for name in sorted(other._dependencies)]
 
         for s, o in zip(ssorted, osorted):
             visited_s = id(s) in vs
@@ -1874,9 +2016,10 @@ class Spec(object):
           1. A tuple describing this node in the DAG.
           2. The hash of each of this node's dependencies' cmp_keys.
         """
+        dep_dict = self.dependencies_dict(deptype=('link', 'run'))
         return self._cmp_node() + (
-            tuple(hash(self.dependencies[name])
-                  for name in sorted(self.dependencies)),)
+            tuple(hash(dep_dict[name])
+                  for name in sorted(dep_dict)),)
 
     def colorized(self):
         return colorize_spec(self)
@@ -2081,8 +2224,8 @@ class Spec(object):
                          self.architecture, other.architecture)
 
         #Dependency is not configurable
-        if self.dependencies != other.dependencies:
-            return -1 if self.dependencies < other.dependencies else 1
+        if self._dependencies != other._dependencies:
+            return -1 if self._dependencies < other._dependencies else 1
 
         #Equal specs
         return 0
@@ -2196,10 +2339,13 @@ class SpecParser(spack.parse.Parser):
                         specs.append(self.spec(None))
                         self.previous = None
                     if self.accept(HASH):
-                        specs[-1]._add_dependency(self.spec_by_hash())
+                        dep = self.spec_by_hash()
                     else:
                         self.expect(ID)
-                        specs[-1]._add_dependency(self.spec(self.token.value))
+                        dep = self.spec(self.token.value)
+                    # XXX(deptype): default deptypes
+                    def_deptypes = ('build', 'link')
+                    specs[-1]._add_dependency(dep, def_deptypes)
 
                 else:
                     # Attempt to construct an anonymous spec, but check that
@@ -2263,8 +2409,8 @@ class SpecParser(spack.parse.Parser):
         spec.external = None
         spec.external_module = None
         spec.compiler_flags = FlagMap(spec)
-        spec.dependents = DependencyMap()
-        spec.dependencies = DependencyMap()
+        spec._dependents = DependencyMap()
+        spec._dependencies = DependencyMap()
         spec.namespace = spec_namespace
         spec._hash = None
 

@@ -133,7 +133,12 @@ def fetch_log(path):
 
 
 def failed_dependencies(spec):
-    return set(item for item in spec.dependencies.itervalues() if not spack.repo.get(item).installed)
+    def get_deps(deptype):
+        return set(item for item in spec.dependencies(deptype)
+                   if not spack.repo.get(item).installed)
+    link_deps = get_deps('link')
+    run_deps = get_deps('run')
+    return link_deps.union(run_deps)
 
 
 def get_top_spec_or_die(args):

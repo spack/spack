@@ -120,7 +120,7 @@ def dependencies(spec, request='all'):
         return []
 
     if request == 'direct':
-        return [xx for _, xx in spec.dependencies.items()]
+        return spec.dependencies()
 
     # FIXME : during module file creation nodes seem to be visited multiple
     # FIXME : times even if cover='nodes' is given. This work around permits

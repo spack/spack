@@ -80,12 +80,14 @@ def topological_sort(spec, **kwargs):
 
     """
     reverse = kwargs.get('reverse', False)
+    # XXX(deptype): iterate over a certain kind of dependency. Maybe color
+    #               edges based on the type of dependency?
     if not reverse:
-        parents  = lambda s: s.dependents
-        children = lambda s: s.dependencies
+        parents = lambda s: s.dependents()
+        children = lambda s: s.dependencies()
     else:
-        parents  = lambda s: s.dependencies
-        children = lambda s: s.dependents
+        parents = lambda s: s.dependencies()
+        children = lambda s: s.dependents()
 
     # Work on a copy so this is nondestructive.
     spec = spec.copy()
