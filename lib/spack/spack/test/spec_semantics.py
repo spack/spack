@@ -234,6 +234,50 @@ class SpecSematicsTest(MockPackagesTest):
         self.assertFalse(Spec('netlib-lapack ^openblas').satisfies('netlib-lapack ^netlib-blas'))
         self.assertTrue(Spec('netlib-lapack ^netlib-blas').satisfies('netlib-lapack ^netlib-blas'))
 
+    def test_scalapack_variant_forwarding(self):
+        """
+        Ensure that the correct semantic for variant forwarding is maintained in presence of:
+        - virtual dependencies
+        - multiple forwarded variants
+        """
+        #
+        s = Spec('netlib-scalapack')
+        s.concretize()
+        self.assertTrue('~debug' in s)
+        self.assertTrue('~debug' in s['lapack']['blas'])
+        self.assertTrue('~debug' in s['lapack'])
+        self.assertTrue('~debug' in s['lapack']['blas'])
+        self.assertTrue('+shared' in s)
+        self.assertTrue('+shared' in s['lapack'])
+        self.assertTrue('+shared' in s['lapack']['blas'])
+        #
+        s = Spec('netlib-scalapack+debug')
+        s.concretize()
+        self.assertTrue('+debug' in s)
+        self.assertTrue('+debug' in s['lapack'])
+        self.assertTrue('+debug' in s['lapack']['blas'])
+        self.assertTrue('+shared' in s)
+        self.assertTrue('+shared' in s['lapack'])
+        self.assertTrue('+shared' in s['lapack']['blas'])
+        #
+        s = Spec('netlib-scalapack+debug ^ netlib-lapack~debug')
+        s.concretize()
+        self.assertTrue('+debug' in s)
+        self.assertTrue('~debug' in s['lapack'])
+        self.assertTrue('~debug' in s['lapack']['blas'])
+        self.assertTrue('+shared' in s)
+        self.assertTrue('+shared' in s['lapack'])
+        self.assertTrue('+shared' in s['lapack']['blas'])
+        #
+        s = Spec('netlib-scalapack+debug~shared ^ netlib-lapack+shared ^ openblas~debug+shared')
+        s.concretize()
+        self.assertTrue('+debug' in s)
+        self.assertTrue('+debug' in s['lapack'])
+        self.assertTrue('~debug' in s['lapack']['blas'])
+        self.assertTrue('~shared' in s)
+        self.assertTrue('+shared' in s['lapack'])
+        self.assertTrue('+shared' in s['lapack']['blas'])
+
 
     # ================================================================================
     # Indexing specs
