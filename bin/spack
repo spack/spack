@@ -42,9 +42,9 @@ SPACK_EXTERNAL_LIBS = os.path.join(SPACK_LIB_PATH, "external")
 sys.path.insert(0, SPACK_EXTERNAL_LIBS)
 
 import warnings
-# Avoid warnings when nose is installed with the python exe being used to run 
-# spack. Note this must be done after Spack's external libs directory is added 
-# to sys.path. 
+# Avoid warnings when nose is installed with the python exe being used to run
+# spack. Note this must be done after Spack's external libs directory is added
+# to sys.path.
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", ".*nose was already imported")
     import nose
@@ -62,7 +62,7 @@ for pyc_file in orphaned_pyc_files:
     try:
         os.remove(pyc_file)
     except OSError as e:
-        print "WARNING: Spack may fail mysteriously. Couldn't remove orphaned .pyc file: %s" % pyc
+        print "WARNING: Spack may fail mysteriously. Couldn't remove orphaned .pyc file: %s" % pyc_file
 
 # If there is no working directory, use the spack prefix.
 try:
