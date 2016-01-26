@@ -22,8 +22,10 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 from pprint import pprint
 
+from llnl.util.filesystem import join_path, mkdirp
 from llnl.util.tty.colify import colify
 from llnl.util.lang import list_modules
 
@@ -38,6 +40,12 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-l', '--list', action='store_true', dest='list', help="Show available tests")
     subparser.add_argument(
+        '--createXmlOutput', action='store_true', dest='createXmlOutput', 
+        help="Create JUnit XML from test results")
+    subparser.add_argument(
+        '--xmlOutputDir', dest='xmlOutputDir', 
+        help="Nose creates XML files in this directory")
+    subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="verbose output")
 
@@ -48,4 +56,14 @@ def test(parser, args):
         colify(spack.test.list_tests(), indent=2)
 
     else:
-        spack.test.run(args.names, args.verbose)
+        if not args.createXmlOutput:
+            outputDir = None
+        else:
+            if not args.xmlOutputDir:
+                outputDir = join_path(os.getcwd(), "test-output")
+            else:
+                outputDir = os.path.abspath(args.xmlOutputDir)
+            
+            if not os.path.exists(outputDir):
+                mkdirp(outputDir)
+        spack.test.run(args.names, outputDir, args.verbose)

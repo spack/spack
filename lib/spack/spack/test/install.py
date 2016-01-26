@@ -59,9 +59,7 @@ class InstallTest(MockPackagesTest):
 
     def tearDown(self):
         super(InstallTest, self).tearDown()
-
-        if self.repo.stage is not None:
-            self.repo.stage.destroy()
+        self.repo.destroy()
 
         # Turn checksumming back on
         spack.do_checksum = True
@@ -78,7 +76,7 @@ class InstallTest(MockPackagesTest):
         self.assertTrue(spec.concrete)
 
         # Get the package
-        pkg = spack.db.get(spec)
+        pkg = spack.repo.get(spec)
 
         # Fake the URL for the package so it downloads from a file.
 

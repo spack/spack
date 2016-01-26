@@ -34,7 +34,7 @@ def setup_parser(subparser):
 
 
 def versions(parser, args):
-    pkg = spack.db.get(args.package)
+    pkg = spack.repo.get(args.package)
 
     safe_versions = pkg.versions
     fetched_versions = pkg.fetch_remote_versions()

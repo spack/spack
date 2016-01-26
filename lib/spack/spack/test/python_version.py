@@ -54,8 +54,8 @@ class PythonVersionTest(unittest.TestCase):
 
 
     def package_py_files(self):
-        for name in spack.db.all_package_names():
-            yield spack.db.filename_for_package_name(name)
+        for name in spack.repo.all_package_names():
+            yield spack.repo.filename_for_package_name(name)
 
 
     def check_python_versions(self, *files):

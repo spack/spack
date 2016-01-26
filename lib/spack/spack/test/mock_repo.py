@@ -55,6 +55,12 @@ class MockRepo(object):
         mkdirp(self.path)
 
 
+    def destroy(self):
+        """Destroy resources associated with this mock repo."""
+        if self.stage:
+            self.stage.destroy()
+
+
 class MockArchive(MockRepo):
     """Creates a very simple archive directory with a configure script and a
        makefile that installs to a prefix.  Tars it up into an archive."""
@@ -141,7 +147,7 @@ class MockGitRepo(MockVCSRepo):
             self.url = self.path
 
     def rev_hash(self, rev):
-        return git('rev-parse', rev, return_output=True).strip()
+        return git('rev-parse', rev, output=str).strip()
 
 
 class MockSvnRepo(MockVCSRepo):
@@ -193,4 +199,4 @@ class MockHgRepo(MockVCSRepo):
 
     def get_rev(self):
         """Get current mercurial revision."""
-        return hg('id', '-i', return_output=True).strip()
+        return hg('id', '-i', output=str).strip()

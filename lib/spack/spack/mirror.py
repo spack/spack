@@ -77,6 +77,7 @@ def get_matching_versions(specs, **kwargs):
             continue
 
         num_versions = kwargs.get('num_versions', 0)
+        matching_spec = []
         for i, v in enumerate(reversed(sorted(pkg.versions))):
             # Generate no more than num_versions versions for each spec.
             if num_versions and i >= num_versions:
@@ -87,7 +88,11 @@ def get_matching_versions(specs, **kwargs):
                 s = Spec(pkg.name)
                 s.versions = VersionList([v])
                 s.variants = spec.variants.copy()
-                matching.append(s)
+                matching_spec.append(s)
+
+        if not matching_spec:
+            tty.warn("No known version matches spec: %s" % spec)
+        matching.extend(matching_spec)
 
     return matching
 
@@ -146,7 +151,11 @@ def create(path, specs, **kwargs):
     # Get the absolute path of the root before we start jumping around.
     mirror_root = os.path.abspath(path)
     if not os.path.isdir(mirror_root):
-        mkdirp(mirror_root)
+        try:
+            mkdirp(mirror_root)
+        except OSError as e:
+            raise MirrorError(
+                "Cannot create directory '%s':" % mirror_root, str(e))
 
     # Things to keep track of while parsing specs.
     present  = []

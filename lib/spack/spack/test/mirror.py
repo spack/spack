@@ -44,8 +44,16 @@ class MirrorTest(MockPackagesTest):
         self.repos = {}
 
 
+    def tearDown(self):
+        """Destroy all the stages created by the repos in setup."""
+        super(MirrorTest, self).tearDown()
+        for repo in self.repos.values():
+            repo.destroy()
+        self.repos.clear()
+
+
     def set_up_package(self, name, MockRepoClass, url_attr):
-        """Use this to set up a mock package to be mirrored.
+        """Set up a mock package to be mirrored.
            Each package needs us to:
              1. Set up a mock repo/archive to fetch from.
              2. Point the package's version args at that repo.
@@ -55,7 +63,7 @@ class MirrorTest(MockPackagesTest):
         spec.concretize()
 
         # Get the package and fix its fetch args to point to a mock repo
-        pkg = spack.db.get(spec)
+        pkg = spack.repo.get(spec)
         repo = MockRepoClass()
         self.repos[name] = repo
 
@@ -65,20 +73,13 @@ class MirrorTest(MockPackagesTest):
         pkg.versions[v][url_attr] = repo.url
 
 
-    def tearDown(self):
-        """Destroy all the stages created by the repos in setup."""
-        super(MirrorTest, self).tearDown()
-
-        for name, repo in self.repos.items():
-            if repo.stage:
-                pass #repo.stage.destroy()
-
-        self.repos.clear()
-
-
     def check_mirror(self):
         stage = Stage('spack-mirror-test')
         mirror_root = join_path(stage.path, 'test-mirror')
+
+        # register mirror with spack config
+        mirrors = { 'spack-mirror-test' : 'file://' + mirror_root }
+        spack.config.update_config('mirrors', mirrors)
 
         try:
             os.chdir(stage.path)
@@ -88,7 +89,7 @@ class MirrorTest(MockPackagesTest):
             # Stage directory exists
             self.assertTrue(os.path.isdir(mirror_root))
 
-            # subdirs for each package
+            # check that there are subdirs for each package
             for name in self.repos:
                 subdir = join_path(mirror_root, name)
                 self.assertTrue(os.path.isdir(subdir))
@@ -96,40 +97,37 @@ class MirrorTest(MockPackagesTest):
                 files = os.listdir(subdir)
                 self.assertEqual(len(files), 1)
 
-                # Decompress archive in the mirror
-                archive = files[0]
-                archive_path = join_path(subdir, archive)
-                decomp = decompressor_for(archive_path)
+            # Now try to fetch each package.
+            for name, mock_repo in self.repos.items():
+                spec = Spec(name).concretized()
+                pkg = spec.package
 
-                with working_dir(subdir):
-                    decomp(archive_path)
-
-                    # Find the untarred archive directory.
-                    files = os.listdir(subdir)
-                    self.assertEqual(len(files), 2)
-                    self.assertTrue(archive in files)
-                    files.remove(archive)
-
-                    expanded_archive = join_path(subdir, files[0])
-                    self.assertTrue(os.path.isdir(expanded_archive))
+                saved_checksum_setting = spack.do_checksum
+                try:
+                    # Stage the archive from the mirror and cd to it.
+                    spack.do_checksum = False
+                    pkg.do_stage(mirror_only=True)
 
                     # Compare the original repo with the expanded archive
-                    repo = self.repos[name]
-                    if not 'svn' in name:
-                        original_path = repo.path
-                    else:
-                        co = 'checked_out'
-                        svn('checkout', repo.url, co)
-                        original_path = join_path(subdir, co)
+                    original_path = mock_repo.path
+                    if 'svn' in name:
+                        # have to check out the svn repo to compare.
+                        original_path = join_path(mock_repo.path, 'checked_out')
+                        svn('checkout', mock_repo.url, original_path)
 
-                    dcmp = dircmp(original_path, expanded_archive)
+                    dcmp = dircmp(original_path, pkg.stage.source_path)
 
                     # make sure there are no new files in the expanded tarball
                     self.assertFalse(dcmp.right_only)
+
+                    # and that all original files are present.
                     self.assertTrue(all(l in exclude for l in dcmp.left_only))
 
+                finally:
+                    spack.do_checksum = saved_checksum_setting
+                    pkg.do_clean()
         finally:
-            pass #stage.destroy()
+            stage.destroy()
 
 
     def test_git_mirror(self):
