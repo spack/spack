@@ -233,6 +233,11 @@ class RepoPath(object):
         return providers
 
 
+    @_autospec
+    def extensions_for(self, extendee_spec):
+        return [p for p in self.all_packages() if p.extends(extendee_spec)]
+
+
     def find_module(self, fullname, path=None):
         """Implements precedence for overlaid namespaces.
 
