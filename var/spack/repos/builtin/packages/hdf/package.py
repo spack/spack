@@ -11,8 +11,10 @@ class Hdf(Package):
 
     version('4.2.11', '063f9928f3a19cc21367b71c3b8bbf19')
 
+    variant('szip', default=False, description="Enable szip support")
+
     depends_on("jpeg")
-    depends_on("szip")
+    depends_on("szip", when='+szip')
     depends_on("zlib")
 
 
@@ -21,15 +23,22 @@ class Hdf(Package):
 
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix,
-                  '--with-jpeg=%s'  % spec['jpeg'].prefix,
-                  '--with-szlib=%s' % spec['szip'].prefix,
-                  '--with-zlib=%s'  % spec['zlib'].prefix,
-                  '--disable-netcdf',
-                  '--enable-fortran',
-                  '--disable-shared',
-                  '--enable-static',
-                  '--enable-production')
+        config_args = [
+            '--prefix=%s' % prefix,
+            '--with-jpeg=%s'  % spec['jpeg'].prefix,
+            '--with-zlib=%s'  % spec['zlib'].prefix,
+            '--disable-netcdf',
+            '--enable-fortran',
+            '--disable-shared',
+            '--enable-static',
+            '--enable-production'
+        ]
+
+        # SZip support
+        if '+szip' in spec:
+            config_args.append('--with-szlib=%s' % spec['szip'].prefix)
+
+        configure(*config_args)
 
         make()
         make("install")
