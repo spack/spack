@@ -1,4 +1,4 @@
-1  ##############################################################################
+##############################################################################
 # Copyright (c) 2013, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #

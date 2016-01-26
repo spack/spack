@@ -702,7 +702,7 @@ class Package(object):
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
-        self.do_fetch()
+        self.do_fetch(mirror_only)
         self.stage.expand_archive()
         self.stage.chdir_to_source()
 
