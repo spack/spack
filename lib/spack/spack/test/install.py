@@ -59,9 +59,7 @@ class InstallTest(MockPackagesTest):
 
     def tearDown(self):
         super(InstallTest, self).tearDown()
-
-        if self.repo.stage is not None:
-            self.repo.stage.destroy()
+        self.repo.destroy()
 
         # Turn checksumming back on
         spack.do_checksum = True

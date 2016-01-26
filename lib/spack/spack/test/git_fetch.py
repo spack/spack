@@ -56,10 +56,7 @@ class GitFetchTest(MockPackagesTest):
     def tearDown(self):
         """Destroy the stage space used by this test."""
         super(GitFetchTest, self).tearDown()
-
-        if self.repo.stage is not None:
-            self.repo.stage.destroy()
-
+        self.repo.destroy()
         self.pkg.do_clean()
 
 

@@ -55,10 +55,7 @@ class SvnFetchTest(MockPackagesTest):
     def tearDown(self):
         """Destroy the stage space used by this test."""
         super(SvnFetchTest, self).tearDown()
-
-        if self.repo.stage is not None:
-            self.repo.stage.destroy()
-
+        self.repo.destroy()
         self.pkg.do_clean()
 
 
