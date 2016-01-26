@@ -804,6 +804,9 @@ class Package(object):
         for when_spec, resource_list in self.resources.items():
             if when_spec in self.spec:
                 resources.extend(resource_list)
+        # Sorts the resources by the length of the string representing their destination. Since any nested resource
+        # must contain another resource's name in its path, it seems that should work
+        resources = sorted(resources, key=lambda res: len(res.destination))
         return resources
 
     def _resource_stage(self, resource):
