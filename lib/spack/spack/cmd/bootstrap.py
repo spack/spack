@@ -42,7 +42,7 @@ def get_origin_url():
     git = which('git', required=True)
     origin_url = git(
         '--git-dir=%s' % git_dir, 'config', '--get', 'remote.origin.url',
-        return_output=True)
+        output=str)
     return origin_url.strip()
 
 

@@ -79,13 +79,13 @@ def list_packages(rev):
     git = get_git()
     relpath = spack.packages_path[len(spack.prefix + os.path.sep):] + os.path.sep
     output = git('ls-tree', '--full-tree', '--name-only', rev, relpath,
-                 return_output=True)
+                 output=str)
     return sorted(line[len(relpath):] for line in output.split('\n') if line)
 
 
 def pkg_add(args):
     for pkg_name in args.packages:
-        filename = spack.db.filename_for_package_name(pkg_name)
+        filename = spack.repo.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
             tty.die("No such package: %s.  Path does not exist:" % pkg_name, filename)
 

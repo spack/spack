@@ -32,7 +32,7 @@ from llnl.util.filesystem import join_path
 import spack
 import spack.cmd
 
-description="Print out locations of various diectories used by Spack"
+description="Print out locations of various directories used by Spack"
 
 def setup_parser(subparser):
     global directories
@@ -72,7 +72,7 @@ def location(parser, args):
         print spack.prefix
 
     elif args.packages:
-        print spack.db.root
+        print spack.repo.root
 
     elif args.stages:
         print spack.stage_path
@@ -94,12 +94,12 @@ def location(parser, args):
 
             if args.package_dir:
                 # This one just needs the spec name.
-                print join_path(spack.db.root, spec.name)
+                print join_path(spack.repo.root, spec.name)
 
             else:
                 # These versions need concretized specs.
                 spec.concretize()
-                pkg = spack.db.get(spec)
+                pkg = spack.repo.get(spec)
 
                 if args.stage_dir:
                     print pkg.stage.path
