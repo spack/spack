@@ -48,9 +48,11 @@ class Hdf5(Package):
     variant('unsupported', default=False, description='Enables unsupported configuration options')
 
     variant('mpi', default=False, description='Enable MPI support')
+    variant('szip', default=False, description='Enable szip support')
     variant('threadsafe', default=False, description='Enable thread-safe capabilities')
 
     depends_on("mpi", when='+mpi')
+    depends_on("szip", when='+szip')
     depends_on("zlib")
 
     def validate(self, spec):
@@ -104,6 +106,9 @@ class Hdf5(Package):
 
             if '+fortran' in spec:
                 extra_args.append("FC=%s" % spec['mpi'].prefix.bin + "/mpifort")
+
+        if '+szip' in spec:
+            extra_args.append("--with-szlib=%s" % spec['szip'].prefix)
 
         if '+threadsafe' in spec:
             extra_args.extend([
