@@ -194,5 +194,4 @@ class ConcretizeTest(MockPackagesTest):
         self.assertTrue(spec['libelf'].compiler.satisfies('clang'))
 
     def test_concretize_virtual(self):
-        with self.assertRaises(SpecError):
-            self.check_concretize('lapack')
+        self.assertRaises(SpecError, self.check_concretize, 'lapack')
