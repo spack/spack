@@ -53,7 +53,7 @@ def composite(interface=None, method_list=None, container=list):
         raise TypeError("Either 'interface' or 'method_list' must be defined on a call to composite")
 
     def cls_decorator(cls):
-        # Retrieve the base class of the composite. Inspect its  the methods and decide which ones will be overridden
+        # Retrieve the base class of the composite. Inspect its methods and decide which ones will be overridden
         def no_special_no_private(x):
             return inspect.ismethod(x) and not x.__name__.startswith('_')
 
