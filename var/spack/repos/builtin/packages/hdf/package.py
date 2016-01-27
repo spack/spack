@@ -24,12 +24,13 @@ class Hdf(Package):
 
     def install(self, spec, prefix):
         config_args = [
+            'CFLAGS=-fPIC',
             '--prefix=%s' % prefix,
-            '--with-jpeg=%s'  % spec['jpeg'].prefix,
-            '--with-zlib=%s'  % spec['zlib'].prefix,
-            '--disable-netcdf',
+            '--with-jpeg=%s' % spec['jpeg'].prefix,
+            '--with-zlib=%s' % spec['zlib'].prefix,
+            '--disable-netcdf',  # must be disabled to build NetCDF with HDF4 support
             '--enable-fortran',
-            '--disable-shared',
+            '--disable-shared',  # fortran and shared libraries are not compatible
             '--enable-static',
             '--enable-production'
         ]
