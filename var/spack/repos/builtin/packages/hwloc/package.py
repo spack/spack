@@ -14,14 +14,17 @@ class Hwloc(Package):
        efficiently."""
     homepage = "http://www.open-mpi.org/projects/hwloc/"
     url      = "http://www.open-mpi.org/software/hwloc/v1.9/downloads/hwloc-1.9.tar.gz"
+    list_url = "http://www.open-mpi.org/software/hwloc/"
+    list_depth = 3
 
-    version('1.11.2', '486169cbe111cdea57be12638828ebbf',
-            url='http://www.open-mpi.org/software/hwloc/v1.11/downloads/hwloc-1.11.2.tar.bz2')
-    version('1.11.1', '002742efd3a8431f98d6315365a2b543',
-            url='http://www.open-mpi.org/software/hwloc/v1.11/downloads/hwloc-1.11.1.tar.bz2')
-    version('1.9', '1f9f9155682fe8946a97c08896109508')
+    version('1.11.2', '486169cbe111cdea57be12638828ebbf')
+    version('1.11.1', '002742efd3a8431f98d6315365a2b543')
+    version('1.9',    '1f9f9155682fe8946a97c08896109508')
 
     depends_on('libpciaccess')
+
+    def url_for_version(self, version):
+        return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
