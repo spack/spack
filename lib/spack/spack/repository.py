@@ -528,8 +528,8 @@ class Repo(object):
 
     @_autospec
     def get(self, spec, new=False):
-        if spec.virtual:
-            raise UnknownPackageError(spec.name)
+#        if spec.virtual:
+#            raise UnknownPackageError(spec.name)
 
         if spec.namespace and spec.namespace != self.namespace:
             raise UnknownPackageError("Repository %s does not contain package %s."

@@ -316,6 +316,8 @@ class Package(object):
     """Most packages are NOT extendable.  Set to True if you want extensions."""
     extendable = False
 
+    """By default package are not virtual, VirtualPackage override this"""
+    virtual = False
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -1222,6 +1224,16 @@ class Package(object):
     def rpath_args(self):
         """Get the rpath args as a string, with -Wl,-rpath= for each element."""
         return " ".join("-Wl,-rpath=%s" % p for p in self.rpath)
+
+
+class VirtualPackage(Package):
+    """Subclass of package to define virtual packages"""
+
+    """override the virtual state"""
+    virtual = True
+
+    def install(self, spec, prefix):
+        raise InstallError("You are trying to install a virtual package, this is not implemented")
 
 
 def validate_package_url(url_string):

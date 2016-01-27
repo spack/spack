@@ -231,6 +231,14 @@ def provides(pkg, *specs, **kwargs):
         for provided_spec in spack.spec.parse(string):
             if pkg.name == provided_spec.name:
                 raise CircularReferenceError('depends_on', pkg.name)
+            if not spack.repo.exists(provided_spec.name):
+                raise DirectiveError('provided',
+                                     'Package {0} tries to provide {1} which do not exist as a virtual package'.format(
+                                         pkg.name, string))
+            if not provided_spec.virtual:
+                raise DirectiveError('provided',
+                                     'Package {0} tries to provide {1} which is not a virtual dependency'.format(
+                                         pkg.name, string))
             pkg.provided[provided_spec] = provider_spec
 
 

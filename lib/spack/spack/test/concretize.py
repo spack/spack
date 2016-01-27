@@ -25,7 +25,7 @@
 import unittest
 
 import spack
-from spack.spec import Spec, CompilerSpec
+from spack.spec import Spec, CompilerSpec, SpecError
 from spack.test.mock_packages_test import *
 
 class ConcretizeTest(MockPackagesTest):
@@ -192,3 +192,7 @@ class ConcretizeTest(MockPackagesTest):
         # TODO: not exactly the syntax I would like.
         self.assertTrue(spec['libdwarf'].compiler.satisfies('clang'))
         self.assertTrue(spec['libelf'].compiler.satisfies('clang'))
+
+    def test_concretize_virtual(self):
+        with self.assertRaises(SpecError):
+            self.check_concretize('lapack')

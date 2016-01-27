@@ -174,6 +174,8 @@ class DirectoryLayoutTest(MockPackagesTest):
         # Create install prefixes for all packages in the list
         installed_specs = {}
         for pkg in packages:
+            if pkg.virtual:
+                continue
             spec = pkg.spec.concretized()
             installed_specs[spec.name] = spec
             self.layout.create_install_directory(spec)
