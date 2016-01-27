@@ -90,12 +90,15 @@ class CompositeTest(unittest.TestCase):
 
     def test_error_conditions(self):
 
-        with self.assertRaises(TypeError):
+        def wrong_container():
             @pattern.composite(interface=self.Base, container=2)
             class CompositeFromInterface:
                 pass
 
-        with self.assertRaises(TypeError):
+        def no_methods():
             @pattern.composite()
             class CompositeFromInterface:
                 pass
+
+        self.assertRaises(TypeError, wrong_container)
+        self.assertRaises(TypeError, no_methods)
