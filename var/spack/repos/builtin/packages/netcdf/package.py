@@ -12,9 +12,7 @@ class Netcdf(Package):
     version('4.3.3', '5fbd0e108a54bd82cb5702a73f56d2ae')
 
     variant('fortran', default=False, description="Download and install NetCDF-Fortran")
-    variant('hdf4', default=False, description="Enable HDF4 support")
-
-    patch('netcdf-4.3.3-mpi.patch')
+    variant('hdf4',    default=False, description="Enable HDF4 support")
 
     # Dependencies:
     depends_on("curl")  # required for DAP support
@@ -23,7 +21,13 @@ class Netcdf(Package):
     depends_on("zlib")  # required for NetCDF-4 support
 
     def install(self, spec, prefix):
+        # Environment variables
+        CPPFLAGS = []
+        LDFLAGS  = []
+        LIBS     = []
+
         config_args = [
+            "--prefix=%s" % prefix,
             "--enable-fsync",
             "--enable-v2",
             "--enable-utilities",
@@ -37,18 +41,40 @@ class Netcdf(Package):
             "--enable-dap"
         ]
 
+        CPPFLAGS.append("-I%s/include" % spec['hdf5'].prefix)
+        LDFLAGS.append( "-L%s/lib"     % spec['hdf5'].prefix)
+
         # HDF4 support
+        # As of NetCDF 4.1.3, "--with-hdf4=..." is no longer a valid option
+        # You must use the environment variables CPPFLAGS and LDFLAGS
         if '+hdf4' in spec:
             config_args.append("--enable-hdf4")
+            CPPFLAGS.append("-I%s/include" % spec['hdf'].prefix)
+            LDFLAGS.append( "-L%s/lib"     % spec['hdf'].prefix)
+            LIBS.append(    "-l%s"         % "jpeg")
+
+        if 'szip' in spec:
+            CPPFLAGS.append("-I%s/include" % spec['szip'].prefix)
+            LDFLAGS.append( "-L%s/lib"     % spec['szip'].prefix)
+            LIBS.append(    "-l%s"         % "sz")
 
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.
         # They can be installed separately, but this bootstrap procedure
         # should be able to install both at the same time.
-        # Note: this is a new experimental feature
+        # Note: this is a new experimental feature.
         if '+fortran' in spec:
             config_args.append("--enable-remote-fortran-bootstrap")
+
+        config_args.append('CPPFLAGS=%s' % ' '.join(CPPFLAGS))
+        config_args.append('LDFLAGS=%s'  % ' '.join(LDFLAGS))
+        config_args.append('LIBS=%s'     % ' '.join(LIBS))
 
         configure(*config_args)
         make()
         make("install")
+
+        # After installing NetCDF-C, install NetCDF-Fortran
+        if '+fortran' in spec:
+            make("build-netcdf-fortran")
+            make("install-netcdf-fortran")
