@@ -171,6 +171,25 @@ class Llvm(Package):
                      when='@%(version)s' % release,
                      placement=resources[name].get('placement', None))
 
+    # SVN - current develop
+    version('develop', svn='http://llvm.org/svn/llvm-project/llvm/trunk')
+    resource(name='clang', svn='http://llvm.org/svn/llvm-project/cfe/trunk',
+             destination='tools', when='@develop', placement='clang')
+    resource(name='compiler-rt', svn='http://llvm.org/svn/llvm-project/compiler-rt/trunk',
+             destination='projects', when='@develop', placement='compiler-rt')
+    resource(name='openmp', svn='http://llvm.org/svn/llvm-project/openmp/trunk',
+             destination='projects', when='@develop', placement='openmp')
+    resource(name='libcxx', svn='http://llvm.org/svn/llvm-project/libcxx/trunk',
+             destination='projects', when='@develop', placement='libcxx')
+    resource(name='libcxxabi', svn='http://llvm.org/svn/llvm-project/libcxxabi/trunk',
+             destination='projects', when='@develop', placement='libcxxabi')
+    resource(name='polly', svn='http://llvm.org/svn/llvm-project/polly/trunk',
+             destination='tools', when='@develop', placement='polly')
+    resource(name='lldb', svn='http://llvm.org/svn/llvm-project/lldb/trunk',
+             destination='tools', when='@develop', placement='lldb')
+
+
+
     def install(self, spec, prefix):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
         cmake_args = [ arg for arg in std_cmake_args if 'BUILD_TYPE' not in arg ]

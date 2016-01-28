@@ -44,6 +44,7 @@ import os
 import sys
 import re
 import shutil
+import copy
 from functools import wraps
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
@@ -370,8 +371,12 @@ class GitFetchStrategy(VCSFetchStrategy):
     required_attributes = ('git',)
 
     def __init__(self, **kwargs):
+        # Discards the keywords in kwargs that may conflict with the next call to __init__
+        forwarded_args = copy.copy(kwargs)
+        forwarded_args.pop('name', None)
+
         super(GitFetchStrategy, self).__init__(
-                'git', 'tag', 'branch', 'commit', **kwargs)
+                'git', 'tag', 'branch', 'commit', **forwarded_args)
         self._git = None
 
     @property
@@ -479,8 +484,12 @@ class SvnFetchStrategy(VCSFetchStrategy):
     required_attributes = ['svn']
 
     def __init__(self, **kwargs):
+        # Discards the keywords in kwargs that may conflict with the next call to __init__
+        forwarded_args = copy.copy(kwargs)
+        forwarded_args.pop('name', None)
+
         super(SvnFetchStrategy, self).__init__(
-                'svn', 'revision', **kwargs)
+                'svn', 'revision', **forwarded_args)
         self._svn = None
         if self.revision is not None:
             self.revision = str(self.revision)
@@ -556,8 +565,12 @@ class HgFetchStrategy(VCSFetchStrategy):
     required_attributes = ['hg']
 
     def __init__(self, **kwargs):
+        # Discards the keywords in kwargs that may conflict with the next call to __init__
+        forwarded_args = copy.copy(kwargs)
+        forwarded_args.pop('name', None)
+
         super(HgFetchStrategy, self).__init__(
-                'hg', 'revision', **kwargs)
+                'hg', 'revision', **forwarded_args)
         self._hg = None
 
     @property
