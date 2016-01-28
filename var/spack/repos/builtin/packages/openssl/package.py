@@ -1,7 +1,5 @@
 from spack import *
 
-import spack.util.architecture as arch
-
 class Openssl(Package):
     """The OpenSSL Project is a collaborative effort to develop a
        robust, commercial-grade, full-featured, and Open Source
@@ -40,16 +38,3 @@ class Openssl(Package):
 
         make()
         make("install")
-
-    @when(arch.os_is_in('darwin'))
-    def install(self, spec, prefix):
-        perl = which('perl')
-        perl("./Configure",
-             "--prefix=%s" % prefix,
-             "--openssldir=%s/etc/openssl" % prefix,
-             "zlib",
-             "no-krb5",
-             "shared",
-             "darwin64-x86_64-cc")
-        filter_file(r'-arch x86_64', '', 'Makefile')
-
