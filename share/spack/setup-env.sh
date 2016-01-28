@@ -58,7 +58,7 @@
 
 function spack {
     # save raw arguments into an array before butchering them
-    declare -a args=( "$@" )
+    args=( "$@" )
 
     # accumulate initial flags for main spack command
     _sp_flags=""

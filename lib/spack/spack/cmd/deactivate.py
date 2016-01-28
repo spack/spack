@@ -37,7 +37,7 @@ def setup_parser(subparser):
         help="Run deactivation even if spec is NOT currently activated.")
     subparser.add_argument(
         '-a', '--all', action='store_true',
-        help="Deactivate all extensions of an extendable pacakge, or "
+        help="Deactivate all extensions of an extendable package, or "
         "deactivate an extension AND its dependencies.")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER, help="spec of package extension to deactivate.")

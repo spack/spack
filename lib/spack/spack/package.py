@@ -34,7 +34,9 @@ rundown on spack and how it differs from homebrew, look at the
 README.
 """
 import os
+import errno
 import re
+import shutil
 import time
 import itertools
 import subprocess
@@ -372,7 +374,7 @@ class Package(object):
         self._total_time = 0.0
 
         if self.is_extension:
-            spack.db.get(self.extendee_spec)._check_extendable()
+            spack.repo.get(self.extendee_spec)._check_extendable()
 
 
     @property
@@ -564,7 +566,7 @@ class Package(object):
                     yield spec
                 continue
 
-            for pkg in spack.db.get(name).preorder_traversal(visited, **kwargs):
+            for pkg in spack.repo.get(name).preorder_traversal(visited, **kwargs):
                 yield pkg
 
 
@@ -629,7 +631,7 @@ class Package(object):
         spack.install_layout.remove_install_directory(self.spec)
 
 
-    def do_fetch(self):
+    def do_fetch(self, mirror_only=False):
         """Creates a stage directory and downloads the taball for this package.
            Working directory will be set to the stage directory.
         """
@@ -654,7 +656,7 @@ class Package(object):
                 raise FetchError(
                     "Will not fetch %s." % self.spec.format('$_$@'), checksum_msg)
 
-        self.stage.fetch()
+        self.stage.fetch(mirror_only)
 
         ##########
         # Fetch resources
@@ -675,7 +677,8 @@ class Package(object):
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
 
-    def do_stage(self):
+
+    def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
            directory."""
         if not self.spec.concrete:
@@ -689,14 +692,15 @@ class Package(object):
             else:
                 tty.msg("Already staged %s in %s." % (name, stage.path))
 
-
-        self.do_fetch()
+        self.do_fetch(mirror_only)
         _expand_archive(self.stage)
 
         ##########
         # Stage resources in appropriate path
         resources = self._get_resources()
-        for resource in resources:
+        # TODO: this is to allow nested resources, a better solution would be
+        # good
+        for resource in sorted(resources, key=lambda res: len(res.destination)):
             stage = resource.fetcher.stage
             _expand_archive(stage, resource.name)
             # Turn placement into a dict with relative paths
@@ -705,11 +709,23 @@ class Package(object):
                 placement = {'': placement}
             # Make the paths in the dictionary absolute and link
             for key, value in placement.iteritems():
-                link_path = join_path(self.stage.source_path, resource.destination, value)
+                target_path = join_path(self.stage.source_path, resource.destination)
+                link_path = join_path(target_path, value)
                 source_path = join_path(stage.source_path, key)
+
+                try:
+                    os.makedirs(target_path)
+                except OSError as err:
+                    if err.errno == errno.EEXIST and os.path.isdir(target_path):
+                        pass
+                    else: raise
+
+                # NOTE: a reasonable fix for the TODO above might be to have
+                # these expand in place, but expand_archive does not offer
+                # this
+
                 if not os.path.exists(link_path):
-                    # Create a symlink
-                    os.symlink(source_path, link_path)
+                    shutil.move(source_path, link_path)
         ##########
         self.stage.chdir_to_source()
 
@@ -792,6 +808,12 @@ class Package(object):
             touch(no_patches_file)
 
 
+    @property
+    def namespace(self):
+        namespace, dot, module = self.__module__.rpartition('.')
+        return namespace
+
+
     def do_fake_install(self):
         """Make a fake install directory contaiing a 'fake' file in bin."""
         mkdirp(self.prefix.bin)
@@ -812,10 +834,6 @@ class Package(object):
         pieces = ['resource', resource.name, self.spec.dag_hash()]
         resource_stage_folder = '-'.join(pieces)
         return resource_stage_folder
-
-    def _build_logger(self, log_path):
-        """Create a context manager to log build output."""
-
 
 
     def do_install(self,
@@ -870,7 +888,7 @@ class Package(object):
                 tty.warn("Keeping install prefix in place despite error.",
                          "Spack will think this package is installed." +
                          "Manually remove this directory to fix:",
-                         self.prefix)
+                         self.prefix, wrap=True)
 
 
         def real_work():

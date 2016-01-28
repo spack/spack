@@ -65,17 +65,17 @@ class CompilerTest(unittest.TestCase):
 
     def check_cc(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(self.cc(*args, return_output=True).strip(), expected)
+        self.assertEqual(self.cc(*args, output=str).strip(), expected)
 
 
     def check_ld(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(self.ld(*args, return_output=True).strip(), expected)
+        self.assertEqual(self.ld(*args, output=str).strip(), expected)
 
 
     def check_cpp(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(self.cpp(*args, return_output=True).strip(), expected)
+        self.assertEqual(self.cpp(*args, output=str).strip(), expected)
 
 
     def test_vcheck_mode(self):

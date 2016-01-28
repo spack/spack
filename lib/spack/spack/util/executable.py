@@ -55,24 +55,80 @@ class Executable(object):
 
 
     def __call__(self, *args, **kwargs):
-        """Run the executable with subprocess.check_output, return output."""
-        return_output = kwargs.get("return_output", False)
-        fail_on_error = kwargs.get("fail_on_error", True)
-        ignore_errors = kwargs.get("ignore_errors", ())
+        """Run this executable in a subprocess.
 
-        output        = kwargs.get("output", sys.stdout)
-        error         = kwargs.get("error", sys.stderr)
-        input         = kwargs.get("input", None)
+        Arguments
+          args
+            command line arguments to the executable to run.
+
+        Optional arguments
+
+          fail_on_error
+
+            Raise an exception if the subprocess returns an
+            error. Default is True.  When not set, the return code is
+            avaiale as `exe.returncode`.
+
+          ignore_errors
+
+            An optional list/tuple of error codes that can be
+            *ignored*.  i.e., if these codes are returned, this will
+            not raise an exception when `fail_on_error` is `True`.
+
+          output, error
+
+            These arguments allow you to specify new stdout and stderr
+            values.  They default to `None`, which means the
+            subprocess will inherit the parent's file descriptors.
+
+            You can set these to:
+            - python streams, e.g. open Python file objects, or os.devnull;
+            - filenames, which will be automatically opened for writing; or
+            - `str`, as in the Python string type. If you set these to `str`,
+               output and error will be written to pipes and returned as
+               a string.  If both `output` and `error` are set to `str`,
+               then one string is returned containing output concatenated
+               with error.
+
+          input
+
+            Same as output, error, but `str` is not an allowed value.
+
+        Deprecated arguments
+
+          return_output[=False]
+
+            Setting this to True is the same as setting output=str.
+            This argument may be removed in future Spack versions.
+
+        """
+        fail_on_error = kwargs.pop("fail_on_error", True)
+        ignore_errors = kwargs.pop("ignore_errors", ())
+
+        # TODO: This is deprecated.  Remove in a future version.
+        return_output = kwargs.pop("return_output", False)
+
+        # Default values of None says to keep parent's file descriptors.
+        if return_output:
+            output = str
+        else:
+            output = kwargs.pop("output", None)
+
+        error         = kwargs.pop("error", None)
+        input         = kwargs.pop("input", None)
+        if input is str:
+            raise ValueError("Cannot use `str` as input stream.")
 
         def streamify(arg, mode):
             if isinstance(arg, basestring):
                 return open(arg, mode), True
-            elif arg is None and mode != 'r':
-                return open(os.devnull, mode), True
-            return arg, False
-        output, ostream = streamify(output, 'w')
-        error,  estream = streamify(error,  'w')
-        input,  istream = streamify(input,  'r')
+            elif arg is str:
+                return subprocess.PIPE, False
+            else:
+                return arg, False
+        ostream, close_ostream = streamify(output, 'w')
+        estream, close_estream = streamify(error,  'w')
+        istream, close_istream = streamify(input,  'r')
 
         # if they just want to ignore one error code, make it a tuple.
         if isinstance(ignore_errors, int):
@@ -93,19 +149,19 @@ class Executable(object):
 
         try:
             proc = subprocess.Popen(
-                cmd,
-                stdin=input,
-                stderr=error,
-                stdout=subprocess.PIPE if return_output else output)
+                cmd, stdin=istream, stderr=estream, stdout=ostream)
             out, err = proc.communicate()
-            self.returncode = proc.returncode
 
-            rc = proc.returncode
+            rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
                 raise ProcessError("Command exited with status %d:"
                                    % proc.returncode, cmd_line)
-            if return_output:
-                return out
+
+            if output is str or error is str:
+                result = ''
+                if output is str: result += out
+                if error is str:  result += err
+                return result
 
         except OSError, e:
             raise ProcessError(
@@ -120,9 +176,9 @@ class Executable(object):
                     % (proc.returncode, cmd_line))
 
         finally:
-            if ostream: output.close()
-            if estream: error.close()
-            if istream: input.close()
+            if close_ostream: output.close()
+            if close_estream: error.close()
+            if close_istream: input.close()
 
 
     def __eq__(self, other):

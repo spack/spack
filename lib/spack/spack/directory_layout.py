@@ -213,7 +213,6 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         # Specs read from actual installations are always concrete
         spec._mark_concrete()
-
         return spec
 
 
