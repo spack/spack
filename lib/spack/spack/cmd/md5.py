@@ -30,8 +30,9 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import *
 
 import spack.util.crypto
+from spack.stage import Stage, FailedDownloadError
 
-description = "Calculate md5 checksums for files."
+description = "Calculate md5 checksums for files/urls."
 
 def setup_parser(subparser):
     setup_parser.parser = subparser
@@ -45,9 +46,20 @@ def md5(parser, args):
 
     for f in args.files:
         if not os.path.isfile(f):
-            tty.die("Not a file: %s" % f)
-        if not can_access(f):
-            tty.die("Cannot read file: %s" % f)
+            stage = Stage(f)
+            try:
+                stage.fetch()
+                checksum = spack.util.crypto.checksum(hashlib.md5, stage.archive_file)
+                print "%s  %s" % (checksum, f)
+            except FailedDownloadError, e:
+                tty.msg("Failed to fetch %s" % url)
+                continue
 
-        checksum = spack.util.crypto.checksum(hashlib.md5, f)
-        print "%s  %s" % (checksum, f)
+            finally:
+                stage.destroy()
+        else:
+            if not can_access(f):
+                tty.die("Cannot read file: %s" % f)
+
+            checksum = spack.util.crypto.checksum(hashlib.md5, f)
+            print "%s  %s" % (checksum, f)
