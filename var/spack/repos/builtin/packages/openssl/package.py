@@ -9,9 +9,10 @@ class Openssl(Package):
     homepage = "http://www.openssl.org"
     url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
 
-    version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
-    version('1.0.2d', '38dd619b2e77cbac69b99f52a053d25a')
-    version('1.0.2e', '5262bfa25b60ed9de9f28d5d52d77fc5')
+    version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')  # Not available
+    version('1.0.2d', '38dd619b2e77cbac69b99f52a053d25a')  # Not available
+    version('1.0.2e', '5262bfa25b60ed9de9f28d5d52d77fc5')  # Not available
+    version('1.0.2f', 'b3bf73f507172be9292ea2a8c28b659d')
 
     depends_on("zlib")
     parallel = False
