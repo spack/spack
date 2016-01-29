@@ -1,7 +1,7 @@
 from spack import *
 import os
 
-class Hpx(Package):
+class Hpx5(Package):
     """The HPX-5 Runtime System. HPX-5 (High Performance ParalleX) is an
     open source, portable, performance-oriented runtime developed at
     CREST (Indiana University). HPX-5 provides a distributed
@@ -20,8 +20,33 @@ class Hpx(Package):
     version('1.1.0', '646afb460ecb7e0eea713a634933ce4f')
     version('1.0.0', '8020822adf6090bd59ed7fe465f6c6cb')
 
+    variant('debug', default=False, description='Build a debug version of HPX-5')
+    variant('photon', default=False, description='Enable Photon support')
+    variant('mpi', default=False, description='Enable MPI support')
+
+    depends_on("mpi", when='+mpi')
+    depends_on("mpi", when='+photon')
+
     def install(self, spec, prefix):
+        extra_args = []
+        if '+debug' in spec:
+            extra_args.extend([
+                '--enable-debug',
+                'CFLAGS=-g -O0'
+            ])
+        else:
+            extra_args.append('CFLAGS=-O3')
+
+        if '+mpi' in spec:
+            extra_args.append('--enable-mpi')
+
+        if '+photon' in spec:
+            extra_args.extend([
+                '--enable-mpi',
+                '--enable-photon'
+            ])
+
         os.chdir("./hpx/")
-        configure('--prefix=%s' % prefix)
+        configure('--prefix=%s' % prefix, *extra_args)
         make()
         make("install")
