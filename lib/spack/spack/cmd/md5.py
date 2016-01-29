@@ -23,15 +23,31 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import hashlib
 import argparse
+import hashlib
+
+from contextlib import contextmanager
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
 
 import spack.util.crypto
+from spack.stage import Stage, FailedDownloadError
 
-description = "Calculate md5 checksums for files."
+description = "Calculate md5 checksums for files/urls."
+
+@contextmanager
+def stager(url):
+    _cwd = os.getcwd()
+    _stager = Stage(url)
+    try:
+        _stager.fetch()
+        yield _stager
+    except FailedDownloadError:
+        tty.msg("Failed to fetch %s" % url)
+    finally:
+        _stager.destroy()
+        os.chdir(_cwd) # the Stage class changes the current working dir so it has to be restored
 
 def setup_parser(subparser):
     setup_parser.parser = subparser
@@ -45,9 +61,12 @@ def md5(parser, args):
 
     for f in args.files:
         if not os.path.isfile(f):
-            tty.die("Not a file: %s" % f)
-        if not can_access(f):
-            tty.die("Cannot read file: %s" % f)
+            with stager(f) as stage:
+                checksum = spack.util.crypto.checksum(hashlib.md5, stage.archive_file)
+                print "%s  %s" % (checksum, f)
+        else:
+            if not can_access(f):
+                tty.die("Cannot read file: %s" % f)
 
-        checksum = spack.util.crypto.checksum(hashlib.md5, f)
-        print "%s  %s" % (checksum, f)
+            checksum = spack.util.crypto.checksum(hashlib.md5, f)
+            print "%s  %s" % (checksum, f)
