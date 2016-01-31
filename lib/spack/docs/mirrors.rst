@@ -186,7 +186,7 @@ Each mirror has a name so that you can refer to it again later.
 ``spack mirror list``
 ----------------------------
 
-If you want to see all the mirrors Spack knows about you can run ``spack mirror list``::
+To see all the mirrors Spack knows about, run ``spack mirror list``::
 
    $ spack mirror list
    local_filesystem    file:///Users/gamblin2/spack-mirror-2014-06-24
@@ -196,7 +196,7 @@ If you want to see all the mirrors Spack knows about you can run ``spack mirror 
 ``spack mirror remove``
 ----------------------------
 
-And, if you want to remove a mirror, just remove it by name::
+To remove a mirror by name::
 
    $ spack mirror remove local_filesystem
    $ spack mirror list
@@ -205,11 +205,11 @@ And, if you want to remove a mirror, just remove it by name::
 Mirror precedence
 ----------------------------
 
-Adding a mirror really just adds a section in ``~/.spack/mirrors.yaml``::
+Adding a mirror really adds a line in ``~/.spack/mirrors.yaml``::
 
    mirrors:
-   - local_filesystem: file:///Users/gamblin2/spack-mirror-2014-06-24
-   - remote_server: https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
+     local_filesystem: file:///Users/gamblin2/spack-mirror-2014-06-24
+     remote_server: https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
 
 If you want to change the order in which mirrors are searched for
 packages, you can edit this file and reorder the sections.  Spack will
