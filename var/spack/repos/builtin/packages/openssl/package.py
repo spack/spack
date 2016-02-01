@@ -42,22 +42,3 @@ class Openssl(Package):
 
         make()
         make("install")
-
-    def url_for_version(self, version):
-        # This URL is computed pinging the place where the latest version is stored. To avoid slowdown
-        # due to repeated pinging, we store the URL in a private attribute
-        openssl_url = getattr(self, '_openssl_url', None)
-
-        if openssl_url is None:
-            latest = 'http://www.openssl.org/source/openssl-{version}.tar.gz'
-            older = 'http://www.openssl.org/source/old/{version_number}/openssl-{version_full}.tar.gz'
-            # Try to use the url where the latest tarballs are stored. If the url does not exist (404), then
-            # return the url for older format
-            version_number = '.'.join([str(x) for x in version[:-1]])
-            older_url = older.format(version_number=version_number, version_full=version)
-            latest_url = latest.format(version=version)
-            response = urllib.urlopen(latest.format(version=version))
-            openssl_url = older_url if response.getcode() == 404 else latest_url
-            self._openssl_url = openssl_url
-
-        return openssl_url
