@@ -1,5 +1,3 @@
-import urllib
-
 from spack import *
 
 class Openssl(Package):
