@@ -1,5 +1,6 @@
 from spack import *
 
+
 class Netcdf(Package):
     """NetCDF is a set of software libraries and self-describing, machine-independent
     data formats that support the creation, access, and sharing of array-oriented
@@ -11,13 +12,15 @@ class Netcdf(Package):
     version('4.4.0', 'f01cb26a0126dd9a6224e76472d25f6c')
     version('4.3.3', '5fbd0e108a54bd82cb5702a73f56d2ae')
 
+    variant('mpi', default=True, description='Enables MPI parallelism')
     variant('fortran', default=False, description="Download and install NetCDF-Fortran")
     variant('hdf4',    default=False, description="Enable HDF4 support")
 
     # Dependencies:
     depends_on("curl")  # required for DAP support
     depends_on("hdf", when='+hdf4')
-    depends_on("hdf5")  # required for NetCDF-4 support
+    depends_on("hdf5+mpi~cxx", when='+mpi')  # required for NetCDF-4 support
+    depends_on("hdf5~mpi", when='~mpi')  # required for NetCDF-4 support
     depends_on("zlib")  # required for NetCDF-4 support
 
     def install(self, spec, prefix):
@@ -40,6 +43,9 @@ class Netcdf(Package):
             # necessary for DAP support
             "--enable-dap"
         ]
+
+        if '+mpi' in spec:
+            config_args.append('--enable-parallel4')
 
         CPPFLAGS.append("-I%s/include" % spec['hdf5'].prefix)
         LDFLAGS.append( "-L%s/lib"     % spec['hdf5'].prefix)
