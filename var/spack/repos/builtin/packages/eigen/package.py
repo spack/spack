@@ -41,13 +41,14 @@ class Eigen(Package):
     variant('metis', default=True, description='Enables metis backend')
     variant('scotch', default=True, description='Enables scotch backend')
     variant('fftw', default=True, description='Enables FFTW backend')
+    variant('suitesparse', default=True, description='Enables SuiteSparse support')
 
-    # TODO : dependency on SuiteSparse, googlehash, superlu, adolc missing
+    # TODO : dependency on googlehash, superlu, adolc missing
 
     depends_on('metis', when='+metis')
     depends_on('scotch', when='+scotch')
     depends_on('fftw', when='+fftw')
-
+    depends_on('SuiteSparse', when='+suitesparse')
     depends_on('mpfr@2.3.0:')  # Eigen 3.2.7 requires at least 2.3.0
     depends_on('gmp')
 
