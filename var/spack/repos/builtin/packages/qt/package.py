@@ -1,41 +1,31 @@
-import os
 from spack import *
 import os
 
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
-    homepage = "http://qt.io"
-    list_url   = 'http://download.qt-project.org/official_releases/qt/'
-    list_depth = 2
+    homepage = 'http://qt.io'
+    url      = 'http://download.qt.io/archive/qt/5.5/5.5.1/single/qt-everywhere-opensource-src-5.5.1.tar.gz'
 
-    version('5.4.2', 'fa1c4d819b401b267eb246a543a63ea5',
-            url='http://download.qt-project.org/official_releases/qt/5.4/5.4.2/single/qt-everywhere-opensource-src-5.4.2.tar.gz')
+    version('5.5.1',  '59f0216819152b77536cf660b015d784')
+    version('5.4.2',  'fa1c4d819b401b267eb246a543a63ea5',
+    version('5.4.0',  'e8654e4b37dd98039ba20da7a53877e6')
+    version('5.3.2',  'febb001129927a70174467ecb508a682')
+    version('5.2.1',  'a78408c887c04c34ce615da690e0b4c8')
+    version('4.8.6',  '2edbe4d6c2eff33ef91732602f3518eb')
+    version('3.3.8b', '9f05b4125cfe477cc52c9742c3c09009')
 
-    version('5.4.0', 'e8654e4b37dd98039ba20da7a53877e6',
-            url='http://download.qt-project.org/official_releases/qt/5.4/5.4.0/single/qt-everywhere-opensource-src-5.4.0.tar.gz')
-
-    version('5.3.2', 'febb001129927a70174467ecb508a682',
-            url='http://download.qt.io/archive/qt/5.3/5.3.2/single/qt-everywhere-opensource-src-5.3.2.tar.gz')
-
-    version('5.2.1', 'a78408c887c04c34ce615da690e0b4c8',
-            url='http://download.qt.io/archive/qt/5.2/5.2.1/single/qt-everywhere-opensource-src-5.2.1.tar.gz')
-
-    version('4.8.6', '2edbe4d6c2eff33ef91732602f3518eb',
-            url="http://download.qt-project.org/official_releases/qt/4.8/4.8.6/qt-everywhere-opensource-src-4.8.6.tar.gz")
-
-    version('3.3.8b', '9f05b4125cfe477cc52c9742c3c09009',
-            url="http://download.qt.io/archive/qt/3/qt-x11-free-3.3.8b.tar.gz")
-
-    variant('mesa', default=False, description='depend on mesa')
     # Add patch for compile issues with qt3 found with use in the OpenSpeedShop project
-    variant('krellpatch', default=False, description="build with openspeedshop based patch.")
+    variant('krellpatch', default=False, description="Build with openspeedshop based patch.")
+    variant('mesa',       default=False, description="Depend on mesa.")
+    variant('gtk',        default=False, description="Build with gtkplus.")
+
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
     # Use system openssl for security.
     #depends_on("openssl")
 
     depends_on("glib")
-    depends_on("gtkplus")
+    depends_on("gtkplus", when='+gtk')
     depends_on("libxml2")
     depends_on("zlib")
     depends_on("dbus", when='@4:')
@@ -54,6 +44,34 @@ class Qt(Package):
     # OpenGL hardware acceleration
     depends_on("mesa", when='@4:+mesa')
     depends_on("libxcb")
+
+
+    def url_for_version(self, version):
+        url = "http://download.qt.io/archive/qt/"
+
+        if version >= Version('5'):
+            url += "%s/%s/single/qt-everywhere-opensource-src-%s.tar.gz" % \
+                    (version.up_to(2), version, version)
+        elif version >= Version('4.8'):
+            url += "%s/%s/qt-everywhere-opensource-src-%s.tar.gz" % \
+                    (version.up_to(2), version, version)
+        elif version >= Version('4.6'):
+            url += "%s/qt-everywhere-opensource-src-%s.tar.gz" % \
+                    (version.up_to(2), version)
+        elif version >= Version('4.0'):
+            url += "%s/qt-x11-opensource-src-%s.tar.gz" % \
+                    (version.up_to(2), version)
+        elif version >= Version('3'):
+            url += "%s/qt-x11-free-%s.tar.gz" % \
+                    (version.up_to(1), version)
+        elif version >= Version('2.1'):
+            url += "%s/qt-x11-%s.tar.gz" % \
+                    (version.up_to(1), version)
+        else:
+            url += "%s/qt-%s.tar.gz" % \
+                    (version.up_to(1), version)
+
+        return url
 
 
     def setup_environment(self, spack_env, env):
