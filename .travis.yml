@@ -9,7 +9,6 @@ sudo: false
 # Install coveralls to obtain code coverage
 install:
   - "pip install coveralls"
-  - "pip install pep8"
   - "pip install flake8"
 
 before_install:
@@ -23,9 +22,8 @@ script:
   - . share/spack/setup-env.sh
   # Run unit tests with code coverage
   - coverage run --source=lib --omit=lib/spack/spack/test/*,lib/spack/env/*,lib/spack/docs/* bin/spack test
-  # Checks if the file that have been changed are pep8 conformant
+  # Checks if the file that have been changed are flake8 conformant
   - CHANGED_PYTHON_FILES=`git diff develop... --name-only | perl -ne 'print if /\.py/g'`
-  - if [[ ${CHANGED_PYTHON_FILES} ]] ; then pep8 --max-line-length=120 ${CHANGED_PYTHON_FILES} ; fi
   - if [[ ${CHANGED_PYTHON_FILES} ]] ; then flake8 --format pylint --config flake8.ini ${CHANGED_PYTHON_FILES} ; fi
 
 
