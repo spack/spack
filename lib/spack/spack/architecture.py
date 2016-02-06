@@ -39,20 +39,25 @@ from external import yaml
 
 class InvalidSysTypeError(serr.SpackError):
     def __init__(self, sys_type):
-        super(InvalidSysTypeError, self).__init__("Invalid sys_type value for Spack: " + sys_type)
+        super(InvalidSysTypeError, self).__init__(
+                "Invalid sys_type value for Spack: " + sys_type)
 
 
 class NoSysTypeError(serr.SpackError):
     def __init__(self):
-        super(NoSysTypeError, self).__init__("Could not determine sys_type for this machine.")
+        super(NoSysTypeError, self).__init__(
+                "Could not determine sys_type for this machine.")
 
 
 @key_ordering
 class Target(object):
-    """ Target is the processor of the host machine. The host machine may have different front-end
-        and back-end targets, especially if it is a Cray machine. The target will have a name and
-        also the module_name (e.g craype-compiler). Targets will also recognize which platform
-        they came from using the set_platform method. Targets will have compiler finding strategies
+    """ Target is the processor of the host machine. 
+        The host machine may have different front-end
+        and back-end targets, especially if it is a Cray machine. 
+        The target will have a name and module_name (e.g craype-compiler). 
+        Targets will also recognize which platform
+        they came from using the set_platform method. 
+        Targets will have compiler finding strategies
         """
 
     def __init__(self, name, compiler_strategy, module_name=None):
@@ -60,9 +65,12 @@ class Target(object):
         self.compiler_strategy = compiler_strategy
         self.module_name = module_name # craype-ivybridge
 
-    # Sets only the platform name to avoid recursiveness
+    # Sets only the platform name to avoid recursiveness    
     def set_platform(self, platform):
         self.platform_name = platform.name
+
+    def set_operating_system(self, operating_sys):
+        self.platform_os = operating_sys
 
     def to_dict(self):
         d = {}
@@ -71,6 +79,7 @@ class Target(object):
         d['module_name'] = self.module_name
         if self.platform_name:
             d['platform'] = self.platform_name
+
         return d
 
     @staticmethod
@@ -87,14 +96,16 @@ class Target(object):
 
 
     def _cmp_key(self):
-        return (self.name, self.compiler_strategy, self.module_name)
+        return (self.name, self.compiler_strategy, 
+                self.module_name, self.platform_os)
 
     def __repr__(self):
         return self.__str__()
 
     def __str__(self):
-        if self.platform_name:
-            return self.platform_name + '-' + self.name
+        if self.platform_name and self.platform_os:
+            return (self.platform_name + '-' + 
+                    self.platform_os + '-'  + self.name)
         return self.name
 
 @key_ordering
@@ -105,26 +116,38 @@ class Platform(object):
     """
 
     priority        = None # Subclass needs to set this number. This controls order in which platform is detected.
+
     front_end       = None
     back_end        = None
     default         = None # The default back end target. On cray ivybridge
+    
+    front_os        = None
+    back_os         = None
+    default_os      = None
 
     def __init__(self, name):
         self.targets = {}
         self.name = name
 
     def add_target(self, name, target):
-        """Used by the platform specific subclass to list available targets. Raises an error
-        if the platform specifies a name that is reserved by spack as an alias.
+        """Used by the platform specific subclass to list available targets. 
+            Raises an error if the platform specifies a name 
+            that is reserved by spack as an alias.
         """
         if name in ['front_end', 'fe', 'back_end', 'be', 'default']:
-            raise ValueError("%s is a spack reserved alias and cannot be the name of a target" % name)
+            raise ValueError(
+                            "%s is a spack reserved" \
+                             "alias and cannot be the name of a target" 
+                             % name)
+
+        target.set_operating_system(self.platform_os())
         target.set_platform(self)
         self.targets[name] = target
 
     def target(self, name):
-        """This is a getter method for the target dictionary that handles defaulting based
-        on the values provided by default, front-end, and back-end. This can be overwritten
+        """This is a getter method for the target dictionary that 
+        handles defaulting based on the values provided by default, 
+        front-end, and back-end. This can be overwritten
         by a subclass for which we want to provide further aliasing options.
         """
         if name == 'default':
@@ -135,6 +158,51 @@ class Platform(object):
             name = self.back_end
 
         return self.targets[name]
+    
+    def _detect_linux_os(self):
+        """ If it is one a linux machine use the python method platform.dist()
+        """
+        os_name = py_platform.dist()[0]
+        version = py_platform.dist()[1]
+ a      return os_name + version
+
+    def _detect_mac_os(self):
+        """If it is on a mac machine then use the python method platform.mac_ver
+        """
+        mac_releases = {'10.6' : 'snowleopard', '10.7' : 'lion',
+                        '10.8' : 'mountainlion', '10.9' : 'mavericks',
+                        '10.10' : 'yosemite', '10.11' : 'elcapitan'}
+        
+        mac_ver = py_platform.mac_ver()
+        try:
+            os_name = mac_releases[mac_ver]
+            mac_ver = Version(mac_ver) 
+        
+        except KeyError:
+            os_name = 'mac_os'
+
+        return os_name 
+    
+    def set_os(self):
+        """ Set the OS according to the platform it is on. Darwin and Linux
+            will simply be an auto-detected linux distro or mac release. The
+            special cases will be for Cray and BGQ machines which have two
+            different OS for login and compute nodes. The client should provide
+            the name and major version of the operating system
+        """
+        if self.name == 'darwin':
+            self.default_os = self._detect_mac_os()
+        else:
+            self.default_os = self._detect_linux_os()
+
+    def platform_os(self, name=None):
+        """ Get the platform operating system from the platform """
+        if name == 'front_os':
+            return self.front_os
+        elif name == 'back_os':
+            return self.back_os
+        else:
+            return self.default_os
 
     @classmethod
     def detect(self):
@@ -144,6 +212,7 @@ class Platform(object):
         """
         raise NotImplementedError()
 
+
     def __repr__(self):
         return self.__str__()
 
@@ -152,43 +221,6 @@ class Platform(object):
 
     def _cmp_key(self):
         return (self.name, (_cmp_key(t) for t in self.targets.values()))
-
-def get_sys_type_from_spack_globals():
-    """Return the SYS_TYPE from spack globals, or None if it isn't set."""
-    if not hasattr(spack, "sys_type"):
-        return None
-    elif hasattr(spack.sys_type, "__call__"):
-        return spack.sys_type() #If in __init__.py there is a sys_type() then call that
-    else:
-        return spack.sys_type # Else use the attributed which defaults to None
-
-
-# This is livermore dependent. Hard coded for livermore
-#def get_sys_type_from_environment():
-#    """Return $SYS_TYPE or None if it's not defined."""
-#    return os.environ.get('SYS_TYPE')
-
-
-def get_mac_sys_type():
-    """Return a Mac OS SYS_TYPE or None if this isn't a mac.
-       Front-end config
-    """
-    mac_ver = py_platform.mac_ver()[0]
-    if not mac_ver:
-        return None
-    return "macosx_%s_%s" % (Version(mac_ver).up_to(2), py_platform.machine())
-
-
-def get_sys_type_from_uname():
-    """ Returns a sys_type from the uname argument
-        Front-end config
-    """
-    try:
-        platform_proc = subprocess.Popen(['uname', '-i'], stdout = subprocess.PIPE)
-        platform, _ = platform_proc.communicate()
-        return platform.strip()
-    except:
-        return None
 
 @memoized
 def all_platforms():
