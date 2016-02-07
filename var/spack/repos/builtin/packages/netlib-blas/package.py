@@ -1,15 +1,42 @@
+##############################################################################
+# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License (as published by
+# the Free Software Foundation) version 2.1 dated February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
-import os
 
 
 class NetlibBlas(Package):
-    """Netlib reference BLAS"""
+    """
+    Netlib reference BLAS
+    """
     homepage = "http://www.netlib.org/lapack/"
-    url      = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"
+    url = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"
 
+    version('3.6.0', 'f2f6c67134e851fe189bb3ca1fbb5101')
     version('3.5.0', 'b1d3e3e425b2e44a06760ff173104bdf')
 
-    variant('fpic', default=False, description="Build with -fpic compiler option")
+    variant('debug', default=False, description='Builds the library in debug mode')
+    variant('shared', default=True, description='Builds the shared library version')
 
     # virtual dependency
     provides('blas')
@@ -17,30 +44,32 @@ class NetlibBlas(Package):
     # Doesn't always build correctly in parallel
     parallel = False
 
-    def patch(self):
-        os.symlink('make.inc.example', 'make.inc')
-
-        mf = FileFilter('make.inc')
-        mf.filter('^FORTRAN.*', 'FORTRAN = f90')
-        mf.filter('^LOADER.*',  'LOADER = f90')
-        mf.filter('^CC =.*',  'CC = cc')
-
-        if '+fpic' in self.spec:
-            mf.filter('^OPTS.*=.*',  'OPTS = -O2 -frecursive -fpic')
-            mf.filter('^CFLAGS =.*',  'CFLAGS = -O3 -fpic')
-
-
     def install(self, spec, prefix):
-        make('blaslib')
 
-        # Tests that blas builds correctly
-        make('blas_testing')
+        options = []
+        options.extend(std_cmake_args)
+        options.append('-DUSE_OPTIMIZED_BLAS:BOOL=OFF')  # to force it to create the blas target
 
-        # No install provided
-        mkdirp(prefix.lib)
-        install('librefblas.a', prefix.lib)
+        if '+shared' in spec:
+            options.extend([
+                '-DBUILD_SHARED_LIBS:BOOL=ON',
+                '-DBUILD_STATIC_LIBS:BOOL=OFF'
+            ])
+        else:
+            options.extend([
+                '-DBUILD_SHARED_LIBS:BOOL=OFF',
+                '-DBUILD_STATIC_LIBS:BOOL=ON'
+            ])
 
-        # Blas virtual package should provide blas.a and libblas.a
-        with working_dir(prefix.lib):
-            symlink('librefblas.a', 'blas.a')
-            symlink('librefblas.a', 'libblas.a')
+        if '+debug' in spec:
+            options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
+        else:
+            options.append('-DCMAKE_BUILD_TYPE:STRING=Release')
+
+        with working_dir('spack-build', create=True):
+            cmake('..', *options)
+
+        with working_dir('spack-build/BLAS'):
+            make()
+            make('test')
+            make('install')

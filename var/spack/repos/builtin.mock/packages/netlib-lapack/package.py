@@ -24,14 +24,18 @@
 ##############################################################################
 from spack import *
 
+
 class NetlibLapack(Package):
     homepage = "http://www.netlib.org/lapack/"
     url      = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"
 
     version('3.5.0', 'b1d3e3e425b2e44a06760ff173104bdf')
 
+    variant('debug', default=False, description='Builds a debug version of the library')
+    variant('shared', default=True, description='Builds a shared version of the library')
+
     provides('lapack')
-    depends_on('blas')
+    depends_on('blas', forward=('shared', 'debug'))
 
     def install(self, spec, prefix):
         pass

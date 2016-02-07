@@ -49,12 +49,12 @@ class DefaultConcretizer(object):
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take
            the most recent available version, and default to the package's
-           version if there are no avaialble versions.
+           version if there are no available versions.
 
            TODO: In many cases we probably want to look for installed
                  versions of each package and use an installed version
                  if we can link to it.  The policy implemented here will
-                 tend to rebuild a lot of stuff becasue it will prefer
+                 tend to rebuild a lot of stuff because it will prefer
                  a compiler in the spec to any compiler already-
                  installed things were built with.  There is likely
                  some better policy that finds some middle ground

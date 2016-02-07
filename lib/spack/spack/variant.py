@@ -24,7 +24,7 @@
 ##############################################################################
 """Variant is a class describing flags on builds, or "variants".
 
-Could be generalized later to describe aribitrary parameters, but
+Could be generalized later to describe arbiitrary parameters, but
 currently variants are just flags.
 
 """
