@@ -69,11 +69,11 @@ class ABI(object):
         if not libpath:
             return None
         return os.path.basename(libpath)
-        
-        
+
+
     @memoized
     def _gcc_compiler_compare(self, pversion, cversion):
-        """Returns true iff the gcc version pversion and cversion 
+        """Returns true iff the gcc version pversion and cversion
           are ABI compatible."""
         plib = self._gcc_get_libstdcxx_version(pversion)
         clib = self._gcc_get_libstdcxx_version(cversion)
@@ -86,43 +86,43 @@ class ABI(object):
         """Returns true iff the intel version pversion and cversion
            are ABI compatible"""
 
-        #Test major and minor versions.  Ignore build version.
+        # Test major and minor versions.  Ignore build version.
         if (len(pversion.version) < 2 or len(cversion.version) < 2):
             return False
-        return (pversion.version[0] == cversion.version[0]) and \
-            (pversion.version[1] == cversion.version[1])
-        
-    
+        return pversion.version[:2] == cversion.version[:2]
+
+
     def compiler_compatible(self, parent, child, **kwargs):
         """Returns true iff the compilers for parent and child specs are ABI compatible"""
         if not parent.compiler or not child.compiler:
             return True
-        
+
         if parent.compiler.name != child.compiler.name:
-            #Different compiler families are assumed ABI incompatible
+            # Different compiler families are assumed ABI incompatible
             return False
-        
+
         if kwargs.get('loose', False):
             return True
 
+        # TODO: Can we move the specialized ABI matching stuff
+        # TODO: into compiler classes?
         for pversion in parent.compiler.versions:
             for cversion in child.compiler.versions:
-                #For a few compilers use specialized comparisons.  Otherwise
+                # For a few compilers use specialized comparisons.  Otherwise
                 # match on version match.
                 if pversion.satisfies(cversion):
                     return True
-                elif parent.compiler.name == "gcc" and \
-                     self._gcc_compiler_compare(pversion, cversion):
+                elif (parent.compiler.name == "gcc" and
+                      self._gcc_compiler_compare(pversion, cversion)):
                     return True
-                elif parent.compiler.name == "intel" and \
-                     self._intel_compiler_compare(pversion, cversion):
+                elif (parent.compiler.name == "intel" and
+                      self._intel_compiler_compare(pversion, cversion)):
                     return True
         return False
 
-    
+
     def compatible(self, parent, child, **kwargs):
         """Returns true iff a parent and child spec are ABI compatible"""
         loosematch = kwargs.get('loose', False)
         return self.architecture_compatible(parent, child) and \
                self.compiler_compatible(parent, child, loose=loosematch)
-    
