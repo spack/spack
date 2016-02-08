@@ -97,6 +97,9 @@ class Compiler(object):
     # argument used to get C++11 options
     cxx11_flag = "-std=c++11"
 
+    # argument used to get C++14 options
+    cxx14_flag = "-std=c++1y"
+
 
     def __init__(self, cspec, cc, cxx, f77, fc):
         def check(exe):
