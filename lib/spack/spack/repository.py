@@ -300,8 +300,11 @@ class RepoPath(object):
         for repo in self.repos:
             if spec.name in repo:
                 return repo
-        else:
-            raise UnknownPackageError(spec.name)
+
+        # If the package isn't in any repo, return the one with
+        # highest precedence.  This is for commands like `spack edit`
+        # that can operate on packages that don't exist yet.
+        return self.first_repo()
 
 
     @_autospec

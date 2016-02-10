@@ -22,8 +22,8 @@ class NetlibScalapack(Package):
     
     def install(self, spec, prefix):       
         options = [
-            "-DBUILD_SHARED_LIBS:BOOL=%s" % 'ON' if '+shared' in spec else 'OFF',
-            "-DBUILD_STATIC_LIBS:BOOL=%s" % 'OFF' if '+shared' in spec else 'ON',
+            "-DBUILD_SHARED_LIBS:BOOL=%s" % ('ON' if '+shared' in spec else 'OFF'),
+            "-DBUILD_STATIC_LIBS:BOOL=%s" % ('OFF' if '+shared' in spec else 'ON'),
             "-DUSE_OPTIMIZED_LAPACK_BLAS:BOOL=ON", # forces scalapack to use find_package(LAPACK)
             ]
 
