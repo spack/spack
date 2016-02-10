@@ -237,9 +237,9 @@ def set_module_variables_for_package(pkg, m):
 def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
-    rpaths.extend(d.prefix.lib for d in pkg.spec.traverse(root=False)
+    rpaths.extend(d.prefix.lib for d in pkg.spec.dependencies.values()
                   if os.path.isdir(d.prefix.lib))
-    rpaths.extend(d.prefix.lib64 for d in pkg.spec.traverse(root=False)
+    rpaths.extend(d.prefix.lib64 for d in pkg.spec.dependencies.values()
                   if os.path.isdir(d.prefix.lib64))
     return rpaths
 
