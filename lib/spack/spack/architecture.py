@@ -109,8 +109,13 @@ class Platform(object):
     back_end        = None
     default         = None # The default back end target. On cray ivybridge
 
+    front_os        = None
+    back_os         = None
+    default_os      = None
+
     def __init__(self, name):
         self.targets = {}
+        self.operating_sys = {}
         self.name = name
 
     def add_target(self, name, target):
@@ -136,10 +141,49 @@ class Platform(object):
 
         return self.targets[name]
 
+    def _detect_linux_os(self):
+        return OperatingSystem(py_platform.dist()[0], py_platform.dist()[1])
+
+    def _detect_mac_os(self):
+        mac_releases = {'10.6': "snowleopard", 
+                        "10.7": "lion",
+                        "10.8": "mountainlion",
+                        "10.9": "mavericks",
+                        "10.10": "yosemite",
+                        "10.11": "elcapitan"}
+        mac_ver = py_platform.mac_ver()[:-2]
+        try:
+            os_name = mac_releases[mac_ver]
+            return OperatingSystem(os_name, mac_ver)
+        except KeyError:
+            os_name = "mac_os"
+            return OperatingSystem(os_name, mac_ver)
+
+    def add_operating_system(self, name=None, operating_system=None):
+        if self.name == 'linux':
+            linux_os = self._detect_linux_os()
+            self.operating_sys[linux_os.name] = linux_os
+        elif self.name == 'darwin':
+            mac_os = self._detect_mac_os()
+            self.operating_sys[mac_os.name] = mac_os
+        else:
+            self.operating_sys[name] = operating_system
+
+    def operating_system(self, name):
+        if name == 'default':
+            name = self.default_os
+        if name == 'front_os':
+            name = self.front_os
+        if name == 'back_os':
+            name = self.back_os
+
+        return self.operating_sys[name]
+
     @classmethod
     def detect(self):
         """ Subclass is responsible for implementing this method.
-            Returns True if the Platform class detects that it is the current platform
+            Returns True if the Platform class detects that 
+            it is the current platform
             and False if it's not.
         """
         raise NotImplementedError()
@@ -153,6 +197,21 @@ class Platform(object):
     def _cmp_key(self):
         return (self.name, (_cmp_key(t) for t in self.targets.values()))
 
+
+class OperatingSystem(object):
+    """ The operating system will contain a name and version. It will
+        also represent itself simple with it's name
+    """
+    def __init__(self, name, version):
+        self.name = name
+        self.version = version
+    
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return self.__str__()
+    
 def get_sys_type_from_spack_globals():
     """Return the SYS_TYPE from spack globals, or None if it isn't set."""
     if not hasattr(spack, "sys_type"):
