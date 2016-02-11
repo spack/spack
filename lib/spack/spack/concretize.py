@@ -212,7 +212,7 @@ class DefaultConcretizer(object):
 
     def _concretize_operating_system(self, arch, platform):
         """ Future method for concretizing operating system """
-        if isinstance(arch.arch_os, OperatingSystem):
+        if isinstance(arch.arch_os, spack.architecture.OperatingSystem):
             return False
         else:
             arch.arch_os = platform.operating_system('default')
@@ -240,13 +240,12 @@ class DefaultConcretizer(object):
              Arch = collections.namedtuple("Arch", "arch_os target")
              spec.target = Arch(arch_os=platform.operating_system('default'),
                         target=platform.target('default'))
-
-        return True
+             return True
         # If there is a target and it is a tuple and has both filled return
         # False
         if not isinstance(spec.target, basestring):
             return any((self._concretize_operating_system(spec.target, platform),
-            self._concretize_arch_target(spec.target, plarform)))
+            self._concretize_arch_target(spec.target, platform)))
         else:
             spec.add_target_from_string(spec.target)
 
@@ -316,9 +315,9 @@ class DefaultConcretizer(object):
         # Should think whether this can be more efficient
         def _proper_compiler_style(cspec, target):
             compilers = spack.compilers.compilers_for_spec(cspec)
-            if target.compiler_strategy == 'PATH':
+            if target.target.compiler_strategy == 'PATH':
                 filter(lambda c: not c.modules, compilers)
-            if target.compiler_strategy == 'MODULES':
+            if target.target.compiler_strategy == 'MODULES':
                 filter(lambda c: c.modules, compilers)
             return compilers
 
