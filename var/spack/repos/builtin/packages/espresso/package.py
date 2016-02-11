@@ -1,5 +1,3 @@
-import llnl.util.tty as tty
-
 from spack import *
 
 
@@ -15,21 +13,21 @@ class Espresso(Package):
 
     variant('mpi', default=True, description='Build Quantum-ESPRESSO with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
-    variant('scalapack', default=False, description='Enables scalapack support')
+    variant('scalapack', default=True, description='Enables scalapack support')
     variant('elpa', default=True, description='Use elpa as an eigenvalue solver')
 
     depends_on('blas')
     depends_on('lapack')
 
     depends_on('mpi', when='+mpi')
-    depends_on('elpa', when='+elpa')
-    depends_on('scalapack', when='+scalapack')
+    depends_on('elpa', when='+elpa+scalapack+mpi')  # TODO : + mpi needed to avoid false dependencies installation
+    depends_on('scalapack', when='+scalapack+mpi')  # TODO : + mpi needed to avoid false dependencies installation
 
     def check_variants(self, spec):
         error = 'you cannot ask for \'+{variant}\' when \'+mpi\' is not active'
         if '+scalapack' in spec and '~mpi' in spec:
             raise RuntimeError(error.format(variant='scalapack'))
-        if '+elpa' in spec and '~mpi' in spec:
+        if '+elpa' in spec and ('~mpi' in spec or '~scalapack' in spec):
             raise RuntimeError(error.format(variant='elpa'))
 
     def install(self, spec, prefix):
