@@ -22,7 +22,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 import imp
 import platform as py_platform
 import inspect
@@ -34,31 +33,34 @@ import llnl.util.tty as tty
 import spack
 from spack.util.naming import mod_to_class
 import spack.error as serr
-from spack.version import Version
-from external import yaml
+
 
 class InvalidSysTypeError(serr.SpackError):
     def __init__(self, sys_type):
-        super(InvalidSysTypeError, self).__init__("Invalid sys_type value for Spack: " + sys_type)
+        super(InvalidSysTypeError, self).__init__(
+            "Invalid sys_type value for Spack: " + sys_type)
 
 
 class NoSysTypeError(serr.SpackError):
     def __init__(self):
-        super(NoSysTypeError, self).__init__("Could not determine sys_type for this machine.")
+        super(NoSysTypeError, self).__init__(
+            "Could not determine sys_type for this machine.")
 
 
 @key_ordering
 class Target(object):
-    """ Target is the processor of the host machine. The host machine may have different front-end
-        and back-end targets, especially if it is a Cray machine. The target will have a name and
-        also the module_name (e.g craype-compiler). Targets will also recognize which platform
-        they came from using the set_platform method. Targets will have compiler finding strategies
-        """
+    """ Target is the processor of the host machine. 
+        The host machine may have different front-end and back-end targets, 
+        especially if it is a Cray machine. The target will have a name and
+        also the module_name (e.g craype-compiler). Targets will also 
+        recognize which platform they came from using the set_platform method. 
+        Targets will have compiler finding strategies
+    """
 
     def __init__(self, name, compiler_strategy, module_name=None):
-        self.name = name # case of cray "ivybridge" but if it's x86_64
+        self.name = name  # case of cray "ivybridge" but if it's x86_64
         self.compiler_strategy = compiler_strategy
-        self.module_name = module_name # craype-ivybridge
+        self.module_name = module_name  # craype-ivybridge
 
     # Sets only the platform name to avoid recursiveness
     def set_platform(self, platform):
@@ -85,7 +87,6 @@ class Target(object):
             target.platform_name = d['platform']
         return target
 
-
     def _cmp_key(self):
         return (self.name, self.compiler_strategy, self.module_name)
 
@@ -97,6 +98,7 @@ class Target(object):
             return self.platform_name + '-' + self.name
         return self.name
 
+
 @key_ordering
 class Platform(object):
     """ Abstract class that each type of Platform will subclass.
@@ -104,10 +106,10 @@ class Platform(object):
         is returned
     """
 
-    priority        = None # Subclass needs to set this number. This controls order in which platform is detected.
+    priority        = None  # Subclass needs to set this number. This controls order in which platform is detected.
     front_end       = None
     back_end        = None
-    default         = None # The default back end target. On cray ivybridge
+    default         = None  # The default back end target. On cray ivybridge
 
     front_os        = None
     back_os         = None
@@ -119,17 +121,21 @@ class Platform(object):
         self.name = name
 
     def add_target(self, name, target):
-        """Used by the platform specific subclass to list available targets. Raises an error
-        if the platform specifies a name that is reserved by spack as an alias.
+        """Used by the platform specific subclass to list available targets. 
+        Raises an error if the platform specifies a name 
+        that is reserved by spack as an alias.
         """
         if name in ['front_end', 'fe', 'back_end', 'be', 'default']:
-            raise ValueError("%s is a spack reserved alias and cannot be the name of a target" % name)
+            raise ValueError(
+                "%s is a spack reserved alias " 
+                "and cannot be the name of a target" % name)
         target.set_platform(self)
         self.targets[name] = target
 
     def target(self, name):
-        """This is a getter method for the target dictionary that handles defaulting based
-        on the values provided by default, front-end, and back-end. This can be overwritten
+        """This is a getter method for the target dictionary 
+        that handles defaulting based on the values provided by default, 
+        front-end, and back-end. This can be overwritten
         by a subclass for which we want to provide further aliasing options.
         """
         if name == 'default':
@@ -150,7 +156,7 @@ class Platform(object):
                         "10.8": "mountainlion",
                         "10.9": "mavericks",
                         "10.10": "yosemite",
-                        "10.11": "elcapitan"}
+                        "10.11": "elcapitan"}     
         mac_ver = py_platform.mac_ver()[:-2]
         try:
             os_name = mac_releases[mac_ver]
@@ -199,8 +205,10 @@ class Platform(object):
 
 
 class OperatingSystem(object):
-    """ The operating system will contain a name and version. It will
-        also represent itself simple with it's name
+    """ Operating System class. It will include the name and version. 
+        The biggest attribute to this class will be the compiler finding
+        strategy. At the moment the compiler finding strategy is going to
+        be a string.
     """
     def __init__(self, name, version):
         self.name = name
@@ -212,42 +220,6 @@ class OperatingSystem(object):
     def __repr__(self):
         return self.__str__()
     
-def get_sys_type_from_spack_globals():
-    """Return the SYS_TYPE from spack globals, or None if it isn't set."""
-    if not hasattr(spack, "sys_type"):
-        return None
-    elif hasattr(spack.sys_type, "__call__"):
-        return spack.sys_type() #If in __init__.py there is a sys_type() then call that
-    else:
-        return spack.sys_type # Else use the attributed which defaults to None
-
-
-# This is livermore dependent. Hard coded for livermore
-#def get_sys_type_from_environment():
-#    """Return $SYS_TYPE or None if it's not defined."""
-#    return os.environ.get('SYS_TYPE')
-
-
-def get_mac_sys_type():
-    """Return a Mac OS SYS_TYPE or None if this isn't a mac.
-       Front-end config
-    """
-    mac_ver = py_platform.mac_ver()[0]
-    if not mac_ver:
-        return None
-    return "macosx_%s_%s" % (Version(mac_ver).up_to(2), py_platform.machine())
-
-
-def get_sys_type_from_uname():
-    """ Returns a sys_type from the uname argument
-        Front-end config
-    """
-    try:
-        platform_proc = subprocess.Popen(['uname', '-i'], stdout = subprocess.PIPE)
-        platform, _ = platform_proc.communicate()
-        return platform.strip()
-    except:
-        return None
 
 @memoized
 def all_platforms():
@@ -267,6 +239,7 @@ def all_platforms():
 
     return modules
 
+
 @memoized
 def sys_type():
     """ Gather a list of all available subclasses of platforms.
@@ -276,9 +249,8 @@ def sys_type():
     """
     # Try to create a Platform object using the config file FIRST
     platform_list = all_platforms()
-    platform_list.sort(key = lambda a: a.priority)
+    platform_list.sort(key=lambda a: a.priority)
 
     for platform in platform_list:
         if platform.detect():
             return platform()
-
