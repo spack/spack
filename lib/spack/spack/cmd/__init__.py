@@ -31,6 +31,15 @@ from llnl.util.lang import attr_setdefault
 
 import spack
 import spack.spec
+import spack.config
+
+#
+# Settings for commands that modify configuration
+#
+# Commands that modify confguration By default modify the *highest* priority scope.
+default_modify_scope = spack.config.highest_precedence_scope().name
+# Commands that list confguration list *all* scopes by default.
+default_list_scope = None
 
 # cmd has a submodule called "list" so preserve the python list module
 python_list = list

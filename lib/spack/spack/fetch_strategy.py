@@ -154,7 +154,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # Run curl but grab the mime type from the http headers
         headers = spack.curl(
-            *curl_args, return_output=True, fail_on_error=False)
+            *curl_args, output=str, fail_on_error=False)
 
         if spack.curl.returncode != 0:
             # clean up archive on failure.
@@ -375,7 +375,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def git_version(self):
-        vstring = self.git('--version', return_output=True).lstrip('git version ')
+        vstring = self.git('--version', output=str).lstrip('git version ')
         return Version(vstring)
 
 
@@ -518,7 +518,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     def _remove_untracked_files(self):
         """Removes untracked files in an svn repository."""
-        status = self.svn('status', '--no-ignore', return_output=True)
+        status = self.svn('status', '--no-ignore', output=str)
         self.svn('status', '--no-ignore')
         for line in status.split('\n'):
             if not re.match('^[I?]', line):
@@ -687,7 +687,7 @@ def for_package_version(pkg, version):
 
 
 class FetchError(spack.error.SpackError):
-    def __init__(self, msg, long_msg):
+    def __init__(self, msg, long_msg=None):
         super(FetchError, self).__init__(msg, long_msg)
 
 
@@ -705,7 +705,7 @@ class NoArchiveFileError(FetchError):
 
 
 class NoDigestError(FetchError):
-    def __init__(self, msg, long_msg):
+    def __init__(self, msg, long_msg=None):
         super(NoDigestError, self).__init__(msg, long_msg)
 
 
