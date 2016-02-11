@@ -90,6 +90,7 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
+from collections import namedtuple
 import sys
 import imp
 import itertools
@@ -459,7 +460,7 @@ class Spec(object):
         """Called by the parser to set the target."""
         if self.target: raise DuplicateTargetError(
                 "Spec for '%s' cannot have two targets." % self.name)
-        self.target = target
+        self.target = target # a string can be set
 
 
     def _add_dependency(self, spec):
@@ -1231,7 +1232,7 @@ class Spec(object):
             return parse_anonymous_spec(spec_like, self.name)
 
 
-    def add_target_from_string(self, target):
+    def add_target_from_string(self, arch):
         """If only a target is provided, spack will assume the default architecture.
         A platform-target pair can be input delimited by a '-'. If either portion of
         a platform-target pair is empty, spack will supply a default, in the case of
@@ -1240,31 +1241,28 @@ class Spec(object):
              bgq-          -> default bgq target (back end/powerpc)
              cray-hawswell -> haswell target on cray platform
         """
-        if target is None:
+        Arch = namedtuple("Arch", "arch_os target")
+        platform = spack.architecture.sys_type()
+        
+        if arch is None: 
             return
-        if '-' in target:
-            platform, target = target.split('-')
-        else:
-            platform = ''
-            
-        if platform != '':
-            # Find the class for the platform name given
-            file_path = join_path(spack.platform_path, platform)
-            platform_mod = imp.load_source('spack.platforms', file_path + '.py')
-            cls = getattr(platform_mod, mod_to_class(platform))
-            platform = cls()
-        else:
-            platform = spack.architecture.sys_type()
-        if target != '':
-            self.target = platform.target(target)
-        else:
-            self.target = platform.target('default')
 
+        if '-' in arch:
+            os_name, target = arch.split('-')
+            self.target = Arch(arch_os=platform.operating_system(os_name),
+                    target = platform.target(target))
+        elif arch in platform.targets:
+                self.target = Arch(arch_os=platform.operating_system('default'),
+                                    target=platform.target(target))
+        else:
+            os_name = arch # Odd naming here, definitely need to change
+            self.target = Arch(arch_os=platform.operating_system(os_name),
+                                target=platform.target('default'))
 
     def satisfies(self, other, deps=True, strict=False):
-        """Determine if this spec satisfies all constraints of another.
+        """determine if this spec satisfies all constraints of another.
 
-        There are two senses for satisfies:
+        there are two senses for satisfies:
 
           * `loose` (default): the absence of a constraint in self
             implies that it *could* be satisfied by other, so we only
@@ -1276,32 +1274,32 @@ class Spec(object):
         """
         other = self._autospec(other)
 
-        # A concrete provider can satisfy a virtual dependency.
+        # a concrete provider can satisfy a virtual dependency.
         if not self.virtual and other.virtual:
             pkg = spack.db.get(self.name)
             if pkg.provides(other.name):
                 for provided, when_spec in pkg.provided.items():
-                    if self.satisfies(when_spec, deps=False, strict=strict):
+                    if self.satisfies(when_spec, deps=false, strict=strict):
                         if provided.satisfies(other):
-                            return True
-            return False
+                            return True 
+            return False 
 
-        # Otherwise, first thing we care about is whether the name matches
+        # otherwise, first thing we care about is whether the name matches
         if self.name != other.name:
-            return False
+            return False 
 
         if self.versions and other.versions:
             if not self.versions.satisfies(other.versions, strict=strict):
-                return False
+                return False 
         elif strict and (self.versions or other.versions):
-            return False
+            return False 
 
-        # None indicates no constraints when not strict.
+        # none indicates no constraints when not strict.
         if self.compiler and other.compiler:
             if not self.compiler.satisfies(other.compiler, strict=strict):
-                return False
+                return  False
         elif strict and (other.compiler and not self.compiler):
-            return False
+            return True
 
         if not self.variants.satisfies(other.variants, strict=strict):
             return False
