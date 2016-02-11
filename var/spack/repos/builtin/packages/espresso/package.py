@@ -47,6 +47,14 @@ class Espresso(Package):
         if '+elpa' in spec:
             options.append('--with-elpa=%s' % spec['elpa'].prefix)
 
+        # Add a list of directories to search
+        search_list = []
+        for name, dependency_spec in spec.dependencies.iteritems():
+            print name
+            search_list.extend([dependency_spec.prefix.lib,
+                                dependency_spec.prefix.lib64])
+        search_list = " ".join(search_list)
+        options.append('LIBDIRS=%s' % search_list)
         configure(*options)
         make('all')
         make('install')
