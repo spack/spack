@@ -566,7 +566,7 @@ class Spec(object):
                in the traversal.
 
            root     [=True]
-               If false, this won't yield the root node, just its descendents.
+               If False, this won't yield the root node, just its descendents.
 
            direction [=children|parents]
                If 'children', does a traversal of this spec's children.  If
@@ -661,7 +661,7 @@ class Spec(object):
                                   for d in sorted(self.dependencies))
         }
         if self.target:
-            d['target'] = self.target.to_dict()
+            d['target'] = self.target.target.to_dict()
         else:
             d['target'] = None
         if self.compiler:
@@ -755,7 +755,6 @@ class Spec(object):
 
         if self.name in presets:
             changed |= self.constrain(presets[self.name])
-
         else:
             # Concretize virtual dependencies last.  Because they're added
             # to presets below, their constraints will all be merged, but we'll
@@ -830,6 +829,7 @@ class Spec(object):
         changed = True
         force = False
 
+        # Loops forever here in my implementation
         while changed:
             changes = (self.normalize(force=force),
                        self._expand_virtual_packages(),
@@ -1279,7 +1279,7 @@ class Spec(object):
             pkg = spack.db.get(self.name)
             if pkg.provides(other.name):
                 for provided, when_spec in pkg.provided.items():
-                    if self.satisfies(when_spec, deps=false, strict=strict):
+                    if self.satisfies(when_spec, deps=False, strict=strict):
                         if provided.satisfies(other):
                             return True 
             return False 
@@ -1306,9 +1306,9 @@ class Spec(object):
 
         # Target satisfaction is currently just class equality.
         # If not strict, None means unconstrained.
-        if not isinstance(self.target, spack.architecture.Target):
+        if isinstance(self.target, basestring):
             self.add_target_from_string(self.target)
-        if not isinstance(other.target, spack.architecture.Target):
+        if isinstance(other.target, basestring):
             other.add_target_from_string(other.target)
 
         if self.target and other.target:
@@ -1380,7 +1380,7 @@ class Spec(object):
 
            Options:
            dependencies[=True]
-               Whether deps should be copied too.  Set to false to copy a
+               Whether deps should be copied too.  Set to False to copy a
                spec but not its dependencies.
         """
 
