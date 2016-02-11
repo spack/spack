@@ -10,6 +10,7 @@ class Darwin(Platform):
     def __init__(self):
         super(Darwin, self).__init__('darwin')
         self.add_target(self.default, Target(self.default, 'PATH'))
+        self.add_operating_system()
 
     @classmethod
     def detect(self):

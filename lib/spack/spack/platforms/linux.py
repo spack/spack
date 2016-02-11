@@ -10,6 +10,7 @@ class Linux(Platform):
     def __init__(self):
         super(Linux, self).__init__('linux')
         self.add_target(self.default, Target(self.default, 'PATH'))
+        self.add_operating_system()
 
     @classmethod
     def detect(self):
