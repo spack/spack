@@ -33,6 +33,7 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
+import collections
 from llnl.util.filesystem import join_path
 import spack
 import spack.spec
@@ -209,6 +210,22 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
+    def _concretize_operating_system(self, arch, platform):
+        """ Future method for concretizing operating system """
+        if isinstance(arch.arch_os, OperatingSystem):
+            return False
+        else:
+            arch.arch_os = platform.operating_system('default')
+            return True
+            
+        
+    def _concretize_arch_target(self, arch, platform):
+        if isinstance(arch.target, spack.architecture.Target):
+            return False
+        else:
+            arch.target = platform.target('default')
+            return True
+
     def concretize_target(self, spec):
         """If the spec already has an target and it is a an target type,
         return. Otherwise, if it has a target that is a string type, generate a
@@ -216,23 +233,53 @@ class DefaultConcretizer(object):
         DAG has an target, then use that. Otherwise, take the system's default
         target.
         """
-        if spec.target is not None:
-            if isinstance(spec.target,spack.architecture.Target):
-                return False
-            else:
-                spec.add_target_from_string(spec.target)
-                return True #changed
+        platform = spack.architecture.sys_type()
 
-        if spec.root.target:
-            if isinstance(spec.root.target,spack.architecture.Target):
-                spec.target = spec.root.target
-            else:
-                spec.add_target_from_string(spec.root.target)
+        if spec.target is None:
+            # Create an empty tuple
+             Arch = collections.namedtuple("Arch", "arch_os target")
+             spec.target = Arch(arch_os=platform.operating_system('default'),
+                        target=platform.target('default'))
+
+        return True
+        # If there is a target and it is a tuple and has both filled return
+        # False
+        if not isinstance(spec.target, basestring):
+            return any((self._concretize_operating_system(spec.target, platform),
+            self._concretize_arch_target(spec.target, plarform)))
         else:
-            platform = spack.architecture.sys_type()
-            spec.target = platform.target('default')
+            spec.add_target_from_string(spec.target)
 
-        return True #changed
+        if spec.root.target and \
+            not isinstance(spec.root.target, basestring):
+                bool_flag =  any(
+                        (self._concretize_operating_system(spec.root.target, platform),
+                        self._concretize_arch_target(spec.root.target, platform)))
+                spec.target =spec.root.target
+                return bool_flag
+        else:
+            spec.add_target_from_string(spec.root.target)
+
+                
+        # if there is no target specified used the defaults
+    
+        #if spec.target is not None:
+        #    if isinstance(spec.target,spack.architecture.Target):
+        #        return False
+        #    else:
+        #        spec.add_target_from_string(spec.target)
+        #        return True #changed
+
+        #if spec.root.target:
+        #    if isinstance(spec.root.target,spack.architecture.Target):
+        #        spec.target = spec.root.target
+        #    else:
+        #        spec.add_target_from_string(spec.root.target)
+        #else:
+        #    platform = spack.architecture.sys_type()
+        #    spec.target = platform.target('default')
+
+        #return True #changed
 
 
     def concretize_variants(self, spec):
