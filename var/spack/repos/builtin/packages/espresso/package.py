@@ -1,53 +1,44 @@
-# FIXME:
-# This is a template package file for Spack.  We've conveniently
-# put "FIXME" labels next to all the things you'll want to change.
-#
-# Once you've edited all the FIXME's, delete this whole message,
-# save this file, and test out your package like this:
-#
-#     spack install espresso
-#
-# You can always get back here to change things with:
-#
-#     spack edit espresso
-#
-# See the spack documentation for more information on building
-# packages.
-#
+import llnl.util.tty as tty
+
 from spack import *
 
+
 class Espresso(Package):
-    """FIXME: put a proper description of your package here."""
-    # FIXME: add a proper url for your package's homepage here.
-    homepage = "http://quantum-espresso.org"
-    url      = "http://www.qe-forge.org/gf/download/frsrelease/204/912/espresso-5.3.0.tar.gz"
+    """
+    QE is an integrated suite of Open-Source computer codes for electronic-structure calculations and materials
+    modeling at the nanoscale. It is based on density-functional theory, plane waves, and pseudopotentials.
+    """
+    homepage = 'http://quantum-espresso.org'
+    url = 'http://www.qe-forge.org/gf/download/frsrelease/204/912/espresso-5.3.0.tar.gz'
 
     version('5.3.0', '6848fcfaeb118587d6be36bd10b7f2c3')
+
     variant('mpi', default=True, description='Build Quantum-ESPRESSO with mpi support')
-    variant('openmp', default=False, description='Build Quantum-ESPRESSO with mpi openmp')
-    variant('scalapack', default=False, description='Build Quantum-ESPRESSO with mpi openmp')
+    variant('openmp', default=False, description='Enables openMP support')
+    variant('scalapack', default=False, description='Enables scalapack support')
+    variant('elpa', default=True, description='Use elpa as an eigenvalue solver')
 
+    depends_on('blas')
+    depends_on('lapack')
 
-    # FIXME: Add dependencies if this package requires them.
-    # depends_on("foo")
     depends_on('mpi', when='+mpi')
+    depends_on('elpa', when='+elpa')
+    depends_on('scalapack', when='+scalapack')
 
-
-#    def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
-#        configure('--prefix=%s' % prefix)
-
-        # FIXME: Add logic to build and install here
-#        make()
-#        make("install")
+    def check_variants(self, spec):
+        error = 'you cannot ask for \'+{variant}\' when \'+mpi\' is not active'
+        if '+scalapack' in spec and '~mpi' in spec:
+            raise RuntimeError(error.format(variant='scalapack'))
+        if '+elpa' in spec and '~mpi' in spec:
+            raise RuntimeError(error.format(variant='elpa'))
 
     def install(self, spec, prefix):
-        # TAU isn't happy with directories that have '@' in the path.  Sigh.
+        self.check_variants(spec)
 
-        # TAU configure, despite the name , seems to be a manually written script (nothing related to autotools).
-        # As such it has a few #peculiarities# that make this build quite hackish.
-        options = ["-prefix=%s" % prefix,
-                   "--enable-parallel"]
+        options = ['-prefix=%s' % prefix]
+
+        if '+mpi' in spec:
+            options.append('--enable-parallel')
 
         if '+openmp' in spec:
             options.append('--enable-openmp')
@@ -55,7 +46,9 @@ class Espresso(Package):
         if '+scalapack' in spec:
             options.append('--with-scalapack=yes')
 
-        configure(*options)
-        make("all")
-        make("install")
+        if '+elpa' in spec:
+            options.append('--with-elpa=%s' % spec['elpa'].prefix)
 
+        configure(*options)
+        make('all')
+        make('install')
