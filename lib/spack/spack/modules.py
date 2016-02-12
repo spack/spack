@@ -194,12 +194,14 @@ class Dotkit(EnvModule):
     @property
     def file_name(self):
         return join_path(Dotkit.path, self.spec.architecture,
-                         self.spec.format('$_$@$%@$+$#.dk'))
+                         '%s.dk' % self.use_name)
 
     @property
     def use_name(self):
-        return self.spec.format('$_$@$%@$+$#')
-
+      return "%s-%s-%s-%s-%s" % (self.spec.name, self.spec.version,
+                                 self.spec.compiler.name,
+                                 self.spec.compiler.version, 
+                                 self.spec.dag_hash())
 
     def _write(self, dk_file):
         # Category
@@ -235,7 +237,10 @@ class TclModule(EnvModule):
 
     @property
     def use_name(self):
-        return self.spec.format('$_$@$%@$+$#')
+      return "%s-%s-%s-%s-%s" % (self.spec.name, self.spec.version,
+                                 self.spec.compiler.name,
+                                 self.spec.compiler.version, 
+                                 self.spec.dag_hash())
 
 
     def _write(self, m_file):
