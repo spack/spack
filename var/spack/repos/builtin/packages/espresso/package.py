@@ -1,5 +1,6 @@
 from spack import *
 
+import os
 
 class Espresso(Package):
     """
@@ -20,9 +21,10 @@ class Espresso(Package):
     depends_on('lapack')
 
     depends_on('mpi', when='+mpi')
-    depends_on('elpa', when='+elpa+scalapack+mpi')  # TODO : + mpi needed to avoid false dependencies installation
+    depends_on('fftw~mpi', when='~mpi')
+    depends_on('fftw+mpi', when='+mpi')
     depends_on('scalapack', when='+scalapack+mpi')  # TODO : + mpi needed to avoid false dependencies installation
-
+    
     def check_variants(self, spec):
         error = 'you cannot ask for \'+{variant}\' when \'+mpi\' is not active'
         if '+scalapack' in spec and '~mpi' in spec:
@@ -45,16 +47,19 @@ class Espresso(Package):
             options.append('--with-scalapack=yes')
 
         if '+elpa' in spec:
-            options.append('--with-elpa=%s' % spec['elpa'].prefix)
+            options.append('--with-elpa=yes')
 
         # Add a list of directories to search
         search_list = []
         for name, dependency_spec in spec.dependencies.iteritems():
-            print name
             search_list.extend([dependency_spec.prefix.lib,
                                 dependency_spec.prefix.lib64])
+
         search_list = " ".join(search_list)
         options.append('LIBDIRS=%s' % search_list)
+        options.append('F90=%s' % os.environ['FC'])
+
         configure(*options)
         make('all')
-        make('install')
+        make('install')        
+
