@@ -51,6 +51,7 @@ class Mpich(Package):
         os.environ['MPICH_CC']  = os.environ['CC']
         os.environ['MPICH_CXX'] = os.environ['CXX']
         os.environ['MPICH_F77'] = os.environ['F77']
+        os.environ['MPICH_F90'] = os.environ['FC']
         os.environ['MPICH_FC'] = os.environ['FC']
 
 
