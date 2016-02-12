@@ -50,8 +50,10 @@ class Gcc(Package):
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
-    variant('binutils', default=sys.platform != 'darwin', description="Build via binutils")
-    variant('gold', default=sys.platform != 'darwin', description="Build the gold linker plugin for ld-based LTO")
+    variant('binutils', default=sys.platform != 'darwin',
+        description="Build via binutils")
+    variant('gold', default=sys.platform != 'darwin',
+        description="Build the gold linker plugin for ld-based LTO")
 
     depends_on("mpfr")
     depends_on("gmp")
@@ -66,7 +68,8 @@ class Gcc(Package):
 
     def install(self, spec, prefix):
         # libjava/configure needs a minor fix to install into spack paths.
-        filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure', string=True)
+        filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure',
+            string=True)
 
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
         if spec.satisfies("@4.7.1:") and sys.platform != 'darwin':
@@ -77,17 +80,19 @@ class Gcc(Package):
                    "--libdir=%s/lib64" % prefix,
                    "--disable-multilib",
                    "--enable-languages=" + ','.join(enabled_languages),
-                   "--with-mpc=%s"    % spec['mpc'].prefix,
-                   "--with-mpfr=%s"   % spec['mpfr'].prefix,
-                   "--with-gmp=%s"    % spec['gmp'].prefix,
+                   "--with-mpc=%s" % spec['mpc'].prefix,
+                   "--with-mpfr=%s" % spec['mpfr'].prefix,
+                   "--with-gmp=%s" % spec['gmp'].prefix,
                    "--enable-lto",
                    "--with-quad"]
         # Binutils
         if spec.satisfies('+binutils'):
             static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
             binutils_options = ["--with-sysroot=/",
-                                "--with-stage1-ldflags=%s %s" % (self.rpath_args, static_bootstrap_flags),
-                                "--with-boot-ldflags=%s %s"   %     (self.rpath_args, static_bootstrap_flags),
+                                "--with-stage1-ldflags=%s %s" %
+                                    (self.rpath_args, static_bootstrap_flags),
+                                "--with-boot-ldflags=%s %s" %
+                                    (self.rpath_args, static_bootstrap_flags),
                                 "--with-gnu-ld",
                                 "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
                                 "--with-gnu-as",
@@ -120,7 +125,8 @@ class Gcc(Package):
         """Generate a spec file so the linker adds a rpath to the libs
            the compiler used to build the executable."""
         if not self.spec_dir:
-            tty.warn("Could not install specs for %s." % self.spec.format('$_$@'))
+            tty.warn("Could not install specs for %s." %
+                self.spec.format('$_$@'))
             return
 
         gcc = Executable(join_path(self.prefix.bin, 'gcc'))
@@ -130,5 +136,6 @@ class Gcc(Package):
             for line in lines:
                 out.write(line + "\n")
                 if line.startswith("*link:"):
-                    out.write("-rpath %s/lib:%s/lib64 \\\n"% (self.prefix, self.prefix))
+                    out.write("-rpath %s/lib:%s/lib64 \\\n" %
+                        (self.prefix, self.prefix))
         set_install_permissions(specs_file)
