@@ -1,10 +1,10 @@
 import os
 
-from spack.provider_contracts import MpiProvider
+from spack.provider_contracts import StandardMpiProvider
 from spack import *
 
 
-class Mvapich2(MpiProvider, Package):
+class Mvapich2(StandardMpiProvider, Package):
     """
     MVAPICH2 is an MPI implementation for Infiniband networks.
     """
@@ -55,22 +55,6 @@ class Mvapich2(MpiProvider, Package):
     ##########
 
     # FIXME : CUDA support is missing
-
-    @property
-    def cc_compiler_wrapper(self):
-        return join_path(self.prefix.bin, 'mpicc')
-
-    @property
-    def cxx_compiler_wrapper(self):
-        return join_path(self.prefix.bin, 'mpicxx')
-
-    @property
-    def f77_compiler_wrapper(self):
-        return join_path(self.prefix.bin, 'mpif77')
-
-    @property
-    def fc_compiler_wrapper(self):
-        return join_path(self.prefix.bin, 'mpifort')
 
     def url_for_version(self, version):
         base_url = "http://mvapich.cse.ohio-state.edu/download"

@@ -28,7 +28,10 @@ Collects all the explicit contracts enforced on providers
 import abc
 
 
-class MpiProvider(object):
+class MpiProviderContract(object):
+    """
+    ABC that defines a common interface for MPI providers
+    """
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractproperty
@@ -47,3 +50,23 @@ class MpiProvider(object):
     def fc_compiler_wrapper(self):
         pass
 
+
+class StandardMpiProvider(MpiProviderContract):
+    """
+    Standard values that fit the most common FOSS implementations
+    """
+    @property
+    def cc_compiler_wrapper(self):
+        return join_path(self.prefix.bin, 'mpicc')
+
+    @property
+    def cxx_compiler_wrapper(self):
+        return join_path(self.prefix.bin, 'mpicxx')
+
+    @property
+    def f77_compiler_wrapper(self):
+        return join_path(self.prefix.bin, 'mpif77')
+
+    @property
+    def fc_compiler_wrapper(self):
+        return join_path(self.prefix.bin, 'mpifort')

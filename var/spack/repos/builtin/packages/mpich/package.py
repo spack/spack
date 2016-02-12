@@ -24,11 +24,11 @@
 ##############################################################################
 import os
 
-from spack.provider_contracts import MpiProvider
+from spack.provider_contracts import StandardMpiProvider
 from spack import *
 
 
-class Mpich(MpiProvider, Package):
+class Mpich(StandardMpiProvider, Package):
     """
     MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard.
@@ -49,22 +49,6 @@ class Mpich(MpiProvider, Package):
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
 
     provides('mpi')
-
-    @property
-    def cc_compiler_wrapper(self):
-        return join_path(self.prefix.bin, 'mpicc')
-
-    @property
-    def cxx_compiler_wrapper(self):
-        return join_path(self.prefix.bin, 'mpicxx')
-
-    @property
-    def f77_compiler_wrapper(self):
-        return join_path(self.prefix.bin, 'mpif77')
-
-    @property
-    def fc_compiler_wrapper(self):
-        return join_path(self.prefix.bin, 'mpifort')
 
     def setup_dependent_environment(self, module, spec, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""
