@@ -181,6 +181,11 @@ while [ -n "$1" ]; do
                 for rpath in ${arg//,/ }; do
                     rpaths+=("$rpath")
                 done
+            elif [[ $arg = -rpath,* ]]; then
+                arg="${arg#-rpath,}"
+                for rpath in ${arg//,/ }; do
+                    rpaths+=("$rpath")
+                done
             elif [[ $arg = -rpath ]]; then
                 shift; arg="$1"
                 if [[ $arg != -Wl,* ]]; then
