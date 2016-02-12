@@ -94,11 +94,11 @@ case "$command" in
         command="$SPACK_CXX"
         language="C++"
         ;;
-    f90|fc|f95|gfortran|ifort|pgf90|xlf90)
+    f90|fc|f95|gfortran|ifort|pgf90|xlf90|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
         ;;
-    f77|gfortran|ifort|pgf77|xlf)
+    f77|gfortran|ifort|pgf77|xlf|nagfor)
         command="$SPACK_F77"
         language="Fortran 77"
         ;;

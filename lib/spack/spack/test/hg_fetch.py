@@ -47,16 +47,13 @@ class HgFetchTest(MockPackagesTest):
 
         spec = Spec('hg-test')
         spec.concretize()
-        self.pkg = spack.db.get(spec, new=True)
+        self.pkg = spack.repo.get(spec, new=True)
 
 
     def tearDown(self):
         """Destroy the stage space used by this test."""
         super(HgFetchTest, self).tearDown()
-
-        if self.repo.stage is not None:
-            self.repo.stage.destroy()
-
+        self.repo.destroy()
         self.pkg.do_clean()
 
 

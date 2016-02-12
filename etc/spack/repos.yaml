@@ -1,0 +1,8 @@
+# -------------------------------------------------------------------------
+# This is the default spack repository configuration.
+#
+# Changes to this file will affect all users of this spack install,
+# although users can override these settings in their ~/.spack/repos.yaml.
+# -------------------------------------------------------------------------
+repos:
+  - $spack/var/spack/repos/builtin

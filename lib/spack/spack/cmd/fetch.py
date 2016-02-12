@@ -52,10 +52,10 @@ def fetch(parser, args):
         if args.missing or args.dependencies:
             to_fetch = set()
             for s in spec.traverse():
-                package = spack.db.get(s)
+                package = spack.repo.get(s)
                 if args.missing and package.installed:
                     continue
                 package.do_fetch()
 
-        package = spack.db.get(spec)
+        package = spack.repo.get(spec)
         package.do_fetch()

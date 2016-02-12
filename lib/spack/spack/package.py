@@ -34,7 +34,9 @@ rundown on spack and how it differs from homebrew, look at the
 README.
 """
 import os
+import errno
 import re
+import shutil
 import time
 import itertools
 import subprocess
@@ -372,7 +374,7 @@ class Package(object):
         self._total_time = 0.0
 
         if self.is_extension:
-            spack.db.get(self.extendee_spec)._check_extendable()
+            spack.repo.get(self.extendee_spec)._check_extendable()
 
 
     @property
@@ -564,7 +566,7 @@ class Package(object):
                     yield spec
                 continue
 
-            for pkg in spack.db.get(name).preorder_traversal(visited, **kwargs):
+            for pkg in spack.repo.get(name).preorder_traversal(visited, **kwargs):
                 yield pkg
 
 
@@ -629,7 +631,7 @@ class Package(object):
         spack.install_layout.remove_install_directory(self.spec)
 
 
-    def do_fetch(self):
+    def do_fetch(self, mirror_only=False):
         """Creates a stage directory and downloads the taball for this package.
            Working directory will be set to the stage directory.
         """
@@ -654,7 +656,7 @@ class Package(object):
                 raise FetchError(
                     "Will not fetch %s." % self.spec.format('$_$@'), checksum_msg)
 
-        self.stage.fetch()
+        self.stage.fetch(mirror_only)
 
         ##########
         # Fetch resources
@@ -675,7 +677,8 @@ class Package(object):
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
 
-    def do_stage(self):
+
+    def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
            directory."""
         if not self.spec.concrete:
@@ -689,14 +692,15 @@ class Package(object):
             else:
                 tty.msg("Already staged %s in %s." % (name, stage.path))
 
-
-        self.do_fetch()
+        self.do_fetch(mirror_only)
         _expand_archive(self.stage)
 
         ##########
         # Stage resources in appropriate path
         resources = self._get_resources()
-        for resource in resources:
+        # TODO: this is to allow nested resources, a better solution would be
+        # good
+        for resource in sorted(resources, key=lambda res: len(res.destination)):
             stage = resource.fetcher.stage
             _expand_archive(stage, resource.name)
             # Turn placement into a dict with relative paths
@@ -705,11 +709,23 @@ class Package(object):
                 placement = {'': placement}
             # Make the paths in the dictionary absolute and link
             for key, value in placement.iteritems():
-                link_path = join_path(self.stage.source_path, resource.destination, value)
+                target_path = join_path(self.stage.source_path, resource.destination)
+                link_path = join_path(target_path, value)
                 source_path = join_path(stage.source_path, key)
+
+                try:
+                    os.makedirs(target_path)
+                except OSError as err:
+                    if err.errno == errno.EEXIST and os.path.isdir(target_path):
+                        pass
+                    else: raise
+
+                # NOTE: a reasonable fix for the TODO above might be to have
+                # these expand in place, but expand_archive does not offer
+                # this
+
                 if not os.path.exists(link_path):
-                    # Create a symlink
-                    os.symlink(source_path, link_path)
+                    shutil.move(source_path, link_path)
         ##########
         self.stage.chdir_to_source()
 
@@ -733,9 +749,10 @@ class Package(object):
 
         # Construct paths to special files in the archive dir used to
         # keep track of whether patches were successfully applied.
-        archive_dir = self.stage.source_path
-        good_file = join_path(archive_dir, '.spack_patched')
-        bad_file  = join_path(archive_dir, '.spack_patch_failed')
+        archive_dir     = self.stage.source_path
+        good_file       = join_path(archive_dir, '.spack_patched')
+        no_patches_file = join_path(archive_dir, '.spack_no_patches')
+        bad_file        = join_path(archive_dir, '.spack_patch_failed')
 
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
@@ -749,29 +766,52 @@ class Package(object):
         if os.path.isfile(good_file):
             tty.msg("Already patched %s" % self.name)
             return
+        elif os.path.isfile(no_patches_file):
+            tty.msg("No patches needed for %s." % self.name)
+            return
 
         # Apply all the patches for specs that match this one
+        patched = False
         for spec, patch_list in self.patches.items():
             if self.spec.satisfies(spec):
                 for patch in patch_list:
-                    tty.msg('Applying patch %s' % patch.path_or_url)
                     try:
                         patch.apply(self.stage)
+                        tty.msg('Applied patch %s' % patch.path_or_url)
+                        patched = True
                     except:
                         # Touch bad file if anything goes wrong.
+                        tty.msg('Patch %s failed.' % patch.path_or_url)
                         touch(bad_file)
                         raise
 
-        # patch succeeded.  Get rid of failed file & touch good file so we
-        # don't try to patch again again next time.
+        if has_patch_fun:
+            try:
+                self.patch()
+                tty.msg("Ran patch() for %s." % self.name)
+                patched = True
+            except:
+                tty.msg("patch() function failed for %s." % self.name)
+                touch(bad_file)
+                raise
+
+        # Get rid of any old failed file -- patches have either succeeded
+        # or are not needed.  This is mostly defensive -- it's needed
+        # if the restage() method doesn't clean *everything* (e.g., for a repo)
         if os.path.isfile(bad_file):
             os.remove(bad_file)
-        touch(good_file)
 
-        if has_patch_fun:
-            self.patch()
+        # touch good or no patches file so that we skip next time.
+        if patched:
+            touch(good_file)
+        else:
+            touch(no_patches_file)
 
-        tty.msg("Patched %s" % self.name)
+
+    @property
+    def namespace(self):
+        namespace, dot, module = self.__module__.rpartition('.')
+        return namespace
 
 
     def do_fake_install(self):
@@ -794,10 +834,6 @@ class Package(object):
         pieces = ['resource', resource.name, self.spec.dag_hash()]
         resource_stage_folder = '-'.join(pieces)
         return resource_stage_folder
-
-    def _build_logger(self, log_path):
-        """Create a context manager to log build output."""
-
 
 
     def do_install(self,
@@ -852,7 +888,7 @@ class Package(object):
                 tty.warn("Keeping install prefix in place despite error.",
                          "Spack will think this package is installed." +
                          "Manually remove this directory to fix:",
-                         self.prefix)
+                         self.prefix, wrap=True)
 
 
         def real_work():
@@ -1164,7 +1200,7 @@ class Package(object):
             raise VersionFetchError(self.__class__)
 
         try:
-            return find_versions_of_archive(
+            return spack.util.web.find_versions_of_archive(
                 *self.all_urls, list_url=self.list_url, list_depth=self.list_depth)
         except spack.error.NoNetworkConnectionError, e:
             tty.die("Package.fetch_versions couldn't connect to:",
@@ -1186,49 +1222,6 @@ class Package(object):
     def rpath_args(self):
         """Get the rpath args as a string, with -Wl,-rpath= for each element."""
         return " ".join("-Wl,-rpath=%s" % p for p in self.rpath)
-
-
-def find_versions_of_archive(*archive_urls, **kwargs):
-    list_url   = kwargs.get('list_url', None)
-    list_depth = kwargs.get('list_depth', 1)
-
-    # Generate a list of list_urls based on archive urls and any
-    # explicitly listed list_url in the package
-    list_urls = set()
-    if list_url:
-        list_urls.add(list_url)
-    for aurl in archive_urls:
-        list_urls.add(spack.url.find_list_url(aurl))
-
-    # Grab some web pages to scrape.
-    page_map = {}
-    for lurl in list_urls:
-        pages = spack.util.web.get_pages(lurl, depth=list_depth)
-        page_map.update(pages)
-
-    # Scrape them for archive URLs
-    regexes = []
-    for aurl in archive_urls:
-        # This creates a regex from the URL with a capture group for
-        # the version part of the URL.  The capture group is converted
-        # to a generic wildcard, so we can use this to extract things
-        # on a page that look like archive URLs.
-        url_regex = spack.url.wildcard_version(aurl)
-
-        # We'll be a bit more liberal and just look for the archive
-        # part, not the full path.
-        regexes.append(os.path.basename(url_regex))
-
-    # Build a version list from all the matches we find
-    versions = {}
-    for page_url, content in page_map.iteritems():
-        # extract versions from matches.
-        for regex in regexes:
-            versions.update(
-                (Version(m.group(1)), urljoin(page_url, m.group(0)))
-                for m in re.finditer(regex, content))
-
-    return versions
 
 
 def validate_package_url(url_string):
