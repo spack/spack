@@ -43,8 +43,9 @@ class Dakota(Package):
                         '-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if '+shared' in spec else 'OFF')])
 
         if '+mpi' in spec:
+            mpi_provider = spec['mpi'].package
             options.extend(['-DDAKOTA_HAVE_MPI:BOOL=ON',
-                            '-DMPI_CXX_COMPILER:STRING=%s' % join_path(spec['mpi'].prefix.bin, 'mpicxx')])
+                            '-DMPI_CXX_COMPILER:STRING=%s' % mpi_provider.cxx_compiler_wrapper])
 
         build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path

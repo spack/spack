@@ -82,12 +82,12 @@ class Mumps(Package):
                  'OPTL    = -O ',
                  'OPTC    = -O '])
 
-
         if '+mpi' in self.spec:
+            mpi_provider = spec['mpi'].package
             makefile_conf.extend(
-                ["CC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpicc'),
-                 "FC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
-                 "FL = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
+                ["CC = %s" % mpi_provider.cc_compiler_wrapper,
+                 "FC = %s" % mpi_provider.fc_compiler_wrapper,
+                 "FL = %s" % mpi_provider.fc_compiler_wrapper,
                  "SCALAP = %s" % self.spec['scalapack'].fc_link,
                  "MUMPS_TYPE = par"])
         else:

@@ -96,16 +96,17 @@ class Hdf5(Package):
             # that parts of the MPI interface are not accessible via the C++
             # interface. Since they are still accessible via the C interface,
             # this is not actually a problem.
+            mpi_provider = spec['mpi'].package
             extra_args.extend([
                 "--enable-parallel",
-                "CC=%s" % spec['mpi'].prefix.bin + "/mpicc",
+                "CC=%s" % mpi_provider.cc_compiler_wrapper,
             ])
 
             if '+cxx' in spec:
-                extra_args.append("CXX=%s" % spec['mpi'].prefix.bin + "/mpic++")
+                extra_args.append("CXX=%s" % mpi_provider.cxx_compiler_wrapper)
 
             if '+fortran' in spec:
-                extra_args.append("FC=%s" % spec['mpi'].prefix.bin + "/mpifort")
+                extra_args.append("FC=%s" % mpi_provider.fc_compiler_wrapper)
 
         if '+szip' in spec:
             extra_args.append("--with-szlib=%s" % spec['szip'].prefix)
