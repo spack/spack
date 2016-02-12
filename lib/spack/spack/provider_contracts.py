@@ -26,7 +26,7 @@
 Collects all the explicit contracts enforced on providers
 """
 import abc
-
+from llnl.util.filesystem import join_path
 
 class MpiProviderContract(object):
     """
