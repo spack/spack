@@ -174,19 +174,26 @@ while [ -n "$1" ]; do
             libs+=("$arg")
             ;;
         -Wl,*)
+            echo "FOUND arg=[$arg]" >&2
             arg="${1#-Wl,}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
+            echo "SHIFTED, arg=[$arg]" >&2
             if [[ $arg = -rpath=* ]]; then
+                echo "CASE 1" >&2
                 arg="${arg#-rpath=}"
                 for rpath in ${arg//,/ }; do
+                    echo "    RPATH=[$rpath]" >&2
                     rpaths+=("$rpath")
                 done
             elif [[ $arg = -rpath,* ]]; then
+                echo "CASE 2" >&2
                 arg="${arg#-rpath,}"
                 for rpath in ${arg//,/ }; do
+                    echo "    RPATH=[$rpath]" >&2
                     rpaths+=("$rpath")
                 done
             elif [[ $arg = -rpath ]]; then
+                echo "CASE 3" >&2
                 shift; arg="$1"
                 if [[ $arg != -Wl,* ]]; then
                     die "-Wl,-rpath was not followed by -Wl,*"
@@ -194,9 +201,11 @@ while [ -n "$1" ]; do
                 # TODO: Handle multiple -Wl, continuations of -Wl,-rpath
                 arg="${arg#-Wl,}"
                 for rpath in ${arg//,/ }; do
+                    echo "    RPATH=[$rpath]" >&2
                     rpaths+=("$rpath")
                 done
             else
+                echo "OTHER" >&2
                 other_args+=("-Wl,$arg")
             fi
             ;;
