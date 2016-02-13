@@ -168,9 +168,11 @@ class Platform(object):
     def add_operating_system(self, name=None, operating_system=None):
         if self.name == 'linux':
             linux_os = self._detect_linux_os()
+            self.default_os = linux_os.name
             self.operating_sys[linux_os.name] = linux_os
         elif self.name == 'darwin':
             mac_os = self._detect_mac_os()
+            self.default_os = mac_os.name
             self.operating_sys[mac_os.name] = mac_os
         else:
             self.operating_sys[name] = operating_system
