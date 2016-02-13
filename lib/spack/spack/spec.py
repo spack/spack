@@ -63,7 +63,7 @@ line is a spec for a particular installation of the mpileaks package.
    if it comes immediately after the compiler name.  Otherwise it will be
    associated with the current package spec.
 
-6. The target to build with.  This is needed on machines where
+6. The architecture to build with.  This is needed on machines where
    cross-compilation is required
 
 Here is the EBNF grammar for a spec::
@@ -72,9 +72,9 @@ Here is the EBNF grammar for a spec::
   dep_list     = { ^ spec }
   spec         = id [ options ]
   options      = { @version-list | +variant | -variant | ~variant |
-                   %compiler | =target }
+                   %compiler | =architecture }
   variant      = id
-  target       = id
+  architecture = id
   compiler     = id [ version-list ]
   version-list = version [ { , version } ]
   version      = id | id: | :id | id:id
@@ -107,6 +107,7 @@ from llnl.util.lang import *
 from llnl.util.tty.color import *
 
 import spack
+import spack.architecture
 import spack.parse
 import spack.error
 import spack.compilers as compilers
@@ -123,7 +124,7 @@ identifier_re = r'\w[\w-]*'
 # Convenient names for color formats so that other things can use them
 compiler_color         = '@g'
 version_color          = '@c'
-target_color           = '@m'
+architecture_color           = '@m'
 enabled_variant_color  = '@B'
 disabled_variant_color = '@r'
 dependency_color       = '@.'
@@ -134,7 +135,7 @@ hash_color             = '@K'
    See spack.color for descriptions of the color codes. """
 color_formats = {'%' : compiler_color,
                  '@' : version_color,
-                 '=' : target_color,
+                 '=' : architecture_color,
                  '+' : enabled_variant_color,
                  '~' : disabled_variant_color,
                  '^' : dependency_color,
@@ -411,7 +412,7 @@ class Spec(object):
         self.name = other.name
         self.dependents = other.dependents
         self.versions = other.versions
-        self.target = other.target
+        self.architecture = other.architecture
         self.compiler = other.compiler
         self.dependencies = other.dependencies
         self.variants = other.variants
@@ -456,11 +457,11 @@ class Spec(object):
         self.compiler = compiler
 
 
-    def _set_target(self, target):
-        """Called by the parser to set the target."""
-        if self.target: raise DuplicateTargetError(
-                "Spec for '%s' cannot have two targets." % self.name)
-        self.target = target # a string can be set
+    def _set_architecture(self, architecture):
+        """Called by the parser to set the architecture."""
+        if self.architecture: raise DuplicateArchitectureError(
+                "Spec for '%s' cannot have two architectures." % self.name)
+        self.architecture = architecture # a string can be set
 
 
     def _add_dependency(self, spec):
@@ -516,7 +517,7 @@ class Spec(object):
     @property
     def concrete(self):
         """A spec is concrete if it can describe only ONE build of a package.
-           If any of the name, version, target, compiler,
+           If any of the name, version, architecture, compiler,
            variants, or depdenencies are ambiguous,then it is not concrete.
         """
         if self._concrete:
@@ -525,7 +526,7 @@ class Spec(object):
         self._concrete = bool(not self.virtual
                               and self.versions.concrete
                               and self.variants.concrete
-                              and self.target
+                              and self.architecture
                               and self.compiler and self.compiler.concrete
                               and self.dependencies.concrete)
         return self._concrete
@@ -660,10 +661,12 @@ class Spec(object):
             'dependencies' : dict((d, self.dependencies[d].dag_hash())
                                   for d in sorted(self.dependencies))
         }
-        if self.target:
-            d['target'] = self.target.target.to_dict()
+        if self.architecture:
+            # TODO: Fix the target.to_dict to account for the tuple
+            # Want it to be a dict of dicts
+            d['architecture'] = self.architecture.target.to_dict()
         else:
-            d['target'] = None
+            d['architecture'] = None
         if self.compiler:
             d.update(self.compiler.to_dict())
         else:
@@ -689,7 +692,9 @@ class Spec(object):
 
         spec = Spec(name)
         spec.versions = VersionList.from_dict(node)
-        spec.target = spack.architecture.Target.from_dict(node['target'])
+        # TODO: Need to fix the architecture.Target.from_dict
+        spec.architecture = spack.architecture.Target.from_dict(
+                                                        node['architecture'])
 
         if node['compiler'] is None:
             spec.compiler = None
@@ -760,7 +765,7 @@ class Spec(object):
             # to presets below, their constraints will all be merged, but we'll
             # still need to select a concrete package later.
             changed |= any(
-                (spack.concretizer.concretize_target(self),
+                (spack.concretizer.concretize_architecture(self),
                  spack.concretizer.concretize_compiler(self),
                  spack.concretizer.concretize_version(self),
                  spack.concretizer.concretize_variants(self)))
@@ -1149,10 +1154,11 @@ class Spec(object):
                 raise UnsatisfiableVariantSpecError(self.variants[v],
                                                     other.variants[v])
 
-        if self.target is not None and other.target is not None:
-            if self.target != other.target:
-                raise UnsatisfiableTargetSpecError(self.target,
-                                                         other.target)
+        # TODO: Check out the logic here
+        if self.architecture is not None and other.architecture is not None:
+            if self.architecture != other.architecture:
+                raise UnsatisfiableTargetSpecError(self.architecture,
+                                                         other.architecture)
 
         changed = False
         if self.compiler is not None and other.compiler is not None:
@@ -1164,9 +1170,9 @@ class Spec(object):
         changed |= self.versions.intersect(other.versions)
         changed |= self.variants.constrain(other.variants)
 
-        old = self.target
-        self.target = self.target or other.target
-        changed |= (self.target != old)
+        old = self.architecture
+        self.architecture = self.architecture or other.architecture
+        changed |= (self.architecture != old)
 
         if deps:
             changed |= self._constrain_dependencies(other)
@@ -1231,34 +1237,67 @@ class Spec(object):
         except SpecError:
             return parse_anonymous_spec(spec_like, self.name)
 
+    def _is_valid_platform(self, platform, platform_list):
+        if platform in platform_names:
+            return True
+        return False
 
-    def add_target_from_string(self, arch):
-        """If only a target is provided, spack will assume the default architecture.
-        A platform-target pair can be input delimited by a '-'. If either portion of
-        a platform-target pair is empty, spack will supply a default, in the case of
-        a blank target the default will be dependent on the platform.
-        E.g. x86_64        -> 64 bit x86
-             bgq-          -> default bgq target (back end/powerpc)
-             cray-hawswell -> haswell target on cray platform
+    def _is_valid_target(self, target, platform):
+        if target in platform.targets:
+                return True
+            return False
+
+    def add_architecture_from_string(self, arch):
+        """ The user is able to provide a architecture string of the form
+            platform-os-target. This string will be parsed by this function
+            and turn the architecture string into an architecture tuple of
+            platform, operating system and target processor classes.
+            The platform-os-target triplet can be delimited by a '-'. If any
+            portion of the architecture triplet is empty, spack will supply
+            the default. If the architecture is blank then defaults will 
+            be provided based off of the platform
+
+            e.g 
+                =linux-ubuntu10-x84_64    -> (linux, ubuntu10, x86_64)
+
+                =cray_xc-SuSE11-haswell   -> (cray_xc, SuSE11, haswell)
+
+                =bgq                      -> (bgq, 
+                                              default_os, 
+                                              default_target)
+
+                =elcapitan                -> (darwin, elcapitan, x86_64)
+
+                =x86_64                   -> (autodetected platform, 
+                                              default_os,
+                                              x86_64)
         """
-        Arch = namedtuple("Arch", "arch_os target")
-        platform = spack.architecture.sys_type()
-        
+
+        platform_list = spack.architecture.all_platforms()
+        platform_names = [plat.__name__.lower() for plat in platform_list]
         if arch is None: 
             return
+        # Get all the platforms to check whether string is valid
+        Arch = namedtuple("Arch", "platform platform_os target")        
+        arch_list = arch.split("-")
+        platform = spack.architecture.sys_type()
+        for entry in arch_list:
+            if _is_valid_platform(entry, platform_names):
+                platform = entry()
+            elif _is_valid_target(entry, platform):
+                target = entry
+            else:
+                platform_os = entry
 
-        if '-' in arch:
-            os_name, target = arch.split('-')
-            self.target = Arch(arch_os=platform.operating_system(os_name),
-                    target = platform.target(target))
-        elif arch in platform.targets:
-                self.target = Arch(arch_os=platform.operating_system('default'),
-                                    target=platform.target(target))
-        else:
-            os_name = arch # Odd naming here, definitely need to change
-            self.target = Arch(arch_os=platform.operating_system(os_name),
-                                target=platform.target('default'))
+        if target is None:
+            target = platform.target('default')
+        if platform_os is None:
+            platform_os = platform.operating_system('default')
 
+        self.architecture = Arch(platform=platform, 
+                                 platform_os=platform_os, 
+                                 target=target)
+        
     def satisfies(self, other, deps=True, strict=False):
         """determine if this spec satisfies all constraints of another.
 
@@ -1306,15 +1345,16 @@ class Spec(object):
 
         # Target satisfaction is currently just class equality.
         # If not strict, None means unconstrained.
-        if isinstance(self.target, basestring):
-            self.add_target_from_string(self.target)
-        if isinstance(other.target, basestring):
-            other.add_target_from_string(other.target)
+        if isinstance(self.architecture, basestring):
+            self.add_architecture_from_string(self.architecture)
+        if isinstance(other.architecture, basestring):
+            other.add_architecture_from_string(other.architecture)
 
-        if self.target and other.target:
-            if self.target != other.target:
+        # TODO: Need to make sure that comparisons can be made via classes
+        if self.architecture and other.architecture:
+            if self.architecture != other.architecture:
                 return False
-        elif strict and (other.target and not self.target):
+        elif strict and (other.architecture and not self.architecture):
             return False
 
         # If we need to descend into dependencies, do it, otherwise we're done.
@@ -1384,11 +1424,12 @@ class Spec(object):
                spec but not its dependencies.
         """
 
+        # TODO: Check if comparisons for tuple are valid
         # We don't count dependencies as changes here
         changed = True
         if hasattr(self, 'name'):
             changed = (self.name != other.name and self.versions != other.versions and \
-                       self.target != other.target and self.compiler != other.compiler and \
+                       self.architecture != other.architecture and self.compiler != other.compiler and \
                        self.variants != other.variants and self._normal != other._normal and \
                        self.concrete != other.concrete and self.external != other.external and \
                        self.external_module != other.external_module)
@@ -1396,7 +1437,7 @@ class Spec(object):
         # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
-        self.target = other.target
+        self.architecture = other.architecture
         self.compiler = other.compiler.copy() if other.compiler else None
         if kwargs.get('cleardeps', True):
             self.dependents = DependencyMap()
@@ -1526,7 +1567,7 @@ class Spec(object):
     def _cmp_node(self):
         """Comparison key for just *this node* and not its deps."""
         return (self.name, self.versions, self.variants,
-                self.target, self.compiler)
+                self.architecture, self.compiler)
 
 
     def eq_node(self, other):
@@ -1585,7 +1626,7 @@ class Spec(object):
            Anything else is copied verbatim into the output stream.
 
            *Example:*  ``$_$@$+`` translates to the name, version, and options
-           of the package, but no dependencies, target, or compiler.
+           of the package, but no dependencies, architecture, or compiler.
 
            TODO: allow, e.g., $6# to customize short hash length
            TODO: allow, e.g., $## for full hash.
@@ -1628,9 +1669,10 @@ class Spec(object):
                 elif c == '+':
                     if self.variants:
                         write(fmt % str(self.variants), c)
+                # TODO: Check string methods here
                 elif c == '=':
-                    if self.target:
-                        write(fmt % (c + str(self.target)), c)
+                    if self.architecture:
+                        write(fmt % (c + str(self.architecture)), c)
                 elif c == '#':
                     out.write('-' + fmt % (self.dag_hash(7)))
                 elif c == '$':
@@ -2036,10 +2078,10 @@ class UnknownVariantError(SpecError):
             "Package %s has no variant %s!" % (pkg, variant))
 
 
-class DuplicateTargetError(SpecError):
+class DuplicateArchitectureError(SpecError):
     """Raised when the same target occurs in a spec twice."""
     def __init__(self, message):
-        super(DuplicateTargetError, self).__init__(message)
+        super(DuplicateArchitectureError, self).__init__(message)
 
 
 class InconsistentSpecError(SpecError):
