@@ -24,6 +24,7 @@
 ##############################################################################
 
 from spack import *
+import sys
 
 # FIXME : lot of code is duplicated from packages/metis/package.py . Inheriting from there may reduce
 # FIXME : the installation rules to just a few lines
@@ -93,3 +94,9 @@ class Parmetis(Package):
             # Parmetis build system doesn't allow for an external metis to be used, but doesn't copy the required
             # metis header either
             install(metis_header, self.prefix.include)
+
+        # The shared library is not installed correctly on Darwin; correct this
+        if sys.platform == 'darwin':
+            install_name_tool = which('install_name_tool')
+            install_name_tool('-id', join_path(prefix.lib, 'libparmetis.dylib'),
+                join_path(prefix.lib, 'libparmetis.dylib'))

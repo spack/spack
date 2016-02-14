@@ -1,7 +1,9 @@
 from spack import *
 import spack
 
+import glob
 import os
+import re
 import sys
 
 class Boost(Package):
@@ -197,7 +199,7 @@ class Boost(Package):
             dst = join_path(prefix, 'include', 'boost')
             install_tree(src, dst)
             return
-    
+
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = './'
 
@@ -220,3 +222,17 @@ class Boost(Package):
         # Boost.MPI if the threading options are not separated.
         for threadingOpt in threadingOpts:
             b2('install', 'threading=%s' % threadingOpt, *b2_options)
+
+        # The shared libraries are not installed correctly on Darwin; correct this
+        if sys.platform == 'darwin':
+            install_name_tool = which('install_name_tool')
+            otool = which('otool')
+            for lib in glob.glob(join_path(prefix.lib, '*.dylib')):
+                install_name_tool('-id', lib, lib)
+                output = otool('-L', lib, output=str)
+                for line in output.split('\n'):
+                    m = re.search(r'\s+(libboost_\S+)', line)
+                    if m:
+                        otherlib = m.group(1)
+                        install_name_tool('-change', otherlib,
+                            join_path(prefix.lib, otherlib), lib)
