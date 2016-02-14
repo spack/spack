@@ -219,7 +219,11 @@ if [[ -n $SPACK_TEST_COMMAND ]]; then
                 elif [[ $arg = -rpath ]]; then
                     shift; arg="$1"
                     if [[ $arg != -Xlinker,* ]]; then
-                    die "-Xlinker,-rpath was not followed by -Xlinker,*"
+                        die "-Xlinker,-rpath was not followed by -Xlinker,*"
+                    fi
+                    rpaths+=("${arg#-Xlinker,}")
+                else
+                    other_args+=("-Xlinker,$arg")
                 fi
                 ;;
             *)
