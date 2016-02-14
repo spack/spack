@@ -188,7 +188,7 @@ while [ -n "$1" ]; do
                 done
             elif [[ $arg == '-rpath' ]]; then
                 shift; arg="$1"
-                if [[ $arg != "-Wl,*" ]]; then
+                if [[ $arg != '-Wl,'* ]]; then
                     die "-Wl,-rpath was not followed by -Wl,*"
                 fi
                 arg="${arg#-Wl,}"
