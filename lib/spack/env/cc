@@ -175,20 +175,19 @@ while [ -n "$1" ]; do
             ;;
         -Wl,*)
             arg="${1#-Wl,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if [[ $arg =~ -rpath=.* ]]; then
+            if [[ $arg = "-rpath=*" ]]; then
                 arg="${arg#-rpath=}"
                 for rpath in ${arg//,/ }; do
                     rpaths+=("$rpath")
                 done
-            elif [[ $arg =~ -rpath,.* ]]; then
+            elif [[ $arg = "-rpath,*" ]]; then
                 arg="${arg#-rpath,}"
                 for rpath in ${arg//,/ }; do
-                                        rpaths+=("$rpath")
+                    rpaths+=("$rpath")
                 done
-            elif [[ $arg = -rpath ]]; then
+            elif [[ $arg = "-rpath" ]]; then
                 shift; arg="$1"
-                if [[ $arg != -Wl,* ]]; then
+                if [[ $arg != "-Wl,*" ]]; then
                     die "-Wl,-rpath was not followed by -Wl,*"
                 fi
                 # TODO: Handle multiple -Wl, continuations of -Wl,-rpath
