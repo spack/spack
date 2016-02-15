@@ -52,10 +52,11 @@ class Mpich(StandardMpiProvider, Package):
 
     def setup_dependent_environment(self, module, spec, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""
-        os.environ['MPICH_CC'] = 'cc'
-        os.environ['MPICH_CXX'] = 'c++'
-        os.environ['MPICH_F77'] = 'f77'
-        os.environ['MPICH_F90'] = 'f90'
+        os.environ['MPICH_CC']  = os.environ['CC']
+        os.environ['MPICH_CXX'] = os.environ['CXX']
+        os.environ['MPICH_F77'] = os.environ['F77']
+        os.environ['MPICH_F90'] = os.environ['FC']
+        os.environ['MPICH_FC'] = os.environ['FC']
 
     def install(self, spec, prefix):
         config_args = ["--prefix=" + prefix,
@@ -91,18 +92,18 @@ class Mpich(StandardMpiProvider, Package):
            be bound to whatever compiler they were built with.
         """
         bin = self.prefix.bin
-        mpicc = os.path.join(bin, 'mpicc')
+        mpicc  = os.path.join(bin, 'mpicc')
         mpicxx = os.path.join(bin, 'mpicxx')
         mpif77 = os.path.join(bin, 'mpif77')
         mpif90 = os.path.join(bin, 'mpif90')
 
-        spack_cc = os.environ['CC']
+        spack_cc  = os.environ['CC']
         spack_cxx = os.environ['CXX']
         spack_f77 = os.environ['F77']
-        spack_fc = os.environ['FC']
+        spack_fc  = os.environ['FC']
 
-        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
-        filter_file('CC="%s"' % spack_cc, 'CC="%s"' % self.compiler.cc, mpicc, **kwargs)
-        filter_file('CXX="%s"' % spack_cxx, 'CXX="%s"' % self.compiler.cxx, mpicxx, **kwargs)
-        filter_file('F77="%s"' % spack_f77, 'F77="%s"' % self.compiler.f77, mpif77, **kwargs)
-        filter_file('FC="%s"' % spack_fc, 'FC="%s"' % self.compiler.fc, mpif90, **kwargs)
+        kwargs = { 'ignore_absent' : True, 'backup' : False, 'string' : True }
+        filter_file('CC="%s"' % spack_cc , 'CC="%s"'  % self.compiler.cc,  mpicc,  **kwargs)
+        filter_file('CXX="%s"'% spack_cxx, 'CXX="%s"' % self.compiler.cxx, mpicxx, **kwargs)
+        filter_file('F77="%s"'% spack_f77, 'F77="%s"' % self.compiler.f77, mpif77, **kwargs)
+        filter_file('FC="%s"' % spack_fc , 'FC="%s"'  % self.compiler.fc,  mpif90, **kwargs)
