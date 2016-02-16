@@ -210,55 +210,74 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
+    def _concretize_platform(self, arch, platform):
+        if issubclass(arch.platform.__class__, spack.architecture.Platform):
+            return True
+        else:
+            arch.platform = platform
+
     def _concretize_operating_system(self, arch, platform):
         """ Future method for concretizing operating system """
-        if isinstance(arch.arch_os, spack.architecture.OperatingSystem):
+        if isinstance(arch.platform_os, spack.architecture.OperatingSystem):
             return False
         else:
-            arch.arch_os = platform.operating_system('default')
+            arch.arch_os = platform.operating_system('default_os')
             return True
             
         
-    def _concretize_arch_target(self, arch, platform):
+    def _concretize_target(self, arch, platform):
         if isinstance(arch.target, spack.architecture.Target):
             return False
         else:
             arch.target = platform.target('default')
             return True
 
-    def concretize_target(self, spec):
-        """If the spec already has an target and it is a an target type,
-        return. Otherwise, if it has a target that is a string type, generate a
-        target based on that type. If it has no target and the root of the
-        DAG has an target, then use that. Otherwise, take the system's default
-        target.
+    def concretize_architecture(self, spec):
+        """If the spec is empty provide the defaults of the platform. If the
+        architecture is not a basestring, then check if either the platform,
+        target or operating system are concretized. If any of the fields are 
+        changed then return True. If everything is concretized (i.e the
+        architecture attribute is a namedtuple of classes) then return False. 
+        If the target is a string type, then convert the string into a 
+        concretized architecture. If it has no architecture and the root of the
+        DAG has an architecture, then use the root otherwise use the defaults
+        on the platform.
         """
-        platform = spack.architecture.sys_type()
 
-        if spec.target is None:
+        platform = spack.architecture.sys_type()
+        import ipdb;ipdb.set_trace()
+        if spec.architecture is None:
             # Create an empty tuple
-             Arch = collections.namedtuple("Arch", "arch_os target")
-             spec.target = Arch(arch_os=platform.operating_system('default'),
-                        target=platform.target('default'))
-             return True
-        # If there is a target and it is a tuple and has both filled return
-        # False
-        if not isinstance(spec.target, basestring):
-            return any((self._concretize_operating_system(spec.target, platform),
-            self._concretize_arch_target(spec.target, platform)))
+            Arch = spack.architecture.Arch
+            # Set the architecture to all defaults
+            spec.architecture = Arch(platform=platform, 
+                    platform_os=platform.operating_system('default_os'),
+                    target=platform.target('default'))
+            return True
+         #If there is a target and it is a tuple and has both filled return
+         #False
+        if not isinstance(spec.architecture, basestring):
+            return any((
+                self._concretize_platform(spec.architecture, platform),
+                self._concretize_operating_system(spec.architecture, platform),
+                self._concretize_arch_target(spec.architecture, platform)))
         else:
             spec.add_target_from_string(spec.target)
 
-        if spec.root.target and \
-            not isinstance(spec.root.target, basestring):
-                bool_flag =  any(
-                        (self._concretize_operating_system(spec.root.target, platform),
-                        self._concretize_arch_target(spec.root.target, platform)))
-                spec.target =spec.root.target
+        # Does not look pretty at all!!!
+        if spec.root.architecture and \
+            not isinstance(spec.root.architecture, basestring):
+                bool_flag =  any((
+                    self._concretize_platform(spec.root.architecture, platform),
+                    self._concretize_operating_system(spec.root.architecture, 
+                                                      platform),
+                    self._concretize_target(spec.root.target, platform)))
+                spec.architecture =spec.root.architecture
                 return bool_flag
         else:
-            spec.add_target_from_string(spec.root.target)
+            spec.add_architecture_from_string(spec.root.architecture)
 
+        return True
                 
         # if there is no target specified used the defaults
     
