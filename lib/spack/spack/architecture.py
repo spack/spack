@@ -22,6 +22,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from collections import namedtuple
 import imp
 import platform as py_platform
 import inspect
@@ -178,7 +179,7 @@ class Platform(object):
             self.operating_sys[name] = operating_system
 
     def operating_system(self, name):
-        if name == 'default':
+        if name == 'default_os':
             name = self.default_os
         if name == 'front_os':
             name = self.front_os
@@ -203,9 +204,10 @@ class Platform(object):
         return self.name
 
     def _cmp_key(self):
-        return (self.name, (_cmp_key(t) for t in self.targets.values()))
+        return (self.name, (_cmp_key(t) for t in self.targets.values()),
+                (_cmp_key(o) for o in self.operating_sys.values()))
 
-
+@key_ordering
 class OperatingSystem(object):
     """ Operating System class. It will include the name and version. 
         The biggest attribute to this class will be the compiler finding
@@ -222,6 +224,19 @@ class OperatingSystem(object):
     def __repr__(self):
         return self.__str__()
     
+    def _cmp_key(self):
+        return (self.name, self.version) 
+
+
+class Arch(namedtuple("Arch", "platform platform_os target")):
+    """ namedtuple for Architecture. Will have it's own __str__ method
+        to make printing out the tuple easier and also won't make directory
+        paths look odd """
+    __slots__ = ()
+
+    def __str__(self):
+        return (self.platform.name +"-"+ 
+                self.platform_os.name + "-" + self.target.name)
 
 @memoized
 def all_platforms():
