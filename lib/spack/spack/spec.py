@@ -1238,14 +1238,18 @@ class Spec(object):
             return parse_anonymous_spec(spec_like, self.name)
 
     def _is_valid_platform(self, platform, platform_list):
-        if platform in platform_names:
+        if platform in platform_list:
             return True
         return False
 
     def _is_valid_target(self, target, platform):
         if target in platform.targets:
                 return True
-            return False
+        return False
+    def _is_valid_os(self, os_string, platform):
+        if os_string in platform.operating_sys:
+            return True
+        return False
 
     def add_architecture_from_string(self, arch):
         """ The user is able to provide a architecture string of the form
@@ -1254,8 +1258,9 @@ class Spec(object):
             platform, operating system and target processor classes.
             The platform-os-target triplet can be delimited by a '-'. If any
             portion of the architecture triplet is empty, spack will supply
-            the default. If the architecture is blank then defaults will 
-            be provided based off of the platform
+            the default. If the entire architecture field is blank then 
+            defaults will be provided based off of the platform. 
+            This happens in the concretize_architecture method in concretize.py
 
             e.g 
                 =linux-ubuntu10-x84_64    -> (linux, ubuntu10, x86_64)
@@ -1272,27 +1277,38 @@ class Spec(object):
                                               default_os,
                                               x86_64)
         """
-
+        if arch is None: return
+        
         platform_list = spack.architecture.all_platforms()
-        platform_names = [plat.__name__.lower() for plat in platform_list]
-        if arch is None: 
-            return
-        # Get all the platforms to check whether string is valid
-        Arch = namedtuple("Arch", "platform platform_os target")        
+        platform_names = {plat.__name__.lower():plat for plat in platform_list}
+        Arch = spack.architecture.Arch       
         arch_list = arch.split("-")
-        platform = spack.architecture.sys_type()
+        
+        # Create instance of current platform, gets overwritten if user
+        # provided a platform spec.
+        platform = spack.architecture.sys_type()                                                 
+        target = None
+        platform_os = None
+
         for entry in arch_list:
-            if _is_valid_platform(entry, platform_names):
-                platform = entry()
-            elif _is_valid_target(entry, platform):
-                target = entry
+            if self._is_valid_platform(entry, platform_names):
+                if entry != platform.name:
+                    platform = platform_dict[entry]() # Create instance of platform
+            elif self._is_valid_target(entry, platform):
+                target = platform.target(entry)
+            # Need to figure out if we're supporting arbitrary os's and how
+            # to account for them
+            # Not really a good implementation since the user can add
+            # gibberish and spack will see it as an os
+            elif self._is_valid_os(entry, platform):
+                platform_os = platform.operating_system(entry)
             else:
-                platform_os = entry
+                raise UnknownArchitectureSpecError(entry)
 
         if target is None:
             target = platform.target('default')
         if platform_os is None:
-            platform_os = platform.operating_system('default')
+            platform_os = platform.operating_system('default_os')
 
         self.architecture = Arch(platform=platform, 
                                  platform_os=platform_os, 
@@ -1854,7 +1870,6 @@ class SpecParser(spack.parse.Parser):
 
     def do_parse(self):
         specs = []
-
         try:
             while self.next:
                 if self.accept(ID):
@@ -1889,7 +1904,7 @@ class SpecParser(spack.parse.Parser):
         spec.name = self.token.value
         spec.versions = VersionList()
         spec.variants = VariantMap(spec)
-        spec.target = None
+        spec.architecture = None
         spec.compiler = None
         spec.external = None
         spec.external_module = None
@@ -1920,7 +1935,7 @@ class SpecParser(spack.parse.Parser):
                 spec._set_compiler(self.compiler())
 
             elif self.accept(EQ):
-                spec._set_target(self.target())
+                spec._set_architecture(self.architecture())
 
             else:
                 break
@@ -1938,7 +1953,7 @@ class SpecParser(spack.parse.Parser):
         return self.token.value
 
 
-    def target(self):
+    def architecture(self):
         self.expect(ID)
         return self.token.value
 
@@ -2077,6 +2092,13 @@ class UnknownVariantError(SpecError):
         super(UnknownVariantError, self).__init__(
             "Package %s has no variant %s!" % (pkg, variant))
 
+class UnknownArchitectureSpecError(SpecError):
+    """ Raised when an entry in a string field is neither a platform,
+        operating system or a target. """
+    def __init__(self, architecture_spec_entry):
+        super(UnknownArchitectureSpecError, self).__init__(
+                "Architecture spec %s is not a valid spec entry" % (
+                                            architecture_spec_entry))
 
 class DuplicateArchitectureError(SpecError):
     """Raised when the same target occurs in a spec twice."""
