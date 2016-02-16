@@ -42,6 +42,7 @@ class Hdf5(Package):
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
 
     variant('debug', default=False, description='Builds a debug version of the library')
+    variant('static', default=False, description='Builds a static executable version of the library')
 
     variant('cxx', default=True, description='Enable C++ support')
     variant('fortran', default=True, description='Enable Fortran support')
@@ -77,6 +78,9 @@ class Hdf5(Package):
             extra_args.append('--enable-debug=all')
         else:
             extra_args.append('--enable-production')
+
+        if '+static' in spec:
+            extra_args.append('--enable-static-exec')
 
         if '+unsupported' in spec:
             extra_args.append("--enable-unsupported")
