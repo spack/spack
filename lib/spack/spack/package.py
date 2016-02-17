@@ -871,7 +871,6 @@ class Package(object):
                 make_jobs=make_jobs)
 
         start_time = time.time()
-        print install_policy
         if install_policy != "build":
             spack.binary_distribution.prepare()
             spack.binary_distribution.download_tarball(self)
