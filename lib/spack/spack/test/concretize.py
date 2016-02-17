@@ -46,7 +46,7 @@ class ConcretizeTest(MockPackagesTest):
         if abstract.compiler and abstract.compiler.concrete:
             self.assertEqual(abstract.compiler, concrete.compiler)
 
-        if abstract.target and abstract.target.concrete:
+        if abstract.architecture and abstract.architecture.target.concrete:
             self.assertEqual(abstract.target, concrete.target)
 
 
