@@ -55,6 +55,10 @@ def setup_parser(subparser):
         help="Fake install.  Just remove the prefix and touch a fake file in it.")
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
+    subparser.add_argument(
+        '-p', '--install-policy', action='store', dest="install_policy",
+        default="build", choices = ["build","download"],
+         help="Install policy (build,download)")
 
 
 def install(parser, args):
@@ -78,4 +82,5 @@ def install(parser, args):
                 ignore_deps=args.ignore_deps,
                 make_jobs=args.jobs,
                 verbose=args.verbose,
-                fake=args.fake)
+                fake=args.fake,
+                install_policy=args.install_policy)

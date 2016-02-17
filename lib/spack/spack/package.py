@@ -58,6 +58,7 @@ import spack.compilers
 import spack.mirror
 import spack.hooks
 import spack.directives
+import spack.binary_distribution
 import spack.build_environment
 import spack.url
 import spack.util.web
@@ -838,20 +839,21 @@ class Package(object):
 
     def do_install(self,
                    keep_prefix=False,  keep_stage=False, ignore_deps=False,
-                   skip_patch=False, verbose=False, make_jobs=None, fake=False):
+                   skip_patch=False, verbose=False, make_jobs=None, fake=False,install_policy="build"):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
         their build process.
 
         Args:
-        keep_prefix -- Keep install prefix on failure. By default, destroys it.
-        keep_stage  -- Keep stage on successful build. By default, destroys it.
-        ignore_deps -- Do not install dependencies before installing this package.
-        fake        -- Don't really build -- install fake stub files instead.
-        skip_patch  -- Skip patch stage of build if True.
-        verbose     -- Display verbose build output (by default, suppresses it)
-        make_jobs   -- Number of make jobs to use for install.  Default is ncpus.
+        keep_prefix    -- Keep install prefix on failure. By default, destroys it.
+        keep_stage     -- Keep stage on successful build. By default, destroys it.
+        ignore_deps    -- Do not install dependencies before installing this package.
+        install_policy -- Whether to download a pre-compiled package or build from scratch
+        fake           -- Don't really build -- install fake stub files instead.
+        skip_patch     -- Skip patch stage of build if True.
+        verbose        -- Display verbose build output (by default, suppresses it)
+        make_jobs      -- Number of make jobs to use for install.  Default is ncpus.
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -865,11 +867,15 @@ class Package(object):
         if not ignore_deps:
             self.do_install_dependencies(
                 keep_prefix=keep_prefix, keep_stage=keep_stage, ignore_deps=ignore_deps,
-                fake=fake, skip_patch=skip_patch, verbose=verbose,
+                fake=fake, skip_patch=skip_patch, verbose=verbose, install_policy=install_policy,
                 make_jobs=make_jobs)
 
         start_time = time.time()
-        if not fake:
+        print install_policy
+        if install_policy != "build":
+            spack.binary_distribution.prepare()
+            spack.binary_distribution.download_tarball(self)
+        elif not fake:
             if not skip_patch:
                 self.do_patch()
             else:
@@ -900,7 +906,10 @@ class Package(object):
                 spack.hooks.pre_install(self)
 
                 # Set up process's build environment before running install.
-                if fake:
+                if install_policy != "build":
+                  spack.binary_distribution.extract_tarball(self)
+                  spack.binary_distribution.relocate(self)
+                elif fake:
                     self.do_fake_install()
                 else:
                     # Do the real install in the source directory.
@@ -916,7 +925,7 @@ class Package(object):
                 self._sanity_check_install()
 
                 # Move build log into install directory on success
-                if not fake:
+                if install_policy == "build" and not fake:
                     log_install_path = spack.install_layout.build_log_path(self.spec)
                     install(log_path, log_install_path)
 
