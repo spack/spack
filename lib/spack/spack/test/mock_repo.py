@@ -103,6 +103,8 @@ class MockGitRepo(MockVCSRepo):
     def __init__(self):
         super(MockGitRepo, self).__init__('mock-git-stage', 'mock-git-repo')
 
+        self.url = 'file://' + self.path
+
         with working_dir(self.path):
             git('init')
 
@@ -139,8 +141,6 @@ class MockGitRepo(MockVCSRepo):
             # R1 test is the same as test for branch
             self.r1      = self.rev_hash(self.branch)
             self.r1_file = self.branch_file
-
-            self.url = self.path
 
     def rev_hash(self, rev):
         return git('rev-parse', rev, output=str).strip()
