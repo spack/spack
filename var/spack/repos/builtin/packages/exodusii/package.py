@@ -23,7 +23,7 @@ class Exodusii(Package):
     # TODO: Make this a build dependency once build dependencies are supported
     # (see: https://github.com/LLNL/spack/pull/378).
     depends_on('cmake@2.8.7:')
-    depends_on('hdf5+static~mpi')
+    depends_on('hdf5+shared~mpi')
     depends_on('netcdf~mpi')
 
     patch('exodus-cmake.patch')
