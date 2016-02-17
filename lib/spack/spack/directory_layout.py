@@ -200,8 +200,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             spec.version,
             spec.dag_hash(self.hash_len))
 
-        path = join_path(
-            spec.target,
+        path = join_path(spec.architecture,
             "%s-%s" % (spec.compiler.name, spec.compiler.version),
             dir_name)
 
