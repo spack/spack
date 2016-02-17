@@ -1735,9 +1735,9 @@ class Spec(object):
                 elif named_str == 'OPTIONS':
                     if self.variants:
                         write(fmt % str(self.variants), '+')
-                elif named_str == 'TARGET':
-                    if self.target:
-                        write(fmt % str(self.target), '=')
+                elif named_str == 'ARCHITECTURE':
+                    if self.architecture:
+                        write(fmt % self.architecture, '=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % str(self.dep_hash(8)))
