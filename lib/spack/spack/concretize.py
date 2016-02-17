@@ -180,7 +180,7 @@ class DefaultConcretizer(object):
 
         # If there are known available versions, return the most recent
         # version that satisfies the spec
-        pkg = spec.package
+        pkg = spec.package # Gives error here with dynist
         cmp_versions = partial(spack.pkgsort.version_compare, spec.name)
         valid_versions = sorted(
             [v for v in pkg.versions
@@ -212,9 +212,10 @@ class DefaultConcretizer(object):
 
     def _concretize_platform(self, arch, platform):
         if issubclass(arch.platform.__class__, spack.architecture.Platform):
-            return True
+            return False
         else:
             arch.platform = platform
+            return True
 
     def _concretize_operating_system(self, arch, platform):
         """ Future method for concretizing operating system """
@@ -245,7 +246,6 @@ class DefaultConcretizer(object):
         """
 
         platform = spack.architecture.sys_type()
-        import ipdb;ipdb.set_trace()
         if spec.architecture is None:
             # Create an empty tuple
             Arch = spack.architecture.Arch
@@ -260,9 +260,9 @@ class DefaultConcretizer(object):
             return any((
                 self._concretize_platform(spec.architecture, platform),
                 self._concretize_operating_system(spec.architecture, platform),
-                self._concretize_arch_target(spec.architecture, platform)))
+                self._concretize_target(spec.architecture, platform)))
         else:
-            spec.add_target_from_string(spec.target)
+            spec.add_architecture_from_string(spec.target)
 
         # Does not look pretty at all!!!
         if spec.root.architecture and \
@@ -325,18 +325,18 @@ class DefaultConcretizer(object):
            link to this one, to maximize compatibility.
         """
         # Pass on concretizing the compiler if the target is not yet determined
-        if not spec.target:
+        if not spec.architecture.target:
             #Although this usually means changed, this means awaiting other changes
             return True
 
         # Only use a matching compiler if it is of the proper style
         # Takes advantage of the proper logic already existing in compiler_for_spec
         # Should think whether this can be more efficient
-        def _proper_compiler_style(cspec, target):
+        def _proper_compiler_style(cspec, architecture):
             compilers = spack.compilers.compilers_for_spec(cspec)
-            if target.target.compiler_strategy == 'PATH':
+            if architecture.target.compiler_strategy == 'PATH':
                 filter(lambda c: not c.modules, compilers)
-            if target.target.compiler_strategy == 'MODULES':
+            if architecture.target.compiler_strategy == 'MODULES':
                 filter(lambda c: c.modules, compilers)
             return compilers
 
@@ -369,7 +369,7 @@ class DefaultConcretizer(object):
             
         # copy concrete version into other_compiler
         index = len(matches)-1
-        while not _proper_compiler_style(matches[index], spec.target):
+        while not _proper_compiler_style(matches[index], spec.architecture):
             index -= 1
             if index == 0:
                 raise NoValidVersionError(spec)
