@@ -120,7 +120,7 @@ class Multimethod(Package):
     for target in targets:
         @when('='+target.name)
         def different_by_target(self):
-            return self.spec.target.name
+            return self.spec.architecture.target.name
 
 
     #
