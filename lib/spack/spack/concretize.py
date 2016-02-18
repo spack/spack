@@ -262,7 +262,7 @@ class DefaultConcretizer(object):
                 self._concretize_operating_system(spec.architecture, platform),
                 self._concretize_target(spec.architecture, platform)))
         else:
-            spec.add_architecture_from_string(spec.target)
+            spec.add_architecture_from_string(spec.architecture)
 
         # Does not look pretty at all!!!
         if spec.root.architecture and \
