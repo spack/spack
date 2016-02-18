@@ -21,16 +21,16 @@ def tarball_name(spec):
     Return the name of the tarfile according to the convention
     <architecture>-<os>-<name>-<dag_hash>.tar.gz
     """
-    return "%s-%s-%s.tar.gz" %(get_full_system_from_platform(),spec.name,spec.dag_hash())
+    return "%s-%s-%s-%s.tar.gz" %(get_full_system_from_platform(),spec.name,spec.version,spec.dag_hash())
 
 def download_tarball(package):
     """
     Download binary tarball for given package into stage area
     """
     try:
-        download_url = os.environ["DOWNLOAD_URL"]
+        download_url = os.environ["SPACK_DOWNLOAD_URL"]
     except KeyError:
-        print "Please set the DOWNLOAD_URL environment variable for downloading pre-compiled packages!"
+        print "Please set the SPACK_DOWNLOAD_URL environment variable for downloading pre-compiled packages!"
         raise KeyError()
     tarball = tarball_name(package.spec)
     remote_tarball = os.path.join(download_url, tarball)
