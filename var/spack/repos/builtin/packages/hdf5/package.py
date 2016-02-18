@@ -42,6 +42,7 @@ class Hdf5(Package):
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
 
     variant('debug', default=False, description='Builds a debug version of the library')
+    variant('shared', default=True, description='Builds a shared version of the library')
 
     variant('cxx', default=True, description='Enable C++ support')
     variant('fortran', default=True, description='Enable Fortran support')
@@ -77,6 +78,11 @@ class Hdf5(Package):
             extra_args.append('--enable-debug=all')
         else:
             extra_args.append('--enable-production')
+
+        if '+shared' in spec:
+            extra_args.append('--enable-shared')
+        else:
+            extra_args.append('--enable-static-exec')
 
         if '+unsupported' in spec:
             extra_args.append("--enable-unsupported")
@@ -119,7 +125,6 @@ class Hdf5(Package):
         configure(
             "--prefix=%s" % prefix,
             "--with-zlib=%s" % spec['zlib'].prefix,
-            "--enable-shared",  # TODO : this should be enabled by default, remove it?
             *extra_args)
         make()
         make("install")
