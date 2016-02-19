@@ -39,24 +39,14 @@ def setup_parser(subparser):
                            help="also make tarballs for dependencies.")
     subparser.add_argument('-f','--force',action='store_true',
                            help="overwrite tarball if it exists.")
+    subparser.add_argument('-d','--directory',default=".",
+                           help="directory in which to save the tarballs.")
 
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to package")
 
-
-def flatten_to_specs(package_names, recurse = False):
-    ret = set()
-    for pkgname in package_names:
-        specs = spack.cmd.parse_specs(pkgname, concretize=True)
-        for spec in specs:
-            ret.add(spec)
-            if recurse and spec.dependencies:
-                ret.update(flatten_to_specs(spec.dependencies))
-    return ret
-
-
-def do_tar(spec, force=False):
-    tarfile = tarball_name(spec)
+def do_tar(spec, outdir, force=False, ):
+    tarfile = os.path.join(outdir, tarball_name(spec))
     if os.path.exists(tarfile):
         if force:
             os.remove(tarfile)
@@ -72,7 +62,14 @@ def do_tar(spec, force=False):
 def create_tarball(parser, args):
     if not args.packages:
         tty.die("tarball creation requires at least one package argument")
-    specs = flatten_to_specs(args.packages, args.recurse)
-    for spec in specs:
-        do_tar(spec, args.force)
+
+    pkgs = set(args.packages)
+    if args.recurse:
+        for name in args.packages:
+            for spec in spack.cmd.parse_specs(name, concretize=True):
+                pkgs.update(spec.flat_dependencies())
+
+    for pkg in pkgs:
+        for spec in spack.cmd.parse_specs(pkg, concretize=True):
+            do_tar(spec, args.directory, args.force)
 
