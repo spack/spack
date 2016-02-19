@@ -102,6 +102,7 @@ class MirrorTest(MockPackagesTest):
                 spec = Spec(name).concretized()
                 pkg = spec.package
 
+                pkg._stage = None
                 saved_checksum_setting = spack.do_checksum
                 try:
                     # Stage the archive from the mirror and cd to it.

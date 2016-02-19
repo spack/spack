@@ -63,7 +63,7 @@ import spack.url
 import spack.util.web
 import spack.fetch_strategy as fs
 from spack.version import *
-from spack.stage import Stage
+from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive, extension
 from spack.util.executable import ProcessError
 
@@ -433,23 +433,46 @@ class Package(object):
         return spack.url.substitute_version(self.nearest_url(version),
                                             self.url_version(version))
 
+    def _make_resource_stage(self, root_stage, fetcher, resource):
+        resource_stage_folder = self._resource_stage(resource)
+        resource_mirror = join_path(self.name, os.path.basename(fetcher.url))
+        stage = ResourceStage(resource.fetcher, root=root_stage, resource=resource,
+                              name=resource_stage_folder, mirror_path=resource_mirror)
+        return stage
+
+    def _make_root_stage(self, fetcher):
+        # Construct a mirror path (TODO: get this out of package.py)
+        mp = spack.mirror.mirror_archive_path(self.spec, fetcher)
+        # Construct a path where the stage should build..
+        s = self.spec
+        stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
+        # Build the composite stage
+        stage = Stage(fetcher, mirror_path=mp, name=stage_name)
+        return stage
+
+    def _make_stage(self):
+        # Construct a composite stage on top of the composite FetchStrategy
+        composite_fetcher = self.fetcher
+        composite_stage = StageComposite()
+        resources = self._get_resources()
+        for ii, fetcher in enumerate(composite_fetcher):
+            if ii == 0:
+                # Construct root stage first
+                stage = self._make_root_stage(fetcher)
+            else:
+                # Construct resource stage
+                resource = resources[ii - 1]  # ii == 0 is root!
+                stage = self._make_resource_stage(composite_stage[0], fetcher, resource)
+            # Append the item to the composite
+            composite_stage.append(stage)
+        return composite_stage
 
     @property
     def stage(self):
         if not self.spec.concrete:
             raise ValueError("Can only get a stage for a concrete package.")
-
         if self._stage is None:
-            # Construct a mirror path (TODO: get this out of package.py)
-            mp = spack.mirror.mirror_archive_path(self.spec)
-
-            # Construct a path where the stage should build..
-            s = self.spec
-            stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
-
-            # Build the stage
-            self._stage = Stage(self.fetcher, mirror_path=mp, name=stage_name)
-
+            self._stage = self._make_stage()
         return self._stage
 
 
@@ -459,16 +482,24 @@ class Package(object):
         self._stage = stage
 
 
+    def _make_fetcher(self):
+        # Construct a composite fetcher that always contains at least one element (the root package). In case there
+        # are resources associated with the package, append their fetcher to the composite.
+        root_fetcher = fs.for_package_version(self, self.version)
+        fetcher = fs.FetchStrategyComposite()  # Composite fetcher
+        fetcher.append(root_fetcher)  # Root fetcher is always present
+        resources = self._get_resources()
+        for resource in resources:
+            fetcher.append(resource.fetcher)
+        return fetcher
+
     @property
     def fetcher(self):
         if not self.spec.versions.concrete:
-            raise ValueError(
-                "Can only get a fetcher for a package with concrete versions.")
-
+            raise ValueError("Can only get a fetcher for a package with concrete versions.")
         if not self._fetcher:
-            self._fetcher = fs.for_package_version(self, self.version)
+            self._fetcher = self._make_fetcher()
         return self._fetcher
-
 
     @fetcher.setter
     def fetcher(self, f):
@@ -632,7 +663,7 @@ class Package(object):
 
 
     def do_fetch(self, mirror_only=False):
-        """Creates a stage directory and downloads the taball for this package.
+        """Creates a stage directory and downloads the tarball for this package.
            Working directory will be set to the stage directory.
         """
         if not self.spec.concrete:
@@ -658,20 +689,6 @@ class Package(object):
 
         self.stage.fetch(mirror_only)
 
-        ##########
-        # Fetch resources
-        resources = self._get_resources()
-        for resource in resources:
-            resource_stage_folder = self._resource_stage(resource)
-            # FIXME : works only for URLFetchStrategy
-            resource_mirror = join_path(self.name, os.path.basename(resource.fetcher.url))
-            resource_stage = Stage(resource.fetcher, name=resource_stage_folder, mirror_path=resource_mirror)
-            resource.fetcher.set_stage(resource_stage)
-            # Delegate to stage object to trigger mirror logic
-            resource_stage.fetch()
-            resource_stage.check()
-        ##########
-
         self._fetch_time = time.time() - start_time
 
         if spack.do_checksum and self.version in self.versions:
@@ -684,51 +701,9 @@ class Package(object):
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
-        def _expand_archive(stage, name=self.name):
-            archive_dir = stage.source_path
-            if not archive_dir:
-                stage.expand_archive()
-                tty.msg("Created stage in %s." % stage.path)
-            else:
-                tty.msg("Already staged %s in %s." % (name, stage.path))
-
         self.do_fetch(mirror_only)
-        _expand_archive(self.stage)
-
-        ##########
-        # Stage resources in appropriate path
-        resources = self._get_resources()
-        # TODO: this is to allow nested resources, a better solution would be
-        # good
-        for resource in sorted(resources, key=lambda res: len(res.destination)):
-            stage = resource.fetcher.stage
-            _expand_archive(stage, resource.name)
-            # Turn placement into a dict with relative paths
-            placement = os.path.basename(stage.source_path) if resource.placement is None else resource.placement
-            if not isinstance(placement, dict):
-                placement = {'': placement}
-            # Make the paths in the dictionary absolute and link
-            for key, value in placement.iteritems():
-                target_path = join_path(self.stage.source_path, resource.destination)
-                link_path = join_path(target_path, value)
-                source_path = join_path(stage.source_path, key)
-
-                try:
-                    os.makedirs(target_path)
-                except OSError as err:
-                    if err.errno == errno.EEXIST and os.path.isdir(target_path):
-                        pass
-                    else: raise
-
-                # NOTE: a reasonable fix for the TODO above might be to have
-                # these expand in place, but expand_archive does not offer
-                # this
-
-                if not os.path.exists(link_path):
-                    shutil.move(source_path, link_path)
-        ##########
+        self.stage.expand_archive()
         self.stage.chdir_to_source()
-
 
     def do_patch(self):
         """Calls do_stage(), then applied patches to the expanded tarball if they
@@ -828,6 +803,9 @@ class Package(object):
         for when_spec, resource_list in self.resources.items():
             if when_spec in self.spec:
                 resources.extend(resource_list)
+        # Sorts the resources by the length of the string representing their destination. Since any nested resource
+        # must contain another resource's name in its path, it seems that should work
+        resources = sorted(resources, key=lambda res: len(res.destination))
         return resources
 
     def _resource_stage(self, resource):
