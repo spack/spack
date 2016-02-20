@@ -57,8 +57,8 @@ def setup_parser(subparser):
         'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
     subparser.add_argument(
         '-p', '--install-policy', action='store', dest="install_policy",
-        default="build", choices = ["build","download"],
-         help="Install policy (build,download)")
+        default="build", choices = ["build","download","lazy"],
+         help="Build from source, download binaries, or build if binary not available.")
 
 
 def install(parser, args):

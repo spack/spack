@@ -30,7 +30,7 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 from spack.util.executable import which
-from spack.binary_distribution import tarball_name
+from spack.binary_distribution import build_tarball
 
 description = "Create tarballs for given packages"
 
@@ -45,20 +45,6 @@ def setup_parser(subparser):
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to package")
 
-def do_tar(spec, outdir, force=False, ):
-    tarfile = os.path.join(outdir, tarball_name(spec))
-    if os.path.exists(tarfile):
-        if force:
-            os.remove(tarfile)
-        else:
-            tty.die("file exists, use -f to force overwrite: %s"%tarfile)
-
-    tar = which('tar', required=True)
-    dirname = os.path.dirname(spec.prefix)
-    basename = os.path.basename(spec.prefix)
-    tar("--directory=%s" %dirname, "-cf", tarfile, basename)
-    tty.msg(tarfile)
-
 def create_tarball(parser, args):
     if not args.packages:
         tty.die("tarball creation requires at least one package argument")
@@ -71,5 +57,5 @@ def create_tarball(parser, args):
 
     for pkg in pkgs:
         for spec in spack.cmd.parse_specs(pkg, concretize=True):
-            do_tar(spec, args.directory, args.force)
+            build_tarball(spec, args.directory, args.force)
 

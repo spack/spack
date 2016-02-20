@@ -871,10 +871,20 @@ class Package(object):
                 make_jobs=make_jobs)
 
         start_time = time.time()
-        if install_policy != "build":
-            spack.binary_distribution.prepare()
-            spack.binary_distribution.download_tarball(self)
-        elif not fake:
+        
+        # check and prepare binary install option
+        install_binary = False
+        if install_policy in ("download","lazy"):
+            tarball_available = spack.binary_distribution.download_tarball(self)
+            if tarball_available:
+                install_binary = True
+                spack.binary_distribution.prepare()
+            elif install_policy == "download":
+                tty.die("Download of binary package for %s failed." %self.name)
+            else:
+                pass
+                
+        if not fake and not install_binary:
             if not skip_patch:
                 self.do_patch()
             else:
@@ -905,7 +915,7 @@ class Package(object):
                 spack.hooks.pre_install(self)
 
                 # Set up process's build environment before running install.
-                if install_policy != "build":
+                if install_binary == True:
                   spack.binary_distribution.extract_tarball(self)
                   spack.binary_distribution.relocate(self)
                 elif fake:
@@ -924,7 +934,7 @@ class Package(object):
                 self._sanity_check_install()
 
                 # Move build log into install directory on success
-                if install_policy == "build" and not fake:
+                if (install_binary == False) and not fake:
                     log_install_path = spack.install_layout.build_log_path(self.spec)
                     install(log_path, log_install_path)
 

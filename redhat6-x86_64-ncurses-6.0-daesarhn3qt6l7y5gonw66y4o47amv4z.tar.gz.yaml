@@ -1,0 +1,11 @@
+spec:
+- ncurses:
+    arch: linux-x86_64
+    compiler:
+      name: gcc
+      version: 4.4.7
+    dependencies: {}
+    hash: daesarhn3qt6l7y5gonw66y4o47amv4z
+    namespace: builtin
+    variants: {}
+    version: '6.0'
