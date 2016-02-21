@@ -118,6 +118,21 @@ class Llvm(Package):
                 }
     releases = [
                   {
+                    'version' : 'trunk',
+                    'repo' : 'http://llvm.org/svn/llvm-project/llvm/trunk',
+                    'resources' : {
+                        'compiler-rt' : 'http://llvm.org/svn/llvm-project/compiler-rt/trunk',
+                        'openmp' : 'http://llvm.org/svn/llvm-project/openmp/trunk',
+                        'polly' : 'http://llvm.org/svn/llvm-project/polly/trunk',
+                        'libcxx' : 'http://llvm.org/svn/llvm-project/libcxx/trunk',
+                        'libcxxabi' : 'http://llvm.org/svn/llvm-project/libcxxabi/trunk',
+                        'clang' : 'http://llvm.org/svn/llvm-project/cfe/trunk',
+                        'clang-tools-extra' : 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
+                        'lldb' : 'http://llvm.org/svn/llvm-project/lldb/trunk',
+                        'llvm-libunwind' : 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+                        }
+                  },
+                  {
                     'version' : '3.7.0',
                     'md5':'b98b9495e5655a672d6cb83e1a180f8e',
                     'resources' : {
@@ -161,15 +176,25 @@ class Llvm(Package):
                ]
 
     for release in releases:
-        version(release['version'], release['md5'], url=llvm_url % release)
+        if release['version'] == 'trunk' :
+            version(release['version'], svn=release['repo'])
 
-        for name, md5 in release['resources'].items():
-            resource(name=name,
-                     url=resources[name]['url'] % release,
-                     md5=md5,
-                     destination=resources[name]['destination'],
-                     when='@%(version)s' % release,
-                     placement=resources[name].get('placement', None))
+            for name, repo in release['resources'].items():
+                resource(name=name,
+                         svn=repo,
+                         destination=resources[name]['destination'],
+                         when='@%(version)s' % release,
+                         placement=resources[name].get('placement', None))
+        else:
+            version(release['version'], release['md5'], url=llvm_url % release)
+
+            for name, md5 in release['resources'].items():
+                resource(name=name,
+                         url=resources[name]['url'] % release,
+                         md5=md5,
+                         destination=resources[name]['destination'],
+                         when='@%(version)s' % release,
+                         placement=resources[name].get('placement', None))
 
     # SVN - current develop
     version('develop', svn='http://llvm.org/svn/llvm-project/llvm/trunk')
