@@ -148,35 +148,29 @@ class Platform(object):
 
         return self.targets[name]
 
-    def _detect_linux_os(self):
-        return OperatingSystem(py_platform.dist()[0], py_platform.dist()[1])
+    #def _detect_linux_os(self):
+    #    return OperatingSystem(py_platform.dist()[0], py_platform.dist()[1])
 
-    def _detect_mac_os(self):
-        mac_releases = {'10.6': "snowleopard", 
-                        "10.7": "lion",
-                        "10.8": "mountainlion",
-                        "10.9": "mavericks",
-                        "10.10": "yosemite",
-                        "10.11": "elcapitan"}     
-        mac_ver = py_platform.mac_ver()[:-2]
-        try:
-            os_name = mac_releases[mac_ver]
-            return OperatingSystem(os_name, mac_ver)
-        except KeyError:
-            os_name = "mac_os"
-            return OperatingSystem(os_name, mac_ver)
-
-    def add_operating_system(self, name=None, operating_system=None):
-        if self.name == 'linux':
-            linux_os = self._detect_linux_os()
-            self.default_os = linux_os.name
-            self.operating_sys[linux_os.name] = linux_os
-        elif self.name == 'darwin':
-            mac_os = self._detect_mac_os()
-            self.default_os = mac_os.name
-            self.operating_sys[mac_os.name] = mac_os
-        else:
-            self.operating_sys[name] = operating_system
+    #def _detect_mac_os(self):
+    #    mac_releases = {'10.6': "snowleopard", 
+    #                    "10.7": "lion",
+    #                    "10.8": "mountainlion",
+    #                    "10.9": "mavericks",
+    #                    "10.10": "yosemite",
+    #                    "10.11": "elcapitan"}     
+    #    mac_ver = py_platform.mac_ver()[:-2]
+    #    try:
+    #        os_name = mac_releases[mac_ver]
+    #        return OperatingSystem(os_name, mac_ver)
+    #    except KeyError:
+    #        os_name = "mac_os"
+    #        return OperatingSystem(os_name, mac_ver)
+    
+    def add_operating_system(self, name, os_class):
+        """ Add the operating_system class object into the 
+            platform.operating_sys dictionary
+        """
+        self.operating_sys[name] = os_class
 
     def operating_system(self, name):
         if name == 'default_os':
@@ -207,27 +201,37 @@ class Platform(object):
         return (self.name, (_cmp_key(t) for t in self.targets.values()),
                 (_cmp_key(o) for o in self.operating_sys.values()))
 
+        
 @key_ordering
 class OperatingSystem(object):
-    """ Operating System class. It will include the name and version. 
-        The biggest attribute to this class will be the compiler finding
-        strategy. At the moment the compiler finding strategy is going to
-        be a string.
+    """ Operating System will be like a class similar to platform extended
+        by subclasses for the specifics. Operating System will contain the 
+        compiler finding logic. Instead of calling two separate methods to
+        find compilers we call find_compilers method for each operating system
     """
     def __init__(self, name, version):
         self.name = name
         self.version = version
     
     def __str__(self):
-        return self.name
+        return self.name + self.version
 
     def __repr__(self):
         return self.__str__()
+
+    def compiler_strategy(self):
+        """ The compiler strategy will be overwritten by the subclass.
+            Depending on where it comes from it will either use compilers
+            based off of MODULES search method or the PATH search method
+        """
+        raise NotImplementedError()
     
     def _cmp_key(self):
         return (self.name, self.version) 
+    
 
-
+#NOTE: Key error caused because Architecture has no comparison method
+@key_ordering
 class Arch(namedtuple("Arch", "platform platform_os target")):
     """ namedtuple for Architecture. Will have it's own __str__ method
         to make printing out the tuple easier and also won't make directory
@@ -237,6 +241,22 @@ class Arch(namedtuple("Arch", "platform platform_os target")):
     def __str__(self):
         return (self.platform.name +"-"+ 
                 self.platform_os.name + "-" + self.target.name)
+
+    def _cmp_key(self):
+        return (self.platform.name, self.platform_os.name, self.target.name)
+
+    @staticmethod
+    def to_dict(platform, os_name, target):
+        """ This function will handle all the converting of dictionaries
+            for each of the architecture classes. This is better than having
+            each class have a to_dict method when creating the dict of dicts
+            arch class
+        """
+        d = {}
+        d['platform'] = platform
+        d['operating_system'] = os_name
+        d['target'] = target.to_dict()
+        return d
 
 @memoized
 def all_platforms():
