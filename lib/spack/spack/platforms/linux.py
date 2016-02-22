@@ -1,5 +1,6 @@
 import subprocess
 from spack.architecture import Platform, Target
+from spack.operating_system.linux_distro import LinuxDistro
 
 class Linux(Platform):
     priority    = 90
@@ -10,7 +11,9 @@ class Linux(Platform):
     def __init__(self):
         super(Linux, self).__init__('linux')
         self.add_target(self.default, Target(self.default, 'PATH'))
-        self.add_operating_system()
+        linux_dist = LinuxDistro()
+        self.default_os = str(linux_dist)
+        self.add_operating_system(str(linux_dist), linux_dist)
 
     @classmethod
     def detect(self):
