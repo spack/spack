@@ -1,6 +1,7 @@
 import os
 
-from spack.architecture import Platform, Target, OperatingSystem
+from spack.architecture import Platform, Target
+from spack.operating_system.linux_distro import LinuxDistro
 
 class CrayXc(Platform):
     priority    = 20
@@ -9,8 +10,8 @@ class CrayXc(Platform):
     default     = 'ivybridge'
 
     front_os    = "SuSE11"
-    back_os     = "GNU/Linux"
-    default_os  = "GNU/Linux"
+    back_os     = "CNL"
+    default_os  = "CNL" 
 
     def __init__(self):
         ''' Since cori doesn't have ivybridge as a front end it's better
@@ -31,18 +32,12 @@ class CrayXc(Platform):
         # Could switch to use modules and fe targets for front end
         # Currently using compilers by path for front end.
         self.add_target('sandybridge', Target('sandybridge', 'PATH'))
-
         self.add_target('ivybridge', 
                         Target('ivybridge', 'MODULES', 'craype-ivybridge'))
-
         self.add_target('haswell', 
-                        Target('haswell', 'MODULES', 'craype-haswell')) 
+                        Target('haswell', 'MODULES', 'craype-haswell'))         
 
-        self.add_operating_system('SuSE11', 
-                                  OperatingSystem('SuSE11', '11'))
-
-        self.add_operating_system('GNU/Linux', 
-                                  OperatingSystem('GNU/Linux', '10'))
+        self.add_operating_system('SuSE11', LinuxDistro())
 
     @classmethod
     def detect(self):
