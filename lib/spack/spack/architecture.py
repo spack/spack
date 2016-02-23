@@ -209,26 +209,28 @@ class OperatingSystem(object):
         compiler finding logic. Instead of calling two separate methods to
         find compilers we call find_compilers method for each operating system
     """
-    def __init__(self, name, version):
+
+    def __init__(self, name, version, compiler_strategy):
         self.name = name
         self.version = version
+        self.compiler_strategy = compiler_strategy
     
     def __str__(self):
         return self.name + self.version
 
     def __repr__(self):
         return self.__str__()
-
-    def compiler_strategy(self):
-        """ The compiler strategy will be overwritten by the subclass.
-            Depending on where it comes from it will either use compilers
-            based off of MODULES search method or the PATH search method
-        """
-        raise NotImplementedError()
     
     def _cmp_key(self):
         return (self.name, self.version) 
     
+    def compiler_strategy(self):
+        """ Operating Systems will now be in charge of the compiler finding
+            strategy. They will each have their own find_compilers method
+            which depending on their compiler strategy will find the compilers
+            using a specific method (i.e PATH vs MODULES)
+        """
+        raise NotImplementedError()
 
 #NOTE: Key error caused because Architecture has no comparison method
 @key_ordering
