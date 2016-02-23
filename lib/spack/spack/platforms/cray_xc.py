@@ -2,6 +2,7 @@ import os
 
 from spack.architecture import Platform, Target
 from spack.operating_system.linux_distro import LinuxDistro
+from spack.operating_system.cnl import ComputeNodeLinux
 
 class CrayXc(Platform):
     priority    = 20
@@ -10,8 +11,8 @@ class CrayXc(Platform):
     default     = 'ivybridge'
 
     front_os    = "SuSE11"
-    back_os     = "CNL"
-    default_os  = "CNL" 
+    back_os     = "CNL10"
+    default_os  = "CNL10" 
 
     def __init__(self):
         ''' Since cori doesn't have ivybridge as a front end it's better
@@ -38,6 +39,7 @@ class CrayXc(Platform):
                         Target('haswell', 'MODULES', 'craype-haswell'))         
 
         self.add_operating_system('SuSE11', LinuxDistro())
+        self.add_operating_system('CNL10', ComputeNodeLinux())
 
     @classmethod
     def detect(self):
