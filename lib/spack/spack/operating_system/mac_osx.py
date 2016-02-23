@@ -34,11 +34,14 @@ class MacOSX(OperatingSystem):
 
         name, version = get_mac_release()
 
-        super(MacOSX, self).__init__(name, version)
+        super(MacOSX, self).__init__(name, version, "PATH")
 
-    @property
     def compiler_strategy(self):
-        return "PATH"
+        return self.compiler_strategy
+
+    def find_compilers(self):
+        pass
+        
 
 
 
