@@ -17,9 +17,13 @@ class LinuxDistro(OperatingSystem):
 
         name, version = detect_operating_system()
             
-        super(LinuxDistro, self).__init__(name, version)
+        super(LinuxDistro, self).__init__(name, version, "PATH")
     
-    @property
     def compiler_strategy(self):
-        return "PATH"
+        return self.compiler_strategy
+
+    def find_compilers(self):
+        pass
+
+    
 
