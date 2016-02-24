@@ -192,116 +192,90 @@ class StageTest(unittest.TestCase):
 
     def test_setup_and_destroy_name_with_tmp(self):
         with use_tmp(True):
-            stage = Stage(archive_url, name=stage_name)
-            self.check_setup(stage, stage_name)
-
-            stage.destroy()
+            with Stage(archive_url, name=stage_name) as stage:
+                self.check_setup(stage, stage_name)
             self.check_destroy(stage, stage_name)
 
 
     def test_setup_and_destroy_name_without_tmp(self):
         with use_tmp(False):
-            stage = Stage(archive_url, name=stage_name)
-            self.check_setup(stage, stage_name)
-
-            stage.destroy()
+            with Stage(archive_url, name=stage_name) as stage:
+                self.check_setup(stage, stage_name)
             self.check_destroy(stage, stage_name)
 
 
     def test_setup_and_destroy_no_name_with_tmp(self):
         with use_tmp(True):
-            stage = Stage(archive_url)
-            self.check_setup(stage, None)
-
-            stage.destroy()
+            with Stage(archive_url) as stage:
+                self.check_setup(stage, None)
             self.check_destroy(stage, None)
 
 
     def test_setup_and_destroy_no_name_without_tmp(self):
         with use_tmp(False):
-            stage = Stage(archive_url)
-            self.check_setup(stage, None)
-
-            stage.destroy()
+            with Stage(archive_url) as stage:
+                self.check_setup(stage, None)
             self.check_destroy(stage, None)
 
 
     def test_chdir(self):
-        stage = Stage(archive_url, name=stage_name)
-
-        stage.chdir()
-        self.check_setup(stage, stage_name)
-        self.check_chdir(stage, stage_name)
-
-        stage.destroy()
+        with Stage(archive_url, name=stage_name) as stage:
+            stage.chdir()
+            self.check_setup(stage, stage_name)
+            self.check_chdir(stage, stage_name)
         self.check_destroy(stage, stage_name)
 
 
     def test_fetch(self):
-        stage = Stage(archive_url, name=stage_name)
-
-        stage.fetch()
-        self.check_setup(stage, stage_name)
-        self.check_chdir(stage, stage_name)
-        self.check_fetch(stage, stage_name)
-
-        stage.destroy()
+        with Stage(archive_url, name=stage_name) as stage:
+            stage.fetch()
+            self.check_setup(stage, stage_name)
+            self.check_chdir(stage, stage_name)
+            self.check_fetch(stage, stage_name)
         self.check_destroy(stage, stage_name)
 
 
     def test_expand_archive(self):
-        stage = Stage(archive_url, name=stage_name)
-
-        stage.fetch()
-        self.check_setup(stage, stage_name)
-        self.check_fetch(stage, stage_name)
-
-        stage.expand_archive()
-        self.check_expand_archive(stage, stage_name)
-
-        stage.destroy()
+        with Stage(archive_url, name=stage_name) as stage:
+            stage.fetch()
+            self.check_setup(stage, stage_name)
+            self.check_fetch(stage, stage_name)
+            stage.expand_archive()
+            self.check_expand_archive(stage, stage_name)
         self.check_destroy(stage, stage_name)
 
 
     def test_expand_archive(self):
-        stage = Stage(archive_url, name=stage_name)
-
-        stage.fetch()
-        self.check_setup(stage, stage_name)
-        self.check_fetch(stage, stage_name)
-
-        stage.expand_archive()
-        stage.chdir_to_source()
-        self.check_expand_archive(stage, stage_name)
-        self.check_chdir_to_source(stage, stage_name)
-
-        stage.destroy()
+        with Stage(archive_url, name=stage_name) as stage:
+            stage.fetch()
+            self.check_setup(stage, stage_name)
+            self.check_fetch(stage, stage_name)
+            stage.expand_archive()
+            stage.chdir_to_source()
+            self.check_expand_archive(stage, stage_name)
+            self.check_chdir_to_source(stage, stage_name)
         self.check_destroy(stage, stage_name)
 
 
     def test_restage(self):
-        stage = Stage(archive_url, name=stage_name)
+        with Stage(archive_url, name=stage_name) as stage:
+            stage.fetch()
+            stage.expand_archive()
+            stage.chdir_to_source()
+            self.check_expand_archive(stage, stage_name)
+            self.check_chdir_to_source(stage, stage_name)
 
-        stage.fetch()
-        stage.expand_archive()
-        stage.chdir_to_source()
-        self.check_expand_archive(stage, stage_name)
-        self.check_chdir_to_source(stage, stage_name)
+            # Try to make a file in the old archive dir
+            with open('foobar', 'w') as file:
+                file.write("this file is to be destroyed.")
 
-        # Try to make a file in the old archive dir
-        with open('foobar', 'w') as file:
-            file.write("this file is to be destroyed.")
+            self.assertTrue('foobar' in os.listdir(stage.source_path))
 
-        self.assertTrue('foobar' in os.listdir(stage.source_path))
-
-        # Make sure the file is not there after restage.
-        stage.restage()
-        self.check_chdir(stage, stage_name)
-        self.check_fetch(stage, stage_name)
-
-        stage.chdir_to_source()
-        self.check_chdir_to_source(stage, stage_name)
-        self.assertFalse('foobar' in os.listdir(stage.source_path))
-
-        stage.destroy()
+            # Make sure the file is not there after restage.
+            stage.restage()
+            self.check_chdir(stage, stage_name)
+            self.check_fetch(stage, stage_name)
+            stage.chdir_to_source()
+            self.check_chdir_to_source(stage, stage_name)
+            self.assertFalse('foobar' in os.listdir(stage.source_path))
         self.check_destroy(stage, stage_name)

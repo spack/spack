@@ -96,12 +96,44 @@ class Stage(object):
         self.default_fetcher = self.fetcher  # self.fetcher can change with mirrors.
         self.skip_checksum_for_mirror = True  # used for mirrored archives of repositories.
 
-        self.name = kwargs.get('name')
+        # TODO : this uses a protected member of tempfile, but seemed the only way to get a temporary name
+        # TODO : besides, the temporary link name won't be the same as the temporary stage area in tmp_root
+        self.name = kwargs.get('name') if 'name' in kwargs else STAGE_PREFIX + next(tempfile._get_candidate_names())
         self.mirror_path = kwargs.get('mirror_path')
         self.tmp_root = find_tmp_root()
 
-        self.path = None
+        # Try to construct here a temporary name for the stage directory
+        # If this is a named stage, then construct a named path.
+        self.path = join_path(spack.stage_path, self.name)
+
+        self.delete_on_exit = True
+
+    def __enter__(self):
+        """
+        Entering a stage context will create the stage directory
+        """
+        # FIXME : if _setup is used only here, then it makes no sense to retain the function
         self._setup()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exiting from a stage context will delete the stage directory unless:
+        - it was explicitly requested not to do so
+        - an exception has been raised
+
+        Args:
+            exc_type: exception type
+            exc_val: exception value
+            exc_tb: exception traceback
+
+        Returns:
+            Boolean
+        """
+        self.delete_on_exit = False if exc_type is not None else self.delete_on_exit
+
+        if self.delete_on_exit:
+            self.destroy()
 
     def _cleanup_dead_links(self):
         """Remove any dead links in the stage directory."""
@@ -163,35 +195,17 @@ class Stage(object):
         mkdirp(spack.stage_path)
         self._cleanup_dead_links()
 
-        # If this is a named stage, then construct a named path.
-        if self.name is not None:
-            self.path = join_path(spack.stage_path, self.name)
-
         # If this is a temporary stage, them make the temp directory
-        tmp_dir = None
         if self.tmp_root:
-            if self.name is None:
-                # Unnamed tmp root.  Link the path in
+            if self._need_to_create_path():
                 tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
-                self.name = os.path.basename(tmp_dir)
-                self.path = join_path(spack.stage_path, self.name)
-                if self._need_to_create_path():
-                    os.symlink(tmp_dir, self.path)
-
-            else:
-                if self._need_to_create_path():
-                    tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
-                    os.symlink(tmp_dir, self.path)
+                os.symlink(tmp_dir, self.path)
 
         # if we're not using a tmp dir, create the stage directly in the
         # stage dir, rather than linking to it.
         else:
-            if self.name is None:
-                self.path = tempfile.mkdtemp('', STAGE_PREFIX, spack.stage_path)
-                self.name = os.path.basename(self.path)
-            else:
-                if self._need_to_create_path():
-                    mkdirp(self.path)
+            if self._need_to_create_path():
+                mkdirp(self.path)
 
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
@@ -388,6 +402,12 @@ class StageComposite:
     @property
     def path(self):
         return self[0].path
+
+    def __enter__(self):
+        return self[0].__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self[0].__exit__(exc_type, exc_val, exc_tb)
 
     def chdir_to_source(self):
         return self[0].chdir_to_source()
