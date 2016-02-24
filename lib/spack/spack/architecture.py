@@ -250,7 +250,8 @@ class Arch(namedtuple("Arch", "platform platform_os target")):
 
 def _helper_to_dict(arch_field_dict, arch_field_name,  *args):
     """ General method to turn each class in architecture into a 
-        dictionary. Takes as argument the class dictionary, 
+        dictionary. Takes as argument the class dictionary, the field name
+        (platform, platform_os, target) and then any attribute args
     """
     d = {}
     d[arch_field_name] = {}
@@ -294,10 +295,11 @@ def _target_from_dict(target):
     return target
 
 def _operating_system_from_dict(os_dict):
+    #TODO: Have a way to recognize the OS subclasses
     name = os_dict['name']
     os_list = all_platforms(True)
-    os_classes = {o.__name__.lower():o for o in os_list}
-    return os_classes[name]()
+    os_classes = {o.__name__:o for o in os_list}
+    
     
 
 def arch_from_dict(d):
@@ -318,6 +320,7 @@ def arch_from_dict(d):
 
     return arch
 
+#TODO: Haven't changed name here but all_platforms should now pull os class list
 @memoized
 def all_platforms(operating_system=False):
     modules = []
