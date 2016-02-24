@@ -155,7 +155,6 @@ input_command="$@"
 
 if [ "$mode" == vcheck ] ; then
     exec "${input_command}"
-    exit
 fi
 
 #
@@ -343,5 +342,3 @@ if [ "$SPACK_DEBUG" = "TRUE" ]; then
 fi
 
 exec "${full_command[@]}"
-
-
