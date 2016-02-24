@@ -661,12 +661,14 @@ class Spec(object):
             'dependencies' : dict((d, self.dependencies[d].dag_hash())
                                   for d in sorted(self.dependencies))
         }
+
         if self.architecture:
             # TODO: Fix the target.to_dict to account for the tuple
             # Want it to be a dict of dicts
-            d['architecture'] = self.architecture.target.to_dict()
+            d['architecture'] = spack.architecture.to_dict(self.architecture)
         else:
             d['architecture'] = None
+
         if self.compiler:
             d.update(self.compiler.to_dict())
         else:
@@ -693,8 +695,7 @@ class Spec(object):
         spec = Spec(name)
         spec.versions = VersionList.from_dict(node)
         # TODO: Need to fix the architecture.Target.from_dict
-        spec.architecture = spack.architecture.Target.from_dict(
-                                                        node['architecture'])
+        spec.architecture = spack.architecture.from_dict(node['architecture'])
 
         if node['compiler'] is None:
             spec.compiler = None
@@ -1292,17 +1293,17 @@ class Spec(object):
 
         for entry in arch_list:
             if self._is_valid_platform(entry, platform_names):
+                # If entry is different from platform name then create it.
+                # else just keep the already instantiated platform class
                 if entry != platform.name:
                     platform = platform_dict[entry]() # Create instance of platform
             elif self._is_valid_target(entry, platform):
                 target = platform.target(entry)
-            # Need to figure out if we're supporting arbitrary os's and how
-            # to account for them
-            # Not really a good implementation since the user can add
-            # gibberish and spack will see it as an os
+           # check if os is valid by checking platform operating sys dict 
             elif self._is_valid_os(entry, platform):
                 platform_os = platform.operating_system(entry)
             else:
+            # throw error since entry is unknown 
                 raise UnknownArchitectureSpecError(entry)
 
         if target is None:
