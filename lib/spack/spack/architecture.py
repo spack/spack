@@ -294,7 +294,11 @@ def _target_from_dict(target):
     return target
 
 def _operating_system_from_dict(os_dict):
-    pass
+    name = os_dict['name']
+    os_list = all_platforms(True)
+    os_classes = {o.__name__.lower():o for o in os_list}
+    return os_classes[name]()
+    
 
 def arch_from_dict(d):
     if d is None:
@@ -315,11 +319,19 @@ def arch_from_dict(d):
     return arch
 
 @memoized
-def all_platforms():
+def all_platforms(operating_system=False):
     modules = []
-    for name in list_modules(spack.platform_path):
-        mod_name = 'spack.platformss' + name
-        path = join_path(spack.platform_path, name) + ".py"
+    
+    if operating_system:
+        mod_path = spack.operating_system_path
+        mod_string = "spack.operating_system."
+    else:
+        mod_path = spack.platform_path
+        mod_string = "spack.platformss"
+
+    for name in list_modules(mod_path):
+        mod_name = mod_string + name
+        path = join_path(mod_path, name) + ".py"
         mod = imp.load_source(mod_name, path)
         class_name = mod_to_class(name)
         if not hasattr(mod, class_name):
