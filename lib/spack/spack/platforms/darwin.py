@@ -1,6 +1,6 @@
 import subprocess
 from spack.architecture import Platform, Target
-from spack.operating_system.mac_osx import MacOSX
+from spack.operating_system.mac_osx import MacOsx
 
 class Darwin(Platform):
     priority    = 89
@@ -11,7 +11,7 @@ class Darwin(Platform):
     def __init__(self):
         super(Darwin, self).__init__('darwin')
         self.add_target(self.default, Target(self.default, 'PATH'))
-        mac_os = MacOSX()
+        mac_os = MacOsx()
         self.default_os = mac_os.name
         self.add_operating_system(mac_os.name, mac_os)
 

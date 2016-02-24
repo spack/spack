@@ -1,8 +1,7 @@
 import os
-
 from spack.architecture import Platform, Target
 from spack.operating_system.linux_distro import LinuxDistro
-from spack.operating_system.cnl import ComputeNodeLinux
+from spack.operating_system.cnl import Cnl
 
 class CrayXc(Platform):
     priority    = 20
@@ -39,7 +38,7 @@ class CrayXc(Platform):
                         Target('haswell', 'MODULES', 'craype-haswell'))         
 
         self.add_operating_system('SuSE11', LinuxDistro())
-        self.add_operating_system('CNL10', ComputeNodeLinux())
+        self.add_operating_system('CNL10', Cnl())
 
     @classmethod
     def detect(self):
