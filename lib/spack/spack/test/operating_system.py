@@ -38,7 +38,6 @@ class TestOperatingSystem(unittest.TestCase):
         self.assertEquals(self.cray_back_os.compiler_strategy, "MODULES")
 
     def test_linux_operating_system(self):
-        print self.linux_operating_sys
         self.assertIsInstance(self.linux_operating_sys, LinuxDistro)
 
     def test_linux_compiler_strategy(self):
