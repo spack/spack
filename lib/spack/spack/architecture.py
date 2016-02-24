@@ -89,7 +89,7 @@ class Target(object):
         return target
 
     def _cmp_key(self):
-        return (self.name, self.compiler_strategy, self.module_name)
+        return (self.name, self.module_name)
 
     def __repr__(self):
         return self.__str__()
@@ -200,7 +200,6 @@ class Platform(object):
     def _cmp_key(self):
         return (self.name, (_cmp_key(t) for t in self.targets.values()),
                 (_cmp_key(o) for o in self.operating_sys.values()))
-
         
 @key_ordering
 class OperatingSystem(object):
@@ -221,16 +220,18 @@ class OperatingSystem(object):
     def __repr__(self):
         return self.__str__()
     
-    def _cmp_key(self):
-        return (self.name, self.version) 
     
     def compiler_strategy(self):
         """ Operating Systems will now be in charge of the compiler finding
             strategy. They will each have their own find_compilers method
             which depending on their compiler strategy will find the compilers
-            using a specific method (i.e PATH vs MODULES)
+            using a specific method (i.e PATH vs MODULES).
         """
         raise NotImplementedError()
+
+    def _cmp_key(self):
+        return (self.name, self.version, self.compiler_strategy)
+
 
 #NOTE: Key error caused because Architecture has no comparison method
 @key_ordering
@@ -241,24 +242,77 @@ class Arch(namedtuple("Arch", "platform platform_os target")):
     __slots__ = ()
 
     def __str__(self):
-        return (self.platform.name +"-"+ 
-                self.platform_os.name + "-" + self.target.name)
-
+        return (self.platform.name +"-"+ self.platform_os.name + "-" + self.target.name)
+        
     def _cmp_key(self):
         return (self.platform.name, self.platform_os.name, self.target.name)
 
-    @staticmethod
-    def to_dict(platform, os_name, target):
-        """ This function will handle all the converting of dictionaries
-            for each of the architecture classes. This is better than having
-            each class have a to_dict method when creating the dict of dicts
-            arch class
-        """
-        d = {}
-        d['platform'] = platform
-        d['operating_system'] = os_name
-        d['target'] = target.to_dict()
-        return d
+
+def _helper_to_dict(arch_field_dict, arch_field_name,  *args):
+    """ General method to turn each class in architecture into a 
+        dictionary. Takes as argument the class dictionary, 
+    """
+    d = {}
+    d[arch_field_name] = {}
+    for items in args:
+        d[arch_field_name][items] = arch_field_dict[items]
+    return d
+
+def to_dict(arch):
+    d = {}
+    d['architecture'] = {}
+
+    platform = arch.platform.__dict__
+    platform_os = arch.platform_os.__dict__
+    target = arch.target.__dict__
+
+    platform_dict = _helper_to_dict(platform,'platform','name')
+    os_dict = _helper_to_dict(platform_os, 'platform_os', 'name','version',
+                                                          'compiler_strategy')
+    target_dict = _helper_to_dict(target,'target', 'name', 
+                                            'module_name','platform_name')
+
+    d['architecture'].update(platform_dict)
+    d['architecture'].update(os_dict)
+    d['architecture'].update(target_dict)
+
+    return d
+
+def _platform_from_dict(platform):
+    platform_list = all_platforms()
+    platform_names = {plat.__name__.lower():plat for plat in platform_list}
+    return platform_names[platform['name']]()
+
+
+def _target_from_dict(target): 
+    target = Target.__new__(Target)
+    target.name = d['name']
+    target.compiler_strategy = d['compiler_strategy']
+    target.module_name = d['module_name']
+    if 'platform' in d:
+        target.platform_name = d['platform']
+    return target
+
+def _operating_system_from_dict(os_dict):
+    pass
+
+def arch_from_dict(d):
+    if d is None:
+        return None
+    arch = Arch 
+    platform_dict = d['platform']
+    platform_os_dict = d['platform_os']
+    target_dict = d['target']
+
+    platform = _platform_from_dict(platform_dict)
+    platform_os = _operating_system_from_dict(platform_os_dict)
+    target = _target_from_dict(target_dict)
+
+    arch.platform = platform
+    arch.platform_os = platform_os
+    arch.target = target
+
+    return arch
 
 @memoized
 def all_platforms():
@@ -277,7 +331,6 @@ def all_platforms():
         modules.append(cls)
 
     return modules
-
 
 @memoized
 def sys_type():
