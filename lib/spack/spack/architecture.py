@@ -261,8 +261,7 @@ def _helper_to_dict(arch_field_dict, arch_field_name,  *args):
 
 def to_dict(arch):
     d = {}
-    d['architecture'] = {}
-
+    
     platform = arch.platform.__dict__
     platform_os = arch.platform_os.__dict__
     target = arch.target.__dict__
@@ -273,9 +272,9 @@ def to_dict(arch):
     target_dict = _helper_to_dict(target,'target', 'name', 
                                             'module_name','platform_name')
 
-    d['architecture'].update(platform_dict)
-    d['architecture'].update(os_dict)
-    d['architecture'].update(target_dict)
+    d.update(platform_dict)
+    d.update(os_dict)
+    d.update(target_dict)
 
     return d
 
