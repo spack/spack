@@ -695,7 +695,7 @@ class Spec(object):
         spec = Spec(name)
         spec.versions = VersionList.from_dict(node)
         # TODO: Need to fix the architecture.Target.from_dict
-        spec.architecture = spack.architecture.from_dict(node['architecture'])
+        spec.architecture = spack.architecture.arch_from_dict(node['architecture'])
 
         if node['compiler'] is None:
             spec.compiler = None
