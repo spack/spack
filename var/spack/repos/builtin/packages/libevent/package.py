@@ -23,6 +23,9 @@ class Libevent(Package):
     version('2.0.12', '42986228baf95e325778ed328a93e070')
 
 
+    depends_on('openssl')
+
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
 
