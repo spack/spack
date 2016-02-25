@@ -67,26 +67,26 @@ class Target(object):
     def set_platform(self, platform):
         self.platform_name = platform.name
 
-    def to_dict(self):
-        d = {}
-        d['name'] = self.name
-        d['compiler_strategy'] = self.compiler_strategy
-        d['module_name'] = self.module_name
-        if self.platform_name:
-            d['platform'] = self.platform_name
-        return d
+    #def to_dict(self):
+    #    d = {}
+    #    d['name'] = self.name
+    #    d['compiler_strategy'] = self.compiler_strategy
+    #    d['module_name'] = self.module_name
+    #    if self.platform_name:
+    #        d['platform'] = self.platform_name
+    #    return d
 
-    @staticmethod
-    def from_dict(d):
-        if d is None:
-            return None
-        target = Target.__new__(Target)
-        target.name = d['name']
-        target.compiler_strategy = d['compiler_strategy']
-        target.module_name = d['module_name']
-        if 'platform' in d:
-            target.platform_name = d['platform']
-        return target
+    #@staticmethod
+    #def from_dict(d):
+    #    if d is None:
+    #        return None
+    #    target = Target.__new__(Target)
+    #    target.name = d['name']
+    #    target.compiler_strategy = d['compiler_strategy']
+    #    target.module_name = d['module_name']
+    #    if 'platform' in d:
+    #        target.platform_name = d['platform']
+    #    return target
 
     def _cmp_key(self):
         return (self.name, self.module_name)
@@ -326,7 +326,7 @@ def all_platforms(operating_system=False):
     
     if operating_system:
         mod_path = spack.operating_system_path
-        mod_string = "spack.operating_system."
+        mod_string = "spack.operating_systems"
     else:
         mod_path = spack.platform_path
         mod_string = "spack.platformss"
