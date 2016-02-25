@@ -67,27 +67,6 @@ class Target(object):
     def set_platform(self, platform):
         self.platform_name = platform.name
 
-    #def to_dict(self):
-    #    d = {}
-    #    d['name'] = self.name
-    #    d['compiler_strategy'] = self.compiler_strategy
-    #    d['module_name'] = self.module_name
-    #    if self.platform_name:
-    #        d['platform'] = self.platform_name
-    #    return d
-
-    #@staticmethod
-    #def from_dict(d):
-    #    if d is None:
-    #        return None
-    #    target = Target.__new__(Target)
-    #    target.name = d['name']
-    #    target.compiler_strategy = d['compiler_strategy']
-    #    target.module_name = d['module_name']
-    #    if 'platform' in d:
-    #        target.platform_name = d['platform']
-    #    return target
-
     def _cmp_key(self):
         return (self.name, self.module_name)
 
@@ -147,24 +126,6 @@ class Platform(object):
             name = self.back_end
 
         return self.targets[name]
-
-    #def _detect_linux_os(self):
-    #    return OperatingSystem(py_platform.dist()[0], py_platform.dist()[1])
-
-    #def _detect_mac_os(self):
-    #    mac_releases = {'10.6': "snowleopard", 
-    #                    "10.7": "lion",
-    #                    "10.8": "mountainlion",
-    #                    "10.9": "mavericks",
-    #                    "10.10": "yosemite",
-    #                    "10.11": "elcapitan"}     
-    #    mac_ver = py_platform.mac_ver()[:-2]
-    #    try:
-    #        os_name = mac_releases[mac_ver]
-    #        return OperatingSystem(os_name, mac_ver)
-    #    except KeyError:
-    #        os_name = "mac_os"
-    #        return OperatingSystem(os_name, mac_ver)
     
     def add_operating_system(self, name, os_class):
         """ Add the operating_system class object into the 
@@ -242,7 +203,8 @@ class Arch(namedtuple("Arch", "platform platform_os target")):
     __slots__ = ()
 
     def __str__(self):
-        return (self.platform.name +"-"+ self.platform_os.name + "-" + self.target.name)
+        return (self.platform.name +"-"+ 
+                self.platform_os.name + "-" + self.target.name)
         
     def _cmp_key(self):
         return (self.platform.name, self.platform_os.name, self.target.name)
@@ -284,52 +246,39 @@ def _platform_from_dict(platform):
     return platform_names[platform['name']]()
 
 
-def _target_from_dict(target): 
+def _target_from_dict(target_dict): 
     target = Target.__new__(Target)
-    target.name = d['name']
-    target.compiler_strategy = d['compiler_strategy']
-    target.module_name = d['module_name']
-    if 'platform' in d:
-        target.platform_name = d['platform']
+    target.name = target_dict['name']
+    #target.compiler_strategy = target_dict['compiler_strategy']
+    target.module_name = target_dict['module_name']
+    if 'platform_name' in target_dict:
+        target.platform_name = target_dict['platform_name']
     return target
 
-def _operating_system_from_dict(os_dict):
-    #TODO: Have a way to recognize the OS subclasses
+def _operating_system_from_dict(os_dict, platform_class):
     name = os_dict['name']
-    os_list = all_platforms(True)
-    os_classes = {o.__name__:o for o in os_list}
-    
+    return platform_class.operating_system(name) 
     
 
 def arch_from_dict(d):
     if d is None:
         return None
-    arch = Arch 
     platform_dict = d['platform']
     platform_os_dict = d['platform_os']
     target_dict = d['target']
 
     platform = _platform_from_dict(platform_dict)
-    platform_os = _operating_system_from_dict(platform_os_dict)
+    platform_os = _operating_system_from_dict(platform_os_dict, platform)
     target = _target_from_dict(target_dict)
 
-    arch.platform = platform
-    arch.platform_os = platform_os
-    arch.target = target
+    return Arch(platform, platform_os, target)
 
-    return arch
-
-#TODO: Haven't changed name here but all_platforms should now pull os class list
 @memoized
-def all_platforms(operating_system=False):
+def all_platforms():
     modules = []
     
-    if operating_system:
-        mod_path = spack.operating_system_path
-        mod_string = "spack.operating_systems"
-    else:
-        mod_path = spack.platform_path
-        mod_string = "spack.platformss"
+    mod_path = spack.platform_path
+    mod_string = "spack.platformss"
 
     for name in list_modules(mod_path):
         mod_name = mod_string + name
