@@ -1,6 +1,6 @@
 import subprocess
 from spack.architecture import Platform, Target
-from spack.operating_system.mac_osx import MacOsx
+from spack.operating_systems.mac_osx import MacOsx
 
 class Darwin(Platform):
     priority    = 89
