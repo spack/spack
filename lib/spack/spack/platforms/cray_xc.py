@@ -9,9 +9,9 @@ class CrayXc(Platform):
     back_end    = 'ivybridge'
     default     = 'ivybridge'
 
-    front_os    = "SuSE11"
-    back_os     = "CNL10"
-    default_os  = "CNL10" 
+    front_os    = "SuSE"
+    back_os     = "CNL"
+    default_os  = "CNL" 
 
     def __init__(self):
         ''' Since cori doesn't have ivybridge as a front end it's better
@@ -37,8 +37,8 @@ class CrayXc(Platform):
         self.add_target('haswell', 
                         Target('haswell', 'MODULES', 'craype-haswell'))         
 
-        self.add_operating_system('SuSE11', LinuxDistro())
-        self.add_operating_system('CNL10', Cnl())
+        self.add_operating_system('SuSE', LinuxDistro())
+        self.add_operating_system('CNL', Cnl())
 
     @classmethod
     def detect(self):
