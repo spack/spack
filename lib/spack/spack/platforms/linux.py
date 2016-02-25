@@ -1,6 +1,6 @@
 import subprocess
 from spack.architecture import Platform, Target
-from spack.operating_system.linux_distro import LinuxDistro
+from spack.operating_systems.linux_distro import LinuxDistro
 
 class Linux(Platform):
     priority    = 90

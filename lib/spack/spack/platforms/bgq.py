@@ -1,5 +1,4 @@
 import os
-
 from spack.architecture import Platform, Target
 
 class Bgq(Platform):
