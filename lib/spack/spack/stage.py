@@ -23,7 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import re
+import errno
 import shutil
 import tempfile
 from urlparse import urljoin
@@ -31,17 +31,18 @@ from urlparse import urljoin
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
 
+import spack.util.pattern as pattern
+
 import spack
 import spack.config
 import spack.fetch_strategy as fs
 import spack.error
 
-
 STAGE_PREFIX = 'spack-stage-'
 
 
 class Stage(object):
-    """A Stage object manaages a directory where some source code is
+    """A Stage object manages a directory where some source code is
        downloaded and built before being installed.  It handles
        fetching the source code, either as an archive to be expanded
        or by checking it out of a repository.  A stage's lifecycle
@@ -93,7 +94,7 @@ class Stage(object):
             raise ValueError("Can't construct Stage without url or fetch strategy")
         self.fetcher.set_stage(self)
         self.default_fetcher = self.fetcher  # self.fetcher can change with mirrors.
-        self.skip_checksum_for_mirror = True # used for mirrored archives of repositories.
+        self.skip_checksum_for_mirror = True  # used for mirrored archives of repositories.
 
         self.name = kwargs.get('name')
         self.mirror_path = kwargs.get('mirror_path')
@@ -101,7 +102,6 @@ class Stage(object):
 
         self.path = None
         self._setup()
-
 
     def _cleanup_dead_links(self):
         """Remove any dead links in the stage directory."""
@@ -111,7 +111,6 @@ class Stage(object):
                 real_path = os.path.realpath(path)
                 if not os.path.exists(path):
                     os.unlink(path)
-
 
     def _need_to_create_path(self):
         """Makes sure nothing weird has happened since the last time we
@@ -130,7 +129,7 @@ class Stage(object):
         # Path looks ok, but need to check the target of the link.
         if os.path.islink(self.path):
             real_path = os.path.realpath(self.path)
-            real_tmp  = os.path.realpath(self.tmp_root)
+            real_tmp = os.path.realpath(self.tmp_root)
 
             if spack.use_tmp_stage:
                 # If we're using a tmp dir, it's a link, and it points at the right spot,
@@ -148,7 +147,6 @@ class Stage(object):
                 return True
 
         return False
-
 
     def _setup(self):
         """Creates the stage directory.
@@ -198,7 +196,6 @@ class Stage(object):
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
 
-
     @property
     def archive_file(self):
         """Path to the source archive within this stage directory."""
@@ -215,7 +212,6 @@ class Stage(object):
         else:
             return None
 
-
     @property
     def source_path(self):
         """Returns the path to the expanded/checked out source code
@@ -230,14 +226,12 @@ class Stage(object):
                 return p
         return None
 
-
     def chdir(self):
         """Changes directory to the stage path.  Or dies if it is not set up."""
         if os.path.isdir(self.path):
             os.chdir(self.path)
         else:
             tty.die("Setup failed: no such directory: " + self.path)
-
 
     def fetch(self, mirror_only=False):
         """Downloads an archive or checks out code from a repository."""
@@ -291,7 +285,6 @@ class Stage(object):
             self.fetcher = self.default_fetcher
             raise fs.FetchError(errMessage, None)
 
-
     def check(self):
         """Check the downloaded archive against a checksum digest.
            No-op if this stage checks code out of a repository."""
@@ -305,14 +298,17 @@ class Stage(object):
         else:
             self.fetcher.check()
 
-
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
            archive.  Fail if the stage is not set up or if the archive is not yet
            downloaded.
         """
-        self.fetcher.expand()
-
+        archive_dir = self.source_path
+        if not archive_dir:
+            self.fetcher.expand()
+            tty.msg("Created stage in %s." % self.path)
+        else:
+            tty.msg("Already staged %s in %s." % (self.name, self.path))
 
     def chdir_to_source(self):
         """Changes directory to the expanded archive directory.
@@ -326,13 +322,11 @@ class Stage(object):
             if not os.listdir(path):
                 tty.die("Archive was empty for %s" % self.name)
 
-
     def restage(self):
         """Removes the expanded archive path if it exists, then re-expands
            the archive.
         """
         self.fetcher.reset()
-
 
     def destroy(self):
         """Remove this stage directory."""
@@ -345,8 +339,63 @@ class Stage(object):
             os.chdir(os.path.dirname(self.path))
 
 
+class ResourceStage(Stage):
+    def __init__(self, url_or_fetch_strategy, root, resource, **kwargs):
+        super(ResourceStage, self).__init__(url_or_fetch_strategy, **kwargs)
+        self.root_stage = root
+        self.resource = resource
+
+    def expand_archive(self):
+        super(ResourceStage, self).expand_archive()
+        root_stage = self.root_stage
+        resource = self.resource
+        placement = os.path.basename(self.source_path) if resource.placement is None else resource.placement
+        if not isinstance(placement, dict):
+            placement = {'': placement}
+        # Make the paths in the dictionary absolute and link
+        for key, value in placement.iteritems():
+            target_path = join_path(root_stage.source_path, resource.destination)
+            destination_path = join_path(target_path, value)
+            source_path = join_path(self.source_path, key)
+
+            try:
+                os.makedirs(target_path)
+            except OSError as err:
+                if err.errno == errno.EEXIST and os.path.isdir(target_path):
+                    pass
+                else:
+                    raise
+
+            if not os.path.exists(destination_path):
+                # Create a symlink
+                tty.info('Moving resource stage\n\tsource : {stage}\n\tdestination : {destination}'.format(
+                    stage=source_path, destination=destination_path
+                ))
+                shutil.move(source_path, destination_path)
+
+
+@pattern.composite(method_list=['fetch', 'check', 'expand_archive', 'restage', 'destroy'])
+class StageComposite:
+    """
+    Composite for Stage type objects. The first item in this composite is considered to be the root package, and
+    operations that return a value are forwarded to it.
+    """
+
+    @property
+    def source_path(self):
+        return self[0].source_path
+
+    @property
+    def path(self):
+        return self[0].path
+
+    def chdir_to_source(self):
+        return self[0].chdir_to_source()
+
+
 class DIYStage(object):
     """Simple class that allows any directory to be a spack stage."""
+
     def __init__(self, path):
         self.archive_file = None
         self.path = path
@@ -382,7 +431,6 @@ def _get_mirrors():
     """Get mirrors from spack configuration."""
     config = spack.config.get_config('mirrors')
     return [val for name, val in config.iteritems()]
-
 
 
 def ensure_access(file=spack.stage_path):

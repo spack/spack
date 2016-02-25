@@ -47,6 +47,8 @@ class Fftw(Package):
 
     depends_on('mpi', when='+mpi')
 
+    # TODO : add support for architecture specific optimizations as soon as targets are supported
+
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix,
                    '--enable-shared',

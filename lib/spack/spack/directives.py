@@ -296,8 +296,8 @@ def resource(pkg, **kwargs):
         raise RuntimeError(message)
     when_spec = parse_anonymous_spec(when, pkg.name)
     resources = pkg.resources.setdefault(when_spec, [])
-    fetcher = from_kwargs(**kwargs)
     name = kwargs.get('name')
+    fetcher = from_kwargs(**kwargs)
     resources.append(Resource(name, fetcher, destination, placement))
 
 
