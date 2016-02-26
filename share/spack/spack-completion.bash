@@ -418,26 +418,188 @@ function _spack_patch {
     fi
 }
 
-#function _spack_pkg {
-#function _spack_providers {
-#function _spack_purge {
-#function _spack_python {
-#function _spack_reindex {
-#function _spack_repo {
-#function _spack_restage {
-#function _spack_spec {
-#function _spack_stage {
-#function _spack_test {
-#function _spack_test-install {
-#function _spack_uninstall {
-#function _spack_unload {
-#function _spack_unuse {
-#function _spack_url-parse {
-#function _spack_urls {
-#function _spack_use {
-#function _spack_versions {
+function _spack_pkg {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "add added diff list removed" -- "$cur"
+    fi
+}
 
+function _spack_pkg_add {
+    # `spack pkg add` has no valid options
+    :
+}
 
+function _spack_pkg_added {
+    # `spack pkg added` has no valid options
+    :
+}
+
+function _spack_pkg_diff {
+    # `spack pkg diff` has no valid options
+    :
+}
+
+function _spack_pkg_list {
+    # `spack pkg list` has no valid options
+    :
+}
+
+function _spack_pkg_removed {
+    # `spack pkg removed` has no valid options
+    :
+}
+
+function _spack_providers {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "blas elf lapack mpe mpi scalapack" -- "$cur"
+    fi
+}
+
+function _spack_purge {
+    compgen -W "-h --help" -- "$cur"
+}
+
+function _spack_python {
+    if $list_options
+    then
+        compgen -W "-h --help -c" -- "$cur"
+    else
+        compgen -o filenames -- "$cur"
+    fi
+}
+
+function _spack_reindex {
+    compgen -W "-h --help" -- "$cur"
+}
+
+function _spack_repo {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "add create list remove" -- "$cur"
+    fi
+}
+
+function _spack_repo_add {
+    # `spack repo add` has no valid options
+    :
+}
+
+function _spack_repo_create {
+    # `spack repo create` has no valid options
+    :
+}
+
+function _spack_repo_list {
+    # `spack repo list` has no valid options
+    :
+}
+
+function _spack_repo_remove {
+    compgen -W "$(_repos)" -- "$cur"
+}
+
+function _spack_restage {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "$(_available_packages)" -- "$cur"
+    fi
+}
+
+function _spack_spec {
+    if $list_options
+    then
+        compgen -W "-h --help -i --ids" -- "$cur"
+    else
+        compgen -W "$(_available_packages)" -- "$cur"
+    fi
+}
+
+function _spack_stage {
+    if $list_options
+    then
+        compgen -W "-h --help -n --no-checksum" -- "$cur"
+    else
+        compgen -W "$(_available_packages)" -- "$cur"
+    fi
+}
+
+function _spack_test {
+    # TODO: What does this subcommand even do?
+    compgen -W "-h --help -l --list --createXmlOutput --xmlOutputDir
+                -v --verbose" -- "$cur"
+}
+
+function _spack_test-install {
+    if $list_options
+    then
+        compgen -W "-h --help -j --jobs -n --no-checksum -o --output" -- "$cur"
+    else
+        compgen -W "$(_available_packages)" -- "$cur"
+    fi
+}
+
+function _spack_uninstall {
+    if $list_options
+    then
+        compgen -W "-h --help -f --force -a --all" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_unload {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)"
+    fi
+}
+
+function _spack_unuse {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)"
+    fi
+}
+
+function _spack_url-parse {
+    compgen -W "-h --help -s --spider" -- "$cur"
+}
+
+function _spack_urls {
+    compgen -W "-h --help -c --color -e --extrapolation" -- "$cur"
+}
+
+function _spack_use {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_versions {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "$(_available_packages)" -- "$cur"
+    fi
+}
 
 function _subcommands {
     spack help | grep "^    [a-z]" | awk '{print $1}'
@@ -457,6 +619,10 @@ function _installed_compilers {
 
 function _mirrors {
     spack mirror list | awk '{print $1}'
+}
+
+function _repos {
+    spack repo list
 }
 
 function test_vars {
