@@ -32,7 +32,7 @@ function _bash_completion_spack {
     # Options will be listed by a subfunction named after non-flag arguments.
     # For example, `spack -d install []` will call _spack_install
     # and `spack compiler add []` will call _spack_compiler_add
-    subfunction=$(IFS=_; echo "_${COMP_WORDS_NO_FLAGS[@]}")
+    subfunction=$(IFS='_'; echo "_${COMP_WORDS_NO_FLAGS[*]}")
 
     # However, the word containing the current cursor position needs to be
     # added regardless of whether or not it is a flag. This allows us to
@@ -80,13 +80,15 @@ function _bash_completion_spack {
     local cur=${COMP_WORDS_NO_FLAGS[$COMP_CWORD_NO_FLAGS]}
     local prev=${COMP_WORDS_NO_FLAGS[$COMP_CWORD_NO_FLAGS-1]}
 
-    #test_vars
+    test_vars
 
-    COMPREPLY=($($subcommand))
+    # TODO: Make sure function exists before calling it
+    COMPREPLY=($($subfunction))
 }
 
 function _spack {
     if $list_options
+    then
         compgen -W "-h --help -d --debug -D --pdb -k --insecure -m --mock -p
                     --profile -v --verbose -V --version" -- "$cur"
     else
@@ -141,7 +143,7 @@ function _spack_checksum {
 function _spack_clean {
     if $list_options
     then
-        compgen -W "-h --help"
+        compgen -W "-h --help" -- "$cur"
     else
         compgen -W "$(_available_packages)" -- "$cur"
     fi
@@ -152,7 +154,7 @@ function _spack_compiler {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "add remove list info"
+        compgen -W "add info list remove" -- "$cur"
     fi
 }
 
@@ -160,15 +162,16 @@ function _spack_compiler_add {
     compgen -o dirnames -- "$cur"
 }
 
-function _spack_compiler_remove {
+function _spack_compiler_info {
     compgen -W "$(_installed_compilers)" -- "$cur"
 }
 
 function _spack_compiler_list {
     # `spack compiler list` has no valid options
+    :
 }
 
-function _spack_compiler_info {
+function _spack_compiler_remove {
     compgen -W "$(_installed_compilers)" -- "$cur"
 }
 
@@ -181,16 +184,16 @@ function _spack_config {
     then
         compgen -W "-h --help --user --site" -- "$cur"
     else
-        compgen -W "edit get"
+        compgen -W "edit get" -- "$cur"
     fi
 }
 
 function _spack_config_edit {
-    compgen -W "compilers mirrors" # TODO: more?
+    compgen -W "compilers mirrors" -- "$cur" # TODO: more?
 }
 
 function _spack_config_get {
-    compgen -W "compilers mirrors" # TODO: more?
+    compgen -W "compilers mirrors" -- "$cur" # TODO: more?
 }
 
 function _spack_create {
@@ -211,7 +214,7 @@ function _spack_deactivate {
 function _spack_dependents {
     if $list_options
     then
-        compgen -W "-h --help"
+        compgen -W "-h --help" -- "$cur"
     else
         compgen -W "$(_available_packages)" -- "$cur"
     fi
@@ -315,36 +318,124 @@ function _spack_install {
         compgen -W "-h --help -i --ignore-dependencies -j --jobs --keep-prefix
                     --keep-stage -n --no-checksum -v --verbose --fake" -- "$cur"
     else
-        compgen -W "$(_spack_available_packages)" -- "$cur"
+        compgen -W "$(_available_packages)" -- "$cur"
     fi
 }
 
 function _spack_list {
+    if $list_options
+    then
+        compgen -W "-h --help -i --insensitive" -- "$cur"
+    else
+        compgen -W "$(_available_packages)" -- "$cur"
+    fi
+}
+
 function _spack_load {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
 function _spack_location {
+    if $list_options
+    then
+        compgen -W "-h --help -m --module-dir -r --spack-root -i --install-dir
+                    -p --package-dir -P --packages -s --stage-dir -S --stages
+                    -b --build-dir" -- "$cur"
+    else
+        compgen -W "$(_available_packages)" -- "$cur"
+    fi
+}
+
 function _spack_md5 {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -o filenames -- "$cur"
+    fi
+}
+
 function _spack_mirror {
+    if $list_options
+    then
+        compgen -W "-h --help -n --no-checksum" -- "$cur"
+    else
+        compgen -W "add create list remove" -- "$cur"
+    fi
+}
+
+function _spack_mirror_add {
+    compgen -o dirnames -- "$cur"
+}
+
+function _spack_mirror_create {
+    compgen -W "$(_available_packages)" -- "$cur"
+}
+
+function _spack_mirror_list {
+    # `spack mirror list` has no valid options
+    :
+}
+
+function _spack_mirror_remove {
+    compgen -W "$(_mirrors)" -- "$cur"
+}
+
 function _spack_module {
+    if $list_compilers
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "find refresh" -- "$cur"
+    fi
+}
+
+function _spack_module_find {
+    # `spack module find` has no valid options
+    :
+}
+
+function _spack_module_refresh {
+    # `spack module refresh` has no valid arguments
+    :
+}
+
 function _spack_package-list {
+    compgen -W "-h --help" -- "$cur"
+}
+
 function _spack_patch {
-function _spack_pkg {
-function _spack_providers {
-function _spack_purge {
-function _spack_python {
-function _spack_reindex {
-function _spack_repo {
-function _spack_restage {
-function _spack_spec {
-function _spack_stage {
-function _spack_test {
-function _spack_test-install {
-function _spack_uninstall {
-function _spack_unload {
-function _spack_unuse {
-function _spack_url-parse {
-function _spack_urls {
-function _spack_use {
-function _spack_versions {
+    if $list_options
+    then
+        compgen -W "-h --help -n --no-checksum" -- "$cur"
+    else
+        compgen -W "$(_available_packages)" -- "$cur"
+    fi
+}
+
+#function _spack_pkg {
+#function _spack_providers {
+#function _spack_purge {
+#function _spack_python {
+#function _spack_reindex {
+#function _spack_repo {
+#function _spack_restage {
+#function _spack_spec {
+#function _spack_stage {
+#function _spack_test {
+#function _spack_test-install {
+#function _spack_uninstall {
+#function _spack_unload {
+#function _spack_unuse {
+#function _spack_url-parse {
+#function _spack_urls {
+#function _spack_use {
+#function _spack_versions {
 
 
 
@@ -364,26 +455,31 @@ function _installed_compilers {
     spack compilers | grep -v "^--"
 }
 
+function _mirrors {
+    spack mirror list | awk '{print $1}'
+}
+
 function test_vars {
-    echo "-----------------------------------------------------"            >> ~/temp
-    echo "Full line:                '$COMP_LINE'"                           >> ~/temp
-    echo                                                                    >> ~/temp
-    echo "Word list w/ flags:       $(pretty_print COMP_WORDS[@])"          >> ~/temp
-    echo "# words w/ flags:         '${#COMP_WORDS[@]}'"                    >> ~/temp
-    echo "Cursor index w/ flags:    '$COMP_CWORD'"                          >> ~/temp
-    echo                                                                    >> ~/temp
-    echo "Word list w/out flags:    $(pretty_print COMP_WORDS_NO_FLAGS[@])" >> ~/temp
-    echo "# words w/out flags:      '${#COMP_WORDS_NO_FLAGS[@]}'"           >> ~/temp
-    echo "Cursor index w/out flags: '$COMP_CWORD_NO_FLAGS'"                 >> ~/temp
-    echo                                                                    >> ~/temp
+    echo "-----------------------------------------------------"            >> temp
+    echo "Full line:                '$COMP_LINE'"                           >> temp
+    echo                                                                    >> temp
+    echo "Word list w/ flags:       $(pretty_print COMP_WORDS[@])"          >> temp
+    echo "# words w/ flags:         '${#COMP_WORDS[@]}'"                    >> temp
+    echo "Cursor index w/ flags:    '$COMP_CWORD'"                          >> temp
+    echo                                                                    >> temp
+    echo "Word list w/out flags:    $(pretty_print COMP_WORDS_NO_FLAGS[@])" >> temp
+    echo "# words w/out flags:      '${#COMP_WORDS_NO_FLAGS[@]}'"           >> temp
+    echo "Cursor index w/out flags: '$COMP_CWORD_NO_FLAGS'"                 >> temp
+    echo                                                                    >> temp
+    echo "Subfunction:              '$subfunction'"                         >> temp
     if $list_options
     then
-        echo "List options:             'True'"  >> ~/temp
+        echo "List options:             'True'"  >> temp
     else
-        echo "List options:             'False'" >> ~/temp
+        echo "List options:             'False'" >> temp
     fi
-    echo "Current word:             '$cur'"  >> ~/temp
-    echo "Previous word:            '$prev'" >> ~/temp
+    echo "Current word:             '$cur'"  >> temp
+    echo "Previous word:            '$prev'" >> temp
 }
 
 # Pretty-prints one or more arrays
