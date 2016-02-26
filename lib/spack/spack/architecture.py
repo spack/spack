@@ -222,6 +222,12 @@ def _helper_to_dict(arch_field_dict, arch_field_name,  *args):
     return d
 
 def to_dict(arch):
+    """ Convert the Arch tuple into a dictionary for yaml dumping. This
+        uses the _helper_to_dict method to create the dictionary from the
+        provided architecture field. Can assign the architecture
+        field name (either platform, platform_os or target) and any
+        attributes that make up that architecture field,
+    """
     d = {}
     
     platform = arch.platform.__dict__
@@ -241,12 +247,19 @@ def to_dict(arch):
     return d
 
 def _platform_from_dict(platform):
+    """Creates all the platform class module names into a dictionary of
+    name : <class_mod> key-value pairs. From there we can construct the 
+    platform subclass
+    """
     platform_list = all_platforms()
     platform_names = {plat.__name__.lower():plat for plat in platform_list}
     return platform_names[platform['name']]()
 
 
 def _target_from_dict(target_dict): 
+    """ Creates new instance of target and assigns all the attributes of
+        that target from the dictionary
+    """
     target = Target.__new__(Target)
     target.name = target_dict['name']
     #target.compiler_strategy = target_dict['compiler_strategy']
@@ -256,11 +269,19 @@ def _target_from_dict(target_dict):
     return target
 
 def _operating_system_from_dict(os_dict, platform_class):
+    """ uses platform's operating system method to grab the constructed
+        operating systems that are valid on the platform.
+    """
+# NOTE: Might need a better way to create operating system objects
     name = os_dict['name']
     return platform_class.operating_system(name) 
     
 
 def arch_from_dict(d):
+    """ Uses _platform_from_dict, _operating_system_from_dict, _target_from_dict
+        helper methods to recreate the arch tuple from the dictionary read from
+        a yaml file
+    """
     if d is None:
         return None
     platform_dict = d['platform']
