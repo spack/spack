@@ -835,7 +835,6 @@ class Spec(object):
         changed = True
         force = False
 
-        # Loops forever here in my implementation
         while changed:
             changes = (self.normalize(force=force),
                        self._expand_virtual_packages(),
