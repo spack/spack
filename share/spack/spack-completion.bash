@@ -612,7 +612,7 @@ function _installed_packages {
 }
 
 function _installed_compilers {
-    spack compilers | grep -v "^--"
+    spack compilers | egrep -v "^(-|=)"
 }
 
 function _mirrors {
