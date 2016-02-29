@@ -23,7 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os, shutil
+import glob, os, shutil, sys
 
 
 class Llvm(Package):
@@ -254,6 +254,16 @@ class Llvm(Package):
 
         with working_dir('spack-build', create=True):
             cmake(*cmake_args)
+
+            # if sys.platform == 'darwin':
+            #     # Remove all '-arch' flags from compiler flags; only
+            #     # Darwin's system compiler supports them
+            #     for pattern in [
+            #             "projects/*/*/*/CMakeFiles/*/flags.make",
+            #             "tools/*/*/CMakeFiles/*/build.make"]:
+            #         for file in glob.iglob(pattern):
+            #             filter_file(r"\s-arch\s+\S+", " ", file)
+
             make()
             make("install")
             query_path = os.path.join('bin', 'clang-query')
