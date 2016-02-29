@@ -27,8 +27,18 @@ class Lua(Package):
         else:
             target = 'linux'
         make('INSTALL_TOP=%s' % prefix,
-             'MYLDFLAGS=-L%s -lncurses' % spec['ncurses'].prefix.lib,
+             'MYCFLAGS=-I%s -I%s' %
+                 (spec['readline'].prefix.include,
+                  spec['ncurses'].prefix.include),
+             'MYLDFLAGS=-L%s -lreadline -L%s -lncurses' %
+                 (spec['readline'].prefix.lib,
+                  spec['ncurses'].prefix.lib),
              target)
         make('INSTALL_TOP=%s' % prefix,
-             'MYLDFLAGS=-L%s -lncurses' % spec['ncurses'].prefix.lib,
+             'MYCFLAGS=-I%s -I%s' %
+                 (spec['readline'].prefix.include,
+                  spec['ncurses'].prefix.include),
+             'MYLDFLAGS=-L%s -lreadline -L%s -lncurses' %
+                 (spec['readline'].prefix.lib,
+                  spec['ncurses'].prefix.lib),
              'install')
