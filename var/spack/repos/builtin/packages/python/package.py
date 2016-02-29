@@ -40,6 +40,7 @@ class Python(Package):
                   "--prefix=%s" % prefix,
                   "--with-threads",
                   "--enable-shared",
+                  "CC=/usr/bin/cc",
                   "CPPFLAGS=-I%s/include -I%s/include -I%s/include -I%s/include -I%s/include -I%s/include" % (
                        spec['openssl'].prefix, spec['bzip2'].prefix,
                        spec['readline'].prefix, spec['ncurses'].prefix,
