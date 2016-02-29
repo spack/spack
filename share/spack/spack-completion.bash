@@ -1,22 +1,19 @@
 #!/usr/bin/env bash
 
+# The following global variables are used/set by Bash programmable completion
+#     COMP_CWORD: An index into ${COMP_WORDS} of the word containing the
+#                 current cursor position
+#     COMP_LINE:  The current command line
+#     COMP_WORDS: an array containing individual command arguments typed so far
+#     COMPREPLY:  an array containing possible completions as a result of your
+#                 function
 
+# Bash programmable completion for Spack
 function _bash_completion_spack {
-    # Bash programmable completion for Spack
-    #
-    # The following variables are useful for Bash completion:
-    #     COMP_CWORD: An index into ${COMP_WORDS} of the word containing the current cursor position
-    #     COMP_KEY:   The key (or final key of a key sequence) used to invoke the current completion function
-    #     COMP_LINE:  The current command line
-    #     COMP_POINT: The index of the current cursor position relative to the beginning of the current command
-    #     COMP_TYPE:  Set to an integer value corresponding to the type of completion attempted
-    #     COMP_WORDS: an array containing individual command arguments typed so far
-    #     COMPREPLY:  an array containing possible completions as a result of your function
-
     # In all following examples, let the cursor be denoted by brackets, i.e. []
 
     # For our purposes, flags should not affect tab completion. For instance,
-    # `spack install []` and `spack -d install []` should both give the same
+    # `spack install []` and `spack -d install --jobs 8 []` should both give the same
     # possible completions. Therefore, we need to ignore any flags in COMP_WORDS.
     local COMP_WORDS_NO_FLAGS=()
     local index=0
@@ -32,7 +29,7 @@ function _bash_completion_spack {
     # Options will be listed by a subfunction named after non-flag arguments.
     # For example, `spack -d install []` will call _spack_install
     # and `spack compiler add []` will call _spack_compiler_add
-    subfunction=$(IFS='_'; echo "_${COMP_WORDS_NO_FLAGS[*]}")
+    local subfunction=$(IFS='_'; echo "_${COMP_WORDS_NO_FLAGS[*]}")
 
     # However, the word containing the current cursor position needs to be
     # added regardless of whether or not it is a flag. This allows us to
@@ -60,14 +57,11 @@ function _bash_completion_spack {
         list_options=true
     fi
 
-
-
-    # TODO:
     # In general, when envoking tab completion, the user is not expecting to
     # see optional flags mixed in with subcommands or package names. Tab
-    # completion is used by the lazy and by those who are bad at spelling.
+    # completion is used by those who are either lazy or just bad at spelling.
     # If someone doesn't remember what flag to use, seeing single letter flags
-    # in their results won't help them, and they should consult the
+    # in their results won't help them, and they should instead consult the
     # documentation. However, if the user explicitly declares that they are
     # looking for a flag, we can certainly help them out.
     #     `spack install -[]`
@@ -80,10 +74,13 @@ function _bash_completion_spack {
     local cur=${COMP_WORDS_NO_FLAGS[$COMP_CWORD_NO_FLAGS]}
     local prev=${COMP_WORDS_NO_FLAGS[$COMP_CWORD_NO_FLAGS-1]}
 
-    test_vars
+    #test_vars
 
-    # TODO: Make sure function exists before calling it
-    COMPREPLY=($($subfunction))
+    # Make sure function exists before calling it
+    if [[ "$(type -t $subfunction)" == "function" ]]
+    then
+        COMPREPLY=($($subfunction))
+    fi
 }
 
 function _spack {
@@ -127,7 +124,7 @@ function _spack_cd {
                     -p --package-dir -P --packages -s --stage-dir -S --stages
                     -b --build-dir" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -136,7 +133,7 @@ function _spack_checksum {
     then
         compgen -W "-h --help --keep-stage" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -145,7 +142,7 @@ function _spack_clean {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -216,7 +213,7 @@ function _spack_dependents {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -226,7 +223,7 @@ function _spack_diy {
         compgen -W "-h --help -i --ignore-dependencies --keep-prefix
                     --skip-patch" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -241,7 +238,7 @@ function _spack_edit {
         compgen -W "-h --help -f --force -c --command -t --test -m --module
                     -r --repo -N --namespace" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -250,7 +247,7 @@ function _spack_env {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -270,7 +267,7 @@ function _spack_fetch {
         compgen -W "-h --help -n --no-checksum -m --missing
                     -D --dependencies" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -290,7 +287,7 @@ function _spack_graph {
     then
         compgen -W "-h --help --ascii --dot --concretize" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -308,7 +305,7 @@ function _spack_info {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -318,7 +315,7 @@ function _spack_install {
         compgen -W "-h --help -i --ignore-dependencies -j --jobs --keep-prefix
                     --keep-stage -n --no-checksum -v --verbose --fake" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -327,7 +324,7 @@ function _spack_list {
     then
         compgen -W "-h --help -i --insensitive" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -347,7 +344,7 @@ function _spack_location {
                     -p --package-dir -P --packages -s --stage-dir -S --stages
                     -b --build-dir" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -374,7 +371,7 @@ function _spack_mirror_add {
 }
 
 function _spack_mirror_create {
-    compgen -W "$(_available_packages)" -- "$cur"
+    compgen -W "$(_all_packages)" -- "$cur"
 }
 
 function _spack_mirror_list {
@@ -414,7 +411,7 @@ function _spack_patch {
     then
         compgen -W "-h --help -n --no-checksum" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -511,7 +508,7 @@ function _spack_restage {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -520,7 +517,7 @@ function _spack_spec {
     then
         compgen -W "-h --help -i --ids" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -529,7 +526,7 @@ function _spack_stage {
     then
         compgen -W "-h --help -n --no-checksum" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -544,7 +541,7 @@ function _spack_test-install {
     then
         compgen -W "-h --help -j --jobs -n --no-checksum -o --output" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -597,7 +594,7 @@ function _spack_versions {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "$(_available_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -605,12 +602,13 @@ function _subcommands {
     spack help | grep "^    [a-z]" | awk '{print $1}'
 }
 
-function _available_packages {
+function _all_packages {
     spack list
 }
 
 function _installed_packages {
-    spack find | grep -v "^--"
+    # Perl one-liner used to strip out color codes
+    spack find | grep -v "^--" | perl -pe 's/\e\[?.*?[\@-~]//g'
 }
 
 function _installed_compilers {
@@ -622,7 +620,7 @@ function _mirrors {
 }
 
 function _repos {
-    spack repo list
+    spack repo list | awk '{print $1}'
 }
 
 function test_vars {
@@ -661,7 +659,5 @@ function pretty_print {
     done
 }
 
-
 complete -F _bash_completion_spack spack
-
 
