@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://scalability-software.llnl.gov/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@ class Tally(Plugin):
         self.successCount = 0
         self.failCount = 0
         self.errorCount = 0
-    
+
     @property
     def numberOfTestsRun(self):
         """Excludes skipped tests"""
@@ -48,10 +48,10 @@ class Tally(Plugin):
 
     def addSuccess(self, test):
         self.successCount += 1
-        
+
     def addError(self, test, err):
         self.errorCount += 1
-            
+
     def addFailure(self, test, err):
         self.failCount += 1
 
