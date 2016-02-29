@@ -19,7 +19,7 @@ written in pure Python, and specs allow package authors to write a
 single build script for many different builds of the same package.
 
 See the
-[Feature Overview](http://llnl.github.io/spack/features.html)
+[Feature Overview](http://software.llnl.gov/spack/features.html)
 for examples and highlights.
 
 To install spack and install your first package:
@@ -31,7 +31,7 @@ To install spack and install your first package:
 Documentation
 ----------------
 
-[**Full documentation**](http://llnl.github.io/spack) for Spack is
+[**Full documentation**](http://software.llnl.gov/spack) for Spack is
 the first place to look.
 
 See also:
