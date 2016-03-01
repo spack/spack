@@ -37,16 +37,34 @@ class Cmake(Package):
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
     variant('ncurses', default=True, description='Enables the build of the ncurses gui')
+    variant('qt', default=False, description='Enables the build of cmake-gui')
+    variant('sphinxbuild', default=False, description='Enables the generation of html and man page documentation')
+
     depends_on('ncurses', when='+ncurses')
+    depends_on('qt', when='+qt')
+    depends_on('python@2.7.11:', when='+sphinxbuild')
+    depends_on('py-sphinx', when='+sphinxbuild')
 
     def url_for_version(self, version):
         """Handle CMake's version-based custom URLs."""
         return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (version.up_to(2), version)
 
-
     def install(self, spec, prefix):
-        configure('--prefix='   + prefix,
-                  '--parallel=' + str(make_jobs),
-                  '--', '-DCMAKE_USE_OPENSSL=ON')
+
+        options = ['--prefix=%s' % prefix]
+        options.append('--parallel=%s' % str(make_jobs))
+
+        if '+qt' in spec:
+            options.append('--qt-gui')
+
+        if '+sphinxbuild' in spec:
+            options.append('--sphinx-html')
+            options.append('--sphinx-man')
+
+        options.append('--')
+        options.append('-DCMAKE_USE_OPENSSL=ON')
+
+        configure(*options)
+
         make()
         make('install')
