@@ -1,5 +1,5 @@
 from spack import *
-import glob
+import glob, sys
 
 class Papi(Package):
     """PAPI provides the tool designer and application engineer with a
@@ -35,3 +35,9 @@ class Papi(Package):
 
             make()
             make("install")
+
+            # The shared library is not installed correctly on Darwin
+            if sys.platform == 'darwin':
+                install_name_tool = which('install_name_tool')
+                install_name_tool('-id', join_path(prefix.lib, 'libpapi.so'),
+                                  join_path(prefix.lib, 'libpapi.so'))
