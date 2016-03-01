@@ -46,6 +46,7 @@ class Cgal(Package):
     depends_on('mpfr')
     depends_on('gmp')
     depends_on('zlib')
+    depends_on('cmake')
 
     # FIXME : Qt5 dependency missing (needs Qt5 and OpenGL)
     # FIXME : Optional third party libraries missing
