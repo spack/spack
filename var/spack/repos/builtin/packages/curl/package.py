@@ -13,13 +13,13 @@ class Curl(Package):
     version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
     version('7.42.1', '296945012ce647b94083ed427c1877a8')
 
-#    depends_on("openssl")
+    depends_on("openssl")
     depends_on("zlib")
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix,
-                  '--with-zlib=%s' % spec['zlib'].prefix)
-#                  '--with-ssl=%s' % spec['openssl'].prefix)
+                  '--with-zlib=%s' % spec['zlib'].prefix,
+                  '--with-ssl=%s' % spec['openssl'].prefix)
 
         make()
         make("install")
