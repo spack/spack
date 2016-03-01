@@ -23,7 +23,7 @@ class Git(Package):
     # does not have it you will not be able to push https repos
     variant("expat", default=False, description="Add the internal support of expat for https push")
 
-    depends_on("openssl")
+#    depends_on("openssl")
     depends_on("curl", when="+curl")
     depends_on("expat", when="+expat")
 
@@ -37,7 +37,7 @@ class Git(Package):
         configure_args = [
             "--prefix=%s" % prefix,
             "--without-pcre",
-            "--with-openssl=%s" % spec['openssl'].prefix,
+#            "--with-openssl=%s" % spec['openssl'].prefix,
             "--with-zlib=%s" % spec['zlib'].prefix
             ]
 
