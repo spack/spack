@@ -173,7 +173,9 @@ class YamlDirectoryLayout(DirectoryLayout):
 
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
-        self.build_log_name      = 'build.out' # TODO: use config file.
+        self.build_log_name      = 'build.out'  # build log.
+        self.build_env_name      = 'build.env'  # build environment
+        self.packages_dir        = 'repos'      # archive of package.py files
 
         # Cache of already written/read extension maps.
         self._extension_maps = {}
@@ -229,6 +231,16 @@ class YamlDirectoryLayout(DirectoryLayout):
     def build_log_path(self, spec):
         return join_path(self.path_for_spec(spec), self.metadata_dir,
                          self.build_log_name)
+
+
+    def build_env_path(self, spec):
+        return join_path(self.path_for_spec(spec), self.metadata_dir,
+                         self.build_env_name)
+
+
+    def build_packages_path(self, spec):
+        return join_path(self.path_for_spec(spec), self.metadata_dir,
+                         self.packages_dir)
 
 
     def create_install_directory(self, spec):

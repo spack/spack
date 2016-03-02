@@ -66,6 +66,7 @@ from spack.version import *
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive, extension
 from spack.util.executable import ProcessError
+from spack.util.environment import dump_environment
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -884,10 +885,14 @@ class Package(object):
                     # Do the real install in the source directory.
                     self.stage.chdir_to_source()
 
+                    # Save the build environment in a file before building.
+                    env_path = join_path(os.getcwd(), 'spack-build.env')
+
                     # This redirects I/O to a build log (and optionally to the terminal)
                     log_path = join_path(os.getcwd(), 'spack-build.out')
                     log_file = open(log_path, 'w')
                     with log_output(log_file, verbose, sys.stdout.isatty(), True):
+                        dump_environment(env_path)
                         self.install(self.spec, self.prefix)
 
                 # Ensure that something was actually installed.
@@ -896,7 +901,9 @@ class Package(object):
                 # Move build log into install directory on success
                 if not fake:
                     log_install_path = spack.install_layout.build_log_path(self.spec)
+                    env_install_path = spack.install_layout.build_env_path(self.spec)
                     install(log_path, log_install_path)
+                    install(env_path, env_install_path)
 
                 # On successful install, remove the stage.
                 if not keep_stage:
