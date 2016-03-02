@@ -671,7 +671,7 @@ class Spec(object):
         if self.architecture:
             # TODO: Fix the target.to_dict to account for the tuple
             # Want it to be a dict of dicts
-            d['architecture'] = spack.architecture.to_dict(self.architecture)
+            d['architecture'] = self.architecture.to_dict()
         else:
             d['architecture'] = None
 
