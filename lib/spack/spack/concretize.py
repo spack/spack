@@ -210,7 +210,7 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
-    def _concretize_operating_system(self, spec, platform):
+    def _concretize_operating_system(self, spec):
         if spec.architecture.platform_os is not None:
             if isinstance(spec.architecture.platform_os,spack.architecture.OperatingSystem):
                 return False
@@ -223,8 +223,7 @@ class DefaultConcretizer(object):
             else:
                 spec.add_operating_system_from_string(spec.root.architecture.platform_os)
         else:
-            platform = spack.architecture.sys_type()
-            spec.architecture.platform_os = platform.operating_system('default_os')
+            spec.architecture.platform_os = spec.architecture.platform.operating_system('default_os')
 
         return True #changed
 
@@ -236,7 +235,7 @@ class DefaultConcretizer(object):
 #            return True
             
         
-    def _concretize_target(self, spec, platform):
+    def _concretize_target(self, spec):
         if spec.architecture.target is not None:
             if isinstance(spec.architecture.target,spack.architecture.Target):
                 return False
@@ -250,8 +249,7 @@ class DefaultConcretizer(object):
             else:
                 spec.add_target_from_string(spec.root.architecture.target)
         else:
-            platform = spack.architecture.sys_type()
-            spec.architecture.target = platform.target('default')
+            spec.architecture.target = spec.architecture.platform.target('default')
 
         return True #changed
 
@@ -280,11 +278,10 @@ class DefaultConcretizer(object):
          #False
 #        if isinstance(spec.architecture, basestring):
 #            spec.split_architecture_string(spec.architecture)
-        print spec.architecture
             
         ret =  any((
-                self._concretize_operating_system(spec, platform),
-                self._concretize_target(spec, platform)))
+                self._concretize_operating_system(spec),
+                self._concretize_target(spec)))
 
 
         # Does not look pretty at all!!!

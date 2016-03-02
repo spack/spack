@@ -209,7 +209,10 @@ class Arch(object):
                 str(self.platform_os) + "-" + str(self.target) )
         
     def _cmp_key(self):
-        return (self.platform, self.platform_os, self.target)
+        platform = self.platform.name
+        os = self.platform_os.name if isinstance(self.platform_os, OperatingSystem) else self.platform_os
+        target = self.target.name if isinstance(self.target, Target) else self.target
+        return (platform, os, target)
 
 
 def _helper_to_dict(arch_field_dict, arch_field_name,  *args):
