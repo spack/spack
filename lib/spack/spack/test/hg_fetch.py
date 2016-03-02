@@ -68,26 +68,27 @@ class HgFetchTest(MockPackagesTest):
         """
         self.pkg.versions[ver('hg')] = args
 
-        self.pkg.do_stage()
-        self.assertEqual(self.repo.get_rev(), rev)
+        with self.pkg.stage:
+            self.pkg.do_stage()
+            self.assertEqual(self.repo.get_rev(), rev)
 
-        file_path = join_path(self.pkg.stage.source_path, test_file)
-        self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-        self.assertTrue(os.path.isfile(file_path))
+            file_path = join_path(self.pkg.stage.source_path, test_file)
+            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
+            self.assertTrue(os.path.isfile(file_path))
 
-        os.unlink(file_path)
-        self.assertFalse(os.path.isfile(file_path))
+            os.unlink(file_path)
+            self.assertFalse(os.path.isfile(file_path))
 
-        untracked = 'foobarbaz'
-        touch(untracked)
-        self.assertTrue(os.path.isfile(untracked))
-        self.pkg.do_restage()
-        self.assertFalse(os.path.isfile(untracked))
+            untracked = 'foobarbaz'
+            touch(untracked)
+            self.assertTrue(os.path.isfile(untracked))
+            self.pkg.do_restage()
+            self.assertFalse(os.path.isfile(untracked))
 
-        self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-        self.assertTrue(os.path.isfile(file_path))
+            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
+            self.assertTrue(os.path.isfile(file_path))
 
-        self.assertEqual(self.repo.get_rev(), rev)
+            self.assertEqual(self.repo.get_rev(), rev)
 
 
     def test_fetch_default(self):

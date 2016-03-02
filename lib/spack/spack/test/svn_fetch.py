@@ -82,26 +82,27 @@ class SvnFetchTest(MockPackagesTest):
         """
         self.pkg.versions[ver('svn')] = args
 
-        self.pkg.do_stage()
-        self.assert_rev(rev)
+        with self.pkg.stage:
+            self.pkg.do_stage()
+            self.assert_rev(rev)
 
-        file_path = join_path(self.pkg.stage.source_path, test_file)
-        self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-        self.assertTrue(os.path.isfile(file_path))
+            file_path = join_path(self.pkg.stage.source_path, test_file)
+            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
+            self.assertTrue(os.path.isfile(file_path))
 
-        os.unlink(file_path)
-        self.assertFalse(os.path.isfile(file_path))
+            os.unlink(file_path)
+            self.assertFalse(os.path.isfile(file_path))
 
-        untracked = 'foobarbaz'
-        touch(untracked)
-        self.assertTrue(os.path.isfile(untracked))
-        self.pkg.do_restage()
-        self.assertFalse(os.path.isfile(untracked))
+            untracked = 'foobarbaz'
+            touch(untracked)
+            self.assertTrue(os.path.isfile(untracked))
+            self.pkg.do_restage()
+            self.assertFalse(os.path.isfile(untracked))
 
-        self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-        self.assertTrue(os.path.isfile(file_path))
+            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
+            self.assertTrue(os.path.isfile(file_path))
 
-        self.assert_rev(rev)
+            self.assert_rev(rev)
 
 
     def test_fetch_default(self):

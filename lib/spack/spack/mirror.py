@@ -168,32 +168,33 @@ def create(path, specs, **kwargs):
         pkg = spec.package
         tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
         try:
-            for ii, stage in enumerate(pkg.stage):
-                fetcher = stage.fetcher
-                if ii == 0:
-                    # create a subdirectory for the current package@version
-                    archive_path = os.path.abspath(join_path(mirror_root, mirror_archive_path(spec, fetcher)))
-                    name = spec.format("$_$@")
-                else:
-                    resource = stage.resource
-                    archive_path = join_path(subdir, suggest_archive_basename(resource))
-                    name = "{resource} ({pkg}).".format(resource=resource.name, pkg=spec.format("$_$@"))
-                subdir = os.path.dirname(archive_path)
-                mkdirp(subdir)
+            with pkg.stage:
+                for ii, stage in enumerate(pkg.stage):
+                    fetcher = stage.fetcher
+                    if ii == 0:
+                        # create a subdirectory for the current package@version
+                        archive_path = os.path.abspath(join_path(mirror_root, mirror_archive_path(spec, fetcher)))
+                        name = spec.format("$_$@")
+                    else:
+                        resource = stage.resource
+                        archive_path = join_path(subdir, suggest_archive_basename(resource))
+                        name = "{resource} ({pkg}).".format(resource=resource.name, pkg=spec.format("$_$@"))
+                    subdir = os.path.dirname(archive_path)
+                    mkdirp(subdir)
 
-                if os.path.exists(archive_path):
-                    tty.msg("{name} : already added".format(name=name))
-                else:
-                    everything_already_exists = False
-                    fetcher.fetch()
-                    if not kwargs.get('no_checksum', False):
-                        fetcher.check()
-                        tty.msg("{name} : checksum passed".format(name=name))
+                    if os.path.exists(archive_path):
+                        tty.msg("{name} : already added".format(name=name))
+                    else:
+                        everything_already_exists = False
+                        fetcher.fetch()
+                        if not kwargs.get('no_checksum', False):
+                            fetcher.check()
+                            tty.msg("{name} : checksum passed".format(name=name))
 
-                    # Fetchers have to know how to archive their files.  Use
-                    # that to move/copy/create an archive in the mirror.
-                    fetcher.archive(archive_path)
-                    tty.msg("{name} : added".format(name=name))
+                        # Fetchers have to know how to archive their files.  Use
+                        # that to move/copy/create an archive in the mirror.
+                        fetcher.archive(archive_path)
+                        tty.msg("{name} : added".format(name=name))
 
             if everything_already_exists:
                 present.append(spec)

@@ -52,8 +52,6 @@ class InstallTest(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
-        if self.stage:
-            self.stage.destroy()
         os.chdir(self.orig_dir)
 
 
@@ -64,12 +62,12 @@ class InstallTest(unittest.TestCase):
 
         url = 'file://' + join_path(os.getcwd(), 'archive.tar.gz')
         print url
-        self.stage = Stage(url)
-        self.stage.fetch()
+        with Stage(url) as stage:
+            stage.fetch()
 
-        guesser = ConfigureGuesser()
-        guesser(self.stage)
-        self.assertEqual(system, guesser.build_system)
+            guesser = ConfigureGuesser()
+            guesser(stage)
+            self.assertEqual(system, guesser.build_system)
 
 
     def test_python(self):

@@ -38,6 +38,8 @@ class LinkTreeTest(unittest.TestCase):
 
     def setUp(self):
         self.stage = Stage('link-tree-test')
+        # FIXME : possibly this test needs to be refactored to avoid the explicit call to __enter__ and __exit__
+        self.stage.__enter__()
 
         with working_dir(self.stage.path):
             touchp('source/1')
@@ -51,10 +53,8 @@ class LinkTreeTest(unittest.TestCase):
         source_path = os.path.join(self.stage.path, 'source')
         self.link_tree = LinkTree(source_path)
 
-
     def tearDown(self):
-        if self.stage:
-            self.stage.destroy()
+        self.stage.__exit__(None, None, None)
 
 
     def check_file_link(self, filename):

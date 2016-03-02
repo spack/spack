@@ -76,26 +76,27 @@ class GitFetchTest(MockPackagesTest):
         """
         self.pkg.versions[ver('git')] = args
 
-        self.pkg.do_stage()
-        self.assert_rev(rev)
+        with self.pkg.stage:
+            self.pkg.do_stage()
+            self.assert_rev(rev)
 
-        file_path = join_path(self.pkg.stage.source_path, test_file)
-        self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-        self.assertTrue(os.path.isfile(file_path))
+            file_path = join_path(self.pkg.stage.source_path, test_file)
+            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
+            self.assertTrue(os.path.isfile(file_path))
 
-        os.unlink(file_path)
-        self.assertFalse(os.path.isfile(file_path))
+            os.unlink(file_path)
+            self.assertFalse(os.path.isfile(file_path))
 
-        untracked_file = 'foobarbaz'
-        touch(untracked_file)
-        self.assertTrue(os.path.isfile(untracked_file))
-        self.pkg.do_restage()
-        self.assertFalse(os.path.isfile(untracked_file))
+            untracked_file = 'foobarbaz'
+            touch(untracked_file)
+            self.assertTrue(os.path.isfile(untracked_file))
+            self.pkg.do_restage()
+            self.assertFalse(os.path.isfile(untracked_file))
 
-        self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-        self.assertTrue(os.path.isfile(file_path))
+            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
+            self.assertTrue(os.path.isfile(file_path))
 
-        self.assert_rev(rev)
+            self.assert_rev(rev)
 
 
     def test_fetch_master(self):

@@ -404,10 +404,13 @@ class StageComposite:
         return self[0].path
 
     def __enter__(self):
-        return self[0].__enter__()
+        for item in self:
+            item.__enter__()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        return self[0].__exit__(exc_type, exc_val, exc_tb)
+        for item in reversed(self):
+            item.__exit__(exc_type, exc_val, exc_tb)
 
     def chdir_to_source(self):
         return self[0].chdir_to_source()
