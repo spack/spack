@@ -65,7 +65,7 @@ import spack.fetch_strategy as fs
 from spack.version import *
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive, extension
-from spack.util.executable import ProcessError
+from spack.util.executable import ProcessError, which
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -1229,6 +1229,60 @@ def _hms(seconds):
     if m: parts.append("%dm" % m)
     if s: parts.append("%.2fs" % s)
     return ' '.join(parts)
+
+
+
+
+class CMakePackage(Package):
+
+    def config_args(self, spec, prefix):
+        """Package implementations override this with their own build configuration."""
+        raise InstallError("Package %s provides no config_args method!" % self.name)
+
+
+    def install_version(self, spec, prefix):
+        cmake = which('cmake')
+        make = which('make')
+
+        options = self.config_args(spec, prefix) + spack.build_environment.get_std_cmake_args(self)
+
+        build_directory = join_path(self.stage.path, 'spack-build')
+        source_directory = self.stage.source_path
+
+        with working_dir(build_directory, create=True):
+            cmake(source_directory, *options)
+            make()
+            make("install")
+
+    def install(self, spec, prefix):
+        transitive_includes = ';'.join(os.path.join(dep, 'include')
+            for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep))
+        if str(spec.version) != 'local':
+            os.environ['CMAKE_TRANSITIVE_INCLUDE_PATH'] = transitive_includes
+            self.install_version(spec, prefix)
+        else:    # spec.version == 'local'
+            cmd = [str(which('cmake')),
+                '-DCMAKE_INSTALL_PREFIX=%s' % os.environ['SPACK_PREFIX'],
+                '-DCMAKE_C_COMPILER=%s' % os.environ['SPACK_CC'],
+                '-DCMAKE_CXX_COMPILER=%s' % os.environ['SPACK_CXX'],
+                '-DCMAKE_Fortran_COMPILER=%s' % os.environ['SPACK_FC']] \
+                + self.config_args(spec, prefix)
+
+            env = dict()
+            env['PATH'] = os.environ['PATH']
+            env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = transitive_includes
+            env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
+
+            with open('spconfig.py', 'w') as fout:
+                fout.write('import sys\nimport os\nimport subprocess\n')
+                fout.write('env = {}\n'.format(repr(env)))
+                fout.write('cmd = {} + sys.argv[1:]\n'.format(repr(cmd)))
+                fout.write('proc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
+
+            # Create a dummy file so the build doesn't fail.
+            # That way, the module file will also be created.
+            with open(os.path.join(prefix, 'dummy'), 'w') as fout:
+                pass
 
 
 class FetchError(spack.error.SpackError):
