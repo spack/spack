@@ -210,13 +210,6 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
-    def _concretize_platform(self, arch, platform):
-        if issubclass(arch.platform.__class__, spack.architecture.Platform):
-            return False
-        else:
-            arch.platform = platform
-            return True
-
     def _concretize_operating_system(self, spec, platform):
         if spec.architecture.platform_os is not None:
             if isinstance(spec.architecture.platform_os,spack.architecture.OperatingSystem):
@@ -279,13 +272,9 @@ class DefaultConcretizer(object):
         DAG has an architecture, then use the root otherwise use the defaults
         on the platform.
         """
-
-        platform = spack.architecture.sys_type()
-
         if spec.architecture is None:
             # Set the architecture to all defaults
-            spec.architecture = spack.architecture.Arch(platform=platform, platform_os=None, 
-                    target=None)
+            spec.architecture = spack.architecture.Arch()
             return True
          #If there is a target and it is a tuple and has both filled return
          #False
@@ -294,7 +283,6 @@ class DefaultConcretizer(object):
         print spec.architecture
             
         ret =  any((
-                self._concretize_platform(spec.architecture, platform),
                 self._concretize_operating_system(spec, platform),
                 self._concretize_target(spec, platform)))
 
