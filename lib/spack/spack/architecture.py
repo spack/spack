@@ -58,14 +58,11 @@ class Target(object):
         Targets will have compiler finding strategies
     """
 
-    def __init__(self, name, compiler_strategy, module_name=None):
+    def __init__(self, name, module_name=None):
         self.name = name  # case of cray "ivybridge" but if it's x86_64
-        self.compiler_strategy = compiler_strategy
         self.module_name = module_name  # craype-ivybridge
 
     # Sets only the platform name to avoid recursiveness
-    def set_platform(self, platform):
-        self.platform_name = platform.name
 
     def _cmp_key(self):
         return (self.name, self.module_name)
@@ -74,10 +71,14 @@ class Target(object):
         return self.__str__()
 
     def __str__(self):
-        if self.platform_name:
-            return self.platform_name + '-' + self.name
         return self.name
 
+    def to_dict(self):
+        d = {}
+        d['name'] = self.name
+        d['module_name'] = self.module_name
+
+        return d
 
 @key_ordering
 class Platform(object):
@@ -109,7 +110,6 @@ class Platform(object):
             raise ValueError(
                 "%s is a spack reserved alias " 
                 "and cannot be the name of a target" % name)
-        target.set_platform(self)
         self.targets[name] = target
 
     def target(self, name):
@@ -193,6 +193,14 @@ class OperatingSystem(object):
     def _cmp_key(self):
         return (self.name, self.version, self.compiler_strategy)
 
+    
+    def to_dict(self):
+        d = {}
+        d['name'] = self.name
+        d['version'] = self.version
+        d['compiler_strategy'] = self.compiler_strategy
+
+        return d
 
 #NOTE: Key error caused because Architecture has no comparison method
 @key_ordering
@@ -213,43 +221,55 @@ class Arch(object):
         os = self.platform_os.name if isinstance(self.platform_os, OperatingSystem) else self.platform_os
         target = self.target.name if isinstance(self.target, Target) else self.target
         return (platform, os, target)
-
-
-def _helper_to_dict(arch_field_dict, arch_field_name,  *args):
-    """ General method to turn each class in architecture into a 
-        dictionary. Takes as argument the class dictionary, the field name
-        (platform, platform_os, target) and then any attribute args
-    """
-    d = {}
-    d[arch_field_name] = {}
-    for items in args:
-        d[arch_field_name][items] = arch_field_dict[items]
-    return d
-
-def to_dict(arch):
-    """ Convert the Arch tuple into a dictionary for yaml dumping. This
-        uses the _helper_to_dict method to create the dictionary from the
-        provided architecture field. Can assign the architecture
-        field name (either platform, platform_os or target) and any
-        attributes that make up that architecture field,
-    """
-    d = {}
     
-    platform = arch.platform.__dict__
-    platform_os = arch.platform_os.__dict__
-    target = arch.target.__dict__
+    def to_dict(self):
+        d = {}
+        platform = self.platform
+        platform_os = self.platform_os
+        target = self.target
 
-    platform_dict = _helper_to_dict(platform,'platform','name')
-    os_dict = _helper_to_dict(platform_os, 'platform_os', 'name','version',
-                                                          'compiler_strategy')
-    target_dict = _helper_to_dict(target,'target', 'name', 
-                                            'module_name','platform_name')
+        d['platform'] = self.platform.name
+        d['platform_os'] = self.platform_os.to_dict()
+        d['target'] = self.target.to_dict()
+        
+        return d
 
-    d.update(platform_dict)
-    d.update(os_dict)
-    d.update(target_dict)
+#def _helper_to_dict(arch_field_dict, arch_field_name,  *args):
+#    """ General method to turn each class in architecture into a 
+#        dictionary. Takes as argument the class dictionary, the field name
+#        (platform, platform_os, target) and then any attribute args
+#    """
+#    d = {}
+#    d[arch_field_name] = {}
+#    for items in args:
+#        d[arch_field_name][items] = arch_field_dict[items]
+#    return d
+#
 
-    return d
+#def to_dict(arch):
+#    """ Convert the Arch tuple into a dictionary for yaml dumping. This
+#        uses the _helper_to_dict method to create the dictionary from the
+#        provided architecture field. Can assign the architecture
+#        field name (either platform, platform_os or target) and any
+#        attributes that make up that architecture field,
+#    """
+#    d = {}
+#    
+#    platform = arch.platform.__dict__
+#    platform_os = arch.platform_os.__dict__
+#    target = arch.target.__dict__
+#
+#    platform_dict = _helper_to_dict(platform,'platform','name')
+#    os_dict = _helper_to_dict(platform_os, 'platform_os', 'name','version',
+#                                                          'compiler_strategy')
+#    target_dict = _helper_to_dict(target,'target', 'name', 
+#                                            'module_name','platform_name')
+#
+#    d.update(platform_dict)
+#    d.update(os_dict)
+#    d.update(target_dict)
+#
+#    return d
 
 #def _platform_from_dict(platform):
 #    """Creates all the platform class module names into a dictionary of
@@ -287,17 +307,19 @@ def arch_from_dict(d):
         helper methods to recreate the arch tuple from the dictionary read from
         a yaml file
     """
+    arch = Arch()
+
     if d is None:
         return None
-    platform_dict = d['platform']
-    platform_os_dict = d['platform_os']
+    os_dict = d['platform_os']
     target_dict = d['target']
 
-    platform = d['platform']
-    platform_os = _operating_system_from_dict(platform_os_dict, platform)
     target = _target_from_dict(target_dict)
+    platform_os = _operating_system_from_dict(os_dict, arch.platform)
+    arch.target =target
+    arch.platform_os = platform_os
 
-    return Arch(platform, platform_os, target)
+    return arch
 
 @memoized
 def all_platforms():
