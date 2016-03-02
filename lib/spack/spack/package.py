@@ -291,7 +291,6 @@ class Package(object):
 
     .. code-block:: python
 
-       p.do_clean()              # removes the stage directory entirely
        p.do_restage()            # removes the build directory and
                                  # re-expands the archive.
 
