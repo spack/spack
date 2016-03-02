@@ -110,7 +110,6 @@ def suggest_archive_basename(resource):
     return basename
 
 
-
 def create(path, specs, **kwargs):
     """Create a directory to be used as a spack mirror, and fill it with
        package archives.
@@ -158,58 +157,65 @@ def create(path, specs, **kwargs):
                 "Cannot create directory '%s':" % mirror_root, str(e))
 
     # Things to keep track of while parsing specs.
-    present  = []
-    mirrored = []
-    error    = []
+    categories = {
+        'present': [],
+        'mirrored': [],
+        'error': []
+    }
 
     # Iterate through packages and download all the safe tarballs for each of them
-    everything_already_exists = True
     for spec in version_specs:
-        pkg = spec.package
-        tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
-        try:
-            with pkg.stage:
-                for ii, stage in enumerate(pkg.stage):
-                    fetcher = stage.fetcher
-                    if ii == 0:
-                        # create a subdirectory for the current package@version
-                        archive_path = os.path.abspath(join_path(mirror_root, mirror_archive_path(spec, fetcher)))
-                        name = spec.format("$_$@")
-                    else:
-                        resource = stage.resource
-                        archive_path = join_path(subdir, suggest_archive_basename(resource))
-                        name = "{resource} ({pkg}).".format(resource=resource.name, pkg=spec.format("$_$@"))
-                    subdir = os.path.dirname(archive_path)
-                    mkdirp(subdir)
+        add_single_spec(spec, mirror_root, categories, **kwargs)
 
-                    if os.path.exists(archive_path):
-                        tty.msg("{name} : already added".format(name=name))
-                    else:
-                        everything_already_exists = False
-                        fetcher.fetch()
-                        if not kwargs.get('no_checksum', False):
-                            fetcher.check()
-                            tty.msg("{name} : checksum passed".format(name=name))
+    return categories['present'], categories['mirrored'], categories['error']
 
-                        # Fetchers have to know how to archive their files.  Use
-                        # that to move/copy/create an archive in the mirror.
-                        fetcher.archive(archive_path)
-                        tty.msg("{name} : added".format(name=name))
 
-            if everything_already_exists:
-                present.append(spec)
-            else:
-                mirrored.append(spec)
-        except Exception, e:
-            if spack.debug:
-                sys.excepthook(*sys.exc_info())
-            else:
-                tty.warn("Error while fetching %s." % spec.format('$_$@'), e.message)
-            error.append(spec)
-        finally:
-            pkg.stage.destroy()
+def add_single_spec(spec, mirror_root, categories, **kwargs):
+    tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
+    spec_exists_in_mirror = True
+    try:
+        with spec.package.stage:
+            # fetcher = stage.fetcher
+            # fetcher.fetch()
+            # ...
+            # fetcher.archive(archive_path)
+            for ii, stage in enumerate(spec.package.stage):
+                fetcher = stage.fetcher
+                if ii == 0:
+                    # create a subdirectory for the current package@version
+                    archive_path = os.path.abspath(join_path(mirror_root, mirror_archive_path(spec, fetcher)))
+                    name = spec.format("$_$@")
+                else:
+                    resource = stage.resource
+                    archive_path = join_path(subdir, suggest_archive_basename(resource))
+                    name = "{resource} ({pkg}).".format(resource=resource.name, pkg=spec.format("$_$@"))
+                subdir = os.path.dirname(archive_path)
+                mkdirp(subdir)
 
-    return (present, mirrored, error)
+                if os.path.exists(archive_path):
+                    tty.msg("{name} : already added".format(name=name))
+                else:
+                    spec_exists_in_mirror = False
+                    fetcher.fetch()
+                    if not kwargs.get('no_checksum', False):
+                        fetcher.check()
+                        tty.msg("{name} : checksum passed".format(name=name))
+
+                    # Fetchers have to know how to archive their files.  Use
+                    # that to move/copy/create an archive in the mirror.
+                    fetcher.archive(archive_path)
+                    tty.msg("{name} : added".format(name=name))
+
+        if spec_exists_in_mirror:
+            categories['present'].append(spec)
+        else:
+            categories['mirrored'].append(spec)
+    except Exception as e:
+        if spack.debug:
+            sys.excepthook(*sys.exc_info())
+        else:
+            tty.warn("Error while fetching %s." % spec.format('$_$@'), e.message)
+        categories['error'].append(spec)
 
 
 class MirrorError(spack.error.SpackError):

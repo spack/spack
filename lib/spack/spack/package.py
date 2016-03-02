@@ -732,7 +732,7 @@ class Package(object):
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
-            tty.msg("Patching failed last time.  Restaging.")
+            tty.msg("Patching failed last time. Restaging.")
             self.stage.restage()
 
         self.stage.chdir_to_source()
@@ -912,7 +912,7 @@ class Package(object):
                             % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
                     print_pkg(self.prefix)
 
-                except ProcessError, e:
+                except ProcessError as e:
                     # Annotate with location of build log.
                     e.build_log = log_path
                     cleanup()
