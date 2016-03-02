@@ -354,10 +354,11 @@ class DefaultConcretizer(object):
         # Should think whether this can be more efficient
         def _proper_compiler_style(cspec, architecture):
             compilers = spack.compilers.compilers_for_spec(cspec)
-            if architecture.platform_os.compiler_strategy == 'PATH':
-                filter(lambda c: not c.modules, compilers)
-            if architecture.platform_os.compiler_strategy == 'MODULES':
-                filter(lambda c: c.modules, compilers)
+            filter(lambda c: c.strategy == architecture.platform_os.compiler_strategy, compilers)
+#if architecture.platform_os.compiler_strategy == 'PATH':
+            #    filter(lambda c: not c.modules, compilers)
+            #if architecture.platform_os.compiler_strategy == 'MODULES':
+            #    filter(lambda c: c.modules, compilers)
             return compilers
 
         

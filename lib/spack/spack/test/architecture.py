@@ -34,10 +34,10 @@ class ArchitectureTest(unittest.TestCase):
              'target' : {'name':'haswell', 'module_name': 'craype-haswell'}}
                 
         arch = spack.architecture.arch_from_dict(d)                                                
-        self.assertIsInstance(arch, Arch)
-        self.assertIsInstance(arch.platform, Platform)
-        self.assertIsInstance(arch.platform_os, OperatingSystem)
-        self.assertIsInstance(arch.target, Target)
+        self.assertTrue( isinstance(arch, Arch) )
+        self.assertTrue( isinstance(arch.platform, Platform) )
+        self.assertTrue( isinstance(arch.platform_os, OperatingSystem) )
+        self.assertTrue( isinstance(arch.target, Target) )
         
 
     def test_platform_class_and_compiler_strategies(self):

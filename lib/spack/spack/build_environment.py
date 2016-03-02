@@ -171,7 +171,7 @@ def set_compiler_environment_variables(pkg):
 
     os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
 
-    if compiler.modules:
+    if compiler.strategy == 'MODULES':
         for mod in compiler.modules:
             load_module(mod)
 

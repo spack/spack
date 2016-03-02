@@ -129,6 +129,11 @@ def add_compilers_to_config(scope, *compilers):
     for compiler in compilers:
         compiler_entry = {}
 
+        val = getattr(compiler, 'strategy')
+        if not val:
+            val = 'None'
+        compiler_entry[c] = val
+
         for c in _required_instance_vars:
             val = getattr(compiler, c)
             if not val:
@@ -190,6 +195,11 @@ def compilers_for_spec(compiler_spec):
             raise InvalidCompilerConfigurationError(cspec)
 
         cls  = class_for_compiler_name(cspec.name)
+        
+        strategy = items['strategy']
+        if not strategy:
+            raise InvalidCompilerConfigurationError(cspec)
+
         compiler_paths = []
         for c in _required_instance_vars:
             compiler_path = items[c]
@@ -203,22 +213,19 @@ def compilers_for_spec(compiler_spec):
                 items[m] = None
             mods = items[m]
 
-        return cls(cspec, compiler_paths, mods)
+        return cls(cspec, strategy, compiler_paths, mods)
 
     matches = find(compiler_spec)
     return [get_compiler(cspec) for cspec in matches]
 
 
 @_auto_compiler_spec
-def compiler_for_spec(compiler_spec, target):
+def compiler_for_spec(compiler_spec, operating_system):
     """Get the compiler that satisfies compiler_spec.  compiler_spec must
        be concrete."""
     assert(compiler_spec.concrete)
-    compilers = compilers_for_spec(compiler_spec)
-    if target.compiler_strategy == "PATH":
-        compilers = [c for c in compilers if c.modules is None]
-    elif target.compiler_strategy == "MODULES":
-        compilers = [c for c in compilers if c.modules is not None]
+    compilers = [c for c in compilers_for_spec(compiler_spec)
+                if c.strategy == operating_system.strategy]
     if len(compilers) < 1:
         raise NoCompilerForSpecError(compiler_spec, target)
     if len(compilers) > 1:
