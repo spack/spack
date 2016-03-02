@@ -33,7 +33,7 @@ from bisect import bisect_left
 from external import yaml
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
+from llnl.util.filesystem import *
 
 import spack.error
 import spack.config
@@ -705,12 +705,68 @@ class Repo(object):
         return self.exists(pkg_name)
 
 
+def create_repo(root, namespace=None):
+    """Create a new repository in root with the specified namespace.
+
+       If the namespace is not provided, use basename of root.
+       Return the canonicalized path and the namespace of the created repository.
+    """
+    root = canonicalize_path(root)
+    if not namespace:
+        namespace = os.path.basename(root)
+
+    if not re.match(r'\w[\.\w-]*', namespace):
+        raise InvalidNamespaceError("'%s' is not a valid namespace." % namespace)
+
+    existed = False
+    if os.path.exists(root):
+        if os.path.isfile(root):
+            raise BadRepoError('File %s already exists and is not a directory' % root)
+        elif os.path.isdir(root):
+            if not os.access(root, os.R_OK | os.W_OK):
+                raise BadRepoError('Cannot create new repo in %s: cannot access directory.' % root)
+            if os.listdir(root):
+                raise BadRepoError('Cannot create new repo in %s: directory is not empty.' % root)
+        existed = True
+
+    full_path = os.path.realpath(root)
+    parent = os.path.dirname(full_path)
+    if not os.access(parent, os.R_OK | os.W_OK):
+        raise BadRepoError("Cannot create repository in %s: can't access parent!" % root)
+
+    try:
+        config_path = os.path.join(root, repo_config_name)
+        packages_path = os.path.join(root, packages_dir_name)
+
+        mkdirp(packages_path)
+        with open(config_path, 'w') as config:
+            config.write("repo:\n")
+            config.write("  namespace: '%s'\n" % namespace)
+
+    except (IOError, OSError) as e:
+        raise BadRepoError('Failed to create new repository in %s.' % root,
+                           "Caused by %s: %s" % (type(e), e))
+
+        # try to clean up.
+        if existed:
+            shutil.rmtree(config_path, ignore_errors=True)
+            shutil.rmtree(packages_path, ignore_errors=True)
+        else:
+            shutil.rmtree(root, ignore_errors=True)
+
+    return full_path, namespace
+
+
 class RepoError(spack.error.SpackError):
     """Superclass for repository-related errors."""
 
 
 class NoRepoConfiguredError(RepoError):
     """Raised when there are no repositories configured."""
+
+
+class InvalidNamespaceError(RepoError):
+    """Raised when an invalid namespace is encountered."""
 
 
 class BadRepoError(RepoError):
