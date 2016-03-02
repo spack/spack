@@ -87,6 +87,7 @@ install_layout = YamlDirectoryLayout(install_path)
 # policies.
 
 #choose_hints = {'mpi' : 'openmpi'}
+choose_hints = {}
 from spack.concretize import DefaultConcretizer
 concretizer = DefaultConcretizer(choose_hints=choose_hints)
 
