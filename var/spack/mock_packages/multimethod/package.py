@@ -120,9 +120,10 @@ class Multimethod(Package):
     for target in targets:
         @when('='+target.name)
         def different_by_target(self):
-            return self.spec.architecture.target.name
-
-
+            if isinstance(self.spec.architecture.target,basestring):
+                return self.spec.architecture.target
+            else:
+                return self.spec.architecture.target.name
     #
     # Make sure we can switch methods on different dependencies
     #

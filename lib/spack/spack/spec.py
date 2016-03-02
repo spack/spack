@@ -462,7 +462,6 @@ class Spec(object):
         if self.architecture: raise DuplicateArchitectureError(
                 "Spec for '%s' cannot have two architectures." % self.name)
         platform = spack.architecture.sys_type()
-        print architecture
         if '-' in architecture:
             os, target = architecture.split('-')
         else:
