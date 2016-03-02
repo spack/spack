@@ -203,8 +203,8 @@ class Arch(namedtuple("Arch", "platform platform_os target")):
     __slots__ = ()
 
     def __str__(self):
-        return (self.platform.name +"-"+ 
-                self.platform_os.name + "-" + self.target.name)
+        return (str(self.platform) +"-"+ 
+                str(self.platform_os) + "-" + str(self.target) )
         
     def _cmp_key(self):
         return (self.platform, self.platform_os, self.target)
@@ -246,14 +246,14 @@ def to_dict(arch):
 
     return d
 
-def _platform_from_dict(platform):
-    """Creates all the platform class module names into a dictionary of
-    name : <class_mod> key-value pairs. From there we can construct the 
-    platform subclass
-    """
-    platform_list = all_platforms()
-    platform_names = {plat.__name__.lower():plat for plat in platform_list}
-    return platform_names[platform['name']]()
+#def _platform_from_dict(platform):
+#    """Creates all the platform class module names into a dictionary of
+#    name : <class_mod> key-value pairs. From there we can construct the 
+#    platform subclass
+#    """
+#    platform_list = all_platforms()
+#    platform_names = {plat.__name__.lower():plat for plat in platform_list}
+#    return platform_names[platform['name']]()
 
 
 def _target_from_dict(target_dict): 
@@ -288,7 +288,7 @@ def arch_from_dict(d):
     platform_os_dict = d['platform_os']
     target_dict = d['target']
 
-    platform = _platform_from_dict(platform_dict)
+    platform = d['platform']
     platform_os = _operating_system_from_dict(platform_os_dict, platform)
     target = _target_from_dict(target_dict)
 
