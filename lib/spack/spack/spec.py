@@ -461,7 +461,13 @@ class Spec(object):
         """Called by the parser to set the architecture."""
         if self.architecture: raise DuplicateArchitectureError(
                 "Spec for '%s' cannot have two architectures." % self.name)
-        self.architecture = architecture # a string can be set
+        platform = spack.architecture.sys_type()
+        if '-' in architecture:
+            os, target = architecture.split('-')
+        else:
+            os = architecture
+            target = None
+        self.architecture = spack.architecture.Arch(platform, os, target)
 
 
     def _add_dependency(self, spec):
