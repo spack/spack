@@ -14,43 +14,31 @@ from spack.platforms.darwin import Darwin
 
 class ArchitectureTest(unittest.TestCase):
     
-    def setUp(self):
-        zlib = spack.spec.Spec("zlib")
-        zlib.concretize()
-        self.architecture = zlib.architecture
-        self.platform = sys_type()
-        self.platform_os = self.platform.operating_system('default_os')
-        self.target = self.platform.target('default')
-
-    #def test_to_dict_function_with_target(self):
-    #    d = spack.architecture.to_dict(self.architecture)
-    #    print d['target']
-    #    self.assertEquals(d['target'], {'name': self.target.name,
-    #                          'module_name' : self.target.module_name,
-    #                          'platform_name' : self.target.platform_name,
-    #                          'compiler_strategy': 'MODULES'
-    #                          })
-
     def test_to_dict_function_with_architecture(self):
-        d = spack.architecture.to_dict(self.architecture)
-        self.assertEquals(d, {'architecture':
-                                    {'platform' : {'name': 'crayxc'}, 
-                                     'platform_os': {
-                                                'compiler_strategy': 'MODULES', 
-                                                 'name':'CNL', 
-                                                 'version':'10'},
-                                     'target' : {'platform_name' :'crayxc',
-                                                 'module_name': 'craype-haswell',
-                                                 'name':'haswell'}}})
+        arch = Arch()
+        arch.platform_os = arch.platform.operating_system('default_os')
+        arch.target = arch.platform.target('default')
 
-    #def test_to_dict_function_with_operating_system(self):
-    #    d = spack.architecture.to_dict(self.architecture)
-    #    self.assertEquals(d['platform_os'], {'name': self.platform_os.name,
-    #                          'version': self.platform_os.version,
-    #                          'compiler_strategy': self.platform_os.compiler_strategy})
-
-    def test_architecture_from_dict(self):
-        pass
+        d = arch.to_dict()
+        self.assertEqual(d, {'platform' : 'crayxc',
+                             'platform_os' : {'name': 'CNL',
+                                              'compiler_strategy' : 'MODULES',
+                                              'version':'10'},
+                             'target' : {'name': 'haswell',
+                                         'module_name': 'craype-haswell'}})
+                            
+    def test_from_dict_function_with_architecture(self):
+        d = {'platform':'crayxc',
+             'platform_os' : {'name' : 'CNL', 'compiler_strategy': 'MODULES',
+                                 'version': '10'},
+             'target' : {'name':'haswell', 'module_name': 'craype-haswell'}}
+                
+        arch = spack.architecture.arch_from_dict(d)                                                
+        self.assertIsInstance(arch, Arch)
+        self.assertIsInstance(arch.platform, Platform)
+        self.assertIsInstance(arch.platform_os, OperatingSystem)
+        self.assertIsInstance(arch.target, Target)
+        
 
     def test_platform_class_and_compiler_strategies(self):
         a = CrayXc()
