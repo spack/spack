@@ -33,6 +33,7 @@ import shutil
 import multiprocessing
 import platform
 from llnl.util.filesystem import *
+import llnl.util.tty as tty
 
 import spack
 import spack.compilers as compilers
@@ -205,14 +206,7 @@ def set_module_variables_for_package(pkg, m):
     m.cmake = which("cmake")
 
     # standard CMake arguments
-    m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % pkg.prefix,
-                        '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
-    if platform.mac_ver()[0]:
-        m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
-
-    # Set up CMake rpath
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(pkg)))
+    m.std_cmake_args = get_std_cmake_args(pkg)
 
     # Emulate some shell commands for convenience
     m.pwd          = os.getcwd
@@ -243,6 +237,18 @@ def get_rpaths(pkg):
                   if os.path.isdir(d.prefix.lib64))
     return rpaths
 
+def get_std_cmake_args(cmake_pkg):
+    # standard CMake arguments
+    ret = ['-DCMAKE_INSTALL_PREFIX=%s' % cmake_pkg.prefix,
+        '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
+    if platform.mac_ver()[0]:
+        ret.append('-DCMAKE_FIND_FRAMEWORK=LAST')
+
+    # Set up CMake rpath
+    ret.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
+    ret.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(cmake_pkg)))
+
+    return ret
 
 def parent_class_modules(cls):
     """Get list of super class modules that are all descend from spack.Package"""
