@@ -207,7 +207,7 @@ class Arch(namedtuple("Arch", "platform platform_os target")):
                 self.platform_os.name + "-" + self.target.name)
         
     def _cmp_key(self):
-        return (self.platform.name, self.platform_os.name, self.target.name)
+        return (self.platform, self.platform_os, self.target)
 
 
 def _helper_to_dict(arch_field_dict, arch_field_name,  *args):
