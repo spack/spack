@@ -85,9 +85,10 @@ install_layout = YamlDirectoryLayout(install_path)
 # This controls how things are concretized in spack.
 # Replace it with a subclass if you want different
 # policies.
-#
+
+#choose_hints = {'mpi' : 'openmpi'}
 from spack.concretize import DefaultConcretizer
-concretizer = DefaultConcretizer()
+concretizer = DefaultConcretizer(choose_hints=choose_hints)
 
 # Version information
 from spack.version import Version
