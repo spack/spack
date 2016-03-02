@@ -111,9 +111,32 @@ class Stage(object):
     def __enter__(self):
         """
         Entering a stage context will create the stage directory
+
+        If self.tmp_root evaluates to False, the stage directory is created directly under spack.stage_path, otherwise
+        this will attempt to create a stage in a temporary directory and link it into spack.stage_path.
+
+        Spack will use the first writable location in spack.tmp_dirs to create a stage. If there is no valid location
+        in tmp_dirs, fall back to making the stage inside spack.stage_path.
         """
-        # FIXME : if _setup is used only here, then it makes no sense to retain the function
-        self._setup()
+        # Create the top-level stage directory
+        mkdirp(spack.stage_path)
+        self._cleanup_dead_links()
+
+        # If this is a temporary stage, them make the temp directory
+        if self.tmp_root:
+            if self._need_to_create_path():
+                tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
+                os.symlink(tmp_dir, self.path)
+
+        # if we're not using a tmp dir, create the stage directly in the
+        # stage dir, rather than linking to it.
+        else:
+            if self._need_to_create_path():
+                mkdirp(self.path)
+
+        # Make sure we can actually do something with the stage we made.
+        ensure_access(self.path)
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -179,36 +202,6 @@ class Stage(object):
                 return True
 
         return False
-
-    def _setup(self):
-        """Creates the stage directory.
-           If spack.use_tmp_stage is False, the stage directory is created
-           directly under spack.stage_path.
-
-           If spack.use_tmp_stage is True, this will attempt to create a
-           stage in a temporary directory and link it into spack.stage_path.
-           Spack will use the first writable location in spack.tmp_dirs to
-           create a stage.  If there is no valid location in tmp_dirs, fall
-           back to making the stage inside spack.stage_path.
-        """
-        # Create the top-level stage directory
-        mkdirp(spack.stage_path)
-        self._cleanup_dead_links()
-
-        # If this is a temporary stage, them make the temp directory
-        if self.tmp_root:
-            if self._need_to_create_path():
-                tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
-                os.symlink(tmp_dir, self.path)
-
-        # if we're not using a tmp dir, create the stage directly in the
-        # stage dir, rather than linking to it.
-        else:
-            if self._need_to_create_path():
-                mkdirp(self.path)
-
-        # Make sure we can actually do something with the stage we made.
-        ensure_access(self.path)
 
     @property
     def archive_file(self):
