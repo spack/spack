@@ -410,7 +410,7 @@ class DIYStage(object):
     def chdir_to_source(self):
         self.chdir()
 
-    def fetch(self):
+    def fetch(self, *args, **kwargs):
         tty.msg("No need to fetch for DIY.")
 
     def check(self):
