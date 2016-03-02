@@ -1307,7 +1307,7 @@ class Spec(object):
             if not self.compiler.satisfies(other.compiler, strict=strict):
                 return  False
         elif strict and (other.compiler and not self.compiler):
-            return True
+            return False
 
         if not self.variants.satisfies(other.variants, strict=strict):
             return False
