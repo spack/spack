@@ -25,7 +25,7 @@
 __all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree',
            'expand_user', 'working_dir', 'touch', 'touchp', 'mkdirp',
            'force_remove', 'join_path', 'ancestor', 'can_access', 'filter_file',
-           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink', 'remove_dead_links']
+           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink', 'remove_dead_links', 'remove_linked_tree']
 
 import os
 import sys
@@ -354,3 +354,19 @@ def remove_dead_links(root):
             real_path = os.path.realpath(path)
             if not os.path.exists(real_path):
                 os.unlink(path)
+
+def remove_linked_tree(path):
+    """
+    Removes a directory and its contents.  If the directory is a symlink, follows the link and removes the real
+    directory before removing the link.
+
+    Args:
+        path: directory to be removed
+
+    """
+    if os.path.exists(path):
+        if os.path.islink(path):
+            shutil.rmtree(os.path.realpath(path), True)
+            os.unlink(path)
+        else:
+            shutil.rmtree(path, True)

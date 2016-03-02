@@ -114,15 +114,13 @@ class Stage(object):
         # Create the top-level stage directory
         mkdirp(spack.stage_path)
         remove_dead_links(spack.stage_path)
-
         # If a tmp_root exists then create a directory there and then link it in the stage area,
         # otherwise create the stage directory in self.path
-        if self.tmp_root:
-            if self._need_to_create_path():
+        if self._need_to_create_path():
+            if self.tmp_root:
                 tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
                 os.symlink(tmp_dir, self.path)
-        else:
-            if self._need_to_create_path():
+            else:
                 mkdirp(self.path)
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
@@ -434,19 +432,6 @@ def ensure_access(file=spack.stage_path):
     """Ensure we can access a directory and die with an error if we can't."""
     if not can_access(file):
         tty.die("Insufficient permissions for %s" % file)
-
-
-def remove_linked_tree(path):
-    """Removes a directory and its contents.  If the directory is a symlink,
-       follows the link and reamoves the real directory before removing the
-       link.
-    """
-    if os.path.exists(path):
-        if os.path.islink(path):
-            shutil.rmtree(os.path.realpath(path), True)
-            os.unlink(path)
-        else:
-            shutil.rmtree(path, True)
 
 
 def purge():
