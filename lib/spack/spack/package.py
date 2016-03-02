@@ -1138,13 +1138,6 @@ class Package(object):
         """Reverts expanded/checked out source to a pristine state."""
         self.stage.restage()
 
-
-    def do_clean(self):
-        """Removes the package's build stage and source tarball."""
-        if os.path.exists(self.stage.path):
-            self.stage.destroy()
-
-
     def format_doc(self, **kwargs):
         """Wrap doc string at 72 characters and format nicely"""
         indent = kwargs.get('indent', 0)
@@ -1181,7 +1174,7 @@ class Package(object):
         try:
             return spack.util.web.find_versions_of_archive(
                 *self.all_urls, list_url=self.list_url, list_depth=self.list_depth)
-        except spack.error.NoNetworkConnectionError, e:
+        except spack.error.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:",
                     e.url, e.message)
 

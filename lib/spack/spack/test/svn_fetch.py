@@ -51,13 +51,10 @@ class SvnFetchTest(MockPackagesTest):
         spec.concretize()
         self.pkg = spack.repo.get(spec, new=True)
 
-
     def tearDown(self):
         """Destroy the stage space used by this test."""
         super(SvnFetchTest, self).tearDown()
         self.repo.destroy()
-        self.pkg.do_clean()
-
 
     def assert_rev(self, rev):
         """Check that the current revision is equal to the supplied rev."""
@@ -69,7 +66,6 @@ class SvnFetchTest(MockPackagesTest):
                 if match:
                     return match.group(1)
         self.assertEqual(get_rev(), rev)
-
 
     def try_fetch(self, rev, test_file, args):
         """Tries to:

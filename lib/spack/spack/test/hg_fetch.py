@@ -49,13 +49,10 @@ class HgFetchTest(MockPackagesTest):
         spec.concretize()
         self.pkg = spack.repo.get(spec, new=True)
 
-
     def tearDown(self):
         """Destroy the stage space used by this test."""
         super(HgFetchTest, self).tearDown()
         self.repo.destroy()
-        self.pkg.do_clean()
-
 
     def try_fetch(self, rev, test_file, args):
         """Tries to:
