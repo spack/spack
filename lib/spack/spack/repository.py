@@ -316,6 +316,16 @@ class RepoPath(object):
         return self.repo_for_pkg(spec).get(spec)
 
 
+    @_autospec
+    def dump_provenance(self, spec, path):
+        """Dump provenance information for a spec to a particular path.
+
+           This dumps the package file and any associated patch files.
+           Raises UnknownPackageError if not found.
+        """
+        return self.repo_for_pkg(spec).dump_provenance(spec, path)
+
+
     def dirname_for_package_name(self, pkg_name):
         return self.repo_for_pkg(pkg_name).dirname_for_package_name(pkg_name)
 
@@ -550,6 +560,35 @@ class Repo(object):
                 raise FailedConstructorError(spec.fullname, *sys.exc_info())
 
         return self._instances[key]
+
+
+    @_autospec
+    def dump_provenance(self, spec, path):
+        """Dump provenance information for a spec to a particular path.
+
+           This dumps the package file and any associated patch files.
+           Raises UnknownPackageError if not found.
+        """
+        # Some preliminary checks.
+        if spec.virtual:
+            raise UnknownPackageError(spec.name)
+
+        if spec.namespace and spec.namespace != self.namespace:
+            raise UnknownPackageError("Repository %s does not contain package %s."
+                                      % (self.namespace, spec.fullname))
+
+        # Install any patch files needed by packages.
+        mkdirp(path)
+        for spec, patches in spec.package.patches.items():
+            for patch in patches:
+                if patch.path:
+                    if os.path.exists(patch.path):
+                        install(patch.path, path)
+                    else:
+                        tty.warn("Patch file did not exist: %s" % patch.path)
+
+        # Install the package.py file itself.
+        install(self.filename_for_package_name(spec), path)
 
 
     def purge(self):
