@@ -1256,70 +1256,82 @@ class Spec(object):
         if os_string in platform.operating_sys:
             return True
         return False
+    
+    def add_target_from_string(self, arch):
+        if arch.target is None:
+            return arch.platform.target('default_target')
+        else:
+           return arch.platform.target(arch.target) 
 
-    def add_architecture_from_string(self, arch):
-        """ The user is able to provide a architecture string of the form
-            platform-os-target. This string will be parsed by this function
-            and turn the architecture string into an architecture tuple of
-            platform, operating system and target processor classes.
-            The platform-os-target triplet can be delimited by a '-'. If any
-            portion of the architecture triplet is empty, spack will supply
-            the default. If the entire architecture field is blank then 
-            defaults will be provided based off of the platform. 
-            This happens in the concretize_architecture method in concretize.py
+    def add_operating_system_from_string(self, arch):
+        if arch.platform_os is None:
+            return arch.platform.operating_system('default_os')
+        else:
+            return arch.platform.operating_system(arch.platform_os)
 
-            e.g 
-                =linux-ubuntu10-x84_64    -> (linux, ubuntu10, x86_64)
+    #def add_architecture_from_string(self, arch):
+    #    """ The user is able to provide a architecture string of the form
+    #        platform-os-target. This string will be parsed by this function
+    #        and turn the architecture string into an architecture tuple of
+    #        platform, operating system and target processor classes.
+    #        The platform-os-target triplet can be delimited by a '-'. If any
+    #        portion of the architecture triplet is empty, spack will supply
+    #        the default. If the entire architecture field is blank then 
+    #        defaults will be provided based off of the platform. 
+    #        This happens in the concretize_architecture method in concretize.py
 
-                =cray_xc-SuSE11-haswell   -> (cray_xc, SuSE11, haswell)
+    #        e.g 
+    #            =linux-ubuntu10-x84_64    -> (linux, ubuntu10, x86_64)
 
-                =bgq                      -> (bgq, 
-                                              default_os, 
-                                              default_target)
+    #            =cray_xc-SuSE11-haswell   -> (cray_xc, SuSE11, haswell)
 
-                =elcapitan                -> (darwin, elcapitan, x86_64)
+    #            =bgq                      -> (bgq, 
+    #                                          default_os, 
+    #                                          default_target)
 
-                =x86_64                   -> (autodetected platform, 
-                                              default_os,
-                                              x86_64)
-        """
-        if arch is None: return
-        
-        platform_list = spack.architecture.all_platforms()
-        platform_names = {plat.__name__.lower():plat for plat in platform_list}
-        Arch = spack.architecture.Arch       
-        arch_list = arch.split("-")
-        
-        # Create instance of current platform, gets overwritten if user
-        # provided a platform spec.
-        platform = spack.architecture.sys_type()                                                 
-        target = None
-        platform_os = None
+    #            =elcapitan                -> (darwin, elcapitan, x86_64)
 
-        for entry in arch_list:
-            if self._is_valid_platform(entry, platform_names):
-                # If entry is different from platform name then create it.
-                # else just keep the already instantiated platform class
-                if entry != platform.name:
-                    platform = platform_dict[entry]() # Create instance of platform
-            elif self._is_valid_target(entry, platform):
-                target = platform.target(entry)
-           # check if os is valid by checking platform operating sys dict 
-            elif self._is_valid_os(entry, platform):
-                platform_os = platform.operating_system(entry)
-            else:
-            # throw error since entry is unknown 
-                raise UnknownArchitectureSpecError(entry)
+    #            =x86_64                   -> (autodetected platform, 
+    #                                          default_os,
+    #                                          x86_64)
+    #    """
+    #    if arch is None: return
+    #    
+    #    platform_list = spack.architecture.all_platforms()
+    #    platform_names = {plat.__name__.lower():plat for plat in platform_list}
+    #    Arch = spack.architecture.Arch       
+    #    arch_list = arch.split("-")
+    #    
+    #    # Create instance of current platform, gets overwritten if user
+    #    # provided a platform spec.
+    #    platform = spack.architecture.sys_type()                                                 
+    #    target = None
+    #    platform_os = None
 
-        if target is None:
-            target = platform.target('default')
-        if platform_os is None:
-            platform_os = platform.operating_system('default_os')
+    #    for entry in arch_list:
+    #        if self._is_valid_platform(entry, platform_names):
+    #            # If entry is different from platform name then create it.
+    #            # else just keep the already instantiated platform class
+    #            if entry != platform.name:
+    #                platform = platform_dict[entry]() # Create instance of platform
+    #        elif self._is_valid_target(entry, platform):
+    #            target = platform.target(entry)
+    #       # check if os is valid by checking platform operating sys dict 
+    #        elif self._is_valid_os(entry, platform):
+    #            platform_os = platform.operating_system(entry)
+    #        else:
+    #        # throw error since entry is unknown 
+    #            raise UnknownArchitectureSpecError(entry)
 
-        self.architecture = Arch(platform=platform, 
-                                 platform_os=platform_os, 
-                                 target=target)
-        
+    #    if target is None:
+    #        target = platform.target('default')
+    #    if platform_os is None:
+    #        platform_os = platform.operating_system('default_os')
+
+    #    self.architecture = Arch(platform=platform, 
+    #                             platform_os=platform_os, 
+    #                             target=target)
+    #    
     def satisfies(self, other, deps=True, strict=False):
         """determine if this spec satisfies all constraints of another.
 
