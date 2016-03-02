@@ -13,10 +13,23 @@ compilers:
       fc: /path/to/gfortran
       modules: None
     gcc@5.2.0:
-        cc: cc
-        cxx: CC
-        f77: ftn
-        fc: ftn
-        modules:
+      cc: cc
+      cxx: CC
+      f77: ftn
+      fc: ftn
+      modules:
         - PrgEnv-gnu
         - gcc/5.2.0
+    intel@15.0.1:
+      cc: cc
+      ccx: CC
+      f77: ftn
+      fc: ftn
+      modules:
+      - PrgEnv-intel
+      - intel/15.0.1
+    intel@15.1.2:
+      cc: /path/to/icc
+      cxx: /path/to/ic++
+      f77: /path/to/ifort
+      fc: /path/to/ifort
