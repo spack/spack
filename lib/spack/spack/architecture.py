@@ -196,11 +196,13 @@ class OperatingSystem(object):
 
 #NOTE: Key error caused because Architecture has no comparison method
 @key_ordering
-class Arch(namedtuple("Arch", "platform platform_os target")):
-    """ namedtuple for Architecture. Will have it's own __str__ method
-        to make printing out the tuple easier and also won't make directory
-        paths look odd """
-    __slots__ = ()
+class Arch(object):
+    "Architecture is now a class to help with setting attributes"
+
+    def __init__(self, platform_os=None, target=None):
+        self.platform = sys_type() 
+        self.platform_os = platform_os
+        self.target   = target
 
     def __str__(self):
         return (str(self.platform) +"-"+ 
