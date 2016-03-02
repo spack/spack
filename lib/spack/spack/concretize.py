@@ -46,6 +46,9 @@ class DefaultConcretizer(object):
        default concretization strategies, or you can override all of them.
     """
 
+    def __init__(self, choose_hints=dict()):
+        self.choose_hints = choose_hints
+
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take
            the most recent available version, and default to the package's
@@ -191,8 +194,16 @@ class DefaultConcretizer(object):
         assert(providers)
 
         index = spack.spec.index_specs(providers)
-        first_key = sorted(index.keys())[0]
-        latest_version = sorted(index[first_key])[-1]
+        try:
+            # This could fail because:
+            #   a) There is no hint for spec.name (eg: mpi)
+            #   b) The hint for spec.name doesn't correspond to any real provier
+            #      (eg: self.choose_hints['mpi'] == 'sillympi')
+            concrete_versions = index[self.choose_hints[spec.name]]
+        except:
+            concrete_versions = index[sorted(index.keys())[0]]
+
+        latest_version = sorted(concrete_versions)[-1]
         return latest_version
 
 
