@@ -462,11 +462,12 @@ class Spec(object):
         if self.architecture: raise DuplicateArchitectureError(
                 "Spec for '%s' cannot have two architectures." % self.name)
         platform = spack.architecture.sys_type()
+        print architecture
         if '-' in architecture:
             os, target = architecture.split('-')
         else:
-            os = architecture
-            target = None
+            os = None
+            target = architecture
         self.architecture = spack.architecture.Arch(platform, os, target)
 
 
@@ -1257,17 +1258,17 @@ class Spec(object):
             return True
         return False
     
-    def add_target_from_string(self, arch):
-        if arch.target is None:
-            return arch.platform.target('default_target')
+    def add_target_from_string(self, target):
+        if target is None:
+            self.architecture.target = self.architecture.platform.target('default_target')
         else:
-           return arch.platform.target(arch.target) 
+            self.architecture.target = self.architecture.platform.target(target)
 
-    def add_operating_system_from_string(self, arch):
-        if arch.platform_os is None:
-            return arch.platform.operating_system('default_os')
+    def add_operating_system_from_string(self, os):
+        if os is None:
+            self.architecture.platform_os = self.architecture.platform.operating_system('default_os')
         else:
-            return arch.platform.operating_system(arch.platform_os)
+            self.architecture.platform_os = self.architecture.platform.operating_system(os)
 
     #def add_architecture_from_string(self, arch):
     #    """ The user is able to provide a architecture string of the form

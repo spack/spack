@@ -217,14 +217,14 @@ class DefaultConcretizer(object):
             arch.platform = platform
             return True
 
-    def _concretize_operating_system(self, arch, platform):
+    def _concretize_operating_system(self, spec, platform):
         if spec.architecture.platform_os is not None:
             if isinstance(spec.architecture.platform_os,spack.architecture.OperatingSystem):
                 return False
             else:
                 spec.add_operating_system_from_string(spec.architecture.platform_os)
                 return True #changed
-        if spec.root.architecture.platform_os:
+        if spec.root.architecture and spec.root.architecture.platform_os:
             if isinstance(spec.root.architecture.platform_os,spack.architecture.OperatingSystem):
                 spec.architecture.platform_os = spec.root.architecture.platform_os
             else:
@@ -243,22 +243,22 @@ class DefaultConcretizer(object):
 #            return True
             
         
-    def _concretize_target(self, arch, platform):
-        if spec.target is not None:
-            if isinstance(spec.target,spack.architecture.Target):
+    def _concretize_target(self, spec, platform):
+        if spec.architecture.target is not None:
+            if isinstance(spec.architecture.target,spack.architecture.Target):
                 return False
             else:
-                spec.add_target_from_string(spec.target)
+                spec.add_target_from_string(spec.architecture.target)
                 return True #changed
 
-        if spec.root.target:
-            if isinstance(spec.root.target,spack.architecture.Target):
-                spec.target = spec.root.target
+        if spec.root.architecture and spec.root.architecture.target:
+            if isinstance(spec.root.architecture.target,spack.architecture.Target):
+                spec.architecture.target = spec.root.architecture.target
             else:
-                spec.add_target_from_string(spec.root.target)
+                spec.add_target_from_string(spec.root.architecture.target)
         else:
             platform = spack.architecture.sys_type()
-            spec.target = platform.target('default')
+            spec.architecture.target = platform.target('default')
 
         return True #changed
 
@@ -283,22 +283,20 @@ class DefaultConcretizer(object):
         platform = spack.architecture.sys_type()
 
         if spec.architecture is None:
-            # Create an empty tuple
-            Arch = spack.architecture.Arch
             # Set the architecture to all defaults
-            spec.architecture = Arch(platform=platform, platform_os=None, 
+            spec.architecture = spack.architecture.Arch(platform=platform, platform_os=None, 
                     target=None)
             return True
          #If there is a target and it is a tuple and has both filled return
          #False
 #        if isinstance(spec.architecture, basestring):
 #            spec.split_architecture_string(spec.architecture)
-
+        print spec.architecture
             
         ret =  any((
                 self._concretize_platform(spec.architecture, platform),
-                self._concretize_operating_system(spec.architecture, platform),
-                self._concretize_target(spec.architecture, platform)))
+                self._concretize_operating_system(spec, platform),
+                self._concretize_target(spec, platform)))
 
 
         # Does not look pretty at all!!!
