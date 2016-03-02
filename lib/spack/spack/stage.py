@@ -98,7 +98,7 @@ class Stage(object):
         # Try to construct here a temporary name for the stage directory
         # If this is a named stage, then construct a named path.
         self.path = join_path(spack.stage_path, self.name)
-
+        # Flag to decide whether to delete the stage folder on exit or not
         self.delete_on_exit = True
 
     def __enter__(self):
@@ -113,20 +113,17 @@ class Stage(object):
         """
         # Create the top-level stage directory
         mkdirp(spack.stage_path)
-        self._cleanup_dead_links()
+        remove_dead_links(spack.stage_path)
 
-        # If this is a temporary stage, them make the temp directory
+        # If a tmp_root exists then create a directory there and then link it in the stage area,
+        # otherwise create the stage directory in self.path
         if self.tmp_root:
             if self._need_to_create_path():
                 tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
                 os.symlink(tmp_dir, self.path)
-
-        # if we're not using a tmp dir, create the stage directly in the
-        # stage dir, rather than linking to it.
         else:
             if self._need_to_create_path():
                 mkdirp(self.path)
-
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
 
@@ -150,15 +147,6 @@ class Stage(object):
 
         if self.delete_on_exit:
             self.destroy()
-
-    def _cleanup_dead_links(self):
-        """Remove any dead links in the stage directory."""
-        for file in os.listdir(spack.stage_path):
-            path = join_path(spack.stage_path, file)
-            if os.path.islink(path):
-                real_path = os.path.realpath(path)
-                if not os.path.exists(real_path):
-                    os.unlink(path)
 
     def _need_to_create_path(self):
         """Makes sure nothing weird has happened since the last time we
