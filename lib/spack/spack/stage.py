@@ -42,33 +42,26 @@ STAGE_PREFIX = 'spack-stage-'
 
 
 class Stage(object):
-    """A Stage object manages a directory where some source code is
-       downloaded and built before being installed.  It handles
-       fetching the source code, either as an archive to be expanded
-       or by checking it out of a repository.  A stage's lifecycle
-       looks like this:
+    """
+    A Stage object is a context manager that handles a directory where some source code is downloaded and built
+    before being installed.  It handles fetching the source code, either as an archive to be expanded or by checking
+    it out of a repository.  A stage's lifecycle looks like this:
 
-       Stage()
-         Constructor creates the stage directory.
-       fetch()
-         Fetch a source archive into the stage.
-       expand_archive()
-         Expand the source archive.
-       <install>
-         Build and install the archive.  This is handled by the Package class.
-       destroy()
-         Remove the stage once the package has been installed.
+    ```
+    with Stage() as stage:  # Context manager creates and destroys the stage directory
+        fetch()  # Fetch a source archive into the stage.
+        expand_archive()  # Expand the source archive.
+        <install>  # Build and install the archive.  This is handled by the Package class.
+    ```
 
-       If spack.use_tmp_stage is True, spack will attempt to create stages
-       in a tmp directory.  Otherwise, stages are created directly in
-       spack.stage_path.
+    If spack.use_tmp_stage is True, spack will attempt to create stages in a tmp directory.
+    Otherwise, stages are created directly in spack.stage_path.
 
-       There are two kinds of stages: named and unnamed.  Named stages can
-       persist between runs of spack, e.g. if you fetched a tarball but
-       didn't finish building it, you won't have to fetch it again.
+    There are two kinds of stages: named and unnamed.  Named stages can persist between runs of spack, e.g. if you
+    fetched a tarball but didn't finish building it, you won't have to fetch it again.
 
-       Unnamed stages are created using standard mkdtemp mechanisms or
-       similar, and are intended to persist for only one run of spack.
+    Unnamed stages are created using standard mkdtemp mechanisms or similar, and are intended to persist for
+    only one run of spack.
     """
 
     def __init__(self, url_or_fetch_strategy, **kwargs):
@@ -164,7 +157,7 @@ class Stage(object):
             path = join_path(spack.stage_path, file)
             if os.path.islink(path):
                 real_path = os.path.realpath(path)
-                if not os.path.exists(path):
+                if not os.path.exists(real_path):
                     os.unlink(path)
 
     def _need_to_create_path(self):
