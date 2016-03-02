@@ -10,7 +10,7 @@ class Linux(Platform):
 
     def __init__(self):
         super(Linux, self).__init__('linux')
-        self.add_target(self.default, Target(self.default, 'PATH'))
+        self.add_target(self.default, Target(self.default))
         linux_dist = LinuxDistro()
         self.default_os = linux_dist.name
         self.add_operating_system(linux_dist.name, linux_dist)

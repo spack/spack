@@ -31,11 +31,11 @@ class CrayXc(Platform):
 
         # Could switch to use modules and fe targets for front end
         # Currently using compilers by path for front end.
-        self.add_target('sandybridge', Target('sandybridge', 'PATH'))
+        self.add_target('sandybridge', Target('sandybridge'))
         self.add_target('ivybridge', 
-                        Target('ivybridge', 'MODULES', 'craype-ivybridge'))
+                        Target('ivybridge', 'craype-ivybridge'))
         self.add_target('haswell', 
-                        Target('haswell', 'MODULES', 'craype-haswell'))         
+                        Target('haswell','craype-haswell'))         
 
         self.add_operating_system('SuSE', LinuxDistro())
         self.add_operating_system('CNL', Cnl())
