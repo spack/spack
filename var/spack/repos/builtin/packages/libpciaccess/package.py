@@ -12,8 +12,8 @@ class Libpciaccess(Package):
     depends_on('libtool')
 
     def install(self, spec, prefix):
-        # libpciaccess does not support OS X
-        if spec.satisfies('=darwin-x86_64'):
+        # libpciaccess does not support OS X or PGI compilers
+        if spec.satisfies('=darwin-x86_64') or spec.satisfies('%pgi'):
             # create a dummy directory
             mkdir(prefix.lib)
             return
