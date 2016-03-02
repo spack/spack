@@ -225,7 +225,7 @@ class DefaultConcretizer(object):
                 spec.add_operating_system_from_string(spec.architecture.platform_os)
                 return True #changed
         if spec.root.architecture.platform_os:
-           if isinstance(spec.root.architecture.platform_os,spack.architecture.OperatingSystem):
+            if isinstance(spec.root.architecture.platform_os,spack.architecture.OperatingSystem):
                 spec.architecture.platform_os = spec.root.architecture.platform_os
             else:
                 spec.add_operating_system_from_string(spec.root.architecture.platform_os)
@@ -281,13 +281,13 @@ class DefaultConcretizer(object):
         """
 
         platform = spack.architecture.sys_type()
+
         if spec.architecture is None:
             # Create an empty tuple
             Arch = spack.architecture.Arch
             # Set the architecture to all defaults
-            spec.architecture = Arch(platform=platform, 
-                                     None,
-                                     None)
+            spec.architecture = Arch(platform=platform, platform_os=None, 
+                    target=None)
             return True
          #If there is a target and it is a tuple and has both filled return
          #False
