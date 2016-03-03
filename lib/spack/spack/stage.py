@@ -246,7 +246,7 @@ class Stage(object):
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
-            except spack.error.SpackError, e:
+            except spack.error.SpackError as e:
                 tty.msg("Fetching from %s failed." % fetcher)
                 tty.debug(e)
                 continue
