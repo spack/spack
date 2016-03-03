@@ -22,13 +22,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
+import unittest
 import shutil
+import os
 from tempfile import mkdtemp
-
+from ordereddict_backport import OrderedDict
 import spack
 import spack.config
-from ordereddict_backport import OrderedDict
 from spack.test.mock_packages_test import *
 
 # Some sample compiler config data

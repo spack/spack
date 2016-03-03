@@ -23,15 +23,20 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import unittest
 import shutil
 import tempfile
-import unittest
 
 from llnl.util.filesystem import *
+
 from spack.cmd.create import ConfigureGuesser
 from spack.stage import Stage
-from spack.test.mock_packages_test import *
+
+from spack.fetch_strategy import URLFetchStrategy
+from spack.directory_layout import YamlDirectoryLayout
 from spack.util.executable import which
+from spack.test.mock_packages_test import *
+from spack.test.mock_repo import MockArchive
 
 
 class InstallTest(unittest.TestCase):
@@ -47,6 +52,8 @@ class InstallTest(unittest.TestCase):
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
+        if self.stage:
+            self.stage.destroy()
         os.chdir(self.orig_dir)
 
 
@@ -57,12 +64,12 @@ class InstallTest(unittest.TestCase):
 
         url = 'file://' + join_path(os.getcwd(), 'archive.tar.gz')
         print url
-        with Stage(url) as stage:
-            stage.fetch()
+        self.stage = Stage(url)
+        self.stage.fetch()
 
-            guesser = ConfigureGuesser()
-            guesser(stage)
-            self.assertEqual(system, guesser.build_system)
+        guesser = ConfigureGuesser()
+        guesser(self.stage)
+        self.assertEqual(system, guesser.build_system)
 
 
     def test_python(self):

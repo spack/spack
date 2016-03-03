@@ -28,13 +28,13 @@ Tests for Spack's built-in parallel make support.
 This just tests whether the right args are getting passed to make.
 """
 import os
-import shutil
-import tempfile
 import unittest
+import tempfile
+import shutil
 
 from llnl.util.filesystem import *
-from spack.build_environment import MakeExecutable
 from spack.util.environment import path_put_first
+from spack.build_environment import MakeExecutable
 
 
 class MakeExecutableTest(unittest.TestCase):

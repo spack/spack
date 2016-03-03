@@ -22,12 +22,14 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import unittest
+
+from llnl.util.filesystem import join_path
 
 import spack
-from llnl.util.filesystem import join_path
 from spack.repository import Repo
-from spack.test.mock_packages_test import *
 from spack.util.naming import mod_to_class
+from spack.test.mock_packages_test import *
 
 
 class PackagesTest(MockPackagesTest):

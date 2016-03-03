@@ -25,7 +25,10 @@
 """\
 Tests ability of spack to extrapolate URL versions from existing versions.
 """
+import spack
 import spack.url as url
+from spack.spec import Spec
+from spack.version import ver
 from spack.test.mock_packages_test import *
 
 

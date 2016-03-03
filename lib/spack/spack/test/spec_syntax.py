@@ -23,10 +23,9 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import unittest
-
 import spack.spec
-from spack.parse import Token
 from spack.spec import *
+from spack.parse import Token
 
 # Sample output for a complex lexing.
 complex_lex = [Token(ID, 'mvapich_foo'),
