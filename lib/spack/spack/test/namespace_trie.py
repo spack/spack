@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import unittest
+
 from spack.util.naming import NamespaceTrie
 
 
