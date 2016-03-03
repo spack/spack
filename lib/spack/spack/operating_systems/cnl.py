@@ -11,9 +11,3 @@ class Cnl(OperatingSystem):
         name = 'CNL'
         version = '10'
         super(Cnl, self).__init__(name, version, "MODULES")
-
-    def compiler_strategy(self):
-        return self.compiler_strategy
-
-    def find_compilers(self):
-        pass
