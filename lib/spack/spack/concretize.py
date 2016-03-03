@@ -50,34 +50,17 @@ class DefaultConcretizer(object):
        default concretization strategies, or you can override all of them.
     """
 
-    def _find_other_spec(self, spec, condition):
-        """Searches the dag from spec in an intelligent order and looks
-           for a spec that matches a condition"""
-        dagiter = chain(spec.traverse(direction='parents'), spec.traverse(direction='children'))
-        found = next((x for x in dagiter if x is not spec and condition(x)), None)
-        if found:
-            return found
-        dagiter = chain(spec.traverse(direction='parents'), spec.traverse(direction='children'))
-        searched = list(dagiter)
-        found = next((x for x in spec.root.traverse() if x not in searched and x is not spec and condition(x)), None)
-        if found:
-            return found
-        if condition(spec):
-            return spec
-        return None
-
-    
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of spec/external-path pairs for both virtuals and externals
-           that can concretize this spec.""" 
+           that can concretize this spec."""
         # Get a list of candidate packages that could satisfy this spec
         packages = []
         if spec.virtual:
             providers = spack.repo.providers_for(spec)
             if not providers:
                 raise UnsatisfiableProviderSpecError(providers[0], spec)
-            spec_w_preferred_providers = self._find_other_spec(spec, \
-                    lambda(x): spack.pkgsort.spec_has_preferred_provider(x.name, spec.name))
+            spec_w_preferred_providers = find_spec(
+                spec, lambda(x): spack.pkgsort.spec_has_preferred_provider(x.name, spec.name))
             if not spec_w_preferred_providers:
                 spec_w_preferred_providers = spec
             provider_cmp = partial(spack.pkgsort.provider_compare, spec_w_preferred_providers.name, spec.name)
@@ -101,15 +84,15 @@ class DefaultConcretizer(object):
             raise NoBuildError(spec)
 
         def cmp_externals(a, b):
-            result = a[0].__cmp__(b[0])
-            if result != 0: return result
+            result = cmp_specs(a[0], b[0])
+            if result != 0:
+                return result
             if not a[1] and b[1]:
                 return 1
             if not b[1] and a[1]:
                 return -1
-            return a[1].__cmp__(b[1])
+            return cmp_specs(a[1], b[1])
 
-        #result = sorted(result, cmp=lambda a,b: a[0].__cmp__(b[0]))
         result = sorted(result, cmp=cmp_externals)
         return result
 
@@ -121,27 +104,27 @@ class DefaultConcretizer(object):
         if not candidates:
             return False
 
-        #Find the nearest spec in the dag that has a compiler.  We'll use that
+        # Find the nearest spec in the dag that has a compiler.  We'll use that
         # spec to test compiler compatibility.
-        other_spec = self._find_other_spec(spec, lambda(x): x.compiler)
+        other_spec = find_spec(spec, lambda(x): x.compiler)
         if not other_spec:
             other_spec = spec.root
 
-        #Choose an ABI-compatible candidate, or the first match otherwise.
+        # Choose an ABI-compatible candidate, or the first match otherwise.
         candidate = None
         if other_spec:
             candidate = next((c for c in candidates if spack.abi.compatible(c[0], other_spec)), None)
             if not candidate:
-                #Try a looser ABI matching
+                # Try a looser ABI matching
                 candidate = next((c for c in candidates if spack.abi.compatible(c[0], other_spec, loose=True)), None)
         if not candidate:
-            #No ABI matches. Pick the top choice based on the orignal preferences.
+            # No ABI matches. Pick the top choice based on the orignal preferences.
             candidate = candidates[0]
         candidate_spec = candidate[0]
         external = candidate[1]
         changed = False
 
-        #If we're external then trim the dependencies
+        # If we're external then trim the dependencies
         if external:
             if (spec.dependencies):
                 changed = True
@@ -150,26 +133,26 @@ class DefaultConcretizer(object):
 
         def fequal(candidate_field, spec_field):
             return (not candidate_field) or (candidate_field == spec_field)
-        if fequal(candidate_spec.name, spec.name) and \
-           fequal(candidate_spec.versions, spec.versions) and \
-           fequal(candidate_spec.compiler, spec.compiler) and \
-           fequal(candidate_spec.architecture, spec.architecture) and \
-           fequal(candidate_spec.dependencies, spec.dependencies) and \
-           fequal(candidate_spec.variants, spec.variants) and \
-           fequal(external, spec.external):
+        if (fequal(candidate_spec.name, spec.name) and
+            fequal(candidate_spec.versions, spec.versions) and
+            fequal(candidate_spec.compiler, spec.compiler) and
+            fequal(candidate_spec.architecture, spec.architecture) and
+            fequal(candidate_spec.dependencies, spec.dependencies) and
+            fequal(candidate_spec.variants, spec.variants) and
+            fequal(external, spec.external)):
             return changed
-        
-        #Refine this spec to the candidate.
+
+        # Refine this spec to the candidate.
         if spec.virtual:
             spec._replace_with(candidate_spec)
             changed = True
         if spec._dup(candidate_spec, deps=False, cleardeps=False):
             changed = True
-        spec.external = external        
+        spec.external = external
 
         return changed
-        
-        
+
+
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take
            the preferred version from spackconfig, and default to the package's
@@ -263,7 +246,7 @@ class DefaultConcretizer(object):
         """If the spec already has a compiler, we're done.  If not, then take
            the compiler used for the nearest ancestor with a compiler
            spec and use that.  If the ancestor's compiler is not
-           concrete, then used the preferred compiler as specified in 
+           concrete, then used the preferred compiler as specified in
            spackconfig.
 
            Intuition: Use the spackconfig default if no package that depends on
@@ -272,35 +255,97 @@ class DefaultConcretizer(object):
            link to this one, to maximize compatibility.
         """
         all_compilers = spack.compilers.all_compilers()
-        
+
         if (spec.compiler and
             spec.compiler.concrete and
             spec.compiler in all_compilers):
             return False
 
         #Find the another spec that has a compiler, or the root if none do
-        other_spec = self._find_other_spec(spec, lambda(x) : x.compiler)
+        other_spec = find_spec(spec, lambda(x) : x.compiler)
         if not other_spec:
             other_spec = spec.root
         other_compiler = other_spec.compiler
         assert(other_spec)
-        
+
         # Check if the compiler is already fully specified
         if other_compiler in all_compilers:
             spec.compiler = other_compiler.copy()
             return True
-            
+
         # Filter the compilers into a sorted list based on the compiler_order from spackconfig
         compiler_list = all_compilers if not other_compiler else spack.compilers.find(other_compiler)
         cmp_compilers = partial(spack.pkgsort.compiler_compare, other_spec.name)
         matches = sorted(compiler_list, cmp=cmp_compilers)
         if not matches:
             raise UnavailableCompilerVersionError(other_compiler)
-            
+
         # copy concrete version into other_compiler
         spec.compiler = matches[0].copy()
         assert(spec.compiler.concrete)
         return True  # things changed.
+
+
+def find_spec(spec, condition):
+    """Searches the dag from spec in an intelligent order and looks
+       for a spec that matches a condition"""
+    # First search parents, then search children
+    dagiter = chain(spec.traverse(direction='parents',  root=False),
+                    spec.traverse(direction='children', root=False))
+    visited = set()
+    for relative in dagiter:
+        if condition(relative):
+            return relative
+        visited.add(id(relative))
+
+    # Then search all other relatives in the DAG *except* spec
+    for relative in spec.root.traverse():
+        if relative is spec: continue
+        if id(relative) in visited: continue
+        if condition(relative):
+            return relative
+
+    # Finally search spec itself.
+    if condition(spec):
+        return spec
+
+    return None   # Nohting matched the condition.
+
+
+def cmp_specs(lhs, rhs):
+    # Package name sort order is not configurable, always goes alphabetical
+    if lhs.name != rhs.name:
+        return cmp(lhs.name, rhs.name)
+
+    # Package version is second in compare order
+    pkgname = lhs.name
+    if lhs.versions != rhs.versions:
+        return spack.pkgsort.version_compare(
+            pkgname, lhs.versions, rhs.versions)
+
+    # Compiler is third
+    if lhs.compiler != rhs.compiler:
+        return spack.pkgsort.compiler_compare(
+            pkgname, lhs.compiler, rhs.compiler)
+
+    # Variants
+    if lhs.variants != rhs.variants:
+        return spack.pkgsort.variant_compare(
+            pkgname, lhs.variants, rhs.variants)
+
+    # Architecture
+    if lhs.architecture != rhs.architecture:
+        return spack.pkgsort.architecture_compare(
+            pkgname, lhs.architecture, rhs.architecture)
+
+    # Dependency is not configurable
+    lhash, rhash = hash(lhs), hash(rhs)
+    if lhash != rhash:
+        return -1 if lhash < rhash else 1
+
+    # Equal specs
+    return 0
+
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):
@@ -326,4 +371,3 @@ class NoBuildError(spack.error.SpackError):
     def __init__(self, spec):
         super(NoBuildError, self).__init__(
             "The spec '%s' is configured as nobuild, and no matching external installs were found" % spec.name)
-       
