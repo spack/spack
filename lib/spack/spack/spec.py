@@ -428,7 +428,7 @@ class Spec(object):
         for dep in dep_like:
             spec = dep if isinstance(dep, Spec) else Spec(dep)
             self._add_dependency(spec)
-        
+
 
     #
     # Private routines here are called by the parser when building a spec.
@@ -1410,7 +1410,7 @@ class Spec(object):
                        self.architecture != other.architecture and self.compiler != other.compiler and \
                        self.variants != other.variants and self._normal != other._normal and \
                        self.concrete != other.concrete and self.external != other.external)
-                                       
+
         # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
@@ -1585,7 +1585,7 @@ class Spec(object):
                $@   Version with '@' prefix
                $%   Compiler with '%' prefix
                $%@  Compiler with '%' prefix & compiler version with '@' prefix
-               $+   Options 
+               $+   Options
                $=   Architecture with '=' prefix
                $#   7-char prefix of DAG hash with '-' prefix
                $$   $
@@ -1738,7 +1738,7 @@ class Spec(object):
         #Package name sort order is not configurable, always goes alphabetical
         if self.name != other.name:
             return cmp(self.name, other.name)
-        
+
         #Package version is second in compare order
         pkgname = self.name
         if self.versions != other.versions:
