@@ -174,7 +174,11 @@ def version(pkg, ver, checksum=None, **kwargs):
 
 
 def _depends_on(pkg, spec, when=None):
-    if when is None:
+    # If when is False do nothing
+    if when is False:
+        return
+    # If when is None or True make sure the condition is always satisfied
+    if when is None or when is True:
         when = pkg.name
     when_spec = parse_anonymous_spec(when, pkg.name)
 

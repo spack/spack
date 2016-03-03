@@ -152,15 +152,20 @@ def set_install_permissions(path):
 def copy_mode(src, dest):
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
-    if src_mode | stat.S_IXUSR: dest_mode |= stat.S_IXUSR
-    if src_mode | stat.S_IXGRP: dest_mode |= stat.S_IXGRP
-    if src_mode | stat.S_IXOTH: dest_mode |= stat.S_IXOTH
+    if src_mode & stat.S_IXUSR: dest_mode |= stat.S_IXUSR
+    if src_mode & stat.S_IXGRP: dest_mode |= stat.S_IXGRP
+    if src_mode & stat.S_IXOTH: dest_mode |= stat.S_IXOTH
     os.chmod(dest, dest_mode)
 
 
 def install(src, dest):
     """Manually install a file to a particular location."""
     tty.debug("Installing %s to %s" % (src, dest))
+
+    # Expand dsst to its eventual full path if it is a directory.
+    if os.path.isdir(dest):
+        dest = join_path(dest, os.path.basename(src))
+
     shutil.copy(src, dest)
     set_install_permissions(dest)
     copy_mode(src, dest)
