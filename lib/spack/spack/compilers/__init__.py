@@ -132,7 +132,7 @@ def add_compilers_to_config(scope, *compilers):
         val = getattr(compiler, 'strategy')
         if not val:
             val = 'None'
-        compiler_entry[c] = val
+        compiler_entry['strategy'] = val
 
         for c in _required_instance_vars:
             val = getattr(compiler, c)
