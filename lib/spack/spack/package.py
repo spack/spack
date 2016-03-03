@@ -58,6 +58,7 @@ import spack.compilers
 import spack.mirror
 import spack.hooks
 import spack.directives
+import spack.repository
 import spack.build_environment
 import spack.url
 import spack.util.web
@@ -66,6 +67,7 @@ from spack.version import *
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive, extension
 from spack.util.executable import ProcessError
+from spack.util.environment import dump_environment
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -501,6 +503,7 @@ class Package(object):
             self._fetcher = self._make_fetcher()
         return self._fetcher
 
+
     @fetcher.setter
     def fetcher(self, f):
         self._fetcher = f
@@ -884,10 +887,14 @@ class Package(object):
                     # Do the real install in the source directory.
                     self.stage.chdir_to_source()
 
+                    # Save the build environment in a file before building.
+                    env_path = join_path(os.getcwd(), 'spack-build.env')
+
                     # This redirects I/O to a build log (and optionally to the terminal)
                     log_path = join_path(os.getcwd(), 'spack-build.out')
                     log_file = open(log_path, 'w')
                     with log_output(log_file, verbose, sys.stdout.isatty(), True):
+                        dump_environment(env_path)
                         self.install(self.spec, self.prefix)
 
                 # Ensure that something was actually installed.
@@ -896,7 +903,12 @@ class Package(object):
                 # Move build log into install directory on success
                 if not fake:
                     log_install_path = spack.install_layout.build_log_path(self.spec)
+                    env_install_path = spack.install_layout.build_env_path(self.spec)
                     install(log_path, log_install_path)
+                    install(env_path, env_install_path)
+
+                packages_dir = spack.install_layout.build_packages_path(self.spec)
+                dump_packages(self.spec, packages_dir)
 
                 # On successful install, remove the stage.
                 if not keep_stage:
@@ -1210,6 +1222,52 @@ def validate_package_url(url_string):
 
     if not allowed_archive(url_string):
         tty.die("Invalid file type in URL: '%s'" % url_string)
+
+
+def dump_packages(spec, path):
+    """Dump all package information for a spec and its dependencies.
+
+       This creates a package repository within path for every
+       namespace in the spec DAG, and fills the repos wtih package
+       files and patch files for every node in the DAG.
+    """
+    mkdirp(path)
+
+    # Copy in package.py files from any dependencies.
+    # Note that we copy them in as they are in the *install* directory
+    # NOT as they are in the repository, because we want a snapshot of
+    # how *this* particular build was done.
+    for node in spec.traverse():
+        if node is not spec:
+            # Locate the dependency package in the install tree and find
+            # its provenance information.
+            source = spack.install_layout.build_packages_path(node)
+            source_repo_root = join_path(source, node.namespace)
+
+            # There's no provenance installed for the source package.  Skip it.
+            # User can always get something current from the builtin repo.
+            if not os.path.isdir(source_repo_root):
+                continue
+
+            # Create a source repo and get the pkg directory out of it.
+            try:
+                source_repo = spack.repository.Repo(source_repo_root)
+                source_pkg_dir = source_repo.dirname_for_package_name(node.name)
+            except RepoError as e:
+                tty.warn("Warning: Couldn't copy in provenance for %s" % node.name)
+
+        # Create a destination repository
+        dest_repo_root = join_path(path, node.namespace)
+        if not os.path.exists(dest_repo_root):
+            spack.repository.create_repo(dest_repo_root)
+        repo = spack.repository.Repo(dest_repo_root)
+
+        # Get the location of the package in the dest repo.
+        dest_pkg_dir = repo.dirname_for_package_name(node.name)
+        if node is not spec:
+            install_tree(source_pkg_dir, dest_pkg_dir)
+        else:
+            spack.repo.dump_provenance(node, dest_pkg_dir)
 
 
 def print_pkg(message):

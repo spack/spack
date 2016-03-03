@@ -130,7 +130,7 @@ if [ -z "$mode" ]; then
     done
 fi
 
-# Dump the version and exist if we're in testing mode.
+# Dump the version and exit if we're in testing mode.
 if [ "$SPACK_TEST_COMMAND" = "dump-mode" ]; then
     echo "$mode"
     exit
