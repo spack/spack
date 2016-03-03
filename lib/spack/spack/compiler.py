@@ -224,7 +224,7 @@ class Compiler(object):
     def find(cls, *path):
         compilers = []
         platform = spack.architecture.sys_type()
-        strategies = [o.compiler_strategy for o in platform.operating_systems.values()]
+        strategies = [o.compiler_strategy for o in platform.operating_sys.values()]
         if 'PATH' in strategies:
             compilers.extend(cls.find_in_path(*path))
         if 'MODULES' in strategies:
