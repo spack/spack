@@ -23,20 +23,15 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import unittest
 import shutil
 import tempfile
+import unittest
 
 from llnl.util.filesystem import *
-
 from spack.cmd.create import ConfigureGuesser
 from spack.stage import Stage
-
-from spack.fetch_strategy import URLFetchStrategy
-from spack.directory_layout import YamlDirectoryLayout
-from spack.util.executable import which
 from spack.test.mock_packages_test import *
-from spack.test.mock_repo import MockArchive
+from spack.util.executable import which
 
 
 class InstallTest(unittest.TestCase):

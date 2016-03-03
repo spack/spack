@@ -25,15 +25,13 @@
 """\
 Test that the Stage class works correctly.
 """
-import unittest
-import shutil
 import os
-import getpass
+import shutil
+import unittest
 from contextlib import *
 
-from llnl.util.filesystem import *
-
 import spack
+from llnl.util.filesystem import *
 from spack.stage import Stage
 from spack.util.executable import which
 

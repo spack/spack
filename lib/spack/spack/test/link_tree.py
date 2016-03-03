@@ -24,8 +24,6 @@
 ##############################################################################
 import os
 import unittest
-import shutil
-import tempfile
 
 from llnl.util.filesystem import *
 from llnl.util.link_tree import LinkTree
@@ -38,8 +36,7 @@ class LinkTreeTest(unittest.TestCase):
 
     def setUp(self):
         self.stage = Stage('link-tree-test')
-        # FIXME : possibly this test needs to be refactored to avoid the explicit call to __enter__ and __exit__
-        self.stage.__enter__()
+        self.stage.create()
 
         with working_dir(self.stage.path):
             touchp('source/1')
@@ -54,7 +51,7 @@ class LinkTreeTest(unittest.TestCase):
         self.link_tree = LinkTree(source_path)
 
     def tearDown(self):
-        self.stage.__exit__(None, None, None)
+        self.stage.destroy()
 
 
     def check_file_link(self, filename):

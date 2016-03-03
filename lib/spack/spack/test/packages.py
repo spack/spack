@@ -22,14 +22,12 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import unittest
-
-from llnl.util.filesystem import join_path
 
 import spack
+from llnl.util.filesystem import join_path
 from spack.repository import Repo
-from spack.util.naming import mod_to_class
 from spack.test.mock_packages_test import *
+from spack.util.naming import mod_to_class
 
 
 class PackagesTest(MockPackagesTest):
@@ -77,30 +75,20 @@ class PackagesTest(MockPackagesTest):
     #
 
     def test_import_package(self):
-        import spack.pkg.builtin.mock.mpich
+        pass
 
 
     def test_import_package_as(self):
-        import spack.pkg.builtin.mock.mpich as mp
+        pass
 
 
     def test_import_class_from_package(self):
-        from spack.pkg.builtin.mock.mpich import Mpich
+        pass
 
 
     def test_import_module_from_package(self):
-        from spack.pkg.builtin.mock import mpich
+        pass
 
 
     def test_import_namespace_container_modules(self):
-        import spack.pkg
-        import spack.pkg as p
-        from spack import pkg
-
-        import spack.pkg.builtin
-        import spack.pkg.builtin as b
-        from spack.pkg import builtin
-
-        import spack.pkg.builtin.mock
-        import spack.pkg.builtin.mock as m
-        from spack.pkg.builtin import mock
+        pass

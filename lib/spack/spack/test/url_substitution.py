@@ -27,7 +27,6 @@ This test does sanity checks on substituting new versions into URLs
 """
 import unittest
 
-import spack
 import spack.url as url
 
 

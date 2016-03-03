@@ -23,16 +23,12 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import unittest
-
-from llnl.util.filesystem import *
-
 import spack
+
 from spack.version import ver
-from spack.stage import Stage
-from spack.util.executable import which
-from spack.test.mock_packages_test import *
 from spack.test.mock_repo import MockHgRepo
+from llnl.util.filesystem import *
+from spack.test.mock_packages_test import *
 
 
 class HgFetchTest(MockPackagesTest):

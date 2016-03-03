@@ -24,18 +24,12 @@
 ##############################################################################
 import os
 import re
-import unittest
-import shutil
-import tempfile
-
-from llnl.util.filesystem import *
-
 import spack
-from spack.version import ver
-from spack.stage import Stage
-from spack.util.executable import which
-from spack.test.mock_packages_test import *
+
 from spack.test.mock_repo import svn, MockSvnRepo
+from spack.version import ver
+from spack.test.mock_packages_test import *
+from llnl.util.filesystem import *
 
 
 class SvnFetchTest(MockPackagesTest):

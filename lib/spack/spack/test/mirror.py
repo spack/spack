@@ -23,11 +23,10 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-from filecmp import dircmp
-
 import spack
 import spack.mirror
-from spack.util.compression import decompressor_for
+
+from filecmp import dircmp
 from spack.test.mock_packages_test import *
 from spack.test.mock_repo import *
 
