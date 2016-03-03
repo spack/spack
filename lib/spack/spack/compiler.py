@@ -34,6 +34,7 @@ from llnl.util.filesystem import join_path
 
 import spack.error
 import spack.spec
+import spack.architecture
 from spack.util.multiproc import parmap
 from spack.util.executable import *
 from spack.util.environment import get_path
@@ -221,7 +222,15 @@ class Compiler(object):
 
     @classmethod
     def find(cls, *path):
-        return cls.find_in_path(*path) + cls.find_in_modules()
+        compilers = []
+        platform = spack.architecture.sys_type()
+        strategies = [o.compiler_strategy for o in platform.operating_systems.values()]
+        if 'PATH' in strategies:
+            compilers.extend(cls.find_in_path(*path))
+        if 'MODULES' in strategies:
+            compilers.extend(cls.find_in_modules())
+        return compilers
+                            
 
     @classmethod
     def find_in_path(cls, *path):
