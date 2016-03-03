@@ -170,7 +170,7 @@ class OperatingSystem(object):
         find compilers we call find_compilers method for each operating system
     """
 
-    def __init__(self, name, version, compiler_strategy):
+    def __init__(self, name, version, compiler_strategy="PATH"):
         self.name = name
         self.version = version
         self.compiler_strategy = compiler_strategy
@@ -180,19 +180,9 @@ class OperatingSystem(object):
 
     def __repr__(self):
         return self.__str__()
-    
-    
-    def compiler_strategy(self):
-        """ Operating Systems will now be in charge of the compiler finding
-            strategy. They will each have their own find_compilers method
-            which depending on their compiler strategy will find the compilers
-            using a specific method (i.e PATH vs MODULES).
-        """
-        raise NotImplementedError()
 
     def _cmp_key(self):
         return (self.name, self.version, self.compiler_strategy)
-
     
     def to_dict(self):
         d = {}
