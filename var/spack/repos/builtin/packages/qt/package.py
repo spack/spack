@@ -53,6 +53,8 @@ class Qt(Package):
     # https://github.com/xboxdrv/xboxdrv/issues/188
     patch('btn_trigger_happy.patch', when='@5.7.0:')
 
+    patch('qt4-corewlan-new-osx.patch', when='@4')
+
     # Use system openssl for security.
     # depends_on("openssl")
 
