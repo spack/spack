@@ -75,20 +75,30 @@ class PackagesTest(MockPackagesTest):
     #
 
     def test_import_package(self):
-        pass
+        import spack.pkg.builtin.mock.mpich
 
 
     def test_import_package_as(self):
-        pass
+        import spack.pkg.builtin.mock.mpich as mp
 
 
     def test_import_class_from_package(self):
-        pass
+        from spack.pkg.builtin.mock.mpich import Mpich
 
 
     def test_import_module_from_package(self):
-        pass
+        from spack.pkg.builtin.mock import mpich
 
 
     def test_import_namespace_container_modules(self):
-        pass
+        import spack.pkg
+        import spack.pkg as p
+        from spack import pkg
+
+        import spack.pkg.builtin
+        import spack.pkg.builtin as b
+        from spack.pkg import builtin
+
+        import spack.pkg.builtin.mock
+        import spack.pkg.builtin.mock as m
+        from spack.pkg.builtin import mock
