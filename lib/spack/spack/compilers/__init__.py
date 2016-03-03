@@ -227,7 +227,7 @@ def compiler_for_spec(compiler_spec, operating_system):
     compilers = [c for c in compilers_for_spec(compiler_spec)
                 if c.strategy == operating_system.compiler_strategy]
     if len(compilers) < 1:
-        raise NoCompilerForSpecError(compiler_spec, target)
+        raise NoCompilerForSpecError(compiler_spec, operating_system)
     if len(compilers) > 1:
         raise CompilerSpecInsufficientlySpecificError(compiler_spec)
     return compilers[0]
