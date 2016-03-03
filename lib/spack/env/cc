@@ -188,17 +188,17 @@ if [[ -n $SPACK_TEST_COMMAND ]]; then
             -Wl,*)
                 arg="${1#-Wl,}"
                 # TODO: Handle multiple -Wl, continuations of -Wl,-rpath
-                if [[ $arg == '-rpath='* ]]; then
+                if [[ $arg == -rpath=* ]]; then
                     arg="${arg#-rpath=}"
                     for rpath in ${arg//,/ }; do
                         rpaths+=("$rpath")
                     done
-                elif [[ $arg == '-rpath,'* ]]; then
+                elif [[ $arg == -rpath,* ]]; then
                     arg="${arg#-rpath,}"
                     for rpath in ${arg//,/ }; do
                         rpaths+=("$rpath")
                     done
-                elif [[ $arg == '-rpath' ]]; then
+                elif [[ $arg == -rpath ]]; then
                     shift; arg="$1"
                     if [[ $arg != '-Wl,'* ]]; then
                         die "-Wl,-rpath was not followed by -Wl,*"
@@ -214,9 +214,9 @@ if [[ -n $SPACK_TEST_COMMAND ]]; then
             -Xlinker,*)
                 arg="${1#-Xlinker,}"
                 if [ -z "$arg" ]; then shift; arg="$1"; fi
-                if [[ $arg = -rpath=* ]]; then
+                if [[ $arg == -rpath=* ]]; then
                     rpaths+=("${arg#-rpath=}")
-                elif [[ $arg = -rpath ]]; then
+                elif [[ $arg == -rpath ]]; then
                     shift; arg="$1"
                     if [[ $arg != -Xlinker,* ]]; then
                         die "-Xlinker,-rpath was not followed by -Xlinker,*"
