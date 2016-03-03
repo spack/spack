@@ -12,13 +12,4 @@ class LinuxDistro(OperatingSystem):
         name = py_platform.dist()[0]
         version = py_platform.dist()[1] 
 
-        super(LinuxDistro, self).__init__(name, version, "PATH")
-    
-    def compiler_strategy(self):
-        return self.compiler_strategy
-
-    def find_compilers(self):
-        pass
-
-    
-
+        super(LinuxDistro, self).__init__(name, version)

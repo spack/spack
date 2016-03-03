@@ -26,15 +26,4 @@ class MacOsx(OperatingSystem):
         except KeyError:
             name = "mac_os"
 
-        super(MacOsx, self).__init__(name, mac_ver, "PATH")
-
-    def compiler_strategy(self):
-        return self.compiler_strategy
-
-    def find_compilers(self):
-        pass
-        
-
-
-
-
+        super(MacOsx, self).__init__(name, mac_ver)
