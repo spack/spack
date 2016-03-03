@@ -58,24 +58,29 @@ def get_checksums(versions, urls, **kwargs):
 
     tty.msg("Downloading...")
     hashes = []
-    for i, (url, version) in enumerate(zip(urls, versions)):
+    i = 0
+    for url, version in zip(urls, versions):
         stage = Stage(url)
         try:
             stage.fetch()
             if i == 0 and first_stage_function:
                 first_stage_function(stage)
 
-            hashes.append(
-                spack.util.crypto.checksum(hashlib.md5, stage.archive_file))
+            hashes.append((version,
+                spack.util.crypto.checksum(hashlib.md5, stage.archive_file)))
         except FailedDownloadError, e:
             tty.msg("Failed to fetch %s" % url)
+            continue
+	except Exception, e:
+            tty.msg('Something failed on %s, skipping.\n    (%s)' % (url, e))
             continue
 
         finally:
             if not keep_stage:
                 stage.destroy()
+        i += 1
 
-    return zip(versions, hashes)
+    return hashes
 
 
 

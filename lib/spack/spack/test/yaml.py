@@ -26,6 +26,7 @@
 Test Spack's custom YAML format.
 """
 import unittest
+
 import spack.util.spack_yaml as syaml
 
 test_file = """\

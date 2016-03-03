@@ -25,7 +25,7 @@
 __all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree',
            'expand_user', 'working_dir', 'touch', 'touchp', 'mkdirp',
            'force_remove', 'join_path', 'ancestor', 'can_access', 'filter_file',
-           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink']
+           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink', 'remove_dead_links', 'remove_linked_tree']
 
 import os
 import sys
@@ -152,15 +152,20 @@ def set_install_permissions(path):
 def copy_mode(src, dest):
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
-    if src_mode | stat.S_IXUSR: dest_mode |= stat.S_IXUSR
-    if src_mode | stat.S_IXGRP: dest_mode |= stat.S_IXGRP
-    if src_mode | stat.S_IXOTH: dest_mode |= stat.S_IXOTH
+    if src_mode & stat.S_IXUSR: dest_mode |= stat.S_IXUSR
+    if src_mode & stat.S_IXGRP: dest_mode |= stat.S_IXGRP
+    if src_mode & stat.S_IXOTH: dest_mode |= stat.S_IXOTH
     os.chmod(dest, dest_mode)
 
 
 def install(src, dest):
     """Manually install a file to a particular location."""
     tty.debug("Installing %s to %s" % (src, dest))
+
+    # Expand dsst to its eventual full path if it is a directory.
+    if os.path.isdir(dest):
+        dest = join_path(dest, os.path.basename(src))
+
     shutil.copy(src, dest)
     set_install_permissions(dest)
     copy_mode(src, dest)
@@ -235,7 +240,7 @@ def touchp(path):
 def force_symlink(src, dest):
     try:
         os.symlink(src, dest)
-    except OSError, e:
+    except OSError as e:
         os.remove(dest)
         os.symlink(src, dest)
 
@@ -339,3 +344,34 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
     if order == 'post':
         yield (source_path, dest_path)
+
+def remove_dead_links(root):
+    """
+    Removes any dead link that is present in root
+
+    Args:
+        root: path where to search for dead links
+
+    """
+    for file in os.listdir(root):
+        path = join_path(root, file)
+        if os.path.islink(path):
+            real_path = os.path.realpath(path)
+            if not os.path.exists(real_path):
+                os.unlink(path)
+
+def remove_linked_tree(path):
+    """
+    Removes a directory and its contents.  If the directory is a symlink, follows the link and removes the real
+    directory before removing the link.
+
+    Args:
+        path: directory to be removed
+
+    """
+    if os.path.exists(path):
+        if os.path.islink(path):
+            shutil.rmtree(os.path.realpath(path), True)
+            os.unlink(path)
+        else:
+            shutil.rmtree(path, True)

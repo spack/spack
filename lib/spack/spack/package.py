@@ -58,6 +58,7 @@ import spack.compilers
 import spack.mirror
 import spack.hooks
 import spack.directives
+import spack.repository
 import spack.build_environment
 import spack.url
 import spack.util.web
@@ -66,6 +67,7 @@ from spack.version import *
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive, extension
 from spack.util.executable import ProcessError
+from spack.util.environment import dump_environment
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -291,7 +293,6 @@ class Package(object):
 
     .. code-block:: python
 
-       p.do_clean()              # removes the stage directory entirely
        p.do_restage()            # removes the build directory and
                                  # re-expands the archive.
 
@@ -732,7 +733,7 @@ class Package(object):
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
-            tty.msg("Patching failed last time.  Restaging.")
+            tty.msg("Patching failed last time. Restaging.")
             self.stage.restage()
 
         self.stage.chdir_to_source()
@@ -847,93 +848,103 @@ class Package(object):
                 make_jobs=make_jobs)
 
         start_time = time.time()
-        if not fake:
-            if not skip_patch:
-                self.do_patch()
-            else:
-                self.do_stage()
-
-        # create the install directory.  The install layout
-        # handles this in case so that it can use whatever
-        # package naming scheme it likes.
-        spack.install_layout.create_install_directory(self.spec)
-
-        def cleanup():
-            if not keep_prefix:
-                # If anything goes wrong, remove the install prefix
-                self.remove_prefix()
-            else:
-                tty.warn("Keeping install prefix in place despite error.",
-                         "Spack will think this package is installed." +
-                         "Manually remove this directory to fix:",
-                         self.prefix, wrap=True)
-
-
-        def real_work():
-            try:
-                tty.msg("Building %s." % self.name)
-
-                # Run the pre-install hook in the child process after
-                # the directory is created.
-                spack.hooks.pre_install(self)
-
-                # Set up process's build environment before running install.
-                if fake:
-                    self.do_fake_install()
+        with self.stage:
+            if not fake:
+                if not skip_patch:
+                    self.do_patch()
                 else:
-                    # Do the real install in the source directory.
-                    self.stage.chdir_to_source()
+                    self.do_stage()
 
-                    # This redirects I/O to a build log (and optionally to the terminal)
-                    log_path = join_path(os.getcwd(), 'spack-build.out')
-                    log_file = open(log_path, 'w')
-                    with log_output(log_file, verbose, sys.stdout.isatty(), True):
-                        self.install(self.spec, self.prefix)
+            # create the install directory.  The install layout
+            # handles this in case so that it can use whatever
+            # package naming scheme it likes.
+            spack.install_layout.create_install_directory(self.spec)
 
-                # Ensure that something was actually installed.
-                self._sanity_check_install()
+            def cleanup():
+                if not keep_prefix:
+                    # If anything goes wrong, remove the install prefix
+                    self.remove_prefix()
+                else:
+                    tty.warn("Keeping install prefix in place despite error.",
+                             "Spack will think this package is installed." +
+                             "Manually remove this directory to fix:",
+                             self.prefix, wrap=True)
 
-                # Move build log into install directory on success
-                if not fake:
-                    log_install_path = spack.install_layout.build_log_path(self.spec)
-                    install(log_path, log_install_path)
 
-                # On successful install, remove the stage.
-                if not keep_stage:
-                    self.stage.destroy()
+            def real_work():
+                try:
+                    tty.msg("Building %s." % self.name)
 
-                # Stop timer.
-                self._total_time = time.time() - start_time
-                build_time = self._total_time - self._fetch_time
+                    # Run the pre-install hook in the child process after
+                    # the directory is created.
+                    spack.hooks.pre_install(self)
 
-                tty.msg("Successfully installed %s." % self.name,
-                        "Fetch: %s.  Build: %s.  Total: %s."
-                        % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
-                print_pkg(self.prefix)
+                    # Set up process's build environment before running install.
+                    if fake:
+                        self.do_fake_install()
+                    else:
+                        # Do the real install in the source directory.
+                        self.stage.chdir_to_source()
 
-            except ProcessError, e:
-                # Annotate with location of build log.
-                e.build_log = log_path
-                cleanup()
-                raise e
+                        # Save the build environment in a file before building.
+                        env_path = join_path(os.getcwd(), 'spack-build.env')
 
-            except:
-                # other exceptions just clean up and raise.
-                cleanup()
-                raise
+                        # This redirects I/O to a build log (and optionally to the terminal)
+                        log_path = join_path(os.getcwd(), 'spack-build.out')
+                        log_file = open(log_path, 'w')
+                        with log_output(log_file, verbose, sys.stdout.isatty(), True):
+                            dump_environment(env_path)
+                            self.install(self.spec, self.prefix)
 
-        # Set parallelism before starting build.
-        self.make_jobs = make_jobs
+                    # Ensure that something was actually installed.
+                    self._sanity_check_install()
 
-        # Do the build.
-        spack.build_environment.fork(self, real_work)
+                    # Move build log into install directory on success
+                    if not fake:
+                        log_install_path = spack.install_layout.build_log_path(self.spec)
+                        env_install_path = spack.install_layout.build_env_path(self.spec)
+                        install(log_path, log_install_path)
+                        install(env_path, env_install_path)
 
-        # note: PARENT of the build process adds the new package to
-        # the database, so that we don't need to re-read from file.
-        spack.installed_db.add(self.spec, self.prefix)
+                    packages_dir = spack.install_layout.build_packages_path(self.spec)
+                    dump_packages(self.spec, packages_dir)
 
-        # Once everything else is done, run post install hooks
-        spack.hooks.post_install(self)
+                    # On successful install, remove the stage.
+                    if not keep_stage:
+                        self.stage.destroy()
+
+                    # Stop timer.
+                    self._total_time = time.time() - start_time
+                    build_time = self._total_time - self._fetch_time
+
+                    tty.msg("Successfully installed %s." % self.name,
+                            "Fetch: %s.  Build: %s.  Total: %s."
+                            % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
+                    print_pkg(self.prefix)
+
+                except ProcessError as e:
+                    # Annotate with location of build log.
+                    e.build_log = log_path
+                    cleanup()
+                    raise e
+
+                except:
+                    # other exceptions just clean up and raise.
+                    cleanup()
+                    raise
+
+            # Set parallelism before starting build.
+            self.make_jobs = make_jobs
+
+            # Do the build.
+            spack.build_environment.fork(self, real_work)
+
+            # note: PARENT of the build process adds the new package to
+            # the database, so that we don't need to re-read from file.
+            spack.installed_db.add(self.spec, self.prefix)
+
+            # Once everything else is done, run post install hooks
+            spack.hooks.post_install(self)
 
 
     def _sanity_check_install(self):
@@ -1137,13 +1148,6 @@ class Package(object):
         """Reverts expanded/checked out source to a pristine state."""
         self.stage.restage()
 
-
-    def do_clean(self):
-        """Removes the package's build stage and source tarball."""
-        if os.path.exists(self.stage.path):
-            self.stage.destroy()
-
-
     def format_doc(self, **kwargs):
         """Wrap doc string at 72 characters and format nicely"""
         indent = kwargs.get('indent', 0)
@@ -1180,7 +1184,7 @@ class Package(object):
         try:
             return spack.util.web.find_versions_of_archive(
                 *self.all_urls, list_url=self.list_url, list_depth=self.list_depth)
-        except spack.error.NoNetworkConnectionError, e:
+        except spack.error.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:",
                     e.url, e.message)
 
@@ -1210,6 +1214,52 @@ def validate_package_url(url_string):
 
     if not allowed_archive(url_string):
         tty.die("Invalid file type in URL: '%s'" % url_string)
+
+
+def dump_packages(spec, path):
+    """Dump all package information for a spec and its dependencies.
+
+       This creates a package repository within path for every
+       namespace in the spec DAG, and fills the repos wtih package
+       files and patch files for every node in the DAG.
+    """
+    mkdirp(path)
+
+    # Copy in package.py files from any dependencies.
+    # Note that we copy them in as they are in the *install* directory
+    # NOT as they are in the repository, because we want a snapshot of
+    # how *this* particular build was done.
+    for node in spec.traverse():
+        if node is not spec:
+            # Locate the dependency package in the install tree and find
+            # its provenance information.
+            source = spack.install_layout.build_packages_path(node)
+            source_repo_root = join_path(source, node.namespace)
+
+            # There's no provenance installed for the source package.  Skip it.
+            # User can always get something current from the builtin repo.
+            if not os.path.isdir(source_repo_root):
+                continue
+
+            # Create a source repo and get the pkg directory out of it.
+            try:
+                source_repo = spack.repository.Repo(source_repo_root)
+                source_pkg_dir = source_repo.dirname_for_package_name(node.name)
+            except RepoError as e:
+                tty.warn("Warning: Couldn't copy in provenance for %s" % node.name)
+
+        # Create a destination repository
+        dest_repo_root = join_path(path, node.namespace)
+        if not os.path.exists(dest_repo_root):
+            spack.repository.create_repo(dest_repo_root)
+        repo = spack.repository.Repo(dest_repo_root)
+
+        # Get the location of the package in the dest repo.
+        dest_pkg_dir = repo.dirname_for_package_name(node.name)
+        if node is not spec:
+            install_tree(source_pkg_dir, dest_pkg_dir)
+        else:
+            spack.repo.dump_provenance(node, dest_pkg_dir)
 
 
 def print_pkg(message):
