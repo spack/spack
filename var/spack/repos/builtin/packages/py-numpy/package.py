@@ -13,6 +13,7 @@ class PyNumpy(Package):
     extends('python')
     depends_on('py-nose')
     depends_on('netlib-blas+fpic', when='+blas')
+    depends_on('netlib-blas+fpic+fortran', when='+blas+fortran')
     depends_on('netlib-lapack+shared', when='+blas')
 
     def install(self, spec, prefix):
