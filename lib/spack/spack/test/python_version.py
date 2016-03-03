@@ -28,11 +28,12 @@ This test ensures that all Spack files are Python version 2.6 or less.
 Spack was originally 2.7, but enough systems in 2014 are still using
 2.6 on their frontend nodes that we need 2.6 to get adopted.
 """
+import unittest
 import os
 import re
-import unittest
 
 import llnl.util.tty as tty
+
 import pyqver2
 import spack
 

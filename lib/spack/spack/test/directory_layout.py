@@ -25,16 +25,19 @@
 """\
 This test verifies that the Spack directory layout works properly.
 """
-import os
-import shutil
+import unittest
 import tempfile
+import shutil
+import os
+
+from llnl.util.filesystem import *
 
 import spack
-from llnl.util.filesystem import *
-from spack.directory_layout import YamlDirectoryLayout
-from spack.repository import RepoPath
 from spack.spec import Spec
+from spack.repository import RepoPath
+from spack.directory_layout import YamlDirectoryLayout
 from spack.test.mock_packages_test import *
+
 
 # number of packages to test (to reduce test time)
 max_packages = 10

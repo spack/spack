@@ -22,15 +22,17 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import sys
 import os
 import shutil
-import tempfile
 import unittest
+import tempfile
+from ordereddict_backport import OrderedDict
+
+from llnl.util.filesystem import mkdirp
 
 import spack
 import spack.config
-from llnl.util.filesystem import mkdirp
-from ordereddict_backport import OrderedDict
 from spack.repository import RepoPath
 from spack.spec import Spec
 

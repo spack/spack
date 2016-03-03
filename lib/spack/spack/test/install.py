@@ -22,13 +22,18 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
+import unittest
 import shutil
 import tempfile
 
-import spack
 from llnl.util.filesystem import *
-from spack.directory_layout import YamlDirectoryLayout
+
+import spack
+from spack.stage import Stage
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
+from spack.directory_layout import YamlDirectoryLayout
+from spack.util.executable import which
 from spack.test.mock_packages_test import *
 from spack.test.mock_repo import MockArchive
 
