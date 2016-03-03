@@ -31,13 +31,13 @@ class Qt(Package):
     patch('qt4-corewlan-new-osx.patch', when='@4')
 
     # Use system openssl for security.
-    #depends_on("openssl")
+    depends_on("openssl")
 
     depends_on("glib")
-    depends_on("gtkplus")
+    #depends_on("gtkplus")
     depends_on("libxml2")
     depends_on("zlib")
-    depends_on("dbus", when='@4:')
+    #depends_on("dbus", when='@4:')
     depends_on("libtiff")
     depends_on("libpng")
     depends_on("libmng")
@@ -48,11 +48,11 @@ class Qt(Package):
     # depends_on("flex")
     # depends_on("bison")
     # depends_on("ruby")
-    # depends_on("icu4c")
+    depends_on("icu4c")
 
     # OpenGL hardware acceleration
-    depends_on("mesa", when='@4:+mesa')
-    depends_on("libxcb")
+    #depends_on("mesa", when='@4:+mesa')
+    #depends_on("libxcb")
 
 
     def setup_dependent_environment(self, module, spec, dep_spec):
@@ -88,7 +88,9 @@ class Qt(Package):
             '-shared',
             '-confirm-license',
             '-openssl-linked',
-            '-dbus-linked',
+            #'-dbus-linked',
+            '-no-dbus',
+            '-no-phonon',
             '-optimized-qmake',
             '-no-openvg',
             '-no-pch',
@@ -111,6 +113,11 @@ class Qt(Package):
     def configure(self):
         configure('-fast',
                   '-no-webkit',
+                  # XXX(osx): sdk stuff; should depend on the architecture and the SDKs available.
+                  '-arch', 'x86_64',
+                  '-sdk', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk',
+                  # XXX(osx): When using Xcode's clang rather than a GCC.
+                  '-platform', 'unsupported/macx-clang',
                   *self.common_config_args)
 
 

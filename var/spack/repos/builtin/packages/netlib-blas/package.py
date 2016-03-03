@@ -10,6 +10,7 @@ class NetlibBlas(Package):
     version('3.5.0', 'b1d3e3e425b2e44a06760ff173104bdf')
 
     variant('fpic', default=False, description="Build with -fpic compiler option")
+    variant('fortran', default=False, description="Build with Fortran support")
 
     # virtual dependency
     provides('blas')
@@ -21,8 +22,9 @@ class NetlibBlas(Package):
         os.symlink('make.inc.example', 'make.inc')
 
         mf = FileFilter('make.inc')
-        mf.filter('^FORTRAN.*', 'FORTRAN = f90')
-        mf.filter('^LOADER.*',  'LOADER = f90')
+        if '+fortran' in spec:
+            mf.filter('^FORTRAN.*', 'FORTRAN = f90')
+            mf.filter('^LOADER.*',  'LOADER = f90')
         mf.filter('^CC =.*',  'CC = cc')
 
         if '+fpic' in self.spec:
