@@ -110,7 +110,6 @@ def suggest_archive_basename(resource):
     return basename
 
 
-
 def create(path, specs, **kwargs):
     """Create a directory to be used as a spack mirror, and fill it with
        package archives.
@@ -158,17 +157,29 @@ def create(path, specs, **kwargs):
                 "Cannot create directory '%s':" % mirror_root, str(e))
 
     # Things to keep track of while parsing specs.
-    present  = []
-    mirrored = []
-    error    = []
+    categories = {
+        'present': [],
+        'mirrored': [],
+        'error': []
+    }
 
     # Iterate through packages and download all the safe tarballs for each of them
-    everything_already_exists = True
     for spec in version_specs:
-        pkg = spec.package
-        tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
-        try:
-            for ii, stage in enumerate(pkg.stage):
+        add_single_spec(spec, mirror_root, categories, **kwargs)
+
+    return categories['present'], categories['mirrored'], categories['error']
+
+
+def add_single_spec(spec, mirror_root, categories, **kwargs):
+    tty.msg("Adding package {pkg} to mirror".format(pkg=spec.format("$_$@")))
+    spec_exists_in_mirror = True
+    try:
+        with spec.package.stage:
+            # fetcher = stage.fetcher
+            # fetcher.fetch()
+            # ...
+            # fetcher.archive(archive_path)
+            for ii, stage in enumerate(spec.package.stage):
                 fetcher = stage.fetcher
                 if ii == 0:
                     # create a subdirectory for the current package@version
@@ -184,7 +195,7 @@ def create(path, specs, **kwargs):
                 if os.path.exists(archive_path):
                     tty.msg("{name} : already added".format(name=name))
                 else:
-                    everything_already_exists = False
+                    spec_exists_in_mirror = False
                     fetcher.fetch()
                     if not kwargs.get('no_checksum', False):
                         fetcher.check()
@@ -195,20 +206,16 @@ def create(path, specs, **kwargs):
                     fetcher.archive(archive_path)
                     tty.msg("{name} : added".format(name=name))
 
-            if everything_already_exists:
-                present.append(spec)
-            else:
-                mirrored.append(spec)
-        except Exception, e:
-            if spack.debug:
-                sys.excepthook(*sys.exc_info())
-            else:
-                tty.warn("Error while fetching %s." % spec.format('$_$@'), e.message)
-            error.append(spec)
-        finally:
-            pkg.stage.destroy()
-
-    return (present, mirrored, error)
+        if spec_exists_in_mirror:
+            categories['present'].append(spec)
+        else:
+            categories['mirrored'].append(spec)
+    except Exception as e:
+        if spack.debug:
+            sys.excepthook(*sys.exc_info())
+        else:
+            tty.warn("Error while fetching %s." % spec.format('$_$@'), e.message)
+        categories['error'].append(spec)
 
 
 class MirrorError(spack.error.SpackError):
