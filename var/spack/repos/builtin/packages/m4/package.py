@@ -7,6 +7,8 @@ class M4(Package):
 
     version('1.4.17', 'a5e9954b1dae036762f7b13673a2cf76')
 
+    depends_on('libsigsegv')
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
