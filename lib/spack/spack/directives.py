@@ -125,7 +125,7 @@ class directive(object):
             dicts = (dicts,)
         elif type(dicts) not in (list, tuple):
             raise TypeError(
-                "dicts arg must be list, tuple, or string. Found %s."
+                "dicts arg must be list, tuple, or string. Found %s"
                 % type(dicts))
 
         self.dicts = dicts
@@ -317,5 +317,5 @@ class CircularReferenceError(DirectiveError):
     def __init__(self, directive, package):
         super(CircularReferenceError, self).__init__(
             directive,
-            "Package '%s' cannot pass itself to %s." % (package, directive))
+            "Package '%s' cannot pass itself to %s" % (package, directive))
         self.package = package

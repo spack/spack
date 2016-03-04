@@ -306,9 +306,9 @@ class Stage(object):
         archive_dir = self.source_path
         if not archive_dir:
             self.fetcher.expand()
-            tty.msg("Created stage in %s." % self.path)
+            tty.msg("Created stage in %s" % self.path)
         else:
-            tty.msg("Already staged %s in %s." % (self.name, self.path))
+            tty.msg("Already staged %s in %s" % (self.name, self.path))
 
     def chdir_to_source(self):
         """Changes directory to the expanded archive directory.
