@@ -96,7 +96,7 @@ def compiler_remove(args):
     compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
 
     if not compilers:
-        tty.die("No compilers match spec %s." % cspec)
+        tty.die("No compilers match spec %s" % cspec)
     elif not args.all and len(compilers) > 1:
         tty.error("Multiple compilers match spec %s. Choose one:" % cspec)
         colify(reversed(sorted([c.spec for c in compilers])), indent=4)
@@ -105,7 +105,7 @@ def compiler_remove(args):
 
     for compiler in compilers:
         spack.compilers.remove_compiler_from_config(compiler.spec, scope=args.scope)
-        tty.msg("Removed compiler %s." % compiler.spec)
+        tty.msg("Removed compiler %s" % compiler.spec)
 
 
 def compiler_info(args):
@@ -114,7 +114,7 @@ def compiler_info(args):
     compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
 
     if not compilers:
-        tty.error("No compilers match spec %s." % cspec)
+        tty.error("No compilers match spec %s" % cspec)
     else:
         for c in compilers:
             print str(c.spec) + ":"

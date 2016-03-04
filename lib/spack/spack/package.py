@@ -688,7 +688,7 @@ class Package(object):
 
             if not ignore_checksum:
                 raise FetchError(
-                    "Will not fetch %s." % self.spec.format('$_$@'), checksum_msg)
+                    "Will not fetch %s" % self.spec.format('$_$@'), checksum_msg)
 
         self.stage.fetch(mirror_only)
 
@@ -722,7 +722,7 @@ class Package(object):
 
         # If there are no patches, note it.
         if not self.patches and not has_patch_fun:
-            tty.msg("No patches needed for %s." % self.name)
+            tty.msg("No patches needed for %s" % self.name)
             return
 
         # Construct paths to special files in the archive dir used to
@@ -745,7 +745,7 @@ class Package(object):
             tty.msg("Already patched %s" % self.name)
             return
         elif os.path.isfile(no_patches_file):
-            tty.msg("No patches needed for %s." % self.name)
+            tty.msg("No patches needed for %s" % self.name)
             return
 
         # Apply all the patches for specs that match this one
@@ -766,10 +766,10 @@ class Package(object):
         if has_patch_fun:
             try:
                 self.patch()
-                tty.msg("Ran patch() for %s." % self.name)
+                tty.msg("Ran patch() for %s" % self.name)
                 patched = True
             except:
-                tty.msg("patch() function failed for %s." % self.name)
+                tty.msg("patch() function failed for %s" % self.name)
                 touch(bad_file)
                 raise
 
@@ -838,7 +838,7 @@ class Package(object):
             raise ValueError("Can only install concrete packages.")
 
         if os.path.exists(self.prefix):
-            tty.msg("%s is already installed in %s." % (self.name, self.prefix))
+            tty.msg("%s is already installed in %s" % (self.name, self.prefix))
             return
 
         tty.msg("Installing %s" % self.name)
@@ -874,7 +874,7 @@ class Package(object):
 
         def real_work():
             try:
-                tty.msg("Building %s." % self.name)
+                tty.msg("Building %s" % self.name)
 
                 # Run the pre-install hook in the child process after
                 # the directory is created.
@@ -918,8 +918,8 @@ class Package(object):
                 self._total_time = time.time() - start_time
                 build_time = self._total_time - self._fetch_time
 
-                tty.msg("Successfully installed %s." % self.name,
-                        "Fetch: %s.  Build: %s.  Total: %s."
+                tty.msg("Successfully installed %s" % self.name,
+                        "Fetch: %s.  Build: %s.  Total: %s"
                         % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
                 print_pkg(self.prefix)
 
@@ -1025,7 +1025,7 @@ class Package(object):
         # Uninstalling in Spack only requires removing the prefix.
         self.remove_prefix()
         spack.installed_db.remove(self.spec)
-        tty.msg("Successfully uninstalled %s." % self.spec.short_spec)
+        tty.msg("Successfully uninstalled %s" % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_uninstall(self)
@@ -1072,7 +1072,7 @@ class Package(object):
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.install_layout.add_extension(self.extendee_spec, self.spec)
-        tty.msg("Activated extension %s for %s."
+        tty.msg("Activated extension %s for %s"
                 % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
 
 
@@ -1124,7 +1124,7 @@ class Package(object):
         if self.activated:
             spack.install_layout.remove_extension(self.extendee_spec, self.spec)
 
-        tty.msg("Deactivated extension %s for %s."
+        tty.msg("Deactivated extension %s for %s"
                 % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
 
 
@@ -1320,7 +1320,7 @@ class PackageVersionError(PackageError):
     """Raised when a version URL cannot automatically be determined."""
     def __init__(self, version):
         super(PackageVersionError, self).__init__(
-            "Cannot determine a URL automatically for version %s." % version,
+            "Cannot determine a URL automatically for version %s" % version,
             "Please provide a url for this version in the package.py file.")
 
 
