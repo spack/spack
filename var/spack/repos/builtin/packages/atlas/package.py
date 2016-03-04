@@ -27,6 +27,8 @@ class Atlas(Package):
     provides('blas')
     provides('lapack')
 
+    parallel = False
+
     def patch(self):
         # Disable thread check.  LLNL's environment does not allow
         # disabling of CPU throttling in a way that ATLAS actually
