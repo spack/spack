@@ -10,7 +10,7 @@ class NetcdfFortran(Package):
 
     variant('mpi', default=True, description='Enables MPI parallelism')
 
-    # NetCDF-CXX4 doesn't really depend (directly) on MPI.  However... this
+    # netcdf-fortran doesn't really depend (directly) on MPI.  However... this
     # depndency ensures taht the right version of MPI is selected (eg: ^openmpi)
     depends_on('mpi', when='+mpi')
     depends_on('netcdf')
