@@ -109,7 +109,7 @@ def repo_create(args):
             config.write("  namespace: '%s'\n" % namespace)
 
     except (IOError, OSError) as e:
-        tty.die('Failed to create new repository in %s.' % root,
+        tty.die('Failed to create new repository in %s' % root,
                 "Caused by %s: %s" % (type(e), e))
 
         # try to clean up.
@@ -133,11 +133,11 @@ def repo_add(args):
 
     # check if the path exists
     if not os.path.exists(canon_path):
-        tty.die("No such file or directory: '%s'." % path)
+        tty.die("No such file or directory: %s" % path)
 
     # Make sure the path is a directory.
     if not os.path.isdir(canon_path):
-        tty.die("Not a Spack repository: '%s'." % path)
+        tty.die("Not a Spack repository: %s" % path)
 
     # Make sure it's actually a spack repository by constructing it.
     repo = Repo(canon_path)
@@ -147,7 +147,7 @@ def repo_add(args):
     if not repos: repos = []
 
     if repo.root in repos or path in repos:
-        tty.die("Repository is already registered with Spack: '%s'" % path)
+        tty.die("Repository is already registered with Spack: %s" % path)
 
     repos.insert(0, canon_path)
     spack.config.update_config('repos', repos, args.scope)
@@ -166,7 +166,7 @@ def repo_remove(args):
         if canon_path == repo_canon_path:
             repos.remove(repo_path)
             spack.config.update_config('repos', repos, args.scope)
-            tty.msg("Removed repository '%s'." % repo_path)
+            tty.msg("Removed repository %s" % repo_path)
             return
 
     # If it is a namespace, remove corresponding repo
@@ -176,13 +176,13 @@ def repo_remove(args):
             if repo.namespace == path_or_namespace:
                 repos.remove(path)
                 spack.config.update_config('repos', repos, args.scope)
-                tty.msg("Removed repository '%s' with namespace %s."
+                tty.msg("Removed repository %s with namespace '%s'."
                         % (repo.root, repo.namespace))
                 return
         except RepoError as e:
             continue
 
-    tty.die("No repository with path or namespace: '%s'"
+    tty.die("No repository with path or namespace: %s"
             % path_or_namespace)
 
 

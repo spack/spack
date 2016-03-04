@@ -73,7 +73,7 @@ def get_matching_versions(specs, **kwargs):
 
         # Skip any package that has no known versions.
         if not pkg.versions:
-            tty.msg("No safe (checksummed) versions for package %s." % pkg.name)
+            tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
             continue
 
         num_versions = kwargs.get('num_versions', 0)
@@ -203,7 +203,7 @@ def create(path, specs, **kwargs):
             if spack.debug:
                 sys.excepthook(*sys.exc_info())
             else:
-                tty.warn("Error while fetching %s." % spec.format('$_$@'), e.message)
+                tty.warn("Error while fetching %s" % spec.format('$_$@'), e.message)
             error.append(spec)
         finally:
             pkg.stage.destroy()

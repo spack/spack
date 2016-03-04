@@ -323,7 +323,7 @@ class YamlDirectoryLayout(DirectoryLayout):
 
                         if not dag_hash in by_hash:
                             raise InvalidExtensionSpecError(
-                                "Spec %s not found in %s." % (dag_hash, prefix))
+                                "Spec %s not found in %s" % (dag_hash, prefix))
 
                         ext_spec = by_hash[dag_hash]
                         if not prefix == ext_spec.prefix:
@@ -438,7 +438,7 @@ class ExtensionConflictError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
     def __init__(self, spec, ext_spec, conflict):
         super(ExtensionConflictError, self).__init__(
-            "%s cannot be installed in %s because it conflicts with %s."% (
+            "%s cannot be installed in %s because it conflicts with %s"% (
                 ext_spec.short_spec, spec.short_spec, conflict.short_spec))
 
 

@@ -153,7 +153,7 @@ class URLFetchStrategy(FetchStrategy):
         self.stage.chdir()
 
         if self.archive_file:
-            tty.msg("Already downloaded %s." % self.archive_file)
+            tty.msg("Already downloaded %s" % self.archive_file)
             return
 
         tty.msg("Trying to fetch from %s" % self.url)
@@ -275,8 +275,8 @@ class URLFetchStrategy(FetchStrategy):
         checker = crypto.Checker(self.digest)
         if not checker.check(self.archive_file):
             raise ChecksumError(
-                    "%s checksum failed for %s." % (checker.hash_name, self.archive_file),
-                    "Expected %s but got %s." % (self.digest, checker.sum))
+                    "%s checksum failed for %s" % (checker.hash_name, self.archive_file),
+                    "Expected %s but got %s" % (self.digest, checker.sum))
 
     @_needs_stage
     def reset(self):
@@ -312,7 +312,7 @@ class VCSFetchStrategy(FetchStrategy):
         # Ensure that there's only one of the rev_types
         if sum(k in kwargs for k in rev_types) > 1:
             raise FetchStrategyError(
-                    "Supply only one of %s to fetch with %s." % (
+                    "Supply only one of %s to fetch with %s" % (
                         comma_or(rev_types), name))
 
         # Set attributes for each rev type.
@@ -321,7 +321,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def check(self):
-        tty.msg("No checksum needed when fetching with %s." % self.name)
+        tty.msg("No checksum needed when fetching with %s" % self.name)
 
     @_needs_stage
     def expand(self):
@@ -395,7 +395,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         self.stage.chdir()
 
         if self.stage.source_path:
-            tty.msg("Already fetched %s." % self.stage.source_path)
+            tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
         args = []
@@ -505,7 +505,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
         self.stage.chdir()
 
         if self.stage.source_path:
-            tty.msg("Already fetched %s." % self.stage.source_path)
+            tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
         tty.msg("Trying to check out svn repository: %s" % self.url)
@@ -584,7 +584,7 @@ class HgFetchStrategy(VCSFetchStrategy):
         self.stage.chdir()
 
         if self.stage.source_path:
-            tty.msg("Already fetched %s." % self.stage.source_path)
+            tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
         args = []
