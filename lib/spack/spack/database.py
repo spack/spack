@@ -330,7 +330,7 @@ class Database(object):
             found = rec.ref_count
             if not expected == found:
                 raise AssertionError(
-                    "Invalid ref_count: %s: %d (expected %d), in DB %s."
+                    "Invalid ref_count: %s: %d (expected %d), in DB %s"
                     % (key, found, expected, self._index_path))
 
 

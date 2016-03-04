@@ -205,7 +205,7 @@ config_scopes = OrderedDict()
 def validate_section_name(section):
     """Raise a ValueError if the section is not a valid section."""
     if section not in section_schemas:
-        raise ValueError("Invalid config section: '%s'.  Options are %s."
+        raise ValueError("Invalid config section: '%s'.  Options are %s"
                          % (section, section_schemas))
 
 
@@ -335,7 +335,7 @@ def validate_scope(scope):
         return config_scopes[scope]
 
     else:
-        raise ValueError("Invalid config scope: '%s'.  Must be one of %s."
+        raise ValueError("Invalid config scope: '%s'.  Must be one of %s"
                          % (scope, config_scopes.keys()))
 
 
@@ -350,7 +350,7 @@ def _read_config_file(filename, schema):
             "Invlaid configuration. %s exists but is not a file." % filename)
 
     elif not os.access(filename, os.R_OK):
-        raise ConfigFileError("Config file is not readable: %s." % filename)
+        raise ConfigFileError("Config file is not readable: %s" % filename)
 
     try:
         tty.debug("Reading config file %s" % filename)

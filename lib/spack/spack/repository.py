@@ -156,7 +156,7 @@ class RepoPath(object):
 
         if repo.namespace in self.by_namespace:
             raise DuplicateRepoError(
-                "Package repos '%s' and '%s' both provide namespace %s."
+                "Package repos '%s' and '%s' both provide namespace %s"
                 % (repo.root, self.by_namespace[repo.namespace].root, repo.namespace))
 
         # Add repo to the pkg indexes
@@ -535,7 +535,7 @@ class Repo(object):
             raise UnknownPackageError(spec.name)
 
         if spec.namespace and spec.namespace != self.namespace:
-            raise UnknownPackageError("Repository %s does not contain package %s."
+            raise UnknownPackageError("Repository %s does not contain package %s"
                                       % (self.namespace, spec.fullname))
 
         key = hash(spec)
@@ -730,7 +730,7 @@ class UnknownPackageError(PackageLoadError):
     def __init__(self, name, repo=None):
         msg = None
         if repo:
-            msg = "Package %s not found in repository %s." % (name, repo)
+            msg = "Package %s not found in repository %s" % (name, repo)
         else:
             msg = "Package %s not found." % name
         super(UnknownPackageError, self).__init__(msg)
