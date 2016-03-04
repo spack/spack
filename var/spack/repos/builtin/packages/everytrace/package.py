@@ -21,5 +21,5 @@ class Everytrace(CMakePackage):
 
 	def config_args(self, spec, prefix):
 		return [
-			'-DUSE_MPI=%s' % 'YES' if '+mpi' in spec else 'NO',
-			'-DUSE_FORTRAN=%s' % 'YES' if '+fortran' in spec else 'NO']
+			'-DUSE_MPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
+			'-DUSE_FORTRAN=%s' % ('YES' if '+fortran' in spec else 'NO')]
