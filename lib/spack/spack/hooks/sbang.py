@@ -67,6 +67,9 @@ def post_install(pkg):
     """This hook edits scripts so that they call /bin/bash
        $spack_prefix/bin/sbang instead of something longer than the
        shebang limit."""
+    if not os.path.isdir(pkg.prefix.bin):
+        return
+
     for file in os.listdir(pkg.prefix.bin):
         path = os.path.join(pkg.prefix.bin, file)
         if shebang_too_long(path):
