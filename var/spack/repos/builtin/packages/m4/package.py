@@ -12,6 +12,12 @@ class M4(Package):
     depends_on('libsigsegv', when='+sigsegv')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure_args = []
+        if 'libsigsegv' in spec:
+            configure_args.append('--with-libsigsegv-prefix=%s' % spec['libsigsegv'].prefix)
+        else:
+            configure_args.append('--without-libsigsegv-prefix')
+
+        configure("--prefix=%s" % prefix, *configure_args)
         make()
         make("install")
