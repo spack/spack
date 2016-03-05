@@ -41,6 +41,7 @@ set _sp_subcommand=""
 set _sp_spec=""
 [ $#_sp_args -gt 0 ] && set _sp_subcommand = ($_sp_args[1])
 [ $#_sp_args -gt 1 ] && set _sp_spec = ($_sp_args[2-])
+set _sp_spec_name=`echo $_sp_spec | cut -d@ -f1`
 
 # Figure out what type of module we're running here.
 set _sp_modtype = ""
@@ -67,6 +68,7 @@ case unload:
         set _sp_module_args = $_sp_spec[1]
         shift _sp_spec
         set _sp_spec = ($_sp_spec)
+        set _sp_spec_name=`echo $_sp_spec | cut -d@ -f1`
     endif
 
     # Here the user has run use or unuse with a spec.  Find a matching
@@ -76,25 +78,25 @@ case unload:
         case "use":
             set _sp_full_spec = ( "`\spack $_sp_flags module find dotkit $_sp_spec`" )
             if ( $? == 0 ) then
-                use $_sp_module_args $_sp_full_spec
+                use $_sp_module_args $_sp_spec_name/$_sp_full_spec
             endif
             breaksw
         case "unuse":
             set _sp_full_spec = ( "`\spack $_sp_flags module find dotkit $_sp_spec`" )
             if ( $? == 0 ) then
-                unuse $_sp_module_args $_sp_full_spec
+                unuse $_sp_module_args $_sp_spec_name/$_sp_full_spec
             endif
             breaksw
         case "load":
             set _sp_full_spec = ( "`\spack $_sp_flags module find tcl $_sp_spec`" )
             if ( $? == 0 ) then
-                module load $_sp_module_args $_sp_full_spec
+                module load $_sp_module_args $_sp_spec_name/$_sp_full_spec
             endif
             breaksw
         case "unload":
             set _sp_full_spec = ( "`\spack $_sp_flags module find tcl $_sp_spec`" )
             if ( $? == 0 ) then
-                module unload $_sp_module_args $_sp_full_spec
+                module unload $_sp_module_args $_sp_spec_name/$_sp_full_spec
             endif
             breaksw
     endsw
@@ -107,4 +109,4 @@ endsw
 
 _sp_end:
 unset _sp_args _sp_full_spec _sp_modtype _sp_module_args
-unset _sp_sh_cmd _sp_spec _sp_subcommand _sp_flags
+unset _sp_sh_cmd _sp_spec _sp_spec_name _sp_subcommand _sp_flags
