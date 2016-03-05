@@ -45,13 +45,14 @@ The available directives are:
   * ``resource``
 
 """
-__all__ = ['depends_on', 'extends', 'provides', 'patch', 'version',
+__all__ = ['depends_on', 'depends_on_inherits', 'extends', 'provides', 'patch', 'version',
            'variant', 'resource']
-
+           
 import re
 import inspect
 import os.path
 import functools
+import itertools
 
 from llnl.util.lang import *
 from llnl.util.filesystem import join_path
@@ -198,6 +199,22 @@ def depends_on(pkg, spec, when=None):
     """Creates a dict of deps with specs defining when they apply."""
     _depends_on(pkg, spec, when=when)
 
+@directive('dependencies')
+def depends_on_inherits(pkg, spec, inherits, when=''):
+    """Creates a matrix of depends_on calls. That is,
+
+    depends_on_inherits("xrootd", inherits=["cxx14", "debug"])
+    expands to
+        depends_on("xrootd+cxx14+debug", when='+cxx14+debug')
+        depends_on("xrootd+cxx14~debug", when='+cxx14~debug')
+        depends_on("xrootd~cxx14+debug", when='~cxx14+debug')
+        depends_on("xrootd~cxx14~debug", when='~cxx14~debug')
+    """
+    elements = [ ('+'+e, '~'+e) for e in inherits ]
+    combos = itertools.product( *elements )
+    for e in combos:
+        s = ''.join(e)  # Turn into a string
+        _depends_on(pkg, spec+s, when=when+s)
 
 @directive(('extendees', 'dependencies'))
 def extends(pkg, spec, **kwargs):
