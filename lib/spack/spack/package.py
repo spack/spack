@@ -467,6 +467,11 @@ class Package(object):
                 stage = self._make_resource_stage(composite_stage[0], fetcher, resource)
             # Append the item to the composite
             composite_stage.append(stage)
+
+        # Create stage on first access.  Needed because fetch, stage,
+        # patch, and install can be called independently of each
+        # other, so `with self.stage:` in do_install isn't sufficient.
+        composite_stage.create()
         return composite_stage
 
     @property
@@ -846,35 +851,38 @@ class Package(object):
 
         tty.msg("Installing %s" % self.name)
 
+        # First, install dependencies recursively.
         if not ignore_deps:
             self.do_install_dependencies(
                 keep_prefix=keep_prefix, keep_stage=keep_stage, ignore_deps=ignore_deps,
-                fake=fake, skip_patch=skip_patch, verbose=verbose,
-                make_jobs=make_jobs)
-
-        start_time = time.time()
-        if not fake:
-            if not skip_patch:
-                self.do_patch()
-            else:
-                self.do_stage()
-
-        # create the install directory.  The install layout
-        # handles this in case so that it can use whatever
-        # package naming scheme it likes.
-        spack.install_layout.create_install_directory(self.spec)
+                fake=fake, skip_patch=skip_patch, verbose=verbose, make_jobs=make_jobs)
 
         def cleanup():
+            """Handles removing install prefix on error."""
             if not keep_prefix:
-                # If anything goes wrong, remove the install prefix
                 self.remove_prefix()
             else:
                 tty.warn("Keeping install prefix in place despite error.",
-                         "Spack will think this package is installed." +
+                         "Spack will think this package is installed. " +
                          "Manually remove this directory to fix:",
                          self.prefix, wrap=True)
 
+        # Then install the package itself.
         def real_work():
+            """Forked for each build. Has its own process and python
+               module space set up by build_environment.fork()."""
+            start_time = time.time()
+            if not fake:
+                if not skip_patch:
+                    self.do_patch()
+                else:
+                    self.do_stage()
+
+            # create the install directory.  The install layout
+            # handles this in case so that it can use whatever
+            # package naming scheme it likes.
+            spack.install_layout.create_install_directory(self.spec)
+
             try:
                 tty.msg("Building %s" % self.name)
 
@@ -884,9 +892,9 @@ class Package(object):
                     # the directory is created.
                     spack.hooks.pre_install(self)
 
-                    # Set up process's build environment before running install.
                     if fake:
                         self.do_fake_install()
+
                     else:
                         # Do the real install in the source directory.
                         self.stage.chdir_to_source()
@@ -901,18 +909,17 @@ class Package(object):
                             dump_environment(env_path)
                             self.install(self.spec, self.prefix)
 
-                    # Ensure that something was actually installed.
-                    self._sanity_check_install()
+                        # Ensure that something was actually installed.
+                        self._sanity_check_install()
 
-                    # Move build log into install directory on success
-                    if not fake:
+                        # Copy provenance into the install directory on success
                         log_install_path = spack.install_layout.build_log_path(self.spec)
                         env_install_path = spack.install_layout.build_env_path(self.spec)
+                        packages_dir = spack.install_layout.build_packages_path(self.spec)
+
                         install(log_path, log_install_path)
                         install(env_path, env_install_path)
-
-                    packages_dir = spack.install_layout.build_packages_path(self.spec)
-                    dump_packages(self.spec, packages_dir)
+                        dump_packages(self.spec, packages_dir)
 
                 # Stop timer.
                 self._total_time = time.time() - start_time
@@ -934,18 +941,18 @@ class Package(object):
                 cleanup()
                 raise
 
-            # Set parallelism before starting build.
-            self.make_jobs = make_jobs
+        # Set parallelism before starting build.
+        self.make_jobs = make_jobs
 
-            # Do the build.
-            spack.build_environment.fork(self, real_work)
+        # Do the build.
+        spack.build_environment.fork(self, real_work)
 
-            # note: PARENT of the build process adds the new package to
-            # the database, so that we don't need to re-read from file.
-            spack.installed_db.add(self.spec, self.prefix)
+        # note: PARENT of the build process adds the new package to
+        # the database, so that we don't need to re-read from file.
+        spack.installed_db.add(self.spec, self.prefix)
 
-            # Once everything else is done, run post install hooks
-            spack.hooks.post_install(self)
+        # Once everything else is done, run post install hooks
+        spack.hooks.post_install(self)
 
 
     def _sanity_check_install(self):
