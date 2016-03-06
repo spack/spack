@@ -42,33 +42,26 @@ STAGE_PREFIX = 'spack-stage-'
 
 
 class Stage(object):
-    """A Stage object manages a directory where some source code is
-       downloaded and built before being installed.  It handles
-       fetching the source code, either as an archive to be expanded
-       or by checking it out of a repository.  A stage's lifecycle
-       looks like this:
+    """
+    A Stage object is a context manager that handles a directory where some source code is downloaded and built
+    before being installed.  It handles fetching the source code, either as an archive to be expanded or by checking
+    it out of a repository.  A stage's lifecycle looks like this:
 
-       Stage()
-         Constructor creates the stage directory.
-       fetch()
-         Fetch a source archive into the stage.
-       expand_archive()
-         Expand the source archive.
-       <install>
-         Build and install the archive.  This is handled by the Package class.
-       destroy()
-         Remove the stage once the package has been installed.
+    ```
+    with Stage() as stage:  # Context manager creates and destroys the stage directory
+        fetch()  # Fetch a source archive into the stage.
+        expand_archive()  # Expand the source archive.
+        <install>  # Build and install the archive.  This is handled by the Package class.
+    ```
 
-       If spack.use_tmp_stage is True, spack will attempt to create stages
-       in a tmp directory.  Otherwise, stages are created directly in
-       spack.stage_path.
+    If spack.use_tmp_stage is True, spack will attempt to create stages in a tmp directory.
+    Otherwise, stages are created directly in spack.stage_path.
 
-       There are two kinds of stages: named and unnamed.  Named stages can
-       persist between runs of spack, e.g. if you fetched a tarball but
-       didn't finish building it, you won't have to fetch it again.
+    There are two kinds of stages: named and unnamed.  Named stages can persist between runs of spack, e.g. if you
+    fetched a tarball but didn't finish building it, you won't have to fetch it again.
 
-       Unnamed stages are created using standard mkdtemp mechanisms or
-       similar, and are intended to persist for only one run of spack.
+    Unnamed stages are created using standard mkdtemp mechanisms or similar, and are intended to persist for
+    only one run of spack.
     """
 
     def __init__(self, url_or_fetch_strategy, **kwargs):
@@ -96,21 +89,46 @@ class Stage(object):
         self.default_fetcher = self.fetcher  # self.fetcher can change with mirrors.
         self.skip_checksum_for_mirror = True  # used for mirrored archives of repositories.
 
-        self.name = kwargs.get('name')
+        # TODO : this uses a protected member of tempfile, but seemed the only way to get a temporary name
+        # TODO : besides, the temporary link name won't be the same as the temporary stage area in tmp_root
+        self.name = kwargs.get('name') if 'name' in kwargs else STAGE_PREFIX + next(tempfile._get_candidate_names())
         self.mirror_path = kwargs.get('mirror_path')
         self.tmp_root = find_tmp_root()
 
-        self.path = None
-        self._setup()
+        # Try to construct here a temporary name for the stage directory
+        # If this is a named stage, then construct a named path.
+        self.path = join_path(spack.stage_path, self.name)
+        # Flag to decide whether to delete the stage folder on exit or not
+        self.delete_on_exit = True
 
-    def _cleanup_dead_links(self):
-        """Remove any dead links in the stage directory."""
-        for file in os.listdir(spack.stage_path):
-            path = join_path(spack.stage_path, file)
-            if os.path.islink(path):
-                real_path = os.path.realpath(path)
-                if not os.path.exists(path):
-                    os.unlink(path)
+    def __enter__(self):
+        """
+        Entering a stage context will create the stage directory
+
+        Returns:
+            self
+        """
+        self.create()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exiting from a stage context will delete the stage directory unless:
+        - it was explicitly requested not to do so
+        - an exception has been raised
+
+        Args:
+            exc_type: exception type
+            exc_val: exception value
+            exc_tb: exception traceback
+
+        Returns:
+            Boolean
+        """
+        self.delete_on_exit = False if exc_type is not None else self.delete_on_exit
+
+        if self.delete_on_exit:
+            self.destroy()
 
     def _need_to_create_path(self):
         """Makes sure nothing weird has happened since the last time we
@@ -147,54 +165,6 @@ class Stage(object):
                 return True
 
         return False
-
-    def _setup(self):
-        """Creates the stage directory.
-           If spack.use_tmp_stage is False, the stage directory is created
-           directly under spack.stage_path.
-
-           If spack.use_tmp_stage is True, this will attempt to create a
-           stage in a temporary directory and link it into spack.stage_path.
-           Spack will use the first writable location in spack.tmp_dirs to
-           create a stage.  If there is no valid location in tmp_dirs, fall
-           back to making the stage inside spack.stage_path.
-        """
-        # Create the top-level stage directory
-        mkdirp(spack.stage_path)
-        self._cleanup_dead_links()
-
-        # If this is a named stage, then construct a named path.
-        if self.name is not None:
-            self.path = join_path(spack.stage_path, self.name)
-
-        # If this is a temporary stage, them make the temp directory
-        tmp_dir = None
-        if self.tmp_root:
-            if self.name is None:
-                # Unnamed tmp root.  Link the path in
-                tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
-                self.name = os.path.basename(tmp_dir)
-                self.path = join_path(spack.stage_path, self.name)
-                if self._need_to_create_path():
-                    os.symlink(tmp_dir, self.path)
-
-            else:
-                if self._need_to_create_path():
-                    tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
-                    os.symlink(tmp_dir, self.path)
-
-        # if we're not using a tmp dir, create the stage directly in the
-        # stage dir, rather than linking to it.
-        else:
-            if self.name is None:
-                self.path = tempfile.mkdtemp('', STAGE_PREFIX, spack.stage_path)
-                self.name = os.path.basename(self.path)
-            else:
-                if self._need_to_create_path():
-                    mkdirp(self.path)
-
-        # Make sure we can actually do something with the stage we made.
-        ensure_access(self.path)
 
     @property
     def archive_file(self):
@@ -276,7 +246,7 @@ class Stage(object):
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
-            except spack.error.SpackError, e:
+            except spack.error.SpackError as e:
                 tty.msg("Fetching from %s failed." % fetcher)
                 tty.debug(e)
                 continue
@@ -328,8 +298,34 @@ class Stage(object):
         """
         self.fetcher.reset()
 
+    def create(self):
+        """
+        Creates the stage directory
+
+        If self.tmp_root evaluates to False, the stage directory is created directly under spack.stage_path, otherwise
+        this will attempt to create a stage in a temporary directory and link it into spack.stage_path.
+
+        Spack will use the first writable location in spack.tmp_dirs to create a stage. If there is no valid location
+        in tmp_dirs, fall back to making the stage inside spack.stage_path.
+        """
+        # Create the top-level stage directory
+        mkdirp(spack.stage_path)
+        remove_dead_links(spack.stage_path)
+        # If a tmp_root exists then create a directory there and then link it in the stage area,
+        # otherwise create the stage directory in self.path
+        if self._need_to_create_path():
+            if self.tmp_root:
+                tmp_dir = tempfile.mkdtemp('', STAGE_PREFIX, self.tmp_root)
+                os.symlink(tmp_dir, self.path)
+            else:
+                mkdirp(self.path)
+        # Make sure we can actually do something with the stage we made.
+        ensure_access(self.path)
+
     def destroy(self):
-        """Remove this stage directory."""
+        """
+        Removes this stage directory
+        """
         remove_linked_tree(self.path)
 
         # Make sure we don't end up in a removed directory
@@ -389,6 +385,15 @@ class StageComposite:
     def path(self):
         return self[0].path
 
+    def __enter__(self):
+        for item in self:
+            item.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for item in reversed(self):
+            item.__exit__(exc_type, exc_val, exc_tb)
+
     def chdir_to_source(self):
         return self[0].chdir_to_source()
 
@@ -437,19 +442,6 @@ def ensure_access(file=spack.stage_path):
     """Ensure we can access a directory and die with an error if we can't."""
     if not can_access(file):
         tty.die("Insufficient permissions for %s" % file)
-
-
-def remove_linked_tree(path):
-    """Removes a directory and its contents.  If the directory is a symlink,
-       follows the link and reamoves the real directory before removing the
-       link.
-    """
-    if os.path.exists(path):
-        if os.path.islink(path):
-            shutil.rmtree(os.path.realpath(path), True)
-            os.unlink(path)
-        else:
-            shutil.rmtree(path, True)
 
 
 def purge():

@@ -27,8 +27,8 @@ This file has a bunch of versions tests taken from the excellent version
 detection in Homebrew.
 """
 import unittest
+
 import spack.url as url
-from pprint import pprint
 
 
 class UrlParseTest(unittest.TestCase):
