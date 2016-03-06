@@ -362,8 +362,9 @@ def remove_dead_links(root):
 
 def remove_linked_tree(path):
     """
-    Removes a directory and its contents.  If the directory is a symlink, follows the link and removes the real
-    directory before removing the link.
+    Removes a directory and its contents.  If the directory is a
+    symlink, follows the link and removes the real directory before
+    removing the link.
 
     Args:
         path: directory to be removed

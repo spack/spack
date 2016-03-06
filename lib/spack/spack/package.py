@@ -293,6 +293,7 @@ class Package(object):
 
     .. code-block:: python
 
+       p.do_clean()              # removes the stage directory entirely
        p.do_restage()            # removes the build directory and
                                  # re-expands the archive.
 
@@ -455,7 +456,7 @@ class Package(object):
         # Construct a composite stage on top of the composite FetchStrategy
         composite_fetcher = self.fetcher
         composite_stage = StageComposite()
-        resources = self._get_resources()
+        resources = self._get_needed_resources()
         for ii, fetcher in enumerate(composite_fetcher):
             if ii == 0:
                 # Construct root stage first
@@ -484,12 +485,14 @@ class Package(object):
 
 
     def _make_fetcher(self):
-        # Construct a composite fetcher that always contains at least one element (the root package). In case there
-        # are resources associated with the package, append their fetcher to the composite.
+        # Construct a composite fetcher that always contains at least
+        # one element (the root package). In case there are resources
+        # associated with the package, append their fetcher to the
+        # composite.
         root_fetcher = fs.for_package_version(self, self.version)
         fetcher = fs.FetchStrategyComposite()  # Composite fetcher
         fetcher.append(root_fetcher)  # Root fetcher is always present
-        resources = self._get_resources()
+        resources = self._get_needed_resources()
         for resource in resources:
             fetcher.append(resource.fetcher)
         return fetcher
@@ -706,6 +709,7 @@ class Package(object):
         self.stage.expand_archive()
         self.stage.chdir_to_source()
 
+
     def do_patch(self):
         """Calls do_stage(), then applied patches to the expanded tarball if they
            haven't been applied already."""
@@ -798,7 +802,7 @@ class Package(object):
         mkdirp(self.prefix.man1)
 
 
-    def _get_resources(self):
+    def _get_needed_resources(self):
         resources = []
         # Select the resources that are needed for this build
         for when_spec, resource_list in self.resources.items():
@@ -816,7 +820,7 @@ class Package(object):
 
 
     def do_install(self,
-                   keep_prefix=False,  keep_stage=False, ignore_deps=False,
+                   keep_prefix=False,  keep_stage=None, ignore_deps=False,
                    skip_patch=False, verbose=False, make_jobs=None, fake=False):
         """Called by commands to install a package and its dependencies.
 
@@ -825,7 +829,8 @@ class Package(object):
 
         Args:
         keep_prefix -- Keep install prefix on failure. By default, destroys it.
-        keep_stage  -- Keep stage on successful build. By default, destroys it.
+        keep_stage  -- Set to True or false to always keep or always delete stage.
+                       By default, stage is destroyed only if there are no exceptions.
         ignore_deps -- Do not install dependencies before installing this package.
         fake        -- Don't really build -- install fake stub files instead.
         skip_patch  -- Skip patch stage of build if True.
@@ -848,32 +853,33 @@ class Package(object):
                 make_jobs=make_jobs)
 
         start_time = time.time()
-        with self.stage:
-            if not fake:
-                if not skip_patch:
-                    self.do_patch()
-                else:
-                    self.do_stage()
+        if not fake:
+            if not skip_patch:
+                self.do_patch()
+            else:
+                self.do_stage()
 
-            # create the install directory.  The install layout
-            # handles this in case so that it can use whatever
-            # package naming scheme it likes.
-            spack.install_layout.create_install_directory(self.spec)
+        # create the install directory.  The install layout
+        # handles this in case so that it can use whatever
+        # package naming scheme it likes.
+        spack.install_layout.create_install_directory(self.spec)
 
-            def cleanup():
-                if not keep_prefix:
-                    # If anything goes wrong, remove the install prefix
-                    self.remove_prefix()
-                else:
-                    tty.warn("Keeping install prefix in place despite error.",
-                             "Spack will think this package is installed." +
-                             "Manually remove this directory to fix:",
-                             self.prefix, wrap=True)
+        def cleanup():
+            if not keep_prefix:
+                # If anything goes wrong, remove the install prefix
+                self.remove_prefix()
+            else:
+                tty.warn("Keeping install prefix in place despite error.",
+                         "Spack will think this package is installed." +
+                         "Manually remove this directory to fix:",
+                         self.prefix, wrap=True)
 
-            def real_work():
-                try:
-                    tty.msg("Building %s" % self.name)
+        def real_work():
+            try:
+                tty.msg("Building %s" % self.name)
 
+                self.stage.keep = keep_stage
+                with self.stage:
                     # Run the pre-install hook in the child process after
                     # the directory is created.
                     spack.hooks.pre_install(self)
@@ -888,7 +894,7 @@ class Package(object):
                         # Save the build environment in a file before building.
                         env_path = join_path(os.getcwd(), 'spack-build.env')
 
-                        # This redirects I/O to a build log (and optionally to the terminal)
+                        # Redirect I/O to a build log (and optionally to the terminal)
                         log_path = join_path(os.getcwd(), 'spack-build.out')
                         log_file = open(log_path, 'w')
                         with log_output(log_file, verbose, sys.stdout.isatty(), True):
@@ -908,29 +914,25 @@ class Package(object):
                     packages_dir = spack.install_layout.build_packages_path(self.spec)
                     dump_packages(self.spec, packages_dir)
 
-                    # On successful install, remove the stage.
-                    if not keep_stage:
-                        self.stage.destroy()
+                # Stop timer.
+                self._total_time = time.time() - start_time
+                build_time = self._total_time - self._fetch_time
 
-                    # Stop timer.
-                    self._total_time = time.time() - start_time
-                    build_time = self._total_time - self._fetch_time
+                tty.msg("Successfully installed %s" % self.name,
+                        "Fetch: %s.  Build: %s.  Total: %s."
+                        % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
+                print_pkg(self.prefix)
 
-                    tty.msg("Successfully installed %s" % self.name,
-                            "Fetch: %s.  Build: %s.  Total: %s."
-                            % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
-                    print_pkg(self.prefix)
+            except ProcessError as e:
+                # Annotate with location of build log.
+                e.build_log = log_path
+                cleanup()
+                raise e
 
-                except ProcessError as e:
-                    # Annotate with location of build log.
-                    e.build_log = log_path
-                    cleanup()
-                    raise e
-
-                except:
-                    # other exceptions just clean up and raise.
-                    cleanup()
-                    raise
+            except:
+                # other exceptions just clean up and raise.
+                cleanup()
+                raise
 
             # Set parallelism before starting build.
             self.make_jobs = make_jobs
@@ -1146,6 +1148,12 @@ class Package(object):
     def do_restage(self):
         """Reverts expanded/checked out source to a pristine state."""
         self.stage.restage()
+
+
+    def do_clean(self):
+        """Removes the package's build stage and source tarball."""
+        self.stage.destroy()
+
 
     def format_doc(self, **kwargs):
         """Wrap doc string at 72 characters and format nicely"""
