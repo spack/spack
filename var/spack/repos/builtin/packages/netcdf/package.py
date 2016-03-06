@@ -6,7 +6,7 @@ class Netcdf(Package):
     data formats that support the creation, access, and sharing of array-oriented
     scientific data."""
 
-    homepage = "http://www.unidata.ucar.edu/software/netcdf/"
+    homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.tar.gz"
 
     version('4.4.0', 'cffda0cbd97fdb3a06e9274f7aef438e')
