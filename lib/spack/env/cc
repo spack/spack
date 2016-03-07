@@ -175,15 +175,26 @@ while [ -n "$1" ]; do
             ;;
         -Wl,*)
             arg="${1#-Wl,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if [[ "$arg" = -rpath=* ]]; then
-                rpaths+=("${arg#-rpath=}")
-            elif [[ "$arg" = -rpath ]]; then
+            # TODO: Handle multiple -Wl, continuations of -Wl,-rpath
+            if [[ $arg == -rpath=* ]]; then
+                arg="${arg#-rpath=}"
+                for rpath in ${arg//,/ }; do
+                    rpaths+=("$rpath")
+                done
+            elif [[ $arg == -rpath,* ]]; then
+                arg="${arg#-rpath,}"
+                for rpath in ${arg//,/ }; do
+                    rpaths+=("$rpath")
+                done
+            elif [[ $arg == -rpath ]]; then
                 shift; arg="$1"
-                if [[ "$arg" != -Wl,* ]]; then
+                if [[ $arg != '-Wl,'* ]]; then
                     die "-Wl,-rpath was not followed by -Wl,*"
                 fi
-                rpaths+=("${arg#-Wl,}")
+                arg="${arg#-Wl,}"
+                for rpath in ${arg//,/ }; do
+                    rpaths+=("$rpath")
+                done
             else
                 other_args+=("-Wl,$arg")
             fi
@@ -191,11 +202,11 @@ while [ -n "$1" ]; do
         -Xlinker,*)
             arg="${1#-Xlinker,}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
-            if [[ "$arg" = -rpath=* ]]; then
+            if [[ $arg = -rpath=* ]]; then
                 rpaths+=("${arg#-rpath=}")
-            elif [[ "$arg" = -rpath ]]; then
+            elif [[ $arg = -rpath ]]; then
                 shift; arg="$1"
-                if [[ "$arg" != -Xlinker,* ]]; then
+                if [[ $arg != -Xlinker,* ]]; then
                     die "-Xlinker,-rpath was not followed by -Xlinker,*"
                 fi
                 rpaths+=("${arg#-Xlinker,}")

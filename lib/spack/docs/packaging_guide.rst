@@ -1711,15 +1711,15 @@ Compile-time library search paths
   * ``-L$dep_prefix/lib``
   * ``-L$dep_prefix/lib64``
 Runtime library search paths (RPATHs)
-  * ``-Wl,-rpath=$dep_prefix/lib``
-  * ``-Wl,-rpath=$dep_prefix/lib64``
+  * ``-Wl,-rpath,$dep_prefix/lib``
+  * ``-Wl,-rpath,$dep_prefix/lib64``
 Include search paths
   * ``-I$dep_prefix/include``
 
 An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
 build will have ``-I$LIBELF_PREFIX/include``,
-``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath=$LIBELF_PREFIX/lib``
+``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath,$LIBELF_PREFIX/lib``
 inserted on the command line.  This is done transparently to the
 project's build system, which will just think it's using a system
 where ``libelf`` is readily available.  Because of this, you **do

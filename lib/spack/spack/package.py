@@ -1216,8 +1216,8 @@ class Package(object):
 
     @property
     def rpath_args(self):
-        """Get the rpath args as a string, with -Wl,-rpath= for each element."""
-        return " ".join("-Wl,-rpath=%s" % p for p in self.rpath)
+        """Get the rpath args as a string, with -Wl,-rpath, for each element."""
+        return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
 
 def validate_package_url(url_string):
