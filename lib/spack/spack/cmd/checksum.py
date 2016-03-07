@@ -100,11 +100,11 @@ def checksum(parser, args):
     else:
         versions = pkg.fetch_remote_versions()
         if not versions:
-            tty.die("Could not fetch any versions for %s." % pkg.name)
+            tty.die("Could not fetch any versions for %s" % pkg.name)
 
     sorted_versions = sorted(versions, reverse=True)
 
-    tty.msg("Found %s versions of %s." % (len(versions), pkg.name),
+    tty.msg("Found %s versions of %s" % (len(versions), pkg.name),
             *spack.cmd.elide_list(
             ["%-10s%s" % (v, versions[v]) for v in sorted_versions]))
     print
@@ -121,7 +121,7 @@ def checksum(parser, args):
         keep_stage=args.keep_stage)
 
     if not version_hashes:
-        tty.die("Could not fetch any versions for %s." % pkg.name)
+        tty.die("Could not fetch any versions for %s" % pkg.name)
 
     version_lines = ["    version('%s', '%s')" % (v, h) for v, h in version_hashes]
     tty.msg("Checksummed new versions of %s:" % pkg.name, *version_lines)
