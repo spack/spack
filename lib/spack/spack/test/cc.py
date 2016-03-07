@@ -43,7 +43,7 @@ test_command = [
     '-llib1', '-llib2',
     'arg4',
     '-Wl,--end-group',
-    '-Xlinker,-rpath', '-Xlinker,/third/rpath', '-Xlinker,-rpath', '-Xlinker,/fourth/rpath',
+    '-Xlinker', '-rpath', '-Xlinker', '/third/rpath', '-Xlinker', '-rpath', '-Xlinker', '/fourth/rpath',
     '-llib3', '-llib4',
     'arg5', 'arg6']
 
