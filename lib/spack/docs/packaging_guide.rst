@@ -84,7 +84,7 @@ always choose to download just one tarball initially, and run
 
    If it fails entirely, you can get minimal boilerplate by using
    :ref:`spack-edit-f`, or you can manually create a directory and
-   ``package.py`` file for the package in ``var/spack/packages``.
+   ``package.py`` file for the package in ``var/spack/repos/builtin/packages``.
 
 .. note::
 
@@ -203,7 +203,7 @@ edit`` command:
 So, if you used ``spack create`` to create a package, then saved and
 closed the resulting file, you can get back to it with ``spack edit``.
 The ``cmake`` package actually lives in
-``$SPACK_ROOT/var/spack/packages/cmake/package.py``, but this provides
+``$SPACK_ROOT/var/spack/repos/builtin/packages/cmake/package.py``, but this provides
 a much simpler shortcut and saves you the trouble of typing the full
 path.
 
@@ -269,18 +269,18 @@ live in Spack's directory structure.  In general, `spack-create`_ and
 `spack-edit`_ handle creating package files for you, so you can skip
 most of the details here.
 
-``var/spack/packages``
+``var/spack/repos/builtin/packages``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 A Spack installation directory is structured like a standard UNIX
 install prefix (``bin``, ``lib``, ``include``, ``var``, ``opt``,
 etc.).  Most of the code for Spack lives in ``$SPACK_ROOT/lib/spack``.
-Packages themselves live in ``$SPACK_ROOT/var/spack/packages``.
+Packages themselves live in ``$SPACK_ROOT/var/spack/repos/builtin/packages``.
 
 If you ``cd`` to that directory, you will see directories for each
 package:
 
-.. command-output::  cd $SPACK_ROOT/var/spack/packages;  ls -CF
+.. command-output::  cd $SPACK_ROOT/var/spack/repos/builtin/packages;  ls -CF
    :shell:
    :ellipsis: 10
 
@@ -288,7 +288,7 @@ Each directory contains a file called ``package.py``, which is where
 all the python code for the package goes.  For example, the ``libelf``
 package lives in::
 
-   $SPACK_ROOT/var/spack/packages/libelf/package.py
+   $SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py
 
 Alongside the ``package.py`` file, a package may contain extra
 directories or files (like patches) that it needs to build.
@@ -301,7 +301,7 @@ Packages are named after the directory containing ``package.py``.  So,
 ``libelf``'s ``package.py`` lives in a directory called ``libelf``.
 The ``package.py`` file defines a class called ``Libelf``, which
 extends Spack's ``Package`` class.  for example, here is
-``$SPACK_ROOT/var/spack/packages/libelf/package.py``:
+``$SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py``:
 
 .. code-block:: python
    :linenos:
@@ -328,7 +328,7 @@ these:
    $ spack install libelf@0.8.13
 
 Spack sees the package name in the spec and looks for
-``libelf/package.py`` in ``var/spack/packages``.  Likewise, if you say
+``libelf/package.py`` in ``var/spack/repos/builtin/packages``.  Likewise, if you say
 ``spack install py-numpy``, then Spack looks for
 ``py-numpy/package.py``.
 
@@ -703,7 +703,7 @@ supply is a filename, then the patch needs to live within the spack
 source tree.  For example, the patch above lives in a directory
 structure like this::
 
-   $SPACK_ROOT/var/spack/packages/
+   $SPACK_ROOT/var/spack/repos/builtin/packages/
        mvapich2/
            package.py
            ad_lustre_rwcontig_open_source.patch
@@ -1533,7 +1533,7 @@ The last element of a package is its ``install()`` method.  This is
 where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
-.. literalinclude::  ../../../var/spack/packages/libelf/package.py
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/libelf/package.py
    :start-after: 0.8.12
    :linenos:
 
