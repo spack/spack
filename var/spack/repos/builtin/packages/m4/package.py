@@ -14,6 +14,10 @@ class M4(Package):
     depends_on('libsigsegv', when='+sigsegv')
 
     def install(self, spec, prefix):
+        # After patch, update generated configuration files that depend on extern-inline.m4
+        autoreconf = which('autoreconf')
+        autoreconf()
+
         configure_args = []
         if 'libsigsegv' in spec:
             configure_args.append('--with-libsigsegv-prefix=%s' % spec['libsigsegv'].prefix)
