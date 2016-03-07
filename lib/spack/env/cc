@@ -199,19 +199,20 @@ while [ -n "$1" ]; do
                 other_args+=("-Wl,$arg")
             fi
             ;;
-        -Xlinker,*)
-            arg="${1#-Xlinker,}"
-            if [ -z "$arg" ]; then shift; arg="$1"; fi
+        -Xlinker)
+            shift; arg="$1";
             if [[ $arg = -rpath=* ]]; then
                 rpaths+=("${arg#-rpath=}")
             elif [[ $arg = -rpath ]]; then
                 shift; arg="$1"
-                if [[ $arg != -Xlinker,* ]]; then
-                    die "-Xlinker,-rpath was not followed by -Xlinker,*"
+                if [[ $arg != -Xlinker ]]; then
+                    die "-Xlinker -rpath was not followed by -Xlinker <arg>"
                 fi
-                rpaths+=("${arg#-Xlinker,}")
+                shift; arg="$1"
+                rpaths+=("$arg")
             else
-                other_args+=("-Xlinker,$arg")
+                other_args+=("-Xlinker")
+                other_args+=("$arg")
             fi
             ;;
         *)
