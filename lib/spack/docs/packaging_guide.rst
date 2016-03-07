@@ -2137,6 +2137,15 @@ Filtering functions
 
   Examples:
 
+  #. Filtering a Makefile to force it to use Spack's compiler wrappers:
+
+     .. code-block:: python
+
+        filter_file(r'^CC\s*=.*',  spack_cc,  'Makefile')
+        filter_file(r'^CXX\s*=.*', spack_cxx, 'Makefile')
+        filter_file(r'^F77\s*=.*', spack_f77, 'Makefile')
+        filter_file(r'^FC\s*=.*',  spack_fc,  'Makefile')
+
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 
      .. code-block:: python
