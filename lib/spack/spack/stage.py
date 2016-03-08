@@ -229,13 +229,22 @@ class Stage(object):
 
     @property
     def source_path(self):
-        """Returns the path to the expanded/checked out source code
-           within this fetch strategy's path.
+        """Returns the path to the expanded/checked out source code.
 
-           This assumes nothing else is going ot be put in the
-           FetchStrategy's path.  It searches for the first
-           subdirectory of the path it can find, then returns that.
+        To find the source code, this method searches for the first
+        subdirectory of the stage that it can find, and returns it.
+        This assumes nothing besides the archive file will be in the
+        stage path, but it has the advantage that we don't need to
+        know the name of the archive or its contents.
+
+        If the fetch strategy is not supposed to expand the downloaded
+        file, it will just return the stage path. If the archive needs
+        to be expanded, it will return None when no archive is found.
         """
+        if isinstance(self.fetcher, fs.URLFetchStrategy):
+            if not self.fetcher.expand_archive:
+                return self.path
+
         for p in [os.path.join(self.path, f) for f in os.listdir(self.path)]:
             if os.path.isdir(p):
                 return p
@@ -416,21 +425,15 @@ class ResourceStage(Stage):
                 shutil.move(source_path, destination_path)
 
 
-@pattern.composite(method_list=['fetch', 'create', 'check', 'expand_archive', 'restage', 'destroy'])
+@pattern.composite(method_list=['fetch', 'create', 'check', 'expand_archive',  'restage', 'destroy'])
 class StageComposite:
     """
     Composite for Stage type objects. The first item in this composite is considered to be the root package, and
     operations that return a value are forwarded to it.
     """
-
-    @property
-    def source_path(self):
-        return self[0].source_path
-
-    @property
-    def path(self):
-        return self[0].path
-
+    #
+    # __enter__ and __exit__ delegate to all stages in the composite.
+    #
     def __enter__(self):
         for item in self:
             item.__enter__()
@@ -440,8 +443,23 @@ class StageComposite:
         for item in reversed(self):
             item.__exit__(exc_type, exc_val, exc_tb)
 
+    #
+    # Below functions act only on the *first* stage in the composite.
+    #
+    @property
+    def source_path(self):
+        return self[0].source_path
+
+    @property
+    def path(self):
+        return self[0].path
+
     def chdir_to_source(self):
         return self[0].chdir_to_source()
+
+    @property
+    def archive_file(self):
+        return self[0].archive_file
 
 
 class DIYStage(object):

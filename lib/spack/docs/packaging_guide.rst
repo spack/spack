@@ -401,6 +401,35 @@ construct the new one for ``8.2.1``.
 When you supply a custom URL for a version, Spack uses that URL
 *verbatim* and does not perform extrapolation.
 
+Skipping the expand step
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spack normally expands archives automatically after downloading
+them. If you want to skip this step (e.g., for self-extracting
+executables and other custom archive types), you can add
+``expand=False`` to a ``version`` directive.
+
+.. code-block:: python
+
+   version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
+           url='http://example.com/foo-8.2.1-special-version.tar.gz', 'expand=False')
+
+When ``expand`` is set to ``False``, Spack sets the current working
+directory to the directory containing the downloaded archive before it
+calls your ``install`` method.  Within ``install``, the path to the
+downloaded archive is available as ``self.stage.archive_file``.
+
+Here is an example snippet for packages distribuetd as self-extracting
+archives.  The example sets permissions on the downloaded file to make
+it executable, then runs it with some arguments.
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       set_executable(self.stage.archive_file)
+       installer = Executable(self.stage.archive_file)
+       installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
+
 Checksums
 ~~~~~~~~~~~~~~~~~
 
@@ -2107,6 +2136,15 @@ Filtering functions
   string for the particular match.
 
   Examples:
+
+  #. Filtering a Makefile to force it to use Spack's compiler wrappers:
+
+     .. code-block:: python
+
+        filter_file(r'^CC\s*=.*',  spack_cc,  'Makefile')
+        filter_file(r'^CXX\s*=.*', spack_cxx, 'Makefile')
+        filter_file(r'^F77\s*=.*', spack_f77, 'Makefile')
+        filter_file(r'^FC\s*=.*',  spack_fc,  'Makefile')
 
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 

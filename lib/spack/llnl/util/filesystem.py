@@ -26,7 +26,8 @@ __all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree'
            'expand_user', 'working_dir', 'touch', 'touchp', 'mkdirp',
            'force_remove', 'join_path', 'ancestor', 'can_access', 'filter_file',
            'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
-           'remove_dead_links', 'remove_linked_tree', 'copy_mode', 'unset_executable_mode']
+           'set_executable', 'copy_mode', 'unset_executable_mode',
+           'remove_dead_links', 'remove_linked_tree']
 
 import os
 import sys
@@ -353,6 +354,12 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
     if order == 'post':
         yield (source_path, dest_path)
+
+
+def set_executable(path):
+    st = os.stat(path)
+    os.chmod(path, st.st_mode | stat.S_IEXEC)
+
 
 def remove_dead_links(root):
     """
