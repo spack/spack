@@ -82,7 +82,6 @@ class FetchStrategy(object):
 
     class __metaclass__(type):
         """This metaclass registers all fetch strategies in a list."""
-
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
             if cls.enabled: all_strategies.append(cls)
@@ -144,6 +143,8 @@ class URLFetchStrategy(FetchStrategy):
 
         self.digest = kwargs.get('md5', None)
         if not self.digest: self.digest = digest
+
+        self.expand_archive = kwargs.get('expand', True)
 
         if not self.url:
             raise ValueError("URLFetchStrategy requires a url for fetching.")
@@ -218,6 +219,10 @@ class URLFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def expand(self):
+        if not self.expand_archive:
+            tty.msg("Skipping expand step for %s" % self.archive_file)
+            return
+
         tty.msg("Staging archive: %s" % self.archive_file)
 
         self.stage.chdir()
