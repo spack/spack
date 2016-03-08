@@ -441,6 +441,7 @@ class StageComposite:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         for item in reversed(self):
+            item.delete_on_exit = getattr(self, 'delete_on_exit', True)
             item.__exit__(exc_type, exc_val, exc_tb)
 
     #

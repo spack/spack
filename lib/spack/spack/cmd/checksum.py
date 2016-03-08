@@ -22,23 +22,18 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import re
 import argparse
 import hashlib
-from pprint import pprint
-from subprocess import CalledProcessError
 
 import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
-
 import spack
 import spack.cmd
 import spack.util.crypto
 from spack.stage import Stage, FailedDownloadError
 from spack.version import *
 
-description ="Checksum available versions of a package."
+description = "Checksum available versions of a package."
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -60,28 +55,22 @@ def get_checksums(versions, urls, **kwargs):
     hashes = []
     i = 0
     for url, version in zip(urls, versions):
-        stage = Stage(url)
         try:
-            stage.fetch()
-            if i == 0 and first_stage_function:
-                first_stage_function(stage)
+            with Stage(url) as stage:
+                stage.delete_on_exit = not keep_stage
+                stage.fetch()
+                if i == 0 and first_stage_function:
+                    first_stage_function(stage)
 
-            hashes.append((version,
-                spack.util.crypto.checksum(hashlib.md5, stage.archive_file)))
-        except FailedDownloadError, e:
+                hashes.append((version,
+                               spack.util.crypto.checksum(hashlib.md5, stage.archive_file)))
+                i += 1
+        except FailedDownloadError as e:
             tty.msg("Failed to fetch %s" % url)
-            continue
-	except Exception, e:
+        except Exception as e:
             tty.msg('Something failed on %s, skipping.\n    (%s)' % (url, e))
-            continue
-
-        finally:
-            if not keep_stage:
-                stage.destroy()
-        i += 1
 
     return hashes
-
 
 
 def checksum(parser, args):
@@ -106,8 +95,8 @@ def checksum(parser, args):
 
     tty.msg("Found %s versions of %s" % (len(versions), pkg.name),
             *spack.cmd.elide_list(
-            ["%-10s%s" % (v, versions[v]) for v in sorted_versions]))
-    print
+                ["%-10s%s" % (v, versions[v]) for v in sorted_versions]))
+    print()
     archives_to_fetch = tty.get_number(
         "How many would you like to checksum?", default=5, abort='q')
 
