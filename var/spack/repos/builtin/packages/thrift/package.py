@@ -12,33 +12,45 @@ class Thrift(Package):
 
     version('0.9.2', '89f63cc4d0100912f4a1f8a9dee63678')
 
-    extends("python")
+    # Currently only support for c-family and python
+    variant('c', default=True, description="Build support for C-family languages")
+    variant('python', default=True, description="Build support for python")
 
-    depends_on("autoconf")
-    depends_on("automake")
-    depends_on("bison")
-    depends_on("boost")
-    depends_on("flex")
-    depends_on("jdk")
-    depends_on("libtool")
-    depends_on("openssl")
-    depends_on("python")
+    depends_on('jdk')
+    depends_on('autoconf')
+    depends_on('automake')
+    depends_on('libtool')
+    depends_on('boost@1.53:')
+    depends_on('bison')
+    depends_on('flex')
+    depends_on('openssl')
 
-    # Compilation fails for most languages, fortunately cpp installs fine
-    # All other languages (yes, including C) are omitted until someone needs them
+    # Variant dependencies
+    extends('python', when='+python')
+    depends_on('python', when='+python')
+
+    depends_on('zlib', when='+c')
+    depends_on('libevent', when='+c')
+
     def install(self, spec, prefix):
-        env["PY_PREFIX"]   = prefix
-        env["JAVA_PREFIX"] = prefix
+        env['PY_PREFIX'] = prefix
+        env['JAVA_HOME'] = spec['jdk'].prefix
 
-        configure("--prefix=%s" % prefix,
-                  "--with-boost=%s" % spec['boost'].prefix,
-                  "--with-c=no",
-                  "--with-go=no",
-                  "--with-python=yes",
-                  "--with-lua=no",
-                  "--with-php=no",
-                  "--with-qt4=no",
-                  "--enable-tests=no")
+        # configure options
+        options = ['--prefix=%s' % prefix]
+
+        options.append('--with-boost=%s' % spec['boost'].prefix)
+        options.append('--enable-tests=no')
+
+        options.append('--with-c=%s' % ('yes' if '+c' in spec else 'no'))
+        options.append('--with-python=%s' % ('yes' if '+python' in spec else 'no'))
+        options.append('--with-java=%s' % ('yes' if '+java' in spec else 'no'))
+        options.append('--with-go=%s' % ('yes' if '+go' in spec else 'no'))
+        options.append('--with-lua=%s' % ('yes' if '+lua' in spec else 'no'))
+        options.append('--with-php=%s' % ('yes' if '+php' in spec else 'no'))
+        options.append('--with-qt4=%s' % ('yes' if '+qt4' in spec else 'no'))
+
+        configure(*options)
 
         make()
         make("install")
