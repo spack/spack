@@ -30,6 +30,7 @@ class Cmake(Package):
     homepage  = 'https://www.cmake.org'
     url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
 
+    version('3.5.0',    '33c5d09d4c33d4ffcc63578a6ba8777e')
     version('3.4.3',    '4cb3ff35b2472aae70f542116d616e63')
     version('3.4.0',    'cd3034e0a44256a0917e254167217fc8')
     version('3.3.1',    '52638576f4e1e621fed6c3410d3a1b12')
@@ -49,8 +50,25 @@ class Cmake(Package):
         """Handle CMake's version-based custom URLs."""
         return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (version.up_to(2), version)
 
-    def install(self, spec, prefix):
+    def validate(self, spec):
+        """
+        Checks if incompatible versions of qt were specified
 
+        :param spec: spec of the package
+        :raises RuntimeError: in case of inconsistencies
+        """
+
+        print spec
+
+        if '+qt' in spec and spec.satisfies('^qt@5.4.0'):
+            msg = 'qt-5.4.0 has broken CMake modules.'
+            raise RuntimeError(msg)
+
+    def install(self, spec, prefix):
+        # Consistency check
+        self.validate(spec)
+
+        # configure, build, install:
         options = ['--prefix=%s' % prefix]
         options.append('--parallel=%s' % str(make_jobs))
 
@@ -65,6 +83,5 @@ class Cmake(Package):
         options.append('-DCMAKE_USE_OPENSSL=ON')
 
         configure(*options)
-
         make()
         make('install')
