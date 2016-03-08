@@ -477,10 +477,14 @@ class DIYStage(object):
         else:
             raise ChdirError("Setup failed: no such directory: " + self.path)
 
+    # DIY stages do nothing as context managers.
+    def __enter__(self): pass
+    def __exit__(self, exc_type, exc_val, exc_tb): pass
+
     def chdir_to_source(self):
         self.chdir()
 
-    def fetch(self):
+    def fetch(self, mirror_only):
         tty.msg("No need to fetch for DIY.")
 
     def check(self):
