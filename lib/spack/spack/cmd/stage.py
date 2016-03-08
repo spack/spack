@@ -50,4 +50,6 @@ def stage(parser, args):
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
     for spec in specs:
         package = spack.repo.get(spec)
-        package.do_stage()
+        with package.stage as stage:
+            stage.delete_on_exit = False
+            package.do_stage()
