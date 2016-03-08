@@ -56,8 +56,7 @@ def get_checksums(versions, urls, **kwargs):
     i = 0
     for url, version in zip(urls, versions):
         try:
-            with Stage(url) as stage:
-                stage.delete_on_exit = not keep_stage
+            with Stage(url, keep=keep_stage) as stage:
                 stage.fetch()
                 if i == 0 and first_stage_function:
                     first_stage_function(stage)
@@ -96,7 +95,7 @@ def checksum(parser, args):
     tty.msg("Found %s versions of %s" % (len(versions), pkg.name),
             *spack.cmd.elide_list(
                 ["%-10s%s" % (v, versions[v]) for v in sorted_versions]))
-    print()
+    print
     archives_to_fetch = tty.get_number(
         "How many would you like to checksum?", default=5, abort='q')
 

@@ -67,6 +67,6 @@ def md5(parser, args):
             tty.warn("%s" % e)
 
     # Dump the MD5s at last without interleaving them with downloads
-    tty.msg("Number of MD5 check-sums computed: %s " % len(results))
+    tty.msg("%d MD5 checksums:" % len(results))
     for checksum, url in results:
-        tty.msg("%s  %s" % (checksum, url))
+        print "%s  %s" % (checksum, url)
