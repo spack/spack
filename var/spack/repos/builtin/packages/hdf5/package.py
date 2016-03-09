@@ -46,7 +46,6 @@ class Hdf5(Package):
 
     variant('cxx', default=True, description='Enable C++ support')
     variant('fortran', default=True, description='Enable Fortran support')
-    variant('unsupported', default=True, description='Enables unsupported configuration options')
 
     variant('mpi', default=False, description='Enable MPI support')
     variant('szip', default=False, description='Enable szip support')
@@ -74,6 +73,13 @@ class Hdf5(Package):
         self.validate(spec)
         # Handle compilation after spec validation
         extra_args = []
+
+        # Always enable this option. This does not actually enable any
+        # features: it only *allows* the user to specify certain
+        # combinations of other arguments. Enabling it just skips a
+        # sanity check in configure, so this doesn't merit a variant.
+        extra_args.append("--enable-unsupported")
+
         if '+debug' in spec:
             extra_args.append('--enable-debug=all')
         else:
@@ -83,9 +89,6 @@ class Hdf5(Package):
             extra_args.append('--enable-shared')
         else:
             extra_args.append('--enable-static-exec')
-
-        if '+unsupported' in spec:
-            extra_args.append("--enable-unsupported")
 
         if '+cxx' in spec:
             extra_args.append('--enable-cxx')
