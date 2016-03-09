@@ -512,7 +512,9 @@ class Spec(object):
     @staticmethod
     def is_virtual(name):
         """Test if a name is virtual without requiring a Spec."""
-        return not spack.repo.exists(name)
+        pkg = spack.repo.get(name)
+        return pkg.virtual
+        #return not spack.repo.exists(name)
 
 
     @property
@@ -808,6 +810,7 @@ class Spec(object):
               a problem.
         """
         changed = False
+        # This generate an infinite loop when self is virtual ex: spack install lapack
         while True:
             virtuals =[v for v in self.traverse() if v.virtual]
             if not virtuals:
@@ -837,6 +840,9 @@ class Spec(object):
            with requirements of its pacakges.  See flatten() and normalize() for
            more details on this.
         """
+        if self.virtual:
+            raise SpecError("Cannot concretize {0} because it is a virtual package".format(self.name))
+
         if self._concrete:
             return
 
