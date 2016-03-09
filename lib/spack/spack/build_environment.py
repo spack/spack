@@ -177,8 +177,6 @@ def set_module_variables_for_package(pkg, m):
     """Populate the module scope of install() with some useful functions.
        This makes things easier for package writers.
     """
-    m = pkg.module
-
     # number of jobs spack will to build with.
     jobs = multiprocessing.cpu_count()
     if not pkg.parallel:
