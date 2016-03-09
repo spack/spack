@@ -51,6 +51,9 @@ class Petsc(Package):
                 '--with-mpi=0'
             ]
             error_message_fmt = '\t{library} support requires "+mpi" to be activated'
+
+            # If mpi is disabled (~mpi), it's an error to have any of these enabled.
+            # This generates a list of any such errors.
             errors = [error_message_fmt.format(library=x)
                       for x in ('hdf5', 'hypre', 'parmetis')
                       if ('+'+x) in self.spec]
