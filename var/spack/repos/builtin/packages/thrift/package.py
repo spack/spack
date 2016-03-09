@@ -41,12 +41,12 @@ class Thrift(Package):
     variant('python', default=True, description="Build support for python")
 
     depends_on('jdk')
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
     depends_on('boost@1.53:')
-    depends_on('bison')
-    depends_on('flex')
+    depends_on('bison', type='build')
+    depends_on('flex', type='build')
     depends_on('openssl')
 
     # Variant dependencies

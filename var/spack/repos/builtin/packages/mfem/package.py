@@ -62,7 +62,7 @@ class Mfem(Package):
     depends_on('blas', when='+suite-sparse')
     depends_on('lapack', when='+suite-sparse')
     depends_on('metis@5:', when='+suite-sparse ^suite-sparse@4.5:')
-    depends_on('cmake', when='^metis@5:')
+    depends_on('cmake', when='^metis@5:', type='build')
 
     def check_variants(self, spec):
         if '+mpi' in spec and ('+hypre' not in spec or '+metis' not in spec):

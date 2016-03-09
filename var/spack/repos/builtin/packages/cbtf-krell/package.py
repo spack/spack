@@ -64,7 +64,7 @@ class CbtfKrell(Package):
     variant('mpich', default=False, description="Build mpi experiment collector for mpich MPI when this variant is enabled.")
 
     # Dependencies for cbtf-krell
-    depends_on("cmake@3.0.2")
+    depends_on("cmake@3.0.2", type='build')
 
     # For binutils service
     depends_on("binutils@2.24+krellpatch")

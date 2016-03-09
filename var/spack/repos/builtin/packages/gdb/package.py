@@ -41,7 +41,7 @@ class Gdb(Package):
     version('7.9', '8f8ced422fe462a00e0135a643544f17')
     version('7.8.2', '8b0ea8b3559d3d90b3ff4952f0aeafbc')
 
-    depends_on('texinfo')
+    depends_on('texinfo', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)

@@ -35,7 +35,7 @@ class PyVirtualenv(Package):
     version('15.0.1', '28d76a0d9cbd5dc42046dd14e76a6ecc')
 
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

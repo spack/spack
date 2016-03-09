@@ -35,8 +35,8 @@ class Glm(Package):
     url = "https://github.com/g-truc/glm/archive/0.9.7.1.tar.gz"
 
     version('0.9.7.1', '61af6639cdf652d1cdd7117190afced8')
-    
-    depends_on ("cmake")
+
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):

@@ -37,6 +37,7 @@ class Vtk(Package):
 
     version('6.1.0', '25e4dfb3bad778722dcaec80cd5dab7d')
 
+    depends_on('cmake', type='build')
     depends_on("qt")
 
     # VTK7 defaults to OpenGL2 rendering backend

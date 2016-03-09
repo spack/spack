@@ -72,10 +72,10 @@ class ArpackNg(Package):
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('automake', when='@3.3.0')
-    depends_on('autoconf', when='@3.3.0')
-    depends_on('libtool@2.4.2:', when='@3.3.0')
-    depends_on('cmake@2.8.6:', when='@3.4.0:')
+    depends_on('automake', when='@3.3.0', type='build')
+    depends_on('autoconf', when='@3.3.0', type='build')
+    depends_on('libtool@2.4.2:', when='@3.3.0', type='build')
+    depends_on('cmake@2.8.6:', when='@3.4.0:', type='build')
 
     depends_on('mpi', when='+mpi')
 

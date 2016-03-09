@@ -38,7 +38,7 @@ class PyPrettytable(Package):
     version('0.7.2', 'a6b80afeef286ce66733d54a0296b13b')
 
     extends("python")
-    depends_on("py-setuptools")
+    depends_on("py-setuptools", type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

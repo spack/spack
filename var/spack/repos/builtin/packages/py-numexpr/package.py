@@ -34,7 +34,7 @@ class PyNumexpr(Package):
     version('2.5', '84f66cced45ba3e30dcf77a937763aaa')
 
     extends('python')
-    depends_on('py-numpy')
+    depends_on('py-numpy', type=nolink)
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

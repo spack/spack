@@ -42,7 +42,7 @@ class Parmetis(Package):
     variant('debug', default=False, description='Builds the library in debug mode')
     variant('gdb', default=False, description='Enables gdb support')
 
-    depends_on('cmake@2.8:')  # build dependency
+    depends_on('cmake@2.8:', type='build')  # build dependency
     depends_on('mpi')
     depends_on('metis@5:')
 

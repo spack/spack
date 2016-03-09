@@ -43,12 +43,12 @@ class Doxygen(Package):
     # graphviz appears to be a run-time optional dependency
     variant('graphviz', default=True, description='Build with dot command support from Graphviz.')  # NOQA: ignore=E501
 
-    depends_on("cmake@2.8.12:")
-    depends_on("flex")
-    depends_on("bison")
+    depends_on("cmake@2.8.12:", type='build')
+    depends_on("flex", type='build')
+    depends_on("bison", type='build')
 
     # optional dependencies
-    depends_on("graphviz", when="+graphviz")
+    depends_on("graphviz", when="+graphviz", type='run')
 
     def install(self, spec, prefix):
         cmake('.', *std_cmake_args)

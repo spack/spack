@@ -45,8 +45,8 @@ class Scotch(Package):
     variant('shared', default=True, description='Build a shared version of the library')
     variant('metis', default=True, description='Build metis and parmetis wrapper libraries')
 
-    depends_on('flex')
-    depends_on('bison')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('zlib', when='+compression')
 

@@ -41,8 +41,8 @@ class Psi4(Package):
     depends_on('lapack')
     depends_on('boost+chrono+filesystem+python+regex+serialization+system+timer+thread')
     depends_on('python')
-    depends_on('cmake')
-    depends_on('py-numpy')
+    depends_on('cmake', type='build')
+    depends_on('py-numpy', type=nolink)
 
     # Optional dependencies
     # TODO: add packages for these

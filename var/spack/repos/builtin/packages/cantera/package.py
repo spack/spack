@@ -42,7 +42,7 @@ class Cantera(Package):
     variant('matlab',     default=False, description='Build the Cantera Matlab toolbox')
 
     # Required dependencies
-    depends_on('scons')
+    depends_on('scons', type='build')
 
     # Recommended dependencies
     depends_on('blas',      when='+lapack')
