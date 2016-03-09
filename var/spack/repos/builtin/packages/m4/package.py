@@ -7,6 +7,8 @@ class M4(Package):
 
     version('1.4.17', 'a5e9954b1dae036762f7b13673a2cf76')
 
+    patch('pgi.patch', when='@1.4.17')
+
     variant('sigsegv', default=True, description="Build the libsigsegv dependency")
 
     depends_on('libsigsegv', when='+sigsegv')
