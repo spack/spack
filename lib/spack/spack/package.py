@@ -58,14 +58,16 @@ import spack.compilers
 import spack.mirror
 import spack.hooks
 import spack.directives
+import spack.repository
 import spack.build_environment
 import spack.url
 import spack.util.web
 import spack.fetch_strategy as fs
 from spack.version import *
-from spack.stage import Stage
+from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive, extension
 from spack.util.executable import ProcessError
+from spack.util.environment import dump_environment
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -433,23 +435,51 @@ class Package(object):
         return spack.url.substitute_version(self.nearest_url(version),
                                             self.url_version(version))
 
+    def _make_resource_stage(self, root_stage, fetcher, resource):
+        resource_stage_folder = self._resource_stage(resource)
+        resource_mirror = join_path(self.name, os.path.basename(fetcher.url))
+        stage = ResourceStage(resource.fetcher, root=root_stage, resource=resource,
+                              name=resource_stage_folder, mirror_path=resource_mirror)
+        return stage
+
+    def _make_root_stage(self, fetcher):
+        # Construct a mirror path (TODO: get this out of package.py)
+        mp = spack.mirror.mirror_archive_path(self.spec, fetcher)
+        # Construct a path where the stage should build..
+        s = self.spec
+        stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
+        # Build the composite stage
+        stage = Stage(fetcher, mirror_path=mp, name=stage_name)
+        return stage
+
+    def _make_stage(self):
+        # Construct a composite stage on top of the composite FetchStrategy
+        composite_fetcher = self.fetcher
+        composite_stage = StageComposite()
+        resources = self._get_needed_resources()
+        for ii, fetcher in enumerate(composite_fetcher):
+            if ii == 0:
+                # Construct root stage first
+                stage = self._make_root_stage(fetcher)
+            else:
+                # Construct resource stage
+                resource = resources[ii - 1]  # ii == 0 is root!
+                stage = self._make_resource_stage(composite_stage[0], fetcher, resource)
+            # Append the item to the composite
+            composite_stage.append(stage)
+
+        # Create stage on first access.  Needed because fetch, stage,
+        # patch, and install can be called independently of each
+        # other, so `with self.stage:` in do_install isn't sufficient.
+        composite_stage.create()
+        return composite_stage
 
     @property
     def stage(self):
         if not self.spec.concrete:
             raise ValueError("Can only get a stage for a concrete package.")
-
         if self._stage is None:
-            # Construct a mirror path (TODO: get this out of package.py)
-            mp = spack.mirror.mirror_archive_path(self.spec)
-
-            # Construct a path where the stage should build..
-            s = self.spec
-            stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
-
-            # Build the stage
-            self._stage = Stage(self.fetcher, mirror_path=mp, name=stage_name)
-
+            self._stage = self._make_stage()
         return self._stage
 
 
@@ -459,16 +489,26 @@ class Package(object):
         self._stage = stage
 
 
+    def _make_fetcher(self):
+        # Construct a composite fetcher that always contains at least
+        # one element (the root package). In case there are resources
+        # associated with the package, append their fetcher to the
+        # composite.
+        root_fetcher = fs.for_package_version(self, self.version)
+        fetcher = fs.FetchStrategyComposite()  # Composite fetcher
+        fetcher.append(root_fetcher)  # Root fetcher is always present
+        resources = self._get_needed_resources()
+        for resource in resources:
+            fetcher.append(resource.fetcher)
+        return fetcher
+
     @property
     def fetcher(self):
         if not self.spec.versions.concrete:
-            raise ValueError(
-                "Can only get a fetcher for a package with concrete versions.")
-
+            raise ValueError("Can only get a fetcher for a package with concrete versions.")
         if not self._fetcher:
-            self._fetcher = fs.for_package_version(self, self.version)
+            self._fetcher = self._make_fetcher()
         return self._fetcher
-
 
     @fetcher.setter
     def fetcher(self, f):
@@ -631,8 +671,8 @@ class Package(object):
         spack.install_layout.remove_install_directory(self.spec)
 
 
-    def do_fetch(self):
-        """Creates a stage directory and downloads the taball for this package.
+    def do_fetch(self, mirror_only=False):
+        """Creates a stage directory and downloads the tarball for this package.
            Working directory will be set to the stage directory.
         """
         if not self.spec.concrete:
@@ -654,79 +694,24 @@ class Package(object):
 
             if not ignore_checksum:
                 raise FetchError(
-                    "Will not fetch %s." % self.spec.format('$_$@'), checksum_msg)
+                    "Will not fetch %s" % self.spec.format('$_$@'), checksum_msg)
 
-        self.stage.fetch()
-
-        ##########
-        # Fetch resources
-        resources = self._get_resources()
-        for resource in resources:
-            resource_stage_folder = self._resource_stage(resource)
-            # FIXME : works only for URLFetchStrategy
-            resource_mirror = join_path(self.name, os.path.basename(resource.fetcher.url))
-            resource_stage = Stage(resource.fetcher, name=resource_stage_folder, mirror_path=resource_mirror)
-            resource.fetcher.set_stage(resource_stage)
-            # Delegate to stage object to trigger mirror logic
-            resource_stage.fetch()
-            resource_stage.check()
-        ##########
+        self.stage.fetch(mirror_only)
 
         self._fetch_time = time.time() - start_time
 
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
 
-    def do_stage(self):
+
+    def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
            directory."""
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
-        def _expand_archive(stage, name=self.name):
-            archive_dir = stage.source_path
-            if not archive_dir:
-                stage.expand_archive()
-                tty.msg("Created stage in %s." % stage.path)
-            else:
-                tty.msg("Already staged %s in %s." % (name, stage.path))
-
-
-        self.do_fetch()
-        _expand_archive(self.stage)
-
-        ##########
-        # Stage resources in appropriate path
-        resources = self._get_resources()
-        # TODO: this is to allow nested resources, a better solution would be
-        # good
-        for resource in sorted(resources, key=lambda res: len(res.destination)):
-            stage = resource.fetcher.stage
-            _expand_archive(stage, resource.name)
-            # Turn placement into a dict with relative paths
-            placement = os.path.basename(stage.source_path) if resource.placement is None else resource.placement
-            if not isinstance(placement, dict):
-                placement = {'': placement}
-            # Make the paths in the dictionary absolute and link
-            for key, value in placement.iteritems():
-                target_path = join_path(self.stage.source_path, resource.destination)
-                link_path = join_path(target_path, value)
-                source_path = join_path(stage.source_path, key)
-
-                try:
-                    os.makedirs(target_path)
-                except OSError as err:
-                    if err.errno == errno.EEXIST and os.path.isdir(target_path):
-                        pass
-                    else: raise
-
-                # NOTE: a reasonable fix for the TODO above might be to have
-                # these expand in place, but expand_archive does not offer
-                # this
-
-                if not os.path.exists(link_path):
-                    shutil.move(source_path, link_path)
-        ##########
+        self.do_fetch(mirror_only)
+        self.stage.expand_archive()
         self.stage.chdir_to_source()
 
 
@@ -744,7 +729,7 @@ class Package(object):
 
         # If there are no patches, note it.
         if not self.patches and not has_patch_fun:
-            tty.msg("No patches needed for %s." % self.name)
+            tty.msg("No patches needed for %s" % self.name)
             return
 
         # Construct paths to special files in the archive dir used to
@@ -757,7 +742,7 @@ class Package(object):
         # If we encounter an archive that failed to patch, restage it
         # so that we can apply all the patches again.
         if os.path.isfile(bad_file):
-            tty.msg("Patching failed last time.  Restaging.")
+            tty.msg("Patching failed last time. Restaging.")
             self.stage.restage()
 
         self.stage.chdir_to_source()
@@ -767,7 +752,7 @@ class Package(object):
             tty.msg("Already patched %s" % self.name)
             return
         elif os.path.isfile(no_patches_file):
-            tty.msg("No patches needed for %s." % self.name)
+            tty.msg("No patches needed for %s" % self.name)
             return
 
         # Apply all the patches for specs that match this one
@@ -788,10 +773,10 @@ class Package(object):
         if has_patch_fun:
             try:
                 self.patch()
-                tty.msg("Ran patch() for %s." % self.name)
+                tty.msg("Ran patch() for %s" % self.name)
                 patched = True
             except:
-                tty.msg("patch() function failed for %s." % self.name)
+                tty.msg("patch() function failed for %s" % self.name)
                 touch(bad_file)
                 raise
 
@@ -822,12 +807,15 @@ class Package(object):
         mkdirp(self.prefix.man1)
 
 
-    def _get_resources(self):
+    def _get_needed_resources(self):
         resources = []
         # Select the resources that are needed for this build
         for when_spec, resource_list in self.resources.items():
             if when_spec in self.spec:
                 resources.extend(resource_list)
+        # Sorts the resources by the length of the string representing their destination. Since any nested resource
+        # must contain another resource's name in its path, it seems that should work
+        resources = sorted(resources, key=lambda res: len(res.destination))
         return resources
 
     def _resource_stage(self, resource):
@@ -835,13 +823,9 @@ class Package(object):
         resource_stage_folder = '-'.join(pieces)
         return resource_stage_folder
 
-    def _build_logger(self, log_path):
-        """Create a context manager to log build output."""
-
-
 
     def do_install(self,
-                   keep_prefix=False,  keep_stage=False, ignore_deps=False,
+                   keep_prefix=False,  keep_stage=None, ignore_deps=False,
                    skip_patch=False, verbose=False, make_jobs=None, fake=False):
         """Called by commands to install a package and its dependencies.
 
@@ -850,7 +834,8 @@ class Package(object):
 
         Args:
         keep_prefix -- Keep install prefix on failure. By default, destroys it.
-        keep_stage  -- Keep stage on successful build. By default, destroys it.
+        keep_stage  -- Set to True or false to always keep or always delete stage.
+                       By default, stage is destroyed only if there are no exceptions.
         ignore_deps -- Do not install dependencies before installing this package.
         fake        -- Don't really build -- install fake stub files instead.
         skip_patch  -- Skip patch stage of build if True.
@@ -860,103 +845,103 @@ class Package(object):
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
 
+        # No installation needed if package is external
         if self.spec.external:
-            tty.msg("%s is externally installed in %s." % (self.name, self.spec.external))
+            tty.msg("%s is externally installed in %s" % (self.name, self.spec.external))
             return
 
-        if os.path.exists(self.prefix):
-            tty.msg("%s is already installed in %s." % (self.name, self.prefix))
+        # Ensure package is not already installed
+        if spack.install_layout.check_installed(self.spec):
+            tty.msg("%s is already installed in %s" % (self.name, self.prefix))
             return
 
         tty.msg("Installing %s" % self.name)
 
+        # First, install dependencies recursively.
         if not ignore_deps:
             self.do_install_dependencies(
                 keep_prefix=keep_prefix, keep_stage=keep_stage, ignore_deps=ignore_deps,
-                fake=fake, skip_patch=skip_patch, verbose=verbose,
-                make_jobs=make_jobs)
-
-        start_time = time.time()
-        if not fake:
-            if not skip_patch:
-                self.do_patch()
-            else:
-                self.do_stage()
-
-        # create the install directory.  The install layout
-        # handles this in case so that it can use whatever
-        # package naming scheme it likes.
-        spack.install_layout.create_install_directory(self.spec)
-
-        def cleanup():
-            if not keep_prefix:
-                # If anything goes wrong, remove the install prefix
-                self.remove_prefix()
-            else:
-                tty.warn("Keeping install prefix in place despite error.",
-                         "Spack will think this package is installed." +
-                         "Manually remove this directory to fix:",
-                         self.prefix, wrap=True)
-
-
-        def real_work():
-            try:
-                tty.msg("Building %s." % self.name)
-
-                # Run the pre-install hook in the child process after
-                # the directory is created.
-                spack.hooks.pre_install(self)
-
-                # Set up process's build environment before running install.
-                if fake:
-                    self.do_fake_install()
-                else:
-                    # Do the real install in the source directory.
-                    self.stage.chdir_to_source()
-
-                    # This redirects I/O to a build log (and optionally to the terminal)
-                    log_path = join_path(os.getcwd(), 'spack-build.out')
-                    log_file = open(log_path, 'w')
-                    with log_output(log_file, verbose, sys.stdout.isatty(), True):
-                        self.install(self.spec, self.prefix)
-
-                # Ensure that something was actually installed.
-                self._sanity_check_install()
-
-                # Move build log into install directory on success
-                if not fake:
-                    log_install_path = spack.install_layout.build_log_path(self.spec)
-                    install(log_path, log_install_path)
-
-                # On successful install, remove the stage.
-                if not keep_stage:
-                    self.stage.destroy()
-
-                # Stop timer.
-                self._total_time = time.time() - start_time
-                build_time = self._total_time - self._fetch_time
-
-                tty.msg("Successfully installed %s." % self.name,
-                        "Fetch: %s.  Build: %s.  Total: %s."
-                        % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
-                print_pkg(self.prefix)
-
-            except ProcessError, e:
-                # Annotate with location of build log.
-                e.build_log = log_path
-                cleanup()
-                raise e
-
-            except:
-                # other exceptions just clean up and raise.
-                cleanup()
-                raise
+                fake=fake, skip_patch=skip_patch, verbose=verbose, make_jobs=make_jobs)
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
-        # Do the build.
-        spack.build_environment.fork(self, real_work)
+        # Then install the package itself.
+        def build_process():
+            """Forked for each build. Has its own process and python
+               module space set up by build_environment.fork()."""
+            start_time = time.time()
+            if not fake:
+                if not skip_patch:
+                    self.do_patch()
+                else:
+                    self.do_stage()
+
+            tty.msg("Building %s" % self.name)
+
+            self.stage.keep = keep_stage
+            with self.stage:
+                # Run the pre-install hook in the child process after
+                # the directory is created.
+                spack.hooks.pre_install(self)
+
+                if fake:
+                    self.do_fake_install()
+                else:
+                    # Do the real install in the source directory.
+                     self.stage.chdir_to_source()
+
+                     # Save the build environment in a file before building.
+                     env_path = join_path(os.getcwd(), 'spack-build.env')
+
+                     try:
+                        # Redirect I/O to a build log (and optionally to the terminal)
+                        log_path = join_path(os.getcwd(), 'spack-build.out')
+                        log_file = open(log_path, 'w')
+                        with log_output(log_file, verbose, sys.stdout.isatty(), True):
+                            dump_environment(env_path)
+                            self.install(self.spec, self.prefix)
+
+                     except ProcessError as e:
+                         # Annotate ProcessErrors with the location of the build log.
+                         e.build_log = log_path
+                         raise e
+
+                     # Ensure that something was actually installed.
+                     self._sanity_check_install()
+
+                     # Copy provenance into the install directory on success
+                     log_install_path = spack.install_layout.build_log_path(self.spec)
+                     env_install_path = spack.install_layout.build_env_path(self.spec)
+                     packages_dir = spack.install_layout.build_packages_path(self.spec)
+
+                     install(log_path, log_install_path)
+                     install(env_path, env_install_path)
+                     dump_packages(self.spec, packages_dir)
+
+            # Stop timer.
+            self._total_time = time.time() - start_time
+            build_time = self._total_time - self._fetch_time
+
+            tty.msg("Successfully installed %s" % self.name,
+                    "Fetch: %s.  Build: %s.  Total: %s."
+                    % (_hms(self._fetch_time), _hms(build_time), _hms(self._total_time)))
+            print_pkg(self.prefix)
+
+        try:
+            # Create the install prefix and fork the build process.
+            spack.install_layout.create_install_directory(self.spec)
+            spack.build_environment.fork(self, build_process)
+        except:
+            # remove the install prefix if anything went wrong during install.
+            if not keep_prefix:
+                self.remove_prefix()
+            else:
+                tty.warn("Keeping install prefix in place despite error.",
+                         "Spack will think this package is installed. " +
+                         "Manually remove this directory to fix:",
+                         self.prefix, wrap=True)
+            raise
 
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
@@ -1043,7 +1028,7 @@ class Package(object):
         # Uninstalling in Spack only requires removing the prefix.
         self.remove_prefix()
         spack.installed_db.remove(self.spec)
-        tty.msg("Successfully uninstalled %s." % self.spec.short_spec)
+        tty.msg("Successfully uninstalled %s" % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks
         spack.hooks.post_uninstall(self)
@@ -1090,7 +1075,7 @@ class Package(object):
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
         spack.install_layout.add_extension(self.extendee_spec, self.spec)
-        tty.msg("Activated extension %s for %s."
+        tty.msg("Activated extension %s for %s"
                 % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
 
 
@@ -1142,7 +1127,7 @@ class Package(object):
         if self.activated:
             spack.install_layout.remove_extension(self.extendee_spec, self.spec)
 
-        tty.msg("Deactivated extension %s for %s."
+        tty.msg("Deactivated extension %s for %s"
                 % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
 
 
@@ -1170,8 +1155,7 @@ class Package(object):
 
     def do_clean(self):
         """Removes the package's build stage and source tarball."""
-        if os.path.exists(self.stage.path):
-            self.stage.destroy()
+        self.stage.destroy()
 
 
     def format_doc(self, **kwargs):
@@ -1210,7 +1194,7 @@ class Package(object):
         try:
             return spack.util.web.find_versions_of_archive(
                 *self.all_urls, list_url=self.list_url, list_depth=self.list_depth)
-        except spack.error.NoNetworkConnectionError, e:
+        except spack.error.NoNetworkConnectionError as e:
             tty.die("Package.fetch_versions couldn't connect to:",
                     e.url, e.message)
 
@@ -1228,8 +1212,8 @@ class Package(object):
 
     @property
     def rpath_args(self):
-        """Get the rpath args as a string, with -Wl,-rpath= for each element."""
-        return " ".join("-Wl,-rpath=%s" % p for p in self.rpath)
+        """Get the rpath args as a string, with -Wl,-rpath, for each element."""
+        return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
 
 def validate_package_url(url_string):
@@ -1240,6 +1224,52 @@ def validate_package_url(url_string):
 
     if not allowed_archive(url_string):
         tty.die("Invalid file type in URL: '%s'" % url_string)
+
+
+def dump_packages(spec, path):
+    """Dump all package information for a spec and its dependencies.
+
+       This creates a package repository within path for every
+       namespace in the spec DAG, and fills the repos wtih package
+       files and patch files for every node in the DAG.
+    """
+    mkdirp(path)
+
+    # Copy in package.py files from any dependencies.
+    # Note that we copy them in as they are in the *install* directory
+    # NOT as they are in the repository, because we want a snapshot of
+    # how *this* particular build was done.
+    for node in spec.traverse():
+        if node is not spec:
+            # Locate the dependency package in the install tree and find
+            # its provenance information.
+            source = spack.install_layout.build_packages_path(node)
+            source_repo_root = join_path(source, node.namespace)
+
+            # There's no provenance installed for the source package.  Skip it.
+            # User can always get something current from the builtin repo.
+            if not os.path.isdir(source_repo_root):
+                continue
+
+            # Create a source repo and get the pkg directory out of it.
+            try:
+                source_repo = spack.repository.Repo(source_repo_root)
+                source_pkg_dir = source_repo.dirname_for_package_name(node.name)
+            except RepoError as e:
+                tty.warn("Warning: Couldn't copy in provenance for %s" % node.name)
+
+        # Create a destination repository
+        dest_repo_root = join_path(path, node.namespace)
+        if not os.path.exists(dest_repo_root):
+            spack.repository.create_repo(dest_repo_root)
+        repo = spack.repository.Repo(dest_repo_root)
+
+        # Get the location of the package in the dest repo.
+        dest_pkg_dir = repo.dirname_for_package_name(node.name)
+        if node is not spec:
+            install_tree(source_pkg_dir, dest_pkg_dir)
+        else:
+            spack.repo.dump_provenance(node, dest_pkg_dir)
 
 
 def print_pkg(message):
@@ -1292,7 +1322,7 @@ class PackageVersionError(PackageError):
     """Raised when a version URL cannot automatically be determined."""
     def __init__(self, version):
         super(PackageVersionError, self).__init__(
-            "Cannot determine a URL automatically for version %s." % version,
+            "Cannot determine a URL automatically for version %s" % version,
             "Please provide a url for this version in the package.py file.")
 
 

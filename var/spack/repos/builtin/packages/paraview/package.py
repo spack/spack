@@ -2,9 +2,11 @@ from spack import *
 
 class Paraview(Package):
     homepage = 'http://www.paraview.org'
-    url      = 'http://www.paraview.org/files/v4.4/ParaView-v4.4.0-source.tar.gz'
+    url      = 'http://www.paraview.org/files/v5.0/ParaView-v'
+    _url_str = 'http://www.paraview.org/files/v%s/ParaView-v%s-source.tar.gz'
 
-    version('4.4.0', 'fa1569857dd680ebb4d7ff89c2227378', url='http://www.paraview.org/files/v4.4/ParaView-v4.4.0-source.tar.gz')
+    version('4.4.0', 'fa1569857dd680ebb4d7ff89c2227378')
+    version('5.0.0', '4598f0b421460c8bbc635c9a1c3bdbee')
 
     variant('python', default=False, description='Enable Python support')
 
@@ -14,6 +16,7 @@ class Paraview(Package):
 
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('qt', default=False, description='Enable Qt support')
+    variant('opengl2', default=False, description='Enable OPengl2 backend')
 
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python')
@@ -24,8 +27,8 @@ class Paraview(Package):
 
     depends_on('bzip2')
     depends_on('freetype')
-    depends_on('hdf5')
     depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5~mpi', when='~mpi')
     depends_on('jpeg')
     depends_on('libpng')
     depends_on('libtiff')
@@ -34,6 +37,11 @@ class Paraview(Package):
     #depends_on('protobuf') # version mismatches?
     #depends_on('sqlite') # external version not supported
     depends_on('zlib')
+    
+    def url_for_version(self, version):
+        """Handle ParaView version-based custom URLs."""
+        return self._url_str % (version.up_to(2), version)
+    
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):

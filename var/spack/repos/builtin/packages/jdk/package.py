@@ -28,7 +28,7 @@ class Jdk(Package):
         '-H', # specify required License Agreement cookie
         'Cookie: oraclelicense=accept-securebackup-cookie']
 
-    def do_fetch(self):
+    def do_fetch(self, mirror_only=False):
         # Add our custom curl commandline options
         tty.msg(
             "[Jdk] Adding required commandline options to curl " +
@@ -39,7 +39,7 @@ class Jdk(Package):
             spack.curl.add_default_arg(option)
 
         # Now perform the actual fetch
-        super(Jdk, self).do_fetch()
+        super(Jdk, self).do_fetch(mirror_only)
 
 
     def install(self, spec, prefix):

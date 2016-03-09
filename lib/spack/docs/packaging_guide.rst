@@ -84,7 +84,7 @@ always choose to download just one tarball initially, and run
 
    If it fails entirely, you can get minimal boilerplate by using
    :ref:`spack-edit-f`, or you can manually create a directory and
-   ``package.py`` file for the package in ``var/spack/packages``.
+   ``package.py`` file for the package in ``var/spack/repos/builtin/packages``.
 
 .. note::
 
@@ -203,7 +203,7 @@ edit`` command:
 So, if you used ``spack create`` to create a package, then saved and
 closed the resulting file, you can get back to it with ``spack edit``.
 The ``cmake`` package actually lives in
-``$SPACK_ROOT/var/spack/packages/cmake/package.py``, but this provides
+``$SPACK_ROOT/var/spack/repos/builtin/packages/cmake/package.py``, but this provides
 a much simpler shortcut and saves you the trouble of typing the full
 path.
 
@@ -269,18 +269,18 @@ live in Spack's directory structure.  In general, `spack-create`_ and
 `spack-edit`_ handle creating package files for you, so you can skip
 most of the details here.
 
-``var/spack/packages``
+``var/spack/repos/builtin/packages``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 A Spack installation directory is structured like a standard UNIX
 install prefix (``bin``, ``lib``, ``include``, ``var``, ``opt``,
 etc.).  Most of the code for Spack lives in ``$SPACK_ROOT/lib/spack``.
-Packages themselves live in ``$SPACK_ROOT/var/spack/packages``.
+Packages themselves live in ``$SPACK_ROOT/var/spack/repos/builtin/packages``.
 
 If you ``cd`` to that directory, you will see directories for each
 package:
 
-.. command-output::  cd $SPACK_ROOT/var/spack/packages;  ls -CF
+.. command-output::  cd $SPACK_ROOT/var/spack/repos/builtin/packages;  ls -CF
    :shell:
    :ellipsis: 10
 
@@ -288,7 +288,7 @@ Each directory contains a file called ``package.py``, which is where
 all the python code for the package goes.  For example, the ``libelf``
 package lives in::
 
-   $SPACK_ROOT/var/spack/packages/libelf/package.py
+   $SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py
 
 Alongside the ``package.py`` file, a package may contain extra
 directories or files (like patches) that it needs to build.
@@ -301,7 +301,7 @@ Packages are named after the directory containing ``package.py``.  So,
 ``libelf``'s ``package.py`` lives in a directory called ``libelf``.
 The ``package.py`` file defines a class called ``Libelf``, which
 extends Spack's ``Package`` class.  for example, here is
-``$SPACK_ROOT/var/spack/packages/libelf/package.py``:
+``$SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py``:
 
 .. code-block:: python
    :linenos:
@@ -328,7 +328,7 @@ these:
    $ spack install libelf@0.8.13
 
 Spack sees the package name in the spec and looks for
-``libelf/package.py`` in ``var/spack/packages``.  Likewise, if you say
+``libelf/package.py`` in ``var/spack/repos/builtin/packages``.  Likewise, if you say
 ``spack install py-numpy``, then Spack looks for
 ``py-numpy/package.py``.
 
@@ -400,6 +400,35 @@ construct the new one for ``8.2.1``.
 
 When you supply a custom URL for a version, Spack uses that URL
 *verbatim* and does not perform extrapolation.
+
+Skipping the expand step
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spack normally expands archives automatically after downloading
+them. If you want to skip this step (e.g., for self-extracting
+executables and other custom archive types), you can add
+``expand=False`` to a ``version`` directive.
+
+.. code-block:: python
+
+   version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
+           url='http://example.com/foo-8.2.1-special-version.tar.gz', 'expand=False')
+
+When ``expand`` is set to ``False``, Spack sets the current working
+directory to the directory containing the downloaded archive before it
+calls your ``install`` method.  Within ``install``, the path to the
+downloaded archive is available as ``self.stage.archive_file``.
+
+Here is an example snippet for packages distribuetd as self-extracting
+archives.  The example sets permissions on the downloaded file to make
+it executable, then runs it with some arguments.
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       set_executable(self.stage.archive_file)
+       installer = Executable(self.stage.archive_file)
+       installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
 
 Checksums
 ~~~~~~~~~~~~~~~~~
@@ -703,7 +732,7 @@ supply is a filename, then the patch needs to live within the spack
 source tree.  For example, the patch above lives in a directory
 structure like this::
 
-   $SPACK_ROOT/var/spack/packages/
+   $SPACK_ROOT/var/spack/repos/builtin/packages/
        mvapich2/
            package.py
            ad_lustre_rwcontig_open_source.patch
@@ -1597,7 +1626,7 @@ The last element of a package is its ``install()`` method.  This is
 where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
-.. literalinclude::  ../../../var/spack/packages/libelf/package.py
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/libelf/package.py
    :start-after: 0.8.12
    :linenos:
 
@@ -1775,15 +1804,15 @@ Compile-time library search paths
   * ``-L$dep_prefix/lib``
   * ``-L$dep_prefix/lib64``
 Runtime library search paths (RPATHs)
-  * ``-Wl,-rpath=$dep_prefix/lib``
-  * ``-Wl,-rpath=$dep_prefix/lib64``
+  * ``-Wl,-rpath,$dep_prefix/lib``
+  * ``-Wl,-rpath,$dep_prefix/lib64``
 Include search paths
   * ``-I$dep_prefix/include``
 
 An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
 build will have ``-I$LIBELF_PREFIX/include``,
-``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath=$LIBELF_PREFIX/lib``
+``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath,$LIBELF_PREFIX/lib``
 inserted on the command line.  This is done transparently to the
 project's build system, which will just think it's using a system
 where ``libelf`` is readily available.  Because of this, you **do
@@ -2171,6 +2200,15 @@ Filtering functions
   string for the particular match.
 
   Examples:
+
+  #. Filtering a Makefile to force it to use Spack's compiler wrappers:
+
+     .. code-block:: python
+
+        filter_file(r'^CC\s*=.*',  spack_cc,  'Makefile')
+        filter_file(r'^CXX\s*=.*', spack_cxx, 'Makefile')
+        filter_file(r'^F77\s*=.*', spack_f77, 'Makefile')
+        filter_file(r'^FC\s*=.*',  spack_fc,  'Makefile')
 
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 

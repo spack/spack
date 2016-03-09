@@ -23,6 +23,7 @@ class Qt(Package):
     version('3.3.8b', '9f05b4125cfe477cc52c9742c3c09009',
             url="http://download.qt.io/archive/qt/3/qt-x11-free-3.3.8b.tar.gz")
 
+    variant('mesa', default=False, description='depend on mesa')
     # Add patch for compile issues with qt3 found with use in the OpenSpeedShop project
     variant('krellpatch', default=False, description="build with openspeedshop based patch.")
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
@@ -48,7 +49,7 @@ class Qt(Package):
     # depends_on("icu4c")
 
     # OpenGL hardware acceleration
-    depends_on("mesa", when='@4:')
+    depends_on("mesa", when='@4:+mesa')
     depends_on("libxcb")
 
 

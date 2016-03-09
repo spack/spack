@@ -903,7 +903,7 @@ Or, similarly with modules, you could type:
    $ spack load mpich %gcc@4.4.7
 
 These commands will add appropriate directories to your ``PATH``,
-``MANPATH``, and ``LD_LIBRARY_PATH``.  When you no longer want to use
+``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH``.  When you no longer want to use
 a package, you can type unload or unuse similarly:
 
 .. code-block:: sh

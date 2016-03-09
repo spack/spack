@@ -28,19 +28,21 @@ class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
     homepage  = 'https://www.cmake.org'
+    url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
 
-    version('2.8.10.2', '097278785da7182ec0aea8769d06860c',
-            url = 'http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz')
-
-    version('3.0.2', 'db4c687a31444a929d2fdc36c4dfb95f',
-            url = 'http://www.cmake.org/files/v3.0/cmake-3.0.2.tar.gz')
-
-    version('3.4.0', 'cd3034e0a44256a0917e254167217fc8',
-            url = 'http://cmake.org/files/v3.4/cmake-3.4.0.tar.gz')
+    version('3.4.3',    '4cb3ff35b2472aae70f542116d616e63')
+    version('3.4.0',    'cd3034e0a44256a0917e254167217fc8')
+    version('3.3.1',    '52638576f4e1e621fed6c3410d3a1b12')
+    version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
+    version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
     variant('ncurses', default=True, description='Enables the build of the ncurses gui')
-
     depends_on('ncurses', when='+ncurses')
+
+    def url_for_version(self, version):
+        """Handle CMake's version-based custom URLs."""
+        return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (version.up_to(2), version)
+
 
     def install(self, spec, prefix):
         configure('--prefix='   + prefix,

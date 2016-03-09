@@ -26,12 +26,8 @@ import os
 import shutil
 
 from llnl.util.filesystem import *
-
-import spack
-from spack.version import ver
 from spack.stage import Stage
 from spack.util.executable import which
-
 
 #
 # VCS Systems used by mock repo code.
@@ -53,6 +49,12 @@ class MockRepo(object):
         # Full path to the repo within the stage.
         self.path = join_path(self.stage.path, repo_name)
         mkdirp(self.path)
+
+
+    def destroy(self):
+        """Destroy resources associated with this mock repo."""
+        if self.stage:
+            self.stage.destroy()
 
 
 class MockArchive(MockRepo):

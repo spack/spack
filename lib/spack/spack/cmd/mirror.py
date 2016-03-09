@@ -53,11 +53,13 @@ def setup_parser(subparser):
     create_parser.add_argument('-d', '--directory', default=None,
                                help="Directory in which to create mirror.")
     create_parser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="Specs of packages to put in mirror")
+        'specs', nargs=argparse.REMAINDER,
+        help="Specs of packages to put in mirror")
     create_parser.add_argument(
         '-f', '--file', help="File with specs of packages to put in mirror.")
     create_parser.add_argument(
-        '-D', '--dependencies', action='store_true', help="Also fetch all dependencies")
+        '-D', '--dependencies', action='store_true',
+        help="Also fetch all dependencies")
     create_parser.add_argument(
         '-o', '--one-version-per-spec', action='store_const', const=1, default=0,
         help="Only fetch one 'preferred' version per spec, not all known versions.")
@@ -74,7 +76,8 @@ def setup_parser(subparser):
         help="Configuration scope to modify.")
 
     # Remove
-    remove_parser = sp.add_parser('remove', aliases=['rm'], help=mirror_remove.__doc__)
+    remove_parser = sp.add_parser('remove', aliases=['rm'],
+                                  help=mirror_remove.__doc__)
     remove_parser.add_argument('name')
     remove_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
@@ -123,7 +126,7 @@ def mirror_remove(args):
 
     old_value = mirrors.pop(name)
     spack.config.update_config('mirrors', mirrors, scope=args.scope)
-    tty.msg("Removed mirror %s with url %s." % (name, old_value))
+    tty.msg("Removed mirror %s with url %s" % (name, old_value))
 
 
 def mirror_list(args):
@@ -141,15 +144,17 @@ def mirror_list(args):
 
 
 def _read_specs_from_file(filename):
+    specs = []
     with open(filename, "r") as stream:
         for i, string in enumerate(stream):
             try:
                 s = Spec(string)
                 s.package
-                args.specs.append(s)
+                specs.append(s)
             except SpackError, e:
                 tty.die("Parse error in %s, line %d:" % (args.file, i+1),
                         ">>> " + string, str(e))
+    return specs
 
 
 def mirror_create(args):
@@ -169,6 +174,7 @@ def mirror_create(args):
         specs = [Spec(n) for n in spack.repo.all_package_names()]
         specs.sort(key=lambda s: s.format("$_$@").lower())
 
+    # If the user asked for dependencies, traverse spec DAG get them.
     if args.dependencies:
         new_specs = set()
         for spec in specs:
@@ -197,7 +203,7 @@ def mirror_create(args):
 
     verb = "updated" if existed else "created"
     tty.msg(
-        "Successfully %s mirror in %s." % (verb, directory),
+        "Successfully %s mirror in %s" % (verb, directory),
         "Archive stats:",
         "  %-4d already present"  % p,
         "  %-4d added"            % m,

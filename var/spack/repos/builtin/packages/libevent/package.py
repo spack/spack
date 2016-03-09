@@ -22,9 +22,16 @@ class Libevent(Package):
     version('2.0.13', 'af786b4b3f790c9d3279792edf7867fc')
     version('2.0.12', '42986228baf95e325778ed328a93e070')
 
+    variant('openssl', default=True, description="Build with encryption enabled at the libevent level.")
+    depends_on('openssl', when='+openssl')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure_args = []
+        if '+openssl' in spec:
+            configure_args.append('--enable-openssl')
+        else:
+            configure_args.append('--enable-openssl')
 
+        configure("--prefix=%s" % prefix, *configure_args)
         make()
         make("install")
