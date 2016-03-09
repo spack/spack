@@ -15,6 +15,7 @@ class Petsc(Package):
     version('3.5.3', 'd4fd2734661e89f18ac6014b5dd1ef2f')
     version('3.5.2', 'ad170802b3b058b5deb9cd1f968e7e13')
     version('3.5.1', 'a557e029711ebf425544e117ffa44d8f')
+    version('3.4.4', '7edbc68aa6d8d6a3295dd5f6c2f6979d')
 
     variant('shared', default=True, description='Enables the build of shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
@@ -25,21 +26,21 @@ class Petsc(Package):
     variant('boost', default=True, description='Activates support for Boost')
     variant('hypre', default=True, description='Activates support for Hypre')
 
-    # Build dependencies
-    depends_on('python @2.6:2.9')  # requires Python for building
-
     # Virtual dependencies
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
 
+    # Build dependencies
+    depends_on('python @2.6:2.7')
+
     # Other dependencies
     depends_on('boost', when='+boost')
     depends_on('metis', when='+metis')
 
-    depends_on('hdf5~cxx~unsupported+mpi', when='+hdf5+mpi')
+    depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('parmetis', when='+metis+mpi')
-    depends_on('hypre', when='+hypre+mpi')
+    depends_on('hypre',    when='+hypre+mpi')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
@@ -50,7 +51,12 @@ class Petsc(Package):
                 '--with-mpi=0'
             ]
             error_message_fmt = '\t{library} support requires "+mpi" to be activated'
-            errors = [error_message_fmt.format(library=x) for x in ('hdf5', 'hypre') if ('+'+x) in self.spec]
+
+            # If mpi is disabled (~mpi), it's an error to have any of these enabled.
+            # This generates a list of any such errors.
+            errors = [error_message_fmt.format(library=x)
+                      for x in ('hdf5', 'hypre', 'parmetis')
+                      if ('+'+x) in self.spec]
             if errors:
                 errors = ['incompatible variants given'] + errors
                 raise RuntimeError('\n'.join(errors))
@@ -70,7 +76,7 @@ class Petsc(Package):
             '--with-blas-lapack-dir=%s' % spec['lapack'].prefix
         ])
         # Activates library support if needed
-        for library in ('metis', 'boost', 'hfd5', 'hypre', 'parmetis'):
+        for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis'):
             options.append(
                 '--with-{library}={value}'.format(library=library, value=('1' if library in spec else '0'))
             )
@@ -79,8 +85,8 @@ class Petsc(Package):
                     '--with-{library}-dir={path}'.format(library=library, path=spec[library].prefix)
                 )
 
-
         configure('--prefix=%s' % prefix, *options)
+
         # PETSc has its own way of doing parallel make.
         make('MAKE_NP=%s' % make_jobs, parallel=False)
         make("install")
