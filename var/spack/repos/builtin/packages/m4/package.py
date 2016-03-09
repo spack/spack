@@ -7,17 +7,13 @@ class M4(Package):
 
     version('1.4.17', 'a5e9954b1dae036762f7b13673a2cf76')
 
-    patch('inline-pgi.patch', when='@1.4.17')
+    patch('pgi.patch', when='@1.4.17')
 
     variant('sigsegv', default=True, description="Build the libsigsegv dependency")
 
     depends_on('libsigsegv', when='+sigsegv')
 
     def install(self, spec, prefix):
-        # After patch, update generated configuration files that depend on extern-inline.m4
-        autoreconf = which('autoreconf')
-        autoreconf()
-
         configure_args = []
         if 'libsigsegv' in spec:
             configure_args.append('--with-libsigsegv-prefix=%s' % spec['libsigsegv'].prefix)
