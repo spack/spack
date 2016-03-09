@@ -25,15 +25,13 @@
 """
 These tests ensure that our lock works correctly.
 """
-import unittest
-import os
-import tempfile
 import shutil
+import tempfile
+import unittest
 from multiprocessing import Process
 
-from llnl.util.lock import *
 from llnl.util.filesystem import join_path, touch
-
+from llnl.util.lock import *
 from spack.util.multiproc import Barrier
 
 # This is the longest a failed test will take, as the barriers will

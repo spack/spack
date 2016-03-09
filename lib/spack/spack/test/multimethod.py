@@ -25,14 +25,11 @@
 """
 Test for multi_method dispatch.
 """
-import unittest
 
 import spack
 from spack.multimethod import *
-from spack.version import *
-from spack.spec import Spec
-from spack.multimethod import when
 from spack.test.mock_packages_test import *
+from spack.version import *
 
 
 class MultiMethodTest(MockPackagesTest):

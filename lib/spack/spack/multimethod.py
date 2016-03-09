@@ -138,7 +138,7 @@ class when(object):
        methods like install() that depend on the package's spec.
        For example:
 
-       .. code-block::
+       .. code-block:: python
 
           class SomePackage(Package):
               ...
@@ -163,26 +163,28 @@ class when(object):
        if you only have part of the install that is platform specific, you
        could do this:
 
-       class SomePackage(Package):
-           ...
-           # virtual dependence on MPI.
-           # could resolve to mpich, mpich2, OpenMPI
-           depends_on('mpi')
+       .. code-block:: python
 
-           def setup(self):
-               # do nothing in the default case
-               pass
+          class SomePackage(Package):
+              ...
+              # virtual dependence on MPI.
+              # could resolve to mpich, mpich2, OpenMPI
+              depends_on('mpi')
 
-           @when('^openmpi')
-           def setup(self):
-               # do something special when this is built with OpenMPI for
-               # its MPI implementations.
+              def setup(self):
+                  # do nothing in the default case
+                  pass
+
+              @when('^openmpi')
+              def setup(self):
+                  # do something special when this is built with OpenMPI for
+                  # its MPI implementations.
 
 
-           def install(self, prefix):
-               # Do common install stuff
-               self.setup()
-               # Do more common install stuff
+              def install(self, prefix):
+                  # Do common install stuff
+                  self.setup()
+                  # Do more common install stuff
 
        There must be one (and only one) @when clause that matches the
        package's spec.  If there is more than one, or if none match,
