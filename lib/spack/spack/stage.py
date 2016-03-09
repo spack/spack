@@ -88,7 +88,8 @@ class Stage(object):
     similar, and are intended to persist for only one run of spack.
     """
 
-    def __init__(self, url_or_fetch_strategy, name=None, mirror_path=None, keep=None):
+    def __init__(self, url_or_fetch_strategy,
+                 name=None, mirror_path=None, keep=False):
         """Create a stage object.
            Parameters:
              url_or_fetch_strategy
@@ -108,10 +109,9 @@ class Stage(object):
 
              keep
                  By default, when used as a context manager, the Stage
-                 is cleaned up when everything goes well, and it is
-                 kept intact when an exception is raised. You can
-                 override this behavior by setting keep to True
-                 (always keep) or False (always delete).
+                 is deleted on exit when no exceptions are raised.
+                 Pass True to keep the stage intact even if no
+                 exceptions are raised.
         """
         # TODO: fetch/stage coupling needs to be reworked -- the logic
         # TODO: here is convoluted and not modular enough.
@@ -166,12 +166,8 @@ class Stage(object):
         Returns:
             Boolean
         """
-        if self.keep is None:
-            # Default: delete when there are no exceptions.
-            if exc_type is None: self.destroy()
-
-        elif not self.keep:
-            # Overridden. Either always keep or always delete.
+        # Delete when there are no exceptions, unless asked to keep.
+        if exc_type is None and not self.keep:
             self.destroy()
 
 
@@ -195,8 +191,8 @@ class Stage(object):
             real_tmp = os.path.realpath(self.tmp_root)
 
             if spack.use_tmp_stage:
-                # If we're using a tmp dir, it's a link, and it points at the right spot,
-                # then keep it.
+                # If we're using a tmp dir, it's a link, and it points at the
+                # right spot, then keep it.
                 if (real_path.startswith(real_tmp) and os.path.exists(real_path)):
                     return False
                 else:
@@ -441,7 +437,7 @@ class StageComposite:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         for item in reversed(self):
-            item.keep = getattr(self, 'keep', None)
+            item.keep = getattr(self, 'keep', False)
             item.__exit__(exc_type, exc_val, exc_tb)
 
     #
