@@ -73,19 +73,32 @@ with a high level view of Spack's directory structure::
   spack/                  <- installation root
      bin/
         spack             <- main spack executable
+
+     etc/
+        spack/            <- Spack config files.
+                             Can be overridden by files in ~/.spack.
+
      var/
         spack/            <- build & stage directories
+        repos/            <- contains package repositories
+           builtin/       <- pkg repository that comes with Spack
+              repo.yaml   <- descriptor for the builtin repository
+              packages/   <- directories under here contain packages
+
      opt/
         spack/            <- packages are installed here
+
      lib/
         spack/
            docs/          <- source for this documentation
            env/           <- compiler wrappers for build environment
 
+           external/      <- external libs included in Spack distro
+           llnl/          <- some general-use libraries
+
            spack/         <- spack module; contains Python code
               cmd/        <- each file in here is a spack subcommand
               compilers/  <- compiler description files
-              packages/   <- each file in here is a spack package
               test/       <- unit test modules
               util/       <- common code
 

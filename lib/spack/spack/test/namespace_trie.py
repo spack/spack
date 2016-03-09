@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://llnl.github.io/spack
+# For details, see https://software.llnl.gov/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import unittest
+
 from spack.util.naming import NamespaceTrie
 
 

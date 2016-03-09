@@ -6,14 +6,13 @@ class Netcdf(Package):
     data formats that support the creation, access, and sharing of array-oriented
     scientific data."""
 
-    homepage = "http://www.unidata.ucar.edu/software/netcdf/"
+    homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.tar.gz"
 
     version('4.4.0', 'cffda0cbd97fdb3a06e9274f7aef438e')
     version('4.3.3', '5fbd0e108a54bd82cb5702a73f56d2ae')
 
     variant('mpi', default=True, description='Enables MPI parallelism')
-    variant('fortran', default=False, description="Download and install NetCDF-Fortran")
     variant('hdf4',    default=False, description="Enable HDF4 support")
 
     # Dependencies:
@@ -66,11 +65,7 @@ class Netcdf(Package):
 
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.
-        # They can be installed separately, but this bootstrap procedure
-        # should be able to install both at the same time.
-        # Note: this is a new experimental feature.
-        if '+fortran' in spec:
-            config_args.append("--enable-remote-fortran-bootstrap")
+        # Use the netcdf-fortran package to install Fortran support.
 
         config_args.append('CPPFLAGS=%s' % ' '.join(CPPFLAGS))
         config_args.append('LDFLAGS=%s'  % ' '.join(LDFLAGS))
@@ -79,8 +74,3 @@ class Netcdf(Package):
         configure(*config_args)
         make()
         make("install")
-
-        # After installing NetCDF-C, install NetCDF-Fortran
-        if '+fortran' in spec:
-            make("build-netcdf-fortran")
-            make("install-netcdf-fortran")

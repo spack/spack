@@ -22,7 +22,7 @@ go:
    $ spack install libelf
 
 For a richer experience, use Spack's `shell support
-<http://llnl.github.io/spack/basic_usage.html#environment-modules>`_:
+<http://software.llnl.gov/spack/basic_usage.html#environment-modules>`_:
 
 .. code-block:: sh
 

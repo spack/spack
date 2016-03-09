@@ -256,12 +256,12 @@ class Compiler(object):
 
 
     def __repr__(self):
-        """Return a string represntation of the compiler toolchain."""
+        """Return a string representation of the compiler toolchain."""
         return self.__str__()
 
 
     def __str__(self):
-        """Return a string represntation of the compiler toolchain."""
+        """Return a string representation of the compiler toolchain."""
         return "%s(%s)" % (
             self.name, '\n     '.join((str(s) for s in (self.cc, self.cxx, self.f77, self.fc))))
 
