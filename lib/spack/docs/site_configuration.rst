@@ -75,7 +75,7 @@ directory. Here's an example of an external configuration:
             openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
 
 This example lists three installations of OpenMPI, one built with gcc,
-one built with gcc and debug information, and another built with OpenMPI.
+one built with gcc and debug information, and another built with Intel.
 If Spack is asked to build a package that uses one of these MPIs as a 
 dependency, it will use the the pre-installed OpenMPI in
 the given directory.  This example also specifies that Spack should never
@@ -116,7 +116,7 @@ be:
 
 The addition of the ``nobuild`` flag tells Spack that it should never build
 its own version of OpenMPI, and it will instead always rely on a pre-built
-OpenMPI.  Similar to ``path``, ``nobuild`` is specified as a property under
+OpenMPI.  Similar to ``paths``, ``nobuild`` is specified as a property under
 a package name.
 
 The ``nobuild`` does not need to be paired with external packages.  
