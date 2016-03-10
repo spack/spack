@@ -214,7 +214,8 @@ section_schemas = {
                             'version': {
                                 'type' : 'array',
                                 'default' : [],
-                                'items' : { 'type' : 'string' } }, #version strings
+                                'items' : { 'anyOf' : [ { 'type' : 'string' },
+                                                        { 'type' : 'number'}]}}, #version strings
                             'compiler': {
                                 'type' : 'array',
                                 'default' : [],
@@ -573,7 +574,7 @@ class ConfigFormatError(ConfigError):
         # Try to get line number from erroneous instance and its parent
         instance_mark = getattr(validation_error.instance, '_start_mark', None)
         parent_mark = getattr(validation_error.parent, '_start_mark', None)
-        path = getattr(validation_error, 'path', None)
+        path = [str(s) for s in getattr(validation_error, 'path', None)]
 
         # Try really hard to get the parent (which sometimes is not
         # set) This digs it out of the validated structure if it's not

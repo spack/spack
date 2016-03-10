@@ -45,7 +45,7 @@ class PreferredPackages(object):
                 order = order.get(second_key, {})
             if not order:
                 continue
-            return [s.strip() for s in order]
+            return [str(s).strip() for s in order]
         return []
             
 
@@ -98,11 +98,11 @@ class PreferredPackages(object):
         b_index = None
         reverse = -1 if reverse_natural_compare else 1
         for i, cspec in enumerate(specs):
-            if a_index == None and cspec.satisfies(a):
+            if a_index == None and (cspec.satisfies(a) or a.satisfies(cspec)):
                 a_index = i
                 if b_index:
                     break
-            if b_index == None and cspec.satisfies(b):
+            if b_index == None and (cspec.satisfies(b) or b.satisfies(cspec)):
                 b_index = i
                 if a_index:
                     break
