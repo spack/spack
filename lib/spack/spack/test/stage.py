@@ -277,3 +277,38 @@ class StageTest(unittest.TestCase):
             self.check_chdir_to_source(stage, stage_name)
             self.assertFalse('foobar' in os.listdir(stage.source_path))
         self.check_destroy(stage, stage_name)
+
+
+    def test_no_keep_without_exceptions(self):
+        with Stage(archive_url, name=stage_name, keep=False) as stage:
+            pass
+        self.check_destroy(stage, stage_name)
+
+
+    def test_keep_without_exceptions(self):
+        with Stage(archive_url, name=stage_name, keep=True) as stage:
+            pass
+        path = self.get_stage_path(stage, stage_name)
+        self.assertTrue(os.path.isdir(path))
+
+
+    def test_no_keep_with_exceptions(self):
+        try:
+            with Stage(archive_url, name=stage_name, keep=False) as stage:
+                raise Exception()
+
+            path = self.get_stage_path(stage, stage_name)
+            self.assertTrue(os.path.isdir(path))
+        except:
+            pass # ignore here.
+
+
+    def test_keep_exceptions(self):
+        try:
+            with Stage(archive_url, name=stage_name, keep=True) as stage:
+                raise Exception()
+
+            path = self.get_stage_path(stage, stage_name)
+            self.assertTrue(os.path.isdir(path))
+        except:
+            pass # ignore here.
