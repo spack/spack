@@ -129,6 +129,7 @@ from ordereddict_backport import OrderedDict
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
+import copy
 
 import spack
 from spack.error import SpackError
@@ -194,6 +195,49 @@ section_schemas = {
                 'default': [],
                 'items': {
                     'type': 'string'},},},},
+    'packages': {
+        '$schema': 'http://json-schema.org/schema#',
+        'title': 'Spack package configuration file schema',
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            r'packages:?': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'patternProperties': {
+                    r'\w[\w-]*': { # package name
+                        'type': 'object',
+                        'default': {},
+                        'additionalProperties': False,
+                        'properties': {
+                            'version': {
+                                'type' : 'array',
+                                'default' : [],
+                                'items' : { 'anyOf' : [ { 'type' : 'string' },
+                                                        { 'type' : 'number'}]}}, #version strings
+                            'compiler': {
+                                'type' : 'array',
+                                'default' : [],
+                                'items' : { 'type' : 'string' } }, #compiler specs
+                            'nobuild': {
+                                'type':  'boolean',
+                                'default': False,
+                             },
+                            'providers': {
+                                'type':  'object',
+                                'default': {},
+                                'additionalProperties': False,
+                                'patternProperties': {
+                                    r'\w[\w-]*': {
+                                        'type' : 'array',
+                                        'default' : [],
+                                        'items' : { 'type' : 'string' },},},},
+                            'paths': {
+                                'type' : 'object',
+                                'default' : {},
+                            }
+                        },},},},},}
 }
 
 """OrderedDict of config scopes keyed by name.
@@ -494,6 +538,36 @@ def print_section(section):
         raise ConfigError("Error reading configuration: %s" % section)
 
 
+def spec_externals(spec):
+    """Return a list of spec, directory pairs for each external location for spec"""
+    allpkgs = get_config('packages')
+    name = spec.name
+    spec_locations = []
+
+    pkg_paths = allpkgs.get(name, {}).get('paths', None)
+    if not pkg_paths:
+        return []
+
+    for pkg,path in pkg_paths.iteritems():
+        if not spec.satisfies(pkg):
+            continue
+        if not path:
+            continue
+        spec_locations.append( (spack.spec.Spec(pkg), path) )
+    return spec_locations
+
+
+def is_spec_nobuild(spec):
+    """Return true if the spec pkgspec is configured as nobuild"""
+    allpkgs = get_config('packages')
+    name = spec.name
+    if not spec.name in allpkgs:
+        return False
+    if not 'nobuild' in allpkgs[spec.name]:
+        return False
+    return allpkgs[spec.name]['nobuild']
+
+
 class ConfigError(SpackError): pass
 class ConfigFileError(ConfigError): pass
 
@@ -509,7 +583,7 @@ class ConfigFormatError(ConfigError):
         # Try to get line number from erroneous instance and its parent
         instance_mark = getattr(validation_error.instance, '_start_mark', None)
         parent_mark = getattr(validation_error.parent, '_start_mark', None)
-        path = getattr(validation_error, 'path', None)
+        path = [str(s) for s in getattr(validation_error, 'path', None)]
 
         # Try really hard to get the parent (which sometimes is not
         # set) This digs it out of the validated structure if it's not

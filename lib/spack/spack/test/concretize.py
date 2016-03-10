@@ -24,6 +24,7 @@
 ##############################################################################
 import spack
 from spack.spec import Spec, CompilerSpec
+from spack.concretize import find_spec
 from spack.test.mock_packages_test import *
 
 class ConcretizeTest(MockPackagesTest):
@@ -190,3 +191,94 @@ class ConcretizeTest(MockPackagesTest):
         # TODO: not exactly the syntax I would like.
         self.assertTrue(spec['libdwarf'].compiler.satisfies('clang'))
         self.assertTrue(spec['libelf'].compiler.satisfies('clang'))
+
+
+    def test_external_package(self):
+        spec = Spec('externaltool')
+        spec.concretize()
+
+        self.assertEqual(spec['externaltool'].external, '/path/to/external_tool')
+        self.assertFalse('externalprereq' in spec)
+        self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
+
+
+    def test_nobuild_package(self):
+        got_error = False
+        spec = Spec('externaltool%clang')
+        try:
+            spec.concretize()
+        except spack.concretize.NoBuildError:
+            got_error = True
+        self.assertTrue(got_error)
+
+
+    def test_external_and_virtual(self):
+        spec = Spec('externaltest')
+        spec.concretize()
+        self.assertEqual(spec['externaltool'].external, '/path/to/external_tool')
+        self.assertEqual(spec['stuff'].external, '/path/to/external_virtual_gcc')
+        self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
+        self.assertTrue(spec['stuff'].compiler.satisfies('gcc'))
+
+
+    def test_find_spec_parents(self):
+        """Tests the spec finding logic used by concretization. """
+        s = Spec('a +foo',
+                 Spec('b +foo',
+                      Spec('c'),
+                      Spec('d +foo')),
+                 Spec('e +foo'))
+
+        self.assertEqual('a', find_spec(s['b'], lambda s: '+foo' in s).name)
+
+
+    def test_find_spec_children(self):
+        s = Spec('a',
+                 Spec('b +foo',
+                      Spec('c'),
+                      Spec('d +foo')),
+                 Spec('e +foo'))
+        self.assertEqual('d', find_spec(s['b'], lambda s: '+foo' in s).name)
+        s = Spec('a',
+                 Spec('b +foo',
+                      Spec('c +foo'),
+                      Spec('d')),
+                 Spec('e +foo'))
+        self.assertEqual('c', find_spec(s['b'], lambda s: '+foo' in s).name)
+
+
+    def test_find_spec_sibling(self):
+        s = Spec('a',
+                 Spec('b +foo',
+                      Spec('c'),
+                      Spec('d')),
+                 Spec('e +foo'))
+        self.assertEqual('e', find_spec(s['b'], lambda s: '+foo' in s).name)
+        self.assertEqual('b', find_spec(s['e'], lambda s: '+foo' in s).name)
+
+        s = Spec('a',
+                 Spec('b +foo',
+                      Spec('c'),
+                      Spec('d')),
+                 Spec('e',
+                      Spec('f +foo')))
+        self.assertEqual('f', find_spec(s['b'], lambda s: '+foo' in s).name)
+
+
+    def test_find_spec_self(self):
+        s = Spec('a',
+                 Spec('b +foo',
+                      Spec('c'),
+                      Spec('d')),
+                 Spec('e'))
+        self.assertEqual('b', find_spec(s['b'], lambda s: '+foo' in s).name)
+
+
+    def test_find_spec_none(self):
+        s = Spec('a',
+                 Spec('b',
+                      Spec('c'),
+                      Spec('d')),
+                 Spec('e'))
+        self.assertEqual(None, find_spec(s['b'], lambda s: '+foo' in s))
+
