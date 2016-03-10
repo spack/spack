@@ -9,7 +9,7 @@ class NetlibBlas(Package):
 
     version('3.5.0', 'b1d3e3e425b2e44a06760ff173104bdf')
 
-    variant('fpic', default=False, description="Build with -fpic compiler option")
+    variant('fpic', default=True, description="Build with -fpic compiler option")
 
     # virtual dependency
     provides('blas')
