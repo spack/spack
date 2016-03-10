@@ -15,7 +15,8 @@ class Petsc(Package):
 
     variant('shared', default=True, description="Build shared library version")
 
-    depends_on("python @2.6:2.7")   # requires Python for building
+# Since we can't declare a build dependency, this doesn't work.
+#    depends_on("python @2.6:2.7")   # requires Python for building
 
     depends_on("boost")
     depends_on("blas")
