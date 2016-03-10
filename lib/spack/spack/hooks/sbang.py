@@ -35,7 +35,7 @@ import spack.modules
 shebang_limit = 127
 
 def shebang_too_long(path):
-    """Detects whether an file has a shebang line that is too long."""
+    """Detects whether a file has a shebang line that is too long."""
     with open(path, 'r') as script:
         bytes = script.read(2)
         if bytes != '#!':
@@ -47,14 +47,21 @@ def shebang_too_long(path):
 
 def filter_shebang(path):
     """Adds a second shebang line, using sbang, at the beginning of a file."""
+    with open(path, 'r') as original_file:
+        original = original_file.read()
+
+    # This line will be prepended to file
+    new_sbang_line = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
+
+    # Skip files that are already using sbang.
+    if original.startswith(new_sbang_line):
+        return
+
     backup = path + ".shebang.bak"
     os.rename(path, backup)
 
-    with open(backup, 'r') as bak_file:
-        original = bak_file.read()
-
     with open(path, 'w') as new_file:
-        new_file.write('#!/bin/bash %s/bin/sbang\n' % spack.spack_root)
+        new_file.write(new_sbang_line)
         new_file.write(original)
 
     copy_mode(backup, path)
@@ -63,15 +70,29 @@ def filter_shebang(path):
     tty.warn("Patched overly long shebang in %s" % path)
 
 
+def filter_shebangs_in_directory(directory):
+    for file in os.listdir(directory):
+        path = os.path.join(directory, file)
+
+        # only handle files
+        if not os.path.isfile(path):
+            continue
+
+        # only handle links that resolve within THIS package's prefix.
+        if os.path.islink(path):
+            real_path = os.path.realpath(path)
+            if not real_path.startswith(directory + os.sep):
+                continue
+
+        # test the file for a long shebang, and filter
+        if shebang_too_long(path):
+            filter_shebang(path)
+
+
 def post_install(pkg):
     """This hook edits scripts so that they call /bin/bash
        $spack_prefix/bin/sbang instead of something longer than the
        shebang limit."""
     if not os.path.isdir(pkg.prefix.bin):
         return
-
-    for file in os.listdir(pkg.prefix.bin):
-        path = os.path.join(pkg.prefix.bin, file)
-        if shebang_too_long(path):
-            filter_shebang(path)
-
+    filter_shebangs_in_directory(pkg.prefix.bin)
