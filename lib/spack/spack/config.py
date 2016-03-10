@@ -224,6 +224,15 @@ section_schemas = {
                                 'type':  'boolean',
                                 'default': False,
                              },
+                            'providers': {
+                                'type':  'object',
+                                'default': {},
+                                'additionalProperties': False,
+                                'patternProperties': {
+                                    r'\w[\w-]*': {
+                                        'type' : 'array',
+                                        'default' : [],
+                                        'items' : { 'type' : 'string' },},},},
                             'paths': {
                                 'type' : 'object',
                                 'default' : {},
@@ -534,11 +543,11 @@ def spec_externals(spec):
     allpkgs = get_config('packages')
     name = spec.name
     spec_locations = []
-    
+
     pkg_paths = allpkgs.get(name, {}).get('paths', None)
     if not pkg_paths:
         return []
-    
+
     for pkg,path in pkg_paths.iteritems():
         if not spec.satisfies(pkg):
             continue
