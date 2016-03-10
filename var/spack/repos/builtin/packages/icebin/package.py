@@ -25,7 +25,7 @@ class Icebin(CMakePackage):
 	depends_on('mpfr', when='+gridgen')
 
 	depends_on('mpi', when='+coupler')
-	depends_on('pism', when='+coupler+pism')
+	depends_on('pism~python', when='+coupler+pism')
 	depends_on('petsc', when='+coupler+petsc')
 
 	depends_on('boost+filesystem+date_time')
