@@ -154,7 +154,7 @@ fi
 input_command="$@"
 
 if [ "$mode" == vcheck ] ; then
-    exec "${input_command}"
+    exec ${command} ${input_command}
 fi
 
 #
