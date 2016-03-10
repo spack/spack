@@ -119,7 +119,7 @@ if [ -z "$mode" ]; then
         if [ "$arg" = -v -o "$arg" = -V -o "$arg" = --version -o "$arg" = -dumpversion ]; then
             mode=vcheck
             break
-	fi
+    fi
     done
 fi
 
