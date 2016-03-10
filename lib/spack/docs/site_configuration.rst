@@ -56,44 +56,43 @@ directory is.
 
 External Packages
 ~~~~~~~~~~~~~~~~~~~~~
-It's possible for Spack to use certain externally-installed 
-packages rather than always rebuilding packages. This may be desirable
+Spack can be configured to use externally-installed 
+packages rather than building its own packages. This may be desirable
 if machines ship with system packages, such as a customized MPI
 that should be used instead of Spack building its own MPI.
 
 External packages are configured through the ``packages.yaml`` file found
 in a Spack installation's ``etc/spack/`` or a user's ``~/.spack/``
-directory. Here's an example of an external configuration::
+directory. Here's an example of an external configuration:
 
 .. code-block:: yaml
 
-  packages:
-    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib:
-        path: /opt/openmpi-1.4.3
-    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug:
-        path: /opt/openmpi-1.4.3-debug
-    - openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib:
-        path: /opt/openmpi-1.6.5-intel
+   packages:
+      openmpi:
+         paths:
+            openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
+            openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
+            openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
 
 This example lists three installations of OpenMPI, one built with gcc,
 one built with gcc and debug information, and another built with OpenMPI.
 If Spack is asked to build a package that uses one of these MPIs as a 
-dependency, it link the package to the pre-installed OpenMPI in
-the given directory.  
+dependency, it will use the the pre-installed OpenMPI in
+the given directory.  This example also specifies that Spack should never
+build its own OpenMPI via the ``nobuild: True`` option.
 
-Each ``packages.yaml`` should begin with a ``packages:`` token, followed
-by a list of package specs.  Specs in the ``packages.yaml`` have at most
-one ``path`` tag, which specifies the top-level directory where the 
-spec is installed.  
-
-Each spec should be as well-defined as reasonably possible.  If a 
+Each ``packages.yaml`` begins with a ``packages:`` token, followed
+by a list of package names.  To specify externals, add a ``paths``
+token under the package name, which lists externals in a
+``spec : /path`` format.  Each spec should be as
+well-defined as reasonably possible.  If a 
 package lacks a spec component, such as missing a compiler or 
 package version, then Spack will guess the missing component based 
 on its most-favored packages, and it may guess incorrectly.
 
-All package versions and compilers listed in ``packages.yaml`` should 
+Each package version and compilers listed in an external should 
 have entries in Spack's packages and compiler configuration, even
-the package and compiler may not actually be used.
+though the package and compiler may not every be built.
 
 The packages configuration can tell Spack to use an external location
 for certain package versions, but it does not restrict Spack to using
@@ -103,27 +102,25 @@ rather than continue using the pre-installed OpenMPI versions.
 
 To prevent this, the ``packages.yaml`` configuration also allows packages
 to be flagged as non-buildable.  The previous example could be modified to
-be::
+be:
 
 .. code-block:: yaml
 
   packages:
-    - openmpi:
-        nobuild: True
-    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib:
-        path: /opt/openmpi-1.4.3
-    - openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug:
-        path: /opt/openmpi-1.4.3-debug
-    - openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib:
-        path: /opt/openmpi-1.6.5-intel
+    openmpi:
+      paths:
+        openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
+        openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
+        openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel                
+    nobuild: True
 
 The addition of the ``nobuild`` flag tells Spack that it should never build
 its own version of OpenMPI, and it will instead always rely on a pre-built
 OpenMPI.  Similar to ``path``, ``nobuild`` is specified as a property under
-a spec and will prevent building of anything that satisfies that spec.
+a package name.
 
 The ``nobuild`` does not need to be paired with external packages.  
-It could also be used alone to forbid versions of packages that may be 
+It could also be used alone to forbid packages that may be 
 buggy or otherwise undesirable.
   
 
