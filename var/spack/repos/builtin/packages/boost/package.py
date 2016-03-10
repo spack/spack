@@ -126,10 +126,9 @@ class Boost(Package):
             compiler_wrapper = join_path(spack.build_env_path, 'c++')
             f.write("using {0} : : {1} ;\n".format(boostToolsetId, 
                 compiler_wrapper))
-            
+            mpi_provider = spec['mpi'].package
             if '+mpi' in spec:
-                f.write('using mpi : %s ;\n' %
-                    join_path(spec['mpi'].prefix.bin, 'mpicxx'))
+                f.write('using mpi : %s ;\n' % mpi_provider.cxx_compiler_wrapper)
             if '+python' in spec:
                 f.write('using python : %s : %s ;\n' %
                     (spec['python'].version,

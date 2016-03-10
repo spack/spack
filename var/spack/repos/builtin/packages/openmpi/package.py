@@ -2,8 +2,10 @@ import os
 
 from spack import *
 
+from spack.provider_contracts import StandardMpiProvider
 
-class Openmpi(Package):
+
+class Openmpi(StandardMpiProvider, Package):
     """Open MPI is a project combining technologies and resources from
        several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI)
        in order to build the best MPI library available. A completely

@@ -1,8 +1,13 @@
-from spack import *
 import os
 
-class Mvapich2(Package):
-    """MVAPICH2 is an MPI implementation for Infiniband networks."""
+from spack.provider_contracts import StandardMpiProvider
+from spack import *
+
+
+class Mvapich2(StandardMpiProvider, Package):
+    """
+    MVAPICH2 is an MPI implementation for Infiniband networks.
+    """
     homepage = "http://mvapich.cse.ohio-state.edu/"
     url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2b.tar.gz"
 

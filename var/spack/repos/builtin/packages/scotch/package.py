@@ -1,6 +1,7 @@
 from spack import *
 import os
 
+
 class Scotch(Package):
     """Scotch is a software package for graph and mesh/hypergraph
        partitioning, graph clustering, and sparse matrix ordering."""
@@ -29,8 +30,9 @@ class Scotch(Package):
         makefile_inc.append('CCS       = $(CC)')
 
         if '+mpi' in self.spec:
+            mpi_provider = self.spec['mpi'].package
             makefile_inc.extend([
-                    'CCP       = %s' % os.path.join(self.spec['mpi'].prefix.bin, 'mpicc'),
+                    'CCP       = %s' % mpi_provider.cc_compiler_wrapper,
                     'CCD       = $(CCP)'
                     ])
         else:
@@ -38,8 +40,6 @@ class Scotch(Package):
                     'CCP       = mpicc', # It is set but not used
                     'CCD       = $(CCS)'
                     ])
-
-
 
     def library_build_type(self, makefile_inc, defines):
         makefile_inc.extend([

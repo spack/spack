@@ -22,29 +22,33 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import os
 
-class Mpich(Package):
-    """MPICH is a high performance and widely portable implementation of
-       the Message Passing Interface (MPI) standard."""
+from spack.provider_contracts import StandardMpiProvider
+from spack import *
+
+
+class Mpich(StandardMpiProvider, Package):
+    """
+    MPICH is a high performance and widely portable implementation of
+    the Message Passing Interface (MPI) standard.
+    """
     homepage = "http://www.mpich.org"
-    url      = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
-    list_url   = "http://www.mpich.org/static/downloads/"
+    url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+    list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 2
 
-    version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
+    version('3.2', 'f414cfa77099cd1fa1a5ae4e22db508a')
     version('3.1.4', '2ab544607986486562e076b83937bba2')
     version('3.1.3', '93cb17f91ac758cbf9174ecb03563778')
     version('3.1.2', '7fbf4b81dcb74b07ae85939d1ceee7f1')
     version('3.1.1', '40dc408b1e03cc36d80209baaa2d32b7')
-    version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
+    version('3.1', '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
 
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
 
-    provides('mpi@:3.0', when='@3:')
-    provides('mpi@:1.3', when='@1:')
+    provides('mpi')
 
     def setup_dependent_environment(self, module, spec, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""
@@ -53,7 +57,6 @@ class Mpich(Package):
         os.environ['MPICH_F77'] = os.environ['F77']
         os.environ['MPICH_F90'] = os.environ['FC']
         os.environ['MPICH_FC'] = os.environ['FC']
-
 
     def install(self, spec, prefix):
         config_args = ["--prefix=" + prefix,
@@ -79,7 +82,6 @@ class Mpich(Package):
         make("install")
 
         self.filter_compilers()
-
 
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
