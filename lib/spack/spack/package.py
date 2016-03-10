@@ -846,6 +846,11 @@ class Package(object):
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
 
+        # No installation needed if package is external
+        if self.spec.external:
+            tty.msg("%s is externally installed in %s" % (self.name, self.spec.external))
+            return
+
         # Ensure package is not already installed
         if spack.install_layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
