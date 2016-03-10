@@ -113,14 +113,22 @@ case "$command" in
         ;;
 esac
 
-# Finish setting up the mode.
+# If any of the arguments below is present then the mode is vcheck. In vcheck mode nothing is added in terms of extra search paths or libraries
 if [ -z "$mode" ]; then
-    mode=ccld
     for arg in "$@"; do
         if [ "$arg" = -v -o "$arg" = -V -o "$arg" = --version -o "$arg" = -dumpversion ]; then
             mode=vcheck
             break
-        elif [ "$arg" = -E ]; then
+    fi
+    done
+fi
+
+# Finish setting up the mode.
+
+if [ -z "$mode" ]; then
+    mode=ccld
+    for arg in "$@"; do
+        if [ "$arg" = -E ]; then
             mode=cpp
             break
         elif [ "$arg" = -c ]; then
@@ -144,6 +152,10 @@ fi
 
 # Save original command for debug logging
 input_command="$@"
+
+if [ "$mode" == vcheck ] ; then
+    exec ${command} "$@"
+fi
 
 #
 # Now do real parsing of the command line args, trying hard to keep
