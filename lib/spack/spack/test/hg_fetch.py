@@ -23,16 +23,12 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import unittest
-
-from llnl.util.filesystem import *
-
 import spack
+
 from spack.version import ver
-from spack.stage import Stage
-from spack.util.executable import which
-from spack.test.mock_packages_test import *
 from spack.test.mock_repo import MockHgRepo
+from llnl.util.filesystem import *
+from spack.test.mock_packages_test import *
 
 
 class HgFetchTest(MockPackagesTest):
@@ -49,13 +45,10 @@ class HgFetchTest(MockPackagesTest):
         spec.concretize()
         self.pkg = spack.repo.get(spec, new=True)
 
-
     def tearDown(self):
         """Destroy the stage space used by this test."""
         super(HgFetchTest, self).tearDown()
         self.repo.destroy()
-        self.pkg.do_clean()
-
 
     def try_fetch(self, rev, test_file, args):
         """Tries to:
@@ -68,26 +61,27 @@ class HgFetchTest(MockPackagesTest):
         """
         self.pkg.versions[ver('hg')] = args
 
-        self.pkg.do_stage()
-        self.assertEqual(self.repo.get_rev(), rev)
+        with self.pkg.stage:
+            self.pkg.do_stage()
+            self.assertEqual(self.repo.get_rev(), rev)
 
-        file_path = join_path(self.pkg.stage.source_path, test_file)
-        self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-        self.assertTrue(os.path.isfile(file_path))
+            file_path = join_path(self.pkg.stage.source_path, test_file)
+            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
+            self.assertTrue(os.path.isfile(file_path))
 
-        os.unlink(file_path)
-        self.assertFalse(os.path.isfile(file_path))
+            os.unlink(file_path)
+            self.assertFalse(os.path.isfile(file_path))
 
-        untracked = 'foobarbaz'
-        touch(untracked)
-        self.assertTrue(os.path.isfile(untracked))
-        self.pkg.do_restage()
-        self.assertFalse(os.path.isfile(untracked))
+            untracked = 'foobarbaz'
+            touch(untracked)
+            self.assertTrue(os.path.isfile(untracked))
+            self.pkg.do_restage()
+            self.assertFalse(os.path.isfile(untracked))
 
-        self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-        self.assertTrue(os.path.isfile(file_path))
+            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
+            self.assertTrue(os.path.isfile(file_path))
 
-        self.assertEqual(self.repo.get_rev(), rev)
+            self.assertEqual(self.repo.get_rev(), rev)
 
 
     def test_fetch_default(self):

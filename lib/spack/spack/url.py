@@ -225,7 +225,7 @@ def parse_version_offset(path):
         (r'_((\d+\.)+\d+[a-z]?)[.]orig$', stem),
 
         # e.g. http://www.openssl.org/source/openssl-0.9.8s.tar.gz
-        (r'-([^-]+(-alpha|-beta)?)', stem),
+        (r'-v?([^-]+(-alpha|-beta)?)', stem),
 
         # e.g. astyle_1.23_macosx.tar.gz
         (r'_([^_]+(_alpha|_beta)?)', stem),

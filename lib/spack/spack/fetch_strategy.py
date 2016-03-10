@@ -82,7 +82,6 @@ class FetchStrategy(object):
 
     class __metaclass__(type):
         """This metaclass registers all fetch strategies in a list."""
-
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
             if cls.enabled: all_strategies.append(cls)
@@ -145,6 +144,8 @@ class URLFetchStrategy(FetchStrategy):
         self.digest = kwargs.get('md5', None)
         if not self.digest: self.digest = digest
 
+        self.expand_archive = kwargs.get('expand', True)
+
         if not self.url:
             raise ValueError("URLFetchStrategy requires a url for fetching.")
 
@@ -153,7 +154,7 @@ class URLFetchStrategy(FetchStrategy):
         self.stage.chdir()
 
         if self.archive_file:
-            tty.msg("Already downloaded %s." % self.archive_file)
+            tty.msg("Already downloaded %s" % self.archive_file)
             return
 
         tty.msg("Trying to fetch from %s" % self.url)
@@ -218,6 +219,10 @@ class URLFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def expand(self):
+        if not self.expand_archive:
+            tty.msg("Skipping expand step for %s" % self.archive_file)
+            return
+
         tty.msg("Staging archive: %s" % self.archive_file)
 
         self.stage.chdir()
@@ -275,8 +280,8 @@ class URLFetchStrategy(FetchStrategy):
         checker = crypto.Checker(self.digest)
         if not checker.check(self.archive_file):
             raise ChecksumError(
-                    "%s checksum failed for %s." % (checker.hash_name, self.archive_file),
-                    "Expected %s but got %s." % (self.digest, checker.sum))
+                    "%s checksum failed for %s" % (checker.hash_name, self.archive_file),
+                    "Expected %s but got %s" % (self.digest, checker.sum))
 
     @_needs_stage
     def reset(self):
@@ -312,7 +317,7 @@ class VCSFetchStrategy(FetchStrategy):
         # Ensure that there's only one of the rev_types
         if sum(k in kwargs for k in rev_types) > 1:
             raise FetchStrategyError(
-                    "Supply only one of %s to fetch with %s." % (
+                    "Supply only one of %s to fetch with %s" % (
                         comma_or(rev_types), name))
 
         # Set attributes for each rev type.
@@ -321,7 +326,7 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def check(self):
-        tty.msg("No checksum needed when fetching with %s." % self.name)
+        tty.msg("No checksum needed when fetching with %s" % self.name)
 
     @_needs_stage
     def expand(self):
@@ -395,7 +400,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         self.stage.chdir()
 
         if self.stage.source_path:
-            tty.msg("Already fetched %s." % self.stage.source_path)
+            tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
         args = []
@@ -505,7 +510,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
         self.stage.chdir()
 
         if self.stage.source_path:
-            tty.msg("Already fetched %s." % self.stage.source_path)
+            tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
         tty.msg("Trying to check out svn repository: %s" % self.url)
@@ -584,7 +589,7 @@ class HgFetchStrategy(VCSFetchStrategy):
         self.stage.chdir()
 
         if self.stage.source_path:
-            tty.msg("Already fetched %s." % self.stage.source_path)
+            tty.msg("Already fetched %s" % self.stage.source_path)
             return
 
         args = []

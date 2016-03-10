@@ -24,8 +24,6 @@
 ##############################################################################
 import os
 import unittest
-import shutil
-import tempfile
 
 from llnl.util.filesystem import *
 from llnl.util.link_tree import LinkTree
@@ -38,6 +36,7 @@ class LinkTreeTest(unittest.TestCase):
 
     def setUp(self):
         self.stage = Stage('link-tree-test')
+        self.stage.create()
 
         with working_dir(self.stage.path):
             touchp('source/1')
@@ -51,10 +50,8 @@ class LinkTreeTest(unittest.TestCase):
         source_path = os.path.join(self.stage.path, 'source')
         self.link_tree = LinkTree(source_path)
 
-
     def tearDown(self):
-        if self.stage:
-            self.stage.destroy()
+        self.stage.destroy()
 
 
     def check_file_link(self, filename):

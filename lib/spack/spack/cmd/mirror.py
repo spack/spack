@@ -126,7 +126,7 @@ def mirror_remove(args):
 
     old_value = mirrors.pop(name)
     spack.config.update_config('mirrors', mirrors, scope=args.scope)
-    tty.msg("Removed mirror %s with url %s." % (name, old_value))
+    tty.msg("Removed mirror %s with url %s" % (name, old_value))
 
 
 def mirror_list(args):
@@ -203,7 +203,7 @@ def mirror_create(args):
 
     verb = "updated" if existed else "created"
     tty.msg(
-        "Successfully %s mirror in %s." % (verb, directory),
+        "Successfully %s mirror in %s" % (verb, directory),
         "Archive stats:",
         "  %-4d already present"  % p,
         "  %-4d added"            % m,
