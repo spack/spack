@@ -19,19 +19,29 @@ class NetlibLapack(Package):
 
     variant('debug', default=False, description='Activates the Debug build type')
     variant('shared', default=True, description="Build shared library version")
+    variant('external-blas', default=False, description='Build lapack with an external blas')
 
     variant('lapacke', default=True, description='Activates the build of the LAPACKE C interface')
 
     # virtual dependency
-    provides('blas')
+    provides('blas', when='~external-blas')
     provides('lapack')
 
     depends_on('cmake')
+    depends_on('blas', when='+external-blas')
 
     def install(self, spec, prefix):
         cmake_args = ['-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if '+shared' in spec else 'OFF'),
                       '-DCMAKE_BUILD_TYPE:STRING=%s' % ('Debug' if '+debug' in spec else 'Release'),
                       '-DLAPACKE:BOOL=%s' % ('ON' if '+lapacke' in spec else 'OFF')]
+        if '+external-blas' in spec:
+            # TODO : the mechanism to specify the library should be more general,
+            # TODO : but this allows to have an hook to an external blas
+            cmake_args.extend([
+                '-DUSE_OPTIMIZED_BLAS:BOOL=ON',
+                '-DBLAS_LIBRARIES:PATH=%s' % join_path(spec['blas'].prefix.lib, 'libblas.a')
+            ])
+
         cmake_args.extend(std_cmake_args)
 
         with working_dir('spack-build', create=True):
