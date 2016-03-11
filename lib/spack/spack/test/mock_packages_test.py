@@ -52,11 +52,11 @@ compilers:
 mock_packages_config = """\
 packages:
   externaltool:
-    nobuild: True
+    buildable: False
     paths:
       externaltool@1.0%gcc@4.5.0: /path/to/external_tool
   externalvirtual:
-    nobuild: True
+    buildable: False
     paths:
       externalvirtual@2.0%clang@3.3: /path/to/external_virtual_clang
       externalvirtual@1.0%gcc@4.5.0: /path/to/external_virtual_gcc

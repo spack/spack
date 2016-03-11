@@ -69,12 +69,12 @@ class DefaultConcretizer(object):
             packages = [spec]
 
         # For each candidate package, if it has externals add those to the candidates
-        # if it's a nobuild, then only add the externals.
+        # if it's not buildable, then only add the externals.
         candidates = []
         all_compilers = spack.compilers.all_compilers()
         for pkg in packages:
             externals = spec_externals(pkg)
-            buildable = not is_spec_nobuild(pkg)
+            buildable = is_spec_buildable(pkg)
             if buildable:
                 candidates.append((pkg, None))
             for ext in externals:
@@ -369,8 +369,8 @@ class NoValidVersionError(spack.error.SpackError):
 
 
 class NoBuildError(spack.error.SpackError):
-    """Raised when a package is configured with the nobuild option, but
+    """Raised when a package is configured with the buildable option False, but
        no satisfactory external versions can be found"""
     def __init__(self, spec):
         super(NoBuildError, self).__init__(
-            "The spec '%s' is configured as nobuild, and no matching external installs were found" % spec.name)
+            "The spec '%s' is configured as not buildable, and no matching external installs were found" % spec.name)
