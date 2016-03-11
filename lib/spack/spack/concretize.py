@@ -70,20 +70,23 @@ class DefaultConcretizer(object):
 
         # For each candidate package, if it has externals add those to the candidates
         # if it's a nobuild, then only add the externals.
-        result = []
+        candidates = []
         all_compilers = spack.compilers.all_compilers()
         for pkg in packages:
             externals = spec_externals(pkg)
             buildable = not is_spec_nobuild(pkg)
             if buildable:
-                result.append((pkg, None))
+                candidates.append((pkg, None))
             for ext in externals:
                 if ext[0].satisfies(spec):
-                    result.append(ext)
-        if not result:
+                    candidates.append(ext)
+        if not candidates:
             raise NoBuildError(spec)
 
         def cmp_externals(a, b):
+            if a[0].name != b[0].name:
+                #We're choosing between different providers. Maintain order from above sort
+                return candidates.index(a) - candidates.index(b)
             result = cmp_specs(a[0], b[0])
             if result != 0:
                 return result
@@ -91,10 +94,10 @@ class DefaultConcretizer(object):
                 return 1
             if not b[1] and a[1]:
                 return -1
-            return cmp_specs(a[1], b[1])
+            return cmp(a[1], b[1])
 
-        result = sorted(result, cmp=cmp_externals)
-        return result
+        candidates = sorted(candidates, cmp=cmp_externals)
+        return candidates
 
 
     def concretize_virtual_and_external(self, spec):
