@@ -220,9 +220,9 @@ section_schemas = {
                                 'type' : 'array',
                                 'default' : [],
                                 'items' : { 'type' : 'string' } }, #compiler specs
-                            'nobuild': {
+                            'buildable': {
                                 'type':  'boolean',
-                                'default': False,
+                                'default': True,
                              },
                             'providers': {
                                 'type':  'object',
@@ -557,15 +557,15 @@ def spec_externals(spec):
     return spec_locations
 
 
-def is_spec_nobuild(spec):
-    """Return true if the spec pkgspec is configured as nobuild"""
+def is_spec_buildable(spec):
+    """Return true if the spec pkgspec is configured as buildable"""
     allpkgs = get_config('packages')
     name = spec.name
     if not spec.name in allpkgs:
-        return False
-    if not 'nobuild' in allpkgs[spec.name]:
-        return False
-    return allpkgs[spec.name]['nobuild']
+        return True
+    if not 'buildable' in allpkgs[spec.name]:
+        return True
+    return allpkgs[spec.name]['buildable']
 
 
 class ConfigError(SpackError): pass
