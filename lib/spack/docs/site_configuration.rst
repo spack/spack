@@ -56,7 +56,7 @@ directory is.
 
 External Packages
 ~~~~~~~~~~~~~~~~~~~~~
-Spack can be configured to use externally-installed 
+Spack can be configured to use externally-installed
 packages rather than building its own packages. This may be desirable
 if machines ship with system packages, such as a customized MPI
 that should be used instead of Spack building its own MPI.
@@ -76,7 +76,7 @@ directory. Here's an example of an external configuration:
 
 This example lists three installations of OpenMPI, one built with gcc,
 one built with gcc and debug information, and another built with Intel.
-If Spack is asked to build a package that uses one of these MPIs as a 
+If Spack is asked to build a package that uses one of these MPIs as a
 dependency, it will use the the pre-installed OpenMPI in
 the given directory.  This example also specifies that Spack should never
 build its own OpenMPI via the ``nobuild: True`` option.
@@ -85,12 +85,12 @@ Each ``packages.yaml`` begins with a ``packages:`` token, followed
 by a list of package names.  To specify externals, add a ``paths``
 token under the package name, which lists externals in a
 ``spec : /path`` format.  Each spec should be as
-well-defined as reasonably possible.  If a 
-package lacks a spec component, such as missing a compiler or 
-package version, then Spack will guess the missing component based 
+well-defined as reasonably possible.  If a
+package lacks a spec component, such as missing a compiler or
+package version, then Spack will guess the missing component based
 on its most-favored packages, and it may guess incorrectly.
 
-Each package version and compilers listed in an external should 
+Each package version and compilers listed in an external should
 have entries in Spack's packages and compiler configuration, even
 though the package and compiler may not every be built.
 
@@ -111,18 +111,18 @@ be:
       paths:
         openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
         openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
-        openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel                
-    nobuild: True
+        openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
+      nobuild: True
 
 The addition of the ``nobuild`` flag tells Spack that it should never build
 its own version of OpenMPI, and it will instead always rely on a pre-built
 OpenMPI.  Similar to ``paths``, ``nobuild`` is specified as a property under
 a package name.
 
-The ``nobuild`` does not need to be paired with external packages.  
-It could also be used alone to forbid packages that may be 
+The ``nobuild`` does not need to be paired with external packages.
+It could also be used alone to forbid packages that may be
 buggy or otherwise undesirable.
-  
+
 
 Profiling
 ~~~~~~~~~~~~~~~~~~~~~
