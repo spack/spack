@@ -27,7 +27,7 @@ import spack
 from spack.version import *
 
 class PreferredPackages(object):
-    _default_order = {'compiler' : [ 'gcc', 'intel', 'clang', 'pgi', 'xlc' ] }, # Arbitrary, but consistent
+    _default_order = {'compiler' : [ 'gcc', 'intel', 'clang', 'pgi', 'xlc' ] } # Arbitrary, but consistent
 
     def __init__(self):
         self.preferred = spack.config.get_config('packages')
