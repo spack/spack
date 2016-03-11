@@ -227,6 +227,12 @@ class ConcretizeTest(MockPackagesTest):
         self.assertTrue(spec['stuff'].satisfies('buildablevirtual@3.0'))
 
 
+    def test_use_newest_compiler(self):
+        spec = Spec('buildabletool%gcc')
+        spec.concretize()
+        self.assertTrue(spec.satisfies('%gcc@4.5.0'))
+
+
     def test_find_spec_parents(self):
         """Tests the spec finding logic used by concretization. """
         s = Spec('a +foo',

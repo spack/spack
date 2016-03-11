@@ -47,6 +47,11 @@ compilers:
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
+    gcc@4.4.7:
+      cc: /path/to/gcc44
+      cxx: /path/to/g++44
+      f77: /path/to/gfortran44
+      fc: /path/to/gfortran44
 """
 
 mock_packages_config = """\
