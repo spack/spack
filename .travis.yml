@@ -16,7 +16,10 @@ before_install:
 
 script:
   - . share/spack/setup-env.sh
+  - spack compilers
+  - spack config get compilers
   - spack test
+  - spack install -v libdwarf
 
 notifications:
   email:
