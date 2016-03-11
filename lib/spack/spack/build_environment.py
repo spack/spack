@@ -3,7 +3,7 @@ This module contains all routines related to setting up the package
 build environment.  All of this is set up by package.py just before
 install() is called.
 
-There are two parts to the bulid environment:
+There are two parts to the build environment:
 
 1. Python build environment (i.e. install() method)
 
@@ -13,7 +13,7 @@ There are two parts to the bulid environment:
    the package's module scope.  Ths allows package writers to call
    them all directly in Package.install() without writing 'self.'
    everywhere.  No, this isn't Pythonic.  Yes, it makes the code more
-   readable and more like the shell script from whcih someone is
+   readable and more like the shell script from which someone is
    likely porting.
 
 2. Build execution environment
@@ -27,17 +27,16 @@ There are two parts to the bulid environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
-import os
-import sys
-import shutil
 import multiprocessing
+import os
 import platform
-from llnl.util.filesystem import *
+import shutil
+import sys
 
 import spack
-import spack.compilers as compilers
-from spack.util.executable import Executable, which
+from llnl.util.filesystem import *
 from spack.util.environment import *
+from spack.util.executable import Executable, which
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -107,18 +106,19 @@ def set_compiler_environment_variables(pkg):
     if compiler.fc:
         os.environ['SPACK_FC']  = compiler.fc
 
-    os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
+    os.environ['SPACK_COMPILER_SPEC'] = str(pkg.spec.compiler)
 
 
 def set_build_environment_variables(pkg):
-    """This ensures a clean install environment when we build packages.
+    """
+    This ensures a clean install environment when we build packages
     """
     # Add spack build environment path with compiler wrappers first in
     # the path. We add both spack.env_path, which includes default
     # wrappers (cc, c++, f77, f90), AND a subdirectory containing
     # compiler-specific symlinks.  The latter ensures that builds that
     # are sensitive to the *name* of the compiler see the right name
-    # when we're building wtih the wrappers.
+    # when we're building with the wrappers.
     #
     # Conflicts on case-insensitive systems (like "CC" and "cc") are
     # handled by putting one in the <build_env_path>/case-insensitive
@@ -296,23 +296,23 @@ def fork(pkg, function):
            # do stuff
        build_env.fork(pkg, child_fun)
 
-    Forked processes are run with the build environemnt set up by
+    Forked processes are run with the build environment set up by
     spack.build_environment.  This allows package authors to have
-    full control over the environment, etc. without offecting
+    full control over the environment, etc. without affecting
     other builds that might be executed in the same spack call.
 
-    If something goes wrong, the child process is expected toprint
+    If something goes wrong, the child process is expected to print
     the error and the parent process will exit with error as
     well. If things go well, the child exits and the parent
     carries on.
     """
     try:
         pid = os.fork()
-    except OSError, e:
+    except OSError as e:
         raise InstallError("Unable to fork build process: %s" % e)
 
     if pid == 0:
-        # Give the child process the package's build environemnt.
+        # Give the child process the package's build environment.
         setup_package(pkg)
 
         try:
@@ -323,7 +323,7 @@ def fork(pkg, function):
             # which interferes with unit tests.
             os._exit(0)
 
-        except spack.error.SpackError, e:
+        except spack.error.SpackError as e:
             e.die()
 
         except:
@@ -338,8 +338,7 @@ def fork(pkg, function):
         # message.  Just make the parent exit with an error code.
         pid, returncode = os.waitpid(pid, 0)
         if returncode != 0:
-            raise InstallError("Installation process had nonzero exit code."
-                .format(str(returncode)))
+            raise InstallError("Installation process had nonzero exit code.".format(str(returncode)))
 
 
 class InstallError(spack.error.SpackError):
