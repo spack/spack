@@ -34,8 +34,9 @@ class Python(Package):
         env['PYTHONHOME'] = prefix
         env['MACOSX_DEPLOYMENT_TARGET'] = '10.6'
 
-        # Rest of install is pretty standard except setup.py needs to be able to read the CPPFLAGS
-        # and LDFLAGS as it scans for the library and headers to build
+        # Rest of install is pretty standard except setup.py needs to
+        # be able to read the CPPFLAGS and LDFLAGS as it scans for the
+        # library and headers to build
         configure_args= [
                   "--prefix=%s" % prefix,
                   "--with-threads",

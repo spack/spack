@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,7 +34,7 @@ class Llvm(Package):
        it is the full name of the project.
     """
     homepage = 'http://llvm.org/'
-    url = 'http://llvm.org/releases/3.7.0/llvm-3.7.0.src.tar.xz'
+    url = 'http://llvm.org/releases/3.7.1/llvm-3.7.1.src.tar.xz'
 
     version('3.0', 'a8e5f5f1c1adebae7b4a654c376a6005', url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz') # currently required by mesa package
 
@@ -133,6 +133,21 @@ class Llvm(Package):
                         }
                   },
                   {
+                    'version' : '3.7.1',
+                    'md5':'bf8b3a2c79e61212c5409041dfdbd319',
+                    'resources' : {
+                        'compiler-rt' : '1c6975daf30bb3b0473b53c3a1a6ff01',
+                        'openmp' : 'b4ad08cda4e5c22e42b66062b140438e',
+                        'polly' : '3a2a7367002740881637f4d47bca4dc3',
+                        'libcxx' : 'f9c43fa552a10e14ff53b94d04bea140',
+                        'libcxxabi' : '52d925afac9f97e9dcac90745255c169',
+                        'clang' : '0acd026b5529164197563d135a8fd83e',
+                        'clang-tools-extra' : '5d49ff745037f061a7c86aeb6a24c3d2',
+                        'lldb' : 'a106d8a0d21fc84d76953822fbaf3398',
+                        'llvm-libunwind' : '814bd52c9247c5d04629658fbcb3ab8c',
+                        }
+                  },
+                  {
                     'version' : '3.7.0',
                     'md5':'b98b9495e5655a672d6cb83e1a180f8e',
                     'resources' : {
@@ -195,25 +210,6 @@ class Llvm(Package):
                          destination=resources[name]['destination'],
                          when='@%(version)s' % release,
                          placement=resources[name].get('placement', None))
-
-    # SVN - current develop
-    version('develop', svn='http://llvm.org/svn/llvm-project/llvm/trunk')
-    resource(name='clang', svn='http://llvm.org/svn/llvm-project/cfe/trunk',
-             destination='tools', when='@develop', placement='clang')
-    resource(name='compiler-rt', svn='http://llvm.org/svn/llvm-project/compiler-rt/trunk',
-             destination='projects', when='@develop', placement='compiler-rt')
-    resource(name='openmp', svn='http://llvm.org/svn/llvm-project/openmp/trunk',
-             destination='projects', when='@develop', placement='openmp')
-    resource(name='libcxx', svn='http://llvm.org/svn/llvm-project/libcxx/trunk',
-             destination='projects', when='@develop', placement='libcxx')
-    resource(name='libcxxabi', svn='http://llvm.org/svn/llvm-project/libcxxabi/trunk',
-             destination='projects', when='@develop', placement='libcxxabi')
-    resource(name='polly', svn='http://llvm.org/svn/llvm-project/polly/trunk',
-             destination='tools', when='@develop', placement='polly')
-    resource(name='lldb', svn='http://llvm.org/svn/llvm-project/lldb/trunk',
-             destination='tools', when='@develop', placement='lldb')
-
-
 
     def install(self, spec, prefix):
         env['CXXFLAGS'] = self.compiler.cxx11_flag

@@ -178,8 +178,6 @@ def set_module_variables_for_package(pkg, m):
     """Populate the module scope of install() with some useful functions.
        This makes things easier for package writers.
     """
-    m = pkg.module
-
     # number of jobs spack will to build with.
     jobs = multiprocessing.cpu_count()
     if not pkg.parallel:
@@ -207,6 +205,13 @@ def set_module_variables_for_package(pkg, m):
 
     # standard CMake arguments
     m.std_cmake_args = get_std_cmake_args(pkg)
+
+    # Put spack compiler paths in module scope.
+    link_dir = spack.build_env_path
+    m.spack_cc  = join_path(link_dir, pkg.compiler.link_paths['cc'])
+    m.spack_cxx = join_path(link_dir, pkg.compiler.link_paths['cxx'])
+    m.spack_f77 = join_path(link_dir, pkg.compiler.link_paths['f77'])
+    m.spack_f90 = join_path(link_dir, pkg.compiler.link_paths['fc'])
 
     # Emulate some shell commands for convenience
     m.pwd          = os.getcwd

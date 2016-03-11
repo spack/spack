@@ -420,6 +420,7 @@ class Spec(object):
         # package.py files for.
         self._normal = kwargs.get('normal', False)
         self._concrete = kwargs.get('concrete', False)
+        self.external = None
 
         # This allows users to construct a spec DAG with literals.
         # Note that given two specs a and b, Spec(a) copies a, but
@@ -770,12 +771,11 @@ class Spec(object):
             # Concretize virtual dependencies last.  Because they're added
             # to presets below, their constraints will all be merged, but we'll
             # still need to select a concrete package later.
-            if not self.virtual:
-                changed |= any(
-                    (spack.concretizer.concretize_architecture(self),
-                     spack.concretizer.concretize_compiler(self),
-                     spack.concretizer.concretize_version(self),
-                     spack.concretizer.concretize_variants(self)))
+            changed |= any(
+                (spack.concretizer.concretize_architecture(self),
+                 spack.concretizer.concretize_compiler(self),
+                 spack.concretizer.concretize_version(self),
+                 spack.concretizer.concretize_variants(self)))
             presets[self.name] = self
 
         visited.add(self.name)
@@ -808,21 +808,18 @@ class Spec(object):
               a problem.
         """
         changed = False
-        while True:
-            virtuals =[v for v in self.traverse() if v.virtual]
-            if not virtuals:
-                return changed
+        done = False
+        while not done:
+            done = True
+            for spec in list(self.traverse()):
+                if spack.concretizer.concretize_virtual_and_external(spec):
+                    done = False
+                    changed = True
 
-            for spec in virtuals:
-                providers = spack.repo.providers_for(spec)
-                concrete = spack.concretizer.choose_provider(spec, providers)
-                concrete = concrete.copy()
-                spec._replace_with(concrete)
-                changed = True
-
-            # If there are duplicate providers or duplicate provider deps, this
-            # consolidates them and merge constraints.
-            changed |= self.normalize(force=True)
+        # If there are duplicate providers or duplicate provider deps, this
+        # consolidates them and merge constraints.
+        changed |= self.normalize(force=True)
+        return changed
 
 
     def concretize(self):
@@ -837,6 +834,7 @@ class Spec(object):
            with requirements of its pacakges.  See flatten() and normalize() for
            more details on this.
         """
+
         if self._concrete:
             return
 
@@ -1069,7 +1067,7 @@ class Spec(object):
 
         # if we descend into a virtual spec, there's nothing more
         # to normalize.  Concretize will finish resolving it later.
-        if self.virtual:
+        if self.virtual or self.external:
             return False
 
         # Combine constraints from package deps with constraints from
@@ -1404,15 +1402,26 @@ class Spec(object):
                Whether deps should be copied too.  Set to false to copy a
                spec but not its dependencies.
         """
+
+        # We don't count dependencies as changes here
+        changed = True
+        if hasattr(self, 'name'):
+            changed = (self.name != other.name and self.versions != other.versions and \
+                       self.architecture != other.architecture and self.compiler != other.compiler and \
+                       self.variants != other.variants and self._normal != other._normal and \
+                       self.concrete != other.concrete and self.external != other.external)
+
         # Local node attributes get copied first.
         self.name = other.name
         self.versions = other.versions.copy()
         self.architecture = other.architecture
         self.compiler = other.compiler.copy() if other.compiler else None
-        self.dependents = DependencyMap()
-        self.dependencies = DependencyMap()
+        if kwargs.get('cleardeps', True):
+            self.dependents = DependencyMap()
+            self.dependencies = DependencyMap()
         self.variants = other.variants.copy()
         self.variants.spec = self
+        self.external = other.external
         self.namespace = other.namespace
 
         # If we copy dependencies, preserve DAG structure in the new spec
@@ -1431,6 +1440,8 @@ class Spec(object):
         # Since we preserved structure, we can copy _normal safely.
         self._normal = other._normal
         self._concrete = other._concrete
+        self.external = other.external
+        return changed
 
 
     def copy(self, **kwargs):
@@ -1571,13 +1582,27 @@ class Spec(object):
 
                $_   Package name
                $.   Full package name (with namespace)
-               $@   Version
-               $%   Compiler
-               $%@  Compiler & compiler version
+               $@   Version with '@' prefix
+               $%   Compiler with '%' prefix
+               $%@  Compiler with '%' prefix & compiler version with '@' prefix
                $+   Options
-               $=   Architecture
-               $#   7-char prefix of DAG hash
+               $=   Architecture with '=' prefix
+               $#   7-char prefix of DAG hash with '-' prefix
                $$   $
+
+               You can also use full-string versions, which leave off the prefixes:
+
+               ${PACKAGE}       Package name
+               ${VERSION}       Version
+               ${COMPILER}      Full compiler string
+               ${COMPILERNAME}  Compiler name
+               ${COMPILERVER}   Compiler version
+               ${OPTIONS}       Options
+               ${ARCHITECTURE}  Architecture
+               ${SHA1}          Dependencies 8-char sha1 prefix
+
+               ${SPACK_ROOT}    The spack root directory
+               ${SPACK_INSTALL} The default spack install directory, ${SPACK_PREFIX}/opt
 
            Optionally you can provide a width, e.g. $20_ for a 20-wide name.
            Like printf, you can provide '-' for left justification, e.g.
@@ -1594,7 +1619,8 @@ class Spec(object):
         color    = kwargs.get('color', False)
         length = len(format_string)
         out = StringIO()
-        escape = compiler = False
+        named = escape = compiler = False
+        named_str = fmt = ''
 
         def write(s, c):
             if color:
@@ -1636,9 +1662,12 @@ class Spec(object):
                 elif c == '#':
                     out.write('-' + fmt % (self.dag_hash(7)))
                 elif c == '$':
-                    if fmt != '':
+                    if fmt != '%s':
                         raise ValueError("Can't use format width with $$.")
                     out.write('$')
+                elif c == '{':
+                    named = True
+                    named_str = ''
                 escape = False
 
             elif compiler:
@@ -1651,6 +1680,43 @@ class Spec(object):
                 else:
                     out.write(c)
                 compiler = False
+
+            elif named:
+                if not c == '}':
+                    if i == length - 1:
+                        raise ValueError("Error: unterminated ${ in format: '%s'"
+                                         % format_string)
+                    named_str += c
+                    continue;
+                if named_str == 'PACKAGE':
+                    write(fmt % self.name, '@')
+                if named_str == 'VERSION':
+                    if self.versions and self.versions != _any_version:
+                        write(fmt % str(self.versions), '@')
+                elif named_str == 'COMPILER':
+                    if self.compiler:
+                        write(fmt % self.compiler, '%')
+                elif named_str == 'COMPILERNAME':
+                    if self.compiler:
+                        write(fmt % self.compiler.name, '%')
+                elif named_str == 'COMPILERVER':
+                    if self.compiler:
+                        write(fmt % self.compiler.versions, '%')
+                elif named_str == 'OPTIONS':
+                    if self.variants:
+                        write(fmt % str(self.variants), '+')
+                elif named_str == 'ARCHITECTURE':
+                    if self.architecture:
+                        write(fmt % str(self.architecture), '=')
+                elif named_str == 'SHA1':
+                    if self.dependencies:
+                        out.write(fmt % str(self.dag_hash(7)))
+                elif named_str == 'SPACK_ROOT':
+                    out.write(fmt % spack.prefix)
+                elif named_str == 'SPACK_INSTALL':
+                    out.write(fmt % spack.install_path)
+
+                named = False
 
             elif c == '$':
                 escape = True
@@ -1782,6 +1848,7 @@ class SpecParser(spack.parse.Parser):
         spec.variants = VariantMap(spec)
         spec.architecture = None
         spec.compiler = None
+        spec.external = None
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
         spec.namespace = spec_namespace

@@ -74,51 +74,7 @@ def setup_parser(subparser):
 
 def repo_create(args):
     """Create a new package repository."""
-    root = canonicalize_path(args.directory)
-    namespace = args.namespace
-
-    if not args.namespace:
-        namespace = os.path.basename(root)
-
-    if not re.match(r'\w[\.\w-]*', namespace):
-        tty.die("'%s' is not a valid namespace." % namespace)
-
-    existed = False
-    if os.path.exists(root):
-        if os.path.isfile(root):
-            tty.die('File %s already exists and is not a directory' % root)
-        elif os.path.isdir(root):
-            if not os.access(root, os.R_OK | os.W_OK):
-                tty.die('Cannot create new repo in %s: cannot access directory.' % root)
-            if os.listdir(root):
-                tty.die('Cannot create new repo in %s: directory is not empty.' % root)
-        existed = True
-
-    full_path = os.path.realpath(root)
-    parent = os.path.dirname(full_path)
-    if not os.access(parent, os.R_OK | os.W_OK):
-        tty.die("Cannot create repository in %s: can't access parent!" % root)
-
-    try:
-        config_path = os.path.join(root, repo_config_name)
-        packages_path = os.path.join(root, packages_dir_name)
-
-        mkdirp(packages_path)
-        with open(config_path, 'w') as config:
-            config.write("repo:\n")
-            config.write("  namespace: '%s'\n" % namespace)
-
-    except (IOError, OSError) as e:
-        tty.die('Failed to create new repository in %s.' % root,
-                "Caused by %s: %s" % (type(e), e))
-
-        # try to clean up.
-        if existed:
-            shutil.rmtree(config_path, ignore_errors=True)
-            shutil.rmtree(packages_path, ignore_errors=True)
-        else:
-            shutil.rmtree(root, ignore_errors=True)
-
+    full_path, namespace = create_repo(args.directory, args.namespace)
     tty.msg("Created repo with namespace '%s'." % namespace)
     tty.msg("To register it with spack, run this command:",
             'spack repo add %s' % full_path)

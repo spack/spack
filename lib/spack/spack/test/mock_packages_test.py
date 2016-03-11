@@ -22,17 +22,15 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
 import os
 import shutil
-import unittest
 import tempfile
-from ordereddict_backport import OrderedDict
-
-from llnl.util.filesystem import mkdirp
+import unittest
 
 import spack
 import spack.config
+from llnl.util.filesystem import mkdirp
+from ordereddict_backport import OrderedDict
 from spack.repository import RepoPath
 from spack.spec import Spec
 
@@ -49,6 +47,19 @@ compilers:
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
+"""
+
+mock_packages_config = """\
+packages:
+  externaltool:
+    buildable: False
+    paths:
+      externaltool@1.0%gcc@4.5.0: /path/to/external_tool
+  externalvirtual:
+    buildable: False
+    paths:
+      externalvirtual@2.0%clang@3.3: /path/to/external_virtual_clang
+      externalvirtual@1.0%gcc@4.5.0: /path/to/external_virtual_gcc
 """
 
 class MockPackagesTest(unittest.TestCase):
@@ -68,9 +79,10 @@ class MockPackagesTest(unittest.TestCase):
         self.mock_user_config = os.path.join(self.temp_config, 'user')
         mkdirp(self.mock_site_config)
         mkdirp(self.mock_user_config)
-        comp_yaml = os.path.join(self.mock_site_config, 'compilers.yaml')
-        with open(comp_yaml, 'w') as f:
-            f.write(mock_compiler_config)
+        for confs in [('compilers.yaml', mock_compiler_config), ('packages.yaml', mock_packages_config)]:
+            conf_yaml = os.path.join(self.mock_site_config, confs[0])
+            with open(conf_yaml, 'w') as f:
+                f.write(confs[1])
 
         # TODO: Mocking this up is kind of brittle b/c ConfigScope
         # TODO: constructor modifies config_scopes.  Make it cleaner.

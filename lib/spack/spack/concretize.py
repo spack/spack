@@ -33,12 +33,16 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
+import spack
 import spack.spec
 import spack.compilers
 import spack.architecture
 import spack.error
 from spack.version import *
-
+from functools import partial
+from spec import DependencyMap
+from itertools import chain
+from spack.config import *
 
 class DefaultConcretizer(object):
     """This class doesn't have any state, it just provides some methods for
@@ -46,13 +50,116 @@ class DefaultConcretizer(object):
        default concretization strategies, or you can override all of them.
     """
 
-    def __init__(self, choose_hints=dict()):
-        self.choose_hints = choose_hints
+    def _valid_virtuals_and_externals(self, spec):
+        """Returns a list of spec/external-path pairs for both virtuals and externals
+           that can concretize this spec."""
+        # Get a list of candidate packages that could satisfy this spec
+        packages = []
+        if spec.virtual:
+            providers = spack.repo.providers_for(spec)
+            if not providers:
+                raise UnsatisfiableProviderSpecError(providers[0], spec)
+            spec_w_preferred_providers = find_spec(
+                spec, lambda(x): spack.pkgsort.spec_has_preferred_provider(x.name, spec.name))
+            if not spec_w_preferred_providers:
+                spec_w_preferred_providers = spec
+            provider_cmp = partial(spack.pkgsort.provider_compare, spec_w_preferred_providers.name, spec.name)
+            packages = sorted(providers, cmp=provider_cmp)
+        else:
+            packages = [spec]
+
+        # For each candidate package, if it has externals add those to the candidates
+        # if it's not buildable, then only add the externals.
+        candidates = []
+        all_compilers = spack.compilers.all_compilers()
+        for pkg in packages:
+            externals = spec_externals(pkg)
+            buildable = is_spec_buildable(pkg)
+            if buildable:
+                candidates.append((pkg, None))
+            for ext in externals:
+                if ext[0].satisfies(spec):
+                    candidates.append(ext)
+        if not candidates:
+            raise NoBuildError(spec)
+
+        def cmp_externals(a, b):
+            if a[0].name != b[0].name:
+                #We're choosing between different providers. Maintain order from above sort
+                return candidates.index(a) - candidates.index(b)
+            result = cmp_specs(a[0], b[0])
+            if result != 0:
+                return result
+            if not a[1] and b[1]:
+                return 1
+            if not b[1] and a[1]:
+                return -1
+            return cmp(a[1], b[1])
+
+        candidates = sorted(candidates, cmp=cmp_externals)
+        return candidates
+
+
+    def concretize_virtual_and_external(self, spec):
+        """From a list of candidate virtual and external packages, concretize to one that
+           is ABI compatible with the rest of the DAG."""
+        candidates = self._valid_virtuals_and_externals(spec)
+        if not candidates:
+            return False
+
+        # Find the nearest spec in the dag that has a compiler.  We'll use that
+        # spec to test compiler compatibility.
+        other_spec = find_spec(spec, lambda(x): x.compiler)
+        if not other_spec:
+            other_spec = spec.root
+
+        # Choose an ABI-compatible candidate, or the first match otherwise.
+        candidate = None
+        if other_spec:
+            candidate = next((c for c in candidates if spack.abi.compatible(c[0], other_spec)), None)
+            if not candidate:
+                # Try a looser ABI matching
+                candidate = next((c for c in candidates if spack.abi.compatible(c[0], other_spec, loose=True)), None)
+        if not candidate:
+            # No ABI matches. Pick the top choice based on the orignal preferences.
+            candidate = candidates[0]
+        candidate_spec = candidate[0]
+        external = candidate[1]
+        changed = False
+
+        # If we're external then trim the dependencies
+        if external:
+            if (spec.dependencies):
+                changed = True
+            spec.dependencies = DependencyMap()
+            candidate_spec.dependencies = DependencyMap()
+
+        def fequal(candidate_field, spec_field):
+            return (not candidate_field) or (candidate_field == spec_field)
+        if (fequal(candidate_spec.name, spec.name) and
+            fequal(candidate_spec.versions, spec.versions) and
+            fequal(candidate_spec.compiler, spec.compiler) and
+            fequal(candidate_spec.architecture, spec.architecture) and
+            fequal(candidate_spec.dependencies, spec.dependencies) and
+            fequal(candidate_spec.variants, spec.variants) and
+            fequal(external, spec.external)):
+            return changed
+
+        # Refine this spec to the candidate.
+        if spec.virtual:
+            spec._replace_with(candidate_spec)
+            changed = True
+        if spec._dup(candidate_spec, deps=False, cleardeps=False):
+            changed = True
+        spec.external = external
+
+        return changed
+
 
     def concretize_version(self, spec):
         """If the spec is already concrete, return.  Otherwise take
-           the most recent available version, and default to the package's
-           version if there are no avaialble versions.
+           the preferred version from spackconfig, and default to the package's
+           version if there are no available versions.
 
            TODO: In many cases we probably want to look for installed
                  versions of each package and use an installed version
@@ -70,20 +177,14 @@ class DefaultConcretizer(object):
         # If there are known available versions, return the most recent
         # version that satisfies the spec
         pkg = spec.package
-
-        # Key function to sort versions first by whether they were
-        # marked `preferred=True`, then by most recent.
-        def preferred_key(v):
-            prefer = pkg.versions[v].get('preferred', False)
-            return (prefer, v)
-
+        cmp_versions = partial(spack.pkgsort.version_compare, spec.name)
         valid_versions = sorted(
             [v for v in pkg.versions
              if any(v.satisfies(sv) for sv in spec.versions)],
-            key=preferred_key)
+            cmp=cmp_versions)
 
         if valid_versions:
-            spec.versions = ver([valid_versions[-1]])
+            spec.versions = ver([valid_versions[0]])
         else:
             # We don't know of any SAFE versions that match the given
             # spec.  Grab the spec's versions and grab the highest
@@ -148,10 +249,10 @@ class DefaultConcretizer(object):
         """If the spec already has a compiler, we're done.  If not, then take
            the compiler used for the nearest ancestor with a compiler
            spec and use that.  If the ancestor's compiler is not
-           concrete, then give it a valid version.  If there is no
-           ancestor with a compiler, use the system default compiler.
+           concrete, then used the preferred compiler as specified in
+           spackconfig.
 
-           Intuition: Use the system default if no package that depends on
+           Intuition: Use the spackconfig default if no package that depends on
            this one has a strict compiler requirement.  Otherwise, try to
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
@@ -163,48 +264,91 @@ class DefaultConcretizer(object):
             spec.compiler in all_compilers):
             return False
 
-        try:
-            nearest = next(p for p in spec.traverse(direction='parents')
-                           if p.compiler is not None).compiler
+        #Find the another spec that has a compiler, or the root if none do
+        other_spec = find_spec(spec, lambda(x) : x.compiler)
+        if not other_spec:
+            other_spec = spec.root
+        other_compiler = other_spec.compiler
+        assert(other_spec)
 
-            if not nearest in all_compilers:
-                # Take the newest compiler that saisfies the spec
-                matches = sorted(spack.compilers.find(nearest))
-                if not matches:
-                    raise UnavailableCompilerVersionError(nearest)
+        # Check if the compiler is already fully specified
+        if other_compiler in all_compilers:
+            spec.compiler = other_compiler.copy()
+            return True
 
-                # copy concrete version into nearest spec
-                nearest.versions = matches[-1].versions.copy()
-                assert(nearest.concrete)
+        # Filter the compilers into a sorted list based on the compiler_order from spackconfig
+        compiler_list = all_compilers if not other_compiler else spack.compilers.find(other_compiler)
+        cmp_compilers = partial(spack.pkgsort.compiler_compare, other_spec.name)
+        matches = sorted(compiler_list, cmp=cmp_compilers)
+        if not matches:
+            raise UnavailableCompilerVersionError(other_compiler)
 
-            spec.compiler = nearest.copy()
-
-        except StopIteration:
-            spec.compiler = spack.compilers.default_compiler().copy()
-
+        # copy concrete version into other_compiler
+        spec.compiler = matches[0].copy()
+        assert(spec.compiler.concrete)
         return True  # things changed.
 
 
-    def choose_provider(self, spec, providers):
-        """This is invoked for virtual specs.  Given a spec with a virtual name,
-           say "mpi", and a list of specs of possible providers of that spec,
-           select a provider and return it.
-        """
-        assert(spec.virtual)
-        assert(providers)
+def find_spec(spec, condition):
+    """Searches the dag from spec in an intelligent order and looks
+       for a spec that matches a condition"""
+    # First search parents, then search children
+    dagiter = chain(spec.traverse(direction='parents',  root=False),
+                    spec.traverse(direction='children', root=False))
+    visited = set()
+    for relative in dagiter:
+        if condition(relative):
+            return relative
+        visited.add(id(relative))
 
-        index = spack.spec.index_specs(providers)
-        try:
-            # This could fail because:
-            #   a) There is no hint for spec.name (eg: mpi)
-            #   b) The hint for spec.name doesn't correspond to any real provier
-            #      (eg: self.choose_hints['mpi'] == 'sillympi')
-            concrete_versions = index[self.choose_hints[spec.name]]
-        except:
-            concrete_versions = index[sorted(index.keys())[0]]
+    # Then search all other relatives in the DAG *except* spec
+    for relative in spec.root.traverse():
+        if relative is spec: continue
+        if id(relative) in visited: continue
+        if condition(relative):
+            return relative
 
-        latest_version = sorted(concrete_versions)[-1]
-        return latest_version
+    # Finally search spec itself.
+    if condition(spec):
+        return spec
+
+    return None   # Nohting matched the condition.
+
+
+def cmp_specs(lhs, rhs):
+    # Package name sort order is not configurable, always goes alphabetical
+    if lhs.name != rhs.name:
+        return cmp(lhs.name, rhs.name)
+
+    # Package version is second in compare order
+    pkgname = lhs.name
+    if lhs.versions != rhs.versions:
+        return spack.pkgsort.version_compare(
+            pkgname, lhs.versions, rhs.versions)
+
+    # Compiler is third
+    if lhs.compiler != rhs.compiler:
+        return spack.pkgsort.compiler_compare(
+            pkgname, lhs.compiler, rhs.compiler)
+
+    # Variants
+    if lhs.variants != rhs.variants:
+        return spack.pkgsort.variant_compare(
+            pkgname, lhs.variants, rhs.variants)
+
+    # Architecture
+    if lhs.architecture != rhs.architecture:
+        return spack.pkgsort.architecture_compare(
+            pkgname, lhs.architecture, rhs.architecture)
+
+    # Dependency is not configurable
+    lhash, rhash = hash(lhs), hash(rhs)
+    if lhash != rhash:
+        return -1 if lhash < rhash else 1
+
+    # Equal specs
+    return 0
+
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):
@@ -222,3 +366,11 @@ class NoValidVersionError(spack.error.SpackError):
     def __init__(self, spec):
         super(NoValidVersionError, self).__init__(
             "There are no valid versions for %s that match '%s'" % (spec.name, spec.versions))
+
+
+class NoBuildError(spack.error.SpackError):
+    """Raised when a package is configured with the buildable option False, but
+       no satisfactory external versions can be found"""
+    def __init__(self, spec):
+        super(NoBuildError, self).__init__(
+            "The spec '%s' is configured as not buildable, and no matching external installs were found" % spec.name)
