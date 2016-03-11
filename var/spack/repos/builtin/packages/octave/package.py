@@ -50,7 +50,7 @@ class Octave(Package):
     depends_on('fontconfig',  when='+fontconfig')
     depends_on('freetype',    when='+freetype')
     depends_on('glpk',        when='+glpk')
-    #depends_on('gl2ps',       when='+gl2ps')
+    depends_on('gl2ps',       when='+gl2ps')
     depends_on('gnuplot',     when='+gnuplot')
     depends_on('ImageMagick', when='+magick')
     depends_on('hdf5',        when='+hdf5')
@@ -58,10 +58,10 @@ class Octave(Package):
     depends_on('llvm',        when='+llvm')
     #depends_on('opengl',      when='+opengl')
     depends_on('qhull',       when='+qhull')
-    #depends_on('qrupdate',    when='+qrupdate')
+    depends_on('qrupdate',    when='+qrupdate')
     #depends_on('qscintilla',  when='+qscintilla)
     depends_on('qt',          when='+qt')
-    depends_on('SuiteSparse', when='suitesparse')
+    depends_on('SuiteSparse', when='+suitesparse')
     depends_on('zlib',        when='+zlib')
 
 
@@ -72,7 +72,7 @@ class Octave(Package):
 
         # Required dependencies
         config_args.extend([
-            "--with-blas=%s" % spec['blas'].prefix.lib,
+            "--with-blas=%s"   % spec['blas'].prefix.lib,
             "--with-lapack=%s" % spec['lapack'].prefix.lib
         ])
 
@@ -122,7 +122,7 @@ class Octave(Package):
 
         if '+glpk' in spec:
             config_args.extend([
-                "--with-glpk-includedir=%s" % spec['glpk'].prefix.include
+                "--with-glpk-includedir=%s" % spec['glpk'].prefix.include,
                 "--with-glpk-libdir=%s"     % spec['glpk'].prefix.lib
             ])
         else:
@@ -160,13 +160,13 @@ class Octave(Package):
         else:
             config_args.append("--without-qhull")
 
-        #if '+qrupdate' in spec:
-        #    config_args.extend([
-        #        "--with-qrupdate-includedir=%s" % spec['qrupdate'].prefix.include,
-        #        "--with-qrupdate-libdir=%s"     % spec['qrupdate'].prefix.lib
-        #    ])
-        #else:
-        #    config_args.append("--without-qrupdate")
+        if '+qrupdate' in spec:
+            config_args.extend([
+                "--with-qrupdate-includedir=%s" % spec['qrupdate'].prefix.include,
+                "--with-qrupdate-libdir=%s"     % spec['qrupdate'].prefix.lib
+            ])
+        else:
+            config_args.append("--without-qrupdate")
 
         if '+zlib' in spec:
             config_args.extend([
