@@ -33,6 +33,12 @@ class PreferredPackages(object):
         self.preferred = spack.config.get_config('packages')
         self._spec_for_pkgname_cache = {}
 
+    # Reset the cached contents of config files, used for testing
+    def reset_cached_configs(self):
+        self.preferred = spack.config.get_config('packages')
+        self._spec_for_pkgname_cache = {}
+
+
     # Given a package name, sort component (e.g, version, compiler, ...), and
     # a second_key (used by providers), return the list
     def _order_for_package(self, pkgname, component, second_key, test_all=True):

@@ -55,11 +55,19 @@ packages:
     buildable: False
     paths:
       externaltool@1.0%gcc@4.5.0: /path/to/external_tool
+    providers:
+      stuff: [externalvirtual]
   externalvirtual:
+    version: [1.0, 2.0]
     buildable: False
     paths:
       externalvirtual@2.0%clang@3.3: /path/to/external_virtual_clang
       externalvirtual@1.0%gcc@4.5.0: /path/to/external_virtual_gcc
+  buildablevirtual:
+    version: [3, 4]
+  buildabletool:
+    providers:
+      stuff: [buildablevirtual]
 """
 
 class MockPackagesTest(unittest.TestCase):
@@ -93,6 +101,7 @@ class MockPackagesTest(unittest.TestCase):
         # Store changes to the package's dependencies so we can
         # restore later.
         self.saved_deps = {}
+        spack.pkgsort.reset_cached_configs()
 
 
     def set_pkg_dep(self, pkg_name, spec):
@@ -118,6 +127,7 @@ class MockPackagesTest(unittest.TestCase):
         spack.config.config_scopes = self.real_scopes
         shutil.rmtree(self.temp_config, ignore_errors=True)
         spack.config.clear_config_caches()
+        spack.pkgsort.reset_cached_configs()
 
         # Restore dependency changes that happened during the test
         for pkg_name, (pkg, deps) in self.saved_deps.items():
