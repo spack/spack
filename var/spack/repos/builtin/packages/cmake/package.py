@@ -39,12 +39,12 @@ class Cmake(Package):
 
     variant('ncurses', default=True, description='Enables the build of the ncurses gui')
     variant('qt', default=False, description='Enables the build of cmake-gui')
-    variant('sphinxbuild', default=False, description='Enables the generation of html and man page documentation')
+    variant('doc', default=False, description='Enables the generation of html and man page documentation')
 
     depends_on('ncurses', when='+ncurses')
     depends_on('qt', when='+qt')
-    depends_on('python@2.7.11:', when='+sphinxbuild')
-    depends_on('py-sphinx', when='+sphinxbuild')
+    depends_on('python@2.7.11:', when='+doc')
+    depends_on('py-sphinx', when='+doc')
 
     def url_for_version(self, version):
         """Handle CMake's version-based custom URLs."""
@@ -57,8 +57,6 @@ class Cmake(Package):
         :param spec: spec of the package
         :raises RuntimeError: in case of inconsistencies
         """
-
-        print spec
 
         if '+qt' in spec and spec.satisfies('^qt@5.4.0'):
             msg = 'qt-5.4.0 has broken CMake modules.'
@@ -75,7 +73,7 @@ class Cmake(Package):
         if '+qt' in spec:
             options.append('--qt-gui')
 
-        if '+sphinxbuild' in spec:
+        if '+doc' in spec:
             options.append('--sphinx-html')
             options.append('--sphinx-man')
 
