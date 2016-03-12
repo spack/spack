@@ -12,6 +12,8 @@ class Emacs(Package):
     #     GTK or other widget library
     #     libtiff, png, etc.
     # For now, we assume the system provides all that stuff.
+    # For Ubuntu 14.04 LTS:
+    #     sudo apt-get install libgtk-3-dev libxpm-dev libtiff5-dev libjpeg8-dev libgif-dev libpng12-dev
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)
