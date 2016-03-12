@@ -7,10 +7,11 @@ class Pism(CMakePackage):
     """Parallel Ice Sheet Model"""
 
     homepage = "http://pism-docs.org/wiki/doku.php:="
-    url      = "https://github.com/pism/pism/tarball/123"
+    url      = "https://github.com/pism/pism/tarball/v123"
+#https://github.com/pism/pism/archive/v0.7.3.tar.gz
 
-    version('88beceba', 'de444fc48fd1e818c23e459bb3d74202')		# On the new_bc branch
-
+    version('0.7.3', '7cfb034100d99d5c313c4ac06b7f17b6')
+#    version('88beceba', 'de444fc48fd1e818c23e459bb3d74202')		# On the new_bc branch
 
     variant('extra', default=False, description='Build extra executables (mostly testing/verification)')
     variant('shared', default=True, description='Build shared Pism libraries')
@@ -20,7 +21,7 @@ class Pism(CMakePackage):
     variant('parallel-netcdf3', default=False, description='Enables parallel NetCDF-3 I/O using PnetCDF.')
     variant('parallel-hdf5', default=False, description='Enables parallel HDF5 I/O.')
     #variant('tao', default=False, description='Use TAO in inverse solvers.')
-
+    variant('docs', default=False, description='Build PISM documentation (requires LaTeX and Doxygen)')
     # CMake build options not transferred to Spack variants
     #option (Pism_TEST_USING_VALGRIND "Add extra regression tests using valgrind" OFF)
     #mark_as_advanced (Pism_TEST_USING_VALGRIND)
@@ -48,12 +49,13 @@ class Pism(CMakePackage):
     def config_args(self, spec, prefix):
         return [
             '-DPism_BUILD_EXTRA_EXECS=%s' % ('YES' if '+extra' in spec else 'NO'),
-            '-DBUILD_SHARED_LIBS     =%s' % ('YES' if '+shared' in spec else 'NO'),
+            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO'),
             '-DPism_BUILD_PYTHON_BINDINGS=%s' % ('YES' if '+python' in spec else 'NO'),
             '-DPism_USE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),
             '-DPism_USE_PARALLEL_NETCDF4=%s' % ('YES' if '+parallel-netcdf4' in spec else 'NO'),
             '-DPism_USE_PNETCDF=%s' % ('YES' if '+parallel-netcdf3' in spec else 'NO'),
-            '-DPism_USE_PARALLEL_HDF5=%s' % ('YES' if '+parallel-hdf5' in spec else 'NO')]
+            '-DPism_USE_PARALLEL_HDF5=%s' % ('YES' if '+parallel-hdf5' in spec else 'NO'),
+            '-DPism_BUILD_PDFS=%s' % ('YES' if '+docs' in spec else 'NO')]
 
     def install_version(self, spec, prefix):
         #cmake = which('cmake')

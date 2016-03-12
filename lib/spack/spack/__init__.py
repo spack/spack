@@ -102,7 +102,7 @@ abi = ABI()
 
 choose_hints = {'mpi' : 'openmpi'}
 from spack.concretize import DefaultConcretizer
-concretizer = DefaultConcretizer(choose_hints=choose_hints)
+concretizer = DefaultConcretizer()
 
 # Version information
 from spack.version import Version

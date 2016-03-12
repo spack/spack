@@ -4,9 +4,10 @@ class NetcdfCxx4(Package):
     """C++ interface for NetCDF4"""
     homepage = "http://www.unidata.ucar.edu/downloads/netcdf/netcdf-cxx/index.jsp"
 #    url      = "http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-cxx4-4.2.tar.gz"
-    url      = "https://github.com/unidata/netcdf-cxx4/tarball/123"
+    url      = "https://www.github.com/unidata/netcdf-cxx4/tarball/v123"
 
-    version('ecdf914', 'afca0c0aeb5c0863c5153c08ad0af534')
+#    version('ecdf914', 'afca0c0aeb5c0863c5153c08ad0af534')
+    version('ecdf914', git='https://github.com/Unidata/netcdf-cxx4.git', commit='ecdf914')
     version('4.2.1', 'd019853802092cf686254aaba165fc81')
 
 
