@@ -66,7 +66,7 @@ import spack.fetch_strategy as fs
 from spack.version import *
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive, extension
-from spack.util.executable import ProcessError
+from spack.util.executable import ProcessError, which
 from spack.util.environment import dump_environment
 
 """Allowed URL schemes for spack packages."""
@@ -826,7 +826,8 @@ class Package(object):
 
     def do_install(self,
                    keep_prefix=False,  keep_stage=False, ignore_deps=False,
-                   skip_patch=False, verbose=False, make_jobs=None, fake=False):
+                   skip_patch=False, verbose=False, make_jobs=None, fake=False,
+                   install_phases = {'spconfig', 'configure', 'build', 'install'}):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -881,6 +882,10 @@ class Package(object):
             tty.msg("Building %s" % self.name)
 
             self.stage.keep = keep_stage
+            self.install_phases = install_phases
+            self.build_directory = join_path(self.stage.path, 'spack-build')
+            self.source_directory = self.stage.source_path
+
             with self.stage:
                 # Run the pre-install hook in the child process after
                 # the directory is created.
@@ -1290,6 +1295,97 @@ def _hms(seconds):
     if m: parts.append("%dm" % m)
     if s: parts.append("%.2fs" % s)
     return ' '.join(parts)
+
+class StagedPackage(Package):
+    """A Package subclass where the install() is split up into stages."""
+
+    def install_spconfig(self):
+        """Creates an spconfig.py script to configure the package later if we like."""
+        raise InstallError("Package %s provides no install_spconfig() method!" % self.name)
+
+    def install_configure(self):
+        """Runs the configure process."""   
+        raise InstallError("Package %s provides no install_configure() method!" % self.name)
+
+    def install_build(self):
+        """Runs the build process."""       
+        raise InstallError("Package %s provides no install_build() method!" % self.name)
+
+    def install_install(self):
+        """Runs the install process."""     
+        raise InstallError("Package %s provides no install_install() method!" % self.name)
+
+    def install(self, spec, prefix):
+        if 'spconfig' in self.install_phases:
+            self.install_spconfig()
+
+        if 'configure' in self.install_phases:
+            self.install_configure()
+
+        if 'build' in self.install_phases:
+            self.install_build()
+
+        if 'install' in self.install_phases:
+            self.install_install()
+        else:
+            # Create a dummy file so the build doesn't fail.
+            # That way, the module file will also be created.
+            with open(os.path.join(prefix, 'dummy'), 'w') as fout:
+                pass
+
+
+class CMakePackage(StagedPackage):
+
+    def configure_args(self):
+        """Returns package-specific arguments to be provided to the configure command."""
+        return list()
+
+    def configure_env(self):
+        """Returns package-specific environment under which the configure command should be run."""
+        return dict()
+
+    def cmake_transitive_include_path(self):
+        return ';'.join(
+            os.path.join(dep, 'include')
+            for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
+        )
+
+    def install_spconfig(self):
+        cmd = [str(which('cmake'))] + \
+            spack.build_environment.get_std_cmake_args(self) + \
+            ['-DCMAKE_INSTALL_PREFIX=%s' % os.environ['SPACK_PREFIX'],
+            '-DCMAKE_C_COMPILER=%s' % os.environ['SPACK_CC'],
+            '-DCMAKE_CXX_COMPILER=%s' % os.environ['SPACK_CXX'],
+            '-DCMAKE_Fortran_COMPILER=%s' % os.environ['SPACK_FC']] + \
+            self.configure_args()
+
+        env = dict()
+        env['PATH'] = os.environ['PATH']
+        env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = self.cmake_transitive_include_path()
+        env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
+
+        with open('spconfig.py', 'w') as fout:
+            fout.write('import sys\nimport os\nimport subprocess\n')
+            fout.write('env = {}\n'.format(repr(env)))
+            fout.write('cmd = {} + sys.argv[1:]\n'.format(repr(cmd)))
+            fout.write('proc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
+
+
+    def install_configure(self):
+        cmake = which('cmake')
+        with working_dir(self.build_directory, create=True):
+            os.environ.update(self.configure_env())
+            os.environ['CMAKE_TRANSITIVE_INCLUDE_PATH'] = self.cmake_transitive_include_path()
+            options = self.configure_args() + spack.build_environment.get_std_cmake_args(self)
+            cmake(self.source_directory, *options)
+
+    def install_build(self):
+        with working_dir(self.build_directory, create=False):
+            make()
+
+    def install_install(self):
+        with working_dir(self.build_directory, create=False):
+            make('install')
 
 
 class FetchError(spack.error.SpackError):
