@@ -45,6 +45,9 @@ import multiprocessing
 from urlparse import urlparse, urljoin
 import textwrap
 from StringIO import StringIO
+import shutil
+import sys
+import string
 
 import llnl.util.tty as tty
 from llnl.util.tty.log import log_output
@@ -68,6 +71,7 @@ from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive, extension
 from spack.util.executable import ProcessError, which
 from spack.util.environment import dump_environment
+from spack import directory_layout
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -827,7 +831,7 @@ class Package(object):
     def do_install(self,
                    keep_prefix=False,  keep_stage=False, ignore_deps=False,
                    skip_patch=False, verbose=False, make_jobs=None, fake=False,
-                   install_phases = {'spconfig', 'configure', 'build', 'install'}):
+                   install_phases = {'configure', 'build', 'install', 'provenance'}):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -853,7 +857,7 @@ class Package(object):
             return
 
         # Ensure package is not already installed
-        if spack.install_layout.check_installed(self.spec):
+        if 'install' in install_phases and spack.install_layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
             return
 
@@ -895,35 +899,46 @@ class Package(object):
                     self.do_fake_install()
                 else:
                     # Do the real install in the source directory.
-                     self.stage.chdir_to_source()
+                    self.stage.chdir_to_source()
 
-                     # Save the build environment in a file before building.
-                     env_path = join_path(os.getcwd(), 'spack-build.env')
+                    # Save the build environment in a file before building.
+                    env_path = join_path(os.getcwd(), 'spack-build.env')
 
-                     try:
-                        # Redirect I/O to a build log (and optionally to the terminal)
-                        log_path = join_path(os.getcwd(), 'spack-build.out')
-                        log_file = open(log_path, 'w')
-                        with log_output(log_file, verbose, sys.stdout.isatty(), True):
-                            dump_environment(env_path)
-                            self.install(self.spec, self.prefix)
+                    try:
+                       # Redirect I/O to a build log (and optionally to the terminal)
+                       log_path = join_path(os.getcwd(), 'spack-build.out')
+                       log_file = open(log_path, 'w')
+                       with log_output(log_file, verbose, sys.stdout.isatty(), True):
+                           dump_environment(env_path)
+                           self.install(self.spec, self.prefix)
 
-                     except ProcessError as e:
-                         # Annotate ProcessErrors with the location of the build log.
-                         e.build_log = log_path
-                         raise e
+                    except ProcessError as e:
+                        # Annotate ProcessErrors with the location of the build log.
+                        e.build_log = log_path
+                        raise e
 
-                     # Ensure that something was actually installed.
-                     self._sanity_check_install()
+                    # Ensure that something was actually installed.
+                    if 'install' in self.install_phases:
+                        self._sanity_check_install()
 
-                     # Copy provenance into the install directory on success
-                     log_install_path = spack.install_layout.build_log_path(self.spec)
-                     env_install_path = spack.install_layout.build_env_path(self.spec)
-                     packages_dir = spack.install_layout.build_packages_path(self.spec)
 
-                     install(log_path, log_install_path)
-                     install(env_path, env_install_path)
-                     dump_packages(self.spec, packages_dir)
+                    # Copy provenance into the install directory on success
+                    if 'provenance' in self.install_phases:
+
+                        log_install_path = spack.install_layout.build_log_path(self.spec)
+                        env_install_path = spack.install_layout.build_env_path(self.spec)
+                        packages_dir = spack.install_layout.build_packages_path(self.spec)
+
+                        # Remove first if we're overwriting another build
+                        # (can happen with spack spconfig)
+                        try:
+                            shutil.rmtree(packages_dir)   # log_install_path and env_install_path are inside this
+                        except:
+                            pass
+
+                        install(log_path, log_install_path)
+                        install(env_path, env_install_path)
+                        dump_packages(self.spec, packages_dir)
 
             # Stop timer.
             self._total_time = time.time() - start_time
@@ -937,16 +952,29 @@ class Package(object):
         try:
             # Create the install prefix and fork the build process.
             spack.install_layout.create_install_directory(self.spec)
+        except directory_layout.InstallDirectoryAlreadyExistsError:
+            if 'install' in install_phases:
+                # Abort install if install directory exists.
+                # But do NOT remove it (you'd be overwriting someon else's stuff)
+                tty.warn("Keeping existing install prefix in place.")
+                raise
+            else:
+                # We're not installing anyway, so don't worry if someone
+                # else has already written in the install directory
+                pass
+
+        try:
             spack.build_environment.fork(self, build_process)
         except:
             # remove the install prefix if anything went wrong during install.
-            if not keep_prefix:
-                self.remove_prefix()
-            else:
+            if keep_prefix:
                 tty.warn("Keeping install prefix in place despite error.",
                          "Spack will think this package is installed. " +
                          "Manually remove this directory to fix:",
                          self.prefix, wrap=True)
+            else:
+                self.remove_prefix()
+
             raise
 
         # note: PARENT of the build process adds the new package to
@@ -1333,6 +1361,12 @@ class StagedPackage(Package):
             with open(os.path.join(prefix, 'dummy'), 'w') as fout:
                 pass
 
+# stackoverflow.com/questions/12791997/how-do-you-do-a-simple-chmod-x-from-within-python
+def make_executable(path):
+    mode = os.stat(path).st_mode
+    mode |= (mode & 0o444) >> 2    # copy R bits to X
+    os.chmod(path, mode)
+
 
 class CMakePackage(StagedPackage):
 
@@ -1364,11 +1398,44 @@ class CMakePackage(StagedPackage):
         env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = self.cmake_transitive_include_path()
         env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
 
-        with open('spconfig.py', 'w') as fout:
-            fout.write('import sys\nimport os\nimport subprocess\n')
-            fout.write('env = {}\n'.format(repr(env)))
-            fout.write('cmd = {} + sys.argv[1:]\n'.format(repr(cmd)))
-            fout.write('proc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
+        spconfig_fname = 'spconfig.py'
+        with open(spconfig_fname, 'w') as fout:
+            fout.write(\
+r"""#!{}
+#
+
+import sys
+import os
+import subprocess
+
+def cmdlist(str):
+	return list(x.strip().replace("'",'') for x in str.split('\n') if x)
+env = dict()
+""".format(sys.executable))
+
+            env_vars = sorted(list(env.keys()))
+            for name in env_vars:
+                val = env[name]
+                if string.find(name, 'PATH') < 0:
+                    fout.write('env[{}] = {}\n'.format(repr(name),repr(val)))
+                else:
+                    if name == 'CMAKE_TRANSITIVE_INCLUDE_PATH':
+                        sep = ';'
+                    else:
+                        sep = ':'
+
+                    fout.write('env[{}] = "{}".join(cmdlist("""\n'.format(repr(name),sep))
+                    for part in string.split(val, sep):
+                        fout.write('    {}\n'.format(part))
+                    fout.write('"""))\n')
+
+            fout.write('\ncmd = cmdlist("""\n')
+            fout.write('{}\n'.format(cmd[0]))
+            for arg in cmd[1:]:
+                fout.write('    {}\n'.format(arg))
+            fout.write('""") + sys.argv[1:]\n')
+            fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
+        make_executable(spconfig_fname)
 
 
     def install_configure(self):
