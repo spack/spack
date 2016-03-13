@@ -831,7 +831,7 @@ class Package(object):
     def do_install(self,
                    keep_prefix=False,  keep_stage=False, ignore_deps=False,
                    skip_patch=False, verbose=False, make_jobs=None, fake=False,
-                   install_phases = {'configure', 'build', 'install', 'provenance'}):
+                   install_phases = set(['configure', 'build', 'install', 'provenance'])):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -1401,7 +1401,7 @@ class CMakePackage(StagedPackage):
         spconfig_fname = 'spconfig.py'
         with open(spconfig_fname, 'w') as fout:
             fout.write(\
-r"""#!{}
+r"""#!%s
 #
 
 import sys
@@ -1411,28 +1411,28 @@ import subprocess
 def cmdlist(str):
 	return list(x.strip().replace("'",'') for x in str.split('\n') if x)
 env = dict()
-""".format(sys.executable))
+""" % sys.executable)
 
             env_vars = sorted(list(env.keys()))
             for name in env_vars:
                 val = env[name]
                 if string.find(name, 'PATH') < 0:
-                    fout.write('env[{}] = {}\n'.format(repr(name),repr(val)))
+                    fout.write('env[%s] = %s\n' % (repr(name),repr(val)))
                 else:
                     if name == 'CMAKE_TRANSITIVE_INCLUDE_PATH':
                         sep = ';'
                     else:
                         sep = ':'
 
-                    fout.write('env[{}] = "{}".join(cmdlist("""\n'.format(repr(name),sep))
+                    fout.write('env[%s] = "%s".join(cmdlist("""\n' % (repr(name),sep))
                     for part in string.split(val, sep):
-                        fout.write('    {}\n'.format(part))
+                        fout.write('    %s\n' % part)
                     fout.write('"""))\n')
 
             fout.write('\ncmd = cmdlist("""\n')
-            fout.write('{}\n'.format(cmd[0]))
+            fout.write('%s\n' % cmd[0])
             for arg in cmd[1:]:
-                fout.write('    {}\n'.format(arg))
+                fout.write('    %s\n' % arg)
             fout.write('""") + sys.argv[1:]\n')
             fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
         make_executable(spconfig_fname)

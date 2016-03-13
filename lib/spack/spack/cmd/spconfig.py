@@ -94,4 +94,4 @@ def spconfig(self, args):
             ignore_deps=args.ignore_deps,
             verbose=not args.quiet,
             keep_stage=True,   # don't remove source dir for SPCONFIG.
-            install_phases = {'spconfig', 'provenance'})
+            install_phases = set(['spconfig', 'provenance']))

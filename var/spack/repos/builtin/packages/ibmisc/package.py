@@ -44,4 +44,3 @@ class Ibmisc(CMakePackage):
             '-DUSE_BOOST=%s' % ('YES' if '+boost' in spec else 'NO'),
             '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
             '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO')]
-
