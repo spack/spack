@@ -69,10 +69,8 @@ def spconfig(self, args):
                 edit_package(spec.name, spack.repo.first_repo(), None, True)
                 return
 
-        print('spec', spec)
-
-        if not spec.version.concrete:
-            tty.die("spack spconfig spec must have a single, concrete version.")
+        if not spec.versions.concrete:
+            tty.die("spack spconfig spec must have a single, concrete version.  Did you forget a package version number?")
 
         spec.concretize()
         package = spack.repo.get(spec)
