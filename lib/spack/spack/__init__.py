@@ -173,7 +173,7 @@ sys_type = None
 #       should live.  This file is overloaded for spack core vs. for packages.
 #
 __all__ = ['Package', 'Version', 'when', 'ver']
-from spack.package import Package, ExtensionConflictError
+from spack.package import Package, CMakePackage, ExtensionConflictError
 from spack.version import Version, ver
 from spack.multimethod import when
 
