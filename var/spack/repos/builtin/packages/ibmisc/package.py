@@ -1,4 +1,5 @@
 from spack import *
+import llnl.util.tty as tty
 
 class Ibmisc(CMakePackage):
     """Misc. reusable utilities used by IceBin."""
@@ -15,7 +16,7 @@ class Ibmisc(CMakePackage):
     variant('boost', default=True, description='Compile utilities for Boost library')
     variant('udunits2', default=True, description='Compile utilities for UDUNITS2 library')
     variant('googletest', default=True, description='Compile utilities for Google Test library')
-    variant('python', default=True, description='Compile utilities for use with Python/Cython')
+    variant('python', default=True, description='Compile utilities fro use with Python/Cython')
 
     extends('python')
 
@@ -26,16 +27,18 @@ class Ibmisc(CMakePackage):
     depends_on('netcdf-cxx4', when='+netcdf')
     depends_on('udunits2', when='+udunits2')
     depends_on('googletest', when='+googletest')
+#    depends_on('python', when='+python')
     depends_on('py-cython', when='+python')
     depends_on('py-numpy', when='+python')
     depends_on('boost', when='+boost')
+
+
 
     # Build dependencies
     depends_on('cmake')
     depends_on('doxygen')
 
-    def configure_args(self):
-        spec = self.spec
+    def config_args(self, spec, prefix):
         return [
             '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
             '-DUSE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),

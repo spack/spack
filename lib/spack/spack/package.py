@@ -831,7 +831,7 @@ class Package(object):
     def do_install(self,
                    keep_prefix=False,  keep_stage=False, ignore_deps=False,
                    skip_patch=False, verbose=False, make_jobs=None, fake=False,
-                   install_phases = {'configure', 'build', 'install', 'provenance'}):
+                   install_phases = set(['configure', 'build', 'install', 'provenance'])):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
