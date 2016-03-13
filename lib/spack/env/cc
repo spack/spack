@@ -113,28 +113,31 @@ case "$command" in
         ;;
 esac
 
+# If any of the arguments below is present then the mode is vcheck. In vcheck mode nothing is added in terms of extra search paths or libraries
+if [ -z "$mode" ]; then
+    for arg in "$@"; do
+        if [ "$arg" = -v -o "$arg" = -V -o "$arg" = --version -o "$arg" = -dumpversion ]; then
+            mode=vcheck
+            break
+    fi
+    done
+fi
+
 # Finish setting up the mode.
-if [[ -z $mode ]]; then
+
+if [ -z "$mode" ]; then
     mode=ccld
     for arg in "$@"; do
-        case "$arg" in
-            -v|-V|--version|-dumpversion)
-                mode=vcheck
-                break
-                ;;
-            -E)
-                mode=cpp
-                break
-                ;;
-            -c)
-                mode=cc
-                break
-                ;;
-            -S)
-                mode=as
-                break
-                ;;
-        esac
+        if [ "$arg" = -E ]; then
+            mode=cpp
+            break
+        elif [ "$arg" = -c ]; then
+            mode=cc
+            break
+        elif [ "$arg" = -S ]; then
+            mode=as
+            break
+        fi
     done
 fi
 
@@ -150,12 +153,20 @@ if [[ -z $command ]]; then
     die "ERROR: Compiler '$SPACK_COMPILER_SPEC' does not support compiling $language programs."
 fi
 
+if [ "$mode" == vcheck ] ; then
+    exec ${command} "$@"
+fi
+
 # Save original command for debug logging
 input_command="$@"
 args=("$@")
 
 # Dump parsed values for unit testing if asked for
 if [[ -n $SPACK_TEST_COMMAND ]]; then
+
+    if [ "$mode" == vcheck ] ; then
+        exec ${command} "$@"
+    fi
 
     #
     # Now do real parsing of the command line args, trying hard to keep

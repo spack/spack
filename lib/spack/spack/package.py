@@ -825,7 +825,7 @@ class Package(object):
 
 
     def do_install(self,
-                   keep_prefix=False,  keep_stage=None, ignore_deps=False,
+                   keep_prefix=False,  keep_stage=False, ignore_deps=False,
                    skip_patch=False, verbose=False, make_jobs=None, fake=False):
         """Called by commands to install a package and its dependencies.
 
@@ -834,8 +834,9 @@ class Package(object):
 
         Args:
         keep_prefix -- Keep install prefix on failure. By default, destroys it.
-        keep_stage  -- Set to True or false to always keep or always delete stage.
-                       By default, stage is destroyed only if there are no exceptions.
+        keep_stage  -- By default, stage is destroyed only if there are no
+                       exceptions during build. Set to True to keep the stage
+                       even with exceptions.
         ignore_deps -- Do not install dependencies before installing this package.
         fake        -- Don't really build -- install fake stub files instead.
         skip_patch  -- Skip patch stage of build if True.
@@ -844,6 +845,11 @@ class Package(object):
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
+
+        # No installation needed if package is external
+        if self.spec.external:
+            tty.msg("%s is externally installed in %s" % (self.name, self.spec.external))
+            return
 
         # Ensure package is not already installed
         if spack.install_layout.check_installed(self.spec):
