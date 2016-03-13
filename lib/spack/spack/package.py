@@ -1417,7 +1417,7 @@ env = dict()
             for name in env_vars:
                 val = env[name]
                 if string.find(name, 'PATH') < 0:
-                    fout.write('env[%s] = %s\n'. % (repr(name),repr(val)))
+                    fout.write('env[%s] = %s\n' % (repr(name),repr(val)))
                 else:
                     if name == 'CMAKE_TRANSITIVE_INCLUDE_PATH':
                         sep = ';'
