@@ -76,7 +76,7 @@ def diy(self, args):
                 return
 
         if not spec.versions.concrete:
-            tty.die("spack spconfig spec must have a single, concrete version.  Did you forget a package version number?")
+            tty.die("spack diy spec must have a single, concrete version.  Did you forget a package version number?")
 
         spec.concretize()
         package = spack.repo.get(spec)
