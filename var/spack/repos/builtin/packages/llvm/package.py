@@ -52,7 +52,7 @@ class Llvm(Package):
     depends_on('cmake @2.8.12.2:')
 
     # Universal dependency
-    depends_on('python@2.7:')
+    depends_on('python @2.7:2.999')
 
     # lldb dependencies
     depends_on('ncurses', when='+lldb')
