@@ -418,9 +418,11 @@ class Spec(object):
         # cases we've read them from a file want to assume normal.
         # This allows us to manipulate specs that Spack doesn't have
         # package.py files for.
-        self._normal = kwargs.get('normal', False)
+        self._normal   = kwargs.get('normal', False)
         self._concrete = kwargs.get('concrete', False)
-        self.external = None
+
+        # Allow a spec to be constructed with an external path.
+        self.external  = kwargs.get('external', None)
 
         # This allows users to construct a spec DAG with literals.
         # Note that given two specs a and b, Spec(a) copies a, but
@@ -794,8 +796,30 @@ class Spec(object):
         """Replace this virtual spec with a concrete spec."""
         assert(self.virtual)
         for name, dependent in self.dependents.items():
+            # remove self from all dependents.
             del dependent.dependencies[self.name]
-            dependent._add_dependency(concrete)
+
+            # add the replacement, unless it is already a dep of dependent.
+            if concrete.name not in dependent.dependencies:
+                dependent._add_dependency(concrete)
+
+
+    def _replace_node(self, replacement):
+        """Replace this spec with another.
+
+        Connects all dependents of this spec to its replacement, and
+        disconnects this spec from any dependencies it has. New spec
+        will have any dependencies the replacement had, and may need
+        to be normalized.
+
+        """
+        for name, dependent in self.dependents.items():
+            del dependent.dependencies[self.name]
+            dependent._add_dependency(replacement)
+
+        for name, dep in self.dependencies.items():
+            del dep.dependents[self.name]
+            del self.dependencies[dep.name]
 
 
     def _expand_virtual_packages(self):
@@ -815,18 +839,80 @@ class Spec(object):
               this are infrequent, but should implement this before it is
               a problem.
         """
+        # Make an index of stuff this spec already provides
+        self_index = ProviderIndex(self.traverse(), restrict=True)
+
         changed = False
         done = False
         while not done:
             done = True
             for spec in list(self.traverse()):
-                if spack.concretizer.concretize_virtual_and_external(spec):
-                    done = False
+                replacement = None
+                if spec.virtual:
+                    replacement = self._find_provider(spec, self_index)
+                    if replacement:
+                        # TODO: may break if in-place on self but
+                        # shouldn't happen if root is traversed first.
+                        spec._replace_with(replacement)
+                        done=False
+                        break
+
+                if not replacement:
+                    # Get a list of possible replacements in order of preference.
+                    candidates = spack.concretizer.choose_virtual_or_external(spec)
+
+                    # Try the replacements in order, skipping any that cause
+                    # satisfiability problems.
+                    for replacement in candidates:
+                        if replacement is spec:
+                            break
+
+                        # Replace spec with the candidate and normalize
+                        copy = self.copy()
+                        copy[spec.name]._dup(replacement.copy(deps=False))
+
+                        try:
+                            # If there are duplicate providers or duplicate provider
+                            # deps, consolidate them and merge constraints.
+                            copy.normalize(force=True)
+                            break
+                        except SpecError as e:
+                            # On error, we'll try the next replacement.
+                            continue
+
+                # If replacement is external then trim the dependencies
+                if replacement.external:
+                    if (spec.dependencies):
+                        changed = True
+                        spec.dependencies = DependencyMap()
+                    replacement.dependencies = DependencyMap()
+
+                # TODO: could this and the stuff in _dup be cleaned up?
+                def feq(cfield, sfield):
+                    return (not cfield) or (cfield == sfield)
+
+                if replacement is spec or (feq(replacement.name, spec.name) and
+                    feq(replacement.versions, spec.versions) and
+                    feq(replacement.compiler, spec.compiler) and
+                    feq(replacement.architecture, spec.architecture) and
+                    feq(replacement.dependencies, spec.dependencies) and
+                    feq(replacement.variants, spec.variants) and
+                    feq(replacement.external, spec.external)):
+                    continue
+
+                # Refine this spec to the candidate. This uses
+                # replace_with AND dup so that it can work in
+                # place. TODO: make this more efficient.
+                if spec.virtual:
+                    spec._replace_with(replacement)
+                    changed = True
+                if spec._dup(replacement, deps=False, cleardeps=False):
                     changed = True
 
-        # If there are duplicate providers or duplicate provider deps, this
-        # consolidates them and merge constraints.
-        changed |= self.normalize(force=True)
+                self_index.update(spec)
+                done=False
+                break
+
         return changed
 
 
@@ -850,7 +936,7 @@ class Spec(object):
         force = False
 
         while changed:
-            changes = (self.normalize(force=force),
+            changes = (self.normalize(force),
                        self._expand_virtual_packages(),
                        self._concretize_helper())
             changed = any(changes)
@@ -976,8 +1062,8 @@ class Spec(object):
 
     def _find_provider(self, vdep, provider_index):
         """Find provider for a virtual spec in the provider index.
-        Raise an exception if there is a conflicting virtual
-        dependency already in this spec.
+           Raise an exception if there is a conflicting virtual
+           dependency already in this spec.
         """
         assert(vdep.virtual)
         providers = provider_index.providers_for(vdep)
@@ -1018,17 +1104,14 @@ class Spec(object):
         """
         changed = False
 
-        # If it's a virtual dependency, try to find a provider and
-        # merge that.
+        # If it's a virtual dependency, try to find an existing
+        # provider in the spec, and merge that.
         if dep.virtual:
             visited.add(dep.name)
             provider = self._find_provider(dep, provider_index)
             if provider:
                 dep = provider
-
         else:
-            # if it's a real dependency, check whether it provides
-            # something already required in the spec.
             index = ProviderIndex([dep], restrict=True)
             for vspec in (v for v in spec_deps.values() if v.virtual):
                 if index.providers_for(vspec):
@@ -1125,13 +1208,14 @@ class Spec(object):
         # Get all the dependencies into one DependencyMap
         spec_deps = self.flat_dependencies(copy=False)
 
-        # Initialize index of virtual dependency providers
-        index = ProviderIndex(spec_deps.values(), restrict=True)
+        # Initialize index of virtual dependency providers if
+        # concretize didn't pass us one already
+        provider_index = ProviderIndex(spec_deps.values(), restrict=True)
 
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
         visited = set()
-        any_change = self._normalize_helper(visited, spec_deps, index)
+        any_change = self._normalize_helper(visited, spec_deps, provider_index)
 
         # If there are deps specified but not visited, they're not
         # actually deps of this package.  Raise an error.
@@ -1410,13 +1494,12 @@ class Spec(object):
                Whether deps should be copied too.  Set to false to copy a
                spec but not its dependencies.
         """
-
         # We don't count dependencies as changes here
         changed = True
         if hasattr(self, 'name'):
-            changed = (self.name != other.name and self.versions != other.versions and \
-                       self.architecture != other.architecture and self.compiler != other.compiler and \
-                       self.variants != other.variants and self._normal != other._normal and \
+            changed = (self.name != other.name and self.versions != other.versions and
+                       self.architecture != other.architecture and self.compiler != other.compiler and
+                       self.variants != other.variants and self._normal != other._normal and
                        self.concrete != other.concrete and self.external != other.external)
 
         # Local node attributes get copied first.
