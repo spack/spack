@@ -4,10 +4,9 @@ import os
 class Julia(Package):
     """The Julia Language: A fresh approach to technical computing"""
     homepage = "http://julialang.org"
-    url      = "http://github.com/JuliaLang/julia/releases/download/v0.4.2/julia-0.4.2.tar.gz"
+    url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
 
-    version('0.4.3', '7b9f096798fca4bef262a64674bc2b52')
-    version('0.4.2', 'ccfeb4f4090c8b31083f5e1ccb03eb06')
+    version('0.4.3', '8a4a59fd335b05090dd1ebefbbe5aaac')
 
     patch('gc.patch')
 
