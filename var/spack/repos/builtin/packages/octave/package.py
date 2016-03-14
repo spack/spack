@@ -12,6 +12,7 @@ class Octave(Package):
 
     version('4.0.0' , 'a69f8320a4f20a8480c1b278b1adb799')
 
+    # Variants
     variant('readline',   default=True)
     variant('arpack',     default=False)
     variant('curl',       default=False)
@@ -45,7 +46,7 @@ class Octave(Package):
     # Optional dependencies
     depends_on('arpack',      when='+arpack')
     depends_on('curl',        when='+curl')
-    depends_on('fftw@3',      when='+fftw')
+    depends_on('fftw',      when='+fftw')
     depends_on('fltk',        when='+fltk')
     depends_on('fontconfig',  when='+fontconfig')
     depends_on('freetype',    when='+freetype')
@@ -56,10 +57,10 @@ class Octave(Package):
     depends_on('hdf5',        when='+hdf5')
     depends_on('jdk',         when='+jdk')
     depends_on('llvm',        when='+llvm')
-    #depends_on('opengl',      when='+opengl')
+    #depends_on('opengl',      when='+opengl')    # TODO: add package
     depends_on('qhull',       when='+qhull')
     depends_on('qrupdate',    when='+qrupdate')
-    #depends_on('qscintilla',  when='+qscintilla)
+    #depends_on('qscintilla',  when='+qscintilla) # TODO: add package
     depends_on('qt',          when='+qt')
     depends_on('SuiteSparse', when='+suitesparse')
     depends_on('zlib',        when='+zlib')
@@ -146,11 +147,11 @@ class Octave(Package):
                 "--with-java-libdir=%s"     % spec['jdk'].prefix.lib
             ])
 
-        #if '~opengl' in spec:
-        #    config_args.extend([
-        #        "--without-opengl",
-        #        "--without-framework-opengl"
-        #    ])
+        if '~opengl' in spec:
+            config_args.extend([
+                "--without-opengl",
+                "--without-framework-opengl"
+            ])
 
         if '+qhull' in spec:
             config_args.extend([

@@ -9,10 +9,10 @@ class Qrupdate(Package):
 
     version('1.1.2', '6d073887c6e858c24aeda5b54c57a8c4')
 
-    depends_on("openblas")
+    depends_on("blas")
+    depends_on("lapack")
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")
+        # Build static and dynamic libraries
+        make("lib", "solib")
+        make("install", "PREFIX=%s" % prefix)
