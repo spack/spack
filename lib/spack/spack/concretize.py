@@ -238,7 +238,7 @@ class DefaultConcretizer(object):
            the default variants from the package specification.
         """
         changed = False
-        for name, variant in spec.package.variants.items():
+        for name, variant in spec.package_class.variants.items():
             if name not in spec.variants:
                 spec.variants[name] = spack.spec.VariantSpec(name, variant.default)
                 changed = True

@@ -353,7 +353,7 @@ class VariantMap(HashableMap):
     @property
     def concrete(self):
         return self.spec._concrete or all(
-            v in self for v in self.spec.package.variants)
+            v in self for v in self.spec.package_class.variants)
 
 
     def copy(self):
@@ -496,6 +496,14 @@ class Spec(object):
     @property
     def package(self):
         return spack.repo.get(self)
+
+
+    @property
+    def package_class(self):
+        """Internal package call gets only the class object for a package.
+           Use this to just get package metadata.
+        """
+        return spack.repo.get_pkg_class(self.name)
 
 
     @property
@@ -1161,7 +1169,7 @@ class Spec(object):
 
             # Ensure that variants all exist.
             for vname, variant in spec.variants.items():
-                if vname not in spec.package.variants:
+                if vname not in spec.package_class.variants:
                     raise UnknownVariantError(spec.name, vname)
 
 
