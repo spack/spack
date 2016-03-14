@@ -16,12 +16,12 @@ class Pism(CMakePackage):
     variant('extra', default=False, description='Build extra executables (mostly testing/verification)')
     variant('shared', default=True, description='Build shared Pism libraries')
     variant('python', default=False, description='Build python bindings')
-    variant('proj', default=False, description='Use Proj.4 to compute cell areas, longitudes, and latitudes.')
+    variant('proj', default=True, description='Use Proj.4 to compute cell areas, longitudes, and latitudes.')
     variant('parallel-netcdf4', default=False, description='Enables parallel NetCDF-4 I/O.')
     variant('parallel-netcdf3', default=False, description='Enables parallel NetCDF-3 I/O using PnetCDF.')
     variant('parallel-hdf5', default=False, description='Enables parallel HDF5 I/O.')
     #variant('tao', default=False, description='Use TAO in inverse solvers.')
-    variant('docs', default=False, description='Build PISM documentation (requires LaTeX and Doxygen)')
+    variant('doc', default=False, description='Build PISM documentation (requires LaTeX and Doxygen)')
     # CMake build options not transferred to Spack variants
     #option (Pism_TEST_USING_VALGRIND "Add extra regression tests using valgrind" OFF)
     #mark_as_advanced (Pism_TEST_USING_VALGRIND)
@@ -46,7 +46,8 @@ class Pism(CMakePackage):
     # Build dependencies
     depends_on('cmake')
 
-    def config_args(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         return [
             '-DPism_BUILD_EXTRA_EXECS=%s' % ('YES' if '+extra' in spec else 'NO'),
             '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO'),
@@ -55,26 +56,7 @@ class Pism(CMakePackage):
             '-DPism_USE_PARALLEL_NETCDF4=%s' % ('YES' if '+parallel-netcdf4' in spec else 'NO'),
             '-DPism_USE_PNETCDF=%s' % ('YES' if '+parallel-netcdf3' in spec else 'NO'),
             '-DPism_USE_PARALLEL_HDF5=%s' % ('YES' if '+parallel-hdf5' in spec else 'NO'),
-            '-DPism_BUILD_PDFS=%s' % ('YES' if '+docs' in spec else 'NO')]
-
-    def install_version(self, spec, prefix):
-        #cmake = which('cmake')
-        #make = which('make')
-
-
-        options = self.config_args(spec, prefix) + spack.build_environment.get_std_cmake_args(self)
-
-        build_directory = join_path(self.stage.path, 'spack-build')
-        source_directory = self.stage.source_path
-        with working_dir(build_directory, create=True):
-            print 'CMAKE', source_directory, options
-            cmake(source_directory, *options)
-            make()
-            make("install")   # Installs binaries but no headers
-            print 'PATH', self.stage.path
-            print 'SOURCE_PATH', self.stage.source_path
-            print 'CMAKE2', source_directory
-            install_tree(os.path.join(source_directory, 'src'), prefix.include)
+            '-DPism_BUILD_PDFS=%s' % ('YES' if '+doc' in spec else 'NO')]
 
 # > Do you have handy a table of which versions of PETSc are required for which
 # > versions of PISM?
