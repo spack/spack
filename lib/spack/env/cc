@@ -279,7 +279,9 @@ fi
 IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
 for dep in "${deps[@]}"; do
     if [[ -d $dep/include ]]; then
-        args=("-I$dep/include" "${args[@]}")
+        if [[ $mode = cpp || $mode = cc || $mode = as ]]; then
+            args=("-I$dep/include" "${args[@]}")
+        fi
     fi
 
     if [[ -d $dep/lib ]]; then
