@@ -52,11 +52,13 @@ class Qt(Package):
     depends_on("mesa", when='@4:+mesa')
     depends_on("libxcb")
 
-
-    def setup_dependent_environment(self, module, spec, dep_spec):
-        """Dependencies of Qt find it using the QTDIR environment variable."""
-        os.environ['QTDIR'] = self.prefix
-
+    def environment_modifications(self, module, spec, dep_spec):
+        """
+        Dependencies of Qt find it using the QTDIR environment variable
+        """
+        env = super(Qt, self).environment_modifications(module, spec, dep_spec)
+        env.set_env['QTDIR'] = self.prefix
+        return env
 
     def patch(self):
         if self.spec.satisfies('@4'):

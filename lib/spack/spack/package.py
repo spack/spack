@@ -63,6 +63,7 @@ import spack.build_environment
 import spack.url
 import spack.util.web
 import spack.fetch_strategy as fs
+from spack.environment import EnvironmentModifications
 from spack.version import *
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive, extension
@@ -982,6 +983,9 @@ class Package(object):
         return __import__(self.__class__.__module__,
                           fromlist=[self.__class__.__name__])
 
+
+    def environment_modifications(self, module, spec, dependent_spec):
+        return EnvironmentModifications()
 
     def setup_dependent_environment(self, module, spec, dependent_spec):
         """Called before the install() method of dependents.

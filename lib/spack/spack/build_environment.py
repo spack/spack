@@ -178,6 +178,7 @@ def set_build_environment_variables(pkg):
 
     return env
 
+
 def set_module_variables_for_package(pkg, m):
     """Populate the module scope of install() with some useful functions.
        This makes things easier for package writers.
@@ -272,7 +273,6 @@ def setup_package(pkg):
     env = EnvironmentModifications()
     env.extend(set_compiler_environment_variables(pkg))
     env.extend(set_build_environment_variables(pkg))
-    apply_environment_modifications(env)
     # If a user makes their own package repo, e.g.
     # spack.repos.mystuff.libelf.Libelf, and they inherit from
     # an existing class like spack.repos.original.libelf.Libelf,
@@ -284,8 +284,9 @@ def setup_package(pkg):
 
     # Allow dependencies to set up environment as well.
     for dep_spec in pkg.spec.traverse(root=False):
-        dep_spec.package.setup_dependent_environment(
-            pkg.module, dep_spec, pkg.spec)
+        env.extend(dep_spec.package.environment_modifications(pkg.module, dep_spec, pkg.spec))
+        dep_spec.package.setup_dependent_environment(pkg.module, dep_spec, pkg.spec)
+    apply_environment_modifications(env)
 
 
 def fork(pkg, function):

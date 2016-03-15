@@ -90,6 +90,17 @@ class Python(Package):
         return os.path.join(self.python_lib_dir, 'site-packages')
 
 
+    def environment_modifications(self, module, spec, dependent_spec):
+        env = super(Python, self).environment_modifications(module, spec, dependent_spec)
+        # Set PYTHONPATH to include site-packages dir for the
+        # extension and any other python extensions it depends on.
+        python_paths = []
+        for d in ext_spec.traverse():
+            if d.package.extends(self.spec):
+                python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
+        env.set_env['PYTHONPATH'] = ':'.join(python_paths)
+
+
     def setup_dependent_environment(self, module, spec, ext_spec):
         """Called before python modules' install() methods.
 
@@ -110,15 +121,6 @@ class Python(Package):
 
         # Make the site packages directory if it does not exist already.
         mkdirp(module.site_packages_dir)
-
-        # Set PYTHONPATH to include site-packages dir for the
-        # extension and any other python extensions it depends on.
-        python_paths = []
-        for d in ext_spec.traverse():
-            if d.package.extends(self.spec):
-                python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
-        os.environ['PYTHONPATH'] = ':'.join(python_paths)
-
 
     # ========================================================================
     # Handle specifics of activating and deactivating python modules.

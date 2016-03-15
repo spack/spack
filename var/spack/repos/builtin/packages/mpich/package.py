@@ -46,14 +46,18 @@ class Mpich(Package):
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
+    def environment_modifications(self, module, spec, dependent_spec):
+        env = super(Mpich, self).environment_modifications(module, spec, dependent_spec)
+        env.set_env('MPICH_CC', os.environ['CC'])
+        env.set_env('MPICH_CXX', os.environ['CXX'])
+        env.set_env('MPICH_F77', os.environ['F77'])
+        env.set_env('MPICH_F90', os.environ['FC'])
+        env.set_env('MPICH_FC', os.environ['FC'])
+        return env
+
     def setup_dependent_environment(self, module, spec, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""
-        os.environ['MPICH_CC']  = os.environ['CC']
-        os.environ['MPICH_CXX'] = os.environ['CXX']
-        os.environ['MPICH_F77'] = os.environ['F77']
-        os.environ['MPICH_F90'] = os.environ['FC']
-        os.environ['MPICH_FC'] = os.environ['FC']
-
+        # FIXME : is this necessary ? Shouldn't this be part of a contract with MPI providers?
         module.mpicc = join_path(self.prefix.bin, 'mpicc')
 
     def install(self, spec, prefix):

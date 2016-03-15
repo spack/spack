@@ -46,5 +46,4 @@ class NetlibScalapack(Package):
 
         spec['scalapack'].fc_link = '-L%s -lscalapack' % spec['scalapack'].prefix.lib
         spec['scalapack'].cc_link = spec['scalapack'].fc_link
-        spec['scalapack'].libraries = [join_path(spec['scalapack'].prefix.lib,
-                                                 'libscalapack%s' % lib_suffix)]
+        spec['scalapack'].libraries = [join_path(spec['scalapack'].prefix.lib, 'libscalapack%s' % lib_suffix)]

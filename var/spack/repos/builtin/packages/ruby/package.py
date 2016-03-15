@@ -15,9 +15,20 @@ class Ruby(Package):
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
-
         make()
         make("install")
+
+    def environment_modifications(self, module, spec, ext_spec):
+        env = super(Ruby, self).environment_modifications(module, spec, ext_spec)
+        # Set GEM_PATH to include dependent gem directories
+        ruby_paths = []
+        for d in ext_spec.traverse():
+            if d.package.extends(self.spec):
+                ruby_paths.append(d.prefix)
+        env.set_env('GEM_PATH', concatenate_paths(ruby_paths))
+        # The actual installation path for this gem
+        env.set_env('GEM_HOME', ext_spec.prefix)
+        return env
 
     def setup_dependent_environment(self, module, spec, ext_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME
@@ -31,11 +42,4 @@ class Ruby(Package):
         module.ruby = Executable(join_path(spec.prefix.bin, 'ruby'))
         module.gem = Executable(join_path(spec.prefix.bin, 'gem'))
 
-        # Set GEM_PATH to include dependent gem directories
-        ruby_paths = []
-        for d in ext_spec.traverse():
-            if d.package.extends(self.spec):
-                ruby_paths.append(d.prefix)
-        os.environ['GEM_PATH'] = ':'.join(ruby_paths)
-        # The actual installation path for this gem
-        os.environ['GEM_HOME'] = ext_spec.prefix
+
