@@ -78,10 +78,11 @@ done
 # 'command' is set based on the input command to $SPACK_[CC|CXX|F77|F90]
 #
 # 'mode' is set to one of:
+#    cpp     preprocessor
 #    cc      compile
+#    as      assemble
 #    ld      link
 #    ccld    compile & link
-#    cpp     preprocessor
 #    vcheck  version check
 #
 command=$(basename "$0")
@@ -131,11 +132,11 @@ if [ -z "$mode" ]; then
         if [ "$arg" = -E ]; then
             mode=cpp
             break
-        elif [ "$arg" = -c ]; then
-            mode=cc
-            break
         elif [ "$arg" = -S ]; then
             mode=as
+            break
+        elif [ "$arg" = -c ]; then
+            mode=cc
             break
         fi
     done
@@ -163,10 +164,6 @@ args=("$@")
 
 # Dump parsed values for unit testing if asked for
 if [[ -n $SPACK_TEST_COMMAND ]]; then
-
-    if [ "$mode" == vcheck ] ; then
-        exec ${command} "$@"
-    fi
 
     #
     # Now do real parsing of the command line args, trying hard to keep
@@ -279,7 +276,7 @@ fi
 IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
 for dep in "${deps[@]}"; do
     if [[ -d $dep/include ]]; then
-        if [[ $mode = cpp || $mode = cc || $mode = as ]]; then
+        if [[ $mode = cpp || $mode = cc || $mode = as || $mode = ccld ]]; then
             args=("-I$dep/include" "${args[@]}")
         fi
     fi
