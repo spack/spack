@@ -16,6 +16,7 @@ class Pism(CMakePackage):
     variant('extra', default=False, description='Build extra executables (mostly testing/verification)')
     variant('shared', default=True, description='Build shared Pism libraries')
     variant('python', default=False, description='Build python bindings')
+    variant('icebin', default=False, description='Build classes needed by IceBin')
     variant('proj', default=True, description='Use Proj.4 to compute cell areas, longitudes, and latitudes.')
     variant('parallel-netcdf4', default=False, description='Enables parallel NetCDF-4 I/O.')
     variant('parallel-netcdf3', default=False, description='Enables parallel NetCDF-3 I/O using PnetCDF.')
@@ -52,6 +53,7 @@ class Pism(CMakePackage):
             '-DPism_BUILD_EXTRA_EXECS=%s' % ('YES' if '+extra' in spec else 'NO'),
             '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO'),
             '-DPism_BUILD_PYTHON_BINDINGS=%s' % ('YES' if '+python' in spec else 'NO'),
+            '-DPism_BUILD_ICEBIN=%s' % ('YES' if '+icebin' in spec else 'NO'),
             '-DPism_USE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),
             '-DPism_USE_PARALLEL_NETCDF4=%s' % ('YES' if '+parallel-netcdf4' in spec else 'NO'),
             '-DPism_USE_PNETCDF=%s' % ('YES' if '+parallel-netcdf3' in spec else 'NO'),
