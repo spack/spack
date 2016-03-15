@@ -34,41 +34,34 @@ rundown on spack and how it differs from homebrew, look at the
 README.
 """
 import os
-import errno
 import re
-import shutil
-import time
-import itertools
-import subprocess
-import platform as py_platform
-import multiprocessing
-from urlparse import urlparse, urljoin
 import textwrap
-from StringIO import StringIO
+import time
 
 import llnl.util.tty as tty
-from llnl.util.tty.log import log_output
-from llnl.util.link_tree import LinkTree
-from llnl.util.filesystem import *
-from llnl.util.lang import *
-
 import spack
-import spack.error
-import spack.compilers
-import spack.mirror
-import spack.hooks
-import spack.directives
-import spack.repository
 import spack.build_environment
+import spack.compilers
+import spack.directives
+import spack.error
+import spack.fetch_strategy as fs
+import spack.hooks
+import spack.mirror
+import spack.repository
 import spack.url
 import spack.util.web
-import spack.fetch_strategy as fs
+from StringIO import StringIO
+from llnl.util.filesystem import *
+from llnl.util.lang import *
+from llnl.util.link_tree import LinkTree
+from llnl.util.tty.log import log_output
 from spack.environment import EnvironmentModifications
-from spack.version import *
 from spack.stage import Stage, ResourceStage, StageComposite
-from spack.util.compression import allowed_archive, extension
-from spack.util.executable import ProcessError
+from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
+from spack.util.executable import ProcessError
+from spack.version import *
+from urlparse import urlparse
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
