@@ -40,11 +40,13 @@ def env_flag(name):
     return False
 
 
+# FIXME : remove this function ?
 def path_set(var_name, directories):
     path_str = ":".join(str(dir) for dir in directories)
     os.environ[var_name] = path_str
 
 
+# FIXME : remove this function ?
 def path_put_first(var_name, directories):
     """Puts the provided directories first in the path, adding them
        if they're not already there.
@@ -57,12 +59,6 @@ def path_put_first(var_name, directories):
 
     new_path = tuple(directories) + tuple(path)
     path_set(var_name, new_path)
-
-
-def pop_keys(dictionary, *keys):
-    for key in keys:
-        if key in dictionary:
-            dictionary.pop(key)
 
 
 def dump_environment(path):

@@ -3,33 +3,40 @@ import os.path
 import collections
 
 
-class SetEnv(object):
-    def __init__(self, name, value, **kwargs):
-        self.name = name
-        self.value = value
+class AttributeHolder(object):
+    """
+    Policy that permits to store any kind of attribute on self. The attributes must be passed as key/value pairs
+    during the initialization of the instance.
+    """
+    def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+
+class SetEnv(AttributeHolder):
+    def __init__(self, name, value, **kwargs):
+        super(SetEnv, self).__init__(**kwargs)
+        self.name = name
+        self.value = value
 
     def execute(self):
         os.environ[self.name] = str(self.value)
 
 
-class UnsetEnv(object):
+class UnsetEnv(AttributeHolder):
     def __init__(self, name, **kwargs):
+        super(UnsetEnv, self).__init__(**kwargs)
         self.name = name
-        for key, value in kwargs.items():
-            setattr(self, key, value)
 
     def execute(self):
         os.environ.pop(self.name, None)  # Avoid throwing if the variable was not set
 
 
-class AppendPath(object):
+class AppendPath(AttributeHolder):
     def __init__(self, name, path, **kwargs):
+        super(AppendPath, self).__init__(**kwargs)
         self.name = name
         self.path = path
-        for key, value in kwargs.items():
-            setattr(self, key, value)
 
     def execute(self):
         environment_value = os.environ.get(self.name, '')
@@ -39,12 +46,11 @@ class AppendPath(object):
         os.environ[self.name] = ':'.join(directories)
 
 
-class PrependPath(object):
+class PrependPath(AttributeHolder):
     def __init__(self, name, path, **kwargs):
+        super(PrependPath, self).__init__(**kwargs)
         self.name = name
         self.path = path
-        for key, value in kwargs.items():
-            setattr(self, key, value)
 
     def execute(self):
         environment_value = os.environ.get(self.name, '')
@@ -54,12 +60,11 @@ class PrependPath(object):
         os.environ[self.name] = ':'.join(directories)
 
 
-class RemovePath(object):
+class RemovePath(AttributeHolder):
     def __init__(self, name, path, **kwargs):
+        super(RemovePath, self).__init__(**kwargs)
         self.name = name
         self.path = path
-        for key, value in kwargs.items():
-            setattr(self, key, value)
 
     def execute(self):
         environment_value = os.environ.get(self.name, '')
@@ -70,17 +75,25 @@ class RemovePath(object):
 
 class EnvironmentModifications(object):
     """
-    Keeps track of requests to modify the current environment
+    Keeps track of requests to modify the current environment.
     """
 
     def __init__(self, other=None):
+        """
+        Initializes a new instance, copying commands from other if it is not None
+
+        Args:
+            other: another instance of EnvironmentModifications from which (optional)
+        """
         self.env_modifications = []
         if other is not None:
-            self._check_other(other)
-            self.env_modifications.extend(other.env_modifications)
+            self.extend(other)
 
     def __iter__(self):
         return iter(self.env_modifications)
+
+    def __len__(self):
+        return len(self.env_modifications)
 
     def extend(self, other):
         self._check_other(other)
@@ -147,7 +160,17 @@ class EnvironmentModifications(object):
 
 
 def concatenate_paths(paths):
+    """
+    Concatenates an iterable of paths into a column separated string
+
+    Args:
+        paths: iterable of paths
+
+    Returns:
+        column separated string
+    """
     return ':'.join(str(item) for item in paths)
+
 
 def validate_environment_modifications(env):
     modifications = collections.defaultdict(list)

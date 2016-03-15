@@ -55,5 +55,11 @@ class EnvironmentTest(unittest.TestCase):
         apply_environment_modifications(env)
         self.assertEqual('dummy value', os.environ['A'])
 
-    def test_copy(self):
-        pass
+    def test_extend(self):
+        env = EnvironmentModifications()
+        env.set_env('A', 'dummy value')
+        env.set_env('B', 3)
+        copy_construct = EnvironmentModifications(env)
+        self.assertEqual(len(copy_construct), 2)
+        for x, y in zip(env, copy_construct):
+            self.assertIs(x, y)

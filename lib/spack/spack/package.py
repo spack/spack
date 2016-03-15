@@ -985,30 +985,41 @@ class Package(object):
 
 
     def environment_modifications(self, dependent_spec):
+        """
+        Called before the install() method of dependents.
+
+        Return the list of environment modifications needed by dependents (or extensions). Default implementation does
+        nothing, but this can be overridden by an extendable package to set up the install environment for its
+        extensions. This is useful if there are some common steps to installing all extensions for a certain package.
+
+        Example :
+
+        1. Installing python modules generally requires `PYTHONPATH` to point to the lib/pythonX.Y/site-packages
+        directory in the module's install prefix.  This could set that variable.
+
+        2. A lot of Qt extensions need `QTDIR` set.  This can be used to do that.
+
+        Args:
+            dependent_spec: dependent (or extension) of this spec
+
+        Returns:
+            instance of environment modifications
+        """
         return EnvironmentModifications()
 
     def module_modifications(self, module, spec, dependent_spec):
-        """Called before the install() method of dependents.
+        """
+        Called before the install() method of dependents.
 
-        Default implementation does nothing, but this can be
-        overridden by an extendable package to set up the install
-        environment for its extensions.  This is useful if there are
-        some common steps to installing all extensions for a
+        Default implementation does nothing, but this can be overridden by an extendable package to set up the module of
+        its extensions. This is useful if there are some common steps to installing all extensions for a
         certain package.
 
-        Some examples:
+        Example :
 
-        1. Installing python modules generally requires PYTHONPATH to
-           point to the lib/pythonX.Y/site-packages directory in the
-           module's install prefix.  This could set that variable.
-
-        2. Extensions often need to invoke the 'python' interpreter
-           from the Python installation being extended.  This routine can
-           put a 'python' Execuable object in the module scope for the
-           extension package to simplify extension installs.
-
-        3. A lot of Qt extensions need QTDIR set.  This can be used to do that.
-
+        1. Extensions often need to invoke the 'python' interpreter from the Python installation being extended.
+        This routine can put a 'python' Executable object in the module scope for the extension package to simplify
+        extension installs.
         """
         pass
 
