@@ -35,7 +35,7 @@ import sys
 
 import spack
 from llnl.util.filesystem import *
-from spack.environment import EnvironmentModifications, apply_environment_modifications
+from spack.environment import EnvironmentModifications, apply_environment_modifications, concatenate_paths
 from spack.util.environment import *
 from spack.util.executable import Executable, which
 
@@ -127,44 +127,45 @@ def set_build_environment_variables(pkg):
     # handled by putting one in the <build_env_path>/case-insensitive
     # directory.  Add that to the path too.
     env_paths = []
-    def add_env_path(path):
-        env_paths.append(path)
-        ci = join_path(path, 'case-insensitive')
-        if os.path.isdir(ci): env_paths.append(ci)
-    add_env_path(spack.build_env_path)
-    add_env_path(join_path(spack.build_env_path, pkg.compiler.name))
+    for item in [spack.build_env_path, join_path(spack.build_env_path, pkg.compiler.name)]:
+        env_paths.append(item)
+        ci = join_path(item, 'case-insensitive')
+        if os.path.isdir(ci):
+            env_paths.append(ci)
 
-    path_put_first("PATH", env_paths)
-    path_set(SPACK_ENV_PATH, env_paths)
+    env = EnvironmentModifications()
+    for item in reversed(env_paths):
+        env.prepend_path('PATH', item)
+    env.set_env(SPACK_ENV_PATH, concatenate_paths(env_paths))
 
-    # Prefixes of all of the package's dependencies go in
-    # SPACK_DEPENDENCIES
+    # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
     dep_prefixes = [d.prefix for d in pkg.spec.traverse(root=False)]
-    path_set(SPACK_DEPENDENCIES, dep_prefixes)
+    env.set_env(SPACK_DEPENDENCIES, concatenate_paths(dep_prefixes))
+    env.set_env('CMAKE_PREFIX_PATH', concatenate_paths(dep_prefixes))  # Add dependencies to CMAKE_PREFIX_PATH
 
     # Install prefix
-    os.environ[SPACK_PREFIX] = pkg.prefix
+    env.set_env(SPACK_PREFIX, pkg.prefix)
 
     # Install root prefix
-    os.environ[SPACK_INSTALL] = spack.install_path
+    env.set_env(SPACK_INSTALL, spack.install_path)
 
     # Remove these vars from the environment during build because they
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
-    pop_keys(os.environ, "LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH")
+    env.unset_env('LD_LIBRARY_PATH')
+    env.unset_env('LD_RUN_PATH')
+    env.unset_env('DYLD_LIBRARY_PATH')
 
     # Add bin directories from dependencies to the PATH for the build.
-    bin_dirs = ['%s/bin' % prefix for prefix in dep_prefixes]
-    path_put_first('PATH', [bin for bin in bin_dirs if os.path.isdir(bin)])
+    bin_dirs = reversed(filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))
+    for item in bin_dirs:
+        env.prepend_path('PATH', item)
 
     # Working directory for the spack command itself, for debug logs.
     if spack.debug:
-        os.environ[SPACK_DEBUG] = "TRUE"
-    os.environ[SPACK_SHORT_SPEC] = pkg.spec.short_spec
-    os.environ[SPACK_DEBUG_LOG_DIR] = spack.spack_working_dir
-
-    # Add dependencies to CMAKE_PREFIX_PATH
-    path_set("CMAKE_PREFIX_PATH", dep_prefixes)
+        env.set_env(SPACK_DEBUG, 'TRUE')
+    env.set_env(SPACK_SHORT_SPEC, pkg.spec.short_spec)
+    env.set_env(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     pkg_config_dirs = []
@@ -173,8 +174,9 @@ def set_build_environment_variables(pkg):
             pcdir = join_path(p, libdir, 'pkgconfig')
             if os.path.isdir(pcdir):
                 pkg_config_dirs.append(pcdir)
-    path_set("PKG_CONFIG_PATH", pkg_config_dirs)
+    env.set_env('PKG_CONFIG_PATH', concatenate_paths(pkg_config_dirs))
 
+    return env
 
 def set_module_variables_for_package(pkg, m):
     """Populate the module scope of install() with some useful functions.
@@ -269,8 +271,8 @@ def setup_package(pkg):
     """Execute all environment setup routines."""
     env = EnvironmentModifications()
     env.extend(set_compiler_environment_variables(pkg))
+    env.extend(set_build_environment_variables(pkg))
     apply_environment_modifications(env)
-    set_build_environment_variables(pkg)
     # If a user makes their own package repo, e.g.
     # spack.repos.mystuff.libelf.Libelf, and they inherit from
     # an existing class like spack.repos.original.libelf.Libelf,

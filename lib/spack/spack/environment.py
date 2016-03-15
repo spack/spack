@@ -146,6 +146,9 @@ class EnvironmentModifications(object):
         self.env_modifications.append(item)
 
 
+def concatenate_paths(paths):
+    return ':'.join(str(item) for item in paths)
+
 def validate_environment_modifications(env):
     modifications = collections.defaultdict(list)
     for item in env:
