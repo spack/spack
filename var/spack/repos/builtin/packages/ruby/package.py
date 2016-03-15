@@ -1,6 +1,5 @@
 from spack import *
-import spack
-import os
+
 
 class Ruby(Package):
     """A dynamic, open source programming language with a focus on 
@@ -18,19 +17,19 @@ class Ruby(Package):
         make()
         make("install")
 
-    def environment_modifications(self, module, spec, ext_spec):
-        env = super(Ruby, self).environment_modifications(module, spec, ext_spec)
+    def environment_modifications(self, extension_spec):
+        env = super(Ruby, self).environment_modifications(extension_spec)
         # Set GEM_PATH to include dependent gem directories
         ruby_paths = []
-        for d in ext_spec.traverse():
+        for d in extension_spec.traverse():
             if d.package.extends(self.spec):
                 ruby_paths.append(d.prefix)
         env.set_env('GEM_PATH', concatenate_paths(ruby_paths))
         # The actual installation path for this gem
-        env.set_env('GEM_HOME', ext_spec.prefix)
+        env.set_env('GEM_HOME', extension_spec.prefix)
         return env
 
-    def setup_dependent_environment(self, module, spec, ext_spec):
+    def module_modifications(self, module, spec, ext_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME
         and GEM_PATH to values appropriate for the package being built.
 

@@ -984,10 +984,10 @@ class Package(object):
                           fromlist=[self.__class__.__name__])
 
 
-    def environment_modifications(self, module, spec, dependent_spec):
+    def environment_modifications(self, dependent_spec):
         return EnvironmentModifications()
 
-    def setup_dependent_environment(self, module, spec, dependent_spec):
+    def module_modifications(self, module, spec, dependent_spec):
         """Called before the install() method of dependents.
 
         Default implementation does nothing, but this can be

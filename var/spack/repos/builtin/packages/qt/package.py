@@ -52,11 +52,8 @@ class Qt(Package):
     depends_on("mesa", when='@4:+mesa')
     depends_on("libxcb")
 
-    def environment_modifications(self, module, spec, dep_spec):
-        """
-        Dependencies of Qt find it using the QTDIR environment variable
-        """
-        env = super(Qt, self).environment_modifications(module, spec, dep_spec)
+    def environment_modifications(self, dependent_spec):
+        env = super(Qt, self).environment_modifications(dependent_spec)
         env.set_env['QTDIR'] = self.prefix
         return env
 

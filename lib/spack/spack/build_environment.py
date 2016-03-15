@@ -284,8 +284,8 @@ def setup_package(pkg):
 
     # Allow dependencies to set up environment as well.
     for dep_spec in pkg.spec.traverse(root=False):
-        env.extend(dep_spec.package.environment_modifications(pkg.module, dep_spec, pkg.spec))
-        dep_spec.package.setup_dependent_environment(pkg.module, dep_spec, pkg.spec)
+        dep_spec.package.module_modifications(pkg.module, dep_spec, pkg.spec)
+        env.extend(dep_spec.package.environment_modifications(pkg.spec))
     apply_environment_modifications(env)
 
 

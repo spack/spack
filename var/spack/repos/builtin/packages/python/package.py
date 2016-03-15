@@ -89,19 +89,17 @@ class Python(Package):
     def site_packages_dir(self):
         return os.path.join(self.python_lib_dir, 'site-packages')
 
-
-    def environment_modifications(self, module, spec, dependent_spec):
-        env = super(Python, self).environment_modifications(module, spec, dependent_spec)
+    def environment_modifications(self, extension_spec):
+        env = super(Python, self).environment_modifications(extension_spec)
         # Set PYTHONPATH to include site-packages dir for the
         # extension and any other python extensions it depends on.
         python_paths = []
-        for d in ext_spec.traverse():
+        for d in extension_spec.traverse():
             if d.package.extends(self.spec):
                 python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
         env.set_env['PYTHONPATH'] = ':'.join(python_paths)
 
-
-    def setup_dependent_environment(self, module, spec, ext_spec):
+    def module_modifications(self, module, spec, ext_spec):
         """Called before python modules' install() methods.
 
         In most cases, extensions will only need to have one line::
