@@ -32,7 +32,7 @@ class Petsc(Package):
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python @2.6:2.7')
+#    depends_on('python @2.6:2.7')
 
     # Other dependencies
     depends_on('boost', when='+boost')
