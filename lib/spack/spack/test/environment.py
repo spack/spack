@@ -62,4 +62,4 @@ class EnvironmentTest(unittest.TestCase):
         copy_construct = EnvironmentModifications(env)
         self.assertEqual(len(copy_construct), 2)
         for x, y in zip(env, copy_construct):
-            self.assertIs(x, y)
+            assert x is y
