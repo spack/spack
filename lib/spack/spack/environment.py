@@ -73,11 +73,23 @@ class EnvironmentModifications(object):
     Keeps track of requests to modify the current environment
     """
 
-    def __init__(self):
+    def __init__(self, other=None):
         self.env_modifications = []
+        if other is not None:
+            self._check_other(other)
+            self.env_modifications.extend(other.env_modifications)
 
     def __iter__(self):
         return iter(self.env_modifications)
+
+    def extend(self, other):
+        self._check_other(other)
+        self.env_modifications.extend(other.env_modifications)
+
+    @staticmethod
+    def _check_other(other):
+        if not isinstance(other, EnvironmentModifications):
+            raise TypeError('other must be an instance of EnvironmentModifications')
 
     def set_env(self, name, value, **kwargs):
         """
@@ -138,6 +150,9 @@ def validate_environment_modifications(env):
     modifications = collections.defaultdict(list)
     for item in env:
         modifications[item.name].append(item)
+    # TODO : once we organized the modifications into a dictionary that maps an environment variable
+    # TODO : to a list of action to be done on it, we may easily spot inconsistencies and warn the user if
+    # TODO : something suspicious is happening
     return modifications
 
 

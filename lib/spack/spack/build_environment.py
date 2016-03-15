@@ -35,6 +35,7 @@ import sys
 
 import spack
 from llnl.util.filesystem import *
+from spack.environment import EnvironmentModifications, apply_environment_modifications
 from spack.util.environment import *
 from spack.util.executable import Executable, which
 
@@ -83,30 +84,32 @@ class MakeExecutable(Executable):
 
 
 def set_compiler_environment_variables(pkg):
-    assert(pkg.spec.concrete)
-    compiler = pkg.compiler
-
+    assert pkg.spec.concrete
     # Set compiler variables used by CMake and autotools
-    assert all(key in pkg.compiler.link_paths
-               for key in ('cc', 'cxx', 'f77', 'fc'))
+    assert all(key in pkg.compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
 
+    # Populate an object with the list of environment modifications
+    # and return it
+    # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
+    env = EnvironmentModifications()
     link_dir = spack.build_env_path
-    os.environ['CC']  = join_path(link_dir, pkg.compiler.link_paths['cc'])
-    os.environ['CXX'] = join_path(link_dir, pkg.compiler.link_paths['cxx'])
-    os.environ['F77'] = join_path(link_dir, pkg.compiler.link_paths['f77'])
-    os.environ['FC']  = join_path(link_dir, pkg.compiler.link_paths['fc'])
-
+    env.set_env('CC', join_path(link_dir, pkg.compiler.link_paths['cc']))
+    env.set_env('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
+    env.set_env('F77', join_path(link_dir, pkg.compiler.link_paths['f77']))
+    env.set_env('FC', join_path(link_dir, pkg.compiler.link_paths['fc']))
     # Set SPACK compiler variables so that our wrapper knows what to call
+    compiler = pkg.compiler
     if compiler.cc:
-        os.environ['SPACK_CC']  = compiler.cc
+        env.set_env('SPACK_CC', compiler.cc)
     if compiler.cxx:
-        os.environ['SPACK_CXX'] = compiler.cxx
+        env.set_env('SPACK_CXX', compiler.cxx)
     if compiler.f77:
-        os.environ['SPACK_F77'] = compiler.f77
+        env.set_env('SPACK_F77', compiler.f77)
     if compiler.fc:
-        os.environ['SPACK_FC']  = compiler.fc
+        env.set_env('SPACK_FC', compiler.fc)
 
-    os.environ['SPACK_COMPILER_SPEC'] = str(pkg.spec.compiler)
+    env.set_env('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
+    return env
 
 
 def set_build_environment_variables(pkg):
@@ -264,9 +267,10 @@ def parent_class_modules(cls):
 
 def setup_package(pkg):
     """Execute all environment setup routines."""
-    set_compiler_environment_variables(pkg)
+    env = EnvironmentModifications()
+    env.extend(set_compiler_environment_variables(pkg))
+    apply_environment_modifications(env)
     set_build_environment_variables(pkg)
-
     # If a user makes their own package repo, e.g.
     # spack.repos.mystuff.libelf.Libelf, and they inherit from
     # an existing class like spack.repos.original.libelf.Libelf,

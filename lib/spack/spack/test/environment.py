@@ -48,3 +48,12 @@ class EnvironmentTest(unittest.TestCase):
         self.assertEqual('/path/first:/path/middle:/path/last', os.environ['EMPTY_PATH_LIST'])
         self.assertEqual('/path/first:/path/middle:/path/last', os.environ['NEWLY_CREATED_PATH_LIST'])
         self.assertEqual('/a/b:/a/c:/a/d:/f/g', os.environ['REMOVE_PATH_LIST'])
+
+    def test_extra_arguments(self):
+        env = EnvironmentModifications()
+        env.set_env('A', 'dummy value', who='Pkg1')
+        apply_environment_modifications(env)
+        self.assertEqual('dummy value', os.environ['A'])
+
+    def test_copy(self):
+        pass
