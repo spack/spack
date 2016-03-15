@@ -316,6 +316,11 @@ class RepoPath(object):
         return self.repo_for_pkg(spec).get(spec)
 
 
+    def get_pkg_class(self, pkg_name):
+        """Find a class for the spec's package and return the class object."""
+        return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
+
+
     @_autospec
     def dump_provenance(self, spec, path):
         """Dump provenance information for a spec to a particular path.
@@ -550,7 +555,7 @@ class Repo(object):
 
         key = hash(spec)
         if new or key not in self._instances:
-            package_class = self._get_pkg_class(spec.name)
+            package_class = self.get_pkg_class(spec.name)
             try:
                 copy = spec.copy() # defensive copy.  Package owns its spec.
                 self._instances[key] = package_class(copy)
@@ -715,7 +720,7 @@ class Repo(object):
         return self._modules[pkg_name]
 
 
-    def _get_pkg_class(self, pkg_name):
+    def get_pkg_class(self, pkg_name):
         """Get the class for the package out of its module.
 
         First loads (or fetches from cache) a module for the
