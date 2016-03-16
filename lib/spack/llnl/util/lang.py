@@ -235,11 +235,11 @@ def key_ordering(cls):
     if not has_method(cls, '_cmp_key'):
         raise TypeError("'%s' doesn't define _cmp_key()." % cls.__name__)
 
-    setter('__eq__', lambda s,o: o is not None and s._cmp_key() == o._cmp_key())
+    setter('__eq__', lambda s,o: (s is o) or (o is not None and s._cmp_key() == o._cmp_key()))
     setter('__lt__', lambda s,o: o is not None and s._cmp_key() <  o._cmp_key())
     setter('__le__', lambda s,o: o is not None and s._cmp_key() <= o._cmp_key())
 
-    setter('__ne__', lambda s,o: o is None or s._cmp_key() != o._cmp_key())
+    setter('__ne__', lambda s,o: (s is not o) and (o is None or s._cmp_key() != o._cmp_key()))
     setter('__gt__', lambda s,o: o is None or s._cmp_key() >  o._cmp_key())
     setter('__ge__', lambda s,o: o is None or s._cmp_key() >= o._cmp_key())
 

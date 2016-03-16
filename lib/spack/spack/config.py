@@ -220,9 +220,9 @@ section_schemas = {
                                 'type' : 'array',
                                 'default' : [],
                                 'items' : { 'type' : 'string' } }, #compiler specs
-                            'nobuild': {
+                            'buildable': {
                                 'type':  'boolean',
-                                'default': False,
+                                'default': True,
                              },
                             'providers': {
                                 'type':  'object',
@@ -539,33 +539,36 @@ def print_section(section):
 
 
 def spec_externals(spec):
-    """Return a list of spec, directory pairs for each external location for spec"""
+    """Return a list of external specs (with external directory path filled in),
+       one for each known external installation."""
     allpkgs = get_config('packages')
     name = spec.name
-    spec_locations = []
 
+    external_specs = []
     pkg_paths = allpkgs.get(name, {}).get('paths', None)
     if not pkg_paths:
         return []
 
-    for pkg,path in pkg_paths.iteritems():
-        if not spec.satisfies(pkg):
-            continue
+    for external_spec, path in pkg_paths.iteritems():
         if not path:
+            # skip entries without paths (avoid creating extra Specs)
             continue
-        spec_locations.append( (spack.spec.Spec(pkg), path) )
-    return spec_locations
+
+        external_spec = spack.spec.Spec(external_spec, external=path)
+        if external_spec.satisfies(spec):
+            external_specs.append(external_spec)
+    return external_specs
 
 
-def is_spec_nobuild(spec):
-    """Return true if the spec pkgspec is configured as nobuild"""
+def is_spec_buildable(spec):
+    """Return true if the spec pkgspec is configured as buildable"""
     allpkgs = get_config('packages')
     name = spec.name
     if not spec.name in allpkgs:
-        return False
-    if not 'nobuild' in allpkgs[spec.name]:
-        return False
-    return allpkgs[spec.name]['nobuild']
+        return True
+    if not 'buildable' in allpkgs[spec.name]:
+        return True
+    return allpkgs[spec.name]['buildable']
 
 
 class ConfigError(SpackError): pass

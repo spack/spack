@@ -78,8 +78,7 @@ This example lists three installations of OpenMPI, one built with gcc,
 one built with gcc and debug information, and another built with Intel.
 If Spack is asked to build a package that uses one of these MPIs as a
 dependency, it will use the the pre-installed OpenMPI in
-the given directory.  This example also specifies that Spack should never
-build its own OpenMPI via the ``nobuild: True`` option.
+the given directory.  
 
 Each ``packages.yaml`` begins with a ``packages:`` token, followed
 by a list of package names.  To specify externals, add a ``paths``
@@ -111,16 +110,16 @@ be:
       paths:
         openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
         openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
-        openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
-      nobuild: True
+        openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel                
+      buildable: False
 
-The addition of the ``nobuild`` flag tells Spack that it should never build
+The addition of the ``buildable`` flag tells Spack that it should never build
 its own version of OpenMPI, and it will instead always rely on a pre-built
-OpenMPI.  Similar to ``paths``, ``nobuild`` is specified as a property under
+OpenMPI.  Similar to ``paths``, ``buildable`` is specified as a property under
 a package name.
 
-The ``nobuild`` does not need to be paired with external packages.
-It could also be used alone to forbid packages that may be
+The ``buildable`` does not need to be paired with external packages.  
+It could also be used alone to forbid packages that may be 
 buggy or otherwise undesirable.
 
 
