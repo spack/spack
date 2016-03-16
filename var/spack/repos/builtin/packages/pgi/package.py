@@ -58,8 +58,8 @@ class Pgi(Package):
 
 """)
 
-        spack.editor(license_path)
-        tty.message("Set up license file %s" % license_path)
+        #spack.editor(license_path)
+        tty.msg("Set up license file %s" % license_path)
 
 
     def install(self, spec, prefix):
