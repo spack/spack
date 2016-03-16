@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class Mpich(Package):
     """MPICH is a high performance and widely portable implementation of
        the Message Passing Interface (MPI) standard."""
@@ -48,11 +49,25 @@ class Mpich(Package):
 
     def environment_modifications(self, dependent_spec):
         env = super(Mpich, self).environment_modifications(dependent_spec)
-        env.set_env('MPICH_CC', os.environ['CC'])
-        env.set_env('MPICH_CXX', os.environ['CXX'])
-        env.set_env('MPICH_F77', os.environ['F77'])
-        env.set_env('MPICH_F90', os.environ['FC'])
-        env.set_env('MPICH_FC', os.environ['FC'])
+
+        if dependent_spec is None:
+            # We are not using compiler wrappers
+            cc = self.compiler.cc
+            cxx = self.compiler.cxx
+            f77 = self.compiler.f77
+            f90 = fc = self.compiler.fc
+        else:
+            # Spack compiler wrappers
+            cc = os.environ['CC']
+            cxx = os.environ['CXX']
+            f77 = os.environ['F77']
+            f90 = fc = os.environ['FC']
+
+        env.set_env('MPICH_CC', cc)
+        env.set_env('MPICH_CXX', cxx)
+        env.set_env('MPICH_F77', f77)
+        env.set_env('MPICH_F90', f90)
+        env.set_env('MPICH_FC', fc)
         return env
 
     def module_modifications(self, module, spec, dep_spec):

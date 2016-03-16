@@ -47,18 +47,18 @@ of module file.
 __all__ = ['EnvModule', 'Dotkit', 'TclModule']
 
 import os
+import os.path
 import re
-import textwrap
 import shutil
+import textwrap
 from glob import glob
 
 import llnl.util.tty as tty
+import spack
+from spack.environment import *
 from llnl.util.filesystem import join_path, mkdirp
 
-import spack
-
-"""Registry of all types of modules.  Entries created by EnvModule's
-   metaclass."""
+# Registry of all types of modules.  Entries created by EnvModule's metaclass
 module_types = {}
 
 
@@ -79,6 +79,32 @@ def print_help():
             "")
 
 
+class PathInspector(object):
+    dirname2varname = {
+        'bin': ('PATH',),
+        'man': ('MANPATH',),
+        'lib': ('LIBRARY_PATH', 'LD_LIBRARY_PATH'),
+        'lib64': ('LIBRARY_PATH', 'LD_LIBRARY_PATH'),
+        'include': ('CPATH',),
+        'pkgconfig': ('PKG_CONFIG_PATH',)
+    }
+
+    def __call__(self, env, directory, names):
+        for name in names:
+            variables = PathInspector.dirname2varname.get(name, None)
+            if variables is None:
+                continue
+            absolute_path = join_path(os.path.abspath(directory), name)
+            for variable in variables:
+                env.prepend_path(variable, absolute_path)
+
+
+def inspect_path(path):
+    env, inspector = EnvironmentModifications(), PathInspector()
+    os.path.walk(path, inspector, env)
+    return env
+
+
 class EnvModule(object):
     name = 'env_module'
 
@@ -88,21 +114,27 @@ class EnvModule(object):
             if cls.name != 'env_module':
                 module_types[cls.name] = cls
 
-
     def __init__(self, spec=None):
         # category in the modules system
         # TODO: come up with smarter category names.
         self.category = "spack"
 
-        # Descriptions for the module system's UI
-        self.short_description = ""
-        self.long_description = ""
-
         # dict pathname -> list of directories to be prepended to in
         # the module file.
         self._paths = None
         self.spec = spec
+        self.pkg = spec.package  # Just stored for convenience
 
+        # short description default is just the package + version
+        # packages can provide this optional attribute
+        self.short_description = spec.format("$_ $@")
+        if hasattr(self.pkg, 'short_description'):
+            self.short_description = self.pkg.short_description
+
+        # long description is the docstring with reduced whitespace.
+        self.long_description = None
+        if self.spec.package.__doc__:
+            self.long_description = re.sub(r'\s+', ' ', self.spec.package.__doc__)
 
     @property
     def paths(self):
@@ -130,25 +162,18 @@ class EnvModule(object):
                     add_path(var, directory)
 
             # Add python path unless it's an actual python installation
-            # TODO: is there a better way to do this?
+            # TODO : is there a better way to do this?
+            # FIXME : add PYTHONPATH to every python package
             if self.spec.name != 'python':
                 site_packages = glob(join_path(self.spec.prefix.lib, "python*/site-packages"))
                 if site_packages:
                     add_path('PYTHONPATH', site_packages[0])
 
+            # FIXME : Same for GEM_PATH
             if self.spec.package.extends(spack.spec.Spec('ruby')):
-              add_path('GEM_PATH', self.spec.prefix)
-
-            # short description is just the package + version
-            # TODO: maybe packages can optionally provide it.
-            self.short_description = self.spec.format("$_ $@")
-
-            # long description is the docstring with reduced whitespace.
-            if self.spec.package.__doc__:
-                self.long_description = re.sub(r'\s+', ' ', self.spec.package.__doc__)
+                add_path('GEM_PATH', self.spec.prefix)
 
         return self._paths
-
 
     def write(self):
         """Write out a module file for this object."""
@@ -160,9 +185,18 @@ class EnvModule(object):
         if not self.paths:
             return
 
-        with open(self.file_name, 'w') as f:
-            self._write(f)
+        # Construct the changes that needs to be done on the environment for
+        env = inspect_path(self.spec.prefix)
+        # FIXME : move the logic to inspection
+        env.prepend_path('CMAKE_PREFIX_PATH', self.spec.prefix)
+        # FIXME : decide how to distinguish between calls done in the installation and elsewhere
+        env.extend(self.spec.package.environment_modifications(None))
+        # site_specific = ...`
+        if not env:
+            return
 
+        with open(self.file_name, 'w') as f:
+            self._write(f, env)
 
     def _write(self, stream):
         """To be implemented by subclasses."""
@@ -175,13 +209,11 @@ class EnvModule(object):
            where this module lives."""
         raise NotImplementedError()
 
-
     @property
     def use_name(self):
         """Subclasses should implement this to return the name the
            module command uses to refer to the package."""
         raise NotImplementedError()
-
 
     def remove(self):
         mod_file = self.file_name
@@ -205,7 +237,7 @@ class Dotkit(EnvModule):
                                  self.spec.compiler.version, 
                                  self.spec.dag_hash())
 
-    def _write(self, dk_file):
+    def _write(self, dk_file, env):
         # Category
         if self.category:
             dk_file.write('#c %s\n' % self.category)
@@ -231,6 +263,10 @@ class Dotkit(EnvModule):
 class TclModule(EnvModule):
     name = 'tcl'
     path = join_path(spack.share_path, "modules")
+    formats = {
+        PrependPath: 'prepend-path {0.name} \"{0.path}\"\n',
+        SetEnv: 'setenv {0.name} \"{0.value}\"\n'
+    }
 
     @property
     def file_name(self):
@@ -244,25 +280,56 @@ class TclModule(EnvModule):
                                  self.spec.compiler.version, 
                                  self.spec.dag_hash())
 
+    def process_environment_command(self, env):
+        for command in env:
+            # FIXME : how should we handle errors here?
+            yield self.formats[type(command)].format(command)
 
-    def _write(self, m_file):
-        # TODO: cateogry?
-        m_file.write('#%Module1.0\n')
+    def _write(self, module_file, env):
+        """
+        Writes a TCL module file for this package
 
+        Args:
+            module_file: module file stream
+            env: list of environment modifications to be written in the module file
+        """
+        # TCL Modulefile header
+        module_file.write('#%Module1.0\n')
+        # TODO : category ?
         # Short description
         if self.short_description:
-            m_file.write('module-whatis \"%s\"\n\n' % self.short_description)
+            module_file.write('module-whatis \"%s\"\n\n' % self.short_description)
 
         # Long description
         if self.long_description:
-            m_file.write('proc ModulesHelp { } {\n')
+            module_file.write('proc ModulesHelp { } {\n')
             doc = re.sub(r'"', '\"', self.long_description)
-            m_file.write("puts stderr \"%s\"\n" % doc)
-            m_file.write('}\n\n')
+            module_file.write("puts stderr \"%s\"\n" % doc)
+            module_file.write('}\n\n')
 
-        # Path alterations
-        for var, dirs in self.paths.items():
-            for directory in dirs:
-                m_file.write("prepend-path %s \"%s\"\n" % (var, directory))
+        # Environment modifications
+        for line in self.process_environment_command(env):
+            module_file.write(line)
 
-        m_file.write("prepend-path CMAKE_PREFIX_PATH \"%s\"\n" % self.spec.prefix)
+    # FIXME : REMOVE
+    # def _write(self, m_file):
+    #     # TODO: cateogry?
+    #     m_file.write('#%Module1.0\n')
+    #
+    #     # Short description
+    #     if self.short_description:
+    #         m_file.write('module-whatis \"%s\"\n\n' % self.short_description)
+    #
+    #     # Long description
+    #     if self.long_description:
+    #         m_file.write('proc ModulesHelp { } {\n')
+    #         doc = re.sub(r'"', '\"', self.long_description)
+    #         m_file.write("puts stderr \"%s\"\n" % doc)
+    #         m_file.write('}\n\n')
+    #
+    #     # Path alterations
+    #     for var, dirs in self.paths.items():
+    #         for directory in dirs:
+    #             m_file.write("prepend-path %s \"%s\"\n" % (var, directory))
+    #
+    #     m_file.write("prepend-path CMAKE_PREFIX_PATH \"%s\"\n" % self.spec.prefix)

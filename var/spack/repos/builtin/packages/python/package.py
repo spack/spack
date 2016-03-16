@@ -91,13 +91,14 @@ class Python(Package):
 
     def environment_modifications(self, extension_spec):
         env = super(Python, self).environment_modifications(extension_spec)
-        # Set PYTHONPATH to include site-packages dir for the
-        # extension and any other python extensions it depends on.
-        python_paths = []
-        for d in extension_spec.traverse():
-            if d.package.extends(self.spec):
-                python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
-        env.set_env['PYTHONPATH'] = ':'.join(python_paths)
+        if extension_spec is not None:
+            # Set PYTHONPATH to include site-packages dir for the
+            # extension and any other python extensions it depends on.
+            python_paths = []
+            for d in extension_spec.traverse():
+                if d.package.extends(self.spec):
+                    python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
+            env.set_env['PYTHONPATH'] = ':'.join(python_paths)
         return env
 
     def module_modifications(self, module, spec, ext_spec):
