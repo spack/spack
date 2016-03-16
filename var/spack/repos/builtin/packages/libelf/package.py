@@ -38,6 +38,9 @@ class Libelf(Package):
 
     provides('elf')
 
+    sanity_check_files = ['include/libelf.h']
+    sanity_check_dirs  = ['lib']
+
     def install(self, spec, prefix):
         configure("--prefix=" + prefix,
                   "--enable-shared",
