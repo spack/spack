@@ -35,7 +35,7 @@ import sys
 
 import spack
 from llnl.util.filesystem import *
-from spack.environment import EnvironmentModifications, apply_environment_modifications, concatenate_paths
+from spack.environment import EnvironmentModifications, concatenate_paths
 from spack.util.environment import *
 from spack.util.executable import Executable, which
 
@@ -283,10 +283,12 @@ def setup_package(pkg):
         set_module_variables_for_package(pkg, mod)
 
     # Allow dependencies to set up environment as well.
-    for dep_spec in pkg.spec.traverse(root=False):
-        dep_spec.package.module_modifications(pkg.module, dep_spec, pkg.spec)
-        env.extend(dep_spec.package.environment_modifications(pkg.spec))
-    apply_environment_modifications(env)
+    for dependency_spec in pkg.spec.traverse(root=False):
+        dependency_spec.package.module_modifications(pkg.module, dependency_spec, pkg.spec)
+        env.extend(dependency_spec.package.environment_modifications(pkg.spec))
+    # TODO : implement validation
+    #validate(env)
+    env.apply_modifications()
 
 
 def fork(pkg, function):

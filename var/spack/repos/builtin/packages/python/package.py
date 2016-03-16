@@ -98,6 +98,7 @@ class Python(Package):
             if d.package.extends(self.spec):
                 python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
         env.set_env['PYTHONPATH'] = ':'.join(python_paths)
+        return env
 
     def module_modifications(self, module, spec, ext_spec):
         """Called before python modules' install() methods.

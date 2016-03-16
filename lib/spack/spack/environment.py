@@ -158,41 +158,43 @@ class EnvironmentModifications(object):
         item = RemovePath(name, path, **kwargs)
         self.env_modifications.append(item)
 
+    def group_by_name(self):
+        """
+        Returns a dict of the modifications grouped by variable name
+
+        Returns:
+            dict mapping the environment variable name to the modifications to be done on it
+        """
+        modifications = collections.defaultdict(list)
+        for item in self:
+            modifications[item.name].append(item)
+        return modifications
+
+    def clear(self):
+        """
+        Clears the current list of modifications
+        """
+        self.env_modifications.clear()
+
+    def apply_modifications(self):
+        """
+        Applies the modifications and clears the list
+        """
+        modifications = self.group_by_name()
+        # Apply the modifications to the environment variables one variable at a time
+        for name, actions in sorted(modifications.items()):
+            for x in actions:
+                x.execute()
+
 
 def concatenate_paths(paths):
     """
-    Concatenates an iterable of paths into a column separated string
+    Concatenates an iterable of paths into a  string of column separated paths
 
     Args:
         paths: iterable of paths
 
     Returns:
-        column separated string
+        string
     """
     return ':'.join(str(item) for item in paths)
-
-
-def validate_environment_modifications(env):
-    modifications = collections.defaultdict(list)
-    for item in env:
-        modifications[item.name].append(item)
-    # TODO : once we organized the modifications into a dictionary that maps an environment variable
-    # TODO : to a list of action to be done on it, we may easily spot inconsistencies and warn the user if
-    # TODO : something suspicious is happening
-    return modifications
-
-
-def apply_environment_modifications(env):
-    """
-    Modifies the current environment according to the request in env
-
-    Args:
-        env: object storing modifications to the environment
-    """
-    modifications = validate_environment_modifications(env)
-
-    # Cycle over the environment variables that will be modified
-    for variable, actions in modifications.items():
-        # Execute all the actions in the order they were issued
-        for x in actions:
-            x.execute()

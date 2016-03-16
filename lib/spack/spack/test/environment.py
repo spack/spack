@@ -1,6 +1,6 @@
 import unittest
 import os
-from spack.environment import EnvironmentModifications, apply_environment_modifications
+from spack.environment import EnvironmentModifications
 
 
 class EnvironmentTest(unittest.TestCase):
@@ -15,7 +15,7 @@ class EnvironmentTest(unittest.TestCase):
         env = EnvironmentModifications()
         env.set_env('A', 'dummy value')
         env.set_env('B', 3)
-        apply_environment_modifications(env)
+        env.apply_modifications()
         self.assertEqual('dummy value', os.environ['A'])
         self.assertEqual(str(3), os.environ['B'])
 
@@ -23,7 +23,7 @@ class EnvironmentTest(unittest.TestCase):
         env = EnvironmentModifications()
         self.assertEqual('foo', os.environ['UNSET_ME'])
         env.unset_env('UNSET_ME')
-        apply_environment_modifications(env)
+        env.apply_modifications()
         self.assertRaises(KeyError, os.environ.__getitem__, 'UNSET_ME')
 
     def test_path_manipulation(self):
@@ -43,7 +43,7 @@ class EnvironmentTest(unittest.TestCase):
         env.remove_path('REMOVE_PATH_LIST', '/remove/this')
         env.remove_path('REMOVE_PATH_LIST', '/duplicate/')
 
-        apply_environment_modifications(env)
+        env.apply_modifications()
         self.assertEqual('/path/first:/path/second:/path/third:/path/last', os.environ['PATH_LIST'])
         self.assertEqual('/path/first:/path/middle:/path/last', os.environ['EMPTY_PATH_LIST'])
         self.assertEqual('/path/first:/path/middle:/path/last', os.environ['NEWLY_CREATED_PATH_LIST'])
@@ -52,7 +52,9 @@ class EnvironmentTest(unittest.TestCase):
     def test_extra_arguments(self):
         env = EnvironmentModifications()
         env.set_env('A', 'dummy value', who='Pkg1')
-        apply_environment_modifications(env)
+        for x in env:
+            assert hasattr(x, 'who')
+        env.apply_modifications()
         self.assertEqual('dummy value', os.environ['A'])
 
     def test_extend(self):
