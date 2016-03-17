@@ -40,7 +40,7 @@ class NetlibScalapack(Package):
             make()
             make("install")
 
-    def module_modifications(self, module, spec, dependent_spec):
+    def modify_module(self, module, spec, dependent_spec):
         # TODO treat OS that are not Linux...
         lib_suffix = '.so' if '+shared' in spec['scalapack'] else '.a'
 

@@ -89,24 +89,21 @@ class Python(Package):
     def site_packages_dir(self):
         return os.path.join(self.python_lib_dir, 'site-packages')
 
-    def environment_modifications(self, extension_spec):
-        env = super(Python, self).environment_modifications(extension_spec)
-        if extension_spec is not None:
-            # Set PYTHONPATH to include site-packages dir for the
-            # extension and any other python extensions it depends on.
-            python_paths = []
-            for d in extension_spec.traverse():
-                if d.package.extends(self.spec):
-                    python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
-            env.set_env['PYTHONPATH'] = ':'.join(python_paths)
-        return env
+    def setup_dependent_environment(self, env, extension_spec):
+        # Set PYTHONPATH to include site-packages dir for the extension and any other python extensions it depends on.
+        python_paths = []
+        for d in extension_spec.traverse():
+            if d.package.extends(self.spec):
+                python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
+        env.set_env['PYTHONPATH'] = ':'.join(python_paths)
 
-    def module_modifications(self, module, spec, ext_spec):
-        """Called before python modules' install() methods.
+    def modify_module(self, module, spec, ext_spec):
+        """
+        Called before python modules' install() methods.
 
         In most cases, extensions will only need to have one line::
 
-            python('setup.py', 'install', '--prefix=%s' % prefix)
+        python('setup.py', 'install', '--prefix=%s' % prefix)
         """
         # Python extension builds can have a global python executable function
         if self.version >= Version("3.0.0") and self.version < Version("4.0.0"):

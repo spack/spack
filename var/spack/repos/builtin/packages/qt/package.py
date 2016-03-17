@@ -55,10 +55,8 @@ class Qt(Package):
     depends_on("mesa", when='@4:+mesa')
     depends_on("libxcb")
 
-    def environment_modifications(self, dependent_spec):
-        env = super(Qt, self).environment_modifications(dependent_spec)
+    def setup_environment(self, env):
         env.set_env['QTDIR'] = self.prefix
-        return env
 
     def patch(self):
         if self.spec.satisfies('@4'):

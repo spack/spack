@@ -977,7 +977,7 @@ class Package(object):
                           fromlist=[self.__class__.__name__])
 
 
-    def environment_modifications(self, dependent_spec):
+    def setup_environment(self, env):
         """
         Called before the install() method of dependents.
 
@@ -998,9 +998,12 @@ class Package(object):
         Returns:
             instance of environment modifications
         """
-        return EnvironmentModifications()
+        pass
 
-    def module_modifications(self, module, spec, dependent_spec):
+    def setup_dependent_environment(self, env, dependent_spec):
+        self.setup_environment(env)
+
+    def modify_module(self, module, spec, dependent_spec):
         """
         Called before the install() method of dependents.
 

@@ -162,9 +162,8 @@ class EnvModule(object):
         # Environment modifications guessed by inspecting the installation prefix
         env = inspect_path(self.spec.prefix)
         # Package-specific environment modifications
-        # FIXME : decide how to distinguish between calls done in the installation and elsewhere
-        env.extend(self.spec.package.environment_modifications(None))
-        # site_specific = ...`
+        self.spec.package.setup_environment(env)
+        # TODO : implement site-specific modifications and filters
         if not env:
             return
 

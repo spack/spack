@@ -47,30 +47,21 @@ class Mpich(Package):
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
-    def environment_modifications(self, dependent_spec):
-        env = super(Mpich, self).environment_modifications(dependent_spec)
+    def setup_environment(self, env):
+        env.set_env('MPICH_CC', self.compiler.cc)
+        env.set_env('MPICH_CXX', self.compiler.cxx)
+        env.set_env('MPICH_F77', self.compiler.f77)
+        env.set_env('MPICH_F90', self.compiler.fc)
+        env.set_env('MPICH_FC', self.compiler.fc)
 
-        if dependent_spec is None:
-            # We are not using compiler wrappers
-            cc = self.compiler.cc
-            cxx = self.compiler.cxx
-            f77 = self.compiler.f77
-            f90 = fc = self.compiler.fc
-        else:
-            # Spack compiler wrappers
-            cc = os.environ['CC']
-            cxx = os.environ['CXX']
-            f77 = os.environ['F77']
-            f90 = fc = os.environ['FC']
+    def setup_dependent_environment(self, env, dependent_spec):
+        env.set_env('MPICH_CC', spack_cc)
+        env.set_env('MPICH_CXX', spack_cxx)
+        env.set_env('MPICH_F77', spack_f77)
+        env.set_env('MPICH_F90', spack_f90)
+        env.set_env('MPICH_FC', spack_fc)
 
-        env.set_env('MPICH_CC', cc)
-        env.set_env('MPICH_CXX', cxx)
-        env.set_env('MPICH_F77', f77)
-        env.set_env('MPICH_F90', f90)
-        env.set_env('MPICH_FC', fc)
-        return env
-
-    def module_modifications(self, module, spec, dep_spec):
+    def modify_module(self, module, spec, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""
         # FIXME : is this necessary ? Shouldn't this be part of a contract with MPI providers?
         module.mpicc = join_path(self.prefix.bin, 'mpicc')
