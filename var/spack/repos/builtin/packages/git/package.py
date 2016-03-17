@@ -8,7 +8,8 @@ class Git(Package):
     url      = "https://github.com/git/git/archive/v2.7.3.tar.gz"
 
 
-    # version('2.8.0-rc2', 'c2cf9f2cc70e35f2fafbaf9258f82e4c')
+    version('2.8.0-rc2', '98a5bbeec5b4e8f61f96160aed67dff9')
+    # The versions 2.7.x below have some vulnerabilities
     version('2.7.3', '627165fe4453a93cad7899cd7b649784')
     version('2.7.1', 'a3cae4589bd75b82451b813f2b8ed8bc')
 
@@ -36,10 +37,8 @@ class Git(Package):
     depends_on("curl", when="+curl")
     depends_on("expat", when="+expat")
     depends_on("openssl")
-
-    # Use system perl for now.
     # depends_on("perl")
-    # depends_on("pcre")
+    depends_on("pcre")
 
     depends_on("zlib")
 
@@ -47,7 +46,8 @@ class Git(Package):
         configure_args = [
             "CC=/usr/bin/cc",
             "--prefix=%s" % prefix,
-            "--without-pcre",
+            "--with-libpcre=%s" % spec['pcre'].prefix,
+            # "--with-perl=%s" % spec['perl'].prefix,
             "--with-openssl=%s" % spec['openssl'].prefix,
             "--with-zlib=%s" % spec['zlib'].prefix
             ]
