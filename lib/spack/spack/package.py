@@ -976,32 +976,41 @@ class Package(object):
         return __import__(self.__class__.__module__,
                           fromlist=[self.__class__.__name__])
 
-
     def setup_environment(self, env):
         """
+        Appends in `env` the list of environment modifications needed to use this package outside of spack.
 
+        Default implementation does nothing, but this can be overridden if the package needs a particular environment.
+
+        Example :
+
+        1. A lot of Qt extensions need `QTDIR` set.  This can be used to do that.
+
+        Args:
+            env: list of environment modifications to be updated
+        """
+        pass
+
+    def setup_dependent_environment(self, env, dependent_spec):
+        """
         Called before the install() method of dependents.
 
-        Return the list of environment modifications needed by dependents (or extensions). Default implementation does
-        nothing, but this can be overridden by an extendable package to set up the install environment for its
-        extensions. This is useful if there are some common steps to installing all extensions for a certain package.
+        Appends in `env` the list of environment modifications needed by dependents (or extensions) during the
+        installation of a package. The default implementation delegates to `setup_environment`, but can be overridden
+        if the modifications to the environment happen to be different from the one needed to use the package outside
+        of spack.
+
+        This is useful if there are some common steps to installing all extensions for a certain package.
 
         Example :
 
         1. Installing python modules generally requires `PYTHONPATH` to point to the lib/pythonX.Y/site-packages
         directory in the module's install prefix.  This could set that variable.
 
-        2. A lot of Qt extensions need `QTDIR` set.  This can be used to do that.
-
         Args:
+            env: list of environment modifications to be updated
             dependent_spec: dependent (or extension) of this spec
-
-        Returns:
-            instance of environment modifications
         """
-        pass
-
-    def setup_dependent_environment(self, env, dependent_spec):
         self.setup_environment(env)
 
     def modify_module(self, module, spec, dependent_spec):
@@ -1020,11 +1029,9 @@ class Package(object):
         """
         pass
 
-
     def install(self, spec, prefix):
         """Package implementations override this with their own build configuration."""
         raise InstallError("Package %s provides no install method!" % self.name)
-
 
     def do_uninstall(self, force=False):
         if not self.installed:
