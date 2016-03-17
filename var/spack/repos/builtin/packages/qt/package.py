@@ -3,8 +3,10 @@ import os
 
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
+
     homepage = 'http://qt.io'
 
+    version('5.6.0',  '7a2a867bc12384f4161809136d49d4be')
     version('5.5.1',  '59f0216819152b77536cf660b015d784')
     version('5.4.2',  'fa1c4d819b401b267eb246a543a63ea5')
     version('5.4.0',  'e8654e4b37dd98039ba20da7a53877e6')
