@@ -74,29 +74,37 @@ def print_help():
             "")
 
 
-def inspect_path(path):
-    class PathInspector(object):
-        dirname2varname = {
-            'bin': ('PATH',),
-            'man': ('MANPATH',),
-            'lib': ('LIBRARY_PATH', 'LD_LIBRARY_PATH'),
-            'lib64': ('LIBRARY_PATH', 'LD_LIBRARY_PATH'),
-            'include': ('CPATH',),
-            'pkgconfig': ('PKG_CONFIG_PATH',)
-        }
+def inspect_path(prefix):
+    """
+    Inspects the prefix of an installation to search for common layouts. Issues a request to modify the environment
+    accordingly when an item is found.
 
-        def __call__(self, env, directory, names):
-            for name in names:
-                variables = PathInspector.dirname2varname.get(name, None)
-                if variables is None:
-                    continue
-                absolute_path = join_path(os.path.abspath(directory), name)
-                for variable in variables:
-                    env.prepend_path(variable, absolute_path)
+    Args:
+        prefix: prefix of the installation
 
-    env, inspector = EnvironmentModifications(), PathInspector()
-    os.path.walk(path, inspector, env)
-    env.prepend_path('CMAKE_PREFIX_PATH', path)
+    Returns:
+        instance of EnvironmentModifications containing the requested modifications
+    """
+    env = EnvironmentModifications()
+    # Inspect the prefix to check for the existence of common directories
+    prefix_inspections = {
+        'bin': ('PATH',),
+        'man': ('MANPATH',),
+        'lib': ('LIBRARY_PATH', 'LD_LIBRARY_PATH'),
+        'lib64': ('LIBRARY_PATH', 'LD_LIBRARY_PATH'),
+        'include': ('CPATH',)
+    }
+    for attribute, variables in prefix_inspections.items():
+        expected = getattr(prefix, attribute)
+        if os.path.isdir(expected):
+            for variable in variables:
+                env.prepend_path(variable, expected)
+    # PKGCONFIG
+    for expected in (join_path(prefix.lib, 'pkgconfig'), join_path(prefix.lib64, 'pkgconfig')):
+        if os.path.isdir(expected):
+            env.prepend_path('PKG_CONFIG_PATH', expected)
+    # CMake related variables
+    env.prepend_path('CMAKE_PREFIX_PATH', prefix)
     return env
 
 
