@@ -78,7 +78,7 @@ done
 # 'command' is set based on the input command to $SPACK_[CC|CXX|F77|F90]
 #
 # 'mode' is set to one of:
-#    cpp     preprocessor
+#    cpp     preprocess
 #    cc      compile
 #    as      assemble
 #    ld      link
