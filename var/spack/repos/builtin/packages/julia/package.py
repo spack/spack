@@ -6,6 +6,8 @@ class Julia(Package):
     homepage = "http://julialang.org"
     url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
 
+    version('master',
+            git='https://github.com/JuliaLang/julia.git', branch='master')
     version('0.4.3', '8a4a59fd335b05090dd1ebefbbe5aaac')
 
     patch('gc.patch')
@@ -15,7 +17,7 @@ class Julia(Package):
     # depends_on("awk")
     # depends_on("m4")
     # depends_on("pkg-config")
-    depends_on("python @2.6:2.9")
+    depends_on("python @2.7:2.999")
 
     # I think that Julia requires the dependencies above, but it builds find (on
     # my system) without these. We should enable them as necessary.
