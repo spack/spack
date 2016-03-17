@@ -3,73 +3,54 @@ import os.path
 import collections
 
 
-class AttributeHolder(object):
-    """
-    Policy that permits to store any kind of attribute on self. The attributes must be passed as key/value pairs
-    during the initialization of the instance.
-    """
-    def __init__(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
+class NameModifier(object):
+    def __init__(self, name, **kwargs):
+        self.name = name
+        self.args = {'name': name}
+        self.args.update(kwargs)
 
 
-class SetEnv(AttributeHolder):
+class NameValueModifier(object):
     def __init__(self, name, value, **kwargs):
-        super(SetEnv, self).__init__(**kwargs)
         self.name = name
         self.value = value
+        self.args = {'name': name, 'value': value}
+        self.args.update(kwargs)
 
+
+class SetEnv(NameValueModifier):
     def execute(self):
         os.environ[self.name] = str(self.value)
 
 
-class UnsetEnv(AttributeHolder):
-    def __init__(self, name, **kwargs):
-        super(UnsetEnv, self).__init__(**kwargs)
-        self.name = name
-
+class UnsetEnv(NameModifier):
     def execute(self):
         os.environ.pop(self.name, None)  # Avoid throwing if the variable was not set
 
 
-class AppendPath(AttributeHolder):
-    def __init__(self, name, path, **kwargs):
-        super(AppendPath, self).__init__(**kwargs)
-        self.name = name
-        self.path = path
-
+class AppendPath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
         directories = environment_value.split(':') if environment_value else []
         # TODO : Check if this is a valid directory name
-        directories.append(os.path.normpath(self.path))
+        directories.append(os.path.normpath(self.value))
         os.environ[self.name] = ':'.join(directories)
 
 
-class PrependPath(AttributeHolder):
-    def __init__(self, name, path, **kwargs):
-        super(PrependPath, self).__init__(**kwargs)
-        self.name = name
-        self.path = path
-
+class PrependPath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
         directories = environment_value.split(':') if environment_value else []
         # TODO : Check if this is a valid directory name
-        directories = [os.path.normpath(self.path)] + directories
+        directories = [os.path.normpath(self.value)] + directories
         os.environ[self.name] = ':'.join(directories)
 
 
-class RemovePath(AttributeHolder):
-    def __init__(self, name, path, **kwargs):
-        super(RemovePath, self).__init__(**kwargs)
-        self.name = name
-        self.path = path
-
+class RemovePath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
         directories = environment_value.split(':') if environment_value else []
-        directories = [os.path.normpath(x) for x in directories if x != os.path.normpath(self.path)]
+        directories = [os.path.normpath(x) for x in directories if x != os.path.normpath(self.value)]
         os.environ[self.name] = ':'.join(directories)
 
 

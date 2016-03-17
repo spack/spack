@@ -178,7 +178,7 @@ class EnvModule(object):
     def process_environment_command(self, env):
         for command in env:
             # FIXME : how should we handle errors here?
-            yield self.formats[type(command)].format(command)
+            yield self.formats[type(command)].format(**command.args)
 
     @property
     def file_name(self):
@@ -203,8 +203,8 @@ class Dotkit(EnvModule):
     path = join_path(spack.share_path, "dotkit")
 
     formats = {
-        PrependPath: 'dk_alter {0.name} {0.path}\n',
-        SetEnv: 'dk_setenv {0.name} {0.value}\n'
+        PrependPath: 'dk_alter {name} {value}\n',
+        SetEnv: 'dk_setenv {name} {value}\n'
     }
 
     @property
@@ -238,8 +238,8 @@ class TclModule(EnvModule):
     path = join_path(spack.share_path, "modules")
 
     formats = {
-        PrependPath: 'prepend-path {0.name} \"{0.path}\"\n',
-        SetEnv: 'setenv {0.name} \"{0.value}\"\n'
+        PrependPath: 'prepend-path {name} \"{value}\"\n',
+        SetEnv: 'setenv {name} \"{value}\"\n'
     }
 
     @property

@@ -979,6 +979,7 @@ class Package(object):
 
     def setup_environment(self, env):
         """
+
         Called before the install() method of dependents.
 
         Return the list of environment modifications needed by dependents (or extensions). Default implementation does

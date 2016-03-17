@@ -53,7 +53,7 @@ class EnvironmentTest(unittest.TestCase):
         env = EnvironmentModifications()
         env.set_env('A', 'dummy value', who='Pkg1')
         for x in env:
-            assert hasattr(x, 'who')
+            assert 'who' in x.args
         env.apply_modifications()
         self.assertEqual('dummy value', os.environ['A'])
 
