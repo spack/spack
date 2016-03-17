@@ -95,7 +95,7 @@ class Python(Package):
         for d in extension_spec.traverse():
             if d.package.extends(self.spec):
                 python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
-        env.set_env['PYTHONPATH'] = ':'.join(python_paths)
+        env.set_env('PYTHONPATH', ':'.join(python_paths))
 
     def modify_module(self, module, spec, ext_spec):
         """
