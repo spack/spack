@@ -1,6 +1,7 @@
 from spack import *
+from spack.package import PythonExtension
 
-class PyNose(Package):
+class PyNose(PythonExtension):
     """nose extends the test loading and running features of unittest,
     making it easier to write, find and run tests."""
 

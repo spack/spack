@@ -37,6 +37,7 @@ import os
 import re
 import textwrap
 import time
+import glob
 
 import llnl.util.tty as tty
 import spack
@@ -55,7 +56,6 @@ from llnl.util.filesystem import *
 from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
-from spack.environment import EnvironmentModifications
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
@@ -1235,6 +1235,15 @@ class Package(object):
         """Get the rpath args as a string, with -Wl,-rpath, for each element."""
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
+
+class PythonExtension(Package):
+    def setup_dependent_environment(self, env, dependent_spec):
+        pass
+
+    def setup_environment(self, env):
+        site_packages = glob.glob(join_path(self.spec.prefix.lib, "python*/site-packages"))
+        if site_packages:
+            env.prepend_path('PYTHONPATH', site_packages[0])
 
 def validate_package_url(url_string):
     """Determine whether spack can handle a particular URL or not."""
