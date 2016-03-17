@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -24,29 +24,16 @@
 ##############################################################################
 from spack import *
 
-class Libelf(Package):
-    """libelf lets you read, modify or create ELF object files in an
-       architecture-independent way. The library takes care of size
-       and endian issues, e.g. you can process a file for SPARC
-       processors on an Intel-based system."""
+class Hypre(Package):
+    """Hypre is included here as an example of a package that depends on
+       both LAPACK and BLAS."""
+    homepage = "http://www.openblas.net"
+    url      = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+    version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-
-    provides('elf')
-
-    sanity_check_files = ['include/libelf.h']
-    sanity_check_dirs  = ['lib']
+    depends_on('lapack')
+    depends_on('blas')
 
     def install(self, spec, prefix):
-        configure("--prefix=" + prefix,
-                  "--enable-shared",
-                  "--disable-dependency-tracking",
-                  "--disable-debug")
-        make()
-
-        # The mkdir commands in libelf's install can fail in parallel
-        make("install", parallel=False)
+        pass

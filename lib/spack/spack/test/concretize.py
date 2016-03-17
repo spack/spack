@@ -142,6 +142,34 @@ class ConcretizeTest(MockPackagesTest):
                                 for spec in spack.repo.providers_for('mpi@3')))
 
 
+    def test_concretize_two_virtuals(self):
+        """Test a package with multiple virtual dependencies."""
+        s = Spec('hypre').concretize()
+
+
+    def test_concretize_two_virtuals_with_one_bound(self):
+        """Test a package with multiple virtual dependencies and one preset."""
+        s = Spec('hypre ^openblas').concretize()
+
+
+    def test_concretize_two_virtuals_with_two_bound(self):
+        """Test a package with multiple virtual dependencies and two of them preset."""
+        s = Spec('hypre ^openblas ^netlib-lapack').concretize()
+
+
+    def test_concretize_two_virtuals_with_dual_provider(self):
+        """Test a package with multiple virtual dependencies and force a provider
+           that provides both."""
+        s = Spec('hypre ^openblas-with-lapack').concretize()
+
+
+    def test_concretize_two_virtuals_with_dual_provider_and_a_conflict(self):
+        """Test a package with multiple virtual dependencies and force a provider
+           that provides both, and another conflicting package that provides one."""
+        s = Spec('hypre ^openblas-with-lapack ^netlib-lapack')
+        self.assertRaises(spack.spec.MultipleProviderError, s.concretize)
+
+
     def test_virtual_is_fully_expanded_for_callpath(self):
         # force dependence on fake "zmpi" by asking for MPI 10.0
         spec = Spec('callpath ^mpi@10.0')
@@ -281,4 +309,3 @@ class ConcretizeTest(MockPackagesTest):
                       Spec('d')),
                  Spec('e'))
         self.assertEqual(None, find_spec(s['b'], lambda s: '+foo' in s))
-

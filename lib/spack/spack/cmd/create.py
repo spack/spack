@@ -208,7 +208,7 @@ def find_repository(spec, args):
     return repo
 
 
-def fetch_tarballs(url, name, args):
+def fetch_tarballs(url, name, version):
     """Try to find versions of the supplied archive by scraping the web.
 
     Prompts the user to select how many to download if many are found.
@@ -222,7 +222,7 @@ def fetch_tarballs(url, name, args):
     archives_to_fetch = 1
     if not versions:
         # If the fetch failed for some reason, revert to what the user provided
-        versions = { "version" : url }
+        versions = { version : url }
     elif len(versions) > 1:
         tty.msg("Found %s versions of %s:" % (len(versions), name),
                 *spack.cmd.elide_list(
@@ -256,7 +256,7 @@ def create(parser, args):
     tty.msg("Creating template for package %s" % name)
 
     # Fetch tarballs (prompting user if necessary)
-    versions, urls = fetch_tarballs(url, name, args)
+    versions, urls = fetch_tarballs(url, name, version)
 
     # Try to guess what configure system is used.
     guesser = ConfigureGuesser()

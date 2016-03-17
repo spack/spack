@@ -38,7 +38,7 @@ contains tarballs for each package, named after each package.
 
 .. note::
 
-   Archives are **not** named exactly they were in the package's fetch
+   Archives are **not** named exactly the way they were in the package's fetch
    URL.  They have the form ``<name>-<version>.<extension>``, where
    ``<name>`` is Spack's name for the package, ``<version>`` is the
    version of the tarball, and ``<extension>`` is whatever format the
