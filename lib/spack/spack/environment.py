@@ -1,6 +1,7 @@
 import os
 import os.path
 import collections
+import inspect
 
 
 class NameModifier(object):
@@ -32,7 +33,6 @@ class AppendPath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
         directories = environment_value.split(':') if environment_value else []
-        # TODO : Check if this is a valid directory name
         directories.append(os.path.normpath(self.value))
         os.environ[self.name] = ':'.join(directories)
 
@@ -41,7 +41,6 @@ class PrependPath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
         directories = environment_value.split(':') if environment_value else []
-        # TODO : Check if this is a valid directory name
         directories = [os.path.normpath(self.value)] + directories
         os.environ[self.name] = ':'.join(directories)
 
@@ -57,6 +56,11 @@ class RemovePath(NameValueModifier):
 class EnvironmentModifications(object):
     """
     Keeps track of requests to modify the current environment.
+
+    Each call to a method to modify the environment stores the extra information on the caller in the request:
+    - 'filename' : filename of the module where the caller is defined
+    - 'lineno': line number where the request occurred
+    - 'context' : line of code that issued the request that failed
     """
 
     def __init__(self, other=None):
@@ -85,6 +89,20 @@ class EnvironmentModifications(object):
         if not isinstance(other, EnvironmentModifications):
             raise TypeError('other must be an instance of EnvironmentModifications')
 
+    def _get_outside_caller_attributes(self):
+        stack = inspect.stack()
+        try:
+            _, filename, lineno, _, context, index = stack[2]
+            context = context[index].strip()
+        except Exception:
+            filename, lineno, context = 'unknown file', 'unknown line', 'unknown context'
+        args = {
+            'filename': filename,
+            'lineno': lineno,
+            'context': context
+        }
+        return args
+
     def set_env(self, name, value, **kwargs):
         """
         Stores in the current object a request to set an environment variable
@@ -93,6 +111,7 @@ class EnvironmentModifications(object):
             name: name of the environment variable to be set
             value: value of the environment variable
         """
+        kwargs.update(self._get_outside_caller_attributes())
         item = SetEnv(name, value, **kwargs)
         self.env_modifications.append(item)
 
@@ -103,6 +122,7 @@ class EnvironmentModifications(object):
         Args:
             name: name of the environment variable to be set
         """
+        kwargs.update(self._get_outside_caller_attributes())
         item = UnsetEnv(name, **kwargs)
         self.env_modifications.append(item)
 
@@ -114,6 +134,7 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be appended
         """
+        kwargs.update(self._get_outside_caller_attributes())
         item = AppendPath(name, path, **kwargs)
         self.env_modifications.append(item)
 
@@ -125,6 +146,7 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be pre-pended
         """
+        kwargs.update(self._get_outside_caller_attributes())
         item = PrependPath(name, path, **kwargs)
         self.env_modifications.append(item)
 
@@ -136,6 +158,7 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be removed
         """
+        kwargs.update(self._get_outside_caller_attributes())
         item = RemovePath(name, path, **kwargs)
         self.env_modifications.append(item)
 

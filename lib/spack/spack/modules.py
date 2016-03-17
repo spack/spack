@@ -177,8 +177,12 @@ class EnvModule(object):
 
     def process_environment_command(self, env):
         for command in env:
-            # FIXME : how should we handle errors here?
-            yield self.formats[type(command)].format(**command.args)
+            try:
+                yield self.formats[type(command)].format(**command.args)
+            except KeyError:
+                tty.warn('Cannot handle command of type {command} : skipping request'.format(command=type(command)))
+                tty.warn('{context} at {filename}:{lineno}'.format(**command.args))
+
 
     @property
     def file_name(self):
