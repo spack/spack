@@ -15,6 +15,7 @@ class Julia(Package):
     # Build-time dependencies
     depends_on("cmake @2.8:")
     # depends_on("awk")
+    depends_on("git")
     # depends_on("m4")
     # depends_on("pkg-config")
     depends_on("python @2.7:2.999")
