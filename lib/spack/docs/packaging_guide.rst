@@ -1559,11 +1559,11 @@ you ask for a particular spec.
 A user may have certain preferences for how packages should
 be concretized on their system.  For example, one user may prefer packages
 built with OpenMPI and the Intel compiler.  Another user may prefer
-packages be built with MVAPICH and GCC.  
+packages be built with MVAPICH and GCC.
 
 Spack can be configured to prefer certain compilers, package
 versions, depends_on, and variants during concretization.
-The preferred configuration can be controlled via the 
+The preferred configuration can be controlled via the
 ``~/.spack/packages.yaml`` file for user configuations, or the
 ``etc/spack/packages.yaml`` site configuration.
 
@@ -1582,32 +1582,32 @@ Here's an example packages.yaml file that sets preferred packages:
         compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
         providers:
           mpi: [mvapich, mpich, openmpi]
-          
+
 
 At a high level, this example is specifying how packages should be
-concretized.  The dyninst package should prefer using gcc 4.9 and 
+concretized.  The dyninst package should prefer using gcc 4.9 and
 be built with debug options.  The gperftools package should prefer version
 2.2 over 2.4.  Every package on the system should prefer mvapich for
-its MPI and gcc 4.4.7 (except for Dyninst, which overrides this by preferring gcc 4.9).  
-These options are used to fill in implicit defaults.  Any of them can be overwritten 
+its MPI and gcc 4.4.7 (except for Dyninst, which overrides this by preferring gcc 4.9).
+These options are used to fill in implicit defaults.  Any of them can be overwritten
 on the command line if explicitly requested.
 
-Each packages.yaml file begins with the string ``packages:`` and 
+Each packages.yaml file begins with the string ``packages:`` and
 package names are specified on the next level. The special string ``all``
-applies settings to each package. Underneath each package name is 
-one or more components: ``compiler``, ``variants``, ``version``, 
-or ``providers``.  Each component has an ordered list of spec 
+applies settings to each package. Underneath each package name is
+one or more components: ``compiler``, ``variants``, ``version``,
+or ``providers``.  Each component has an ordered list of spec
 ``constraints``, with earlier entries in the list being preferred over
 later entries.
 
-Sometimes a package installation may have constraints that forbid 
+Sometimes a package installation may have constraints that forbid
 the first concretization rule, in which case Spack will use the first
 legal concretization rule.  Going back to the example, if a user
-requests gperftools 2.3 or later, then Spack will install version 2.4 
+requests gperftools 2.3 or later, then Spack will install version 2.4
 as the 2.4 version of gperftools is preferred over 2.3.
 
-An explicit concretization rule in the preferred section will always 
-take preference over unlisted concretizations.  In the above example, 
+An explicit concretization rule in the preferred section will always
+take preference over unlisted concretizations.  In the above example,
 xlc isn't listed in the compiler list.  Every listed compiler from
 gcc to pgi will thus be preferred over the xlc compiler.
 
@@ -2158,6 +2158,62 @@ a package file, you can supply a keyword argument, ``parallel=False``,
 to the ``make`` wrapper to disable parallel make.  In the ``libelf``
 package, this allows us to avoid race conditions in the library's
 build system.
+
+
+.. _sanity-checks:
+
+Sanity checking an intallation
+--------------------------------
+
+By default, Spack assumes that a build has failed if nothing is
+written to the install prefix, and that it has succeeded if anything
+(a file, a directory, etc.)  is written to the install prefix after
+``install()`` completes.
+
+Consider a simple autotools build like this:
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       configure("--prefix=" + prefix)
+       make()
+       make("install")
+
+If you are using using standard autotools or CMake, ``configure`` and
+``make`` will not write anything to the install prefix.  Only ``make
+install`` writes the files, and only once the build is already
+complete.  Not all builds are like this.  Many builds of scientific
+software modify the install prefix *before* ``make install``. Builds
+like this can falsely report that they were successfully installed if
+an error occurs before the install is complete but after files have
+been written to the ``prefix``.
+
+
+``sanity_check_is_file`` and ``sanity_check_is_dir``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can optionally specify *sanity checks* to deal with this problem.
+Add properties like this to your package:
+
+.. code-block:: python
+
+   class MyPackage(Package):
+       ...
+
+       sanity_check_is_file = ['include/libelf.h']
+       sanity_check_is_dir  = [lib]
+
+       def install(self, spec, prefix):
+           configure("--prefix=" + prefix)
+           make()
+           make("install")
+
+Now, after ``install()`` runs, Spack will check whether
+``$prefix/include/libelf.h`` exists and is a file, and whether
+``$prefix/lib`` exists and is a directory.  If the checks fail, then
+the build will fail and the install prefix will be removed.  If they
+succeed, Spack considers the build succeeful and keeps the prefix in
+place.
 
 
 .. _file-manipulation:
