@@ -156,7 +156,7 @@ class URLFetchStrategy(FetchStrategy):
         if self.archive_file:
             tty.msg("Already downloaded %s" % self.archive_file)
             return
-        cached = self.check_cache()
+        cached = self.search_cache()
         if cached:
             tty.msg("Cached %s." % cached)
             shutil.copy(cached, "./")
@@ -292,7 +292,7 @@ class URLFetchStrategy(FetchStrategy):
                     "Expected %s but got %s" % (self.digest, checker.sum))
 
 
-    def check_cache(self):
+    def search_cache(self):
         if not self.digest:
             return
         checker = crypto.Checker(self.digest)
