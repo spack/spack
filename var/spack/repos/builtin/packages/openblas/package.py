@@ -5,6 +5,7 @@ class Openblas(Package):
     homepage = "http://www.openblas.net"
     url      = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
+    version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
     # virtual dependency
