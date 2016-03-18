@@ -1,11 +1,14 @@
+import functools
+import glob
+import inspect
 import os
 import re
 from contextlib import closing
-from llnl.util.lang import match_predicate
-from spack.util.environment import *
 
-from spack import *
 import spack
+from llnl.util.lang import match_predicate
+from spack import *
+from spack.util.environment import *
 
 
 class Python(Package):
@@ -110,6 +113,31 @@ class Python(Package):
             module.python = Executable(join_path(spec.prefix.bin, 'python3'))
         else:
             module.python = Executable(join_path(spec.prefix.bin, 'python'))
+
+        # The code below patches the any python extension to have good defaults for `setup_dependent_environment` and
+        # `setup_environment` only if the extension didn't override any of these functions explicitly.
+        def _setup_env(self, env):
+            site_packages = glob.glob(join_path(self.spec.prefix.lib, "python*/site-packages"))
+            if site_packages:
+                env.prepend_path('PYTHONPATH', site_packages[0])
+
+        def _setup_denv(self, env, extension_spec):
+            pass
+
+        pkg_cls = type(ext_spec.package)  # Retrieve the type we may want to patch
+        if 'python' in pkg_cls.extendees:
+            # List of overrides we are interested in
+            interesting_overrides = ['setup_environment', 'setup_dependent_environment']
+            overrides_found = [
+                (name, defining_cls) for name, _, defining_cls, _, in inspect.classify_class_attrs(pkg_cls)
+                if
+                name in interesting_overrides and  # The attribute has the right name
+                issubclass(defining_cls, Package) and defining_cls is not Package  # and is an actual override
+            ]
+            if not overrides_found:
+                # If no override were found go on patching
+                pkg_cls.setup_environment = functools.wraps(Package.setup_environment)(_setup_env)
+                pkg_cls.setup_dependent_environment = functools.wraps(Package.setup_dependent_environment)(_setup_denv)
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
         module.python_lib_dir     = os.path.join(ext_spec.prefix, self.python_lib_dir)

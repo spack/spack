@@ -282,9 +282,11 @@ def setup_package(pkg):
     for mod in modules:
         set_module_variables_for_package(pkg, mod)
 
-    # Allow dependencies to set up environment as well.
+    # Allow dependencies to modify the module
     for dependency_spec in pkg.spec.traverse(root=False):
         dependency_spec.package.modify_module(pkg.module, dependency_spec, pkg.spec)
+    # Allow dependencies to set up environment as well
+    for dependency_spec in pkg.spec.traverse(root=False):
         dependency_spec.package.setup_dependent_environment(env, pkg.spec)
     # TODO : implement validation
     #validate(env)

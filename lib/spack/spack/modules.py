@@ -119,12 +119,12 @@ class EnvModule(object):
                 module_types[cls.name] = cls
 
     def __init__(self, spec=None):
+        self.spec = spec
+        self.pkg = spec.package  # Just stored for convenience
+
         # category in the modules system
         # TODO: come up with smarter category names.
         self.category = "spack"
-
-        self.spec = spec
-        self.pkg = spec.package  # Just stored for convenience
 
         # short description default is just the package + version
         # packages can provide this optional attribute
@@ -161,6 +161,12 @@ class EnvModule(object):
 
         # Environment modifications guessed by inspecting the installation prefix
         env = inspect_path(self.spec.prefix)
+
+        # Let the extendee modify their extensions before asking for package-specific modifications
+        for extendee in self.pkg.extendees:
+            extendee_spec = self.spec[extendee]
+            extendee_spec.package.modify_module(self.pkg, extendee_spec, self.spec)
+
         # Package-specific environment modifications
         self.spec.package.setup_environment(env)
         # TODO : implement site-specific modifications and filters

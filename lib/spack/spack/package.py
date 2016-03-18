@@ -1261,16 +1261,6 @@ class Package(object):
         """Get the rpath args as a string, with -Wl,-rpath, for each element."""
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
-
-class PythonExtension(Package):
-    def setup_dependent_environment(self, env, dependent_spec):
-        pass
-
-    def setup_environment(self, env):
-        site_packages = glob.glob(join_path(self.spec.prefix.lib, "python*/site-packages"))
-        if site_packages:
-            env.prepend_path('PYTHONPATH', site_packages[0])
-
 def validate_package_url(url_string):
     """Determine whether spack can handle a particular URL or not."""
     url = urlparse(url_string)
