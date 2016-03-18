@@ -33,6 +33,7 @@ import yaml
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
+from llnl.util.link_tree import *
 
 from spack.spec import Spec
 from spack.error import SpackError
@@ -129,6 +130,23 @@ class DirectoryLayout(object):
     def remove_extension(self, spec, ext_spec):
         """Remove from the list of currently installed extensions."""
         raise NotImplementedError()
+
+
+    def flatten_dependencies(self, spec, flat_dir):
+        """Make each dependency of spec present in dir via symlink."""
+        for dep in spec.traverse(root=False):
+            name = dep.name
+
+            dep_path = self.path_for_spec(dep)
+            dep_files = LinkTree(dep_path)
+
+            os.mkdir(flat_dir+'/'+name)
+
+            conflict = dep_files.find_conflict(flat_dir+'/'+name)
+            if conflict:
+                raise DependencyConflictError(conflict)
+
+            dep_files.merge(flat_dir+'/'+name)
 
 
     def path_for_spec(self, spec):
