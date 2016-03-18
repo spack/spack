@@ -318,16 +318,17 @@ class Package(object):
     """Most packages are NOT extendable.  Set to True if you want extensions."""
     extendable = False
 
-    """List of prefix-relative file paths. If these do not exist after
-       install, or if they exist but are not files, sanity checks fail.
+    """List of prefix-relative file paths (or a single path). If these do
+       not exist after install, or if they exist but are not files,
+       sanity checks fail.
     """
-    sanity_check_files = []
+    sanity_check_is_file = []
 
-    """List of prefix-relative directory paths. If these do not exist
-       after install, or if they exist but are not directories, sanity
-       checks will fail.
+    """List of prefix-relative directory paths (or a single path). If
+       these do not exist after install, or if they exist but are not
+       directories, sanity checks will fail.
     """
-    sanity_check_dirs = []
+    sanity_check_is_dir = []
 
 
     def __init__(self, spec):
@@ -966,14 +967,17 @@ class Package(object):
     def sanity_check_prefix(self):
         """This function checks whether install succeeded."""
         def check_paths(path_list, filetype, predicate):
+            if isinstance(path_list, basestring):
+                path_list = [path_list]
+
             for path in path_list:
                 abs_path = os.path.join(self.prefix, path)
                 if not predicate(abs_path):
                     raise InstallError("Install failed for %s. No such %s in prefix: %s"
                                        % (self.name, filetype, path))
 
-        check_paths(self.sanity_check_files, 'file', os.path.isfile)
-        check_paths(self.sanity_check_dirs, 'directory', os.path.isdir)
+        check_paths(self.sanity_check_is_file, 'file', os.path.isfile)
+        check_paths(self.sanity_check_is_dir, 'directory', os.path.isdir)
 
         installed = set(os.listdir(self.prefix))
         installed.difference_update(spack.install_layout.hidden_file_paths)

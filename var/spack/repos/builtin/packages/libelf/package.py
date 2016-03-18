@@ -38,8 +38,7 @@ class Libelf(Package):
 
     provides('elf')
 
-    sanity_check_files = ['include/libelf.h']
-    sanity_check_dirs  = ['lib']
+    sanity_check_is_file = 'include/libelf.h'
 
     def install(self, spec, prefix):
         configure("--prefix=" + prefix,
