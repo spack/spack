@@ -1351,6 +1351,10 @@ class InstallError(spack.error.SpackError):
         super(InstallError, self).__init__(message, long_msg)
 
 
+class ExternalPackageError(InstallError):
+    """Raised by install() when a package is only for external use."""
+
+
 class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
     def __init__(self, spec, dependents):
