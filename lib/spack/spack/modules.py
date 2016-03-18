@@ -256,7 +256,10 @@ class TclModule(EnvModule):
 
     formats = {
         PrependPath: 'prepend-path {name} \"{value}\"\n',
-        SetEnv: 'setenv {name} \"{value}\"\n'
+        AppendPath: 'append-path {name} \"{value}\"\n',
+        RemovePath: 'remove-path {name} \"{value}\"\n',
+        SetEnv: 'setenv {name} \"{value}\"\n',
+        UnsetEnv: 'unsetenv {name}\n'
     }
 
     @property
