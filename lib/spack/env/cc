@@ -90,15 +90,15 @@ case "$command" in
         command="$SPACK_CC"
         language="C"
         ;;
-    c++|CC|g++|clang++|icpc|pgCC|xlc++)
+    c++|CC|g++|clang++|icpc|pgc++|xlc++)
         command="$SPACK_CXX"
         language="C++"
         ;;
-    f90|fc|f95|gfortran|ifort|pgf90|xlf90|nagfor)
+    f90|fc|f95|gfortran|ifort|pgfortran|xlf90|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
         ;;
-    f77|gfortran|ifort|pgf77|xlf|nagfor)
+    f77|gfortran|ifort|pgfortran|xlf|nagfor)
         command="$SPACK_F77"
         language="Fortran 77"
         ;;
@@ -113,14 +113,22 @@ case "$command" in
         ;;
 esac
 
-# Finish setting up the mode.
+# If any of the arguments below is present then the mode is vcheck. In vcheck mode nothing is added in terms of extra search paths or libraries
 if [ -z "$mode" ]; then
-    mode=ccld
     for arg in "$@"; do
         if [ "$arg" = -v -o "$arg" = -V -o "$arg" = --version -o "$arg" = -dumpversion ]; then
             mode=vcheck
             break
-        elif [ "$arg" = -E ]; then
+    fi
+    done
+fi
+
+# Finish setting up the mode.
+
+if [ -z "$mode" ]; then
+    mode=ccld
+    for arg in "$@"; do
+        if [ "$arg" = -E ]; then
             mode=cpp
             break
         elif [ "$arg" = -c ]; then
@@ -130,7 +138,7 @@ if [ -z "$mode" ]; then
     done
 fi
 
-# Dump the version and exist if we're in testing mode.
+# Dump the version and exit if we're in testing mode.
 if [ "$SPACK_TEST_COMMAND" = "dump-mode" ]; then
     echo "$mode"
     exit
@@ -146,6 +154,7 @@ fi
 input_command="$@"
 args=("$@")
 
+<<<<<<< HEAD
 # Dump parsed values for unit testing if asked for
 if [[ -n $SPACK_TEST_COMMAND ]]; then
 
@@ -213,6 +222,88 @@ if [[ -n $SPACK_TEST_COMMAND ]]; then
         esac
         shift
     done
+=======
+if [ "$mode" == vcheck ] ; then
+    exec ${command} "$@"
+fi
+
+#
+# Now do real parsing of the command line args, trying hard to keep
+# non-rpath linker arguments in the proper order w.r.t. other command
+# line arguments.  This is important for things like groups.
+#
+includes=()
+libraries=()
+libs=()
+rpaths=()
+other_args=()
+
+while [ -n "$1" ]; do
+    case "$1" in
+        -I*)
+            arg="${1#-I}"
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            includes+=("$arg")
+            ;;
+        -L*)
+            arg="${1#-L}"
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            libraries+=("$arg")
+            ;;
+        -l*)
+            arg="${1#-l}"
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            libs+=("$arg")
+            ;;
+        -Wl,*)
+            arg="${1#-Wl,}"
+            # TODO: Handle multiple -Wl, continuations of -Wl,-rpath
+            if [[ $arg == -rpath=* ]]; then
+                arg="${arg#-rpath=}"
+                for rpath in ${arg//,/ }; do
+                    rpaths+=("$rpath")
+                done
+            elif [[ $arg == -rpath,* ]]; then
+                arg="${arg#-rpath,}"
+                for rpath in ${arg//,/ }; do
+                    rpaths+=("$rpath")
+                done
+            elif [[ $arg == -rpath ]]; then
+                shift; arg="$1"
+                if [[ $arg != '-Wl,'* ]]; then
+                    die "-Wl,-rpath was not followed by -Wl,*"
+                fi
+                arg="${arg#-Wl,}"
+                for rpath in ${arg//,/ }; do
+                    rpaths+=("$rpath")
+                done
+            else
+                other_args+=("-Wl,$arg")
+            fi
+            ;;
+        -Xlinker)
+            shift; arg="$1";
+            if [[ $arg = -rpath=* ]]; then
+                rpaths+=("${arg#-rpath=}")
+            elif [[ $arg = -rpath ]]; then
+                shift; arg="$1"
+                if [[ $arg != -Xlinker ]]; then
+                    die "-Xlinker -rpath was not followed by -Xlinker <arg>"
+                fi
+                shift; arg="$1"
+                rpaths+=("$arg")
+            else
+                other_args+=("-Xlinker")
+                other_args+=("$arg")
+            fi
+            ;;
+        *)
+            other_args+=("$1")
+            ;;
+    esac
+    shift
+done
+>>>>>>> develop
 
     IFS=$'\n'
     case "$SPACK_TEST_COMMAND" in

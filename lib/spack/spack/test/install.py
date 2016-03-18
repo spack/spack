@@ -22,18 +22,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import unittest
 import shutil
 import tempfile
 
-from llnl.util.filesystem import *
-
 import spack
-from spack.stage import Stage
-from spack.fetch_strategy import URLFetchStrategy
+from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
-from spack.util.executable import which
+from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.test.mock_packages_test import *
 from spack.test.mock_repo import MockArchive
 
@@ -79,7 +74,10 @@ class InstallTest(MockPackagesTest):
         pkg = spack.repo.get(spec)
 
         # Fake the URL for the package so it downloads from a file.
-        pkg.fetcher = URLFetchStrategy(self.repo.url)
+
+        fetcher = FetchStrategyComposite()
+        fetcher.append(URLFetchStrategy(self.repo.url))
+        pkg.fetcher = fetcher
 
         try:
             pkg.do_install()

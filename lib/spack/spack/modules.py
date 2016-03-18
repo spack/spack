@@ -33,6 +33,7 @@ number of directories to be appended to paths in the user's environment:
 
   * /bin directories to be appended to PATH
   * /lib* directories for LD_LIBRARY_PATH
+  * /include directories for CPATH
   * /man* and /share/man* directories for MANPATH
   * the package prefix for CMAKE_PREFIX_PATH
 
@@ -121,6 +122,7 @@ class EnvModule(object):
                     ('LIBRARY_PATH', self.spec.prefix.lib64),
                     ('LD_LIBRARY_PATH', self.spec.prefix.lib),
                     ('LD_LIBRARY_PATH', self.spec.prefix.lib64),
+                    ('CPATH', self.spec.prefix.include),
                     ('PKG_CONFIG_PATH', join_path(self.spec.prefix.lib, 'pkgconfig')),
                     ('PKG_CONFIG_PATH', join_path(self.spec.prefix.lib64, 'pkgconfig'))]:
 
@@ -194,12 +196,14 @@ class Dotkit(EnvModule):
     @property
     def file_name(self):
         return join_path(Dotkit.path, self.spec.architecture,
-                         self.spec.format('$_$@$%@$+$#.dk'))
+                         '%s.dk' % self.use_name)
 
     @property
     def use_name(self):
-        return self.spec.format('$_$@$%@$+$#')
-
+      return "%s-%s-%s-%s-%s" % (self.spec.name, self.spec.version,
+                                 self.spec.compiler.name,
+                                 self.spec.compiler.version, 
+                                 self.spec.dag_hash())
 
     def _write(self, dk_file):
         # Category
@@ -235,7 +239,10 @@ class TclModule(EnvModule):
 
     @property
     def use_name(self):
-        return self.spec.format('$_$@$%@$+$#')
+      return "%s-%s-%s-%s-%s" % (self.spec.name, self.spec.version,
+                                 self.spec.compiler.name,
+                                 self.spec.compiler.version, 
+                                 self.spec.dag_hash())
 
 
     def _write(self, m_file):

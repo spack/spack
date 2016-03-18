@@ -34,8 +34,9 @@ class Python(Package):
         env['PYTHONHOME'] = prefix
         env['MACOSX_DEPLOYMENT_TARGET'] = '10.6'
 
-        # Rest of install is pretty standard except setup.py needs to be able to read the CPPFLAGS
-        # and LDFLAGS as it scans for the library and headers to build
+        # Rest of install is pretty standard except setup.py needs to
+        # be able to read the CPPFLAGS and LDFLAGS as it scans for the
+        # library and headers to build
         configure_args= [
                   "--prefix=%s" % prefix,
                   "--with-threads",
@@ -54,6 +55,20 @@ class Python(Package):
         configure(*configure_args)
         make()
         make("install")
+
+        # Modify compiler paths in configuration files. This is necessary for
+        # building site packages outside of spack
+        filter_file(r'([/s]=?)([\S=]*)/lib/spack/env(/[^\s/]*)?/(\S*)(\s)',
+                    (r'\4\5'),
+                    join_path(prefix.lib, 'python%d.%d' % self.version[:2], '_sysconfigdata.py'))
+
+        python3_version = ''
+        if spec.satisfies('@3:'):
+            python3_version = '-%d.%dm' % self.version[:2]
+        makefile_filepath = join_path(prefix.lib, 'python%d.%d' % self.version[:2], 'config%s' % python3_version, 'Makefile')
+        filter_file(r'([/s]=?)([\S=]*)/lib/spack/env(/[^\s/]*)?/(\S*)(\s)',
+                    (r'\4\5'),
+                    makefile_filepath)
 
 
     # ========================================================================
