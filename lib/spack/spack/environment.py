@@ -202,3 +202,33 @@ def concatenate_paths(paths):
         string
     """
     return ':'.join(str(item) for item in paths)
+
+
+def set_or_unset_not_first(variable, changes, errstream):
+    """
+    Check if we are going to set or unset something after other modifications have already been requested
+    """
+    indexes = [ii for ii, item in enumerate(changes) if ii != 0 and type(item) in [SetEnv, UnsetEnv]]
+    if indexes:
+        good = '\t    \t{context} at {filename}:{lineno}'
+        nogood = '\t--->\t{context} at {filename}:{lineno}'
+        errstream('Suspicious requests to set or unset the variable \'{var}\' found'.format(var=variable))
+        for ii, item in enumerate(changes):
+            print_format = nogood if ii in indexes else good
+            errstream(print_format.format(**item.args))
+
+
+def validate(env, errstream):
+    """
+    Validates the environment modifications to check for the presence of suspicious patterns. Prompts a warning for
+    everything that was found
+
+    Current checks:
+    - set or unset variables after other changes on the same variable
+
+    Args:
+        env: list of environment modifications
+    """
+    modifications = env.group_by_name()
+    for variable, list_of_changes in sorted(modifications.items()):
+        set_or_unset_not_first(variable, list_of_changes, errstream)

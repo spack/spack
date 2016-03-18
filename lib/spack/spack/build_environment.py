@@ -34,8 +34,9 @@ import shutil
 import sys
 
 import spack
+import llnl.util.tty as tty
 from llnl.util.filesystem import *
-from spack.environment import EnvironmentModifications, concatenate_paths
+from spack.environment import EnvironmentModifications, concatenate_paths, validate
 from spack.util.environment import *
 from spack.util.executable import Executable, which
 
@@ -288,8 +289,7 @@ def setup_package(pkg):
     # Allow dependencies to set up environment as well
     for dependency_spec in pkg.spec.traverse(root=False):
         dependency_spec.package.setup_dependent_environment(env, pkg.spec)
-    # TODO : implement validation
-    #validate(env)
+    validate(env, tty.warn)
     env.apply_modifications()
 
 
