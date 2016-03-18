@@ -1,4 +1,4 @@
-import urllib2
+import urllib
 import llnl.util.tty as tty
 
 from spack import *
@@ -37,22 +37,17 @@ class Openssl(Package):
             version_number = '.'.join([str(x) for x in version[:-1]])
             older_url = older.format(version_number=version_number, version_full=version)
             latest_url = latest.format(version=version)
-            try:
-                response = urllib2.urlopen(latest.format(version=version), timeout=5)
-                if response.getcode() == 404:
-                    openssl_url = older_url
-                    # Checks if we already warned the user for this particular version of OpenSSL.
-                    # If not we display a warning message and mark this version
-                    if not warnings_given_to_user.get(version, False):
-                        tty.warn('This installation depends on an old version of OpenSSL, which may have known security issues. ')
-                        tty.warn('Consider updating to the latest version of this package.')
-                        tty.warn('More details at {homepage}'.format(homepage=Openssl.homepage))
-                        warnings_given_to_user[version] = True
-                else:
-                    openssl_url = latest_url
-            except urllib2.URLError:
-                tty.warn('Cannot connect to network to retrieve OpenSSL version. Using default url.')
-                warnings_given_to_user[version] = True
+            response = urllib.urlopen(latest.format(version=version))
+            if response.getcode() == 404:
+                openssl_url = older_url
+                # Checks if we already warned the user for this particular version of OpenSSL.
+                # If not we display a warning message and mark this version
+                if not warnings_given_to_user.get(version, False):
+                    tty.warn('This installation depends on an old version of OpenSSL, which may have known security issues. ')
+                    tty.warn('Consider updating to the latest version of this package.')
+                    tty.warn('More details at {homepage}'.format(homepage=Openssl.homepage))
+                    warnings_given_to_user[version] = True
+            else:
                 openssl_url = latest_url
             # Store the computed URL
             openssl_urls[version] = openssl_url
