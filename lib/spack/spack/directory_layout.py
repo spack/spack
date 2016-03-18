@@ -33,7 +33,6 @@ import yaml
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
-from llnl.util.link_tree import *
 
 from spack.spec import Spec
 from spack.error import SpackError
