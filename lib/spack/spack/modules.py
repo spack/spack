@@ -122,10 +122,6 @@ class EnvModule(object):
         self.spec = spec
         self.pkg = spec.package  # Just stored for convenience
 
-        # category in the modules system
-        # TODO: come up with smarter category names.
-        self.category = "spack"
-
         # short description default is just the package + version
         # packages can provide this optional attribute
         self.short_description = spec.format("$_ $@")
@@ -136,6 +132,17 @@ class EnvModule(object):
         self.long_description = None
         if self.spec.package.__doc__:
             self.long_description = re.sub(r'\s+', ' ', self.spec.package.__doc__)
+
+    @property
+    def category(self):
+        # Anything defined at the package level takes precedence
+        if hasattr(self.pkg, 'category'):
+            return self.pkg.category
+        # Extensions
+        for extendee in self.pkg.extendees:
+            return '{extendee} extension'.format(extendee=extendee)
+        # Not very descriptive fallback
+        return 'spack installed package'
 
     # @property
     # def paths(self):
