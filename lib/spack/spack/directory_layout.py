@@ -498,3 +498,10 @@ class NoSuchExtensionError(DirectoryLayoutError):
         super(NoSuchExtensionError, self).__init__(
             "%s cannot be removed from %s because it's not activated."% (
                 ext_spec.short_spec, spec.short_spec))
+
+class DependencyConflictError(SpackError):
+    """Raised when the dependencies cannot be flattened as asked for."""
+    def __init__(self, conflict):
+        super(DependencyConflictError, self).__init__(
+            "%s conflicts with another file in the flattened directory." %(
+                conflict))
