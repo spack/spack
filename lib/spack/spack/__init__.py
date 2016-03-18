@@ -174,3 +174,6 @@ __all__ += spack.directives.__all__
 import spack.util.executable
 from spack.util.executable import *
 __all__ += spack.util.executable.__all__
+
+from spack.package import flat_install, flatten_dependencies, DependencyConflictError
+__all__ += ['flat_install', 'flatten_dependencies', 'DependencyConflictError']

@@ -132,23 +132,6 @@ class DirectoryLayout(object):
         raise NotImplementedError()
 
 
-    def flatten_dependencies(self, spec, flat_dir):
-        """Make each dependency of spec present in dir via symlink."""
-        for dep in spec.traverse(root=False):
-            name = dep.name
-
-            dep_path = self.path_for_spec(dep)
-            dep_files = LinkTree(dep_path)
-
-            os.mkdir(flat_dir+'/'+name)
-
-            conflict = dep_files.find_conflict(flat_dir+'/'+name)
-            if conflict:
-                raise DependencyConflictError(conflict)
-
-            dep_files.merge(flat_dir+'/'+name)
-
-
     def path_for_spec(self, spec):
         """Return an absolute path from the root to a directory for the spec."""
         _check_concrete(spec)
@@ -498,10 +481,3 @@ class NoSuchExtensionError(DirectoryLayoutError):
         super(NoSuchExtensionError, self).__init__(
             "%s cannot be removed from %s because it's not activated."% (
                 ext_spec.short_spec, spec.short_spec))
-
-class DependencyConflictError(SpackError):
-    """Raised when the dependencies cannot be flattened as asked for."""
-    def __init__(self, conflict):
-        super(DependencyConflictError, self).__init__(
-            "%s conflicts with another file in the flattened directory." %(
-                conflict))

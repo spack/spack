@@ -1211,6 +1211,28 @@ class Package(object):
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
 
+def flat_install(pkg, spec, prefix):
+    """Execute a dummy install and flatten dependencies"""
+    os.mkdir(prefix+'/libs')
+    flatten_dependencies(spec, prefix+'/libs')
+
+def flatten_dependencies(spec, flat_dir):
+    """Make each dependency of spec present in dir via symlink."""
+    for dep in spec.traverse(root=False):
+        name = dep.name
+
+        dep_path = spack.install_layout.path_for_spec(dep)
+        dep_files = LinkTree(dep_path)
+
+        os.mkdir(flat_dir+'/'+name)
+
+        conflict = dep_files.find_conflict(flat_dir+'/'+name)
+        if conflict:
+            raise DependencyConflictError(conflict)
+
+        dep_files.merge(flat_dir+'/'+name)
+
+
 def validate_package_url(url_string):
     """Determine whether spack can handle a particular URL or not."""
     url = urlparse(url_string)
@@ -1348,3 +1370,11 @@ class ExtensionConflictError(ExtensionError):
 class ActivationError(ExtensionError):
     def __init__(self, msg, long_msg=None):
         super(ActivationError, self).__init__(msg, long_msg)
+
+
+class DependencyConflictError(spack.error.SpackError):
+    """Raised when the dependencies cannot be flattened as asked for."""
+    def __init__(self, conflict):
+        super(DependencyConflictError, self).__init__(
+            "%s conflicts with another file in the flattened directory." %(
+                conflict))
