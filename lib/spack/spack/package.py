@@ -1211,10 +1211,9 @@ class Package(object):
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
 
-def flat_install(pkg, spec, prefix):
+def install_dependency_symlinks(pkg, spec, prefix):
     """Execute a dummy install and flatten dependencies"""
-    os.mkdir(prefix+'/libs')
-    flatten_dependencies(spec, prefix+'/libs')
+    flatten_dependencies(spec, prefix)
 
 def flatten_dependencies(spec, flat_dir):
     """Make each dependency of spec present in dir via symlink."""
