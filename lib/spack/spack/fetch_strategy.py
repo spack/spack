@@ -216,7 +216,7 @@ class URLFetchStrategy(FetchStrategy):
 
         if not self.archive_file:
             raise FailedDownloadError(self.url)
-        else:
+        elif self.digest:
             shutil.copy(self.archive_file, spack.cache_path)
 
 
