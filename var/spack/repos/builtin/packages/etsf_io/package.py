@@ -19,11 +19,12 @@ class EtsfIo(Package):
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
         oapp = options.append
-        #--with-netcdf-incs=-I/Users/gmatteo/local/include 
-        #--with-netcdf-libs=-L/Users/gmatteo/local/lib -lnetcdff -lnetcdf 
-        #-L/Users/gmatteo/local/lib -lhdf5_hl -lhdf5 
-        #--with-moduledir=/Users/gmatteo/Software/abinit/803/gmatteo-training/build_gcc/fallbacks/exports/include
 
+        # Specify installation directory for Fortran module files
+        # Default is [INCLUDEDIR/FC_TYPE]
+        oapp("--with-moduledir=%s" % prefix.include)
+
+        # Netcdf4/HDF
         hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib  
         options.extend([
             "--with-netcdf-incs=-I%s" % spec["netcdf-fortran"].prefix.include,
@@ -34,3 +35,5 @@ class EtsfIo(Package):
 
         make()
         make("install")
+
+

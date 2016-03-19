@@ -30,15 +30,14 @@ class Abinit(Package):
 
     depends_on("gsl")
     #depends_on("libxc")
-    #depends_on("etsf_io")
+    depends_on("etsf_io")
 
     depends_on("scalapack")
+    #depends_on("elpa", when="+elpa")
     depends_on("fftw +float")
 
     depends_on("netcdf-fortran")
     depends_on("hdf5+mpi~cxx", when='+mpi')  # required for NetCDF-4 support
-
-    #depends_on("elpa", when="+elpa")
 
     #depends_on('mpi', when='+mpi')
     #depends_on('fftw~mpi', when='~mpi')
@@ -58,12 +57,23 @@ class Abinit(Package):
         options = ['--prefix=%s' % prefix]
         oapp = options.append
 
-        # MPI: 
-        # let the configure script auto-detect MPI support from mpi_prefix
+        # MPI: let the configure script auto-detect MPI support from mpi_prefix
         oapp("--with-mpi-prefix=%s" % spec["mpi"].prefix)
         oapp("--enable-mpi=yes")
         oapp("--enable-mpi-io=yes")
 
+        # BLAS/LAPACK
+        oapp("--with-linalg-flavor=netlib+scalapack")
+        linalg_fc_link = "--with-linalg-libs=-L%s -llapack -L%s -lblas " % (
+               spec["lapack"].prefix.lib, spec["blas"].prefix.lib)
+
+        #if '+scalapack' in spec:
+        linalg_fc_link += spec['scalapack'].fc_link
+        #if '+elpa' in spec:
+
+        oapp(linalg_fc_link)
+
+        # FFTW3: select sequential or threaded version if +openmp
         fftlibs = "-lfftw3 -lfftw3f"
         if '+openmp' in spec:
             oapp('--enable-openmp=yes')
@@ -81,11 +91,16 @@ class Abinit(Package):
         #    "with_libxc_libs=-L%s -lxcf90 -lxc" % spec["libxc"].prefix.lib,
         #])
 
-        #oapp("--with-linalg-flavor=netlib+scalapack")
         #oapp("--with-trio-flavor=netcdf+etsf_io-fallback")
-
         oapp("--with-trio-flavor=netcdf+etsf_io")
 
+        # ETSF_IO
+        options.extend([
+            "--with-etsf-io-incs=-I%s" % spec["etsf_io"].prefix.include,
+            "--with-etsf-io-libs=-L%s -letsf_io_utils -letsf_io" % spec["etsf_io"].prefix.lib,
+        ])
+
+        # Netcdf4/HDF5
         hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib  
         options.extend([
             "--with-netcdf-incs=-I%s" % spec["netcdf-fortran"].prefix.include,
@@ -94,11 +109,6 @@ class Abinit(Package):
 
         oapp("--with-dft-flavor=atompaw+libxc+wannier90")
         oapp("--with-math-flavor=gsl")
-
-        #if '+scalapack' in spec:
-        #    oapp('--with-scalapack=yes')
-        #if '+elpa' in spec:
-        #    oapp('--with-elpa=yes')
 
         # Add a list of directories to search
         #search_list = []
