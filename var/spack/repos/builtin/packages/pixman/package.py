@@ -13,6 +13,7 @@ class Pixman(Package):
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,
+                  "--disable-mmx",
                   "--disable-gtk")
         make()
         make("install")
