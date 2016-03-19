@@ -14,6 +14,7 @@ class EtsfIo(Package):
     version('1.0.4', '32d0f7143278bd925b334c69fa425da1')
 
     depends_on("netcdf-fortran")
+    depends_on("hdf5+mpi~cxx", when='+mpi')  # required for NetCDF-4 support
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
@@ -23,10 +24,10 @@ class EtsfIo(Package):
         #-L/Users/gmatteo/local/lib -lhdf5_hl -lhdf5 
         #--with-moduledir=/Users/gmatteo/Software/abinit/803/gmatteo-training/build_gcc/fallbacks/exports/include
 
-        hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf"].prefix.lib  
+        hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib  
         options.extend([
             "--with-netcdf-incs=-I%s" % spec["netcdf-fortran"].prefix.include,
-            "--with-netcdf-libs=-L%s -lnetcdff -lnetcdf" % (spec["netcdf-fortran"].prefix.lib, hdf_libs),
+            "--with-netcdf-libs=-L%s -lnetcdff -lnetcdf %s" % (spec["netcdf-fortran"].prefix.lib, hdf_libs),
         ])
 
         configure(*options)

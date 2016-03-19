@@ -19,9 +19,10 @@ class Libxc(Package):
     url      = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
 
     version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
+    #version('2.0.0', 'b15303a3c1f82d157e474ec97edafd83')
 
     def install(self, spec, prefix):
         configure("--enable-fortran", "--enable-static", "--enable-shared", "--prefix=%s" % prefix)
 
-        make()
+        make(parallel=True)
         make("install")

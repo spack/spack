@@ -26,16 +26,19 @@ class Abinit(Package):
     # Add dependencies
     depends_on("blas")
     depends_on("lapack")
-    depends_on("mpi")
+    depends_on("mpi@2:")
 
     depends_on("gsl")
+    #depends_on("libxc")
+    #depends_on("etsf_io")
 
     depends_on("scalapack")
     depends_on("fftw +float")
+
     depends_on("netcdf-fortran")
+    depends_on("hdf5+mpi~cxx", when='+mpi')  # required for NetCDF-4 support
 
     #depends_on("elpa", when="+elpa")
-    #depends_on("libxc")
 
     #depends_on('mpi', when='+mpi')
     #depends_on('fftw~mpi', when='~mpi')
@@ -72,8 +75,22 @@ class Abinit(Package):
             "--with-fft-libs=-L%s %s" % (spec["fftw"].prefix.lib, fftlibs),
         ])
 
+        # LibXC library
+        #options.extend([
+        #    "with_libxc_incs=-I%s" % spec["libxc"].prefix.include,
+        #    "with_libxc_libs=-L%s -lxcf90 -lxc" % spec["libxc"].prefix.lib,
+        #])
+
         #oapp("--with-linalg-flavor=netlib+scalapack")
-        oapp("--with-trio-flavor=netcdf+etsf_io-fallback")
+        #oapp("--with-trio-flavor=netcdf+etsf_io-fallback")
+
+        oapp("--with-trio-flavor=netcdf+etsf_io")
+
+        hdf_libs = "-L%s -lhdf5_hl -lhdf5" % spec["hdf5"].prefix.lib  
+        options.extend([
+            "--with-netcdf-incs=-I%s" % spec["netcdf-fortran"].prefix.include,
+            "--with-netcdf-libs=-L%s -lnetcdff -lnetcdf %s" % (spec["netcdf-fortran"].prefix.lib, hdf_libs),
+        ])
 
         oapp("--with-dft-flavor=atompaw+libxc+wannier90")
         oapp("--with-math-flavor=gsl")
