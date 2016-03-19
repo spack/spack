@@ -46,7 +46,7 @@ var_path       = join_path(spack_root, "var", "spack")
 stage_path     = join_path(var_path, "stage")
 repos_path     = join_path(var_path, "repos")
 share_path     = join_path(spack_root, "share", "spack")
-cache_path     = join_path(spack_root, "var", "cache")
+cache_path     = join_path(var_path, "cache")
 mkdirp(cache_path)
 
 prefix = spack_root
