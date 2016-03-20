@@ -24,7 +24,7 @@
 ##############################################################################
 
 from spack import *
-
+import sys
 
 class Metis(Package):
     """
@@ -81,3 +81,9 @@ class Metis(Package):
             cmake(source_directory, *options)
             make()
             make("install")
+
+        # The shared library is not installed correctly on Darwin; correct this
+        if sys.platform == 'darwin':
+            install_name_tool = which('install_name_tool')
+            install_name_tool('-id', join_path(prefix.lib, 'libmetis.dylib'),
+                join_path(prefix.lib, 'libmetis.dylib'))
