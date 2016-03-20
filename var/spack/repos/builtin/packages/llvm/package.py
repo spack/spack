@@ -38,6 +38,7 @@ class Llvm(Package):
 
     version('3.0', 'a8e5f5f1c1adebae7b4a654c376a6005', url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz') # currently required by mesa package
 
+    variant('assertions', default=False, description="Build with assertions enabled (this slows down the compiler significantly)")
     variant('debug', default=False, description="Build a debug version of LLVM, this increases binary size by an order of magnitude, make sure you have 20-30gb of space available to build this")
     variant('clang', default=True, description="Build the LLVM C/C++/Objective-C compiler frontend")
     variant('lldb', default=True, description="Build the LLVM debugger")
@@ -230,6 +231,8 @@ class Llvm(Package):
         else:
             cmake_args.append('-DLLVM_EXTERNAL_POLLY_BUILD:Bool=OFF')
 
+        if '+assertions' in spec:
+            cmake_args.append('-DLLVM_ENABLE_ASSERTIONS:Bool=ON')
         if '+clang' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_CLANG_BUILD:Bool=OFF')
         if '+lldb' not in spec:
