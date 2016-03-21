@@ -46,6 +46,12 @@ class Parmetis(Package):
     patch('enable_external_metis.patch')
     depends_on('metis')
 
+    # bug fixes from PETSc developers
+    # https://bitbucket.org/petsc/pkg-parmetis/commits/1c1a9fd0f408dc4d42c57f5c3ee6ace411eb222b/raw/
+    patch('pkg-parmetis-1c1a9fd0f408dc4d42c57f5c3ee6ace411eb222b.patch')
+    # https://bitbucket.org/petsc/pkg-parmetis/commits/82409d68aa1d6cbc70740d0f35024aae17f7d5cb/raw/
+    patch('pkg-parmetis-82409d68aa1d6cbc70740d0f35024aae17f7d5cb.patch')
+
     depends_on('gdb', when='+gdb')
 
     def install(self, spec, prefix):
