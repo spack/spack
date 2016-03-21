@@ -39,14 +39,15 @@ class Llvm(Package):
     version('3.0', 'a8e5f5f1c1adebae7b4a654c376a6005', url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz') # currently required by mesa package
 
     variant('assertions', default=False, description="Build with assertions enabled (this slows down the compiler significantly)")
-    variant('debug', default=False, description="Build a debug version of LLVM, this increases binary size by an order of magnitude, make sure you have 20-30gb of space available to build this")
+    variant('debug', default=False, description="Build a debuginfo version of LLVM (this increases binary size by an order of magnitude, make sure you have 20-30 GByte of space available to build this)")
+    variant('release', default=True, description="Build a release (i.e. optimized) version of LLVM")
     variant('clang', default=True, description="Build the LLVM C/C++/Objective-C compiler frontend")
     variant('lldb', default=True, description="Build the LLVM debugger")
     variant('internal_unwind', default=True, description="Build the libcxxabi libunwind")
     variant('polly', default=True, description="Build the LLVM polyhedral optimization plugin, only builds for 3.7.0+")
     variant('libcxx', default=True, description="Build the LLVM C++ standard library")
     variant('compiler-rt', default=True, description="Build the LLVM compiler runtime, including sanitizers")
-    variant('gold', default=True, description="Add support for LTO with the gold linker plugin")
+    variant('gold', default=sys.platform!='darwin', description="Add support for LTO with the gold linker plugin")
 
 
     # Build dependency
@@ -216,7 +217,12 @@ class Llvm(Package):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
         cmake_args = [ arg for arg in std_cmake_args if 'BUILD_TYPE' not in arg ]
 
-        build_type = 'RelWithDebInfo' if '+debug' in spec else 'Release'
+        if '-optimize' in spec:
+            build_type = 'Debug'
+        elif '+debug' in spec:
+            build_type = 'RelWithDebInfo'
+        else:
+            build_type = 'Release'
         cmake_args.extend([
                 '..',
                 '-DCMAKE_BUILD_TYPE=' + build_type,
@@ -254,14 +260,14 @@ class Llvm(Package):
         with working_dir('spack-build', create=True):
             cmake(*cmake_args)
 
-            # if sys.platform == 'darwin':
-            #     # Remove all '-arch' flags from compiler flags; only
-            #     # Darwin's system compiler supports them
-            #     for pattern in [
-            #             "projects/*/*/*/CMakeFiles/*/flags.make",
-            #             "tools/*/*/CMakeFiles/*/build.make"]:
-            #         for file in glob.iglob(pattern):
-            #             filter_file(r"\s-arch\s+\S+", " ", file)
+            if sys.platform == 'darwin':
+                # Remove all '-arch' flags from compiler flags; only
+                # Darwin's system compiler supports them
+                for pattern in [
+                        "projects/*/*/*/CMakeFiles/*/flags.make",
+                        "tools/*/*/CMakeFiles/*/build.make"]:
+                    for file in glob.iglob(pattern):
+                        filter_file(r"\s-arch\s+\S+", " ", file)
 
             make()
             make("install")
