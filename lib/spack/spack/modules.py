@@ -133,6 +133,7 @@ class EnvModule(object):
         if self.spec.package.__doc__:
             self.long_description = re.sub(r'\s+', ' ', self.spec.package.__doc__)
 
+
     @property
     def category(self):
         # Anything defined at the package level takes precedence
@@ -144,21 +145,6 @@ class EnvModule(object):
         # Not very descriptive fallback
         return 'spack installed package'
 
-    # @property
-    # def paths(self):
-    #         # Add python path unless it's an actual python installation
-    #         # TODO : is there a better way to do this?
-    #         # FIXME : add PYTHONPATH to every python package
-    #         if self.spec.name != 'python':
-    #             site_packages = glob(join_path(self.spec.prefix.lib, "python*/site-packages"))
-    #             if site_packages:
-    #                 add_path('PYTHONPATH', site_packages[0])
-    #
-    #         # FIXME : Same for GEM_PATH
-    #         if self.spec.package.extends(spack.spec.Spec('ruby')):
-    #             add_path('GEM_PATH', self.spec.prefix)
-    #
-    #     return self._paths
 
     def write(self):
         """Write out a module file for this object."""
@@ -166,16 +152,20 @@ class EnvModule(object):
         if not os.path.exists(module_dir):
             mkdirp(module_dir)
 
-        # Environment modifications guessed by inspecting the installation prefix
+        # Environment modifications guessed by inspecting the
+        # installation prefix
         env = inspect_path(self.spec.prefix)
 
-        # Let the extendee modify their extensions before asking for package-specific modifications
+        # Let the extendee modify their extensions before asking for
+        # package-specific modifications
         for extendee in self.pkg.extendees:
             extendee_spec = self.spec[extendee]
-            extendee_spec.package.modify_module(self.pkg.module, extendee_spec, self.spec)
+            extendee_spec.package.modify_module(
+                self.pkg.module, extendee_spec, self.spec)
 
         # Package-specific environment modifications
         self.spec.package.setup_environment(env)
+
         # TODO : implement site-specific modifications and filters
         if not env:
             return
@@ -232,7 +222,7 @@ class Dotkit(EnvModule):
     def use_name(self):
       return "%s-%s-%s-%s-%s" % (self.spec.name, self.spec.version,
                                  self.spec.compiler.name,
-                                 self.spec.compiler.version, 
+                                 self.spec.compiler.version,
                                  self.spec.dag_hash())
 
     def write_header(self, dk_file):
@@ -270,7 +260,7 @@ class TclModule(EnvModule):
     def use_name(self):
       return "%s-%s-%s-%s-%s" % (self.spec.name, self.spec.version,
                                  self.spec.compiler.name,
-                                 self.spec.compiler.version, 
+                                 self.spec.compiler.version,
                                  self.spec.dag_hash())
 
     def write_header(self, module_file):
