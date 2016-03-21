@@ -37,11 +37,11 @@ class Paraview(Package):
     #depends_on('protobuf') # version mismatches?
     #depends_on('sqlite') # external version not supported
     depends_on('zlib')
-    
+
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
         return self._url_str % (version.up_to(2), version)
-    
+
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
