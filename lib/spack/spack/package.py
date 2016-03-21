@@ -34,40 +34,34 @@ rundown on spack and how it differs from homebrew, look at the
 README.
 """
 import os
-import errno
 import re
-import shutil
-import time
-import itertools
-import subprocess
-import platform as py_platform
-import multiprocessing
-from urlparse import urlparse, urljoin
 import textwrap
-from StringIO import StringIO
+import time
+import glob
 
 import llnl.util.tty as tty
-from llnl.util.tty.log import log_output
-from llnl.util.link_tree import LinkTree
-from llnl.util.filesystem import *
-from llnl.util.lang import *
-
 import spack
-import spack.error
-import spack.compilers
-import spack.mirror
-import spack.hooks
-import spack.directives
-import spack.repository
 import spack.build_environment
+import spack.compilers
+import spack.directives
+import spack.error
+import spack.fetch_strategy as fs
+import spack.hooks
+import spack.mirror
+import spack.repository
 import spack.url
 import spack.util.web
-import spack.fetch_strategy as fs
-from spack.version import *
+from StringIO import StringIO
+from llnl.util.filesystem import *
+from llnl.util.lang import *
+from llnl.util.link_tree import LinkTree
+from llnl.util.tty.log import log_output
 from spack.stage import Stage, ResourceStage, StageComposite
-from spack.util.compression import allowed_archive, extension
-from spack.util.executable import ProcessError
+from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
+from spack.util.executable import ProcessError
+from spack.version import *
+from urlparse import urlparse
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -1008,37 +1002,62 @@ class Package(object):
         return __import__(self.__class__.__module__,
                           fromlist=[self.__class__.__name__])
 
+    def setup_environment(self, env):
+        """
+        Appends in `env` the list of environment modifications needed to use this package outside of spack.
 
-    def setup_dependent_environment(self, module, spec, dependent_spec):
-        """Called before the install() method of dependents.
+        Default implementation does nothing, but this can be overridden if the package needs a particular environment.
 
-        Default implementation does nothing, but this can be
-        overridden by an extendable package to set up the install
-        environment for its extensions.  This is useful if there are
-        some common steps to installing all extensions for a
-        certain package.
+        Example :
 
-        Some examples:
+        1. A lot of Qt extensions need `QTDIR` set.  This can be used to do that.
 
-        1. Installing python modules generally requires PYTHONPATH to
-           point to the lib/pythonX.Y/site-packages directory in the
-           module's install prefix.  This could set that variable.
-
-        2. Extensions often need to invoke the 'python' interpreter
-           from the Python installation being extended.  This routine can
-           put a 'python' Execuable object in the module scope for the
-           extension package to simplify extension installs.
-
-        3. A lot of Qt extensions need QTDIR set.  This can be used to do that.
-
+        Args:
+            env: list of environment modifications to be updated
         """
         pass
 
+    def setup_dependent_environment(self, env, dependent_spec):
+        """
+        Called before the install() method of dependents.
+
+        Appends in `env` the list of environment modifications needed by dependents (or extensions) during the
+        installation of a package. The default implementation delegates to `setup_environment`, but can be overridden
+        if the modifications to the environment happen to be different from the one needed to use the package outside
+        of spack.
+
+        This is useful if there are some common steps to installing all extensions for a certain package.
+
+        Example :
+
+        1. Installing python modules generally requires `PYTHONPATH` to point to the lib/pythonX.Y/site-packages
+        directory in the module's install prefix.  This could set that variable.
+
+        Args:
+            env: list of environment modifications to be updated
+            dependent_spec: dependent (or extension) of this spec
+        """
+        self.setup_environment(env)
+
+    def modify_module(self, module, spec, dependent_spec):
+        """
+        Called before the install() method of dependents.
+
+        Default implementation does nothing, but this can be overridden by an extendable package to set up the module of
+        its extensions. This is useful if there are some common steps to installing all extensions for a
+        certain package.
+
+        Example :
+
+        1. Extensions often need to invoke the 'python' interpreter from the Python installation being extended.
+        This routine can put a 'python' Executable object in the module scope for the extension package to simplify
+        extension installs.
+        """
+        pass
 
     def install(self, spec, prefix):
         """Package implementations override this with their own build configuration."""
         raise InstallError("Package %s provides no install method!" % self.name)
-
 
     def do_uninstall(self, force=False):
         if not self.installed:

@@ -66,7 +66,8 @@ test_names = ['versions',
               'database',
               'namespace_trie',
               'yaml',
-              'sbang']
+              'sbang',
+              'environment']
 
 
 def list_tests():

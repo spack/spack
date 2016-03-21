@@ -41,12 +41,17 @@ class Openmpi(Package):
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)
 
-    def setup_dependent_environment(self, module, spec, dep_spec):
-        """For dependencies, make mpicc's use spack wrapper."""
-        os.environ['OMPI_CC'] = 'cc'
-        os.environ['OMPI_CXX'] = 'c++'
-        os.environ['OMPI_FC'] = 'f90'
-        os.environ['OMPI_F77'] = 'f77'
+    def setup_environment(self, env):
+        env.set_env('OMPI_CC', self.compiler.cc)
+        env.set_env('OMPI_CXX', self.compiler.cxx)
+        env.set_env('OMPI_FC', self.compiler.fc)
+        env.set_env('OMPI_F77', self.compiler.f77)
+
+    def setup_dependent_environment(self, env, dependent_spec):
+        env.set_env('OMPI_CC', spack_cc)
+        env.set_env('OMPI_CXX', spack_cxx)
+        env.set_env('OMPI_FC', spack_fc)
+        env.set_env('OMPI_F77', spack_f77)
 
     def install(self, spec, prefix):
         config_args = ["--prefix=%s" % prefix,

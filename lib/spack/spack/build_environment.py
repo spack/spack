@@ -3,7 +3,7 @@ This module contains all routines related to setting up the package
 build environment.  All of this is set up by package.py just before
 install() is called.
 
-There are two parts to the bulid environment:
+There are two parts to the build environment:
 
 1. Python build environment (i.e. install() method)
 
@@ -13,7 +13,7 @@ There are two parts to the bulid environment:
    the package's module scope.  Ths allows package writers to call
    them all directly in Package.install() without writing 'self.'
    everywhere.  No, this isn't Pythonic.  Yes, it makes the code more
-   readable and more like the shell script from whcih someone is
+   readable and more like the shell script from which someone is
    likely porting.
 
 2. Build execution environment
@@ -27,17 +27,18 @@ There are two parts to the bulid environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
-import os
-import sys
-import shutil
 import multiprocessing
+import os
 import platform
-from llnl.util.filesystem import *
+import shutil
+import sys
 
 import spack
-import spack.compilers as compilers
-from spack.util.executable import Executable, which
+import llnl.util.tty as tty
+from llnl.util.filesystem import *
+from spack.environment import EnvironmentModifications, concatenate_paths, validate
 from spack.util.environment import *
+from spack.util.executable import Executable, which
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -84,84 +85,88 @@ class MakeExecutable(Executable):
 
 
 def set_compiler_environment_variables(pkg):
-    assert(pkg.spec.concrete)
-    compiler = pkg.compiler
-
+    assert pkg.spec.concrete
     # Set compiler variables used by CMake and autotools
-    assert all(key in pkg.compiler.link_paths
-               for key in ('cc', 'cxx', 'f77', 'fc'))
+    assert all(key in pkg.compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
 
+    # Populate an object with the list of environment modifications
+    # and return it
+    # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
+    env = EnvironmentModifications()
     link_dir = spack.build_env_path
-    os.environ['CC']  = join_path(link_dir, pkg.compiler.link_paths['cc'])
-    os.environ['CXX'] = join_path(link_dir, pkg.compiler.link_paths['cxx'])
-    os.environ['F77'] = join_path(link_dir, pkg.compiler.link_paths['f77'])
-    os.environ['FC']  = join_path(link_dir, pkg.compiler.link_paths['fc'])
-
+    env.set_env('CC', join_path(link_dir, pkg.compiler.link_paths['cc']))
+    env.set_env('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
+    env.set_env('F77', join_path(link_dir, pkg.compiler.link_paths['f77']))
+    env.set_env('FC', join_path(link_dir, pkg.compiler.link_paths['fc']))
     # Set SPACK compiler variables so that our wrapper knows what to call
+    compiler = pkg.compiler
     if compiler.cc:
-        os.environ['SPACK_CC']  = compiler.cc
+        env.set_env('SPACK_CC', compiler.cc)
     if compiler.cxx:
-        os.environ['SPACK_CXX'] = compiler.cxx
+        env.set_env('SPACK_CXX', compiler.cxx)
     if compiler.f77:
-        os.environ['SPACK_F77'] = compiler.f77
+        env.set_env('SPACK_F77', compiler.f77)
     if compiler.fc:
-        os.environ['SPACK_FC']  = compiler.fc
+        env.set_env('SPACK_FC', compiler.fc)
 
-    os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
+    env.set_env('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
+    return env
 
 
 def set_build_environment_variables(pkg):
-    """This ensures a clean install environment when we build packages.
+    """
+    This ensures a clean install environment when we build packages
     """
     # Add spack build environment path with compiler wrappers first in
     # the path. We add both spack.env_path, which includes default
     # wrappers (cc, c++, f77, f90), AND a subdirectory containing
     # compiler-specific symlinks.  The latter ensures that builds that
     # are sensitive to the *name* of the compiler see the right name
-    # when we're building wtih the wrappers.
+    # when we're building with the wrappers.
     #
     # Conflicts on case-insensitive systems (like "CC" and "cc") are
     # handled by putting one in the <build_env_path>/case-insensitive
     # directory.  Add that to the path too.
     env_paths = []
-    def add_env_path(path):
-        env_paths.append(path)
-        ci = join_path(path, 'case-insensitive')
-        if os.path.isdir(ci): env_paths.append(ci)
-    add_env_path(spack.build_env_path)
-    add_env_path(join_path(spack.build_env_path, pkg.compiler.name))
+    for item in [spack.build_env_path, join_path(spack.build_env_path, pkg.compiler.name)]:
+        env_paths.append(item)
+        ci = join_path(item, 'case-insensitive')
+        if os.path.isdir(ci):
+            env_paths.append(ci)
 
-    path_put_first("PATH", env_paths)
-    path_set(SPACK_ENV_PATH, env_paths)
+    env = EnvironmentModifications()
+    for item in reversed(env_paths):
+        env.prepend_path('PATH', item)
+    env.set_env(SPACK_ENV_PATH, concatenate_paths(env_paths))
 
-    # Prefixes of all of the package's dependencies go in
-    # SPACK_DEPENDENCIES
+    # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
     dep_prefixes = [d.prefix for d in pkg.spec.traverse(root=False)]
-    path_set(SPACK_DEPENDENCIES, dep_prefixes)
+    env.set_env(SPACK_DEPENDENCIES, concatenate_paths(dep_prefixes))
+    env.set_env('CMAKE_PREFIX_PATH', concatenate_paths(dep_prefixes))  # Add dependencies to CMAKE_PREFIX_PATH
 
     # Install prefix
-    os.environ[SPACK_PREFIX] = pkg.prefix
+    env.set_env(SPACK_PREFIX, pkg.prefix)
 
     # Install root prefix
-    os.environ[SPACK_INSTALL] = spack.install_path
+    env.set_env(SPACK_INSTALL, spack.install_path)
 
     # Remove these vars from the environment during build because they
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
-    pop_keys(os.environ, "LD_LIBRARY_PATH", "LD_RUN_PATH", "DYLD_LIBRARY_PATH")
+    env.unset_env('LD_LIBRARY_PATH')
+    env.unset_env('LD_RUN_PATH')
+    env.unset_env('DYLD_LIBRARY_PATH')
 
     # Add bin directories from dependencies to the PATH for the build.
-    bin_dirs = ['%s/bin' % prefix for prefix in dep_prefixes]
-    path_put_first('PATH', [bin for bin in bin_dirs if os.path.isdir(bin)])
+    bin_dirs = reversed(filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))
+    for item in bin_dirs:
+        env.prepend_path('PATH', item)
 
     # Working directory for the spack command itself, for debug logs.
     if spack.debug:
-        os.environ[SPACK_DEBUG] = "TRUE"
-    os.environ[SPACK_SHORT_SPEC] = pkg.spec.short_spec
-    os.environ[SPACK_DEBUG_LOG_DIR] = spack.spack_working_dir
-
-    # Add dependencies to CMAKE_PREFIX_PATH
-    path_set("CMAKE_PREFIX_PATH", dep_prefixes)
+        env.set_env(SPACK_DEBUG, 'TRUE')
+    env.set_env(SPACK_SHORT_SPEC, pkg.spec.short_spec)
+    env.set_env(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     pkg_config_dirs = []
@@ -170,7 +175,9 @@ def set_build_environment_variables(pkg):
             pcdir = join_path(p, libdir, 'pkgconfig')
             if os.path.isdir(pcdir):
                 pkg_config_dirs.append(pcdir)
-    path_set("PKG_CONFIG_PATH", pkg_config_dirs)
+    env.set_env('PKG_CONFIG_PATH', concatenate_paths(pkg_config_dirs))
+
+    return env
 
 
 def set_module_variables_for_package(pkg, m):
@@ -264,9 +271,9 @@ def parent_class_modules(cls):
 
 def setup_package(pkg):
     """Execute all environment setup routines."""
-    set_compiler_environment_variables(pkg)
-    set_build_environment_variables(pkg)
-
+    env = EnvironmentModifications()
+    env.extend(set_compiler_environment_variables(pkg))
+    env.extend(set_build_environment_variables(pkg))
     # If a user makes their own package repo, e.g.
     # spack.repos.mystuff.libelf.Libelf, and they inherit from
     # an existing class like spack.repos.original.libelf.Libelf,
@@ -276,10 +283,14 @@ def setup_package(pkg):
     for mod in modules:
         set_module_variables_for_package(pkg, mod)
 
-    # Allow dependencies to set up environment as well.
-    for dep_spec in pkg.spec.traverse(root=False):
-        dep_spec.package.setup_dependent_environment(
-            pkg.module, dep_spec, pkg.spec)
+    # Allow dependencies to modify the module
+    for dependency_spec in pkg.spec.traverse(root=False):
+        dependency_spec.package.modify_module(pkg.module, dependency_spec, pkg.spec)
+    # Allow dependencies to set up environment as well
+    for dependency_spec in pkg.spec.traverse(root=False):
+        dependency_spec.package.setup_dependent_environment(env, pkg.spec)
+    validate(env, tty.warn)
+    env.apply_modifications()
 
 
 def fork(pkg, function):
@@ -296,23 +307,23 @@ def fork(pkg, function):
            # do stuff
        build_env.fork(pkg, child_fun)
 
-    Forked processes are run with the build environemnt set up by
+    Forked processes are run with the build environment set up by
     spack.build_environment.  This allows package authors to have
-    full control over the environment, etc. without offecting
+    full control over the environment, etc. without affecting
     other builds that might be executed in the same spack call.
 
-    If something goes wrong, the child process is expected toprint
+    If something goes wrong, the child process is expected to print
     the error and the parent process will exit with error as
     well. If things go well, the child exits and the parent
     carries on.
     """
     try:
         pid = os.fork()
-    except OSError, e:
+    except OSError as e:
         raise InstallError("Unable to fork build process: %s" % e)
 
     if pid == 0:
-        # Give the child process the package's build environemnt.
+        # Give the child process the package's build environment.
         setup_package(pkg)
 
         try:
@@ -323,7 +334,7 @@ def fork(pkg, function):
             # which interferes with unit tests.
             os._exit(0)
 
-        except spack.error.SpackError, e:
+        except spack.error.SpackError as e:
             e.die()
 
         except:
@@ -338,8 +349,7 @@ def fork(pkg, function):
         # message.  Just make the parent exit with an error code.
         pid, returncode = os.waitpid(pid, 0)
         if returncode != 0:
-            raise InstallError("Installation process had nonzero exit code."
-                .format(str(returncode)))
+            raise InstallError("Installation process had nonzero exit code.".format(str(returncode)))
 
 
 class InstallError(spack.error.SpackError):

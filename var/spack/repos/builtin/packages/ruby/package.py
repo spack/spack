@@ -1,6 +1,5 @@
 from spack import *
-import spack
-import os
+
 
 class Ruby(Package):
     """A dynamic, open source programming language with a focus on 
@@ -15,11 +14,20 @@ class Ruby(Package):
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
-
         make()
         make("install")
 
-    def setup_dependent_environment(self, module, spec, ext_spec):
+    def setup_dependent_environment(self, env, extension_spec):
+        # Set GEM_PATH to include dependent gem directories
+        ruby_paths = []
+        for d in extension_spec.traverse():
+            if d.package.extends(self.spec):
+                ruby_paths.append(d.prefix)
+        env.set_env('GEM_PATH', concatenate_paths(ruby_paths))
+        # The actual installation path for this gem
+        env.set_env('GEM_HOME', extension_spec.prefix)
+
+    def modify_module(self, module, spec, ext_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME
         and GEM_PATH to values appropriate for the package being built.
 
@@ -31,11 +39,4 @@ class Ruby(Package):
         module.ruby = Executable(join_path(spec.prefix.bin, 'ruby'))
         module.gem = Executable(join_path(spec.prefix.bin, 'gem'))
 
-        # Set GEM_PATH to include dependent gem directories
-        ruby_paths = []
-        for d in ext_spec.traverse():
-            if d.package.extends(self.spec):
-                ruby_paths.append(d.prefix)
-        os.environ['GEM_PATH'] = ':'.join(ruby_paths)
-        # The actual installation path for this gem
-        os.environ['GEM_HOME'] = ext_spec.prefix
+
