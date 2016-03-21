@@ -22,6 +22,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
 import sys
 import argparse
 
@@ -63,12 +64,12 @@ def uninstall(parser, args):
             matching_specs = spack.installed_db.query(spec)
             if not args.all and len(matching_specs) > 1:
                 tty.error("%s matches multiple packages:" % spec)
-                print
+                print()
                 display_specs(matching_specs, long=True)
-                print
-                print "You can either:"
-                print "  a) Use a more specific spec, or"
-                print "  b) use spack uninstall -a to uninstall ALL matching specs."
+                print()
+                print("You can either:")
+                print("  a) Use a more specific spec, or")
+                print("  b) use spack uninstall -a to uninstall ALL matching specs.")
                 sys.exit(1)
 
             if len(matching_specs) == 0:
