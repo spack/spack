@@ -75,6 +75,7 @@ function spack {
 
     _sp_subcommand=$1; shift
     _sp_spec="$@"
+    _sp_spec_name=$(echo $_sp_spec | cut -d@ -f1)
 
     # Filter out use and unuse.  For any other commands, just run the
     # command.
@@ -94,6 +95,7 @@ function spack {
             if [[ "$1" =~ ^- ]]; then
                 _sp_module_args="$1"; shift
                 _sp_spec="$@"
+                _sp_spec_name=$(echo $_sp_spec | cut -d@ -f1)
             fi
 
             # Here the user has run use or unuse with a spec.  Find a matching
@@ -103,19 +105,19 @@ function spack {
             case $_sp_subcommand in
                 "use")
                     if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
-                        use $_sp_module_args $_sp_full_spec
+                        use $_sp_module_args $_sp_spec_name/$_sp_full_spec
                     fi ;;
                 "unuse")
                     if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
-                        unuse $_sp_module_args $_sp_full_spec
+                        unuse $_sp_module_args $_sp_spec_name/$_sp_full_spec
                     fi ;;
                 "load")
                     if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
-                        module load $_sp_module_args $_sp_full_spec
+                        module load $_sp_module_args $_sp_spec_name/$_sp_full_spec
                     fi ;;
                 "unload")
                     if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
-                        module unload $_sp_module_args $_sp_full_spec
+                        module unload $_sp_module_args $_sp_spec_name/$_sp_full_spec
                     fi ;;
             esac
             ;;

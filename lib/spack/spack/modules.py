@@ -195,15 +195,15 @@ class Dotkit(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(Dotkit.path, self.spec.architecture,
+        return join_path(Dotkit.path, self.spec.architecture, self.spec.name,
                          '%s.dk' % self.use_name)
 
     @property
     def use_name(self):
-      return "%s-%s-%s-%s-%s" % (self.spec.name, self.spec.version,
-                                 self.spec.compiler.name,
-                                 self.spec.compiler.version, 
-                                 self.spec.dag_hash())
+      return "%s-%s-%s-%s" % (self.spec.version,
+                              self.spec.compiler.name,
+                              self.spec.compiler.version, 
+                              self.spec.dag_hash())
 
     def _write(self, dk_file):
         # Category
@@ -234,15 +234,15 @@ class TclModule(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(TclModule.path, self.spec.architecture, self.use_name)
+        return join_path(TclModule.path, self.spec.architecture, self.spec.name, self.use_name)
 
 
     @property
     def use_name(self):
-      return "%s-%s-%s-%s-%s" % (self.spec.name, self.spec.version,
-                                 self.spec.compiler.name,
-                                 self.spec.compiler.version, 
-                                 self.spec.dag_hash())
+      return "%s-%s-%s-%s" % (self.spec.version,
+                              self.spec.compiler.name,
+                              self.spec.compiler.version, 
+                              self.spec.dag_hash())
 
 
     def _write(self, m_file):
@@ -259,6 +259,9 @@ class TclModule(EnvModule):
             doc = re.sub(r'"', '\"', self.long_description)
             m_file.write("puts stderr \"%s\"\n" % doc)
             m_file.write('}\n\n')
+
+        # Write out directory based conflict
+        m_file.write('conflict %s\n\n' % self.spec.name)
 
         # Path alterations
         for var, dirs in self.paths.items():
