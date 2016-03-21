@@ -96,9 +96,9 @@ def uninstall(parser, args):
                 pkg.do_uninstall(force=args.force)
             except PackageStillNeededError as e:
                 tty.error("Will not uninstall %s" % e.spec.format("$_$@$%@$#", color=True))
-                print()
+                print('')
                 print("The following packages depend on it:")
                 display_specs(e.dependents, long=True)
-                print()
+                print('')
                 print("You can use spack uninstall -f to force this action.")
                 sys.exit(1)
