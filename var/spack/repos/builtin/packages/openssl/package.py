@@ -1,4 +1,5 @@
 import urllib
+import sys
 import llnl.util.tty as tty
 
 from spack import *
@@ -12,12 +13,13 @@ class Openssl(Package):
     homepage = "http://www.openssl.org"
     url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
 
-    version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
-    version('1.0.1r', '1abd905e079542ccae948af37e393d28')
-    version('1.0.2d', '38dd619b2e77cbac69b99f52a053d25a')
-    version('1.0.2e', '5262bfa25b60ed9de9f28d5d52d77fc5')
-    version('1.0.2f', 'b3bf73f507172be9292ea2a8c28b659d')
     version('1.0.2g', 'f3c710c045cdee5fd114feb69feba7aa')
+    # All previous versions have security issues
+    # version('1.0.2f', 'b3bf73f507172be9292ea2a8c28b659d')
+    # version('1.0.2e', '5262bfa25b60ed9de9f28d5d52d77fc5')
+    # version('1.0.2d', '38dd619b2e77cbac69b99f52a053d25a')
+    # version('1.0.1r', '1abd905e079542ccae948af37e393d28')
+    # version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
 
     depends_on("zlib")
     parallel = False
@@ -69,10 +71,13 @@ class Openssl(Package):
             env['KERNEL_BITS'] = '64'
         config = Executable("./config")
         config("--prefix=%s" % prefix,
-               "--openssldir=%s" % join_path(prefix, 'etc', 'openssl'),
-               "zlib",
+               # "--openssldir=%s" % join_path(prefix, 'etc', 'openssl'),
+               "shared",
+               "enable-ec_nistp_64_gcc_128" if sys.byteorder=='little' else "",
                "no-krb5",
-               "shared")
+               "no-ssl2",       # broken
+               "no-ssl3",       # broken
+               "zlib")
         # Remove non-standard compiler options if present. These options are
         # present e.g. on Darwin. They are non-standard, i.e. most compilers
         # (e.g. gcc) will not accept them.
