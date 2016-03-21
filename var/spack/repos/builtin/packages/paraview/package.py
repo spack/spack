@@ -16,7 +16,7 @@ class Paraview(Package):
 
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('qt', default=False, description='Enable Qt support')
-    variant('opengl2', default=False, description='Enable OPengl2 backend')
+    variant('opengl2', default=False, description='Enable OpenGL2 backend')
 
     depends_on('python', when='+python')
     depends_on('py-numpy', when='+python')
