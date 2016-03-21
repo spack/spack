@@ -2,7 +2,7 @@ from spack import *
 
 class NetlibScalapack(Package):
     """ScaLAPACK is a library of high-performance linear algebra routines for parallel distributed memory machines"""
-    
+
     homepage = "http://www.netlib.org/scalapack/"
     url      = "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz"
 
@@ -32,17 +32,17 @@ class NetlibScalapack(Package):
                 "-DCMAKE_C_FLAGS=-fPIC",
                 "-DCMAKE_Fortran_FLAGS=-fPIC"
             ])
-           
+
         options.extend(std_cmake_args)
-        
+
         with working_dir('spack-build', create=True):
             cmake('..', *options)
             make()
             make("install")
 
     def modify_module(self, module, spec, dependent_spec):
-        # TODO treat OS that are not Linux...
-        lib_suffix = '.so' if '+shared' in spec['scalapack'] else '.a'
+        lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
+        lib_suffix = lib_dsuffix if '+shared' in spec['scalapack'] else '.a'
 
         spec['scalapack'].fc_link = '-L%s -lscalapack' % spec['scalapack'].prefix.lib
         spec['scalapack'].cc_link = spec['scalapack'].fc_link

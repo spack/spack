@@ -1261,6 +1261,28 @@ class Package(object):
         """Get the rpath args as a string, with -Wl,-rpath, for each element."""
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
+
+def install_dependency_symlinks(pkg, spec, prefix):
+    """Execute a dummy install and flatten dependencies"""
+    flatten_dependencies(spec, prefix)
+
+def flatten_dependencies(spec, flat_dir):
+    """Make each dependency of spec present in dir via symlink."""
+    for dep in spec.traverse(root=False):
+        name = dep.name
+
+        dep_path = spack.install_layout.path_for_spec(dep)
+        dep_files = LinkTree(dep_path)
+
+        os.mkdir(flat_dir+'/'+name)
+
+        conflict = dep_files.find_conflict(flat_dir+'/'+name)
+        if conflict:
+            raise DependencyConflictError(conflict)
+
+        dep_files.merge(flat_dir+'/'+name)
+
+
 def validate_package_url(url_string):
     """Determine whether spack can handle a particular URL or not."""
     url = urlparse(url_string)
@@ -1348,6 +1370,10 @@ class InstallError(spack.error.SpackError):
         super(InstallError, self).__init__(message, long_msg)
 
 
+class ExternalPackageError(InstallError):
+    """Raised by install() when a package is only for external use."""
+
+
 class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
     def __init__(self, spec, dependents):
@@ -1398,3 +1424,11 @@ class ExtensionConflictError(ExtensionError):
 class ActivationError(ExtensionError):
     def __init__(self, msg, long_msg=None):
         super(ActivationError, self).__init__(msg, long_msg)
+
+
+class DependencyConflictError(spack.error.SpackError):
+    """Raised when the dependencies cannot be flattened as asked for."""
+    def __init__(self, conflict):
+        super(DependencyConflictError, self).__init__(
+            "%s conflicts with another file in the flattened directory." %(
+                conflict))
