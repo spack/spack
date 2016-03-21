@@ -1844,6 +1844,20 @@ dedicated process.
 
 .. _prefix-objects:
 
+
+Failing the build
+----------------------
+
+Sometimes you don't want a package to successfully install unless some
+condition is true.  You can explicitly cause the build to fail from
+``install()`` by raising an ``InstallError``, for example:
+
+.. code-block:: python
+
+   if spec.architecture.startswith('darwin'):
+       raise InstallError('This package does not build on Mac OS X!')
+
+
 Prefix objects
 ----------------------
 
