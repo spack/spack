@@ -217,7 +217,7 @@ class Llvm(Package):
         env['CXXFLAGS'] = self.compiler.cxx11_flag
         cmake_args = [ arg for arg in std_cmake_args if 'BUILD_TYPE' not in arg ]
 
-        if '-release' in spec:
+        if '+release' not in spec:
             build_type = 'Debug'
         elif '+debug' in spec:
             build_type = 'RelWithDebInfo'
