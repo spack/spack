@@ -318,16 +318,17 @@ class Package(object):
     """Most packages are NOT extendable.  Set to True if you want extensions."""
     extendable = False
 
-    """List of prefix-relative file paths. If these do not exist after
-       install, or if they exist but are not files, sanity checks fail.
+    """List of prefix-relative file paths (or a single path). If these do
+       not exist after install, or if they exist but are not files,
+       sanity checks fail.
     """
-    sanity_check_files = []
+    sanity_check_is_file = []
 
-    """List of prefix-relative directory paths. If these do not exist
-       after install, or if they exist but are not directories, sanity
-       checks will fail.
+    """List of prefix-relative directory paths (or a single path). If
+       these do not exist after install, or if they exist but are not
+       directories, sanity checks will fail.
     """
-    sanity_check_dirs = []
+    sanity_check_is_dir = []
 
 
     def __init__(self, spec):
@@ -966,14 +967,17 @@ class Package(object):
     def sanity_check_prefix(self):
         """This function checks whether install succeeded."""
         def check_paths(path_list, filetype, predicate):
+            if isinstance(path_list, basestring):
+                path_list = [path_list]
+
             for path in path_list:
                 abs_path = os.path.join(self.prefix, path)
                 if not predicate(abs_path):
                     raise InstallError("Install failed for %s. No such %s in prefix: %s"
                                        % (self.name, filetype, path))
 
-        check_paths(self.sanity_check_files, 'file', os.path.isfile)
-        check_paths(self.sanity_check_dirs, 'directory', os.path.isdir)
+        check_paths(self.sanity_check_is_file, 'file', os.path.isfile)
+        check_paths(self.sanity_check_is_dir, 'directory', os.path.isdir)
 
         installed = set(os.listdir(self.prefix))
         installed.difference_update(spack.install_layout.hidden_file_paths)
@@ -1239,6 +1243,27 @@ class Package(object):
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
 
+def install_dependency_symlinks(pkg, spec, prefix):
+    """Execute a dummy install and flatten dependencies"""
+    flatten_dependencies(spec, prefix)
+
+def flatten_dependencies(spec, flat_dir):
+    """Make each dependency of spec present in dir via symlink."""
+    for dep in spec.traverse(root=False):
+        name = dep.name
+
+        dep_path = spack.install_layout.path_for_spec(dep)
+        dep_files = LinkTree(dep_path)
+
+        os.mkdir(flat_dir+'/'+name)
+
+        conflict = dep_files.find_conflict(flat_dir+'/'+name)
+        if conflict:
+            raise DependencyConflictError(conflict)
+
+        dep_files.merge(flat_dir+'/'+name)
+
+
 def validate_package_url(url_string):
     """Determine whether spack can handle a particular URL or not."""
     url = urlparse(url_string)
@@ -1326,6 +1351,10 @@ class InstallError(spack.error.SpackError):
         super(InstallError, self).__init__(message, long_msg)
 
 
+class ExternalPackageError(InstallError):
+    """Raised by install() when a package is only for external use."""
+
+
 class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
     def __init__(self, spec, dependents):
@@ -1376,3 +1405,11 @@ class ExtensionConflictError(ExtensionError):
 class ActivationError(ExtensionError):
     def __init__(self, msg, long_msg=None):
         super(ActivationError, self).__init__(msg, long_msg)
+
+
+class DependencyConflictError(spack.error.SpackError):
+    """Raised when the dependencies cannot be flattened as asked for."""
+    def __init__(self, conflict):
+        super(DependencyConflictError, self).__init__(
+            "%s conflicts with another file in the flattened directory." %(
+                conflict))
