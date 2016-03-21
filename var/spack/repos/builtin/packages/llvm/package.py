@@ -40,7 +40,7 @@ class Llvm(Package):
 
     variant('assertions', default=False, description="Build with assertions enabled (this slows down the compiler significantly)")
     variant('debug', default=False, description="Build a debuginfo version of LLVM (this increases binary size by an order of magnitude, make sure you have 20-30 GByte of space available to build this)")
-    variant('release', default=True, description="Build a release (i.e. optimized) version of LLVM")
+    variant('release', default=True, description="Build a release (i.e. optimized) version of LLVM; ~release requires +debug")
     variant('clang', default=True, description="Build the LLVM C/C++/Objective-C compiler frontend")
     variant('lldb', default=True, description="Build the LLVM debugger")
     variant('internal_unwind', default=True, description="Build the libcxxabi libunwind")
@@ -218,6 +218,8 @@ class Llvm(Package):
         cmake_args = [ arg for arg in std_cmake_args if 'BUILD_TYPE' not in arg ]
 
         if '+release' not in spec:
+            if '+debug' not in spec:
+                raise SpackException('The ~release variant requires the +debug variant to be selected')
             build_type = 'Debug'
         elif '+debug' in spec:
             build_type = 'RelWithDebInfo'
