@@ -48,11 +48,11 @@ class Mpich(Package):
     provides('mpi@:1.3', when='@1:')
 
     def setup_dependent_environment(self, env, dependent_spec):
-        env.set_env('MPICH_CC', spack_cc)
-        env.set_env('MPICH_CXX', spack_cxx)
-        env.set_env('MPICH_F77', spack_f77)
-        env.set_env('MPICH_F90', spack_f90)
-        env.set_env('MPICH_FC', spack_fc)
+        env.set('MPICH_CC', spack_cc)
+        env.set('MPICH_CXX', spack_cxx)
+        env.set('MPICH_F77', spack_f77)
+        env.set('MPICH_F90', spack_f90)
+        env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_python_module(self, module, spec, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""

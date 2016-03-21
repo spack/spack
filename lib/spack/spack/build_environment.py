@@ -36,7 +36,7 @@ import sys
 import spack
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
-from spack.environment import EnvironmentModifications, concatenate_paths, validate
+from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
 from spack.util.executable import Executable, which
 
@@ -93,22 +93,23 @@ def set_compiler_environment_variables(pkg, env):
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
     link_dir = spack.build_env_path
-    env.set_env('CC', join_path(link_dir, pkg.compiler.link_paths['cc']))
-    env.set_env('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
-    env.set_env('F77', join_path(link_dir, pkg.compiler.link_paths['f77']))
-    env.set_env('FC', join_path(link_dir, pkg.compiler.link_paths['fc']))
+    env.set('CC', join_path(link_dir, pkg.compiler.link_paths['cc']))
+    env.set('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
+    env.set('F77', join_path(link_dir, pkg.compiler.link_paths['f77']))
+    env.set('FC', join_path(link_dir, pkg.compiler.link_paths['fc']))
+
     # Set SPACK compiler variables so that our wrapper knows what to call
     compiler = pkg.compiler
     if compiler.cc:
-        env.set_env('SPACK_CC', compiler.cc)
+        env.set('SPACK_CC', compiler.cc)
     if compiler.cxx:
-        env.set_env('SPACK_CXX', compiler.cxx)
+        env.set('SPACK_CXX', compiler.cxx)
     if compiler.f77:
-        env.set_env('SPACK_F77', compiler.f77)
+        env.set('SPACK_F77', compiler.f77)
     if compiler.fc:
-        env.set_env('SPACK_FC', compiler.fc)
+        env.set('SPACK_FC', compiler.fc)
 
-    env.set_env('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
+    env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
     return env
 
 
@@ -135,25 +136,25 @@ def set_build_environment_variables(pkg, env):
 
     for item in reversed(env_paths):
         env.prepend_path('PATH', item)
-    env.set_env(SPACK_ENV_PATH, concatenate_paths(env_paths))
+    env.set_path(SPACK_ENV_PATH, env_paths)
 
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
     dep_prefixes = [d.prefix for d in pkg.spec.traverse(root=False)]
-    env.set_env(SPACK_DEPENDENCIES, concatenate_paths(dep_prefixes))
-    env.set_env('CMAKE_PREFIX_PATH', concatenate_paths(dep_prefixes))  # Add dependencies to CMAKE_PREFIX_PATH
+    env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
+    env.set_path('CMAKE_PREFIX_PATH', dep_prefixes)  # Add dependencies to CMAKE_PREFIX_PATH
 
     # Install prefix
-    env.set_env(SPACK_PREFIX, pkg.prefix)
+    env.set(SPACK_PREFIX, pkg.prefix)
 
     # Install root prefix
-    env.set_env(SPACK_INSTALL, spack.install_path)
+    env.set(SPACK_INSTALL, spack.install_path)
 
     # Remove these vars from the environment during build because they
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
-    env.unset_env('LD_LIBRARY_PATH')
-    env.unset_env('LD_RUN_PATH')
-    env.unset_env('DYLD_LIBRARY_PATH')
+    env.unset('LD_LIBRARY_PATH')
+    env.unset('LD_RUN_PATH')
+    env.unset('DYLD_LIBRARY_PATH')
 
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = reversed(filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))
@@ -162,9 +163,9 @@ def set_build_environment_variables(pkg, env):
 
     # Working directory for the spack command itself, for debug logs.
     if spack.debug:
-        env.set_env(SPACK_DEBUG, 'TRUE')
-    env.set_env(SPACK_SHORT_SPEC, pkg.spec.short_spec)
-    env.set_env(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
+        env.set(SPACK_DEBUG, 'TRUE')
+    env.set(SPACK_SHORT_SPEC, pkg.spec.short_spec)
+    env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     pkg_config_dirs = []
@@ -173,7 +174,7 @@ def set_build_environment_variables(pkg, env):
             pcdir = join_path(p, libdir, 'pkgconfig')
             if os.path.isdir(pcdir):
                 pkg_config_dirs.append(pcdir)
-    env.set_env('PKG_CONFIG_PATH', concatenate_paths(pkg_config_dirs))
+    env.set_path('PKG_CONFIG_PATH', pkg_config_dirs)
 
     return env
 

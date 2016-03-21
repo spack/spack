@@ -25,9 +25,10 @@ class Ruby(Package):
             if d.package.extends(self.spec):
                 ruby_paths.append(d.prefix)
 
-        spack_env.set_env('GEM_PATH', concatenate_paths(ruby_paths))
+        spack_env.set_path('GEM_PATH', ruby_paths)
+
         # The actual installation path for this gem
-        spack_env.set_env('GEM_HOME', extension_spec.prefix)
+        spack_env.set('GEM_HOME', extension_spec.prefix)
 
     def modify_module(self, module, spec, ext_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME

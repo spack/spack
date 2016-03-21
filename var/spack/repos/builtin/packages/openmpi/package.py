@@ -43,10 +43,10 @@ class Openmpi(Package):
 
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set_env('OMPI_CC', spack_cc)
-        spack_env.set_env('OMPI_CXX', spack_cxx)
-        spack_env.set_env('OMPI_FC', spack_fc)
-        spack_env.set_env('OMPI_F77', spack_f77)
+        spack_env.set('OMPI_CC', spack_cc)
+        spack_env.set('OMPI_CXX', spack_cxx)
+        spack_env.set('OMPI_FC', spack_fc)
+        spack_env.set('OMPI_F77', spack_f77)
 
 
     def install(self, spec, prefix):

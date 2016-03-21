@@ -11,20 +11,26 @@ class EnvironmentTest(unittest.TestCase):
         os.environ['PATH_LIST'] = '/path/second:/path/third'
         os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'
 
-    def test_set_env(self):
+    def test_set(self):
         env = EnvironmentModifications()
-        env.set_env('A', 'dummy value')
-        env.set_env('B', 3)
+        env.set('A', 'dummy value')
+        env.set('B', 3)
         env.apply_modifications()
         self.assertEqual('dummy value', os.environ['A'])
         self.assertEqual(str(3), os.environ['B'])
 
-    def test_unset_env(self):
+    def test_unset(self):
         env = EnvironmentModifications()
         self.assertEqual('foo', os.environ['UNSET_ME'])
-        env.unset_env('UNSET_ME')
+        env.unset('UNSET_ME')
         env.apply_modifications()
         self.assertRaises(KeyError, os.environ.__getitem__, 'UNSET_ME')
+
+    def test_set_path(self):
+        env = EnvironmentModifications()
+        env.set_path('A', ['foo', 'bar', 'baz'])
+        env.apply_modifications()
+        self.assertEqual('foo:bar:baz', os.environ['A'])
 
     def test_path_manipulation(self):
         env = EnvironmentModifications()
@@ -51,7 +57,7 @@ class EnvironmentTest(unittest.TestCase):
 
     def test_extra_arguments(self):
         env = EnvironmentModifications()
-        env.set_env('A', 'dummy value', who='Pkg1')
+        env.set('A', 'dummy value', who='Pkg1')
         for x in env:
             assert 'who' in x.args
         env.apply_modifications()
@@ -59,8 +65,8 @@ class EnvironmentTest(unittest.TestCase):
 
     def test_extend(self):
         env = EnvironmentModifications()
-        env.set_env('A', 'dummy value')
-        env.set_env('B', 3)
+        env.set('A', 'dummy value')
+        env.set('B', 3)
         copy_construct = EnvironmentModifications(env)
         self.assertEqual(len(copy_construct), 2)
         for x, y in zip(env, copy_construct):

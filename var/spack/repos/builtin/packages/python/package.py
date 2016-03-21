@@ -104,8 +104,8 @@ class Python(Package):
                 python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
 
         pythonpath = ':'.join(python_paths)
-        spack_env.set_env('PYTHONPATH', pythonpath)
-        run_env.set_env('PYTHONPATH', pythonpath)
+        spack_env.set('PYTHONPATH', pythonpath)
+        run_env.set('PYTHONPATH', pythonpath)
 
 
     def modify_module(self, module, spec, ext_spec):

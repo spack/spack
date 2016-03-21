@@ -57,11 +57,11 @@ class Qt(Package):
 
 
     def setup_environment(self, spack_env, env):
-        env.set_env('QTDIR', self.prefix)
+        env.set('QTDIR', self.prefix)
 
 
     def setup_dependent_environment(self, spack_env, run_env, dspec):
-        spack_env.set_env('QTDIR', self.prefix)
+        spack_env.set('QTDIR', self.prefix)
 
 
     def patch(self):

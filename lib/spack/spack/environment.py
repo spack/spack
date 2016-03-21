@@ -29,6 +29,12 @@ class UnsetEnv(NameModifier):
         os.environ.pop(self.name, None)  # Avoid throwing if the variable was not set
 
 
+class SetPath(NameValueModifier):
+    def execute(self):
+        string_path = concatenate_paths(self.value)
+        os.environ[self.name] = string_path
+
+
 class AppendPath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
@@ -103,7 +109,7 @@ class EnvironmentModifications(object):
         }
         return args
 
-    def set_env(self, name, value, **kwargs):
+    def set(self, name, value, **kwargs):
         """
         Stores in the current object a request to set an environment variable
 
@@ -115,7 +121,7 @@ class EnvironmentModifications(object):
         item = SetEnv(name, value, **kwargs)
         self.env_modifications.append(item)
 
-    def unset_env(self, name, **kwargs):
+    def unset(self, name, **kwargs):
         """
         Stores in the current object a request to unset an environment variable
 
@@ -124,6 +130,18 @@ class EnvironmentModifications(object):
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = UnsetEnv(name, **kwargs)
+        self.env_modifications.append(item)
+
+    def set_path(self, name, elts, **kwargs):
+        """
+        Stores a request to set a path generated from a list.
+
+        Args:
+            name: name o the environment variable to be set.
+            elts: elements of the path to set.
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        item = SetPath(name, elts, **kwargs)
         self.env_modifications.append(item)
 
     def append_path(self, name, path, **kwargs):
