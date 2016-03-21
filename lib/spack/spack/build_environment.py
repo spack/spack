@@ -84,7 +84,7 @@ class MakeExecutable(Executable):
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
 
-def set_compiler_environment_variables(pkg):
+def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
     # Set compiler variables used by CMake and autotools
     assert all(key in pkg.compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
@@ -92,7 +92,6 @@ def set_compiler_environment_variables(pkg):
     # Populate an object with the list of environment modifications
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
-    env = EnvironmentModifications()
     link_dir = spack.build_env_path
     env.set_env('CC', join_path(link_dir, pkg.compiler.link_paths['cc']))
     env.set_env('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
@@ -113,7 +112,7 @@ def set_compiler_environment_variables(pkg):
     return env
 
 
-def set_build_environment_variables(pkg):
+def set_build_environment_variables(pkg, env):
     """
     This ensures a clean install environment when we build packages
     """
@@ -134,7 +133,6 @@ def set_build_environment_variables(pkg):
         if os.path.isdir(ci):
             env_paths.append(ci)
 
-    env = EnvironmentModifications()
     for item in reversed(env_paths):
         env.prepend_path('PATH', item)
     env.set_env(SPACK_ENV_PATH, concatenate_paths(env_paths))
@@ -180,7 +178,7 @@ def set_build_environment_variables(pkg):
     return env
 
 
-def set_module_variables_for_package(pkg, m):
+def set_module_variables_for_package(pkg, module):
     """Populate the module scope of install() with some useful functions.
        This makes things easier for package writers.
     """
@@ -190,6 +188,8 @@ def set_module_variables_for_package(pkg, m):
         jobs = 1
     elif pkg.make_jobs:
         jobs = pkg.make_jobs
+
+    m = module
     m.make_jobs = jobs
 
     # TODO: make these build deps that can be installed if not found.
@@ -271,9 +271,12 @@ def parent_class_modules(cls):
 
 def setup_package(pkg):
     """Execute all environment setup routines."""
-    env = EnvironmentModifications()
-    env.extend(set_compiler_environment_variables(pkg))
-    env.extend(set_build_environment_variables(pkg))
+    spack_env = EnvironmentModifications()
+    run_env   = EnvironmentModifications()
+
+    set_compiler_environment_variables(pkg, spack_env)
+    set_build_environment_variables(pkg, spack_env)
+
     # If a user makes their own package repo, e.g.
     # spack.repos.mystuff.libelf.Libelf, and they inherit from
     # an existing class like spack.repos.original.libelf.Libelf,
@@ -285,12 +288,20 @@ def setup_package(pkg):
 
     # Allow dependencies to modify the module
     for dependency_spec in pkg.spec.traverse(root=False):
-        dependency_spec.package.modify_module(pkg.module, dependency_spec, pkg.spec)
+        dpkg = dependency_spec.package
+        dpkg.setup_dependent_python_module(pkg.module, pkg.spec)
+
     # Allow dependencies to set up environment as well
     for dependency_spec in pkg.spec.traverse(root=False):
-        dependency_spec.package.setup_dependent_environment(env, pkg.spec)
-    validate(env, tty.warn)
-    env.apply_modifications()
+        dpkg = dependency_spec.package
+        dpkg.setup_dependent_environment(spack_env, run_env, pkg.spec)
+
+    # Allow the package to apply some settings.
+    pkg.setup_environment(spack_env, run_env)
+
+    # Make sure nothing's strange about the Spack environment.
+    validate(spack_env, tty.warn)
+    spack_env.apply_modifications()
 
 
 def fork(pkg, function):

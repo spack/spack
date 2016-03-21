@@ -164,7 +164,8 @@ class EnvModule(object):
                 self.pkg.module, extendee_spec, self.spec)
 
         # Package-specific environment modifications
-        self.spec.package.setup_environment(env)
+        spack_env = EnvironmentModifications()
+        self.spec.package.setup_environment(spack_env, env)
 
         # TODO : implement site-specific modifications and filters
         if not env:

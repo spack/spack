@@ -1002,56 +1002,120 @@ class Package(object):
         return __import__(self.__class__.__module__,
                           fromlist=[self.__class__.__name__])
 
-    def setup_environment(self, env):
-        """
-        Appends in `env` the list of environment modifications needed to use this package outside of spack.
+    def setup_environment(self, spack_env, run_env):
+        """Set up the compile and runtime environemnts for a package.
 
-        Default implementation does nothing, but this can be overridden if the package needs a particular environment.
+        `spack_env` and `run_env` are `EnvironmentModifications`
+        objects.  Package authors can call methods on them to alter
+        the environment within Spack and at runtime.
 
-        Example :
+        Both `spack_env` and `run_env` are applied within the build
+        process, before this package's `install()` method is called.
 
-        1. A lot of Qt extensions need `QTDIR` set.  This can be used to do that.
+        Modifications in `run_env` will *also* be added to the
+        generated environment modules for this package.
+
+        Default implementation does nothing, but this can be
+        overridden if the package needs a particular environment.
+
+        Examples:
+
+            1. Qt extensions need `QTDIR` set.
 
         Args:
-            env: list of environment modifications to be updated
+            spack_env (EnvironmentModifications): list of
+                modifications to be applied when this package is built
+                within Spack.
+
+            run_env (EnvironmentModifications): list of environment
+                changes to be applied when this package is run outside
+                of Spack.
+
         """
         pass
 
-    def setup_dependent_environment(self, env, dependent_spec):
-        """
-        Called before the install() method of dependents.
 
-        Appends in `env` the list of environment modifications needed by dependents (or extensions) during the
-        installation of a package. The default implementation delegates to `setup_environment`, but can be overridden
-        if the modifications to the environment happen to be different from the one needed to use the package outside
-        of spack.
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        """Set up the environment of packages that depend on this one.
 
-        This is useful if there are some common steps to installing all extensions for a certain package.
+        This is similar to `setup_environment`, but it is used to
+        modify the compile and runtime environments of packages that
+        *depend* on this one. This gives packages like Python and
+        others that follow the extension model a way to implement
+        common environment or compile-time settings for dependencies.
+
+        By default, this delegates to self.setup_environment()
 
         Example :
 
-        1. Installing python modules generally requires `PYTHONPATH` to point to the lib/pythonX.Y/site-packages
-        directory in the module's install prefix.  This could set that variable.
+            1. Installing python modules generally requires
+              `PYTHONPATH` to point to the lib/pythonX.Y/site-packages
+              directory in the module's install prefix.  This could
+              set that variable.
 
         Args:
-            env: list of environment modifications to be updated
-            dependent_spec: dependent (or extension) of this spec
-        """
-        self.setup_environment(env)
 
-    def modify_module(self, module, spec, dependent_spec):
+            spack_env (EnvironmentModifications): list of
+                modifications to be applied when the dependent package
+                is bulit within Spack.
+
+            run_env (EnvironmentModifications): list of environment
+                changes to be applied when the dependent package is
+                run outside of Spack.
+
+            dependent_spec (Spec): The spec of the dependent package
+                about to be built. This allows the extendee (self) to
+                query the dependent's state. Note that *this*
+                package's spec is available as `self.spec`.
+
+        This is useful if there are some common steps to installing
+        all extensions for a certain package.
+
         """
+        self.setup_environment(spack_env, run_env)
+
+
+    def setup_dependent_python_module(self, module, dependent_spec):
+        """Set up Python module-scope variables for dependent packages.
+
         Called before the install() method of dependents.
 
-        Default implementation does nothing, but this can be overridden by an extendable package to set up the module of
-        its extensions. This is useful if there are some common steps to installing all extensions for a
-        certain package.
+        Default implementation does nothing, but this can be
+        overridden by an extendable package to set up the module of
+        its extensions. This is useful if there are some common steps
+        to installing all extensions for a certain package.
 
         Example :
 
-        1. Extensions often need to invoke the 'python' interpreter from the Python installation being extended.
-        This routine can put a 'python' Executable object in the module scope for the extension package to simplify
-        extension installs.
+            1. Extensions often need to invoke the `python`
+               interpreter from the Python installation being
+               extended.  This routine can put a 'python' Executable
+               object in the module scope for the extension package to
+               simplify extension installs.
+
+            2. MPI compilers could set some variables in the
+               dependent's scope that point to `mpicc`, `mpicxx`,
+               etc., allowing them to be called by common names
+               regardless of which MPI is used.
+
+            3. BLAS/LAPACK implementations can set some variables
+               indicating the path to their libraries, since these
+               paths differ by BLAS/LAPACK implementation.
+
+        Args:
+
+            module (module): The Python `module` object of the
+                dependent package. Packages can use this to set
+                module-scope variables for the dependent to use.
+
+            dependent_spec (Spec): The spec of the dependent package
+                about to be built. This allows the extendee (self) to
+                query the dependent's state.  Note that *this*
+                package's spec is available as `self.spec`.
+
+        This is useful if there are some common steps to installing
+        all extensions for a certain package.
+
         """
         pass
 

@@ -2,7 +2,7 @@ from spack import *
 
 
 class Ruby(Package):
-    """A dynamic, open source programming language with a focus on 
+    """A dynamic, open source programming language with a focus on
     simplicity and productivity."""
 
     homepage = "https://www.ruby-lang.org/"
@@ -17,15 +17,17 @@ class Ruby(Package):
         make()
         make("install")
 
-    def setup_dependent_environment(self, env, extension_spec):
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories
         ruby_paths = []
         for d in extension_spec.traverse():
             if d.package.extends(self.spec):
                 ruby_paths.append(d.prefix)
-        env.set_env('GEM_PATH', concatenate_paths(ruby_paths))
+
+        spack_env.set_env('GEM_PATH', concatenate_paths(ruby_paths))
         # The actual installation path for this gem
-        env.set_env('GEM_HOME', extension_spec.prefix)
+        spack_env.set_env('GEM_HOME', extension_spec.prefix)
 
     def modify_module(self, module, spec, ext_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME
@@ -38,5 +40,3 @@ class Ruby(Package):
         # Ruby extension builds have global ruby and gem functions
         module.ruby = Executable(join_path(spec.prefix.bin, 'ruby'))
         module.gem = Executable(join_path(spec.prefix.bin, 'gem'))
-
-

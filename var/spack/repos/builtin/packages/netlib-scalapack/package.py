@@ -40,7 +40,7 @@ class NetlibScalapack(Package):
             make()
             make("install")
 
-    def modify_module(self, module, spec, dependent_spec):
+    def setup_dependent_python_module(self, module, spec, dependent_spec):
         lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
         lib_suffix = lib_dsuffix if '+shared' in spec['scalapack'] else '.a'
 

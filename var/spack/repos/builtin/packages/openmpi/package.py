@@ -41,17 +41,13 @@ class Openmpi(Package):
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)
 
-    def setup_environment(self, env):
-        env.set_env('OMPI_CC', self.compiler.cc)
-        env.set_env('OMPI_CXX', self.compiler.cxx)
-        env.set_env('OMPI_FC', self.compiler.fc)
-        env.set_env('OMPI_F77', self.compiler.f77)
 
-    def setup_dependent_environment(self, env, dependent_spec):
-        env.set_env('OMPI_CC', spack_cc)
-        env.set_env('OMPI_CXX', spack_cxx)
-        env.set_env('OMPI_FC', spack_fc)
-        env.set_env('OMPI_F77', spack_f77)
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set_env('OMPI_CC', spack_cc)
+        spack_env.set_env('OMPI_CXX', spack_cxx)
+        spack_env.set_env('OMPI_FC', spack_fc)
+        spack_env.set_env('OMPI_F77', spack_f77)
+
 
     def install(self, spec, prefix):
         config_args = ["--prefix=%s" % prefix,

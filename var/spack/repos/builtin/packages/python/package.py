@@ -92,13 +92,21 @@ class Python(Package):
     def site_packages_dir(self):
         return os.path.join(self.python_lib_dir, 'site-packages')
 
-    def setup_dependent_environment(self, env, extension_spec):
-        # Set PYTHONPATH to include site-packages dir for the extension and any other python extensions it depends on.
+
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        # TODO: do this only for actual extensions.
+
+        # Set PYTHONPATH to include site-packages dir for the
+        # extension and any other python extensions it depends on.
         python_paths = []
         for d in extension_spec.traverse():
             if d.package.extends(self.spec):
                 python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
-        env.set_env('PYTHONPATH', ':'.join(python_paths))
+
+        pythonpath = ':'.join(python_paths)
+        spack_env.set_env('PYTHONPATH', pythonpath)
+        run_env.set_env('PYTHONPATH', pythonpath)
+
 
     def modify_module(self, module, spec, ext_spec):
         """
@@ -113,31 +121,6 @@ class Python(Package):
             module.python = Executable(join_path(spec.prefix.bin, 'python3'))
         else:
             module.python = Executable(join_path(spec.prefix.bin, 'python'))
-
-        # The code below patches the any python extension to have good defaults for `setup_dependent_environment` and
-        # `setup_environment` only if the extension didn't override any of these functions explicitly.
-        def _setup_env(self, env):
-            site_packages = glob.glob(join_path(self.spec.prefix.lib, "python*/site-packages"))
-            if site_packages:
-                env.prepend_path('PYTHONPATH', site_packages[0])
-
-        def _setup_denv(self, env, extension_spec):
-            pass
-
-        pkg_cls = type(ext_spec.package)  # Retrieve the type we may want to patch
-        if 'python' in pkg_cls.extendees:
-            # List of overrides we are interested in
-            interesting_overrides = ['setup_environment', 'setup_dependent_environment']
-            overrides_found = [
-                (name, defining_cls) for name, _, defining_cls, _, in inspect.classify_class_attrs(pkg_cls)
-                if
-                name in interesting_overrides and  # The attribute has the right name
-                issubclass(defining_cls, Package) and defining_cls is not Package  # and is an actual override
-            ]
-            if not overrides_found:
-                # If no override were found go on patching
-                pkg_cls.setup_environment = functools.wraps(Package.setup_environment)(_setup_env)
-                pkg_cls.setup_dependent_environment = functools.wraps(Package.setup_dependent_environment)(_setup_denv)
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
         module.python_lib_dir     = os.path.join(ext_spec.prefix, self.python_lib_dir)
