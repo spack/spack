@@ -43,6 +43,7 @@ class Cmake(Package):
     variant('doc', default=False, description='Enables the generation of html and man page documentation')
 
     depends_on('ncurses', when='+ncurses')
+    depends_on('openssl', when='+openssl')
     depends_on('qt', when='+qt')
     depends_on('python@2.7.11:', when='+doc')
     depends_on('py-sphinx', when='+doc')
