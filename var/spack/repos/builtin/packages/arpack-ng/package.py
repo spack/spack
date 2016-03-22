@@ -50,7 +50,10 @@ class ArpackNg(Package):
         options = ['--prefix=%s' % prefix]
 
         if '+mpi' in spec:
-            options.append('--enable-mpi')
+            options.extend([
+                '--enable-mpi',
+                'F77=mpif77' #FIXME: avoid hardcoding MPI wrapper names
+            ])
 
         if '~shared' in spec:
             options.append('--enable-shared=no')
