@@ -1,9 +1,9 @@
 ##############################################################################
-# Copyright (c) 2014, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Matthew LeGendre, legendre1@llnl.gov, All rights reserved.
+# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
@@ -24,26 +24,21 @@
 ##############################################################################
 from spack import *
 
-class Swig(Package):
-    """SWIG is an interface compiler that connects programs written in
-       C and C++ with scripting languages such as Perl, Python, Ruby,
-       and Tcl. It works by taking the declarations found in C/C++
-       header files and using them to generate the wrapper code that
-       scripting languages need to access the underlying C/C++
-       code. In addition, SWIG provides a variety of customization
-       features that let you tailor the wrapping process to suit your
-       application."""
-    homepage = "http://www.swig.org"
-    url      = "http://prdownloads.sourceforge.net/swig/swig-3.0.2.tar.gz"
+class AprUtil(Package):
+    """Apache Portable Runtime Utility"""
+    homepage  = 'https://apr.apache.org/'
+    url       = 'http://archive.apache.org/dist/apr/apr-util-1.5.4.tar.gz'
 
-    version('3.0.8',  'c96a1d5ecb13d38604d7e92148c73c97')
-    version('3.0.2',  '62f9b0d010cef36a13a010dc530d0d41')
-    version('2.0.12', 'c3fb0b2d710cc82ed0154b91e43085a4')
+    version('1.5.4',    '866825c04da827c6e5f53daff5569f42')
 
-    depends_on('pcre')
+    depends_on('apr')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
 
+        # configure, build, install:
+        options = ['--prefix=%s' % prefix]
+        options.append('--with-apr=%s' % spec['apr'].prefix)
+
+        configure(*options)
         make()
-        make("install")
+        make('install')
