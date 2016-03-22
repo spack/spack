@@ -323,11 +323,8 @@ class Stage(object):
 
     def cache_local(self):
         archiveDst = join_path(os.path.abspath(spack.cache_path), self.mirror_path)
-        if not os.path.exists(archiveDst): #tmp conditional
-            mkdirp(os.path.dirname(archiveDst))
-            # TODO: this moves the archive for URLFetchStrategy vs. a copy - 
-            # edit to do a move?
-            self.fetcher.archive(archiveDst)
+        mkdirp(os.path.dirname(archiveDst))
+        self.fetcher.archive(archiveDst)
 
 
     def expand_archive(self):

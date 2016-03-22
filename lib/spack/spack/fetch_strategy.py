@@ -268,7 +268,7 @@ class URLFetchStrategy(FetchStrategy):
         if not extension(destination) == extension(self.archive_file):
             raise ValueError("Cannot archive without matching extensions.")
 
-        shutil.move(self.archive_file, destination)
+        shutil.copy(self.archive_file, destination)
 
     @_needs_stage
     def check(self):
