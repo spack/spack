@@ -54,7 +54,7 @@ class Mpich(Package):
         env.set('MPICH_F90', spack_f90)
         env.set('MPICH_FC', spack_fc)
 
-    def setup_dependent_python_module(self, module, spec, dep_spec):
+    def setup_dependent_package(self, module, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""
         # FIXME : is this necessary ? Shouldn't this be part of a contract with MPI providers?
         module.mpicc = join_path(self.prefix.bin, 'mpicc')

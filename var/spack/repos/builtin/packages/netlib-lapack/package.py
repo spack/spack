@@ -20,13 +20,13 @@ class NetlibLapack(Package):
     version('3.3.1', 'd0d533ec9a5b74933c2a1e84eedc58b4')
 
     variant('shared', default=False, description="Build shared library version")
+    variant('fpic', default=False, description="Build with -fpic compiler option")
 
     # virtual dependency
     provides('lapack')
 
     # blas is a virtual dependency.
     depends_on('blas')
-
     depends_on('cmake')
 
     # Doesn't always build correctly in parallel
@@ -37,13 +37,11 @@ class NetlibLapack(Package):
         blas = self.spec['netlib-blas']
         return [join_path(blas.prefix.lib, 'blas.a')]
 
-
     @when('^atlas')
     def get_blas_libs(self):
         blas = self.spec['atlas']
         return [join_path(blas.prefix.lib, l)
                 for l in ('libf77blas.a', 'libatlas.a')]
-
 
     def install(self, spec, prefix):
         blas_libs = ";".join(self.get_blas_libs())
@@ -51,10 +49,11 @@ class NetlibLapack(Package):
 
         if '+shared' in spec:
             cmake_args.append('-DBUILD_SHARED_LIBS=ON')
+        if '+fpic' in spec:
+            cmake_args.append('-DCMAKE_POSITION_INDEPENDENT_CODE=ON')
 
         cmake_args += std_cmake_args
 
         cmake(*cmake_args)
         make()
         make("install")
-
