@@ -273,6 +273,7 @@ class Stage(object):
             # the root, so we add a '/' if it is not present.
             mirror_roots = [root if root.endswith('/') else root + '/'
                             for root in mirrors.values()]
+            mirror_roots.append("file://" + os.path.abspath(spack.cache_path) + os.sep)
             urls = [urljoin(root, self.mirror_path) for root in mirror_roots]
 
             # If this archive is normally fetched from a tarball URL,
@@ -305,6 +306,7 @@ class Stage(object):
             self.fetcher = self.default_fetcher
             raise fs.FetchError(errMessage, None)
 
+
     def check(self):
         """Check the downloaded archive against a checksum digest.
            No-op if this stage checks code out of a repository."""
@@ -317,6 +319,15 @@ class Stage(object):
                      "this mirror is secure!.")
         else:
             self.fetcher.check()
+
+
+    def cache_local(self):
+        archiveDst = join_path(os.path.abspath(spack.cache_path), self.mirror_path)
+        mkdirp(os.path.dirname(archiveDst))
+        # TODO: this moves the archive for URLFetchStrategy vs. a copy - edit
+        # to do a move?
+        self.fetcher.archive(archiveDst)
+
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -421,7 +432,7 @@ class ResourceStage(Stage):
                 shutil.move(source_path, destination_path)
 
 
-@pattern.composite(method_list=['fetch', 'create', 'check', 'expand_archive',  'restage', 'destroy'])
+@pattern.composite(method_list=['fetch', 'create', 'check', 'expand_archive',  'restage', 'destroy', 'cache_local'])
 class StageComposite:
     """
     Composite for Stage type objects. The first item in this composite is considered to be the root package, and
