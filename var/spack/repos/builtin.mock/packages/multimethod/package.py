@@ -22,8 +22,11 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import imp
+from llnl.util.filesystem import join_path
+from spack.util.naming import mod_to_class
 from spack import *
-
+import spack.architecture
 
 class Multimethod(Package):
     """This package is designed for use with Spack's multimethod test.
@@ -101,25 +104,26 @@ class Multimethod(Package):
 
 
     #
-    # Make sure we can switch methods on different architectures
+    # Make sure we can switch methods on different target
     #
-    @when('=x86_64')
-    def different_by_architecture(self):
-        return 'x86_64'
-
-    @when('=ppc64')
-    def different_by_architecture(self):
-        return 'ppc64'
-
-    @when('=ppc32')
-    def different_by_architecture(self):
-        return 'ppc32'
-
-    @when('=arm64')
-    def different_by_architecture(self):
-        return 'arm64'
-
-
+#    for platform_name in ['cray_xc', 'darwin', 'linux']:
+#        file_path = join_path(spack.platform_path, platform_name)
+#        platform_mod = imp.load_source('spack.platforms', file_path + '.py')
+#        cls = getattr(platform_mod, mod_to_class(platform_name))
+        
+#        platform = cls()
+    platform = spack.architecture.sys_type()
+    targets = platform.targets.values()
+    if len(targets) > 1:
+        targets = targets[:-1]
+    
+    for target in targets:
+        @when('='+target.name)
+        def different_by_target(self):
+            if isinstance(self.spec.architecture.target,basestring):
+                return self.spec.architecture.target
+            else:
+                return self.spec.architecture.target.name
     #
     # Make sure we can switch methods on different dependencies
     #

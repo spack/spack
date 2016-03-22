@@ -33,11 +33,14 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
+import collections
+from llnl.util.filesystem import join_path
 import spack
 import spack.spec
 import spack.compilers
 import spack.architecture
 import spack.error
+from spack.util.naming import mod_to_class
 from spack.version import *
 from functools import partial
 from spec import DependencyMap
@@ -80,6 +83,11 @@ class DefaultConcretizer(object):
             for ext in externals:
                 if ext[0].satisfies(spec):
                     result.append(ext)
+#            if externals:
+#                sorted_externals = sorted(externals, cmp=lambda a,b: a[0].__cmp__(b[0]))
+#                for external in sorted_externals:
+#                    if external[0].satisfies(spec):
+#                        result.append(external)
         if not result:
             raise NoBuildError(spec)
 
@@ -120,8 +128,10 @@ class DefaultConcretizer(object):
         if not candidate:
             # No ABI matches. Pick the top choice based on the orignal preferences.
             candidate = candidates[0]
-        candidate_spec = candidate[0]
+
+        external_module = candidate[2]
         external = candidate[1]
+        candidate_spec = candidate[0]
         changed = False
 
         # If we're external then trim the dependencies
@@ -148,7 +158,13 @@ class DefaultConcretizer(object):
             changed = True
         if spec._dup(candidate_spec, deps=False, cleardeps=False):
             changed = True
-        spec.external = external
+
+        if not spec.external and external:
+            spec.external = external
+            changed = True
+        if not spec.external_module and external_module:
+            spec.external_module = external_module
+            changed = True
 
         return changed
 
@@ -173,7 +189,7 @@ class DefaultConcretizer(object):
 
         # If there are known available versions, return the most recent
         # version that satisfies the spec
-        pkg = spec.package
+        pkg = spec.package # Gives error here with dynist
         cmp_versions = partial(spack.pkgsort.version_compare, spec.name)
         valid_versions = sorted(
             [v for v in pkg.versions
@@ -203,31 +219,114 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
+    def _concretize_operating_system(self, spec):
+        if spec.architecture.platform_os is not None:
+            if isinstance(spec.architecture.platform_os,spack.architecture.OperatingSystem):
+                return False
+            else:
+                spec.add_operating_system_from_string(spec.architecture.platform_os)
+                return True #changed
+        if spec.root.architecture and spec.root.architecture.platform_os:
+            if isinstance(spec.root.architecture.platform_os,spack.architecture.OperatingSystem):
+                spec.architecture.platform_os = spec.root.architecture.platform_os
+            else:
+                spec.add_operating_system_from_string(spec.root.architecture.platform_os)
+        else:
+            spec.architecture.platform_os = spec.architecture.platform.operating_system('default_os')
+
+        return True #changed
+
+#        """ Future method for concretizing operating system """
+#        if isinstance(arch.platform_os, spack.architecture.OperatingSystem):
+#            return False
+#        else:
+#            arch.arch_os = platform.operating_system('default_os')
+#            return True
+
+
+    def _concretize_target(self, spec):
+        if spec.architecture.target is not None:
+            if isinstance(spec.architecture.target,spack.architecture.Target):
+                return False
+            else:
+                spec.add_target_from_string(spec.architecture.target)
+                return True #changed
+
+        if spec.root.architecture and spec.root.architecture.target:
+            if isinstance(spec.root.architecture.target,spack.architecture.Target):
+                spec.architecture.target = spec.root.architecture.target
+            else:
+                spec.add_target_from_string(spec.root.architecture.target)
+        else:
+            spec.architecture.target = spec.architecture.platform.target('default')
+
+        return True #changed
+
+#        if isinstance(arch.target, spack.architecture.Target):
+#            return False
+#        else:
+#            arch.target = platform.target('default')
+#            return True
 
     def concretize_architecture(self, spec):
-        """If the spec already had an architecture, return.  Otherwise if
-           the root of the DAG has an architecture, then use that.
-           Otherwise take the system's default architecture.
-
-           Intuition: Architectures won't be set a lot, and generally you
-           want the host system's architecture.  When architectures are
-           mised in a spec, it is likely because the tool requries a
-           cross-compiled component, e.g. for tools that run on BlueGene
-           or Cray machines.  These constraints will likely come directly
-           from packages, so require the user to be explicit if they want
-           to mess with the architecture, and revert to the default when
-           they're not explicit.
+        """If the spec is empty provide the defaults of the platform. If the
+        architecture is not a basestring, then check if either the platform,
+        target or operating system are concretized. If any of the fields are
+        changed then return True. If everything is concretized (i.e the
+        architecture attribute is a namedtuple of classes) then return False.
+        If the target is a string type, then convert the string into a
+        concretized architecture. If it has no architecture and the root of the
+        DAG has an architecture, then use the root otherwise use the defaults
+        on the platform.
         """
-        if spec.architecture is not None:
-            return False
+        if spec.architecture is None:
+            # Set the architecture to all defaults
+            spec.architecture = spack.architecture.Arch()
+            return True
+         #If there is a target and it is a tuple and has both filled return
+         #False
+#        if isinstance(spec.architecture, basestring):
+#            spec.split_architecture_string(spec.architecture)
 
-        if spec.root.architecture:
-            spec.architecture = spec.root.architecture
-        else:
-            spec.architecture = spack.architecture.sys_type()
+        ret =  any((
+                self._concretize_operating_system(spec),
+                self._concretize_target(spec)))
 
-        assert(spec.architecture is not None)
-        return True   # changed
+
+        # Does not look pretty at all!!!
+#        if spec.root.architecture and \
+#            not isinstance(spec.root.architecture, basestring):
+#                bool_flag =  any((
+#                    self._concretize_platform(spec.root.architecture, platform),
+#                    self._concretize_operating_system(spec.root.architecture,
+#                                                      platform),
+#                    self._concretize_target(spec.root.target, platform)))
+#                spec.architecture =spec.root.architecture
+#                return bool_flag
+#        else:
+#            spec.add_architecture_from_string(spec.root.architecture)
+
+        return ret
+
+        # if there is no target specified used the defaults
+
+        #if spec.target is not None:
+        #    if isinstance(spec.target,spack.architecture.Target):
+        #        return False
+        #    else:
+        #        spec.add_target_from_string(spec.target)
+        #        return True #changed
+
+        #if spec.root.target:
+        #    if isinstance(spec.root.target,spack.architecture.Target):
+        #        spec.target = spec.root.target
+        #    else:
+        #        spec.add_target_from_string(spec.root.target)
+        #else:
+        #    platform = spack.architecture.sys_type()
+        #    spec.target = platform.target('default')
+
+        #return True #changed
 
 
     def concretize_variants(self, spec):
@@ -254,6 +353,24 @@ class DefaultConcretizer(object):
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
         """
+        # Pass on concretizing the compiler if the target is not yet determined
+        if not spec.architecture.target:
+            #Although this usually means changed, this means awaiting other changes
+            return True
+
+        # Only use a matching compiler if it is of the proper style
+        # Takes advantage of the proper logic already existing in compiler_for_spec
+        # Should think whether this can be more efficient
+        def _proper_compiler_style(cspec, architecture):
+            compilers = spack.compilers.compilers_for_spec(cspec)
+            filter(lambda c: c.strategy == architecture.platform_os.compiler_strategy, compilers)
+#if architecture.platform_os.compiler_strategy == 'PATH':
+            #    filter(lambda c: not c.modules, compilers)
+            #if architecture.platform_os.compiler_strategy == 'MODULES':
+            #    filter(lambda c: c.modules, compilers)
+            return compilers
+
+
         all_compilers = spack.compilers.all_compilers()
 
         if (spec.compiler and
@@ -281,7 +398,12 @@ class DefaultConcretizer(object):
             raise UnavailableCompilerVersionError(other_compiler)
 
         # copy concrete version into other_compiler
-        spec.compiler = matches[0].copy()
+        index = len(matches)-1
+        while not _proper_compiler_style(matches[index], spec.architecture):
+            index -= 1
+            if index == 0:
+                raise NoValidVersionError(spec)
+        spec.compiler = matches[index].copy()
         assert(spec.compiler.concrete)
         return True  # things changed.
 

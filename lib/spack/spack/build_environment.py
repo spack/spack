@@ -32,6 +32,8 @@ import sys
 import shutil
 import multiprocessing
 import platform
+import re
+
 from llnl.util.filesystem import *
 
 import spack
@@ -56,6 +58,9 @@ SPACK_INSTALL          = 'SPACK_INSTALL'
 SPACK_DEBUG            = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
+
+SPACK_CRAYPE           = 'SPACK_CRAYPE'
+SPACK_COMP_MODULE      = 'SPACK_COMP_MODULE'
 
 
 class MakeExecutable(Executable):
@@ -83,6 +88,68 @@ class MakeExecutable(Executable):
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
 
+def load_module(mod):
+    """Takes a module name and removes modules until it is possible to
+    load that module. It then loads the provided module. Depends on the
+    modulecmd implementation of modules used in cray and lmod.
+    """
+    #Create an executable of the module command that will output python code
+    modulecmd = which('modulecmd')
+    modulecmd.add_default_arg('python')
+
+    # Read the module and remove any conflicting modules
+    # We do this without checking that they are already installed
+    # for ease of programming because unloading a module that is not
+    # loaded does nothing.
+    text = modulecmd('show', mod, return_oe=True).split()
+    for i, word in enumerate(text):
+        if word == 'conflict':
+            exec(compile(modulecmd('unload', text[i+1], return_oe=True), '<string>', 'exec'))
+    # Load the module now that there are no conflicts
+    load = modulecmd('load', mod, return_oe=True)
+    exec(compile(load, '<string>', 'exec'))
+
+
+def get_path_from_module(mod):
+    """Inspects a TCL module for entries that indicate the absolute path
+    at which the library supported by said module can be found.
+    """
+    # Create a modulecmd executable
+    modulecmd = which('modulecmd')
+    modulecmd.add_default_arg('python')
+
+    # Read the module
+    text = modulecmd('show', mod, return_oe=True).split('\n')
+
+    # If it lists its package directory, return that
+    for line in text:
+        if line.find(mod.upper()+'_DIR') >= 0:
+            words = line.split()
+            return words[2]
+
+    # If it lists a -rpath instruction, use that
+    for line in text:
+        rpath = line.find('-rpath/')
+        if rpath >= 0:
+            return line[rpath+6:line.find('/lib')]
+
+    # If it lists a -L instruction, use that
+    for line in text:
+        L = line.find('-L/')
+        if L >= 0:
+            return line[L+2:line.find('/lib')]
+
+    # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
+    for line in text:
+        if line.find('LD_LIBRARY_PATH') >= 0:
+            words = line.split()
+            path = words[2]
+            return path[:path.find('/lib')]
+
+    # Unable to find module path
+    return None
+
+
 def set_compiler_environment_variables(pkg):
     assert(pkg.spec.concrete)
     compiler = pkg.compiler
@@ -108,6 +175,10 @@ def set_compiler_environment_variables(pkg):
         os.environ['SPACK_FC']  = compiler.fc
 
     os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
+
+    if compiler.strategy == 'MODULES':
+        for mod in compiler.modules:
+            load_module(mod)
 
 
 def set_build_environment_variables(pkg):
@@ -172,6 +243,8 @@ def set_build_environment_variables(pkg):
                 pkg_config_dirs.append(pcdir)
     path_set("PKG_CONFIG_PATH", pkg_config_dirs)
 
+    if pkg.spec.architecture.target.module_name:
+        load_module(pkg.spec.architecture.target.module_name)
 
 def set_module_variables_for_package(pkg, m):
     """Populate the module scope of install() with some useful functions.
@@ -241,10 +314,21 @@ def set_module_variables_for_package(pkg, m):
 
 def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
+
+    # First load all modules for external packages and update the external
+    # packages' paths to reflect what is found in the modules so that we can
+    # rpath through the modules when possible, but if not possible they are
+    # already loaded.
+    for spec in pkg.spec.traverse(root=False):
+        if spec.external_module:
+            load_module(spec.external_module)
+            spec.external = get_path_from_module(spec.external_module)
+
+    # Construct rpaths from the paths of each dep
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
-    rpaths.extend(d.prefix.lib for d in pkg.spec.dependencies.values()
+    rpaths.extend(d.prefix.lib for d in pkg.spec.traverse(root=False)
                   if os.path.isdir(d.prefix.lib))
-    rpaths.extend(d.prefix.lib64 for d in pkg.spec.dependencies.values()
+    rpaths.extend(d.prefix.lib64 for d in pkg.spec.traverse(root=False)
                   if os.path.isdir(d.prefix.lib64))
     return rpaths
 

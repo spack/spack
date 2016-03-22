@@ -34,7 +34,8 @@ from llnl.util.tty.colify import colify
 import spack
 
 """Names of tests to be included in Spack's test suite"""
-test_names = ['versions',
+test_names = ['architecture',
+              'versions',
               'url_parse',
               'url_substitution',
               'packages',

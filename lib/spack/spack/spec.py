@@ -90,7 +90,9 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
+from collections import namedtuple
 import sys
+import imp
 import itertools
 import hashlib
 import base64
@@ -100,15 +102,18 @@ import yaml
 from yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
 from llnl.util.lang import *
 from llnl.util.tty.color import *
 
 import spack
+import spack.architecture
 import spack.parse
 import spack.error
 import spack.compilers as compilers
 
 from spack.version import *
+from spack.util.naming import mod_to_class
 from spack.util.string import *
 from spack.util.prefix import Prefix
 from spack.virtual import ProviderIndex
@@ -119,7 +124,7 @@ identifier_re = r'\w[\w-]*'
 # Convenient names for color formats so that other things can use them
 compiler_color         = '@g'
 version_color          = '@c'
-architecture_color     = '@m'
+architecture_color           = '@m'
 enabled_variant_color  = '@B'
 disabled_variant_color = '@r'
 dependency_color       = '@.'
@@ -421,6 +426,7 @@ class Spec(object):
         self._normal = kwargs.get('normal', False)
         self._concrete = kwargs.get('concrete', False)
         self.external = None
+        self.external_module = None
 
         # This allows users to construct a spec DAG with literals.
         # Note that given two specs a and b, Spec(a) copies a, but
@@ -456,7 +462,13 @@ class Spec(object):
         """Called by the parser to set the architecture."""
         if self.architecture: raise DuplicateArchitectureError(
                 "Spec for '%s' cannot have two architectures." % self.name)
-        self.architecture = architecture
+        platform = spack.architecture.sys_type()
+        if '-' in architecture:
+            os, target = architecture.split('-')
+        else:
+            os = None
+            target = architecture
+        self.architecture = spack.architecture.Arch(os, target)
 
 
     def _add_dependency(self, spec):
@@ -571,7 +583,7 @@ class Spec(object):
                in the traversal.
 
            root     [=True]
-               If false, this won't yield the root node, just its descendents.
+               If False, this won't yield the root node, just its descendents.
 
            direction [=children|parents]
                If 'children', does a traversal of this spec's children.  If
@@ -664,7 +676,6 @@ class Spec(object):
         d = {
             'variants' : dict(
                 (name,v.enabled) for name, v in self.variants.items()),
-            'arch' : self.architecture,
             'dependencies' : dict((d, self.dependencies[d].dag_hash())
                                   for d in sorted(self.dependencies))
         }
@@ -673,6 +684,13 @@ class Spec(object):
         # consistent hashing.
         if not self.concrete or self.namespace:
             d['namespace'] = self.namespace
+
+        if self.architecture:
+            # TODO: Fix the target.to_dict to account for the tuple
+            # Want it to be a dict of dicts
+            d['architecture'] = self.architecture.to_dict()
+        else:
+            d['architecture'] = None
 
         if self.compiler:
             d.update(self.compiler.to_dict())
@@ -700,7 +718,8 @@ class Spec(object):
         spec = Spec(name)
         spec.namespace = node.get('namespace', None)
         spec.versions = VersionList.from_dict(node)
-        spec.architecture = node['arch']
+        # TODO: Need to fix the architecture.Target.from_dict
+        spec.architecture = spack.architecture.arch_from_dict(node['architecture'])
 
         if node['compiler'] is None:
             spec.compiler = None
@@ -766,7 +785,6 @@ class Spec(object):
 
         if self.name in presets:
             changed |= self.constrain(presets[self.name])
-
         else:
             # Concretize virtual dependencies last.  Because they're added
             # to presets below, their constraints will all be merged, but we'll
@@ -786,8 +804,9 @@ class Spec(object):
         """Replace this virtual spec with a concrete spec."""
         assert(self.virtual)
         for name, dependent in self.dependents.items():
-            del dependent.dependencies[self.name]
-            dependent._add_dependency(concrete)
+            if not dependent.external:
+                del dependent.dependencies[self.name]
+                dependent._add_dependency(concrete)
 
 
     def _expand_virtual_packages(self):
@@ -1188,9 +1207,10 @@ class Spec(object):
                 raise UnsatisfiableVariantSpecError(self.variants[v],
                                                     other.variants[v])
 
+        # TODO: Check out the logic here
         if self.architecture is not None and other.architecture is not None:
             if self.architecture != other.architecture:
-                raise UnsatisfiableArchitectureSpecError(self.architecture,
+                raise UnsatisfiableTargetSpecError(self.architecture,
                                                          other.architecture)
 
         changed = False
@@ -1277,11 +1297,34 @@ class Spec(object):
         except SpecError:
             return parse_anonymous_spec(spec_like, self.name)
 
+    def _is_valid_platform(self, platform, platform_list):
+        if platform in platform_list:
+            return True
+        return False
+
+    def _is_valid_target(self, target, platform):
+        return target in platform.targets
+
+    def _is_valid_os(self, os_string, platform):
+        return os_string in platform.operating_sys
+
+    def add_target_from_string(self, target):
+        if target is None:
+            self.architecture.target = self.architecture.platform.target('default_target')
+        else:
+            self.architecture.target = self.architecture.platform.target(target)
+
+    def add_operating_system_from_string(self, os):
+        if os is None:
+            self.architecture.platform_os = self.architecture.platform.operating_system('default_os')
+        else:
+            self.architecture.platform_os = self.architecture.platform.operating_system(os)
+
 
     def satisfies(self, other, deps=True, strict=False):
-        """Determine if this spec satisfies all constraints of another.
+        """determine if this spec satisfies all constraints of another.
 
-        There are two senses for satisfies:
+        there are two senses for satisfies:
 
           * `loose` (default): the absence of a constraint in self
             implies that it *could* be satisfied by other, so we only
@@ -1293,7 +1336,7 @@ class Spec(object):
         """
         other = self._autospec(other)
 
-        # A concrete provider can satisfy a virtual dependency.
+        # a concrete provider can satisfy a virtual dependency.
         if not self.virtual and other.virtual:
             pkg = spack.repo.get(self.fullname)
             if pkg.provides(other.name):
@@ -1303,7 +1346,7 @@ class Spec(object):
                             return True
             return False
 
-        # Otherwise, first thing we care about is whether the name matches
+        # otherwise, first thing we care about is whether the name matches
         if self.name != other.name:
             return False
 
@@ -1318,18 +1361,25 @@ class Spec(object):
         elif strict and (self.versions or other.versions):
             return False
 
-        # None indicates no constraints when not strict.
+        # none indicates no constraints when not strict.
         if self.compiler and other.compiler:
             if not self.compiler.satisfies(other.compiler, strict=strict):
-                return False
+                return  False
         elif strict and (other.compiler and not self.compiler):
             return False
 
         if not self.variants.satisfies(other.variants, strict=strict):
             return False
 
-        # Architecture satisfaction is currently just string equality.
+
+        # Target satisfaction is currently just class equality.
         # If not strict, None means unconstrained.
+        if isinstance(self.architecture, basestring):
+            self.add_architecture_from_string(self.architecture)
+        if isinstance(other.architecture, basestring):
+            other.add_architecture_from_string(other.architecture)
+
+        # TODO: Need to make sure that comparisons can be made via classes
         if self.architecture and other.architecture:
             if self.architecture != other.architecture:
                 return False
@@ -1399,17 +1449,19 @@ class Spec(object):
 
            Options:
            dependencies[=True]
-               Whether deps should be copied too.  Set to false to copy a
+               Whether deps should be copied too.  Set to False to copy a
                spec but not its dependencies.
         """
 
+        # TODO: Check if comparisons for tuple are valid
         # We don't count dependencies as changes here
         changed = True
         if hasattr(self, 'name'):
             changed = (self.name != other.name and self.versions != other.versions and \
                        self.architecture != other.architecture and self.compiler != other.compiler and \
                        self.variants != other.variants and self._normal != other._normal and \
-                       self.concrete != other.concrete and self.external != other.external)
+                       self.concrete != other.concrete and self.external != other.external and \
+                       self.external_module != other.external_module)
 
         # Local node attributes get copied first.
         self.name = other.name
@@ -1423,6 +1475,7 @@ class Spec(object):
         self.variants.spec = self
         self.external = other.external
         self.namespace = other.namespace
+        self.external_module = other.external_module
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
@@ -1441,6 +1494,7 @@ class Spec(object):
         self._normal = other._normal
         self._concrete = other._concrete
         self.external = other.external
+        self.external_module = other.external_module
         return changed
 
 
@@ -1598,7 +1652,7 @@ class Spec(object):
                ${COMPILERNAME}  Compiler name
                ${COMPILERVER}   Compiler version
                ${OPTIONS}       Options
-               ${ARCHITECTURE}  Architecture
+               ${TARGET}        Target
                ${SHA1}          Dependencies 8-char sha1 prefix
 
                ${SPACK_ROOT}    The spack root directory
@@ -1611,7 +1665,7 @@ class Spec(object):
            Anything else is copied verbatim into the output stream.
 
            *Example:*  ``$_$@$+`` translates to the name, version, and options
-           of the package, but no dependencies, arch, or compiler.
+           of the package, but no dependencies, architecture, or compiler.
 
            TODO: allow, e.g., $6# to customize short hash length
            TODO: allow, e.g., $## for full hash.
@@ -1656,6 +1710,7 @@ class Spec(object):
                 elif c == '+':
                     if self.variants:
                         write(fmt % str(self.variants), c)
+                # TODO: Check string methods here
                 elif c == '=':
                     if self.architecture:
                         write(fmt % (c + str(self.architecture)), c)
@@ -1707,7 +1762,7 @@ class Spec(object):
                         write(fmt % str(self.variants), '+')
                 elif named_str == 'ARCHITECTURE':
                     if self.architecture:
-                        write(fmt % str(self.architecture), '=')
+                        write(fmt % self.architecture, '=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % str(self.dag_hash(7)))
@@ -1732,6 +1787,40 @@ class Spec(object):
 
     def dep_string(self):
         return ''.join("^" + dep.format() for dep in self.sorted_deps())
+
+
+    def __cmp__(self, other):
+        #Package name sort order is not configurable, always goes alphabetical
+        if self.name != other.name:
+            return cmp(self.name, other.name)
+
+        #Package version is second in compare order
+        pkgname = self.name
+        if self.versions != other.versions:
+            return spack.pkgsort.version_compare(pkgname,
+                         self.versions, other.versions)
+
+        #Compiler is third
+        if self.compiler != other.compiler:
+            return spack.pkgsort.compiler_compare(pkgname,
+                         self.compiler, other.compiler)
+
+        #Variants
+        if self.variants != other.variants:
+            return spack.pkgsort.variant_compare(pkgname,
+                         self.variants, other.variants)
+
+        #Target
+        if self.target != other.target:
+            return spack.pkgsort.target_compare(pkgname,
+                         self.target, other.target)
+
+        #Dependency is not configurable
+        if self.dep_hash() != other.dep_hash():
+            return -1 if self.dep_hash() < other.dep_hash() else 1
+
+        #Equal specs
+        return 0
 
 
     def __str__(self):
@@ -1806,7 +1895,6 @@ class SpecParser(spack.parse.Parser):
 
     def do_parse(self):
         specs = []
-
         try:
             while self.next:
                 if self.accept(ID):
@@ -1849,6 +1937,7 @@ class SpecParser(spack.parse.Parser):
         spec.architecture = None
         spec.compiler = None
         spec.external = None
+        spec.external_module = None
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
         spec.namespace = spec_namespace
@@ -2036,9 +2125,16 @@ class UnknownVariantError(SpecError):
         super(UnknownVariantError, self).__init__(
             "Package %s has no variant %s!" % (pkg, variant))
 
+class UnknownArchitectureSpecError(SpecError):
+    """ Raised when an entry in a string field is neither a platform,
+        operating system or a target. """
+    def __init__(self, architecture_spec_entry):
+        super(UnknownArchitectureSpecError, self).__init__(
+                "Architecture spec %s is not a valid spec entry" % (
+                                            architecture_spec_entry))
 
 class DuplicateArchitectureError(SpecError):
-    """Raised when the same architecture occurs in a spec twice."""
+    """Raised when the same target occurs in a spec twice."""
     def __init__(self, message):
         super(DuplicateArchitectureError, self).__init__(message)
 
@@ -2119,11 +2215,11 @@ class UnsatisfiableVariantSpecError(UnsatisfiableSpecError):
             provided, required, "variant")
 
 
-class UnsatisfiableArchitectureSpecError(UnsatisfiableSpecError):
-    """Raised when a spec architecture conflicts with package constraints."""
+class UnsatisfiableTargetSpecError(UnsatisfiableSpecError):
+    """Raised when a spec target conflicts with package constraints."""
     def __init__(self, provided, required):
-        super(UnsatisfiableArchitectureSpecError, self).__init__(
-            provided, required, "architecture")
+        super(UnsatisfiableTargetSpecError, self).__init__(
+            provided, required, "target")
 
 
 class UnsatisfiableProviderSpecError(UnsatisfiableSpecError):

@@ -43,6 +43,9 @@ class Pgi(Compiler):
                    'f77' : 'pgi/pgfortran',
                    'fc'  : 'pgi/pgfortran' }
 
+    PrgEnv = 'PrgEnv-pgi'
+    PrgEnv_compiler = 'pgi'
+
     @classmethod
     def default_version(cls, comp):
         """The '-V' option works for all the PGI compilers.

@@ -13,6 +13,8 @@ class PyH5py(Package):
     depends_on('hdf5')
     depends_on('py-numpy')
     depends_on('py-cython')
+    depends_on('py-six')
+    depends_on('py-pkgconfig')
 
     def install(self, spec, prefix):
         python('setup.py', 'configure', '--hdf5=%s' % spec['hdf5'].prefix)

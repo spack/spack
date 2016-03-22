@@ -48,7 +48,7 @@ class Clang(Compiler):
                    'fc'  : 'f90' }
 
     @classmethod
-    def default_version(self, comp):
+    def default_version(cls, comp):
         """The '--version' option works for clang compilers.
            On most platforms, output looks like this::
 

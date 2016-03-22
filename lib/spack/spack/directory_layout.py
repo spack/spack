@@ -165,7 +165,7 @@ class DirectoryLayout(object):
 class YamlDirectoryLayout(DirectoryLayout):
     """Lays out installation directories like this::
            <install root>/
-               <architecture>/
+               <target>/
                    <compiler>-<compiler version>/
                        <name>-<version>-<variants>-<hash>
 
@@ -207,8 +207,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             spec.version,
             spec.dag_hash(self.hash_len))
 
-        path = join_path(
-            spec.architecture,
+        path = join_path(spec.architecture,
             "%s-%s" % (spec.compiler.name, spec.compiler.version),
             dir_name)
 

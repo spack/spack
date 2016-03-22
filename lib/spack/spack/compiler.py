@@ -33,6 +33,7 @@ from llnl.util.filesystem import join_path
 
 import spack.error
 import spack.spec
+import spack.architecture
 from spack.util.multiproc import parmap
 from spack.util.executable import *
 from spack.util.environment import get_path
@@ -98,19 +99,33 @@ class Compiler(object):
     cxx11_flag = "-std=c++11"
 
 
-    def __init__(self, cspec, cc, cxx, f77, fc):
+    # Cray PrgEnv name that can be used to load this compiler
+    PrgEnv = None
+
+    # Name of module used to switch versions of this compiler
+    PrgEnv_compiler = None
+
+
+    def __init__(self, cspec, strategy, paths, modules=None):
         def check(exe):
             if exe is None:
                 return None
             _verify_executables(exe)
             return exe
 
-        self.cc  = check(cc)
-        self.cxx = check(cxx)
-        self.f77 = check(f77)
-        self.fc  = check(fc)
+        self.strategy = strategy
+
+        self.cc  = check(paths[0])
+        self.cxx = check(paths[1])
+        if len(paths) > 2:
+            self.f77 = check(paths[2])
+            if len(paths) == 3:
+                self.fc = self.f77
+            else:
+                self.fc  = check(paths[3])
 
         self.spec = cspec
+        self.modules = modules
 
 
     @property
@@ -206,6 +221,18 @@ class Compiler(object):
 
     @classmethod
     def find(cls, *path):
+        compilers = []
+        platform = spack.architecture.sys_type()
+        strategies = [o.compiler_strategy for o in platform.operating_sys.values()]
+        if 'PATH' in strategies:
+            compilers.extend(cls.find_in_path(*path))
+        if 'MODULES' in strategies:
+            compilers.extend(cls.find_in_modules())
+        return compilers
+
+
+    @classmethod
+    def find_in_path(cls, *path):
         """Try to find this type of compiler in the user's
            environment. For each set of compilers found, this returns
            compiler objects with the cc, cxx, f77, fc paths and the
@@ -250,9 +277,32 @@ class Compiler(object):
                 if newcount <= prevcount:
                     continue
 
-            compilers[ver] = cls(spec, *paths)
+            compilers[ver] = cls(spec, 'PATH', paths)
 
         return list(compilers.values())
+
+
+    @classmethod
+    def find_in_modules(cls):
+        compilers = []
+
+        if cls.PrgEnv:
+            if not cls.PrgEnv_compiler:
+                tty.die('Must supply PrgEnv_compiler with PrgEnv')
+
+            modulecmd = which('modulecmd')
+            modulecmd.add_default_arg('python')
+            output = modulecmd('avail', cls.PrgEnv_compiler, return_oe=True)
+            matches = re.findall(r'(%s)/([\d\.]+[\d])' % cls.PrgEnv_compiler, output)
+
+            for name, version in matches:
+                v = version
+                comp = cls(spack.spec.CompilerSpec(name + '@' + v), 'MODULES',
+                           ['cc', 'CC', 'ftn'], [cls.PrgEnv, name +'/' + v])
+
+                compilers.append(comp)
+
+        return compilers
 
 
     def __repr__(self):
@@ -261,9 +311,13 @@ class Compiler(object):
 
 
     def __str__(self):
-        """Return a string representation of the compiler toolchain."""
-        return "%s(%s)" % (
-            self.name, '\n     '.join((str(s) for s in (self.cc, self.cxx, self.f77, self.fc))))
+        """Return a string represntation of the compiler toolchain."""
+        if self.strategy is 'MODULES':
+            return "%s(%s)" % (
+                self.name, '\n     '.join((str(s) for s in (self.strategy, self.cc, self.cxx, self.f77, self.fc, self.modules))))
+        else:
+            return "%s(%s)" % (
+                self.name, '\n     '.join((str(s) for s in (self.strategy, self.cc, self.cxx, self.f77, self.fc))))
 
 
 class CompilerAccessError(spack.error.SpackError):

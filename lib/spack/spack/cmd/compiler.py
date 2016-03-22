@@ -30,6 +30,8 @@ from llnl.util.tty.color import colorize
 from llnl.util.tty.colify import colify
 from llnl.util.lang import index_by
 
+import spack.architecture
+import spack.compiler
 import spack.compilers
 import spack.spec
 import spack.config
@@ -39,8 +41,7 @@ from spack.spec import CompilerSpec
 description = "Manage compilers"
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(
-        metavar='SUBCOMMAND', dest='compiler_command')
+    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='compiler_command')
 
     scopes = spack.config.config_scopes
 
@@ -71,9 +72,11 @@ def setup_parser(subparser):
 
 
 def compiler_add(args):
-    """Search either $PATH or a list of paths for compilers and add them
+    """Search either $PATH or a list of paths OR MODULES for compilers and add them
        to Spack's configuration."""
-    paths = args.add_paths
+
+
+    paths = args.add_paths # This might be a parser method. Parsing method to add_paths
     if not paths:
         paths = get_path('PATH')
 
