@@ -34,7 +34,22 @@ class Numdiff(Package):
 
     version('5.8.1',    'a295eb391f6cb1578209fc6b4f9d994e')
 
+    def validate(self, spec):
+        """
+        Checks if we are attempting to build on an incompatible
+        architecture.
+
+        Ref. https://github.com/davydden/homebrew-dealiisuite/blob/master/numdiff.rb#L13-L15.
+
+        :param spec: spec of the package
+        :raises RuntimeError: in case of inconsistencies.
+        """
+
+        if spec.satisfies("=darwin-x86_64"):
+            raise RuntimeError(msg)
+
     def install(self, spec, prefix):
+        self.validate(spec)
         options = ['--prefix=%s' % prefix]
         configure(*options)
         make()
