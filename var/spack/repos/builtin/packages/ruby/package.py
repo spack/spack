@@ -1,9 +1,8 @@
 from spack import *
-import spack
-import os
+
 
 class Ruby(Package):
-    """A dynamic, open source programming language with a focus on 
+    """A dynamic, open source programming language with a focus on
     simplicity and productivity."""
 
     homepage = "https://www.ruby-lang.org/"
@@ -15,11 +14,23 @@ class Ruby(Package):
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
-
         make()
         make("install")
 
-    def setup_dependent_environment(self, module, spec, ext_spec):
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        # TODO: do this only for actual extensions.
+        # Set GEM_PATH to include dependent gem directories
+        ruby_paths = []
+        for d in extension_spec.traverse():
+            if d.package.extends(self.spec):
+                ruby_paths.append(d.prefix)
+
+        spack_env.set_path('GEM_PATH', ruby_paths)
+
+        # The actual installation path for this gem
+        spack_env.set('GEM_HOME', extension_spec.prefix)
+
+    def modify_module(self, module, spec, ext_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME
         and GEM_PATH to values appropriate for the package being built.
 
@@ -30,12 +41,3 @@ class Ruby(Package):
         # Ruby extension builds have global ruby and gem functions
         module.ruby = Executable(join_path(spec.prefix.bin, 'ruby'))
         module.gem = Executable(join_path(spec.prefix.bin, 'gem'))
-
-        # Set GEM_PATH to include dependent gem directories
-        ruby_paths = []
-        for d in ext_spec.traverse():
-            if d.package.extends(self.spec):
-                ruby_paths.append(d.prefix)
-        os.environ['GEM_PATH'] = ':'.join(ruby_paths)
-        # The actual installation path for this gem
-        os.environ['GEM_HOME'] = ext_spec.prefix
