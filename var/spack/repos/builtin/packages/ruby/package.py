@@ -30,7 +30,7 @@ class Ruby(Package):
         # The actual installation path for this gem
         spack_env.set('GEM_HOME', extension_spec.prefix)
 
-    def modify_module(self, module, spec, ext_spec):
+    def setup_dependent_package(self, module, ext_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME
         and GEM_PATH to values appropriate for the package being built.
 
