@@ -225,7 +225,7 @@ def set_module_variables_for_package(pkg, module):
     m.spack_cc  = join_path(link_dir, pkg.compiler.link_paths['cc'])
     m.spack_cxx = join_path(link_dir, pkg.compiler.link_paths['cxx'])
     m.spack_f77 = join_path(link_dir, pkg.compiler.link_paths['f77'])
-    m.spack_f90 = join_path(link_dir, pkg.compiler.link_paths['fc'])
+    m.spack_fc  = join_path(link_dir, pkg.compiler.link_paths['fc'])
 
     # Emulate some shell commands for convenience
     m.pwd          = os.getcwd
@@ -270,32 +270,56 @@ def parent_class_modules(cls):
     return result
 
 
+def setup_module_variables_for_dag(pkg):
+    """Set module-scope variables for all packages in the DAG."""
+    for spec in pkg.spec.traverse(order='post'):
+        # If a user makes their own package repo, e.g.
+        # spack.repos.mystuff.libelf.Libelf, and they inherit from
+        # an existing class like spack.repos.original.libelf.Libelf,
+        # then set the module variables for both classes so the
+        # parent class can still use them if it gets called.
+        spkg = spec.package
+        modules = parent_class_modules(spkg.__class__)
+        for mod in modules:
+            set_module_variables_for_package(spkg, mod)
+        set_module_variables_for_package(spkg, spkg.module)
+
+
 def setup_package(pkg):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
     run_env   = EnvironmentModifications()
 
+    # Before proceeding, ensure that specs and packages are consistent
+    #
+    # This is a confusing behavior due to how packages are
+    # constructed.  `setup_dependent_package` may set attributes on
+    # specs in the DAG for use by other packages' install
+    # method. However, spec.package will look up a package via
+    # spack.repo, which defensively copies specs into packages.  This
+    # code ensures that all packages in the DAG have pieces of the
+    # same spec object at build time.
+    #
+    # This is safe for the build process, b/c the build process is a
+    # throwaway environment, but it is kind of dirty.
+    #
+    # TODO: Think about how to avoid this fix and do something cleaner.
+    for s in pkg.spec.traverse(): s.package.spec = s
+
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env)
-
-    # If a user makes their own package repo, e.g.
-    # spack.repos.mystuff.libelf.Libelf, and they inherit from
-    # an existing class like spack.repos.original.libelf.Libelf,
-    # then set the module variables for both classes so the
-    # parent class can still use them if it gets called.
-    modules = parent_class_modules(pkg.__class__)
-    for mod in modules:
-        set_module_variables_for_package(pkg, mod)
+    setup_module_variables_for_dag(pkg)
 
     # Allow dependencies to modify the module
-    for dependency_spec in pkg.spec.traverse(root=False):
+    spec = pkg.spec
+    for dependency_spec in spec.traverse(root=False):
         dpkg = dependency_spec.package
-        dpkg.setup_dependent_python_module(pkg.module, pkg.spec)
+        dpkg.setup_dependent_package(pkg.module, spec)
 
     # Allow dependencies to set up environment as well
-    for dependency_spec in pkg.spec.traverse(root=False):
+    for dependency_spec in spec.traverse(root=False):
         dpkg = dependency_spec.package
-        dpkg.setup_dependent_environment(spack_env, run_env, pkg.spec)
+        dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
     # Allow the package to apply some settings.
     pkg.setup_environment(spack_env, run_env)
