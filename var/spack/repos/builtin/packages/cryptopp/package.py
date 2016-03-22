@@ -25,7 +25,5 @@ class Cryptopp(Package):
         install('libcryptopp.a', prefix.lib)
 
     def url_for_version(self, version):
-        version_tuple = tuple(v for v in iter(version))
-        version_string = reduce(lambda vs, nv: vs + str(nv), version_tuple, "")
-
+        version_string = str(version).replace('.', '')
         return '%s/cryptopp%s.zip' % (Cryptopp.base_url, version_string)
