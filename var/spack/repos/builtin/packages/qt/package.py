@@ -56,9 +56,12 @@ class Qt(Package):
     depends_on("libxcb")
 
 
-    def setup_dependent_environment(self, module, spec, dep_spec):
-        """Dependencies of Qt find it using the QTDIR environment variable."""
-        os.environ['QTDIR'] = self.prefix
+    def setup_environment(self, spack_env, env):
+        env.set('QTDIR', self.prefix)
+
+
+    def setup_dependent_environment(self, spack_env, run_env, dspec):
+        spack_env.set('QTDIR', self.prefix)
 
 
     def patch(self):

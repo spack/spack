@@ -16,9 +16,9 @@ class Paraview(Package):
 
     variant('osmesa', default=False, description='Enable OSMesa support')
     variant('qt', default=False, description='Enable Qt support')
-    variant('opengl2', default=False, description='Enable OPengl2 backend')
+    variant('opengl2', default=False, description='Enable OpenGL2 backend')
 
-    depends_on('python', when='+python')
+    depends_on('python@2:2.7', when='+python')
     depends_on('py-numpy', when='+python')
     depends_on('py-matplotlib', when='+python')
     depends_on('tcl', when='+tcl')
@@ -37,11 +37,11 @@ class Paraview(Package):
     #depends_on('protobuf') # version mismatches?
     #depends_on('sqlite') # external version not supported
     depends_on('zlib')
-    
+
     def url_for_version(self, version):
         """Handle ParaView version-based custom URLs."""
         return self._url_str % (version.up_to(2), version)
-    
+
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
