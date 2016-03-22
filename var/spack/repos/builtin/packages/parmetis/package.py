@@ -25,9 +25,6 @@
 
 from spack import *
 
-# FIXME : lot of code is duplicated from packages/metis/package.py . Inheriting from there may reduce
-# FIXME : the installation rules to just a few lines
-
 
 class Parmetis(Package):
     """
@@ -43,13 +40,17 @@ class Parmetis(Package):
     variant('debug', default=False, description='Builds the library in debug mode')
     variant('gdb', default=False, description='Enables gdb support')
 
-    variant('idx64', default=False, description='Use int64_t as default index type')
-    variant('double', default=False, description='Use double precision floating point types')
-
     depends_on('cmake @2.8:')  # build dependency
     depends_on('mpi')
 
-    # FIXME : this should conflict with metis as it builds its own version internally
+    patch('enable_external_metis.patch')
+    depends_on('metis')
+
+    # bug fixes from PETSc developers
+    # https://bitbucket.org/petsc/pkg-parmetis/commits/1c1a9fd0f408dc4d42c57f5c3ee6ace411eb222b/raw/
+    patch('pkg-parmetis-1c1a9fd0f408dc4d42c57f5c3ee6ace411eb222b.patch')
+    # https://bitbucket.org/petsc/pkg-parmetis/commits/82409d68aa1d6cbc70740d0f35024aae17f7d5cb/raw/
+    patch('pkg-parmetis-82409d68aa1d6cbc70740d0f35024aae17f7d5cb.patch')
 
     depends_on('gdb', when='+gdb')
 
@@ -63,8 +64,8 @@ class Parmetis(Package):
 
         # FIXME : Once a contract is defined, MPI compilers should be retrieved indirectly via spec['mpi'] in case
         # FIXME : they use a non-standard name
-        options.extend(['-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=metis_source),
-                        '-DMETIS_PATH:PATH={metis_source}'.format(metis_source=metis_source),
+        options.extend(['-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=metis_source), # still need headers from METIS source, and they are not installed with METIS. shame...
+                        '-DMETIS_PATH:PATH={metis_source}'.format(metis_source=spec['metis'].prefix),
                         '-DCMAKE_C_COMPILER:STRING=mpicc',
                         '-DCMAKE_CXX_COMPILER:STRING=mpicxx'])
 
@@ -78,18 +79,7 @@ class Parmetis(Package):
         if '+gdb' in spec:
             options.append('-DGDB:BOOL=ON')
 
-        metis_header = join_path(metis_source, 'include', 'metis.h')
-
-        if '+idx64' in spec:
-            filter_file('IDXTYPEWIDTH 32', 'IDXTYPEWIDTH 64', metis_header)
-
-        if '+double' in spec:
-            filter_file('REALTYPEWIDTH 32', 'REALTYPEWIDTH 64', metis_header)
-
         with working_dir(build_directory, create=True):
             cmake(source_directory, *options)
             make()
             make("install")
-            # Parmetis build system doesn't allow for an external metis to be used, but doesn't copy the required
-            # metis header either
-            install(metis_header, self.prefix.include)
