@@ -1,5 +1,5 @@
 from spack import *
-
+import os
 
 class Trilinos(Package):
     """
@@ -10,6 +10,7 @@ class Trilinos(Package):
     homepage = "https://trilinos.org/"
     url = "http://trilinos.csbsju.edu/download/files/trilinos-12.2.1-Source.tar.gz"
 
+    version('12.6.1', 'adcf2d3aab74cdda98f88fee19cd1442604199b0515ee3da4d80cbe8f37d00e4')
     version('12.4.2', '7c830f7f0f68b8ad324690603baf404e')
     version('12.2.1', '6161926ea247863c690e927687f83be9')
     version('12.0.1', 'bd99741d047471e127b8296b2ec08017')
@@ -39,14 +40,37 @@ class Trilinos(Package):
         options.extend(std_cmake_args)
 
         options.extend(['-DTrilinos_ENABLE_ALL_PACKAGES:BOOL=ON',
+                        '-DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON',
                         '-DTrilinos_ENABLE_TESTS:BOOL=OFF',
                         '-DTrilinos_ENABLE_EXAMPLES:BOOL=OFF',
                         '-DCMAKE_BUILD_TYPE:STRING=%s' % ('Debug' if '+debug' in spec else 'Release'),
                         '-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if '+shared' in spec else 'OFF'),
-                        '-DTPL_ENABLE_MPI:STRING=ON',
-                        '-DBLAS_LIBRARY_DIRS:PATH=%s' % spec['blas'].prefix,
-                        '-DLAPACK_LIBRARY_DIRS:PATH=%s' % spec['lapack'].prefix
+                        '-DTPL_ENABLE_MPI:BOOL=ON',
+                        '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
+                        '-DTPL_ENABLE_BLAS=ON',
+                        '-DBLAS_LIBRARY_NAMES=blas',
+                        '-DBLAS_LIBRARY_DIRS=/usr/lib', # % spec['blas'].prefix,
+                        '-DTPL_ENABLE_LAPACK=ON',
+                        '-DLAPACK_LIBRARY_NAMES=lapack',
+                        '-DLAPACK_LIBRARY_DIRS=/usr/lib', # % spec['lapack'].prefix,
+                        '-DTPL_ENABLE_Boost:BOOL=ON',
+                        '-DBOOST_BASE_DIR:PATH=%s' % spec['boost'].prefix,
+                        '-DTrilinos_ENABLE_Fortran=OFF',
+                        '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
+                        '-DTrilinos_ENABLE_CXX11:BOOL=ON',
+                        '-DTrilinos_CXX11_FLAGS=-std=c++11'
                         ])
+
+        # disable due to compiler / config errors:
+        options.extend(['-DTrilinos_ENABLE_SEACAS=OFF',
+                        '-DTrilinos_ENABLE_Pike=OFF',
+                        '-DTrilinos_ENABLE_STK=OFF'
+                        ])
+
+        if self.compiler.name == "clang":
+            os.environ['CPPFLAGS']="-Qunused-arguments"
+
+        #os.environ['LDFLAGS']="lgfortran"
 
         with working_dir('spack-build', create=True):
             cmake('..', *options)
