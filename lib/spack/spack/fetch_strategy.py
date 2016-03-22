@@ -212,7 +212,6 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise FailedDownloadError(self.url)
 
-
     @property
     def archive_file(self):
         """Path to the source archive within this stage directory."""
@@ -283,7 +282,6 @@ class URLFetchStrategy(FetchStrategy):
             raise ChecksumError(
                     "%s checksum failed for %s" % (checker.hash_name, self.archive_file),
                     "Expected %s but got %s" % (self.digest, checker.sum))
-
 
     @_needs_stage
     def reset(self):
