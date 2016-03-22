@@ -1075,7 +1075,7 @@ class Package(object):
         self.setup_environment(spack_env, run_env)
 
 
-    def setup_dependent_python_module(self, module, dependent_spec):
+    def setup_dependent_package(self, module, dependent_spec):
         """Set up Python module-scope variables for dependent packages.
 
         Called before the install() method of dependents.
