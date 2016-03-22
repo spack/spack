@@ -8,7 +8,6 @@ class Graphviz(Package):
     version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
 
     variant('perl', default=True, description='Disable if you have problems with the optional script language bindings')
-    variant('shared', default=True, description='Building static is required on AIX')
 
     parallel = False
 
@@ -20,8 +19,6 @@ class Graphviz(Package):
         options = ['--prefix=%s' % prefix]
         if '~perl' in spec:
             options.append('--disable-perl')
-        if '~shared' in spec:
-            options.append('--enable-shared=no')
 
         configure(*options)
         make()
