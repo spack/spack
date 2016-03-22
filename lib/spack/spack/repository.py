@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://llnl.github.io/spack
+# For details, see https://software.llnl.gov/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -33,7 +33,7 @@ from bisect import bisect_left
 from external import yaml
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path
+from llnl.util.filesystem import *
 
 import spack.error
 import spack.config
@@ -156,7 +156,7 @@ class RepoPath(object):
 
         if repo.namespace in self.by_namespace:
             raise DuplicateRepoError(
-                "Package repos '%s' and '%s' both provide namespace %s."
+                "Package repos '%s' and '%s' both provide namespace %s"
                 % (repo.root, self.by_namespace[repo.namespace].root, repo.namespace))
 
         # Add repo to the pkg indexes
@@ -233,6 +233,11 @@ class RepoPath(object):
         return providers
 
 
+    @_autospec
+    def extensions_for(self, extendee_spec):
+        return [p for p in self.all_packages() if p.extends(extendee_spec)]
+
+
     def find_module(self, fullname, path=None):
         """Implements precedence for overlaid namespaces.
 
@@ -295,8 +300,11 @@ class RepoPath(object):
         for repo in self.repos:
             if spec.name in repo:
                 return repo
-        else:
-            raise UnknownPackageError(spec.name)
+
+        # If the package isn't in any repo, return the one with
+        # highest precedence.  This is for commands like `spack edit`
+        # that can operate on packages that don't exist yet.
+        return self.first_repo()
 
 
     @_autospec
@@ -306,6 +314,21 @@ class RepoPath(object):
            Raises UnknownPackageError if not found.
         """
         return self.repo_for_pkg(spec).get(spec)
+
+
+    def get_pkg_class(self, pkg_name):
+        """Find a class for the spec's package and return the class object."""
+        return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
+
+
+    @_autospec
+    def dump_provenance(self, spec, path):
+        """Dump provenance information for a spec to a particular path.
+
+           This dumps the package file and any associated patch files.
+           Raises UnknownPackageError if not found.
+        """
+        return self.repo_for_pkg(spec).dump_provenance(spec, path)
 
 
     def dirname_for_package_name(self, pkg_name):
@@ -527,12 +550,12 @@ class Repo(object):
             raise UnknownPackageError(spec.name)
 
         if spec.namespace and spec.namespace != self.namespace:
-            raise UnknownPackageError("Repository %s does not contain package %s."
+            raise UnknownPackageError("Repository %s does not contain package %s"
                                       % (self.namespace, spec.fullname))
 
         key = hash(spec)
         if new or key not in self._instances:
-            package_class = self._get_pkg_class(spec.name)
+            package_class = self.get_pkg_class(spec.name)
             try:
                 copy = spec.copy() # defensive copy.  Package owns its spec.
                 self._instances[key] = package_class(copy)
@@ -542,6 +565,35 @@ class Repo(object):
                 raise FailedConstructorError(spec.fullname, *sys.exc_info())
 
         return self._instances[key]
+
+
+    @_autospec
+    def dump_provenance(self, spec, path):
+        """Dump provenance information for a spec to a particular path.
+
+           This dumps the package file and any associated patch files.
+           Raises UnknownPackageError if not found.
+        """
+        # Some preliminary checks.
+        if spec.virtual:
+            raise UnknownPackageError(spec.name)
+
+        if spec.namespace and spec.namespace != self.namespace:
+            raise UnknownPackageError("Repository %s does not contain package %s."
+                                      % (self.namespace, spec.fullname))
+
+        # Install any patch files needed by packages.
+        mkdirp(path)
+        for spec, patches in spec.package.patches.items():
+            for patch in patches:
+                if patch.path:
+                    if os.path.exists(patch.path):
+                        install(patch.path, path)
+                    else:
+                        tty.warn("Patch file did not exist: %s" % patch.path)
+
+        # Install the package.py file itself.
+        install(self.filename_for_package_name(spec), path)
 
 
     def purge(self):
@@ -668,7 +720,7 @@ class Repo(object):
         return self._modules[pkg_name]
 
 
-    def _get_pkg_class(self, pkg_name):
+    def get_pkg_class(self, pkg_name):
         """Get the class for the package out of its module.
 
         First loads (or fetches from cache) a module for the
@@ -697,12 +749,68 @@ class Repo(object):
         return self.exists(pkg_name)
 
 
+def create_repo(root, namespace=None):
+    """Create a new repository in root with the specified namespace.
+
+       If the namespace is not provided, use basename of root.
+       Return the canonicalized path and the namespace of the created repository.
+    """
+    root = canonicalize_path(root)
+    if not namespace:
+        namespace = os.path.basename(root)
+
+    if not re.match(r'\w[\.\w-]*', namespace):
+        raise InvalidNamespaceError("'%s' is not a valid namespace." % namespace)
+
+    existed = False
+    if os.path.exists(root):
+        if os.path.isfile(root):
+            raise BadRepoError('File %s already exists and is not a directory' % root)
+        elif os.path.isdir(root):
+            if not os.access(root, os.R_OK | os.W_OK):
+                raise BadRepoError('Cannot create new repo in %s: cannot access directory.' % root)
+            if os.listdir(root):
+                raise BadRepoError('Cannot create new repo in %s: directory is not empty.' % root)
+        existed = True
+
+    full_path = os.path.realpath(root)
+    parent = os.path.dirname(full_path)
+    if not os.access(parent, os.R_OK | os.W_OK):
+        raise BadRepoError("Cannot create repository in %s: can't access parent!" % root)
+
+    try:
+        config_path = os.path.join(root, repo_config_name)
+        packages_path = os.path.join(root, packages_dir_name)
+
+        mkdirp(packages_path)
+        with open(config_path, 'w') as config:
+            config.write("repo:\n")
+            config.write("  namespace: '%s'\n" % namespace)
+
+    except (IOError, OSError) as e:
+        raise BadRepoError('Failed to create new repository in %s.' % root,
+                           "Caused by %s: %s" % (type(e), e))
+
+        # try to clean up.
+        if existed:
+            shutil.rmtree(config_path, ignore_errors=True)
+            shutil.rmtree(packages_path, ignore_errors=True)
+        else:
+            shutil.rmtree(root, ignore_errors=True)
+
+    return full_path, namespace
+
+
 class RepoError(spack.error.SpackError):
     """Superclass for repository-related errors."""
 
 
 class NoRepoConfiguredError(RepoError):
     """Raised when there are no repositories configured."""
+
+
+class InvalidNamespaceError(RepoError):
+    """Raised when an invalid namespace is encountered."""
 
 
 class BadRepoError(RepoError):
@@ -722,7 +830,7 @@ class UnknownPackageError(PackageLoadError):
     def __init__(self, name, repo=None):
         msg = None
         if repo:
-            msg = "Package %s not found in repository %s." % (name, repo)
+            msg = "Package %s not found in repository %s" % (name, repo)
         else:
             msg = "Package %s not found." % name
         super(UnknownPackageError, self).__init__(msg)

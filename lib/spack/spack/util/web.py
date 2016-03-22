@@ -86,12 +86,12 @@ def _spider(args):
 
         if not "Content-type" in resp.headers:
             tty.debug("ignoring page " + url)
-            return pages
+            return pages, links
 
         if not resp.headers["Content-type"].startswith('text/html'):
             tty.debug("ignoring page " + url + " with content type " +
                       resp.headers["Content-type"])
-            return pages
+            return pages, links
 
         # Do the real GET request when we know it's just HTML.
         req.get_method = lambda: "GET"
@@ -173,7 +173,7 @@ def spider(root_url, **kwargs):
        performance over a sequential fetch.
     """
     max_depth = kwargs.setdefault('depth', 1)
-    pages, links =  _spider((root_url, set(), root_url, None, 1, max_depth, False))
+    pages, links = _spider((root_url, set(), root_url, None, 1, max_depth, False))
     return pages, links
 
 

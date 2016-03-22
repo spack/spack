@@ -25,19 +25,16 @@
 """\
 This test verifies that the Spack directory layout works properly.
 """
-import unittest
-import tempfile
-import shutil
 import os
-
-from llnl.util.filesystem import *
+import shutil
+import tempfile
 
 import spack
-from spack.spec import Spec
-from spack.repository import RepoPath
+from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
+from spack.repository import RepoPath
+from spack.spec import Spec
 from spack.test.mock_packages_test import *
-
 
 # number of packages to test (to reduce test time)
 max_packages = 10
@@ -69,6 +66,9 @@ class DirectoryLayoutTest(MockPackagesTest):
         packages = list(spack.repo.all_packages())[:max_packages]
 
         for pkg in packages:
+            if pkg.name.startswith('external'):
+                #External package tests cannot be installed
+                continue            
             spec = pkg.spec
 
             # If a spec fails to concretize, just skip it.  If it is a
@@ -174,6 +174,9 @@ class DirectoryLayoutTest(MockPackagesTest):
         # Create install prefixes for all packages in the list
         installed_specs = {}
         for pkg in packages:
+            if pkg.name.startswith('external'):
+                #External package tests cannot be installed
+                continue
             spec = pkg.spec.concretized()
             installed_specs[spec.name] = spec
             self.layout.create_install_directory(spec)

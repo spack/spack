@@ -132,7 +132,7 @@ class ConfigureGuesser(object):
         # Peek inside the tarball.
         tar = which('tar')
         output = tar(
-            "--exclude=*/*/*", "-tf", stage.archive_file, return_output=True)
+            "--exclude=*/*/*", "-tf", stage.archive_file, output=str)
         lines = output.split("\n")
 
         # Set the configure line to the one that matched.
@@ -156,7 +156,7 @@ def guess_name_and_version(url, args):
     # Try to deduce name and version of the new package from the URL
     version = spack.url.parse_version(url)
     if not version:
-        tty.die("Couldn't guess a version string from %s." % url)
+        tty.die("Couldn't guess a version string from %s" % url)
 
     # Try to guess a name.  If it doesn't work, allow the user to override.
     if args.alternate_name:
@@ -189,7 +189,7 @@ def find_repository(spec, args):
         try:
             repo = Repo(repo_path)
             if spec.namespace and spec.namespace != repo.namespace:
-                tty.die("Can't create package with namespace %s in repo with namespace %s."
+                tty.die("Can't create package with namespace %s in repo with namespace %s"
                         % (spec.namespace, repo.namespace))
         except RepoError as e:
             tty.die(str(e))
@@ -208,7 +208,7 @@ def find_repository(spec, args):
     return repo
 
 
-def fetch_tarballs(url, name, args):
+def fetch_tarballs(url, name, version):
     """Try to find versions of the supplied archive by scraping the web.
 
     Prompts the user to select how many to download if many are found.
@@ -252,11 +252,11 @@ def create(parser, args):
     name = spec.name  # factors out namespace, if any
     repo = find_repository(spec, args)
 
-    tty.msg("This looks like a URL for %s version %s." % (name, version))
+    tty.msg("This looks like a URL for %s version %s" % (name, version))
     tty.msg("Creating template for package %s" % name)
 
     # Fetch tarballs (prompting user if necessary)
-    versions, urls = fetch_tarballs(url, name, args)
+    versions, urls = fetch_tarballs(url, name, version)
 
     # Try to guess what configure system is used.
     guesser = ConfigureGuesser()
@@ -266,7 +266,7 @@ def create(parser, args):
         keep_stage=args.keep_stage)
 
     if not ver_hash_tuples:
-        tty.die("Could not fetch any tarballs for %s." % name)
+        tty.die("Could not fetch any tarballs for %s" % name)
 
     # Prepend 'py-' to python package names, by convention.
     if guesser.build_system == 'python':
@@ -291,4 +291,4 @@ def create(parser, args):
 
     # If everything checks out, go ahead and edit.
     spack.editor(pkg_path)
-    tty.msg("Created package %s." % pkg_path)
+    tty.msg("Created package %s" % pkg_path)

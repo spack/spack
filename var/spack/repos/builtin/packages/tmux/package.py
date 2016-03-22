@@ -7,10 +7,11 @@ class Tmux(Package):
        do a lot more.
     """
 
-    homepage = "http://tmux.sourceforge.net"
-    url      = "http://downloads.sourceforge.net/project/tmux/tmux/tmux-1.9/tmux-1.9a.tar.gz"
+    homepage = "http://tmux.github.io"
+    url = "https://github.com/tmux/tmux/releases/download/2.1/tmux-2.1.tar.gz"
 
     version('1.9a', 'b07601711f96f1d260b390513b509a2d')
+    version('2.1', '74a2855695bccb51b6e301383ad4818c')
 
     depends_on('libevent')
     depends_on('ncurses')

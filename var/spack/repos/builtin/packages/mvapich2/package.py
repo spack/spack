@@ -4,15 +4,13 @@ import os
 class Mvapich2(Package):
     """MVAPICH2 is an MPI implementation for Infiniband networks."""
     homepage = "http://mvapich.cse.ohio-state.edu/"
+    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2b.tar.gz"
 
-    version('2.2a', 'b8ceb4fc5f5a97add9b3ff1b9cbe39d2',
-            url='http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2a.tar.gz')
+    version('2.2b', '5651e8b7a72d7c77ca68da48f3a5d108')
+    version('2.2a', 'b8ceb4fc5f5a97add9b3ff1b9cbe39d2')
+    version('2.0',  '9fbb68a4111a8b6338e476dc657388b4')
+    version('1.9',  '5dc58ed08fd3142c260b70fe297e127c')
 
-    version('2.0', '9fbb68a4111a8b6338e476dc657388b4',
-            url='http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.0.tar.gz')
-
-    version('1.9', '5dc58ed08fd3142c260b70fe297e127c',
-            url="http://mvapich.cse.ohio-state.edu/download/mvapich2/mv2/mvapich2-1.9.tgz")
     patch('ad_lustre_rwcontig_open_source.patch', when='@1.9')
 
     provides('mpi@:2.2', when='@1.9')  # MVAPICH2-1.9 supports MPI 2.2
@@ -41,15 +39,24 @@ class Mvapich2(Package):
     NEMESISIBTCP = 'nemesisibtcp'
     NEMESISIB = 'nemesisib'
     NEMESIS = 'nemesis'
+    MRAIL = 'mrail'
     SUPPORTED_NETWORKS = (PSM, SOCK, NEMESIS, NEMESISIB, NEMESISIBTCP)
     variant(PSM, default=False, description='Configures a build for QLogic PSM-CH3')
     variant(SOCK, default=False, description='Configures a build for TCP/IP-CH3')
     variant(NEMESISIBTCP, default=False, description='Configures a build for both OFA-IB-Nemesis and TCP/IP-Nemesis')
     variant(NEMESISIB, default=False, description='Configures a build for OFA-IB-Nemesis')
     variant(NEMESIS, default=False, description='Configures a build for TCP/IP-Nemesis')
+    variant(MRAIL, default=False, description='Configures a build for OFA-IB-CH3')
     ##########
 
     # FIXME : CUDA support is missing
+
+    def url_for_version(self, version):
+        base_url = "http://mvapich.cse.ohio-state.edu/download"
+        if version < Version('2.0'):
+            return "%s/mvapich2/mv2/mvapich2-%s.tar.gz" % (base_url, version)
+        else:
+            return "%s/mvapich/mv2/mvapich2-%s.tar.gz"  % (base_url, version)
 
     @staticmethod
     def enabled(x):
@@ -116,8 +123,8 @@ class Mvapich2(Package):
                 count += 1
         if count > 1:
             raise RuntimeError('network variants are mutually exclusive (only one can be selected at a time)')
-
-        # From here on I can suppose that ony one variant has been selected
+        network_options = []
+        # From here on I can suppose that only one variant has been selected
         if self.enabled(Mvapich2.PSM) in spec:
             network_options = ["--with-device=ch3:psm"]
         elif self.enabled(Mvapich2.SOCK) in spec:
@@ -128,7 +135,7 @@ class Mvapich2(Package):
             network_options = ["--with-device=ch3:nemesis:ib"]
         elif self.enabled(Mvapich2.NEMESIS) in spec:
             network_options = ["--with-device=ch3:nemesis"]
-        else:
+        elif self.enabled(Mvapich2.MRAIL) in spec:
             network_options = ["--with-device=ch3:mrail", "--with-rdma=gen2"]
 
         configure_args.extend(network_options)
@@ -141,7 +148,14 @@ class Mvapich2(Package):
             "--enable-romio",
             "--disable-silent-rules",
         ]
-        if not self.compiler.f77 and not self.compiler.fc:
+
+        if self.compiler.f77 and self.compiler.fc:
+            configure_args.append("--enable-fortran=all")
+        elif self.compiler.f77:
+            configure_args.append("--enable-fortran=f77")
+        elif self.compiler.fc:
+            configure_args.append("--enable-fortran=fc")
+        else:
             configure_args.append("--enable-fortran=none")
 
         # Set the type of the build (debug, release)

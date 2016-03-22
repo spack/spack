@@ -125,7 +125,7 @@ class directive(object):
             dicts = (dicts,)
         elif type(dicts) not in (list, tuple):
             raise TypeError(
-                "dicts arg must be list, tuple, or string. Found %s."
+                "dicts arg must be list, tuple, or string. Found %s"
                 % type(dicts))
 
         self.dicts = dicts
@@ -174,7 +174,11 @@ def version(pkg, ver, checksum=None, **kwargs):
 
 
 def _depends_on(pkg, spec, when=None):
-    if when is None:
+    # If when is False do nothing
+    if when is False:
+        return
+    # If when is None or True make sure the condition is always satisfied
+    if when is None or when is True:
         when = pkg.name
     when_spec = parse_anonymous_spec(when, pkg.name)
 
@@ -296,8 +300,8 @@ def resource(pkg, **kwargs):
         raise RuntimeError(message)
     when_spec = parse_anonymous_spec(when, pkg.name)
     resources = pkg.resources.setdefault(when_spec, [])
-    fetcher = from_kwargs(**kwargs)
     name = kwargs.get('name')
+    fetcher = from_kwargs(**kwargs)
     resources.append(Resource(name, fetcher, destination, placement))
 
 
@@ -313,5 +317,5 @@ class CircularReferenceError(DirectiveError):
     def __init__(self, directive, package):
         super(CircularReferenceError, self).__init__(
             directive,
-            "Package '%s' cannot pass itself to %s." % (package, directive))
+            "Package '%s' cannot pass itself to %s" % (package, directive))
         self.package = package

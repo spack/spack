@@ -51,7 +51,7 @@ _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 if platform.system() == 'Darwin':
     _default_order = ['clang', 'gcc', 'intel']
 else:
-    _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
+    _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc', 'nag']
 
 
 def _auto_compiler_spec(function):
@@ -74,28 +74,36 @@ def _to_dict(compiler):
 def get_compiler_config(arch=None, scope=None):
     """Return the compiler configuration for the specified architecture.
     """
-    # If any configuration file has compilers, just stick with the
-    # ones already configured.
-    config = spack.config.get_config('compilers', scope=scope)
-
+    # Check whether we're on a front-end (native) architecture.
     my_arch = spack.architecture.sys_type()
     if arch is None:
         arch = my_arch
 
-    if arch in config:
-        return config[arch]
-
-    # Only for the current arch in *highest* scope: automatically try to
-    # find compilers if none are configured yet.
-    if arch == my_arch and scope == 'user':
+    def init_compiler_config():
+        """Compiler search used when Spack has no compilers."""
         config[arch] = {}
         compilers = find_compilers(*get_path('PATH'))
         for compiler in compilers:
             config[arch].update(_to_dict(compiler))
         spack.config.update_config('compilers', config, scope=scope)
-        return config[arch]
 
-    return {}
+    config = spack.config.get_config('compilers', scope=scope)
+
+    # Update the configuration if there are currently no compilers
+    # configured.  Avoid updating automatically if there ARE site
+    # compilers configured but no user ones.
+    if arch == my_arch and arch not in config:
+        if scope is None:
+            # We know no compilers were configured in any scope.
+            init_compiler_config()
+        elif scope == 'user':
+            # Check the site config and update the user config if
+            # nothing is configured at the site level.
+            site_config = spack.config.get_config('compilers', scope='site')
+            if not site_config:
+                init_compiler_config()
+
+    return config[arch] if arch in config else {}
 
 
 def add_compilers_to_config(compilers, arch=None, scope=None):

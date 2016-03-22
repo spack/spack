@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ca945dd..1bf94e9 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -33,7 +33,7 @@ include_directories(${GKLIB_PATH})
+ include_directories(${METIS_PATH}/include)
+
+ # List of directories that cmake will look for CMakeLists.txt
+-add_subdirectory(${METIS_PATH}/libmetis ${CMAKE_BINARY_DIR}/libmetis)
++#add_subdirectory(${METIS_PATH}/libmetis ${CMAKE_BINARY_DIR}/libmetis)
+ add_subdirectory(include)
+ add_subdirectory(libparmetis)
+ add_subdirectory(programs)

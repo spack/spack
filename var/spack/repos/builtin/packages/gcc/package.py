@@ -36,8 +36,6 @@ class Gcc(Package):
     list_url = 'http://open-source-box.org/gcc/'
     list_depth = 2
 
-    DEPENDS_ON_ISL_PREDICATE = '@5.0:'
-
     version('5.3.0', 'c9616fd448f980259c31de613e575719')
     version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
     version('4.9.3', '6f831b4d251872736e8e9cc09746f327')
@@ -50,15 +48,14 @@ class Gcc(Package):
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
     variant('gold', default=True, description="Build the gold linker plugin for ld-based LTO")
-    
+
     depends_on("mpfr")
     depends_on("gmp")
-    depends_on("mpc")     # when @4.5:
+    depends_on("mpc", when='@4.5:')
+    depends_on("isl", when='@5.0:')
     depends_on("binutils~libiberty", when='~gold')
     depends_on("binutils~libiberty+gold", when='+gold')
 
-    # Save these until we can do optional deps.
-    depends_on("isl", when=DEPENDS_ON_ISL_PREDICATE)
     #depends_on("ppl")
     #depends_on("cloog")
 
@@ -91,7 +88,7 @@ class Gcc(Package):
                             "--with-as=%s/bin/as" % spec['binutils'].prefix]
         options.extend(binutils_options)
         # Isl
-        if spec.satisfies(Gcc.DEPENDS_ON_ISL_PREDICATE):
+        if 'isl' in spec:
             isl_options = ["--with-isl=%s" % spec['isl'].prefix]
             options.extend(isl_options)
 
@@ -102,7 +99,7 @@ class Gcc(Package):
             configure(*options)
             make()
             make("install")
-            
+
         self.write_rpath_specs()
 
 
@@ -121,7 +118,7 @@ class Gcc(Package):
             return
 
         gcc = Executable(join_path(self.prefix.bin, 'gcc'))
-        lines = gcc('-dumpspecs', return_output=True).strip().split("\n")
+        lines = gcc('-dumpspecs', output=str).strip().split("\n")
         specs_file = join_path(self.spec_dir, 'specs')
         with closing(open(specs_file, 'w')) as out:
             for line in lines:

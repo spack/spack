@@ -46,6 +46,9 @@ def setup_parser(subparser):
         '--skip-patch', action='store_true',
         help="Skip patching for the DIY build.")
     subparser.add_argument(
+        '-q', '--quiet', action='store_true', dest='quiet',
+        help="Do not display verbose build output while installing.")
+    subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install.  Must contain package AND verison.")
 
@@ -72,8 +75,8 @@ def diy(self, args):
                 edit_package(spec.name, spack.repo.first_repo(), None, True)
                 return
 
-        if not spec.version.concrete:
-            tty.die("spack diy spec must have a single, concrete version.")
+        if not spec.versions.concrete:
+            tty.die("spack diy spec must have a single, concrete version.  Did you forget a package version number?")
 
         spec.concretize()
         package = spack.repo.get(spec)
@@ -92,4 +95,5 @@ def diy(self, args):
         package.do_install(
             keep_prefix=args.keep_prefix,
             ignore_deps=args.ignore_deps,
+            verbose=not args.quiet,
             keep_stage=True)   # don't remove source dir for DIY.

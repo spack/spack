@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class Mpich(Package):
     """MPICH is a high performance and widely portable implementation of
        the Message Passing Interface (MPI) standard."""
@@ -41,20 +42,32 @@ class Mpich(Package):
     version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
 
+    variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
+
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
-    def setup_dependent_environment(self, module, spec, dep_spec):
-        """For dependencies, make mpicc's use spack wrapper."""
-        os.environ['MPICH_CC']  = 'cc'
-        os.environ['MPICH_CXX'] = 'c++'
-        os.environ['MPICH_F77'] = 'f77'
-        os.environ['MPICH_F90'] = 'f90'
+    def setup_dependent_environment(self, env, dependent_spec):
+        env.set('MPICH_CC', spack_cc)
+        env.set('MPICH_CXX', spack_cxx)
+        env.set('MPICH_F77', spack_f77)
+        env.set('MPICH_F90', spack_f90)
+        env.set('MPICH_FC', spack_fc)
 
+    def setup_dependent_package(self, module, dep_spec):
+        """For dependencies, make mpicc's use spack wrapper."""
+        # FIXME : is this necessary ? Shouldn't this be part of a contract with MPI providers?
+        module.mpicc = join_path(self.prefix.bin, 'mpicc')
 
     def install(self, spec, prefix):
         config_args = ["--prefix=" + prefix,
                        "--enable-shared"]
+
+        # Variants
+        if '+verbs' in spec:
+            config_args.append("--with-ibverbs")
+        else:
+            config_args.append("--without-ibverbs")
 
         # TODO: Spack should make it so that you can't actually find
         # these compilers if they're "disabled" for the current

@@ -7,6 +7,7 @@ class Expat(Package):
 
     version('2.1.0', 'dd7dab7a5fea97d2a6a43f511449b7cd')
 
+    depends_on('cmake')
 
     def install(self, spec, prefix):
 

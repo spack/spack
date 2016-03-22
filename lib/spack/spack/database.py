@@ -330,7 +330,7 @@ class Database(object):
             found = rec.ref_count
             if not expected == found:
                 raise AssertionError(
-                    "Invalid ref_count: %s: %d (expected %d), in DB %s."
+                    "Invalid ref_count: %s: %d (expected %d), in DB %s"
                     % (key, found, expected, self._index_path))
 
 
@@ -489,7 +489,7 @@ class Database(object):
           1. Marks the spec as not installed.
           2. Removes the spec if it has no more dependents.
           3. If removed, recursively updates dependencies' ref counts
-             and remvoes them if they are no longer needed.
+             and removes them if they are no longer needed.
 
         """
         # Take a lock around the entire removal.

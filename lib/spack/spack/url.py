@@ -142,7 +142,7 @@ def split_url_extension(path):
 
 def downloaded_file_extension(path):
     """This returns the type of archive a URL refers to.  This is
-       sometimes confusing becasue of URLs like:
+       sometimes confusing because of URLs like:
 
            (1) https://github.com/petdance/ack/tarball/1.93_02
 
@@ -225,7 +225,7 @@ def parse_version_offset(path):
         (r'_((\d+\.)+\d+[a-z]?)[.]orig$', stem),
 
         # e.g. http://www.openssl.org/source/openssl-0.9.8s.tar.gz
-        (r'-([^-]+(-alpha|-beta)?)', stem),
+        (r'-v?([^-]+(-alpha|-beta)?)', stem),
 
         # e.g. astyle_1.23_macosx.tar.gz
         (r'_([^_]+(_alpha|_beta)?)', stem),

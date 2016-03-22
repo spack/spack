@@ -8,6 +8,9 @@ class Qt(Package):
     list_url   = 'http://download.qt-project.org/official_releases/qt/'
     list_depth = 2
 
+    version('5.4.2', 'fa1c4d819b401b267eb246a543a63ea5',
+            url='http://download.qt-project.org/official_releases/qt/5.4/5.4.2/single/qt-everywhere-opensource-src-5.4.2.tar.gz')
+
     version('5.4.0', 'e8654e4b37dd98039ba20da7a53877e6',
             url='http://download.qt-project.org/official_releases/qt/5.4/5.4.0/single/qt-everywhere-opensource-src-5.4.0.tar.gz')
 
@@ -23,6 +26,7 @@ class Qt(Package):
     version('3.3.8b', '9f05b4125cfe477cc52c9742c3c09009',
             url="http://download.qt.io/archive/qt/3/qt-x11-free-3.3.8b.tar.gz")
 
+    variant('mesa', default=False, description='depend on mesa')
     # Add patch for compile issues with qt3 found with use in the OpenSpeedShop project
     variant('krellpatch', default=False, description="build with openspeedshop based patch.")
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
@@ -48,13 +52,16 @@ class Qt(Package):
     # depends_on("icu4c")
 
     # OpenGL hardware acceleration
-    depends_on("mesa", when='@4:')
+    depends_on("mesa", when='@4:+mesa')
     depends_on("libxcb")
 
 
-    def setup_dependent_environment(self, module, spec, dep_spec):
-        """Dependencies of Qt find it using the QTDIR environment variable."""
-        os.environ['QTDIR'] = self.prefix
+    def setup_environment(self, spack_env, env):
+        env.set('QTDIR', self.prefix)
+
+
+    def setup_dependent_environment(self, spack_env, run_env, dspec):
+        spack_env.set('QTDIR', self.prefix)
 
 
     def patch(self):

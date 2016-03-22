@@ -39,11 +39,11 @@ test_command = [
     'arg1',
     '-Wl,--start-group',
     'arg2',
-    '-Wl,-rpath=/first/rpath', 'arg3', '-Wl,-rpath', '-Wl,/second/rpath',
+    '-Wl,-rpath,/first/rpath', 'arg3', '-Wl,-rpath', '-Wl,/second/rpath',
     '-llib1', '-llib2',
     'arg4',
     '-Wl,--end-group',
-    '-Xlinker,-rpath', '-Xlinker,/third/rpath', '-Xlinker,-rpath=/fourth/rpath',
+    '-Xlinker', '-rpath', '-Xlinker', '/third/rpath', '-Xlinker', '-rpath', '-Xlinker', '/fourth/rpath',
     '-llib3', '-llib4',
     'arg5', 'arg6']
 
@@ -65,17 +65,17 @@ class CompilerTest(unittest.TestCase):
 
     def check_cc(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(self.cc(*args, return_output=True).strip(), expected)
+        self.assertEqual(self.cc(*args, output=str).strip(), expected)
 
 
     def check_ld(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(self.ld(*args, return_output=True).strip(), expected)
+        self.assertEqual(self.ld(*args, output=str).strip(), expected)
 
 
     def check_cpp(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
-        self.assertEqual(self.cpp(*args, return_output=True).strip(), expected)
+        self.assertEqual(self.cpp(*args, output=str).strip(), expected)
 
 
     def test_vcheck_mode(self):
@@ -95,13 +95,13 @@ class CompilerTest(unittest.TestCase):
     def test_ccld_mode(self):
         self.check_cc('dump-mode', [], "ccld")
         self.check_cc('dump-mode', ['foo.c', '-o', 'foo'], "ccld")
-        self.check_cc('dump-mode', ['foo.c', '-o', 'foo', '-Wl,-rpath=foo'], "ccld")
-        self.check_cc('dump-mode', ['foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath=foo'], "ccld")
+        self.check_cc('dump-mode', ['foo.c', '-o', 'foo', '-Wl,-rpath,foo'], "ccld")
+        self.check_cc('dump-mode', ['foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo'], "ccld")
 
 
     def test_ld_mode(self):
         self.check_ld('dump-mode', [], "ld")
-        self.check_ld('dump-mode', ['foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath=foo'], "ld")
+        self.check_ld('dump-mode', ['foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo'], "ld")
 
 
     def test_includes(self):

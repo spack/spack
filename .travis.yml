@@ -20,6 +20,9 @@ before_install:
 
 script:
   - . share/spack/setup-env.sh
+  - spack compilers
+  - spack config get compilers
+  - spack install -v libdwarf
   # Run unit tests with code coverage
   - coverage run --source=lib --omit=lib/spack/spack/test/*,lib/spack/env/*,lib/spack/docs/* bin/spack test
   # Checks if the file that have been changed are flake8 conformant

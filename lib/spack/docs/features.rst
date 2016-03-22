@@ -103,7 +103,7 @@ creates a simple python file:
 It doesn't take much python coding to get from there to a working
 package:
 
-.. literalinclude:: ../../../var/spack/packages/libelf/package.py
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/libelf/package.py
    :lines: 25-
 
 Spack also provides wrapper functions around common commands like
