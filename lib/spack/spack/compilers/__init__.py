@@ -46,7 +46,9 @@ from spack.util.environment import get_path
 
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
+_optional_instance_vars = ['modules']
 
+_default_order = []
 # TODO: customize order in config file
 if platform.system() == 'Darwin':
     _default_order = ['clang', 'gcc', 'intel']
@@ -121,7 +123,7 @@ def add_compilers_to_config(compilers, arch=None, scope=None):
     for compiler in compilers:
         compiler_config[str(compiler.spec)] = dict(
             (c, getattr(compiler, c, "None"))
-            for c in _required_instance_vars)
+            for c in _required_instance_vars + ['strategy'] + _optional_instance_vars)
 
     update = { arch : compiler_config }
     spack.config.update_config('compilers', update, scope)
@@ -247,6 +249,11 @@ def compilers_for_spec(compiler_spec, arch=None, scope=None):
             raise InvalidCompilerConfigurationError(cspec)
 
         cls  = class_for_compiler_name(cspec.name)
+
+        strategy = items['strategy']
+        if not strategy:
+            raise InvalidCompilerConfigurationError(cspec)
+
         compiler_paths = []
         for c in _required_instance_vars:
             compiler_path = items[c]
@@ -255,19 +262,28 @@ def compilers_for_spec(compiler_spec, arch=None, scope=None):
             else:
                 compiler_paths.append(None)
 
-        return cls(cspec, *compiler_paths)
+        for m in _optional_instance_vars:
+            if m not in items:
+                items[m] = None
+            mods = items[m]
+
+        return cls(cspec, strategy, compiler_paths, mods)
 
     matches = find(compiler_spec, arch, scope)
     return [get_compiler(cspec) for cspec in matches]
 
 
 @_auto_compiler_spec
-def compiler_for_spec(compiler_spec):
+def compiler_for_spec(compiler_spec, operating_system):
     """Get the compiler that satisfies compiler_spec.  compiler_spec must
        be concrete."""
     assert(compiler_spec.concrete)
-    compilers = compilers_for_spec(compiler_spec)
-    assert(len(compilers) == 1)
+    compilers = [c for c in compilers_for_spec(compiler_spec)
+                if c.strategy == operating_system.compiler_strategy]
+    if len(compilers) < 1:
+        raise NoCompilerForSpecError(compiler_spec, operating_system)
+    if len(compilers) > 1:
+        raise CompilerSpecInsufficientlySpecificError(compiler_spec)
     return compilers[0]
 
 
@@ -286,6 +302,7 @@ def class_for_compiler_name(compiler_name):
 
 
 def all_compiler_types():
+#    return [class_for_compiler_name(c) for c in ['gcc']]
     return [class_for_compiler_name(c) for c in supported_compilers()]
 
 
@@ -300,3 +317,13 @@ class InvalidCompilerConfigurationError(spack.error.SpackError):
 class NoCompilersError(spack.error.SpackError):
     def __init__(self):
         super(NoCompilersError, self).__init__("Spack could not find any compilers!")
+
+class NoCompilerForSpecError(spack.error.SpackError):
+    def __init__(self, compiler_spec, target):
+        super(NoCompilerForSpecError, self).__init__("No compilers for target %s satisfy spec %s" % (
+                                                     target, compiler_spec))
+
+class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
+    def __init__(self, compiler_spec):
+        super(CompilerSpecInsufficientlySpecificError, self).__init__("Multiple compilers satisfy spec %s",
+                                                                      compiler_spec)

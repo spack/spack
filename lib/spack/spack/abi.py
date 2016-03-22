@@ -35,8 +35,9 @@ class ABI(object):
        The current implementation is rather rough and could be improved."""
 
     def architecture_compatible(self, parent, child):
-        """Returns true iff the parent and child specs have ABI compatible architectures."""
-        return not parent.architecture or not child.architecture or parent.architecture == child.architecture
+        """Returns true iff the parent and child specs have ABI compatible targets."""
+        return not parent.architecture or not child.architecture \
+                        or parent.architecture == child.architecture
 
 
     @memoized

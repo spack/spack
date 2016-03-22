@@ -136,7 +136,7 @@ from spack.error import SpackError
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
-
+from spack.build_environment import get_path_from_module
 
 """Dict from section names -> schema for that section."""
 section_schemas = {
@@ -551,9 +551,13 @@ def spec_externals(spec):
     for pkg,path in pkg_paths.iteritems():
         if not spec.satisfies(pkg):
             continue
+
+        module = allpkgs.get(pkg, {}).get('module', None)
         if not path:
-            continue
-        spec_locations.append( (spack.spec.Spec(pkg), path) )
+            if not module:
+                continue
+            path = get_path_from_module(module)
+        spec_locations.append( (spack.spec.Spec(pkg), path, module) )
     return spec_locations
 
 
