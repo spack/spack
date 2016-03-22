@@ -309,3 +309,10 @@ class ConcretizeTest(MockPackagesTest):
                       Spec('d')),
                  Spec('e'))
         self.assertEqual(None, find_spec(s['b'], lambda s: '+foo' in s))
+
+
+    def test_compiler_child(self):
+        s = Spec('mpileaks%clang ^dyninst%gcc')
+        s.concretize()
+        self.assertTrue(s['mpileaks'].satisfies('%clang'))
+        self.assertTrue(s['dyninst'].satisfies('%gcc'))
