@@ -1,6 +1,11 @@
 from spack import *
 import os
 
+# Trilinos is complicated to build, as an inspiration a couple of links to other repositories which build it:
+# https://github.com/hpcugent/easybuild-easyblocks/blob/master/easybuild/easyblocks/t/trilinos.py#L111
+# https://github.com/koecher/candi/blob/master/deal.II-toolchain/packages/trilinos.package
+# https://gitlab.com/configurations/cluster-config/blob/master/trilinos.sh
+# https://github.com/Homebrew/homebrew-science/blob/master/trilinos.rb
 class Trilinos(Package):
     """The Trilinos Project is an effort to develop algorithms and enabling technologies within an object-oriented
     software framework for the solution of large-scale, complex multi-physics engineering and scientific problems.
@@ -59,11 +64,11 @@ class Trilinos(Package):
                         '-DTPL_ENABLE_MPI:BOOL=ON',
                         '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
                         '-DTPL_ENABLE_BLAS=ON',
-                        '-DBLAS_LIBRARY_NAMES=blas',
-                        '-DBLAS_LIBRARY_DIRS=/usr/lib', # % spec['blas'].prefix, #FIXME
+                        '-DBLAS_LIBRARY_NAMES=blas', # FIXME: for Intel, Clang+GNU, GNU; easybuild add gfortran here...
+                        '-DBLAS_LIBRARY_DIRS=%s' % spec['blas'].prefix.lib,
                         '-DTPL_ENABLE_LAPACK=ON',
                         '-DLAPACK_LIBRARY_NAMES=lapack',
-                        '-DLAPACK_LIBRARY_DIRS=/usr/lib', # % spec['lapack'].prefix, #FIXME
+                        '-DLAPACK_LIBRARY_DIRS=%s' % spec['lapack'].prefix,
                         '-DTPL_ENABLE_Boost:BOOL=ON',
                         '-DBoost_INCLUDE_DIRS:PATH=%s' % spec['boost'].prefix.include,
                         '-DBoost_LIBRARY_DIRS:PATH=%s' % spec['boost'].prefix.lib,
@@ -74,9 +79,9 @@ class Trilinos(Package):
                         '-DTPL_ENABLE_HYPRE:BOOL=ON',
                         '-DTPL_ENABLE_HDF5:BOOL=ON',
                         # Need to use MPI wrappers, otherwise: Undefined symbols for architecture x86_64: "_mpi_abort_","_mpi_allgatherv_", etc from MUMPS
-                        '-DCMAKE_C_COMPILER=%s' % join_path(mpi_bin,'mpicc'), # FIXME: dont hardcode compiler name
-                        '-DCMAKE_CXX_COMPILER=%s' % join_path(mpi_bin,'mpicxx'),
-                        '-DCMAKE_Fortran_COMPILER=%s' % join_path(mpi_bin,'mpif90')
+                        #'-DCMAKE_C_COMPILER=%s' % join_path(mpi_bin,'mpicc'), # FIXME: dont hardcode compiler name
+                        #'-DCMAKE_CXX_COMPILER=%s' % join_path(mpi_bin,'mpicxx'),
+                        #'-DCMAKE_Fortran_COMPILER=%s' % join_path(mpi_bin,'mpif90')
                         ])
 
         # Fortran lib
