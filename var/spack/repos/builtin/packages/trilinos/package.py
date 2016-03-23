@@ -29,7 +29,6 @@ class Trilinos(Package):
     depends_on('swig')
     depends_on('metis')
     depends_on('suite-sparse')
-    depends_on('tbb')
 
     # MPI related dependencies
     depends_on('mpi')
@@ -75,7 +74,6 @@ class Trilinos(Package):
                         '-DTPL_ENABLE_Netcdf:BOOL=ON',
                         '-DTPL_ENABLE_HYPRE:BOOL=ON',
                         '-DTPL_ENABLE_HDF5:BOOL=ON',
-                        '-DTPL_ENABLE_TBB:BOOL=ON',
                         # Need to use MPI wrappers, otherwise: Undefined symbols for architecture x86_64: "_mpi_abort_","_mpi_allgatherv_", etc from MUMPS
                         '-DCMAKE_C_COMPILER=%s' % join_path(mpi_bin,'mpicc'), # FIXME: dont hardcode compiler name
                         '-DCMAKE_CXX_COMPILER=%s' % join_path(mpi_bin,'mpicxx'),
