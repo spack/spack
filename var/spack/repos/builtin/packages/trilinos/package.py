@@ -36,7 +36,7 @@ class Trilinos(Package):
     depends_on('netcdf+mpi')
     depends_on('parmetis')
     depends_on('mumps+metis+parmetis')
-    depends_on('scalapack')
+    # depends_on('scalapack') # see FIXME below
     depends_on('superlu-dist')
     depends_on('hypre')
     depends_on('hdf5+mpi')
@@ -49,6 +49,7 @@ class Trilinos(Package):
         options = []
         options.extend(std_cmake_args)
 
+        mpi_bin = spec['mpi'].prefix.bin
         options.extend(['-DTrilinos_ENABLE_ALL_PACKAGES:BOOL=ON',
                         '-DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON',
                         '-DTrilinos_ENABLE_TESTS:BOOL=OFF',
@@ -73,7 +74,12 @@ class Trilinos(Package):
                         '-DTPL_ENABLE_Netcdf:BOOL=ON',
                         '-DTPL_ENABLE_HYPRE:BOOL=ON',
                         '-DTPL_ENABLE_HDF5:BOOL=ON',
-                        '-DTPL_ENABLE_TBB:BOOL=ON'
+                        '-DTPL_ENABLE_TBB:BOOL=ON',
+                        # Need to use MPI wrappers, otherwise: Undefined symbols for architecture x86_64: "_mpi_abort_","_mpi_allgatherv_", etc from MUMPS
+                        '-DCMAKE_C_COMPILER=%s' % join_path(mpi_bin,'mpicc'), # FIXME: dont hardcode compiler name
+                        '-DCMAKE_CXX_COMPILER=%s' % join_path(mpi_bin,'mpicxx'),
+                        '-DCMAKE_Fortran_COMPILER=%s' % join_path(mpi_bin,'mpicxx'),
+                        '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-lgfortran'
                         ])
 
         # suite-sparse related
@@ -109,8 +115,8 @@ class Trilinos(Package):
 
         # scalapack
         options.extend([
-            '-DTPL_ENABLE_SCALAPACK:BOOL=ON',
-            '-DSCALAPACK_LIBRARY_NAMES=scalapack' # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
+            '-DTPL_ENABLE_SCALAPACK:BOOL=OFF', #FIXME: Undefined symbols for architecture x86_64: "_blacs_gridinfo__", referenced from: Amesos_Scalapack::RedistributeA() in Amesos_Scalapack.cpp.o
+            #'-DSCALAPACK_LIBRARY_NAMES=scalapack' # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
         ])
 
         # superlu_dist:
@@ -140,8 +146,6 @@ class Trilinos(Package):
 
         if self.compiler.name == "clang":
             os.environ['CPPFLAGS']="-Qunused-arguments"
-
-        #os.environ['LDFLAGS']="lgfortran"
 
         with working_dir('spack-build', create=True):
             cmake('..', *options)
