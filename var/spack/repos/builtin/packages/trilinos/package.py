@@ -55,7 +55,7 @@ class Trilinos(Package):
                         '-DTrilinos_VERBOSE_CONFIGURE:BOOL=OFF',
                         '-DTrilinos_ENABLE_TESTS:BOOL=OFF',
                         '-DTrilinos_ENABLE_EXAMPLES:BOOL=OFF',
-                        '-DCMAKE_BUILD_TYPE:STRING=%s' % ('Debug' if '+debug' in spec else 'Release'),
+                        '-DCMAKE_BUILD_TYPE:STRING=%s' % ('DEBUG' if '+debug' in spec else 'RELEASE'),
                         '-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if '+shared' in spec else 'OFF'),
                         '-DTPL_ENABLE_MPI:BOOL=ON',
                         '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
@@ -82,6 +82,11 @@ class Trilinos(Package):
                         '-DCMAKE_Fortran_COMPILER=%s' % join_path(mpi_bin,'mpif90'),
                         '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-lgfortran'
                         ])
+
+        # for build-debug only:
+        options.extend([
+            '-DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE'
+        ])
 
         # suite-sparse related
         options.extend([
