@@ -73,14 +73,6 @@ class Trilinos(Package):
                         '-DTPL_ENABLE_TBB:BOOL=ON'
                         ])
 
-        # Amesos, conflicting types of double and complex SLU_D
-        # see https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
-        # and https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
-        options.extend([
-            '-DTeuchos_ENABLE_COMPLEX:BOOL=OFF',
-            '-DKokkosTSQR_ENABLE_Complex:BOOL=OFF'
-        ])
-
         # suite-sparse related
         options.extend([
             '-DTPL_ENABLE_Cholmod:BOOL=ON',
@@ -113,7 +105,14 @@ class Trilinos(Package):
             '-DSCALAPACK_LIBRARY_NAMES=scalapack' # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
         ])
 
-        # superlu_dist
+        # superlu_dist:
+        # Amesos, conflicting types of double and complex SLU_D
+        # see https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
+        # and https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
+        options.extend([
+            '-DTeuchos_ENABLE_COMPLEX:BOOL=OFF',
+            '-DKokkosTSQR_ENABLE_Complex:BOOL=OFF'
+        ])
         options.extend([
             '-DTPL_ENABLE_SuperLUDist:BOOL=ON',
             '-DSuperLUDist_INCLUDE_DIRS=%s' % spec['superlu-dist'].prefix.include
@@ -122,7 +121,6 @@ class Trilinos(Package):
             options.extend([
                 '-DHAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG:BOOL=ON'
             ])
-
 
         # disable due to compiler / config errors:
         options.extend([
