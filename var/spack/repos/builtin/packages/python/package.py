@@ -105,7 +105,10 @@ class Python(Package):
 
         pythonpath = ':'.join(python_paths)
         spack_env.set('PYTHONPATH', pythonpath)
-        run_env.set('PYTHONPATH', pythonpath)
+
+        # For run time environment set only the path for extension_spec and prepend it to PYTHONPATH
+        if extension_spec.package.extends(self.spec):
+            run_env.prepend_path('PYTHONPATH', os.path.join(extension_spec.prefix, self.site_packages_dir))
 
 
     def setup_dependent_package(self, module, ext_spec):

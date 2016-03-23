@@ -161,13 +161,13 @@ class EnvModule(object):
 
         # Let the extendee modify their extensions before asking for
         # package-specific modifications
-        for extendee in self.pkg.extendees:
-            extendee_spec = self.spec[extendee]
-            extendee_spec.package.setup_dependent_package(
-                self.pkg.module, self.spec)
+        spack_env = EnvironmentModifications()
+        for item in self.pkg.extendees:
+            package = self.spec[item].package
+            package.setup_dependent_package(self.pkg.module, self.spec)
+            package.setup_dependent_environment(spack_env, env, self.spec)
 
         # Package-specific environment modifications
-        spack_env = EnvironmentModifications()
         self.spec.package.setup_environment(spack_env, env)
 
         # TODO : implement site-specific modifications and filters
