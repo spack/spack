@@ -64,7 +64,8 @@ class Trilinos(Package):
                         '-DLAPACK_LIBRARY_NAMES=lapack',
                         '-DLAPACK_LIBRARY_DIRS=/usr/lib', # % spec['lapack'].prefix, #FIXME
                         '-DTPL_ENABLE_Boost:BOOL=ON',
-                        '-DBoost_BASE_DIR:PATH=%s' % spec['boost'].prefix,
+                        '-DBoost_INCLUDE_DIRS:PATH=%s' % spec['boost'].prefix.include,
+                        '-DBoost_LIBRARY_DIRS:PATH=%s' % spec['boost'].prefix.lib,
                         '-DTrilinos_ENABLE_Fortran=OFF', # FIXME
                         '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
                         '-DTrilinos_ENABLE_CXX11:BOOL=ON',
@@ -77,12 +78,13 @@ class Trilinos(Package):
 
         # suite-sparse related
         options.extend([
-            '-DTPL_ENABLE_Cholmod:BOOL=ON',
-            '-DCholmod_LIBRARY_DIRS=%s' % spec['suite-sparse'].prefix.lib,
-            '-DCholmod_INCLUDE_DIRS:PATH=%s' % spec['suite-sparse'].prefix.include,
+            '-DTPL_ENABLE_Cholmod:BOOL=OFF', # FIXME: Trilinos seems to be looking for static libs only, patch CMake TPL file?
+            #'-DTPL_ENABLE_Cholmod:BOOL=ON',
+            #'-DCholmod_LIBRARY_DIRS:PATH=%s' % spec['suite-sparse'].prefix.lib,
+            #'-DCholmod_INCLUDE_DIRS:PATH=%s' % spec['suite-sparse'].prefix.include,
             '-DTPL_ENABLE_UMFPACK:BOOL=ON',
-            '-D_UMFPACK_LIBRARY_DIRS:PATH=%s' % spec['suite-sparse'].prefix.lib,
-            '-D_UMFPACK_INCLUDE_DIRS:PATH=%s' % spec['suite-sparse'].prefix.include,
+            '-DUMFPACK_LIBRARY_DIRS:PATH=%s' % spec['suite-sparse'].prefix.lib,
+            '-DUMFPACK_INCLUDE_DIRS:PATH=%s' % spec['suite-sparse'].prefix.include,
             '-DUMFPACK_LIBRARY_NAMES=umfpack;amd;colamd;cholmod;suitesparseconfig'
         ])
 
