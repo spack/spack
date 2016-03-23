@@ -150,7 +150,9 @@ class PreferredPackages(object):
     def version_compare(self, pkgname, a, b):
         """Return less-than-0, 0, or greater than 0 if version a of pkgname is
            respecively less-than, equal-to, or greater-than version b of pkgname.
-           One version is less-than another if it is preferred over the other."""
+           Versions marked 'preferred=True' in package.py take precedence over any
+           versions not marked preferred.
+        """
         return self._spec_compare(pkgname, 'version', a, b, True, None)
 
 
