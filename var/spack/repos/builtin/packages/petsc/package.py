@@ -100,3 +100,7 @@ class Petsc(Package):
         # PETSc has its own way of doing parallel make.
         make('MAKE_NP=%s' % make_jobs, parallel=False)
         make("install")
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        # set up PETSC_DIR for everyone using PETSc package
+        spack_env.set('PETSC_DIR', self.prefix)
