@@ -43,6 +43,8 @@ class Trilinos(Package):
 
     depends_on('python') #  Needs py-numpy activated
 
+    patch('umfpack_from_suitesparse.patch')
+
     def install(self, spec, prefix):
         options = []
         options.extend(std_cmake_args)
@@ -76,9 +78,11 @@ class Trilinos(Package):
         # suite-sparse related
         options.extend([
             '-DTPL_ENABLE_Cholmod:BOOL=ON',
-            '-DCholmod_BASE_DIR:PATH=%s' % spec['suite-sparse'].prefix,
+            '-DCholmod_LIBRARY_DIRS=%s' % spec['suite-sparse'].prefix.lib,
+            '-DCholmod_INCLUDE_DIRS:PATH=%s' % spec['suite-sparse'].prefix.include,
             '-DTPL_ENABLE_UMFPACK:BOOL=ON',
-            '-D_UMFPACK_BASE_DIR:PATH=%s' % spec['suite-sparse'].prefix,
+            '-D_UMFPACK_LIBRARY_DIRS:PATH=%s' % spec['suite-sparse'].prefix.lib,
+            '-D_UMFPACK_INCLUDE_DIRS:PATH=%s' % spec['suite-sparse'].prefix.include,
             '-DUMFPACK_LIBRARY_NAMES=umfpack;amd;colamd;cholmod;suitesparseconfig'
         ])
 
@@ -117,7 +121,7 @@ class Trilinos(Package):
         ])
         options.extend([
             '-DTPL_ENABLE_SuperLUDist:BOOL=ON',
-            '-DSuperLUDist_BASE_DIR:PATH=%s' % spec['superlu-dist'].prefix,
+            '-DSuperLUDist_LIBRARY_DIRS=%s' % spec['superlu-dist'].prefix.lib,
             '-DSuperLUDist_INCLUDE_DIRS=%s' % spec['superlu-dist'].prefix.include
         ])
         if spec.satisfies('^superlu-dist@4.0:'):
