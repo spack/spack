@@ -62,7 +62,7 @@ class Trilinos(Package):
                         '-DLAPACK_LIBRARY_NAMES=lapack',
                         '-DLAPACK_LIBRARY_DIRS=/usr/lib', # % spec['lapack'].prefix, #FIXME
                         '-DTPL_ENABLE_Boost:BOOL=ON',
-                        '-DBOOST_BASE_DIR:PATH=%s' % spec['boost'].prefix,
+                        '-DBoost_BASE_DIR:PATH=%s' % spec['boost'].prefix,
                         '-DTrilinos_ENABLE_Fortran=OFF', # FIXME
                         '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
                         '-DTrilinos_ENABLE_CXX11:BOOL=ON',
@@ -76,7 +76,9 @@ class Trilinos(Package):
         # suite-sparse related
         options.extend([
             '-DTPL_ENABLE_Cholmod:BOOL=ON',
+            '-DCholmod_BASE_DIR:PATH=%s' % spec['suite-sparse'].prefix,
             '-DTPL_ENABLE_UMFPACK:BOOL=ON',
+            '-D_UMFPACK_BASE_DIR:PATH=%s' % spec['suite-sparse'].prefix,
             '-DUMFPACK_LIBRARY_NAMES=umfpack;amd;colamd;cholmod;suitesparseconfig'
         ])
 
@@ -94,7 +96,7 @@ class Trilinos(Package):
 
         # mumps
         options.extend([
-            '-DTPL_ENABLE_MUMPS:BOOL=ON"',
+            '-DTPL_ENABLE_MUMPS:BOOL=ON',
             '-DMUMPS_LIBRARY_DIRS=%s' % spec['mumps'].prefix.lib,
             '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord' # order is important!
         ])
@@ -115,6 +117,7 @@ class Trilinos(Package):
         ])
         options.extend([
             '-DTPL_ENABLE_SuperLUDist:BOOL=ON',
+            '-DSuperLUDist_BASE_DIR:PATH=%s' % spec['superlu-dist'].prefix,
             '-DSuperLUDist_INCLUDE_DIRS=%s' % spec['superlu-dist'].prefix.include
         ])
         if spec.satisfies('^superlu-dist@4.0:'):
