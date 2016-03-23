@@ -135,7 +135,8 @@ class Mumps(Package):
 
         self.write_makefile_inc()
 
-        make(*make_libs)
+        # Build fails in parallel, at least on OS-X
+        make(*make_libs, parallel=False)
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
