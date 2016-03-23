@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import shutil
 from pprint import pprint
 
 from llnl.util.filesystem import join_path, mkdirp
@@ -66,4 +67,7 @@ def test(parser, args):
             
             if not os.path.exists(outputDir):
                 mkdirp(outputDir)
+        spack.cache_path = join_path(spack.var_path, "test-cache")
+        mkdirp(spack.cache_path)
         spack.test.run(args.names, outputDir, args.verbose)
+        shutil.rmtree(spack.cache_path)
