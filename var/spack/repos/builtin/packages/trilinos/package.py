@@ -116,7 +116,7 @@ class Trilinos(Package):
         # superlu_dist
         options.extend([
             '-DTPL_ENABLE_SuperLUDist:BOOL=ON',
-            '-DSuperLUDist_INCLUDE_DIRS=%s' % spec['superlu_dist'].prefix.include
+            '-DSuperLUDist_INCLUDE_DIRS=%s' % spec['superlu-dist'].prefix.include
         ])
         if spec.satisfies('^superlu-dist@4.0:'):
             options.extend([
