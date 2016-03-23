@@ -24,6 +24,7 @@
 ##############################################################################
 
 from spack import *
+import glob
 import sys
 
 
@@ -79,6 +80,9 @@ class Parmetis(Package):
 
         if '+gdb' in spec:
             options.append('-DGDB:BOOL=ON')
+
+        for filename in glob.iglob("metis/*/CMakeLists.txt"):
+            filter_file(r'if\(UNIX\)', 'if(1)', filename)
 
         with working_dir(build_directory, create=True):
             cmake = which('cmake')
