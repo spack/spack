@@ -66,6 +66,7 @@ class Parmetis(Package):
         # FIXME : they use a non-standard name
         options.extend(['-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=metis_source), # still need headers from METIS source, and they are not installed with METIS. shame...
                         '-DMETIS_PATH:PATH={metis_source}'.format(metis_source=spec['metis'].prefix),
+                        '-DCMAKE_C_FLAGS=-lm',
                         '-DCMAKE_C_COMPILER:STRING=mpicc',
                         '-DCMAKE_CXX_COMPILER:STRING=mpicxx'])
 
