@@ -1,4 +1,5 @@
 from spack import *
+import sys
 
 class Openblas(Package):
     """OpenBLAS: An optimized BLAS library"""
@@ -16,13 +17,14 @@ class Openblas(Package):
         make('libs', 'netlib', 'shared', 'CC=cc', 'FC=f77')
         make('install', "PREFIX='%s'" % prefix)
 
+        lib_dsuffix = 'dylib' if sys.platform == 'darwin' else 'so'
         # Blas virtual package should provide blas.a and libblas.a
         with working_dir(prefix.lib):
             symlink('libopenblas.a', 'blas.a')
             symlink('libopenblas.a', 'libblas.a')
-            symlink('libopenblas.so', 'libblas.so')
+            symlink('libopenblas.%s' % lib_dsuffix, 'libblas.%s' % lib_dsuffix)
 
         # Lapack virtual package should provide liblapack.a
         with working_dir(prefix.lib):
             symlink('libopenblas.a', 'liblapack.a')
-            symlink('libopenblas.so', 'liblapack.so')
+            symlink('libopenblas.%s' % lib_dsuffix, 'liblapack.%s' % lib_dsuffix)

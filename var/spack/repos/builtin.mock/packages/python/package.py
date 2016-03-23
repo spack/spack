@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -22,45 +22,22 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
+from spack import *
 
+class Python(Package):
+    """Dummy Python package to demonstrate preferred versions."""
+    homepage = "http://www.python.org"
+    url      = "http://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz"
 
-def get_path(name):
-    path = os.environ.get(name, "").strip()
-    if path:
-        return path.split(":")
-    else:
-        return []
+    extendable = True
 
+    version('3.5.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
+    version('3.5.0', 'a56c0c0b45d75a0ec9c6dee933c41c36')
+    version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b', preferred=True)
+    version('2.7.10', 'd7547558fd673bd9d38e2108c6b42521')
+    version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
+    version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
 
-def env_flag(name):
-    if name in os.environ:
-        value = os.environ[name].lower()
-        return value == "true" or value == "1"
-    return False
+    def install(self, spec, prefix):
+        pass
 
-
-def path_set(var_name, directories):
-    path_str = ":".join(str(dir) for dir in directories)
-    os.environ[var_name] = path_str
-
-
-def path_put_first(var_name, directories):
-    """Puts the provided directories first in the path, adding them
-       if they're not already there.
-    """
-    path = os.environ.get(var_name, "").split(':')
-
-    for dir in directories:
-        if dir in path:
-            path.remove(dir)
-
-    new_path = tuple(directories) + tuple(path)
-    path_set(var_name, new_path)
-
-
-def dump_environment(path):
-    """Dump the current environment out to a file."""
-    with open(path, 'w') as env_file:
-        for key, val in sorted(os.environ.items()):
-            env_file.write("%s=%s\n" % (key, val))

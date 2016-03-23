@@ -159,6 +159,10 @@ class DefaultConcretizer(object):
              if any(v.satisfies(sv) for sv in spec.versions)],
             cmp=cmp_versions)
 
+        def prefer_key(v):
+            return pkg.versions.get(Version(v)).get('preferred', False)
+        valid_versions.sort(key=prefer_key, reverse=True)
+
         if valid_versions:
             spec.versions = ver([valid_versions[0]])
         else:
@@ -241,7 +245,7 @@ class DefaultConcretizer(object):
             return False
 
         #Find the another spec that has a compiler, or the root if none do
-        other_spec = find_spec(spec, lambda(x) : x.compiler)
+        other_spec = spec if spec.compiler else find_spec(spec, lambda(x) : x.compiler)
         if not other_spec:
             other_spec = spec.root
         other_compiler = other_spec.compiler
@@ -288,7 +292,7 @@ def find_spec(spec, condition):
     if condition(spec):
         return spec
 
-    return None   # Nohting matched the condition.
+    return None   # Nothing matched the condition.
 
 
 def cmp_specs(lhs, rhs):

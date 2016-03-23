@@ -24,6 +24,7 @@
 ##############################################################################
 import spack
 from spack.spec import Spec, CompilerSpec
+from spack.version import ver
 from spack.concretize import find_spec
 from spack.test.mock_packages_test import *
 
@@ -75,6 +76,14 @@ class ConcretizeTest(MockPackagesTest):
         self.check_concretize('mpich+debug')
         self.check_concretize('mpich~debug')
         self.check_concretize('mpich')
+
+
+    def test_concretize_preferred_version(self):
+        spec = self.check_concretize('python')
+        self.assertEqual(spec.versions, ver('2.7.11'))
+
+        spec = self.check_concretize('python@3.5.1')
+        self.assertEqual(spec.versions, ver('3.5.1'))
 
 
     def test_concretize_with_virtual(self):
@@ -309,3 +318,10 @@ class ConcretizeTest(MockPackagesTest):
                       Spec('d')),
                  Spec('e'))
         self.assertEqual(None, find_spec(s['b'], lambda s: '+foo' in s))
+
+
+    def test_compiler_child(self):
+        s = Spec('mpileaks%clang ^dyninst%gcc')
+        s.concretize()
+        self.assertTrue(s['mpileaks'].satisfies('%clang'))
+        self.assertTrue(s['dyninst'].satisfies('%gcc'))
