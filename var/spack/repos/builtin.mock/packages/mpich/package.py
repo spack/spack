@@ -38,6 +38,7 @@ class Mpich(Package):
     version('3.0.2', 'foobarbaz')
     version('3.0.1', 'foobarbaz')
     version('3.0', 'foobarbaz')
+    version('1.0', 'foobarbas')
 
     provides('mpi@:3', when='@3:')
     provides('mpi@:1', when='@:1')

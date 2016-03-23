@@ -357,7 +357,7 @@ Spack, you can simply run ``spack compiler add`` with the path to
 where the compiler is installed.  For example::
 
     $ spack compiler add /usr/local/tools/ic-13.0.079
-    ==> Added 1 new compiler to /Users/gamblin2/.spackconfig
+    ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
         intel@13.0.079
 
 Or you can run ``spack compiler add`` with no arguments to force
@@ -367,7 +367,7 @@ installed, but you know that new compilers have been added to your
 
     $ module load gcc-4.9.0
     $ spack compiler add
-    ==> Added 1 new compiler to /Users/gamblin2/.spackconfig
+    ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
         gcc@4.9.0
 
 This loads the environment module for gcc-4.9.0 to get it into the
@@ -398,27 +398,34 @@ Manual compiler configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If auto-detection fails, you can manually configure a compiler by
-editing your ``~/.spackconfig`` file.  You can do this by running
-``spack config edit``, which will open the file in your ``$EDITOR``.
+editing your ``~/.spack/compilers.yaml`` file.  You can do this by running
+``spack config edit compilers``, which will open the file in your ``$EDITOR``.
 
 Each compiler configuration in the file looks like this::
 
     ...
-    [compiler "intel@15.0.0"]
-        cc = /usr/local/bin/icc-15.0.024-beta
-        cxx = /usr/local/bin/icpc-15.0.024-beta
-        f77 = /usr/local/bin/ifort-15.0.024-beta
-        fc = /usr/local/bin/ifort-15.0.024-beta
-    ...
+    chaos_5_x86_64_ib:
+      ...
+      intel@15.0.0:
+          cc: /usr/local/bin/icc-15.0.024-beta
+          cxx: /usr/local/bin/icpc-15.0.024-beta
+          f77: /usr/local/bin/ifort-15.0.024-beta
+          fc: /usr/local/bin/ifort-15.0.024-beta
+      ...
+
+The chaos_5_x86_64_ib string is an architecture string, and multiple
+compilers can be listed underneath an architecture.  The architecture
+string may be replaced with the string 'all' to signify compilers that
+work on all architectures.
 
 For compilers, like ``clang``, that do not support Fortran, put
 ``None`` for ``f77`` and ``fc``::
 
-    [compiler "clang@3.3svn"]
-        cc = /usr/bin/clang
-        cxx = /usr/bin/clang++
-        f77 = None
-        fc = None
+    clang@3.3svn:
+        cc: /usr/bin/clang
+        cxx: /usr/bin/clang++
+        f77: None
+        fc: None
 
 Once you save the file, the configured compilers will show up in the
 list displayed by ``spack compilers``.

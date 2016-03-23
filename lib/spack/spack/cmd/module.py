@@ -58,7 +58,7 @@ def module_find(mtype, spec_array):
        should type to use that package's module.
     """
     if mtype not in module_types:
-        tty.die("Invalid module type: '%s'.  Options are %s." % (mtype, comma_or(module_types)))
+        tty.die("Invalid module type: '%s'.  Options are %s" % (mtype, comma_or(module_types)))
 
     specs = spack.cmd.parse_specs(spec_array)
     if len(specs) > 1:
@@ -78,9 +78,9 @@ def module_find(mtype, spec_array):
     mt = module_types[mtype]
     mod = mt(specs[0])
     if not os.path.isfile(mod.file_name):
-        tty.die("No %s module is installed for %s." % (mtype, spec))
+        tty.die("No %s module is installed for %s" % (mtype, spec))
 
-    print mod.use_name
+    print(mod.use_name)
 
 
 def module_refresh():
@@ -94,7 +94,7 @@ def module_refresh():
             shutil.rmtree(cls.path, ignore_errors=False)
         mkdirp(cls.path)
         for spec in specs:
-            tty.debug("   Writing file for %s." % spec)
+            tty.debug("   Writing file for %s" % spec)
             cls(spec).write()
 
 

@@ -11,6 +11,7 @@ class NetlibLapack(Package):
     homepage = "http://www.netlib.org/lapack/"
     url = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"
 
+    version('3.6.0', 'f2f6c67134e851fe189bb3ca1fbb5101')
     version('3.5.0', 'b1d3e3e425b2e44a06760ff173104bdf')
     version('3.4.2', '61bf1a8a4469d4bdb7604f5897179478')
     version('3.4.1', '44c3869c38c8335c2b9c2a8bb276eb55')

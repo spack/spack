@@ -20,10 +20,10 @@ class Mumps(Package):
     variant('complex', default=True, description='Activate the compilation of cmumps and/or zmumps')
     variant('idx64', default=False, description='Use int64_t/integer*8 as default index type')
 
-    
+
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
     depends_on('scotch + esmumps + mpi', when='+ptscotch')
-    depends_on('metis', when='~parmetis+metis')
+    depends_on('metis', when='+metis')
     depends_on('parmetis', when="+parmetis")
     depends_on('blas')
     depends_on('lapack')
@@ -38,11 +38,11 @@ class Mumps(Package):
     def write_makefile_inc(self):
         if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and '+mpi' not in self.spec:
             raise RuntimeError('You cannot use the variants parmetis or ptscotch without mpi')
-        
+
         makefile_conf = ["LIBBLAS = -L%s -lblas" % self.spec['blas'].prefix.lib]
 
         orderings = ['-Dpord']
-        
+
         if '+ptscotch' in self.spec or '+scotch' in self.spec:
             join_lib = ' -l%s' % ('pt' if '+ptscotch' in self.spec else '')
             makefile_conf.extend(
@@ -54,15 +54,19 @@ class Mumps(Package):
             if '+ptscotch' in self.spec:
                 orderings.append('-Dptscotch')
 
-        if '+parmetis' in self.spec or '+metis' in self.spec:
+        if '+parmetis' in self.spec and '+metis' in self.spec:
             libname = 'parmetis' if '+parmetis' in self.spec else 'metis'
             makefile_conf.extend(
-                ["IMETIS = -I%s" % self.spec[libname].prefix.include,
-                 "LMETIS = -L%s -l%s" % (self.spec[libname].prefix.lib, libname)])
+                ["IMETIS = -I%s" % self.spec['parmetis'].prefix.include,
+                 "LMETIS = -L%s -l%s -L%s -l%s" % (self.spec['parmetis'].prefix.lib, 'parmetis',self.spec['metis'].prefix.lib, 'metis')])
+
+            orderings.append('-Dparmetis')
+        elif '+metis' in self.spec:
+            makefile_conf.extend(
+                ["IMETIS = -I%s" % self.spec['metis'].prefix.include,
+                 "LMETIS = -L%s -l%s" % (self.spec['metis'].prefix.lib, 'metis')])
 
             orderings.append('-Dmetis')
-            if '+parmetis' in self.spec:
-                orderings.append('-Dparmetis')
 
         makefile_conf.append("ORDERINGSF = %s" % (' '.join(orderings)))
 
@@ -101,12 +105,12 @@ class Mumps(Package):
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
         makefile_conf.append("CDEFS   = -DAdd_")
 
-        
+
         makefile_inc_template = join_path(os.path.dirname(self.module.__file__),
                                           'Makefile.inc')
         with open(makefile_inc_template, "r") as fh:
             makefile_conf.extend(fh.read().split('\n'))
-        
+
         with working_dir('.'):
             with open("Makefile.inc", "w") as fh:
                 makefile_inc = '\n'.join(makefile_conf)
@@ -130,7 +134,7 @@ class Mumps(Package):
                 make_libs.append('zexamples')
 
         self.write_makefile_inc()
-                
+
         make(*make_libs)
 
         install_tree('lib', prefix.lib)

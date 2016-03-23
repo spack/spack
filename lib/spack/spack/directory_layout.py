@@ -85,6 +85,16 @@ class DirectoryLayout(object):
         raise NotImplementedError()
 
 
+    def check_installed(self, spec):
+        """Checks whether a spec is installed.
+
+        Return the spec's prefix, if it is installed, None otherwise.
+
+        Raise an exception if the install is inconsistent or corrupt.
+        """
+        raise NotImplementedError()
+
+
     def extension_map(self, spec):
         """Get a dict of currently installed extension packages for a spec.
 
@@ -140,7 +150,7 @@ class DirectoryLayout(object):
         if os.path.exists(path):
             try:
                 shutil.rmtree(path)
-            except exceptions.OSError, e:
+            except exceptions.OSError as e:
                 raise RemoveFailedError(spec, path, e)
 
         path = os.path.dirname(path)
@@ -188,6 +198,10 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
+
+        if spec.external:
+            return spec.external
+
         dir_name = "%s-%s-%s" % (
             spec.name,
             spec.version,
@@ -246,26 +260,36 @@ class YamlDirectoryLayout(DirectoryLayout):
     def create_install_directory(self, spec):
         _check_concrete(spec)
 
+        prefix = self.check_installed(spec)
+        if prefix:
+            raise InstallDirectoryAlreadyExistsError(prefix)
+
+        mkdirp(self.metadata_path(spec))
+        self.write_spec(spec, self.spec_file_path(spec))
+
+
+    def check_installed(self, spec):
+        _check_concrete(spec)
         path = self.path_for_spec(spec)
         spec_file_path = self.spec_file_path(spec)
 
-        if os.path.isdir(path):
-            if not os.path.isfile(spec_file_path):
-                raise InconsistentInstallDirectoryError(
-                    'No spec file found at path %s' % spec_file_path)
+        if not os.path.isdir(path):
+            return None
 
-            installed_spec = self.read_spec(spec_file_path)
-            if installed_spec == self.spec:
-                raise InstallDirectoryAlreadyExistsError(path)
+        if not os.path.isfile(spec_file_path):
+            raise InconsistentInstallDirectoryError(
+                'Inconsistent state: install prefix exists but contains no spec.yaml:',
+                "  " + path)
 
-            if spec.dag_hash() == installed_spec.dag_hash():
-                raise SpecHashCollisionError(installed_hash, spec_hash)
-            else:
-                raise InconsistentInstallDirectoryError(
-                    'Spec file in %s does not match hash!' % spec_file_path)
+        installed_spec = self.read_spec(spec_file_path)
+        if installed_spec == spec:
+            return path
 
-        mkdirp(self.metadata_path(spec))
-        self.write_spec(spec, spec_file_path)
+        if spec.dag_hash() == installed_spec.dag_hash():
+            raise SpecHashCollisionError(installed_hash, spec_hash)
+        else:
+            raise InconsistentInstallDirectoryError(
+                'Spec file in %s does not match hash!' % spec_file_path)
 
 
     def all_specs(self):
@@ -335,7 +359,7 @@ class YamlDirectoryLayout(DirectoryLayout):
 
                         if not dag_hash in by_hash:
                             raise InvalidExtensionSpecError(
-                                "Spec %s not found in %s." % (dag_hash, prefix))
+                                "Spec %s not found in %s" % (dag_hash, prefix))
 
                         ext_spec = by_hash[dag_hash]
                         if not prefix == ext_spec.prefix:
@@ -399,8 +423,8 @@ class YamlDirectoryLayout(DirectoryLayout):
 
 class DirectoryLayoutError(SpackError):
     """Superclass for directory layout errors."""
-    def __init__(self, message):
-        super(DirectoryLayoutError, self).__init__(message)
+    def __init__(self, message, long_msg=None):
+        super(DirectoryLayoutError, self).__init__(message, long_msg)
 
 
 class SpecHashCollisionError(DirectoryLayoutError):
@@ -422,8 +446,8 @@ class RemoveFailedError(DirectoryLayoutError):
 
 class InconsistentInstallDirectoryError(DirectoryLayoutError):
     """Raised when a package seems to be installed to the wrong place."""
-    def __init__(self, message):
-        super(InconsistentInstallDirectoryError, self).__init__(message)
+    def __init__(self, message, long_msg=None):
+        super(InconsistentInstallDirectoryError, self).__init__(message, long_msg)
 
 
 class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
@@ -450,7 +474,7 @@ class ExtensionConflictError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
     def __init__(self, spec, ext_spec, conflict):
         super(ExtensionConflictError, self).__init__(
-            "%s cannot be installed in %s because it conflicts with %s."% (
+            "%s cannot be installed in %s because it conflicts with %s"% (
                 ext_spec.short_spec, spec.short_spec, conflict.short_spec))
 
 

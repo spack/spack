@@ -65,7 +65,9 @@ test_names = ['versions',
               'lock',
               'database',
               'namespace_trie',
-              'yaml']
+              'yaml',
+              'sbang',
+              'environment']
 
 
 def list_tests():
@@ -87,20 +89,20 @@ def run(names, outputDir, verbose=False):
                           "Valid names are:")
                 colify(sorted(test_names), indent=4)
                 sys.exit(1)
-    
+
     tally = Tally()
     for test in names:
         module = 'spack.test.' + test
         print module
-        
+
         tty.msg("Running test: %s" % test)
-        
+
         runOpts = ["--with-%s" % spack.test.tally_plugin.Tally.name]
-        
+
         if outputDir:
             xmlOutputFname = "unittests-{0}.xml".format(test)
             xmlOutputPath = join_path(outputDir, xmlOutputFname)
-            runOpts += ["--with-xunit", 
+            runOpts += ["--with-xunit",
                 "--xunit-file={0}".format(xmlOutputPath)]
         argv = [""] + runOpts + [module]
         result = nose.run(argv=argv, addplugins=[tally])

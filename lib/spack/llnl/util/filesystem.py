@@ -25,7 +25,9 @@
 __all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree',
            'expand_user', 'working_dir', 'touch', 'touchp', 'mkdirp',
            'force_remove', 'join_path', 'ancestor', 'can_access', 'filter_file',
-           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink', 'remove_dead_links', 'remove_linked_tree']
+           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
+           'set_executable', 'copy_mode', 'unset_executable_mode',
+           'remove_dead_links', 'remove_linked_tree']
 
 import os
 import sys
@@ -156,6 +158,14 @@ def copy_mode(src, dest):
     if src_mode & stat.S_IXGRP: dest_mode |= stat.S_IXGRP
     if src_mode & stat.S_IXOTH: dest_mode |= stat.S_IXOTH
     os.chmod(dest, dest_mode)
+
+
+def unset_executable_mode(path):
+    mode = os.stat(path).st_mode
+    mode &= ~stat.S_IXUSR
+    mode &= ~stat.S_IXGRP
+    mode &= ~stat.S_IXOTH
+    os.chmod(path, mode)
 
 
 def install(src, dest):
@@ -345,6 +355,12 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
     if order == 'post':
         yield (source_path, dest_path)
 
+
+def set_executable(path):
+    st = os.stat(path)
+    os.chmod(path, st.st_mode | stat.S_IEXEC)
+
+
 def remove_dead_links(root):
     """
     Removes any dead link that is present in root
@@ -362,8 +378,9 @@ def remove_dead_links(root):
 
 def remove_linked_tree(path):
     """
-    Removes a directory and its contents.  If the directory is a symlink, follows the link and removes the real
-    directory before removing the link.
+    Removes a directory and its contents.  If the directory is a
+    symlink, follows the link and removes the real directory before
+    removing the link.
 
     Args:
         path: directory to be removed

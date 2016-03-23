@@ -16,4 +16,4 @@ class Pango(Package):
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
-        make("install")
+        make("install", parallel=False)

@@ -156,7 +156,7 @@ class RepoPath(object):
 
         if repo.namespace in self.by_namespace:
             raise DuplicateRepoError(
-                "Package repos '%s' and '%s' both provide namespace %s."
+                "Package repos '%s' and '%s' both provide namespace %s"
                 % (repo.root, self.by_namespace[repo.namespace].root, repo.namespace))
 
         # Add repo to the pkg indexes
@@ -314,6 +314,11 @@ class RepoPath(object):
            Raises UnknownPackageError if not found.
         """
         return self.repo_for_pkg(spec).get(spec)
+
+
+    def get_pkg_class(self, pkg_name):
+        """Find a class for the spec's package and return the class object."""
+        return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
 
 
     @_autospec
@@ -545,12 +550,12 @@ class Repo(object):
             raise UnknownPackageError(spec.name)
 
         if spec.namespace and spec.namespace != self.namespace:
-            raise UnknownPackageError("Repository %s does not contain package %s."
+            raise UnknownPackageError("Repository %s does not contain package %s"
                                       % (self.namespace, spec.fullname))
 
         key = hash(spec)
         if new or key not in self._instances:
-            package_class = self._get_pkg_class(spec.name)
+            package_class = self.get_pkg_class(spec.name)
             try:
                 copy = spec.copy() # defensive copy.  Package owns its spec.
                 self._instances[key] = package_class(copy)
@@ -715,7 +720,7 @@ class Repo(object):
         return self._modules[pkg_name]
 
 
-    def _get_pkg_class(self, pkg_name):
+    def get_pkg_class(self, pkg_name):
         """Get the class for the package out of its module.
 
         First loads (or fetches from cache) a module for the
@@ -825,7 +830,7 @@ class UnknownPackageError(PackageLoadError):
     def __init__(self, name, repo=None):
         msg = None
         if repo:
-            msg = "Package %s not found in repository %s." % (name, repo)
+            msg = "Package %s not found in repository %s" % (name, repo)
         else:
             msg = "Package %s not found." % name
         super(UnknownPackageError, self).__init__(msg)

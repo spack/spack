@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -34,7 +34,7 @@ class Llvm(Package):
        it is the full name of the project.
     """
     homepage = 'http://llvm.org/'
-    url = 'http://llvm.org/releases/3.7.0/llvm-3.7.0.src.tar.xz'
+    url = 'http://llvm.org/releases/3.7.1/llvm-3.7.1.src.tar.xz'
 
     version('3.0', 'a8e5f5f1c1adebae7b4a654c376a6005', url='http://llvm.org/releases/3.0/llvm-3.0.tar.gz') # currently required by mesa package
 
@@ -52,7 +52,7 @@ class Llvm(Package):
     depends_on('cmake @2.8.12.2:')
 
     # Universal dependency
-    depends_on('python@2.7:')
+    depends_on('python@2.7:2.8')  # Seems not to support python 3.X.Y
 
     # lldb dependencies
     depends_on('ncurses', when='+lldb')
@@ -130,6 +130,36 @@ class Llvm(Package):
                         'clang-tools-extra' : 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
                         'lldb' : 'http://llvm.org/svn/llvm-project/lldb/trunk',
                         'llvm-libunwind' : 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+                        }
+                  },
+                  {
+                    'version' : '3.8.0',
+                    'md5':'07a7a74f3c6bd65de4702bf941b511a0',
+                    'resources' : {
+                        'compiler-rt' : 'd6fcbe14352ffb708e4d1ac2e48bb025',
+                        'openmp' : '8fd7cc35d48051613cf1e750e9f22e40',
+                        'polly' : '1b3b20f52d34a4024e21a4ea7112caa7',
+                        'libcxx' : 'd6e0bdbbee39f7907ad74fd56d03b88a',
+                        'libcxxabi' : 'bbe6b4d72c7c5978550d370af529bcf7',
+                        'clang' : 'cc99e7019bb74e6459e80863606250c5',
+                        'clang-tools-extra' : 'c2344f50e0eea0b402f0092a80ddc036',
+                        'lldb' : 'a5da35ed9cc8c8817ee854e3dbfba00e',
+                        'llvm-libunwind' : '162ade468607f153cca12be90b5194fa',
+                        }
+                  },
+                  {
+                    'version' : '3.7.1',
+                    'md5':'bf8b3a2c79e61212c5409041dfdbd319',
+                    'resources' : {
+                        'compiler-rt' : '1c6975daf30bb3b0473b53c3a1a6ff01',
+                        'openmp' : 'b4ad08cda4e5c22e42b66062b140438e',
+                        'polly' : '3a2a7367002740881637f4d47bca4dc3',
+                        'libcxx' : 'f9c43fa552a10e14ff53b94d04bea140',
+                        'libcxxabi' : '52d925afac9f97e9dcac90745255c169',
+                        'clang' : '0acd026b5529164197563d135a8fd83e',
+                        'clang-tools-extra' : '5d49ff745037f061a7c86aeb6a24c3d2',
+                        'lldb' : 'a106d8a0d21fc84d76953822fbaf3398',
+                        'llvm-libunwind' : '814bd52c9247c5d04629658fbcb3ab8c',
                         }
                   },
                   {

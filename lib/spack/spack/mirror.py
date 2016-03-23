@@ -51,13 +51,20 @@ def mirror_archive_filename(spec, fetcher):
         raise ValueError("mirror.path requires spec with concrete version.")
 
     if isinstance(fetcher, fs.URLFetchStrategy):
-        # If we fetch this version with a URLFetchStrategy, use URL's archive type
-        ext = url.downloaded_file_extension(fetcher.url)
+        if fetcher.expand_archive:
+            # If we fetch this version with a URLFetchStrategy, use URL's archive type
+            ext = url.downloaded_file_extension(fetcher.url)
+        else:
+            # If the archive shouldn't be expanded, don't check for its extension.
+            ext = None
     else:
         # Otherwise we'll make a .tar.gz ourselves
         ext = 'tar.gz'
 
-    return "%s-%s.%s" % (spec.package.name, spec.version, ext)
+    filename = "%s-%s" % (spec.package.name, spec.version)
+    if ext:
+        filename += ".%s" % ext
+    return filename
 
 
 def mirror_archive_path(spec, fetcher):
@@ -73,7 +80,7 @@ def get_matching_versions(specs, **kwargs):
 
         # Skip any package that has no known versions.
         if not pkg.versions:
-            tty.msg("No safe (checksummed) versions for package %s." % pkg.name)
+            tty.msg("No safe (checksummed) versions for package %s" % pkg.name)
             continue
 
         num_versions = kwargs.get('num_versions', 0)
@@ -214,7 +221,7 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
         if spack.debug:
             sys.excepthook(*sys.exc_info())
         else:
-            tty.warn("Error while fetching %s." % spec.format('$_$@'), e.message)
+            tty.warn("Error while fetching %s" % spec.format('$_$@'), e.message)
         categories['error'].append(spec)
 
 
