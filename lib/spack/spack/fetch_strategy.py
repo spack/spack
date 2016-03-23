@@ -312,7 +312,8 @@ class VCSFetchStrategy(FetchStrategy):
         # Set a URL based on the type of fetch strategy.
         self.url = kwargs.get(name, None)
         if not self.url: raise ValueError(
-                "%s requires %s argument." % (self.__class__, name))
+            "%s requires %s argument." % (self.__class__, name))
+        self.subdir = kwargs.get('subdir', None)
 
         # Ensure that there's only one of the rev_types
         if sum(k in kwargs for k in rev_types) > 1:
@@ -412,10 +413,18 @@ class GitFetchStrategy(VCSFetchStrategy):
             args.append('on branch %s' % self.branch)
         tty.msg("Trying to clone git repository:", self.url, *args)
 
+        if self.subdir:
+            if '/' in self.subdir:
+                raise FetchError('Subdirectory name "%s" is a path, not a simple directory name' % self.subdir)
+            args.append(self.subdir)
+
         if self.commit:
             # Need to do a regular clone and check out everything if
             # they asked for a particular commit.
-            self.git('clone', self.url)
+            args = ['clone', self.url]
+            if self.subdir:
+                args.append(self.subdir)
+            self.git(*args)
             self.stage.chdir_to_source()
             self.git('checkout', self.commit)
 
@@ -438,15 +447,21 @@ class GitFetchStrategy(VCSFetchStrategy):
             # Yet more efficiency, only download a 1-commit deep tree
             if self.git_version >= ver('1.7.1'):
                 try:
-                    self.git(*(args + ['--depth', '1', self.url]))
+                    oldargs = list(args)
+                    args += ['--depth', '1', self.url]
+                    if self.subdir:
+                        args.append(self.subdir)
+                    self.git(*args)
                     cloned = True
                 except spack.error.SpackError:
                     # This will fail with the dumb HTTP transport
                     # continue and try without depth, cleanup first
-                    pass
+                    args = oldargs
 
             if not cloned:
                 args.append(self.url)
+                if self.subdir:
+                    args.append(self.subdir)
                 self.git(*args)
 
             self.stage.chdir_to_source()
@@ -519,6 +534,10 @@ class SvnFetchStrategy(VCSFetchStrategy):
         if self.revision:
             args += ['-r', self.revision]
         args.append(self.url)
+        if self.subdir:
+            if '/' in self.subdir:
+                raise FetchError('Subdirectory name "%s" is a path, not a simple directory name' % self.subdir)
+            args.append(self.subdir)
 
         self.svn(*args)
         self.stage.chdir_to_source()
@@ -600,6 +619,8 @@ class HgFetchStrategy(VCSFetchStrategy):
         args = ['clone', self.url]
         if self.revision:
             args += ['-r', self.revision]
+        if self.subdir:
+            args.append(self.subdir)
 
         self.hg(*args)
 
@@ -644,6 +665,11 @@ def from_kwargs(**kwargs):
     :param kwargs: dictionary of keyword arguments
     :return: fetcher or raise a FetchError exception
     """
+    # 'name' may be a kwarg if called from 'resource' (instead of 'version').
+    # The routines above use an argument called 'name' and hence don't accept a
+    # kwarg 'name'.
+    if 'name' in kwargs:
+        del kwargs['name']
     for fetcher in all_strategies:
         if fetcher.matches(kwargs):
             return fetcher(**kwargs)

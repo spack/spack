@@ -26,6 +26,7 @@ from spack import *
 
 from contextlib import closing
 from glob import glob
+import sys
 
 class Gcc(Package):
     """The GNU Compiler Collection includes front ends for C, C++,
@@ -47,14 +48,15 @@ class Gcc(Package):
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
-    variant('gold', default=True, description="Build the gold linker plugin for ld-based LTO")
+    variant('binutils', default=sys.platform != 'darwin', description="Build via binutils")
+    variant('gold', default=sys.platform != 'darwin', description="Build the gold linker plugin for ld-based LTO")
 
     depends_on("mpfr")
     depends_on("gmp")
     depends_on("mpc", when='@4.5:')
     depends_on("isl", when='@5.0:')
-    depends_on("binutils~libiberty", when='~gold')
-    depends_on("binutils~libiberty+gold", when='+gold')
+    depends_on("binutils~libiberty", when='+binutils ~gold')
+    depends_on("binutils~libiberty+gold", when='+binutils +gold')
 
     #depends_on("ppl")
     #depends_on("cloog")
@@ -64,7 +66,7 @@ class Gcc(Package):
         filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure', string=True)
 
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
-        if spec.satisfies("@4.7.1:"):
+        if spec.satisfies("@4.7.1:") and sys.platform != 'darwin':
             enabled_languages.add('go')
 
         # Generic options to compile GCC
@@ -76,17 +78,18 @@ class Gcc(Package):
                    "--with-mpfr=%s"   % spec['mpfr'].prefix,
                    "--with-gmp=%s"    % spec['gmp'].prefix,
                    "--enable-lto",
-                   "--with-gnu-ld",
-                   "--with-gnu-as",
                    "--with-quad"]
         # Binutils
-        static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
-        binutils_options = ["--with-sysroot=/",
-                            "--with-stage1-ldflags=%s %s" % (self.rpath_args, static_bootstrap_flags),
-                            "--with-boot-ldflags=%s %s"   % (self.rpath_args, static_bootstrap_flags),
-                            "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
-                            "--with-as=%s/bin/as" % spec['binutils'].prefix]
-        options.extend(binutils_options)
+        if spec.satisfies('+binutils'):
+            static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
+            binutils_options = ["--with-sysroot=/",
+                                "--with-stage1-ldflags=%s %s" % (self.rpath_args, static_bootstrap_flags),
+                                "--with-boot-ldflags=%s %s"   %     (self.rpath_args, static_bootstrap_flags),
+                                "--with-gnu-ld",
+                                "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
+                                "--with-gnu-as",
+                                "--with-as=%s/bin/as" % spec['binutils'].prefix]
+            options.extend(binutils_options)
         # Isl
         if 'isl' in spec:
             isl_options = ["--with-isl=%s" % spec['isl'].prefix]

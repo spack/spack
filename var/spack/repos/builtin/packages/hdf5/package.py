@@ -63,7 +63,7 @@ class Hdf5(Package):
         :raises RuntimeError: in case of inconsistencies
         """
         if '+fortran' in spec and not self.compiler.fc:
-            msg = 'cannot build a fortran variant without a fortran compiler'
+            msg = 'cannot build a fortran variant without a Fortran compiler'
             raise RuntimeError(msg)
 
         if '+threadsafe' in spec and ('+cxx' in spec or '+fortran' in spec):

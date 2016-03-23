@@ -5,11 +5,13 @@ class Git(Package):
        system designed to handle everything from small to very large
        projects with speed and efficiency."""
     homepage = "http://git-scm.com"
-    url      = "https://github.com/git/git/tarball/v2.7.1"
+    url      = "https://github.com/git/git/archive/v2.7.3.tar.gz"
 
-    version('2.8.0-rc2', 'c2cf9f2cc70e35f2fafbaf9258f82e4c')
-    version('2.7.3', 'fa1c008b56618c355a32ba4a678305f6')
-    version('2.7.1', 'bf0706b433a8dedd27a63a72f9a66060')
+
+    version('2.8.0-rc2', '98a5bbeec5b4e8f61f96160aed67dff9')
+    # The versions 2.7.x below have some vulnerabilities
+    version('2.7.3', '627165fe4453a93cad7899cd7b649784')
+    version('2.7.1', 'a3cae4589bd75b82451b813f2b8ed8bc')
 
 
     # See here for info on vulnerable Git versions:
@@ -25,27 +27,27 @@ class Git(Package):
 
     # Git compiles with curl support by default on but if your system
     # does not have it you will not be able to clone https repos
-    variant("curl", default=False, description="Add the internal support of curl for https clone")
+    variant("curl", default=True, description="Support curl for https clone")
 
     # Git compiles with expat support by default on but if your system
     # does not have it you will not be able to push https repos
-    variant("expat", default=False, description="Add the internal support of expat for https push")
+    variant("expat", default=False, description="Support expat for https push")
 
-    depends_on("openssl")
     depends_on("autoconf")
     depends_on("curl", when="+curl")
     depends_on("expat", when="+expat")
-
-    # Use system perl for now.
+    depends_on("openssl")
     # depends_on("perl")
-    # depends_on("pcre")
+    depends_on("pcre")
 
     depends_on("zlib")
 
     def install(self, spec, prefix):
         configure_args = [
+            "CC=/usr/bin/cc",
             "--prefix=%s" % prefix,
-            "--without-pcre",
+            "--with-libpcre=%s" % spec['pcre'].prefix,
+            # "--with-perl=%s" % spec['perl'].prefix,
             "--with-openssl=%s" % spec['openssl'].prefix,
             "--with-zlib=%s" % spec['zlib'].prefix
             ]
@@ -60,10 +62,3 @@ class Git(Package):
         configure(*configure_args)
         make()
         make("install")
-
-
-
-
-
-
-

@@ -24,6 +24,8 @@
 ##############################################################################
 
 from spack import *
+import glob
+import sys
 
 
 class Parmetis(Package):
@@ -79,7 +81,17 @@ class Parmetis(Package):
         if '+gdb' in spec:
             options.append('-DGDB:BOOL=ON')
 
+        for filename in glob.iglob("metis/*/CMakeLists.txt"):
+            filter_file(r'if\(UNIX\)', 'if(1)', filename)
+
         with working_dir(build_directory, create=True):
+            cmake = which('cmake')
             cmake(source_directory, *options)
             make()
             make("install")
+
+        # The shared library is not installed correctly on Darwin; correct this
+        if sys.platform == 'darwin':
+            install_name_tool = which('install_name_tool')
+            install_name_tool('-id', join_path(prefix.lib, 'libparmetis.dylib'),
+                join_path(prefix.lib, 'libparmetis.dylib'))
