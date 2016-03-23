@@ -124,7 +124,7 @@ class Trilinos(Package):
         options.extend([
             '-DTPL_ENABLE_SuperLUDist:BOOL=ON',
             '-DSuperLUDist_LIBRARY_DIRS=%s' % spec['superlu-dist'].prefix.lib,
-            '-DSuperLUDist_INCLUDE_DIRS=%s' % spec['superlu-dist'].prefix.include
+            '-DSuperLUDist_INCLUDE_DIRS=%s/superlu_dist' % spec['superlu-dist'].prefix.include # superlu_dist and superlu have the same header names :-( In order to avoid conflicts, try to keep "dist" version headers in a subfolder
         ])
         if spec.satisfies('^superlu-dist@4.0:'):
             options.extend([
