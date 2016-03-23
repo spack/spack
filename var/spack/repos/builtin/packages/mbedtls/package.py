@@ -16,6 +16,7 @@ class Mbedtls(Package):
     depends_on('cmake')
 
     def install(self, spec, prefix):
+        cmake = which('cmake')
         cmake('.', *std_cmake_args)
 
         make()
