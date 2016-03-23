@@ -110,7 +110,7 @@ import spack
 import spack.architecture
 import spack.parse
 import spack.error
-import spack.compilers as compilers
+#import spack.compilers as compilers
 
 from spack.version import *
 from spack.util.naming import mod_to_class
@@ -1174,9 +1174,9 @@ class Spec(object):
                 spack.repo.get(spec.fullname)
 
             # validate compiler in addition to the package name.
-            if spec.compiler:
-                if not compilers.supported(spec.compiler):
-                    raise UnsupportedCompilerError(spec.compiler.name)
+#            if spec.compiler:
+#                if not compilers.supported(spec.compiler):
+#                    raise UnsupportedCompilerError(spec.compiler.name)
 
             # Ensure that variants all exist.
             for vname, variant in spec.variants.items():
