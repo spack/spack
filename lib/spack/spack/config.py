@@ -237,7 +237,29 @@ section_schemas = {
                                 'type' : 'object',
                                 'default' : {},
                             }
-                        },},},},},}
+                        },},},},},},
+    'modules': {
+        '$schema': 'http://json-schema.org/schema#',
+        'title': 'Spack module file configuration file schema',
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            r'modules:?': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'properties': {
+                    'disable': {
+                        'type': 'array',
+                        'default': [],
+                        'items': {
+                            'type': 'string'
+                        }
+                    }
+                }
+            },
+        },
+    },
 }
 
 """OrderedDict of config scopes keyed by name.
@@ -405,11 +427,11 @@ def _read_config_file(filename, schema):
             validate_section(data, schema)
         return data
 
-    except MarkedYAMLError, e:
+    except MarkedYAMLError as e:
         raise ConfigFileError(
             "Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
 
-    except IOError, e:
+    except IOError as e:
         raise ConfigFileError(
             "Error reading configuration file %s: %s" % (filename, str(e)))
 

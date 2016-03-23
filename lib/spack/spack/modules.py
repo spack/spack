@@ -48,6 +48,7 @@ import textwrap
 
 import llnl.util.tty as tty
 import spack
+import spack.config
 from llnl.util.filesystem import join_path, mkdirp
 from spack.environment import *
 
@@ -56,6 +57,13 @@ __all__ = ['EnvModule', 'Dotkit', 'TclModule']
 # Registry of all types of modules.  Entries created by EnvModule's metaclass
 module_types = {}
 
+
+def read_configuration_file():
+    f = spack.config.get_config('modules')
+    f.setdefault('disable', [])  # Default : disable nothing
+    return f
+
+CONFIGURATION = read_configuration_file()
 
 def print_help():
     """For use by commands to tell user how to activate shell support."""
@@ -115,8 +123,8 @@ class EnvModule(object):
     class __metaclass__(type):
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
-            if cls.name != 'env_module':
-                module_types[cls.name] = cls
+            if cls.name != 'env_module' and cls.name not in CONFIGURATION['disable']:
+                    module_types[cls.name] = cls
 
     def __init__(self, spec=None):
         self.spec = spec
