@@ -67,7 +67,6 @@ class Trilinos(Package):
                         '-DTPL_ENABLE_Boost:BOOL=ON',
                         '-DBoost_INCLUDE_DIRS:PATH=%s' % spec['boost'].prefix.include,
                         '-DBoost_LIBRARY_DIRS:PATH=%s' % spec['boost'].prefix.lib,
-                        # '-DTrilinos_ENABLE_Fortran=OFF', # FIXME
                         '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
                         '-DTrilinos_ENABLE_CXX11:BOOL=ON',
                         '-DTrilinos_CXX11_FLAGS=-std=c++11',
@@ -82,10 +81,9 @@ class Trilinos(Package):
 
         # Fortran lib
         libgfortran = os.path.dirname (os.popen('%s --print-file-name libgfortran.a' % join_path(mpi_bin,'mpif90') ).read())
-        #os.environ['LDFLAGS'] = '-L%s -lgfortran' % libgfortran
         options.extend([
-            '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-lgfortran',
-            '-DCMAKE_EXE_LINKER_FLAGS:STRING=-L%s -lgfortran' % libgfortran
+            '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % libgfortran,
+            '-DTrilinos_ENABLE_Fortran=OFF' # FIXME: otherwise VerifyFortranC fails as it does not contain -lgfortran , issues with IMPLICIT_LINK_LIBRARIES in CMakeFiles/CMake(C|CXX|Fortran)Compiler.cmake?
         ])
 
         # for build-debug only:
@@ -154,11 +152,6 @@ class Trilinos(Package):
             '-DTrilinos_ENABLE_Pike=OFF',
             '-DTrilinos_ENABLE_STK=OFF'
         ])
-
-        #if self.compiler.name == "clang":
-        #    options.extend([
-        #        '-DCMAKE_EXE_LINKER_FLAGS:STRING=-Qunused-arguments'
-        #    ])
 
         with working_dir('spack-build', create=True):
             cmake('..', *options)
