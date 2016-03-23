@@ -275,6 +275,7 @@ class Llvm(Package):
                 raise SpackException('The lldb variant requires the clang variant to be selected')
 
         with working_dir('spack-build', create=True):
+            cmake = which('cmake')
             cmake(*cmake_args)
 
             if sys.platform == 'darwin':
