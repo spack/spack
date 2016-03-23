@@ -160,8 +160,8 @@ class EnvModule(object):
         # package-specific modifications
         for extendee in self.pkg.extendees:
             extendee_spec = self.spec[extendee]
-            extendee_spec.package.modify_module(
-                self.pkg.module, extendee_spec, self.spec)
+            extendee_spec.package.setup_dependent_package(
+                self.pkg.module, self.spec)
 
         # Package-specific environment modifications
         spack_env = EnvironmentModifications()
