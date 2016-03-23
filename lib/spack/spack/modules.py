@@ -124,7 +124,7 @@ class EnvModule(object):
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
             if cls.name != 'env_module' and cls.name not in CONFIGURATION['disable']:
-                    module_types[cls.name] = cls
+                module_types[cls.name] = cls
 
     def __init__(self, spec=None):
         self.spec = spec
