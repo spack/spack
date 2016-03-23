@@ -52,6 +52,7 @@ class Trilinos(Package):
         mpi_bin = spec['mpi'].prefix.bin
         options.extend(['-DTrilinos_ENABLE_ALL_PACKAGES:BOOL=ON',
                         '-DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON',
+                        '-DTrilinos_VERBOSE_CONFIGURE:BOOL=OFF',
                         '-DTrilinos_ENABLE_TESTS:BOOL=OFF',
                         '-DTrilinos_ENABLE_EXAMPLES:BOOL=OFF',
                         '-DCMAKE_BUILD_TYPE:STRING=%s' % ('Debug' if '+debug' in spec else 'Release'),
@@ -145,7 +146,9 @@ class Trilinos(Package):
         ])
 
         if self.compiler.name == "clang":
-            os.environ['CPPFLAGS']="-Qunused-arguments"
+            options.extend([
+                '-DCMAKE_EXE_LINKER_FLAGS:STRING=-Qunused-arguments'
+            ])
 
         with working_dir('spack-build', create=True):
             cmake('..', *options)
