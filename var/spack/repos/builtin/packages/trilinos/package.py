@@ -78,7 +78,7 @@ class Trilinos(Package):
                         # Need to use MPI wrappers, otherwise: Undefined symbols for architecture x86_64: "_mpi_abort_","_mpi_allgatherv_", etc from MUMPS
                         '-DCMAKE_C_COMPILER=%s' % join_path(mpi_bin,'mpicc'), # FIXME: dont hardcode compiler name
                         '-DCMAKE_CXX_COMPILER=%s' % join_path(mpi_bin,'mpicxx'),
-                        '-DCMAKE_Fortran_COMPILER=%s' % join_path(mpi_bin,'mpicxx'),
+                        '-DCMAKE_Fortran_COMPILER=%s' % join_path(mpi_bin,'mpif90'),
                         '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-lgfortran'
                         ])
 
