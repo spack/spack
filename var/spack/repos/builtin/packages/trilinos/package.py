@@ -80,7 +80,7 @@ class Trilinos(Package):
                         '-DCMAKE_C_COMPILER=%s' % join_path(mpi_bin,'mpicc'), # FIXME: dont hardcode compiler name
                         '-DCMAKE_CXX_COMPILER=%s' % join_path(mpi_bin,'mpicxx'),
                         '-DCMAKE_Fortran_COMPILER=%s' % join_path(mpi_bin,'mpif90'),
-                        '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-lgfortran'
+                        # '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-lgfortran' # FIXME 
                         ])
 
         # for build-debug only:
