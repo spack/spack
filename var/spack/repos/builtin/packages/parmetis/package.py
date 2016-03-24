@@ -52,6 +52,8 @@ class Parmetis(Package):
     # https://bitbucket.org/petsc/pkg-parmetis/commits/82409d68aa1d6cbc70740d0f35024aae17f7d5cb/raw/
     patch('pkg-parmetis-82409d68aa1d6cbc70740d0f35024aae17f7d5cb.patch')
 
+    patch('link-to-lm.patch')
+
     depends_on('gdb', when='+gdb')
 
     def install(self, spec, prefix):
