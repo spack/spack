@@ -47,7 +47,10 @@ stage_path     = join_path(var_path, "stage")
 repos_path     = join_path(var_path, "repos")
 share_path     = join_path(spack_root, "share", "spack")
 cache_path     = join_path(var_path, "cache")
-mkdirp(cache_path)
+
+# TODO: i get a complaint if i dont qualify this, fix that
+import llnl.util.filesystem
+cache = llnl.util.filesystem.FsCache(cache_path)
 
 prefix = spack_root
 opt_path       = join_path(prefix, "opt")

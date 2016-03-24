@@ -67,7 +67,5 @@ def test(parser, args):
             
             if not os.path.exists(outputDir):
                 mkdirp(outputDir)
-        spack.cache_path = join_path(spack.var_path, "test-cache")
-        mkdirp(spack.cache_path)
+        spack.cache = None
         spack.test.run(args.names, outputDir, args.verbose)
-        shutil.rmtree(spack.cache_path, ignore_errors=True)

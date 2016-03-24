@@ -322,9 +322,7 @@ class Stage(object):
 
 
     def cache_local(self):
-        archiveDst = join_path(os.path.abspath(spack.cache_path), self.mirror_path)
-        mkdirp(os.path.dirname(archiveDst))
-        self.fetcher.archive(archiveDst)
+        spack.cache.store(self.fetcher.archive, self.mirror_path)
 
 
     def expand_archive(self):
