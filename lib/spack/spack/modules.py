@@ -48,6 +48,7 @@ import textwrap
 
 import llnl.util.tty as tty
 import spack
+import spack.config
 from llnl.util.filesystem import join_path, mkdirp
 from spack.environment import *
 
@@ -55,6 +56,8 @@ __all__ = ['EnvModule', 'Dotkit', 'TclModule']
 
 # Registry of all types of modules.  Entries created by EnvModule's metaclass
 module_types = {}
+
+CONFIGURATION = spack.config.get_config('modules')
 
 
 def print_help():
@@ -115,7 +118,7 @@ class EnvModule(object):
     class __metaclass__(type):
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
-            if cls.name != 'env_module':
+            if cls.name != 'env_module' and cls.name in CONFIGURATION['enable']:
                 module_types[cls.name] = cls
 
     def __init__(self, spec=None):
