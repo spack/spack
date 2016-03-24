@@ -22,8 +22,15 @@ class Trilinos(Package):
     version('11.14.2', 'a43590cf896c677890d75bfe75bc6254')
     version('11.14.1', '40febc57f76668be8b6a77b7607bb67f')
 
-    variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('debug', default=False, description='Builds a debug version of the libraries')
+    variant('metis',        default=True,  description='Compile with METIS')
+    variant('parmetis',     default=True,  description='Compile with ParMETIS')
+    variant('mumps',        default=True,  description='Compile with support for MUMPS solvers')
+    variant('superlu-dist', default=True,  description='Compile with SuperluDist solvers')
+    variant('hypre',        default=True,  description='Compile with Hypre preconditioner')
+    variant('hdf5',         default=True,  description='Compile with HDF5')
+    variant('suite-sparse', default=True,  description='Compile with SuiteSparse solvers')
+    variant('shared',       default=True,  description='Enables the build of shared libraries')
+    variant('debug',        default=False, description='Builds a debug version of the libraries')
 
     # Everything should be compiled with -fpic
     depends_on('blas')
@@ -49,7 +56,23 @@ class Trilinos(Package):
 
     patch('umfpack_from_suitesparse.patch')
 
+    # check that the combination of variants makes sense
+    def variants_check(self):
+        if '+parmetis' in self.spec and '+metis' not in self.spec:
+            raise RuntimeError('You cannot use the variant parmetis without metis')
+
+        if '+mumps' in self.spec and '+parmetis' not in self.spec:
+            raise RuntimeError('You cannot use the variant mumps without parmetis')
+
+        if '+superlu-dist' in self.spec and self.spec.satisfies('@:11.4.3'):
+            # For Trilinos v11 we need to force SuperLUDist=OFF,
+            # since only the deprecated SuperLUDist v3.3 together with an Amesos patch
+            # is working.
+            raise RuntimeError('The superlu-dist variant can only be used with Trilinos @12.0.1:')
+
     def install(self, spec, prefix):
+        self.variants_check()
+
         options = []
         options.extend(std_cmake_args)
 
@@ -93,35 +116,38 @@ class Trilinos(Package):
         # ])
 
         # suite-sparse related
-        options.extend([
-            '-DTPL_ENABLE_Cholmod:BOOL=OFF', # FIXME: Trilinos seems to be looking for static libs only, patch CMake TPL file?
-            #'-DTPL_ENABLE_Cholmod:BOOL=ON',
-            #'-DCholmod_LIBRARY_DIRS:PATH=%s' % spec['suite-sparse'].prefix.lib,
-            #'-DCholmod_INCLUDE_DIRS:PATH=%s' % spec['suite-sparse'].prefix.include,
-            '-DTPL_ENABLE_UMFPACK:BOOL=ON',
-            '-DUMFPACK_LIBRARY_DIRS:PATH=%s' % spec['suite-sparse'].prefix.lib,
-            '-DUMFPACK_INCLUDE_DIRS:PATH=%s' % spec['suite-sparse'].prefix.include,
-            '-DUMFPACK_LIBRARY_NAMES=umfpack;amd;colamd;cholmod;suitesparseconfig'
-        ])
+        if '+suite-sparse' in spec:
+            options.extend([
+                '-DTPL_ENABLE_Cholmod:BOOL=OFF', # FIXME: Trilinos seems to be looking for static libs only, patch CMake TPL file?
+                #'-DTPL_ENABLE_Cholmod:BOOL=ON',
+                #'-DCholmod_LIBRARY_DIRS:PATH=%s' % spec['suite-sparse'].prefix.lib,
+                #'-DCholmod_INCLUDE_DIRS:PATH=%s' % spec['suite-sparse'].prefix.include,
+                '-DTPL_ENABLE_UMFPACK:BOOL=ON',
+                '-DUMFPACK_LIBRARY_DIRS:PATH=%s' % spec['suite-sparse'].prefix.lib,
+                '-DUMFPACK_INCLUDE_DIRS:PATH=%s' % spec['suite-sparse'].prefix.include,
+                '-DUMFPACK_LIBRARY_NAMES=umfpack;amd;colamd;cholmod;suitesparseconfig'
+            ])
 
         # metis / parmetis
-        options.extend([
-            '-DTPL_ENABLE_METIS:BOOL=ON',
-            '-DMETIS_LIBRARY_DIRS=%s' % spec['metis'].prefix.lib,
-            '-DMETIS_LIBRARY_NAMES=metis',
-            '-DTPL_METIS_INCLUDE_DIRS=%s' % spec['metis'].prefix.include,
-            '-DTPL_ENABLE_ParMETIS:BOOL=ON',
-            '-DParMETIS_LIBRARY_DIRS=%s;%s' % (spec['parmetis'].prefix.lib,spec['metis'].prefix.lib),
-            '-DParMETIS_LIBRARY_NAMES=parmetis;metis',
-            '-DTPL_ParMETIS_INCLUDE_DIRS=%s' % spec['parmetis'].prefix.include
-        ])
+        if '+parmetis' in spec: # metis is required, see variants_check()
+            options.extend([
+                '-DTPL_ENABLE_METIS:BOOL=ON',
+                '-DMETIS_LIBRARY_DIRS=%s' % spec['metis'].prefix.lib,
+                '-DMETIS_LIBRARY_NAMES=metis',
+                '-DTPL_METIS_INCLUDE_DIRS=%s' % spec['metis'].prefix.include,
+                '-DTPL_ENABLE_ParMETIS:BOOL=ON',
+                '-DParMETIS_LIBRARY_DIRS=%s;%s' % (spec['parmetis'].prefix.lib,spec['metis'].prefix.lib),
+                '-DParMETIS_LIBRARY_NAMES=parmetis;metis',
+                '-DTPL_ParMETIS_INCLUDE_DIRS=%s' % spec['parmetis'].prefix.include
+            ])
 
         # mumps
-        options.extend([
-            '-DTPL_ENABLE_MUMPS:BOOL=ON',
-            '-DMUMPS_LIBRARY_DIRS=%s' % spec['mumps'].prefix.lib,
-            '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord' # order is important!
-        ])
+        if '+mumps' in spec:
+            options.extend([
+                '-DTPL_ENABLE_MUMPS:BOOL=ON',
+                '-DMUMPS_LIBRARY_DIRS=%s' % spec['mumps'].prefix.lib,
+                '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord' # order is important!
+            ])
 
         # scalapack
         options.extend([
@@ -129,23 +155,24 @@ class Trilinos(Package):
             #'-DSCALAPACK_LIBRARY_NAMES=scalapack' # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
         ])
 
-        # superlu_dist:
-        # Amesos, conflicting types of double and complex SLU_D
-        # see https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
-        # and https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
-        options.extend([
-            '-DTeuchos_ENABLE_COMPLEX:BOOL=OFF',
-            '-DKokkosTSQR_ENABLE_Complex:BOOL=OFF'
-        ])
-        options.extend([
-            '-DTPL_ENABLE_SuperLUDist:BOOL=ON',
-            '-DSuperLUDist_LIBRARY_DIRS=%s' % spec['superlu-dist'].prefix.lib,
-            '-DSuperLUDist_INCLUDE_DIRS=%s/superlu_dist' % spec['superlu-dist'].prefix.include # superlu_dist and superlu have the same header names :-( In order to avoid conflicts, try to keep "dist" version headers in a subfolder
-        ])
-        if spec.satisfies('^superlu-dist@4.0:'):
+        # superlu-dist:
+        if '+superlu-dist' in spec:
+            # Amesos, conflicting types of double and complex SLU_D
+            # see https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html
+            # and https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html
             options.extend([
-                '-DHAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG:BOOL=ON'
+                '-DTeuchos_ENABLE_COMPLEX:BOOL=OFF',
+                '-DKokkosTSQR_ENABLE_Complex:BOOL=OFF'
             ])
+            options.extend([
+                '-DTPL_ENABLE_SuperLUDist:BOOL=ON',
+                '-DSuperLUDist_LIBRARY_DIRS=%s' % spec['superlu-dist'].prefix.lib,
+                '-DSuperLUDist_INCLUDE_DIRS=%s/superlu_dist' % spec['superlu-dist'].prefix.include # superlu_dist and superlu have the same header names :-( In order to avoid conflicts, try to keep "dist" version headers in a subfolder
+            ])
+            if spec.satisfies('^superlu-dist@4.0:'):
+                options.extend([
+                    '-DHAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG:BOOL=ON'
+                ])
 
         # disable due to compiler / config errors:
         options.extend([
