@@ -196,4 +196,4 @@ class Trilinos(Package):
             # See https://github.com/Homebrew/homebrew-science/issues/2148#issuecomment-103614509
             # A workaround it to remove PyTrilinos from the COMPONENTS_LIST :
             if '+python' in self.spec:
-                filter_file(r'(?:SET\(COMPONENTS_LIST.*)(PyTrilinos;)(?:.*)',  '',  '%s/cmake/Trilinos/TrilinosConfig.cmake' % prefix.lib)
+                filter_file(r'(SET\(COMPONENTS_LIST.*)(PyTrilinos;)(.*)',  (r'\1\3'),  '%s/cmake/Trilinos/TrilinosConfig.cmake' % prefix.lib)
