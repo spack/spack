@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index ca945dd..5995e42 100644
+index ca945dd..aff8b5f 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -23,7 +23,7 @@ else()
@@ -16,10 +16,26 @@ index ca945dd..5995e42 100644
  
  # List of directories that cmake will look for CMakeLists.txt
 -add_subdirectory(${METIS_PATH}/libmetis ${CMAKE_BINARY_DIR}/libmetis)
-+# add_subdirectory(${METIS_PATH}/libmetis ${CMAKE_BINARY_DIR}/libmetis)
++find_library(METIS_LIBRARY metis PATHS ${METIS_PATH}/lib)
  add_subdirectory(include)
  add_subdirectory(libparmetis)
  add_subdirectory(programs)
+diff --git a/libparmetis/CMakeLists.txt b/libparmetis/CMakeLists.txt
+index 9cfc8a7..e0c4de7 100644
+--- a/libparmetis/CMakeLists.txt
++++ b/libparmetis/CMakeLists.txt
+@@ -5,7 +5,10 @@ file(GLOB parmetis_sources *.c)
+ # Create libparmetis
+ add_library(parmetis ${ParMETIS_LIBRARY_TYPE} ${parmetis_sources})
+ # Link with metis and MPI libraries.
+-target_link_libraries(parmetis metis ${MPI_LIBRARIES})
++target_link_libraries(parmetis ${METIS_LIBRARY} ${MPI_LIBRARIES})
++if(UNIX)
++  target_link_libraries(parmetis m)
++endif()
+ set_target_properties(parmetis PROPERTIES LINK_FLAGS "${MPI_LINK_FLAGS}")
+ 
+ install(TARGETS parmetis
 diff --git a/libparmetis/parmetislib.h b/libparmetis/parmetislib.h
 index c1daeeb..07511f6 100644
 --- a/libparmetis/parmetislib.h
