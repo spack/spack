@@ -39,7 +39,7 @@ class Trilinos(Package):
     depends_on('mpi')
     depends_on('netcdf+mpi')
     depends_on('parmetis')
-    depends_on('mumps+metis+parmetis')
+    depends_on('mumps+metis+parmetis+shared') # build errors with static libs
     # depends_on('scalapack') # see FIXME below
     depends_on('superlu-dist')
     depends_on('hypre')
