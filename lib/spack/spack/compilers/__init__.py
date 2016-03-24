@@ -46,7 +46,7 @@ from spack.util.environment import get_path
 
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
-_optional_instance_vars = ['modules']
+_optional_instance_vars = ['modules', 'strategy']
 
 _default_order = []
 # TODO: customize order in config file
@@ -69,7 +69,7 @@ def _to_dict(compiler):
     return {
         str(compiler.spec) : dict(
             (attr, getattr(compiler, attr, None))
-            for attr in _required_instance_vars)
+            for attr in _required_instance_vars + _optional_instance_vars)
     }
 
 
@@ -77,20 +77,24 @@ def get_compiler_config(arch=None, scope=None):
     """Return the compiler configuration for the specified architecture.
     """
     # Check whether we're on a front-end (native) architecture.
-    my_arch = spack.architecture.sys_type()
+
+    my_arch = spack.architecture.Arch()
+    if isinstance(arch, basestring):
+        if arch == 'all':
+            my_arch.platform.name = 'all'
+            arch = my_arch
     if arch is None:
         arch = my_arch
 
     def init_compiler_config():
         """Compiler search used when Spack has no compilers."""
-        config[arch] = {}
+        config[arch.platform.name] = {}
         compilers = find_compilers(*get_path('PATH'))
         for compiler in compilers:
-            config[arch].update(_to_dict(compiler))
+            config[arch.platform.name].update(_to_dict(compiler))
         spack.config.update_config('compilers', config, scope=scope)
 
     config = spack.config.get_config('compilers', scope=scope)
-
     # Update the configuration if there are currently no compilers
     # configured.  Avoid updating automatically if there ARE site
     # compilers configured but no user ones.
@@ -105,7 +109,7 @@ def get_compiler_config(arch=None, scope=None):
             if not site_config:
                 init_compiler_config()
 
-    return config[arch] if arch in config else {}
+    return config[arch.platform.name] if arch.platform.name in config else {}
 
 
 def add_compilers_to_config(compilers, arch=None, scope=None):
@@ -117,15 +121,15 @@ def add_compilers_to_config(compilers, arch=None, scope=None):
       - scope:     configuration scope to modify.
     """
     if arch is None:
-        arch = spack.architecture.sys_type()
+        arch = spack.architecture.Arch()
 
     compiler_config = get_compiler_config(arch, scope)
     for compiler in compilers:
         compiler_config[str(compiler.spec)] = dict(
             (c, getattr(compiler, c, "None"))
-            for c in _required_instance_vars + ['strategy'] + _optional_instance_vars)
+            for c in _required_instance_vars + _optional_instance_vars)
 
-    update = { arch : compiler_config }
+    update = { arch.platform.name : compiler_config }
     spack.config.update_config('compilers', update, scope)
 
 
@@ -139,7 +143,7 @@ def remove_compiler_from_config(compiler_spec, arch=None, scope=None):
       - scope:          configuration scope to modify.
     """
     if arch is None:
-        arch = spack.architecture.sys_type()
+        arch = spack.architecture.Arch()
 
     compiler_config = get_compiler_config(arch, scope)
     del compiler_config[str(compiler_spec)]
@@ -154,7 +158,6 @@ def all_compilers_config(arch=None, scope=None):
     """
     # Get compilers for this architecture.
     arch_config = get_compiler_config(arch, scope)
-
     # Merge 'all' compilers with arch-specific ones.
     # Arch-specific compilers have higher precedence.
     merged_config = get_compiler_config('all', scope=scope)
@@ -262,10 +265,9 @@ def compilers_for_spec(compiler_spec, arch=None, scope=None):
             else:
                 compiler_paths.append(None)
 
-        for m in _optional_instance_vars:
-            if m not in items:
-                items[m] = None
-            mods = items[m]
+        if 'modules' not in items:
+            items['modules'] = None
+        mods = items['modules']
 
         return cls(cspec, strategy, compiler_paths, mods)
 

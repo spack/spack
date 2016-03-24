@@ -168,6 +168,10 @@ section_schemas = {
                                                         {'type' : 'null' }]},
                                     'fc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
+                                    'strategy': { 'anyOf': [ {'type' : 'string' },
+                                                             {'type' : 'null' }]},
+                                    'modules': { 'anyOf': [ {'type' : 'string' },
+                                                             {'type' : 'null' }]}
                                 },},},},},},},},
 
     'mirrors': {
@@ -223,6 +227,10 @@ section_schemas = {
                             'nobuild': {
                                 'type':  'boolean',
                                 'default': False,
+                             },
+                            'module': {
+                                'anyOf' : [{'type': 'string'},
+                                           {'type': 'null'}]
                              },
                             'providers': {
                                 'type':  'object',
