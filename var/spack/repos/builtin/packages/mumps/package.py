@@ -1,6 +1,5 @@
 from spack import *
-import os
-
+import os, sys
 
 class Mumps(Package):
     """MUMPS: a MUltifrontal Massively Parallel sparse direct Solver"""
@@ -19,6 +18,7 @@ class Mumps(Package):
     variant('float', default=True, description='Activate the compilation of smumps')
     variant('complex', default=True, description='Activate the compilation of cmumps and/or zmumps')
     variant('idx64', default=False, description='Use int64_t/integer*8 as default index type')
+    variant('shared', default=True, description='Build shared libraries')
 
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
@@ -105,6 +105,27 @@ class Mumps(Package):
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
         makefile_conf.append("CDEFS   = -DAdd_")
 
+        if '+shared' in self.spec:
+            if sys.platform == 'darwin':
+                # Building dylibs with mpif90 causes segfaults on 10.8 and 10.10. Use gfortran. (Homebrew)
+                makefile_conf.extend([
+                    'LIBEXT=.dylib',
+                    'AR=%s -dynamiclib -undefined dynamic_lookup -o ' % os.environ['FC'],
+                    'RANLIB=echo'
+                ])
+            else:
+                makefile_conf.extend([
+                    'LIBEXT=.so',
+                    'AR=$(FL) -shared -o',
+                    'RANLIB=echo'
+                ])
+        else:
+            makefile_conf.extend([
+                'LIBEXT  = .a',
+                'AR = ar vr',
+                'RANLIB = ranlib'
+            ])
+
 
         makefile_inc_template = join_path(os.path.dirname(self.module.__file__),
                                           'Makefile.inc')
@@ -121,7 +142,7 @@ class Mumps(Package):
     def install(self, spec, prefix):
         make_libs = []
 
-        # the coice to compile ?examples is to have kind of a sanity
+        # the choice to compile ?examples is to have kind of a sanity
         # check on the libraries generated.
         if '+float' in spec:
             make_libs.append('sexamples')
@@ -135,10 +156,24 @@ class Mumps(Package):
 
         self.write_makefile_inc()
 
-        # Build fails in parallel, at least on OS-X
+        # Build fails in parallel
         make(*make_libs, parallel=False)
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
         if '~mpi' in spec:
-            install('libseq/libmpiseq.a', prefix.lib)
+            lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
+            lib_suffix = lib_dsuffix if '+shared' in spec else '.a'
+            install('libseq/libmpiseq%s' % lib_suffix, prefix.lib)
+
+        # FIXME: extend the tests to mpirun -np 2 (or alike) when build with MPI
+        # FIXME: use something like numdiff to compare blessed output with the current
+        with working_dir('examples'):
+            if '+float' in spec:
+                os.system('./ssimpletest < input_simpletest_real')
+                if '+complex' in spec:
+                    os.system('./csimpletest < input_simpletest_real')
+            if '+double' in spec:
+                os.system('./dsimpletest < input_simpletest_real')
+                if '+complex' in spec:
+                    os.system('./zsimpletest < input_simpletest_cmplx')
