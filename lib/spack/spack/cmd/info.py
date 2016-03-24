@@ -52,7 +52,7 @@ def print_text_info(pkg):
     print "Safe versions:  "
 
     if not pkg.versions:
-        print("None")
+        print("    None")
     else:
         pad = padder(pkg.versions, 4)
         for v in reversed(sorted(pkg.versions)):
@@ -62,7 +62,7 @@ def print_text_info(pkg):
     print
     print "Variants:"
     if not pkg.variants:
-        print "None"
+        print "    None"
     else:
         pad = padder(pkg.variants, 4)
 
