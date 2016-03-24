@@ -30,6 +30,7 @@ from spack.test.mock_packages_test import *
 from spack.test.mock_repo import MockGitRepo
 from spack.version import ver
 
+
 class GitFetchTest(MockPackagesTest):
     """Tests fetching from a dummy git repository."""
 

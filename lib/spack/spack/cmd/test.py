@@ -51,6 +51,11 @@ def setup_parser(subparser):
         help="verbose output")
 
 
+class MockCache(object):
+    def store(self, copyCmd, relativeDst):
+        pass
+
+
 def test(parser, args):
     if args.list:
         print "Available tests:"
@@ -67,5 +72,5 @@ def test(parser, args):
             
             if not os.path.exists(outputDir):
                 mkdirp(outputDir)
-        spack.cache = None
+        spack.cache = MockCache()
         spack.test.run(args.names, outputDir, args.verbose)

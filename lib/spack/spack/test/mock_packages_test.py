@@ -34,8 +34,6 @@ from ordereddict_backport import OrderedDict
 from spack.repository import RepoPath
 from spack.spec import Spec
 
-import llnl.util.tty as tty
-
 mock_compiler_config = """\
 compilers:
   all:
@@ -127,20 +125,9 @@ class MockPackagesTest(unittest.TestCase):
             pkg.dependencies.update(deps)
 
 
-    def rm_cache(self):
-        shutil.rmtree(spack.cache_path, ignore_errors=True)
-
-
     def setUp(self):
-        spack.cache = MockCache()
         self.initmock()
 
 
     def tearDown(self):
-        spack.cache = None
         self.cleanmock()
-        
-class MockCache(object):
-    def store(self, copyCmd, relativeDst):
-        tty.warn("Copying " + str(relativeDst))
-        pass
