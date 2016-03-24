@@ -77,24 +77,20 @@ class Trilinos(Package):
                         '-DTrilinos_CXX11_FLAGS=-std=c++11',
                         '-DTPL_ENABLE_Netcdf:BOOL=ON',
                         '-DTPL_ENABLE_HYPRE:BOOL=ON',
-                        '-DTPL_ENABLE_HDF5:BOOL=ON',
-                        # Need to use MPI wrappers, otherwise: Undefined symbols for architecture x86_64: "_mpi_abort_","_mpi_allgatherv_", etc from MUMPS
-                        #'-DCMAKE_C_COMPILER=%s' % join_path(mpi_bin,'mpicc'), # FIXME: dont hardcode compiler name
-                        #'-DCMAKE_CXX_COMPILER=%s' % join_path(mpi_bin,'mpicxx'),
-                        #'-DCMAKE_Fortran_COMPILER=%s' % join_path(mpi_bin,'mpif90')
+                        '-DTPL_ENABLE_HDF5:BOOL=ON'
                         ])
 
         # Fortran lib
         libgfortran = os.path.dirname (os.popen('%s --print-file-name libgfortran.a' % join_path(mpi_bin,'mpif90') ).read())
         options.extend([
             '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % libgfortran,
-            '-DTrilinos_ENABLE_Fortran=OFF' # FIXME: otherwise VerifyFortranC fails as it does not contain -lgfortran , issues with IMPLICIT_LINK_LIBRARIES in CMakeFiles/CMake(C|CXX|Fortran)Compiler.cmake?
+            '-DTrilinos_ENABLE_Fortran=OFF' # FIXME: otherwise CMake's VerifyFortranC fails as it does not contain -lgfortran
         ])
 
         # for build-debug only:
-        options.extend([
-            '-DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE'
-        ])
+        # options.extend([
+        #    '-DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE'
+        # ])
 
         # suite-sparse related
         options.extend([
