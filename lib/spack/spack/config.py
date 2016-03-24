@@ -249,7 +249,7 @@ section_schemas = {
                 'default': {},
                 'additionalProperties': False,
                 'properties': {
-                    'disable': {
+                    'enable': {
                         'type': 'array',
                         'default': [],
                         'items': {
