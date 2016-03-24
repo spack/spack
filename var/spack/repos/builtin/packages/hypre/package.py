@@ -1,5 +1,5 @@
 from spack import *
-import os
+import os, sys
 
 class Hypre(Package):
     """Hypre is a library of high performance preconditioners that
@@ -12,7 +12,8 @@ class Hypre(Package):
     version('2.10.1', 'dc048c4cabb3cd549af72591474ad674')
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
 
-    variant('shared', default=True, description="Build shared library version (disables static library)")
+    # hypre does not know how to build shared libraries on Darwin
+    variant('shared', default=sys.platform!='darwin', description="Build shared library version (disables static library)")
 
     depends_on("mpi")
     depends_on("blas")

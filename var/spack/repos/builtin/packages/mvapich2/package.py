@@ -123,7 +123,7 @@ class Mvapich2(Package):
                 count += 1
         if count > 1:
             raise RuntimeError('network variants are mutually exclusive (only one can be selected at a time)')
-
+        network_options = []
         # From here on I can suppose that only one variant has been selected
         if self.enabled(Mvapich2.PSM) in spec:
             network_options = ["--with-device=ch3:psm"]

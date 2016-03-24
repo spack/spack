@@ -80,7 +80,7 @@ def module_find(mtype, spec_array):
     if not os.path.isfile(mod.file_name):
         tty.die("No %s module is installed for %s" % (mtype, spec))
 
-    print mod.use_name
+    print(mod.use_name)
 
 
 def module_refresh():

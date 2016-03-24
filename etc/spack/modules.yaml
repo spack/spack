@@ -1,0 +1,8 @@
+# -------------------------------------------------------------------------
+# This is the default spack module files generation configuration.
+#
+# Changes to this file will affect all users of this spack install,
+# although users can override these settings in their ~/.spack/modules.yaml.
+# -------------------------------------------------------------------------
+modules:
+  enable: ['tcl', 'dotkit']

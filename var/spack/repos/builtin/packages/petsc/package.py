@@ -61,14 +61,24 @@ class Petsc(Package):
                 errors = ['incompatible variants given'] + errors
                 raise RuntimeError('\n'.join(errors))
         else:
-            compiler_opts = [
-                '--with-mpi=1',
-                '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
-            ]
+            if self.compiler.name == "clang":
+                compiler_opts = [
+                    '--with-mpi=1',
+                    '--with-cc=%s  -Qunused-arguments' % join_path(self.spec['mpi'].prefix.bin, 'mpicc'), # Avoid confusing PETSc config by clang: warning: argument unused during compilation
+                    '--with-cxx=%s -Qunused-arguments' % join_path(self.spec['mpi'].prefix.bin, 'mpic++'),
+                    '--with-fc=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
+                    '--with-f77=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpif77'),
+                ]
+            else:
+                compiler_opts = [
+                    '--with-mpi=1',
+                    '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
+                ]
         return compiler_opts
 
     def install(self, spec, prefix):
-        options = []
+        options = ['--with-debugging=0',
+                   '--with-ssl=0']
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % ('double' if '+double' in spec else 'single'),
@@ -90,3 +100,7 @@ class Petsc(Package):
         # PETSc has its own way of doing parallel make.
         make('MAKE_NP=%s' % make_jobs, parallel=False)
         make("install")
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        # set up PETSC_DIR for everyone using PETSc package
+        spack_env.set('PETSC_DIR', self.prefix)
