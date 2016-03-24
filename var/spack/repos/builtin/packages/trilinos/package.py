@@ -29,6 +29,7 @@ class Trilinos(Package):
     variant('hypre',        default=True,  description='Compile with Hypre preconditioner')
     variant('hdf5',         default=True,  description='Compile with HDF5')
     variant('suite-sparse', default=True,  description='Compile with SuiteSparse solvers')
+    variant('python',       default=True,  description='Build python wrappers')
     variant('shared',       default=True,  description='Enables the build of shared libraries')
     variant('debug',        default=False, description='Builds a debug version of the libraries')
 
@@ -39,20 +40,20 @@ class Trilinos(Package):
     depends_on('matio')
     depends_on('glm')
     depends_on('swig')
-    depends_on('metis')
-    depends_on('suite-sparse')
+    depends_on('metis',when='+metis')
+    depends_on('suite-sparse',when='+suite-sparse')
 
     # MPI related dependencies
     depends_on('mpi')
     depends_on('netcdf+mpi')
-    depends_on('parmetis')
-    depends_on('mumps+metis+parmetis+shared') # build errors with static libs
+    depends_on('parmetis',when='+parmetis')
+    depends_on('mumps+metis+parmetis+shared',when='+mumps') # build errors with static libs
     # depends_on('scalapack') # see FIXME below
-    depends_on('superlu-dist')
-    depends_on('hypre')
-    depends_on('hdf5+mpi')
+    depends_on('superlu-dist',when='+superlu-dist')
+    depends_on('hypre',when='+hypre')
+    depends_on('hdf5+mpi',when='+hdf5')
 
-    depends_on('python') #  Needs py-numpy activated
+    depends_on('python',when='+python') #  Needs py-numpy activated
 
     patch('umfpack_from_suitesparse.patch')
 
