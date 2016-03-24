@@ -38,8 +38,6 @@ class Libelf(Package):
 
     provides('elf')
 
-    sanity_check_is_file = 'include/libelf.h'
-
     def install(self, spec, prefix):
         configure("--prefix=" + prefix,
                   "--enable-shared",
