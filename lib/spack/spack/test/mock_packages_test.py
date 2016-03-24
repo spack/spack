@@ -125,9 +125,16 @@ class MockPackagesTest(unittest.TestCase):
             pkg.dependencies.update(deps)
 
 
+    def rm_cache(self):
+        shutil.rmtree(spack.cache_path, ignore_errors=True)
+
+
     def setUp(self):
+        self.rm_cache()
+        mkdirp(spack.cache_path)
         self.initmock()
 
 
     def tearDown(self):
+        self.rm_cache()
         self.cleanmock()

@@ -30,9 +30,6 @@ from spack.test.mock_packages_test import *
 from spack.test.mock_repo import MockGitRepo
 from spack.version import ver
 
-import shutil
-import os
-
 class GitFetchTest(MockPackagesTest):
     """Tests fetching from a dummy git repository."""
 
@@ -51,8 +48,6 @@ class GitFetchTest(MockPackagesTest):
         """Destroy the stage space used by this test."""
         super(GitFetchTest, self).tearDown()
         self.repo.destroy()
-        for d in os.listdir(spack.cache_path):
-            shutil.rmtree(os.path.join(spack.cache_path, d))
 
     def assert_rev(self, rev):
         """Check that the current git revision is equal to the supplied rev."""
