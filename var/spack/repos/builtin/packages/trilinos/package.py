@@ -186,3 +186,14 @@ class Trilinos(Package):
             cmake('..', *options)
             make()
             make('install')
+
+            # When trilinos is built with Python, libpytrilinos is included through
+            # cmake configure files. Namely, Trilinos_LIBRARIES in TrilinosConfig.cmake
+            # contains pytrilinos. This leads to a run-time error:
+            # Symbol not found: _PyBool_Type
+            # and prevents Trilinos to be used in any C++ code, which links executable
+            # against the libraries listed in Trilinos_LIBRARIES.
+            # See https://github.com/Homebrew/homebrew-science/issues/2148#issuecomment-103614509
+            # A workaround it to remove PyTrilinos from the COMPONENTS_LIST :
+            if '+python' in self.spec:
+                filter_file(r'(?:SET\(COMPONENTS_LIST.*)(PyTrilinos;)(?:.*)',  '',  '%s/cmake/Trilinos/TrilinosConfig.cmake' % prefix.lib)
