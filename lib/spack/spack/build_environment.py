@@ -101,12 +101,12 @@ def load_module(mod):
     # We do this without checking that they are already installed
     # for ease of programming because unloading a module that is not
     # loaded does nothing.
-    text = modulecmd('show', mod, return_oe=True).split()
+    text = modulecmd('show', mod, output=str, error=str).split()
     for i, word in enumerate(text):
         if word == 'conflict':
-            exec(compile(modulecmd('unload', text[i+1], return_oe=True), '<string>', 'exec'))
+            exec(compile(modulecmd('unload', text[i+1], output=str, error=str), '<string>', 'exec'))
     # Load the module now that there are no conflicts
-    load = modulecmd('load', mod, return_oe=True)
+    load = modulecmd('load', mod, output=str, error=str)
     exec(compile(load, '<string>', 'exec'))
 
 
@@ -119,7 +119,7 @@ def get_path_from_module(mod):
     modulecmd.add_default_arg('python')
 
     # Read the module
-    text = modulecmd('show', mod, return_oe=True).split('\n')
+    text = modulecmd('show', mod, output=str, error=str).split('\n')
 
     # If it lists its package directory, return that
     for line in text:
@@ -348,8 +348,8 @@ def parent_class_modules(cls):
 
 def setup_package(pkg):
     """Execute all environment setup routines."""
-    set_compiler_environment_variables(pkg)
     set_build_environment_variables(pkg)
+    set_compiler_environment_variables(pkg)
 
     # If a user makes their own package repo, e.g.
     # spack.repos.mystuff.libelf.Libelf, and they inherit from

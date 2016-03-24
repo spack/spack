@@ -202,6 +202,13 @@ class Arch(object):
         self.platform_os = platform_os
         self.target   = target
 
+    @property
+    def concrete(self):
+        return all( (self.platform is not None, isinstance(self.platform, Platform),
+                     self.platform_os is not None, isinstance(self.platform_os, OperatingSystem),
+                     self.target is not None, isinstance(self.target, Target) ) )
+
+
     def __str__(self):
         return (str(self.platform) +"-"+
                 str(self.platform_os) + "-" + str(self.target) )

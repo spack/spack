@@ -92,10 +92,10 @@ class MultiMethodTest(MockPackagesTest):
         platform = spack.architecture.sys_type()
         targets = platform.targets.values()
         for target in targets[:-1]:
-            pkg = spack.db.get('multimethod='+target.name)
+            pkg = spack.repo.get('multimethod='+target.name)
             self.assertEqual(pkg.different_by_target(), target.name)
 
-        pkg = spack.db.get('multimethod='+targets[-1].name)
+        pkg = spack.repo.get('multimethod='+targets[-1].name)
         if len(targets) == 1:
             self.assertEqual(pkg.different_by_target(), targets[-1].name)
         else:

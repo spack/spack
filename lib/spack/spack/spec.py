@@ -542,6 +542,7 @@ class Spec(object):
                               and self.versions.concrete
                               and self.variants.concrete
                               and self.architecture
+                              and self.architecture.concrete
                               and self.compiler and self.compiler.concrete
                               and self.dependencies.concrete)
 

@@ -79,7 +79,7 @@ class DefaultConcretizer(object):
             externals = spec_externals(pkg)
             buildable = not is_spec_nobuild(pkg)
             if buildable:
-                result.append((pkg, None))
+                result.append((pkg, None, None))
             for ext in externals:
                 if ext[0].satisfies(spec):
                     result.append(ext)
@@ -354,7 +354,7 @@ class DefaultConcretizer(object):
            link to this one, to maximize compatibility.
         """
         # Pass on concretizing the compiler if the target is not yet determined
-        if not spec.architecture.target:
+        if not spec.architecture.platform_os:
             #Although this usually means changed, this means awaiting other changes
             return True
 
@@ -371,7 +371,7 @@ class DefaultConcretizer(object):
             return compilers
 
 
-        all_compilers = spack.compilers.all_compilers()
+        all_compilers = spack.compilers.all_compilers(spec.architecture)
 
         if (spec.compiler and
             spec.compiler.concrete and
