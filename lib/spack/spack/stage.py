@@ -503,6 +503,8 @@ class DIYStage(object):
         # No need to destroy DIY stage.
         pass
 
+    def cache_local(self):
+        tty.msg("Sources for DIY stages are not cached")
 
 def _get_mirrors():
     """Get mirrors from spack configuration."""
