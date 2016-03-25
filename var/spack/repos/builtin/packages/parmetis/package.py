@@ -52,8 +52,6 @@ class Parmetis(Package):
     # https://bitbucket.org/petsc/pkg-parmetis/commits/82409d68aa1d6cbc70740d0f35024aae17f7d5cb/raw/
     patch('pkg-parmetis-82409d68aa1d6cbc70740d0f35024aae17f7d5cb.patch')
 
-    patch('link-to-lm.patch')
-
     depends_on('gdb', when='+gdb')
 
     def install(self, spec, prefix):
@@ -66,7 +64,7 @@ class Parmetis(Package):
 
         # FIXME : Once a contract is defined, MPI compilers should be retrieved indirectly via spec['mpi'] in case
         # FIXME : they use a non-standard name
-        options.extend(['-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=metis_source), # still need headers from METIS source, and they are not installed with METIS. shame...
+        options.extend(['-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=spec['metis'].prefix.include),
                         '-DMETIS_PATH:PATH={metis_source}'.format(metis_source=spec['metis'].prefix),
                         '-DCMAKE_C_COMPILER:STRING=mpicc',
                         '-DCMAKE_CXX_COMPILER:STRING=mpicxx'])

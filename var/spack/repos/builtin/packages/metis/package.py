@@ -24,7 +24,7 @@
 ##############################################################################
 
 from spack import *
-
+import glob
 
 class Metis(Package):
     """
@@ -48,6 +48,8 @@ class Metis(Package):
     depends_on('cmake @2.8:')  # build-time dependency
 
     depends_on('gdb', when='+gdb')
+
+    patch('install_gklib_defs_rename.patch')
 
     def install(self, spec, prefix):
 
@@ -81,3 +83,10 @@ class Metis(Package):
             cmake(source_directory, *options)
             make()
             make("install")
+
+            # install GKlib headers, which will be needed for ParMETIS
+            GKlib_dist = join_path(prefix.include,'GKlib')
+            mkdirp(GKlib_dist)
+            fs = glob.glob(join_path(source_directory,'GKlib',"*.h"))
+            for f in fs:
+                install(f, GKlib_dist)
