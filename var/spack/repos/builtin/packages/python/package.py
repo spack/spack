@@ -25,7 +25,7 @@ class Python(Package):
     version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
     version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
 
-#    depends_on("openssl")
+    depends_on("openssl")
     depends_on("bzip2")
     depends_on("readline")
     depends_on("ncurses")
@@ -45,12 +45,12 @@ class Python(Package):
                   "--with-threads",
                   "--enable-shared",
                   "CPPFLAGS=-I%s/include -I%s/include -I%s/include -I%s/include -I%s/include" % (
-#                       spec['openssl'].prefix,
+                       spec['openssl'].prefix,
                        spec['bzip2'].prefix,
                        spec['readline'].prefix, spec['ncurses'].prefix,
                        spec['sqlite'].prefix, spec['zlib'].prefix),
                   "LDFLAGS=-L%s/lib -L%s/lib -L%s/lib -L%s/lib -L%s/lib" % (
-#                       spec['openssl'].prefix,
+                       spec['openssl'].prefix,
                        spec['bzip2'].prefix,
                        spec['readline'].prefix, spec['ncurses'].prefix,
                        spec['sqlite'].prefix, spec['zlib'].prefix)

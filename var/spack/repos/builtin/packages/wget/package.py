@@ -13,10 +13,10 @@ class Wget(Package):
     version('1.17', 'c4c4727766f24ac716936275014a0536')
     version('1.16', '293a37977c41b5522f781d3a3a078426')
 
-#    depends_on("openssl")
+    depends_on("openssl")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
-#                  "--with-ssl=openssl")
+                  "--with-ssl=openssl")
         make()
         make("install")
