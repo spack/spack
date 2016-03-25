@@ -25,14 +25,14 @@ class Issm(Package):
     depends_on("mumps")
     depends_on("metis")
 
-!!    depends_on("m1qn3")
-!!    depends_on("triangle")
+#!!    depends_on("m1qn3")
+#!!    depends_on("triangle")
 
     depends_on("python@2:", when="+python")
     depends_on("py-nose", when="+python")
     depends_on("py-numpy", when="+python")
     depends_on("py-scipy", when="+python")
-!!    depends_on("py-netcdf", when="+python")
+#!!    depends_on("py-netcdf", when="+python")
 
     depends_on("matlab", when="+matlab")
 
@@ -50,7 +50,7 @@ class Issm(Package):
             "--with-scalapack-dir=%s" % spec['scalapack'].prefix,
             "--with-mumps-dir=%s" % spec['mumps'].prefix,
             "--with-metis-dir=%s" % spec['metis'].prefix,
-            "--with-m1qn3-dir=%s" % spec['m1qn3'].prefix,
+            "--with-m1qn3-dir=%s" % spec['m1qn3'].prefix]
 
         if '+python' in spec:
             config_args.append("--with-python-dir=%s" % spec['python'].prefix)
