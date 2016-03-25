@@ -48,7 +48,7 @@ class Trilinos(Package):
     depends_on('netcdf+mpi')
     depends_on('parmetis',when='+parmetis')
     depends_on('mumps+metis+parmetis+shared',when='+mumps') # build errors with static libs
-    # depends_on('scalapack') # see FIXME below
+    depends_on('scalapack')
     depends_on('superlu-dist',when='+superlu-dist')
     depends_on('hypre',when='+hypre')
     depends_on('hdf5+mpi',when='+hdf5')
@@ -108,13 +108,13 @@ class Trilinos(Package):
         libgfortran = os.path.dirname (os.popen('%s --print-file-name libgfortran.a' % join_path(mpi_bin,'mpif90') ).read())
         options.extend([
             '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % libgfortran,
-            '-DTrilinos_ENABLE_Fortran=OFF' # FIXME: otherwise CMake's VerifyFortranC fails as it does not contain -lgfortran
+            '-DTrilinos_ENABLE_Fortran=ON' # FIXME: otherwise CMake's VerifyFortranC fails as it does not contain -lgfortran
         ])
 
         # for build-debug only:
-        # options.extend([
-        #    '-DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE'
-        # ])
+        options.extend([
+           '-DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE'
+        ])
 
         # suite-sparse related
         if '+suite-sparse' in spec:
@@ -144,16 +144,22 @@ class Trilinos(Package):
 
         # mumps
         if '+mumps' in spec:
+            # FIXME:
+            # since we use mumps with MPI, it will certainly be build against Scalapack.
+            # Add scalapack lib here as well. 
+            # This likely won't be need if Trilinos would compile with Scalapack
             options.extend([
                 '-DTPL_ENABLE_MUMPS:BOOL=ON',
                 '-DMUMPS_LIBRARY_DIRS=%s' % spec['mumps'].prefix.lib,
                 '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord' # order is important!
+#                '-DMUMPS_LIBRARY_DIRS=%s;%s' % (spec['mumps'].prefix.lib,spec['scalapack'].prefix.lib),
+#                '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord;scalapack' # order is important!
             ])
 
         # scalapack
         options.extend([
-            '-DTPL_ENABLE_SCALAPACK:BOOL=OFF', #FIXME: Undefined symbols for architecture x86_64: "_blacs_gridinfo__", referenced from: Amesos_Scalapack::RedistributeA() in Amesos_Scalapack.cpp.o
-            #'-DSCALAPACK_LIBRARY_NAMES=scalapack' # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
+            '-DTPL_ENABLE_SCALAPACK:BOOL=ON', #FIXME: Undefined symbols for architecture x86_64: "_blacs_gridinfo__", referenced from: Amesos_Scalapack::RedistributeA() in Amesos_Scalapack.cpp.o
+            '-DSCALAPACK_LIBRARY_NAMES=scalapack' # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
         ])
 
         # superlu-dist:
@@ -174,6 +180,12 @@ class Trilinos(Package):
                 options.extend([
                     '-DHAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG:BOOL=ON'
                 ])
+
+        # python
+        if '~python' in spec:
+            options.extend([
+                '-DTrilinos_ENABLE_PyTrilinos:BOOL=OFF'
+            ])
 
         # disable due to compiler / config errors:
         options.extend([
