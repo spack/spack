@@ -273,7 +273,6 @@ class Stage(object):
             # the root, so we add a '/' if it is not present.
             mirror_roots = [root if root.endswith('/') else root + '/'
                             for root in mirrors.values()]
-            mirror_roots.append("file://" + os.path.abspath(spack.cache_path) + os.sep)
             urls = [urljoin(root, self.mirror_path) for root in mirror_roots]
 
             # If this archive is normally fetched from a tarball URL,
@@ -290,6 +289,7 @@ class Stage(object):
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
                 fetchers.insert(0, fs.URLFetchStrategy(url, digest))
+            fetchers.insert(0, spack.cache.fetcher(self.mirror_path, digest))
 
         for fetcher in fetchers:
             try:

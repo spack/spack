@@ -31,6 +31,7 @@ from llnl.util.lang import list_modules
 
 import spack
 import spack.test
+from spack.fetch_strategy import FetchError
 
 description ="Run unit tests"
 
@@ -54,6 +55,19 @@ class MockCache(object):
     def store(self, copyCmd, relativeDst):
         pass
 
+    def fetcher(self, targetPath, digest):
+        return MockCacheFetcher()
+
+
+class MockCacheFetcher(object):
+    def set_stage(self, stage):
+        pass
+    
+    def fetch(self):
+        raise FetchError("Mock cache always fails for tests")
+
+    def __str__(self):
+        return "[mock fetcher]"
 
 def test(parser, args):
     if args.list:

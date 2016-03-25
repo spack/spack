@@ -689,6 +689,20 @@ def for_package_version(pkg, version):
     raise InvalidArgsError(pkg, version)
 
 
+class FsCache(object):
+    def __init__(self, root):
+        self.root = os.path.abspath(root)
+
+    def store(self, copyCmd, relativeDst):
+        dst = join_path(self.root, relativeDst)
+        mkdirp(os.path.dirname(dst))
+        copyCmd(dst)
+        
+    def fetcher(self, targetPath, digest):
+        url = "file://" + join_path(self.root, targetPath)
+        return URLFetchStrategy(url, digest)
+
+
 class FetchError(spack.error.SpackError):
     def __init__(self, msg, long_msg=None):
         super(FetchError, self).__init__(msg, long_msg)

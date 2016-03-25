@@ -392,12 +392,3 @@ def remove_linked_tree(path):
             os.unlink(path)
         else:
             shutil.rmtree(path, True)
-
-class FsCache(object):
-    def __init__(self, root):
-        self.root = os.path.abspath(root)
-
-    def store(self, copyCmd, relativeDst):
-        dst = join_path(self.root, relativeDst)
-        mkdirp(os.path.dirname(dst))
-        copyCmd(dst)
