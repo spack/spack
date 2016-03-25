@@ -16,7 +16,7 @@ class Wget(Package):
     depends_on("openssl")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure("--prefix=%s" % prefix,
                   "--with-ssl=openssl")
         make()
         make("install")

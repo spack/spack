@@ -19,7 +19,7 @@ class Curl(Package):
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix,
-                  '--with-zlib=%s' % spec['zlib'].prefix)
+                  '--with-zlib=%s' % spec['zlib'].prefix,
                   '--with-ssl=%s' % spec['openssl'].prefix)
 
         make()
