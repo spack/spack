@@ -54,6 +54,7 @@ class SuperluDist(Package):
         # need to install by hand
         headers_location = join_path(self.prefix.include,'superlu_dist')
         mkdirp(headers_location)
+        mkdirp(prefix.lib)
         # FIXME: fetch all headers in the folder automatically
         for header in ['Cnames.h','cublas_utils.h','dcomplex.h','html_mainpage.h','machines.h','old_colamd.h','psymbfact.h','superlu_ddefs.h','superlu_defs.h','superlu_enum_consts.h','superlu_zdefs.h','supermatrix.h','util_dist.h']:
             superludist_header = join_path(self.stage.source_path, 'SRC/',header)
