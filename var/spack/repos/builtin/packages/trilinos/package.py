@@ -88,7 +88,7 @@ class Trilinos(Package):
                         '-DTPL_ENABLE_MPI:BOOL=ON',
                         '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
                         '-DTPL_ENABLE_BLAS=ON',
-                        '-DBLAS_LIBRARY_NAMES=blas', # FIXME: for Intel, Clang+GNU, GNU; easybuild add gfortran here...
+                        '-DBLAS_LIBRARY_NAMES=blas', # FIXME: don't hardcode names
                         '-DBLAS_LIBRARY_DIRS=%s' % spec['blas'].prefix.lib,
                         '-DTPL_ENABLE_LAPACK=ON',
                         '-DLAPACK_LIBRARY_NAMES=lapack',
@@ -108,7 +108,7 @@ class Trilinos(Package):
         libgfortran = os.path.dirname (os.popen('%s --print-file-name libgfortran.a' % join_path(mpi_bin,'mpif90') ).read())
         options.extend([
             '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % libgfortran,
-            '-DTrilinos_ENABLE_Fortran=ON' # FIXME: otherwise CMake's VerifyFortranC fails as it does not contain -lgfortran
+            '-DTrilinos_ENABLE_Fortran=ON'
         ])
 
         # for build-debug only:
@@ -144,21 +144,15 @@ class Trilinos(Package):
 
         # mumps
         if '+mumps' in spec:
-            # FIXME:
-            # since we use mumps with MPI, it will certainly be build against Scalapack.
-            # Add scalapack lib here as well. 
-            # This likely won't be need if Trilinos would compile with Scalapack
             options.extend([
                 '-DTPL_ENABLE_MUMPS:BOOL=ON',
                 '-DMUMPS_LIBRARY_DIRS=%s' % spec['mumps'].prefix.lib,
                 '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord' # order is important!
-#                '-DMUMPS_LIBRARY_DIRS=%s;%s' % (spec['mumps'].prefix.lib,spec['scalapack'].prefix.lib),
-#                '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord;scalapack' # order is important!
             ])
 
         # scalapack
         options.extend([
-            '-DTPL_ENABLE_SCALAPACK:BOOL=ON', #FIXME: Undefined symbols for architecture x86_64: "_blacs_gridinfo__", referenced from: Amesos_Scalapack::RedistributeA() in Amesos_Scalapack.cpp.o
+            '-DTPL_ENABLE_SCALAPACK:BOOL=ON',
             '-DSCALAPACK_LIBRARY_NAMES=scalapack' # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
         ])
 
