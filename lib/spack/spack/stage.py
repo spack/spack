@@ -506,6 +506,7 @@ class DIYStage(object):
     def cache_local(self):
         tty.msg("Sources for DIY stages are not cached")
 
+
 def _get_mirrors():
     """Get mirrors from spack configuration."""
     config = spack.config.get_config('mirrors')
