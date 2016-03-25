@@ -237,7 +237,29 @@ section_schemas = {
                                 'type' : 'object',
                                 'default' : {},
                             }
-                        },},},},},}
+                        },},},},},},
+    'modules': {
+        '$schema': 'http://json-schema.org/schema#',
+        'title': 'Spack module file configuration file schema',
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            r'modules:?': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'properties': {
+                    'enable': {
+                        'type': 'array',
+                        'default': [],
+                        'items': {
+                            'type': 'string'
+                        }
+                    }
+                }
+            },
+        },
+    },
 }
 
 """OrderedDict of config scopes keyed by name.
@@ -405,11 +427,11 @@ def _read_config_file(filename, schema):
             validate_section(data, schema)
         return data
 
-    except MarkedYAMLError, e:
+    except MarkedYAMLError as e:
         raise ConfigFileError(
             "Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
 
-    except IOError, e:
+    except IOError as e:
         raise ConfigFileError(
             "Error reading configuration file %s: %s" % (filename, str(e)))
 
@@ -539,22 +561,25 @@ def print_section(section):
 
 
 def spec_externals(spec):
-    """Return a list of spec, directory pairs for each external location for spec"""
+    """Return a list of external specs (with external directory path filled in),
+       one for each known external installation."""
     allpkgs = get_config('packages')
     name = spec.name
-    spec_locations = []
 
+    external_specs = []
     pkg_paths = allpkgs.get(name, {}).get('paths', None)
     if not pkg_paths:
         return []
 
-    for pkg,path in pkg_paths.iteritems():
-        if not spec.satisfies(pkg):
-            continue
+    for external_spec, path in pkg_paths.iteritems():
         if not path:
+            # skip entries without paths (avoid creating extra Specs)
             continue
-        spec_locations.append( (spack.spec.Spec(pkg), path) )
-    return spec_locations
+
+        external_spec = spack.spec.Spec(external_spec, external=path)
+        if external_spec.satisfies(spec):
+            external_specs.append(external_spec)
+    return external_specs
 
 
 def is_spec_buildable(spec):

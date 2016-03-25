@@ -141,7 +141,7 @@ function _spack_pathadd {
     fi
 
     # Do the actual prepending here.
-    eval "_pa_oldvalue=\$${_pa_varname}"
+    eval "_pa_oldvalue=\${${_pa_varname}:-}"
 
     if [ -d "$_pa_new_path" ] && [[ ":$_pa_oldvalue:" != *":$_pa_new_path:"* ]]; then
         if [ -n "$_pa_oldvalue" ]; then

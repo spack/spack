@@ -24,6 +24,7 @@
 ##############################################################################
 import spack
 from spack.spec import Spec, CompilerSpec
+from spack.version import ver
 from spack.concretize import find_spec
 from spack.test.mock_packages_test import *
 
@@ -75,6 +76,14 @@ class ConcretizeTest(MockPackagesTest):
         self.check_concretize('mpich+debug')
         self.check_concretize('mpich~debug')
         self.check_concretize('mpich')
+
+
+    def test_concretize_preferred_version(self):
+        spec = self.check_concretize('python')
+        self.assertEqual(spec.versions, ver('2.7.11'))
+
+        spec = self.check_concretize('python@3.5.1')
+        self.assertEqual(spec.versions, ver('3.5.1'))
 
 
     def test_concretize_with_virtual(self):
@@ -140,6 +149,34 @@ class ConcretizeTest(MockPackagesTest):
 
         self.assertTrue(not any(spec.satisfies('mpich2')
                                 for spec in spack.repo.providers_for('mpi@3')))
+
+
+    def test_concretize_two_virtuals(self):
+        """Test a package with multiple virtual dependencies."""
+        s = Spec('hypre').concretize()
+
+
+    def test_concretize_two_virtuals_with_one_bound(self):
+        """Test a package with multiple virtual dependencies and one preset."""
+        s = Spec('hypre ^openblas').concretize()
+
+
+    def test_concretize_two_virtuals_with_two_bound(self):
+        """Test a package with multiple virtual dependencies and two of them preset."""
+        s = Spec('hypre ^openblas ^netlib-lapack').concretize()
+
+
+    def test_concretize_two_virtuals_with_dual_provider(self):
+        """Test a package with multiple virtual dependencies and force a provider
+           that provides both."""
+        s = Spec('hypre ^openblas-with-lapack').concretize()
+
+
+    def test_concretize_two_virtuals_with_dual_provider_and_a_conflict(self):
+        """Test a package with multiple virtual dependencies and force a provider
+           that provides both, and another conflicting package that provides one."""
+        s = Spec('hypre ^openblas-with-lapack ^netlib-lapack')
+        self.assertRaises(spack.spec.MultipleProviderError, s.concretize)
 
 
     def test_virtual_is_fully_expanded_for_callpath(self):
@@ -282,3 +319,9 @@ class ConcretizeTest(MockPackagesTest):
                  Spec('e'))
         self.assertEqual(None, find_spec(s['b'], lambda s: '+foo' in s))
 
+
+    def test_compiler_child(self):
+        s = Spec('mpileaks%clang ^dyninst%gcc')
+        s.concretize()
+        self.assertTrue(s['mpileaks'].satisfies('%clang'))
+        self.assertTrue(s['dyninst'].satisfies('%gcc'))
