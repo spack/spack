@@ -2707,3 +2707,104 @@ might write:
    DWARF_PREFIX = $(spack location -i libdwarf)
    CXXFLAGS += -I$DWARF_PREFIX/include
    CXXFLAGS += -L$DWARF_PREFIX/lib
+
+Build System Configuration Support
+----------------------------------
+
+Imagine a developer creating a CMake-based (or Autotools) project in a local
+directory, which depends on libraries A-Z.  Once Spack has installed
+those dependencies, one would like to run ``cmake`` with appropriate
+command line and environment so CMake can find them.  The ``spack
+spconfig`` command does this conveniently, producing a CMake
+configuration that is essentially the same as how Spack *would have*
+configured the project.  This can be demonstrated with a usage
+example:
+
+.. code-block:: bash
+
+  > cd myproject
+  > spack spconfig myproject@local
+  > mkdir build; cd build
+  > ../spconfig.py ..
+  > make
+  > make install
+
+Notes:
+  * Spack must have ``myproject/package.py`` in its repository for
+    this to work.
+  * ``spack spconfig`` produces the executable script ``spconfig.py``
+    in the local directory, and also creates the module file for the
+    package.  ``spconfig.py`` is normally run from the top level of
+    the source tree.
+
+  * The version number given to ``spack spconfig`` is arbitrary (just
+    like ``spack diy``).  ``myproject/package.py`` does not need to
+    have any valid downloadable versions listed (typical when a
+    project is new).
+  * spconfig.py produces a CMake configuration that *does not* use the
+    Spack wrappers.  Any resulting binaries *will not* use RPATH,
+    unless the user has enabled it.  This is recommended for
+    development purposes, not production.
+  * spconfig.py is easily legible, and can serve as a developer
+    reference of what dependencies are being used.
+  * ``make install`` installs the package into the Spack repository,
+    where it may be used by other Spack packages.
+
+CMakePackage
+~~~~~~~~~~~~
+
+In order ot enable ``spack spconfig`` functionality, the author of
+``myproject/package.py`` must subclass from ``CMakePackage`` instead
+of the standard ``Package`` superclass.  Because CMake is
+standardized, the packager does not need to tell Spack how to run
+``cmake; make; make install``.  Instead the packager only needs to
+create (optional) methods ``configure_args()`` and ``configure_env()``, which
+provide the arguments (as a list) and extra environment variables (as
+a dict) to provide to the ``cmake`` command.  Usually, these will
+translate variant flags into CMake definitions.  For example:
+
+.. code-block:: python
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
+            '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
+            '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
+            '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
+            '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')]
+
+If needed, a packager may also override methods defined in
+``StagedPackage`` (see below).
+
+
+StagedPackage
+~~~~~~~~~~~~~
+
+``CMakePackage`` is implemented by subclassing the ``StagedPackage``
+superclass, which breaks down the standard ``Package.install()``
+method into several sub-stages: ``spconfig``, ``configure``, ``build``
+and ``install``.  Details:
+
+  * Instead of implementing the standard ``install()`` method, package
+    authors implement the methods for the sub-stages
+    ``install_spconfig()``, ``install_configure()``,
+    ``install_build()``, and ``install_install()``.
+  * The ``spack install`` command runs the sub-stages ``configure``,
+    ``build`` and ``install`` in order.  (The ``spconfig`` stage is
+    not run by default; see below).
+  * The ``spack spconfig`` command runs the sub-stages ``spconfig``
+    and a dummy install (to create the module file).
+  * The sub-stage install methods take no arguments (other than
+    ``self``).  The arguments ``spec`` and ``prefix`` to the standard
+    ``install()`` method may be accessed via ``self.spec`` and
+    ``self.prefix``.
+
+GNU Autotools
+~~~~~~~~~~~~~
+
+The ``spconfig`` functionality is currently only available for
+CMake-based packages.  Extending this functionality to GNU
+Autotools-based packages would be easy (and should be done by a
+developer who actively uses Autotools).  Packages that use
+non-standard build systems can gain ``spconfig`` functionality by
+subclassing ``StagedPackage`` directly.
