@@ -110,6 +110,13 @@ class Trilinos(Package):
             '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % libgfortran,
             '-DTrilinos_ENABLE_Fortran=ON'
         ])
+        # FIXME:
+        # VerifyFortranC test of CMake does not contain -lgfortran and thus fails.
+        # This could be GCC/CMake related, but appears at least on OSX with Clang@7.0.2 and GNU Fortran@5.3.0
+        if sys.platform == 'darwin':
+            options.extend([
+                '-DTrilinos_SKIP_FORTRANCINTERFACE_VERIFY_TEST:BOOL=TRUE'
+            ])
 
         # for build-debug only:
         options.extend([
