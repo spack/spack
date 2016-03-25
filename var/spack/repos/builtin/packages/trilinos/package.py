@@ -28,6 +28,7 @@ class Trilinos(Package):
     variant('superlu-dist', default=True,  description='Compile with SuperluDist solvers')
     variant('hypre',        default=True,  description='Compile with Hypre preconditioner')
     variant('hdf5',         default=True,  description='Compile with HDF5')
+    variant('scalapack',    default=True,  description='Compile with Scalapack')
     variant('suite-sparse', default=True,  description='Compile with SuiteSparse solvers')
     variant('python',       default=True,  description='Build python wrappers')
     variant('shared',       default=True,  description='Enables the build of shared libraries')
@@ -110,13 +111,6 @@ class Trilinos(Package):
             '-DTrilinos_EXTRA_LINK_FLAGS:STRING=-L%s/ -lgfortran' % libgfortran,
             '-DTrilinos_ENABLE_Fortran=ON'
         ])
-        # FIXME:
-        # VerifyFortranC test of CMake does not contain -lgfortran and thus fails.
-        # This could be GCC/CMake related, but appears at least on OSX with Clang@7.0.2 and GNU Fortran@5.3.0
-        #if sys.platform == 'darwin':
-        #    options.extend([
-        #        '-DTrilinos_SKIP_FORTRANCINTERFACE_VERIFY_TEST:BOOL=TRUE'
-        #    ])
 
         # for build-debug only:
         #options.extend([
@@ -135,6 +129,11 @@ class Trilinos(Package):
                 '-DUMFPACK_INCLUDE_DIRS:PATH=%s' % spec['suite-sparse'].prefix.include,
                 '-DUMFPACK_LIBRARY_NAMES=umfpack;amd;colamd;cholmod;suitesparseconfig'
             ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_Cholmod:BOOL=OFF',
+                '-DTPL_ENABLE_UMFPACK:BOOL=OFF',
+            ])
 
         # metis / parmetis
         if '+parmetis' in spec: # metis is required, see variants_check()
@@ -148,6 +147,11 @@ class Trilinos(Package):
                 '-DParMETIS_LIBRARY_NAMES=parmetis;metis',
                 '-DTPL_ParMETIS_INCLUDE_DIRS=%s' % spec['parmetis'].prefix.include
             ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_METIS:BOOL=OFF',
+                '-DTPL_ENABLE_ParMETIS:BOOL=OFF',
+            ])
 
         # mumps
         if '+mumps' in spec:
@@ -156,12 +160,22 @@ class Trilinos(Package):
                 '-DMUMPS_LIBRARY_DIRS=%s' % spec['mumps'].prefix.lib,
                 '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord' # order is important!
             ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_MUMPS:BOOL=OFF',
+            ])
 
         # scalapack
-        options.extend([
-            '-DTPL_ENABLE_SCALAPACK:BOOL=ON',
-            '-DSCALAPACK_LIBRARY_NAMES=scalapack' # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
-        ])
+        if '+scalapack' in spec:
+            options.extend([
+                '-DTPL_ENABLE_SCALAPACK:BOOL=ON',
+                '-DSCALAPACK_LIBRARY_NAMES=scalapack' # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
+            ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_SCALAPACK:BOOL=OFF',
+            ])
+
 
         # superlu-dist:
         if '+superlu-dist' in spec:
@@ -181,12 +195,22 @@ class Trilinos(Package):
                 options.extend([
                     '-DHAVE_SUPERLUDIST_LUSTRUCTINIT_2ARG:BOOL=ON'
                 ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_SuperLUDist:BOOL=OFF',
+            ])
+
 
         # python
         if '~python' in spec:
             options.extend([
                 '-DTrilinos_ENABLE_PyTrilinos:BOOL=OFF'
             ])
+        else:
+            options.extend([
+                '-DTrilinos_ENABLE_PyTrilinos:BOOL=ON'
+            ])
+
 
         # disable due to compiler / config errors:
         options.extend([
