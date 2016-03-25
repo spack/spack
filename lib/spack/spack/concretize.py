@@ -51,10 +51,10 @@ class DefaultConcretizer(object):
     """
 
     def _valid_virtuals_and_externals(self, spec):
-        """Returns a list of spec/external-path pairs for both virtuals and externals
-           that can concretize this spec."""
-        # Get a list of candidate packages that could satisfy this spec
-        packages = []
+        """Returns a list of candidate virtual dep providers and external
+           packages that coiuld be used to concretize a spec."""
+        # First construct a list of concrete candidates to replace spec with.
+        candidates = [spec]
         if spec.virtual:
             providers = spack.repo.providers_for(spec)
             if not providers:
@@ -64,96 +64,72 @@ class DefaultConcretizer(object):
             if not spec_w_preferred_providers:
                 spec_w_preferred_providers = spec
             provider_cmp = partial(spack.pkgsort.provider_compare, spec_w_preferred_providers.name, spec.name)
-            packages = sorted(providers, cmp=provider_cmp)
-        else:
-            packages = [spec]
+            candidates = sorted(providers, cmp=provider_cmp)
 
-        # For each candidate package, if it has externals add those to the candidates
-        # if it's not buildable, then only add the externals.
-        candidates = []
-        all_compilers = spack.compilers.all_compilers()
-        for pkg in packages:
-            externals = spec_externals(pkg)
-            buildable = is_spec_buildable(pkg)
-            if buildable:
-                candidates.append((pkg, None))
+        # For each candidate package, if it has externals, add those to the usable list.
+        # if it's not buildable, then *only* add the externals.
+        usable = []
+        for cspec in candidates:
+            if is_spec_buildable(cspec):
+                usable.append(cspec)
+            externals = spec_externals(cspec)
             for ext in externals:
-                if ext[0].satisfies(spec):
-                    candidates.append(ext)
-        if not candidates:
+                if ext.satisfies(spec):
+                    usable.append(ext)
+
+        # If nothing is in the usable list now, it's because we aren't
+        # allowed to build anything.
+        if not usable:
             raise NoBuildError(spec)
 
         def cmp_externals(a, b):
-            if a[0].name != b[0].name:
-                #We're choosing between different providers. Maintain order from above sort
+            if a.name != b.name:
+                # We're choosing between different providers, so
+                # maintain order from provider sort
                 return candidates.index(a) - candidates.index(b)
-            result = cmp_specs(a[0], b[0])
+
+            result = cmp_specs(a, b)
             if result != 0:
                 return result
-            if not a[1] and b[1]:
-                return 1
-            if not b[1] and a[1]:
-                return -1
-            return cmp(a[1], b[1])
 
-        candidates = sorted(candidates, cmp=cmp_externals)
-        return candidates
+            # prefer external packages to internal packages.
+            if a.external is None or b.external is None:
+                return -cmp(a.external, b.external)
+            else:
+                return cmp(a.external, b.external)
+
+        usable.sort(cmp=cmp_externals)
+        return usable
 
 
-    def concretize_virtual_and_external(self, spec):
-        """From a list of candidate virtual and external packages, concretize to one that
-           is ABI compatible with the rest of the DAG."""
+    def choose_virtual_or_external(self, spec):
+        """Given a list of candidate virtual and external packages, try to
+           find one that is most ABI compatible.
+        """
         candidates = self._valid_virtuals_and_externals(spec)
         if not candidates:
-            return False
+            return candidates
 
-        # Find the nearest spec in the dag that has a compiler.  We'll use that
-        # spec to test compiler compatibility.
-        other_spec = find_spec(spec, lambda(x): x.compiler)
-        if not other_spec:
-            other_spec = spec.root
+        # Find the nearest spec in the dag that has a compiler.  We'll
+        # use that spec to calibrate compiler compatibility.
+        abi_exemplar = find_spec(spec, lambda(x): x.compiler)
+        if not abi_exemplar:
+            abi_exemplar = spec.root
 
-        # Choose an ABI-compatible candidate, or the first match otherwise.
-        candidate = None
-        if other_spec:
-            candidate = next((c for c in candidates if spack.abi.compatible(c[0], other_spec)), None)
-            if not candidate:
-                # Try a looser ABI matching
-                candidate = next((c for c in candidates if spack.abi.compatible(c[0], other_spec, loose=True)), None)
-        if not candidate:
-            # No ABI matches. Pick the top choice based on the orignal preferences.
-            candidate = candidates[0]
-        candidate_spec = candidate[0]
-        external = candidate[1]
-        changed = False
+        # Make a list including ABI compatibility of specs with the exemplar.
+        strict = [spack.abi.compatible(c, abi_exemplar) for c in candidates]
+        loose  = [spack.abi.compatible(c, abi_exemplar, loose=True) for c in candidates]
+        keys = zip(strict, loose, candidates)
 
-        # If we're external then trim the dependencies
-        if external:
-            if (spec.dependencies):
-                changed = True
-            spec.dependencies = DependencyMap()
-            candidate_spec.dependencies = DependencyMap()
+        # Sort candidates from most to least compatibility.
+        # Note:
+        #   1. We reverse because True > False.
+        #   2. Sort is stable, so c's keep their order.
+        keys.sort(key=lambda k:k[:2], reverse=True)
 
-        def fequal(candidate_field, spec_field):
-            return (not candidate_field) or (candidate_field == spec_field)
-        if (fequal(candidate_spec.name, spec.name) and
-            fequal(candidate_spec.versions, spec.versions) and
-            fequal(candidate_spec.compiler, spec.compiler) and
-            fequal(candidate_spec.architecture, spec.architecture) and
-            fequal(candidate_spec.dependencies, spec.dependencies) and
-            fequal(candidate_spec.variants, spec.variants) and
-            fequal(external, spec.external)):
-            return changed
-
-        # Refine this spec to the candidate.
-        if spec.virtual:
-            spec._replace_with(candidate_spec)
-            changed = True
-        if spec._dup(candidate_spec, deps=False, cleardeps=False):
-            changed = True
-        spec.external = external
-
-        return changed
+        # Pull the candidates back out and return them in order
+        candidates = [c for s,l,c in keys]
+        return candidates
 
 
     def concretize_version(self, spec):
@@ -182,6 +158,10 @@ class DefaultConcretizer(object):
             [v for v in pkg.versions
              if any(v.satisfies(sv) for sv in spec.versions)],
             cmp=cmp_versions)
+
+        def prefer_key(v):
+            return pkg.versions.get(Version(v)).get('preferred', False)
+        valid_versions.sort(key=prefer_key, reverse=True)
 
         if valid_versions:
             spec.versions = ver([valid_versions[0]])
@@ -238,7 +218,7 @@ class DefaultConcretizer(object):
            the default variants from the package specification.
         """
         changed = False
-        for name, variant in spec.package.variants.items():
+        for name, variant in spec.package_class.variants.items():
             if name not in spec.variants:
                 spec.variants[name] = spack.spec.VariantSpec(name, variant.default)
                 changed = True
@@ -265,7 +245,7 @@ class DefaultConcretizer(object):
             return False
 
         #Find the another spec that has a compiler, or the root if none do
-        other_spec = find_spec(spec, lambda(x) : x.compiler)
+        other_spec = spec if spec.compiler else find_spec(spec, lambda(x) : x.compiler)
         if not other_spec:
             other_spec = spec.root
         other_compiler = other_spec.compiler
@@ -312,7 +292,7 @@ def find_spec(spec, condition):
     if condition(spec):
         return spec
 
-    return None   # Nohting matched the condition.
+    return None   # Nothing matched the condition.
 
 
 def cmp_specs(lhs, rhs):
