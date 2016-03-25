@@ -28,6 +28,7 @@ system and configuring Spack to use multiple compilers.
 import imp
 import os
 import platform
+import copy
 
 from llnl.util.lang import memoized, list_modules
 from llnl.util.filesystem import join_path
@@ -77,28 +78,27 @@ def get_compiler_config(arch=None, scope=None):
     """Return the compiler configuration for the specified architecture.
     """
     # Check whether we're on a front-end (native) architecture.
-
     my_arch = spack.architecture.Arch()
-    if isinstance(arch, basestring):
-        if arch == 'all':
-            my_arch.platform.name = 'all'
-            arch = my_arch
     if arch is None:
         arch = my_arch
+    if isinstance(arch, basestring) and arch == 'all':
+        name = 'all'
+    else:
+        name = arch.platform.name
 
     def init_compiler_config():
         """Compiler search used when Spack has no compilers."""
-        config[arch.platform.name] = {}
+        config[name] = {}
         compilers = find_compilers(*get_path('PATH'))
         for compiler in compilers:
-            config[arch.platform.name].update(_to_dict(compiler))
+            config[name].update(_to_dict(compiler))
         spack.config.update_config('compilers', config, scope=scope)
 
     config = spack.config.get_config('compilers', scope=scope)
     # Update the configuration if there are currently no compilers
     # configured.  Avoid updating automatically if there ARE site
     # compilers configured but no user ones.
-    if arch == my_arch and arch not in config:
+    if (isinstance(arch, basestring) or arch == my_arch) and arch not in config:
         if scope is None:
             # We know no compilers were configured in any scope.
             init_compiler_config()
@@ -109,7 +109,7 @@ def get_compiler_config(arch=None, scope=None):
             if not site_config:
                 init_compiler_config()
 
-    return config[arch.platform.name] if arch.platform.name in config else {}
+    return config[name] if name in config else {}
 
 
 def add_compilers_to_config(compilers, arch=None, scope=None):
