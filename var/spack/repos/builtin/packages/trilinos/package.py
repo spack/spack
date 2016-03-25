@@ -1,5 +1,5 @@
 from spack import *
-import os
+import os, sys
 
 # Trilinos is complicated to build, as an inspiration a couple of links to other repositories which build it:
 # https://github.com/hpcugent/easybuild-easyblocks/blob/master/easybuild/easyblocks/t/trilinos.py#L111
