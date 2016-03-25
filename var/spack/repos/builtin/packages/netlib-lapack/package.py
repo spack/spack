@@ -46,6 +46,6 @@ class NetlibLapack(Package):
         cmake_args.extend(std_cmake_args)
 
         with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
+            which('cmake')('..', *cmake_args)
             make()
             make("install")
