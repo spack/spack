@@ -43,6 +43,13 @@ class Netcdf(Package):
             "--enable-dap"
         ]
 
+        # Make sure Netcdf links against Spack's curl
+        # Otherwise it may pick up system's curl, which could lead to link errors:
+        # /usr/lib/x86_64-linux-gnu/libcurl.so: undefined reference to `SSL_CTX_use_certificate_chain_file@OPENSSL_1.0.0'
+        LIBS.append("-lcurl")
+        CPPFLAGS.append("-I%s" % spec['curl'].prefix.include)
+        LDFLAGS.append ("-L%s" % spec['curl'].prefix.lib)
+
         if '+mpi' in spec:
             config_args.append('--enable-parallel4')
 
