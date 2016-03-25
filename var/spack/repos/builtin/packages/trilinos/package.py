@@ -113,15 +113,15 @@ class Trilinos(Package):
         # FIXME:
         # VerifyFortranC test of CMake does not contain -lgfortran and thus fails.
         # This could be GCC/CMake related, but appears at least on OSX with Clang@7.0.2 and GNU Fortran@5.3.0
-        if sys.platform == 'darwin':
-            options.extend([
-                '-DTrilinos_SKIP_FORTRANCINTERFACE_VERIFY_TEST:BOOL=TRUE'
-            ])
+        #if sys.platform == 'darwin':
+        #    options.extend([
+        #        '-DTrilinos_SKIP_FORTRANCINTERFACE_VERIFY_TEST:BOOL=TRUE'
+        #    ])
 
         # for build-debug only:
-        options.extend([
-           '-DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE'
-        ])
+        #options.extend([
+        #   '-DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE'
+        #])
 
         # suite-sparse related
         if '+suite-sparse' in spec:
@@ -194,6 +194,11 @@ class Trilinos(Package):
             '-DTrilinos_ENABLE_Pike=OFF',
             '-DTrilinos_ENABLE_STK=OFF'
         ])
+        if sys.platform == 'darwin':
+            options.extend([
+                '-DTrilinos_ENABLE_FEI=OFF'
+            ])
+
 
         with working_dir('spack-build', create=True):
             cmake('..', *options)
