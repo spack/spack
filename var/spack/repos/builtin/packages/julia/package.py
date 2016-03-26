@@ -11,14 +11,18 @@ class Julia(Package):
     version('0.4.5', '69141ff5aa6cee7c0ec8c85a34aa49a6')
     version('0.4.3', '8a4a59fd335b05090dd1ebefbbe5aaac')
 
+    # patch('dsymutil.patch')
     patch('gc.patch')
 
     # Build-time dependencies
-    depends_on("cmake @2.8:")
     # depends_on("awk")
-    depends_on("git")
     # depends_on("m4")
     # depends_on("pkg-config")
+
+    # Combined build-time and run-time dependencies
+    depends_on("cmake @2.8:")
+    depends_on("git")
+    depends_on("openssl")
     depends_on("python @2.7:2.999")
 
     # I think that Julia requires the dependencies above, but it
@@ -29,7 +33,9 @@ class Julia(Package):
     # depends_on("arpack")
     # depends_on("fftw +float")
     # depends_on("gmp")
+    # depends_on("libgit")
     # depends_on("mpfr")
+    # depends_on("openblas")
     # depends_on("pcre2")
 
     # ARPACK: Requires BLAS and LAPACK; needs to use the same version
@@ -57,6 +63,11 @@ class Julia(Package):
     # USE_SYSTEM_LIBGIT2=0
 
     def install(self, spec, prefix):
+        if '@master' in spec:
+            # Julia needs to know the offset from a specific commit
+            git = which('git')
+            git('fetch', '--unshallow')
+
         # Explicitly setting CC, CXX, or FC breaks building libuv, one
         # of Julia's dependencies. This might be a Darwin-specific
         # problem. Given how Spack sets up compilers, Julia should
