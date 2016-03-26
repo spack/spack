@@ -107,6 +107,8 @@ class FetchStrategy(object):
 
     def archive(self, destination): pass  # Used to create tarball for mirror.
 
+    def file_hash(self): pass # Identifies the resource to be retrieved
+
     def __str__(self):  # Should be human readable URL.
         return "FetchStrategy.__str___"
 
@@ -216,6 +218,10 @@ class URLFetchStrategy(FetchStrategy):
     def archive_file(self):
         """Path to the source archive within this stage directory."""
         return self.stage.archive_file
+
+    @property
+    def file_hash(self):
+        return self.digest
 
     @_needs_stage
     def expand(self):
@@ -348,6 +354,10 @@ class VCSFetchStrategy(FetchStrategy):
 
         self.stage.chdir()
         tar('-czf', destination, os.path.basename(self.stage.source_path))
+
+    @property
+    def file_hash(self):
+        return None
 
     def __str__(self):
         return "VCS: %s" % self.url
