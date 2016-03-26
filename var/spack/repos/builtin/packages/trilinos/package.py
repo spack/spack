@@ -22,13 +22,11 @@ class Trilinos(Package):
     version('11.14.2', 'a43590cf896c677890d75bfe75bc6254')
     version('11.14.1', '40febc57f76668be8b6a77b7607bb67f')
 
-    variant('metis',        default=True,  description='Compile with METIS')
-    variant('parmetis',     default=True,  description='Compile with ParMETIS')
+    variant('metis',        default=True,  description='Compile with METIS and ParMETIS')
     variant('mumps',        default=True,  description='Compile with support for MUMPS solvers')
     variant('superlu-dist', default=True,  description='Compile with SuperluDist solvers')
     variant('hypre',        default=True,  description='Compile with Hypre preconditioner')
     variant('hdf5',         default=True,  description='Compile with HDF5')
-    variant('scalapack',    default=True,  description='Compile with Scalapack')
     variant('suite-sparse', default=True,  description='Compile with SuiteSparse solvers')
     variant('python',       default=True,  description='Build python wrappers')
     variant('shared',       default=True,  description='Enables the build of shared libraries')
@@ -47,9 +45,9 @@ class Trilinos(Package):
     # MPI related dependencies
     depends_on('mpi')
     depends_on('netcdf+mpi')
-    depends_on('parmetis',when='+parmetis')
-    depends_on('mumps+metis+parmetis+shared',when='+mumps') # Amesos link errors with static: "__gfortran_adjustl", referenced from: _dmumps_ in libdmumps.a(dmumps_driver.o) "_mpi_abort_", referenced from: _mumps_abort_ in libmumps_common.a(tools_common.o)
-    depends_on('scalapack',when='+scalapack')
+    depends_on('parmetis',when='+metis')
+    depends_on('mumps+mpi+metis+parmetis+shared',when='+mumps') # Amesos link errors with static: "__gfortran_adjustl", referenced from: _dmumps_ in libdmumps.a(dmumps_driver.o) "_mpi_abort_", referenced from: _mumps_abort_ in libmumps_common.a(tools_common.o)
+    depends_on('scalapack',when='+mumps')
     depends_on('superlu-dist',when='+superlu-dist')
     depends_on('hypre',when='+hypre')
     depends_on('hdf5+mpi',when='+hdf5')
@@ -60,11 +58,8 @@ class Trilinos(Package):
 
     # check that the combination of variants makes sense
     def variants_check(self):
-        if '+parmetis' in self.spec and '+metis' not in self.spec:
-            raise RuntimeError('You cannot use the variant parmetis without metis')
-
-        if '+mumps' in self.spec and '+parmetis' not in self.spec:
-            raise RuntimeError('You cannot use the variant mumps without parmetis')
+        if '+mumps' in self.spec and '+metis' not in self.spec:
+            raise RuntimeError('You cannot use the variant mumps without metis')
 
         if '+superlu-dist' in self.spec and self.spec.satisfies('@:11.4.3'):
             # For Trilinos v11 we need to force SuperLUDist=OFF,
@@ -136,7 +131,7 @@ class Trilinos(Package):
             ])
 
         # metis / parmetis
-        if '+parmetis' in spec: # metis is required, see variants_check()
+        if '+metis' in spec:
             options.extend([
                 '-DTPL_ENABLE_METIS:BOOL=ON',
                 '-DMETIS_LIBRARY_DIRS=%s' % spec['metis'].prefix.lib,
@@ -153,29 +148,20 @@ class Trilinos(Package):
                 '-DTPL_ENABLE_ParMETIS:BOOL=OFF',
             ])
 
-        # mumps
+        # mumps / scalapack
         if '+mumps' in spec:
             options.extend([
                 '-DTPL_ENABLE_MUMPS:BOOL=ON',
                 '-DMUMPS_LIBRARY_DIRS=%s' % spec['mumps'].prefix.lib,
-                '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord' # order is important!
-            ])
-        else:
-            options.extend([
-                '-DTPL_ENABLE_MUMPS:BOOL=OFF',
-            ])
-
-        # scalapack
-        if '+scalapack' in spec:
-            options.extend([
+                '-DMUMPS_LIBRARY_NAMES=dmumps;mumps_common;pord', # order is important!
                 '-DTPL_ENABLE_SCALAPACK:BOOL=ON',
                 '-DSCALAPACK_LIBRARY_NAMES=scalapack' # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
             ])
         else:
             options.extend([
+                '-DTPL_ENABLE_MUMPS:BOOL=OFF',
                 '-DTPL_ENABLE_SCALAPACK:BOOL=OFF',
             ])
-
 
         # superlu-dist:
         if '+superlu-dist' in spec:
@@ -202,13 +188,13 @@ class Trilinos(Package):
 
 
         # python
-        if '~python' in spec:
+        if '+python' in spec:
             options.extend([
-                '-DTrilinos_ENABLE_PyTrilinos:BOOL=OFF'
+                '-DTrilinos_ENABLE_PyTrilinos:BOOL=ON'
             ])
         else:
             options.extend([
-                '-DTrilinos_ENABLE_PyTrilinos:BOOL=ON'
+                '-DTrilinos_ENABLE_PyTrilinos:BOOL=OFF'
             ])
 
 
