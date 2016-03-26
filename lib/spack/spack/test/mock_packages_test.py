@@ -42,11 +42,15 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
+      strategy: PATH
+      modules: None
     gcc@4.5.0:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
+      strategy: PATH
+      modules: None
 """
 
 mock_packages_config = """\
