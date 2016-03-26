@@ -12,7 +12,7 @@ class Dealii(Package):
     depends_on ("lapack")
     depends_on ("mpi")
 
-    depends_on ("arpack-ng")
+    depends_on ("arpack-ng+mpi")
     depends_on ("boost")
     depends_on ("doxygen")
     depends_on ("hdf5+mpi~cxx") #FIXME NetCDF declares dependency with ~cxx, why?
@@ -23,7 +23,7 @@ class Dealii(Package):
     depends_on ("oce")
     depends_on ("p4est")
     depends_on ("parmetis")
-    depends_on ("petsc")
+    depends_on ("petsc+mpi")
     depends_on ("slepc")
     depends_on ("suite-sparse")
     depends_on ("tbb")
