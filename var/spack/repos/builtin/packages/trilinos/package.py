@@ -48,7 +48,7 @@ class Trilinos(Package):
     depends_on('mpi')
     depends_on('netcdf+mpi')
     depends_on('parmetis',when='+parmetis')
-    depends_on('mumps+metis+parmetis+shared',when='+mumps') # build errors with static libs
+    depends_on('mumps+metis+parmetis+shared',when='+mumps') # Amesos link errors with static: "__gfortran_adjustl", referenced from: _dmumps_ in libdmumps.a(dmumps_driver.o) "_mpi_abort_", referenced from: _mumps_abort_ in libmumps_common.a(tools_common.o)
     depends_on('scalapack',when='+scalapack')
     depends_on('superlu-dist',when='+superlu-dist')
     depends_on('hypre',when='+hypre')
