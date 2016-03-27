@@ -1,5 +1,5 @@
 from spack import *
-import os, sys
+import os, sys, glob
 
 # Trilinos is complicated to build, as an inspiration a couple of links to other repositories which build it:
 # https://github.com/hpcugent/easybuild-easyblocks/blob/master/easybuild/easyblocks/t/trilinos.py#L111
@@ -222,3 +222,10 @@ class Trilinos(Package):
             # A workaround it to remove PyTrilinos from the COMPONENTS_LIST :
             if '+python' in self.spec:
                 filter_file(r'(SET\(COMPONENTS_LIST.*)(PyTrilinos;)(.*)',  (r'\1\3'),  '%s/cmake/Trilinos/TrilinosConfig.cmake' % prefix.lib)
+
+            # The shared libraries are not installed correctly on Darwin; correct this
+            if (sys.platform == 'darwin') and ('+shared' in spec):
+                fs = glob.glob(join_path(prefix.lib,"*.dylib"))
+                install_name_tool = which('install_name_tool')
+                for f in fs:
+                    install_name_tool('-id',f,f)
