@@ -1773,7 +1773,7 @@ discover its dependencies.
 
 If you want to see the environment that a package will build with, or
 if you want to run commands in that environment to test them out, you
-can use the :ref:```spack env`` <spack-env>` command, documented
+can use the :ref:`spack env <spack-env>` command, documented
 below.
 
 .. _compiler-wrappers:
@@ -1812,7 +1812,7 @@ An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
 build will have ``-I$LIBELF_PREFIX/include``,
 ``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath,$LIBELF_PREFIX/lib``
-inserted on the command line.  This is done transparently to the
+‰ command line.  This is done transparently to the
 project's build system, which will just think it's using a system
 where ``libelf`` is readily available.  Because of this, you **do
 not** have to insert extra ``-I``, ``-L``, etc. on the command line.
@@ -2722,12 +2722,12 @@ example:
 
 .. code-block:: bash
 
-  > cd myproject
-  > spack spconfig myproject@local
-  > mkdir build; cd build
-  > ../spconfig.py ..
-  > make
-  > make install
+   cd myproject
+    spack spconfig myproject@local
+    mkdir build; cd build
+    ../spconfig.py ..
+    make
+    make install
 
 Notes:
   * Spack must have ``myproject/package.py`` in its repository for
@@ -2749,6 +2749,7 @@ Notes:
     reference of what dependencies are being used.
   * ``make install`` installs the package into the Spack repository,
     where it may be used by other Spack packages.
+  * CMake-generated makefiles re-run CMake in some circumstances.  Use of ``spconfig.py`` breaks this behavior, requiring the developer to manually re-run ``spconfig.py`` when a ``CMakeLists.txt`` file has changed.
 
 CMakePackage
 ~~~~~~~~~~~~
@@ -2764,6 +2765,7 @@ a dict) to provide to the ``cmake`` command.  Usually, these will
 translate variant flags into CMake definitions.  For example:
 
 .. code-block:: python
+
     def configure_args(self):
         spec = self.spec
         return [
@@ -2785,19 +2787,20 @@ superclass, which breaks down the standard ``Package.install()``
 method into several sub-stages: ``spconfig``, ``configure``, ``build``
 and ``install``.  Details:
 
-  * Instead of implementing the standard ``install()`` method, package
-    authors implement the methods for the sub-stages
-    ``install_spconfig()``, ``install_configure()``,
-    ``install_build()``, and ``install_install()``.
-  * The ``spack install`` command runs the sub-stages ``configure``,
-    ``build`` and ``install`` in order.  (The ``spconfig`` stage is
-    not run by default; see below).
-  * The ``spack spconfig`` command runs the sub-stages ``spconfig``
-    and a dummy install (to create the module file).
-  * The sub-stage install methods take no arguments (other than
-    ``self``).  The arguments ``spec`` and ``prefix`` to the standard
-    ``install()`` method may be accessed via ``self.spec`` and
-    ``self.prefix``.
+* Instead of implementing the standard ``install()`` method, package
+  authors implement the methods for the sub-stages
+  ``install_spconfig()``, ``install_configure()``,
+  ``install_build()``, and ``install_install()``.
+
+* The ``spack install`` command runs the sub-stages ``configure``,
+  ``build`` and ``install`` in order.  (The ``spconfig`` stage is
+  not run by default; see below).
+* The ``spack spconfig`` command runs the sub-stages ``spconfig``
+  and a dummy install (to create the module file).
+* The sub-stage install methods take no arguments (other than
+  ``self``).  The arguments ``spec`` and ``prefix`` to the standard
+  ``install()`` method may be accessed via ``self.spec`` and
+  ``self.prefix``.
 
 GNU Autotools
 ~~~~~~~~~~~~~

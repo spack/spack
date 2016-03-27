@@ -930,7 +930,6 @@ class Package(object):
 
                     # Copy provenance into the install directory on success
                     if 'provenance' in self.install_phases:
-
                         log_install_path = spack.install_layout.build_log_path(self.spec)
                         env_install_path = spack.install_layout.build_env_path(self.spec)
                         packages_dir = spack.install_layout.build_packages_path(self.spec)
