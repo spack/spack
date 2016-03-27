@@ -8,7 +8,7 @@ class PyLibxml2(Package):
     version('2.6.21', '229dd2b3d110a77defeeaa73af83f7f3')
 
     extends('python')
-    depends_on('libxml2')
+    depends_on('libxml2+python')
     depends_on('libxslt')
 
     def install(self, spec, prefix):
