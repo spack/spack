@@ -38,6 +38,7 @@ import re
 import textwrap
 import time
 import glob
+import string
 
 import llnl.util.tty as tty
 import spack
@@ -51,6 +52,8 @@ import spack.mirror
 import spack.repository
 import spack.url
 import spack.util.web
+
+from urlparse import urlparse
 from StringIO import StringIO
 from llnl.util.filesystem import *
 from llnl.util.lang import *
@@ -59,9 +62,10 @@ from llnl.util.tty.log import log_output
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
-from spack.util.executable import ProcessError
+from spack.util.executable import ProcessError, Executable, which
 from spack.version import *
-from urlparse import urlparse
+from spack import directory_layout
+
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
