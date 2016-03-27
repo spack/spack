@@ -19,7 +19,7 @@ class Doxygen(Package):
     depends_on("cmake@2.8.12:")
 
     def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
+        which('cmake')('.', *std_cmake_args)
 
         make()
         make("install")

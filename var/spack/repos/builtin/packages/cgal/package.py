@@ -69,6 +69,6 @@ class Cgal(Package):
         build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path
         with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
+            which('cmake')(source_directory, *options)
             make()
             make("install")

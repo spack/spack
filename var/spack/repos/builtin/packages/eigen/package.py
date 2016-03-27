@@ -64,6 +64,6 @@ class Eigen(Package):
             options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
 
         with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
+            which('cmake')(source_directory, *options)
             make()
             make("install")
