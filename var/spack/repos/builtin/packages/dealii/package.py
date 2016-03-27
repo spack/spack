@@ -1,5 +1,5 @@
 from spack import *
-import shutil
+import sys
 
 class Dealii(Package):
     """C++ software library providing well-documented tools to build finite element codes for a broad variety of PDEs."""
@@ -39,6 +39,7 @@ class Dealii(Package):
             if word.startswith('-DCMAKE_BUILD_TYPE'):
                 options.remove(word)
 
+        dsuf = 'dylib' if sys.platform == 'darwin' else 'so'
         options.extend([
             '-DCMAKE_BUILD_TYPE=DebugRelease',
             '-DDEAL_II_WITH_THREADS:BOOL=ON'
@@ -51,7 +52,14 @@ class Dealii(Package):
             '-DHDF5_DIR=%s' % spec['hdf5'].prefix,
             '-DMETIS_DIR=%s' % spec['metis'].prefix,
             '-DMUPARSER_DIR=%s ' % spec['muparser'].prefix,
-            '-DNETCDF_DIR=%s' % spec['netcdf-cxx4'].prefix,
+            # since Netcdf is spread among two, need to do it by hand:
+            '-DNETCDF_FOUND=true',
+            '-DNETCDF_LIBRARIES=%s;%s' %
+                (join_path(spec['netcdf-cxx4'].prefix.lib,'libnetcdf_c++4.%s' % dsuf),
+                 join_path(spec['netcdf'].prefix.lib,'libnetcdf.%s' % dsuf)),
+            '-DNETCDF_INCLUDE_DIRS=%s;%s' %
+                (spec['netcdf-cxx4'].prefix.include,
+                 spec['netcdf'].prefix.include),
             '-DOPENCASCADE_DIR=%s' % spec['oce'].prefix,
             '-DP4EST_DIR=%s' % spec['p4est'].prefix,
             '-DPETSC_DIR=%s' % spec['petsc'].prefix,
