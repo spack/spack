@@ -225,7 +225,4 @@ class Trilinos(Package):
 
             # The shared libraries are not installed correctly on Darwin; correct this
             if (sys.platform == 'darwin') and ('+shared' in spec):
-                fs = glob.glob(join_path(prefix.lib,"*.dylib"))
-                install_name_tool = which('install_name_tool')
-                for f in fs:
-                    install_name_tool('-id',f,f)
+                fix_darwin_install_name(prefix.lib)
