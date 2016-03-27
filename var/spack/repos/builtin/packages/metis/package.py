@@ -80,7 +80,7 @@ class Metis(Package):
             filter_file('REALTYPEWIDTH 32', 'REALTYPEWIDTH 64', metis_header)
 
         with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
+            which('cmake')(source_directory, *options)
             make()
             make("install")
 
