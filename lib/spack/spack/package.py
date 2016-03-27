@@ -974,10 +974,10 @@ class Package(object):
         except:
             # remove the install prefix if anything went wrong during install.
             if keep_prefix:
-                tty.warn("Keeping install prefix in place despite error.",
-                         "Spack will think this package is installed. " +
-                         "Manually remove this directory to fix:",
-                         self.prefix, wrap=True)
+                tty.warn("Keeping install prefix in place despite error.\n",
+                         "Spack will think this package is installed.\n" +
+                         "Manually remove this directory to fix:\n",
+                         self.prefix, wrap=False)
             else:
                 self.remove_prefix()
 
