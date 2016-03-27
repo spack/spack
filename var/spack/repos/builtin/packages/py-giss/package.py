@@ -6,7 +6,7 @@ class PyGiss(Package):
     homepage = "https://github.com/citibeth/pygiss"
     url      = "https://github.com/citibeth/pygiss/tarball/v0.1.0"
 
-    version('0.1.0', '2eb907ca0af9fd1463357740df7c4ac0')
+    version('0.1.0', '766c88600096fc35acfb2174a981e634')
 
     # Requires python@3:
     extends('python')
