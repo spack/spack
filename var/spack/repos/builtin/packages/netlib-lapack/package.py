@@ -31,8 +31,16 @@ class NetlibLapack(Package):
     depends_on('cmake')
     depends_on('blas', when='+external-blas')
 
-    def install(self, spec, prefix):
-        cmake_args = ['-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if '+shared' in spec else 'OFF'),
+
+    def patch(self):
+        # Fix cblas CMakeLists.txt -- has wrong case for subdirectory name.
+        filter_file('${CMAKE_CURRENT_SOURCE_DIR}/CMAKE/',
+                    '${CMAKE_CURRENT_SOURCE_DIR}/cmake/', 'CBLAS/CMakeLists.txt', string=True)
+
+
+    def install_one(self, spec, prefix, shared):
+        cmake_args = ['-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if shared else 'OFF'),
+                      '-DCBLAS=ON', # always build CBLAS
                       '-DCMAKE_BUILD_TYPE:STRING=%s' % ('Debug' if '+debug' in spec else 'Release'),
                       '-DLAPACKE:BOOL=%s' % ('ON' if '+lapacke' in spec else 'OFF')]
         if '+external-blas' in spec:
@@ -45,7 +53,33 @@ class NetlibLapack(Package):
 
         cmake_args.extend(std_cmake_args)
 
-        with working_dir('spack-build', create=True):
+        build_dir = 'spack-build' + ('-shared' if shared else '-static')
+        with working_dir(build_dir, create=True):
             cmake('..', *cmake_args)
             make()
             make("install")
+
+
+    def install(self, spec, prefix):
+        # Always build static libraries.
+        self.install_one(spec, prefix, False)
+
+        # Build shared libraries if requested.
+        if '+shared' in spec:
+            self.install_one(spec, prefix, True)
+
+
+    def setup_dependent_package(self, module, dspec):
+        # This is WIP for a prototype interface for virtual packages.
+        # We can update this as more builds start depending on BLAS/LAPACK.
+        libdir = find_library_path('libblas.a', self.prefix.lib64, self.prefix.lib)
+
+        self.spec.blas_static_lib   = join_path(libdir, 'libblas.a')
+        self.spec.lapack_static_lib = join_path(libdir, 'liblapack.a')
+
+        if '+shared' in self.spec:
+            self.spec.blas_shared_lib   = join_path(libdir, 'libblas.%s' % dso_suffix)
+            self.spec.lapack_shared_lib = join_path(libdir, 'liblapack.%s' % dso_suffix)
+
+
+
