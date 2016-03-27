@@ -14,6 +14,8 @@ class Icebin(CMakePackage):
     variant('coupler', default=True, description='Build the GCM coupler (requires MPI)')
     variant('pism', default=False, description='Build coupling link with PISM (requires PISM, PETSc)')
 
+    extends('python')
+
     depends_on('everytrace', when='+everytrace')
 
     depends_on('python', when='+python')
