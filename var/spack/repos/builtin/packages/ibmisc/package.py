@@ -4,9 +4,9 @@ class Ibmisc(CMakePackage):
     """Misc. reusable utilities used by IceBin."""
 
     homepage = "https://github.com/citibeth/ibmisc"
-    url      = "https://github.com/citibeth/ibmisc/tarball/123"
+    url      = "https://github.com/citibeth/ibmisc/tarball/v0.1.0"
 
-    version('0.1.0', '12f2a32432a11db48e00217df18e59fa')
+    version('0.1.0', '1856cc25a60154ffe6073ad031e78cec')
 
     variant('everytrace', default=False, description='Report errors through Everytrace')
     variant('proj', default=True, description='Compile utilities for PROJ.4 library')

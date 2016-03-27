@@ -6,7 +6,7 @@ class Icebin(CMakePackage):
     homepage = "https://github.com/citibeth/icebin"
     url         = "https://github.com/citibeth/icebin/tarball/dev"
 
-    version('devel', '0123456789abcdef0123456789abcdef')
+    version('0.1.0', '218088165b85946e01a0605d304d2718')
 
     variant('everytrace', default=False, description='Report errors through Everytrace (requires Everytrace)')
     variant('python', default=True, description='Build Python extension (requires Python, Numpy)')
@@ -31,7 +31,7 @@ class Icebin(CMakePackage):
     depends_on('boost+filesystem+date_time')
     depends_on('blitz')
     depends_on('netcdf-cxx4')
-    depends_on('ibmisc')
+    depends_on('ibmisc+proj+blitz+netcdf+boost+udunits2+python')
     depends_on('proj')
     depends_on('eigen')
 
