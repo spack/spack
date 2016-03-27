@@ -33,8 +33,10 @@ class Julia(Package):
     # depends_on("arpack")
     # depends_on("fftw +float")
     # depends_on("gmp")
+    depends_on("hdf5")
     # depends_on("libgit")
     # depends_on("mpfr")
+    depends_on("mpi")
     # depends_on("openblas")
     # depends_on("pcre2")
 
