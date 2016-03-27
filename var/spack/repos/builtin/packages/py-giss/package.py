@@ -1,13 +1,16 @@
 from spack import *
 
-class PyNetcdf(Package):
-    """Python interface to the netCDF Library."""
-    homepage = "http://unidata.github.io/netcdf4-python"
-    url      = "https://github.com/Unidata/netcdf4-python/tarball/v1.2.3.1rel"
+class PyGiss(Package):
+    """Misc. Python Stuff."""
 
-    version('1.2.3.1', '4fc4320d4f2a77b894ebf8da1c9895af')
+    homepage = "https://github.com/citibeth/pygiss"
+    url      = "https://github.com/citibeth/pygiss/tarball/v0.1.0"
 
+    version('0.1.0', '2eb907ca0af9fd1463357740df7c4ac0')
+
+    # Requires python@3:
     extends('python')
+
     depends_on('py-numpy+blas+lapack')
     depends_on('py-netcdf')
 
