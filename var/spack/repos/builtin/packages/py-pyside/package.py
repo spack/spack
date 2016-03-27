@@ -6,10 +6,25 @@ class PyPyside(Package):
     homepage = "https://pypi.python.org/pypi/pyside"
     url      = "https://pypi.python.org/packages/source/P/PySide/PySide-1.2.2.tar.gz"
 
-    version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d')
+    # This doesn't work, GitHub download isn't the same as the full tarfile.
+    # The tarfile for 1.2.3 was removed from PyPI.
+    # url = "https://github.com/PySide/pyside-setup/tarball/1.2.3"
+
+    # Version 1.2.4 claims to not work with Python 3.5, mostly
+    # because it hasn't been tested.  Otherwise, it's the same as v1.2.3
+    # https://github.com/PySide/pyside-setup/issues/58
+    # Meanwhile, developers have moved onto pyside2 (for Qt5),
+    # and show little interest in certifying PySide 1.2.4 for Python.
+    version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')
+
+    # This is not available from pypi
+    # version('1.2.3', 'fa5d5438b045ede36104bba25a6ccc10')
+
+# v1.2.2 does not work with Python3
+#    version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d')
 
     # TODO: make build dependency
-    # depends_on("cmake")
+    depends_on("cmake")
 
     extends('python')
     depends_on('py-setuptools')
@@ -31,12 +46,20 @@ class PyPyside(Package):
                 '"-DCMAKE_INSTALL_RPATH=%s",' % ':'.join(rpath)),
             'setup.py')
 
-        # PySide tries to patch ELF files to remove RPATHs
-        # Disable this and go with the one we set.
+
+        # Convince PySide that it really CAN work with Python 3.5
         filter_file(
-            r'^\s*rpath_cmd\(pyside_path, srcpath\)',
-            r'#rpath_cmd(pyside_path, srcpath)',
-            'pyside_postinstall.py')
+            "'Programming Language :: Python :: 3.4',",
+            "'Programming Language :: Python :: 3.4',\n        'Programming Language :: Python :: 3.5',",
+            'setup.py')
+
+# As of version 1.2.3, PySide removed the post-install script.
+#        # PySide tries to patch ELF files to remove RPATHs
+#        # Disable this and go with the one we set.
+#        filter_file(
+#            r'^\s*rpath_cmd\(pyside_path, srcpath\)',
+#            r'#rpath_cmd(pyside_path, srcpath)',
+#            'pyside_postinstall.py')
 
 
     def install(self, spec, prefix):
