@@ -6,6 +6,15 @@ Basic usage
 The ``spack`` command has many *subcommands*.  You'll only need a
 small subset of them for typical usage.
 
+Note that Spack colorizes output.  ``less -R`` should be used with
+Spack to maintian this colorization.  Eg::
+
+    spack find | less -R
+
+It is recommend that the following be put in your ``.bashrc`` file::
+
+    alias less='less -R'
+
 
 Listing available packages
 ------------------------------
