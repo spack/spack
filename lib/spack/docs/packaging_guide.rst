@@ -1773,7 +1773,7 @@ discover its dependencies.
 
 If you want to see the environment that a package will build with, or
 if you want to run commands in that environment to test them out, you
-can use the :ref:``spack env`` command, documented
+can use the :ref:```spack env`` <spack-env>` command, documented
 below.
 
 .. _compiler-wrappers:
