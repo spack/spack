@@ -5,6 +5,7 @@ class PyCython(Package):
     homepage = "https://pypi.python.org/pypi/cython"
     url      = "https://pypi.python.org/packages/source/C/Cython/Cython-0.22.tar.gz"
 
+    version('0.23.5', '66b62989a67c55af016c916da36e7514')
     version('0.23.4', '157df1f69bcec6b56fd97e0f2e057f6e')
 
     # These versions contain illegal Python3 code...
