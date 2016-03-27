@@ -24,7 +24,7 @@
 ##############################################################################
 
 from spack import *
-import glob
+import glob,sys
 
 class Metis(Package):
     """
@@ -90,3 +90,7 @@ class Metis(Package):
             fs = glob.glob(join_path(source_directory,'GKlib',"*.h"))
             for f in fs:
                 install(f, GKlib_dist)
+
+            # The shared library is not installed correctly on Darwin; correct this
+            if (sys.platform == 'darwin') and ('+shared' in spec):
+                fix_darwin_install_name(prefix.lib)

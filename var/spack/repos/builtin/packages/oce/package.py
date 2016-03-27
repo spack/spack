@@ -1,5 +1,5 @@
 from spack import *
-import platform
+import platform, sys
 
 class Oce(Package):
     """
@@ -45,3 +45,7 @@ class Oce(Package):
         cmake('.', *options)
 
         make("install/strip")
+
+        # The shared libraries are not installed correctly on Darwin; correct this
+        if (sys.platform == 'darwin'):
+            fix_darwin_install_name(prefix.lib)

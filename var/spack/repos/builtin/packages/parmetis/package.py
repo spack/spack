@@ -24,7 +24,7 @@
 ##############################################################################
 
 from spack import *
-
+import sys
 
 class Parmetis(Package):
     """
@@ -83,3 +83,7 @@ class Parmetis(Package):
             cmake(source_directory, *options)
             make()
             make("install")
+
+            # The shared library is not installed correctly on Darwin; correct this
+            if (sys.platform == 'darwin') and ('+shared' in spec):
+                fix_darwin_install_name(prefix.lib)
