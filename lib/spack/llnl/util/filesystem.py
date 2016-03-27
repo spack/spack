@@ -27,7 +27,7 @@ __all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree'
            'force_remove', 'join_path', 'ancestor', 'can_access', 'filter_file',
            'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
            'set_executable', 'copy_mode', 'unset_executable_mode',
-           'remove_dead_links', 'remove_linked_tree']
+           'remove_dead_links', 'remove_linked_tree', 'find_library_path']
 
 import os
 import sys
@@ -392,3 +392,18 @@ def remove_linked_tree(path):
             os.unlink(path)
         else:
             shutil.rmtree(path, True)
+
+
+def find_library_path(libname, *paths):
+    """Searches for a file called <libname> in each path.
+
+    Return:
+      directory where the library was found, if found.  None otherwise.
+
+    """
+    for path in paths:
+        library = join_path(path, libname)
+        if os.path.exists(library):
+            return path
+    return None
+
