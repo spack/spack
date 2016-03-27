@@ -46,7 +46,7 @@ class Trilinos(Package):
     depends_on('mpi')
     depends_on('netcdf+mpi')
     depends_on('parmetis',when='+metis')
-    depends_on('mumps+mpi+metis+parmetis+shared',when='+mumps') # Amesos link errors with static: "__gfortran_adjustl", referenced from: _dmumps_ in libdmumps.a(dmumps_driver.o) "_mpi_abort_", referenced from: _mumps_abort_ in libmumps_common.a(tools_common.o)
+    depends_on('mumps+mpi+shared',when='+mumps') # Amesos link errors with static: "__gfortran_adjustl", referenced from: _dmumps_ in libdmumps.a(dmumps_driver.o) "_mpi_abort_", referenced from: _mumps_abort_ in libmumps_common.a(tools_common.o)
     depends_on('scalapack',when='+mumps')
     depends_on('superlu-dist',when='+superlu-dist')
     depends_on('hypre',when='+hypre')
@@ -58,9 +58,6 @@ class Trilinos(Package):
 
     # check that the combination of variants makes sense
     def variants_check(self):
-        if '+mumps' in self.spec and '+metis' not in self.spec:
-            raise RuntimeError('You cannot use the variant mumps without metis')
-
         if '+superlu-dist' in self.spec and self.spec.satisfies('@:11.4.3'):
             # For Trilinos v11 we need to force SuperLUDist=OFF,
             # since only the deprecated SuperLUDist v3.3 together with an Amesos patch
