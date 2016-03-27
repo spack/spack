@@ -25,11 +25,11 @@ class Git(Package):
 
     # Git compiles with curl support by default on but if your system
     # does not have it you will not be able to clone https repos
-    variant("curl", default=False, description="Add the internal support of curl for https clone")
+    variant("curl", default=True, description="Add the internal support of curl for https clone")
 
     # Git compiles with expat support by default on but if your system
     # does not have it you will not be able to push https repos
-    variant("expat", default=False, description="Add the internal support of expat for https push")
+    variant("expat", default=True, description="Add the internal support of expat for https push")
 
     depends_on("openssl")
     depends_on("autoconf")
