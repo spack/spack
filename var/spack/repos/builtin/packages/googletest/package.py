@@ -18,24 +18,20 @@ from spack import *
 
 class Googletest(Package):
     """FIXME: put a proper description of your package here."""
-    # FIXME: add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://github.com/google/googletest"
     url      = "https://github.com/google/googletest/tarball/release-1.7.0"
 
     version('1.7.0', '5eaf03ed925a47b37c8e1d559eb19bc4')
 
-    # FIXME: Add dependencies if this package requires them.
     depends_on("cmake")
 
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
-        cmake('.', *std_cmake_args)
+        which('cmake')('.', *std_cmake_args)
 
-        # FIXME: Add logic to build and install here
         make()
-        #make("install")
 
-
+        # Google Test doesn't have a make install
+        # We have to do our own install here.
 	install_tree('include', prefix.include)
 
         mkdirp(prefix.lib)

@@ -1,5 +1,8 @@
 from spack import *
 
+# See SciPy build instructions:
+# http://www.scipy.org/scipylib/building/linux.html
+
 class PyScipy(Package):
     """Scientific Library for Python."""
     homepage = "http://www.scipy.org/"

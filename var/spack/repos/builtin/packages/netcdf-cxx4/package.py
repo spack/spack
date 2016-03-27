@@ -26,6 +26,6 @@ class NetcdfCxx4(Package):
         build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path
         with working_dir(build_directory, create=True):
-            cmake(source_directory, *std_cmake_args)
+            which('cmake')(source_directory, *std_cmake_args)
             make()
             make("install")
