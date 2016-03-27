@@ -1,4 +1,5 @@
 from spack import *
+import shutil
 
 class Dealii(Package):
     """C++ software library providing well-documented tools to build finite element codes for a broad variety of PDEs."""
@@ -18,7 +19,7 @@ class Dealii(Package):
     depends_on ("hdf5+mpi~cxx") #FIXME NetCDF declares dependency with ~cxx, why?
     depends_on ("metis")
     depends_on ("muparser")
-    depends_on ("netcdf")
+    depends_on ("netcdf-cxx4")
     #depends_on ("numdiff") #FIXME
     depends_on ("oce")
     depends_on ("p4est")
@@ -50,7 +51,7 @@ class Dealii(Package):
             '-DHDF5_DIR=%s' % spec['hdf5'].prefix,
             '-DMETIS_DIR=%s' % spec['metis'].prefix,
             '-DMUPARSER_DIR=%s ' % spec['muparser'].prefix,
-            '-DNETCDF_DIR=%s' % spec['netcdf'].prefix,
+            '-DNETCDF_DIR=%s' % spec['netcdf-cxx4'].prefix,
             '-DOPENCASCADE_DIR=%s' % spec['oce'].prefix,
             '-DP4EST_DIR=%s' % spec['p4est'].prefix,
             '-DPETSC_DIR=%s' % spec['petsc'].prefix,
@@ -65,3 +66,36 @@ class Dealii(Package):
         make()
         make("test")
         make("install")
+
+        # run some MPI examples with different solvers from PETSc and Trilinos
+        env['DEAL_II_DIR'] = prefix
+        # take bare-bones step-3
+        with working_dir('examples/step-3'):
+            cmake('.')
+            make('release')
+            make('run',parallel=False)
+
+        # take step-40 which can use both PETSc and Trilinos
+        # FIXME: switch step-40 to MPI run
+        with working_dir('examples/step-40'):
+            # list the number of cycles to speed up
+            filter_file(r'(const unsigned int n_cycles = 8;)',  ('const unsigned int n_cycles = 2;'), 'step-40.cc')
+            cmake('.')
+            make('release')
+            make('run',parallel=False)
+
+            # change Linear Algebra to Trilinos
+            filter_file(r'(#define USE_PETSC_LA.*)',  (''), 'step-40.cc')
+            make('release')
+            make('run',parallel=False)
+
+        with working_dir('examples/step-36'):
+            cmake('.')
+            make('release')
+            make('run',parallel=False)
+
+        with working_dir('examples/step-54'):
+            cmake('.')
+            make('release')
+            # FIXME
+            # make('run',parallel=False)
