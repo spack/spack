@@ -6,7 +6,7 @@ class Ibmisc(CMakePackage):
     homepage = "https://github.com/citibeth/ibmisc"
     url      = "https://github.com/citibeth/ibmisc/tarball/v0.1.0"
 
-    version('0.1.0', '1856cc25a60154ffe6073ad031e78cec')
+    version('0.1.0', '0f6b5c6d2635106963878b4d4e06169c')
 
     variant('everytrace', default=False, description='Report errors through Everytrace')
     variant('proj', default=True, description='Compile utilities for PROJ.4 library')
