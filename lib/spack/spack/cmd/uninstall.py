@@ -24,15 +24,14 @@
 ##############################################################################
 from __future__ import print_function
 
-import argparse
 import sys
+import argparse
 
 import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.repository
 from spack.cmd.find import display_specs
-from spack.package import PackageStillNeededError
 
 description = "Remove an installed package"
 
@@ -40,6 +39,16 @@ error_message = """You can either:
     a) Use a more specific spec, or
     b) use spack uninstall -a to uninstall ALL matching specs.
 """
+
+def ask_for_confirmation(message):
+    while True:
+        tty.msg(message + '[y/n]')
+        choice = raw_input().lower()
+        if choice == 'y':
+            break
+        elif choice == 'n':
+            sys.exit(1)
+        tty.warning('Please reply either "y" or "n"')
 
 
 def setup_parser(subparser):
@@ -53,7 +62,11 @@ def setup_parser(subparser):
              "libelf are uninstalled. This is both useful and dangerous, like rm -r.")
     subparser.add_argument(
         '-r', '--recursive', action='store_true', dest='recursive',
-        help='Uninstall all the packages that depends on the ones for which we required explicit removal.'
+        help='Also uninstall any packages that depend on the ones given via command line.'
+    )
+    subparser.add_argument(
+        '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
+        help='Assume "yes" is the answer to every confirmation asked to the user.'
 
     )
     subparser.add_argument('packages', nargs=argparse.REMAINDER, help="specs of packages to uninstall")
@@ -96,6 +109,15 @@ def concretize_specs(specs, allow_multiple_matches=False, force=False):
 
 
 def installed_dependents(specs):
+    """
+    Returns a dictionary that maps a spec with a list of its installed dependents
+
+    Args:
+        specs: list of specs to be checked for dependents
+
+    Returns:
+        dictionary of installed dependents
+    """
     dependents = {}
     for item in specs:
         lst = [x for x in item.package.installed_dependents if x not in specs]
@@ -105,7 +127,13 @@ def installed_dependents(specs):
 
 
 def do_uninstall(specs, force):
-    specs = list(set(specs))  # Make specs unique
+    """
+    Uninstalls all the specs in a list.
+
+    Args:
+        specs: list of specs to be uninstalled
+        force: force uninstallation (boolean)
+    """
     packages = []
     for item in specs:
         try:
@@ -136,7 +164,7 @@ def uninstall(parser, args):
         uninstall_list = concretize_specs(specs, args.all, args.force)  # takes care of '-a' is given in the cli
         dependent_list = installed_dependents(uninstall_list)  # takes care of '-r'
 
-        # There are dependents but recursive uninstall wasn't a requirement
+        # Process dependent_list and update uninstall_list
         has_error = False
         if dependent_list and not args.recursive and not args.force:
             for spec, lst in dependent_list.items():
@@ -149,8 +177,17 @@ def uninstall(parser, args):
         elif args.recursive:
             for key, lst in dependent_list.items():
                 uninstall_list.extend(lst)
+            uninstall_list = list(set(uninstall_list))
 
         if has_error:
             tty.die('You can use spack uninstall -f to force this action')
+
+        if not args.yes_to_all:
+            tty.msg("The following packages will be uninstalled : ")
+            print('')
+            display_specs(uninstall_list, long=True)
+            print('')
+            ask_for_confirmation('Do you want to proceed ? ')
+
         # Uninstall everything on the list
         do_uninstall(uninstall_list, args.force)
