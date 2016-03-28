@@ -7,6 +7,7 @@ class Icebin(CMakePackage):
     url         = "https://github.com/citibeth/icebin/tarball/v0.1.0"
 
     version('0.1.0', '1c2769a0cb3531e4086b885dc7a6fd27')
+    version('0.1.1', '986b8b51a2564f9c52156a11642e596c')
 
     variant('everytrace', default=False, description='Report errors through Everytrace (requires Everytrace)')
     variant('python', default=True, description='Build Python extension (requires Python, Numpy)')

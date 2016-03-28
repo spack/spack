@@ -13,6 +13,11 @@ class PyGiss(Package):
 
     depends_on('py-numpy+blas+lapack')
     depends_on('py-netcdf')
+    depends_on('py-matplotlib')
+    depends_on('py-basemap')
+    depends_on('py-proj')
+    depends_on('py-scipy')
+    depends_on('py-six')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
