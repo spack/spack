@@ -19,7 +19,7 @@ class Dealii(Package):
     depends_on ("hdf5+mpi~cxx") #FIXME NetCDF declares dependency with ~cxx, why?
     depends_on ("metis")
     depends_on ("muparser")
-    depends_on ("netcdf-cxx4")
+    depends_on ("netcdf-cxx")
     #depends_on ("numdiff") #FIXME
     depends_on ("oce")
     depends_on ("p4est")
@@ -55,10 +55,10 @@ class Dealii(Package):
             # since Netcdf is spread among two, need to do it by hand:
             '-DNETCDF_FOUND=true',
             '-DNETCDF_LIBRARIES=%s;%s' %
-                (join_path(spec['netcdf-cxx4'].prefix.lib,'libnetcdf_c++4.%s' % dsuf),
+                (join_path(spec['netcdf-cxx'].prefix.lib,'libnetcdf_c++.%s' % dsuf),
                  join_path(spec['netcdf'].prefix.lib,'libnetcdf.%s' % dsuf)),
             '-DNETCDF_INCLUDE_DIRS=%s;%s' %
-                (spec['netcdf-cxx4'].prefix.include,
+                (spec['netcdf-cxx'].prefix.include,
                  spec['netcdf'].prefix.include),
             '-DOPENCASCADE_DIR=%s' % spec['oce'].prefix,
             '-DP4EST_DIR=%s' % spec['p4est'].prefix,
