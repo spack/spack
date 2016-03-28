@@ -293,9 +293,9 @@ for dep in "${deps[@]}"; do
     if [[ -d $dep/lib64 ]]; then
         # libraries+=("$dep/lib64")
         if [[ $mode = ccld ]]; then
-            args=("-L$dep/lib" "-Wl,-rpath,$dep/lib" "${args[@]}")
+            args=("-L$dep/lib64" "-Wl,-rpath,$dep/lib64" "${args[@]}")
         elif [[ $mode = ld ]]; then
-            args=("-L$dep/lib" "-rpath" "$dep/lib" "${args[@]}")
+            args=("-L$dep/lib64" "-rpath" "$dep/lib64" "${args[@]}")
         fi
     fi
 done
