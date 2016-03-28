@@ -96,8 +96,8 @@ class Trilinos(Package):
                         '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
                         '-DTrilinos_ENABLE_CXX11:BOOL=ON',
                         '-DTPL_ENABLE_Netcdf:BOOL=ON',
-                        '-DTPL_ENABLE_HYPRE:BOOL=ON',
-                        '-DTPL_ENABLE_HDF5:BOOL=ON'
+                        '-DTPL_ENABLE_HYPRE:BOOL=%s' % ('ON' if '+hypre' in spec else 'OFF'),,
+                        '-DTPL_ENABLE_HDF5:BOOL=%s' % ('ON' if '+hdf5' in spec else 'OFF'),
                         ])
 
         # Fortran lib
