@@ -52,7 +52,7 @@ class Trilinos(Package):
     depends_on('mumps@5.0:+mpi+shared',when='+mumps') # Amesos link errors with static: "__gfortran_adjustl", referenced from: _dmumps_ in libdmumps.a(dmumps_driver.o) "_mpi_abort_", referenced from: _mumps_abort_ in libmumps_common.a(tools_common.o)
     depends_on('scalapack',when='+mumps')
     depends_on('superlu-dist',when='+superlu-dist')
-    depends_on('hypre',when='+hypre')
+    depends_on('hypre~internal-superlu',when='+hypre')
     depends_on('hdf5+mpi',when='+hdf5')
 
     depends_on('python',when='+python') #  Needs py-numpy activated
@@ -179,7 +179,7 @@ class Trilinos(Package):
             options.extend([
                 '-DTPL_ENABLE_SuperLUDist:BOOL=ON',
                 '-DSuperLUDist_LIBRARY_DIRS=%s' % spec['superlu-dist'].prefix.lib,
-                '-DSuperLUDist_INCLUDE_DIRS=%s/superlu_dist' % spec['superlu-dist'].prefix.include # superlu_dist and superlu have the same header names :-( In order to avoid conflicts, try to keep "dist" version headers in a subfolder
+                '-DSuperLUDist_INCLUDE_DIRS=%s' % spec['superlu-dist'].prefix.include
             ])
             if spec.satisfies('^superlu-dist@4.0:'):
                 options.extend([
