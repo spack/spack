@@ -28,6 +28,7 @@ class Petsc(Package):
     variant('boost',   default=True,  description='Activates support for Boost')
     variant('hypre',   default=True,  description='Activates support for Hypre (only parallel)')
     variant('mumps',   default=True,  description='Activates support for MUMPS (only parallel)')
+    variant('superlu-dist', default=True, description='Activates support for SuperluDist (only parallel)')
 
     # Virtual dependencies
     depends_on('blas')
@@ -43,8 +44,11 @@ class Petsc(Package):
 
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('parmetis', when='+metis+mpi')
-    depends_on('hypre',    when='+hypre+mpi~complex') # Hypre does not support complex numbers
-
+    # Hypre does not support complex numbers.
+    # Also PETSc prefer to build it without internal superlu, likely due to conflict in headers
+    # see https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
+    depends_on('hypre~internal-superlu', when='+hypre+mpi~complex')
+    depends_on('superlu-dist', when='+superlu-dist+mpi')
     depends_on('mumps+mpi', when='+mumps+mpi')
     depends_on('scalapack', when='+mumps+mpi')
 
@@ -61,7 +65,7 @@ class Petsc(Package):
             # If mpi is disabled (~mpi), it's an error to have any of these enabled.
             # This generates a list of any such errors.
             errors = [error_message_fmt.format(library=x)
-                      for x in ('hdf5', 'hypre', 'parmetis','mumps')
+                      for x in ('hdf5', 'hypre', 'parmetis','mumps','superlu-dist')
                       if ('+'+x) in self.spec]
             if errors:
                 errors = ['incompatible variants given'] + errors
@@ -101,6 +105,17 @@ class Petsc(Package):
                 options.append(
                     '--with-{library}-dir={path}'.format(library=library, path=spec[library].prefix)
                 )
+        # PETSc does not pick up SuperluDist from the dir as they look for superlu_dist_4.1.a
+        if 'superlu-dist' in spec:
+            options.extend([
+                '--with-superlu_dist-include=%s' % spec['superlu-dist'].prefix.include,
+                '--with-superlu_dist-lib=%s' % join_path(spec['superlu-dist'].prefix.lib, 'libsuperlu_dist.a'),
+                '--with-superlu_dist=1'
+            ])
+        else:
+            options.append(
+                '--with-superlu_dist=0'
+            )
 
         configure('--prefix=%s' % prefix, *options)
 

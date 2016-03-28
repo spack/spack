@@ -14,6 +14,8 @@ class Hypre(Package):
 
     # hypre does not know how to build shared libraries on Darwin
     variant('shared', default=sys.platform!='darwin', description="Build shared library version (disables static library)")
+    # SuperluDist have conflicting headers with those in Hypre
+    variant('internal-superlu', default=True, description="Use internal Superlu routines")
 
     depends_on("mpi")
     depends_on("blas")
@@ -37,6 +39,9 @@ class Hypre(Package):
                 "--with-blas-lib-dirs=%s/lib" % blas_dir]
         if '+shared' in self.spec:
             configure_args.append("--enable-shared")
+
+        if '~internal-superlu' in self.spec:
+            configure_args.append("--without-superlu")
 
         # Hypre's source is staged under ./src so we'll have to manually
         # cd into it.
