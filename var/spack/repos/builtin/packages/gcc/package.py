@@ -27,6 +27,7 @@ from spack import *
 from contextlib import closing
 from glob import glob
 import sys
+import os
 
 class Gcc(Package):
     """The GNU Compiler Collection includes front ends for C, C++,
@@ -63,6 +64,9 @@ class Gcc(Package):
     # TODO: integrate these libraries.
     #depends_on("ppl")
     #depends_on("cloog")
+    if sys.platform == 'darwin':
+        patch('darwin/gcc-4.9.patch1', when='@4.9.3')
+        patch('darwin/gcc-4.9.patch2', when='@4.9.3')
 
     def install(self, spec, prefix):
         # libjava/configure needs a minor fix to install into spack paths.
@@ -70,6 +74,7 @@ class Gcc(Package):
             string=True)
 
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
+
         if spec.satisfies("@4.7.1:") and sys.platform != 'darwin':
             enabled_languages.add('go')
 
@@ -101,12 +106,17 @@ class Gcc(Package):
             isl_options = ["--with-isl=%s" % spec['isl'].prefix]
             options.extend(isl_options)
 
+        if sys.platform == 'darwin' :
+            darwin_options = [ "--with-build-config=bootstrap-debug" ]
+            options.extend(darwin_options)
+
         build_dir = join_path(self.stage.path, 'spack-build')
         configure = Executable( join_path(self.stage.source_path, 'configure') )
         with working_dir(build_dir, create=True):
             # Rest of install is straightforward.
             configure(*options)
-            make()
+            if sys.platform == 'darwin' : make("bootstrap")
+            else: make()
             make("install")
 
         self.write_rpath_specs()
