@@ -114,7 +114,9 @@ case "$command" in
         ;;
 esac
 
-# If any of the arguments below is present then the mode is vcheck. In vcheck mode nothing is added in terms of extra search paths or libraries
+# If any of the arguments below is present then the mode is vcheck. In
+# vcheck mode nothing is added in terms of extra search paths or
+# libraries
 if [ -z "$mode" ]; then
     for arg in "$@"; do
         if [ "$arg" = -v -o "$arg" = -V -o "$arg" = --version -o "$arg" = -dumpversion ]; then
@@ -125,7 +127,6 @@ if [ -z "$mode" ]; then
 fi
 
 # Finish setting up the mode.
-
 if [ -z "$mode" ]; then
     mode=ccld
     for arg in "$@"; do
@@ -162,127 +163,18 @@ fi
 input_command="$@"
 args=("$@")
 
-# Dump parsed values for unit testing if asked for
-if [[ -n $SPACK_TEST_COMMAND ]]; then
-
-    #
-    # Now do real parsing of the command line args, trying hard to keep
-    # non-rpath linker arguments in the proper order w.r.t. other command line
-    # arguments.  This is important for things like groups.
-    #
-    includes=()
-    libraries=()
-    libs=()
-    rpaths=()
-    other_args=()
-
-    while [ -n "$1" ]; do
-        case "$1" in
-            -I*)
-                arg="${1#-I}"
-                if [ -z "$arg" ]; then shift; arg="$1"; fi
-                includes+=("$arg")
-                ;;
-            -L*)
-                arg="${1#-L}"
-                if [ -z "$arg" ]; then shift; arg="$1"; fi
-                libraries+=("$arg")
-                ;;
-            -l*)
-                arg="${1#-l}"
-                if [ -z "$arg" ]; then shift; arg="$1"; fi
-                libs+=("$arg")
-                ;;
-            -Wl,*)
-                arg="${1#-Wl,}"
-                # TODO: Handle multiple -Wl, continuations of -Wl,-rpath
-                if [[ $arg == -rpath=* ]]; then
-                    arg="${arg#-rpath=}"
-                    for rpath in ${arg//,/ }; do
-                        rpaths+=("$rpath")
-                    done
-                elif [[ $arg == -rpath,* ]]; then
-                    arg="${arg#-rpath,}"
-                    for rpath in ${arg//,/ }; do
-                        rpaths+=("$rpath")
-                    done
-                elif [[ $arg == -rpath ]]; then
-                    shift; arg="$1"
-                    if [[ $arg != '-Wl,'* ]]; then
-                        die "-Wl,-rpath was not followed by -Wl,*"
-                    fi
-                    arg="${arg#-Wl,}"
-                    for rpath in ${arg//,/ }; do
-                        rpaths+=("$rpath")
-                    done
-                else
-                    other_args+=("-Wl,$arg")
-                fi
-                ;;
-            -Xlinker)
-                shift; arg="$1";
-                if [[ $arg = -rpath=* ]]; then
-                    rpaths+=("${arg#-rpath=}")
-                elif [[ $arg = -rpath ]]; then
-                    shift; arg="$1"
-                    if [[ $arg != -Xlinker ]]; then
-                        die "-Xlinker -rpath was not followed by -Xlinker <arg>"
-                    fi
-                    shift; arg="$1"
-                    rpaths+=("$arg")
-                else
-                    other_args+=("-Xlinker")
-                    other_args+=("$arg")
-                fi
-                ;;
-            *)
-                other_args+=("$1")
-                ;;
-        esac
-        shift
-    done
-
-    IFS=$'\n'
-    case "$SPACK_TEST_COMMAND" in
-        dump-includes)   echo "${includes[*]}";;
-        dump-libraries)  echo "${libraries[*]}";;
-        dump-libs)       echo "${libs[*]}";;
-        dump-rpaths)     echo "${rpaths[*]}";;
-        dump-other-args) echo "${other_args[*]}";;
-        dump-all)
-            echo "INCLUDES:"
-            echo "${includes[*]}"
-            echo
-            echo "LIBRARIES:"
-            echo "${libraries[*]}"
-            echo
-            echo "LIBS:"
-            echo "${libs[*]}"
-            echo
-            echo "RPATHS:"
-            echo "${rpaths[*]}"
-            echo
-            echo "ARGS:"
-            echo "${other_args[*]}"
-            ;;
-        *)
-            die "ERROR: Unknown test command"
-            ;;
-    esac
-    exit
-fi
-
 # Read spack dependencies from the path environment variable
 IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
 for dep in "${deps[@]}"; do
+    # Prepend include directories
     if [[ -d $dep/include ]]; then
         if [[ $mode = cpp || $mode = cc || $mode = as || $mode = ccld ]]; then
             args=("-I$dep/include" "${args[@]}")
         fi
     fi
 
+    # Prepend lib and RPATH directories
     if [[ -d $dep/lib ]]; then
-        # libraries+=("$dep/lib")
         if [[ $mode = ccld ]]; then
             args=("-L$dep/lib" "-Wl,-rpath,$dep/lib" "${args[@]}")
         elif [[ $mode = ld ]]; then
@@ -290,8 +182,8 @@ for dep in "${deps[@]}"; do
         fi
     fi
 
+    # Prepend lib64 and RPATH directories
     if [[ -d $dep/lib64 ]]; then
-        # libraries+=("$dep/lib64")
         if [[ $mode = ccld ]]; then
             args=("-L$dep/lib64" "-Wl,-rpath,$dep/lib64" "${args[@]}")
         elif [[ $mode = ld ]]; then
@@ -302,18 +194,8 @@ done
 
 # Include all -L's and prefix/whatever dirs in rpath
 if [[ $mode = ccld ]]; then
-    # for dir in "${libraries[@]}"; do
-    #     if [[ dir = $SPACK_INSTALL* ]]; then
-    #         args=("-Wl,-rpath,$dir" "${args[@]}")
-    #     fi
-    # done
     args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" "${args[@]}")
 elif [[ $mode = ld ]]; then
-    # for dir in "${libraries[@]}"; do
-    #     if [[ dir = $SPACK_INSTALL* ]]; then
-    #         args=("-rpath" "$dir" "${args[@]}")
-    #     fi
-    # done
     args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
 fi
 
@@ -344,6 +226,14 @@ done
 export PATH
 
 full_command=("$command" "${args[@]}")
+
+# In test command mode, write out full command for Spack tests.
+if [[ $SPACK_TEST_COMMAND = dump-args ]]; then
+    echo "${full_command[@]}"
+    exit
+elif [[ -n $SPACK_TEST_COMMAND ]]; then
+    die "ERROR: Unknown test command"
+fi
 
 #
 # Write the input and output commands to debug logs if it's asked for.
