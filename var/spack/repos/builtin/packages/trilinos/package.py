@@ -6,6 +6,9 @@ import os, sys, glob
 # https://github.com/koecher/candi/blob/master/deal.II-toolchain/packages/trilinos.package
 # https://gitlab.com/configurations/cluster-config/blob/master/trilinos.sh
 # https://github.com/Homebrew/homebrew-science/blob/master/trilinos.rb
+# and some relevant documentation/examples:
+# https://trilinos.org/docs/dev/packages/amesos2/doc/html/classAmesos2_1_1MUMPS.html
+# https://github.com/trilinos/Trilinos/issues/175
 class Trilinos(Package):
     """The Trilinos Project is an effort to develop algorithms and enabling technologies within an object-oriented
     software framework for the solution of large-scale, complex multi-physics engineering and scientific problems.
@@ -46,7 +49,7 @@ class Trilinos(Package):
     depends_on('mpi')
     depends_on('netcdf+mpi')
     depends_on('parmetis',when='+metis')
-    depends_on('mumps+mpi+shared',when='+mumps') # Amesos link errors with static: "__gfortran_adjustl", referenced from: _dmumps_ in libdmumps.a(dmumps_driver.o) "_mpi_abort_", referenced from: _mumps_abort_ in libmumps_common.a(tools_common.o)
+    depends_on('mumps@5.0:+mpi+shared',when='+mumps') # Amesos link errors with static: "__gfortran_adjustl", referenced from: _dmumps_ in libdmumps.a(dmumps_driver.o) "_mpi_abort_", referenced from: _mumps_abort_ in libmumps_common.a(tools_common.o)
     depends_on('scalapack',when='+mumps')
     depends_on('superlu-dist',when='+superlu-dist')
     depends_on('hypre',when='+hypre')
@@ -67,6 +70,7 @@ class Trilinos(Package):
     def install(self, spec, prefix):
         self.variants_check()
 
+        cxx_flags = []
         options = []
         options.extend(std_cmake_args)
 
@@ -91,7 +95,6 @@ class Trilinos(Package):
                         '-DBoost_LIBRARY_DIRS:PATH=%s' % spec['boost'].prefix.lib,
                         '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
                         '-DTrilinos_ENABLE_CXX11:BOOL=ON',
-                        '-DTrilinos_CXX11_FLAGS=-std=c++11',
                         '-DTPL_ENABLE_Netcdf:BOOL=ON',
                         '-DTPL_ENABLE_HYPRE:BOOL=ON',
                         '-DTPL_ENABLE_HDF5:BOOL=ON'
@@ -154,6 +157,10 @@ class Trilinos(Package):
                 '-DTPL_ENABLE_SCALAPACK:BOOL=ON',
                 '-DSCALAPACK_LIBRARY_NAMES=scalapack' # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
             ])
+            # see https://github.com/trilinos/Trilinos/blob/master/packages/amesos/README-MUMPS
+            cxx_flags.extend([
+                '-DMUMPS_5_0'
+            ])
         else:
             options.extend([
                 '-DTPL_ENABLE_MUMPS:BOOL=OFF',
@@ -194,6 +201,10 @@ class Trilinos(Package):
                 '-DTrilinos_ENABLE_PyTrilinos:BOOL=OFF'
             ])
 
+        # collect CXX flags:
+        options.extend([
+            '-DCMAKE_CXX_FLAGS:STRING=%s' % (' '.join(cxx_flags)),
+        ])
 
         # disable due to compiler / config errors:
         options.extend([
