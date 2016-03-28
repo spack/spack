@@ -77,7 +77,13 @@ class Dealii(Package):
 
         # run some MPI examples with different solvers from PETSc and Trilinos
         env['DEAL_II_DIR'] = prefix
+        print('=====================================')
+        print('============ EXAMPLES ===============')
+        print('=====================================')
         # take bare-bones step-3
+        print('=====================================')
+        print('============ Step-3 =================')
+        print('=====================================')
         with working_dir('examples/step-3'):
             cmake('.')
             make('release')
@@ -86,22 +92,56 @@ class Dealii(Package):
         # take step-40 which can use both PETSc and Trilinos
         # FIXME: switch step-40 to MPI run
         with working_dir('examples/step-40'):
+            print('=====================================')
+            print('========== Step-40 PETSc ============')
+            print('=====================================')
             # list the number of cycles to speed up
             filter_file(r'(const unsigned int n_cycles = 8;)',  ('const unsigned int n_cycles = 2;'), 'step-40.cc')
             cmake('.')
             make('release')
             make('run',parallel=False)
 
+            print('=====================================')
+            print('========= Step-40 Trilinos ==========')
+            print('=====================================')
             # change Linear Algebra to Trilinos
-            filter_file(r'(#define USE_PETSC_LA.*)',  (''), 'step-40.cc')
+            filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',  ('#define FORCE_USE_OF_TRILINOS'), 'step-40.cc')
             make('release')
             make('run',parallel=False)
 
+            print('=====================================')
+            print('=== Step-40 Trilinos SuperluDist ====')
+            print('=====================================')
+            # change to direct solvers
+            filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')
+            filter_file(r'(LA::MPI::PreconditionAMG preconditioner;)',  (''), 'step-40.cc')
+            filter_file(r'(LA::MPI::PreconditionAMG::AdditionalData data;)',  (''), 'step-40.cc')
+            filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',  (''), 'step-40.cc')
+            filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')
+            filter_file(r'(preconditioner\);)',  (''), 'step-40.cc')
+
+            make('release')
+            make('run',paralle=False)
+
+            print('=====================================')
+            print('====== Step-40 Trilinos MUMPS =======')
+            print('=====================================')
+            # switch to Mumps
+            filter_file(r'(Amesos_Superludist)',  ('Amesos_Mumps'), 'step-40.cc')
+            make('release')
+            make('run',parallel=False)
+
+        print('=====================================')
+        print('============ Step-36 ================')
+        print('=====================================')
         with working_dir('examples/step-36'):
             cmake('.')
             make('release')
             make('run',parallel=False)
 
+        print('=====================================')
+        print('============ Step-54 ================')
+        print('=====================================')
         with working_dir('examples/step-54'):
             cmake('.')
             make('release')
