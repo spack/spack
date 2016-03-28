@@ -108,6 +108,12 @@ case "$command" in
         ;;
     ld)
         mode=ld
+        for arg in "$@"; do
+            if [ "$arg" = -S ]; then
+                mode=strip
+                break
+	    fi
+        done
         ;;
     *)
         die "Unkown compiler: $command"
@@ -315,6 +321,9 @@ elif [[ $mode = ld ]]; then
     #     fi
     # done
     args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
+
+elif [[ $mode = strip ]]; then
+      args=("${args[@]}")
 fi
 
 #
@@ -351,8 +360,8 @@ full_command=("$command" "${args[@]}")
 if [[ $SPACK_DEBUG = TRUE ]]; then
     input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.in.log"
     output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.out.log"
-    echo "$input_command" >> $input_log
-    echo "$mode       ${full_command[@]}" >> $output_log
+    echo "in $command $input_command" >> $output_log
+    echo "out: $mode ${full_command[@]}" >> $output_log
 fi
 
 exec "${full_command[@]}"
