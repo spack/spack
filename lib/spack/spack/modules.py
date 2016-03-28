@@ -278,6 +278,6 @@ class TclModule(EnvModule):
         # Long description
         if self.long_description:
             module_file.write('proc ModulesHelp { } {\n')
-            doc = re.sub(r'"', '\"', self.long_description)
-            module_file.write("puts stderr \"%s\"\n" % doc)
+            for line in textwrap.wrap(self.long_description, 72):
+                module_file.write("puts stderr \"%s\"\n" % line)
             module_file.write('}\n\n')
