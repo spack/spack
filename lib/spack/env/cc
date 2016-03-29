@@ -85,6 +85,10 @@ done
 #    ccld    compile & link
 #    vcheck  version check
 #
+# Depending on the mode, we may or may not add extra rpaths.
+# This variable controls whether they are added.
+add_rpaths=true
+
 command=$(basename "$0")
 case "$command" in
     cc|c89|c99|gcc|clang|icc|pgcc|xlc)
@@ -108,6 +112,17 @@ case "$command" in
         ;;
     ld)
         mode=ld
+
+        # Darwin's linker has a -r argument that merges object files
+        # together. It doesn't work with -rpath.
+        if [[ $OSTYPE = darwin* ]]; then
+            for arg in "$@"; do
+                if [ "$arg" = -r ]; then
+                    add_rpaths=false
+                    break
+	            fi
+            done
+        fi
         ;;
     *)
         die "Unkown compiler: $command"
@@ -176,27 +191,31 @@ for dep in "${deps[@]}"; do
     # Prepend lib and RPATH directories
     if [[ -d $dep/lib ]]; then
         if [[ $mode = ccld ]]; then
-            args=("-L$dep/lib" "-Wl,-rpath,$dep/lib" "${args[@]}")
+            $add_rpaths && args=("-Wl,-rpath,$dep/lib" "${args[@]}")
+            args=("-L$dep/lib" "${args[@]}")
         elif [[ $mode = ld ]]; then
-            args=("-L$dep/lib" "-rpath" "$dep/lib" "${args[@]}")
+            $add_rpaths && args=("-rpath" "$dep/lib" "${args[@]}")
+            args=("-L$dep/lib" "${args[@]}")
         fi
     fi
 
     # Prepend lib64 and RPATH directories
     if [[ -d $dep/lib64 ]]; then
         if [[ $mode = ccld ]]; then
-            args=("-L$dep/lib64" "-Wl,-rpath,$dep/lib64" "${args[@]}")
+            $add_rpaths && args=("-Wl,-rpath,$dep/lib64" "${args[@]}")
+            args=("-L$dep/lib64" "${args[@]}")
         elif [[ $mode = ld ]]; then
-            args=("-L$dep/lib64" "-rpath" "$dep/lib64" "${args[@]}")
+            $add_rpaths && args=("-rpath" "$dep/lib64" "${args[@]}")
+            args=("-L$dep/lib64" "${args[@]}")
         fi
     fi
 done
 
 # Include all -L's and prefix/whatever dirs in rpath
 if [[ $mode = ccld ]]; then
-    args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" "${args[@]}")
 elif [[ $mode = ld ]]; then
-    args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
 fi
 
 #
@@ -241,8 +260,8 @@ fi
 if [[ $SPACK_DEBUG = TRUE ]]; then
     input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.in.log"
     output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.out.log"
-    echo "$command $input_command" >> $input_log
-    echo "$mode       ${full_command[@]}" >> $output_log
+    echo "[$mode] $command $input_command" >> $input_log
+    echo "[$mode] ${full_command[@]}" >> $output_log
 fi
 
 exec "${full_command[@]}"
