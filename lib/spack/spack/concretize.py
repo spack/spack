@@ -159,6 +159,10 @@ class DefaultConcretizer(object):
              if any(v.satisfies(sv) for sv in spec.versions)],
             cmp=cmp_versions)
 
+        def prefer_key(v):
+            return pkg.versions.get(Version(v)).get('preferred', False)
+        valid_versions.sort(key=prefer_key, reverse=True)
+
         if valid_versions:
             spec.versions = ver([valid_versions[0]])
         else:

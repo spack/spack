@@ -24,7 +24,7 @@
 ##############################################################################
 
 from spack import *
-
+import sys
 
 class Parmetis(Package):
     """
@@ -64,7 +64,7 @@ class Parmetis(Package):
 
         # FIXME : Once a contract is defined, MPI compilers should be retrieved indirectly via spec['mpi'] in case
         # FIXME : they use a non-standard name
-        options.extend(['-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=metis_source), # still need headers from METIS source, and they are not installed with METIS. shame...
+        options.extend(['-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=spec['metis'].prefix.include),
                         '-DMETIS_PATH:PATH={metis_source}'.format(metis_source=spec['metis'].prefix),
                         '-DCMAKE_C_COMPILER:STRING=mpicc',
                         '-DCMAKE_CXX_COMPILER:STRING=mpicxx'])
@@ -83,3 +83,7 @@ class Parmetis(Package):
             cmake(source_directory, *options)
             make()
             make("install")
+
+            # The shared library is not installed correctly on Darwin; correct this
+            if (sys.platform == 'darwin') and ('+shared' in spec):
+                fix_darwin_install_name(prefix.lib)

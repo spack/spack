@@ -32,6 +32,10 @@ class Espresso(Package):
         if '+elpa' in spec and ('~mpi' in spec or '~scalapack' in spec):
             raise RuntimeError(error.format(variant='elpa'))
 
+    def setup_environment(self, spack_env, run_env):
+        # Espresso copies every executable in prefix without creating sub-folders
+        run_env.prepend_path('PATH', self.prefix)
+
     def install(self, spec, prefix):
         self.check_variants(spec)
 
