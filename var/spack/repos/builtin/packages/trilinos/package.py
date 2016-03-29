@@ -7,7 +7,6 @@ import os, sys, glob
 # https://gitlab.com/configurations/cluster-config/blob/master/trilinos.sh
 # https://github.com/Homebrew/homebrew-science/blob/master/trilinos.rb
 # and some relevant documentation/examples:
-# https://trilinos.org/docs/dev/packages/amesos2/doc/html/classAmesos2_1_1MUMPS.html
 # https://github.com/trilinos/Trilinos/issues/175
 class Trilinos(Package):
     """The Trilinos Project is an effort to develop algorithms and enabling technologies within an object-oriented
@@ -50,7 +49,14 @@ class Trilinos(Package):
     depends_on('mpi')
     depends_on('netcdf+mpi')
     depends_on('parmetis',when='+metis')
-    depends_on('mumps@5.0:+mpi+shared',when='+mumps') # Amesos link errors with static: "__gfortran_adjustl", referenced from: _dmumps_ in libdmumps.a(dmumps_driver.o) "_mpi_abort_", referenced from: _mumps_abort_ in libmumps_common.a(tools_common.o)
+    # Trilinos' Tribits config system is limited which makes it
+    # very tricky to link Amesos with static MUMPS, see
+    # https://trilinos.org/docs/dev/packages/amesos2/doc/html/classAmesos2_1_1MUMPS.html
+    # One could work it out by getting linking flags from mpif90 --showme:link (or alike)
+    # and adding results to -DTrilinos_EXTRA_LINK_FLAGS
+    # together with Blas and Lapack and ScaLAPACK and Blacs and -lgfortran and
+    # it may work at the end. But let's avoid all this by simply using shared libs
+    depends_on('mumps@5.0:+mpi+shared',when='+mumps')
     depends_on('scalapack',when='+mumps')
     depends_on('superlu-dist',when='+superlu-dist')
     depends_on('hypre~internal-superlu',when='+hypre')
