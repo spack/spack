@@ -42,6 +42,9 @@ class Hypre(Package):
 
         if '~internal-superlu' in self.spec:
             configure_args.append("--without-superlu")
+            # MLI and FEI do not build without superlu on Linux
+            configure_args.append("--without-mli")
+            configure_args.append("--without-fei")
 
         # Hypre's source is staged under ./src so we'll have to manually
         # cd into it.
