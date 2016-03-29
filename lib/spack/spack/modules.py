@@ -48,6 +48,7 @@ import textwrap
 
 import llnl.util.tty as tty
 import spack
+import spack.config
 from llnl.util.filesystem import join_path, mkdirp
 from spack.environment import *
 
@@ -55,6 +56,8 @@ __all__ = ['EnvModule', 'Dotkit', 'TclModule']
 
 # Registry of all types of modules.  Entries created by EnvModule's metaclass
 module_types = {}
+
+CONFIGURATION = spack.config.get_config('modules')
 
 
 def print_help():
@@ -115,7 +118,7 @@ class EnvModule(object):
     class __metaclass__(type):
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
-            if cls.name != 'env_module':
+            if cls.name != 'env_module' and cls.name in CONFIGURATION['enable']:
                 module_types[cls.name] = cls
 
     def __init__(self, spec=None):
@@ -158,13 +161,13 @@ class EnvModule(object):
 
         # Let the extendee modify their extensions before asking for
         # package-specific modifications
-        for extendee in self.pkg.extendees:
-            extendee_spec = self.spec[extendee]
-            extendee_spec.package.modify_module(
-                self.pkg.module, extendee_spec, self.spec)
+        spack_env = EnvironmentModifications()
+        for item in self.pkg.extendees:
+            package = self.spec[item].package
+            package.setup_dependent_package(self.pkg.module, self.spec)
+            package.setup_dependent_environment(spack_env, env, self.spec)
 
         # Package-specific environment modifications
-        spack_env = EnvironmentModifications()
         self.spec.package.setup_environment(spack_env, env)
 
         # TODO : implement site-specific modifications and filters
@@ -275,6 +278,6 @@ class TclModule(EnvModule):
         # Long description
         if self.long_description:
             module_file.write('proc ModulesHelp { } {\n')
-            doc = re.sub(r'"', '\"', self.long_description)
-            module_file.write("puts stderr \"%s\"\n" % doc)
+            for line in textwrap.wrap(self.long_description, 72):
+                module_file.write("puts stderr \"%s\"\n" % line)
             module_file.write('}\n\n')

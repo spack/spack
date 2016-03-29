@@ -117,7 +117,8 @@ def caller_locals():
        scope.  Yes, this is some black magic, and yes it's useful
        for implementing things like depends_on and provides.
     """
-    stack = inspect.stack()
+    # Passing zero here skips line context for speed.
+    stack = inspect.stack(0)
     try:
         return stack[2][0].f_locals
     finally:
@@ -128,7 +129,8 @@ def get_calling_module_name():
     """Make sure that the caller is a class definition, and return the
        enclosing module's name.
     """
-    stack = inspect.stack()
+    # Passing zero here skips line context for speed.
+    stack = inspect.stack(0)
     try:
         # Make sure locals contain __module__
         caller_locals = stack[2][0].f_locals

@@ -1,5 +1,5 @@
 from spack import *
-import os
+import os, sys
 
 class Hypre(Package):
     """Hypre is a library of high performance preconditioners that
@@ -12,7 +12,10 @@ class Hypre(Package):
     version('2.10.1', 'dc048c4cabb3cd549af72591474ad674')
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
 
-    variant('shared', default=True, description="Build shared library version (disables static library)")
+    # hypre does not know how to build shared libraries on Darwin
+    variant('shared', default=sys.platform!='darwin', description="Build shared library version (disables static library)")
+    # SuperluDist have conflicting headers with those in Hypre
+    variant('internal-superlu', default=True, description="Use internal Superlu routines")
 
     depends_on("mpi")
     depends_on("blas")
@@ -36,6 +39,9 @@ class Hypre(Package):
                 "--with-blas-lib-dirs=%s/lib" % blas_dir]
         if '+shared' in self.spec:
             configure_args.append("--enable-shared")
+
+        if '~internal-superlu' in self.spec:
+            configure_args.append("--without-superlu")
 
         # Hypre's source is staged under ./src so we'll have to manually
         # cd into it.

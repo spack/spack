@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
@@ -24,26 +24,20 @@
 ##############################################################################
 from spack import *
 
-class Libelf(Package):
-    """libelf lets you read, modify or create ELF object files in an
-       architecture-independent way. The library takes care of size
-       and endian issues, e.g. you can process a file for SPARC
-       processors on an Intel-based system."""
+class Python(Package):
+    """Dummy Python package to demonstrate preferred versions."""
+    homepage = "http://www.python.org"
+    url      = "http://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz"
 
-    homepage = "http://www.mr511.de/software/english.html"
-    url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
+    extendable = True
 
-    version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
-    version('0.8.12', 'e21f8273d9f5f6d43a59878dc274fec7')
-
-    provides('elf')
+    version('3.5.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
+    version('3.5.0', 'a56c0c0b45d75a0ec9c6dee933c41c36')
+    version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b', preferred=True)
+    version('2.7.10', 'd7547558fd673bd9d38e2108c6b42521')
+    version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
+    version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
 
     def install(self, spec, prefix):
-        configure("--prefix=" + prefix,
-                  "--enable-shared",
-                  "--disable-dependency-tracking",
-                  "--disable-debug")
-        make()
+        pass
 
-        # The mkdir commands in libelf's install can fail in parallel
-        make("install", parallel=False)
