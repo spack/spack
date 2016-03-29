@@ -13,32 +13,26 @@ from spack.platforms.bgq import Bgq
 from spack.platforms.darwin import Darwin
 
 class ArchitectureTest(unittest.TestCase):
-    
-    def test_to_dict_function_with_architecture(self):
+
+    def test_dict_functions_for_architecture(self):
         arch = Arch()
         arch.platform_os = arch.platform.operating_system('default_os')
         arch.target = arch.platform.target('default')
 
         d = arch.to_dict()
-        self.assertEqual(d, {'platform' : 'crayxc',
-                             'platform_os' : {'name': 'CNL',
-                                              'compiler_strategy' : 'MODULES',
-                                              'version':'10'},
-                             'target' : {'name': 'haswell',
-                                         'module_name': 'craype-haswell'}})
-                            
-    def test_from_dict_function_with_architecture(self):
-        d = {'platform':'crayxc',
-             'platform_os' : {'name' : 'CNL', 'compiler_strategy': 'MODULES',
-                                 'version': '10'},
-             'target' : {'name':'haswell', 'module_name': 'craype-haswell'}}
-                
-        arch = spack.architecture.arch_from_dict(d)                                                
+
+        new_arch = spack.architecture.arch_from_dict(d)
+        self.assertEqual(arch, new_arch)
+
         self.assertTrue( isinstance(arch, Arch) )
         self.assertTrue( isinstance(arch.platform, Platform) )
         self.assertTrue( isinstance(arch.platform_os, OperatingSystem) )
         self.assertTrue( isinstance(arch.target, Target) )
-        
+        self.assertTrue( isinstance(new_arch, Arch) )
+        self.assertTrue( isinstance(new_arch.platform, Platform) )
+        self.assertTrue( isinstance(new_arch.platform_os, OperatingSystem) )
+        self.assertTrue( isinstance(new_arch.target, Target) )
+
 
     def test_platform_class_and_compiler_strategies(self):
         a = CrayXc()
