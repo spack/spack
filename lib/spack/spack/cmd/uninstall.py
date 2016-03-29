@@ -40,6 +40,7 @@ error_message = """You can either:
     b) use spack uninstall -a to uninstall ALL matching specs.
 """
 
+
 def ask_for_confirmation(message):
     while True:
         tty.msg(message + '[y/n]')
@@ -122,6 +123,7 @@ def installed_dependents(specs):
     for item in specs:
         lst = [x for x in item.package.installed_dependents if x not in specs]
         if lst:
+            lst = list(set(lst))
             dependents[item] = lst
     return dependents
 
