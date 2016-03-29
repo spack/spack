@@ -31,7 +31,8 @@ class Trilinos(Package):
     variant('hypre',        default=True,  description='Compile with Hypre preconditioner')
     variant('hdf5',         default=True,  description='Compile with HDF5')
     variant('suite-sparse', default=True,  description='Compile with SuiteSparse solvers')
-    variant('python',       default=True,  description='Build python wrappers')
+    # not everyone has py-numpy activated, keep it disabled by default to avoid configure errors
+    variant('python',       default=False, description='Build python wrappers')
     variant('shared',       default=True,  description='Enables the build of shared libraries')
     variant('debug',        default=False, description='Builds a debug version of the libraries')
 
@@ -55,7 +56,7 @@ class Trilinos(Package):
     depends_on('hypre~internal-superlu',when='+hypre')
     depends_on('hdf5+mpi',when='+hdf5')
 
-    depends_on('python',when='+python') #  Needs py-numpy activated
+    depends_on('python',when='+python')
 
     patch('umfpack_from_suitesparse.patch')
 
