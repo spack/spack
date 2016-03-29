@@ -18,6 +18,6 @@ class Ravel(Package):
     depends_on('qt@5:')
 
     def install(self, spec, prefix):
-        cmake('-Wno-dev', *std_cmake_args)
+        which('cmake')('-Wno-dev', *std_cmake_args)
         make()
         make("install")

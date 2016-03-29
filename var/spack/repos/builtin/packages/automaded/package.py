@@ -46,6 +46,6 @@ class Automaded(Package):
     depends_on('callpath')
 
     def install(self, spec, prefix):
-        cmake("-DSTATE_TRACKER_WITH_CALLPATH=ON", *std_cmake_args)
+        which('cmake')("-DSTATE_TRACKER_WITH_CALLPATH=ON", *std_cmake_args)
         make()
         make("install")

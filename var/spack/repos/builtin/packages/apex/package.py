@@ -19,7 +19,7 @@ class Apex(Package):
         path.remove(spec["binutils"].prefix.bin)
         path_set("PATH", path)
         with working_dir("build", create=True):
-            cmake('-DBOOST_ROOT=%s' % spec['boost'].prefix,
+            which('cmake')('-DBOOST_ROOT=%s' % spec['boost'].prefix,
                 '-DUSE_BFD=TRUE', 
                 '-DBFD_ROOT=%s' % spec['binutils'].prefix,
                 '-DUSE_ACTIVEHARMONY=TRUE', 

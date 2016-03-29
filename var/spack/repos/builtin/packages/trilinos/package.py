@@ -49,6 +49,6 @@ class Trilinos(Package):
                         ])
 
         with working_dir('spack-build', create=True):
-            cmake('..', *options)
+            which('cmake')('..', *options)
             make()
             make('install')

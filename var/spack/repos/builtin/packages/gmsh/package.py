@@ -79,6 +79,6 @@ class Gmsh(Package):
             options.append('-DENABLE_COMPRESSED_IO:BOOL=ON')
 
         with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
+            which('cmake')(source_directory, *options)
             make()
             make('install')

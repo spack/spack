@@ -13,7 +13,7 @@ class OmptOpenmp(Package):
         with working_dir("runtime/build", create=True):
 
             # FIXME: Modify the configure line to suit your build system here.
-            cmake('-DCMAKE_C_COMPILER=%s' % self.compiler.cc, 
+            which('cmake')('-DCMAKE_C_COMPILER=%s' % self.compiler.cc, 
                   '-DCMAKE_CXX_COMPILER=%s' % self.compiler.cxx,
                   '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
                   '..', *std_cmake_args)

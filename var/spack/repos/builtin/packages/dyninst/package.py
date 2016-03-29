@@ -48,7 +48,7 @@ class Dyninst(Package):
         libdwarf = spec['libdwarf'].prefix
 
         with working_dir('spack-build', create=True):
-            cmake('..',
+            which('cmake')('..',
                   '-DBoost_INCLUDE_DIR=%s'    % spec['boost'].prefix.include,
                   '-DBoost_LIBRARY_DIR=%s'    % spec['boost'].prefix.lib,
                   '-DBoost_NO_SYSTEM_PATHS=TRUE',

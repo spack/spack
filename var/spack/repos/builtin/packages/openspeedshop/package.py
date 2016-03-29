@@ -100,7 +100,7 @@ class Openspeedshop(Package):
             instrumentor_setting = "offline"
             if '+runtime' in spec:
                 with working_dir('build_runtime', create=True):
-                    cmake('..',
+                    which('cmake')('..',
                           '-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
                           '-DCMAKE_LIBRARY_PATH=%s'     % prefix.lib64,
                           '-DINSTRUMENTOR=%s'           % instrumentor_setting,
@@ -118,7 +118,7 @@ class Openspeedshop(Package):
                     #'-DOPENMPI_DIR=%s'            % openmpi_prefix_path,
                     #'-DMVAPICH_DIR=%s'            % mvapich_prefix_path,
                     python_vers='%d.%d' % spec['python'].version[:2]
-                    cmake('..',
+                    which('cmake')('..',
                           '-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
                           '-DCMAKE_LIBRARY_PATH=%s'     % prefix.lib64,
                           '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,
@@ -148,7 +148,7 @@ class Openspeedshop(Package):
             if '+runtime' in spec:
                 with working_dir('build_cbtf_runtime', create=True):
                     python_vers='%d.%d' % spec['python'].version[:2]
-                    cmake('..',
+                    which('cmake')('..',
                           '-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
                           '-DCMAKE_LIBRARY_PATH=%s'     % prefix.lib64,
                           '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,
@@ -174,7 +174,7 @@ class Openspeedshop(Package):
                 with working_dir('build_cbtf', create=True):
                     python_vers='%d.%d' % spec['python'].version[:2]
                     #python_vers=join_path(spec['python'].version[:2])
-                    cmake('..',
+                    which('cmake')('..',
                           '-DCMAKE_INSTALL_PREFIX=%s'   % prefix,
                           '-DCMAKE_LIBRARY_PATH=%s'     % prefix.lib64,
                           '-DCMAKE_PREFIX_PATH=%s'      % cmake_prefix_path,

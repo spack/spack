@@ -80,6 +80,6 @@ class Parmetis(Package):
             options.append('-DGDB:BOOL=ON')
 
         with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
+            which('cmake')(source_directory, *options)
             make()
             make("install")

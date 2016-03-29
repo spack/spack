@@ -11,7 +11,7 @@ class Bear(Package):
     depends_on("python")
 
     def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
+        which('cmake')('.', *std_cmake_args)
 
         make("all")
         make("install")

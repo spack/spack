@@ -95,7 +95,7 @@ class CbtfKrell(Package):
 
         # Build cbtf-krell with cmake 
         with working_dir('build_cbtf_krell', create=True):
-            cmake('..',
+            which('cmake')('..',
                   '-DCMAKE_BUILD_TYPE=Debug',
                   '-DCMAKE_INSTALL_PREFIX=%s'	% prefix,
                   '-DCBTF_DIR=%s'		% spec['cbtf'].prefix,

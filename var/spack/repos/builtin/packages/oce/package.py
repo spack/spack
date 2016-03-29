@@ -42,6 +42,6 @@ class Oce(Package):
                 '-DOCE_OSX_USE_COCOA:BOOL=ON',
             ])
 
-        cmake('.', *options)
+        which('cmake')('.', *options)
 
         make("install/strip")

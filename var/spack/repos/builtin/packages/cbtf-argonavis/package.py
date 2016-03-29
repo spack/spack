@@ -49,7 +49,7 @@ class CbtfArgonavis(Package):
 
        with working_dir('CUDA'):
          with working_dir('build', create=True):
-           cmake('..',
+           which('cmake')('..',
                  '-DCMAKE_INSTALL_PREFIX=%s'	% prefix,
                  '-DCMAKE_LIBRARY_PATH=%s'	% prefix.lib64,
                  '-DCMAKE_PREFIX_PATH=%s'	% cmake_prefix_path,

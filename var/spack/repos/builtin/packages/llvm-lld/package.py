@@ -38,7 +38,7 @@ class LlvmLld(Package):
         env['CXXFLAGS'] = self.compier.cxx11_flag
 
         with working_dir('spack-build', create=True):
-            cmake('..',
+            which('cmake')('..',
                   '-DLLD_PATH_TO_LLVM_BUILD=%s' % spec['llvm'].prefix,
                   '-DLLVM_MAIN_SRC_DIR=%s' % spec['llvm'].prefix,
                   *std_cmake_args)

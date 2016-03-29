@@ -9,6 +9,6 @@ class Damselfly(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
-	    cmake('-DCMAKE_BUILD_TYPE=release', '..', *std_cmake_args)
+	    which('cmake')('-DCMAKE_BUILD_TYPE=release', '..', *std_cmake_args)
 	    make()
 	    make('install')

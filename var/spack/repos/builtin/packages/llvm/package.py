@@ -264,7 +264,7 @@ class Llvm(Package):
                 raise SpackException('The lldb variant requires the clang variant to be selected')
 
         with working_dir('spack-build', create=True):
-            cmake(*cmake_args)
+            which('cmake')(*cmake_args)
             make()
             make("install")
             query_path = os.path.join('bin', 'clang-query')
