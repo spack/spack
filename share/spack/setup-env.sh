@@ -176,3 +176,13 @@ _spack_pathadd PATH       "${_sp_prefix%/}/bin"
 _sp_sys_type=$(spack-python -c 'print(spack.architecture.sys_type())')
 _spack_pathadd DK_NODE    "${_sp_share_dir%/}/dotkit/$_sp_sys_type"
 _spack_pathadd MODULEPATH "${_sp_share_dir%/}/modules/$_sp_sys_type"
+
+#
+# Use spack built modules package if available
+# for system that does not have it
+#
+
+_modules_install_path=$(command spack location -i modules)
+if [ -n "$_modules_install_path" ] ; then
+    . $_modules_install_path/Modules/init/sh
+fi
