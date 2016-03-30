@@ -7,7 +7,11 @@ class Graphviz(Package):
 
     version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
 
-    variant('perl', default=True, description='Disable if you have problems with the optional script language bindings')
+    # By default disable optional Perl language support to prevent build issues
+    # related to missing Perl packages. If spack begins support for Perl in the
+    # future, this package can be updated to depend_on('perl') and the
+    # ncecessary devel packages.
+    variant('perl', default=False, description='Disable if you have problems with the optional script language bindings')
 
     parallel = False
 
@@ -17,7 +21,7 @@ class Graphviz(Package):
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
-        if '~perl' in spec:
+        if not '+perl' in spec:
             options.append('--disable-perl')
 
         configure(*options)
