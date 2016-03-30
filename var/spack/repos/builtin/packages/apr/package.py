@@ -31,19 +31,6 @@ class Apr(Package):
 
     version('1.5.2',    '98492e965963f852ab29f9e61b2ad700')
 
-    #variant('ncurses', default=True, description='Enables the build of the ncurses gui')
-    #variant('qt', default=False, description='Enables the build of cmake-gui')
-    #variant('doc', default=False, description='Enables the generation of html and man page documentation')
-
-    #depends_on('ncurses', when='+ncurses')
-    #depends_on('qt', when='+qt')
-    #depends_on('python@2.7.11:', when='+doc')
-    #depends_on('py-sphinx', when='+doc')
-
-    #def url_for_version(self, version):
-    #    """Handle CMake's version-based custom URLs."""
-    #    return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (version.up_to(2), version)
-
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
         configure(*options)

@@ -37,7 +37,13 @@ class Subversion(Package):
     depends_on('apr-util')
     depends_on('zlib')
     depends_on('sqlite')
+
+    # Optional: We need swig if we want the Perl, Python or Ruby
+    # bindings.
     #depends_on('swig')
+    #depends_on('python')
+    #depends_on('perl')
+    #depends_on('ruby')
 
     def install(self, spec, prefix):
 
@@ -53,7 +59,19 @@ class Subversion(Package):
         configure(*options)
         make()
         make('install')
-        #make('swig-py') # python bindings
-        #make('install-swig-py')
-        #make('swig-pl') # perl bindings
+
+        # python bindings
+        #make('swig-py',
+        #     'swig-pydir=/usr/lib/python2.7/site-packages/libsvn',
+        #     'swig_pydir_extra=/usr/lib/python2.7/site-packages/svn')
+        #make('install-swig-py',
+        #     'swig-pydir=/usr/lib/python2.7/site-packages/libsvn',
+        #     'swig_pydir_extra=/usr/lib/python2.7/site-packages/svn')
+
+        # perl bindings
+        #make('swig-pl')
         #make('install-swig-pl')
+
+        # ruby bindings
+        #make('swig-rb')
+        #make('isntall-swig-rb')
