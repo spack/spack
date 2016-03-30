@@ -397,6 +397,13 @@ class Package(object):
             raise ValueError("Can only get of package with concrete version.")
         return self.spec.versions[0]
 
+    @property
+    def digests(self):
+        versionInfo = self.versions[self.version]
+        digests = {}
+        if 'md5' in versionInfo:
+            digests['md5'] = versionInfo['md5']
+        return digests 
 
     @memoized
     def version_urls(self):
