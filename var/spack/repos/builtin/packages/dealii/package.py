@@ -7,12 +7,13 @@ class Dealii(Package):
     url      = "https://github.com/dealii/dealii/releases/download/v8.4.0/dealii-8.4.0.tar.gz"
 
     version('8.4.0', 'ac5dbf676096ff61e092ce98c80c2b00')
+    version('dev', git='https://github.com/dealii/dealii.git')
 
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('arpack',   default=True,  description='Compile with Arpack and PArpack (only with MPI)')
     variant('doxygen',  default=False, description='Compile with Doxygen documentation')
     variant('hdf5',     default=True,  description='Compile with HDF5 (only with MPI)')
-    variant('metis',    default=True,  description='Compile with Metis or ParMetis')
+    variant('metis',    default=True,  description='Compile with Metis')
     variant('netcdf',   default=True,  description='Compile with Netcdf (only with MPI)')
     variant('oce',      default=True,  description='Compile with OCE')
     variant('p4est',    default=True,  description='Compile with P4est (only with MPI)')
@@ -42,7 +43,6 @@ class Dealii(Package):
     depends_on ("netcdf-cxx", when='+netcdf+mpi')
     depends_on ("oce", when='+oce')
     depends_on ("p4est", when='+p4est+mpi')
-    depends_on ("parmetis", when='+metis+mpi')
     depends_on ("petsc+mpi", when='+petsc+mpi')
     depends_on ("slepc", when='+slepc+petsc+mpi')
     depends_on ("trilinos", when='+trilinos+mpi')
@@ -98,7 +98,7 @@ class Dealii(Package):
             ])
 
         # Optional dependencies for which librariy names are the same as CMake variables
-        for library in ('hdf5', 'p4est','petsc', 'slepc','trilinos','metis','parmetis'):
+        for library in ('hdf5', 'p4est','petsc', 'slepc','trilinos','metis'):
             if library in spec:
                 options.extend([
                     '-D{library}_DIR={value}'.format(library=library.upper(), value=spec[library].prefix),
@@ -126,25 +126,6 @@ class Dealii(Package):
             options.extend([
                 '-DDEAL_II_WITH_ARPACK=OFF'
             ])
-
-        # # metis
-        # if '+metis' in spec:
-        #
-        #     if 'mpi' in spec:
-        #         options.extend([
-        #             '-DMETIS_DIR=%s' % spec['parmetis'].prefix,
-        #         ])
-        #     else:
-        #         options.extend([
-        #             '-DMETIS_DIR=%s' % spec['metis'].prefix,
-        #         ])
-        #     options.extend([
-        #         '-DDEAL_II_WITH_METIS=ON'
-        #     ])
-        # else:
-        #     options.extend([
-        #         '-DDEAL_II_WITH_METIS=OFF'
-        #     ])
 
         # since Netcdf is spread among two, need to do it by hand:
         if '+netcdf' in spec:
@@ -202,16 +183,18 @@ class Dealii(Package):
             # list the number of cycles to speed up
             filter_file(r'(const unsigned int n_cycles = 8;)',  ('const unsigned int n_cycles = 2;'), 'step-40.cc')
             cmake('.')
-            make('release')
-            make('run',parallel=False)
+            if '^petsc' in spec:
+                make('release')
+                make('run',parallel=False)
 
             print('=====================================')
             print('========= Step-40 Trilinos ==========')
             print('=====================================')
             # change Linear Algebra to Trilinos
             filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',  ('#define FORCE_USE_OF_TRILINOS'), 'step-40.cc')
-            make('release')
-            make('run',parallel=False)
+            if '^trilinos+hypre' in spec:
+                make('release')
+                make('run',parallel=False)
 
             print('=====================================')
             print('=== Step-40 Trilinos SuperluDist ====')
@@ -223,31 +206,34 @@ class Dealii(Package):
             filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',  (''), 'step-40.cc')
             filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')
             filter_file(r'(preconditioner\);)',  (''), 'step-40.cc')
-
-            make('release')
-            make('run',paralle=False)
+            if '^trilinos+superlu-dist' in spec:
+                make('release')
+                make('run',paralle=False)
 
             print('=====================================')
             print('====== Step-40 Trilinos MUMPS =======')
             print('=====================================')
             # switch to Mumps
             filter_file(r'(Amesos_Superludist)',  ('Amesos_Mumps'), 'step-40.cc')
-            make('release')
-            make('run',parallel=False)
+            if '^trilinos+mumps' in spec:
+                make('release')
+                make('run',parallel=False)
 
         print('=====================================')
         print('============ Step-36 ================')
         print('=====================================')
         with working_dir('examples/step-36'):
-            cmake('.')
-            make('release')
-            make('run',parallel=False)
+            if 'slepc' in spec:
+                cmake('.')
+                make('release')
+                make('run',parallel=False)
 
         print('=====================================')
         print('============ Step-54 ================')
         print('=====================================')
         with working_dir('examples/step-54'):
-            cmake('.')
-            make('release')
-            # FIXME
-            # make('run',parallel=False)
+            if 'oce' in spec:
+                cmake('.')
+                make('release')
+                if sys.platform != 'darwin': #FIXME
+                    make('run',parallel=False)
