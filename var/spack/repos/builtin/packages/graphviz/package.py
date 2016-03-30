@@ -11,7 +11,7 @@ class Graphviz(Package):
     # related to missing Perl packages. If spack begins support for Perl in the
     # future, this package can be updated to depend_on('perl') and the
     # ncecessary devel packages.
-    variant('perl', default=False, description='Disable if you have problems with the optional script language bindings')
+    variant('perl', default=False, description='Enable if you need the optional Perl language bindings.')
 
     parallel = False
 
