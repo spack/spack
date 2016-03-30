@@ -8,17 +8,17 @@ class Dealii(Package):
 
     version('8.4.0', 'ac5dbf676096ff61e092ce98c80c2b00')
 
-    variant('mpi',      default=True, description='Compile with MPI')
-    variant('arpack',   default=True, description='Compile with Arpack and PArpack (only with MPI)')
-    variant('doxygen',  default=True, description='Compile with Doxygen documentation')
-    variant('hdf5',     default=True, description='Compile with HDF5 (only with MPI)')
-    variant('metis',    default=True, description='Compile with Metis or ParMetis')
-    variant('netcdf',   default=True, description='Compile with Netcdf (only with MPI)')
-    variant('oce',      default=True, description='Compile with OCE')
-    variant('p4est',    default=True, description='Compile with P4est (only with MPI)')
-    variant('petsc',    default=True, description='Compile with Petsc (only with MPI)')
-    variant('slepc',    default=True, description='Compile with Slepc (only with Petsc and MPI)')
-    variant('trilinos', default=True, description='Compile with Trilinos (only with MPI)')
+    variant('mpi',      default=True,  description='Compile with MPI')
+    variant('arpack',   default=True,  description='Compile with Arpack and PArpack (only with MPI)')
+    variant('doxygen',  default=False, description='Compile with Doxygen documentation')
+    variant('hdf5',     default=True,  description='Compile with HDF5 (only with MPI)')
+    variant('metis',    default=True,  description='Compile with Metis or ParMetis')
+    variant('netcdf',   default=True,  description='Compile with Netcdf (only with MPI)')
+    variant('oce',      default=True,  description='Compile with OCE')
+    variant('p4est',    default=True,  description='Compile with P4est (only with MPI)')
+    variant('petsc',    default=True,  description='Compile with Petsc (only with MPI)')
+    variant('slepc',    default=True,  description='Compile with Slepc (only with Petsc and MPI)')
+    variant('trilinos', default=True,  description='Compile with Trilinos (only with MPI)')
 
     # required dependencies, light version
     depends_on ("blas")
