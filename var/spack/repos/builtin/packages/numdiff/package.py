@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 class Numdiff(Package):
     """Numdiff is a little program that can be used to compare putatively
@@ -33,6 +34,8 @@ class Numdiff(Package):
     url       = 'http://nongnu.askapache.com/numdiff/numdiff-5.8.1.tar.gz'
 
     version('5.8.1',    'a295eb391f6cb1578209fc6b4f9d994e')
+
+    depends_on('gettext', sys.platform=='darwin')
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
