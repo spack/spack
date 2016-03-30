@@ -11,7 +11,7 @@ class Dealii(Package):
 
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('arpack',   default=True,  description='Compile with Arpack and PArpack (only with MPI)')
-    variant('doxygen',  default=False, description='Compile with Doxygen documentation')
+    variant('doc',      default=False, description='Compile with documentation')
     variant('hdf5',     default=True,  description='Compile with HDF5 (only with MPI)')
     variant('metis',    default=True,  description='Compile with Metis')
     variant('netcdf',   default=True,  description='Compile with Netcdf (only with MPI)')
@@ -36,7 +36,7 @@ class Dealii(Package):
     # optional dependencies
     depends_on ("mpi", when="+mpi")
     depends_on ("arpack-ng+mpi", when='+arpack+mpi')
-    depends_on ("doxygen", when='+doxygen')
+    depends_on ("doxygen", when='+doc')
     depends_on ("hdf5+mpi~cxx", when='+hdf5+mpi') #FIXME NetCDF declares dependency with ~cxx, why?
     depends_on ("metis", when='+metis')
     depends_on ("netcdf+mpi", when="+netcdf+mpi")
@@ -111,7 +111,7 @@ class Dealii(Package):
 
         # doxygen
         options.extend([
-            '-DDEAL_II_COMPONENT_DOCUMENTATION=%s' % ('ON' if '+doxygen' in spec else 'OFF'),
+            '-DDEAL_II_COMPONENT_DOCUMENTATION=%s' % ('ON' if '+doc' in spec else 'OFF'),
         ])
 
 
