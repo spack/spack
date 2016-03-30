@@ -62,11 +62,11 @@ def mirror_archive_filename(spec, fetcher):
         ext = 'tar.gz'
 
     tokens = [spec.package.name, spec.version]
-    package = spack.repo.get(spec)
-    digests = package.digests
+    digests = spec.package.digests
     if digests:
-        if 'md5' in digests:
-            tokens.extend(['md5', digests['md5']])
+        # If a package has multiple digests, any one is sufficient to identify it
+        digestType, digest = digests.iteritems().next()
+        tokens.extend([digestType, digest])
     filename = '-'.join(str(t) for t in tokens)
     if ext:
         filename += ".%s" % ext
