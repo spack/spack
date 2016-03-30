@@ -8,27 +8,48 @@ class Dealii(Package):
 
     version('8.4.0', 'ac5dbf676096ff61e092ce98c80c2b00')
 
-    depends_on ("cmake")
-    depends_on ("blas")
-    depends_on ("lapack")
-    depends_on ("mpi")
+    variant('mpi',      default=True, description='Compile with MPI')
+    variant('arpack',   default=True, description='Compile with Arpack and PArpack (only with MPI)')
+    variant('doxygen',  default=True, description='Compile with Doxygen documentation')
+    variant('hdf5',     default=True, description='Compile with HDF5 (only with MPI)')
+    variant('metis',    default=True, description='Compile with Metis or ParMetis')
+    variant('netcdf',   default=True, description='Compile with Netcdf (only with MPI)')
+    variant('oce',      default=True, description='Compile with OCE')
+    variant('p4est',    default=True, description='Compile with P4est (only with MPI)')
+    variant('petsc',    default=True, description='Compile with Petsc (only with MPI)')
+    variant('slepc',    default=True, description='Compile with Slepc (only with Petsc and MPI)')
+    variant('trilinos', default=True, description='Compile with Trilinos (only with MPI)')
 
-    depends_on ("arpack-ng+mpi")
-    depends_on ("boost")
-    depends_on ("doxygen")
-    depends_on ("hdf5+mpi~cxx") #FIXME NetCDF declares dependency with ~cxx, why?
-    depends_on ("metis")
+    # required dependencies, light version
+    depends_on ("blas")
+    depends_on ("boost",     when='~mpi')
+    depends_on ("boost+mpi", when='+mpi')
+    depends_on ("bzip2")
+    depends_on ("cmake")
+    depends_on ("lapack")
     depends_on ("muparser")
-    depends_on ("netcdf-cxx")
-    #depends_on ("numdiff") #FIXME
-    depends_on ("oce")
-    depends_on ("p4est")
-    depends_on ("parmetis")
-    depends_on ("petsc+mpi")
-    depends_on ("slepc")
     depends_on ("suite-sparse")
     depends_on ("tbb")
-    depends_on ("trilinos")
+    depends_on ("zlib")
+
+    # optional dependencies
+    depends_on ("mpi", when="+mpi")
+    depends_on ("arpack-ng+mpi", when='+arpack+mpi')
+    depends_on ("doxygen", when='+doxygen')
+    depends_on ("hdf5+mpi~cxx", when='+hdf5+mpi') #FIXME NetCDF declares dependency with ~cxx, why?
+    depends_on ("metis", when='+metis')
+    depends_on ("netcdf+mpi", when="+netcdf+mpi")
+    depends_on ("netcdf-cxx", when='+netcdf+mpi')
+    depends_on ("oce", when='+oce')
+    depends_on ("p4est", when='+p4est+mpi')
+    depends_on ("parmetis", when='+metis+mpi')
+    depends_on ("petsc+mpi", when='+petsc+mpi')
+    depends_on ("slepc", when='+slepc+petsc+mpi')
+    depends_on ("trilinos", when='+trilinos+mpi')
+
+    # developer dependnecies
+    #depends_on ("numdiff") #FIXME
+    #depends_on ("astyle") #FIXME
 
     def install(self, spec, prefix):
         options = []
@@ -42,32 +63,115 @@ class Dealii(Package):
         dsuf = 'dylib' if sys.platform == 'darwin' else 'so'
         options.extend([
             '-DCMAKE_BUILD_TYPE=DebugRelease',
-            '-DDEAL_II_WITH_THREADS:BOOL=ON'
-            '-DDEAL_II_WITH_MPI:BOOL=ON',
-            '-DCMAKE_C_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpicc'), # FIXME: avoid hardcoding mpi wrappers names
-            '-DCMAKE_CXX_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpic++'),
-            '-DCMAKE_Fortran_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
-            '-DARPACK_DIR=%s' % spec['arpack-ng'].prefix,
+            '-DDEAL_II_COMPONENT_EXAMPLES=ON',
+            '-DDEAL_II_WITH_THREADS:BOOL=ON',
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
-            '-DHDF5_DIR=%s' % spec['hdf5'].prefix,
-            '-DMETIS_DIR=%s' % spec['metis'].prefix,
+            '-DBZIP2_DIR=%s' % spec['bzip2'].prefix,
+            # CMake's FindBlas/Lapack may pickup system's blas/lapack instead of Spack's.
+            # Be more specific to avoid this.
+            # Note that both lapack and blas are provided in -DLAPACK_XYZ variables
+            '-DLAPACK_FOUND=true',
+            '-DLAPACK_INCLUDE_DIRS=%s;%s' %
+                (spec['lapack'].prefix.include,
+                 spec['blas'].prefix.include),
+            '-DLAPACK_LIBRARIES=%s;%s' %
+                (join_path(spec['lapack'].prefix.lib,'liblapack.%s' % dsuf), # FIXME don't hardcode names
+                 join_path(spec['blas'].prefix.lib,'libblas.%s' % dsuf)),    # FIXME don't hardcode names
             '-DMUPARSER_DIR=%s ' % spec['muparser'].prefix,
-            # since Netcdf is spread among two, need to do it by hand:
-            '-DNETCDF_FOUND=true',
-            '-DNETCDF_LIBRARIES=%s;%s' %
-                (join_path(spec['netcdf-cxx'].prefix.lib,'libnetcdf_c++.%s' % dsuf),
-                 join_path(spec['netcdf'].prefix.lib,'libnetcdf.%s' % dsuf)),
-            '-DNETCDF_INCLUDE_DIRS=%s;%s' %
-                (spec['netcdf-cxx'].prefix.include,
-                 spec['netcdf'].prefix.include),
-            '-DOPENCASCADE_DIR=%s' % spec['oce'].prefix,
             '-DP4EST_DIR=%s' % spec['p4est'].prefix,
-            '-DPETSC_DIR=%s' % spec['petsc'].prefix,
-            '-DSLEPC_DIR=%s' % spec['slepc'].prefix,
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
-            '-DTRILINOS_DIR=%s' % spec['trilinos'].prefix
+            '-DZLIB_DIR=%s' % spec['zlib'].prefix
         ])
+
+        # MPI
+        if '+mpi' in spec:
+            options.extend([
+                '-DDEAL_II_WITH_MPI:BOOL=ON',
+                '-DCMAKE_C_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpicc'), # FIXME: avoid hardcoding mpi wrappers names
+                '-DCMAKE_CXX_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpic++'),
+                '-DCMAKE_Fortran_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
+            ])
+        else:
+            options.extend([
+                '-DDEAL_II_WITH_MPI:BOOL=OFF',
+            ])
+
+        # Optional dependencies for which librariy names are the same as CMake variables
+        for library in ('hdf5', 'p4est','petsc', 'slepc','trilinos','metis','parmetis'):
+            if library in spec:
+                options.extend([
+                    '-D{library}_DIR={value}'.format(library=library.upper(), value=spec[library].prefix),
+                    '-DDEAL_II_WITH_{library}:BOOL=ON'.format(library=library.upper())
+                ])
+            else:
+                options.extend([
+                    '-DDEAL_II_WITH_{library}:BOOL=OFF'.format(library=library.upper())
+                ])
+
+        # doxygen
+        options.extend([
+            '-DDEAL_II_COMPONENT_DOCUMENTATION=%s' % ('ON' if '+doxygen' in spec else 'OFF'),
+        ])
+
+
+        # arpack
+        if '+arpack' in spec:
+            options.extend([
+                '-DARPACK_DIR=%s' % spec['arpack-ng'].prefix,
+                '-DDEAL_II_WITH_ARPACK=ON',
+                '-DDEAL_II_ARPACK_WITH_PARPACK=ON'
+            ])
+        else:
+            options.extend([
+                '-DDEAL_II_WITH_ARPACK=OFF'
+            ])
+
+        # # metis
+        # if '+metis' in spec:
+        #
+        #     if 'mpi' in spec:
+        #         options.extend([
+        #             '-DMETIS_DIR=%s' % spec['parmetis'].prefix,
+        #         ])
+        #     else:
+        #         options.extend([
+        #             '-DMETIS_DIR=%s' % spec['metis'].prefix,
+        #         ])
+        #     options.extend([
+        #         '-DDEAL_II_WITH_METIS=ON'
+        #     ])
+        # else:
+        #     options.extend([
+        #         '-DDEAL_II_WITH_METIS=OFF'
+        #     ])
+
+        # since Netcdf is spread among two, need to do it by hand:
+        if '+netcdf' in spec:
+            options.extend([
+                '-DNETCDF_FOUND=true',
+                '-DNETCDF_LIBRARIES=%s;%s' %
+                    (join_path(spec['netcdf-cxx'].prefix.lib,'libnetcdf_c++.%s' % dsuf),
+                    join_path(spec['netcdf'].prefix.lib,'libnetcdf.%s' % dsuf)),
+                '-DNETCDF_INCLUDE_DIRS=%s;%s' %
+                    (spec['netcdf-cxx'].prefix.include,
+                    spec['netcdf'].prefix.include),
+            ])
+        else:
+            options.extend([
+                '-DDEAL_II_WITH_NETCDF=OFF'
+            ])
+
+        # Open Cascade
+        if '+oce' in spec:
+            options.extend([
+                '-DOPENCASCADE_DIR=%s' % spec['oce'].prefix,
+                '-DDEAL_II_WITH_OPENCASCADE=ON'
+            ])
+        else:
+            options.extend([
+                '-DDEAL_II_WITH_OPENCASCADE=OFF'
+            ])
 
         cmake('.', *options)
 
