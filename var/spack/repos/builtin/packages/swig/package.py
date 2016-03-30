@@ -36,14 +36,11 @@ class Swig(Package):
     homepage = "http://www.swig.org"
     url      = "http://prdownloads.sourceforge.net/swig/swig-3.0.2.tar.gz"
 
-    version('3.0.8',  'c96a1d5ecb13d38604d7e92148c73c97')
-    version('3.0.2',  '62f9b0d010cef36a13a010dc530d0d41')
-    version('2.0.12', 'c3fb0b2d710cc82ed0154b91e43085a4')
+    version('3.0.2', '62f9b0d010cef36a13a010dc530d0d41')
 
     depends_on('pcre')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
-
         make()
         make("install")
