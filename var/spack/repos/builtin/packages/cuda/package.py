@@ -16,9 +16,12 @@ class Cuda(Package):
     see http://software.llnl.gov/spack/mirrors.html"""
 
     homepage = "http://www.nvidia.com/object/cuda_home_new.html"
-    url      = "file://%s/cuda_7.5.18_linux.run" % os.getcwd()
 
-    version('7.5.18', '4b3bcecf0dfc35928a0898793cf3e4c6', expand=False)
+    version('7.5.18', '4b3bcecf0dfc35928a0898793cf3e4c6', expand=False,
+            url="file://%s/cuda_7.5.18_linux.run"    % os.getcwd())
+    version('6.5.14', '90b1b8f77313600cc294d9271741f4da', expand=False,
+            url="file://%s/cuda_6.5.14_linux_64.run" % os.getcwd())
+
 
     def install(self, spec, prefix):
         runfile = glob(os.path.join(self.stage.path, 'cuda*.run'))[0]
@@ -27,15 +30,13 @@ class Cuda(Package):
         runfile = which(runfile)
 
         # Note: NVIDIA does not officially support many newer versions of compilers.
-        # For example, on CentOS 6, you must use GCC 4.4.7 or older.
-        # The --override flag disables these checks. See:
+        # For example, on CentOS 6, you must use GCC 4.4.7 or older. See:
         # http://docs.nvidia.com/cuda/cuda-installation-guide-linux/#system-requirements
         # for details.
 
         runfile(
             '--silent',   # disable interactive prompts
             '--verbose',  # create verbose log file
-            '--override', # ignore compiler checks
             '--toolkit',  # install CUDA Toolkit
             '--toolkitpath=%s' % prefix
         )

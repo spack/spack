@@ -49,10 +49,14 @@ class HoomdBlue(Package):
             cmake_args.append('-DENABLE_CUDA=OFF')
 
         # CUDA-aware MPI library support
-        if '+cuda' in spec and '+mpi' in spec:
-            cmake_args.append('-DENABLE_MPI_CUDA=ON')
-        else:
-            cmake_args.append('-DENABLE_MPI_CUDA=OFF')
+        #if '+cuda' in spec and '+mpi' in spec:
+        #    cmake_args.append('-DENABLE_MPI_CUDA=ON')
+        #else:
+        #    cmake_args.append('-DENABLE_MPI_CUDA=OFF')
+
+        # There may be a bug in the MPI-CUDA code. See:
+        # https://groups.google.com/forum/#!msg/hoomd-users/2griTESmc5I/E69s_M5fDwAJ
+        cmake_args.append('-DENABLE_MPI_CUDA=OFF')
 
         # Documentation
         if '+doc' in spec:
@@ -64,4 +68,5 @@ class HoomdBlue(Package):
         cmake('.', *cmake_args)
 
         make()
+        make("test")
         make("install")
