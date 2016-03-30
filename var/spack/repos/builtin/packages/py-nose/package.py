@@ -10,6 +10,7 @@ class PyNose(Package):
 
     version('1.3.4', '6ed7169887580ddc9a8e16048d38274d')
     version('1.3.6', '0ca546d81ca8309080fc80cb389e7a16')
+    version('1.3.7', '4d3ad0ff07b61373d2cefc89c5d0b20b')
 
     extends('python', ignore=r'bin/nosetests.*$')
     depends_on('py-setuptools')

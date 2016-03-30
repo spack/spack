@@ -62,7 +62,7 @@ class Octave(Package):
     depends_on('qrupdate',    when='+qrupdate')
     #depends_on('qscintilla',  when='+qscintilla) # TODO: add package
     depends_on('qt',          when='+qt')
-    depends_on('SuiteSparse', when='+suitesparse')
+    depends_on('suite-sparse',when='+suitesparse')
     depends_on('zlib',        when='+zlib')
 
 

@@ -8,12 +8,9 @@ IORDERINGSF = $(ISCOTCH)
 IORDERINGSC = $(IMETIS) $(IPORD) $(ISCOTCH)
 
 PLAT    =
-LIBEXT  = .a
-OUTC    = -o 
+OUTC    = -o
 OUTF    = -o
 RM = /bin/rm -f
-AR = ar vr 
-RANLIB = ranlib
 
 INCSEQ  = -I$(topdir)/libseq
 LIBSEQ  = -L$(topdir)/libseq -lmpiseq
