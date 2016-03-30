@@ -182,7 +182,7 @@ def uninstall(parser, args):
             uninstall_list = list(set(uninstall_list))
 
         if has_error:
-            tty.die('You can use spack uninstall -f to force this action')
+            tty.die('You can use spack uninstall -r to uninstall these dependencies as well')
 
         if not args.yes_to_all:
             tty.msg("The following packages will be uninstalled : ")
