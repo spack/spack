@@ -12,7 +12,7 @@ class PyMatplotlib(Package):
     variant('gui', default=False, description='Enable GUI')
     variant('ipython', default=False, description='Enable ipython support')
 
-    extends('python', ignore=r'bin/nosetests.*$|bin/pbr$')
+    extends('python', ignore=r'bin/nosetests.*$|bin/pbr$|bin/f2py$')
 
     depends_on('py-pyside', when='+gui')
     depends_on('py-ipython', when='+ipython')
