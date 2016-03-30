@@ -48,9 +48,8 @@ repos_path     = join_path(var_path, "repos")
 share_path     = join_path(spack_root, "share", "spack")
 cache_path     = join_path(var_path, "cache")
 
-# TODO: i get a complaint if i dont qualify this, fix that
 import spack.fetch_strategy
-cache = fetch_strategy.FsCache(cache_path)
+cache = spack.fetch_strategy.FsCache(cache_path)
 
 prefix = spack_root
 opt_path       = join_path(prefix, "opt")
