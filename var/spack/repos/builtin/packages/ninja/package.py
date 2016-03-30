@@ -16,7 +16,7 @@ class Ninja(Package):
 
         cp = which('cp')
 
-        bindir = os.path.join(prefix, 'bin')
+        bindir = os.path.join(prefix, 'bin/')
         mkdir(bindir)
-        cp('-a', '-t', bindir, 'ninja')
-        cp('-ra', 'misc', prefix)
+        cp('-a', 'ninja', bindir)
+        cp('-a', 'misc', prefix)
