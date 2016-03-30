@@ -399,6 +399,7 @@ class Package(object):
 
     @property
     def digests(self):
+        """All digests for the concretized package version."""
         versionInfo = self.versions[self.version]
         digests = {}
         if 'md5' in versionInfo:
