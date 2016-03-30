@@ -65,7 +65,7 @@ def mirror_archive_filename(spec, fetcher):
     digests = spec.package.digests
     if digests:
         # If a package has multiple digests, any one is sufficient to identify it
-        digestType, digest = digests.iteritems().next()
+        digestType, digest = sorted(digests.iteritems())[0]
         tokens.extend([digestType, digest])
     filename = '-'.join(str(t) for t in tokens)
     if ext:
