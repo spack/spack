@@ -1,3 +1,4 @@
+import os
 from spack import *
 
 class Tetgen(Package):
@@ -7,15 +8,21 @@ class Tetgen(Package):
        Voronoi paritions."""
 
     homepage = "http://www.tetgen.org"
-    url      = "http://www.tetgen.org/files/tetgen1.4.3.tar.gz"
+    url      = "http://www.tetgen.org/files/tetgen1.4.3.zip"
 
-    version('1.4.3', 'd6a4bcdde2ac804f7ec66c29dcb63c18')
+    version('1.5.0', '3891aca3a59872048ead2f217d723131', mirror_only=True)
+    version('1.4.3', '7d01fde9e4b9176ebb706c549e01cd04')
 
     # TODO: Make this a build dependency once build dependencies are supported
     # (see: https://github.com/LLNL/spack/pull/378).
     depends_on('cmake@2.8.7:', when='@1.5.0:')
 
     def install(self, spec, prefix):
+        if spec.satisfies('@1.5.0:'):
+            cmake('.')
+        else:
+            cd('tetgen%s' % self.version)
+
         make('tetgen', 'tetlib')
 
         mkdirp(prefix.bin)
