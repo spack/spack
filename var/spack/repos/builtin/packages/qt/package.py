@@ -137,8 +137,7 @@ class Qt(Package):
                   '-thread',
                   '-shared',
                   '-release',
-                  '-fast',
-                  *self.common_config_args)
+                  '-fast')
 
     @when('@4')
     def configure(self):
