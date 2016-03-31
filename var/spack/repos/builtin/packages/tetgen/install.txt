@@ -1,0 +1,5 @@
+To install the most recent versions of the "TetGen" library, you must do the following:
+
+- Visit the library's official website (i.e. http://www.tetgen.org).
+- Navigate to the website's downloads section and click the "Download TetGen" link.
+- Fill out the form and click the "Submit" button to start the download.
