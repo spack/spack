@@ -1,0 +1,482 @@
+From 61cb965b9ffeca419005bc15e635e67589c421dd Mon Sep 17 00:00:00 2001
+From: Martin Siggel <martin.siggel@dlr.de>
+Date: Thu, 28 Jan 2016 19:05:00 +0100
+Subject: [PATCH] Workaround clang optimizations for null references
+
+OCCT/OCE includes some evil code that uses NULL references,
+which are normally not possible. Clang removes code in
+branches like if(&myNullRef==NULL) as it assumes this can
+never be true. This fix was inspired from the mantis issue
+http://tracker.dev.opencascade.org/view.php?id=26042. This
+code will be fixed in OCCT 7, but we might require the fix
+for earlier releases as well.
+
+Fixes issue #576
+---
+ inc/PLib.hxx                               |  2 +-
+ src/BSplCLib/BSplCLib.cxx                  | 16 ++++++-------
+ src/BSplCLib/BSplCLib_2.cxx                |  6 ++---
+ src/BSplCLib/BSplCLib_CurveComputation.gxx | 26 ++++++++++-----------
+ src/BSplSLib/BSplSLib.cxx                  | 36 +++++++++++++++---------------
+ src/BSplSLib/BSplSLib_BzSyntaxes.cxx       |  2 +-
+ src/PLib/PLib.cxx                          | 10 ++++-----
+ 7 files changed, 49 insertions(+), 49 deletions(-)
+
+diff --git a/inc/PLib.hxx b/inc/PLib.hxx
+index 7513234..52b1f84 100644
+--- a/inc/PLib.hxx
++++ b/inc/PLib.hxx
+@@ -343,6 +343,6 @@ friend class PLib_DoubleJacobiPolynomial;
+ 
+ 
+ 
+-
++#define IS_NULL_REF(ref) ((reinterpret_cast<size_t>(&ref) & 0xFFFFFF) == 0)
+ 
+ #endif // _PLib_HeaderFile
+diff --git a/src/BSplCLib/BSplCLib.cxx b/src/BSplCLib/BSplCLib.cxx
+index 683e4ab..2a2d9ea 100644
+--- a/src/BSplCLib/BSplCLib.cxx
++++ b/src/BSplCLib/BSplCLib.cxx
+@@ -298,7 +298,7 @@ void BSplCLib::LocateParameter
+  Standard_Real&                 NewU) 
+ {
+   Standard_Integer first,last;
+-  if (&Mults) {
++  if (!IS_NULL_REF(Mults)) {
+     if (Periodic) {
+       first = Knots.Lower();
+       last  = Knots.Upper();
+@@ -1434,7 +1434,7 @@ void BSplCLib::BuildKnots(const Standard_Integer         Degree,
+   const Standard_Real * pkn = &Knots(KLower);
+   pkn -= KLower;
+   Standard_Real *knot = &LK;
+-  if (&Mults == NULL) {
++  if (IS_NULL_REF(Mults)) {
+     switch (Degree) {
+     case 1 : {
+       Standard_Integer j = Index    ;
+@@ -1672,7 +1672,7 @@ Standard_Boolean  BSplCLib::PrepareInsertKnots
+  const Standard_Real            Tolerance,
+  const Standard_Boolean         Add)
+ {
+-  Standard_Boolean addflat = &AddMults == NULL;
++  Standard_Boolean addflat = IS_NULL_REF(AddMults);
+   
+   Standard_Integer first,last;
+   if (Periodic) {
+@@ -1856,7 +1856,7 @@ void BSplCLib::InsertKnots
+  const Standard_Real            Tolerance,
+  const Standard_Boolean         Add)
+ {
+-  Standard_Boolean addflat  = &AddMults == NULL;
++  Standard_Boolean addflat  = IS_NULL_REF(AddMults);
+   
+   Standard_Integer i,k,mult,firstmult;
+   Standard_Integer index,kn,curnk,curk;
+@@ -3902,7 +3902,7 @@ void BSplCLib::Resolution(      Standard_Real&        Poles,
+   num_poles = FlatKnots.Length() - Deg1;
+   switch (ArrayDimension) {
+   case 2 : {
+-    if (&Weights != NULL) {
++    if (!IS_NULL_REF(Weights)) {
+       const Standard_Real * WG = &Weights(Weights.Lower());
+       min_weights = WG[0];
+       
+@@ -3970,7 +3970,7 @@ void BSplCLib::Resolution(      Standard_Real&        Poles,
+     break;
+   }
+   case 3 : {
+-    if (&Weights != NULL) {
++    if (!IS_NULL_REF(Weights)) {
+       const Standard_Real * WG = &Weights(Weights.Lower());
+       min_weights = WG[0];
+       
+@@ -4047,7 +4047,7 @@ void BSplCLib::Resolution(      Standard_Real&        Poles,
+     break;
+   }
+   case 4 : {
+-    if (&Weights != NULL) {
++    if (!IS_NULL_REF(Weights)) {
+       const Standard_Real * WG = &Weights(Weights.Lower());
+       min_weights = WG[0];
+       
+@@ -4134,7 +4134,7 @@ void BSplCLib::Resolution(      Standard_Real&        Poles,
+   }
+     default : {
+       Standard_Integer kk;
+-      if (&Weights != NULL) {
++      if (!IS_NULL_REF(Weights)) {
+ 	const Standard_Real * WG = &Weights(Weights.Lower());
+ 	min_weights = WG[0];
+ 	
+diff --git a/src/BSplCLib/BSplCLib_2.cxx b/src/BSplCLib/BSplCLib_2.cxx
+index 35c4639..653b7cd 100644
+--- a/src/BSplCLib/BSplCLib_2.cxx
++++ b/src/BSplCLib/BSplCLib_2.cxx
+@@ -70,7 +70,7 @@ void  BSplCLib::BuildEval(const Standard_Integer         Degree,
+   Standard_Integer i;
+   Standard_Integer ip = PLower + Index - 1;
+   Standard_Real w, *pole = &LP;
+-  if (&Weights == NULL) {
++  if (IS_NULL_REF(Weights)) {
+     
+     for (i = 0; i <= Degree; i++) {
+       ip++;
+@@ -115,13 +115,13 @@ static void PrepareEval
+   
+   // make the knots
+   BSplCLib::BuildKnots(Degree,index,Periodic,Knots,Mults,*dc.knots);
+-  if (&Mults == NULL)
++  if (IS_NULL_REF(Mults))
+     index -= Knots.Lower() + Degree;
+   else
+     index = BSplCLib::PoleIndex(Degree,index,Periodic,Mults);
+   
+   // check truly rational
+-  rational = (&Weights != NULL);
++  rational = (!IS_NULL_REF(Weights));
+   if (rational) {
+     Standard_Integer WLower = Weights.Lower() + index;
+     rational = BSplCLib::IsRational(Weights, WLower, WLower + Degree);
+diff --git a/src/BSplCLib/BSplCLib_CurveComputation.gxx b/src/BSplCLib/BSplCLib_CurveComputation.gxx
+index e71b4e0..9d42643 100644
+--- a/src/BSplCLib/BSplCLib_CurveComputation.gxx
++++ b/src/BSplCLib/BSplCLib_CurveComputation.gxx
+@@ -92,7 +92,7 @@ Standard_Boolean BSplCLib::RemoveKnot
+  TColStd_Array1OfInteger&       NewMults,
+  const Standard_Real            Tolerance) 
+ {
+-  Standard_Boolean rational = &Weights  != NULL;
++  Standard_Boolean rational = !IS_NULL_REF(Weights);
+   Standard_Integer dim;
+   dim = Dimension_gen;
+   if (rational) dim++;
+@@ -133,7 +133,7 @@ void BSplCLib::InsertKnots
+  const Standard_Real            Epsilon,
+  const Standard_Boolean         Add) 
+ {
+-  Standard_Boolean rational = &Weights  != NULL;
++  Standard_Boolean rational = !IS_NULL_REF(Weights);
+   Standard_Integer dim;
+   dim = Dimension_gen;
+   if (rational) dim++;
+@@ -222,7 +222,7 @@ void BSplCLib::IncreaseDegree
+  TColStd_Array1OfReal&           NewKnots,
+  TColStd_Array1OfInteger&        NewMults) 
+ {
+-  Standard_Boolean rational = &Weights  != NULL;
++  Standard_Boolean rational = !IS_NULL_REF(Weights);
+   Standard_Integer dim;
+   dim = Dimension_gen;
+   if (rational) dim++;
+@@ -256,7 +256,7 @@ void  BSplCLib::Unperiodize
+  Array1OfPoints&          NewPoles,
+  TColStd_Array1OfReal&    NewWeights)
+ {
+-  Standard_Boolean rational = &Weights  != NULL;
++  Standard_Boolean rational = !IS_NULL_REF(Weights);
+   Standard_Integer dim;
+   dim = Dimension_gen;
+   if (rational) dim++;
+@@ -292,7 +292,7 @@ void BSplCLib::Trimming(const Standard_Integer         Degree,
+ 			Array1OfPoints&          NewPoles,
+ 			TColStd_Array1OfReal&    NewWeights)
+ {
+-  Standard_Boolean rational = &Weights  != NULL;
++  Standard_Boolean rational = !IS_NULL_REF(Weights);
+   Standard_Integer dim;
+   dim = Dimension_gen;
+   if (rational) dim++;
+@@ -339,7 +339,7 @@ void  BSplCLib::BuildEval(const Standard_Integer         Degree,
+   Standard_Integer PUpper = Poles.Upper();
+   Standard_Integer i;
+   Standard_Integer ip = PLower + Index - 1;
+-  if (&Weights == NULL) {
++  if (IS_NULL_REF(Weights)) {
+     for (i = 0; i <= Degree; i++) {
+       ip++;
+       if (ip > PUpper) ip = PLower;
+@@ -384,13 +384,13 @@ static void PrepareEval
+ 
+   // make the knots
+   BSplCLib::BuildKnots(Degree,index,Periodic,Knots,Mults,*dc.knots);
+-  if (&Mults == NULL)
++  if (IS_NULL_REF(Mults))
+     index -= Knots.Lower() + Degree;
+   else
+     index = BSplCLib::PoleIndex(Degree,index,Periodic,Mults);
+   
+   // check truly rational
+-  rational = (&Weights != NULL);
++  rational = (!IS_NULL_REF(Weights));
+   if (rational) {
+     Standard_Integer WLower = Weights.Lower() + index;
+     rational = BSplCLib::IsRational(Weights, WLower, WLower + Degree);
+@@ -741,7 +741,7 @@ void  BSplCLib::CacheD0(const Standard_Real                  Parameter,
+ 		       Degree * Dimension_gen,
+ 		       PArray[0],
+ 		       myPoint[0]) ;
+-  if (&WeightsArray != NULL) {
++  if (!IS_NULL_REF(WeightsArray)) {
+     Standard_Real *
+       WArray = (Standard_Real *) &WeightsArray(WeightsArray.Lower()) ;
+     PLib::NoDerivativeEvalPolynomial(NewParameter,
+@@ -798,7 +798,7 @@ void  BSplCLib::CacheD1(const Standard_Real                  Parameter,
+ 
+   ModifyCoords (LocalPDerivatives + Dimension_gen, /= SpanLenght);
+   
+-  if (&WeightsArray != NULL) {
++  if (!IS_NULL_REF(WeightsArray)) {
+     Standard_Real *
+       WArray = (Standard_Real *) &WeightsArray(WeightsArray.Lower()) ;
+     PLib::EvalPolynomial(NewParameter,
+@@ -878,7 +878,7 @@ void  BSplCLib::CacheD2(const Standard_Real                  Parameter,
+     Index += Dimension_gen;
+   }
+ 
+-  if (&WeightsArray != NULL) {
++  if (!IS_NULL_REF(WeightsArray)) {
+     Standard_Real *
+       WArray = (Standard_Real *) &WeightsArray(WeightsArray.Lower()) ;
+     
+@@ -971,7 +971,7 @@ void  BSplCLib::CacheD3(const Standard_Real                  Parameter,
+     Index  += Dimension_gen;
+   }
+   
+-  if (&WeightsArray != NULL) {
++  if (!IS_NULL_REF(WeightsArray)) {
+     Standard_Real *
+       WArray = (Standard_Real *) &WeightsArray(WeightsArray.Lower()) ;
+     
+@@ -1081,7 +1081,7 @@ void BSplCLib::BuildCache
+       LocalValue *= SpanDomain / (Standard_Real) ii ;
+     }
+ 
+-    if (&Weights != NULL) { 
++    if (!IS_NULL_REF(Weights)) {
+       for (ii = 1 ; ii <= Degree + 1 ; ii++)
+ 	CacheWeights(ii) = 0.0e0 ;
+       CacheWeights(1) = 1.0e0 ;
+diff --git a/src/BSplSLib/BSplSLib.cxx b/src/BSplSLib/BSplSLib.cxx
+index 5ad633c..07040d5 100644
+--- a/src/BSplSLib/BSplSLib.cxx
++++ b/src/BSplSLib/BSplSLib.cxx
+@@ -309,12 +309,12 @@ static Standard_Boolean  PrepareEval (const Standard_Real            U,
+     BSplCLib::BuildKnots(UDegree,uindex,UPer,UKnots,UMults,*dc.knots1);
+     BSplCLib::BuildKnots(VDegree,vindex,VPer,VKnots,VMults,*dc.knots2);
+     
+-    if (&UMults == NULL)
++    if (IS_NULL_REF(UMults))
+       uindex -= UKLower + UDegree;
+     else
+       uindex  = BSplCLib::PoleIndex(UDegree,uindex,UPer,UMults);
+ 
+-    if (&VMults == NULL)
++    if (IS_NULL_REF(VMults))
+       vindex -= VKLower + VDegree;
+     else
+       vindex  = BSplCLib::PoleIndex(VDegree,vindex,VPer,VMults);
+@@ -460,12 +460,12 @@ static Standard_Boolean  PrepareEval (const Standard_Real            U,
+     BSplCLib::BuildKnots(UDegree,uindex,UPer,UKnots,UMults,*dc.knots2);
+     BSplCLib::BuildKnots(VDegree,vindex,VPer,VKnots,VMults,*dc.knots1);
+ 
+-    if (&UMults == NULL)
++    if (IS_NULL_REF(UMults))
+       uindex -= UKLower + UDegree;
+     else
+       uindex  = BSplCLib::PoleIndex(UDegree,uindex,UPer,UMults);
+ 
+-    if (&VMults == NULL)
++    if (IS_NULL_REF(VMults))
+       vindex -= VKLower + VDegree;
+     else
+       vindex  = BSplCLib::PoleIndex(VDegree,vindex,VPer,VMults);
+@@ -1299,7 +1299,7 @@ void  BSplSLib::Iso(const Standard_Real            Param,
+ {
+   Standard_Integer index = 0;
+   Standard_Real    u = Param;
+-  Standard_Boolean rational = &Weights != NULL;
++  Standard_Boolean rational = !IS_NULL_REF(Weights);
+   Standard_Integer dim = rational ? 4 : 3;
+   
+   // compute local knots
+@@ -1307,7 +1307,7 @@ void  BSplSLib::Iso(const Standard_Real            Param,
+   NCollection_LocalArray<Standard_Real> locknots1 (2*Degree);  
+   BSplCLib::LocateParameter(Degree,Knots,Mults,u,Periodic,index,u);
+   BSplCLib::BuildKnots(Degree,index,Periodic,Knots,Mults,*locknots1);
+-  if (&Mults == NULL)
++  if (IS_NULL_REF(Mults))
+     index -= Knots.Lower() + Degree;
+   else
+     index = BSplCLib::PoleIndex(Degree,index,Periodic,Mults);
+@@ -1381,7 +1381,7 @@ void  BSplSLib::Iso(const Standard_Real            Param,
+   }
+   
+   // if the input is not rational but weights are wanted
+-  if (!rational && (&CWeights != NULL)) {
++  if (!rational && (!IS_NULL_REF(CWeights))) {
+ 
+     for (i = CWeights.Lower(); i <= CWeights.Upper(); i++)
+       CWeights(i) = 1.;
+@@ -1741,7 +1741,7 @@ void  BSplSLib::InsertKnots(const Standard_Boolean         UDirection,
+ 			    const Standard_Real            Epsilon, 
+ 			    const Standard_Boolean         Add )
+ {
+-  Standard_Boolean rational = &Weights != NULL;
++  Standard_Boolean rational = !IS_NULL_REF(Weights);
+   Standard_Integer dim = 3;
+   if (rational) dim++;
+   
+@@ -1787,7 +1787,7 @@ Standard_Boolean  BSplSLib::RemoveKnot
+  TColStd_Array1OfInteger& NewMults,
+  const Standard_Real            Tolerance)
+ {
+-  Standard_Boolean rational = &Weights != NULL;
++  Standard_Boolean rational = !IS_NULL_REF(Weights);
+   Standard_Integer dim = 3;
+   if (rational) dim++;
+   
+@@ -1834,7 +1834,7 @@ void  BSplSLib::IncreaseDegree
+  TColStd_Array1OfReal&    NewKnots, 
+  TColStd_Array1OfInteger& NewMults)
+ {
+-  Standard_Boolean rational = &Weights != NULL;
++  Standard_Boolean rational = !IS_NULL_REF(Weights);
+   Standard_Integer dim = 3;
+   if (rational) dim++;
+   
+@@ -1876,7 +1876,7 @@ void  BSplSLib::Unperiodize
+  TColgp_Array2OfPnt&      NewPoles,
+  TColStd_Array2OfReal&    NewWeights)
+ {
+-  Standard_Boolean rational = &Weights != NULL;
++  Standard_Boolean rational = !IS_NULL_REF(Weights);
+   Standard_Integer dim = 3;
+   if (rational) dim++;
+   
+@@ -1929,7 +1929,7 @@ void BSplSLib::BuildCache
+   Standard_Boolean rational,rational_u,rational_v,flag_u_or_v;                  
+   Standard_Integer kk,d1,d1p1,d2,d2p1,ii,jj,iii,jjj,Index;
+   Standard_Real u1,min_degree_domain,max_degree_domain,f,factor[2],u2;
+-  if (&Weights != NULL) 
++  if (!IS_NULL_REF(Weights))
+     rational_u = rational_v = Standard_True;
+   else
+     rational_u = rational_v = Standard_False;
+@@ -2025,7 +2025,7 @@ void BSplSLib::BuildCache
+       }
+       factor[0] *= max_degree_domain / (Standard_Real) (iii) ;
+     }
+-    if (&Weights != NULL) {
++    if (!IS_NULL_REF(Weights)) {
+       //
+       // means that PrepareEval did found out that the surface was 
+       // locally polynomial but since the surface is constructed
+@@ -2110,7 +2110,7 @@ void  BSplSLib::CacheD0(const Standard_Real                  UParameter,
+ 		       (min_degree << 1) + min_degree,
+ 		       locpoles[0],
+ 		       myPoint[0]) ;
+-  if (&WeightsArray != NULL) {
++  if (!IS_NULL_REF(WeightsArray)) {
+     dimension = min_degree + 1 ;
+     Standard_Real *
+       WArray = (Standard_Real *) 
+@@ -2190,7 +2190,7 @@ void  BSplSLib::CacheD1(const Standard_Real                  UParameter,
+   // the coefficients
+   //
+   //
+-  if (&WeightsArray != NULL) {
++  if (!IS_NULL_REF(WeightsArray)) {
+ 
+     local_poles_array            [0][0][0] = 0.0e0 ;
+     local_poles_array            [0][0][1] = 0.0e0 ;
+@@ -2275,7 +2275,7 @@ void  BSplSLib::CacheD1(const Standard_Real                  UParameter,
+ 		       locpoles[dimension],
+ 		       local_poles_array[1][0][0]) ;
+   
+-  if (&WeightsArray != NULL) {
++  if (!IS_NULL_REF(WeightsArray)) {
+     dimension = min_degree + 1 ;
+     Standard_Real *
+       WArray = (Standard_Real *) 
+@@ -2435,7 +2435,7 @@ void  BSplSLib::CacheD2(const Standard_Real                  UParameter,
+   // the coefficients
+   //
+   //
+-  if (&WeightsArray != NULL) {
++  if (!IS_NULL_REF(WeightsArray)) {
+     
+     local_poles_and_weights_array[0][0][0] = 0.0e0 ;
+     local_poles_and_weights_array[0][0][1] = 0.0e0 ;
+@@ -2564,7 +2564,7 @@ void  BSplSLib::CacheD2(const Standard_Real                  UParameter,
+ 		       locpoles[dimension + dimension],
+ 		       local_poles_array[2][0][0]) ;
+   
+-  if (&WeightsArray != NULL) {
++  if (!IS_NULL_REF(WeightsArray)) {
+     dimension = min_degree + 1 ;
+     Standard_Real *
+       WArray = (Standard_Real *) 
+diff --git a/src/BSplSLib/BSplSLib_BzSyntaxes.cxx b/src/BSplSLib/BSplSLib_BzSyntaxes.cxx
+index 0faf6b6..f2c0f74 100644
+--- a/src/BSplSLib/BSplSLib_BzSyntaxes.cxx
++++ b/src/BSplSLib/BSplSLib_BzSyntaxes.cxx
+@@ -68,7 +68,7 @@ void BSplSLib::PolesCoefficients (const TColgp_Array2OfPnt& Poles,
+ 			 biduflatknots,bidvflatknots,
+ 			 Poles,Weights,
+ 			 CPoles,CWeights);
+-    if (&Weights == NULL) {
++    if (IS_NULL_REF(Weights)) {
+       
+       for (ii = 1; ii <= uclas; ii++) {
+ 	
+diff --git a/src/PLib/PLib.cxx b/src/PLib/PLib.cxx
+index 23fa302..7ee231f 100644
+--- a/src/PLib/PLib.cxx
++++ b/src/PLib/PLib.cxx
+@@ -2427,7 +2427,7 @@ void PLib::CoefficientsPoles (const Standard_Integer      dim,
+ 			      TColStd_Array1OfReal&       Poles, 
+ 			      TColStd_Array1OfReal&       Weights)
+ {
+-  Standard_Boolean rat = &WCoefs != NULL;
++  Standard_Boolean rat = !IS_NULL_REF(WCoefs);
+   Standard_Integer loc = Coefs.Lower();
+   Standard_Integer lop = Poles.Lower();
+   Standard_Integer lowc=0;
+@@ -2550,7 +2550,7 @@ void PLib::Trimming(const Standard_Real U1,
+   Standard_Integer indc, indw=0;
+   Standard_Integer upc = Coefs.Upper() - dim + 1, upw=0;
+   Standard_Integer len = Coefs.Length()/dim;
+-  Standard_Boolean rat = &WCoefs != NULL;
++  Standard_Boolean rat = !IS_NULL_REF(WCoefs);
+ 
+   if (rat) {
+     if(len != WCoefs.Length())
+@@ -2607,7 +2607,7 @@ void PLib::CoefficientsPoles (const TColgp_Array2OfPnt&   Coefs,
+ 			      TColgp_Array2OfPnt&         Poles,
+ 			      TColStd_Array2OfReal&       Weights) 
+ {
+-  Standard_Boolean rat = (&WCoefs != NULL);
++  Standard_Boolean rat = (!IS_NULL_REF(WCoefs));
+   Standard_Integer LowerRow  = Poles.LowerRow();
+   Standard_Integer UpperRow  = Poles.UpperRow();
+   Standard_Integer LowerCol  = Poles.LowerCol();
+@@ -2701,7 +2701,7 @@ void PLib::UTrimming(const Standard_Real U1,
+ 		     TColgp_Array2OfPnt& Coeffs, 
+ 		     TColStd_Array2OfReal& WCoeffs)
+ {
+-  Standard_Boolean rat = &WCoeffs != NULL;
++  Standard_Boolean rat = !IS_NULL_REF(WCoeffs);
+   Standard_Integer lr = Coeffs.LowerRow();
+   Standard_Integer ur = Coeffs.UpperRow();
+   Standard_Integer lc = Coeffs.LowerCol();
+@@ -2735,7 +2735,7 @@ void PLib::VTrimming(const Standard_Real V1,
+ 		     TColgp_Array2OfPnt& Coeffs, 
+ 		     TColStd_Array2OfReal& WCoeffs)
+ {
+-  Standard_Boolean rat = &WCoeffs != NULL;
++  Standard_Boolean rat = !IS_NULL_REF(WCoeffs);
+   Standard_Integer lr = Coeffs.LowerRow();
+   Standard_Integer ur = Coeffs.UpperRow();
+   Standard_Integer lc = Coeffs.LowerCol();
