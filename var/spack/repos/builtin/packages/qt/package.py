@@ -7,7 +7,7 @@ class Qt(Package):
     url      = 'http://download.qt.io/archive/qt/5.5/5.5.1/single/qt-everywhere-opensource-src-5.5.1.tar.gz'
 
     version('5.5.1',  '59f0216819152b77536cf660b015d784')
-    version('5.4.2',  'fa1c4d819b401b267eb246a543a63ea5',
+    version('5.4.2',  'fa1c4d819b401b267eb246a543a63ea5')
     version('5.4.0',  'e8654e4b37dd98039ba20da7a53877e6')
     version('5.3.2',  'febb001129927a70174467ecb508a682')
     version('5.2.1',  'a78408c887c04c34ce615da690e0b4c8')
