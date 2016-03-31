@@ -24,7 +24,7 @@ class Espresso(Package):
     depends_on('fftw~mpi', when='~mpi')
     depends_on('fftw+mpi', when='+mpi')
     depends_on('scalapack', when='+scalapack+mpi')  # TODO : + mpi needed to avoid false dependencies installation
-    
+
     def check_variants(self, spec):
         error = 'you cannot ask for \'+{variant}\' when \'+mpi\' is not active'
         if '+scalapack' in spec and '~mpi' in spec:
@@ -32,14 +32,10 @@ class Espresso(Package):
         if '+elpa' in spec and ('~mpi' in spec or '~scalapack' in spec):
             raise RuntimeError(error.format(variant='elpa'))
 
-    def setup_environment(self, spack_env, run_env):
-        # Espresso copies every executable in prefix without creating sub-folders
-        run_env.prepend_path('PATH', self.prefix)
-
     def install(self, spec, prefix):
         self.check_variants(spec)
 
-        options = ['-prefix=%s' % prefix]
+        options = ['-prefix=%s' % prefix.bin]
 
         if '+mpi' in spec:
             options.append('--enable-parallel')
