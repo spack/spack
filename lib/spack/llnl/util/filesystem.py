@@ -27,9 +27,11 @@ __all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree'
            'force_remove', 'join_path', 'ancestor', 'can_access', 'filter_file',
            'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
            'set_executable', 'copy_mode', 'unset_executable_mode',
-           'remove_dead_links', 'remove_linked_tree']
+           'remove_dead_links', 'remove_linked_tree', 'find_library_path',
+           'fix_darwin_install_name']
 
 import os
+import glob
 import sys
 import re
 import shutil
@@ -38,6 +40,7 @@ import errno
 import getpass
 from contextlib import contextmanager, closing
 from tempfile import NamedTemporaryFile
+import subprocess
 
 import llnl.util.tty as tty
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
@@ -392,3 +395,44 @@ def remove_linked_tree(path):
             os.unlink(path)
         else:
             shutil.rmtree(path, True)
+
+
+def fix_darwin_install_name(path):
+    """
+    Fix install name of dynamic libraries on Darwin to have full path.
+    There are two parts of this task:
+    (i) use install_name('-id',...) to change install name of a single lib;
+    (ii) use install_name('-change',...) to change the cross linking between libs.
+    The function assumes that all libraries are in one folder and currently won't
+    follow subfolders.
+
+    Args:
+        path: directory in which .dylib files are alocated
+
+    """
+    libs = glob.glob(join_path(path,"*.dylib"))
+    for lib in libs:
+        # fix install name first:
+        subprocess.Popen(["install_name_tool", "-id",lib,lib], stdout=subprocess.PIPE).communicate()[0]
+        long_deps = subprocess.Popen(["otool", "-L",lib], stdout=subprocess.PIPE).communicate()[0].split('\n')
+        deps = [dep.partition(' ')[0][1::] for dep in long_deps[2:-1]]
+        # fix all dependencies:
+        for dep in deps:
+            for loc in libs:
+                if dep == os.path.basename(loc):
+                    subprocess.Popen(["install_name_tool", "-change",dep,loc,lib], stdout=subprocess.PIPE).communicate()[0]
+                    break
+
+
+def find_library_path(libname, *paths):
+    """Searches for a file called <libname> in each path.
+
+    Return:
+      directory where the library was found, if found.  None otherwise.
+
+    """
+    for path in paths:
+        library = join_path(path, libname)
+        if os.path.exists(library):
+            return path
+    return None

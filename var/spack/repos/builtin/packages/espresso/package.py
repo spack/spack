@@ -24,7 +24,7 @@ class Espresso(Package):
     depends_on('fftw~mpi', when='~mpi')
     depends_on('fftw+mpi', when='+mpi')
     depends_on('scalapack', when='+scalapack+mpi')  # TODO : + mpi needed to avoid false dependencies installation
-    
+
     def check_variants(self, spec):
         error = 'you cannot ask for \'+{variant}\' when \'+mpi\' is not active'
         if '+scalapack' in spec and '~mpi' in spec:
@@ -33,9 +33,10 @@ class Espresso(Package):
             raise RuntimeError(error.format(variant='elpa'))
 
     def install(self, spec, prefix):
+        from glob import glob
         self.check_variants(spec)
 
-        options = ['-prefix=%s' % prefix]
+        options = ['-prefix=%s' % prefix.bin]
 
         if '+mpi' in spec:
             options.append('--enable-parallel')
@@ -61,5 +62,11 @@ class Espresso(Package):
 
         configure(*options)
         make('all')
-        make('install')        
+
+        if spec.architecture.startswith('darwin'):
+            mkdirp(prefix.bin)
+            for filename in glob("bin/*.x"):
+                install(filename, prefix.bin)
+        else:
+            make('install')
 

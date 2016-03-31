@@ -34,40 +34,34 @@ rundown on spack and how it differs from homebrew, look at the
 README.
 """
 import os
-import errno
 import re
-import shutil
-import time
-import itertools
-import subprocess
-import platform as py_platform
-import multiprocessing
-from urlparse import urlparse, urljoin
 import textwrap
-from StringIO import StringIO
+import time
+import glob
 
 import llnl.util.tty as tty
-from llnl.util.tty.log import log_output
-from llnl.util.link_tree import LinkTree
-from llnl.util.filesystem import *
-from llnl.util.lang import *
-
 import spack
-import spack.error
-import spack.compilers
-import spack.mirror
-import spack.hooks
-import spack.directives
-import spack.repository
 import spack.build_environment
+import spack.compilers
+import spack.directives
+import spack.error
+import spack.fetch_strategy as fs
+import spack.hooks
+import spack.mirror
+import spack.repository
 import spack.url
 import spack.util.web
-import spack.fetch_strategy as fs
-from spack.version import *
+from StringIO import StringIO
+from llnl.util.filesystem import *
+from llnl.util.lang import *
+from llnl.util.link_tree import LinkTree
+from llnl.util.tty.log import log_output
 from spack.stage import Stage, ResourceStage, StageComposite
-from spack.util.compression import allowed_archive, extension
-from spack.util.executable import ProcessError
+from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
+from spack.util.executable import ProcessError
+from spack.version import *
+from urlparse import urlparse
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -341,6 +335,9 @@ class Package(object):
         if '.' in self.name:
             self.name = self.name[self.name.rindex('.') + 1:]
 
+        # Allow custom staging paths for packages
+        self.path=None
+
         # Sanity check attributes required by Spack directives.
         spack.directives.ensure_dicts(type(self))
 
@@ -459,7 +456,8 @@ class Package(object):
         resource_stage_folder = self._resource_stage(resource)
         resource_mirror = join_path(self.name, os.path.basename(fetcher.url))
         stage = ResourceStage(resource.fetcher, root=root_stage, resource=resource,
-                              name=resource_stage_folder, mirror_path=resource_mirror)
+                              name=resource_stage_folder, mirror_path=resource_mirror,
+                              path=self.path)
         return stage
 
     def _make_root_stage(self, fetcher):
@@ -469,7 +467,7 @@ class Package(object):
         s = self.spec
         stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
         # Build the composite stage
-        stage = Stage(fetcher, mirror_path=mp, name=stage_name)
+        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path)
         return stage
 
     def _make_stage(self):
@@ -942,6 +940,9 @@ class Package(object):
                      install(env_path, env_install_path)
                      dump_packages(self.spec, packages_dir)
 
+                # Run post install hooks before build stage is removed.
+                spack.hooks.post_install(self)
+
             # Stop timer.
             self._total_time = time.time() - start_time
             build_time = self._total_time - self._fetch_time
@@ -969,9 +970,6 @@ class Package(object):
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
         spack.installed_db.add(self.spec, self.prefix)
-
-        # Once everything else is done, run post install hooks
-        spack.hooks.post_install(self)
 
 
     def sanity_check_prefix(self):
@@ -1018,37 +1016,126 @@ class Package(object):
         return __import__(self.__class__.__module__,
                           fromlist=[self.__class__.__name__])
 
+    def setup_environment(self, spack_env, run_env):
+        """Set up the compile and runtime environemnts for a package.
 
-    def setup_dependent_environment(self, module, spec, dependent_spec):
-        """Called before the install() method of dependents.
+        `spack_env` and `run_env` are `EnvironmentModifications`
+        objects.  Package authors can call methods on them to alter
+        the environment within Spack and at runtime.
+
+        Both `spack_env` and `run_env` are applied within the build
+        process, before this package's `install()` method is called.
+
+        Modifications in `run_env` will *also* be added to the
+        generated environment modules for this package.
 
         Default implementation does nothing, but this can be
-        overridden by an extendable package to set up the install
-        environment for its extensions.  This is useful if there are
-        some common steps to installing all extensions for a
-        certain package.
+        overridden if the package needs a particular environment.
 
-        Some examples:
+        Examples:
 
-        1. Installing python modules generally requires PYTHONPATH to
-           point to the lib/pythonX.Y/site-packages directory in the
-           module's install prefix.  This could set that variable.
+            1. Qt extensions need `QTDIR` set.
 
-        2. Extensions often need to invoke the 'python' interpreter
-           from the Python installation being extended.  This routine can
-           put a 'python' Execuable object in the module scope for the
-           extension package to simplify extension installs.
+        Args:
+            spack_env (EnvironmentModifications): list of
+                modifications to be applied when this package is built
+                within Spack.
 
-        3. A lot of Qt extensions need QTDIR set.  This can be used to do that.
+            run_env (EnvironmentModifications): list of environment
+                changes to be applied when this package is run outside
+                of Spack.
 
         """
         pass
 
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        """Set up the environment of packages that depend on this one.
+
+        This is similar to `setup_environment`, but it is used to
+        modify the compile and runtime environments of packages that
+        *depend* on this one. This gives packages like Python and
+        others that follow the extension model a way to implement
+        common environment or compile-time settings for dependencies.
+
+        By default, this delegates to self.setup_environment()
+
+        Example :
+
+            1. Installing python modules generally requires
+              `PYTHONPATH` to point to the lib/pythonX.Y/site-packages
+              directory in the module's install prefix.  This could
+              set that variable.
+
+        Args:
+
+            spack_env (EnvironmentModifications): list of
+                modifications to be applied when the dependent package
+                is bulit within Spack.
+
+            run_env (EnvironmentModifications): list of environment
+                changes to be applied when the dependent package is
+                run outside of Spack.
+
+            dependent_spec (Spec): The spec of the dependent package
+                about to be built. This allows the extendee (self) to
+                query the dependent's state. Note that *this*
+                package's spec is available as `self.spec`.
+
+        This is useful if there are some common steps to installing
+        all extensions for a certain package.
+
+        """
+        self.setup_environment(spack_env, run_env)
+
+
+    def setup_dependent_package(self, module, dependent_spec):
+        """Set up Python module-scope variables for dependent packages.
+
+        Called before the install() method of dependents.
+
+        Default implementation does nothing, but this can be
+        overridden by an extendable package to set up the module of
+        its extensions. This is useful if there are some common steps
+        to installing all extensions for a certain package.
+
+        Example :
+
+            1. Extensions often need to invoke the `python`
+               interpreter from the Python installation being
+               extended.  This routine can put a 'python' Executable
+               object in the module scope for the extension package to
+               simplify extension installs.
+
+            2. MPI compilers could set some variables in the
+               dependent's scope that point to `mpicc`, `mpicxx`,
+               etc., allowing them to be called by common names
+               regardless of which MPI is used.
+
+            3. BLAS/LAPACK implementations can set some variables
+               indicating the path to their libraries, since these
+               paths differ by BLAS/LAPACK implementation.
+
+        Args:
+
+            module (module): The Python `module` object of the
+                dependent package. Packages can use this to set
+                module-scope variables for the dependent to use.
+
+            dependent_spec (Spec): The spec of the dependent package
+                about to be built. This allows the extendee (self) to
+                query the dependent's state.  Note that *this*
+                package's spec is available as `self.spec`.
+
+        This is useful if there are some common steps to installing
+        all extensions for a certain package.
+
+        """
+        pass
+
     def install(self, spec, prefix):
         """Package implementations override this with their own build configuration."""
         raise InstallError("Package %s provides no install method!" % self.name)
-
 
     def do_uninstall(self, force=False):
         if not self.installed:
@@ -1359,6 +1446,10 @@ class InstallError(spack.error.SpackError):
     """Raised when something goes wrong during install or uninstall."""
     def __init__(self, message, long_msg=None):
         super(InstallError, self).__init__(message, long_msg)
+
+
+class ExternalPackageError(InstallError):
+    """Raised by install() when a package is only for external use."""
 
 
 class PackageStillNeededError(InstallError):

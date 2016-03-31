@@ -35,18 +35,32 @@ class ArpackNg(Package):
     variant('shared', default=True, description='Enables the build of shared libraries')
     variant('mpi', default=False, description='Activates MPI support')
 
+    # The function pdlamch10 does not set the return variable. This is fixed upstream
+    # see https://github.com/opencollab/arpack-ng/issues/34
+    patch('pdlamch10.patch', when='@3.3:')
+
     depends_on('blas')
     depends_on('lapack')
+    depends_on('automake')
+    depends_on('autoconf')
+    depends_on('libtool@2.4.2:')
+
     depends_on('mpi', when='+mpi')
 
     def install(self, spec, prefix):
         # Apparently autotools are not bootstrapped
+        # TODO: switch to use the CMake build in the next version
+        # rather than bootstrapping.
+        which('libtoolize')()
         bootstrap = Executable('./bootstrap')
 
         options = ['--prefix=%s' % prefix]
 
         if '+mpi' in spec:
-            options.append('--enable-mpi')
+            options.extend([
+                '--enable-mpi',
+                'F77=mpif77' #FIXME: avoid hardcoding MPI wrapper names
+            ])
 
         if '~shared' in spec:
             options.append('--enable-shared=no')

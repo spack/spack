@@ -289,8 +289,14 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Tried to reset URLFetchStrategy before fetching",
                                      "Failed on reset() for URL %s" % self.url)
-        if self.stage.source_path:
-            shutil.rmtree(self.stage.source_path, ignore_errors=True)
+
+        # Remove everythigng but the archive from the stage
+        for filename in os.listdir(self.stage.path):
+            abspath = os.path.join(self.stage.path, filename)
+            if abspath != self.archive_file:
+                shutil.rmtree(abspath, ignore_errors=True)
+
+        # Expand the archive again
         self.expand()
 
     def __repr__(self):

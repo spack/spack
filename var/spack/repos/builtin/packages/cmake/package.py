@@ -30,6 +30,7 @@ class Cmake(Package):
     homepage  = 'https://www.cmake.org'
     url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
 
+    version('3.5.1',    'ca051f4a66375c89d1a524e726da0296')
     version('3.5.0',    '33c5d09d4c33d4ffcc63578a6ba8777e')
     version('3.4.3',    '4cb3ff35b2472aae70f542116d616e63')
     version('3.4.0',    'cd3034e0a44256a0917e254167217fc8')
@@ -38,10 +39,12 @@ class Cmake(Package):
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
     variant('ncurses', default=True, description='Enables the build of the ncurses gui')
+    variant('openssl', default=True, description="Enables CMake's OpenSSL features")
     variant('qt', default=False, description='Enables the build of cmake-gui')
     variant('doc', default=False, description='Enables the generation of html and man page documentation')
 
     depends_on('ncurses', when='+ncurses')
+    depends_on('openssl', when='+openssl')
     depends_on('qt', when='+qt')
     depends_on('python@2.7.11:', when='+doc')
     depends_on('py-sphinx', when='+doc')
@@ -77,8 +80,9 @@ class Cmake(Package):
             options.append('--sphinx-html')
             options.append('--sphinx-man')
 
-        options.append('--')
-        options.append('-DCMAKE_USE_OPENSSL=ON')
+        if '+openssl' in spec:
+            options.append('--')
+            options.append('-DCMAKE_USE_OPENSSL=ON')
 
         configure(*options)
         make()

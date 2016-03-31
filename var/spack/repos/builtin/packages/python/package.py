@@ -1,11 +1,14 @@
+import functools
+import glob
+import inspect
 import os
 import re
 from contextlib import closing
-from llnl.util.lang import match_predicate
-from spack.util.environment import *
 
-from spack import *
 import spack
+from llnl.util.lang import match_predicate
+from spack import *
+from spack.util.environment import *
 
 
 class Python(Package):
@@ -90,35 +93,46 @@ class Python(Package):
         return os.path.join(self.python_lib_dir, 'site-packages')
 
 
-    def setup_dependent_environment(self, module, spec, ext_spec):
-        """Called before python modules' install() methods.
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        # TODO: do this only for actual extensions.
+
+        # Set PYTHONPATH to include site-packages dir for the
+        # extension and any other python extensions it depends on.
+        python_paths = []
+        for d in extension_spec.traverse():
+            if d.package.extends(self.spec):
+                python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
+
+        pythonpath = ':'.join(python_paths)
+        spack_env.set('PYTHONPATH', pythonpath)
+
+        # For run time environment set only the path for extension_spec and prepend it to PYTHONPATH
+        if extension_spec.package.extends(self.spec):
+            run_env.prepend_path('PYTHONPATH', os.path.join(extension_spec.prefix, self.site_packages_dir))
+
+
+    def setup_dependent_package(self, module, ext_spec):
+        """
+        Called before python modules' install() methods.
 
         In most cases, extensions will only need to have one line::
 
-            python('setup.py', 'install', '--prefix=%s' % prefix)
+        python('setup.py', 'install', '--prefix=%s' % prefix)
         """
         # Python extension builds can have a global python executable function
         if self.version >= Version("3.0.0") and self.version < Version("4.0.0"):
-            module.python = Executable(join_path(spec.prefix.bin, 'python3'))
+            module.python = Executable(join_path(self.spec.prefix.bin, 'python3'))
         else:
-            module.python = Executable(join_path(spec.prefix.bin, 'python'))
+            module.python = Executable(join_path(self.spec.prefix.bin, 'python'))
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
         module.python_lib_dir     = os.path.join(ext_spec.prefix, self.python_lib_dir)
         module.python_include_dir = os.path.join(ext_spec.prefix, self.python_include_dir)
         module.site_packages_dir  = os.path.join(ext_spec.prefix, self.site_packages_dir)
 
-        # Make the site packages directory if it does not exist already.
-        mkdirp(module.site_packages_dir)
-
-        # Set PYTHONPATH to include site-packages dir for the
-        # extension and any other python extensions it depends on.
-        python_paths = []
-        for d in ext_spec.traverse():
-            if d.package.extends(self.spec):
-                python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
-        os.environ['PYTHONPATH'] = ':'.join(python_paths)
-
+        # Make the site packages directory for extensions, if it does not exist already.
+        if ext_spec.package.is_extension:
+            mkdirp(module.site_packages_dir)
 
     # ========================================================================
     # Handle specifics of activating and deactivating python modules.

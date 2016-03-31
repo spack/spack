@@ -26,6 +26,7 @@
 These tests check the database is functioning properly,
 both in memory and in its file
 """
+import os.path
 import multiprocessing
 import shutil
 import tempfile
