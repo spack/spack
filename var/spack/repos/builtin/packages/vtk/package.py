@@ -39,6 +39,10 @@ class Vtk(Package):
             if spec['qt'].satisfies('@5'):
                 cmake_args.append("-DVTK_QT_VERSION:STRING=5")
 
+            if spec.satisfies("@6.1.0"):
+                cmake_args.append("-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY")
+                cmake_args.append("-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY")
+
             cmake(*cmake_args)
             make()
             make("install")
