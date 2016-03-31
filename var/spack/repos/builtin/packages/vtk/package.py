@@ -15,7 +15,15 @@ class Vtk(Package):
 
     depends_on("qt")
 
+    # VTK7 defaults to OpenGL2 rendering backend
+    variant('opengl2', default=True, description='Build with OpenGL instead of OpenGL2 as rendering backend')
+
     def install(self, spec, prefix):
+        def feature_to_bool(feature, on='ON', off='OFF'):
+            if feature in spec:
+                return on
+            return off
+
         with working_dir('spack-build', create=True):
             cmake_args = [
                 "..",
@@ -42,6 +50,8 @@ class Vtk(Package):
             if spec.satisfies("@6.1.0"):
                 cmake_args.append("-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY")
                 cmake_args.append("-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY")
+
+            cmake_args.append('-DVTK_RENDERING_BACKEND:STRING=%s' % feature_to_bool('+opengl2', 'OpenGL2', 'OpenGL'))
 
             cmake(*cmake_args)
             make()
