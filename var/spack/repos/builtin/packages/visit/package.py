@@ -1,19 +1,3 @@
-# FIXME:
-# This is a template package file for Spack.  We've conveniently
-# put "FIXME" labels next to all the things you'll want to change.
-#
-# Once you've edited all the FIXME's, delete this whole message,
-# save this file, and test out your package like this:
-#
-#     spack install visit
-#
-# You can always get back here to change things with:
-#
-#     spack edit visit
-#
-# See the spack documentation for more information on building
-# packages.
-#
 from spack import *
 
 
@@ -24,17 +8,21 @@ class Visit(Package):
 
     version('2.10.1', '3cbca162fdb0249f17c4456605c4211e')
 
-    depends_on("vtk@7.0")
+    depends_on("vtk@6.1.0~opengl2")
     depends_on("qt@4.8.6")
-    # FIXME: Add dependencies if this package requires them.
+    depends_on("python")
+    # TODO: Other package dependencies from spack
 
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
-        # FIXME: Spack couldn't guess one, so here are some options:
-        # configure('--prefix=%s' % prefix)
-        std_cmake_args = []
-        cmake('.', *std_cmake_args)
 
-        # FIXME: Add logic to build and install here
+        feature_args = std_cmake_args[:]
+        feature_args = ["-DVTK_MAJOR_VERSION=6",
+                        "-DVTK_MINOR_VERSION=1",
+                        "-DCMAKE_INSTALL_PREFIX:PATH=%s" % spec.prefix,
+                        "-DVISIT_LOC_QMAKE_EXE:FILEPATH=%s/qmake-qt4" % spec['qt'].prefix.bin,
+                        "-DPYTHON_EXECUTABLE:FILEPATH=%s/python" % spec['python'].prefix.bin]
+
+        cmake('./src', *feature_args)
+
         make()
         make("install")
