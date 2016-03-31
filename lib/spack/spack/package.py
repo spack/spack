@@ -335,6 +335,9 @@ class Package(object):
         if '.' in self.name:
             self.name = self.name[self.name.rindex('.') + 1:]
 
+        # Allow custom staging paths for packages
+        self.path=None
+
         # Sanity check attributes required by Spack directives.
         spack.directives.ensure_dicts(type(self))
 
@@ -445,7 +448,8 @@ class Package(object):
         resource_stage_folder = self._resource_stage(resource)
         resource_mirror = join_path(self.name, os.path.basename(fetcher.url))
         stage = ResourceStage(resource.fetcher, root=root_stage, resource=resource,
-                              name=resource_stage_folder, mirror_path=resource_mirror)
+                              name=resource_stage_folder, mirror_path=resource_mirror,
+                              path=self.path)
         return stage
 
     def _make_root_stage(self, fetcher):
@@ -455,7 +459,7 @@ class Package(object):
         s = self.spec
         stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
         # Build the composite stage
-        stage = Stage(fetcher, mirror_path=mp, name=stage_name)
+        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path)
         return stage
 
     def _make_stage(self):
@@ -709,18 +713,13 @@ class Package(object):
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
 
-    def do_stage(self, mirror_only=False, path=None):
+    def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
            directory."""
-
         if not self.spec.concrete:
             raise ValueError("Can only stage concrete packages.")
 
         self.do_fetch(mirror_only)
-
-        if path is not None:
-            self.stage.path = path
-
         self.stage.expand_archive()
         self.stage.chdir_to_source()
 
