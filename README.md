@@ -59,7 +59,8 @@ can join it here:
 
 At the moment, contributing to Spack is relatively simple.  Just send us
 a [pull request](https://help.github.com/articles/using-pull-requests/).
-When you send your request, make ``develop`` the destination branch.
+When you send your request, make ``develop`` the destination branch on the
+[Spack repository](https://github.com/LLNL/spack).
 
 Spack is using a rough approximation of the [Git
 Flow](http://nvie.com/posts/a-successful-git-branching-model/)

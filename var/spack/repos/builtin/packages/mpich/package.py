@@ -78,6 +78,9 @@ class Mpich(Package):
         if not self.compiler.fc:
             config_args.append("--disable-fc")
 
+        if not self.compiler.fc and not self.compiler.f77:
+            config_args.append("--disable-fortran")
+
         configure(*config_args)
         make()
         make("install")

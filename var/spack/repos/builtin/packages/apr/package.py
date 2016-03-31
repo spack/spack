@@ -22,37 +22,17 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import argparse
+from spack import *
 
-import llnl.util.tty as tty
-import spack
-import spack.cmd
+class Apr(Package):
+    """Apache portable runtime."""
+    homepage  = 'https://apr.apache.org/'
+    url       = 'http://archive.apache.org/dist/apr/apr-1.5.2.tar.gz'
 
-description="Expand downloaded archive in preparation for install"
+    version('1.5.2',    '98492e965963f852ab29f9e61b2ad700')
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="Do not check downloaded packages against checksum")
-    subparser.add_argument(
-        '-p', '--path', dest='path',
-        help="Path to stage package, does not add to spack tree")
-
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="specs of packages to stage")
-
-
-def stage(parser, args):
-    if not args.specs:
-        tty.die("stage requires at least one package argument")
-
-    if args.no_checksum:
-        spack.do_checksum = False
-
-    specs = spack.cmd.parse_specs(args.specs, concretize=True)
-    for spec in specs:
-        package = spack.repo.get(spec)
-        if args.path:
-            package.path = args.path
-        package.do_stage()
+    def install(self, spec, prefix):
+        options = ['--prefix=%s' % prefix]
+        configure(*options)
+        make()
+        make('install')
