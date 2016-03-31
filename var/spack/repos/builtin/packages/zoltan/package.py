@@ -28,6 +28,8 @@ class Zoltan(Package):
         if '+mpi' in spec:
             config_args.append('--with-mpi=%s' % spec['mpi'].prefix)
             config_args.append('--with-mpi-compilers=%s' % spec['mpi'].prefix.bin)
+            config_args.append('CC=%s/mpicc' % spec['mpi'].prefix.bin)
+            config_args.append('CXX=%s/mpicxx' % spec['mpi'].prefix.bin)
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
