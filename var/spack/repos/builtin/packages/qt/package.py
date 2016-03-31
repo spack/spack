@@ -101,7 +101,7 @@ class Qt(Package):
 
     @property
     def common_config_args(self):
-        return [
+        config_args = [
             '-prefix', self.prefix,
             '-v',
             '-opensource',
@@ -115,7 +115,16 @@ class Qt(Package):
             '-no-openvg',
             '-no-pch',
             # NIS is deprecated in more recent glibc
-            '-no-nis']
+            '-no-nis'
+        ]
+
+        if '+gtk' in self.spec:
+            config_args.append('-gtkstyle')
+        else:
+            config_args.append('-no-gtkstyle')
+
+        return config_args
+
     # Don't disable all the database drivers, but should
     # really get them into spack at some point.
 
@@ -128,8 +137,8 @@ class Qt(Package):
                   '-thread',
                   '-shared',
                   '-release',
-                  '-fast'
-                  )
+                  '-fast',
+                  *self.common_config_args)
 
     @when('@4')
     def configure(self):
