@@ -19,7 +19,7 @@ class Boxlib(Package):
                  '-DCMAKE_CXX_COMPILER=%s' % which('mpicxx'),
                  '-DCMAKE_Fortran_COMPILER=%s' % which('mpif90')]
 
-        cmake('.', *args)
+        which('cmake')('.', *args)
         make()
         make("install")
 

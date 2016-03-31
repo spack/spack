@@ -45,7 +45,7 @@ class CbtfLanl(Package):
      cmake_prefix_path = join_path(spec['cbtf'].prefix) + ':' + join_path(spec['cbtf-krell'].prefix)
 
      with working_dir('build', create=True):
-          cmake('..',
+          which('cmake')('..',
                 '-DCBTF_DIR=%s'            % spec['cbtf'].prefix,
                 '-DCBTF_KRELL_DIR=%s'      % spec['cbtf-krell'].prefix,
                 '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,

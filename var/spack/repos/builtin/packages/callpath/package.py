@@ -42,6 +42,6 @@ class Callpath(Package):
 
     def install(self, spec, prefix):
         # TODO: offer options for the walker used.
-        cmake('.', "-DCALLPATH_WALKER=dyninst", *std_cmake_args)
+        which('cmake')('.', "-DCALLPATH_WALKER=dyninst", *std_cmake_args)
         make()
         make("install")

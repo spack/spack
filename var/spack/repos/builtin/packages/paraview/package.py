@@ -72,7 +72,7 @@ class Paraview(Package):
                 feature_args.append('-DVTK_USE_X:BOOL=OFF')
                 feature_args.append('-DPARAVIEW_DO_UNIX_STYLE_INSTALLS:BOOL=ON')
 
-            cmake('..',
+            which('cmake')('..',
                 '-DCMAKE_INSTALL_PREFIX:PATH=%s' % prefix,
                 '-DBUILD_TESTING:BOOL=OFF',
                 '-DVTK_USER_SYSTEM_FREETYPE:BOOL=ON',

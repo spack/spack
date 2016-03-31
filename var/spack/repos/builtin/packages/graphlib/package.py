@@ -8,7 +8,7 @@ class Graphlib(Package):
     version('2.0.0', '43c6df84f1d38ba5a5dce0ae19371a70')
 
     def install(self, spec, prefix):
-        cmake(".", *std_cmake_args)
+        which('cmake')(".", *std_cmake_args)
 
         make()
         make("install")

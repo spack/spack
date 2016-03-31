@@ -22,7 +22,7 @@ class Cereal(Package):
 
         # configure
         # Boost is only used for self-tests, which we are not running (yet?)
-        cmake('.', '-DCMAKE_DISABLE_FIND_PACKAGE_Boost=TRUE', *std_cmake_args)
+        which('cmake')('.', '-DCMAKE_DISABLE_FIND_PACKAGE_Boost=TRUE', *std_cmake_args)
 
         # Build
         make()

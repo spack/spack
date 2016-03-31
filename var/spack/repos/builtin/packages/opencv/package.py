@@ -45,6 +45,6 @@ class Opencv(Package):
                               '-DWITH_IPP:BOOL=%s' % ('ON' if '+ipp' in spec else 'OFF')])
 
         with working_dir('spack_build', create=True):
-            cmake('..', *cmake_options)
+            which('cmake')('..', *cmake_options)
             make('VERBOSE=1')
             make("install")

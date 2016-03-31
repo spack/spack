@@ -35,6 +35,6 @@ class Vtk(Package):
             if spec['qt'].satisfies('@5'):
                 cmake_args.append("-DVTK_QT_VERSION:STRING=5")
 
-            cmake(*cmake_args)
+            which('cmake')(*cmake_args)
             make()
             make("install")

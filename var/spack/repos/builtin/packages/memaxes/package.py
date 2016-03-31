@@ -13,6 +13,6 @@ class Memaxes(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
-            cmake('..', *std_cmake_args)
+            which('cmake')('..', *std_cmake_args)
             make()
             make("install")

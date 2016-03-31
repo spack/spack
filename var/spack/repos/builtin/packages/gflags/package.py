@@ -14,7 +14,7 @@ class Gflags(Package):
     version('2.1.2', 'ac432de923f9de1e9780b5254884599f')
 
     def install(self, spec, prefix):
-        cmake("-DCMAKE_INSTALL_PREFIX=" + prefix,
+        which('cmake')("-DCMAKE_INSTALL_PREFIX=" + prefix,
               "-DBUILD_SHARED_LIBS=ON")
         make()
         make("test")

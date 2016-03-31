@@ -48,7 +48,7 @@ class Cbtf(Package):
           # or BOOST_INCLUDEDIR).  Useful when specifying BOOST_ROOT. 
           # Defaults to OFF.
 
-          cmake('..',
+          which('cmake')('..',
                 '--debug-output',
                 '-DBoost_NO_SYSTEM_PATHS=TRUE',
                 '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,

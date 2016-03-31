@@ -44,7 +44,7 @@ class Libgd(Package):
     def install(self, spec, prefix):
 
         with working_dir('spack-build', create=True):
-            cmake('..',
+            which('cmake')('..',
                   '-DENABLE_JPEG:BOOL=ON',
                   '-DENABLE_PNG:BOOL=ON',
                   '-DENABLE_TIFF:BOOL=ON',

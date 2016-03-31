@@ -37,6 +37,6 @@ class AdeptUtils(Package):
     depends_on("mpi")
 
     def install(self, spec, prefix):
-        cmake(*std_cmake_args)
+        which('cmake')(*std_cmake_args)
         make()
         make("install")
