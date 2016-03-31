@@ -34,6 +34,12 @@ class Openblas(Package):
         if spec.satisfies('@0.2.16'):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
 
+        if self.compiler.f77:
+            make_defs.append('FC=f77')
+
+        if not self.compiler.f77 and not self.compiler.fc:
+            make_defs.append('NOFORTRAN=1')
+
         make_args = make_defs + make_targets
         make(*make_args)
 
