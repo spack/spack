@@ -77,7 +77,8 @@ def get_git():
 
 def list_packages(rev):
     git = get_git()
-    relpath = spack.packages_path[len(spack.prefix + os.path.sep):] + os.path.sep
+    pkgpath = os.path.join(spack.packages_path, 'packages')
+    relpath = pkgpath[len(spack.prefix + os.path.sep):] + os.path.sep
     output = git('ls-tree', '--full-tree', '--name-only', rev, relpath,
                  output=str)
     return sorted(line[len(relpath):] for line in output.split('\n') if line)
