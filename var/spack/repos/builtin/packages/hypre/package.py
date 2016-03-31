@@ -28,8 +28,9 @@ class Hypre(Package):
 
         os.environ['CC'] = os.path.join(mpi_dir, 'bin', 'mpicc')
         os.environ['CXX'] = os.path.join(mpi_dir, 'bin', 'mpicxx')
-        os.environ['F77'] = os.path.join(mpi_dir, 'bin', 'mpif77')
 
+        if self.compiler.f77:
+            os.environ['F77'] = os.path.join(mpi_dir, 'bin', 'mpif77')
 
         configure_args = [
                 "--prefix=%s" % prefix,
@@ -39,6 +40,9 @@ class Hypre(Package):
                 "--with-blas-lib-dirs=%s/lib" % blas_dir]
         if '+shared' in self.spec:
             configure_args.append("--enable-shared")
+
+        if not self.compiler.f77 and not self.compiler.fc:
+            configure_args.append('--enable-fortran=no')
 
         if '~internal-superlu' in self.spec:
             configure_args.append("--without-superlu")
