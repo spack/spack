@@ -304,10 +304,7 @@ class URLFetchStrategy(FetchStrategy):
         return "URLFetchStrategy<%s>" % url
 
     def __str__(self):
-        if self.url:
-            return self.url
-        else:
-            return "[no url]"
+        return self.url if self.url else "[no url]"
 
 
 class VCSFetchStrategy(FetchStrategy):

@@ -677,7 +677,7 @@ class Package(object):
         spack.install_layout.remove_install_directory(self.spec)
 
 
-    def do_fetch(self, mirror_only=False):
+    def do_fetch(self, mirror_only=None):
         """Creates a stage directory and downloads the tarball for this package.
            Working directory will be set to the stage directory.
         """
@@ -702,6 +702,8 @@ class Package(object):
                 raise FetchError(
                     "Will not fetch %s" % self.spec.format('$_$@'), checksum_msg)
 
+        if mirror_only is None:
+            mirror_only = self.versions[self.version].get('mirror_only', False)
         self.stage.fetch(mirror_only)
 
         self._fetch_time = time.time() - start_time
@@ -710,7 +712,7 @@ class Package(object):
             self.stage.check()
 
 
-    def do_stage(self, mirror_only=False):
+    def do_stage(self, mirror_only=None):
         """Unpacks the fetched tarball, then changes into the expanded tarball
            directory."""
         if not self.spec.concrete:
@@ -721,14 +723,14 @@ class Package(object):
         self.stage.chdir_to_source()
 
 
-    def do_patch(self):
+    def do_patch(self, mirror_only=None):
         """Calls do_stage(), then applied patches to the expanded tarball if they
            haven't been applied already."""
         if not self.spec.concrete:
             raise ValueError("Can only patch concrete packages.")
 
         # Kick off the stage first.
-        self.do_stage()
+        self.do_stage(mirror_only)
 
         # Package can add its own patch function.
         has_patch_fun = hasattr(self, 'patch') and callable(self.patch)
