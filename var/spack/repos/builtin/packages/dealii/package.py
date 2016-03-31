@@ -235,5 +235,4 @@ class Dealii(Package):
             if 'oce' in spec:
                 cmake('.')
                 make('release')
-                if sys.platform != 'darwin': #FIXME
-                    make('run',parallel=False)
+                make('run',parallel=False)
