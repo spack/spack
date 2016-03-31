@@ -33,6 +33,7 @@ class Espresso(Package):
             raise RuntimeError(error.format(variant='elpa'))
 
     def install(self, spec, prefix):
+        from glob import glob
         self.check_variants(spec)
 
         options = ['-prefix=%s' % prefix.bin]
@@ -61,5 +62,11 @@ class Espresso(Package):
 
         configure(*options)
         make('all')
-        make('install')        
+
+        if spec.architecture.startswith('darwin'):
+            mkdirp(prefix.bin)
+            for filename in glob("bin/*.x"):
+                install(filename, prefix.bin)
+        else:
+            make('install')
 
