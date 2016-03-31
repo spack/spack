@@ -16,9 +16,9 @@ class HoomdBlue(Package):
 
     version('1.3.3', '1469ef4531dc14b579c0acddbfe6a273')
 
-    variant('mpi',  default=False, description='Compile with MPI enabled')
-    variant('cuda', default=False, description='Compile with CUDA Toolkit')
-    variant('doc',  default=False, description='Generate documentation')
+    variant('mpi',  default=True, description='Compile with MPI enabled')
+    variant('cuda', default=True, description='Compile with CUDA Toolkit')
+    variant('doc',  default=True, description='Generate documentation')
 
     extends('python')
     depends_on('py-numpy')
@@ -56,6 +56,7 @@ class HoomdBlue(Package):
 
         # There may be a bug in the MPI-CUDA code. See:
         # https://groups.google.com/forum/#!msg/hoomd-users/2griTESmc5I/E69s_M5fDwAJ
+        # This prevented "make test" from passing for me.
         cmake_args.append('-DENABLE_MPI_CUDA=OFF')
 
         # Documentation

@@ -13,7 +13,11 @@ class Cuda(Package):
     For the Installer Type, select runfile and click Download. Spack will search
     your current directory for this file. Alternatively, add this file to a
     mirror so that Spack can find it. For instructions on how to set up a mirror,
-    see http://software.llnl.gov/spack/mirrors.html"""
+    see http://software.llnl.gov/spack/mirrors.html
+
+    Note: This package does not currently install the drivers necessary to run
+    CUDA. These will need to be installed manually. See:
+    http://docs.nvidia.com/cuda/cuda-getting-started-guide-for-linux for details."""
 
     homepage = "http://www.nvidia.com/object/cuda_home_new.html"
 
