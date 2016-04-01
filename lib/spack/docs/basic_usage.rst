@@ -774,6 +774,34 @@ Environment modules
 Spack provides some limited integration with environment module
 systems to make it easier to use the packages it provides.
 
+
+Installing Environment Modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to use Spack's generated environment modules, you must have
+installed the *Environment Modules* package.  On many Linux
+distributions, this can be installed from the vendor's repository.
+For example: ```yum install environment-modules``
+(Fedora/RHEL/CentOS).  If your Linux distribution does not have
+Environment Modules, you can get it with Spack:
+
+1. Install with::
+
+    spack install environment-modules
+
+2. Activate with::
+
+    MODULES_HOME=`spack location -i environment-modules`
+     MODULES_VERSION=`ls -1 $MODULES_HOME/Modules | head -1`
+     ${MODULES_HOME}/Modules/${MODULES_VERSION}/bin/add.modules
+
+This adds to your ``.bashrc`` (or similar) files, enabling Environment
+Modules when you log in.  It will ask your permission before changing
+any files.
+
+Spack and Environment Modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 You can enable shell support by sourcing some files in the
 ``/share/spack`` directory.
 
