@@ -1,6 +1,4 @@
 from spack import *
-import spack
-import llnl.util.tty as tty
 import os
 
 class Pgi(Package):
@@ -27,46 +25,18 @@ class Pgi(Package):
     variant('java',    default=False, description="Enable installation of Java Runtime Environment")
     variant('mpi',     default=False, description="Enable installation of Open MPI")
 
-
-    def set_up_license(self, prefix):
-        license_path = "%s/license.dat" % prefix
-
-        with open(license_path, "w") as license:
-            license.write("""\
-# The PGI compilers require a license to use. There are two ways to set this up.
-#
-# 1.    (Recommended) Store your license key in this license.dat file. Example:
-#
-#       SERVER <hostname> 0123456789ab 27000
-#       DAEMON pgroupd
-#       PACKAGE PGI2015-<PGI_PIN> pgroupd <subscription end date>  A13AB920D570 \\
-#       <...>
-#       6167 7015 3F05 9C37 2315 ACDF 1B73 DAA9 FBAE"
-#
-# 2.    Use the environment variable PGROUPD_LICENSE_FILE or LM_LICENSE_FILE.
-#
-#       If you choose to store your license in a non-standard location, you may
-#       set either one of these variables to a full pathname to the license
-#       file, or port@host if you store your license keys on a dedicated
-#       license server. You will likely want to set this variable in a module
-#       file so that it gets loaded every time someone wants to use PGI.
-#
-# For further information on how to acquire a license, please refer to:
-# http://www.pgroup.com/doc/pgiinstall.pdf
-#
-# You may enter your license below.
-
-""")
-
-        #spack.editor(license_path)
-        tty.msg("Set up license file %s" % license_path)
+    # Licensing
+    license_required = True
+    license_files    = ['license.dat']
+    license_vars     = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
+    license_url      = 'http://www.pgroup.com/doc/pgiinstall.pdf'
 
 
     def install(self, spec, prefix):
         # Enable the silent installation feature
         os.environ['PGI_SILENT'] = "true"
         os.environ['PGI_ACCEPT_EULA'] = "accept"
-        os.environ['PGI_INSTALL_DIR'] = "%s" % prefix
+        os.environ['PGI_INSTALL_DIR'] = prefix
 
         if '+network' in spec and '~single' in spec:
             os.environ['PGI_INSTALL_TYPE'] = "network"
@@ -92,6 +62,3 @@ class Pgi(Package):
 
         # Run install script
         os.system("./install")
-
-        # Prompt user to set up license file
-        self.set_up_license(prefix)
