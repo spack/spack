@@ -8,7 +8,9 @@ class Tk(Package):
        applications that run unchanged across Windows, Mac OS X, Linux
        and more."""
     homepage = "http://www.tcl.tk"
-    url      = "http://prdownloads.sourceforge.net/tcl/tk8.6.3-src.tar.gz"
+
+    def url_for_version(self, version):
+        return "http://prdownloads.sourceforge.net/tcl/tk%s-src.tar.gz" % version
 
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
 
