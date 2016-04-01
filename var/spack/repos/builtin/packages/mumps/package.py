@@ -1,5 +1,5 @@
 from spack import *
-import os, sys
+import os, sys, glob
 
 class Mumps(Package):
     """MUMPS: a MUltifrontal Massively Parallel sparse direct Solver"""
@@ -164,10 +164,13 @@ class Mumps(Package):
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
-        if '~mpi' in spec:
+
+        if '~mpi' in spec:            
             lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
             lib_suffix = lib_dsuffix if '+shared' in spec else '.a'
             install('libseq/libmpiseq%s' % lib_suffix, prefix.lib)
+            for f in glob.glob(join_path('libseq','*.h')):
+                install(f, prefix.include)
 
         # FIXME: extend the tests to mpirun -np 2 (or alike) when build with MPI
         # FIXME: use something like numdiff to compare blessed output with the current
