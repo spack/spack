@@ -13,6 +13,7 @@ class Dbus(Package):
     homepage = "http://dbus.freedesktop.org/"
     url      = "http://dbus.freedesktop.org/releases/dbus/dbus-1.8.8.tar.gz"
 
+    version('1.11.2', '957a07f066f3730d2bb3ea0932f0081b')
     version('1.9.0', 'ec6895a4d5c0637b01f0d0e7689e2b36')
     version('1.8.8', 'b9f4a18ee3faa1e07c04aa1d83239c43')
     version('1.8.6', '6a08ba555d340e9dfe2d623b83c0eea8')

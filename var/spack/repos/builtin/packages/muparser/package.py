@@ -14,5 +14,5 @@ class Muparser(Package):
 
         configure(*options)
 
-        make()
+        make(parallel=False)
         make("install")

@@ -339,6 +339,9 @@ class Package(object):
         if '.' in self.name:
             self.name = self.name[self.name.rindex('.') + 1:]
 
+        # Allow custom staging paths for packages
+        self.path=None
+
         # Sanity check attributes required by Spack directives.
         spack.directives.ensure_dicts(type(self))
 
@@ -449,7 +452,8 @@ class Package(object):
         resource_stage_folder = self._resource_stage(resource)
         resource_mirror = join_path(self.name, os.path.basename(fetcher.url))
         stage = ResourceStage(resource.fetcher, root=root_stage, resource=resource,
-                              name=resource_stage_folder, mirror_path=resource_mirror)
+                              name=resource_stage_folder, mirror_path=resource_mirror,
+                              path=self.path)
         return stage
 
     def _make_root_stage(self, fetcher):
@@ -459,7 +463,7 @@ class Package(object):
         s = self.spec
         stage_name = "%s-%s-%s" % (s.name, s.version, s.dag_hash())
         # Build the composite stage
-        stage = Stage(fetcher, mirror_path=mp, name=stage_name)
+        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path)
         return stage
 
     def _make_stage(self):
@@ -713,7 +717,6 @@ class Package(object):
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
 
-
     def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
            directory."""
@@ -945,6 +948,9 @@ class Package(object):
                         install(env_path, env_install_path)
                         dump_packages(self.spec, packages_dir)
 
+                # Run post install hooks before build stage is removed.
+                spack.hooks.post_install(self)
+
             # Stop timer.
             self._total_time = time.time() - start_time
             build_time = self._total_time - self._fetch_time
@@ -985,9 +991,6 @@ class Package(object):
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
         spack.installed_db.add(self.spec, self.prefix)
-
-        # Once everything else is done, run post install hooks
-        spack.hooks.post_install(self)
 
 
     def sanity_check_prefix(self):

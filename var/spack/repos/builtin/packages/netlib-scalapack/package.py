@@ -41,6 +41,11 @@ class NetlibScalapack(Package):
             make()
             make("install")
 
+        # The shared libraries are not installed correctly on Darwin; correct this
+        if (sys.platform == 'darwin') and ('+shared' in spec):
+            fix_darwin_install_name(prefix.lib)
+
+
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
         lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
