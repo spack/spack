@@ -40,12 +40,15 @@ description="Remove an installed package"
 def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
-        help="Remove regardless of whether other packages depend on this one.")
+        help="Remove regardless of whether other packages depend on this one (implies --idempotent).")
     subparser.add_argument(
         '-a', '--all', action='store_true', dest='all',
         help="USE CAREFULLY. Remove ALL installed packages that match each " +
         "supplied spec. i.e., if you say uninstall libelf, ALL versions of " +
         "libelf are uninstalled. This is both useful and dangerous, like rm -r.")
+    subparser.add_argument(
+        '-i', '--idempotent', action='store_true', dest='force',
+        help="Ignore requests to remove specs that don't exit.")
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to uninstall")
 
@@ -73,7 +76,7 @@ def uninstall(parser, args):
                 sys.exit(1)
 
             if len(matching_specs) == 0:
-                if args.force: continue
+                if args.force or args.idempotent: continue
                 tty.die("%s does not match any installed packages." % spec)
 
             for s in matching_specs:
