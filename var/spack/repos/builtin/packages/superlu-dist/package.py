@@ -1,4 +1,5 @@
 from spack import *
+import glob
 
 class SuperluDist(Package):
     """A general purpose library for the direct solution of large, sparse, nonsymmetric systems of linear equations on high performance machines."""
@@ -52,13 +53,13 @@ class SuperluDist(Package):
         # system "make"
 
         # need to install by hand
-        headers_location = join_path(self.prefix.include,'superlu_dist')
+        headers_location = self.prefix.include
         mkdirp(headers_location)
         mkdirp(prefix.lib)
-        # FIXME: fetch all headers in the folder automatically
-        for header in ['Cnames.h','cublas_utils.h','dcomplex.h','html_mainpage.h','machines.h','old_colamd.h','psymbfact.h','superlu_ddefs.h','superlu_defs.h','superlu_enum_consts.h','superlu_zdefs.h','supermatrix.h','util_dist.h']:
-            superludist_header = join_path(self.stage.source_path, 'SRC/',header)
-            install(superludist_header, headers_location)
+
+        headers = glob.glob(join_path(self.stage.source_path, 'SRC','*.h'))
+        for h in headers:
+            install(h,headers_location)
 
         superludist_lib = join_path(self.stage.source_path, 'lib/libsuperlu_dist.a')
         install(superludist_lib,self.prefix.lib)

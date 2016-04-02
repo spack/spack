@@ -23,4 +23,14 @@ class SuiteSparse(Package):
 
         # FIXME : this actually uses the current workaround
         # FIXME : (blas / lapack always provide libblas and liblapack as aliases)
-        make('install', 'INSTALL=%s' % prefix, 'BLAS=-lblas', 'LAPACK=-llapack')
+        make('install', 'INSTALL=%s' % prefix,
+
+             # inject Spack compiler wrappers
+             'AUTOCC=no',
+             'CC=cc',
+             'CXX=c++',
+             'F77=f77',
+
+             # BLAS arguments require path to libraries
+             'BLAS=-lblas',
+             'LAPACK=-llapack')

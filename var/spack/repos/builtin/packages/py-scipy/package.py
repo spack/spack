@@ -11,9 +11,15 @@ class PyScipy(Package):
 
     extends('python')
     depends_on('py-nose')
-    depends_on('py-numpy')
-    depends_on('blas')
-    depends_on('lapack')
+    depends_on('py-numpy+blas+lapack')
 
     def install(self, spec, prefix):
+        if 'atlas' in spec:
+            # libatlas.so actually isn't always installed, but this
+            # seems to make the build autodetect things correctly.
+            env['ATLAS'] = join_path(spec['atlas'].prefix.lib, 'libatlas.' + dso_suffix)
+        else:
+            env['BLAS']   = spec['blas'].blas_shared_lib
+            env['LAPACK'] = spec['lapack'].lapack_shared_lib
+
         python('setup.py', 'install', '--prefix=%s' % prefix)
