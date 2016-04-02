@@ -1,4 +1,5 @@
 from spack import *
+import os
 
 class Icebin(CMakePackage):
     """Regridding/Coupling library for GCM + Ice Sheet Model"""
@@ -61,4 +62,4 @@ class Icebin(CMakePackage):
                 for dep in self.unique_dependencies(py_numpy['blas'])]
             os.environ['LD_LIBRARY_PATH'] = ':'.join(LD_LIBRARY_PATH)
 
-        super(Ibmisc, self).install_configure()
+        super(Icebin, self).install_configure()

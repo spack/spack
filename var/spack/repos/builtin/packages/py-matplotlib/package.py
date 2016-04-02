@@ -34,6 +34,14 @@ class PyMatplotlib(Package):
     depends_on('qhull')
 
     def install(self, spec, prefix):
+        # Work around lack of RPATH in Python extensions
+        py_numpy = self.spec['py-numpy']
+        if 'blas' in py_numpy:
+            LD_LIBRARY_PATH = [join_path(dep.prefix, 'lib')
+                for dep in self.unique_dependencies(py_numpy['blas'])]
+            os.environ['LD_LIBRARY_PATH'] = ':'.join(LD_LIBRARY_PATH)
+
+
         python('setup.py', 'install', '--prefix=%s' % prefix)
 
         if str(self.version) in ['1.4.2', '1.4.3']:
