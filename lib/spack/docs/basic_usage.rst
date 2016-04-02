@@ -943,6 +943,75 @@ used ``gcc``.  You could therefore just type:
 To identify just the one built with the Intel compiler.
 
 
+Recursive Modules
+``````````````````
+
+In some cases, it is desirable to load not just a module, but also all
+the modules it depends on.  This is not required for most modules
+because Spack builds binaries with RPATH support.  However, not all
+packages use RPATH to find their dependencies: this can be true in
+particular for Python extensions, which are currently *not* built with
+RPATH.
+
+Modules may be loaded recursively with the command:
+
+.. code-block:: sh
+
+    $ module load `spack module tcl --dependencies <spec>...
+
+More than one spec may be placed on the command line here.
+
+Module Comamnds for Shell Scripts
+``````````````````````````````````
+
+Although Spack is flexbile, the ``module`` command is much faster.
+This could become an issue when emitting a series of ``spack load``
+commands inside a shell script.  By adding the ``--shell`` flag,
+``spack module find`` may also be used to generate code that can be
+cut-and-pasted into a shell script.  For example:
+
+.. code-block:: sh
+
+    $ spack module find tcl --dependencies --shell py-numpy git
+    # bzip2@1.0.6%gcc@4.9.3=linux-x86_64
+    module load bzip2-1.0.6-gcc-4.9.3-ktnrhkrmbbtlvnagfatrarzjojmkvzsx
+    # ncurses@6.0%gcc@4.9.3=linux-x86_64
+    module load ncurses-6.0-gcc-4.9.3-kaazyneh3bjkfnalunchyqtygoe2mncv
+    # zlib@1.2.8%gcc@4.9.3=linux-x86_64
+    module load zlib-1.2.8-gcc-4.9.3-v3ufwaahjnviyvgjcelo36nywx2ufj7z
+    # sqlite@3.8.5%gcc@4.9.3=linux-x86_64
+    module load sqlite-3.8.5-gcc-4.9.3-a3eediswgd5f3rmto7g3szoew5nhehbr
+    # readline@6.3%gcc@4.9.3=linux-x86_64
+    module load readline-6.3-gcc-4.9.3-se6r3lsycrwxyhreg4lqirp6xixxejh3
+    # python@3.5.1%gcc@4.9.3=linux-x86_64
+    module load python-3.5.1-gcc-4.9.3-5q5rsrtjld4u6jiicuvtnx52m7tfhegi
+    # py-setuptools@20.5%gcc@4.9.3=linux-x86_64
+    module load py-setuptools-20.5-gcc-4.9.3-4qr2suj6p6glepnedmwhl4f62x64wxw2
+    # py-nose@1.3.7%gcc@4.9.3=linux-x86_64
+    module load py-nose-1.3.7-gcc-4.9.3-pwhtjw2dvdvfzjwuuztkzr7b4l6zepli
+    # openblas@0.2.17%gcc@4.9.3+shared=linux-x86_64
+    module load openblas-0.2.17-gcc-4.9.3-pw6rmlom7apfsnjtzfttyayzc7nx5e7y
+    # py-numpy@1.11.0%gcc@4.9.3+blas+lapack=linux-x86_64
+    module load py-numpy-1.11.0-gcc-4.9.3-mulodttw5pcyjufva4htsktwty4qd52r
+    # curl@7.47.1%gcc@4.9.3=linux-x86_64
+    module load curl-7.47.1-gcc-4.9.3-ohz3fwsepm3b462p5lnaquv7op7naqbi
+    # autoconf@2.69%gcc@4.9.3=linux-x86_64
+    module load autoconf-2.69-gcc-4.9.3-bkibjqhgqm5e3o423ogfv2y3o6h2uoq4
+    # cmake@3.5.0%gcc@4.9.3~doc+ncurses+openssl~qt=linux-x86_64
+    module load cmake-3.5.0-gcc-4.9.3-x7xnsklmgwla3ubfgzppamtbqk5rwn7t
+    # expat@2.1.0%gcc@4.9.3=linux-x86_64
+    module load expat-2.1.0-gcc-4.9.3-6pkz2ucnk2e62imwakejjvbv6egncppd
+    # git@2.8.0-rc2%gcc@4.9.3+curl+expat=linux-x86_64
+    module load git-2.8.0-rc2-gcc-4.9.3-3bib4hqtnv5xjjoq5ugt3inblt4xrgkd
+
+The script may be further edited by removing unnecessary modules.
+This script may be directly executed in bash via
+
+.. code-block :: sh
+
+    source <( spack module find tcl --dependencies --shell py-numpy git )
+
+
 Regenerating Module files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
