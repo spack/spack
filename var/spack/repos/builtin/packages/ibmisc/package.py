@@ -1,4 +1,5 @@
 from spack import *
+import os
 
 class Ibmisc(CMakePackage):
     """Misc. reusable utilities used by IceBin."""
@@ -45,3 +46,13 @@ class Ibmisc(CMakePackage):
             '-DUSE_BOOST=%s' % ('YES' if '+boost' in spec else 'NO'),
             '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
             '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO')]
+
+    def install_configure(self):
+
+        py_numpy = self.spec['py-numpy']
+        if 'blas' in py_numpy:
+            LD_LIBRARY_PATH = [join_path(dep.prefix, 'lib')
+                for dep in self.unique_dependencies(py_numpy['blas'])]
+            os.environ['LD_LIBRARY_PATH'] = ':'.join(LD_LIBRARY_PATH)
+
+        super(Ibmisc, self).install_configure()
