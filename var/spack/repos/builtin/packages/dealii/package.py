@@ -174,6 +174,19 @@ class Dealii(Package):
             make('release')
             make('run',parallel=False)
 
+        # An example which uses Metis + PETSc
+        # FIXME: switch step-18 to MPI
+        with working_dir('examples/step-18'):
+            print('=====================================')
+            print('============= Step-18 ===============')
+            print('=====================================')
+            # list the number of cycles to speed up
+            filter_file(r'(end_time = 10;)',  ('end_time = 3;'), 'step-18.cc')
+            if '^petsc' in spec and '^metis' in spec:
+                cmake('.')
+                make('release')
+                make('run',parallel=False)
+
         # take step-40 which can use both PETSc and Trilinos
         # FIXME: switch step-40 to MPI run
         with working_dir('examples/step-40'):
