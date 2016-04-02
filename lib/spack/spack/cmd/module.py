@@ -48,40 +48,85 @@ def setup_parser(subparser):
     find_parser = sp.add_parser('find', help='Find module files for packages.')
     find_parser.add_argument(
         'module_type', help="Type of module to find file for. [" + '|'.join(module_types) + "]")
+    find_parser.add_argument(
+        '-r', '--dependencies', action='store_true', dest='recurse_dependencies',
+        help='Recursively traverse dependencies for modules to load.')
+
+    find_parser.add_argument(
+        '-s', '--shell', action='store_true', dest='shell',
+        help='Generate shell script (instead of input for module command)')
+
     find_parser.add_argument('spec', nargs='+', help='spec to find a module file for.')
 
 
-def module_find(mtype, spec_array):
+    
+
+def module_find(mtype, flags, spec_array):
     """Look at all installed packages and see if the spec provided
        matches any.  If it does, check whether there is a module file
        of type <mtype> there, and print out the name that the user
        should type to use that package's module.
     """
+
+    # --------------------------------------
+    def _find_modules(spec, modules_list):
+        """Finds all modules and sub-modules for a spec"""
+        if str(spec.version) == 'system':
+            # No Spack module for system-installed packages
+            return
+
+        if flags.recurse_dependencies:
+            for dep in spec.dependencies.values():
+                _find_modules(dep, modules_list)
+
+        mod = module_types[mtype](spec)
+        if not os.path.isfile(mod.file_name):
+            tty.die("No %s module is installed for %s" % (mtype, spec))
+        modules_list.append((spec, mod))
+
+
+    # --------------------------------------
+
     if mtype not in module_types:
         tty.die("Invalid module type: '%s'.  Options are %s" % (mtype, comma_or(module_types)))
 
-    specs = spack.cmd.parse_specs(spec_array)
-    if len(specs) > 1:
-        tty.die("You can only pass one spec.")
-    spec = specs[0]
+    raw_specs = spack.cmd.parse_specs(spec_array)
+    modules = set()    # Modules we will load
+    seen = set()
+    for raw_spec in raw_specs:
 
-    specs = spack.installed_db.query(spec)
-    if len(specs) == 0:
-        tty.die("No installed packages match spec %s" % spec)
+        # ----------- Make sure the spec only resolves to ONE thing
+        specs = spack.installed_db.query(raw_spec)
+        if len(specs) == 0:
+            tty.die("No installed packages match spec %s" % raw_spec)
 
-    if len(specs) > 1:
-        tty.error("Multiple matches for spec %s.  Choose one:" % spec)
-        for s in specs:
-            sys.stderr.write(s.tree(color=True))
-        sys.exit(1)
+        if len(specs) > 1:
+            tty.error("Multiple matches for spec %s.  Choose one:" % spec)
+            for s in specs:
+                sys.stderr.write(s.tree(color=True))
+            sys.exit(1)
+        spec = specs[0]
 
-    mt = module_types[mtype]
-    mod = mt(specs[0])
-    if not os.path.isfile(mod.file_name):
-        tty.die("No %s module is installed for %s" % (mtype, spec))
+        # ----------- Chase down modules for it and all its dependencies
+        modules_dups = list()
+        _find_modules(spec, modules_dups)
 
-    print(mod.use_name)
+        # Remove duplicates while keeping order
+        modules_unique = list()
+        for spec,mod in modules_dups:
+            if mod.use_name not in seen:
+                modules_unique.append((spec,mod))
+                seen.add(mod.use_name)
 
+        # Output...
+        if flags.shell:
+            module_cmd = {'tcl' : 'module load', 'dotkit' : 'dotkit use'}[mtype]
+        for spec,mod in modules_unique:
+            if flags.shell:
+                print '# %s' % spec.format()
+                print '%s %s' % (module_cmd, mod.use_name)
+            else:
+                print mod.use_name
 
 def module_refresh():
     """Regenerate all module files for installed packages known to
@@ -104,4 +149,4 @@ def module(parser, args):
         module_refresh()
 
     elif args.module_command == 'find':
-        module_find(args.module_type, args.spec)
+        module_find(args.module_type, args, args.spec)
