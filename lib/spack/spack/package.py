@@ -388,6 +388,36 @@ class Package(object):
             spack.repo.get(self.extendee_spec)._check_extendable()
 
 
+    def unique_dependencies(self, spec=None):
+
+        # --------------------------------
+        def walk_dependencies(spec, deps):
+        # see: spec.Spec.traverse()
+            if str(spec.version) == 'system':
+                # No Spack module for system-installed packages
+                return
+
+            for dep in spec.dependencies.values():
+                walk_dependencies(dep, deps)
+
+            deps.append(spec)
+        # --------------------------------
+
+        if spec is None:
+            spec = self.spec
+
+        deps = list()
+        walk_dependencies(spec, deps)
+
+        seen = set()
+        deps_unique = list()
+        for dep in deps:
+            if id(dep) not in seen:
+                deps_unique.append(dep)
+                seen.add(id(dep))
+
+        return deps_unique
+
     @property
     def version(self):
         if not self.spec.versions.concrete:
