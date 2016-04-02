@@ -48,7 +48,7 @@ import sys
 import re
 from bisect import bisect_left
 from functools import wraps
-from functools_backport import total_ordering
+from spack.util import total_ordering
 
 # Valid version characters
 VALID_VERSION = r'[A-Za-z0-9_.-]'

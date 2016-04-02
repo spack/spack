@@ -62,6 +62,10 @@ class PythonVersionTest(unittest.TestCase):
         all_issues = {}
 
         for fn in files:
+            # this tries to import 2.7+ modules before falling back to
+            # provided backports so will give false-positive from pyqver2.
+            if fn.endswith("spack/util/__init__.py"):
+                continue
             with open(fn) as pyfile:
                 versions = pyqver2.get_versions(pyfile.read())
                 for ver, reasons in versions.items():

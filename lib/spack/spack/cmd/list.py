@@ -24,7 +24,7 @@
 ##############################################################################
 import sys
 import llnl.util.tty as tty
-import argparse
+from spack.util import argparse
 from llnl.util.tty.colify import colify
 
 import spack

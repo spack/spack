@@ -28,7 +28,7 @@ from tempfile import mkdtemp
 
 import spack
 import spack.config
-from ordereddict_backport import OrderedDict
+from spack.util import OrderedDict
 from spack.test.mock_packages_test import *
 
 # Some sample compiler config data
