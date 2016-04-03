@@ -17,6 +17,7 @@ class PyProj(Package):
     extends('python')
 
     depends_on('py-cython')
+    depends_on('py-setuptools')
 
     # NOTE: py-proj does NOT depends_on('proj').
     # The py-proj git repo actually includes the correct version of PROJ.4,
