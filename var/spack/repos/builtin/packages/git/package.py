@@ -36,6 +36,8 @@ class Git(Package):
     depends_on("curl", when="+curl")
     depends_on("expat", when="+expat")
 
+    # Also depends_on gettext: apt-get install gettext (Ubuntu)
+
     # Use system perl for now.
     # depends_on("perl")
     # depends_on("pcre")
