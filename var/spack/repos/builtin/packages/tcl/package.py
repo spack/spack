@@ -9,8 +9,6 @@ class Tcl(Package):
        that is truly cross platform, easily deployed and highly
        extensible."""
     homepage = "http://www.tcl.tk"
-    urlpat = 'http://prdownloads.sourceforge.net/tcl/tcl%s-src.tar.gz'
-
 
     def url_for_version(self, version):
         return 'http://prdownloads.sourceforge.net/tcl/tcl%s-src.tar.gz' % version
