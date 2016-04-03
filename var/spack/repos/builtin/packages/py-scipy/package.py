@@ -19,7 +19,18 @@ class PyScipy(Package):
             # seems to make the build autodetect things correctly.
             env['ATLAS'] = join_path(spec['atlas'].prefix.lib, 'libatlas.' + dso_suffix)
         else:
-            env['BLAS']   = spec['blas'].blas_shared_lib
-            env['LAPACK'] = spec['lapack'].lapack_shared_lib
+            blas_spec = spec['blas']
+            try:
+                env['BLAS']   = blas_spec.blas_shared_lib
+            except AttributeError:
+                # This installation has not shared lib; use static
+                env['BLAS']   = blas_spec.blas_static_lib
+
+            lapack_spec = spec['lapack']
+            try:
+                env['LAPACK']   = lapack_spec.lapack_shared_lib
+            except AttributeError:
+                # This installation has not shared lib; use static
+                env['LAPACK']   = lapack_spec.lapack_static_lib
 
         python('setup.py', 'install', '--prefix=%s' % prefix)
