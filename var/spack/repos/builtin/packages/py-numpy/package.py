@@ -19,6 +19,7 @@ class PyNumpy(Package):
     variant('lapack', default=True)
 
     extends('python')
+    depends_on('binutils')
     depends_on('py-nose')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
