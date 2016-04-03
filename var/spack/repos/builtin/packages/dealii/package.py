@@ -23,8 +23,10 @@ class Dealii(Package):
 
     # required dependencies, light version
     depends_on ("blas")
-    depends_on ("boost",     when='~mpi')
-    depends_on ("boost+mpi", when='+mpi')
+    # Boost 1.58 is blacklisted, see https://github.com/dealii/dealii/issues/1591
+    # require at least 1.59
+    depends_on ("boost@1.59.0:",     when='~mpi')
+    depends_on ("boost@1.59.0:+mpi", when='+mpi')
     depends_on ("bzip2")
     depends_on ("cmake")
     depends_on ("lapack")
