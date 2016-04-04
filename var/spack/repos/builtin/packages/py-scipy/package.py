@@ -10,6 +10,7 @@ class PyScipy(Package):
     version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
 
     extends('python')
+    depends_on('binutils')
     depends_on('py-nose')
     depends_on('py-numpy+blas+lapack')
 

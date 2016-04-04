@@ -13,6 +13,7 @@ class PyMatplotlib(Package):
     variant('ipython', default=False, description='Enable ipython support')
 
     extends('python', ignore=r'bin/nosetests.*$|bin/pbr$|bin/f2py$')
+    depends_on('binutils')
 
     depends_on('py-pyside', when='+gui')
     depends_on('py-ipython', when='+ipython')
