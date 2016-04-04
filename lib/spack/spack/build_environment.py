@@ -304,7 +304,7 @@ def setup_package(pkg):
 
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
-    for dspec in pkg.spec.traverse(order='post'):
+    for dspec in pkg.spec.traverse(order='post', root=False):
         # If a user makes their own package repo, e.g.
         # spack.repos.mystuff.libelf.Libelf, and they inherit from
         # an existing class like spack.repos.original.libelf.Libelf,
@@ -321,6 +321,7 @@ def setup_package(pkg):
         dpkg.setup_dependent_package(pkg.module, spec)
         dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
+    set_module_variables_for_package(pkg, pkg.module)
     pkg.setup_environment(spack_env, run_env)
 
     # Make sure nothing's strange about the Spack environment.
