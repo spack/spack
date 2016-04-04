@@ -119,7 +119,7 @@ esac
 # libraries.
 if [[ -z $mode ]]; then
     for arg in "$@"; do
-        if [[ $arg = -v || $arg = -V || $arg = --version || $arg = -dumpversion ]]; then
+        if [[ $arg == -v || $arg == -V || $arg == --version || $arg == -dumpversion ]]; then
             mode=vcheck
             break
     fi
@@ -130,13 +130,13 @@ fi
 if [[ -z $mode ]]; then
     mode=ccld
     for arg in "$@"; do
-        if [[ $arg = -E ]]; then
+        if [[ $arg == -E ]]; then
             mode=cpp
             break
-        elif [[ $arg = -S ]]; then
+        elif [[ $arg == -S ]]; then
             mode=as
             break
-        elif [[ $arg = -c ]]; then
+        elif [[ $arg == -c ]]; then
             mode=cc
             break
         fi
@@ -144,7 +144,7 @@ if [[ -z $mode ]]; then
 fi
 
 # Dump the version and exit if we're in testing mode.
-if [[ $SPACK_TEST_COMMAND = dump-mode ]]; then
+if [[ $SPACK_TEST_COMMAND == dump-mode ]]; then
     echo "$mode"
     exit
 fi
@@ -163,12 +163,12 @@ fi
 # It doesn't work with -rpath.
 # This variable controls whether they are added.
 add_rpaths=true
-if [[ mode = ld && $OSTYPE = darwin* ]]; then
+if [[ mode == ld && $OSTYPE == darwin* ]]; then
     for arg in "$@"; do
-        if [[ $arg = -r ]]; then
+        if [[ $arg == -r ]]; then
             add_rpaths=false
             break
-	fi
+        fi
     done
 fi
 
@@ -181,17 +181,17 @@ IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
 for dep in "${deps[@]}"; do
     # Prepend include directories
     if [[ -d $dep/include ]]; then
-        if [[ $mode = cpp || $mode = cc || $mode = as || $mode = ccld ]]; then
+        if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
             args=("-I$dep/include" "${args[@]}")
         fi
     fi
 
     # Prepend lib and RPATH directories
     if [[ -d $dep/lib ]]; then
-        if [[ $mode = ccld ]]; then
+        if [[ $mode == ccld ]]; then
             $add_rpaths && args=("-Wl,-rpath,$dep/lib" "${args[@]}")
             args=("-L$dep/lib" "${args[@]}")
-        elif [[ $mode = ld ]]; then
+        elif [[ $mode == ld ]]; then
             $add_rpaths && args=("-rpath" "$dep/lib" "${args[@]}")
             args=("-L$dep/lib" "${args[@]}")
         fi
@@ -199,10 +199,10 @@ for dep in "${deps[@]}"; do
 
     # Prepend lib64 and RPATH directories
     if [[ -d $dep/lib64 ]]; then
-        if [[ $mode = ccld ]]; then
+        if [[ $mode == ccld ]]; then
             $add_rpaths && args=("-Wl,-rpath,$dep/lib64" "${args[@]}")
             args=("-L$dep/lib64" "${args[@]}")
-        elif [[ $mode = ld ]]; then
+        elif [[ $mode == ld ]]; then
             $add_rpaths && args=("-rpath" "$dep/lib64" "${args[@]}")
             args=("-L$dep/lib64" "${args[@]}")
         fi
@@ -210,9 +210,9 @@ for dep in "${deps[@]}"; do
 done
 
 # Include all -L's and prefix/whatever dirs in rpath
-if [[ $mode = ccld ]]; then
+if [[ $mode == ccld ]]; then
     $add_rpaths && args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" "${args[@]}")
-elif [[ $mode = ld ]]; then
+elif [[ $mode == ld ]]; then
     $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
 fi
 
@@ -234,7 +234,7 @@ PATH=""
 for dir in "${env_path[@]}"; do
     addpath=true
     for env_dir in "${spack_env_dirs[@]}"; do
-        if [[ $dir = $env_dir ]]; then
+        if [[ $dir == $env_dir ]]; then
             addpath=false
             break
         fi
@@ -248,7 +248,7 @@ export PATH
 full_command=("$command" "${args[@]}")
 
 # In test command mode, write out full command for Spack tests.
-if [[ $SPACK_TEST_COMMAND = dump-args ]]; then
+if [[ $SPACK_TEST_COMMAND == dump-args ]]; then
     echo "${full_command[@]}"
     exit
 elif [[ -n $SPACK_TEST_COMMAND ]]; then
@@ -258,7 +258,7 @@ fi
 #
 # Write the input and output commands to debug logs if it's asked for.
 #
-if [[ $SPACK_DEBUG = TRUE ]]; then
+if [[ $SPACK_DEBUG == TRUE ]]; then
     input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.in.log"
     output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.out.log"
     echo "[$mode] $command $input_command" >> $input_log
