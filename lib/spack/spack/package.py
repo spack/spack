@@ -374,6 +374,19 @@ class Package(object):
         if not hasattr(self, 'list_depth'):
             self.list_depth = 1
 
+        # Set default licensing information
+        if not hasattr(self, 'license_required'):
+            self.license_required = False
+
+        if not hasattr(self, 'license_files'):
+            self.license_files = []
+
+        if not hasattr(self, 'license_vars'):
+            self.license_vars = []
+
+        if not hasattr(self, 'license_url'):
+            self.license_url = None
+
         # Set up some internal variables for timing.
         self._fetch_time = 0.0
         self._total_time = 0.0
