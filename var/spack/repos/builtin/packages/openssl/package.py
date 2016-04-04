@@ -3,6 +3,7 @@ import llnl.util.tty as tty
 
 from spack import *
 
+
 class Openssl(Package):
     """The OpenSSL Project is a collaborative effort to develop a
        robust, commercial-grade, full-featured, and Open Source
@@ -47,16 +48,16 @@ class Openssl(Package):
         return openssl_url
 
     def check_for_outdated_release(self, version, warnings_given_to_user):
-        latest = 'http://www.openssl.org/source/openssl-{version}.tar.gz'
+        latest = 'ftp://ftp.openssl.org/source/openssl-{version}.tar.gz'
         older = 'http://www.openssl.org/source/old/{version_number}/openssl-{version_full}.tar.gz'
         # Try to use the url where the latest tarballs are stored. If the url does not exist (404), then
         # return the url for older format
         version_number = '.'.join([str(x) for x in version[:-1]])
-        older_url = older.format(version_number=version_number, version_full=version)
-        latest_url = latest.format(version=version)
-        response = urllib.urlopen(latest.format(version=version))
-        if response.getcode() == 404:
-            openssl_url = older_url
+        try:
+            openssl_url = latest.format(version=version)
+            urllib.urlopen(openssl_url)
+        except IOError:
+            openssl_url = older.format(version_number=version_number, version_full=version)
             # Checks if we already warned the user for this particular version of OpenSSL.
             # If not we display a warning message and mark this version
             if not warnings_given_to_user.get(version, False):
@@ -65,8 +66,7 @@ class Openssl(Package):
                 tty.warn('Consider updating to the latest version of this package.')
                 tty.warn('More details at {homepage}'.format(homepage=Openssl.homepage))
                 warnings_given_to_user[version] = True
-        else:
-            openssl_url = latest_url
+
         return openssl_url
 
     def install(self, spec, prefix):
