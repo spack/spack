@@ -24,7 +24,6 @@
 ##############################################################################
 from __future__ import print_function
 
-import sys
 import argparse
 
 import llnl.util.tty as tty
@@ -48,8 +47,8 @@ def ask_for_confirmation(message):
         if choice == 'y':
             break
         elif choice == 'n':
-            sys.exit(1)
-        tty.warning('Please reply either "y" or "n"')
+            raise SystemExit('Operation aborted')
+        tty.warn('Please reply either "y" or "n"')
 
 
 def setup_parser(subparser):
@@ -164,7 +163,7 @@ def uninstall(parser, args):
         specs = spack.cmd.parse_specs(args.packages)
         # Gets the list of installed specs that match the ones give via cli
         uninstall_list = concretize_specs(specs, args.all, args.force)  # takes care of '-a' is given in the cli
-        dependent_list = installed_dependents(uninstall_list)  # takes care of '-r'
+        dependent_list = installed_dependents(uninstall_list)  # takes care of '-d'
 
         # Process dependent_list and update uninstall_list
         has_error = False
@@ -182,7 +181,7 @@ def uninstall(parser, args):
             uninstall_list = list(set(uninstall_list))
 
         if has_error:
-            tty.die('You can use spack uninstall -r to uninstall these dependencies as well')
+            tty.die('You can use spack uninstall --dependents to uninstall these dependencies as well')
 
         if not args.yes_to_all:
             tty.msg("The following packages will be uninstalled : ")
