@@ -34,18 +34,15 @@ class NetlibLapack(Package):
 
     def patch(self):
         # Fix cblas CMakeLists.txt -- has wrong case for subdirectory name.
-        if self.spec.satisfies('@3.6.0:'):
-            filter_file('${CMAKE_CURRENT_SOURCE_DIR}/CMAKE/',
-                        '${CMAKE_CURRENT_SOURCE_DIR}/cmake/', 'CBLAS/CMakeLists.txt', string=True)
+        filter_file('${CMAKE_CURRENT_SOURCE_DIR}/CMAKE/',
+                    '${CMAKE_CURRENT_SOURCE_DIR}/cmake/', 'CBLAS/CMakeLists.txt', string=True)
 
 
     def install_one(self, spec, prefix, shared):
         cmake_args = ['-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if shared else 'OFF'),
+                      '-DCBLAS=ON', # always build CBLAS
                       '-DCMAKE_BUILD_TYPE:STRING=%s' % ('Debug' if '+debug' in spec else 'Release'),
                       '-DLAPACKE:BOOL=%s' % ('ON' if '+lapacke' in spec else 'OFF')]
-        if spec.satisfies('@3.6.0:'):
-            cmake_args.extend(['-DCBLAS=ON']) # always build CBLAS
-
         if '+external-blas' in spec:
             # TODO : the mechanism to specify the library should be more general,
             # TODO : but this allows to have an hook to an external blas
@@ -83,3 +80,6 @@ class NetlibLapack(Package):
         if '+shared' in self.spec:
             self.spec.blas_shared_lib   = join_path(libdir, 'libblas.%s' % dso_suffix)
             self.spec.lapack_shared_lib = join_path(libdir, 'liblapack.%s' % dso_suffix)
+
+
+
