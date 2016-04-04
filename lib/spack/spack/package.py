@@ -1052,7 +1052,7 @@ class Package(object):
 #
 #\t%s
 #
-""" % (self.name, self.name, self.name, '\n#\t'.join(self.license_files)))
+""" % (self.name, self.name, '\n#\t'.join(self.license_files)))
 
         if self.license_vars:
             license.write("""\
