@@ -217,7 +217,7 @@ def set_module_variables_for_package(pkg, module):
 
     # standard CMake arguments
     m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % pkg.prefix,
-                        '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
+                        '-DCMAKE_BUILD_TYPE=Release']
     if platform.mac_ver()[0]:
         m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
 
