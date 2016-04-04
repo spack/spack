@@ -125,7 +125,7 @@ import jsonschema
 from jsonschema import Draft4Validator, validators
 import yaml
 from yaml.error import MarkedYAMLError
-from ordereddict_backport import OrderedDict
+from spack.util import OrderedDict
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp

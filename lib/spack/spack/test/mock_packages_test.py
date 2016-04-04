@@ -30,7 +30,7 @@ import unittest
 import spack
 import spack.config
 from llnl.util.filesystem import mkdirp
-from ordereddict_backport import OrderedDict
+from spack.util import OrderedDict
 from spack.repository import RepoPath
 from spack.spec import Spec
 

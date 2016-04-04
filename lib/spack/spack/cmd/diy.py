@@ -24,7 +24,7 @@
 ##############################################################################
 import sys
 import os
-import argparse
+from spack.util import argparse
 
 import llnl.util.tty as tty
 

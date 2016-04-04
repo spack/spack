@@ -25,7 +25,7 @@
 import os
 import sys
 import code
-import argparse
+from spack.util import argparse
 import platform
 
 import spack

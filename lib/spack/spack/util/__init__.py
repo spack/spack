@@ -22,3 +22,17 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
+# Provide functionality to older Pythons
+try:
+    from collections import OrderedDict
+except ImportError:
+    from backport import OrderedDict
+
+try:
+    from functools import total_ordering
+except ImportError:
+    from backport import total_ordering
+
+# Provide overrides of standard functionality
+from spack.util.override import argparse

@@ -27,7 +27,7 @@ import os
 import hashlib
 import re
 
-from ordereddict_backport import OrderedDict
+from spack.util import OrderedDict
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
 

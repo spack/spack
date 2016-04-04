@@ -25,7 +25,7 @@
 import sys
 import collections
 import itertools
-import argparse
+from spack.util import argparse
 from StringIO import StringIO
 
 import llnl.util.tty as tty

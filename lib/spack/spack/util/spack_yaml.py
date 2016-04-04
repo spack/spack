@@ -35,7 +35,7 @@ import yaml
 from yaml.nodes import *
 from yaml.constructor import ConstructorError
 from yaml.representer import SafeRepresenter
-from ordereddict_backport import OrderedDict
+from backport import OrderedDict
 
 # Only export load and dump
 __all__ = ['load', 'dump']

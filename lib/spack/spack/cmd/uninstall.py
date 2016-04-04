@@ -24,7 +24,7 @@
 ##############################################################################
 from __future__ import print_function
 import sys
-import argparse
+from spack.util import argparse
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify

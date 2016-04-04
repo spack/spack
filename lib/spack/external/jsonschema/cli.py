@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-import argparse
+from spack.util import argparse
 import json
 import sys
 
