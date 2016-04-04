@@ -37,8 +37,7 @@ class Hdf5(Package):
     list_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
 
-    version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199',
-            url='http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.0/src/hdf5-1.10.0.tar.gz')
+    version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
     version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618')
     version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
@@ -147,5 +146,7 @@ class Hdf5(Package):
             return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + v + ".tar.gz"
         elif version < Version("1.7"):
             return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + version.up_to(2) + "/hdf5-" + v + ".tar.gz"
-        else:
+        elif version < Version("1.10"):
             return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + v + "/src/hdf5-" + v + ".tar.gz"
+        else:
+            return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + version.up_to(2) + "/hdf5-" + v + "/src/hdf5-" + v + ".tar.gz"
