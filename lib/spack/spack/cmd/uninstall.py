@@ -62,7 +62,7 @@ def setup_parser(subparser):
              "supplied spec. i.e., if you say uninstall libelf, ALL versions of " +
              "libelf are uninstalled. This is both useful and dangerous, like rm -r.")
     subparser.add_argument(
-        '-r', '--recursive', action='store_true', dest='recursive',
+        '-d', '--dependents', action='store_true', dest='dependents',
         help='Also uninstall any packages that depend on the ones given via command line.'
     )
     subparser.add_argument(
@@ -168,7 +168,7 @@ def uninstall(parser, args):
 
         # Process dependent_list and update uninstall_list
         has_error = False
-        if dependent_list and not args.recursive and not args.force:
+        if dependent_list and not args.dependents and not args.force:
             for spec, lst in dependent_list.items():
                 tty.error("Will not uninstall %s" % spec.format("$_$@$%@$#", color=True))
                 print('')
@@ -176,7 +176,7 @@ def uninstall(parser, args):
                 display_specs(lst, long=True)
                 print('')
                 has_error = True
-        elif args.recursive:
+        elif args.dependents:
             for key, lst in dependent_list.items():
                 uninstall_list.extend(lst)
             uninstall_list = list(set(uninstall_list))

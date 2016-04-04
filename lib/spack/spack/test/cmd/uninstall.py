@@ -4,11 +4,11 @@ from spack.cmd.uninstall import uninstall
 
 
 class MockArgs(object):
-    def __init__(self, packages, all=False, force=False, recursive=False):
+    def __init__(self, packages, all=False, force=False, dependents=False):
         self.packages = packages
         self.all = all
         self.force = force
-        self.recursive = recursive
+        self.dependents = dependents
         self.yes_to_all = True
 
 
@@ -22,7 +22,7 @@ class TestUninstall(spack.test.mock_database.MockDatabase):
         args = MockArgs(['libelf'])
         self.assertRaises(SystemExit, uninstall, parser, args)
         # Recursive uninstall
-        args = MockArgs(['callpath'], all=True, recursive=True)
+        args = MockArgs(['callpath'], all=True, dependents=True)
         uninstall(parser, args)
 
         all_specs = spack.install_layout.all_specs()
