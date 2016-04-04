@@ -159,7 +159,9 @@ section_schemas = {
                                 'type': 'object',
                                 'additionalProperties': False,
                                 'required': ['cc', 'cxx', 'f77', 'fc'],
-                                'properties': {
+                                'properties': { 
+                                    'strategy': { 'anyOf': [ {'type' : 'string' },
+                                                             {'type' : 'null' }]},
                                     'cc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
                                     'cxx': { 'anyOf': [ {'type' : 'string' },
@@ -168,10 +170,10 @@ section_schemas = {
                                                         {'type' : 'null' }]},
                                     'fc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
-                                    'strategy': { 'anyOf': [ {'type' : 'string' },
-                                                             {'type' : 'null' }]},
-                                    'modules': { 'anyOf': [ {'type' : 'string' },
-                                                             {'type' : 'null' }]}
+                                    'modules': { 'anyOf': [ {'type' : 'string'},
+                                                            {'type' : 'null' },
+                                                            {'type': 'array'},
+                                                          ]}
                                 },},},},},},},},
 
     'mirrors': {
@@ -221,7 +223,7 @@ section_schemas = {
                                 'items' : { 'anyOf' : [ { 'type' : 'string' },
                                                         { 'type' : 'number'}]}}, #version strings
                             'compiler': {
-                                'type' : 'array',
+                                'typee' : 'array',
                                 'default' : [],
                                 'items' : { 'type' : 'string' } }, #compiler specs
                             'nobuild': {
