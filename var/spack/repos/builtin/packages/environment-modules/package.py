@@ -14,16 +14,21 @@ class EnvironmentModules(Package):
     depends_on('tcl')
 
     def install(self, spec, prefix):
+        tcl_spec = spec['tcl']
+
         # See: https://sourceforge.net/p/modules/bugs/62/
         CPPFLAGS = ['-DUSE_INTERP_ERRORLINE']
         config_args = [
-            '--prefix=%s' % prefix,
+            "--without-tclx",
+            "--with-tclx-ver=0.0",
+            "--prefix=%s" % prefix,
+            "--with-tcl=%s" % join_path(tcl_spec.prefix, 'lib'),    # It looks for tclConfig.sh
+            "--with-tcl-ver=%d.%d" % (tcl_spec.version.version[0], tcl_spec.version.version[1]),
             '--disable-debug',
             '--disable-dependency-tracking',
             '--disable-silent-rules',
             '--disable-versioning', 
             '--datarootdir=%s' % prefix.share,
-            '--with-tcl=%s' % join_path(spec['tcl'].prefix, 'lib'),    # It looks for tclConfig.sh
             'CPPFLAGS=%s' % ' '.join(CPPFLAGS)
         ]
 
