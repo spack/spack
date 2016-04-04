@@ -957,6 +957,10 @@ class Package(object):
             self._total_time = time.time() - start_time
             build_time = self._total_time - self._fetch_time
 
+            # Set up license information
+            if self.license_required:
+                self.set_up_license()
+
             tty.msg("Successfully installed %s" % self.name,
                     "Fetch: %s.  Build: %s.  Total: %s." %
                     (_hms(self._fetch_time), _hms(build_time),
@@ -1005,6 +1009,79 @@ class Package(object):
         if not installed:
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
+
+
+    def set_up_license(self):
+        """Prompt the user, letting them know that a license is required."""
+        # If the license can be stored in a file, create one
+        if self.license_files:
+            # Use the first file listed in license_files
+            license_path = self.prefix + '/' + self.license_files[0]
+            self.write_license_file(license_path)
+            # Open up file in user's favorite $EDITOR for editing
+            spack.editor(license_path)
+            tty.msg("Added license file %s" % license_path)
+
+        # If not a file, what about an environment variable?
+        elif self.license_vars:
+            tty.warn("A license is required to use %s. Please set %s to the "
+                     "full pathname to the license file, or port@host if you"
+                     " store your license keys on a dedicated license server" %
+                     (self.name, ' or '.join(self.license_vars)))
+
+        # If not a file or variable, suggest a website for further info
+        elif self.license_url:
+            tty.warn("A license is required to use %s. See %s for details" %
+                    (self.name, self.license_url))
+
+        # If all else fails, you're on your own
+        else:
+            tty.warn("A license is required to use %s" % self.name)
+
+
+    def write_license_file(self, license_path):
+        # Use the first file listed in license_files
+        license = open(license_path, 'w')
+
+        license.write("""\
+# A license is required to use %s.
+#
+# The recommended solution is to store your license key in this file.
+# By default, %s searches the following file(s) for a license key
+# (relative to the installation prefix):
+#
+#\t%s
+#
+""" % (self.name, self.name, self.name, '\n#\t'.join(self.license_files)))
+
+        if self.license_vars:
+            license.write("""\
+# Alternatively, use one of the following environment variable(s):
+#
+#\t%s
+#
+# If you choose to store your license in a non-standard location, you may
+# set one of these variable(s) to the full pathname to the license file, or
+# port@host if you store your license keys on a dedicated license server.
+# You will likely want to set this variable in a module file so that it
+# gets loaded every time someone tries to use %s.
+#
+""" % ('\n#\t'.join(self.license_vars), self.name))
+
+        if self.license_url:
+            license.write("""\
+# For further information on how to acquire a license, please refer to:
+#\t%s
+#
+""" % self.license_url)
+
+        license.write("""\
+# You may enter your license below.
+
+""")
+
+        license.close()
+
 
     def do_install_dependencies(self, **kwargs):
         # Pass along paths of dependencies here
