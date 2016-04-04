@@ -10,6 +10,6 @@ class LinuxDistro(OperatingSystem):
     """
     def __init__(self):
         name = py_platform.dist()[0]
-        version = py_platform.dist()[1] 
+        version = py_platform.dist()[1].split(".")[0] # Grabs major version from tuple 
 
         super(LinuxDistro, self).__init__(name, version)
