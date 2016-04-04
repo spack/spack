@@ -10,13 +10,18 @@ class SuiteSparse(Package):
 
     version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
 
-    variant('tbb', default=True, description='Build with Intel TBB')
+    # FIXME: (see below)
+    # variant('tbb', default=True, description='Build with Intel TBB')
 
     depends_on('blas')
     depends_on('lapack')
 
     depends_on('metis@5.1.0', when='@4.5.1')
-    depends_on('tbb', when='+tbb')
+    # FIXME:
+    # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng flags
+    # does not seem to be used, which leads to linking errors on Linux.
+    # Try re-enabling in future versions.
+    # depends_on('tbb', when='+tbb')
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned
