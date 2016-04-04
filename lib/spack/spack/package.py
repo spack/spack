@@ -1071,6 +1071,7 @@ class Package(object):
         if self.license_url:
             license.write("""\
 # For further information on how to acquire a license, please refer to:
+#
 #\t%s
 #
 """ % self.license_url)
