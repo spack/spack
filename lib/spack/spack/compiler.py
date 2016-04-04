@@ -285,16 +285,15 @@ class Compiler(object):
     @classmethod
     def find_in_modules(cls):
         compilers = []
-
         if cls.PrgEnv:
             if not cls.PrgEnv_compiler:
                 tty.die('Must supply PrgEnv_compiler with PrgEnv')
 
             modulecmd = which('modulecmd')
             modulecmd.add_default_arg('python')
-            output = modulecmd('avail', cls.PrgEnv_compiler, return_oe=True)
+        
+            output = modulecmd('avail', cls.PrgEnv_compiler, output=str, error=str)
             matches = re.findall(r'(%s)/([\d\.]+[\d])' % cls.PrgEnv_compiler, output)
-
             for name, version in matches:
                 v = version
                 comp = cls(spack.spec.CompilerSpec(name + '@' + v), 'MODULES',
