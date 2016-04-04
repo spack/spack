@@ -20,6 +20,8 @@ class Dbus(Package):
     version('1.8.4', '4717cb8ab5b80978fcadf2b4f2f72e1b')
     version('1.8.2', 'd6f709bbec0a022a1847c7caec9d6068')
 
+    depends_on('expat')
+
     def install(self, spec, prefix):
         configure(
             "--prefix=%s" % prefix,

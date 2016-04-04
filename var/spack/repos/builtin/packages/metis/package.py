@@ -79,10 +79,28 @@ class Metis(Package):
         if '+double' in spec:
             filter_file('REALTYPEWIDTH 32', 'REALTYPEWIDTH 64', metis_header)
 
+        # Make clang 7.3 happy.
+        # Prevents "ld: section __DATA/__thread_bss extends beyond end of file"
+        # See upstream LLVM issue https://llvm.org/bugs/show_bug.cgi?id=27059
+        # Adopted from https://github.com/Homebrew/homebrew-science/blob/master/metis.rb
+        if spec.satisfies('%clang@7.3.0'):
+            filter_file('#define MAX_JBUFS 128', '#define MAX_JBUFS 24', join_path(source_directory, 'GKlib', 'error.c'))
+
         with working_dir(build_directory, create=True):
             cmake(source_directory, *options)
             make()
             make("install")
+            # now run some tests:
+            for f in ["4elt", "copter2", "mdual"]:
+                graph = join_path(source_directory,'graphs','%s.graph' % f)
+                Executable(join_path(prefix.bin,'graphchk'))(graph)
+                Executable(join_path(prefix.bin,'gpmetis'))(graph,'2')
+                Executable(join_path(prefix.bin,'ndmetis'))(graph)
+
+            graph = join_path(source_directory,'graphs','test.mgraph')
+            Executable(join_path(prefix.bin,'gpmetis'))(graph,'2')
+            graph = join_path(source_directory,'graphs','metis.mesh')
+            Executable(join_path(prefix.bin,'mpmetis'))(graph,'2')
 
             # install GKlib headers, which will be needed for ParMETIS
             GKlib_dist = join_path(prefix.include,'GKlib')

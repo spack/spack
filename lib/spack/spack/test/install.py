@@ -64,7 +64,14 @@ class InstallTest(MockPackagesTest):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
 
-    def test_install_and_uninstall(self):
+    def fake_fetchify(self, pkg):
+        """Fake the URL for a package so it downloads from a file."""
+        fetcher = FetchStrategyComposite()
+        fetcher.append(URLFetchStrategy(self.repo.url))
+        pkg.fetcher = fetcher
+
+
+    def ztest_install_and_uninstall(self):
         # Get a basic concrete spec for the trivial install package.
         spec = Spec('trivial_install_test_package')
         spec.concretize()
@@ -73,15 +80,25 @@ class InstallTest(MockPackagesTest):
         # Get the package
         pkg = spack.repo.get(spec)
 
-        # Fake the URL for the package so it downloads from a file.
-
-        fetcher = FetchStrategyComposite()
-        fetcher.append(URLFetchStrategy(self.repo.url))
-        pkg.fetcher = fetcher
+        self.fake_fetchify(pkg)
 
         try:
             pkg.do_install()
             pkg.do_uninstall()
+        except Exception, e:
+            pkg.remove_prefix()
+            raise
+
+
+    def test_install_environment(self):
+        spec = Spec('cmake-client').concretized()
+
+        for s in spec.traverse():
+            self.fake_fetchify(s.package)
+
+        pkg = spec.package
+        try:
+            pkg.do_install()
         except Exception, e:
             pkg.remove_prefix()
             raise

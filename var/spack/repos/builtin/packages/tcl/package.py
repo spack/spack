@@ -10,8 +10,13 @@ class Tcl(Package):
        extensible."""
     homepage = "http://www.tcl.tk"
 
-    version('8.6.3', 'db382feca91754b7f93da16dc4cdad1f',
-            url="http://prdownloads.sourceforge.net/tcl/tcl8.6.3-src.tar.gz")
+    def url_for_version(self, version):
+        return 'http://prdownloads.sourceforge.net/tcl/tcl%s-src.tar.gz' % version
+
+    version('8.6.5', '0e6426a4ca9401825fbc6ecf3d89a326')
+    version('8.6.4', 'd7cbb91f1ded1919370a30edd1534304')
+    version('8.6.3', 'db382feca91754b7f93da16dc4cdad1f')
+    version('8.5.19', '0e6426a4ca9401825fbc6ecf3d89a326')
 
     depends_on('zlib')
 
