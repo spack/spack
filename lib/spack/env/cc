@@ -84,13 +84,12 @@ done
 #    ld      link
 #    ccld    compile & link
 #    vcheck  version check
-#
-# Depending on the mode, we may or may not add extra rpaths.
-# This variable controls whether they are added.
-add_rpaths=true
 
 command=$(basename "$0")
 case "$command" in
+    cpp)
+        mode=cpp
+        ;;
     cc|c89|c99|gcc|clang|icc|pgcc|xlc)
         command="$SPACK_CC"
         language="C"
@@ -107,22 +106,8 @@ case "$command" in
         command="$SPACK_F77"
         language="Fortran 77"
         ;;
-    cpp)
-        mode=cpp
-        ;;
     ld)
         mode=ld
-
-        # Darwin's linker has a -r argument that merges object files
-        # together. It doesn't work with -rpath.
-        if [[ $OSTYPE = darwin* ]]; then
-            for arg in "$@"; do
-                if [ "$arg" = -r ]; then
-                    add_rpaths=false
-                    break
-	            fi
-            done
-        fi
         ;;
     *)
         die "Unkown compiler: $command"
@@ -130,11 +115,11 @@ case "$command" in
 esac
 
 # If any of the arguments below is present then the mode is vcheck. In
-# vcheck mode nothing is added in terms of extra search paths or
-# libraries
-if [ -z "$mode" ]; then
+# vcheck mode, nothing is added in terms of extra search paths or
+# libraries.
+if [[ -z $mode ]]; then
     for arg in "$@"; do
-        if [ "$arg" = -v -o "$arg" = -V -o "$arg" = --version -o "$arg" = -dumpversion ]; then
+        if [[ $arg = -v || $arg = -V || $arg = --version || $arg = -dumpversion ]]; then
             mode=vcheck
             break
     fi
@@ -142,16 +127,16 @@ if [ -z "$mode" ]; then
 fi
 
 # Finish setting up the mode.
-if [ -z "$mode" ]; then
+if [[ -z $mode ]]; then
     mode=ccld
     for arg in "$@"; do
-        if [ "$arg" = -E ]; then
+        if [[ $arg = -E ]]; then
             mode=cpp
             break
-        elif [ "$arg" = -S ]; then
+        elif [[ $arg = -S ]]; then
             mode=as
             break
-        elif [ "$arg" = -c ]; then
+        elif [[ $arg = -c ]]; then
             mode=cc
             break
         fi
@@ -159,7 +144,7 @@ if [ -z "$mode" ]; then
 fi
 
 # Dump the version and exit if we're in testing mode.
-if [ "$SPACK_TEST_COMMAND" = "dump-mode" ]; then
+if [[ $SPACK_TEST_COMMAND = dump-mode ]]; then
     echo "$mode"
     exit
 fi
@@ -170,8 +155,21 @@ if [[ -z $command ]]; then
     die "ERROR: Compiler '$SPACK_COMPILER_SPEC' does not support compiling $language programs."
 fi
 
-if [ "$mode" == vcheck ] ; then
+if [[ $mode == vcheck ]]; then
     exec ${command} "$@"
+fi
+
+# Darwin's linker has a -r argument that merges object files together.
+# It doesn't work with -rpath.
+# This variable controls whether they are added.
+add_rpaths=true
+if [[ mode = ld && $OSTYPE = darwin* ]]; then
+    for arg in "$@"; do
+        if [[ $arg = -r ]]; then
+            add_rpaths=false
+            break
+	fi
+    done
 fi
 
 # Save original command for debug logging
@@ -234,11 +232,14 @@ IFS=':' read -ra spack_env_dirs <<< "$SPACK_ENV_PATH"
 spack_env_dirs+=("" ".")
 PATH=""
 for dir in "${env_path[@]}"; do
-    remove=""
-    for rm_dir in "${spack_env_dirs[@]}"; do
-        if [[ $dir = $rm_dir ]]; then remove=True; fi
+    addpath=true
+    for env_dir in "${spack_env_dirs[@]}"; do
+        if [[ $dir = $env_dir ]]; then
+            addpath=false
+            break
+        fi
     done
-    if [[ -z $remove ]]; then
+    if $addpath; then
         PATH="${PATH:+$PATH:}$dir"
     fi
 done
