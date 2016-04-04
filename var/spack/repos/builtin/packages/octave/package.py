@@ -68,7 +68,7 @@ class Octave(Package):
     depends_on('blas')
     depends_on('lapack')
     # Octave does not configure with sed from darwin:
-    depends_on('sed', sys.platform == 'darwin')
+    depends_on('sed', when=sys.platform == 'darwin')
     depends_on('pcre')
     depends_on('pkg-config')
 
