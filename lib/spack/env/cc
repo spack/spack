@@ -39,7 +39,7 @@
 #
 
 # This is the list of environment variables that need to be set before
-# the script runs.  They are set by routines in spack.build_environment
+# the script runs. They are set by routines in spack.build_environment
 # as part of spack.package.Package.do_install().
 parameters="
 SPACK_PREFIX
@@ -50,7 +50,7 @@ SPACK_SHORT_SPEC"
 
 # The compiler input variables are checked for sanity later:
 #   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
-# Debug flag is optional; set to true for debug logging:
+# Debug flag is optional; set to "TRUE" for debug logging:
 #   SPACK_DEBUG
 # Test command is used to unit test the compiler script.
 #   SPACK_TEST_COMMAND
@@ -66,11 +66,10 @@ function die {
 
 for param in $parameters; do
     if [[ -z ${!param} ]]; then
-        die "Spack compiler must be run from spack!  Input $param was missing!"
+        die "Spack compiler must be run from Apack! Input '$param' is missing."
     fi
 done
 
-#
 # Figure out the type of compiler, the language, and the mode so that
 # the compiler script knows what to do.
 #
@@ -78,12 +77,12 @@ done
 # 'command' is set based on the input command to $SPACK_[CC|CXX|F77|F90]
 #
 # 'mode' is set to one of:
+#    vcheck  version check
 #    cpp     preprocess
 #    cc      compile
 #    as      assemble
 #    ld      link
 #    ccld    compile & link
-#    vcheck  version check
 
 command=$(basename "$0")
 case "$command" in
@@ -114,8 +113,8 @@ case "$command" in
         ;;
 esac
 
-# If any of the arguments below is present then the mode is vcheck. In
-# vcheck mode, nothing is added in terms of extra search paths or
+# If any of the arguments below are present, then the mode is vcheck.
+# In vcheck mode, nothing is added in terms of extra search paths or
 # libraries.
 if [[ -z $mode ]]; then
     for arg in "$@"; do
