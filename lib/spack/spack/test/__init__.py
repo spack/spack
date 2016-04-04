@@ -67,7 +67,8 @@ test_names = ['versions',
               'namespace_trie',
               'yaml',
               'sbang',
-              'environment']
+              'environment',
+              'cmd.uninstall']
 
 
 def list_tests():
