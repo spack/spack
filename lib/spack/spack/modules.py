@@ -50,6 +50,7 @@ import llnl.util.tty as tty
 import spack
 import spack.config
 from llnl.util.filesystem import join_path, mkdirp
+from spack.build_environment import parent_class_modules, set_module_variables_for_package
 from spack.environment import *
 
 __all__ = ['EnvModule', 'Dotkit', 'TclModule']
@@ -159,12 +160,25 @@ class EnvModule(object):
         # installation prefix
         env = inspect_path(self.spec.prefix)
 
-        # Let the extendee modify their extensions before asking for
+        # Let the extendee/dependency modify their extensions/dependencies before asking for
         # package-specific modifications
         spack_env = EnvironmentModifications()
-        for item in self.pkg.extendees:
+
+        def dependencies():
+            # FIXME : during module file creation nodes seem to be visited multiple times even if cover='nodes'
+            # FIXME : is given. This work around permits to get a unique list of spec anyhow.
+            # FIXME : Possibly we miss a merge step among nodes that refer to the same package.
+            l = [x for x in sorted(self.spec.traverse(order='post', depth=True, cover='nodes'),reverse=True)]
+            seen = set()
+            return [x for ii, x in l if not (x in seen or seen.add(x))]
+
+        for item in dependencies():
             try:
-                package = self.spec[item].package
+                package = self.spec[item.name].package
+                modules = parent_class_modules(package.__class__)
+                for mod in modules:
+                    set_module_variables_for_package(package, mod)
+                set_module_variables_for_package(package, package.module)
                 package.setup_dependent_package(self.pkg.module, self.spec)
                 package.setup_dependent_environment(spack_env, env, self.spec)
             except KeyError as e:
@@ -172,8 +186,8 @@ class EnvModule(object):
                 # eg: extends('python', when='+python')
                 tty.debug(str(e))
 
-
         # Package-specific environment modifications
+        set_module_variables_for_package(self.pkg, self.pkg.module)
         self.spec.package.setup_environment(spack_env, env)
 
         # TODO : implement site-specific modifications and filters
