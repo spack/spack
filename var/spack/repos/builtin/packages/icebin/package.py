@@ -16,7 +16,7 @@ class Icebin(CMakePackage):
     variant('coupler', default=True, description='Build the GCM coupler (requires MPI)')
     variant('pism', default=False, description='Build coupling link with PISM (requires PISM, PETSc)')
 
-    extends('python')
+    extends('python', when='+python')
 
     depends_on('everytrace', when='+everytrace')
 
@@ -52,3 +52,6 @@ class Icebin(CMakePackage):
             '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
             '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
             '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')]
+
+    def setup_environment(self, spack_env, env):
+        env.prepend_path('PATH', join_path(self.prefix, 'bin'))
