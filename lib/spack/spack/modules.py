@@ -149,7 +149,6 @@ class EnvModule(object):
         # Not very descriptive fallback
         return 'spack installed package'
 
-
     def write(self):
         """Write out a module file for this object."""
         module_dir = os.path.dirname(self.file_name)
@@ -218,25 +217,27 @@ class EnvModule(object):
             filter_list = []
 
         with open(self.file_name, 'w') as f:
-            self.write_header(f)
+            # Header
+            f.write(self.header)
             # Automatic loads
             for x in autoload_list:
-                self.write_autoload(f, x)
+                f.write(self.autoload(x))
             # Prerequisites
             for x in prerequisites_list:
-                self.write_prerequisite(f, x)
+                f.write(self.prerequisite(x))
             # Modifications to the environment
-            iterable = self.process_environment_command( filter_environment_modifications(env, filter_list))
+            iterable = self.process_environment_command(filter_environment_modifications(env, filter_list))
             for line in iterable:
                 f.write(line)
 
-    def write_header(self, stream):
+    @property
+    def header(self):
         raise NotImplementedError()
 
-    def write_autoload(self, stream, spec):
+    def autoload(self, spec):
         raise NotImplementedError()
 
-    def write_prerequisite(self, stream, spec):
+    def prerequisite(self, spec):
         raise NotImplementedError()
 
     def process_environment_command(self, env):
@@ -286,19 +287,22 @@ class Dotkit(EnvModule):
                                  self.spec.compiler.version,
                                  self.spec.dag_hash())
 
-    def write_header(self, dk_file):
+    @property
+    def header(self):
         # Category
+        header = ''
         if self.category:
-            dk_file.write('#c %s\n' % self.category)
+            header += '#c %s\n' % self.category
 
         # Short description
         if self.short_description:
-            dk_file.write('#d %s\n' % self.short_description)
+            header += '#d %s\n' % self.short_description
 
         # Long description
         if self.long_description:
             for line in textwrap.wrap(self.long_description, 72):
-                dk_file.write("#h %s\n" % line)
+                header += '#h %s\n' % line
+        return header
 
 
 class TclModule(EnvModule):
@@ -324,22 +328,24 @@ class TclModule(EnvModule):
                                  self.spec.compiler.version,
                                  self.spec.dag_hash())
 
-    def write_header(self, module_file):
+    @property
+    def header(self):
         # TCL Modulefile header
-        module_file.write('#%Module1.0\n')
+        header = '#%Module1.0\n'
         # TODO : category ?
         # Short description
         if self.short_description:
-            module_file.write('module-whatis \"%s\"\n\n' % self.short_description)
+            header += 'module-whatis \"%s\"\n\n' % self.short_description
 
         # Long description
         if self.long_description:
-            module_file.write('proc ModulesHelp { } {\n')
+            header += 'proc ModulesHelp { } {\n'
             for line in textwrap.wrap(self.long_description, 72):
-                module_file.write("puts stderr \"%s\"\n" % line)
-            module_file.write('}\n\n')
+                header += 'puts stderr "%s"\n' % line
+            header += '}\n\n'
+        return header
 
-    def write_autoload(self, module_file, spec):
+    def autoload(self, spec):
         autoload_format = '''
 if ![ is-loaded {module_file} ] {{
     puts stderr "Autoloading {module_file}"
@@ -347,8 +353,8 @@ if ![ is-loaded {module_file} ] {{
 }}
 '''''
         m = TclModule(spec)
-        module_file.write(autoload_format.format(module_file=m.use_name))
+        return autoload_format.format(module_file=m.use_name)
 
-    def write_prerequisite(self, module_file, spec):
+    def prerequisite(self, spec):
         m = TclModule(spec)
-        module_file.write('prereq {module_file}\n'.format(module_file=m.use_name))
+        return 'prereq {module_file}\n'.format(module_file=m.use_name)
