@@ -47,7 +47,7 @@ def setup_parser(subparser):
         "supplied spec. i.e., if you say uninstall libelf, ALL versions of " +
         "libelf are uninstalled. This is both useful and dangerous, like rm -r.")
     subparser.add_argument(
-        '-i', '--idempotent', action='store_true', dest='force',
+        '-i', '--idempotent', action='store_true', dest='idempotent',
         help="Ignore requests to remove specs that don't exit.")
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to uninstall")
