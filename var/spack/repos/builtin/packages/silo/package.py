@@ -1,5 +1,6 @@
 from spack import *
 
+
 class Silo(Package):
     """Silo is a library for reading and writing a wide variety of scientific
        data to binary, disk files."""
@@ -30,6 +31,7 @@ class Silo(Package):
             '--prefix=%s' % prefix,
             '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include, spec['hdf5'].prefix.lib),
             '--with-zlib=%s,%s' % (spec['zlib'].prefix.include, spec['zlib'].prefix.lib),
+            '--enable-install-lite-headers',
             *config_args)
 
         make()
