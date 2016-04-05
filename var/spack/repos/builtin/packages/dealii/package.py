@@ -23,8 +23,10 @@ class Dealii(Package):
 
     # required dependencies, light version
     depends_on ("blas")
-    depends_on ("boost",     when='~mpi')
-    depends_on ("boost+mpi", when='+mpi')
+    # Boost 1.58 is blacklisted, see https://github.com/dealii/dealii/issues/1591
+    # require at least 1.59
+    depends_on ("boost@1.59.0:",     when='~mpi')
+    depends_on ("boost@1.59.0:+mpi", when='+mpi')
     depends_on ("bzip2")
     depends_on ("cmake")
     depends_on ("lapack")
@@ -173,6 +175,19 @@ class Dealii(Package):
             cmake('.')
             make('release')
             make('run',parallel=False)
+
+        # An example which uses Metis + PETSc
+        # FIXME: switch step-18 to MPI
+        with working_dir('examples/step-18'):
+            print('=====================================')
+            print('============= Step-18 ===============')
+            print('=====================================')
+            # list the number of cycles to speed up
+            filter_file(r'(end_time = 10;)',  ('end_time = 3;'), 'step-18.cc')
+            if '^petsc' in spec and '^metis' in spec:
+                cmake('.')
+                make('release')
+                make('run',parallel=False)
 
         # take step-40 which can use both PETSc and Trilinos
         # FIXME: switch step-40 to MPI run
