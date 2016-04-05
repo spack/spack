@@ -377,6 +377,8 @@ add a line like this in the package class:
        version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
        ...
 
+Versions should be listed with the newest version first.
+
 Version URLs
 ~~~~~~~~~~~~~~~~~
 
@@ -385,18 +387,27 @@ in the package.  For example, Spack is smart enough to download
 version ``8.2.1.`` of the ``Foo`` package above from
 ``http://example.com/foo-8.2.1.tar.gz``.
 
-If spack *cannot* extrapolate the URL from the ``url`` field, or if
-the package doesn't have a ``url`` field, you can add a URL explicitly
+If spack *cannot* extrapolate the URL from the ``url`` field by
+default, you can write your own URL generation algorithm in place of
+the ``url`` declaration.  For example:
+
+.. code-block:: python
+   :linenos:
+
+   class Foo(Package):
+       def url_for_version(self, version):
+           return 'http://example.com/version_%s/foo-%s.tar.gz' \
+               % (version, version)
+       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
+       ...
+
+If a URL cannot be derived systematically, you can add an explicit URL
 for a particular version:
 
 .. code-block:: python
 
    version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
            url='http://example.com/foo-8.2.1-special-version.tar.gz')
-
-For the URL above, you might have to add an explicit URL because the
-version can't simply be substituted in the original ``url`` to
-construct the new one for ``8.2.1``.
 
 When you supply a custom URL for a version, Spack uses that URL
 *verbatim* and does not perform extrapolation.
@@ -1215,6 +1226,19 @@ extendable package:
 Now, the ``py-numpy`` package can be used as an argument to ``spack
 activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
+
+Many packages produce Python extensions for *some* variants, but not
+others: they should extend ``python`` only if the apropriate
+variant(s) are selected.  This may be accomplished with conditional
+``extends()`` declarations:
+
+.. code-block:: python
+
+   class FooLib(Package):
+       variant('python', default=True, description= \
+           'Build the Python extension Module')
+       extends('python', when='+python')
+       ...
 
 Sometimes, certain files in one package will conflict with those in
 another, which means they cannot both be activated (symlinked) at the
@@ -2391,6 +2415,59 @@ File functions
 
 
 .. _package-lifecycle:
+
+Coding Style Guidelines
+---------------------------
+
+The following guidelines are provided, in the interests of making
+Spack packages work in a consistent manner:
+
+
+Variant Names
+~~~~~~~~~~~~~~
+
+Spack packages with variants similar to already-existing Spack
+packages should use the same name for their variants.  Standard
+variant names are:
+
+======= ======== ========================
+Name    Default   Description
+------- -------- ------------------------
+shared   True     Build shared libraries
+static            Build static libraries
+mpi               Use MPI
+python            Build Python extension
+------- -------- ------------------------
+
+If specified in this table, the corresponding default should be used
+when declaring a variant.
+
+
+Version Lists
+~~~~~~~~~~~~~~
+
+Spack packges should list supported versions with the newest first.
+
+Special Versions
+~~~~~~~~~~~~~~~~~
+
+The following *special* version names may be used when building a package:
+
+* *@system*: Indicates a hook to the OS-installed version of the
+   package.  This is useful, for example, to tell Spack to use the
+   OS-installed version in ``packages.yaml``::
+
+        openssl:
+            paths:
+                openssl@system: /usr
+            buildable: False
+
+   Certain Spack internals look for the *@system* version and do
+   appropriate things in that case.
+
+* *@local*: Indicates the version was built manually from some source
+  tree of unknown provenance (see ``spack spconfig``).
+
 
 Packaging workflow commands
 ---------------------------------
