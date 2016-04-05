@@ -146,7 +146,7 @@ section_schemas = {
         'type': 'object',
         'additionalProperties': False,
         'patternProperties': {
-            'compilers:?': { # optional colon for overriding site config.
+            'compilers:?': {  # optional colon for overriding site config.
                 'type': 'object',
                 'default': {},
                 'additionalProperties': False,
@@ -195,6 +195,7 @@ section_schemas = {
                 'default': [],
                 'items': {
                     'type': 'string'},},},},
+
     'packages': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack package configuration file schema',
@@ -238,11 +239,35 @@ section_schemas = {
                                 'default' : {},
                             }
                         },},},},},},
+
     'modules': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack module file configuration file schema',
         'type': 'object',
         'additionalProperties': False,
+        'definitions': {
+            'module_type_configuration': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'properties': {
+                    'filter': {
+                        'type': 'object',
+                        'default': {},
+                        'additionalProperties': False,
+                        'properties': {
+                            'environment_modifications': {
+                                'type': 'array',
+                                'default': [],
+                                'items': {
+                                    'type': 'string'
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         'patternProperties': {
             r'modules:?': {
                 'type': 'object',
@@ -253,9 +278,22 @@ section_schemas = {
                         'type': 'array',
                         'default': [],
                         'items': {
-                            'type': 'string'
+                            'type': 'string',
+                            'enum': ['tcl', 'dotkit']
                         }
-                    }
+                    },
+                    'tcl': {
+                        'allOf': [
+                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
+                            {}  # Specific tcl extensions
+                        ]
+                    },
+                    'dotkit': {
+                        'allOf': [
+                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
+                            {}  # Specific dotkit extensions
+                        ]
+                    },
                 }
             },
         },

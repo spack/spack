@@ -179,9 +179,17 @@ class EnvModule(object):
         if not env:
             return
 
+        # Filter modifications to the environment according to configuration files
+        try:
+            filter_list = CONFIGURATION[self.name]['filter']['environment_modifications']
+        except KeyError:
+            filter_list = []
+
         with open(self.file_name, 'w') as f:
             self.write_header(f)
-            for line in self.process_environment_command(env):
+            for line in self.process_environment_command(
+                    filter_environment_modifications(env, filter_list)
+            ):
                 f.write(line)
 
     def write_header(self, stream):
