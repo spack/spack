@@ -18,6 +18,7 @@ class NetlibScalapack(Package):
 
     provides('scalapack')
 
+    depends_on('cmake')
     depends_on('mpi')
     depends_on('lapack')
 
