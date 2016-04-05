@@ -66,7 +66,7 @@ function die {
 
 for param in $parameters; do
     if [[ -z ${!param} ]]; then
-        die "Spack compiler must be run from Apack! Input '$param' is missing."
+        die "Spack compiler must be run from Spack! Input '$param' is missing."
     fi
 done
 
