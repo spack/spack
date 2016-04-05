@@ -9,5 +9,7 @@ class PyDecorator(Package):
 
     extends('python')
 
+    depends_on('py-setuptools')
+
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
