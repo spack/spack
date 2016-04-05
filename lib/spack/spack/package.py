@@ -143,8 +143,10 @@ class Package(object):
       informational URL, so that users know what they're
       installing.
 
-    url
-      URL of the source archive that spack will fetch.
+    url or url_for_version(self, version)
+      If url, then the URL of the source archive that spack will fetch.
+      If url_for_version(), then a method returning the URL required
+      to fetch a particular version.
 
     install()
       This function tells spack how to build and install the
