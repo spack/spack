@@ -6,7 +6,3 @@
 # -------------------------------------------------------------------------
 modules:
   enable: ['tcl', 'dotkit']
-
-  dotkit:
-    filter:
-      environment_modifications: ['CPATH', 'LIBRARY_PATH']  # Exclude changes to any of these variables
