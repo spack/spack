@@ -167,10 +167,11 @@ class EnvModule(object):
                 package = self.spec[item].package
                 package.setup_dependent_package(self.pkg.module, self.spec)
                 package.setup_dependent_environment(spack_env, env, self.spec)
-            except:
+            except KeyError as e:
                 # The extends was conditional, so it doesn't count here
                 # eg: extends('python', when='+python')
-                pass
+                tty.debug(str(e))
+
 
         # Package-specific environment modifications
         self.spec.package.setup_environment(spack_env, env)
