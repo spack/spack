@@ -10,6 +10,7 @@ class PySetuptools(Package):
     version('18.1', 'f72e87f34fbf07f299f6cb46256a0b06')
     version('19.2', '78353b1f80375ca5e088f4b4627ffe03')
     version('20.5', 'fadc1e1123ddbe31006e5e43e927362b')
+    version('20.6.7', '45d6110f3ec14924e44c33411db64fe6')
 
     extends('python')
 
