@@ -182,18 +182,13 @@ class EnvModule(object):
         # TODO : the code down below is quite similar to build_environment.setup_package and needs to be
         # TODO : factored out to a single place
         for item in dependencies('All'):
-            try:
-                package = self.spec[item.name].package
-                modules = parent_class_modules(package.__class__)
-                for mod in modules:
-                    set_module_variables_for_package(package, mod)
-                set_module_variables_for_package(package, package.module)
-                package.setup_dependent_package(self.pkg.module, self.spec)
-                package.setup_dependent_environment(spack_env, env, self.spec)
-            except KeyError as e:
-                # The extends was conditional, so it doesn't count here
-                # eg: extends('python', when='+python')
-                tty.debug(str(e))
+            package = self.spec[item.name].package
+            modules = parent_class_modules(package.__class__)
+            for mod in modules:
+                set_module_variables_for_package(package, mod)
+            set_module_variables_for_package(package, package.module)
+            package.setup_dependent_package(self.pkg.module, self.spec)
+            package.setup_dependent_environment(spack_env, env, self.spec)
 
         # Package-specific environment modifications
         set_module_variables_for_package(self.pkg, self.pkg.module)
