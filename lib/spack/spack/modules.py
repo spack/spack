@@ -164,15 +164,25 @@ class EnvModule(object):
         # package-specific modifications
         spack_env = EnvironmentModifications()
 
-        def dependencies():
+        def dependencies(request='All'):
+            if request == 'None':
+                return []
+
+            l = [x for x in sorted(self.spec.traverse(order='post', depth=True, cover='nodes', root=False), reverse=True)]
+
+            if request == 'Direct':
+                return [x for ii, x in l if ii == 1]
+
             # FIXME : during module file creation nodes seem to be visited multiple times even if cover='nodes'
             # FIXME : is given. This work around permits to get a unique list of spec anyhow.
             # FIXME : Possibly we miss a merge step among nodes that refer to the same package.
-            l = [x for x in sorted(self.spec.traverse(order='post', depth=True, cover='nodes'),reverse=True)]
             seen = set()
-            return [x for ii, x in l if not (x in seen or seen.add(x))]
+            seen_add = seen.add
+            return [x for ii, x in l if not (x in seen or seen_add(x))]
 
-        for item in dependencies():
+        # TODO : the code down below is quite similar to build_environment.setup_package and needs to be
+        # TODO : factored out to a single place
+        for item in dependencies('All'):
             try:
                 package = self.spec[item.name].package
                 modules = parent_class_modules(package.__class__)
@@ -190,11 +200,18 @@ class EnvModule(object):
         set_module_variables_for_package(self.pkg, self.pkg.module)
         self.spec.package.setup_environment(spack_env, env)
 
-        # TODO : implement site-specific modifications and filters
-        if not env:
-            return
+        # Get list of modules that will be loaded automatically
+        try:
+            autoload_list = dependencies(CONFIGURATION[self.name]['autoload'])
+        except KeyError:
+            autoload_list = []
 
-        # Filter modifications to the environment according to configuration files
+        try:
+            prerequisites_list = dependencies(CONFIGURATION[self.name]['prerequisites'])
+        except KeyError:
+            prerequisites_list = []
+
+        # Filter modifications to environment variables
         try:
             filter_list = CONFIGURATION[self.name]['filter']['environment_modifications']
         except KeyError:
@@ -202,12 +219,24 @@ class EnvModule(object):
 
         with open(self.file_name, 'w') as f:
             self.write_header(f)
-            for line in self.process_environment_command(
-                    filter_environment_modifications(env, filter_list)
-            ):
+            # Automatic loads
+            for x in autoload_list:
+                self.write_autoload(f, x)
+            # Prerequisites
+            for x in prerequisites_list:
+                self.write_prerequisite(f, x)
+            # Modifications to the environment
+            iterable = self.process_environment_command( filter_environment_modifications(env, filter_list))
+            for line in iterable:
                 f.write(line)
 
     def write_header(self, stream):
+        raise NotImplementedError()
+
+    def write_autoload(self, stream, spec):
+        raise NotImplementedError()
+
+    def write_prerequisite(self, stream, spec):
         raise NotImplementedError()
 
     def process_environment_command(self, env):
@@ -309,3 +338,17 @@ class TclModule(EnvModule):
             for line in textwrap.wrap(self.long_description, 72):
                 module_file.write("puts stderr \"%s\"\n" % line)
             module_file.write('}\n\n')
+
+    def write_autoload(self, module_file, spec):
+        autoload_format = '''
+if ![ is-loaded {module_file} ] {{
+    puts stderr "Autoloading {module_file}"
+    module load {module_file}
+}}
+'''''
+        m = TclModule(spec)
+        module_file.write(autoload_format.format(module_file=m.use_name))
+
+    def write_prerequisite(self, module_file, spec):
+        m = TclModule(spec)
+        module_file.write('prereq {module_file}\n'.format(module_file=m.use_name))

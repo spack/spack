@@ -246,6 +246,10 @@ section_schemas = {
         'type': 'object',
         'additionalProperties': False,
         'definitions': {
+            'dependency_selection': {
+                'type': 'string',
+                'enum': ['None', 'Direct', 'All']
+            },
             'module_type_configuration': {
                 'type': 'object',
                 'default': {},
@@ -264,7 +268,9 @@ section_schemas = {
                                 }
                             }
                         }
-                    }
+                    },
+                    'autoload': {'$ref': '#/definitions/dependency_selection'},
+                    'prerequisites': {'$ref': '#/definitions/dependency_selection'}
                 }
             }
         },
