@@ -378,6 +378,9 @@ class Package(object):
         if not hasattr(self, 'license_required'):
             self.license_required = False
 
+        if not hasattr(self, 'license_comment'):
+            self.license_comment = '#'
+
         if not hasattr(self, 'license_files'):
             self.license_files = []
 
@@ -1040,46 +1043,59 @@ class Package(object):
 
 
     def write_license_file(self, license_path):
-        # Use the first file listed in license_files
+        """Writes empty license file.
+
+        Comments give suggestions on alternative methods of installing
+        a license."""
+
+        comment = self.license_comment
         license = open(license_path, 'w')
 
         license.write("""\
-# A license is required to use %s.
-#
-# The recommended solution is to store your license key in this file.
-# By default, %s searches the following file(s) for a license key
-# (relative to the installation prefix):
-#
-#\t%s
-#
-""" % (self.name, self.name, '\n#\t'.join(self.license_files)))
+{0} A license is required to use {1}.
+{0}
+{0} The recommended solution is to store your license key in this file.
+{0} By default, {1} searches the following file(s) for a license key
+{0} (relative to the installation prefix):
+{0}
+""".format(comment, self.name))
+
+        for filename in self.license_files:
+            license.write("{0}\t{1}\n".format(comment, filename))
+
+        license.write("{0}\n".format(comment))
 
         if self.license_vars:
             license.write("""\
-# Alternatively, use one of the following environment variable(s):
-#
-#\t%s
-#
-# If you choose to store your license in a non-standard location, you may
-# set one of these variable(s) to the full pathname to the license file, or
-# port@host if you store your license keys on a dedicated license server.
-# You will likely want to set this variable in a module file so that it
-# gets loaded every time someone tries to use %s.
-#
-""" % ('\n#\t'.join(self.license_vars), self.name))
+{0} Alternatively, use one of the following environment variable(s):
+{0}
+""".format(comment))
+
+            for var in self.license_vars:
+                license.write("{0}\t{1}\n".format(comment, var))
+
+            license.write("""\
+{0}
+{0} If you choose to store your license in a non-standard location, you may
+{0} set one of these variable(s) to the full pathname to the license file, or
+{0} port@host if you store your license keys on a dedicated license server.
+{0} You will likely want to set this variable in a module file so that it
+{0} gets loaded every time someone tries to use {1}.
+{0}
+""".format(comment, self.name))
 
         if self.license_url:
             license.write("""\
-# For further information on how to acquire a license, please refer to:
-#
-#\t%s
-#
-""" % self.license_url)
+{0} For further information on how to acquire a license, please refer to:
+{0}
+{0}\t{1}
+{0}
+""".format(comment, self.license_url))
 
         license.write("""\
-# You may enter your license below.
+{0} You may enter your license below.
 
-""")
+""".format(comment))
 
         license.close()
 

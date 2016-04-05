@@ -27,6 +27,7 @@ class Pgi(Package):
 
     # Licensing
     license_required = True
+    license_comment  = '#'
     license_files    = ['license.dat']
     license_vars     = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
     license_url      = 'http://www.pgroup.com/doc/pgiinstall.pdf'
