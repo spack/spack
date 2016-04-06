@@ -13,6 +13,7 @@ class Silo(Package):
     version('4.8', 'b1cbc0e7ec435eb656dc4b53a23663c9')
 
     variant('fortran', default=True, description='Enable Fortran support')
+    variant('shared', default=True, description='Build shared libraries')
     variant('silex', default=False, description='Builds Silex, a GUI for viewing Silo files')
 
     depends_on('hdf5')
@@ -22,6 +23,8 @@ class Silo(Package):
         config_args = [
             '--enable-fortran' if '+fortran' in spec else '--disable-fortran',
             '--enable-silex' if '+silex' in spec else '--disable-silex',
+            '--enable-shared' if '+shared' in spec else '--disable-shared',
+            '--disable-static' if '+shared' in spec else '--enable-static',
         ]
 
         if '+silex' in spec:
