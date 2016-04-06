@@ -255,7 +255,7 @@ section_schemas = {
             },
             'dependency_selection': {
                 'type': 'string',
-                'enum': ['None', 'Direct', 'All']
+                'enum': ['none', 'direct', 'all']
             },
             'module_file_configuration': {
                 'type': 'object',
