@@ -151,20 +151,25 @@ def remove_compiler_from_config(compiler_spec, arch=None, scope=None):
 
     spack.config.update_config('compilers', update, scope)
 
+_cache_config_file = {}
 
 def all_compilers_config(arch=None, scope=None):
     """Return a set of specs for all the compiler versions currently
        available to build with.  These are instances of CompilerSpec.
     """
     # Get compilers for this architecture.
-    arch_config = get_compiler_config(arch, scope)
-    # Merge 'all' compilers with arch-specific ones.
-    # Arch-specific compilers have higher precedence.
-    merged_config = get_compiler_config('all', scope=scope)
-    merged_config = spack.config._merge_yaml(merged_config, arch_config)
+    global _cache_config_file #Create a cache of the config file so we don't load all the time.
 
-    return merged_config
+    if not _cache_config_file:
+        arch_config = get_compiler_config(arch, scope)
+        # Merge 'all' compilers with arch-specific ones.
+        # Arch-specific compilers have higher precedence.
+        _cache_config_file = get_compiler_config('all', scope=scope)
+        _cache_config_file = spack.config._merge_yaml(_cache_config_file, arch_config)
+        return _cache_config_file
 
+    else:
+        return _cache_config_file
 
 def all_compilers(arch=None, scope=None):
     # Return compiler specs from the merged config.
