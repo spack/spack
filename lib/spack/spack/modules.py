@@ -156,7 +156,6 @@ def parse_config_options(module_generator):
                 autoloads, prerequisites, filters = [], [], []
                 env = EnvironmentModifications()
             update_single(module_generator.spec, conf, autoloads, prerequisites, filters, env)
-            tty.msg('{request}, {spec}'.format(request=spec, spec=module_generator.spec))
 
     return autoloads, prerequisites, filters, env
 
