@@ -42,7 +42,7 @@ class Trilinos(Package):
     depends_on('matio')
     depends_on('glm')
     depends_on('swig')
-    depends_on('metis',when='+metis')
+    depends_on('metis@5:',when='+metis')
     depends_on('suite-sparse',when='+suite-sparse')
 
     # MPI related dependencies

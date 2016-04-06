@@ -15,7 +15,7 @@ class SuperluDist(Package):
     depends_on ('blas')
     depends_on ('lapack')
     depends_on ('parmetis')
-    depends_on ('metis')
+    depends_on ('metis@5:')
 
     def install(self, spec, prefix):
         makefile_inc = []
