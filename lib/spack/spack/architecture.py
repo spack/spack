@@ -210,8 +210,13 @@ class Arch(object):
 
 
     def __str__(self):
+        if self.platform.name == 'darwin':
+            os_name = self.platform_os.name
+        else:
+            os_name = str(self.platform_os)
+
         return (str(self.platform) +"-"+
-                str(self.platform_os) + "-" + str(self.target) )
+                os_name + "-" + str(self.target))
 
     def _cmp_key(self):
         platform = self.platform.name
@@ -231,52 +236,6 @@ class Arch(object):
 
         return d
 
-#def _helper_to_dict(arch_field_dict, arch_field_name,  *args):
-#    """ General method to turn each class in architecture into a
-#        dictionary. Takes as argument the class dictionary, the field name
-#        (platform, platform_os, target) and then any attribute args
-#    """
-#    d = {}
-#    d[arch_field_name] = {}
-#    for items in args:
-#        d[arch_field_name][items] = arch_field_dict[items]
-#    return d
-#
-
-#def to_dict(arch):
-#    """ Convert the Arch tuple into a dictionary for yaml dumping. This
-#        uses the _helper_to_dict method to create the dictionary from the
-#        provided architecture field. Can assign the architecture
-#        field name (either platform, platform_os or target) and any
-#        attributes that make up that architecture field,
-#    """
-#    d = {}
-#
-#    platform = arch.platform.__dict__
-#    platform_os = arch.platform_os.__dict__
-#    target = arch.target.__dict__
-#
-#    platform_dict = _helper_to_dict(platform,'platform','name')
-#    os_dict = _helper_to_dict(platform_os, 'platform_os', 'name','version',
-#                                                          'compiler_strategy')
-#    target_dict = _helper_to_dict(target,'target', 'name',
-#                                            'module_name','platform_name')
-#
-#    d.update(platform_dict)
-#    d.update(os_dict)
-#    d.update(target_dict)
-#
-#    return d
-
-#def _platform_from_dict(platform):
-#    """Creates all the platform class module names into a dictionary of
-#    name : <class_mod> key-value pairs. From there we can construct the
-#    platform subclass
-#    """
-#    platform_list = all_platforms()
-#    platform_names = {plat.__name__.lower():plat for plat in platform_list}
-#    return platform_names[platform['name']]()
-
 
 def _target_from_dict(target_dict):
     """ Creates new instance of target and assigns all the attributes of
@@ -284,20 +243,21 @@ def _target_from_dict(target_dict):
     """
     target = Target.__new__(Target)
     target.name = target_dict['name']
-    #target.compiler_strategy = target_dict['compiler_strategy']
     target.module_name = target_dict['module_name']
     if 'platform_name' in target_dict:
         target.platform_name = target_dict['platform_name']
     return target
 
-def _operating_system_from_dict(os_dict, platform_class):
+def _operating_system_from_dict(os_dict):
     """ uses platform's operating system method to grab the constructed
         operating systems that are valid on the platform.
     """
 # NOTE: Might need a better way to create operating system objects
-    name = os_dict['name']
-    return platform_class.operating_system(name)
-
+    operating_system = OperatingSystem.__new__(OperatingSystem)
+    operating_system.name = os_dict['name']
+    operating_system.version = os_dict['version']
+    operating_system.compiler_strategy = os_dict['compiler_strategy']
+    return operating_system
 
 def arch_from_dict(d):
     """ Uses _platform_from_dict, _operating_system_from_dict, _target_from_dict
@@ -312,8 +272,8 @@ def arch_from_dict(d):
     target_dict = d['target']
 
     target = _target_from_dict(target_dict)
-    platform_os = _operating_system_from_dict(os_dict, arch.platform)
-    arch.target =target
+    platform_os = _operating_system_from_dict(os_dict)
+    arch.target = target
     arch.platform_os = platform_os
 
     return arch
