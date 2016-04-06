@@ -252,7 +252,7 @@ def validate(env, errstream):
         set_or_unset_not_first(variable, list_of_changes, errstream)
 
 
-def filter_environment_modifications(env, variables):
+def filter_environment_blacklist(env, variables):
     """
     Generator that filters out any change to environment variables present in the input list
 

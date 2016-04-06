@@ -49,6 +49,7 @@ import textwrap
 import llnl.util.tty as tty
 import spack
 import spack.config
+
 from llnl.util.filesystem import join_path, mkdirp
 from spack.build_environment import parent_class_modules, set_module_variables_for_package
 from spack.environment import *
@@ -137,7 +138,6 @@ class EnvModule(object):
         if self.spec.package.__doc__:
             self.long_description = re.sub(r'\s+', ' ', self.spec.package.__doc__)
 
-
     @property
     def category(self):
         # Anything defined at the package level takes precedence
@@ -150,10 +150,32 @@ class EnvModule(object):
         return 'spack installed package'
 
     def write(self):
-        """Write out a module file for this object."""
+        """
+        Writes out a module file for this object.
+
+        This method employs a template pattern and expects derived classes to:
+        - override the header property
+        - provide formats for autoload, prerequisites and environment changes
+        """
         module_dir = os.path.dirname(self.file_name)
         if not os.path.exists(module_dir):
             mkdirp(module_dir)
+
+        def dependencies(request='All'):
+            if request == 'None':
+                return []
+
+            l = [xx for xx in sorted(self.spec.traverse(order='post', depth=True, cover='nodes', root=False), reverse=True)]
+
+            if request == 'Direct':
+                return [xx for ii, xx in l if ii == 1]
+
+            # FIXME : during module file creation nodes seem to be visited multiple times even if cover='nodes'
+            # FIXME : is given. This work around permits to get a unique list of spec anyhow.
+            # FIXME : Possibly we miss a merge step among nodes that refer to the same package.
+            seen = set()
+            seen_add = seen.add
+            return [xx for ii, xx in l if not (xx in seen or seen_add(xx))]
 
         # Environment modifications guessed by inspecting the
         # installation prefix
@@ -162,23 +184,6 @@ class EnvModule(object):
         # Let the extendee/dependency modify their extensions/dependencies before asking for
         # package-specific modifications
         spack_env = EnvironmentModifications()
-
-        def dependencies(request='All'):
-            if request == 'None':
-                return []
-
-            l = [x for x in sorted(self.spec.traverse(order='post', depth=True, cover='nodes', root=False), reverse=True)]
-
-            if request == 'Direct':
-                return [x for ii, x in l if ii == 1]
-
-            # FIXME : during module file creation nodes seem to be visited multiple times even if cover='nodes'
-            # FIXME : is given. This work around permits to get a unique list of spec anyhow.
-            # FIXME : Possibly we miss a merge step among nodes that refer to the same package.
-            seen = set()
-            seen_add = seen.add
-            return [x for ii, x in l if not (x in seen or seen_add(x))]
-
         # TODO : the code down below is quite similar to build_environment.setup_package and needs to be
         # TODO : factored out to a single place
         for item in dependencies('All'):
@@ -207,42 +212,42 @@ class EnvModule(object):
 
         # Filter modifications to environment variables
         try:
-            filter_list = CONFIGURATION[self.name]['filter']['environment_modifications']
+            filter_list = CONFIGURATION[self.name]['filter']['environment_blacklist']
         except KeyError:
             filter_list = []
 
+        # Build up the module file content
+        module_file_content = self.header
+        for x in autoload_list:
+            module_file_content += self.autoload(x)
+        for x in prerequisites_list:
+            module_file_content += self.prerequisite(x)
+        for line in self.process_environment_command(filter_environment_blacklist(env, filter_list)):
+            module_file_content += line
+
+        # Dump to file
         with open(self.file_name, 'w') as f:
-            # Header
-            f.write(self.header)
-            # Automatic loads
-            for x in autoload_list:
-                f.write(self.autoload(x))
-            # Prerequisites
-            for x in prerequisites_list:
-                f.write(self.prerequisite(x))
-            # Modifications to the environment
-            iterable = self.process_environment_command(filter_environment_modifications(env, filter_list))
-            for line in iterable:
-                f.write(line)
+            f.write(module_file_content)
 
     @property
     def header(self):
         raise NotImplementedError()
 
     def autoload(self, spec):
-        raise NotImplementedError()
+        m = TclModule(spec)
+        return self.autoload_format.format(module_file=m.use_name)
 
     def prerequisite(self, spec):
-        raise NotImplementedError()
+        m = TclModule(spec)
+        return self.prerequisite_format.format(module_file=m.use_name)
 
     def process_environment_command(self, env):
         for command in env:
             try:
-                yield self.formats[type(command)].format(**command.args)
+                yield self.environment_modifications_formats[type(command)].format(**command.args)
             except KeyError:
                 tty.warn('Cannot handle command of type {command} : skipping request'.format(command=type(command)))
                 tty.warn('{context} at {filename}:{lineno}'.format(**command.args))
-
 
     @property
     def file_name(self):
@@ -266,7 +271,7 @@ class Dotkit(EnvModule):
     name = 'dotkit'
     path = join_path(spack.share_path, "dotkit")
 
-    formats = {
+    environment_modifications_formats = {
         PrependPath: 'dk_alter {name} {value}\n',
         SetEnv: 'dk_setenv {name} {value}\n'
     }
@@ -304,13 +309,20 @@ class TclModule(EnvModule):
     name = 'tcl'
     path = join_path(spack.share_path, "modules")
 
-    formats = {
+    environment_modifications_formats = {
         PrependPath: 'prepend-path {name} \"{value}\"\n',
         AppendPath: 'append-path {name} \"{value}\"\n',
         RemovePath: 'remove-path {name} \"{value}\"\n',
         SetEnv: 'setenv {name} \"{value}\"\n',
         UnsetEnv: 'unsetenv {name}\n'
     }
+
+    autoload_format = ('if ![ is-loaded {module_file} ] {{'
+                       '    puts stderr "Autoloading {module_file}"'
+                       '    module load {module_file}'
+                       '}}')
+
+    prerequisite_format = 'prereq {module_file}\n'
 
     @property
     def file_name(self):
@@ -339,17 +351,3 @@ class TclModule(EnvModule):
                 header += 'puts stderr "%s"\n' % line
             header += '}\n\n'
         return header
-
-    def autoload(self, spec):
-        autoload_format = '''
-if ![ is-loaded {module_file} ] {{
-    puts stderr "Autoloading {module_file}"
-    module load {module_file}
-}}
-'''''
-        m = TclModule(spec)
-        return autoload_format.format(module_file=m.use_name)
-
-    def prerequisite(self, spec):
-        m = TclModule(spec)
-        return 'prereq {module_file}\n'.format(module_file=m.use_name)

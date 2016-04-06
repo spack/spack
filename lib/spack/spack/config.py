@@ -250,7 +250,7 @@ section_schemas = {
                 'type': 'string',
                 'enum': ['None', 'Direct', 'All']
             },
-            'module_type_configuration': {
+            'module_file_configuration': {
                 'type': 'object',
                 'default': {},
                 'additionalProperties': False,
@@ -260,7 +260,7 @@ section_schemas = {
                         'default': {},
                         'additionalProperties': False,
                         'properties': {
-                            'environment_modifications': {
+                            'environment_blacklist': {
                                 'type': 'array',
                                 'default': [],
                                 'items': {
@@ -270,7 +270,21 @@ section_schemas = {
                         }
                     },
                     'autoload': {'$ref': '#/definitions/dependency_selection'},
-                    'prerequisites': {'$ref': '#/definitions/dependency_selection'}
+                    'prerequisites': {'$ref': '#/definitions/dependency_selection'},
+                    'environment': {
+                        'type': 'object',
+                        'default': {}
+                    }
+                }
+            },
+            'module_type_configuration': {
+                'type': 'object',
+                'default': {},
+                'properties': {
+                    'all': {'$ref': '#/definitions/module_file_configuration'}
+                },
+                'patternProperties': {
+                    r'\w[\w-]*': {'$ref': '#/definitions/module_file_configuration'}
                 }
             }
         },
