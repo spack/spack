@@ -246,6 +246,13 @@ section_schemas = {
         'type': 'object',
         'additionalProperties': False,
         'definitions': {
+            'array_of_strings': {
+                'type': 'array',
+                'default': [],
+                'items': {
+                    'type': 'string'
+                }
+            },
             'dependency_selection': {
                 'type': 'string',
                 'enum': ['None', 'Direct', 'All']
@@ -273,7 +280,14 @@ section_schemas = {
                     'prerequisites': {'$ref': '#/definitions/dependency_selection'},
                     'environment': {
                         'type': 'object',
-                        'default': {}
+                        'default': {},
+                        'additionalProperties': False,
+                        'properties': {
+                            'set-env': {'$ref': '#/definitions/array_of_strings'},
+                            'unset-env': {'$ref': '#/definitions/array_of_strings'},
+                            'prepend-path': {'$ref': '#/definitions/array_of_strings'},
+                            'append-path': {'$ref': '#/definitions/array_of_strings'}
+                        }
                     }
                 }
             },
