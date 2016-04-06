@@ -283,10 +283,10 @@ section_schemas = {
                         'default': {},
                         'additionalProperties': False,
                         'properties': {
-                            'set-env': {'$ref': '#/definitions/array_of_strings'},
-                            'unset-env': {'$ref': '#/definitions/array_of_strings'},
-                            'prepend-path': {'$ref': '#/definitions/array_of_strings'},
-                            'append-path': {'$ref': '#/definitions/array_of_strings'}
+                            'set': {'$ref': '#/definitions/array_of_strings'},
+                            'unset': {'$ref': '#/definitions/array_of_strings'},
+                            'prepend_path': {'$ref': '#/definitions/array_of_strings'},
+                            'append_path': {'$ref': '#/definitions/array_of_strings'}
                         }
                     }
                 }

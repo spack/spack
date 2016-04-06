@@ -45,6 +45,7 @@ import os.path
 import re
 import shutil
 import textwrap
+import copy
 
 import llnl.util.tty as tty
 import spack
@@ -113,6 +114,84 @@ def inspect_path(prefix):
     return env
 
 
+def dependencies(spec, request='All'):
+    if request == 'None':
+        return []
+
+    l = [xx for xx in
+         sorted(spec.traverse(order='post', depth=True, cover='nodes', root=False), reverse=True)]
+
+    if request == 'Direct':
+        return [xx for ii, xx in l if ii == 1]
+
+    # FIXME : during module file creation nodes seem to be visited multiple times even if cover='nodes'
+    # FIXME : is given. This work around permits to get a unique list of spec anyhow.
+    # FIXME : Possibly we miss a merge step among nodes that refer to the same package.
+    seen = set()
+    seen_add = seen.add
+    return [xx for ii, xx in l if not (xx in seen or seen_add(xx))]
+
+
+def parse_config_options(module_generator):
+    autoloads, prerequisites, filters = [], [], []
+    env = EnvironmentModifications()
+    # Get the configuration for this kind of generator
+    try:
+        module_configuration = copy.copy(CONFIGURATION[module_generator.name])
+    except KeyError:
+        return autoloads, prerequisites, filters, env
+
+    # Get the defaults for all packages
+    all_conf = module_configuration.pop('all', {})
+
+    update_single(module_generator.spec, all_conf, autoloads, prerequisites, filters, env)
+
+    for spec, conf in module_configuration.items():
+        override = False
+        if spec.endswith(':'):
+            spec = spec.strip(':')
+            override = True
+        if module_generator.spec.satisfies(spec):
+            if override:
+                autoloads, prerequisites, filters = [], [], []
+                env = EnvironmentModifications()
+            update_single(module_generator.spec, conf, autoloads, prerequisites, filters, env)
+            tty.msg('{request}, {spec}'.format(request=spec, spec=module_generator.spec))
+
+    return autoloads, prerequisites, filters, env
+
+
+def update_single(spec, configuration, autoloads, prerequisites, filters, env):
+    # Get list of modules that will be loaded automatically
+    try:
+        autoloads.extend(dependencies(spec, configuration['autoload']))
+    except KeyError:
+        pass
+    try:
+        prerequisites.extend(dependencies(spec, configuration['prerequisites']))
+    except KeyError:
+        pass
+
+    # Filter modifications to environment variables
+    try:
+        filters.extend(configuration['filter']['environment_blacklist'])
+    except KeyError:
+        pass
+
+    try:
+        for method, arglist in configuration['environment'].items():
+            for item in arglist:
+                if method == 'unset':
+                    args = [item]
+                else:
+                    args = item.split(',')
+                getattr(env, method)(*args)
+    except KeyError:
+        pass
+
+
+
+
 class EnvModule(object):
     name = 'env_module'
     formats = {}
@@ -161,22 +240,6 @@ class EnvModule(object):
         if not os.path.exists(module_dir):
             mkdirp(module_dir)
 
-        def dependencies(request='All'):
-            if request == 'None':
-                return []
-
-            l = [xx for xx in sorted(self.spec.traverse(order='post', depth=True, cover='nodes', root=False), reverse=True)]
-
-            if request == 'Direct':
-                return [xx for ii, xx in l if ii == 1]
-
-            # FIXME : during module file creation nodes seem to be visited multiple times even if cover='nodes'
-            # FIXME : is given. This work around permits to get a unique list of spec anyhow.
-            # FIXME : Possibly we miss a merge step among nodes that refer to the same package.
-            seen = set()
-            seen_add = seen.add
-            return [xx for ii, xx in l if not (xx in seen or seen_add(xx))]
-
         # Environment modifications guessed by inspecting the
         # installation prefix
         env = inspect_path(self.spec.prefix)
@@ -186,7 +249,7 @@ class EnvModule(object):
         spack_env = EnvironmentModifications()
         # TODO : the code down below is quite similar to build_environment.setup_package and needs to be
         # TODO : factored out to a single place
-        for item in dependencies('All'):
+        for item in dependencies(self.spec, 'All'):
             package = self.spec[item.name].package
             modules = parent_class_modules(package.__class__)
             for mod in modules:
@@ -199,30 +262,17 @@ class EnvModule(object):
         set_module_variables_for_package(self.pkg, self.pkg.module)
         self.spec.package.setup_environment(spack_env, env)
 
-        # Get list of modules that will be loaded automatically
-        try:
-            autoload_list = dependencies(CONFIGURATION[self.name]['autoload'])
-        except KeyError:
-            autoload_list = []
-
-        try:
-            prerequisites_list = dependencies(CONFIGURATION[self.name]['prerequisites'])
-        except KeyError:
-            prerequisites_list = []
-
-        # Filter modifications to environment variables
-        try:
-            filter_list = CONFIGURATION[self.name]['filter']['environment_blacklist']
-        except KeyError:
-            filter_list = []
+        # Parse configuration file
+        autoloads, prerequisites, filters, conf_env = parse_config_options(self)
+        env.extend(conf_env)
 
         # Build up the module file content
         module_file_content = self.header
-        for x in autoload_list:
+        for x in autoloads:
             module_file_content += self.autoload(x)
-        for x in prerequisites_list:
+        for x in prerequisites:
             module_file_content += self.prerequisite(x)
-        for line in self.process_environment_command(filter_environment_blacklist(env, filter_list)):
+        for line in self.process_environment_command(filter_environment_blacklist(env, filters)):
             module_file_content += line
 
         # Dump to file
