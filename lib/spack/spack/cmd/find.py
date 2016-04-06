@@ -90,18 +90,26 @@ def display_specs(specs, **kwargs):
         hlen = None
 
     # Make a dict with specs keyed by target and compiler.
-    index = index_by(specs, ('target', 'compiler'))
+    index = index_by(specs, ('architecture', 'compiler'))
 
-    # Traverse the index and print out each package
-    for i, (target, compiler) in enumerate(sorted(index)):
+    # Create sort key based off of whether read architecture is string
+    def sort_key(index_dict):
+        if isinstance(index_dict[0],basestring):
+            return(str, index_dict[1]._cmp_key())
+        elif isinstance(index_dict[0], spack.architecture.Arch):
+            return (index_dict[0]._cmp_key(), index_dict[1]._cmp_key())
+
+    sorted_index = sorted(index, key=sort_key)
+
+    for i, (architecture, compiler) in enumerate(sorted_index):
         if i > 0: print
 
         header = "%s{%s} / %s{%s}" % (
-            spack.spec.target_color, target,
+            spack.spec.architecture_color, architecture,
             spack.spec.compiler_color, compiler)
         tty.hline(colorize(header), char='-')
 
-        specs = index[(target,compiler)]
+        specs = index[(architecture, compiler)]
         specs.sort()
 
         nfmt = '.' if namespace else '_'
