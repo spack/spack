@@ -6,7 +6,7 @@ import os
 import platform
 import spack
 from spack.architecture import *
-import spack.spec
+from spack.spec import *
 from spack.platforms.cray_xc import CrayXc
 from spack.platforms.linux import Linux
 from spack.platforms.bgq import Bgq
@@ -17,7 +17,7 @@ class ArchitectureTest(unittest.TestCase):
     def test_dict_functions_for_architecture(self):
         arch = Arch()
         arch.platform_os = arch.platform.operating_system('default_os')
-        arch.target = arch.platform.target('default')
+        arch.target = arch.platform.target('default_target')
 
         d = arch.to_dict()
 
@@ -55,3 +55,44 @@ class ArchitectureTest(unittest.TestCase):
             my_platform_class = Darwin()
 
         self.assertEqual(str(output_platform_class), str(my_platform_class))
+
+    def setUp(self):
+        self.platform = sys_type()
+
+    def test_user_front_end_input(self):
+        """Test when user inputs just frontend that both the frontend target
+            and frontend operating system match
+        """
+        frontend_os = self.platform.operating_system("frontend")
+        frontend_target = self.platform.target("frontend")
+        print frontend_os
+        print frontend_target
+        frontend_spec = Spec("zlib=frontend")
+        frontend_spec.concretize()
+        self.assertEqual(frontend_os, frontend_spec.architecture.platform_os)
+        self.assertEqual(frontend_target, frontend_spec.architecture.target)
+
+    def test_user_back_end_input(self):
+        """Test when user inputs backend that both the backend target and
+            backend operating system match
+        """
+        backend_os = self.platform.operating_system("backend")
+        backend_target = self.platform.target("backend")
+        print backend_os
+        print backend_target
+        backend_spec = Spec("zlib=backend")
+        backend_spec.concretize()
+        self.assertEqual(backend_os, backend_spec.architecture.platform_os)
+        self.assertEqual(backend_target, backend_spec.architecture.target)
+
+    def test_user_defaults(self):
+        default_os = self.platform.operating_system("default_os")
+        default_target = self.platform.target("default_target")
+
+        default_spec = Spec("zlib") # default is no args
+        default_spec.concretize()
+        self.assertEqual(default_os, default_spec.architecture.platform_os)
+        self.assertEqual(default_target, default_spec.architecture.target)
+
+    def test_user_combination(self):
+        
