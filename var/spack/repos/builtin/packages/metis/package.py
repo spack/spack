@@ -36,7 +36,8 @@ class Metis(Package):
     homepage = 'http://glaros.dtc.umn.edu/gkhome/metis/metis/overview'
     url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
 
-    version('5.1.0', '5465e67079419a69e0116de24fce58fe')
+    version('5.1.0', '5465e67079419a69e0116de24fce58fe',
+            url='http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz')
     version('4.0.3', '5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55',
             url='http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz')
 
