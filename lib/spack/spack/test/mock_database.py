@@ -17,7 +17,7 @@ class MockDatabase(MockPackagesTest):
 
     def _mock_remove(self, spec):
         specs = spack.installed_db.query(spec)
-        assert(len(specs) == 1)
+        assert len(specs) == 1
         spec = specs[0]
         spec.package.do_uninstall(spec)
 
@@ -71,6 +71,8 @@ class MockDatabase(MockPackagesTest):
             self._mock_install('mpileaks ^zmpi')
 
     def tearDown(self):
+        for spec in spack.installed_db.query():
+            spec.package.do_uninstall(spec)
         super(MockDatabase, self).tearDown()
         shutil.rmtree(self.install_path)
         spack.install_path = self.spack_install_path

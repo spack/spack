@@ -22,20 +22,15 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
 import os
 import shutil
-import argparse
+import sys
 
 import llnl.util.tty as tty
-from llnl.util.lang import partition_list
-from llnl.util.filesystem import mkdirp
-
 import spack.cmd
+from llnl.util.filesystem import mkdirp
 from spack.modules import module_types
 from spack.util.string import *
-
-from spack.spec import Spec
 
 description ="Manipulate modules and dotkits."
 
@@ -96,7 +91,6 @@ def module_refresh():
         for spec in specs:
             tty.debug("   Writing file for %s" % spec)
             cls(spec).write()
-
 
 
 def module(parser, args):
