@@ -118,14 +118,14 @@ class Platform(object):
         front-end, and back-end. This can be overwritten
         by a subclass for which we want to provide further aliasing options.
         """
-        if name == 'default':
+        if name == 'default_target':
             name = self.default
-        elif name == 'front_end' or name == 'fe':
+        elif name == 'frontend' or name == 'fe':
             name = self.front_end
-        elif name == 'back_end' or name == 'be':
+        elif name == 'backend' or name == 'be':
             name = self.back_end
 
-        return self.targets[name]
+        return self.targets.get(name, None)
 
     def add_operating_system(self, name, os_class):
         """ Add the operating_system class object into the
@@ -136,12 +136,12 @@ class Platform(object):
     def operating_system(self, name):
         if name == 'default_os':
             name = self.default_os
-        if name == 'front_os':
+        if name == 'frontend' or name == "fe":
             name = self.front_os
-        if name == 'back_os':
+        if name == 'backend' or name == 'be':
             name = self.back_os
 
-        return self.operating_sys[name]
+        return self.operating_sys.get(name, None)
 
     @classmethod
     def detect(self):
