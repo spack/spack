@@ -163,9 +163,14 @@ class EnvModule(object):
         # package-specific modifications
         spack_env = EnvironmentModifications()
         for item in self.pkg.extendees:
-            package = self.spec[item].package
-            package.setup_dependent_package(self.pkg.module, self.spec)
-            package.setup_dependent_environment(spack_env, env, self.spec)
+            try:
+                package = self.spec[item].package
+                package.setup_dependent_package(self.pkg.module, self.spec)
+                package.setup_dependent_environment(spack_env, env, self.spec)
+            except:
+                # The extends was conditional, so it doesn't count here
+                # eg: extends('python', when='+python')
+                pass
 
         # Package-specific environment modifications
         self.spec.package.setup_environment(spack_env, env)
@@ -206,7 +211,11 @@ class EnvModule(object):
     def remove(self):
         mod_file = self.file_name
         if os.path.exists(mod_file):
-            shutil.rmtree(mod_file, ignore_errors=True)
+            try:
+                os.remove(mod_file)  # Remove the module file
+                os.removedirs(os.path.dirname(mod_file))  # Remove all the empty directories from the leaf up
+            except OSError:
+                pass  # removedirs throws OSError on first non-empty directory found
 
 
 class Dotkit(EnvModule):
@@ -278,6 +287,6 @@ class TclModule(EnvModule):
         # Long description
         if self.long_description:
             module_file.write('proc ModulesHelp { } {\n')
-            doc = re.sub(r'"', '\"', self.long_description)
-            module_file.write("puts stderr \"%s\"\n" % doc)
+            for line in textwrap.wrap(self.long_description, 72):
+                module_file.write("puts stderr \"%s\"\n" % line)
             module_file.write('}\n\n')

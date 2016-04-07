@@ -8,18 +8,15 @@ class PyPandas(Package):
 
     version('0.16.0', 'bfe311f05dc0c351f8955fbd1e296e73')
     version('0.16.1', 'fac4f25748f9610a3e00e765474bdea8')
+    version('0.18.0', 'f143762cd7a59815e348adf4308d2cf6')
 
-    extends('python')
+    extends('python', ignore=r'bin/f2py$')
     depends_on('py-dateutil')
     depends_on('py-numpy')
-    depends_on('py-matplotlib')
-    depends_on('py-scipy')
     depends_on('py-setuptools')
     depends_on('py-pytz')
-    depends_on('libdrm')
-    depends_on('libpciaccess')
-    depends_on('llvm')
-    depends_on('mesa')
+    depends_on('py-numexpr')
+    depends_on('py-bottleneck')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

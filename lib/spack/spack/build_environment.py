@@ -59,6 +59,11 @@ SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
 
 
+# Platform-specific library suffix.
+dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+
+
+
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can
        specify parallel or not on a per-invocation basis.  Using
@@ -208,7 +213,7 @@ def set_module_variables_for_package(pkg, module):
     # TODO: of build dependencies, as opposed to link dependencies.
     # TODO: Currently, everything is a link dependency, but tools like
     # TODO: this shouldn't be.
-    m.cmake = which("cmake")
+    m.cmake = Executable('cmake')
 
     # standard CMake arguments
     m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % pkg.prefix,
@@ -246,6 +251,9 @@ def set_module_variables_for_package(pkg, module):
     # a Prefix object.
     m.prefix  = pkg.prefix
 
+    # Platform-specific library suffix.
+    m.dso_suffix = dso_suffix
+
 
 def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
@@ -268,21 +276,6 @@ def parent_class_modules(cls):
     for c in cls.__bases__:
         result.extend(parent_class_modules(c))
     return result
-
-
-def setup_module_variables_for_dag(pkg):
-    """Set module-scope variables for all packages in the DAG."""
-    for spec in pkg.spec.traverse(order='post'):
-        # If a user makes their own package repo, e.g.
-        # spack.repos.mystuff.libelf.Libelf, and they inherit from
-        # an existing class like spack.repos.original.libelf.Libelf,
-        # then set the module variables for both classes so the
-        # parent class can still use them if it gets called.
-        spkg = spec.package
-        modules = parent_class_modules(spkg.__class__)
-        for mod in modules:
-            set_module_variables_for_package(spkg, mod)
-        set_module_variables_for_package(spkg, spkg.module)
 
 
 def setup_package(pkg):
@@ -308,20 +301,27 @@ def setup_package(pkg):
 
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env)
-    setup_module_variables_for_dag(pkg)
 
-    # Allow dependencies to modify the module
+    # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
-    for dependency_spec in spec.traverse(root=False):
-        dpkg = dependency_spec.package
-        dpkg.setup_dependent_package(pkg.module, spec)
+    for dspec in pkg.spec.traverse(order='post', root=False):
+        # If a user makes their own package repo, e.g.
+        # spack.repos.mystuff.libelf.Libelf, and they inherit from
+        # an existing class like spack.repos.original.libelf.Libelf,
+        # then set the module variables for both classes so the
+        # parent class can still use them if it gets called.
+        spkg = dspec.package
+        modules = parent_class_modules(spkg.__class__)
+        for mod in modules:
+            set_module_variables_for_package(spkg, mod)
+        set_module_variables_for_package(spkg, spkg.module)
 
-    # Allow dependencies to set up environment as well
-    for dependency_spec in spec.traverse(root=False):
-        dpkg = dependency_spec.package
+        # Allow dependencies to modify the module
+        dpkg = dspec.package
+        dpkg.setup_dependent_package(pkg.module, spec)
         dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
-    # Allow the package to apply some settings.
+    set_module_variables_for_package(pkg, pkg.module)
     pkg.setup_environment(spack_env, run_env)
 
     # Make sure nothing's strange about the Spack environment.

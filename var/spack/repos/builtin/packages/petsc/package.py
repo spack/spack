@@ -17,14 +17,18 @@ class Petsc(Package):
     version('3.5.1', 'a557e029711ebf425544e117ffa44d8f')
     version('3.4.4', '7edbc68aa6d8d6a3295dd5f6c2f6979d')
 
-    variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('mpi', default=True, description='Activates MPI support')
-    variant('double', default=True, description='Switches between single and double precision')
+    variant('shared',  default=True,  description='Enables the build of shared libraries')
+    variant('mpi',     default=True,  description='Activates MPI support')
+    variant('double',  default=True,  description='Switches between single and double precision')
+    variant('complex', default=False, description='Build with complex numbers')
+    variant('debug',   default=False, description='Compile in debug mode')
 
-    variant('metis', default=True, description='Activates support for metis and parmetis')
-    variant('hdf5', default=True, description='Activates support for HDF5 (only parallel)')
-    variant('boost', default=True, description='Activates support for Boost')
-    variant('hypre', default=True, description='Activates support for Hypre')
+    variant('metis',   default=True,  description='Activates support for metis and parmetis')
+    variant('hdf5',    default=True,  description='Activates support for HDF5 (only parallel)')
+    variant('boost',   default=True,  description='Activates support for Boost')
+    variant('hypre',   default=True,  description='Activates support for Hypre (only parallel)')
+    variant('mumps',   default=True,  description='Activates support for MUMPS (only parallel)')
+    variant('superlu-dist', default=True, description='Activates support for SuperluDist (only parallel)')
 
     # Virtual dependencies
     depends_on('blas')
@@ -36,11 +40,17 @@ class Petsc(Package):
 
     # Other dependencies
     depends_on('boost', when='+boost')
-    depends_on('metis', when='+metis')
+    depends_on('metis@5:', when='+metis')
 
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('parmetis', when='+metis+mpi')
-    depends_on('hypre',    when='+hypre+mpi')
+    # Hypre does not support complex numbers.
+    # Also PETSc prefer to build it without internal superlu, likely due to conflict in headers
+    # see https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
+    depends_on('hypre~internal-superlu', when='+hypre+mpi~complex')
+    depends_on('superlu-dist', when='+superlu-dist+mpi')
+    depends_on('mumps+mpi', when='+mumps+mpi')
+    depends_on('scalapack', when='+mumps+mpi')
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
@@ -55,38 +65,30 @@ class Petsc(Package):
             # If mpi is disabled (~mpi), it's an error to have any of these enabled.
             # This generates a list of any such errors.
             errors = [error_message_fmt.format(library=x)
-                      for x in ('hdf5', 'hypre', 'parmetis')
+                      for x in ('hdf5', 'hypre', 'parmetis','mumps','superlu-dist')
                       if ('+'+x) in self.spec]
             if errors:
                 errors = ['incompatible variants given'] + errors
                 raise RuntimeError('\n'.join(errors))
         else:
-            if self.compiler.name == "clang":
-                compiler_opts = [
-                    '--with-mpi=1',
-                    '--with-cc=%s  -Qunused-arguments' % join_path(self.spec['mpi'].prefix.bin, 'mpicc'), # Avoid confusing PETSc config by clang: warning: argument unused during compilation
-                    '--with-cxx=%s -Qunused-arguments' % join_path(self.spec['mpi'].prefix.bin, 'mpic++'),
-                    '--with-fc=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
-                    '--with-f77=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpif77'),
-                ]
-            else:
-                compiler_opts = [
-                    '--with-mpi=1',
-                    '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
-                ]
+            compiler_opts = [
+                '--with-mpi=1',
+                '--with-mpi-dir=%s' % self.spec['mpi'].prefix,
+            ]
         return compiler_opts
 
     def install(self, spec, prefix):
-        options = ['--with-debugging=0',
-                   '--with-ssl=0']
+        options = ['--with-ssl=0']
         options.extend(self.mpi_dependent_options())
         options.extend([
             '--with-precision=%s' % ('double' if '+double' in spec else 'single'),
+            '--with-scalar-type=%s' % ('complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
+            '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
             '--with-blas-lapack-dir=%s' % spec['lapack'].prefix
         ])
         # Activates library support if needed
-        for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis'):
+        for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis','mumps','scalapack'):
             options.append(
                 '--with-{library}={value}'.format(library=library, value=('1' if library in spec else '0'))
             )
@@ -94,6 +96,17 @@ class Petsc(Package):
                 options.append(
                     '--with-{library}-dir={path}'.format(library=library, path=spec[library].prefix)
                 )
+        # PETSc does not pick up SuperluDist from the dir as they look for superlu_dist_4.1.a
+        if 'superlu-dist' in spec:
+            options.extend([
+                '--with-superlu_dist-include=%s' % spec['superlu-dist'].prefix.include,
+                '--with-superlu_dist-lib=%s' % join_path(spec['superlu-dist'].prefix.lib, 'libsuperlu_dist.a'),
+                '--with-superlu_dist=1'
+            ])
+        else:
+            options.append(
+                '--with-superlu_dist=0'
+            )
 
         configure('--prefix=%s' % prefix, *options)
 
