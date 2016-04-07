@@ -91,8 +91,11 @@ class Compiler(object):
     # version suffix for gcc.
     suffixes = [r'-.*']
 
-    # Names of generic arguments used by this compiler
-    arg_rpath   = '-Wl,-rpath,%s'
+    # How to set an rpath with this compiler
+    cc_rpath_arg  = '-Wl,-rpath,%s'
+    cxx_rpath_arg = cc_rpath_arg
+    f77_rpath_arg = cc_rpath_arg
+    fc_rpath_arg  = cc_rpath_arg
 
     # argument used to get C++11 options
     cxx11_flag = "-std=c++11"
