@@ -189,8 +189,6 @@ def update_single(spec, configuration, autoloads, prerequisites, filters, env):
         pass
 
 
-
-
 class EnvModule(object):
     name = 'env_module'
     formats = {}
@@ -324,6 +322,10 @@ class Dotkit(EnvModule):
         PrependPath: 'dk_alter {name} {value}\n',
         SetEnv: 'dk_setenv {name} {value}\n'
     }
+
+    autoload_format = 'dk_op {module_file}\n'  # TODO : Check this line
+
+    prerequisite_format = None  # TODO : does something like prerequisite exist for dotkit?
 
     @property
     def file_name(self):
