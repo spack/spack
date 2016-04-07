@@ -136,6 +136,7 @@ class Metis(Package):
         source_directory = self.stage.source_path
 
         options.append('-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=source_directory))
+        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
@@ -184,7 +185,3 @@ class Metis(Package):
             fs = glob.glob(join_path(source_directory,'GKlib',"*.h"))
             for f in fs:
                 install(f, GKlib_dist)
-
-            # The shared library is not installed correctly on Darwin; correct this
-            if (sys.platform == 'darwin') and ('+shared' in spec):
-                fix_darwin_install_name(prefix.lib)
