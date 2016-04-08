@@ -308,7 +308,7 @@ class SpecSematicsTest(MockPackagesTest):
 
     def test_constrain_target(self):
         platform = spack.architecture.sys_type()
-        target = platform.target('default').name
+        target = platform.target('default_target').name
         self.check_constrain('libelf='+target, 'libelf='+target, 'libelf='+target)
         self.check_constrain('libelf='+target, 'libelf', 'libelf='+target)
 
@@ -339,7 +339,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf', '+debug')
         self.check_constrain_changed('libelf', '~debug')
         platform = spack.architecture.sys_type()
-        self.check_constrain_changed('libelf', '='+platform.target('default').name)
+        self.check_constrain_changed('libelf', '='+platform.target('default_target').name)
 
 
     def test_constrain_not_changed(self):
@@ -351,8 +351,8 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf+debug', '+debug')
         self.check_constrain_not_changed('libelf~debug', '~debug')
         platform = spack.architecture.sys_type()
-        default = platform.target('default').name
-        self.check_constrain_not_changed('libelf='+default, '='+default)
+        default_target = platform.target('default_target').name
+        self.check_constrain_not_changed('libelf='+default_target, '='+default_target)
         self.check_constrain_not_changed('libelf^foo', 'libelf^foo')
         self.check_constrain_not_changed('libelf^foo^bar', 'libelf^foo^bar')
 
@@ -365,8 +365,8 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf^foo', 'libelf^foo+debug')
         self.check_constrain_changed('libelf^foo', 'libelf^foo~debug')
         platform = spack.architecture.sys_type()
-        default = platform.target('default').name
-        self.check_constrain_changed('libelf^foo', 'libelf^foo='+default)
+        default_target = platform.target('default_target').name
+        self.check_constrain_changed('libelf^foo', 'libelf^foo='+default_target)
 
 
     def test_constrain_dependency_not_changed(self):
@@ -377,6 +377,6 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf^foo+debug', 'libelf^foo+debug')
         self.check_constrain_not_changed('libelf^foo~debug', 'libelf^foo~debug')
         platform = spack.architecture.sys_type()
-        default = platform.target('default').name
-        self.check_constrain_not_changed('libelf^foo='+default, 'libelf^foo='+default)
+        default_target = platform.target('default_target').name
+        self.check_constrain_not_changed('libelf^foo='+default_target, 'libelf^foo='+default_target)
 
