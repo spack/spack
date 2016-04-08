@@ -20,6 +20,7 @@ class Julia(Package):
     # depends_on("pkg-config")
 
     # Combined build-time and run-time dependencies:
+    depends_on("binutils")
     depends_on("cmake @2.8:")
     depends_on("git")
     depends_on("openssl")
