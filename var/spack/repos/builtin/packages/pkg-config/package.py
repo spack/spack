@@ -10,7 +10,12 @@ class PkgConfig(Package):
     parallel = False
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" %prefix, "--enable-shared")
+        configure("--prefix=%s" %prefix,
+                "--enable-shared",
+                "--with-internal-glib") # There's a bootstrapping problem here;
+                                        # glib uses pkg-config as well, so
+                                        # break the cycle by using the internal
+                                        # glib.
 
         make()
         make("install")
