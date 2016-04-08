@@ -27,8 +27,8 @@ class Paraview(Package):
 
     depends_on('bzip2')
     depends_on('freetype')
-    depends_on('hdf5+mpi', when='+mpi')
-    depends_on('hdf5~mpi', when='~mpi')
+    #depends_on('hdf5+mpi', when='+mpi')
+    #depends_on('hdf5~mpi', when='~mpi')
     depends_on('jpeg')
     depends_on('libpng')
     depends_on('libtiff')
@@ -77,7 +77,7 @@ class Paraview(Package):
                 '-DCMAKE_INSTALL_PREFIX:PATH=%s' % prefix,
                 '-DBUILD_TESTING:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_FREETYPE:BOOL=ON',
-                '-DVTK_USE_SYSTEM_HDF5:BOOL=ON',
+                '-DVTK_USE_SYSTEM_HDF5:BOOL=OFF',
                 '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
                 '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
                 '-DVTK_USE_SYSTEM_NETCDF:BOOL=OFF',
