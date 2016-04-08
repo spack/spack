@@ -199,8 +199,13 @@ class Arch(object):
 
     def __init__(self, platform_os=None, target=None):
         self.platform = sys_type()
+        if platform_os:
+            platform_os = self.platform.operating_system(platform_os)
         self.platform_os = platform_os
-        self.target   = target
+        if target:
+            target = self.platform.target(target)
+        self.target = target
+
 
     @property
     def concrete(self):
