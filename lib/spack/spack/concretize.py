@@ -220,39 +220,29 @@ class DefaultConcretizer(object):
         return True   # Things changed
 
     def _concretize_operating_system(self, spec):
-        if spec.architecture.platform_os is not None:
-            if isinstance(spec.architecture.platform_os,spack.architecture.OperatingSystem):
-                return False
-            else:
-                spec.add_operating_system_from_string(spec.architecture.platform_os)
-                return True #changed
+        platform = spec.architecture.platform
+        if spec.architecture.platform_os is not None and isinstance(
+            spec.architecture.platform_os,spack.architecture.OperatingSystem):
+            return False
+
         if spec.root.architecture and spec.root.architecture.platform_os:
             if isinstance(spec.root.architecture.platform_os,spack.architecture.OperatingSystem):
                 spec.architecture.platform_os = spec.root.architecture.platform_os
-            else:
-                spec.add_operating_system_from_string(spec.root.architecture.platform_os)
         else:
             spec.architecture.platform_os = spec.architecture.platform.operating_system('default_os')
-
-        return True #changed
+            return True #changed
 
     def _concretize_target(self, spec):
-        if spec.architecture.target is not None:
-            if isinstance(spec.architecture.target,spack.architecture.Target):
-                return False
-            else:
-                spec.add_target_from_string(spec.architecture.target)
-                return True #changed
-
+        platform = spec.architecture.platform
+        if spec.architecture.target is not None and isinstance(
+                spec.architecture.target, spack.architecture.Target):
+            return False
         if spec.root.architecture and spec.root.architecture.target:
             if isinstance(spec.root.architecture.target,spack.architecture.Target):
                 spec.architecture.target = spec.root.architecture.target
-            else:
-                spec.add_target_from_string(spec.root.architecture.target)
         else:
             spec.architecture.target = spec.architecture.platform.target('default_target')
-
-        return True #changed
+            return True #changed
 
     def concretize_architecture(self, spec):
         """If the spec is empty provide the defaults of the platform. If the
