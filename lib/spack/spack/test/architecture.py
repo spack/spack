@@ -65,8 +65,6 @@ class ArchitectureTest(unittest.TestCase):
         """
         frontend_os = self.platform.operating_system("frontend")
         frontend_target = self.platform.target("frontend")
-        print frontend_os
-        print frontend_target
         frontend_spec = Spec("zlib=frontend")
         frontend_spec.concretize()
         self.assertEqual(frontend_os, frontend_spec.architecture.platform_os)
@@ -78,8 +76,6 @@ class ArchitectureTest(unittest.TestCase):
         """
         backend_os = self.platform.operating_system("backend")
         backend_target = self.platform.target("backend")
-        print backend_os
-        print backend_target
         backend_spec = Spec("zlib=backend")
         backend_spec.concretize()
         self.assertEqual(backend_os, backend_spec.architecture.platform_os)
@@ -94,5 +90,24 @@ class ArchitectureTest(unittest.TestCase):
         self.assertEqual(default_os, default_spec.architecture.platform_os)
         self.assertEqual(default_target, default_spec.architecture.target)
 
-    def test_user_combination(self):
+    def test_user_input_combination(self):
+        os_list = self.platform.operating_sys.keys()
+        target_list = self.platform.targets.keys()  
+        additional = ["fe", "be", "frontend", "backend"]
+
+        os_list.extend(additional)
+        target_list.extend(additional)  
         
+        combinations = itertools.product(os_list, target_list)
+        results = []
+        for arch in combinations:
+            o,t = arch
+            arch_spec = "-".join(arch)
+            spec = Spec("zlib=%s" % arch_spec)
+            spec.concretize()
+            results.append(spec.architecture.platform_os == self.platform.operating_system(o))
+            results.append(spec.architecture.target == self.platform.target(t))
+        res = all(results)
+        print res
+        self.assertTrue(res) 
+
