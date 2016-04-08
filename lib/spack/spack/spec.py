@@ -465,7 +465,7 @@ class Spec(object):
         if '-' in architecture:
             os, target = architecture.split('-')
 
-        elif architecture == 'frontend' or architecture == 'backend':
+        elif architecture in ['frontend','backend','fe','be']:
             os = architecture
             target = architecture
         else:
@@ -1302,28 +1302,17 @@ class Spec(object):
         except SpecError:
             return parse_anonymous_spec(spec_like, self.name)
 
-    def _is_valid_platform(self, platform, platform_list):
-        if platform in platform_list:
-            return True
-        return False
+    #def add_target_from_string(self, target):
+    #    if target is None:
+    #        self.architecture.target = self.architecture.platform.target('default_target')
+    #    else:
+    #        self.architecture.target = self.architecture.platform.target(target)
 
-    def _is_valid_target(self, target, platform):
-        return target in platform.targets
-
-    def _is_valid_os(self, os_string, platform):
-        return os_string in platform.operating_sys
-
-    def add_target_from_string(self, target):
-        if target is None:
-            self.architecture.target = self.architecture.platform.target('default_target')
-        else:
-            self.architecture.target = self.architecture.platform.target(target)
-
-    def add_operating_system_from_string(self, os):
-        if os is None:
-            self.architecture.platform_os = self.architecture.platform.operating_system('default_os')
-        else:
-            self.architecture.platform_os = self.architecture.platform.operating_system(os)
+    #def add_operating_system_from_string(self, os):
+    #    if os is None:
+    #        self.architecture.platform_os = self.architecture.platform.operating_system('default_os')
+    #    else:
+    #        self.architecture.platform_os = self.architecture.platform.operating_system(os)
 
 
     def satisfies(self, other, deps=True, strict=False):
