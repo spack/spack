@@ -13,6 +13,8 @@ class Linux(Platform):
         self.add_target(self.default, Target(self.default))
         linux_dist = LinuxDistro()
         self.default_os = linux_dist.name
+        self.front_os = linux_dist.name
+        self.back_os = linux_dist.name
         self.add_operating_system(linux_dist.name, linux_dist)
 
     @classmethod
