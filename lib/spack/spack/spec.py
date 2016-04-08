@@ -461,12 +461,17 @@ class Spec(object):
     def _set_architecture(self, architecture):
         """Called by the parser to set the architecture."""
         if self.architecture: raise DuplicateArchitectureError(
-                "Spec for '%s' cannot have two architectures." % self.name)
+                "Spec for '%s' cannot have two architectures." % self.name)  
         if '-' in architecture:
             os, target = architecture.split('-')
+
         elif architecture == 'frontend' or architecture == 'backend':
             os = architecture
             target = architecture
+        else:
+            os = None
+            target = architecture
+
         self.architecture = spack.architecture.Arch(os, target)
 
 
