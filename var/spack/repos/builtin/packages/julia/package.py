@@ -11,8 +11,8 @@ class Julia(Package):
     version('0.4.5', '69141ff5aa6cee7c0ec8c85a34aa49a6')
     version('0.4.3', '8a4a59fd335b05090dd1ebefbbe5aaac')
 
-    patch('gc.patch', when='@:0.5')
-    patch('openblas.patch')
+    patch('gc.patch')
+    patch('openblas.patch', when='@0.4:0.4.5')
 
     # Build-time dependencies:
     # depends_on("awk")
