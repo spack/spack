@@ -16,6 +16,7 @@ class Openscenegraph(Package):
     # (see: https://github.com/LLNL/spack/pull/378).
     depends_on('cmake@2.8.7:')
     depends_on('qt@4:')
+    depends_on('zlib')
 
     def install(self, spec, prefix):
         cmake_args = [
@@ -31,11 +32,14 @@ class Openscenegraph(Package):
             '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
             '-DCMAKE_C_COMPILER=%s' % self.compilers.cc,
             '-DCMAKE_CXX_COMPILER=%s' % self.compilers.cxx,
+            '-DZLIB_INCLUDE_DIR=%s' % spec['zlib'].prefix.include,
+            '-DZLIB_LIBRARY=%s/libz.so' % spec['zlib'].prefix.lib,
             '-DBUILD_OSG_APPLICATIONS=OFF',
             '-DFFMPEG_LIBAVCODEC_INCLUDE_DIRS=""',
             '-DFFMPEG_LIBAVFORMAT_INCLUDE_DIRS=""',
             '-DFFMPEG_LIBAVUTIL_INCLUDE_DIRS=""',
             '-DOSG_NOTIFY_DISABLED=ON',
+            '-DLIB_POSTFIX=""',
             *cmake_args)
 
         make()
