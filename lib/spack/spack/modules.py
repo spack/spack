@@ -372,10 +372,10 @@ class TclModule(EnvModule):
         UnsetEnv: 'unsetenv {name}\n'
     }
 
-    autoload_format = ('if ![ is-loaded {module_file} ] {{'
-                       '    puts stderr "Autoloading {module_file}"'
-                       '    module load {module_file}'
-                       '}}')
+    autoload_format = ('if ![ is-loaded {module_file} ] {{\n'
+                       '    puts stderr "Autoloading {module_file}"\n'
+                       '    module load {module_file}\n'
+                       '}}\n')
 
     prerequisite_format = 'prereq {module_file}\n'
 
