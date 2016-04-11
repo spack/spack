@@ -59,6 +59,11 @@ SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
 
 
+# Platform-specific library suffix.
+dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+
+
+
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can
        specify parallel or not on a per-invocation basis.  Using
@@ -238,6 +243,9 @@ def set_module_variables_for_package(pkg, module):
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
     m.prefix  = pkg.prefix
+
+    # Platform-specific library suffix.
+    m.dso_suffix = dso_suffix
 
 
 def get_rpaths(pkg):

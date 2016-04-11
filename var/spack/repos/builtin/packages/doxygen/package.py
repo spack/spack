@@ -4,6 +4,7 @@
 #------------------------------------------------------------------------------
 
 from spack import *
+import sys
 
 class Doxygen(Package):
     """Doxygen is the de facto standard tool for generating documentation
@@ -17,6 +18,10 @@ class Doxygen(Package):
     version('1.8.10', '79767ccd986f12a0f949015efb5f058f')
 
     depends_on("cmake@2.8.12:")
+    # flex does not build on OSX, but it's provided there anyway
+    depends_on("flex", sys.platform != 'darwin')
+    depends_on("bison", sys.platform != 'darwin')
+
 
     def install(self, spec, prefix):
         which('cmake')('.', *std_cmake_args)

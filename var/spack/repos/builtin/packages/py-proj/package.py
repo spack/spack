@@ -17,7 +17,12 @@ class PyProj(Package):
     extends('python')
 
     depends_on('py-cython')
-    depends_on('proj')
+    depends_on('py-setuptools')
+
+    # NOTE: py-proj does NOT depends_on('proj').
+    # The py-proj git repo actually includes the correct version of PROJ.4,
+    # which is built internally as part of the py-proj build.
+    # Adding depends_on('proj') will cause mysterious build errors.
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

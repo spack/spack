@@ -163,9 +163,14 @@ class EnvModule(object):
         # package-specific modifications
         spack_env = EnvironmentModifications()
         for item in self.pkg.extendees:
-            package = self.spec[item].package
-            package.setup_dependent_package(self.pkg.module, self.spec)
-            package.setup_dependent_environment(spack_env, env, self.spec)
+            try:
+                package = self.spec[item].package
+                package.setup_dependent_package(self.pkg.module, self.spec)
+                package.setup_dependent_environment(spack_env, env, self.spec)
+            except:
+                # The extends was conditional, so it doesn't count here
+                # eg: extends('python', when='+python')
+                pass
 
         # Package-specific environment modifications
         self.spec.package.setup_environment(spack_env, env)
@@ -278,6 +283,6 @@ class TclModule(EnvModule):
         # Long description
         if self.long_description:
             module_file.write('proc ModulesHelp { } {\n')
-            doc = re.sub(r'"', '\"', self.long_description)
-            module_file.write("puts stderr \"%s\"\n" % doc)
+            for line in textwrap.wrap(self.long_description, 72):
+                module_file.write("puts stderr \"%s\"\n" % line)
             module_file.write('}\n\n')

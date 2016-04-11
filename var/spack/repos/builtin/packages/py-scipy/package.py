@@ -10,10 +10,28 @@ class PyScipy(Package):
     version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
 
     extends('python')
+    depends_on('binutils')
     depends_on('py-nose')
-    depends_on('py-numpy')
-    depends_on('blas')
-    depends_on('lapack')
+    depends_on('py-numpy+blas+lapack')
 
     def install(self, spec, prefix):
+        if 'atlas' in spec:
+            # libatlas.so actually isn't always installed, but this
+            # seems to make the build autodetect things correctly.
+            env['ATLAS'] = join_path(spec['atlas'].prefix.lib, 'libatlas.' + dso_suffix)
+        else:
+            blas_spec = spec['blas']
+            try:
+                env['BLAS']   = blas_spec.blas_shared_lib
+            except AttributeError:
+                # This installation has not shared lib; use static
+                env['BLAS']   = blas_spec.blas_static_lib
+
+            lapack_spec = spec['lapack']
+            try:
+                env['LAPACK']   = lapack_spec.lapack_shared_lib
+            except AttributeError:
+                # This installation has not shared lib; use static
+                env['LAPACK']   = lapack_spec.lapack_static_lib
+
         python('setup.py', 'install', '--prefix=%s' % prefix)

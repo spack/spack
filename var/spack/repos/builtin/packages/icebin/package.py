@@ -6,8 +6,9 @@ class Icebin(CMakePackage):
     homepage = "https://github.com/citibeth/icebin"
     url         = "https://github.com/citibeth/icebin/tarball/v0.1.0"
 
-    version('0.1.0', '1c2769a0cb3531e4086b885dc7a6fd27')
+    version('0.1.2', '68673158b46b6e88aea6bc4595444adb')
     version('0.1.1', '986b8b51a2564f9c52156a11642e596c')
+    version('0.1.0', '1c2769a0cb3531e4086b885dc7a6fd27')
 
     variant('everytrace', default=False, description='Report errors through Everytrace (requires Everytrace)')
     variant('python', default=True, description='Build Python extension (requires Python, Numpy)')
@@ -15,7 +16,7 @@ class Icebin(CMakePackage):
     variant('coupler', default=True, description='Build the GCM coupler (requires MPI)')
     variant('pism', default=False, description='Build coupling link with PISM (requires PISM, PETSc)')
 
-    extends('python')
+    extends('python', when='+python')
 
     depends_on('everytrace', when='+everytrace')
 
@@ -51,3 +52,6 @@ class Icebin(CMakePackage):
             '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
             '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
             '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')]
+
+    def setup_environment(self, spack_env, env):
+        env.prepend_path('PATH', join_path(self.prefix, 'bin'))
