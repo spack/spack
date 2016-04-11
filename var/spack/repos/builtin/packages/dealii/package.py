@@ -40,7 +40,7 @@ class Dealii(Package):
     depends_on ("arpack-ng+mpi", when='+arpack+mpi')
     depends_on ("doxygen", when='+doc')
     depends_on ("hdf5+mpi~cxx", when='+hdf5+mpi') #FIXME NetCDF declares dependency with ~cxx, why?
-    depends_on ("metis", when='+metis')
+    depends_on ("metis@5:", when='+metis')
     depends_on ("netcdf+mpi", when="+netcdf+mpi")
     depends_on ("netcdf-cxx", when='+netcdf+mpi')
     depends_on ("oce", when='+oce')

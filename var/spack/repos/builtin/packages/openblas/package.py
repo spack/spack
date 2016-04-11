@@ -19,8 +19,11 @@ class Openblas(Package):
 
 
     def install(self, spec, prefix):
-        make_defs = ['CC=%s' % spack_cc,
-                     'FC=%s' % spack_fc]
+        # Openblas is picky about compilers. Configure fails with
+        # FC=/abs/path/to/f77, whereas FC=f77 works fine.
+        # To circumvent this, provide basename only:
+        make_defs = ['CC=%s' % os.path.basename(spack_cc),
+                     'FC=%s' % os.path.basename(spack_f77)]
 
         make_targets = ['libs', 'netlib']
 
@@ -67,4 +70,3 @@ class Openblas(Package):
         if '+shared' in self.spec:
             self.spec.blas_shared_lib   = join_path(libdir, 'libopenblas.%s' % dso_suffix)
             self.spec.lapack_shared_lib = self.spec.blas_shared_lib
-

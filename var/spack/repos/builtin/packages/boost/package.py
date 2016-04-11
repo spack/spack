@@ -199,6 +199,18 @@ class Boost(Package):
             install_tree(src, dst)
             return
 
+        # Remove libraries that the release version does not support
+        if not spec.satisfies('@1.54.0:'):
+            withLibs.remove('log')
+        if not spec.satisfies('@1.53.0:'):
+            withLibs.remove('atomic')
+        if not spec.satisfies('@1.48.0:'):
+            withLibs.remove('locale')
+        if not spec.satisfies('@1.47.0:'):
+            withLibs.remove('chrono')
+        if not spec.satisfies('@1.43.0:'):
+            withLibs.remove('random')
+
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = './'
 

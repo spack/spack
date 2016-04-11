@@ -23,7 +23,7 @@ class Mumps(Package):
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
     depends_on('scotch + esmumps + mpi', when='+ptscotch')
-    depends_on('metis', when='+metis')
+    depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when="+parmetis")
     depends_on('blas')
     depends_on('lapack')
