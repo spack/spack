@@ -292,12 +292,17 @@ section_schemas = {
             'module_type_configuration': {
                 'type': 'object',
                 'default': {},
-                'properties': {
-                    'all': {'$ref': '#/definitions/module_file_configuration'}
-                },
-                'patternProperties': {
-                    r'\w[\w-]*': {'$ref': '#/definitions/module_file_configuration'}
-                }
+                'oneOf': [
+                    {
+                        'properties': {
+                            'whitelist': {'$ref': '#/definitions/array_of_strings'},
+                            'blacklist': {'$ref': '#/definitions/array_of_strings'},
+                        }
+                    },
+                    {
+                        'patternProperties': {r'\w[\w-]*': {'$ref': '#/definitions/module_file_configuration'}}
+                    }
+                ]
             }
         },
         'patternProperties': {

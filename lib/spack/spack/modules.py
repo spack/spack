@@ -40,17 +40,15 @@ various shell-support files in $SPACK/share/spack/setup-env.*.
 
 Each hook in hooks/ implements the logic for writing its specific type of module file.
 """
+import copy
 import os
 import os.path
 import re
-import shutil
 import textwrap
-import copy
 
 import llnl.util.tty as tty
 import spack
 import spack.config
-
 from llnl.util.filesystem import join_path, mkdirp
 from spack.build_environment import parent_class_modules, set_module_variables_for_package
 from spack.environment import *
@@ -225,6 +223,30 @@ class EnvModule(object):
         # Not very descriptive fallback
         return 'spack installed package'
 
+    @property
+    def blacklisted(self):
+        configuration = CONFIGURATION.get(self.name, {})
+        whitelist_matches = [x for x in configuration.get('whitelist', []) if self.spec.satisfies(x)]
+        blacklist_matches = [x for x in configuration.get('blacklist', []) if self.spec.satisfies(x)]
+        if whitelist_matches:
+            message = '\t%s is whitelisted [matches : ' % self.spec.cshort_spec
+            for rule in whitelist_matches:
+                message += '%s ' % rule
+            message += ' ]'
+            tty.debug(message)
+
+        if blacklist_matches:
+            message = '\t%s is blacklisted [matches : ' % self.spec.cshort_spec
+            for rule in blacklist_matches:
+                message += '%s ' % rule
+            message += ' ]'
+            tty.debug(message)
+
+        if not whitelist_matches and blacklist_matches:
+            return True
+
+        return False
+
     def write(self):
         """
         Writes out a module file for this object.
@@ -233,6 +255,10 @@ class EnvModule(object):
         - override the header property
         - provide formats for autoload, prerequisites and environment changes
         """
+        if self.blacklisted:
+            return
+        tty.debug("\t%s : writing module file" % self.spec.cshort_spec)
+
         module_dir = os.path.dirname(self.file_name)
         if not os.path.exists(module_dir):
             mkdirp(module_dir)

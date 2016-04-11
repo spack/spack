@@ -89,7 +89,6 @@ def module_refresh():
             shutil.rmtree(cls.path, ignore_errors=False)
         mkdirp(cls.path)
         for spec in specs:
-            tty.debug("   Writing file for %s" % spec)
             cls(spec).write()
 
 
