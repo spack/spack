@@ -12,6 +12,7 @@ class Openblas(Package):
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
     variant('shared', default=True, description="Build shared libraries as well as static libs.")
+    variant('openmp', default=True, description="Enable OpenMP support.")
 
     # virtual dependency
     provides('blas')
@@ -36,6 +37,11 @@ class Openblas(Package):
         # fix missing _dggsvd_ and _sggsvd_
         if spec.satisfies('@0.2.16'):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
+
+        # Add support for OpenMP
+        # Note: Make sure your compiler supports OpenMP
+        if '+openmp' in spec:
+            make_defs += ['USE_OPENMP=1']
 
         make_args = make_defs + make_targets
         make(*make_args)
