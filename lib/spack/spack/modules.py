@@ -114,14 +114,14 @@ def inspect_path(prefix):
     return env
 
 
-def dependencies(spec, request='All'):
-    if request == 'None':
+def dependencies(spec, request='all'):
+    if request == 'none':
         return []
 
     l = [xx for xx in
          sorted(spec.traverse(order='post', depth=True, cover='nodes', root=False), reverse=True)]
 
-    if request == 'Direct':
+    if request == 'direct':
         return [xx for ii, xx in l if ii == 1]
 
     # FIXME : during module file creation nodes seem to be visited multiple times even if cover='nodes'

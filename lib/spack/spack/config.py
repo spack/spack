@@ -117,22 +117,20 @@ Will make Spack take compilers *only* from the user configuration, and
 the site configuration will be ignored.
 
 """
+import copy
 import os
 import re
 import sys
-import copy
+
 import jsonschema
-from jsonschema import Draft4Validator, validators
-import yaml
-from yaml.error import MarkedYAMLError
-from ordereddict_backport import OrderedDict
-
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-import copy
-
 import spack
+import yaml
+from jsonschema import Draft4Validator, validators
+from llnl.util.filesystem import mkdirp
+from ordereddict_backport import OrderedDict
 from spack.error import SpackError
+from yaml.error import MarkedYAMLError
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
