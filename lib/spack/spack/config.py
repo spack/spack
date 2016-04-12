@@ -539,14 +539,16 @@ def update_config(section, update_data, scope=None):
        other yaml-ish structure.
 
     """
-    # read in the config to ensure we've got current data
-    get_config(section)
+    validate_section_name(section)  # validate section name
+    scope = validate_scope(scope)  # get ConfigScope object from string.
 
-    validate_section_name(section)       # validate section name
-    scope = validate_scope(scope)   # get ConfigScope object from string.
+    # read in the config to ensure we've got current data
+    configuration = get_config(section)
+
+    configuration.update(update_data)
 
     # read only the requested section's data.
-    scope.sections[section] = { section : update_data }
+    scope.sections[section] = {section: configuration}
     scope.write_section(section)
 
 

@@ -22,19 +22,18 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
 import argparse
+import sys
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
-from llnl.util.tty.colify import colify
-from llnl.util.lang import index_by
-
 import spack.compilers
-import spack.spec
 import spack.config
-from spack.util.environment import get_path
+import spack.spec
+from llnl.util.lang import index_by
+from llnl.util.tty.colify import colify
+from llnl.util.tty.color import colorize
 from spack.spec import CompilerSpec
+from spack.util.environment import get_path
 
 description = "Manage compilers"
 
