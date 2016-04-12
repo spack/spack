@@ -41,11 +41,11 @@ various shell-support files in $SPACK/share/spack/setup-env.*.
 Each hook in hooks/ implements the logic for writing its specific type of module file.
 """
 import copy
+import datetime
 import os
 import os.path
 import re
 import textwrap
-import datetime
 
 import llnl.util.tty as tty
 import spack
@@ -75,7 +75,7 @@ def print_help():
             "    . %s/setup-env.sh" % spack.share_path,
             "",
             "For csh and tcsh:",
-            "    setenv SPACK_ROOT %s"    % spack.prefix,
+            "    setenv SPACK_ROOT %s" % spack.prefix,
             "    source %s/setup-env.csh" % spack.share_path,
             "")
 
@@ -264,6 +264,34 @@ class EnvModule(object):
             self.long_description = re.sub(r'\s+', ' ', self.spec.package.__doc__)
 
     @property
+    def naming_scheme(self):
+        try:
+            naming_scheme = CONFIGURATION[self.name]['naming_scheme']
+        except KeyError:
+            naming_scheme = self.default_naming_format
+        return naming_scheme
+
+    @property
+    def tokens(self):
+        tokens = {
+            'name': self.spec.name,
+            'version': self.spec.version,
+            'compiler': self.spec.compiler,
+            'hash': self.spec.dag_hash()
+        }
+        return tokens
+
+    @property
+    def use_name(self):
+        """
+        Subclasses should implement this to return the name the module command uses to refer to the package.
+        """
+        naming_tokens = self.tokens
+        naming_scheme = self.naming_scheme
+        name = naming_scheme.format(**naming_tokens)
+        return name
+
+    @property
     def category(self):
         # Anything defined at the package level takes precedence
         if hasattr(self.pkg, 'category'):
@@ -379,12 +407,6 @@ class EnvModule(object):
            where this module lives."""
         raise NotImplementedError()
 
-    @property
-    def use_name(self):
-        """Subclasses should implement this to return the name the
-           module command uses to refer to the package."""
-        raise NotImplementedError()
-
     def remove(self):
         mod_file = self.file_name
         if os.path.exists(mod_file):
@@ -408,16 +430,11 @@ class Dotkit(EnvModule):
 
     prerequisite_format = None  # TODO : does something like prerequisite exist for dotkit?
 
+    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}-{hash}'
+
     @property
     def file_name(self):
         return join_path(Dotkit.path, self.spec.architecture, '%s.dk' % self.use_name)
-
-    @property
-    def use_name(self):
-      return "%s-%s-%s-%s-%s" % (self.spec.name, self.spec.version,
-                                 self.spec.compiler.name,
-                                 self.spec.compiler.version,
-                                 self.spec.dag_hash())
 
     @property
     def header(self):
@@ -456,16 +473,11 @@ class TclModule(EnvModule):
 
     prerequisite_format = 'prereq {module_file}\n'
 
+    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}-{hash}'
+
     @property
     def file_name(self):
         return join_path(TclModule.path, self.spec.architecture, self.use_name)
-
-    @property
-    def use_name(self):
-      return "%s-%s-%s-%s-%s" % (self.spec.name, self.spec.version,
-                                 self.spec.compiler.name,
-                                 self.spec.compiler.version,
-                                 self.spec.dag_hash())
 
     @property
     def header(self):

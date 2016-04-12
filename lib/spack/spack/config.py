@@ -297,6 +297,9 @@ section_schemas = {
                         'properties': {
                             'whitelist': {'$ref': '#/definitions/array_of_strings'},
                             'blacklist': {'$ref': '#/definitions/array_of_strings'},
+                            'naming_scheme': {
+                                'type': 'string'  # Can we be more specific here?
+                            }
                         }
                     },
                     {
@@ -322,7 +325,11 @@ section_schemas = {
                     'tcl': {
                         'allOf': [
                             {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
-                            {}  # Specific tcl extensions
+                            {
+                                'properties': {
+                                    'conflict': {'type': 'string'}
+                                }
+                            }  # Specific tcl extensions
                         ]
                     },
                     'dotkit': {
