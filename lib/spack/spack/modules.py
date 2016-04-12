@@ -45,6 +45,7 @@ import os
 import os.path
 import re
 import textwrap
+import datetime
 
 import llnl.util.tty as tty
 import spack
@@ -401,7 +402,7 @@ class TclModule(EnvModule):
     autoload_format = ('if ![ is-loaded {module_file} ] {{\n'
                        '    puts stderr "Autoloading {module_file}"\n'
                        '    module load {module_file}\n'
-                       '}}\n')
+                       '}}\n\n')
 
     prerequisite_format = 'prereq {module_file}\n'
 
@@ -420,6 +421,12 @@ class TclModule(EnvModule):
     def header(self):
         # TCL Modulefile header
         header = '#%Module1.0\n'
+        header += '## Module file created by spack (https://github.com/LLNL/spack)'
+        header += ' on %s\n' % datetime.datetime.now()
+        header += '##\n'
+        header += '## %s\n' % self.spec.short_spec
+        header += '##\n'
+
         # TODO : category ?
         # Short description
         if self.short_description:
