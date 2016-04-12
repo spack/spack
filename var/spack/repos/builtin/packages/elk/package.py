@@ -104,13 +104,18 @@ class Elk(Package):
 
 
     def install(self, spec, prefix):
+        # Elk only provides an interactive setup script
         self.configure(spec)
 
         make()
         make('test')
 
+        # The Elk Makefile does not provide an install target
         mkdirp(prefix.bin)
 
         install('src/elk',                   prefix.bin)
         install('src/eos/eos',               prefix.bin)
         install('src/spacegroup/spacegroup', prefix.bin)
+
+        install_tree('examples', join_path(prefix, 'examples'))
+
