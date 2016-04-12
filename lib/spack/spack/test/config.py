@@ -33,7 +33,7 @@ from spack.test.mock_packages_test import *
 
 # Some sample compiler config data
 a_comps =  {
-    "all": {
+    "x86_64_E5v2_IntelIB": {
         "gcc@4.7.3" : {
             "cc" : "/gcc473",
             "cxx": "/g++473",
@@ -53,7 +53,7 @@ a_comps =  {
 }
 
 b_comps = {
-    "all": {
+    "x86_64_E5v3": {
         "icc@10.0" : {
             "cc" : "/icc100",
             "cxx": "/icc100",
@@ -85,17 +85,15 @@ class ConfigTest(MockPackagesTest):
         super(ConfigTest, self).tearDown()
         shutil.rmtree(self.tmp_dir, True)
 
-
-    def check_config(self, comps, *compiler_names):
+    def check_config(self, comps, arch, *compiler_names):
         """Check that named compilers in comps match Spack's config."""
         config = spack.config.get_config('compilers')
         compiler_list = ['cc', 'cxx', 'f77', 'fc']
         for key in compiler_names:
             for c in compiler_list:
-                expected = comps['all'][key][c]
-                actual = config['all'][key][c]
+                expected = comps[arch][key][c]
+                actual = config[arch][key][c]
                 self.assertEqual(expected, actual)
-
 
     def test_write_key_in_memory(self):
         # Write b_comps "on top of" a_comps.
@@ -103,9 +101,8 @@ class ConfigTest(MockPackagesTest):
         spack.config.update_config('compilers', b_comps, 'test_high_priority')
 
         # Make sure the config looks how we expect.
-        self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
-        self.check_config(b_comps, 'icc@10.0', 'icc@11.1', 'clang@3.3')
-
+        self.check_config(a_comps, 'x86_64_E5v2_IntelIB', 'gcc@4.7.3', 'gcc@4.5.0')
+        self.check_config(b_comps, 'x86_64_E5v3', 'icc@10.0', 'icc@11.1', 'clang@3.3')
 
     def test_write_key_to_disk(self):
         # Write b_comps "on top of" a_comps.
@@ -116,5 +113,17 @@ class ConfigTest(MockPackagesTest):
         spack.config.clear_config_caches()
 
         # Same check again, to ensure consistency.
-        self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
-        self.check_config(b_comps, 'icc@10.0', 'icc@11.1', 'clang@3.3')
+        self.check_config(a_comps, 'x86_64_E5v2_IntelIB', 'gcc@4.7.3', 'gcc@4.5.0')
+        self.check_config(b_comps, 'x86_64_E5v3', 'icc@10.0', 'icc@11.1', 'clang@3.3')
+
+    def test_write_to_same_priority_file(self):
+        # Write b_comps in the same file as a_comps.
+        spack.config.update_config('compilers', a_comps, 'test_low_priority')
+        spack.config.update_config('compilers', b_comps, 'test_low_priority')
+
+        # Clear caches so we're forced to read from disk.
+        spack.config.clear_config_caches()
+
+        # Same check again, to ensure consistency.
+        self.check_config(a_comps, 'x86_64_E5v2_IntelIB', 'gcc@4.7.3', 'gcc@4.5.0')
+        self.check_config(b_comps, 'x86_64_E5v3', 'icc@10.0', 'icc@11.1', 'clang@3.3')
