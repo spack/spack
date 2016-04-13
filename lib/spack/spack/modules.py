@@ -270,9 +270,9 @@ class EnvModule(object):
             return self.pkg.category
         # Extensions
         for extendee in self.pkg.extendees:
-            return '{extendee} extension'.format(extendee=extendee)
+            return '{extendee}_extension'.format(extendee=extendee)
         # Not very descriptive fallback
-        return 'spack installed package'
+        return 'spack'
 
     @property
     def blacklisted(self):
@@ -404,7 +404,7 @@ class Dotkit(EnvModule):
         SetEnv: 'dk_setenv {name} {value}\n'
     }
 
-    autoload_format = 'dk_op {module_file}\n'  # TODO : Check this line
+    autoload_format = 'dk_op {module_file}\n'
 
     prerequisite_format = None  # TODO : does something like prerequisite exist for dotkit?
 
