@@ -488,7 +488,7 @@ def _read_config_file(filename, schema):
 
     elif not os.path.isfile(filename):
         raise ConfigFileError(
-            "Invlaid configuration. %s exists but is not a file." % filename)
+            "Invalid configuration. %s exists but is not a file." % filename)
 
     elif not os.access(filename, os.R_OK):
         raise ConfigFileError("Config file is not readable: %s" % filename)

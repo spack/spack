@@ -63,8 +63,9 @@ CONFIGURATION = spack.config.get_config('modules')
 
 
 def print_help():
-    """For use by commands to tell user how to activate shell support."""
-
+    """
+    For use by commands to tell user how to activate shell support.
+    """
     tty.msg("This command requires spack's shell integration.",
             "",
             "To initialize spack's shell commands, you must run one of",
@@ -114,6 +115,20 @@ def inspect_path(prefix):
 
 
 def dependencies(spec, request='all'):
+    """
+    Returns the list of dependent specs for a given spec, according to the given request
+
+    Args:
+        spec: target spec
+        request: either 'none', 'direct' or 'all'
+
+    Returns:
+        empty list if 'none', direct dependency list if 'direct', all dependencies if 'all'
+    """
+    if request not in ('none', 'direct', 'all'):
+        raise tty.error("Wrong value for argument 'request' : should be one of ('none', 'direct', 'all') "
+                        " [current value is '%s']" % request)
+
     if request == 'none':
         return []
 
@@ -132,6 +147,18 @@ def dependencies(spec, request='all'):
 
 
 def parse_config_options(module_generator):
+    """
+    Parse the configuration file and returns a bunch of items that will be needed during module file generation
+
+    Args:
+        module_generator: module generator for a given spec
+
+    Returns:
+        autoloads: list of specs to be autoloaded
+        prerequisites: list of specs to be marked as prerequisite
+        filters: list of environment variables whose modification is blacklisted in module files
+        env: list of custom environment modifications to be applied in the module file
+    """
     autoloads, prerequisites, filters = [], [], []
     env = EnvironmentModifications()
     # Get the configuration for this kind of generator
@@ -160,15 +187,20 @@ def parse_config_options(module_generator):
 
 
 def update_single(spec, configuration, autoloads, prerequisites, filters, env):
+    """
+    Updates the entries in the arguments according to the configuration
+
+    Args:
+        spec: [in] target spec
+        configuration: [in] configuration file for the current type of module file generator
+        autoloads: [inout] list of dependencies to be automatically loaded
+        prerequisites: [inout] list of prerequisites
+        filters: [inout] list of environment variables whose modification is to be blacklisted
+        env: [inout] list of modifications to the environment
+    """
     # Get list of modules that will be loaded automatically
-    try:
-        autoloads.extend(dependencies(spec, configuration['autoload']))
-    except KeyError:
-        pass
-    try:
-        prerequisites.extend(dependencies(spec, configuration['prerequisites']))
-    except KeyError:
-        pass
+    autoloads.extend(dependencies(spec, configuration.get('autoload', 'none')))
+    prerequisites.extend(dependencies(spec, configuration.get('prerequisites', 'none')))
 
     # Filter modifications to environment variables
     try:
@@ -186,6 +218,24 @@ def update_single(spec, configuration, autoloads, prerequisites, filters, env):
                 getattr(env, method)(*args)
     except KeyError:
         pass
+
+
+def filter_blacklisted(specs, module_name):
+    """
+    Given a sequence of specs, filters the ones that are blacklisted in the module configuration file.
+
+    Args:
+        specs: sequence of spec instances
+        module_name: type of module file objects
+
+    Yields:
+        non blacklisted specs
+    """
+    for x in specs:
+        if module_types[module_name](x).blacklisted:
+            tty.debug('\tFILTER : %s' % x)
+            continue
+        yield x
 
 
 class EnvModule(object):
@@ -230,14 +280,14 @@ class EnvModule(object):
         whitelist_matches = [x for x in configuration.get('whitelist', []) if self.spec.satisfies(x)]
         blacklist_matches = [x for x in configuration.get('blacklist', []) if self.spec.satisfies(x)]
         if whitelist_matches:
-            message = '\t%s is whitelisted [matches : ' % self.spec.cshort_spec
+            message = '\tWHITELIST : %s [matches : ' % self.spec.cshort_spec
             for rule in whitelist_matches:
                 message += '%s ' % rule
             message += ' ]'
             tty.debug(message)
 
         if blacklist_matches:
-            message = '\t%s is blacklisted [matches : ' % self.spec.cshort_spec
+            message = '\tBLACKLIST : %s [matches : ' % self.spec.cshort_spec
             for rule in blacklist_matches:
                 message += '%s ' % rule
             message += ' ]'
@@ -258,7 +308,7 @@ class EnvModule(object):
         """
         if self.blacklisted:
             return
-        tty.debug("\t%s : writing module file" % self.spec.cshort_spec)
+        tty.debug("\tWRITE : %s [%s]" % (self.spec.cshort_spec, self.file_name))
 
         module_dir = os.path.dirname(self.file_name)
         if not os.path.exists(module_dir):
@@ -273,7 +323,7 @@ class EnvModule(object):
         spack_env = EnvironmentModifications()
         # TODO : the code down below is quite similar to build_environment.setup_package and needs to be
         # TODO : factored out to a single place
-        for item in dependencies(self.spec, 'All'):
+        for item in dependencies(self.spec, 'all'):
             package = self.spec[item.name].package
             modules = parent_class_modules(package.__class__)
             for mod in modules:
@@ -292,9 +342,9 @@ class EnvModule(object):
 
         # Build up the module file content
         module_file_content = self.header
-        for x in autoloads:
+        for x in filter_blacklisted(autoloads, self.name):
             module_file_content += self.autoload(x)
-        for x in prerequisites:
+        for x in filter_blacklisted(prerequisites, self.name):
             module_file_content += self.prerequisite(x)
         for line in self.process_environment_command(filter_environment_blacklist(env, filters)):
             module_file_content += line
@@ -421,8 +471,7 @@ class TclModule(EnvModule):
     def header(self):
         # TCL Modulefile header
         header = '#%Module1.0\n'
-        header += '## Module file created by spack (https://github.com/LLNL/spack)'
-        header += ' on %s\n' % datetime.datetime.now()
+        header += '## Module file created by spack (https://github.com/LLNL/spack) on %s\n' % datetime.datetime.now()
         header += '##\n'
         header += '## %s\n' % self.spec.short_spec
         header += '##\n'
