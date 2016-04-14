@@ -118,4 +118,5 @@ class Elk(Package):
         install('src/spacegroup/spacegroup', prefix.bin)
 
         install_tree('examples', join_path(prefix, 'examples'))
+        install_tree('species',  join_path(prefix, 'species'))
 
