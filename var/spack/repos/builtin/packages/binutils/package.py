@@ -12,6 +12,10 @@ class Binutils(Package):
     version('2.23.2', '4f8fa651e35ef262edc01d60fb45702e')
     version('2.20.1', '2b9dc8f2b7dbd5ec5992c6e29de0b764')
 
+    depends_on('m4')
+    depends_on('flex')
+    depends_on('bison')
+
     # Add a patch that creates binutils libiberty_pic.a which is preferred by OpenSpeedShop and cbtf-krell
     variant('krellpatch', default=False, description="build with openspeedshop based patch.")
     variant('gold', default=True, description="build the gold linker")
