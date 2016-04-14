@@ -15,13 +15,10 @@ class Mrnet(Package):
     variant('krellpatch', default=False, description="Build MRNet with krell openspeedshop based patch.")
     patch('krell-5.0.1.patch', when='@5.0.1+krellpatch')
 
-
-
     variant('lwthreads', default=False, description="Also build the MRNet LW threadsafe libraries")
     parallel = False
 
-    #depends_on("boost")
-    depends_on("boost@1.53.0")
+    depends_on("boost")
 
     def install(self, spec, prefix):
         # Build the MRNet LW thread safe libraries when the krelloptions variant is present
