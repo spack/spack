@@ -101,10 +101,10 @@ class Hdf5(Package):
             extra_args.append('--enable-cxx')
 
         if '+fortran' in spec:
-            extra_args.extend([
-                '--enable-fortran',
-                '--enable-fortran2003'
-            ])
+            extra_args.append('--enable-fortran')
+            # '--enable-fortran2003' no longer exists as of version 1.10.0
+            if spec.satisfies('@:1.8.16'):
+                extra_args.append('--enable-fortran2003')
 
         if '+mpi' in spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
