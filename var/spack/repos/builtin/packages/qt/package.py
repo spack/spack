@@ -29,7 +29,8 @@ class Qt(Package):
     depends_on("zlib")
     depends_on("dbus", when='@4:')
     depends_on("libtiff")
-    depends_on("libpng")
+    depends_on("libpng@1.2.56", when='@3')
+    depends_on("libpng", when='@4:')
     depends_on("libmng")
     depends_on("jpeg")
 
@@ -120,6 +121,8 @@ class Qt(Package):
 
     @when('@3')
     def configure(self):
+        # An user report that this was necessary to link Qt3 on ubuntu
+        os.environ['LD_LIBRARY_PATH'] = os.getcwd()+'/lib' 
         configure('-prefix', self.prefix,
                   '-v',
                   '-thread',
