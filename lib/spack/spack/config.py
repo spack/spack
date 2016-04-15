@@ -276,6 +276,7 @@ section_schemas = {
                     },
                     'autoload': {'$ref': '#/definitions/dependency_selection'},
                     'prerequisites': {'$ref': '#/definitions/dependency_selection'},
+                    'conflict': {'type': 'string'},
                     'environment': {
                         'type': 'object',
                         'default': {},
@@ -325,11 +326,7 @@ section_schemas = {
                     'tcl': {
                         'allOf': [
                             {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
-                            {
-                                'properties': {
-                                    'conflict': {'type': 'string'}
-                                }
-                            }  # Specific tcl extensions
+                            {}  # Specific tcl extensions
                         ]
                     },
                     'dotkit': {

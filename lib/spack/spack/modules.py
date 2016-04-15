@@ -146,6 +146,17 @@ def dependencies(spec, request='all'):
     return [xx for ii, xx in l if not (xx in seen or seen_add(xx))]
 
 
+def update_dictionary_extending_lists(target, update):
+    for key in update:
+        value = target.get(key, None)
+        if isinstance(value, list):
+            target[key].extend(update[key])
+        elif isinstance(value, dict):
+            update_dictionary_extending_lists(target[key], update[key])
+        else:
+            target[key] = update[key]
+
+
 def parse_config_options(module_generator):
     """
     Parse the configuration file and returns a bunch of items that will be needed during module file generation
@@ -159,19 +170,13 @@ def parse_config_options(module_generator):
         filters: list of environment variables whose modification is blacklisted in module files
         env: list of custom environment modifications to be applied in the module file
     """
-    autoloads, prerequisites, filters = [], [], []
-    env = EnvironmentModifications()
     # Get the configuration for this kind of generator
-    try:
-        module_configuration = copy.copy(CONFIGURATION[module_generator.name])
-    except KeyError:
-        return autoloads, prerequisites, filters, env
+    module_configuration = copy.copy(CONFIGURATION.get(module_generator.name, {}))
 
-    # Get the defaults for all packages
-    all_conf = module_configuration.pop('all', {})
-
-    update_single(module_generator.spec, all_conf, autoloads, prerequisites, filters, env)
-
+    #####
+    # Merge all the rules
+    #####
+    module_file_actions = module_configuration.pop('all', {})
     for spec, conf in module_configuration.items():
         override = False
         if spec.endswith(':'):
@@ -179,45 +184,29 @@ def parse_config_options(module_generator):
             override = True
         if module_generator.spec.satisfies(spec):
             if override:
-                autoloads, prerequisites, filters = [], [], []
-                env = EnvironmentModifications()
-            update_single(module_generator.spec, conf, autoloads, prerequisites, filters, env)
+                module_file_actions = {}
+            update_dictionary_extending_lists(module_file_actions, conf)
 
-    return autoloads, prerequisites, filters, env
+    #####
+    # Process the common rules
+    #####
 
+    # Automatic loading loads
+    module_file_actions['autoload'] = dependencies(module_generator.spec, module_file_actions.get('autoload', 'none'))
+    # Prerequisites
+    module_file_actions['prerequisites'] = dependencies(module_generator.spec, module_file_actions.get('prerequisites', 'none'))
+    # Environment modifications
+    environment_actions = module_file_actions.pop('environment', {})
+    env = EnvironmentModifications()
+    for method, arglist in environment_actions.items():
+        for item in arglist:
+            if method == 'unset':
+                args = [item]
+            else:
+                args = item.split(',')
+            getattr(env, method)(*args)
 
-def update_single(spec, configuration, autoloads, prerequisites, filters, env):
-    """
-    Updates the entries in the arguments according to the configuration
-
-    Args:
-        spec: [in] target spec
-        configuration: [in] configuration file for the current type of module file generator
-        autoloads: [inout] list of dependencies to be automatically loaded
-        prerequisites: [inout] list of prerequisites
-        filters: [inout] list of environment variables whose modification is to be blacklisted
-        env: [inout] list of modifications to the environment
-    """
-    # Get list of modules that will be loaded automatically
-    autoloads.extend(dependencies(spec, configuration.get('autoload', 'none')))
-    prerequisites.extend(dependencies(spec, configuration.get('prerequisites', 'none')))
-
-    # Filter modifications to environment variables
-    try:
-        filters.extend(configuration['filter']['environment_blacklist'])
-    except KeyError:
-        pass
-
-    try:
-        for method, arglist in configuration['environment'].items():
-            for item in arglist:
-                if method == 'unset':
-                    args = [item]
-                else:
-                    args = item.split(',')
-                getattr(env, method)(*args)
-    except KeyError:
-        pass
+    return module_file_actions, env
 
 
 def filter_blacklisted(specs, module_name):
@@ -368,16 +357,18 @@ class EnvModule(object):
         self.spec.package.setup_environment(spack_env, env)
 
         # Parse configuration file
-        autoloads, prerequisites, filters, conf_env = parse_config_options(self)
+        module_configuration, conf_env = parse_config_options(self)
         env.extend(conf_env)
-
+        filters = module_configuration.get('filter', {}).get('environment_blacklist',{})
         # Build up the module file content
         module_file_content = self.header
-        for x in filter_blacklisted(autoloads, self.name):
+        for x in filter_blacklisted(module_configuration.pop('autoload', []), self.name):
             module_file_content += self.autoload(x)
-        for x in filter_blacklisted(prerequisites, self.name):
+        for x in filter_blacklisted(module_configuration.pop('prerequisites', []), self.name):
             module_file_content += self.prerequisite(x)
         for line in self.process_environment_command(filter_environment_blacklist(env, filters)):
+            module_file_content += line
+        for line in self.module_specific_content(module_configuration):
             module_file_content += line
 
         # Dump to file
@@ -387,6 +378,9 @@ class EnvModule(object):
     @property
     def header(self):
         raise NotImplementedError()
+
+    def module_specific_content(self, configuration):
+        return tuple()
 
     def autoload(self, spec):
         m = TclModule(spec)
