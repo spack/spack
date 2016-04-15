@@ -54,4 +54,6 @@ class Icebin(CMakePackage):
             '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')]
 
     def setup_environment(self, spack_env, env):
+        """Add <prefix>/bin to the module; this is not the default if we
+        extend python."""
         env.prepend_path('PATH', join_path(self.prefix, 'bin'))
