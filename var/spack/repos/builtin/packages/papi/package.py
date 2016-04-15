@@ -2,6 +2,7 @@ from spack import *
 import glob
 import os
 import sys
+from llnl.util.filesystem import fix_darwin_install_name
 
 class Papi(Package):
     """PAPI provides the tool designer and application engineer with a
@@ -41,6 +42,6 @@ class Papi(Package):
 
             # The shared library is not installed correctly on Darwin
             if sys.platform == 'darwin':
-                install_name_tool = which('install_name_tool')
-                install_name_tool('-id', join_path(prefix.lib, 'libpapi.so'),
-                                  join_path(prefix.lib, 'libpapi.so'))
+                os.rename(join_path(prefix.lib, 'libpapi.so'),
+                          join_path(prefix.lib, 'libpapi.dylib'))
+                fix_darwin_install_name(prefix.lib)
