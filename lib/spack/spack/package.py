@@ -898,6 +898,11 @@ class Package(object):
         def build_process():
             """Forked for each build. Has its own process and python
                module space set up by build_environment.fork()."""
+
+            # Set up a global license if one is required
+            if self.license_required:
+                self.set_up_license()
+
             start_time = time.time()
             if not fake:
                 if not skip_patch:
@@ -960,9 +965,9 @@ class Package(object):
             self._total_time = time.time() - start_time
             build_time = self._total_time - self._fetch_time
 
-            # Set up license information
-            if self.license_required:
-                self.set_up_license()
+            # Symlink local license to global license if one is required
+            if self.license_required and self.license_files:
+                self.symlink_license()
 
             tty.msg("Successfully installed %s" % self.name,
                     "Fetch: %s.  Build: %s.  Total: %s." %
@@ -1014,16 +1019,38 @@ class Package(object):
                 "Install failed for %s.  Nothing was installed!" % self.name)
 
 
+    def global_license_file(self):
+        """Returns the path where a global license file should be stored."""
+        if not self.license_files:
+            return
+        spack_root = ancestor(__file__, 4)
+        global_license_dir = join_path(spack_root, 'etc', 'spack', 'licenses')
+        return join_path(global_license_dir, self.name,
+                         os.path.basename(self.license_files[0]))
+
+
+    def local_license_symlink(self):
+        """Returns the path where a local license file is searched for."""
+        if not self.license_files:
+            return
+        return join_path(self.prefix, self.license_files[0])
+
+
     def set_up_license(self):
         """Prompt the user, letting them know that a license is required."""
+
         # If the license can be stored in a file, create one
         if self.license_files:
-            # Use the first file listed in license_files
-            license_path = self.prefix + '/' + self.license_files[0]
-            self.write_license_file(license_path)
-            # Open up file in user's favorite $EDITOR for editing
-            spack.editor(license_path)
-            tty.msg("Added license file %s" % license_path)
+            license_path = self.global_license_file()
+            if not os.path.exists(license_path):
+                # Create a new license file
+                self.write_license_file(license_path)
+                # Open up file in user's favorite $EDITOR for editing
+                spack.editor(license_path)
+                tty.msg("Added global license file %s" % license_path)
+            else:
+                # Use already existing license file
+                tty.msg("Found already existing license %s" % license_path)
 
         # If not a file, what about an environment variable?
         elif self.license_vars:
@@ -1045,12 +1072,17 @@ class Package(object):
     def write_license_file(self, license_path):
         """Writes empty license file.
 
-        Comments give suggestions on alternative methods of installing
-        a license."""
+        Comments give suggestions on alternative methods of
+        installing a license."""
 
         comment = self.license_comment
+
+        # Global license directory may not already exist
+        if not os.path.exists(os.path.dirname(license_path)):
+            os.makedirs(os.path.dirname(license_path))
         license = open(license_path, 'w')
 
+        # License files
         license.write("""\
 {0} A license is required to use {1}.
 {0}
@@ -1065,6 +1097,7 @@ class Package(object):
 
         license.write("{0}\n".format(comment))
 
+        # Environment variables
         if self.license_vars:
             license.write("""\
 {0} Alternatively, use one of the following environment variable(s):
@@ -1084,6 +1117,7 @@ class Package(object):
 {0}
 """.format(comment, self.name))
 
+        # Documentation
         if self.license_url:
             license.write("""\
 {0} For further information on how to acquire a license, please refer to:
@@ -1098,6 +1132,15 @@ class Package(object):
 """.format(comment))
 
         license.close()
+
+
+    def symlink_license(self):
+        """Create a local symlink that points to the global license file."""
+        target    = self.global_license_file()
+        link_name = self.local_license_symlink()
+        if os.path.exists(target):
+            os.symlink(target, link_name)
+            tty.msg("Added local symlink %s to global license file" % link_name)
 
 
     def do_install_dependencies(self, **kwargs):
