@@ -276,8 +276,7 @@ class EnvModule(object):
         tokens = {
             'name': self.spec.name,
             'version': self.spec.version,
-            'compiler': self.spec.compiler,
-            'hash': self.spec.dag_hash()
+            'compiler': self.spec.compiler
         }
         return tokens
 
@@ -289,6 +288,10 @@ class EnvModule(object):
         naming_tokens = self.tokens
         naming_scheme = self.naming_scheme
         name = naming_scheme.format(**naming_tokens)
+        name += '-' + self.spec.dag_hash()  # Always append the hash to make the module file unique
+        # Not everybody is working on linux...
+        parts = name.split('/')
+        name = join_path(*parts)
         return name
 
     @property
@@ -430,7 +433,7 @@ class Dotkit(EnvModule):
 
     prerequisite_format = None  # TODO : does something like prerequisite exist for dotkit?
 
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}-{hash}'
+    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'
 
     @property
     def file_name(self):
@@ -473,7 +476,7 @@ class TclModule(EnvModule):
 
     prerequisite_format = 'prereq {module_file}\n'
 
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}-{hash}'
+    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'
 
     @property
     def file_name(self):

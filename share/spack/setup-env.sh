@@ -41,7 +41,7 @@
 # commands.  This allows the user to use packages without knowing all
 # their installation details.
 #
-# e.g., rather than requring a full spec for libelf, the user can type:
+# e.g., rather than requiring a full spec for libelf, the user can type:
 #
 #     spack use libelf
 #
@@ -110,11 +110,11 @@ function spack {
                         unuse $_sp_module_args $_sp_full_spec
                     fi ;;
                 "load")
-                    if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module find tcl $_sp_spec); then
                         module load $_sp_module_args $_sp_full_spec
                     fi ;;
                 "unload")
-                    if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module find tcl $_sp_spec); then
                         module unload $_sp_module_args $_sp_full_spec
                     fi ;;
             esac
