@@ -26,6 +26,7 @@ class PyMatplotlib(Package):
     depends_on('py-pbr')
     depends_on('py-funcsigs')
 
+    depends_on('pkg-config')
     depends_on('freetype')
     depends_on('qt', when='+gui')
     depends_on('bzip2')
