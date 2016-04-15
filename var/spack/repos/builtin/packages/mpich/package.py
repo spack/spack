@@ -47,12 +47,12 @@ class Mpich(Package):
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
-    def setup_dependent_environment(self, env, dependent_spec):
-        env.set('MPICH_CC', spack_cc)
-        env.set('MPICH_CXX', spack_cxx)
-        env.set('MPICH_F77', spack_f77)
-        env.set('MPICH_F90', spack_f90)
-        env.set('MPICH_FC', spack_fc)
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('MPICH_CC', spack_cc)
+        spack_env.set('MPICH_CXX', spack_cxx)
+        spack_env.set('MPICH_F77', spack_f77)
+        spack_env.set('MPICH_F90', spack_fc)
+        spack_env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""
@@ -77,6 +77,9 @@ class Mpich(Package):
 
         if not self.compiler.fc:
             config_args.append("--disable-fc")
+
+        if not self.compiler.fc and not self.compiler.f77:
+            config_args.append("--disable-fortran")
 
         configure(*config_args)
         make()

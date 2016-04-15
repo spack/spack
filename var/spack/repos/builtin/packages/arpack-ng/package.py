@@ -41,16 +41,26 @@ class ArpackNg(Package):
 
     depends_on('blas')
     depends_on('lapack')
+    depends_on('automake')
+    depends_on('autoconf')
+    depends_on('libtool@2.4.2:')
+
     depends_on('mpi', when='+mpi')
 
     def install(self, spec, prefix):
         # Apparently autotools are not bootstrapped
+        # TODO: switch to use the CMake build in the next version
+        # rather than bootstrapping.
+        which('libtoolize')()
         bootstrap = Executable('./bootstrap')
 
         options = ['--prefix=%s' % prefix]
 
         if '+mpi' in spec:
-            options.append('--enable-mpi')
+            options.extend([
+                '--enable-mpi',
+                'F77=mpif77' #FIXME: avoid hardcoding MPI wrapper names
+            ])
 
         if '~shared' in spec:
             options.append('--enable-shared=no')

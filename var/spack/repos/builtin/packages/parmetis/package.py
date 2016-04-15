@@ -24,7 +24,7 @@
 ##############################################################################
 
 from spack import *
-
+import sys
 
 class Parmetis(Package):
     """
@@ -44,7 +44,7 @@ class Parmetis(Package):
     depends_on('mpi')
 
     patch('enable_external_metis.patch')
-    depends_on('metis')
+    depends_on('metis@5:')
 
     # bug fixes from PETSc developers
     # https://bitbucket.org/petsc/pkg-parmetis/commits/1c1a9fd0f408dc4d42c57f5c3ee6ace411eb222b/raw/
@@ -64,7 +64,7 @@ class Parmetis(Package):
 
         # FIXME : Once a contract is defined, MPI compilers should be retrieved indirectly via spec['mpi'] in case
         # FIXME : they use a non-standard name
-        options.extend(['-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=metis_source), # still need headers from METIS source, and they are not installed with METIS. shame...
+        options.extend(['-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=spec['metis'].prefix.include),
                         '-DMETIS_PATH:PATH={metis_source}'.format(metis_source=spec['metis'].prefix),
                         '-DCMAKE_C_COMPILER:STRING=mpicc',
                         '-DCMAKE_CXX_COMPILER:STRING=mpicxx'])
@@ -83,3 +83,7 @@ class Parmetis(Package):
             cmake(source_directory, *options)
             make()
             make("install")
+
+            # The shared library is not installed correctly on Darwin; correct this
+            if (sys.platform == 'darwin') and ('+shared' in spec):
+                fix_darwin_install_name(prefix.lib)

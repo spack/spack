@@ -1,5 +1,9 @@
 from spack import *
 import spack
+import sys
+
+import os
+import sys
 
 class Boost(Package):
     """Boost provides free peer-reviewed portable C++ source
@@ -45,34 +49,34 @@ class Boost(Package):
     version('1.34.1', '2d938467e8a448a2c9763e0a9f8ca7e5')
     version('1.34.0', 'ed5b9291ffad776f8757a916e1726ad0')
 
-    default_install_libs = set(['atomic', 
-        'chrono', 
-        'date_time', 
-        'filesystem', 
+    default_install_libs = set(['atomic',
+        'chrono',
+        'date_time',
+        'filesystem',
         'graph',
         'iostreams',
         'locale',
         'log',
-        'math', 
+        'math',
         'program_options',
-        'random', 
-        'regex', 
-        'serialization', 
-        'signals', 
-        'system', 
-        'test', 
-        'thread', 
+        'random',
+        'regex',
+        'serialization',
+        'signals',
+        'system',
+        'test',
+        'thread',
         'wave'])
 
-    # mpi/python are not installed by default because they pull in many 
-    # dependencies and/or because there is a great deal of customization 
+    # mpi/python are not installed by default because they pull in many
+    # dependencies and/or because there is a great deal of customization
     # possible (and it would be difficult to choose sensible defaults)
     default_noinstall_libs = set(['mpi', 'python'])
 
     all_libs = default_install_libs | default_noinstall_libs
 
     for lib in all_libs:
-        variant(lib, default=(lib not in default_noinstall_libs), 
+        variant(lib, default=(lib not in default_noinstall_libs),
             description="Compile with {0} library".format(lib))
 
     variant('debug', default=False, description='Switch to the debug version of Boost')
@@ -124,9 +128,9 @@ class Boost(Package):
 
         with open('user-config.jam', 'w') as f:
             compiler_wrapper = join_path(spack.build_env_path, 'c++')
-            f.write("using {0} : : {1} ;\n".format(boostToolsetId, 
+            f.write("using {0} : : {1} ;\n".format(boostToolsetId,
                 compiler_wrapper))
-            
+
             if '+mpi' in spec:
                 f.write('using mpi : %s ;\n' %
                     join_path(spec['mpi'].prefix.bin, 'mpicxx'))
@@ -155,7 +159,7 @@ class Boost(Package):
         linkTypes = ['static']
         if '+shared' in spec:
             linkTypes.append('shared')
-        
+
         threadingOpts = []
         if '+multithreaded' in spec:
             threadingOpts.append('multi')
@@ -163,28 +167,50 @@ class Boost(Package):
             threadingOpts.append('single')
         if not threadingOpts:
             raise RuntimeError("At least one of {singlethreaded, multithreaded} must be enabled")
-        
+
         options.extend([
             'toolset=%s' % self.determine_toolset(spec),
             'link=%s' % ','.join(linkTypes),
             '--layout=tagged'])
-        
+
         return threadingOpts
 
     def install(self, spec, prefix):
+        # On Darwin, Boost expects the Darwin libtool. However, one of the
+        # dependencies may have pulled in Spack's GNU libtool, and these two are
+        # not compatible. We thus create a symlink to Darwin's libtool and add
+        # it at the beginning of PATH.
+        if sys.platform == 'darwin':
+            newdir = os.path.abspath('darwin-libtool')
+            mkdirp(newdir)
+            force_symlink('/usr/bin/libtool', join_path(newdir, 'libtool'))
+            env['PATH'] = newdir + ':' + env['PATH']
+
         withLibs = list()
         for lib in Boost.all_libs:
             if "+{0}".format(lib) in spec:
                 withLibs.append(lib)
         if not withLibs:
-            # if no libraries are specified for compilation, then you dont have 
+            # if no libraries are specified for compilation, then you dont have
             # to configure/build anything, just copy over to the prefix directory.
             src = join_path(self.stage.source_path, 'boost')
             mkdirp(join_path(prefix, 'include'))
             dst = join_path(prefix, 'include', 'boost')
             install_tree(src, dst)
             return
-    
+
+        # Remove libraries that the release version does not support
+        if not spec.satisfies('@1.54.0:'):
+            withLibs.remove('log')
+        if not spec.satisfies('@1.53.0:'):
+            withLibs.remove('atomic')
+        if not spec.satisfies('@1.48.0:'):
+            withLibs.remove('locale')
+        if not spec.satisfies('@1.47.0:'):
+            withLibs.remove('chrono')
+        if not spec.satisfies('@1.43.0:'):
+            withLibs.remove('random')
+
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = './'
 
@@ -207,4 +233,7 @@ class Boost(Package):
         # Boost.MPI if the threading options are not separated.
         for threadingOpt in threadingOpts:
             b2('install', 'threading=%s' % threadingOpt, *b2_options)
-        
+
+        # The shared libraries are not installed correctly on Darwin; correct this
+        if (sys.platform == 'darwin') and ('+shared' in spec):
+            fix_darwin_install_name(prefix.lib)

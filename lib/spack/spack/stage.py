@@ -89,7 +89,7 @@ class Stage(object):
     """
 
     def __init__(self, url_or_fetch_strategy,
-                 name=None, mirror_path=None, keep=False):
+                 name=None, mirror_path=None, keep=False, path=None):
         """Create a stage object.
            Parameters:
              url_or_fetch_strategy
@@ -135,7 +135,10 @@ class Stage(object):
 
         # Try to construct here a temporary name for the stage directory
         # If this is a named stage, then construct a named path.
-        self.path = join_path(spack.stage_path, self.name)
+        if path is not None:
+            self.path = path
+        else:
+            self.path = join_path(spack.stage_path, self.name)
 
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep

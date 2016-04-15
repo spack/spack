@@ -1,6 +1,5 @@
 from spack import *
-import os
-
+import os, sys, glob
 
 class Mumps(Package):
     """MUMPS: a MUltifrontal Massively Parallel sparse direct Solver"""
@@ -19,11 +18,12 @@ class Mumps(Package):
     variant('float', default=True, description='Activate the compilation of smumps')
     variant('complex', default=True, description='Activate the compilation of cmumps and/or zmumps')
     variant('idx64', default=False, description='Use int64_t/integer*8 as default index type')
+    variant('shared', default=True, description='Build shared libraries')
 
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
     depends_on('scotch + esmumps + mpi', when='+ptscotch')
-    depends_on('metis', when='+metis')
+    depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when="+parmetis")
     depends_on('blas')
     depends_on('lapack')
@@ -70,6 +70,9 @@ class Mumps(Package):
 
         makefile_conf.append("ORDERINGSF = %s" % (' '.join(orderings)))
 
+        # when building shared libs need -fPIC, otherwise
+        # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1' can not be used when making a shared object; recompile with -fPIC
+        fpic = '-fPIC' if '+shared' in self.spec else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
         if '+idx64' in self.spec:
@@ -77,14 +80,14 @@ class Mumps(Package):
                 # the fortran compilation flags most probably are
                 # working only for intel and gnu compilers this is
                 # perhaps something the compiler should provide
-                ['OPTF    = -O  -DALLOW_NON_INIT %s' % '-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8',
-                 'OPTL    = -O ',
-                 'OPTC    = -O -DINTSIZE64'])
+                ['OPTF    = %s -O  -DALLOW_NON_INIT %s' % (fpic,'-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8'),
+                 'OPTL    = %s -O ' % fpic,
+                 'OPTC    = %s -O -DINTSIZE64' % fpic])
         else:
             makefile_conf.extend(
-                ['OPTF    = -O  -DALLOW_NON_INIT',
-                 'OPTL    = -O ',
-                 'OPTC    = -O '])
+                ['OPTF    = %s -O  -DALLOW_NON_INIT' % fpic,
+                 'OPTL    = %s -O ' % fpic,
+                 'OPTC    = %s -O ' % fpic])
 
 
         if '+mpi' in self.spec:
@@ -105,6 +108,27 @@ class Mumps(Package):
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
         makefile_conf.append("CDEFS   = -DAdd_")
 
+        if '+shared' in self.spec:
+            if sys.platform == 'darwin':
+                # Building dylibs with mpif90 causes segfaults on 10.8 and 10.10. Use gfortran. (Homebrew)
+                makefile_conf.extend([
+                    'LIBEXT=.dylib',
+                    'AR=%s -dynamiclib -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % (os.environ['FC'],prefix.lib),
+                    'RANLIB=echo'
+                ])
+            else:
+                makefile_conf.extend([
+                    'LIBEXT=.so',
+                    'AR=$(FL) -shared -Wl,-soname -Wl,%s/$(notdir $@) -o' % prefix.lib,
+                    'RANLIB=echo'
+                ])
+        else:
+            makefile_conf.extend([
+                'LIBEXT  = .a',
+                'AR = ar vr',
+                'RANLIB = ranlib'
+            ])
+
 
         makefile_inc_template = join_path(os.path.dirname(self.module.__file__),
                                           'Makefile.inc')
@@ -121,7 +145,7 @@ class Mumps(Package):
     def install(self, spec, prefix):
         make_libs = []
 
-        # the coice to compile ?examples is to have kind of a sanity
+        # the choice to compile ?examples is to have kind of a sanity
         # check on the libraries generated.
         if '+float' in spec:
             make_libs.append('sexamples')
@@ -135,9 +159,27 @@ class Mumps(Package):
 
         self.write_makefile_inc()
 
-        make(*make_libs)
+        # Build fails in parallel
+        make(*make_libs, parallel=False)
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
-        if '~mpi' in spec:
-            install('libseq/libmpiseq.a', prefix.lib)
+
+        if '~mpi' in spec:            
+            lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
+            lib_suffix = lib_dsuffix if '+shared' in spec else '.a'
+            install('libseq/libmpiseq%s' % lib_suffix, prefix.lib)
+            for f in glob.glob(join_path('libseq','*.h')):
+                install(f, prefix.include)
+
+        # FIXME: extend the tests to mpirun -np 2 (or alike) when build with MPI
+        # FIXME: use something like numdiff to compare blessed output with the current
+        with working_dir('examples'):
+            if '+float' in spec:
+                os.system('./ssimpletest < input_simpletest_real')
+                if '+complex' in spec:
+                    os.system('./csimpletest < input_simpletest_real')
+            if '+double' in spec:
+                os.system('./dsimpletest < input_simpletest_real')
+                if '+complex' in spec:
+                    os.system('./zsimpletest < input_simpletest_cmplx')

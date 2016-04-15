@@ -18,6 +18,7 @@ class NetlibScalapack(Package):
 
     provides('scalapack')
 
+    depends_on('cmake')
     depends_on('mpi')
     depends_on('lapack')
 
@@ -40,6 +41,11 @@ class NetlibScalapack(Package):
             cmake('..', *options)
             make()
             make("install")
+
+        # The shared libraries are not installed correctly on Darwin; correct this
+        if (sys.platform == 'darwin') and ('+shared' in spec):
+            fix_darwin_install_name(prefix.lib)
+
 
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec

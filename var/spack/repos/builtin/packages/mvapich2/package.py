@@ -140,6 +140,13 @@ class Mvapich2(Package):
 
         configure_args.extend(network_options)
 
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        spack_env.set('MPICH_CC', spack_cc)
+        spack_env.set('MPICH_CXX', spack_cxx)
+        spack_env.set('MPICH_F77', spack_f77)
+        spack_env.set('MPICH_F90', spack_fc)
+        spack_env.set('MPICH_FC', spack_fc)
+
     def install(self, spec, prefix):
         # we'll set different configure flags depending on our environment
         configure_args = [
