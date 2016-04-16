@@ -14,6 +14,9 @@ class Zoltan(Package):
     version('3.83', '1ff1bc93f91e12f2c533ddb01f2c095f')
     version('3.3', '5eb8f00bda634b25ceefa0122bd18d65')
 
+    variant('debug', default=False, description='Builds a debug version of the library')
+    variant('shared', default=True, description='Builds a shared version of the library')
+
     variant('fortran', default=True, description='Enable Fortran support')
     variant('mpi', default=False, description='Enable MPI support')
 
@@ -24,12 +27,20 @@ class Zoltan(Package):
             '--enable-f90interface' if '+fortan' in spec else '--disable-f90interface',
             '--enable-mpi' if '+mpi' in spec else '--disable-mpi',
         ]
+        config_cflags = [
+            '-O0' if '+debug' in spec else '-O3',
+            '-g' if '+debug' in spec else '-g0',
+        ]
+
+        if '+shared' in spec:
+            # config_args.append('--with-ar=%s -shared $(LDFLAGS) -o' % self.compiler.cxx)
+            config_cflags.append('-fPIC')
 
         if '+mpi' in spec:
-            config_args.append('--with-mpi=%s' % spec['mpi'].prefix)
-            config_args.append('--with-mpi-compilers=%s' % spec['mpi'].prefix.bin)
             config_args.append('CC=%s/mpicc' % spec['mpi'].prefix.bin)
             config_args.append('CXX=%s/mpicxx' % spec['mpi'].prefix.bin)
+            config_args.append('--with-mpi=%s' % spec['mpi'].prefix)
+            config_args.append('--with-mpi-compilers=%s' % spec['mpi'].prefix.bin)
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
@@ -41,7 +52,11 @@ class Zoltan(Package):
         cd('build')
 
         config_zoltan = Executable('../configure')
-        config_zoltan('--prefix=%s' % pwd(), *config_args)
+        config_zoltan(
+            '--prefix=%s' % pwd(),
+            '--with-cflags=%s' % ' '.join(config_cflags),
+            '--with-cxxflags=%s' % ' '.join(config_cflags),
+            *config_args)
 
         make()
         make('install')
