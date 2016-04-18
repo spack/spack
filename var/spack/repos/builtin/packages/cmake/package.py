@@ -76,7 +76,8 @@ class Cmake(Package):
 
         if '+qt' in spec:
             options.append('--qt-gui')
-
+            if spec.satisfies('^xz'):
+	        options.append('--system-liblzma')
         if '+doc' in spec:
             options.append('--sphinx-html')
             options.append('--sphinx-man')
