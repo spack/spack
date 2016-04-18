@@ -15,8 +15,10 @@ class Modele(CMakePackage):
         default=False, description='Compile with traps, for debugging')
     variant('fexception', default=False,
         description='Use the FException library, for getting good stack traces.')
-    variant('debug', default=True,
-        description='Use RelWithDebInfo for CMAKE_BUILD_TYPE')
+    variant('debug', default=False,
+        description='Use Debug for CMAKE_BUILD_TYPE')
+    variant('model', default=True,
+        description='Build main model')
     variant('ic', default=False,
         description='Build init_cond directory')
     variant('diags', default=False,
@@ -25,8 +27,9 @@ class Modele(CMakePackage):
         description='Build aux directory')
     variant('mpi', default=True,
         description='Build parallel version with MPI')
-    variant('pnetcdf', default=True,
+    variant('pnetcdf', default=False,
         description='Link with the PNetCDF library; required for some rundecks.')
+
 
     # Build dependencies
     depends_on('m4')
@@ -46,6 +49,7 @@ class Modele(CMakePackage):
         return [
             '-DCMAKE_BUILD_TYPE=%s' % ('Debug' if '+debug' in spec else 'Release'),
             '-DCOMPILE_WITH_TRAPS=%s' % ('YES' if '+traps' in spec else 'NO'),
+            '-DCOMPILE_MODEL=%s' % ('YES' if '+model' in spec else 'NO'),
             '-DCOMPILE_IC=%s' % ('YES' if '+ic' in spec else 'NO'),
             '-DCOMPILE_DIAGS=%s' % ('YES' if '+diags' in spec else 'NO'),
             '-DCOMPILE_AUX=%s' % ('YES' if '+aux' in spec else 'NO'),
@@ -55,7 +59,7 @@ class Modele(CMakePackage):
             '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO')]
 
 
-#    def setup_environment(self, spack_env, env):
-#        """Add <prefix>/bin to the module; this is not the default if we
-#        extend python."""
-#        env.prepend_path('PATH', join_path(self.prefix, 'bin'))
+    def setup_environment(self, spack_env, env):
+        """Add <prefix>/bin to the module; this is not the default if we
+        extend python."""
+        env.prepend_path('PATH', join_path(self.prefix, 'bin'))
