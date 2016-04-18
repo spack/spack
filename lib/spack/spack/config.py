@@ -293,7 +293,7 @@ section_schemas = {
             'module_type_configuration': {
                 'type': 'object',
                 'default': {},
-                'oneOf': [
+                'anyOf': [
                     {
                         'properties': {
                             'whitelist': {'$ref': '#/definitions/array_of_strings'},

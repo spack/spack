@@ -171,7 +171,7 @@ def parse_config_options(module_generator):
         env: list of custom environment modifications to be applied in the module file
     """
     # Get the configuration for this kind of generator
-    module_configuration = copy.copy(CONFIGURATION.get(module_generator.name, {}))
+    module_configuration = copy.deepcopy(CONFIGURATION.get(module_generator.name, {}))
 
     #####
     # Merge all the rules
