@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2015 Krell Institute. All Rights Reserved.
+# Copyright (c) 2015-2016 Krell Institute. All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -25,20 +25,43 @@ class Cbtf(Package):
     homepage = "http://sourceforge.net/p/cbtf/wiki/Home"
 
     # Mirror access template example
-    #url      = "file:/g/g24/jeg/cbtf-1.5.tar.gz"
-    #version('1.6', '1ca88a8834759c4c74452cb97fe7b70a')
+    #url      = "file:/home/jeg/cbtf-1.6.tar.gz"
+    #version('1.6', 'c1ef4e5aa4e470dffb042abdba0b9987')
 
     # Use when the git repository is available
-    version('1.6', branch='master', git='http://git.code.sf.net/p/cbtf/cbtf')
+    version('1.6', branch='master', git='https://github.com/OpenSpeedShop/cbtf.git')
 
-    depends_on("cmake")
-    #depends_on("boost@1.42.0:")
-    depends_on("boost@1.50.0")
-    depends_on("mrnet@4.1.0+lwthreads")
+    variant('runtime', default=False, description="build only the runtime libraries and collectors.")
+
+    depends_on("cmake@3.0.2")
+    depends_on("boost@1.50.0:")
+    depends_on("mrnet@5.0.1:+lwthreads+krellpatch")
     depends_on("xerces-c@3.1.1:")
-    depends_on("libxml2")
+    # Work around for spack libxml2 package bug, take off python when fixed
+    depends_on("libxml2+python")
 
     parallel = False
+
+    def adjustBuildTypeParams_cmakeOptions(self, spec, cmakeOptions):
+        # Sets build type parameters into cmakeOptions the options that will enable the cbtf-krell built type settings
+ 
+        compile_flags="-O2 -g"
+        BuildTypeOptions = []
+        # Set CMAKE_BUILD_TYPE to what cbtf-krell wants it to be, not the stdcmakeargs
+        for word in cmakeOptions[:]:
+            if word.startswith('-DCMAKE_BUILD_TYPE'):
+                cmakeOptions.remove(word)
+            if word.startswith('-DCMAKE_CXX_FLAGS'):
+                cmakeOptions.remove(word)
+            if word.startswith('-DCMAKE_C_FLAGS'):
+                cmakeOptions.remove(word)
+        BuildTypeOptions.extend([
+                 '-DCMAKE_BUILD_TYPE=None',
+                 '-DCMAKE_CXX_FLAGS=%s'         % compile_flags,
+                 '-DCMAKE_C_FLAGS=%s'           % compile_flags
+        ])
+
+        cmakeOptions.extend(BuildTypeOptions)
 
     def install(self, spec, prefix):
       with working_dir('build', create=True):
@@ -48,14 +71,45 @@ class Cbtf(Package):
           # or BOOST_INCLUDEDIR).  Useful when specifying BOOST_ROOT. 
           # Defaults to OFF.
 
-          cmake('..',
-                '--debug-output',
-                '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
-                '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
-                '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
-                '-DCMAKE_MODULE_PATH=%s'   % join_path(prefix.share,'KrellInstitute','cmake'),
-                *std_cmake_args)
+          if '+runtime' in spec:
+              # Install message tag include file for use in Intel MIC cbtf-krell build
+              # FIXME
+              cmakeOptions = []
+              cmakeOptions.extend(['-DCMAKE_INSTALL_PREFIX=%s'	% prefix,
+                                   '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                                   '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
+                                   '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
+                                   '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
+                                   '-DCMAKE_MODULE_PATH=%s'   % join_path(prefix.share,'KrellInstitute','cmake')
+                                  ])
+
+              # Add in the standard cmake arguments
+              cmakeOptions.extend(std_cmake_args)
+
+              # Adjust the standard cmake arguments to what we want the build type, etc to be
+              self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
+             
+              # Invoke cmake
+              cmake('..', *cmakeOptions)
+
+          else:
+              cmakeOptions = []
+              cmakeOptions.extend(['-DCMAKE_INSTALL_PREFIX=%s'	% prefix,
+                                   '-DBoost_NO_SYSTEM_PATHS=TRUE',
+                                   '-DXERCESC_DIR=%s'         % spec['xerces-c'].prefix,
+                                   '-DBOOST_ROOT=%s'          % spec['boost'].prefix,
+                                   '-DMRNET_DIR=%s'           % spec['mrnet'].prefix,
+                                   '-DCMAKE_MODULE_PATH=%s'   % join_path(prefix.share,'KrellInstitute','cmake')
+                                  ])
+
+              # Add in the standard cmake arguments
+              cmakeOptions.extend(std_cmake_args)
+
+              # Adjust the standard cmake arguments to what we want the build type, etc to be
+              self.adjustBuildTypeParams_cmakeOptions(spec, cmakeOptions)
+             
+              # Invoke cmake
+              cmake('..', *cmakeOptions)
 
           make("clean")
           make()
