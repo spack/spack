@@ -20,6 +20,10 @@ class Nag(Compiler):
                    'f77' : 'nag/nagfor',
                    'fc'  : 'nag/nagfor' }
 
+    # Needs double -Wl for rpaths.
+    f77_rpath_arg = '-Wl,-Wl,-rpath,%s'
+    fc_rpath_arg = f77_rpath_arg
+
     @classmethod
     def default_version(self, comp):
         """The '-V' option works for nag compilers.

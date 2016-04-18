@@ -114,6 +114,11 @@ def set_compiler_environment_variables(pkg, env):
     if compiler.fc:
         env.set('SPACK_FC', compiler.fc)
 
+    env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
+    env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
+    env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
+    env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
+
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
     return env
 
