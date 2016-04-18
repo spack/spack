@@ -22,8 +22,19 @@ class IntelInstaller(Package):
 
     homepage = "https://software.intel.com/en-us"
     intel_components = "ALL"
-    # TODO: replace license_path with pull #558
-    license_path = "/usr/local/etc/license.client.intel.lic"
+    license_required = True
+    license_comment = '#'
+    license_files = ['Licenses/license.lic']
+    license_vars = ['INTEL_LICENSE_FILE']
+    license_url = 'http://www.intel.com'
+
+    @property
+    def global_license_file(self):
+        """Returns the path where a global license file should be stored."""
+        if not self.license_files:
+            return
+        return join_path(self.global_license_dir, "intel",
+                         os.path.basename(self.license_files[0]))
 
     def install(self, spec, prefix):
 
@@ -47,7 +58,7 @@ ACTIVATION_LICENSE_FILE=%s
 ACTIVATION_TYPE=license_file
 PHONEHOME_SEND_USAGE_DATA=no
 COMPONENTS=%s
-""" %(self.intel_prefix, self.license_path, self.intel_components))
+""" %(self.intel_prefix, self.global_license_file, self.intel_components))
 
         install_script = which("install.sh")
         install_script('--silent', silent_config_filename)
@@ -95,7 +106,7 @@ class Intel(IntelInstaller):
         abslibdir = os.path.split(os.path.realpath(os.path.join(self.prefix.lib, "intel64", "libimf.a")))[0]
 
         # symlink or copy?
-        os.symlink(self.license_path, os.path.join(absbindir, "license.lic"))
+        os.symlink(self.global_license_file, os.path.join(absbindir, "license.lic"))
 
         if spec.satisfies('+rpath'):
             for compiler_command in ["icc", "icpc", "ifort"]:
