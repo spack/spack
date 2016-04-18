@@ -24,7 +24,7 @@
 ##############################################################################
 from spack import *
 
-class Cmake(Package):
+class CmakeGui(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
     homepage  = 'https://www.cmake.org'
@@ -45,6 +45,7 @@ class Cmake(Package):
 
     depends_on('ncurses', when='+ncurses')
     depends_on('openssl', when='+openssl')
+    depends_on('qt')
     depends_on('python@2.7.11:', when='+doc')
     depends_on('py-sphinx', when='+doc')
 
@@ -52,11 +53,30 @@ class Cmake(Package):
         """Handle CMake's version-based custom URLs."""
         return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (version.up_to(2), version)
 
+    def validate(self, spec):
+        """
+        Checks if incompatible versions of qt were specified
+
+        :param spec: spec of the package
+        :raises RuntimeError: in case of inconsistencies
+        """
+
+        if spec.satisfies('^qt@5.4.0'):
+            msg = 'qt-5.4.0 has broken CMake modules.'
+            raise RuntimeError(msg)
+
     def install(self, spec, prefix):
+        # Consistency check
+        self.validate(spec)
 
         # configure, build, install:
         options = ['--prefix=%s' % prefix]
         options.append('--parallel=%s' % str(make_jobs))
+        options.append('--qt-gui')
+
+        # Use the same libraries that qt depends on.
+        if spec.satisfies('^xz'):
+            options.append('--system-liblzma')
 
         if '+doc' in spec:
             options.append('--sphinx-html')
