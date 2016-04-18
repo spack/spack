@@ -15,9 +15,6 @@ class Ncview(Package):
     # CentOS 7: yum install libXaw-devel
 
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
         configure('--prefix=%s' % prefix)
-
-        # FIXME: Add logic to build and install here
         make()
         make("install")
