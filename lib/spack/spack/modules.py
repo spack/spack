@@ -132,17 +132,15 @@ def dependencies(spec, request='all'):
     if request == 'none':
         return []
 
-    l = [xx for xx in
-         sorted(spec.traverse(order='post', depth=True, cover='nodes', root=False), reverse=True)]
-
     if request == 'direct':
-        return [xx for ii, xx in l if ii == 1]
+        return [xx for _, xx in spec.dependencies.items()]
 
     # FIXME : during module file creation nodes seem to be visited multiple times even if cover='nodes'
     # FIXME : is given. This work around permits to get a unique list of spec anyhow.
     # FIXME : Possibly we miss a merge step among nodes that refer to the same package.
     seen = set()
     seen_add = seen.add
+    l = [xx for xx in sorted(spec.traverse(order='post', depth=True, cover='nodes', root=False), reverse=True)]
     return [xx for ii, xx in l if not (xx in seen or seen_add(xx))]
 
 
