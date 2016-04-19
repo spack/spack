@@ -1029,13 +1029,6 @@ class Package(object):
                          os.path.basename(self.license_files[0]))
 
 
-    def local_license_symlink(self):
-        """Returns the path where a local license file is searched for."""
-        if not self.license_files:
-            return
-        return join_path(self.prefix, self.license_files[0])
-
-
     def set_up_license(self):
         """Prompt the user, letting them know that a license is required."""
 
@@ -1086,9 +1079,9 @@ class Package(object):
         license.write("""\
 {0} A license is required to use {1}.
 {0}
-{0} The recommended solution is to store your license key in this file.
-{0} By default, {1} searches the following file(s) for a license key
-{0} (relative to the installation prefix):
+{0} The recommended solution is to store your license key in this global
+{0} license file. After installation, the following symlink(s) will be
+{0} added to point to this file (relative to the installation prefix):
 {0}
 """.format(comment, self.name))
 
@@ -1135,12 +1128,13 @@ class Package(object):
 
 
     def symlink_license(self):
-        """Create a local symlink that points to the global license file."""
-        target    = self.global_license_file()
-        link_name = self.local_license_symlink()
-        if os.path.exists(target):
-            os.symlink(target, link_name)
-            tty.msg("Added local symlink %s to global license file" % link_name)
+        """Create local symlinks that point to the global license file."""
+        target = self.global_license_file()
+        for filename in self.license_files:
+            link_name = join_path(self.prefix, filename)
+            if os.path.exists(target):
+                os.symlink(target, link_name)
+                tty.msg("Added local symlink %s to global license file" % link_name)
 
 
     def do_install_dependencies(self, **kwargs):

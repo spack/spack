@@ -11,9 +11,7 @@ class Nag(Package):
     # Licensing
     license_required = True
     license_comment  = '!'
-    license_files    = ['lib/nag.key',
-                        'lib/nag.licence',
-                        'lib/nagware.licence']
+    license_files    = ['lib/nag.key']
     license_vars     = ['NAG_KUSARI_FILE']
     license_url      = 'http://www.nag.com/doc/inun/np61/lin-mac/klicence.txt'
 
