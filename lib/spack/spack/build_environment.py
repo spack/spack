@@ -113,6 +113,10 @@ def set_compiler_environment_variables(pkg, env):
         env.set('SPACK_F77', compiler.f77)
     if compiler.fc:
         env.set('SPACK_FC', compiler.fc)
+    if compiler.prelude:
+        # Any environment modules that should be
+        # loaded before calling the compiler
+        env.set('SPACK_COMPILER_PRELUDE', compiler.prelude)
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
     return env

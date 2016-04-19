@@ -97,6 +97,9 @@ class Compiler(object):
     # argument used to get C++11 options
     cxx11_flag = "-std=c++11"
 
+    # Optional "prelude" of environment module commands to be run
+    # before loading the compiler
+    prelude = ""
 
     def __init__(self, cspec, cc, cxx, f77, fc):
         def check(exe):
