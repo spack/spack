@@ -1,0 +1,45 @@
+#!/bin/bash
+source $MODULESHOME/init/bash
+SPACK="$(dirname $0)/spack"
+
+# search_params: PrgEnv-gnu|gcc/5.2.0|cray-libsci|cray-mpich/7.0.0
+function compiler_add {
+    prgenv_module=$1
+    compiler_module=$2
+    libsci_module=$3
+    mpich_module=$4
+    IFS="/" read -a module_parts <<< "$compiler_module"
+    compiler_module_family="${module_parts[0]}"
+
+    echo "Searching for $compiler_module (assuming $libsci_module and $mpich_module)"
+
+    module unload PrgEnv-intel PrgEnv-gnu PrgEnv-pgi PrgEnv-cray
+    module load $prgenv_module
+    module swap $compiler_module_family $compiler_module
+    module swap cray-libsci $libsci_module
+    module swap cray-mpich $mpich_module
+    $SPACK compiler add
+}
+
+# GCC
+compiler_add PrgEnv-gnu   gcc/5.1.0    cray-libsci/13.2.0 cray-mpich/7.2.5
+compiler_add PrgEnv-gnu   gcc/4.9.3    cray-libsci/13.2.0 cray-mpich/7.2.5
+compiler_add PrgEnv-gnu   gcc/4.9.2    cray-libsci/13.2.0 cray-mpich/7.2.5
+compiler_add PrgEnv-gnu   gcc/4.9.1    cray-libsci/13.2.0 cray-mpich/7.2.5
+compiler_add PrgEnv-gnu   gcc/4.9.0    cray-libsci/13.2.0 cray-mpich/7.2.5
+compiler_add PrgEnv-gnu   gcc/4.8.2    cray-libsci/13.0.0 cray-mpich/7.2.2
+compiler_add PrgEnv-gnu   gcc/4.8.1    cray-libsci/13.0.0 cray-mpich/7.2.2
+
+## Intel
+compiler_add PrgEnv-intel intel/15.0.2.164 cray-libsci/13.2.0 cray-mpich/7.2.5
+compiler_add PrgEnv-intel intel/14.0.2.144 cray-libsci/13.2.0 cray-mpich/7.2.5
+
+## PGI
+compiler_add PrgEnv-pgi pgi/15.10.0 cray-libsci/13.2.0 cray-mpich/7.2.5
+compiler_add PrgEnv-pgi pgi/15.7.0 cray-libsci/13.2.0 cray-mpich/7.2.5
+compiler_add PrgEnv-pgi pgi/15.3.0 cray-libsci/13.2.0 cray-mpich/7.2.5
+compiler_add PrgEnv-pgi pgi/14.10.0 cray-libsci/13.0.0 cray-mpich/7.1.0
+compiler_add PrgEnv-pgi pgi/14.7.0 cray-libsci/13.0.0 cray-mpich/7.1.0
+compiler_add PrgEnv-pgi pgi/14.4.0 cray-libsci/13.0.0 cray-mpich/7.1.0
+compiler_add PrgEnv-pgi pgi/14.2.0 cray-libsci/13.0.0 cray-mpich/7.1.0
+compiler_add PrgEnv-pgi pgi/14.1.0 cray-libsci/13.0.0 cray-mpich/7.1.0

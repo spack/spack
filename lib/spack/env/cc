@@ -97,7 +97,7 @@ case "$command" in
         command="$SPACK_CXX"
         language="C++"
         ;;
-    f90|fc|f95|gfortran|ifort|pgfortran|xlf90|nagfor)
+    ftn|f90|fc|f95|gfortran|ifort|pgfortran|xlf90|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
         ;;
@@ -264,4 +264,8 @@ if [[ $SPACK_DEBUG == TRUE ]]; then
     echo "[$mode] ${full_command[@]}" >> $output_log
 fi
 
+if [[ -n $SPACK_COMPILER_PRELUDE ]]; then
+    source $MODULESHOME/init/bash
+    eval $SPACK_COMPILER_PRELUDE
+fi
 exec "${full_command[@]}"
