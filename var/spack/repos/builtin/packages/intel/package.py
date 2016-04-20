@@ -4,11 +4,11 @@ import os
 class Intel(Package):
     """Intel Compilers.
 
-    Note: You will have to add add the downolad file to a
+    Note: You will have to add the downolad file to a
     mirror so that Spack can find it. For instructions on how to set up a
     mirror, see http://software.llnl.gov/spack/mirrors.html"""
 
-    homepage = "http://www.intel.com"
+    homepage = "https://software.intel.com/en-us/intel-parallel-studio-xe"
 
     # TODO: can also try the online installer (will download files on demand)
     version('composer.2016.2', '1133fb831312eb519f7da897fec223fa',
@@ -72,7 +72,8 @@ class Intel(Package):
             if spec.satisfies('+tools') and (spec.satisfies('@cluster') or spec.satisfies('@professional')):
                 components += ";" + tools_components
 
-        with open('install.ini', 'w') as f:
+        silent_config_filename = 'silent.cfg'
+        with open(silent_config_filename, 'w') as f:
             f.write("""
 ACCEPT_EULA=accept
 PSET_MODE=install
@@ -86,7 +87,7 @@ COMPONENTS=%s
 
         install_script = which("install.sh")
 
-        install_script('--silent', 'install.ini')
+        install_script('--silent', silent_config_filename)
 
         absbindir = os.path.split(os.path.realpath(os.path.join(self.prefix.bin, "icc")))[0]
         abslibdir = os.path.split(os.path.realpath(os.path.join(self.prefix.lib, "intel64", "libimf.a")))[0]
