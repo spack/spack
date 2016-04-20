@@ -8,13 +8,14 @@ class Openblas(Package):
     homepage = "http://www.openblas.net"
     url      = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
+    version('0.2.18', '805e7f660877d588ea7e3792cda2ee65')
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
-    variant('shared', default=True, description="Build shared libraries as well as static libs.")
-    variant('openmp', default=True, description="Enable OpenMP support.")
-    variant('fpic', default=True, description="Build position independent code")
+    variant('shared', default=True,  description="Build shared libraries as well as static libs.")
+    variant('openmp', default=False, description="Enable OpenMP support.")
+    variant('fpic',   default=True,  description="Build position independent code")
 
     # virtual dependency
     provides('blas')
@@ -45,8 +46,13 @@ class Openblas(Package):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
 
         # Add support for OpenMP
-        # Note: Make sure your compiler supports OpenMP
         if '+openmp' in spec:
+            # Note: Apple's most recent Clang 7.3.0 still does not support OpenMP.
+            # What is worse, Openblas (as of 0.2.18) hardcoded that OpenMP cannot
+            # be used with any (!) compiler named clang, bummer.
+            if spec.satisfies('%clang'):
+                raise InstallError('OpenBLAS does not support OpenMP with clang!')
+
             make_defs += ['USE_OPENMP=1']
 
         make_args = make_defs + make_targets
