@@ -157,9 +157,9 @@ def set_build_environment_variables(pkg, env):
     # Remove these vars from the environment during build because they
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
-    env.unset('LD_LIBRARY_PATH')
-    env.unset('LD_RUN_PATH')
-    env.unset('DYLD_LIBRARY_PATH')
+#    env.unset('LD_LIBRARY_PATH')
+#    env.unset('LD_RUN_PATH')
+#    env.unset('DYLD_LIBRARY_PATH')
 
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = reversed(filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))
