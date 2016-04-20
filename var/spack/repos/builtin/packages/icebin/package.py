@@ -6,6 +6,7 @@ class Icebin(CMakePackage):
     homepage = "https://github.com/citibeth/icebin"
     url         = "https://github.com/citibeth/icebin/tarball/v0.1.0"
 
+    version('0.1.4', '5c8ecd778255f2972c0caa3a9f5d82ea')
     version('0.1.3', '98d9b28ef8f8a145a7eed2cb1e92e7e4')
     version('0.1.2', '68673158b46b6e88aea6bc4595444adb')
     version('0.1.1', '986b8b51a2564f9c52156a11642e596c')
