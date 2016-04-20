@@ -42,7 +42,7 @@ class Fftw(Package):
     variant('float', default=True, description='Produces a single precision version of the library')
     variant('long_double', default=True, description='Produces a long double precision version of the library')
     variant('quad', default=False, description='Produces a quad precision version of the library (works only with GCC and libquadmath)')
-    variant('openmp', default=True, description="Enable OpenMP support.")
+    variant('openmp', default=False, description="Enable OpenMP support.")
     variant('mpi', default=False, description='Activate MPI support')
 
     depends_on('mpi', when='+mpi')
