@@ -171,12 +171,10 @@ HDF5 version {version} {version}
                 cc = which(join_path(spec['mpi'].prefix.bin, "mpicc"))
             else:
                 cc = which('cc')
-            # TODO: Automate these path settings
+            # TODO: Automate these path and library settings
             cc('-c', "-I%s" % join_path(spec.prefix, "include"), "check.c")
             cc('-o', "check", "check.o",
-               # I couldn't make libraries work on Darwin
                "-L%s" % join_path(spec.prefix, "lib"), "-lhdf5",
-               # join_path(spec.prefix, "lib", "libhdf5.a"),
                "-lz")
             try:
                 output = subprocess.check_output("./check")
