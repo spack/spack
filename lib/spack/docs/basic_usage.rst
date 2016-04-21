@@ -807,22 +807,22 @@ Environment Modules, you can get it with Spack:
 
 1. Install with::
 
+.. code-block:: sh
+
     spack install environment-modules
 
 2. Activate with::
 
-    MODULES_HOME=`spack location -i environment-modules`
-    ${MODULES_HOME}/Modules/bin/add.modules
+Add the following two lines to your ``.bashrc`` profile (or similar):
 
-This adds to your ``.bashrc`` (or similar) files, enabling Environment
-Modules when you log in.  It will ask your permission before changing
-any files.
+.. code-block:: sh
 
-In some circumstances the bash script ``${MODULES_HOME}/Modules/bin/add.modules``
-provided by the Environment Modules package may end up adding incorrect commands.
-Therefore it is advised to double check the ``.bashrc`` (or similar) files.
-As an example, on Ubuntu 14.04 the ``module()`` command was missing the full
-path to ``modulecmd`` executable.
+   MODULES_HOME=`spack location -i environment-modules`
+   source ${MODULES_HOME}/Modules/init/bash
+
+In case you use a Unix shell other than bash, substitute ``bash`` by
+the appropriate file in ``${MODULES_HOME}/Modules/init/``.
+
 
 Spack and Environment Modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
