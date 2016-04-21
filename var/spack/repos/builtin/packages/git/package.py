@@ -24,18 +24,10 @@ class Git(Package):
     #version('2.2.1', 'ff41fdb094eed1ec430aed8ee9b9849c')
 
 
-    # Git compiles with curl support by default on but if your system
-    # does not have it you will not be able to clone https repos
-    variant("curl", default=False, description="Add the internal support of curl for https clone")
-
-    # Git compiles with expat support by default on but if your system
-    # does not have it you will not be able to push https repos
-    variant("expat", default=False, description="Add the internal support of expat for https push")
-
     depends_on("openssl")
     depends_on("autoconf")
-    depends_on("curl", when="+curl")
-    depends_on("expat", when="+expat")
+    depends_on("curl")
+    depends_on("expat")
 
     # Also depends_on gettext: apt-get install gettext (Ubuntu)
 
@@ -50,23 +42,12 @@ class Git(Package):
             "--prefix=%s" % prefix,
             "--without-pcre",
             "--with-openssl=%s" % spec['openssl'].prefix,
-            "--with-zlib=%s" % spec['zlib'].prefix
+            "--with-zlib=%s" % spec['zlib'].prefix,
+            "--with-curl=%s" % spec['curl'].prefix,
+            "--with-expat=%s" % spec['expat'].prefix,
             ]
-
-        if '+curl' in spec:
-            configure_args.append("--with-curl=%s" % spec['curl'].prefix)
-
-        if '+expat' in spec:
-            configure_args.append("--with-expat=%s" % spec['expat'].prefix)
 
         which('autoreconf')('-i')
         configure(*configure_args)
         make()
         make("install")
-
-
-
-
-
-
-
