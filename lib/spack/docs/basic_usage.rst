@@ -812,12 +812,17 @@ Environment Modules, you can get it with Spack:
 2. Activate with::
 
     MODULES_HOME=`spack location -i environment-modules`
-     MODULES_VERSION=`ls -1 $MODULES_HOME/Modules | head -1`
-     ${MODULES_HOME}/Modules/${MODULES_VERSION}/bin/add.modules
+    ${MODULES_HOME}/Modules/bin/add.modules
 
 This adds to your ``.bashrc`` (or similar) files, enabling Environment
 Modules when you log in.  It will ask your permission before changing
 any files.
+
+In some circumstances the bash script ``${MODULES_HOME}/Modules/bin/add.modules``
+provided by the Environment Modules package may end up adding incorrect commands.
+Therefore it is advised to double check the ``.bashrc`` (or similar) files.
+As an example, on Ubuntu 14.04 the ``module()`` command was missing the full
+path to ``modulecmd`` executable.
 
 Spack and Environment Modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
