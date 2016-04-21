@@ -251,3 +251,6 @@ class Dealii(Package):
                 cmake('.')
                 make('release')
                 make('run',parallel=False)
+
+    def setup_environment(self, spack_env, env):
+        env.set('DEAL_II_DIR', self.prefix)
