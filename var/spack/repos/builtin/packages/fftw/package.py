@@ -53,7 +53,11 @@ class Fftw(Package):
         options = ['--prefix=%s' % prefix,
                    '--enable-shared',
                    '--enable-threads']
-        if '+openmp' in spec: 
+    # Add support for OpenMP
+        if '+openmp' in spec:
+            # Note: Apple's Clang does not support OpenMP.
+            if spec.satisfies('%clang'):
+                raise InstallError("Apple's clang does not support OpenMP")
             options.append('--enable-openmp')
         if not self.compiler.f77 or not self.compiler.fc:
             options.append("--disable-fortran")
