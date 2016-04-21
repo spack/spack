@@ -7,7 +7,8 @@ class Git(Package):
     homepage = "http://git-scm.com"
     url      = "https://github.com/git/git/tarball/v2.7.1"
 
-    version('2.8.0-rc2', 'c2cf9f2cc70e35f2fafbaf9258f82e4c')
+    version('2.8.1', '1308448d95afa41a4135903f22262fc8')
+    version('2.8.0', 'eca687e46e9750121638f258cff8317b')
     version('2.7.3', 'fa1c008b56618c355a32ba4a678305f6')
     version('2.7.1', 'bf0706b433a8dedd27a63a72f9a66060')
 
