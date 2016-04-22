@@ -1,10 +1,10 @@
 from spack import *
-import os
+import os, re
 
 class Intel(Package):
     """Intel Compilers.
 
-    Note: You will have to add the downolad file to a
+    Note: You will have to add the download file to a
     mirror so that Spack can find it. For instructions on how to set up a
     mirror, see http://software.llnl.gov/spack/mirrors.html"""
 
@@ -32,7 +32,7 @@ class Intel(Package):
     provides('ipp', when='+ipp')
 
     def install(self, spec, prefix):
-        
+
         # remove the installation DB, otherwise it will try to install into location of other Intel builds
         try:
             os.remove(os.path.join(os.environ["HOME"], "intel", "intel_sdp_products.db"))
@@ -49,28 +49,43 @@ class Intel(Package):
         ipp_components = ""
         tools_components = ""
 
+        def filter_pick(input_list, regex_filter):
+            return [l for l in input_list for m in (regex_filter(l),) if m]
+        def unfilter_pick(input_list, regex_filter):
+            return [l for l in input_list for m in (regex_filter(l),) if not m]
         if spec.satisfies('+all'):
             base_components = "ALL"
-        elif '2016' in str(spec.version): # TODO: string conversion of the spec version is admittedly not the best mechanism 
-            base_components = "intel-comp-l-all-vars__noarch;intel-comp-l-all-common__noarch;intel-comp-l-ps-common__noarch;intel-comp-l-all-devel__x86_64;intel-comp-l-ps-devel__x86_64;intel-comp-l-ps-ss-devel__x86_64;intel-openmp-l-all__x86_64;intel-openmp-l-ps-mic__x86_64;intel-openmp-l-ps__x86_64;intel-openmp-l-ps-ss__x86_64;intel-openmp-l-all-devel__x86_64;intel-openmp-l-ps-mic-devel__x86_64;intel-openmp-l-ps-devel__x86_64;intel-openmp-l-ps-devel-jp__x86_64;intel-openmp-l-ps-mic-devel-jp__x86_64;intel-openmp-l-ps-ss-devel__x86_64;intel-tbb-libs__noarch;intel-comp-all-doc__noarch;intel-comp-ps-ss-doc__noarch;intel-comp-ps-doc-jp__noarch;intel-icc-doc__noarch;intel-icc-ps-doc__noarch;intel-icc-ps-doc-jp__noarch;intel-icc-ps-ss-doc__noarch;intel-ifort-ps-doc__noarch;intel-ifort-ps-doc-jp__noarch;intel-icc-l-all__x86_64;intel-icc-l-ps-ss__x86_64;intel-icc-l-all-vars__noarch;intel-icc-l-all-common__noarch;intel-icc-l-ps-common__noarch;intel-icc-l-all-devel__x86_64;intel-icc-l-ps-devel__x86_64;intel-icc-l-ps-ss-devel__x86_64;intel-ifort-l-ps-jp__x86_64;intel-ifort-l-ps__x86_64;intel-ifort-l-ps-vars__noarch;intel-ifort-l-ps-common__noarch;intel-ifort-l-ps-devel__x86_64;intel-tbb-devel__noarch;intel-tbb-common__noarch;intel-tbb-ps-common__noarch;intel-tbb-common-jp__noarch;intel-tbb-doc__noarch;intel-tbb-doc-jp__noarch;intel-psxe-common__noarch;intel-psxe-doc__noarch;intel-ccomp-doc__noarch;intel-fcomp-doc__noarch;intel-compxe-doc__noarch;intel-icsxe-pset"
-            mpi_components = "intel-imb__x86_64;intel-mpi-rt-core__x86_64;intel-mpi-rt-mic__x86_64;intel-mpi-sdk-core__x86_64;intel-mpi-sdk-mic__x86_64;intel-mpi-doc__x86_64;intel-itac-common__noarch;intel-ta__x86_64;intel-tc__x86_64;intel-tc-mic__x86_64;intel-itac-common-pset__noarch;intel_clck_common__x86_64;intel_clck_analyzer__x86_64;intel_clck_collector__x86_64;intel_clck_database__x86_64;intel_clck_common-pset__noarch;intel-icsxe__noarch;intel-psf-intel__x86_64;intel-icsxe-doc__noarc"
-            mkl_components = "intel-mkl__x86_64;intel-mkl-ps__x86_64;intel-mkl-ps-jp__x86_64;intel-mkl-common__noarch;intel-mkl-ps-common__noarch;intel-mkl-ps-common-jp__noarch;intel-mkl-devel__x86_64;intel-mkl-ps-mic-devel__x86_64;intel-mkl-ps-f95-devel__x86_64;intel-mkl-gnu-devel__x86_64;intel-mkl-ps-gnu-devel__x86_64;intel-mkl-ps-pgi-devel__x86_64;intel-mkl-ps-cluster-devel__x86_64;intel-mkl-ps-cluster-common__noarch;intel-mkl-ps-f95-common__noarch;intel-mkl-ps-cluster__x86_64;intel-mkl-gnu__x86_64;intel-mkl-ps-gnu__x86_64;intel-mkl-ps-pgi__x86_64;intel-mkl-ps-mic__x86_64;intel-mkl-ps-mic-jp__x86_64;intel-mkl-doc__noarch;intel-mkl-ps-doc__noarch;intel-mkl-ps-doc-jp__noarch;intel-mkl-ps-ss-tbb__x86_64;intel-mkl-ps-ss-tbb-devel__x86_64;intel-mkl-ps-tbb-mic__x86_64;intel-mkl-ps-tbb-mic-devel__x86_64"
-            daal_components = "intel-daal__x86_64;intel-daal-common__noarch;intel-daal-ps-common-jp__noarch;intel-daal-doc__noarch;intel-daal-ps-doc-jp__noarch"
-            ipp_components = "intel-ipp-l-common__noarch;intel-ipp-l-ps-common__noarch;intel-ipp-l-st__x86_64;intel-ipp-l-mt__x86_64;intel-ipp-l-st-devel__x86_64;intel-ipp-l-ps-st-devel__x86_64;intel-ipp-l-mt-devel__x86_64;intel-ipp-l-doc__noarch;intel-ipp-l-ps-doc-jp__noarch"
-            tools_components = "intel-gdb-gt__x86_64;intel-gdb-gt-libelfdwarf__x86_64;intel-gdb-gt-devel__x86_64;intel-gdb-gt-common__noarch;intel-gdb-gt-doc__noarch;intel-gdb-ps-cdt__x86_64;intel-gdb-ps-cdt-source__x86_64;intel-gdb-ps-mic__x86_64;intel-gdb-ps-mpm__x86_64;intel-gdb-ps-doc__noarch;intel-gdb-ps-doc-jp__noarch;intel-gdb__x86_64;intel-gdb-common__noarch;intel-gdb-doc__noarch;intel-gdb-doc-jp__noarch;intel-gdb-gt-src__noarch;intel-gdb-source__noarch;intel-compxe__noarch;intel-gdb-ps-common__noarch;intel-vtune-amplifier-xe-2016-cli__i486;intel-vtune-amplifier-xe-2016-cli__x86_64;intel-vtune-amplifier-xe-2016-common__noarch;intel-vtune-amplifier-xe-2016-cli-common__noarch;intel-vtune-amplifier-xe-2016-collector-32linux__i486;intel-vtune-amplifier-xe-2016-collector-64linux__x86_64;intel-vtune-amplifier-xe-2016-doc__noarch;intel-vtune-amplifier-xe-2016-sep__noarch;intel-vtune-amplifier-xe-2016-gui-common__noarch;intel-vtune-amplifier-xe-2016-gui__x86_64;intel-vtune-amplifier-xe-2016-common-pset__noarch;intel-inspector-xe-2016-cli__i486;intel-inspector-xe-2016-cli__x86_64;intel-inspector-xe-2016-cli-common__noarch;intel-inspector-xe-2016-doc__noarch;intel-inspector-xe-2016-gui-common__noarch;intel-inspector-xe-2016-gui__x86_64;intel-inspector-xe-2016-cli-pset__noarch;intel-advisor-xe-2016-cli__i486;intel-advisor-xe-2016-cli__x86_64;intel-advisor-xe-2016-cli-common__noarch;intel-advisor-xe-2016-doc__noarch;intel-advisor-xe-2016-gui-common__noarch;intel-advisor-xe-2016-gui__i486;intel-advisor-xe-2016-gui__x86_64;intel-advisor-xe-2016-cli-pset__noarch"
+        else:
+            with open("pset/mediaconfig.xml", "r") as f:
+                lines = f.readlines()
+                all_components = []
+                for line in lines:
+                    if line.find('<Abbr>') != -1:
+                        component = line[line.find('<Abbr>') + 6:line.find('</Abbr>')]
+                        all_components.append(component)
+                base_components = filter_pick(all_components, re.compile('(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)').search)
+                mpi_components = filter_pick(all_components, re.compile('(icsxe|imb|mpi|itac|intel-tc|clck)').search)
+                mkl_components = filter_pick(all_components, re.compile('(mkl)').search)
+                daal_components = filter_pick(all_components, re.compile('(daal)').search)
+                ipp_components = filter_pick(all_components, re.compile('(ipp)').search)
+                tool_components = filter_pick(all_components, re.compile('(gdb|vtune|inspector|advisor)').search)
 
         components = base_components
         if not spec.satisfies('+all'):
             if spec.satisfies('+mpi') and 'cluster' in str(spec.version):
-                components += ";" + mpi_components
+                components += mpi_components
             if spec.satisfies('+mkl'):
-                components += ";" + mkl_components
+                components += mkl_components
             if spec.satisfies('+daal'):
-                components += ";" + daal_components
+                components += daal_components
             if spec.satisfies('+ipp'):
-                components += ";" + ipp_components
+                components += ipp_components
             if spec.satisfies('+tools') and (spec.satisfies('@cluster') or spec.satisfies('@professional')):
-                components += ";" + tools_components
+                components += tool_components
+
+        components_string = ''
+        for component in components:
+            components_string += component + ';'
 
         silent_config_filename = 'silent.cfg'
         with open(silent_config_filename, 'w') as f:
@@ -83,7 +98,7 @@ ACTIVATION_LICENSE_FILE=%s
 ACTIVATION_TYPE=license_file
 PHONEHOME_SEND_USAGE_DATA=no
 COMPONENTS=%s
-""" %(prefix, license_path, components))
+""" %(prefix, license_path, components_string))
 
         install_script = which("install.sh")
 
@@ -110,5 +125,5 @@ COMPONENTS=%s
                 cfgfilename = os.path.join(absbindir, "%s.cfg" %(compiler_command))
                 with open(cfgfilename, "w") as f:
                     f.write('-Xlinker -rpath -Xlinker %s\n' %(abslibdir))
-        
+
         os.symlink(os.path.join(self.prefix.man, "common", "man1"), os.path.join(self.prefix.man, "man1"))
