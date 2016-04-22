@@ -162,7 +162,7 @@ fi
 # It doesn't work with -rpath.
 # This variable controls whether they are added.
 add_rpaths=true
-if [[ mode == ld && $OSTYPE == darwin* ]]; then
+if [[ $mode == ld && "$SPACK_SHORT_SPEC" =~ "darwin" ]]; then
     for arg in "$@"; do
         if [[ $arg == -r ]]; then
             add_rpaths=false
