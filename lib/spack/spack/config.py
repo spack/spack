@@ -276,7 +276,7 @@ section_schemas = {
                     },
                     'autoload': {'$ref': '#/definitions/dependency_selection'},
                     'prerequisites': {'$ref': '#/definitions/dependency_selection'},
-                    'conflict': {'type': 'string'},
+                    'conflict': {'$ref': '#/definitions/array_of_strings'},
                     'environment': {
                         'type': 'object',
                         'default': {},

@@ -46,6 +46,7 @@ import os
 import os.path
 import re
 import textwrap
+import string
 
 import llnl.util.tty as tty
 import spack
@@ -499,15 +500,20 @@ class TclModule(EnvModule):
     def module_specific_content(self, configuration):
         naming_tokens = self.tokens
         # Conflict
-        conflict_format = configuration.get('conflict', '')
-        if conflict_format:
-            for naming_dir, conflict_dir in zip(self.naming_scheme.split('/'), conflict_format.split('/')):
-                if naming_dir != conflict_dir:
-                    message = 'Conflict scheme does not match naming scheme [{spec}]\n\n'
-                    message += 'naming scheme   : "{nformat}"\n'
-                    message += 'conflict scheme : "{cformat}"\n'
-                    raise tty.error(
-                        message.format(spec=self.spec, nformat=self.naming_scheme, cformat=conflict_format)
-                    )
-            conflict_format = 'conflict ' + conflict_format
-            yield conflict_format.format(**naming_tokens)
+        conflict_format = configuration.get('conflict', [])
+        f = string.Formatter()
+        for item in conflict_format:
+            line = 'conflict ' + item + '\n'
+            if len([x for x in f.parse(line)]) > 1:  # We do have placeholder to substitute
+                for naming_dir, conflict_dir in zip(self.naming_scheme.split('/'), item.split('/')):
+                    if naming_dir != conflict_dir:
+                        message = 'conflict scheme does not match naming scheme [{spec}]\n\n'
+                        message += 'naming scheme   : "{nformat}"\n'
+                        message += 'conflict scheme : "{cformat}"\n\n'
+                        message += '** You may want to check your `modules.yaml` configuration file **\n'
+                        tty.error(
+                            message.format(spec=self.spec, nformat=self.naming_scheme, cformat=item)
+                        )
+                        raise SystemExit('Module generation aborted.')
+                line = line.format(**naming_tokens)
+            yield line

@@ -62,6 +62,16 @@ configuration_blacklist = {
     }
 }
 
+configuration_conflicts = {
+    'enable': ['tcl'],
+    'tcl': {
+        'naming_scheme': '{name}/{version}-{compiler.name}',
+        'all': {
+            'conflict': ['{name}', 'intel/14.0.1']
+        }
+    }
+}
+
 from spack.test.mock_packages_test import MockPackagesTest
 
 
@@ -124,3 +134,11 @@ class TclTests(MockPackagesTest):
         content = self.get_modulefile_content(spec)
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 1)
         self.assertEqual(len([x for x in content if 'module load ' in x]), 1)
+
+    def test_conflicts(self):
+        spack.modules.CONFIGURATION = configuration_conflicts
+        spec = spack.spec.Spec('mpileaks=x86-linux')
+        content = self.get_modulefile_content(spec)
+        self.assertEqual(len([x for x in content if x.startswith('conflict')]), 2)
+        self.assertEqual(len([x for x in content if x == 'conflict mpileaks']), 1)
+        self.assertEqual(len([x for x in content if x == 'conflict intel/14.0.1']), 1)
