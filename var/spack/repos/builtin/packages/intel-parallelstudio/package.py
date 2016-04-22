@@ -1,8 +1,8 @@
 from spack import *
 import os, re
 
-class Intel(Package):
-    """Intel Compilers.
+class IntelParallelstudio(Package):
+    """Intel Parallel Studio.
 
     Note: You will have to add the download file to a
     mirror so that Spack can find it. For instructions on how to set up a
@@ -83,9 +83,7 @@ class Intel(Package):
             if spec.satisfies('+tools') and (spec.satisfies('@cluster') or spec.satisfies('@professional')):
                 components += tool_components
 
-        components_string = ''
-        for component in components:
-            components_string += component + ';'
+        components_string = ';'.join(components)
 
         silent_config_filename = 'silent.cfg'
         with open(silent_config_filename, 'w') as f:
