@@ -22,6 +22,7 @@ class OsuMicroBenchmarks(Package):
         config_args = [
             'CC=%s'  % spec['mpi'].prefix.bin + '/mpicc',
             'CXX=%s' % spec['mpi'].prefix.bin + '/mpicxx',
+            'LDFLAGS=-lrt',
             '--prefix=%s' % prefix
         ]
 
