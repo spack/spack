@@ -25,7 +25,6 @@
 
 from spack import *
 import shutil
-import subprocess
 
 
 class Hdf5(Package):
@@ -177,7 +176,8 @@ HDF5 version {version} {version}
                "-L%s" % join_path(spec.prefix, "lib"), "-lhdf5",
                "-lz")
             try:
-                output = subprocess.check_output("./check")
+                check = Executable('./check')
+                output = check(return_output=True)
             except:
                 output = ""
             success = output == expected
