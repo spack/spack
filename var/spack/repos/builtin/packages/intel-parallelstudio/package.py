@@ -91,17 +91,17 @@ class IntelParallelstudio(IntelInstaller):
         abslibdir = os.path.split(os.path.realpath(os.path.join(self.prefix.lib, "intel64", "libimf.a")))[0]
 
         # symlink or copy?
-        os.symlink(self.license_path, os.path.join(absbindir, "license.lic"))
+        os.symlink(self.global_license_file, os.path.join(absbindir, "license.lic"))
         if spec.satisfies('+tools') and (spec.satisfies('@cluster') or spec.satisfies('@professional')):
             os.mkdir(os.path.join(self.prefix, "inspector_xe/licenses"))
-            os.symlink(self.license_path, os.path.join(self.prefix, "inspector_xe/licenses", "license.lic"))
+            os.symlink(self.global_license_file, os.path.join(self.prefix, "inspector_xe/licenses", "license.lic"))
             os.mkdir(os.path.join(self.prefix, "advisor_xe/licenses"))
-            os.symlink(self.license_path, os.path.join(self.prefix, "advisor_xe/licenses", "license.lic"))
+            os.symlink(self.global_license_file, os.path.join(self.prefix, "advisor_xe/licenses", "license.lic"))
             os.mkdir(os.path.join(self.prefix, "vtune_amplifier_xe/licenses"))
-            os.symlink(self.license_path, os.path.join(self.prefix, "vtune_amplifier_xe/licenses", "license.lic"))
+            os.symlink(self.global_license_file, os.path.join(self.prefix, "vtune_amplifier_xe/licenses", "license.lic"))
 
         if (spec.satisfies('+all') or spec.satisfies('+mpi')) and spec.satisfies('@cluster'):
-            os.symlink(self.license_path, os.path.join(self.prefix, "itac_latest", "license.lic"))
+            os.symlink(self.global_license_file, os.path.join(self.prefix, "itac_latest", "license.lic"))
 
         if spec.satisfies('+rpath'):
             for compiler_command in ["icc", "icpc", "ifort"]:
