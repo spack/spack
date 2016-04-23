@@ -50,9 +50,12 @@ class R(Package):
     depends_on('tk')
 
     def install(self, spec, prefix):
+        rlibdir = join_path(prefix, 'rlib')
         options = ['--prefix=%s' % prefix,
+                   '--libdir=%s' % rlibdir,
                    '--enable-R-shlib',
-                   '--enable-BLAS-shlib']
+                   '--enable-BLAS-shlib',
+                   '--enable-R-framework=no']
         if '+external-lapack' in spec:
             options.extend(['--with-blas', '--with-lapack'])
 
@@ -66,7 +69,7 @@ class R(Package):
 
     @property
     def r_lib_dir(self):
-        return os.path.join('lib64', 'R', 'library')
+        return os.path.join('rlib', 'R', 'library')
 
     def setup_dependent_environment(self, spack_env, run_env, extension_spec):
         # Set R_LIBS to include the library dir for the
