@@ -28,20 +28,20 @@ class Turbomole(Package):
     #
     # Only one of these can be active at a time. MPI and SMP are set as
     # variants so there could be up to 3 installs per version. Switching
-    # between them would be accomplished with `module swap` commands. 
+    # between them would be accomplished with `module swap` commands.
 
     def do_fetch(self, mirror_only=True):
         if '+mpi' in self.spec and '+smp' in self.spec:
-	    raise InstallError('Can not have both SMP and MPI enabled in the same build.')
+            raise InstallError('Can not have both SMP and MPI enabled in the same build.')
         super(Turbomole, self).do_fetch(mirror_only)
 
     def get_tm_arch(self):
-	# For python-2.7 we could use `tm_arch = subprocess.check_output()`
+        # For python-2.7 we could use `tm_arch = subprocess.check_output()`
         # Use the following for compatibility with python 2.6
         if 'TURBOMOLE' in os.getcwd():
             tm_arch = subprocess.Popen(['sh', 'scripts/sysname'],
                 stdout=subprocess.PIPE).communicate()[0]
-	    return tm_arch.rstrip('\n')
+            return tm_arch.rstrip('\n')
         else:
             return
         
@@ -53,7 +53,7 @@ class Turbomole(Package):
         tm_arch=self.get_tm_arch()
 
         tar = which('tar')
-	dst = join_path(prefix, 'TURBOMOLE')
+        dst = join_path(prefix, 'TURBOMOLE')
 
         tar('-x', '-z', '-f', 'thermocalc.tar.gz')
         with working_dir('thermocalc'):
@@ -83,25 +83,25 @@ class Turbomole(Package):
         install('README_LICENSES', dst)
         install('TURBOMOLE_702_LinuxPC', dst)
 
-	if '+mpi' in spec:
-	    install_tree('bin/%s_mpi' % tm_arch, join_path(dst, 'bin', '%s_mpi' % tm_arch))
-	    install_tree('libso/%s_mpi' % tm_arch, join_path(dst, 'libso', '%s_mpi' % tm_arch))
-	    install_tree('mpirun_scripts/%s_mpi' % tm_arch, join_path(dst, 'mpirun_scripts', '%s_mpi' % tm_arch))
-	elif '+smp' in spec:
-	    install_tree('bin/%s_smp' % tm_arch, join_path(dst, 'bin', '%s_smp' % tm_arch))
-	    install_tree('libso/%s_smp' % tm_arch, join_path(dst, 'libso', '%s_smp' % tm_arch))
-	    install_tree('mpirun_scripts/%s_smp' % tm_arch, join_path(dst, 'mpirun_scripts', '%s_smp' % tm_arch))
+        if '+mpi' in spec:
+            install_tree('bin/%s_mpi' % tm_arch, join_path(dst, 'bin', '%s_mpi' % tm_arch))
+            install_tree('libso/%s_mpi' % tm_arch, join_path(dst, 'libso', '%s_mpi' % tm_arch))
+            install_tree('mpirun_scripts/%s_mpi' % tm_arch, join_path(dst, 'mpirun_scripts', '%s_mpi' % tm_arch))
+        elif '+smp' in spec:
+            install_tree('bin/%s_smp' % tm_arch, join_path(dst, 'bin', '%s_smp' % tm_arch))
+            install_tree('libso/%s_smp' % tm_arch, join_path(dst, 'libso', '%s_smp' % tm_arch))
+            install_tree('mpirun_scripts/%s_smp' % tm_arch, join_path(dst, 'mpirun_scripts', '%s_smp' % tm_arch))
         else:
-	    install_tree('bin/%s' % tm_arch, join_path(dst, 'bin', tm_arch))
+            install_tree('bin/%s' % tm_arch, join_path(dst, 'bin', tm_arch))
         if '+mpi' in spec or '+smp' in spec:
-	    install('mpirun_scripts/ccsdf12', join_path(dst, 'mpirun_scripts'))
-	    install('mpirun_scripts/dscf', join_path(dst, 'mpirun_scripts'))
-	    install('mpirun_scripts/grad', join_path(dst, 'mpirun_scripts'))
-	    install('mpirun_scripts/mpgrad', join_path(dst, 'mpirun_scripts'))
-	    install('mpirun_scripts/pnoccsd', join_path(dst, 'mpirun_scripts'))
-	    install('mpirun_scripts/rdgrad', join_path(dst, 'mpirun_scripts'))
-	    install('mpirun_scripts/ricc2', join_path(dst, 'mpirun_scripts'))
-	    install('mpirun_scripts/ridft', join_path(dst, 'mpirun_scripts'))
+            install('mpirun_scripts/ccsdf12', join_path(dst, 'mpirun_scripts'))
+            install('mpirun_scripts/dscf', join_path(dst, 'mpirun_scripts'))
+            install('mpirun_scripts/grad', join_path(dst, 'mpirun_scripts'))
+            install('mpirun_scripts/mpgrad', join_path(dst, 'mpirun_scripts'))
+            install('mpirun_scripts/pnoccsd', join_path(dst, 'mpirun_scripts'))
+            install('mpirun_scripts/rdgrad', join_path(dst, 'mpirun_scripts'))
+            install('mpirun_scripts/ricc2', join_path(dst, 'mpirun_scripts'))
+            install('mpirun_scripts/ridft', join_path(dst, 'mpirun_scripts'))
 
     def setup_environment(self, spack_env, run_env):
         if self.spec.satisfies('@:7.0.2'):
@@ -110,10 +110,10 @@ class Turbomole(Package):
         tm_arch=self.get_tm_arch()
 
         run_env.set('TURBODIR', join_path(self.prefix, 'TURBOMOLE'))
-	run_env.set('MOLE_CONTROL', join_path(self.prefix, 'TURBOMOLE', molecontrol_version))
+        run_env.set('MOLE_CONTROL', join_path(self.prefix, 'TURBOMOLE', molecontrol_version))
 
-	run_env.prepend_path('PATH', join_path(self.prefix, 'TURBOMOLE', 'thermocalc'))
-	run_env.prepend_path('PATH', join_path(self.prefix, 'TURBOMOLE', 'scripts'))
+        run_env.prepend_path('PATH', join_path(self.prefix, 'TURBOMOLE', 'thermocalc'))
+        run_env.prepend_path('PATH', join_path(self.prefix, 'TURBOMOLE', 'scripts'))
         if '+mpi' in self.spec:
             run_env.set('PARA_ARCH', 'MPI')
             run_env.prepend_path('PATH', join_path(self.prefix, 'TURBOMOLE', 'bin', '%s_mpi' % tm_arch))
