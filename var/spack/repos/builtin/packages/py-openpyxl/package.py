@@ -1,9 +1,8 @@
 from spack import *
 
 class PyOpenpyxl(Package):
-    """
-    A Python library to read/write Excel 2007 xlsx/xlsm files
-    """
+    """A Python library to read/write Excel 2007 xlsx/xlsm files"""
+
     homepage = 'http://openpyxl.readthedocs.org/'
     url      = "https://pypi.python.org/packages/source/o/openpyxl/openpyxl-2.4.0-a1.tar.gz"
 

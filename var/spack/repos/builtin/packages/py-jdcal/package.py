@@ -1,9 +1,8 @@
 from spack import *
 
 class PyJdcal(Package):
-    """
-    Julian dates from proleptic Gregorian and Julian calendars
-    """
+    """Julian dates from proleptic Gregorian and Julian calendars"""
+
     homepage = 'http://github.com/phn/jdcal'
     url      = "https://pypi.python.org/packages/source/j/jdcal/jdcal-1.2.tar.gz"
 

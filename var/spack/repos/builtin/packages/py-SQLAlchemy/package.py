@@ -1,9 +1,8 @@
 from spack import *
 
 class PySqlalchemy(Package):
-    """
-    The Python SQL Toolkit and Object Relational Mapper
-    """
+    """The Python SQL Toolkit and Object Relational Mapper"""
+
     homepage = 'http://www.sqlalchemy.org/'
     url      = "https://pypi.python.org/packages/source/S/SQLAlchemy/SQLAlchemy-1.0.12.tar.gz"
 

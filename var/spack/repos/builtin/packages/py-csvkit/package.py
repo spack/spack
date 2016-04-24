@@ -1,10 +1,9 @@
 from spack import *
 
 class PyCsvkit(Package):
-    """
-    A library of utilities for working with CSV, the king of tabular file
-    formats
-    """
+    """A library of utilities for working with CSV, the king of tabular file
+    formats"""
+
     homepage = 'http://csvkit.rtfd.org/'
     url      = "https://pypi.python.org/packages/source/c/csvkit/csvkit-0.9.1.tar.gz"
 

@@ -1,10 +1,9 @@
 from spack import *
 
 class PyXlrd(Package):
-    """
-    Library for developers to extract data from Microsoft Excel (tm)
-    spreadsheet files
-    """
+    """Library for developers to extract data from Microsoft Excel (tm)
+    spreadsheet files"""
+
     homepage = 'http://www.python-excel.org/'
     url      = "https://pypi.python.org/packages/source/x/xlrd/xlrd-0.9.4.tar.gz"
 
