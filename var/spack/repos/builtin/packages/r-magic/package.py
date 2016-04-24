@@ -1,7 +1,11 @@
 from spack import *
 
 class RMagic(Package):
-    """A collection of efficient, vectorized algorithms for the creation and investigation of magic squares and hypercubes, including a variety of functions for the manipulation and analysis of arbitrarily dimensioned arrays."""
+    """A collection of efficient, vectorized algorithms for the creation and
+    investigation of magic squares and hypercubes, including a variety of
+    functions for the manipulation and analysis of arbitrarily dimensioned
+    arrays."""
+
     homepage = "https://cran.r-project.org/"
     url      = "https://cran.r-project.org/src/contrib/magic_1.5-6.tar.gz"
 

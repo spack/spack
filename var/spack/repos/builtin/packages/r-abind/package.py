@@ -1,7 +1,10 @@
 from spack import *
 
 class RAbind(Package):
-    """Combine multidimensional arrays into a single array. This is a generalization of 'cbind' and 'rbind'. Works with vectors, matrices, and higher-dimensional arrays. Also provides functions 'adrop', 'asub', and 'afill' for manipulating, extracting and replacing data in arrays."""
+    """Combine multidimensional arrays into a single array. This is a
+    generalization of 'cbind' and 'rbind'. Works with vectors, matrices, and
+    higher-dimensional arrays. Also provides functions 'adrop', 'asub', and
+    'afill' for manipulating, extracting and replacing data in arrays."""
 
     homepage = "https://cran.r-project.org/"
     url      = "https://cran.r-project.org/src/contrib/abind_1.4-3.tar.gz"
