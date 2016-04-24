@@ -5,7 +5,7 @@ class Ior(Package):
     """The IOR software is used for benchmarking parallel file systems
     using POSIX, MPI-IO, or HDF5 interfaces."""
 
-    homepage = "http://www.nersc.gov/users/computational-systems/cori/nersc-8-procurement/trinity-nersc-8-rfp/nersc-8-trinity-benchmarks/ior/"
+    homepage = "https://github.com/LLNL/ior"
     url      = "https://github.com/LLNL/ior/archive/3.0.1.tar.gz"
 
     version('3.0.1', '71150025e0bb6ea1761150f48b553065')
@@ -28,9 +28,13 @@ class Ior(Package):
 
         if '+hdf5' in spec:
             config_args.append('--with-hdf5')
+        else:
+            config_args.append('--without-hdf5')
 
         if '+ncmpi' in spec:
             config_args.append('--with-ncmpi')
+        else:
+            config_args.append('--without-ncmpi')
 
         configure(*config_args)
 
