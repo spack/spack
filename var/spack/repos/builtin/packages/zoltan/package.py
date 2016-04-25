@@ -36,7 +36,7 @@ class Zoltan(Package):
         ]
 
         if '+shared' in spec:
-            config_args.append('--with-ar=%s -shared $(LDFLAGS) -o' % self.compiler.cxx)
+            config_args.append('--with-ar=$(CXX) -shared $(LDFLAGS) -o')
             config_args.append('RANLIB=echo')
             config_cflags.append('-fPIC')
 
