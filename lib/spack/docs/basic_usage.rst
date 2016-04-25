@@ -397,7 +397,7 @@ installed, but you know that new compilers have been added to your
     ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
         gcc@4.9.0
 
-This loads the environment module for gcc-4.9.0 to get it into the
+This loads the environment module for gcc-4.9.0 to add it to
 ``PATH``, and then it adds the compiler to Spack.
 
 .. _spack-compiler-info:
