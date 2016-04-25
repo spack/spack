@@ -45,6 +45,7 @@ class Eigen(Package):
 
     # TODO : dependency on googlehash, superlu, adolc missing
 
+    depends_on('cmake')
     depends_on('metis@5:', when='+metis')
     depends_on('scotch', when='+scotch')
     depends_on('fftw', when='+fftw')
