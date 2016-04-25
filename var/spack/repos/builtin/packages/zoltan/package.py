@@ -1,3 +1,4 @@
+import re, os, glob
 from spack import *
 
 class Zoltan(Package):
@@ -12,6 +13,8 @@ class Zoltan(Package):
     base_url = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions"
 
     version('3.83', '1ff1bc93f91e12f2c533ddb01f2c095f')
+    version('3.8', '9d8fba8a990896881b85351d4327c4a9')
+    version('3.6', '9cce794f7241ecd8dbea36c3d7a880f9')
     version('3.3', '5eb8f00bda634b25ceefa0122bd18d65')
 
     variant('debug', default=False, description='Builds a debug version of the library')
@@ -33,7 +36,8 @@ class Zoltan(Package):
         ]
 
         if '+shared' in spec:
-            # config_args.append('--with-ar=%s -shared $(LDFLAGS) -o' % self.compiler.cxx)
+            config_args.append('--with-ar=%s -shared $(LDFLAGS) -o' % self.compiler.cxx)
+            config_args.append('RANLIB=echo')
             config_cflags.append('-fPIC')
 
         if '+mpi' in spec:
@@ -45,7 +49,7 @@ class Zoltan(Package):
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
         # ability to descend directly into the package's source directory.
-        if spec.satisfies('@:3.3'):
+        if spec.satisfies('@:3.6'):
             cd('Zoltan_v%s' % self.version)
 
         mkdirp('build')
@@ -60,6 +64,14 @@ class Zoltan(Package):
 
         make()
         make('install')
+
+        # NOTE: Unfortunately, Zoltan doesn't provide any configuration options for
+        # the extension of the output library files, so this script must change these
+        # extensions as a post-processing step.
+        if '+shared' in spec:
+            for libpath in glob.glob('lib/*.a'):
+                libdir, libname = (os.path.dirname(libpath), os.path.basename(libpath))
+                move(libpath, os.path.join(libdir, re.sub(r'\.a$', '.so', libname)))
 
         mkdirp(prefix)
         move('include', prefix)
