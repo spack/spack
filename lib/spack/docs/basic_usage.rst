@@ -372,25 +372,32 @@ how this is done is in :ref:`sec-specs`.
 ``spack compiler add``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+An alias for ``spack compiler find``.
+
+.. _spack-compiler-find:
+
+``spack compiler find``
+~~~~~~~~~~~~~~~~~~~~~~~
+
 If you do not see a compiler in this list, but you want to use it with
-Spack, you can simply run ``spack compiler add`` with the path to
+Spack, you can simply run ``spack compiler find`` with the path to
 where the compiler is installed.  For example::
 
-    $ spack compiler add /usr/local/tools/ic-13.0.079
+    $ spack compiler find /usr/local/tools/ic-13.0.079
     ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
         intel@13.0.079
 
-Or you can run ``spack compiler add`` with no arguments to force
+Or you can run ``spack compiler find`` with no arguments to force
 auto-detection.  This is useful if you do not know where compilers are
 installed, but you know that new compilers have been added to your
 ``PATH``.  For example, using dotkit, you might do this::
 
     $ module load gcc-4.9.0
-    $ spack compiler add
+    $ spack compiler find
     ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
         gcc@4.9.0
 
-This loads the environment module for gcc-4.9.0 to get it into the
+This loads the environment module for gcc-4.9.0 to add it to
 ``PATH``, and then it adds the compiler to Spack.
 
 .. _spack-compiler-info:
