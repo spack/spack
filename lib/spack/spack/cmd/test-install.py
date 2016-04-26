@@ -23,36 +23,39 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
-import xml.etree.ElementTree as ET
-import itertools
-import re
-import os
 import codecs
+import itertools
+import os
+import re
+import time
+import xml.etree.ElementTree as ET
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
-
 import spack
+import spack.cmd
+from llnl.util.filesystem import *
 from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
-import spack.cmd
 
 description = "Run package installation as a unit test, output formatted results."
 
+
 def setup_parser(subparser):
-    subparser.add_argument(
-        '-j', '--jobs', action='store', type=int,
-        help="Explicitly set number of make jobs.  Default is #cpus.")
+    subparser.add_argument('-j',
+                           '--jobs',
+                           action='store',
+                           type=int,
+                           help="Explicitly set number of make jobs.  Default is #cpus.")
 
-    subparser.add_argument(
-        '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="Do not check packages against checksum")
+    subparser.add_argument('-n',
+                           '--no-checksum',
+                           action='store_true',
+                           dest='no_checksum',
+                           help="Do not check packages against checksum")
 
-    subparser.add_argument(
-        '-o', '--output', action='store', help="test output goes in this file")
+    subparser.add_argument('-o', '--output', action='store', help="test output goes in this file")
 
-    subparser.add_argument(
-        'package', nargs=argparse.REMAINDER, help="spec of package to install")
+    subparser.add_argument('package', nargs=argparse.REMAINDER, help="spec of package to install")
 
 
 class JunitResultFormat(object):
@@ -102,8 +105,7 @@ class BuildId(object):
         if not isinstance(other, BuildId):
             return False
 
-        return ((self.name, self.version, self.hashId) ==
-            (other.name, other.version, other.hashId))
+        return ((self.name, self.version, self.hashId) == (other.name, other.version, other.hashId))
 
 
 def fetch_log(path):
@@ -114,14 +116,13 @@ def fetch_log(path):
 
 
 def failed_dependencies(spec):
-    return set(childSpec for childSpec in spec.dependencies.itervalues() if not
-        spack.repo.get(childSpec).installed)
+    return set(childSpec for childSpec in spec.dependencies.itervalues() if not spack.repo.get(childSpec).installed)
 
 
-def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
+def create_test_output(top_spec, newInstalls, output, getLogFunc=fetch_log):
     # Post-order traversal is not strictly required but it makes sense to output
     # tests for dependencies first.
-    for spec in topSpec.traverse(order='post'):
+    for spec in top_spec.traverse(order='post'):
         if spec not in newInstalls:
             continue
 
@@ -131,20 +132,17 @@ def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
             result = TestResult.SKIPPED
             dep = iter(failedDeps).next()
             depBID = BuildId(dep)
-            errOutput = "Skipped due to failed dependency: {0}".format(
-                depBID.stringId())
+            errOutput = "Skipped due to failed dependency: {0}".format(depBID.stringId())
         elif (not package.installed) and (not package.stage.source_path):
             result = TestResult.FAILED
             errOutput = "Failure to fetch package resources."
         elif not package.installed:
             result = TestResult.FAILED
             lines = getLogFunc(package.build_log_path)
-            errMessages = list(line for line in lines if
-                re.search('error:', line, re.IGNORECASE))
+            errMessages = list(line for line in lines if re.search('error:', line, re.IGNORECASE))
             errOutput = errMessages if errMessages else lines[-10:]
-            errOutput = '\n'.join(itertools.chain(
-                    [spec.to_yaml(), "Errors:"], errOutput,
-                    ["Build Log:", package.build_log_path]))
+            errOutput = '\n'.join(itertools.chain([spec.to_yaml(), "Errors:"], errOutput, ["Build Log:",
+                                                                                           package.build_log_path]))
         else:
             result = TestResult.PASSED
             errOutput = None
@@ -153,7 +151,16 @@ def create_test_output(topSpec, newInstalls, output, getLogFunc=fetch_log):
         output.add_test(bId, result, errOutput)
 
 
+def get_top_spec_or_die(args):
+    specs = spack.cmd.parse_specs(args.package, concretize=True)
+    if len(specs) > 1:
+        tty.die("Only 1 top-level package can be specified")
+    top_spec = iter(specs).next()
+    return top_spec
+
+
 def test_install(parser, args):
+    # Check the input
     if not args.package:
         tty.die("install requires a package argument")
 
@@ -162,21 +169,13 @@ def test_install(parser, args):
             tty.die("The -j option must be a positive integer!")
 
     if args.no_checksum:
-        spack.do_checksum = False        # TODO: remove this global.
+        spack.do_checksum = False  # TODO: remove this global.
 
-    specs = spack.cmd.parse_specs(args.package, concretize=True)
-    if len(specs) > 1:
-        tty.die("Only 1 top-level package can be specified")
-    topSpec = iter(specs).next()
-
-    newInstalls = set()
-    for spec in topSpec.traverse():
-        package = spack.repo.get(spec)
-        if not package.installed:
-            newInstalls.add(spec)
+    # Get the one and only top spec
+    top_spec = get_top_spec_or_die(args)
 
     if not args.output:
-        bId = BuildId(topSpec)
+        bId = BuildId(top_spec)
         outputDir = join_path(os.getcwd(), "test-output")
         if not os.path.exists(outputDir):
             os.mkdir(outputDir)
@@ -184,20 +183,27 @@ def test_install(parser, args):
     else:
         outputFpath = args.output
 
-    for spec in topSpec.traverse(order='post'):
+    new_installs = set()
+    for spec in top_spec.traverse(order='post'):
         # Calling do_install for the top-level package would be sufficient but
         # this attempts to keep going if any package fails (other packages which
         # are not dependents may succeed)
         package = spack.repo.get(spec)
+
+        if not package.installed:
+            new_installs.add(spec)
+
+        duration = 0.0
         if (not failed_dependencies(spec)) and (not package.installed):
             try:
-                package.do_install(
-                    keep_prefix=False,
-                    keep_stage=True,
-                    ignore_deps=False,
-                    make_jobs=args.jobs,
-                    verbose=True,
-                    fake=False)
+                start_time = time.time()
+                package.do_install(keep_prefix=False,
+                                   keep_stage=True,
+                                   ignore_deps=False,
+                                   make_jobs=args.jobs,
+                                   verbose=True,
+                                   fake=False)
+                duration = time.time() - start_time
             except InstallError:
                 pass
             except FetchError:
@@ -205,7 +211,13 @@ def test_install(parser, args):
 
     jrf = JunitResultFormat()
     handled = {}
-    create_test_output(topSpec, newInstalls, jrf)
+    create_test_output(top_spec, new_installs, jrf)
 
     with open(outputFpath, 'wb') as F:
-            jrf.write_to(F)
+        jrf.write_to(F)
+
+    # with JunitTestSuite(filename) as test_suite:
+    #     for spec in top_spec.traverse(order='post'):
+    #          test_case = install_test(spec)
+    #          test_suite.append( test_case )
+    #
