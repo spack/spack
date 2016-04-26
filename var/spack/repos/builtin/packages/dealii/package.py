@@ -50,8 +50,8 @@ class Dealii(Package):
     depends_on ("trilinos", when='+trilinos+mpi')
 
     # developer dependnecies
-    #depends_on ("numdiff") #FIXME
-    #depends_on ("astyle") #FIXME
+    depends_on ("numdiff", when='@dev')
+    depends_on ("astyle@2.04", when='@dev')
 
     def install(self, spec, prefix):
         options = []
