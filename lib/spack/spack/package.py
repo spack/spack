@@ -98,7 +98,7 @@ class DoInstallThread(threading.Thread):
     if self.to_wait_for:
       self.to_wait_for.join()
     else:
-      self.package.do_install(self.kwargs)
+      self.package.do_install(**self.kwargs)
 
 
 class Package(object):
@@ -1024,6 +1024,7 @@ class Package(object):
         deptasks = []
         for dep in self.spec.dependencies.values():
             deptasks.append(DoInstallThread(dep.package, kwargs))
+            print "adding dep", dep
         for task in deptasks:
             task.start()
             if not kwargs["build_parallel"]:
