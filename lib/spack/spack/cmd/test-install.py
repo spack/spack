@@ -115,7 +115,7 @@ class TestCase(object):
     def set_result(self, result_type, message=None, error_type=None, text=None):
         self.result_type = result_type
         result = TestCase.results[self.result_type]
-        if result is not None:
+        if result is not None or result is not TestResult.PASSED:
             subelement = ET.SubElement(self.element, result)
             if error_type is not None:
                 subelement.set('type', error_type)
@@ -170,6 +170,7 @@ def install_single_spec(spec, number_of_jobs):
                            fake=False)
         duration = time.time() - start_time
         testcase = TestCase(package.name, package.spec.short_spec, duration)
+        testcase.set_result(TestResult.PASSED)
     except InstallError:
         # An InstallError is considered a failure (the recipe didn't work correctly)
         duration = time.time() - start_time

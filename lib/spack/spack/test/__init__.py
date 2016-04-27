@@ -68,7 +68,8 @@ test_names = ['versions',
               'yaml',
               'sbang',
               'environment',
-              'cmd.uninstall']
+              'cmd.uninstall',
+              'cmd.test_install']
 
 
 def list_tests():
