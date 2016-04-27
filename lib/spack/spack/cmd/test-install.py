@@ -115,7 +115,7 @@ class TestCase(object):
     def set_result(self, result_type, message=None, error_type=None, text=None):
         self.result_type = result_type
         result = TestCase.results[self.result_type]
-        if result is not None or result is not TestResult.PASSED:
+        if result is not None and result is not TestResult.PASSED:
             subelement = ET.SubElement(self.element, result)
             if error_type is not None:
                 subelement.set('type', error_type)
