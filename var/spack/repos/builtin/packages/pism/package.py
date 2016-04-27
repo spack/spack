@@ -12,6 +12,7 @@ class Pism(CMakePackage):
 
     version('0.7.3', '7cfb034100d99d5c313c4ac06b7f17b6')
 #    version('88beceba', 'de444fc48fd1e818c23e459bb3d74202')		# On the new_bc branch
+    version('glint2', git='https://github.com/pism/pism.git', branch='glint2')
 
     variant('cxx11', default=True, description='Set CMake to C++11 standard')
     variant('extra', default=False, description='Build extra executables (mostly testing/verification)')
