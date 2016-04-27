@@ -83,22 +83,22 @@ class DoInstallThread(threading.Thread):
   _queue_lock = threading.Lock()
 
   def __init__(self, package, kwargs):
-    threading.Thread.__init__(self)
-    self.package = package
-    self.kwargs = kwargs
-    self.to_wait_for = None
-    # check whether an equivalent thread already exists
-    with DoInstallThread._queue_lock:
-        if package in DoInstallThread._do_install_threads:
-            self.to_wait_for = DoInstallThread._do_install_threads[package]
-        else:
-            DoInstallThread._do_install_threads[package] = self
+      threading.Thread.__init__(self)
+      self.package = package
+      self.kwargs = kwargs
+      self.to_wait_for = None
+      # check whether an equivalent thread already exists
+      with DoInstallThread._queue_lock:
+          if package in DoInstallThread._do_install_threads:
+              self.to_wait_for = DoInstallThread._do_install_threads[package]
+          else:
+              DoInstallThread._do_install_threads[package] = self
 
   def run(self):
-    if self.to_wait_for:
-      self.to_wait_for.join()
-    else:
-      self.package.do_install(**self.kwargs)
+      if self.to_wait_for:
+          self.to_wait_for.join()
+      else:
+          self.package.do_install(**self.kwargs)
 
 
 class Package(object):
@@ -1024,12 +1024,12 @@ class Package(object):
         deptasks = []
         for dep in self.spec.dependencies.values():
             task = DoInstallThread(dep.package, kwargs)
-            if (kwargs["build_parallel"]==False):
+            if kwargs["build_parallel"]==False:
                 task.start()
                 task.join()
             else:
                 deptasks.append(task)
-        if (kwargs["build_parallel"]==True):
+        if kwargs["build_parallel"]==True:
             for task in deptasks:
                 task.start()
             for task in deptasks:
