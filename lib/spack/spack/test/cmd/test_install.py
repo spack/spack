@@ -117,6 +117,7 @@ class MockArgs(object):
         self.output = None
 
 
+# TODO: add test(s) where Y fails to install
 class TestInstallTest(unittest.TestCase):
     """
     Tests test-install where X->Y
@@ -187,5 +188,3 @@ class TestInstallTest(unittest.TestCase):
             self.assertTrue('failures="0"' in content)
             self.assertTrue('errors="0"' in content)
             self.assertEqual(sum('skipped' in line for line in content.split('\n')), 2)
-
-    #TODO: add test(s) where Y fails to install
