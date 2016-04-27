@@ -88,48 +88,33 @@ class Openblas(Package):
             self.spec.lapack_shared_lib = self.spec.blas_shared_lib
 
     def check_install(self, spec):
-        "Build and run a small program to test that we have Lapack symbols"
+        # TODO: Pull this out to the framework function which recieves a pair of xyz.c and xyz.output
         print "Checking Openblas installation..."
-        checkdir = "spack-check"
-        with working_dir(checkdir, create=True):
-            source = r"""
-#include <cblas.h>
-#include <stdio.h>
-int main(void) {
-int i=0;
-double A[6] = {1.0, 2.0, 1.0, -3.0, 4.0, -1.0};
-double B[6] = {1.0, 2.0, 1.0, -3.0, 4.0, -1.0};
-double C[9] = {.5, .5, .5, .5, .5, .5, .5, .5, .5};
-cblas_dgemm(CblasColMajor, CblasNoTrans, CblasTrans,
-            3, 3, 2, 1, A, 3, B, 3, 2, C, 3);
-for (i = 0; i < 9; i++)
-  printf("%f\n", C[i]);
-return 0;
-}
-"""
-            expected = """\
-11.000000
--9.000000
-5.000000
--9.000000
-21.000000
--1.000000
-5.000000
--1.000000
-3.000000
-"""
-            with open("check.c", 'w') as f:
-                f.write(source)
-            cc = which('cc')
-            # TODO: Automate these path and library settings
-            cc('-c', "-I%s" % join_path(spec.prefix, "include"), "check.c")
-            cc('-o', "check", "check.o",
-               "-L%s" % join_path(spec.prefix, "lib"), "-llapack", "-lblas", "-lpthread")
-            try:
-                check = Executable('./check')
-                output = check(return_output=True)
-            except:
-                output = ""
+        source_file = join_path(os.path.dirname(self.module.__file__),
+                                'test_cblas_dgemm.c')
+        output_file = join_path(os.path.dirname(self.module.__file__),
+                                'test_cblas_dgemm.output')
+
+        with open(output_file, 'r') as f:
+            expected = f.read()
+
+        cc = which('cc')
+        cc('-c', "-I%s" % join_path(spec.prefix, "include"), source_file)
+        link_flags = ["-L%s" % join_path(spec.prefix, "lib"),
+                      "-llapack",
+                      "-lblas",
+                      "-lpthread"
+                      ]
+        if '+openmp' in spec:
+            link_flags.extend([self.compiler.openmp_flag])
+        cc('-o', "check", "test_cblas_dgemm.o",
+            *link_flags)
+
+        try:
+            check = Executable('./check')
+            output = check(return_output=True)
+        except:
+            output = ""
             success = output == expected
             if not success:
                 print "Produced output does not match expected output."
@@ -142,4 +127,3 @@ return 0;
                 print output
                 print '-'*80
                 raise RuntimeError("Openblas install check failed")
-        shutil.rmtree(checkdir)
