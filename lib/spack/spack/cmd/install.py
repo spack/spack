@@ -48,6 +48,9 @@ def setup_parser(subparser):
         '-n', '--no-checksum', action='store_true', dest='no_checksum',
         help="Do not check packages against checksum")
     subparser.add_argument(
+        '-p', '--parallel', action='store_true', dest='build_parallel',
+        help="Whether to do parallel compilation and installation (experimental)")
+    subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="Display verbose build output while installing.")
     subparser.add_argument(
@@ -78,4 +81,5 @@ def install(parser, args):
                 ignore_deps=args.ignore_deps,
                 make_jobs=args.jobs,
                 verbose=args.verbose,
-                fake=args.fake)
+                fake=args.fake,
+                build_parallel = args.build_parallel)
