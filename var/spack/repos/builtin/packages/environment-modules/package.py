@@ -2,7 +2,8 @@ from spack import *
 
 
 class EnvironmentModules(Package):
-    """Environment Modules for HPC"""
+    """The Environment Modules package provides for the dynamic
+    modification of a user's environment via modulefiles."""
 
     homepage = "https://sourceforge.net/p/modules/wiki/Home/"
     url      = "http://prdownloads.sourceforge.net/modules/modules-3.2.10.tar.gz"
@@ -23,10 +24,15 @@ class EnvironmentModules(Package):
             "--prefix=%s" % prefix,
             "--with-tcl=%s" % join_path(tcl_spec.prefix, 'lib'),    # It looks for tclConfig.sh
             "--with-tcl-ver=%d.%d" % (tcl_spec.version.version[0], tcl_spec.version.version[1]),
+            '--disable-debug',
+            '--disable-dependency-tracking',
+            '--disable-silent-rules',
+            '--disable-versioning', 
+            '--datarootdir=%s' % prefix.share,
             'CPPFLAGS=%s' % ' '.join(CPPFLAGS)
         ]
 
 
         configure(*config_args)
         make()
-        make("install")
+        make('install')

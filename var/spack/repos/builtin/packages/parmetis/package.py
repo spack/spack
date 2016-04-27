@@ -44,7 +44,7 @@ class Parmetis(Package):
     depends_on('mpi')
 
     patch('enable_external_metis.patch')
-    depends_on('metis')
+    depends_on('metis@5:')
 
     # bug fixes from PETSc developers
     # https://bitbucket.org/petsc/pkg-parmetis/commits/1c1a9fd0f408dc4d42c57f5c3ee6ace411eb222b/raw/

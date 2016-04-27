@@ -8,6 +8,7 @@ class ParallelNetcdf(Package):
     homepage = "https://trac.mcs.anl.gov/projects/parallel-netcdf"
     url      = "http://cucis.ece.northwestern.edu/projects/PnetCDF/Release/parallel-netcdf-1.6.1.tar.gz"
 
+    version('1.7.0', '267eab7b6f9dc78c4d0e6def2def3aea4bc7c9f0')
     version('1.6.1', '62a094eb952f9d1e15f07d56e535052604f1ac34')
 
     variant('cxx', default=True, description='Build the C++ Interface')

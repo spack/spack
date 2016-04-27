@@ -7,10 +7,15 @@ class P4est(Package):
 
     version('1.1', '37ba7f4410958cfb38a2140339dbf64f')
 
-    # disable by default to make it work on frontend of clusters
-    variant('tests', default=False, description='Run small tests')
+    # build dependencies
+    depends_on('automake')
+    depends_on('autoconf')
+    depends_on('libtool@2.4.2:')
 
+    # other dependencies
+    depends_on('lua') # Needed for the submodule sc
     depends_on('mpi')
+    depends_on('zlib')
 
     def install(self, spec, prefix):
         options = ['--enable-mpi',
@@ -28,7 +33,5 @@ class P4est(Package):
         configure('--prefix=%s' % prefix, *options)
 
         make()
-        if '+tests' in self.spec:
-            make("check")
-
+        make("check")
         make("install")

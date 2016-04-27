@@ -10,7 +10,7 @@ class Glint2(CMakePackage):
 
     variant('everytrace', default=False, description='Report errors through Everytrace (requires Everytrace)')
     variant('python', default=True, description='Build Python extension (requires Python, Numpy)')
-    variant('gridgen', default=True, description='Build grid generators (requires CGAL, GMP, MPFR)')
+#    variant('gridgen', default=True, description='Build grid generators (requires CGAL, GMP, MPFR)')
     variant('coupler', default=True, description='Build the GCM coupler (requires MPI)')
     variant('pism', default=False, description='Build coupling link with PISM (requires PISM, PETSc)')
 
@@ -40,6 +40,10 @@ class Glint2(CMakePackage):
     # Build dependencies
     depends_on('cmake')
     depends_on('doxygen')
+
+
+    # Dummy dependency to work around Spack bug
+    depends_on('openblas')
 
     def configure_args(self):
         spec = self.spec

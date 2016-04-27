@@ -137,9 +137,7 @@ for path in _tmp_candidates:
     # don't add a second username if it's already unique by user.
     if not _tmp_user in path:
         tmp_dirs.append(join_path(path, '%u', 'spack-stage'))
-
-for path in _tmp_candidates:
-    if not path in tmp_dirs:
+    else:
         tmp_dirs.append(join_path(path, 'spack-stage'))
 
 # Whether spack should allow installation of unsafe versions of

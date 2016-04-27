@@ -9,7 +9,7 @@ class PyNumexpr(Package):
     version('2.4.6', '17ac6fafc9ea1ce3eb970b9abccb4fbd')
     version('2.5', '84f66cced45ba3e30dcf77a937763aaa')
 
-    extends('python', ignore=r'bin/f2py$')
+    extends('python')
     depends_on('py-numpy')
 
     def install(self, spec, prefix):

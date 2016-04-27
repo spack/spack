@@ -40,7 +40,7 @@ class Petsc(Package):
 
     # Other dependencies
     depends_on('boost', when='+boost')
-    depends_on('metis', when='+metis')
+    depends_on('metis@5:', when='+metis')
 
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('parmetis', when='+metis+mpi')

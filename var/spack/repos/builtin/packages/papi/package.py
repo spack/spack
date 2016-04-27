@@ -1,5 +1,8 @@
 from spack import *
+import glob
 import os
+import sys
+from llnl.util.filesystem import fix_darwin_install_name
 
 class Papi(Package):
     """PAPI provides the tool designer and application engineer with a
@@ -18,17 +21,27 @@ class Papi(Package):
     version('5.3.0', '367961dd0ab426e5ae367c2713924ffb')
 
     def install(self, spec, prefix):
-        os.chdir("src/")
+        with working_dir("src"):
 
-        configure_args=["--prefix=%s" % prefix]
+            configure_args=["--prefix=%s" % prefix]
 
-        # PAPI uses MPI if MPI is present; since we don't require an
-        # MPI package, we ensure that all attempts to use MPI fail, so
-        # that PAPI does not get confused
-        configure_args.append('MPICC=:')
+            # PAPI uses MPI if MPI is present; since we don't require
+            # an MPI package, we ensure that all attempts to use MPI
+            # fail, so that PAPI does not get confused
+            configure_args.append('MPICC=:')
 
-        configure(*configure_args)
+            configure(*configure_args)
 
-        make()
-        make("install")
+            # Don't use <malloc.h>
+            for level in [".", "*", "*/*"]:
+                files = glob.iglob(join_path(level, "*.[ch]"))
+                filter_file(r"\<malloc\.h\>", "<stdlib.h>", *files)
 
+            make()
+            make("install")
+
+            # The shared library is not installed correctly on Darwin
+            if sys.platform == 'darwin':
+                os.rename(join_path(prefix.lib, 'libpapi.so'),
+                          join_path(prefix.lib, 'libpapi.dylib'))
+                fix_darwin_install_name(prefix.lib)

@@ -10,7 +10,7 @@ class PyPandas(Package):
     version('0.16.1', 'fac4f25748f9610a3e00e765474bdea8')
     version('0.18.0', 'f143762cd7a59815e348adf4308d2cf6')
 
-    extends('python', ignore=r'bin/f2py$')
+    extends('python')
     depends_on('py-dateutil')
     depends_on('py-numpy')
     depends_on('py-setuptools')

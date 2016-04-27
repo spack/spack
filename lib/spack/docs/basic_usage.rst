@@ -149,26 +149,46 @@ customize an installation in :ref:`sec-specs`.
 ``spack uninstall``
 ~~~~~~~~~~~~~~~~~~~~~
 
-To uninstall a package, type ``spack uninstall <package>``.  This will
-completely remove the directory in which the package was installed.
+To uninstall a package, type ``spack uninstall <package>``.  This will ask the user for
+confirmation, and in case will completely remove the directory in which the package was installed.
 
 .. code-block:: sh
 
    spack uninstall mpich
 
 If there are still installed packages that depend on the package to be
-uninstalled, spack will refuse to uninstall it. You can override this
-behavior with ``spack uninstall -f <package>``, but you risk breaking
-other installed packages. In general, it is safer to remove dependent
-packages *before* removing their dependencies.
+uninstalled, spack will refuse to uninstall it.
 
-A line like ``spack uninstall mpich`` may be ambiguous, if multiple
-``mpich`` configurations are installed.  For example, if both
+To uninstall a package and every package that depends on it, you may give the
+`--dependents` option.
+
+.. code-block:: sh
+
+   spack uninstall --dependents mpich
+
+will display a list of all the packages that depends on `mpich` and, upon confirmation,
+will uninstall them in the right order.
+
+A line like
+
+.. code-block:: sh
+
+   spack uninstall mpich
+
+may be ambiguous, if multiple ``mpich`` configurations are installed.  For example, if both
 ``mpich@3.0.2`` and ``mpich@3.1`` are installed, ``mpich`` could refer
 to either one. Because it cannot determine which one to uninstall,
-Spack will ask you to provide a version number to remove the
-ambiguity.  As an example, ``spack uninstall mpich@3.1`` is
-unambiguous in this scenario.
+Spack will ask you either to provide a version number to remove the
+ambiguity or use the ``--all`` option to uninstall all of the matching packages.
+
+You may force uninstall a package with the `--force` option
+
+.. code-block:: sh
+
+   spack uninstall --force mpich
+
+but you risk breaking other installed packages. In general, it is safer to remove dependent
+packages *before* removing their dependencies or use the `--dependents` option.
 
 
 Seeing installed packages
@@ -352,25 +372,32 @@ how this is done is in :ref:`sec-specs`.
 ``spack compiler add``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+An alias for ``spack compiler find``.
+
+.. _spack-compiler-find:
+
+``spack compiler find``
+~~~~~~~~~~~~~~~~~~~~~~~
+
 If you do not see a compiler in this list, but you want to use it with
-Spack, you can simply run ``spack compiler add`` with the path to
+Spack, you can simply run ``spack compiler find`` with the path to
 where the compiler is installed.  For example::
 
-    $ spack compiler add /usr/local/tools/ic-13.0.079
+    $ spack compiler find /usr/local/tools/ic-13.0.079
     ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
         intel@13.0.079
 
-Or you can run ``spack compiler add`` with no arguments to force
+Or you can run ``spack compiler find`` with no arguments to force
 auto-detection.  This is useful if you do not know where compilers are
 installed, but you know that new compilers have been added to your
 ``PATH``.  For example, using dotkit, you might do this::
 
     $ module load gcc-4.9.0
-    $ spack compiler add
+    $ spack compiler find
     ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
         gcc@4.9.0
 
-This loads the environment module for gcc-4.9.0 to get it into the
+This loads the environment module for gcc-4.9.0 to add it to
 ``PATH``, and then it adds the compiler to Spack.
 
 .. _spack-compiler-info:
@@ -787,17 +814,22 @@ Environment Modules, you can get it with Spack:
 
 1. Install with::
 
+.. code-block:: sh
+
     spack install environment-modules
 
 2. Activate with::
 
-    MODULES_HOME=`spack location -i environment-modules`
-     MODULES_VERSION=`ls -1 $MODULES_HOME/Modules | head -1`
-     ${MODULES_HOME}/Modules/${MODULES_VERSION}/bin/add.modules
+Add the following two lines to your ``.bashrc`` profile (or similar):
 
-This adds to your ``.bashrc`` (or similar) files, enabling Environment
-Modules when you log in.  It will ask your permission before changing
-any files.
+.. code-block:: sh
+
+   MODULES_HOME=`spack location -i environment-modules`
+   source ${MODULES_HOME}/Modules/init/bash
+
+In case you use a Unix shell other than bash, substitute ``bash`` by
+the appropriate file in ``${MODULES_HOME}/Modules/init/``.
+
 
 Spack and Environment Modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
