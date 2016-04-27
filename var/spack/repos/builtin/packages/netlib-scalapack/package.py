@@ -1,5 +1,7 @@
 from spack import *
 import sys
+import os
+import llnl.util.tty as tty
 
 class NetlibScalapack(Package):
     """ScaLAPACK is a library of high-performance linear algebra routines for parallel distributed memory machines"""
@@ -20,12 +22,43 @@ class NetlibScalapack(Package):
 
     depends_on('mpi')
     depends_on('lapack')
+    depends_on('blas')
 
     def install(self, spec, prefix):
+        # Look for both shared and static libraries, since we don't know what was built
+        exts = ['.a', '.so']
+        if '+shared' in spec:
+            exts.reverse()
+
+        # Find BLAS for the not-so-powerful CMake script
+        blas_lib = None
+        for ext in exts:
+            blas_lib = os.path.join(spec['blas'].prefix, 'lib', 'libblas' + ext)
+            if os.path.exists(blas_lib):
+                break
+        if blas_lib is None:
+            tty.error('Cannot find libblas in path %s')
+
+
+        # Find LAPACK for the not-so-powerful CMake script
+        lapack_lib = None
+        for ext in exts:
+            lapack_lib = os.path.join(spec['lapack'].prefix, 'lib', 'liblapack' + ext)
+            if os.path.exists(lapack_lib):
+                break
+        if lapack_lib is None:
+            tty.error('Cannot find liblapack in path %s')
+
+
+        # Prefer shared libraries
         options = [
             "-DBUILD_SHARED_LIBS:BOOL=%s" % ('ON' if '+shared' in spec else 'OFF'),
             "-DBUILD_STATIC_LIBS:BOOL=%s" % ('OFF' if '+shared' in spec else 'ON'),
             "-DUSE_OPTIMIZED_LAPACK_BLAS:BOOL=ON", # forces scalapack to use find_package(LAPACK)
+            "-DBLAS_LIBRARIES=%s" % blas_lib,
+            "-DLAPACK_LIBRARIES=%s" % lapack_lib,
+            "-DBLAS_DIR=%s" % spec['blas'].prefix,
+            "-DLAPACK_DIR=%s" % spec['lapack'].prefix,
             ]
 
         if '+fpic' in spec:
