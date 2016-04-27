@@ -119,7 +119,7 @@ return 0;
             # TODO: Automate these path and library settings
             cc('-c', "-I%s" % join_path(spec.prefix, "include"), "check.c")
             cc('-o', "check", "check.o",
-               "-L%s" % join_path(spec.prefix, "lib"), "-llapack", "-lblas")
+               "-L%s" % join_path(spec.prefix, "lib"), "-llapack", "-lblas", "-lpthread")
             try:
                 check = Executable('./check')
                 output = check(return_output=True)
