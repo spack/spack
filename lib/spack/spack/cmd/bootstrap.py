@@ -31,6 +31,8 @@ from llnl.util.filesystem import join_path, mkdirp
 import spack
 from spack.util.executable import which
 
+_SPACK_UPSTREAM = 'https://github.com/llnl/spack'
+
 description = "Create a new installation of spack in another prefix"
 
 def setup_parser(subparser):
@@ -40,9 +42,15 @@ def setup_parser(subparser):
 def get_origin_url():
     git_dir = join_path(spack.prefix, '.git')
     git = which('git', required=True)
-    origin_url = git(
-        '--git-dir=%s' % git_dir, 'config', '--get', 'remote.origin.url',
-        output=str)
+    try:
+        origin_url = git(
+            '--git-dir=%s' % git_dir,
+            'config', '--get', 'remote.origin.url',
+            output=str)
+    except ProcessError:
+        origin_url = _SPACK_UPSTREAM
+        tty.warn('No git repository found; '
+                 'using default upstream URL: %s' % origin_url)
     return origin_url.strip()
 
 
