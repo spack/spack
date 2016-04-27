@@ -1023,13 +1023,15 @@ class Package(object):
         # Pass along paths of dependencies here
         deptasks = []
         for dep in self.spec.dependencies.values():
-            deptasks.append(DoInstallThread(dep.package, kwargs))
-            print "adding dep", dep
-        for task in deptasks:
-            task.start()
-            if not kwargs["build_parallel"]:
+            task = DoInstallThread(dep.package, kwargs)
+            if (kwargs["build_parallel"]==False):
+                task.start()
                 task.join()
-        if  kwargs["build_parallel"]:
+            else:
+                deptasks.append(task)
+        if (kwargs["build_parallel"]==True):
+            for task in deptasks:
+                task.start()
             for task in deptasks:
                 task.join()
 
