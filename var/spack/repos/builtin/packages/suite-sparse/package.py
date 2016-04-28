@@ -58,8 +58,8 @@ class SuiteSparse(Package):
 
         # --------------- Locate BLAS and LAPACK
         exts = ['.a', '.so']
-        #if '+shared' in spec:
-        #    exts.reverse()
+        if ('+shared' in spec) or ('+fpic' in spec):
+            exts.reverse()
 
         # Find BLAS for the not-so-powerful makefile
         blas_lib = None
