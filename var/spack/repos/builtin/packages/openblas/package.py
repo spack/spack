@@ -14,6 +14,7 @@ class Openblas(Package):
 
     variant('shared', default=True, description="Build shared libraries as well as static libs.")
     variant('openmp', default=True, description="Enable OpenMP support.")
+    variant('fpic', default=True, description="Build position independent code")
 
     # virtual dependency
     provides('blas')
@@ -33,6 +34,8 @@ class Openblas(Package):
         if '+shared' in spec:
             make_targets += ['shared']
         else:
+            if '+fpic' in spec:
+                make_defs.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
             make_defs += ['NO_SHARED=1']
 
         # fix missing _dggsvd_ and _sggsvd_
