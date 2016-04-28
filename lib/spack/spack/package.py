@@ -1497,7 +1497,20 @@ def make_executable(path):
     os.chmod(path, mode)
 
 
+
 class CMakePackage(StagedPackage):
+
+    def make_make(self):
+        import multiprocessing
+        # number of jobs spack will to build with.
+        jobs = multiprocessing.cpu_count()
+        if not self.parallel:
+            jobs = 1
+        elif self.make_jobs:
+            jobs = self.make_jobs
+
+        make  = spack.build_environment.MakeExecutable('make', jobs)
+        return make
 
     def configure_args(self):
         """Returns package-specific arguments to be provided to the configure command."""
@@ -1576,10 +1589,12 @@ env = dict()
             cmake(self.source_directory, *options)
 
     def install_build(self):
+        make = self.make_make()
         with working_dir(self.build_directory, create=False):
             make()
 
     def install_install(self):
+        make = self.make_make()
         with working_dir(self.build_directory, create=False):
             make('install')
 
