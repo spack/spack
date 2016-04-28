@@ -760,13 +760,13 @@ class Spec(object):
 
 
     def to_node_dict(self):
+        params = dict( (name, v.value) for name, v in self.variants.items() )
+        params.update( dict( (name, value) for name, value in self.compiler_flags.items()) )
         d = {
-            'variants' : dict(
-                (name,v.value) for name, v in self.variants.items()),
+            'parameters' : params,
             'arch' : self.architecture,
             'dependencies' : dict((d, self.dependencies[d].dag_hash())
                                   for d in sorted(self.dependencies)),
-            'compiler_flags' : dict((name, value) for name, value in self.compiler_flags.items())
         }
 
         # Older concrete specs do not have a namespace.  Omit for
@@ -807,11 +807,17 @@ class Spec(object):
         else:
             spec.compiler = CompilerSpec.from_dict(node)
 
-        for name, value in node['variants'].items():
-            spec.variants[name] = VariantSpec(name, value)
-
-        for name, value in node['compiler_flags'].items():
-            spec.compiler_flags[name] = value
+        if 'parameters' in node:
+            for name, value in node['parameters'].items():
+                if name in _valid_compiler_flags:
+                    spec.compiler_flags[name] = value
+                else:
+                    spec.variants[name] = VariantSpec(name, value)
+        elif 'variants' in node:
+            for name, value in node['variants'].items():
+                spec.variants[name] = VariantSpec(name, value)
+        else:
+            raise SpackRecordError("Did not find a valid format for variants in YAML file")
 
         return spec
 
@@ -2436,3 +2442,7 @@ class UnsatisfiableDependencySpecError(UnsatisfiableSpecError):
 class SpackYAMLError(spack.error.SpackError):
     def __init__(self, msg, yaml_error):
         super(SpackYAMLError, self).__init__(msg, str(yaml_error))
+
+class SpackRecordError(spack.error.SpackError):
+    def __init__(self, msg):
+        super(SpackRecordError, self).__init__(msg)
