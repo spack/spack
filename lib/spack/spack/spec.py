@@ -385,18 +385,12 @@ class FlagMap(HashableMap):
 
 
     def satisfies(self, other, strict=False):
-        #"strict" makes no sense if this works, but it matches how we need it. Maybe
-        #strict=True
-        if strict:
-#            if other.spec and other.spec.concrete:
-            return all(f in self and set(self[f]) == set(other[f])
+        if strict or (self.spec and self.spec._concrete):
+            return all(f in self and set(self[f]) <= set(other[f])
                        for f in other)
-#            else:
-#                return all(f in self and set(self[f]) >= set(other[f])
-#                           for f in other)
         else:
-            return all(f in self and set(self[f]) == set(other[f])
-                       for f in other if other[f] != [])
+            return all(set(self[f]) <= set(other[f])
+                   for f in other if (other[f] != [] and f in self))
 
 
     def constrain(self, other):
@@ -404,14 +398,16 @@ class FlagMap(HashableMap):
 
         Return whether the spec changed.
         """
-        changed = False
+        if other.spec and other.spec._concrete:
+            for k in self:
+                if k not in other:
+                    raise UnsatisfiableCompilerFlagSpecError(self[k], '<absent>')
 
-        # Others_set removes flags set to '' from the comparison
-        others_set = (k for k in other if other[k] != [])
-        for k in others_set:
-            if k in self and not set(self[k]) >= set(other[k]):
-                self[k] = list(set(self[k]) | set(other[k]))
-                changed = True
+        changed = False
+        for k in other:
+            if k in self and not set(self[k]) <= set(other[k]):
+                raise UnsatisfiableCompilerFlagSpecError(
+                    ' '.join(f for f in self[k]), ' '.join( f for f in other[k]))
             elif k not in self:
                 self[k] = other[k]
                 changed = True
@@ -485,6 +481,7 @@ class Spec(object):
         self.architecture = other.architecture
         self.compiler = other.compiler
         self.compiler_flags = other.compiler_flags
+        self.compiler_flags.spec = self
         self.dependencies = other.dependencies
         self.variants = other.variants
         self.variants.spec = self
@@ -520,6 +517,10 @@ class Spec(object):
         """Called by the parser to add a variant."""
         if name in self.variants: raise DuplicateVariantError(
                 "Cannot specify variant '%s' twice" % name)
+        if isinstance(value, basestring) and value.upper() == 'TRUE':
+            value = True
+        elif isinstance(value, basestring) and value.upper() == 'FALSE':
+            value = False
         self.variants[name] = VariantSpec(name, value)
 
 
@@ -2416,6 +2417,11 @@ class UnsatisfiableVariantSpecError(UnsatisfiableSpecError):
         super(UnsatisfiableVariantSpecError, self).__init__(
             provided, required, "variant")
 
+class UnsatisfiableCompilerFlagSpecError(UnsatisfiableSpecError):
+    """Raised when a spec variant conflicts with package constraints."""
+    def __init__(self, provided, required):
+        super(UnsatisfiableCompilerFlagSpecError, self).__init__(
+            provided, required, "compiler_flags")
 
 class UnsatisfiableArchitectureSpecError(UnsatisfiableSpecError):
     """Raised when a spec architecture conflicts with package constraints."""

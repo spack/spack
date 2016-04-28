@@ -40,8 +40,17 @@ class ConcretizeTest(MockPackagesTest):
                 cvariant = concrete.variants[name]
                 self.assertEqual(avariant.value, cvariant.value)
 
+        if abstract.compiler_flags:
+            for flag in abstract.compiler_flags:
+                aflag = abstract.compiler_flags[flag]
+                cflag = concrete.compiler_flags[flag]
+                self.assertTrue(set(aflag) <= set(cflag))
+
         for name in abstract.package.variants:
             self.assertTrue(name in concrete.variants)
+
+        for flag in concrete.compiler_flags.valid_compiler_flags():
+            self.assertTrue(flag in concrete.compiler_flags)
 
         if abstract.compiler and abstract.compiler.concrete:
             self.assertEqual(abstract.compiler, concrete.compiler)
@@ -75,7 +84,12 @@ class ConcretizeTest(MockPackagesTest):
     def test_concretize_variant(self):
         self.check_concretize('mpich+debug')
         self.check_concretize('mpich~debug')
+        self.check_concretize('mpich debug=2')
         self.check_concretize('mpich')
+
+
+    def test_conretize_compiler_flags(self):
+        self.check_concretize('mpich cppflags="-O3"')
 
 
     def test_concretize_preferred_version(self):
