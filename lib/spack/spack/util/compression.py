@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,13 +27,12 @@ import os
 from itertools import product
 from spack.util.executable import which
 
-# Supported archvie extensions.
+# Supported archive extensions.
 PRE_EXTS = ["tar"]
 EXTS     = ["gz", "bz2", "xz", "Z", "zip", "tgz"]
 
-# Add EXTS last so that .tar.gz is matched *before* tar.gz
-ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(PRE_EXTS, EXTS)] + EXTS
-
+# Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
+ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(PRE_EXTS, EXTS)] + PRE_EXTS + EXTS
 
 def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)

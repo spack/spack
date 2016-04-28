@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from external import argparse
+import argparse
 import llnl.util.tty as tty
 
 import spack
@@ -37,7 +37,7 @@ def setup_parser(subparser):
         help="Run deactivation even if spec is NOT currently activated.")
     subparser.add_argument(
         '-a', '--all', action='store_true',
-        help="Deactivate all extensions of an extendable pacakge, or "
+        help="Deactivate all extensions of an extendable package, or "
         "deactivate an extension AND its dependencies.")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER, help="spec of package extension to deactivate.")

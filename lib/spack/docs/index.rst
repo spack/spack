@@ -18,18 +18,18 @@ configurations can coexist on the same system.
 Most importantly, Spack is *simple*.  It offers a simple *spec* syntax
 so that users can specify versions and configuration options
 concisely.  Spack is also simple for package authors: package files
-are writtin in pure Python, and specs allow package authors to
+are written in pure Python, and specs allow package authors to
 maintain a single file for many different builds of the same package.
 
 See the :doc:`features` for examples and highlights.
 
 Get spack from the `github repository
-<https://github.com/scalability-llnl/spack>`_ and install your first
+<https://github.com/llnl/spack>`_ and install your first
 package:
 
 .. code-block:: sh
 
-   $ git clone https://github.com/scalability-llnl/spack.git
+   $ git clone https://github.com/llnl/spack.git
    $ cd spack/bin
    $ ./spack install libelf
 

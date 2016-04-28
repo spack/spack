@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 import sys
 import collections
 import itertools
-from external import argparse
+import argparse
 from StringIO import StringIO
 
 import llnl.util.tty as tty
@@ -40,6 +40,9 @@ description ="Find installed spack packages"
 
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
+    format_group.add_argument(
+        '-s', '--short', action='store_const', dest='mode', const='short',
+        help='Show only specs (default)')
     format_group.add_argument(
         '-p', '--paths', action='store_const', dest='mode', const='paths',
         help='Show paths to package install directories')
@@ -66,6 +69,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-M', '--only-missing', action='store_true', dest='only_missing',
         help='Show only missing dependencies.')
+    subparser.add_argument(
+        '-N', '--namespace', action='store_true',
+        help='Show fully qualified package names.')
 
     subparser.add_argument(
         'query_specs', nargs=argparse.REMAINDER,
@@ -79,16 +85,18 @@ def gray_hash(spec, length):
 def display_specs(specs, **kwargs):
     mode = kwargs.get('mode', 'short')
     hashes = kwargs.get('long', False)
+    namespace = kwargs.get('namespace', False)
 
     hlen = 7
     if kwargs.get('very_long', False):
         hashes = True
         hlen = None
 
-    format_string = '$_$@$+'
+    nfmt = '.' if namespace else '_'
+    format_string = '$%s$@$+' %nfmt
     flags = kwargs.get('show_flags', False)
     if flags:
-        format_string = '$_$@$%+$+'
+        format_string = '$.$@$%+$+' if nfmt == '.' else '$_$@$%+$+'
 
     # Make a dict with specs keyed by architecture and compiler.
     index = index_by(specs, ('architecture', 'compiler'))
@@ -132,7 +140,7 @@ def display_specs(specs, **kwargs):
                     string = ""
                     if hashes:
                         string += gray_hash(s, hlen) + ' '
-                    string += s.format('$-_$@$+', color=True)
+                    string += s.format('$-%s$@$+' % nfmt, color=True)
 
                     return string
                 colify(fmt(s) for s in specs)
@@ -153,7 +161,7 @@ def find(parser, args):
     # Filter out specs that don't exist.
     query_specs = spack.cmd.parse_specs(args.query_specs)
     query_specs, nonexisting = partition_list(
-        query_specs, lambda s: spack.db.exists(s.name) or s.name == "")
+        query_specs, lambda s: spack.repo.exists(s.name) or s.name == "")
 
     if nonexisting:
         msg = "No such package%s: " % ('s' if len(nonexisting) > 1 else '')

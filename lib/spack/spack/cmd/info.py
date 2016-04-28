@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -52,7 +52,7 @@ def print_text_info(pkg):
     print "Safe versions:  "
 
     if not pkg.versions:
-        print("None")
+        print("    None")
     else:
         pad = padder(pkg.versions, 4)
         for v in reversed(sorted(pkg.versions)):
@@ -62,7 +62,7 @@ def print_text_info(pkg):
     print
     print "Variants:"
     if not pkg.variants:
-        print "None"
+        print "    None"
     else:
         pad = padder(pkg.variants, 4)
 
@@ -105,5 +105,5 @@ def print_text_info(pkg):
 
 
 def info(parser, args):
-    pkg = spack.db.get(args.name)
+    pkg = spack.repo.get(args.name)
     print_text_info(pkg)

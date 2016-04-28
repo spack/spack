@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,20 +22,15 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
 import os
 import shutil
-from external import argparse
+import sys
 
 import llnl.util.tty as tty
-from llnl.util.lang import partition_list
-from llnl.util.filesystem import mkdirp
-
 import spack.cmd
+from llnl.util.filesystem import mkdirp
 from spack.modules import module_types
 from spack.util.string import *
-
-from spack.spec import Spec
 
 description ="Manipulate modules and dotkits."
 
@@ -58,7 +53,7 @@ def module_find(mtype, spec_array):
        should type to use that package's module.
     """
     if mtype not in module_types:
-        tty.die("Invalid module type: '%s'.  Options are %s." % (mtype, comma_or(module_types)))
+        tty.die("Invalid module type: '%s'.  Options are %s" % (mtype, comma_or(module_types)))
 
     specs = spack.cmd.parse_specs(spec_array)
     if len(specs) > 1:
@@ -78,9 +73,9 @@ def module_find(mtype, spec_array):
     mt = module_types[mtype]
     mod = mt(specs[0])
     if not os.path.isfile(mod.file_name):
-        tty.die("No %s module is installed for %s." % (mtype, spec))
+        tty.die("No %s module is installed for %s" % (mtype, spec))
 
-    print mod.use_name
+    print(mod.use_name)
 
 
 def module_refresh():
@@ -94,9 +89,8 @@ def module_refresh():
             shutil.rmtree(cls.path, ignore_errors=False)
         mkdirp(cls.path)
         for spec in specs:
-            tty.debug("   Writing file for %s." % spec)
+            tty.debug("   Writing file for %s" % spec)
             cls(spec).write()
-
 
 
 def module(parser, args):

@@ -1,0 +1,45 @@
+From 93f4b306c54bb5be7724dcc19c6e747b62ac76dd Mon Sep 17 00:00:00 2001
+From: Ben Boeckel <mathstuf@gmail.com>
+Date: Thu, 28 May 2015 11:12:25 -0400
+Subject: [PATCH] iterator: use the header
+
+Standard libraries are doing funky things with inline namespaces which
+make these declarations impossible to get right. Just include the
+header.
+---
+ src/libqhullcpp/QhullIterator.h   | 3 +--
+ src/libqhullcpp/QhullLinkedList.h | 5 +----
+ 2 files changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/src/libqhullcpp/QhullIterator.h b/src/libqhullcpp/QhullIterator.h
+index 9dde894..49f3a3b 100644
+--- a/src/libqhullcpp/QhullIterator.h
++++ b/src/libqhullcpp/QhullIterator.h
+@@ -14,10 +14,9 @@ extern "C" {
+ }
+ 
+ #include <assert.h>
++#include <iterator>
+ #include <string>
+ #include <vector>
+-//! Avoid dependence on <iterator>
+-namespace std { struct bidirectional_iterator_tag; struct random_access_iterator_tag; }
+ 
+ namespace orgQhull {
+ 
+diff --git a/src/libqhullcpp/QhullLinkedList.h b/src/libqhullcpp/QhullLinkedList.h
+index d828ac6..00b9008 100644
+--- a/src/libqhullcpp/QhullLinkedList.h
++++ b/src/libqhullcpp/QhullLinkedList.h
+@@ -9,10 +9,7 @@
+ #ifndef QHULLLINKEDLIST_H
+ #define QHULLLINKEDLIST_H
+ 
+-namespace std {
+-    struct bidirectional_iterator_tag;
+-    struct random_access_iterator_tag;
+-}//std
++#include <iterator>
+ 
+ #include "QhullError.h"
+ extern "C" {

@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,18 +24,12 @@
 ##############################################################################
 import os
 import re
-import unittest
-import shutil
-import tempfile
-
-from llnl.util.filesystem import *
-
 import spack
-from spack.version import ver
-from spack.stage import Stage
-from spack.util.executable import which
-from spack.test.mock_packages_test import *
+
 from spack.test.mock_repo import svn, MockSvnRepo
+from spack.version import ver
+from spack.test.mock_packages_test import *
+from llnl.util.filesystem import *
 
 
 class SvnFetchTest(MockPackagesTest):
@@ -49,30 +43,23 @@ class SvnFetchTest(MockPackagesTest):
 
         spec = Spec('svn-test')
         spec.concretize()
-        self.pkg = spack.db.get(spec, new=True)
-
+        self.pkg = spack.repo.get(spec, new=True)
 
     def tearDown(self):
         """Destroy the stage space used by this test."""
         super(SvnFetchTest, self).tearDown()
-
-        if self.repo.stage is not None:
-            self.repo.stage.destroy()
-
-        self.pkg.do_clean()
-
+        self.repo.destroy()
 
     def assert_rev(self, rev):
         """Check that the current revision is equal to the supplied rev."""
         def get_rev():
-            output = svn('info', return_output=True)
+            output = svn('info', output=str)
             self.assertTrue("Revision" in output)
             for line in output.split('\n'):
                 match = re.match(r'Revision: (\d+)', line)
                 if match:
                     return match.group(1)
         self.assertEqual(get_rev(), rev)
-
 
     def try_fetch(self, rev, test_file, args):
         """Tries to:
@@ -85,26 +72,27 @@ class SvnFetchTest(MockPackagesTest):
         """
         self.pkg.versions[ver('svn')] = args
 
-        self.pkg.do_stage()
-        self.assert_rev(rev)
+        with self.pkg.stage:
+            self.pkg.do_stage()
+            self.assert_rev(rev)
 
-        file_path = join_path(self.pkg.stage.source_path, test_file)
-        self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-        self.assertTrue(os.path.isfile(file_path))
+            file_path = join_path(self.pkg.stage.source_path, test_file)
+            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
+            self.assertTrue(os.path.isfile(file_path))
 
-        os.unlink(file_path)
-        self.assertFalse(os.path.isfile(file_path))
+            os.unlink(file_path)
+            self.assertFalse(os.path.isfile(file_path))
 
-        untracked = 'foobarbaz'
-        touch(untracked)
-        self.assertTrue(os.path.isfile(untracked))
-        self.pkg.do_restage()
-        self.assertFalse(os.path.isfile(untracked))
+            untracked = 'foobarbaz'
+            touch(untracked)
+            self.assertTrue(os.path.isfile(untracked))
+            self.pkg.do_restage()
+            self.assertFalse(os.path.isfile(untracked))
 
-        self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-        self.assertTrue(os.path.isfile(file_path))
+            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
+            self.assertTrue(os.path.isfile(file_path))
 
-        self.assert_rev(rev)
+            self.assert_rev(rev)
 
 
     def test_fetch_default(self):

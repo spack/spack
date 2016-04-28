@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -31,6 +31,15 @@ from llnl.util.lang import attr_setdefault
 
 import spack
 import spack.spec
+import spack.config
+
+#
+# Settings for commands that modify configuration
+#
+# Commands that modify confguration By default modify the *highest* priority scope.
+default_modify_scope = spack.config.highest_precedence_scope().name
+# Commands that list confguration list *all* scopes by default.
+default_list_scope = None
 
 # cmd has a submodule called "list" so preserve the python list module
 python_list = list

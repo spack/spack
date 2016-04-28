@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -40,8 +40,8 @@ from spack.test.mock_packages_test import *
 class SpecDagTest(MockPackagesTest):
 
     def test_conflicting_package_constraints(self):
-        set_pkg_dep('mpileaks', 'mpich@1.0')
-        set_pkg_dep('callpath', 'mpich@2.0')
+        self.set_pkg_dep('mpileaks', 'mpich@1.0')
+        self.set_pkg_dep('callpath', 'mpich@2.0')
 
         spec = Spec('mpileaks ^mpich ^callpath ^dyninst ^libelf ^libdwarf')
 
@@ -223,25 +223,25 @@ class SpecDagTest(MockPackagesTest):
 
 
     def test_unsatisfiable_version(self):
-        set_pkg_dep('mpileaks', 'mpich@1.0')
+        self.set_pkg_dep('mpileaks', 'mpich@1.0')
         spec = Spec('mpileaks ^mpich@2.0 ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableVersionSpecError, spec.normalize)
 
 
     def test_unsatisfiable_compiler(self):
-        set_pkg_dep('mpileaks', 'mpich%gcc')
+        self.set_pkg_dep('mpileaks', 'mpich%gcc')
         spec = Spec('mpileaks ^mpich%intel ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableCompilerSpecError, spec.normalize)
 
 
     def test_unsatisfiable_compiler_version(self):
-        set_pkg_dep('mpileaks', 'mpich%gcc@4.6')
+        self.set_pkg_dep('mpileaks', 'mpich%gcc@4.6')
         spec = Spec('mpileaks ^mpich%gcc@4.5 ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableCompilerSpecError, spec.normalize)
 
 
     def test_unsatisfiable_architecture(self):
-        set_pkg_dep('mpileaks', 'mpich arch=bgqos_0')
+        self.set_pkg_dep('mpileaks', 'mpich arch=bgqos_0')
         spec = Spec('mpileaks ^mpich arch=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
 
@@ -336,20 +336,22 @@ class SpecDagTest(MockPackagesTest):
             self.assertEqual(lhs, rhs)
             self.assertEqual(str(lhs), str(rhs))
 
-        # test that equal and equal_dag are doing the right thing
+        # Test that equal and equal_dag are doing the right thing
         self.assertEqual(spec, expected_flat)
         self.assertTrue(spec.eq_dag(expected_flat))
 
-        self.assertEqual(spec, expected_normalized)
+        # Normalized has different DAG structure, so NOT equal.
+        self.assertNotEqual(spec, expected_normalized)
         self.assertFalse(spec.eq_dag(expected_normalized))
 
-        self.assertEqual(spec, non_unique_nodes)
+        # Again, different DAG structure so not equal.
+        self.assertNotEqual(spec, non_unique_nodes)
         self.assertFalse(spec.eq_dag(non_unique_nodes))
 
         spec.normalize()
 
         # After normalizing, spec_dag_equal should match the normalized spec.
-        self.assertEqual(spec, expected_flat)
+        self.assertNotEqual(spec, expected_flat)
         self.assertFalse(spec.eq_dag(expected_flat))
 
         self.assertEqual(spec, expected_normalized)
@@ -437,5 +439,3 @@ class SpecDagTest(MockPackagesTest):
         orig_ids = set(id(s) for s in orig.traverse())
         copy_ids = set(id(s) for s in copy.traverse())
         self.assertFalse(orig_ids.intersection(copy_ids))
-
-#  LocalWords:  libdwarf

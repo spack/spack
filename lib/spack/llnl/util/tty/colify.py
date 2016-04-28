@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -210,6 +210,13 @@ def colify(elts, **options):
 
 
 def colify_table(table, **options):
+    """Version of colify() for data expressed in rows, (list of lists).
+
+       Same as regular colify but takes a list of lists, where each
+       sub-list must be the same length, and each is interpreted as a
+       row in a table.  Regular colify displays a sequential list of
+       values in columns.
+    """
     if table is None:
         raise TypeError("Can't call colify_table on NoneType")
     elif not table or not table[0]:

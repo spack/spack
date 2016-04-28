@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -59,7 +59,8 @@ def path_put_first(var_name, directories):
     path_set(var_name, new_path)
 
 
-def pop_keys(dictionary, *keys):
-    for key in keys:
-        if key in dictionary:
-            dictionary.pop(key)
+def dump_environment(path):
+    """Dump the current environment out to a file."""
+    with open(path, 'w') as env_file:
+        for key, val in sorted(os.environ.items()):
+            env_file.write("%s=%s\n" % (key, val))

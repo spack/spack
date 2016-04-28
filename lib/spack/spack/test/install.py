@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,18 +22,13 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
-import unittest
 import shutil
 import tempfile
 
-from llnl.util.filesystem import *
-
 import spack
-from spack.stage import Stage
-from spack.fetch_strategy import URLFetchStrategy
+from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
-from spack.util.executable import which
+from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.test.mock_packages_test import *
 from spack.test.mock_repo import MockArchive
 
@@ -59,9 +54,7 @@ class InstallTest(MockPackagesTest):
 
     def tearDown(self):
         super(InstallTest, self).tearDown()
-
-        if self.repo.stage is not None:
-            self.repo.stage.destroy()
+        self.repo.destroy()
 
         # Turn checksumming back on
         spack.do_checksum = True
@@ -71,21 +64,41 @@ class InstallTest(MockPackagesTest):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
 
-    def test_install_and_uninstall(self):
+    def fake_fetchify(self, pkg):
+        """Fake the URL for a package so it downloads from a file."""
+        fetcher = FetchStrategyComposite()
+        fetcher.append(URLFetchStrategy(self.repo.url))
+        pkg.fetcher = fetcher
+
+
+    def ztest_install_and_uninstall(self):
         # Get a basic concrete spec for the trivial install package.
         spec = Spec('trivial_install_test_package')
         spec.concretize()
         self.assertTrue(spec.concrete)
 
         # Get the package
-        pkg = spack.db.get(spec)
+        pkg = spack.repo.get(spec)
 
-        # Fake the URL for the package so it downloads from a file.
-        pkg.fetcher = URLFetchStrategy(self.repo.url)
+        self.fake_fetchify(pkg)
 
         try:
             pkg.do_install()
             pkg.do_uninstall()
+        except Exception, e:
+            pkg.remove_prefix()
+            raise
+
+
+    def test_install_environment(self):
+        spec = Spec('cmake-client').concretized()
+
+        for s in spec.traverse():
+            self.fake_fetchify(s.package)
+
+        pkg = spec.package
+        try:
+            pkg.do_install()
         except Exception, e:
             pkg.remove_prefix()
             raise

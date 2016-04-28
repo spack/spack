@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,7 @@
 ##############################################################################
 import os
 
-from external import argparse
+import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -77,15 +77,16 @@ def get_git():
 
 def list_packages(rev):
     git = get_git()
-    relpath = spack.packages_path[len(spack.prefix + os.path.sep):] + os.path.sep
+    pkgpath = os.path.join(spack.packages_path, 'packages')
+    relpath = pkgpath[len(spack.prefix + os.path.sep):] + os.path.sep
     output = git('ls-tree', '--full-tree', '--name-only', rev, relpath,
-                 return_output=True)
+                 output=str)
     return sorted(line[len(relpath):] for line in output.split('\n') if line)
 
 
 def pkg_add(args):
     for pkg_name in args.packages:
-        filename = spack.db.filename_for_package_name(pkg_name)
+        filename = spack.repo.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
             tty.die("No such package: %s.  Path does not exist:" % pkg_name, filename)
 

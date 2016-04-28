@@ -84,7 +84,7 @@ always choose to download just one tarball initially, and run
 
    If it fails entirely, you can get minimal boilerplate by using
    :ref:`spack-edit-f`, or you can manually create a directory and
-   ``package.py`` file for the package in ``var/spack/packages``.
+   ``package.py`` file for the package in ``var/spack/repos/builtin/packages``.
 
 .. note::
 
@@ -203,7 +203,7 @@ edit`` command:
 So, if you used ``spack create`` to create a package, then saved and
 closed the resulting file, you can get back to it with ``spack edit``.
 The ``cmake`` package actually lives in
-``$SPACK_ROOT/var/spack/packages/cmake/package.py``, but this provides
+``$SPACK_ROOT/var/spack/repos/builtin/packages/cmake/package.py``, but this provides
 a much simpler shortcut and saves you the trouble of typing the full
 path.
 
@@ -269,18 +269,18 @@ live in Spack's directory structure.  In general, `spack-create`_ and
 `spack-edit`_ handle creating package files for you, so you can skip
 most of the details here.
 
-``var/spack/packages``
+``var/spack/repos/builtin/packages``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 A Spack installation directory is structured like a standard UNIX
 install prefix (``bin``, ``lib``, ``include``, ``var``, ``opt``,
 etc.).  Most of the code for Spack lives in ``$SPACK_ROOT/lib/spack``.
-Packages themselves live in ``$SPACK_ROOT/var/spack/packages``.
+Packages themselves live in ``$SPACK_ROOT/var/spack/repos/builtin/packages``.
 
 If you ``cd`` to that directory, you will see directories for each
 package:
 
-.. command-output::  cd $SPACK_ROOT/var/spack/packages;  ls -CF
+.. command-output::  cd $SPACK_ROOT/var/spack/repos/builtin/packages;  ls -CF
    :shell:
    :ellipsis: 10
 
@@ -288,7 +288,7 @@ Each directory contains a file called ``package.py``, which is where
 all the python code for the package goes.  For example, the ``libelf``
 package lives in::
 
-   $SPACK_ROOT/var/spack/packages/libelf/package.py
+   $SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py
 
 Alongside the ``package.py`` file, a package may contain extra
 directories or files (like patches) that it needs to build.
@@ -301,7 +301,7 @@ Packages are named after the directory containing ``package.py``.  So,
 ``libelf``'s ``package.py`` lives in a directory called ``libelf``.
 The ``package.py`` file defines a class called ``Libelf``, which
 extends Spack's ``Package`` class.  for example, here is
-``$SPACK_ROOT/var/spack/packages/libelf/package.py``:
+``$SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py``:
 
 .. code-block:: python
    :linenos:
@@ -328,7 +328,7 @@ these:
    $ spack install libelf@0.8.13
 
 Spack sees the package name in the spec and looks for
-``libelf/package.py`` in ``var/spack/packages``.  Likewise, if you say
+``libelf/package.py`` in ``var/spack/repos/builtin/packages``.  Likewise, if you say
 ``spack install py-numpy``, then Spack looks for
 ``py-numpy/package.py``.
 
@@ -400,6 +400,35 @@ construct the new one for ``8.2.1``.
 
 When you supply a custom URL for a version, Spack uses that URL
 *verbatim* and does not perform extrapolation.
+
+Skipping the expand step
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spack normally expands archives automatically after downloading
+them. If you want to skip this step (e.g., for self-extracting
+executables and other custom archive types), you can add
+``expand=False`` to a ``version`` directive.
+
+.. code-block:: python
+
+   version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
+           url='http://example.com/foo-8.2.1-special-version.tar.gz', 'expand=False')
+
+When ``expand`` is set to ``False``, Spack sets the current working
+directory to the directory containing the downloaded archive before it
+calls your ``install`` method.  Within ``install``, the path to the
+downloaded archive is available as ``self.stage.archive_file``.
+
+Here is an example snippet for packages distributed as self-extracting
+archives.  The example sets permissions on the downloaded file to make
+it executable, then runs it with some arguments.
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       set_executable(self.stage.archive_file)
+       installer = Executable(self.stage.archive_file)
+       installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
 
 Checksums
 ~~~~~~~~~~~~~~~~~
@@ -632,7 +661,7 @@ Default
   revision instead.
 
 Revisions
-  Add ``hg`` and ``revision``parameters:
+  Add ``hg`` and ``revision`` parameters:
 
   .. code-block:: python
 
@@ -703,7 +732,7 @@ supply is a filename, then the patch needs to live within the spack
 source tree.  For example, the patch above lives in a directory
 structure like this::
 
-   $SPACK_ROOT/var/spack/packages/
+   $SPACK_ROOT/var/spack/repos/builtin/packages/
        mvapich2/
            package.py
            ad_lustre_rwcontig_open_source.patch
@@ -1524,6 +1553,69 @@ This is useful when you want to know exactly what Spack will do when
 you ask for a particular spec.
 
 
+``Concretization Policies``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A user may have certain preferences for how packages should
+be concretized on their system.  For example, one user may prefer packages
+built with OpenMPI and the Intel compiler.  Another user may prefer
+packages be built with MVAPICH and GCC.
+
+Spack can be configured to prefer certain compilers, package
+versions, depends_on, and variants during concretization.
+The preferred configuration can be controlled via the
+``~/.spack/packages.yaml`` file for user configuations, or the
+``etc/spack/packages.yaml`` site configuration.
+
+
+Here's an example packages.yaml file that sets preferred packages:
+
+.. code-block:: sh
+
+    packages:
+      dyninst:
+        compiler: [gcc@4.9]
+        variants: +debug
+      gperftools:
+        version: [2.2, 2.4, 2.3]
+      all:
+        compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
+        providers:
+          mpi: [mvapich, mpich, openmpi]
+
+
+At a high level, this example is specifying how packages should be
+concretized.  The dyninst package should prefer using gcc 4.9 and
+be built with debug options.  The gperftools package should prefer version
+2.2 over 2.4.  Every package on the system should prefer mvapich for
+its MPI and gcc 4.4.7 (except for Dyninst, which overrides this by preferring gcc 4.9).
+These options are used to fill in implicit defaults.  Any of them can be overwritten
+on the command line if explicitly requested.
+
+Each packages.yaml file begins with the string ``packages:`` and
+package names are specified on the next level. The special string ``all``
+applies settings to each package. Underneath each package name is
+one or more components: ``compiler``, ``variants``, ``version``,
+or ``providers``.  Each component has an ordered list of spec
+``constraints``, with earlier entries in the list being preferred over
+later entries.
+
+Sometimes a package installation may have constraints that forbid
+the first concretization rule, in which case Spack will use the first
+legal concretization rule.  Going back to the example, if a user
+requests gperftools 2.3 or later, then Spack will install version 2.4
+as the 2.4 version of gperftools is preferred over 2.3.
+
+An explicit concretization rule in the preferred section will always
+take preference over unlisted concretizations.  In the above example,
+xlc isn't listed in the compiler list.  Every listed compiler from
+gcc to pgi will thus be preferred over the xlc compiler.
+
+The syntax for the ``provider`` section differs slightly from other
+concretization rules.  A provider lists a value that packages may
+``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
+dependency.
+
 .. _install-method:
 
 Implementing the ``install`` method
@@ -1533,7 +1625,7 @@ The last element of a package is its ``install()`` method.  This is
 where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
-.. literalinclude::  ../../../var/spack/packages/libelf/package.py
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/libelf/package.py
    :start-after: 0.8.12
    :linenos:
 
@@ -1711,15 +1803,15 @@ Compile-time library search paths
   * ``-L$dep_prefix/lib``
   * ``-L$dep_prefix/lib64``
 Runtime library search paths (RPATHs)
-  * ``-Wl,-rpath=$dep_prefix/lib``
-  * ``-Wl,-rpath=$dep_prefix/lib64``
+  * ``-Wl,-rpath,$dep_prefix/lib``
+  * ``-Wl,-rpath,$dep_prefix/lib64``
 Include search paths
   * ``-I$dep_prefix/include``
 
 An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
 build will have ``-I$LIBELF_PREFIX/include``,
-``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath=$LIBELF_PREFIX/lib``
+``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath,$LIBELF_PREFIX/lib``
 inserted on the command line.  This is done transparently to the
 project's build system, which will just think it's using a system
 where ``libelf`` is readily available.  Because of this, you **do
@@ -1751,6 +1843,20 @@ modify Spack internals, because each ``install()`` call has its own
 dedicated process.
 
 .. _prefix-objects:
+
+
+Failing the build
+----------------------
+
+Sometimes you don't want a package to successfully install unless some
+condition is true.  You can explicitly cause the build to fail from
+``install()`` by raising an ``InstallError``, for example:
+
+.. code-block:: python
+
+   if spec.architecture.startswith('darwin'):
+       raise InstallError('This package does not build on Mac OS X!')
+
 
 Prefix objects
 ----------------------
@@ -2068,6 +2174,62 @@ package, this allows us to avoid race conditions in the library's
 build system.
 
 
+.. _sanity-checks:
+
+Sanity checking an intallation
+--------------------------------
+
+By default, Spack assumes that a build has failed if nothing is
+written to the install prefix, and that it has succeeded if anything
+(a file, a directory, etc.)  is written to the install prefix after
+``install()`` completes.
+
+Consider a simple autotools build like this:
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       configure("--prefix=" + prefix)
+       make()
+       make("install")
+
+If you are using using standard autotools or CMake, ``configure`` and
+``make`` will not write anything to the install prefix.  Only ``make
+install`` writes the files, and only once the build is already
+complete.  Not all builds are like this.  Many builds of scientific
+software modify the install prefix *before* ``make install``. Builds
+like this can falsely report that they were successfully installed if
+an error occurs before the install is complete but after files have
+been written to the ``prefix``.
+
+
+``sanity_check_is_file`` and ``sanity_check_is_dir``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can optionally specify *sanity checks* to deal with this problem.
+Add properties like this to your package:
+
+.. code-block:: python
+
+   class MyPackage(Package):
+       ...
+
+       sanity_check_is_file = ['include/libelf.h']
+       sanity_check_is_dir  = [lib]
+
+       def install(self, spec, prefix):
+           configure("--prefix=" + prefix)
+           make()
+           make("install")
+
+Now, after ``install()`` runs, Spack will check whether
+``$prefix/include/libelf.h`` exists and is a file, and whether
+``$prefix/lib`` exists and is a directory.  If the checks fail, then
+the build will fail and the install prefix will be removed.  If they
+succeed, Spack considers the build succeeful and keeps the prefix in
+place.
+
+
 .. _file-manipulation:
 
 File manipulation functions
@@ -2107,6 +2269,15 @@ Filtering functions
   string for the particular match.
 
   Examples:
+
+  #. Filtering a Makefile to force it to use Spack's compiler wrappers:
+
+     .. code-block:: python
+
+        filter_file(r'^CC\s*=.*',  spack_cc,  'Makefile')
+        filter_file(r'^CXX\s*=.*', spack_cxx, 'Makefile')
+        filter_file(r'^F77\s*=.*', spack_f77, 'Makefile')
+        filter_file(r'^FC\s*=.*',  spack_fc,  'Makefile')
 
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 

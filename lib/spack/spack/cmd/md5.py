@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -22,32 +22,51 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
+import argparse
 import hashlib
-from external import argparse
+import os
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
-
 import spack.util.crypto
+from spack.stage import Stage, FailedDownloadError
 
-description = "Calculate md5 checksums for files."
+description = "Calculate md5 checksums for files/urls."
+
 
 def setup_parser(subparser):
     setup_parser.parser = subparser
     subparser.add_argument('files', nargs=argparse.REMAINDER,
                            help="Files to checksum.")
 
+
+def compute_md5_checksum(url):
+    if not os.path.isfile(url):
+        with Stage(url) as stage:
+            stage.fetch()
+            value = spack.util.crypto.checksum(hashlib.md5, stage.archive_file)
+    else:
+        value = spack.util.crypto.checksum(hashlib.md5, url)
+    return value
+
+
 def md5(parser, args):
     if not args.files:
         setup_parser.parser.print_help()
         return 1
 
-    for f in args.files:
-        if not os.path.isfile(f):
-            tty.die("Not a file: %s" % f)
-        if not can_access(f):
-            tty.die("Cannot read file: %s" % f)
+    results = []
+    for url in args.files:
+        try:
+            checksum = compute_md5_checksum(url)
+            results.append((checksum, url))
+        except FailedDownloadError as e:
+            tty.warn("Failed to fetch %s" % url)
+            tty.warn("%s" % e)
+        except IOError as e:
+            tty.warn("Error when reading %s" % url)
+            tty.warn("%s" % e)
 
-        checksum = spack.util.crypto.checksum(hashlib.md5, f)
-        print "%s  %s" % (checksum, f)
+    # Dump the MD5s at last without interleaving them with downloads
+    tty.msg("%d MD5 checksums:" % len(results))
+    for checksum, url in results:
+        print "%s  %s" % (checksum, url)

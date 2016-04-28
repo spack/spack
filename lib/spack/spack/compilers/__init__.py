@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@ system and configuring Spack to use multiple compilers.
 """
 import imp
 import os
+import platform
 
 from llnl.util.lang import memoized, list_modules
 from llnl.util.filesystem import join_path
@@ -35,6 +36,7 @@ import spack
 import spack.error
 import spack.spec
 import spack.config
+import spack.architecture
 
 from spack.util.multiproc import parmap
 import spack.compiler as Comp
@@ -46,50 +48,136 @@ from spack.util.environment import get_path
 _imported_compilers_module = 'spack.compilers'
 _required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 
-_default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
+# TODO: customize order in config file
+if platform.system() == 'Darwin':
+    _default_order = ['clang', 'gcc', 'intel']
+else:
+    _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc', 'nag']
+
 
 def _auto_compiler_spec(function):
-    def converter(cspec_like):
+    def converter(cspec_like, *args, **kwargs):
         if not isinstance(cspec_like, spack.spec.CompilerSpec):
             cspec_like = spack.spec.CompilerSpec(cspec_like)
-        return function(cspec_like)
+        return function(cspec_like, *args, **kwargs)
     return converter
 
 
-def _get_config():
-    """Get a Spack config, but make sure it has compiler configuration
-       first."""
-    # If any configuration file has compilers, just stick with the
-    # ones already configured.
-    config = spack.config.get_compilers_config()
-    existing = [spack.spec.CompilerSpec(s)
-                for s in config]
-    if existing:
-        return config
-
-    compilers = find_compilers(*get_path('PATH'))
-    add_compilers_to_config('user', *compilers)
-
-    # After writing compilers to the user config, return a full config
-    # from all files.
-    return spack.config.get_compilers_config()
+def _to_dict(compiler):
+    """Return a dict version of compiler suitable to insert in YAML."""
+    return {
+        str(compiler.spec) : dict(
+            (attr, getattr(compiler, attr, None))
+            for attr in _required_instance_vars)
+    }
 
 
-_cached_default_compiler = None
+def get_compiler_config(arch=None, scope=None):
+    """Return the compiler configuration for the specified architecture.
+    """
+    # Check whether we're on a front-end (native) architecture.
+    my_arch = spack.architecture.sys_type()
+    if arch is None:
+        arch = my_arch
+
+    def init_compiler_config():
+        """Compiler search used when Spack has no compilers."""
+        config[arch] = {}
+        compilers = find_compilers(*get_path('PATH'))
+        for compiler in compilers:
+            config[arch].update(_to_dict(compiler))
+        spack.config.update_config('compilers', config, scope=scope)
+
+    config = spack.config.get_config('compilers', scope=scope)
+
+    # Update the configuration if there are currently no compilers
+    # configured.  Avoid updating automatically if there ARE site
+    # compilers configured but no user ones.
+    if arch == my_arch and arch not in config:
+        if scope is None:
+            # We know no compilers were configured in any scope.
+            init_compiler_config()
+        elif scope == 'user':
+            # Check the site config and update the user config if
+            # nothing is configured at the site level.
+            site_config = spack.config.get_config('compilers', scope='site')
+            if not site_config:
+                init_compiler_config()
+
+    return config[arch] if arch in config else {}
+
+
+def add_compilers_to_config(compilers, arch=None, scope=None):
+    """Add compilers to the config for the specified architecture.
+
+    Arguments:
+      - compilers: a list of Compiler objects.
+      - arch:      arch to add compilers for.
+      - scope:     configuration scope to modify.
+    """
+    if arch is None:
+        arch = spack.architecture.sys_type()
+
+    compiler_config = get_compiler_config(arch, scope)
+    for compiler in compilers:
+        compiler_config[str(compiler.spec)] = dict(
+            (c, getattr(compiler, c, "None"))
+            for c in _required_instance_vars)
+
+    update = { arch : compiler_config }
+    spack.config.update_config('compilers', update, scope)
+
+
+@_auto_compiler_spec
+def remove_compiler_from_config(compiler_spec, arch=None, scope=None):
+    """Remove compilers from the config, by spec.
+
+    Arguments:
+      - compiler_specs: a list of CompilerSpec objects.
+      - arch:           arch to add compilers for.
+      - scope:          configuration scope to modify.
+    """
+    if arch is None:
+        arch = spack.architecture.sys_type()
+
+    compiler_config = get_compiler_config(arch, scope)
+    del compiler_config[str(compiler_spec)]
+    update = { arch : compiler_config }
+
+    spack.config.update_config('compilers', update, scope)
+
+
+def all_compilers_config(arch=None, scope=None):
+    """Return a set of specs for all the compiler versions currently
+       available to build with.  These are instances of CompilerSpec.
+    """
+    # Get compilers for this architecture.
+    arch_config = get_compiler_config(arch, scope)
+
+    # Merge 'all' compilers with arch-specific ones.
+    # Arch-specific compilers have higher precedence.
+    merged_config = get_compiler_config('all', scope=scope)
+    merged_config = spack.config._merge_yaml(merged_config, arch_config)
+
+    return merged_config
+
+
+def all_compilers(arch=None, scope=None):
+    # Return compiler specs from the merged config.
+    return [spack.spec.CompilerSpec(s)
+            for s in all_compilers_config(arch, scope)]
+
+
 def default_compiler():
-    global _cached_default_compiler
-    if _cached_default_compiler:
-        return _cached_default_compiler
     versions = []
-    for name in _default_order:  # TODO: customize order.
+    for name in _default_order:
         versions = find(name)
-        if versions: break
-
-    if not versions:
+        if versions:
+            break
+    else:
         raise NoCompilersError()
 
-    _cached_default_compiler = sorted(versions)[-1]
-    return _cached_default_compiler
+    return sorted(versions)[-1]
 
 
 def find_compilers(*path):
@@ -124,20 +212,6 @@ def find_compilers(*path):
     return clist
 
 
-def add_compilers_to_config(scope, *compilers):
-    compiler_config_tree = {}
-    for compiler in compilers:
-        compiler_entry = {}
-        for c in _required_instance_vars:
-            val = getattr(compiler, c)
-            if not val:
-                val = "None"
-            compiler_entry[c] = val
-        compiler_config_tree[str(compiler.spec)] = compiler_entry
-    spack.config.add_to_compiler_config(compiler_config_tree, scope)
-
-
-
 def supported_compilers():
     """Return a set of names of compilers supported by Spack.
 
@@ -153,27 +227,19 @@ def supported(compiler_spec):
     return compiler_spec.name in supported_compilers()
 
 
-def all_compilers():
-    """Return a set of specs for all the compiler versions currently
-       available to build with.  These are instances of CompilerSpec.
-    """
-    configuration = _get_config()
-    return [spack.spec.CompilerSpec(s) for s in configuration]
-
-
 @_auto_compiler_spec
-def find(compiler_spec):
+def find(compiler_spec, arch=None, scope=None):
     """Return specs of available compilers that match the supplied
-       compiler spec.  Return an empty list if nothing found."""
-    return [c for c in all_compilers() if c.satisfies(compiler_spec)]
+       compiler spec.  Return an list if nothing found."""
+    return [c for c in all_compilers(arch, scope) if c.satisfies(compiler_spec)]
 
 
 @_auto_compiler_spec
-def compilers_for_spec(compiler_spec):
+def compilers_for_spec(compiler_spec, arch=None, scope=None):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
-    config = _get_config()
+    config = all_compilers_config(arch, scope)
 
     def get_compiler(cspec):
         items = config[str(cspec)]
@@ -196,7 +262,7 @@ def compilers_for_spec(compiler_spec):
                 flags[f] = items[f]
         return cls(cspec, *compiler_paths, **flags)
 
-    matches = find(compiler_spec)
+    matches = find(compiler_spec, arch, scope)
     return [get_compiler(cspec) for cspec in matches]
 
 

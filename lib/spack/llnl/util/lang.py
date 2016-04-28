@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -26,6 +26,7 @@ import os
 import re
 import sys
 import functools
+import collections
 import inspect
 
 # Ignore emacs backups when listing modules
@@ -112,11 +113,12 @@ def partition_list(elements, predicate):
 
 def caller_locals():
     """This will return the locals of the *parent* of the caller.
-       This allows a fucntion to insert variables into its caller's
+       This allows a function to insert variables into its caller's
        scope.  Yes, this is some black magic, and yes it's useful
        for implementing things like depends_on and provides.
     """
-    stack = inspect.stack()
+    # Passing zero here skips line context for speed.
+    stack = inspect.stack(0)
     try:
         return stack[2][0].f_locals
     finally:
@@ -127,7 +129,8 @@ def get_calling_module_name():
     """Make sure that the caller is a class definition, and return the
        enclosing module's name.
     """
-    stack = inspect.stack()
+    # Passing zero here skips line context for speed.
+    stack = inspect.stack(0)
     try:
         # Make sure locals contain __module__
         caller_locals = stack[2][0].f_locals
@@ -167,16 +170,32 @@ def has_method(cls, name):
     return False
 
 
-def memoized(obj):
+class memoized(object):
     """Decorator that caches the results of a function, storing them
        in an attribute of that function."""
-    cache = obj.cache = {}
-    @functools.wraps(obj)
-    def memoizer(*args, **kwargs):
-        if args not in cache:
-            cache[args] = obj(*args, **kwargs)
-        return cache[args]
-    return memoizer
+    def __init__(self, func):
+        self.func = func
+        self.cache = {}
+
+
+    def __call__(self, *args):
+        if not isinstance(args, collections.Hashable):
+            # Not hashable, so just call the function.
+            return self.func(*args)
+
+        if args not in self.cache:
+            self.cache[args] = self.func(*args)
+        return self.cache[args]
+
+
+    def __get__(self, obj, objtype):
+        """Support instance methods."""
+        return functools.partial(self.__call__, obj)
+
+
+    def clear(self):
+        """Expunge cache so that self.func will be called again."""
+        self.cache.clear()
 
 
 def list_modules(directory, **kwargs):
@@ -218,11 +237,11 @@ def key_ordering(cls):
     if not has_method(cls, '_cmp_key'):
         raise TypeError("'%s' doesn't define _cmp_key()." % cls.__name__)
 
-    setter('__eq__', lambda s,o: o is not None and s._cmp_key() == o._cmp_key())
+    setter('__eq__', lambda s,o: (s is o) or (o is not None and s._cmp_key() == o._cmp_key()))
     setter('__lt__', lambda s,o: o is not None and s._cmp_key() <  o._cmp_key())
     setter('__le__', lambda s,o: o is not None and s._cmp_key() <= o._cmp_key())
 
-    setter('__ne__', lambda s,o: o is None or s._cmp_key() != o._cmp_key())
+    setter('__ne__', lambda s,o: (s is not o) and (o is None or s._cmp_key() != o._cmp_key()))
     setter('__gt__', lambda s,o: o is None or s._cmp_key() >  o._cmp_key())
     setter('__ge__', lambda s,o: o is None or s._cmp_key() >= o._cmp_key())
 

@@ -149,26 +149,46 @@ customize an installation in :ref:`sec-specs`.
 ``spack uninstall``
 ~~~~~~~~~~~~~~~~~~~~~
 
-To uninstall a package, type ``spack uninstall <package>``.  This will
-completely remove the directory in which the package was installed.
+To uninstall a package, type ``spack uninstall <package>``.  This will ask the user for
+confirmation, and in case will completely remove the directory in which the package was installed.
 
 .. code-block:: sh
 
    spack uninstall mpich
 
 If there are still installed packages that depend on the package to be
-uninstalled, spack will refuse to uninstall it. You can override this
-behavior with ``spack uninstall -f <package>``, but you risk breaking
-other installed packages. In general, it is safer to remove dependent
-packages *before* removing their dependencies.
+uninstalled, spack will refuse to uninstall it.
 
-A line like ``spack uninstall mpich`` may be ambiguous, if multiple
-``mpich`` configurations are installed.  For example, if both
+To uninstall a package and every package that depends on it, you may give the
+`--dependents` option.
+
+.. code-block:: sh
+
+   spack uninstall --dependents mpich
+
+will display a list of all the packages that depends on `mpich` and, upon confirmation,
+will uninstall them in the right order.
+
+A line like
+
+.. code-block:: sh
+
+   spack uninstall mpich
+
+may be ambiguous, if multiple ``mpich`` configurations are installed.  For example, if both
 ``mpich@3.0.2`` and ``mpich@3.1`` are installed, ``mpich`` could refer
 to either one. Because it cannot determine which one to uninstall,
-Spack will ask you to provide a version number to remove the
-ambiguity.  As an example, ``spack uninstall mpich@3.1`` is
-unambiguous in this scenario.
+Spack will ask you either to provide a version number to remove the
+ambiguity or use the ``--all`` option to uninstall all of the matching packages.
+
+You may force uninstall a package with the `--force` option
+
+.. code-block:: sh
+
+   spack uninstall --force mpich
+
+but you risk breaking other installed packages. In general, it is safer to remove dependent
+packages *before* removing their dependencies or use the `--dependents` option.
 
 
 Seeing installed packages
@@ -357,7 +377,7 @@ Spack, you can simply run ``spack compiler add`` with the path to
 where the compiler is installed.  For example::
 
     $ spack compiler add /usr/local/tools/ic-13.0.079
-    ==> Added 1 new compiler to /Users/gamblin2/.spackconfig
+    ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
         intel@13.0.079
 
 Or you can run ``spack compiler add`` with no arguments to force
@@ -367,7 +387,7 @@ installed, but you know that new compilers have been added to your
 
     $ module load gcc-4.9.0
     $ spack compiler add
-    ==> Added 1 new compiler to /Users/gamblin2/.spackconfig
+    ==> Added 1 new compiler to /Users/gamblin2/.spack/compilers.yaml
         gcc@4.9.0
 
 This loads the environment module for gcc-4.9.0 to get it into the
@@ -398,27 +418,34 @@ Manual compiler configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If auto-detection fails, you can manually configure a compiler by
-editing your ``~/.spackconfig`` file.  You can do this by running
-``spack config edit``, which will open the file in your ``$EDITOR``.
+editing your ``~/.spack/compilers.yaml`` file.  You can do this by running
+``spack config edit compilers``, which will open the file in your ``$EDITOR``.
 
 Each compiler configuration in the file looks like this::
 
     ...
-    [compiler "intel@15.0.0"]
-        cc = /usr/local/bin/icc-15.0.024-beta
-        cxx = /usr/local/bin/icpc-15.0.024-beta
-        f77 = /usr/local/bin/ifort-15.0.024-beta
-        fc = /usr/local/bin/ifort-15.0.024-beta
-    ...
+    chaos_5_x86_64_ib:
+      ...
+      intel@15.0.0:
+          cc: /usr/local/bin/icc-15.0.024-beta
+          cxx: /usr/local/bin/icpc-15.0.024-beta
+          f77: /usr/local/bin/ifort-15.0.024-beta
+          fc: /usr/local/bin/ifort-15.0.024-beta
+      ...
+
+The chaos_5_x86_64_ib string is an architecture string, and multiple
+compilers can be listed underneath an architecture.  The architecture
+string may be replaced with the string 'all' to signify compilers that
+work on all architectures.
 
 For compilers, like ``clang``, that do not support Fortran, put
 ``None`` for ``f77`` and ``fc``::
 
-    [compiler "clang@3.3svn"]
-        cc = /usr/bin/clang
-        cxx = /usr/bin/clang++
-        f77 = None
-        fc = None
+    clang@3.3svn:
+        cc: /usr/bin/clang
+        cxx: /usr/bin/clang++
+        f77: None
+        fc: None
 
 Once you save the file, the configured compilers will show up in the
 list displayed by ``spack compilers``.
@@ -767,6 +794,34 @@ Environment modules
 Spack provides some limited integration with environment module
 systems to make it easier to use the packages it provides.
 
+
+Installing Environment Modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to use Spack's generated environment modules, you must have
+installed the *Environment Modules* package.  On many Linux
+distributions, this can be installed from the vendor's repository.
+For example: ```yum install environment-modules``
+(Fedora/RHEL/CentOS).  If your Linux distribution does not have
+Environment Modules, you can get it with Spack:
+
+1. Install with::
+
+    spack install environment-modules
+
+2. Activate with::
+
+    MODULES_HOME=`spack location -i environment-modules`
+     MODULES_VERSION=`ls -1 $MODULES_HOME/Modules | head -1`
+     ${MODULES_HOME}/Modules/${MODULES_VERSION}/bin/add.modules
+
+This adds to your ``.bashrc`` (or similar) files, enabling Environment
+Modules when you log in.  It will ask your permission before changing
+any files.
+
+Spack and Environment Modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 You can enable shell support by sourcing some files in the
 ``/share/spack`` directory.
 
@@ -896,7 +951,7 @@ Or, similarly with modules, you could type:
    $ spack load mpich %gcc@4.4.7
 
 These commands will add appropriate directories to your ``PATH``,
-``MANPATH``, and ``LD_LIBRARY_PATH``.  When you no longer want to use
+``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH``.  When you no longer want to use
 a package, you can type unload or unuse similarly:
 
 .. code-block:: sh

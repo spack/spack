@@ -6,7 +6,7 @@
 # Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
-# For details, see https://scalability-llnl.github.io/spack
+# For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -138,7 +138,7 @@ class when(object):
        methods like install() that depend on the package's spec.
        For example:
 
-       .. code-block::
+       .. code-block:: python
 
           class SomePackage(Package):
               ...
@@ -163,26 +163,28 @@ class when(object):
        if you only have part of the install that is platform specific, you
        could do this:
 
-       class SomePackage(Package):
-           ...
-           # virtual dependence on MPI.
-           # could resolve to mpich, mpich2, OpenMPI
-           depends_on('mpi')
+       .. code-block:: python
 
-           def setup(self):
-               # do nothing in the default case
-               pass
+          class SomePackage(Package):
+              ...
+              # virtual dependence on MPI.
+              # could resolve to mpich, mpich2, OpenMPI
+              depends_on('mpi')
 
-           @when('^openmpi')
-           def setup(self):
-               # do something special when this is built with OpenMPI for
-               # its MPI implementations.
+              def setup(self):
+                  # do nothing in the default case
+                  pass
+
+              @when('^openmpi')
+              def setup(self):
+                  # do something special when this is built with OpenMPI for
+                  # its MPI implementations.
 
 
-           def install(self, prefix):
-               # Do common install stuff
-               self.setup()
-               # Do more common install stuff
+              def install(self, prefix):
+                  # Do common install stuff
+                  self.setup()
+                  # Do more common install stuff
 
        There must be one (and only one) @when clause that matches the
        package's spec.  If there is more than one, or if none match,
@@ -193,10 +195,11 @@ class when(object):
        platform-specific versions.  There's not much we can do to get
        around this because of the way decorators work.
     """
-class when(object):
     def __init__(self, spec):
         pkg = get_calling_module_name()
-        self.spec = parse_anonymous_spec(spec, pkg)
+        if spec is True:
+            spec = pkg
+        self.spec = parse_anonymous_spec(spec, pkg) if spec is not False else None
 
     def __call__(self, method):
         # Get the first definition of the method in the calling scope
@@ -207,7 +210,9 @@ class when(object):
         if not type(original_method) == SpecMultiMethod:
             original_method = SpecMultiMethod(original_method)
 
-        original_method.register(self.spec, method)
+        if self.spec is not None:
+            original_method.register(self.spec, method)
+
         return original_method
 
 
