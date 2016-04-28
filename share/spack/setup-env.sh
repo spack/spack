@@ -1,4 +1,4 @@
-##############################################################################
+#####################################################################
 # Copyright (c) 2013, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -84,7 +84,10 @@ function spack {
             if [ "$_sp_arg" = "-h" ]; then
                 command spack cd -h
             else
-                cd $(spack location $_sp_arg "$@")
+		LOC="$(spack location $_sp_arg "$@")"
+		if [[ "x" -ne "x$LOC" ]] ; then
+                    cd "$LOC"
+		fi
             fi
             return
             ;;
