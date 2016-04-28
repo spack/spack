@@ -7,7 +7,7 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.0.1.tar.gz"
 
-    version('5.0.1', 'b477573fdcc87babe861f62316833db0')
+    version('5.0.1', 'b477573fdcc87babe861f62316833db0', url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
 
     variant('mpi', default=True, description='Activate the compilation of MUMPS with the MPI support')
     variant('scotch', default=False, description='Activate Scotch as a possible ordering library')
