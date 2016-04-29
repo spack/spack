@@ -1,10 +1,7 @@
 from spack import *
 import sys, os, re
 
-#TODO we may want to fix this path hack if something is implemented for #832
-sys.path.append(os.path.split(os.path.dirname(os.path.realpath(__file__)))[0])
-from support.intel import *
-sys.path.pop()
+from spack.pkg.builtin.intel import IntelInstaller
 
 class Ipp(IntelInstaller):
     """Intel Integrated Performance Primitives.
