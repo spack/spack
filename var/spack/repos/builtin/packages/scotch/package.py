@@ -1,16 +1,18 @@
 from spack import *
-import os
+import os, re
 
 class Scotch(Package):
     """Scotch is a software package for graph and mesh/hypergraph
        partitioning, graph clustering, and sparse matrix ordering."""
 
     homepage = "http://www.labri.fr/perso/pelegrin/scotch/"
-    url = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.3.tar.gz"
+    url      = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.3.tar.gz"
+    base_url = "http://gforge.inria.fr/frs/download.php/latestfile/298"
     list_url = "http://gforge.inria.fr/frs/?group_id=248"
 
     version('6.0.3', '10b0cc0f184de2de99859eafaca83cfc')
-    version('5.1.10b', '9b8622b39c141ecaca4a46298486fd99')
+    version('6.0.0', 'c50d6187462ba801f9a82133ee666e8e')
+    version('5.1.10b', 'f587201d6cf5cf63527182fbfba70753')
 
     variant('mpi', default=False, description='Activate the compilation of PT-Scotch')
     variant('compression', default=True, description='Activate the posibility to use compressed files')
@@ -22,17 +24,47 @@ class Scotch(Package):
     depends_on('mpi', when='+mpi')
     depends_on('zlib', when='+compression')
 
-    def validate(self, spec):
-        # NOTE : Scotch v6.0.0 and older have separate tar files for their esmumps-
-        # compatible versions.  In any normal circumstance, it would be better just
-        # to use these tar files since they're more comprehensive, but they
-        # unfortunately have very strange URLs that are non-uniform.  For the time
-        # being, I'm going to just use the '~esmumps' URLs that are uniform for
-        # the sake of simplicity.
-        if spec.satisfies('@:6.0.0') and '+esmumps' in spec:
-            raise RuntimeError('The "+esmumps" variant is only supported for Scotch v6.0.1+.')
+    # NOTE: Versions of Scotch up to version 6.0.0 don't include support for
+    # building with 'esmumps' in their default packages.  In order to enable
+    # support for this feature, we must grab the 'esmumps' enabled archives
+    # from the Scotch hosting site.  These alternative archives include a strict
+    # superset of the behavior in their default counterparts, so we choose to
+    # always grab these versions for older Scotch versions for simplicity.
+    @when('@:6.0.0')
+    def url_for_version(self, version):
+        return '%s/scotch_%s_esmumps.tar.gz' % (Scotch.base_url, version)
 
+    @when('@6.0.1:')
+    def url_for_version(self, version):
+        return super(Scotch, self).url_for_version(version)
+
+    # NOTE: Several of the 'esmumps' enabled Scotch releases up to version 6.0.0
+    # have broken build scripts that don't properly build 'esmumps' as a separate
+    # target, so we need a patch procedure to remove 'esmumps' from existing targets
+    # and to add it as a standalone target.
+    @when('@:6.0.0')
     def patch(self):
+        makefile_path = os.path.join('src', 'Makefile')
+        with open(makefile_path, 'r') as makefile:
+            esmumps_enabled = any(re.search(r'^esmumps(\s*):(.*)$', line) for line in makefile.readlines())
+
+        if not esmumps_enabled:
+            mff = FileFilter(makefile_path)
+            mff.filter(r'^.*((esmumps)|(ptesmumps)).*(install).*$', '')
+
+            makefile_esmumps_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Makefile.esmumps')
+            with open(makefile_path, 'a') as makefile:
+                makefile.write('\ninclude %s\n' % makefile_esmumps_path)
+
+    @when('@6.0.1:')
+    def patch(self):
+        pass
+
+    # NOTE: Configuration of Scotch is achieved by writing a 'Makefile.inc' file
+    # that contains all of the configuration variables and their desired values
+    # for the installation.  This function writes this file based on the given
+    # installation variants.
+    def configure(self):
         makefile_inc = []
         cflags = [
             '-O3',
@@ -109,7 +141,7 @@ class Scotch(Package):
                 fh.write('\n'.join(makefile_inc))
 
     def install(self, spec, prefix):
-        self.validate(spec)
+        self.configure()
 
         targets = ['scotch']
         if '+mpi' in self.spec:
