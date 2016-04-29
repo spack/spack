@@ -1,3 +1,8 @@
+'''
+Produce a file-system "view" of a Spack DAG.
+
+Concept from Nix, implemented by brett.viren@gmail.com ca 2016.
+'''
 ##############################################################################
 # Copyright (c) 2013, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -22,7 +27,9 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 import os
+import re
 import argparse
 
 import spack
@@ -34,8 +41,15 @@ description = "Produce a single-rooted directory view of a spec."
 def setup_parser(subparser):
     setup_parser.parser = subparser
 
-    subparser.add_argument('prefix', nargs=1,
-                           help="Path to top-level directory for the view.")
+    subparser.add_argument('-e','--exclude', action='append', default=[],
+                           help="exclude any packages which the given re pattern")
+    subparser.add_argument('-a','--action', default='link',
+                           choices=['link','remove','status'], # names match action_*() functions below
+                           help="what action to perform on the view")
+    subparser.add_argument('--no-dependencies', action='store_true', default=False,
+                           help="just operate on named packages and do not follow dependencies")
+    subparser.add_argument('-p','--prefix', required=True, 
+                           help="Path to a top-level directory to receive the view.")
     subparser.add_argument('specs', nargs=argparse.REMAINDER,
                            help="specs of packages to expose in the view.")
 
@@ -45,64 +59,134 @@ def assuredir(path):
         os.makedirs(path)
     
 def relative_to(prefix, path):
+    'Return end of `path` relative to `prefix`'
     assert 0 == path.find(prefix)
     reldir = path[len(prefix):]
     if reldir.startswith('/'):
         reldir = reldir[1:]
     return reldir
 
-def view_one(prefix, spec):
-    print spec.name,spec.prefix
+    
+def transform_path(spec, path, prefix=None):
+    'Return the a relative path corresponding to given path spec.prefix'
+    if os.path.isabs(path):
+        path = relative_to(spec.prefix, path)
+    subdirs = path.split(os.path.sep)
+    if subdirs[0] == '.spack':
+        lst = ['.spack',spec.name]+subdirs[1:]
+        path = os.path.join(*lst)
+    if prefix:
+        path = os.path.join(prefix, path)
+    return path
 
+def action_status(spec, prefix):
+    'Check status of view in prefix against spec'
     dotspack = os.path.join(prefix, '.spack', spec.name)
-
     if os.path.exists(os.path.join(dotspack)):
-        tty.warn("Skipping previously added package %s"%spec.name)
+        tty.info("Package added: %s"%spec.name)
+        return
+    tty.info("Package missing: %s"%spec.name)
+    return
+
+def action_remove(spec, prefix):
+    'Remove any files found in spec from prefix and purge empty directories.'
+
+    if not os.path.exists(prefix):
         return
 
+    dotspack = transform_path(spec, '.spack', prefix)
+    if not os.path.exists(dotspack):
+        tty.info("Skipping nonexistent package %s"%spec.name)
+        return
+
+    for dirpath,dirnames,filenames in os.walk(spec.prefix):
+        if not filenames:
+            continue
+
+        targdir = transform_path(spec, dirpath, prefix)
+        for fname in filenames:
+            src = os.path.join(dirpath, fname)
+            dst = os.path.join(targdir, fname)
+            if not os.path.exists(dst):
+                #tty.warn("Skipping nonexistent file for view: %s" % dst)
+                continue
+            os.unlink(dst)
+
+
+def action_link(spec, prefix):
+    'Symlink all files in `spec` into directory `prefix`.'
+
+    dotspack = transform_path(spec, '.spack', prefix)
+    if os.path.exists(dotspack):
+        tty.warn("Skipping previously added package %s"%spec.name)
+        return
 
     for dirpath,dirnames,filenames in os.walk(spec.prefix):
         if not filenames:
             continue        # avoid explicitly making empty dirs
 
-        reldir = relative_to(spec.prefix, dirpath)
-
-        # fixme: assumes .spack has no subdirs
-        if dirpath.endswith('.spack'):
-            targdir = dotspack
-        else:
-            targdir = os.path.join(prefix, reldir)
-
+        targdir = transform_path(spec, dirpath, prefix)
         assuredir(targdir)
 
-        print '\t%s...'%reldir,
-        nlinks = 0
         for fname in filenames:
             src = os.path.join(dirpath, fname)
             dst = os.path.join(targdir, fname)
             if os.path.exists(dst):
+                if '.spack' in dst.split(os.path.sep):
+                    continue    # silence these
                 tty.warn("Skipping existing file for view: %s" % dst)
                 continue
             os.symlink(src,dst)
-            nlinks += 1
-        print nlinks
-    
+
+
+
+def purge_empty_directories(path):
+    'Ascend up from the leaves accessible from `path` and remove empty directories.'
+    for dirpath, subdirs, files in os.walk(path, topdown=False):
+        for sd in subdirs:
+            sdp = os.path.join(dirpath,sd)
+            try:
+                os.rmdir(sdp)
+            except OSError:
+                tty.warn("Not removing directory with contents: %s" % sdp)
+
 
 def view(parser, args):
-    # if not args.specs:
-    #     tty.die("view creation requires at least one spec argument")
+    'The view command.'
+    to_exclude = [re.compile(e) for e in args.exclude]
+    def exclude(spec):
+        for e in to_exclude:
+            if e.match(spec.name):
+                return True
+        return False
 
     specs = spack.cmd.parse_specs(args.specs, normalize=True, concretize=True)
     if not specs:
         setup_parser.parser.print_help()
         return 1
 
-    prefix = args.prefix[0]
+    prefix = args.prefix
     assuredir(prefix)
 
     flat = set()
     for spec in specs:
+        if args.no_dependencies:
+            flat.add(spec)
+            continue
         flat.update(spec.normalized().traverse())
 
+    action = args.action.lower()
+    method = eval('action_' + action)
+
     for spec in flat:
-        view_one(prefix, spec)
+        if exclude(spec):
+            tty.info('Skipping excluded package: "%s"' % spec.name)
+            continue
+        if not os.path.exists(spec.prefix):
+            tty.warn('Skipping unknown package: %s in %s' % (spec.name, spec.prefix))
+            continue
+        tty.info("%s %s" % (action, spec.name))
+        method(spec, prefix)
+
+    if action in ['remove']:
+        purge_empty_directories(prefix)
