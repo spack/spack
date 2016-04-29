@@ -707,7 +707,10 @@ class Package(object):
 
             if not os.path.exists(lock_file):
                 tty.debug('TOUCH FILE : {0}'.format(lock_file))
-                os.makedirs(dirname)
+                try:
+                    os.makedirs(dirname)
+                except OSError:
+                    pass
                 touch(lock_file)
 
             self._prefix_lock = llnl.util.lock.Lock(lock_file)
