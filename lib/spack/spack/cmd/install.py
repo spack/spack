@@ -78,4 +78,5 @@ def install(parser, args):
                 ignore_deps=args.ignore_deps,
                 make_jobs=args.jobs,
                 verbose=args.verbose,
-                fake=args.fake)
+                fake=args.fake,
+                explicit=True)

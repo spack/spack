@@ -58,6 +58,12 @@ def setup_parser(subparser):
         help='Show dependency hashes as well as versions.')
 
     subparser.add_argument(
+        '-e', '--explicit', action='store_true',
+        help='Show only specs that were installed explicitly')
+    subparser.add_argument(
+        '-E', '--implicit', action='store_true',
+        help='Show only specs that were installed as dependencies')
+    subparser.add_argument(
         '-u', '--unknown', action='store_true',
         help='Show only specs Spack does not have a package for.')
     subparser.add_argument(
@@ -163,7 +169,14 @@ def find(parser, args):
         installed = any
     if args.unknown:
         known = False
-    q_args = { 'installed' : installed, 'known' : known }
+
+    explicit = None
+    if args.explicit:
+        explicit = False
+    if args.implicit:
+        explicit = True
+
+    q_args = { 'installed' : installed, 'known' : known, "explicit" : explicit }
 
     # Get all the specs the user asked for
     if not query_specs:

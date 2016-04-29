@@ -857,7 +857,8 @@ class Package(object):
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
-                   fake=False):
+                   fake=False,
+                   explicit=False):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -995,7 +996,7 @@ class Package(object):
 
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
-        spack.installed_db.add(self.spec, self.prefix)
+        spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
 
     def sanity_check_prefix(self):
         """This function checks whether install succeeded."""
