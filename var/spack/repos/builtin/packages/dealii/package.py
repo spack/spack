@@ -12,6 +12,7 @@ class Dealii(Package):
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('arpack',   default=True,  description='Compile with Arpack and PArpack (only with MPI)')
     variant('doc',      default=False, description='Compile with documentation')
+    variant('gsl' ,     default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,  description='Compile with HDF5 (only with MPI)')
     variant('metis',    default=True,  description='Compile with Metis')
     variant('netcdf',   default=True,  description='Compile with Netcdf (only with MPI)')
@@ -39,6 +40,8 @@ class Dealii(Package):
     depends_on ("mpi", when="+mpi")
     depends_on ("arpack-ng+mpi", when='+arpack+mpi')
     depends_on ("doxygen", when='+doc')
+    depends_on ("gsl", when='@8.5.0:+gsl')
+    depends_on ("gsl", when='@dev+gsl')
     depends_on ("hdf5+mpi~cxx", when='+hdf5+mpi') #FIXME NetCDF declares dependency with ~cxx, why?
     depends_on ("metis@5:", when='+metis')
     depends_on ("netcdf+mpi", when="+netcdf+mpi")
@@ -100,7 +103,7 @@ class Dealii(Package):
             ])
 
         # Optional dependencies for which librariy names are the same as CMake variables
-        for library in ('hdf5', 'p4est','petsc', 'slepc','trilinos','metis'):
+        for library in ('gsl','hdf5','p4est','petsc','slepc','trilinos','metis'):
             if library in spec:
                 options.extend([
                     '-D{library}_DIR={value}'.format(library=library.upper(), value=spec[library].prefix),
