@@ -43,6 +43,7 @@ class Fftw(Package):
     variant('long_double', default=True, description='Produces a long double precision version of the library')
     variant('quad', default=False, description='Produces a quad precision version of the library (works only with GCC and libquadmath)')
 
+    variant('openmp', default=True, description="Enable OpenMP support.")
     variant('mpi', default=False, description='Activate MPI support')
 
     depends_on('mpi', when='+mpi')
@@ -52,10 +53,13 @@ class Fftw(Package):
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix,
                    '--enable-shared',
-                   '--enable-threads',
-                   '--enable-openmp']
+                   '--enable-threads']
         if not self.compiler.f77 or not self.compiler.fc:
             options.append("--disable-fortran")
+        # Add support for OpenMP
+        # Note: Make sure your compiler supports OpenMP
+        if '+openmp' in spec:
+            options.append('--enable-openmp')
         if '+mpi' in spec:
             options.append('--enable-mpi')
 
