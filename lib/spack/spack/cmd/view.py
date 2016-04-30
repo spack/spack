@@ -41,17 +41,30 @@ description = "Produce a single-rooted directory view of a spec."
 def setup_parser(subparser):
     setup_parser.parser = subparser
 
-    subparser.add_argument('-e','--exclude', action='append', default=[],
-                           help="exclude any packages which the given re pattern")
-    subparser.add_argument('-a','--action', default='link',
-                           choices=['link','remove','status'], # names match action_*() functions below
-                           help="what action to perform on the view")
-    subparser.add_argument('--no-dependencies', action='store_true', default=False,
-                           help="just operate on named packages and do not follow dependencies")
-    subparser.add_argument('-p','--prefix', required=True, 
-                           help="Path to a top-level directory to receive the view.")
-    subparser.add_argument('specs', nargs=argparse.REMAINDER,
-                           help="specs of packages to expose in the view.")
+    sp = subparser.add_subparsers(metavar='ACTION', dest='action')
+
+    # The action parameterizes the command but in keeping with Spack
+    # patterns we make it a subcommand.
+    sps = [
+        sp.add_parser('link', aliases=['add'],
+                      help='Add packages to the view, create view if needed.'),
+        sp.add_parser('remove', aliases=['rm'],
+                      help='Remove packages from the view, and view if empty.'),
+        sp.add_parser('status', aliases=['check'],
+                      help='Check status of packages in the view.')
+    ]
+
+    # All these options and arguments are common to every action.
+    for p in sps:
+        p.add_argument('-e','--exclude', action='append', default=[],
+                       help="exclude any packages which the given re pattern")
+        p.add_argument('--no-dependencies', action='store_true', default=False,
+                       help="just operate on named packages and do not follow dependencies")
+        p.add_argument('prefix', nargs=1,
+                       help="Path to a top-level directory to receive the view.")
+        p.add_argument('specs', nargs=argparse.REMAINDER,
+                       help="specs of packages to expose in the view.")
+        
 
 def assuredir(path):
     'Assure path exists as a directory'
@@ -151,7 +164,9 @@ def purge_empty_directories(path):
                 tty.warn("Not removing directory with contents: %s" % sdp)
 
 
-def view(parser, args):
+
+
+def view_action(action, parser, args):
     'The view command.'
     to_exclude = [re.compile(e) for e in args.exclude]
     def exclude(spec):
@@ -162,7 +177,7 @@ def view(parser, args):
 
     specs = spack.cmd.parse_specs(args.specs, normalize=True, concretize=True)
     if not specs:
-        setup_parser.parser.print_help()
+        parser.print_help()
         return 1
 
     prefix = args.prefix
@@ -175,9 +190,6 @@ def view(parser, args):
             continue
         flat.update(spec.normalized().traverse())
 
-    action = args.action.lower()
-    method = eval('action_' + action)
-
     for spec in flat:
         if exclude(spec):
             tty.info('Skipping excluded package: "%s"' % spec.name)
@@ -186,7 +198,19 @@ def view(parser, args):
             tty.warn('Skipping unknown package: %s in %s' % (spec.name, spec.prefix))
             continue
         tty.info("%s %s" % (action, spec.name))
-        method(spec, prefix)
+        action(spec, prefix)
 
     if action in ['remove']:
         purge_empty_directories(prefix)
+
+
+def view(parser, args):
+    action = {
+        'add': action_link,
+        'link': action_link,
+        'remove': action_remove,
+        'rm': action_remove,
+        'status': action_status,
+        'check': action_status
+        }[args.action]
+    view_action(action, parser, args)
