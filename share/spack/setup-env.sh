@@ -84,10 +84,10 @@ function spack {
             if [ "$_sp_arg" = "-h" ]; then
                 command spack cd -h
             else
-		LOC="$(spack location $_sp_arg "$@")"
-		if [[ "x" -ne "x$LOC" ]] ; then
+                LOC="$(spack location $_sp_arg "$@")"
+                if [[ -d "$LOC" ]] ; then
                     cd "$LOC"
-		fi
+                fi
             fi
             return
             ;;
