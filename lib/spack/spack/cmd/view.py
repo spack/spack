@@ -46,7 +46,7 @@ def setup_parser(subparser):
     # The action parameterizes the command but in keeping with Spack
     # patterns we make it a subcommand.
     sps = [
-        sp.add_parser('link', aliases=['add'],
+        sp.add_parser('add', aliases=['link'],
                       help='Add packages to the view, create view if needed.'),
         sp.add_parser('remove', aliases=['rm'],
                       help='Remove packages from the view, and view if empty.'),
@@ -112,6 +112,7 @@ def action_remove(spec, prefix):
         tty.info("Skipping nonexistent package %s"%spec.name)
         return
 
+    tty.info("remove %s"%spec.name)
     for dirpath,dirnames,filenames in os.walk(spec.prefix):
         if not filenames:
             continue
@@ -125,7 +126,6 @@ def action_remove(spec, prefix):
                 continue
             os.unlink(dst)
 
-
 def action_link(spec, prefix):
     'Symlink all files in `spec` into directory `prefix`.'
 
@@ -134,6 +134,7 @@ def action_link(spec, prefix):
         tty.warn("Skipping previously added package %s"%spec.name)
         return
 
+    tty.info("link %s" % spec.name)
     for dirpath,dirnames,filenames in os.walk(spec.prefix):
         if not filenames:
             continue        # avoid explicitly making empty dirs
@@ -151,8 +152,6 @@ def action_link(spec, prefix):
                 continue
             os.symlink(src,dst)
 
-
-
 def purge_empty_directories(path):
     'Ascend up from the leaves accessible from `path` and remove empty directories.'
     for dirpath, subdirs, files in os.walk(path, topdown=False):
@@ -161,13 +160,14 @@ def purge_empty_directories(path):
             try:
                 os.rmdir(sdp)
             except OSError:
-                tty.warn("Not removing directory with contents: %s" % sdp)
+                #tty.warn("Not removing directory with contents: %s" % sdp)
+                pass
 
 
 
 
 def view_action(action, parser, args):
-    'The view command.'
+    'The view command parameterized by the action.'
     to_exclude = [re.compile(e) for e in args.exclude]
     def exclude(spec):
         for e in to_exclude:
@@ -180,7 +180,7 @@ def view_action(action, parser, args):
         parser.print_help()
         return 1
 
-    prefix = args.prefix
+    prefix = args.prefix[0]
     assuredir(prefix)
 
     flat = set()
@@ -197,14 +197,15 @@ def view_action(action, parser, args):
         if not os.path.exists(spec.prefix):
             tty.warn('Skipping unknown package: %s in %s' % (spec.name, spec.prefix))
             continue
-        tty.info("%s %s" % (action, spec.name))
         action(spec, prefix)
 
-    if action in ['remove']:
+    if args.action in ['remove','rm']:
         purge_empty_directories(prefix)
 
 
+
 def view(parser, args):
+    'The view command.'
     action = {
         'add': action_link,
         'link': action_link,
