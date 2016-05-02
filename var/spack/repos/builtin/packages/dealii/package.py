@@ -83,7 +83,6 @@ class Dealii(Package):
                 (join_path(spec['lapack'].prefix.lib,'liblapack.%s' % dsuf), # FIXME don't hardcode names
                  join_path(spec['blas'].prefix.lib,'libblas.%s' % dsuf)),    # FIXME don't hardcode names
             '-DMUPARSER_DIR=%s ' % spec['muparser'].prefix,
-            '-DP4EST_DIR=%s' % spec['p4est'].prefix,
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix
