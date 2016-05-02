@@ -33,30 +33,30 @@ class Metis(Package):
     recursive-bisection, multilevel k-way, and multi-constraint partitioning schemes.
     """
 
-    homepage = 'http://glaros.dtc.umn.edu/gkhome/metis/metis/overview'
-    url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
+    homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
+    base_url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis"
 
-    version('5.1.0', '5465e67079419a69e0116de24fce58fe',
-            url='http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz')
-    version('4.0.3', '5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55',
-            url='http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/OLD/metis-4.0.3.tar.gz')
+    version('5.1.0', '5465e67079419a69e0116de24fce58fe')
+    version('5.0.2', 'acb521a4e8c2e6dd559a7f9abd0468c5')
+    version('4.0.3', 'd3848b454532ef18dc83e4fb160d1e10')
 
     variant('shared', default=True, description='Enables the build of shared libraries')
     variant('debug', default=False, description='Builds the library in debug mode')
     variant('gdb', default=False, description='Enables gdb support')
 
     variant('idx64', default=False, description='Use int64_t as default index type')
-    variant('double', default=False, description='Use double precision floating point types')
+    variant('real64', default=False, description='Use double precision floating point types')
 
     depends_on('cmake @2.8:', when='@5:')  # build-time dependency
-    depends_on('gdb', when='+gdb')
 
     patch('install_gklib_defs_rename.patch', when='@5:')
 
+    def url_for_version(self, version):
+        version_dir = 'OLD/' if version < Version('4.0.3') else ''
+        return '%s/%smetis-%s.tar.gz' % (Metis.base_url, version_dir, version)
 
     @when('@4:4.0.3')
     def install(self, spec, prefix):
-
         if '+gdb' in spec:
             raise InstallError('gdb support not implemented in METIS 4!')
         if '+idx64' in spec:
@@ -128,7 +128,6 @@ class Metis(Package):
 
     @when('@5:')
     def install(self, spec, prefix):
-
         options = []
         options.extend(std_cmake_args)
 
@@ -140,20 +139,15 @@ class Metis(Package):
 
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
-
         if '+debug' in spec:
-            options.extend(['-DDEBUG:BOOL=ON',
-                            '-DCMAKE_BUILD_TYPE:STRING=Debug'])
-
+            options.extend(['-DDEBUG:BOOL=ON', '-DCMAKE_BUILD_TYPE:STRING=Debug'])
         if '+gdb' in spec:
             options.append('-DGDB:BOOL=ON')
 
         metis_header = join_path(source_directory, 'include', 'metis.h')
-
         if '+idx64' in spec:
             filter_file('IDXTYPEWIDTH 32', 'IDXTYPEWIDTH 64', metis_header)
-
-        if '+double' in spec:
+        if '+real64' in spec:
             filter_file('REALTYPEWIDTH 32', 'REALTYPEWIDTH 64', metis_header)
 
         # Make clang 7.3 happy.
@@ -166,9 +160,10 @@ class Metis(Package):
         with working_dir(build_directory, create=True):
             cmake(source_directory, *options)
             make()
-            make("install")
+            make('install')
+
             # now run some tests:
-            for f in ["4elt", "copter2", "mdual"]:
+            for f in ['4elt', 'copter2', 'mdual']:
                 graph = join_path(source_directory,'graphs','%s.graph' % f)
                 Executable(join_path(prefix.bin,'graphchk'))(graph)
                 Executable(join_path(prefix.bin,'gpmetis'))(graph,'2')
@@ -182,6 +177,6 @@ class Metis(Package):
             # install GKlib headers, which will be needed for ParMETIS
             GKlib_dist = join_path(prefix.include,'GKlib')
             mkdirp(GKlib_dist)
-            fs = glob.glob(join_path(source_directory,'GKlib',"*.h"))
+            fs = glob.glob(join_path(source_directory,'GKlib','*.h'))
             for f in fs:
                 install(f, GKlib_dist)
