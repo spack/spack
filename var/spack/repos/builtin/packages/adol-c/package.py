@@ -13,6 +13,8 @@ class AdolC(Package):
     variant('openmp',   default=False, description='Enable OpenMP support')
     variant('sparse',   default=False, description='Enable sparse drivers')
     variant('tests',    default=True,  description='Build all included examples as a test case')
+    
+    patch('openmp_exam.patch')
 
     def install(self, spec, prefix):
         make_args = ['--prefix=%s' % prefix]
@@ -21,9 +23,12 @@ class AdolC(Package):
         # --with-cxxflags=FLAGS   use CXXFLAGS=FLAGS (default: -O3 -Wall)
 
         if '+openmp' in spec:
-            make_args.extend([
-                '--with-openmp-flag=-fopenmp' # FIXME: Is this required? -I <path to omp.h> -L <LLVM OpenMP library path>
-            ])
+            if spec.satisfies('%gcc'):
+                make_args.extend([
+                    '--with-openmp-flag=-fopenmp' # FIXME: Is this required? -I <path to omp.h> -L <LLVM OpenMP library path>
+                ])
+            else:
+                raise InstallError("OpenMP flags for compilers other than GCC are not implemented.")
 
         if '+sparse' in spec:
             make_args.extend([
@@ -48,22 +53,28 @@ class AdolC(Package):
         
         # Copy the config.h file, as some packages might require it
         source_directory = self.stage.source_path
-        config_h = join_path(source_directory,'ADOL-C/src/config.h')
+        config_h = join_path(source_directory,'ADOL-C','src','config.h')
         install(config_h, join_path(prefix.include,'adolc'))
         
         # Install documentation to {prefix}/share
         if '+doc' in spec:
-            install_tree('ADOL-C/doc',join_path(prefix.share,'doc'))
+            install_tree(join_path('ADOL-C','doc'),
+                         join_path(prefix.share,'doc'))
         
         # Install examples to {prefix}/share
         if '+tests' in spec:
-            install_tree('ADOL-C/examples',join_path(prefix.share,'examples'))
+            install_tree(join_path('ADOL-C','examples'),
+                         join_path(prefix.share,'examples'))
         
             # Run some examples that don't require user input
             # TODO: Check that bundled examples produce the correct results
-            with working_dir(join_path(source_directory,'ADOL-C/examples')):
-              Executable('tapeless_scalar')
-              Executable('tapeless_vector')
+            with working_dir(join_path(source_directory,'ADOL-C','examples')):
+                Executable('./tapeless_scalar')()
+                Executable('./tapeless_vector')()
               
-            with working_dir(join_path(source_directory,'ADOL-C/examples/additional_examples')):
-              Executable('checkpointing/checkpointing')
+            with working_dir(join_path(source_directory,'ADOL-C','examples','additional_examples')):
+                Executable('./checkpointing/checkpointing')()
+                
+            if '+openmp' in spec:
+                with working_dir(join_path(source_directory,'ADOL-C','examples','additional_examples')):
+                    Executable('./checkpointing/checkpointing')()
