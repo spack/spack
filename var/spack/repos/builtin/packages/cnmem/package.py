@@ -1,7 +1,7 @@
 from spack import *
 
 class Cnmem(Package):
-    """RAJA Parallel Framework."""
+    """CNMem mempool for CUDA devices"""
     homepage = "https://github.com/NVIDIA/cnmem"
 
     version('git', git='https://github.com/NVIDIA/cnmem.git', branch="master")
