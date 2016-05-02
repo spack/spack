@@ -20,15 +20,20 @@ class Paradiseo(Package):
     #variant('tests',    default=False, description='Compile with build tests')
     #variant('doc',      default=False, description='Compile with documentation')
     variant('debug',    default=False, description='Builds a debug version of the libraries')
+    variant('openmp',   default=False, description='Enable OpenMP support')
+    variant('gnuplot',  default=False, description='Enable GnuPlot support')
     
     # Required dependencies
     depends_on ("cmake")
-    depends_on ("eigen")
 
     # Optional dependencies
     depends_on ("mpi", when="+mpi")
     depends_on ("doxygen", when='+doc')
-    
+    depends_on ("gnuplot", when='+gnuplot')
+    depends_on ("eigen", when='+edo')
+    depends_on ("boost~mpi", when='+edo~mpi')
+    depends_on ("boost+mpi", when='+edo+mpi')
+
     # Patches
     patch('enable_eoserial.patch')
     patch('fix_osx_detection.patch')
@@ -45,7 +50,9 @@ class Paradiseo(Package):
             '-DMPI:BOOL=%s' % ('TRUE' if '+mpi' in spec else 'FALSE'),
             '-DSMP:BOOL=%s' % ('TRUE' if '+smp' in spec else 'FALSE'), # Note: This requires a C++11 compatible compiler
             '-DEDO:BOOL=%s' % ('TRUE' if '+edo' in spec else 'FALSE'),
-            '-DENABLE_CMAKE_TESTING:BOOL=%s' % ('TRUE' if '+tests' in spec else 'FALSE')
+            '-DENABLE_CMAKE_TESTING:BOOL=%s' % ('TRUE' if '+tests' in spec else 'FALSE'),
+            '-DENABLE_OPENMP:BOOL=%s' % ('TRUE' if '+openmp' in spec else 'FALSE'),
+            '-DENABLE_GNUPLOT:BOOL=%s' % ('TRUE' if '+gnuplot' in spec else 'FALSE')
         ])
  
         with working_dir('spack-build', create=True):
