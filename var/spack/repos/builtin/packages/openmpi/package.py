@@ -1,7 +1,5 @@
-import os
-
 from spack import *
-
+import os
 
 class Openmpi(Package):
     """Open MPI is a project combining technologies and resources from
@@ -36,7 +34,6 @@ class Openmpi(Package):
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
 
-    depends_on('hwloc')
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)
@@ -51,7 +48,6 @@ class Openmpi(Package):
 
     def install(self, spec, prefix):
         config_args = ["--prefix=%s" % prefix,
-                       "--with-hwloc=%s" % spec['hwloc'].prefix,
                        "--enable-shared",
                        "--enable-static"]
 
