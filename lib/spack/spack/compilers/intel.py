@@ -47,7 +47,10 @@ class Intel(Compiler):
 
     @property
     def openmp_flag(self):
-        return "-openmp"
+        if self.version < ver('16.0'):
+            return "-openmp"
+        else:
+            return "-qopenmp"
 
     @property
     def cxx11_flag(self):
