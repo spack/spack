@@ -12,16 +12,19 @@ class Netcdf(Package):
     version('4.4.0', 'cffda0cbd97fdb3a06e9274f7aef438e')
     version('4.3.3', '5fbd0e108a54bd82cb5702a73f56d2ae')
 
-    variant('mpi', default=True, description='Enables MPI parallelism')
-    variant('hdf4',    default=False, description="Enable HDF4 support")
+    variant('mpi',  default=True,  description='Enables MPI parallelism')
+    variant('hdf4', default=False, description='Enable HDF4 support')
 
-    # Dependencies:
-    depends_on("curl")  # required for DAP support
-    depends_on("hdf", when='+hdf4')
-    depends_on("hdf5+mpi~cxx", when='+mpi')  # required for NetCDF-4 support
-    depends_on("hdf5~mpi", when='~mpi')  # required for NetCDF-4 support
-    depends_on("zlib")  # required for NetCDF-4 support
     depends_on("m4")
+    depends_on("hdf", when='+hdf4')
+
+    # Required for DAP support
+    depends_on("curl")
+
+    # Required for NetCDF-4 support
+    depends_on("zlib")
+    depends_on("hdf5+mpi", when='+mpi')
+    depends_on("hdf5~mpi", when='~mpi')
 
     def install(self, spec, prefix):
         # Environment variables
@@ -49,7 +52,7 @@ class Netcdf(Package):
         # /usr/lib/x86_64-linux-gnu/libcurl.so: undefined reference to `SSL_CTX_use_certificate_chain_file@OPENSSL_1.0.0'
         LIBS.append("-lcurl")
         CPPFLAGS.append("-I%s" % spec['curl'].prefix.include)
-        LDFLAGS.append ("-L%s" % spec['curl'].prefix.lib)
+        LDFLAGS.append( "-L%s" % spec['curl'].prefix.lib)
 
         if '+mpi' in spec:
             config_args.append('--enable-parallel4')
