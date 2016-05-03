@@ -25,11 +25,6 @@ class Nag(Compiler):
     def openmp_flag(self):
         return "-openmp"
 
-    @property
-    def cxx11_flag(self):
-        tty.die("cxx11_flag() is not implemented for nag. Consider creating a pull-request.")
-        return "-std=c++11"
-
 
     @classmethod
     def default_version(self, comp):

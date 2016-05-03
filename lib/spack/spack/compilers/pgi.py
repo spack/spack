@@ -50,7 +50,6 @@ class Pgi(Compiler):
 
     @property
     def cxx11_flag(self):
-        tty.die("cxx11_flag() is not implemented for pgi. Consider creating a pull-request.")
         return "-std=c++11"
 
 
