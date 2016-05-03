@@ -7,6 +7,8 @@ class P4est(Package):
 
     version('1.1', '37ba7f4410958cfb38a2140339dbf64f')
 
+    variant('tests', default=True, description='Run small tests')
+
     # build dependencies
     depends_on('automake')
     depends_on('autoconf')
@@ -33,5 +35,11 @@ class P4est(Package):
         configure('--prefix=%s' % prefix, *options)
 
         make()
-        make("check")
+        # Make tests optional as sometimes mpiexec can't be run with an error:
+        # mpiexec has detected an attempt to run as root.
+        # Running at root is *strongly* discouraged as any mistake (e.g., in
+        # defining TMPDIR) or bug can result in catastrophic damage to the OS
+        # file system, leaving your system in an unusable state.
+        if '+tests' in self.spec:
+          make("check")
         make("install")
