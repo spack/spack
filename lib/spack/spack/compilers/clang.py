@@ -51,11 +51,8 @@ class Clang(Compiler):
 
     @property
     def is_apple(self):
-        ver_string = '%s' % self.version
-        if ver_string.endswith('-apple'):
-            return True
-        else:
-            return False
+        ver_string = str(self.version)
+        return ver_string.endswith('-apple')
 
     @property
     def openmp_flag(self):
