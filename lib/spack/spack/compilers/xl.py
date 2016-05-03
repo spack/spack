@@ -25,6 +25,7 @@
 ##############################################################################
 from spack.compiler import *
 import llnl.util.tty as tty
+from spack.version import ver
 
 class Xl(Compiler):
     # Subclasses use possible names of C compiler
