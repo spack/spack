@@ -120,15 +120,15 @@ class Compiler(object):
     def version(self):
         return self.spec.version
 
-    # default implementation of OpenMP linking flag.
+    # Default implementation of OpenMP linking flag.
     # Override in derived classes if needed
     @property
     def openmp_flag(self):
         return "-fopenmp"
 
 
-    # default implementation of c++11 linking flag.
-    # raise an error to force derived classes implement it when used
+    # Default implementation of c++11 linking flag.
+    # Override in derived classes if needed
     @property
     def cxx11_flag(self):
         return "-std=c++11"
