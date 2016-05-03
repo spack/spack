@@ -47,6 +47,17 @@ class Clang(Compiler):
                    'f77' : 'f77',
                    'fc'  : 'f90' }
 
+    @property
+    def cxx11_flag(self):
+        if ver.endswith('-apple'):
+            # FIXME: figure out from which version Apple's clang supports c++11
+            return "-std=c++11"
+        else:
+            if self.version < ver('3.3'):
+                tty.die("Only Clang 3.3 and above support c++11.")
+            else:
+                return "-std=c++11"
+
     @classmethod
     def default_version(self, comp):
         """The '--version' option works for clang compilers.

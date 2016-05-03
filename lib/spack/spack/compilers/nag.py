@@ -20,6 +20,12 @@ class Nag(Compiler):
                    'f77' : 'nag/nagfor',
                    'fc'  : 'nag/nagfor' }
 
+    @property
+    def cxx11_flag(self):
+        tty.die("cxx11_flag() is not implemented for nag. Consider creating a pull-request.")
+        return "-std=c++11"
+
+
     @classmethod
     def default_version(self, comp):
         """The '-V' option works for nag compilers.

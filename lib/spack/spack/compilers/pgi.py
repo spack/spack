@@ -43,6 +43,12 @@ class Pgi(Compiler):
                    'f77' : 'pgi/pgfortran',
                    'fc'  : 'pgi/pgfortran' }
 
+    @property
+    def cxx11_flag(self):
+        tty.die("cxx11_flag() is not implemented for pgi. Consider creating a pull-request.")
+        return "-std=c++11"
+
+
     @classmethod
     def default_version(cls, comp):
         """The '-V' option works for all the PGI compilers.
@@ -54,4 +60,3 @@ class Pgi(Compiler):
         """
         return get_compiler_version(
             comp, '-V', r'pg[^ ]* ([^ ]+) \d\d\d?-bit target')
-
