@@ -50,17 +50,23 @@ class Clang(Compiler):
                    'fc'  : 'f90' }
 
     @property
-    def openmp_flag(self):
+    def is_apple(self):
         ver_string = '%s' % self.version
         if ver_string.endswith('-apple'):
+            return True
+        else:
+            return False
+
+    @property
+    def openmp_flag(self):
+        if self.is_apple:
             tty.die("Clang from Apple does not support Openmp yet.")
         else:
             return "-fopenmp"
 
     @property
     def cxx11_flag(self):
-        ver_string = '%s' % self.version
-        if ver_string.endswith('-apple'):
+        if self.is_apple:
             # FIXME: figure out from which version Apple's clang supports c++11
             return "-std=c++11"
         else:
