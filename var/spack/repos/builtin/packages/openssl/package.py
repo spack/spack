@@ -15,10 +15,12 @@ class Openssl(Package):
 
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
     version('1.0.1r', '1abd905e079542ccae948af37e393d28')
+    version('1.0.1t', '9837746fcf8a6727d46d22ca35953da1')
     version('1.0.2d', '38dd619b2e77cbac69b99f52a053d25a')
     version('1.0.2e', '5262bfa25b60ed9de9f28d5d52d77fc5')
     version('1.0.2f', 'b3bf73f507172be9292ea2a8c28b659d')
     version('1.0.2g', 'f3c710c045cdee5fd114feb69feba7aa')
+    version('1.0.2h', '9392e65072ce4b614c1392eefc1f23d0')
 
     depends_on("zlib")
     parallel = False
