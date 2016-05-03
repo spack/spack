@@ -23,6 +23,8 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack.compiler import *
+import llnl.util.tty as tty
+from spack.version import ver
 
 class Intel(Compiler):
     # Subclasses use possible names of C compiler

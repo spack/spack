@@ -1,4 +1,5 @@
 from spack.compiler import *
+import llnl.util.tty as tty
 
 class Nag(Compiler):
     # Subclasses use possible names of C compiler

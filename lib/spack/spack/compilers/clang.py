@@ -26,6 +26,8 @@ import re
 import spack.compiler as cpr
 from spack.compiler import *
 from spack.util.executable import *
+import llnl.util.tty as tty
+from spack.version import ver
 
 class Clang(Compiler):
     # Subclasses use possible names of C compiler
