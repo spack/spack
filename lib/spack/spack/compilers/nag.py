@@ -25,6 +25,11 @@ class Nag(Compiler):
     def openmp_flag(self):
         return "-openmp"
 
+    @property
+    def cxx11_flag(self):
+        # NAG does not have a C++ compiler
+        # However, it can be mixed with a compiler that does support it
+        return "-std=c++11"
 
     @classmethod
     def default_version(self, comp):
