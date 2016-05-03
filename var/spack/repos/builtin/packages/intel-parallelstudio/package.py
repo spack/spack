@@ -19,6 +19,12 @@ class IntelParallelstudio(IntelInstaller):
             url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())
     version('cluster.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
             url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())
+    version('composer.2016.3', '3208eeabee951fc27579177b593cefe9',
+            url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz" % os.getcwd())
+    version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
+            url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())
+    version('cluster.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
+            url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
     variant('all', default=False, description="Install all files associated with the requested edition")

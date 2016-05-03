@@ -14,6 +14,8 @@ class Daal(IntelInstaller):
 
     version('2016.2.181', 'aad2aa70e5599ebfe6f85b29d8719d46',
             url="file://%s/l_daal_2016.2.181.tgz" % os.getcwd())
+    version('2016.3.210', 'ad747c0dd97dace4cad03cf2266cad28',
+            url="file://%s/l_daal_2016.3.210.tgz" % os.getcwd())
 
     def install(self, spec, prefix):
 
