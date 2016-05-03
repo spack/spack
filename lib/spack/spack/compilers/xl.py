@@ -45,6 +45,10 @@ class Xl(Compiler):
                    'fc'  : 'xl/xlf90' }
 
     @property
+    def openmp_flag(self):
+        return "-qsmp=omp"
+
+    @property
     def cxx11_flag(self):
         if self.version < ver('13.1'):
             tty.die("Only xlC 13.1 and above have some c++11 support.")

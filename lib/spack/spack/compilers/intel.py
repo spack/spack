@@ -44,6 +44,10 @@ class Intel(Compiler):
                    'fc'  : 'intel/ifort' }
 
     @property
+    def openmp_flag(self):
+        return "-openmp"
+
+    @property
     def cxx11_flag(self):
         if self.version < ver('11.1'):
             tty.die("Only intel 11.1 and above support c++11.")
@@ -68,5 +72,3 @@ class Intel(Compiler):
         """
         return get_compiler_version(
             comp, '--version', r'\((?:IFORT|ICC)\) ([^ ]+)')
-
-

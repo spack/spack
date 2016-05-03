@@ -44,6 +44,10 @@ class Pgi(Compiler):
                    'fc'  : 'pgi/pgfortran' }
 
     @property
+    def openmp_flag(self):
+        return "-mp"
+
+    @property
     def cxx11_flag(self):
         tty.die("cxx11_flag() is not implemented for pgi. Consider creating a pull-request.")
         return "-std=c++11"
