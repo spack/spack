@@ -120,19 +120,20 @@ class Compiler(object):
     def version(self):
         return self.spec.version
 
-    # Default implementation of OpenMP linking flag.
-    # Override in derived classes if needed
+    # This property should be overridden in the compiler subclass if
+    # OpenMP is supported by that compiler
     @property
     def openmp_flag(self):
-        return "-fopenmp"
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support OpenMP. If you think it should, please edit the compiler subclass and submit a pull request or issue.")
 
 
-    # Default implementation of c++11 linking flag.
-    # Override in derived classes if needed
+    # This property should be overridden in the compiler subclass if
+    # C++11 is supported by that compiler
     @property
     def cxx11_flag(self):
-        return "-std=c++11"
-
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support C++11. If you think it should, please edit the compiler subclass and submit a pull request or issue.")
 
     #
     # Compiler classes have methods for querying the version of
