@@ -57,6 +57,8 @@ class Fftw(Package):
         if '+openmp' in spec:
             # Note: Apple's Clang does not support OpenMP.
             if spec.satisfies('%clang'):
+              ver = '%s' % self.compiler.version
+              if ver.endswith('-apple'):
                 raise InstallError("Apple's clang does not support OpenMP")
             options.append('--enable-openmp')
         if not self.compiler.f77 or not self.compiler.fc:
