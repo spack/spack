@@ -24,10 +24,10 @@ class P4est(Package):
                    '--without-blas',
                    'CPPFLAGS=-DSC_LOG_PRIORITY=SC_LP_ESSENTIAL',
                    'CFLAGS=-O2',
-                   'CC=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpicc'), # TODO: use ENV variables or MPI class wrappers
-                   'CXX=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpic++'),
-                   'FC=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
-                   'F77=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpif77'),
+                   'CC=%s'  % self.spec['mpi'].mpicc,
+                   'CXX=%s' % self.spec['mpi'].mpicxx,
+                   'FC=%s'  % self.spec['mpi'].mpifc,
+                   'F77=%s' % self.spec['mpi'].mpif77
                   ]
 
         configure('--prefix=%s' % prefix, *options)
