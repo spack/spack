@@ -23,7 +23,7 @@ class Petsc(Package):
     # ...
     # /home/me/spack/opt/spack/linux-x86_64/gcc-4.8.5/binutils-2.26-hivbldipko26tkspxgr5y2ny5vfq5aux/bin/ld: cannot find -llapack
     # /home/me/spack/opt/spack/linux-x86_64/gcc-4.8.5/binutils-2.26-hivbldipko26tkspxgr5y2ny5vfq5aux/bin/ld: cannot find -lblas
-    variant('shared',  default=False,  description='Enables the build of shared libraries')
+    variant('shared',  default=True,  description='Enables the build of shared libraries')
 
     variant('mpi',     default=True,  description='Activates MPI support')
     variant('double',  default=True,  description='Switches between single and double precision')
@@ -35,7 +35,7 @@ class Petsc(Package):
     variant('boost',   default=True,  description='Activates support for Boost')
     variant('hypre',   default=True,  description='Activates support for Hypre (only parallel)')
     variant('mumps',   default=True,  description='Activates support for MUMPS (only parallel)')
-    variant('superlu-dist', default=True, description='Activates support for SuperluDist (only parallel)')
+    variant('superlu-dist', default=False, description='Activates support for SuperluDist (only parallel)')
 
     # Virtual dependencies
     depends_on('blas')
@@ -92,7 +92,9 @@ class Petsc(Package):
             '--with-scalar-type=%s' % ('complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
-            '--with-blas-lapack-dir=%s' % spec['lapack'].prefix
+            '--with-lapack-lib=%s' % spec['lapack'].lapack_static_lib,
+            '--with-blas-lib=%s' % spec['blas'].blas_static_lib
+#            '--with-blas-lapack-dir=%s' % spec['lapack'].prefix
         ])
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis','mumps','scalapack'):

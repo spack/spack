@@ -26,7 +26,7 @@ class Glint2(CMakePackage):
 
     depends_on('mpi', when='+coupler')
     depends_on('pism@glint2~python', when='+coupler+pism')
-    depends_on('petsc', when='+coupler+pism')
+    depends_on('petsc@3.4.5~superlu-dist', when='+coupler+pism')
 
     depends_on('boost+filesystem+date_time')
     depends_on('blitz')

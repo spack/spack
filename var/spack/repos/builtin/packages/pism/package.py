@@ -41,7 +41,7 @@ class Pism(CMakePackage):
     depends_on('mpi')
     depends_on('netcdf')    # Only the C interface is used, no netcdf-cxx4
     depends_on('petsc', when='@0:')
-    depends_on('petsc@3.4.5', when='@glint2')
+    depends_on('petsc@3.4.5~superlu-dist', when='@glint2')
     depends_on('udunits2')
     depends_on('proj')
 
