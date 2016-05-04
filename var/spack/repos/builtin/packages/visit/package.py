@@ -7,6 +7,7 @@ class Visit(Package):
     url = "http://portal.nersc.gov/project/visit/releases/2.10.1/visit2.10.1.tar.gz"
 
     version('2.10.1', '3cbca162fdb0249f17c4456605c4211e')
+    version('2.10.2', '253de0837a9d69fb689befc98ea4d068')
 
     depends_on("vtk@6.1.0~opengl2")
     depends_on("qt@4.8.6")
