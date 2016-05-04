@@ -22,6 +22,19 @@ class Netcdf(Package):
     depends_on("hdf5~mpi", when='~mpi')  # required for NetCDF-4 support
     depends_on("zlib")  # required for NetCDF-4 support
 
+    # ======= From NetCDF release notes:
+    # The first release candidate for the netCDF-C library version 4.4.1
+    # is now available. There have been a number of improvements since
+    # the 4.4.0 release. Most importantly, this release candidate is
+    # able to write backwards-compatible netCDF4 files when using HDF5
+    # version 1.10.0. As announced previously, using HDF5 1.10.0 with
+    # netCDF 4.4.0 would result in netCDF4 files which were unreadable
+    # by systems using an earlier version of libhdf5. See GitHub #250
+    # for more information.
+#    depends_on('hdf5@:1.9', when='@:4.4.0')
+#    depends_on('hdf5@1.10:', when='@4.4.1:')
+
+
     def install(self, spec, prefix):
         # Environment variables
         CPPFLAGS = []

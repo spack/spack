@@ -8,26 +8,24 @@ class Glint2(CMakePackage):
 
     version('0.1.0', '1c2769a0cb3531e4086b885dc7a6fd27')
 
-    variant('everytrace', default=False, description='Report errors through Everytrace (requires Everytrace)')
     variant('python', default=True, description='Build Python extension (requires Python, Numpy)')
-#    variant('gridgen', default=True, description='Build grid generators (requires CGAL, GMP, MPFR)')
     variant('coupler', default=True, description='Build the GCM coupler (requires MPI)')
     variant('pism', default=False, description='Build coupling link with PISM (requires PISM, PETSc)')
 
     extends('python', when='+python')
 
-    depends_on('everytrace', when='+everytrace')
+#    depends_on('everytrace')
 
-    depends_on('python', when='+python')
+    depends_on('python@3:', when='+python')
     depends_on('py-cython', when='+python')
     depends_on('py-numpy', when='+python')
 
-    depends_on('cgal', when='+gridgen')
-    depends_on('gmp', when='+gridgen')
-    depends_on('mpfr', when='+gridgen')
+    depends_on('cgal')
+    depends_on('gmp')
+    depends_on('mpfr')
 
     depends_on('mpi', when='+coupler')
-    depends_on('pism~python', when='+coupler+pism')
+    depends_on('pism@glint2~python', when='+coupler+pism')
     depends_on('petsc', when='+coupler+pism')
 
     depends_on('boost+filesystem+date_time')
@@ -48,7 +46,6 @@ class Glint2(CMakePackage):
     def configure_args(self):
         spec = self.spec
         return [
-            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
             '-DUSE_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
             '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')]
 

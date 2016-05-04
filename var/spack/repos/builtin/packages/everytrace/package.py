@@ -9,9 +9,9 @@ class Everytrace(CMakePackage):
 	"""Get stack trace EVERY time a program exits."""
 
 	homepage = "https://github.com/citibeth/everytrace"
-	url		 = "https://github.com/citibeth/everytrace/tarball/dev"
+	url		 = "https://github.com/citibeth/everytrace/tarball/0.1.0"
 
-	version('devel', '0123456789abcdef0123456789abcdef')
+	version('0.1.0', '295b10b2bd1b40712b6475dbb124b0ce')
 
 	variant('mpi', default=True, description='Enables MPI parallelism')
 	variant('fortran', default=True, description='Enable use with Fortran programs')

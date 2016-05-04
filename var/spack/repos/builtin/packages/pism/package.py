@@ -2,6 +2,7 @@ from spack import *
 import spack.build_environment
 import llnl.util.tty as tty
 import os
+import shutil
 
 class Pism(CMakePackage):
     """Parallel Ice Sheet Model"""
@@ -12,7 +13,7 @@ class Pism(CMakePackage):
 
     version('0.7.3', '7cfb034100d99d5c313c4ac06b7f17b6')
 #    version('88beceba', 'de444fc48fd1e818c23e459bb3d74202')		# On the new_bc branch
-    version('glint2', git='https://github.com/pism/pism.git', branch='glint2')
+    version('glint2', git='https://github.com/pism/pism.git', branch='efischer/glint2')
 
     variant('cxx11', default=True, description='Set CMake to C++11 standard')
     variant('extra', default=False, description='Build extra executables (mostly testing/verification)')
@@ -39,7 +40,8 @@ class Pism(CMakePackage):
     depends_on('gsl')
     depends_on('mpi')
     depends_on('netcdf')    # Only the C interface is used, no netcdf-cxx4
-    depends_on('petsc')
+    depends_on('petsc', when='@0:')
+    depends_on('petsc@3.4.5', when='@glint2')
     depends_on('udunits2')
     depends_on('proj')
 
@@ -66,6 +68,15 @@ class Pism(CMakePackage):
             '-DPism_USE_PNETCDF=%s' % ('YES' if '+parallel-netcdf3' in spec else 'NO'),
             '-DPism_USE_PARALLEL_HDF5=%s' % ('YES' if '+parallel-hdf5' in spec else 'NO'),
             '-DPism_BUILD_PDFS=%s' % ('YES' if '+doc' in spec else 'NO')]
+
+    def install_install(self):
+        make = self.make_make()
+        with working_dir(self.build_directory, create=False):
+            make('install')
+
+        install_tree( \
+            os.path.join(self.source_directory, 'src'),
+            os.path.join(self.spec.prefix, 'include'))
 
 # > Do you have handy a table of which versions of PETSc are required for which
 # > versions of PISM?

@@ -15,9 +15,16 @@ class Petsc(Package):
     version('3.5.3', 'd4fd2734661e89f18ac6014b5dd1ef2f')
     version('3.5.2', 'ad170802b3b058b5deb9cd1f968e7e13')
     version('3.5.1', 'a557e029711ebf425544e117ffa44d8f')
-    version('3.4.4', '7edbc68aa6d8d6a3295dd5f6c2f6979d')
+    version('3.4.5', '7edbc68aa6d8d6a3295dd5f6c2f6979d')
 
-    variant('shared',  default=True,  description='Enables the build of shared libraries')
+    # This is currently having trouble finding BLAS and LAPACK:
+    # making shared libraries in /tmp/rpfische/spack-stage/spack-stage-OZB4Az/petsc-3.4.5/arch-linux2-c-opt/lib
+    # building libpetsc.so
+    # ...
+    # /home/me/spack/opt/spack/linux-x86_64/gcc-4.8.5/binutils-2.26-hivbldipko26tkspxgr5y2ny5vfq5aux/bin/ld: cannot find -llapack
+    # /home/me/spack/opt/spack/linux-x86_64/gcc-4.8.5/binutils-2.26-hivbldipko26tkspxgr5y2ny5vfq5aux/bin/ld: cannot find -lblas
+    variant('shared',  default=False,  description='Enables the build of shared libraries')
+
     variant('mpi',     default=True,  description='Activates MPI support')
     variant('double',  default=True,  description='Switches between single and double precision')
     variant('complex', default=False, description='Build with complex numbers')

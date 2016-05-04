@@ -13,7 +13,7 @@ class Icebin(CMakePackage):
     version('0.1.0', '1c2769a0cb3531e4086b885dc7a6fd27')
 
     variant('everytrace', default=False, description='Report errors through Everytrace (requires Everytrace)')
-    variant('python', default=True, description='Build Python extension (requires Python, Numpy)')
+    variant('python@3:', default=True, description='Build Python extension (requires Python, Numpy)')
     variant('gridgen', default=True, description='Build grid generators (requires CGAL, GMP, MPFR)')
     variant('coupler', default=True, description='Build the GCM coupler (requires MPI)')
     variant('pism', default=False, description='Build coupling link with PISM (requires PISM, PETSc)')
