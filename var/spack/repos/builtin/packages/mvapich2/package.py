@@ -146,6 +146,10 @@ class Mvapich2(Package):
         spack_env.set('MPICH_F77', spack_f77)
         spack_env.set('MPICH_F90', spack_fc)
         spack_env.set('MPICH_FC', spack_fc)
+        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
+        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+        self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
     def install(self, spec, prefix):
         # we'll set different configure flags depending on our environment
