@@ -54,6 +54,11 @@ class Mpich(Package):
         spack_env.set('MPICH_F90', spack_fc)
         spack_env.set('MPICH_FC', spack_fc)
 
+        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
+        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+        self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+
     def setup_dependent_package(self, module, dep_spec):
         """For dependencies, make mpicc's use spack wrapper."""
         # FIXME : is this necessary ? Shouldn't this be part of a contract with MPI providers?
