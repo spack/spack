@@ -40,8 +40,8 @@ def setup_parser(subparser):
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="Do not try to install dependencies of requested packages.")
     subparser.add_argument(
-        '-q', '--quiet', action='store_true', dest='quiet',
-        help="Do not display verbose build output while installing.")
+        '-v', '--verbose', action='store_true', dest='verbose',
+        help="Display verbose build output while installing.")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install.  Must contain package AND verison.")
@@ -90,6 +90,6 @@ def spconfig(self, args):
         package.do_install(
             keep_prefix=True,        # Don't remove install directory, even if you think you should
             ignore_deps=args.ignore_deps,
-            verbose=not args.quiet,
+            verbose=args.verbose,
             keep_stage=True,   # don't remove source dir for SPCONFIG.
             install_phases = set(['spconfig', 'provenance']))
