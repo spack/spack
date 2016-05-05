@@ -12,7 +12,6 @@ class Visit(Package):
     depends_on("vtk@6.1.0~opengl2")
     depends_on("qt@4.8.6")
     depends_on("python")
-    depends_on("hdf5")  # silo seems to need it
     depends_on("silo+shared")
 
     def install(self, spec, prefix):
