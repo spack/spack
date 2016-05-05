@@ -1552,7 +1552,8 @@ import subprocess
 
 def cmdlist(str):
 	return list(x.strip().replace("'",'') for x in str.split('\n') if x)
-env = dict()
+#env = dict()
+env = dict(os.environ)
 """ % sys.executable)
 
             env_vars = sorted(list(env.keys()))
