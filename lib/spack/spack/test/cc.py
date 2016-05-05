@@ -67,10 +67,10 @@ class CompilerTest(unittest.TestCase):
         os.environ['SPACK_COMPILER_SPEC'] = "gcc@4.4.7"
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2"
 
-        os.environ['SPACK_CC_RPATH_ARG']  = "-Wl,-rpath"
-        os.environ['SPACK_CXX_RPATH_ARG'] = "-Wl,-rpath"
-        os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath"
-        os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath"
+        os.environ['SPACK_CC_RPATH_ARG']  = "-Wl,-rpath,"
+        os.environ['SPACK_CXX_RPATH_ARG'] = "-Wl,-rpath,"
+        os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
+        os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
 
         # Make some fake dependencies
         self.tmp_deps = tempfile.mkdtemp()
