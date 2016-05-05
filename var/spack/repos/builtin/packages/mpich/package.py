@@ -60,10 +60,6 @@ class Mpich(Package):
         self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
-        """For dependencies, make mpicc's use spack wrapper."""
-        # FIXME : is this necessary ? Shouldn't this be part of a contract with MPI providers?
-        module.mpicc = join_path(self.prefix.bin, 'mpicc')
-
     def install(self, spec, prefix):
         config_args = ["--prefix=" + prefix,
                        "--enable-shared"]
