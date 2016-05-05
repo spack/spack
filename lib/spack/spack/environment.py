@@ -250,3 +250,19 @@ def validate(env, errstream):
     modifications = env.group_by_name()
     for variable, list_of_changes in sorted(modifications.items()):
         set_or_unset_not_first(variable, list_of_changes, errstream)
+
+
+def filter_environment_blacklist(env, variables):
+    """
+    Generator that filters out any change to environment variables present in the input list
+
+    Args:
+        env: list of environment modifications
+        variables: list of variable names to be filtered
+
+    Yields:
+        items in env if they are not in variables
+    """
+    for item in env:
+        if item.name not in variables:
+            yield item

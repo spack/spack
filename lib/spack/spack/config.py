@@ -117,22 +117,20 @@ Will make Spack take compilers *only* from the user configuration, and
 the site configuration will be ignored.
 
 """
+import copy
 import os
 import re
 import sys
-import copy
+
 import jsonschema
-from jsonschema import Draft4Validator, validators
-import yaml
-from yaml.error import MarkedYAMLError
-from ordereddict_backport import OrderedDict
-
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-import copy
-
 import spack
+import yaml
+from jsonschema import Draft4Validator, validators
+from llnl.util.filesystem import mkdirp
+from ordereddict_backport import OrderedDict
 from spack.error import SpackError
+from yaml.error import MarkedYAMLError
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
@@ -146,7 +144,7 @@ section_schemas = {
         'type': 'object',
         'additionalProperties': False,
         'patternProperties': {
-            'compilers:?': { # optional colon for overriding site config.
+            'compilers:?': {  # optional colon for overriding site config.
                 'type': 'object',
                 'default': {},
                 'additionalProperties': False,
@@ -195,6 +193,7 @@ section_schemas = {
                 'default': [],
                 'items': {
                     'type': 'string'},},},},
+
     'packages': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack package configuration file schema',
@@ -238,11 +237,78 @@ section_schemas = {
                                 'default' : {},
                             }
                         },},},},},},
+
     'modules': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack module file configuration file schema',
         'type': 'object',
         'additionalProperties': False,
+        'definitions': {
+            'array_of_strings': {
+                'type': 'array',
+                'default': [],
+                'items': {
+                    'type': 'string'
+                }
+            },
+            'dependency_selection': {
+                'type': 'string',
+                'enum': ['none', 'direct', 'all']
+            },
+            'module_file_configuration': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'properties': {
+                    'filter': {
+                        'type': 'object',
+                        'default': {},
+                        'additionalProperties': False,
+                        'properties': {
+                            'environment_blacklist': {
+                                'type': 'array',
+                                'default': [],
+                                'items': {
+                                    'type': 'string'
+                                }
+                            }
+                        }
+                    },
+                    'autoload': {'$ref': '#/definitions/dependency_selection'},
+                    'prerequisites': {'$ref': '#/definitions/dependency_selection'},
+                    'conflict': {'$ref': '#/definitions/array_of_strings'},
+                    'environment': {
+                        'type': 'object',
+                        'default': {},
+                        'additionalProperties': False,
+                        'properties': {
+                            'set': {'$ref': '#/definitions/array_of_strings'},
+                            'unset': {'$ref': '#/definitions/array_of_strings'},
+                            'prepend_path': {'$ref': '#/definitions/array_of_strings'},
+                            'append_path': {'$ref': '#/definitions/array_of_strings'}
+                        }
+                    }
+                }
+            },
+            'module_type_configuration': {
+                'type': 'object',
+                'default': {},
+                'anyOf': [
+                    {
+                        'properties': {
+                            'whitelist': {'$ref': '#/definitions/array_of_strings'},
+                            'blacklist': {'$ref': '#/definitions/array_of_strings'},
+                            'naming_scheme': {
+                                'type': 'string'  # Can we be more specific here?
+                            }
+                        }
+                    },
+                    {
+                        'patternProperties': {r'\w[\w-]*': {'$ref': '#/definitions/module_file_configuration'}}
+                    }
+                ]
+            }
+        },
         'patternProperties': {
             r'modules:?': {
                 'type': 'object',
@@ -253,9 +319,22 @@ section_schemas = {
                         'type': 'array',
                         'default': [],
                         'items': {
-                            'type': 'string'
+                            'type': 'string',
+                            'enum': ['tcl', 'dotkit']
                         }
-                    }
+                    },
+                    'tcl': {
+                        'allOf': [
+                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
+                            {}  # Specific tcl extensions
+                        ]
+                    },
+                    'dotkit': {
+                        'allOf': [
+                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
+                            {}  # Specific dotkit extensions
+                        ]
+                    },
                 }
             },
         },
@@ -413,7 +492,7 @@ def _read_config_file(filename, schema):
 
     elif not os.path.isfile(filename):
         raise ConfigFileError(
-            "Invlaid configuration. %s exists but is not a file." % filename)
+            "Invalid configuration. %s exists but is not a file." % filename)
 
     elif not os.access(filename, os.R_OK):
         raise ConfigFileError("Config file is not readable: %s" % filename)
