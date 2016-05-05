@@ -74,10 +74,6 @@ class Pism(CMakePackage):
         with working_dir(self.build_directory, create=False):
             make('install')
 
-        install_tree( \
-            os.path.join(self.source_directory, 'src'),
-            os.path.join(self.spec.prefix, 'include'))
-
 # > Do you have handy a table of which versions of PETSc are required for which
 # > versions of PISM?
 # 
