@@ -20,13 +20,15 @@ class Openblas(Package):
     provides('blas')
     provides('lapack')
 
+    patch('make.patch')
 
     def install(self, spec, prefix):
         # Openblas is picky about compilers. Configure fails with
         # FC=/abs/path/to/f77, whereas FC=f77 works fine.
         # To circumvent this, provide basename only:
         make_defs = ['CC=%s' % os.path.basename(spack_cc),
-                     'FC=%s' % os.path.basename(spack_f77)]
+                     'FC=%s' % os.path.basename(spack_f77),
+                     'MAKE_NO_J=1']
 
         make_targets = ['libs', 'netlib']
 
