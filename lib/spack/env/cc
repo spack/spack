@@ -175,6 +175,19 @@ fi
 input_command="$@"
 args=("$@")
 
+# Determine appropriate prefix for passing rpaths to the linker
+if [[ $mode == ccld ]]; then
+    if [[ $(basename $0) == nagfor ]]; then
+        # Unlike other compilers, the NAG compiler passes options to GCC, which
+        # then passes them to the linker. Therefore, we need to doubly wrap the
+        # options with '-Wl,-Wl,,'
+        rpath_prefix="-Wl,-Wl,,"
+    else
+        # Wrap the option with '-Wl,' to properly pass it to the linker
+        rpath_prefix="-Wl,"
+    fi
+fi
+
 # Read spack dependencies from the path environment variable
 IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
 for dep in "${deps[@]}"; do
@@ -188,7 +201,7 @@ for dep in "${deps[@]}"; do
     # Prepend lib and RPATH directories
     if [[ -d $dep/lib ]]; then
         if [[ $mode == ccld ]]; then
-            $add_rpaths && args=("-Wl,-rpath,$dep/lib" "${args[@]}")
+            $add_rpaths && args=("$rpath_prefix-rpath,$dep/lib" "${args[@]}")
             args=("-L$dep/lib" "${args[@]}")
         elif [[ $mode == ld ]]; then
             $add_rpaths && args=("-rpath" "$dep/lib" "${args[@]}")
@@ -199,7 +212,7 @@ for dep in "${deps[@]}"; do
     # Prepend lib64 and RPATH directories
     if [[ -d $dep/lib64 ]]; then
         if [[ $mode == ccld ]]; then
-            $add_rpaths && args=("-Wl,-rpath,$dep/lib64" "${args[@]}")
+            $add_rpaths && args=("$rpath_prefix-rpath,$dep/lib64" "${args[@]}")
             args=("-L$dep/lib64" "${args[@]}")
         elif [[ $mode == ld ]]; then
             $add_rpaths && args=("-rpath" "$dep/lib64" "${args[@]}")
@@ -210,7 +223,7 @@ done
 
 # Include all -L's and prefix/whatever dirs in rpath
 if [[ $mode == ccld ]]; then
-    $add_rpaths && args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("$rpath_prefix-rpath,$SPACK_PREFIX/lib" "$rpath_prefix-rpath,$SPACK_PREFIX/lib64" "${args[@]}")
 elif [[ $mode == ld ]]; then
     $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
 fi
