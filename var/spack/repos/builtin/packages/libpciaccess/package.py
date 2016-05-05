@@ -13,7 +13,7 @@ class Libpciaccess(Package):
 
     def install(self, spec, prefix):
         # libpciaccess does not support OS X
-        if spec.satisfies('=darwin-x86_64'):
+        if spec.satisfies('arch=darwin-x86_64'):
             # create a dummy directory
             mkdir(prefix.lib)
             return

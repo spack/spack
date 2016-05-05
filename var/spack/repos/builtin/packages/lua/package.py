@@ -22,7 +22,7 @@ class Lua(Package):
     depends_on('readline')
 
     def install(self, spec, prefix):
-        if spec.satisfies("=darwin-i686") or spec.satisfies("=darwin-x86_64"):
+        if spec.satisfies("arch=darwin-i686") or spec.satisfies("arch=darwin-x86_64"):
             target = 'macosx'
         else:
             target = 'linux'
