@@ -11,7 +11,7 @@ class Openssl(Package):
        Transport Layer Security (TLS v1) protocols as well as a
        full-strength general purpose cryptography library."""
     homepage = "http://www.openssl.org"
-    url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
+    url      = "https://www.openssl.org/source/openssl-1.0.1h.tar.gz"
 
     version('1.0.1h', '8d6d684a9430d5cc98a62a5d8fbda8cf')
     version('1.0.1r', '1abd905e079542ccae948af37e393d28')
@@ -76,7 +76,7 @@ class Openssl(Package):
         # in the environment, then this will override what is set in the
         # Makefile, leading to build errors.
         env.pop('APPS', None)
-        if spec.satisfies("=darwin-x86_64") or spec.satisfies("=ppc64"):
+        if spec.satisfies("arch=darwin-x86_64") or spec.satisfies("arch=ppc64"):
             # This needs to be done for all 64-bit architectures (except Linux,
             # where it happens automatically?)
             env['KERNEL_BITS'] = '64'
