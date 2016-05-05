@@ -11,6 +11,7 @@ class Everytrace(CMakePackage):
 	homepage = "https://github.com/citibeth/everytrace"
 	url		 = "https://github.com/citibeth/everytrace/tarball/0.1.0"
 
+	version('0.1.1', '491ad7cd8891bfb149a3b383a35f17bf')
 	version('0.1.0', '295b10b2bd1b40712b6475dbb124b0ce')
 
 	variant('mpi', default=True, description='Enables MPI parallelism')

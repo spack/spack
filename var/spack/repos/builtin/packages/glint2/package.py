@@ -7,6 +7,7 @@ class Glint2(CMakePackage):
     url         = "https://github.com/citibeth/icebin/tarball/v0.1.0"
 
     version('0.1.0', '1c2769a0cb3531e4086b885dc7a6fd27')
+    version('glint2', git='https://github.com/citibeth/icebin.git', branch='glint2')
 
     variant('python', default=True, description='Build Python extension (requires Python, Numpy)')
     variant('coupler', default=True, description='Build the GCM coupler (requires MPI)')
@@ -14,7 +15,7 @@ class Glint2(CMakePackage):
 
     extends('python', when='+python')
 
-#    depends_on('everytrace')
+#    depends_on('everytrace+fortran')
 
     depends_on('python@3:', when='+python')
     depends_on('py-cython', when='+python')
@@ -31,6 +32,7 @@ class Glint2(CMakePackage):
     depends_on('boost+filesystem+date_time')
     depends_on('blitz')
     depends_on('netcdf-cxx')
+    depends_on('netcdf-fortran')
     depends_on('proj')
     depends_on('eigen')
     depends_on('galahad')
@@ -47,7 +49,8 @@ class Glint2(CMakePackage):
         spec = self.spec
         return [
             '-DUSE_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
-            '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')]
+            '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO'),
+            '-DPETSC_DIR=%s' % spec['petsc'].prefix]
 
     def setup_environment(self, spack_env, env):
         """Add <prefix>/bin to the module; this is not the default if we
