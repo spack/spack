@@ -60,7 +60,7 @@ from spack.repository import UnknownPackageError
 _db_dirname = '.spack-db'
 
 # DB version.  This is stuck in the DB file to track changes in format.
-_db_version = Version('0.9')
+_db_version = Version('0.9.1')
 
 # Default timeout for spack database locks is 5 min.
 _db_lock_timeout = 60
@@ -250,8 +250,10 @@ class Database(object):
 
         # TODO: better version checking semantics.
         version = Version(db['version'])
-        if version != _db_version:
+        if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
+        elif version < _db_version:
+            self.reindex(spack.install_layout)
 
         # Iterate through database and check each record.
         installs = db['installs']
@@ -342,6 +344,7 @@ class Database(object):
         """
         temp_file = self._index_path + (
             '.%s.%s.temp' % (socket.getfqdn(), os.getpid()))
+
 
         # Write a temporary database file them move it into place
         try:
