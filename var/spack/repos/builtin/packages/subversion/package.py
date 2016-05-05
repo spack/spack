@@ -37,6 +37,7 @@ class Subversion(Package):
     depends_on('apr-util')
     depends_on('zlib')
     depends_on('sqlite')
+    depends_on('serf')
 
     # Optional: We need swig if we want the Perl, Python or Ruby
     # bindings.
@@ -54,6 +55,7 @@ class Subversion(Package):
         options.append('--with-apr-util=%s' % spec['apr-util'].prefix)
         options.append('--with-zlib=%s' % spec['zlib'].prefix)
         options.append('--with-sqlite=%s' % spec['sqlite'].prefix)
+        options.append('--with-serf=%s' % spec['serf'].prefix)
         #options.append('--with-swig=%s' % spec['swig'].prefix)
 
         configure(*options)

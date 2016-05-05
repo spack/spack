@@ -44,10 +44,10 @@ def setup_parser(subparser):
 
     scopes = spack.config.config_scopes
 
-    # Add
-    add_parser = sp.add_parser('add', help='Add compilers to the Spack configuration.')
-    add_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
-    add_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+    # Find
+    find_parser = sp.add_parser('find', aliases=['add'], help='Search the system for compilers to add to the Spack configuration.')
+    find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
+    find_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_modify_scope,
                             help="Configuration scope to modify.")
 
     # Remove
@@ -70,7 +70,7 @@ def setup_parser(subparser):
                              help="Configuration scope to read from.")
 
 
-def compiler_add(args):
+def compiler_find(args):
     """Search either $PATH or a list of paths for compilers and add them
        to Spack's configuration."""
     paths = args.add_paths
@@ -136,7 +136,8 @@ def compiler_list(args):
 
 
 def compiler(parser, args):
-    action = { 'add'    : compiler_add,
+    action = { 'add'    : compiler_find,
+               'find'   : compiler_find,
                'remove' : compiler_remove,
                'rm'     : compiler_remove,
                'info'   : compiler_info,

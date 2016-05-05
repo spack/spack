@@ -61,15 +61,14 @@ test_names = ['versions',
               'optional_deps',
               'make_executable',
               'configure_guess',
-              'unit_install',
               'lock',
               'database',
               'namespace_trie',
               'yaml',
               'sbang',
               'environment',
-              'cmd.uninstall']
-#              'cflags']
+              'cmd.uninstall',
+              'cmd.test_install']
 
 
 def list_tests():

@@ -1831,6 +1831,23 @@ successfully find ``libdwarf.h`` and ``libdwarf.so``, without the
 packager having to provide ``--with-libdwarf=/path/to/libdwarf`` on
 the command line.
 
+Message Parsing Interface (MPI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It is common for high performance computing software/packages to use ``MPI``.
+As a result of conretization, a given package can be built using different
+implementations of MPI such as ``Openmpi``, ``MPICH`` or ``IntelMPI``.
+In some scenarios to configure a package one have to provide it with appropriate MPI
+compiler wrappers such as ``mpicc``, ``mpic++``.
+However different implementations of ``MPI`` may have different names for those
+wrappers.  In order to make package's ``install()`` method indifferent to the
+choice ``MPI`` implementation, each package which implements ``MPI`` sets up
+``self.spec.mpicc``, ``self.spec.mpicxx``, ``self.spec.mpifc`` and ``self.spec.mpif77``
+to point to ``C``, ``C++``, ``Fortran 90`` and ``Fortran 77`` ``MPI`` wrappers.
+Package developers are advised to use these variables, for example ``self.spec['mpi'].mpicc``
+instead of hard-coding ``join_path(self.spec['mpi'].prefix.bin, 'mpicc')`` for
+the reasons outlined above.
+
+
 Forking ``install()``
 ~~~~~~~~~~~~~~~~~~~~~
 

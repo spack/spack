@@ -151,6 +151,8 @@ class Python(Package):
             patterns.append(r'setuptools\.pth')
             patterns.append(r'bin/easy_install[^/]*$')
             patterns.append(r'setuptools.*egg$')
+        if ext_pkg.name != 'py-numpy':
+            patterns.append(r'bin/f2py$')
 
         return match_predicate(ignore_arg, patterns)
 

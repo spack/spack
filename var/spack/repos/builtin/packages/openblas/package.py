@@ -1,6 +1,7 @@
 from spack import *
 import sys
 import os
+import shutil
 
 class Openblas(Package):
     """OpenBLAS: An optimized BLAS library"""
@@ -13,18 +14,21 @@ class Openblas(Package):
 
     variant('shared', default=True, description="Build shared libraries as well as static libs.")
     variant('openmp', default=True, description="Enable OpenMP support.")
+    variant('fpic', default=True, description="Build position independent code")
 
     # virtual dependency
     provides('blas')
     provides('lapack')
 
+    patch('make.patch')
 
     def install(self, spec, prefix):
         # Openblas is picky about compilers. Configure fails with
         # FC=/abs/path/to/f77, whereas FC=f77 works fine.
         # To circumvent this, provide basename only:
         make_defs = ['CC=%s' % os.path.basename(spack_cc),
-                     'FC=%s' % os.path.basename(spack_f77)]
+                     'FC=%s' % os.path.basename(spack_f77),
+                     'MAKE_NO_J=1']
 
         make_targets = ['libs', 'netlib']
 
@@ -32,6 +36,8 @@ class Openblas(Package):
         if '+shared' in spec:
             make_targets += ['shared']
         else:
+            if '+fpic' in spec:
+                make_defs.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
             make_defs += ['NO_SHARED=1']
 
         # fix missing _dggsvd_ and _sggsvd_
@@ -64,6 +70,10 @@ class Openblas(Package):
             if '+shared' in spec:
                 symlink('libopenblas.%s' % dso_suffix, 'liblapack.%s' % dso_suffix)
 
+        # Openblas may pass its own test but still fail to compile Lapack
+        # symbols. To make sure we get working Blas and Lapack, do a small test.
+        self.check_install(spec)
+
 
     def setup_dependent_package(self, module, dspec):
         # This is WIP for a prototype interface for virtual packages.
@@ -76,3 +86,60 @@ class Openblas(Package):
         if '+shared' in self.spec:
             self.spec.blas_shared_lib   = join_path(libdir, 'libopenblas.%s' % dso_suffix)
             self.spec.lapack_shared_lib = self.spec.blas_shared_lib
+
+    def check_install(self, spec):
+        "Build and run a small program to test that we have Lapack symbols"
+        print "Checking Openblas installation..."
+        checkdir = "spack-check"
+        with working_dir(checkdir, create=True):
+            source = r"""
+#include <cblas.h>
+#include <stdio.h>
+int main(void) {
+int i=0;
+double A[6] = {1.0, 2.0, 1.0, -3.0, 4.0, -1.0};
+double B[6] = {1.0, 2.0, 1.0, -3.0, 4.0, -1.0};
+double C[9] = {.5, .5, .5, .5, .5, .5, .5, .5, .5};
+cblas_dgemm(CblasColMajor, CblasNoTrans, CblasTrans,
+            3, 3, 2, 1, A, 3, B, 3, 2, C, 3);
+for (i = 0; i < 9; i++)
+  printf("%f\n", C[i]);
+return 0;
+}
+"""
+            expected = """\
+11.000000
+-9.000000
+5.000000
+-9.000000
+21.000000
+-1.000000
+5.000000
+-1.000000
+3.000000
+"""
+            with open("check.c", 'w') as f:
+                f.write(source)
+            cc = which('cc')
+            # TODO: Automate these path and library settings
+            cc('-c', "-I%s" % join_path(spec.prefix, "include"), "check.c")
+            cc('-o', "check", "check.o",
+               "-L%s" % join_path(spec.prefix, "lib"), "-llapack", "-lblas", "-lpthread")
+            try:
+                check = Executable('./check')
+                output = check(return_output=True)
+            except:
+                output = ""
+            success = output == expected
+            if not success:
+                print "Produced output does not match expected output."
+                print "Expected output:"
+                print '-'*80
+                print expected
+                print '-'*80
+                print "Produced output:"
+                print '-'*80
+                print output
+                print '-'*80
+                raise RuntimeError("Openblas install check failed")
+        shutil.rmtree(checkdir)

@@ -7,7 +7,7 @@ class PyScikitImage(Package):
 
     version('0.12.3', '04ea833383e0b6ad5f65da21292c25e1')
 
-    extends('python', ignore=r'bin/.*\.py$|bin/f2py$')
+    extends('python', ignore=r'bin/.*\.py$')
 
     depends_on('py-dask')
     depends_on('py-pillow')
