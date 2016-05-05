@@ -24,7 +24,6 @@ class Silo(Package):
             '--enable-fortran' if '+fortran' in spec else '--disable-fortran',
             '--enable-silex' if '+silex' in spec else '--disable-silex',
             '--enable-shared' if '+shared' in spec else '--disable-shared',
-            '--disable-static' if '+shared' in spec else '--enable-static',
         ]
 
         if '+silex' in spec:
