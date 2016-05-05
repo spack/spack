@@ -33,43 +33,91 @@ from spack.test.mock_packages_test import *
 
 # Some sample compiler config data
 a_comps =  {
-    "all": {
-        "gcc@4.7.3" : {
+    'gcc473': {
+        'paths': {
             "cc" : "/gcc473",
             "cxx": "/g++473",
             "f77": None,
-            "fc" : None },
-        "gcc@4.5.0" : {
+            "fc" : None 
+            },
+        'modules': None,
+        'spec': 'gcc@4.7.3',
+        'operating_system': {
+            'name': 'CNL',
+            'version': '10'
+            }
+        },
+    'gcc450': {
+        'paths': {
             "cc" : "/gcc450",
             "cxx": "/g++450",
-            "f77": "/gfortran",
-            "fc" : "/gfortran" },
-        "clang@3.3"  : {
+            "f77": 'gfortran',
+            "fc" : 'gfortran'
+            },
+        'modules': None,
+        'spec': 'gcc@4.5.0',
+        'operating_system': {
+            'name': 'CNL',
+            'version': '10'
+            }
+        },
+    'clang33': {
+        'paths': {
             "cc" : "<overwritten>",
             "cxx": "<overwritten>",
-            "f77": "<overwritten>",
-            "fc" : "<overwritten>" }
-    }
+            "f77": '<overwritten>',
+            "fc" : '<overwritten>' },
+        'modules': None,
+        'spec': 'clang@3.3',
+        'operating_system': {
+            'name': 'CNL',
+            'version': '10'
+            }
+        }
 }
 
 b_comps = {
-    "all": {
-        "icc@10.0" : {
+    'icc100': {
+        'paths': {
             "cc" : "/icc100",
-            "cxx": "/icc100",
+            "cxx": "/icp100",
             "f77": None,
-            "fc" : None },
-        "icc@11.1" : {
+            "fc" : None
+            },
+        'modules': None,
+        'spec': 'icc@10.0',
+        'operating_system': {
+            'name': 'CNL',
+            'version': '10'
+            }
+        },
+    'icc111': {
+        'paths': {
             "cc" : "/icc111",
             "cxx": "/icp111",
-            "f77": "/ifort",
-            "fc" : "/ifort" },
-        "clang@3.3" : {
-            "cc" : "/clang",
-            "cxx": "/clang++",
-            "f77": None,
-            "fc" : None}
-    }
+            "f77": 'ifort',
+            "fc" : 'ifort'
+            },
+        'modules': None,
+        'spec': 'icc@11.1',
+        'operating_system': {
+            'name': 'CNL',
+            'version': '10'
+            }
+        },
+    'clang33': {
+        'paths': {
+            "cc" : "<overwritten>",
+            "cxx": "<overwritten>",
+            "f77": '<overwritten>',
+            "fc" : '<overwritten>' },
+        'modules': None,
+        'spec': 'clang@3.3',
+        'operating_system': {
+            'name': 'CNL',
+            'version': '10'
+            }
+        }
 }
 
 class ConfigTest(MockPackagesTest):
@@ -95,7 +143,6 @@ class ConfigTest(MockPackagesTest):
                 expected = comps['all'][key][c]
                 actual = config['all'][key][c]
                 self.assertEqual(expected, actual)
-
 
     def test_write_key_in_memory(self):
         # Write b_comps "on top of" a_comps.

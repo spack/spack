@@ -151,17 +151,16 @@ section_schemas = {
                 'default': {},
                 'additionalProperties': False,
                 'patternProperties': {
-                    r'\w[\w-]*': {           # architecture
+                    r'\w[\w-]*': {   # alias
                         'type': 'object',
                         'additionalProperties': False,
-                        'patternProperties': {
-                            r'\w[\w-]*@\w[\w-]*': {   # compiler spec
+                        'required': ['paths', 'spec', 'modules', 'operating_system'],
+                        'properties': { 
+                            'paths': {
                                 'type': 'object',
-                                'additionalProperties': False,
                                 'required': ['cc', 'cxx', 'f77', 'fc'],
-                                'properties': { 
-                                    'strategy': { 'anyOf': [ {'type' : 'string' },
-                                                             {'type' : 'null' }]},
+                                'additionalProperties': False,
+                                'properties': {
                                     'cc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
                                     'cxx': { 'anyOf': [ {'type' : 'string' },
@@ -169,13 +168,21 @@ section_schemas = {
                                     'f77': { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
                                     'fc':  { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'modules': { 'anyOf': [ {'type' : 'string'},
-                                                            {'type' : 'null' },
-                                                            {'type': 'array'},
-                                                          ]}
-                                },},},},},},},},
-
+                                                        {'type' : 'null' }]}}},
+                            'spec': { 'type': 'string'},#r'\w[\w-]*@\w[\w-]*'
+                            'operating_system': {
+                                'type': 'object',
+                                'required': ['name', 'version'],
+                                'additionalProperties': False,
+                                'properties': {
+                                    'name': {'type': 'string'},
+                                    'version': {'type': 'string'}
+                                    }},
+                            'modules': { 'anyOf': [ {'type' : 'string'},
+                                                    {'type' : 'null' },
+                                                    {'type': 'array'},
+                                                    ]}
+                            },},},},},},
     'mirrors': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack mirror configuration file schema',

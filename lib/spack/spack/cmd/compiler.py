@@ -80,7 +80,7 @@ def compiler_add(args):
     if not paths:
         paths = get_path('PATH')
 
-    compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
+    compilers = [c for c in spack.compilers.find_compilers(*paths)
                  if c.spec not in spack.compilers.all_compilers(scope=args.scope)]
 
     if compilers:
@@ -125,6 +125,8 @@ def compiler_info(args):
             print "\tcxx = %s" % c.cxx
             print "\tf77 = %s" % c.f77
             print "\tfc  = %s" % c.fc
+            print "\tmodules  = %s" % c.modules
+            print "\toperating system  = %s" % c.operating_system
 
 
 def compiler_list(args):

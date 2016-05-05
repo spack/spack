@@ -169,9 +169,8 @@ def set_compiler_environment_variables(pkg):
 
     os.environ['SPACK_COMPILER_SPEC']  = str(pkg.spec.compiler)
 
-    if compiler.strategy == 'MODULES':
-        for mod in compiler.modules:
-            load_module(mod)
+    for mod in compiler.modules:
+        load_module(mod)
 
 def set_build_environment_variables(pkg):
     """This ensures a clean install environment when we build packages.

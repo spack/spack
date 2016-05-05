@@ -243,7 +243,7 @@ class SpecDagTest(MockPackagesTest):
         if len(platform.targets) > 1:
             first = platform.targets.values()[0].name
             second = platform.targets.values()[1].name
-            set_pkg_dep('mpileaks', 'mpich='+first)
+            self.set_pkg_dep('mpileaks', 'mpich='+first)
             spec = Spec('mpileaks ^mpich='+ second +' ^callpath ^dyninst ^libelf ^libdwarf')
             self.assertRaises(spack.spec.UnsatisfiableTargetSpecError, spec.normalize)
 

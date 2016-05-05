@@ -12,8 +12,18 @@ from spack.platforms.linux import Linux
 from spack.platforms.bgq import Bgq
 from spack.platforms.darwin import Darwin
 
-class ArchitectureTest(unittest.TestCase):
+from spack.test.mock_packages_test import *
 
+#class ArchitectureTest(unittest.TestCase):
+class ArchitectureTest(MockPackagesTest):
+
+    def setUp(self):
+        super(ArchitectureTest, self).setUp()
+        self.platform = sys_type()
+
+    def tearDown(self):
+        super(ArchitectureTest, self).tearDown()
+    
     def test_dict_functions_for_architecture(self):
         arch = Arch()
         arch.platform_os = arch.platform.operating_system('default_os')
@@ -34,13 +44,13 @@ class ArchitectureTest(unittest.TestCase):
         self.assertTrue( isinstance(new_arch.target, Target) )
 
 
-    def test_platform_class_and_compiler_strategies(self):
-        a = CrayXc()
-        t = a.operating_system('default_os')
-        self.assertEquals(t.compiler_strategy, 'MODULES')
-        b = Linux()
-        s = b.operating_system('default_os')
-        self.assertEquals(s.compiler_strategy, 'PATH')
+#    def test_platform_class_and_compiler_strategies(self):
+#        a = CrayXc()
+#        t = a.operating_system('default_os')
+#        self.assertEquals(t.compiler_strategy, 'MODULES')
+#        b = Linux()
+#        s = b.operating_system('default_os')
+#        self.assertEquals(s.compiler_strategy, 'PATH')
 
     def test_sys_type(self):
         output_platform_class = sys_type()
@@ -56,16 +66,13 @@ class ArchitectureTest(unittest.TestCase):
 
         self.assertEqual(str(output_platform_class), str(my_platform_class))
 
-    def setUp(self):
-        self.platform = sys_type()
-
     def test_user_front_end_input(self):
         """Test when user inputs just frontend that both the frontend target
             and frontend operating system match
         """
         frontend_os = self.platform.operating_system("frontend")
         frontend_target = self.platform.target("frontend")
-        frontend_spec = Spec("zlib=frontend")
+        frontend_spec = Spec("libelf=frontend")
         frontend_spec.concretize()
         self.assertEqual(frontend_os, frontend_spec.architecture.platform_os)
         self.assertEqual(frontend_target, frontend_spec.architecture.target)
@@ -76,7 +83,7 @@ class ArchitectureTest(unittest.TestCase):
         """
         backend_os = self.platform.operating_system("backend")
         backend_target = self.platform.target("backend")
-        backend_spec = Spec("zlib=backend")
+        backend_spec = Spec("libelf=backend")
         backend_spec.concretize()
         self.assertEqual(backend_os, backend_spec.architecture.platform_os)
         self.assertEqual(backend_target, backend_spec.architecture.target)
@@ -85,7 +92,7 @@ class ArchitectureTest(unittest.TestCase):
         default_os = self.platform.operating_system("default_os")
         default_target = self.platform.target("default_target")
 
-        default_spec = Spec("zlib") # default is no args
+        default_spec = Spec("libelf") # default is no args
         default_spec.concretize()
         self.assertEqual(default_os, default_spec.architecture.platform_os)
         self.assertEqual(default_target, default_spec.architecture.target)
@@ -103,11 +110,11 @@ class ArchitectureTest(unittest.TestCase):
         for arch in combinations:
             o,t = arch
             arch_spec = "-".join(arch)
-            spec = Spec("zlib=%s" % arch_spec)
+            spec = Spec("libelf=%s" % arch_spec)
             spec.concretize()
             results.append(spec.architecture.platform_os == self.platform.operating_system(o))
             results.append(spec.architecture.target == self.platform.target(t))
         res = all(results)
-        print res
+
         self.assertTrue(res) 
 
