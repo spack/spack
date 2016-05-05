@@ -36,21 +36,50 @@ from spack.spec import Spec
 
 mock_compiler_config = """\
 compilers:
-  all:
-    clang@3.3:
+  clang3.3CNL:
+    spec: clang@3.3
+    operating_system:
+      name: CNL
+      version: '10'
+    paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
       f77: None
       fc: None
-      strategy: PATH
-      modules: None
-    gcc@4.5.0:
+    modules: 'None'
+  clang3.3RHL:
+    spec: clang@3.3
+    operating_system:
+      name: redhat
+      version: '6.7'
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+  gcc4.5.0CNL:
+    paths:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-      strategy: PATH
-      modules: None
+    operating_system:
+      name: CNL
+      version: '10'
+    spec: gcc@4.5.0
+    modules: 'None'
+  gcc4.5.0RHL:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system:
+      name: RHL
+      version: '6.7'
+    spec: gcc@4.5.0
+    modules: 'None'
 """
 
 mock_packages_config = """\

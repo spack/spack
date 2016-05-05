@@ -22,6 +22,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import os
 from collections import namedtuple
 import imp
 import platform as py_platform
@@ -32,7 +33,10 @@ from llnl.util.filesystem import join_path
 import llnl.util.tty as tty
 
 import spack
+import spack.compilers
 from spack.util.naming import mod_to_class
+from spack.util.environment import get_path
+from spack.util.multiproc import parmap
 import spack.error as serr
 
 
@@ -143,6 +147,7 @@ class Platform(object):
 
         return self.operating_sys.get(name, None)
 
+    
     @classmethod
     def detect(self):
         """ Subclass is responsible for implementing this method.
@@ -170,10 +175,9 @@ class OperatingSystem(object):
         find compilers we call find_compilers method for each operating system
     """
 
-    def __init__(self, name, version, compiler_strategy="PATH"):
+    def __init__(self, name, version):
         self.name = name
         self.version = version
-        self.compiler_strategy = compiler_strategy
 
     def __str__(self):
         return self.name + self.version
@@ -182,13 +186,96 @@ class OperatingSystem(object):
         return self.__str__()
 
     def _cmp_key(self):
-        return (self.name, self.version, self.compiler_strategy)
+        return (self.name, self.version)
+
+
+    def find_compilers(self, *paths):
+        """
+        Return a list of compilers found in the suppied paths.
+        This invokes the find() method for each Compiler class,
+        and appends the compilers detected to a list.
+        """
+        if not paths:
+            paths = get_path('PATH')
+        # Make sure path elements exist, and include /bin directories
+        # under prefixes.
+        filtered_path = []
+        for p in paths:
+            # Eliminate symlinks and just take the real directories.
+            p = os.path.realpath(p)
+            if not os.path.isdir(p):
+                continue
+            filtered_path.append(p)
+
+            # Check for a bin directory, add it if it exists
+            bin = join_path(p, 'bin')
+            if os.path.isdir(bin):
+                filtered_path.append(os.path.realpath(bin))
+
+        # Once the paths are cleaned up, do a search for each type of
+        # compiler.  We can spawn a bunch of parallel searches to reduce
+        # the overhead of spelunking all these directories.
+        types = spack.compilers.all_compiler_types()
+        compiler_lists = parmap(lambda cmp_cls: self.find_compiler(cmp_cls, *filtered_path), types)
+
+        # ensure all the version calls we made are cached in the parent
+        # process, as well.  This speeds up Spack a lot.
+        clist = reduce(lambda x,y: x+y, compiler_lists)
+        return clist
+
+    def find_compiler(self, cmp_cls, *path):
+        """Try to find the given type of compiler in the user's
+           environment. For each set of compilers found, this returns
+           compiler objects with the cc, cxx, f77, fc paths and the
+           version filled in.
+
+           This will search for compilers with the names in cc_names,
+           cxx_names, etc. and it will group them if they have common
+           prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
+           be grouped with g++-mp-4.7 and gfortran-mp-4.7.
+        """
+        dicts = parmap(
+            lambda t: cmp_cls._find_matches_in_path(*t),
+            [(cmp_cls.cc_names,  cmp_cls.cc_version)  + tuple(path),
+             (cmp_cls.cxx_names, cmp_cls.cxx_version) + tuple(path),
+             (cmp_cls.f77_names, cmp_cls.f77_version) + tuple(path),
+             (cmp_cls.fc_names,  cmp_cls.fc_version)  + tuple(path)])
+
+        all_keys = set()
+        for d in dicts:
+            all_keys.update(d)
+
+        compilers = {}
+        for k in all_keys:
+            ver, pre, suf = k
+
+            # Skip compilers with unknown version.
+            if ver == 'unknown':
+                continue
+
+            paths = tuple(pn[k] if k in pn else None for pn in dicts)
+            spec = spack.spec.CompilerSpec(cmp_cls.name, ver)
+
+            if ver in compilers:
+                prev = compilers[ver]
+
+                # prefer the one with more compilers.
+                prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
+                newcount  = len([p for p in paths      if p is not None])
+                prevcount = len([p for p in prev_paths if p is not None])
+
+                # Don't add if it's not an improvement over prev compiler.
+                if newcount <= prevcount:
+                    continue
+
+            compilers[ver] = cmp_cls(spec, self, paths)
+
+        return list(compilers.values())
 
     def to_dict(self):
         d = {}
         d['name'] = self.name
         d['version'] = self.version
-        d['compiler_strategy'] = self.compiler_strategy
 
         return d
 
@@ -261,7 +348,6 @@ def _operating_system_from_dict(os_dict):
     operating_system = OperatingSystem.__new__(OperatingSystem)
     operating_system.name = os_dict['name']
     operating_system.version = os_dict['version']
-    operating_system.compiler_strategy = os_dict['compiler_strategy']
     return operating_system
 
 def arch_from_dict(d):

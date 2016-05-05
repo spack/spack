@@ -106,14 +106,14 @@ class Compiler(object):
     PrgEnv_compiler = None
 
 
-    def __init__(self, cspec, strategy, paths, modules=None):
+    def __init__(self, cspec, operating_system, paths, modules=[], alias=None):
         def check(exe):
             if exe is None:
                 return None
             _verify_executables(exe)
             return exe
 
-        self.strategy = strategy
+        self.operating_system = operating_system
 
         self.cc  = check(paths[0])
         self.cxx = check(paths[1])
@@ -126,62 +126,33 @@ class Compiler(object):
 
         self.spec = cspec
         self.modules = modules
-
+        self.alias = alias
 
     @property
     def version(self):
         return self.spec.version
 
-    #
-    # Compiler classes have methods for querying the version of
-    # specific compiler executables.  This is used when discovering compilers.
-    #
-    # Compiler *instances* are just data objects, and can only be
-    # constructed from an actual set of executables.
-    #
-
-    @classmethod
-    def default_version(cls, cc):
-        """Override just this to override all compiler version functions."""
-        return dumpversion(cc)
-
-    @classmethod
-    def cc_version(cls, cc):
-        return cls.default_version(cc)
-
-    @classmethod
-    def cxx_version(cls, cxx):
-        return cls.default_version(cxx)
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.default_version(f77)
-
-    @classmethod
-    def fc_version(cls, fc):
-        return cls.default_version(fc)
-
 
     @classmethod
     def _find_matches_in_path(cls, compiler_names, detect_version, *path):
         """Finds compilers in the paths supplied.
-
-           Looks for all combinations of ``compiler_names`` with the
-           ``prefixes`` and ``suffixes`` defined for this compiler
-           class.  If any compilers match the compiler_names,
-           prefixes, or suffixes, uses ``detect_version`` to figure
-           out what version the compiler is.
-
-           This returns a dict with compilers grouped by (prefix,
-           suffix, version) tuples.  This can be further organized by
-           find().
-        """
+        
+            Looks for all combinations of ``compiler_names`` with the
+            ``prefixes`` and ``suffixes`` defined for this compiler
+            class.  If any compilers match the compiler_names,
+            prefixes, or suffixes, uses ``detect_version`` to figure
+            out what version the compiler is.
+ 
+            This returns a dict with compilers grouped by (prefix,
+            suffix, version) tuples.  This can be further organized by
+            find().
+         """
         if not path:
             path = get_path('PATH')
-
+ 
         prefixes = [''] + cls.prefixes
         suffixes = [''] + cls.suffixes
-
+ 
         checks = []
         for directory in path:
             if not (os.path.isdir(directory) and
@@ -219,89 +190,34 @@ class Compiler(object):
         successful = [key for key in parmap(check, checks) if key is not None]
         return dict(((v, p, s), path) for v, p, s, path in successful)
 
-    @classmethod
-    def find(cls, *path):
-        compilers = []
-        platform = spack.architecture.sys_type()
-        strategies = [o.compiler_strategy for o in platform.operating_sys.values()]
-        if 'PATH' in strategies:
-            compilers.extend(cls.find_in_path(*path))
-        if 'MODULES' in strategies:
-            compilers.extend(cls.find_in_modules())
-        return compilers
-
+    #
+    # Compiler classes have methods for querying the version of
+    # specific compiler executables.  This is used when discovering compilers.
+    #
+    # Compiler *instances* are just data objects, and can only be
+    # constructed from an actual set of executables.
+    #
 
     @classmethod
-    def find_in_path(cls, *path):
-        """Try to find this type of compiler in the user's
-           environment. For each set of compilers found, this returns
-           compiler objects with the cc, cxx, f77, fc paths and the
-           version filled in.
-
-           This will search for compilers with the names in cc_names,
-           cxx_names, etc. and it will group them if they have common
-           prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
-           be grouped with g++-mp-4.7 and gfortran-mp-4.7.
-        """
-        dicts = parmap(
-            lambda t: cls._find_matches_in_path(*t),
-            [(cls.cc_names,  cls.cc_version)  + tuple(path),
-             (cls.cxx_names, cls.cxx_version) + tuple(path),
-             (cls.f77_names, cls.f77_version) + tuple(path),
-             (cls.fc_names,  cls.fc_version)  + tuple(path)])
-
-        all_keys = set()
-        for d in dicts:
-            all_keys.update(d)
-
-        compilers = {}
-        for k in all_keys:
-            ver, pre, suf = k
-
-            # Skip compilers with unknown version.
-            if ver == 'unknown':
-                continue
-
-            paths = tuple(pn[k] if k in pn else None for pn in dicts)
-            spec = spack.spec.CompilerSpec(cls.name, ver)
-
-            if ver in compilers:
-                prev = compilers[ver]
-
-                # prefer the one with more compilers.
-                prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
-                newcount  = len([p for p in paths      if p is not None])
-                prevcount = len([p for p in prev_paths if p is not None])
-
-                # Don't add if it's not an improvement over prev compiler.
-                if newcount <= prevcount:
-                    continue
-
-            compilers[ver] = cls(spec, 'PATH', paths)
-
-        return list(compilers.values())
-
+    def default_version(cls, cc):
+        """Override just this to override all compiler version functions."""
+        return dumpversion(cc)
 
     @classmethod
-    def find_in_modules(cls):
-        compilers = []
-        if cls.PrgEnv:
-            if not cls.PrgEnv_compiler:
-                tty.die('Must supply PrgEnv_compiler with PrgEnv')
+    def cc_version(cls, cc):
+        return cls.default_version(cc)
 
-            modulecmd = which('modulecmd')
-            modulecmd.add_default_arg('python')
-        
-            output = modulecmd('avail', cls.PrgEnv_compiler, output=str, error=str)
-            matches = re.findall(r'(%s)/([\d\.]+[\d])' % cls.PrgEnv_compiler, output)
-            for name, version in matches:
-                v = version
-                comp = cls(spack.spec.CompilerSpec(name + '@' + v), 'MODULES',
-                           ['cc', 'CC', 'ftn'], [cls.PrgEnv, name +'/' + v])
+    @classmethod
+    def cxx_version(cls, cxx):
+        return cls.default_version(cxx)
 
-                compilers.append(comp)
+    @classmethod
+    def f77_version(cls, f77):
+        return cls.default_version(f77)
 
-        return compilers
+    @classmethod
+    def fc_version(cls, fc):
+        return cls.default_version(fc)
 
 
     def __repr__(self):
@@ -311,12 +227,8 @@ class Compiler(object):
 
     def __str__(self):
         """Return a string represntation of the compiler toolchain."""
-        if self.strategy is 'MODULES':
-            return "%s(%s)" % (
-                self.name, '\n     '.join((str(s) for s in (self.strategy, self.cc, self.cxx, self.f77, self.fc, self.modules))))
-        else:
-            return "%s(%s)" % (
-                self.name, '\n     '.join((str(s) for s in (self.strategy, self.cc, self.cxx, self.f77, self.fc))))
+        return "%s(%s)" % (
+            self.name, '\n     '.join((str(s) for s in (self.cc, self.cxx, self.f77, self.fc, self.modules, str(self.operating_system)))))
 
 
 class CompilerAccessError(spack.error.SpackError):
