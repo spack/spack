@@ -171,7 +171,7 @@ import spack.schema
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
-from spack.build_environment import get_path_from_module
+
 
 """Dict from section names -> schema for that section."""
 section_schemas = {
@@ -180,6 +180,7 @@ section_schemas = {
     'repos': spack.schema.repos.schema,
     'packages': spack.schema.packages.schema,
     'modules': spack.schema.modules.schema,
+    'install': spack.schema.install.schema,
 }
 
 """OrderedDict of config scopes keyed by name.
@@ -510,6 +511,9 @@ def print_section(section):
 def spec_externals(spec):
     """Return a list of external specs (with external directory path filled in),
        one for each known external installation."""
+    # break circular import.
+    from spack.build_environment import get_path_from_module
+
     allpkgs = get_config('packages')
     name = spec.name
 

@@ -63,7 +63,6 @@ user_cache = FileCache(user_cache_path)
 
 prefix = spack_root
 opt_path       = join_path(prefix, "opt")
-install_path   = join_path(opt_path, "spack")
 etc_path       = join_path(prefix, "etc")
 
 #
@@ -77,23 +76,10 @@ except spack.error.SpackError, e:
     tty.die('while initializing Spack RepoPath:', e.message)
 
 #
-# Set up the installed packages database
-#
-from spack.database import Database
-installed_db = Database(install_path)
-
-#
 # Paths to built-in Spack repositories.
 #
 packages_path      = join_path(repos_path, "builtin")
 mock_packages_path = join_path(repos_path, "builtin.mock")
-
-#
-# This controls how spack lays out install prefixes and
-# stage directories.
-#
-from spack.directory_layout import YamlDirectoryLayout
-install_layout = YamlDirectoryLayout(install_path)
 
 #
 # This controls how packages are sorted when trying to choose
