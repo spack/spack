@@ -762,7 +762,7 @@ class Spec(object):
                 self.to_node_dict(), default_flow_style=True, width=sys.maxint)
             sha = hashlib.sha1(yaml_text)
             b32_hash = base64.b32encode(sha.digest()).lower()[:length]
-            if self._concrete:
+            if self.concrete:
                 self.hash = b32_hash
             return b32_hash
 
