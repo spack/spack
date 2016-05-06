@@ -486,6 +486,7 @@ class Spec(object):
         self.variants = other.variants
         self.variants.spec = self
         self.namespace = other.namespace
+        self.hash = other.hash
 
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
@@ -754,12 +755,16 @@ class Spec(object):
         """
         Return a hash of the entire spec DAG, including connectivity.
         """
-        yaml_text = yaml.dump(
-            self.to_node_dict(), default_flow_style=True, width=sys.maxint)
-#        print yaml_text
-        sha = hashlib.sha1(yaml_text)
-        return base64.b32encode(sha.digest()).lower()[:length]
-
+        if self.hash:
+            return self.hash
+        else:
+            yaml_text = yaml.dump(
+                self.to_node_dict(), default_flow_style=True, width=sys.maxint)
+            sha = hashlib.sha1(yaml_text)
+            b32_hash = base64.b32encode(sha.digest()).lower()[:length]
+            if self._concrete:
+                self.hash = b32_hash
+            return b32_hash
 
     def to_node_dict(self):
         params = dict( (name, v.value) for name, v in self.variants.items() )
@@ -2128,6 +2133,7 @@ class SpecParser(spack.parse.Parser):
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
         spec.namespace = spec_namespace
+        spec.hash = None
 
         spec._normal = False
         spec._concrete = False
