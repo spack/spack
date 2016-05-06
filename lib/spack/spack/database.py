@@ -205,7 +205,8 @@ class Database(object):
 
         # Install records don't include hash with spec, so we add it in here
         # to ensure it is read properly.
-        spec_dict['hash'] = hash_key
+        for name in spec_dict:
+            spec_dict[name]['hash'] = hash_key
 
         # Build spec from dict first.
         spec = Spec.from_node_dict(spec_dict)
