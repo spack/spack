@@ -91,7 +91,7 @@ class Compiler(object):
     # version suffix for gcc.
     suffixes = [r'-.*']
 
-    # Flags used by this compiler to set an rpath
+    # Default flags used by a compiler to set an rpath
     @property
     def cc_rpath_arg(self):
         return '-Wl,-rpath,'
