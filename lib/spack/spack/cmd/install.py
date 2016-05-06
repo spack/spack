@@ -39,6 +39,9 @@ def setup_parser(subparser):
         '-j', '--jobs', action='store', type=int,
         help="Explicitly set number of make jobs.  Default is #cpus.")
     subparser.add_argument(
+        '-l','--load', action='store', type=int,
+        help="Explicitly set maximum load of make. Default is #cpus.")
+    subparser.add_argument(
         '--keep-prefix', action='store_true', dest='keep_prefix',
         help="Don't remove the install prefix if installation fails.")
     subparser.add_argument(
@@ -80,6 +83,7 @@ def install(parser, args):
                 keep_stage=args.keep_stage,
                 ignore_deps=args.ignore_deps,
                 make_jobs=args.jobs,
+                make_load=args.load,
                 verbose=args.verbose,
                 fake=args.fake,
                 build_parallel = args.build_parallel)

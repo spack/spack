@@ -343,6 +343,9 @@ class Package(object):
     """# jobs to use for parallel make. If set, overrides default of ncpus."""
     make_jobs = None
 
+    """# load to use for parallel make. If set, overrides default of ncpus."""
+    make_load = None
+
     """Most packages are NOT extendable.  Set to True if you want extensions."""
     extendable = False
 
@@ -869,7 +872,8 @@ class Package(object):
 
     def do_install(self,
                    keep_prefix=False,  keep_stage=False, ignore_deps=False,
-                   skip_patch=False, verbose=False, make_jobs=None, fake=False, build_parallel=False):
+                   skip_patch=False, verbose=False, make_jobs=None, make_load=None,
+                   fake=False, build_parallel=False):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -885,6 +889,7 @@ class Package(object):
         skip_patch     -- Skip patch stage of build if True.
         verbose        -- Display verbose build output (by default, suppresses it)
         make_jobs      -- Number of make jobs to use for install.  Default is ncpus.
+        make_load      -- Maximum load of parallel make. Default is ncpus.
         build_parallel -- Whether to build dependencies in parallel
         """
         if not self.spec.concrete:
@@ -907,10 +912,11 @@ class Package(object):
             self.do_install_dependencies(
                 keep_prefix=keep_prefix, keep_stage=keep_stage, ignore_deps=ignore_deps,
                 fake=fake, skip_patch=skip_patch, verbose=verbose, make_jobs=make_jobs, 
-                build_parallel = build_parallel)
+                make_load = make_load, build_parallel = build_parallel)
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
+        self.make_load = make_load
 
         # Then install the package itself.
         def build_process():
