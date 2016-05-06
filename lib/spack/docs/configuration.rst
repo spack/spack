@@ -4,6 +4,17 @@
 Configuration
 =============
 
+.. _install-area:
+
+Install options
+----------------------------
+
+By default, Spack will install software into ``opt/spack``.
+To set a custom install directory, the option ``path`` in
+``install.yaml`` can be used. This file can be found
+in a Spack installation's ``etc/spack/`` or a user's ``~/.spack/``
+directory.
+
 .. _temp-space:
 
 ---------------
