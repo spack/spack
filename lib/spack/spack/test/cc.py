@@ -66,6 +66,7 @@ class CompilerTest(unittest.TestCase):
         os.environ['SPACK_DEBUG_LOG_DIR'] = "."
         os.environ['SPACK_COMPILER_SPEC'] = "gcc@4.4.7"
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2"
+        os.environ['SPACK_LOADER_LOOKUP'] = "rpath"
 
         # Make some fake dependencies
         self.tmp_deps = tempfile.mkdtemp()
