@@ -6,4 +6,4 @@
 install:
     path: $spack/opt/spack
     layout : YamlDirectoryLayout
-    loader_lookup: runpath
+    loader_lookup: rpath
