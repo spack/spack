@@ -756,13 +756,15 @@ class Spec(object):
         """
         yaml_text = yaml.dump(
             self.to_node_dict(), default_flow_style=True, width=sys.maxint)
+        print yaml_text
         sha = hashlib.sha1(yaml_text)
         return base64.b32encode(sha.digest()).lower()[:length]
 
 
     def to_node_dict(self):
         params = dict( (name, v.value) for name, v in self.variants.items() )
-        params.update( dict( (name, value) for name, value in self.compiler_flags.items()) )
+        params.update( dict( (name, []) for name in FlagMap.valid_compiler_flags() ) )
+        params.update( dict( (name, value) for name, value in self.compiler_flags.items()) ) #override
         d = {
             'parameters' : params,
             'arch' : self.architecture,
@@ -817,8 +819,8 @@ class Spec(object):
         elif 'variants' in node:
             for name, value in node['variants'].items():
                 spec.variants[name] = VariantSpec(name, value)
-#            for name in FlagMap.valid_compiler_flags():
-#                spec.compiler_flags[name] = []
+            for name in FlagMap.valid_compiler_flags():
+                spec.compiler_flags[name] = []
         else:
             raise SpackRecordError("Did not find a valid format for variants in YAML file")
 
