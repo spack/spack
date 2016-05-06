@@ -42,7 +42,6 @@ from llnl.util.filesystem import *
 
 import spack
 import spack.error
-import spack.config
 import spack.spec
 from spack.provider_index import ProviderIndex
 from spack.util.naming import *
@@ -128,6 +127,7 @@ class RepoPath(object):
 
         # If repo_dirs is empty, just use the configuration
         if not repo_dirs:
+            import spack.config
             repo_dirs = spack.config.get_config('repos')
             if not repo_dirs:
                 raise NoRepoConfiguredError(

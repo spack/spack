@@ -58,6 +58,7 @@ import sys
 
 import llnl.util.tty as tty
 import spack
+import spack.install_area
 from llnl.util.filesystem import *
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
@@ -276,7 +277,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
     env.set(SPACK_PREFIX, pkg.prefix)
 
     # Install root prefix
-    env.set(SPACK_INSTALL, spack.install_path)
+    env.set(SPACK_INSTALL, spack.install_area.path)
 
     # Stuff in here sanitizes the build environemnt to eliminate
     # anything the user has set that may interfere.
