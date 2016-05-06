@@ -41,6 +41,7 @@ import time
 import llnl.util.tty as tty
 import spack
 import spack.build_environment
+import spack.install_area
 import spack.compilers
 import spack.directives
 import spack.error
@@ -576,9 +577,8 @@ class Package(object):
     @property
     def activated(self):
         if not self.is_extension:
-            raise ValueError(
-                "is_extension called on package that is not an extension.")
-        exts = spack.install_layout.extension_map(self.extendee_spec)
+            raise ValueError("is_extension called on package that is not an extension.")
+        exts = spack.install_area.layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
 
     def preorder_traversal(self, visited=None, **kwargs):
@@ -636,7 +636,7 @@ class Package(object):
         TODO: move this method to database.py?
         """
         dependents = []
-        for spec in spack.installed_db.query():
+        for spec in spack.install_area.db.query():
             if self.name == spec.name:
                 continue
             for dep in spec.traverse():
@@ -672,7 +672,7 @@ class Package(object):
         Removes the prefix for a package along with any empty parent
         directories
         """
-        spack.install_layout.remove_install_directory(self.spec)
+        spack.install_area.layout.remove_install_directory(self.spec)
 
     def do_fetch(self, mirror_only=False):
         """
@@ -859,7 +859,7 @@ class Package(object):
             return
 
         # Ensure package is not already installed
-        if spack.install_layout.check_installed(self.spec):
+        if spack.install_area.layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
             return
 
@@ -926,12 +926,10 @@ class Package(object):
                     self.sanity_check_prefix()
 
                     # Copy provenance into the install directory on success
-                    log_install_path = spack.install_layout.build_log_path(
-                        self.spec)
-                    env_install_path = spack.install_layout.build_env_path(
-                        self.spec)
-                    packages_dir = spack.install_layout.build_packages_path(
-                        self.spec)
+                    layout =  spack.install_area.layout
+                    log_install_path = layout.build_log_path(self.spec)
+                    env_install_path = layout.build_env_path(self.spec)
+                    packages_dir     = layout.build_packages_path(self.spec)
 
                     install(log_path, log_install_path)
                     install(env_path, env_install_path)
@@ -952,7 +950,7 @@ class Package(object):
 
         try:
             # Create the install prefix and fork the build process.
-            spack.install_layout.create_install_directory(self.spec)
+            spack.install_area.layout.create_install_directory(self.spec)
             spack.build_environment.fork(self, build_process)
         except:
             # remove the install prefix if anything went wrong during install.
@@ -968,7 +966,7 @@ class Package(object):
 
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
-        spack.installed_db.add(self.spec, self.prefix)
+        spack.install_area.db.add(self.spec, self.prefix)
 
     def sanity_check_prefix(self):
         """This function checks whether install succeeded."""
@@ -988,7 +986,7 @@ class Package(object):
         check_paths(self.sanity_check_is_dir, 'directory', os.path.isdir)
 
         installed = set(os.listdir(self.prefix))
-        installed.difference_update(spack.install_layout.hidden_file_paths)
+        installed.difference_update(spack.install_area.layout.hidden_file_paths)
         if not installed:
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
@@ -1001,7 +999,7 @@ class Package(object):
     @property
     def build_log_path(self):
         if self.installed:
-            return spack.install_layout.build_log_path(self.spec)
+            return spack.install_area.layout.build_log_path(self.spec)
         else:
             return join_path(self.stage.source_path, 'spack-build.out')
 
@@ -1149,7 +1147,7 @@ class Package(object):
 
         # Uninstalling in Spack only requires removing the prefix.
         self.remove_prefix()
-        spack.installed_db.remove(self.spec)
+        spack.install_area.db.remove(self.spec)
         tty.msg("Successfully uninstalled %s" % self.spec.short_spec)
 
         # Once everything else is done, run post install hooks
@@ -1183,8 +1181,9 @@ class Package(object):
         """
         self._sanity_check_extension()
 
-        spack.install_layout.check_extension_conflict(self.extendee_spec,
-                                                      self.spec)
+        spack.install_area.layout.check_extension_conflict(
+            self.extendee_spec, self.spec)
+
 
         # Activate any package dependencies that are also extensions.
         if not force:
@@ -1195,9 +1194,9 @@ class Package(object):
 
         self.extendee_spec.package.activate(self, **self.extendee_args)
 
-        spack.install_layout.add_extension(self.extendee_spec, self.spec)
-        tty.msg("Activated extension %s for %s" %
-                (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+        spack.install_area.layout.add_extension(self.extendee_spec, self.spec)
+        tty.msg("Activated extension %s for %s"
+                % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
 
     def activate(self, extension, **kwargs):
         """Symlinks all files from the extension into extendee's install dir.
@@ -1210,7 +1209,7 @@ class Package(object):
         """
 
         def ignore(filename):
-            return (filename in spack.install_layout.hidden_file_paths or
+            return (filename in spack.install_area.layout.hidden_file_paths or
                     kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix)
@@ -1228,9 +1227,9 @@ class Package(object):
         # Allow a force deactivate to happen.  This can unlink
         # spurious files if something was corrupted.
         if not force:
-            spack.install_layout.check_activated(self.extendee_spec, self.spec)
+            spack.install_area.layout.check_activated(self.extendee_spec, self.spec)
 
-            activated = spack.install_layout.extension_map(self.extendee_spec)
+            activated = spack.install_area.layout.extension_map(self.extendee_spec)
             for name, aspec in activated.items():
                 if aspec == self.spec:
                     continue
@@ -1245,11 +1244,10 @@ class Package(object):
         # redundant activation check -- makes SURE the spec is not
         # still activated even if something was wrong above.
         if self.activated:
-            spack.install_layout.remove_extension(self.extendee_spec,
-                                                  self.spec)
+            spack.install_area.layout.remove_extension(self.extendee_spec, self.spec)
 
-        tty.msg("Deactivated extension %s for %s" %
-                (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+        tty.msg("Deactivated extension %s for %s"
+                % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
 
     def deactivate(self, extension, **kwargs):
         """Unlinks all files from extension out of this package's install dir.
@@ -1262,7 +1260,7 @@ class Package(object):
         """
 
         def ignore(filename):
-            return (filename in spack.install_layout.hidden_file_paths or
+            return (filename in spack.install_area.layout.hidden_file_paths or
                     kwargs.get('ignore', lambda f: False)(filename))
 
         tree = LinkTree(extension.prefix)
@@ -1346,7 +1344,7 @@ def flatten_dependencies(spec, flat_dir):
     for dep in spec.traverse(root=False):
         name = dep.name
 
-        dep_path = spack.install_layout.path_for_spec(dep)
+        dep_path = spack.install_area.layout.path_for_spec(dep)
         dep_files = LinkTree(dep_path)
 
         os.mkdir(flat_dir + '/' + name)
@@ -1385,7 +1383,7 @@ def dump_packages(spec, path):
         if node is not spec:
             # Locate the dependency package in the install tree and find
             # its provenance information.
-            source = spack.install_layout.build_packages_path(node)
+            source = spack.install_area.layout.build_packages_path(node)
             source_repo_root = join_path(source, node.namespace)
 
             # There's no provenance installed for the source package.  Skip it.

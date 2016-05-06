@@ -30,6 +30,7 @@ import os.path
 import multiprocessing
 
 import spack
+import spack.install_area
 from llnl.util.filesystem import join_path
 from llnl.util.lock import *
 from llnl.util.tty.colify import colify
@@ -41,16 +42,16 @@ def _print_ref_counts():
     recs = []
 
     def add_rec(spec):
-        cspecs = spack.installed_db.query(spec, installed=any)
+        cspecs = spack.install_area.db.query(spec, installed=any)
 
         if not cspecs:
             recs.append("[ %-7s ] %-20s-" % ('', spec))
         else:
             key = cspecs[0].dag_hash()
-            rec = spack.installed_db.get_record(cspecs[0])
+            rec = spack.install_area.db.get_record(cspecs[0])
             recs.append("[ %-7s ] %-20s%d" % (key[:7], spec, rec.ref_count))
 
-    with spack.installed_db.read_transaction():
+    with spack.install_area.db.read_transaction():
         add_rec('mpileaks ^mpich')
         add_rec('callpath ^mpich')
         add_rec('mpich')
@@ -82,7 +83,7 @@ class DatabaseTest(MockDatabase):
 
     def test_010_all_install_sanity(self):
         """Ensure that the install layout reflects what we think it does."""
-        all_specs = spack.install_layout.all_specs()
+        all_specs = spack.install_area.layout.all_specs()
         self.assertEqual(len(all_specs), 13)
 
         # query specs with multiple configurations
@@ -111,12 +112,12 @@ class DatabaseTest(MockDatabase):
 
     def test_015_write_and_read(self):
         # write and read DB
-        with spack.installed_db.write_transaction():
-            specs = spack.installed_db.query()
-            recs = [spack.installed_db.get_record(s) for s in specs]
+        with spack.install_area.db.write_transaction():
+            specs = spack.install_area.db.query()
+            recs = [spack.install_area.db.get_record(s) for s in specs]
 
         for spec, rec in zip(specs, recs):
-            new_rec = spack.installed_db.get_record(spec)
+            new_rec = spack.install_area.db.get_record(spec)
             self.assertEqual(new_rec.ref_count, rec.ref_count)
             self.assertEqual(new_rec.spec,      rec.spec)
             self.assertEqual(new_rec.path,      rec.path)
@@ -125,7 +126,7 @@ class DatabaseTest(MockDatabase):
 
     def _check_db_sanity(self):
         """Utiilty function to check db against install layout."""
-        expected = sorted(spack.install_layout.all_specs())
+        expected = sorted(spack.install_area.layout.all_specs())
         actual = sorted(self.installed_db.query())
 
         self.assertEqual(len(expected), len(actual))
@@ -161,7 +162,7 @@ class DatabaseTest(MockDatabase):
     def test_050_basic_query(self):
         """Ensure that querying the database is consistent with what is installed."""
         # query everything
-        self.assertEqual(len(spack.installed_db.query()), 13)
+        self.assertEqual(len(spack.install_area.db.query()), 13)
 
         # query specs with multiple configurations
         mpileaks_specs = self.installed_db.query('mpileaks')

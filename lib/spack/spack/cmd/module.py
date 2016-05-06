@@ -28,6 +28,7 @@ import sys
 
 import llnl.util.tty as tty
 import spack.cmd
+import spack.install_area
 from llnl.util.filesystem import mkdirp
 from spack.modules import module_types
 from spack.util.string import *
@@ -64,7 +65,7 @@ def module_find(mtype, spec_array):
         tty.die("You can only pass one spec.")
     spec = specs[0]
 
-    specs = spack.installed_db.query(spec)
+    specs = spack.install_area.db.query(spec)
     if len(specs) == 0:
         tty.die("No installed packages match spec %s" % spec)
 
@@ -85,7 +86,7 @@ def module_find(mtype, spec_array):
 def module_refresh():
     """Regenerate all module files for installed packages known to
        spack (some packages may no longer exist)."""
-    specs = [s for s in spack.installed_db.query(installed=True, known=True)]
+    specs = [s for s in spack.install_area.db.query(installed=True, known=True)]
 
     for name, cls in module_types.items():
         tty.msg("Regenerating %s module files." % name)

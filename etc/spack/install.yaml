@@ -1,0 +1,8 @@
+# -------------------------------------------------------------------------
+# This is the default spack install setup configuration.
+#
+# Changes to this file will affect all users of this spack install
+# -------------------------------------------------------------------------
+install:
+    path: $spack/opt/spack
+    layout : YamlDirectoryLayout

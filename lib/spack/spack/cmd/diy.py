@@ -30,6 +30,7 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
+import spack.install_area
 from spack.cmd.edit import edit_package
 from spack.stage import DIYStage
 
@@ -62,7 +63,7 @@ def diy(self, args):
         tty.die("spack diy only takes one spec.")
 
     # Take a write lock before checking for existence.
-    with spack.installed_db.write_transaction():
+    with spack.install_area.db.write_transaction():
         spec = specs[0]
         if not spack.repo.exists(spec.name):
             tty.warn("No such package: %s" % spec.name)

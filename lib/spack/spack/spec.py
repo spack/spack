@@ -104,6 +104,7 @@ from llnl.util.lang import *
 from llnl.util.tty.color import *
 
 import spack
+import spack.install_area
 import spack.parse
 import spack.error
 import spack.compilers as compilers
@@ -657,7 +658,7 @@ class Spec(object):
 
     @property
     def prefix(self):
-        return Prefix(spack.install_layout.path_for_spec(self))
+        return Prefix(spack.install_area.layout.path_for_spec(self))
 
 
     def dag_hash(self, length=None):
@@ -1805,7 +1806,7 @@ class Spec(object):
                 elif named_str == 'SPACK_ROOT':
                     out.write(fmt % spack.prefix)
                 elif named_str == 'SPACK_INSTALL':
-                    out.write(fmt % spack.install_path)
+                    out.write(fmt % spack.install_area.path)
 
                 named = False
 

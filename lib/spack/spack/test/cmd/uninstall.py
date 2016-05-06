@@ -1,5 +1,5 @@
 import spack.test.mock_database
-
+import spack.install_area
 from spack.cmd.uninstall import uninstall
 
 
@@ -25,7 +25,7 @@ class TestUninstall(spack.test.mock_database.MockDatabase):
         args = MockArgs(['callpath'], all=True, dependents=True)
         uninstall(parser, args)
 
-        all_specs = spack.install_layout.all_specs()
+        all_specs = spack.install_area.layout.all_specs()
         self.assertEqual(len(all_specs), 7)
         # query specs with multiple configurations
         mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
