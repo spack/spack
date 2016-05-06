@@ -248,15 +248,18 @@ class Database(object):
         check('installs' in db, "No 'installs' in YAML DB.")
         check('version'  in db, "No 'version' in YAML DB.")
 
+
+        installs = db['installs']
+
         # TODO: better version checking semantics.
         version = Version(db['version'])
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
         elif version < _db_version:
             self.reindex(spack.install_layout)
+            installs = dict((k, v.to_dict()) for k, v in self._data.items())
 
         # Iterate through database and check each record.
-        installs = db['installs']
         data = {}
         for hash_key, rec in installs.items():
             try:
@@ -293,6 +296,7 @@ class Database(object):
 
         """
         with self.write_transaction():
+            print "reindex"
             old_data = self._data
             try:
                 self._data = {}
