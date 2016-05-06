@@ -755,7 +755,8 @@ class Spec(object):
         """
         Return a hash of the entire spec DAG, including connectivity.
         """
-        if self.hash:
+        print self, "++"
+        if getattr(self, 'hash', None):
             return self.hash
         else:
             yaml_text = yaml.dump(
@@ -787,6 +788,7 @@ class Spec(object):
         else:
             d['compiler'] = None
         d.update(self.versions.to_dict())
+
         return { self.name : d }
 
 
@@ -809,6 +811,9 @@ class Spec(object):
         spec.namespace = node.get('namespace', None)
         spec.versions = VersionList.from_dict(node)
         spec.architecture = node['arch']
+
+        if 'hash' in node:
+            spec.hash = node['hash']
 
         if node['compiler'] is None:
             spec.compiler = None
@@ -2120,6 +2125,8 @@ class SpecParser(spack.parse.Parser):
 
         if spec_name != '':
             self.check_identifier(spec_name)
+
+        print spec_name, "++"
 
         # This will init the spec without calling __init__.
         spec = Spec.__new__(Spec)

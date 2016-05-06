@@ -203,6 +203,10 @@ class Database(object):
 
         spec_dict = installs[hash_key]['spec']
 
+        # Install records don't include hash with spec, so we add it in here
+        # to ensure it is read properly.
+        spec_dict['hash'] = hash_key
+
         # Build spec from dict first.
         spec = Spec.from_node_dict(spec_dict)
 
