@@ -58,7 +58,7 @@ SPACK_INSTALL          = 'SPACK_INSTALL'
 SPACK_DEBUG            = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
-
+SPACK_LOADER_LOOKUP    = 'SPACK_LOADER_LOOKUP'
 
 # Platform-specific library suffix.
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
@@ -154,6 +154,9 @@ def set_build_environment_variables(pkg, env):
 
     # Install root prefix
     env.set(SPACK_INSTALL, spack.install_area.path)
+
+    # Decide on lookup via RPATH or RUNPATH
+    env.set(SPACK_LOADER_LOOKUP, spack.install_area.loader_lookup)
 
     # Remove these vars from the environment during build because they
     # can affect how some packages find libraries.  We want to make

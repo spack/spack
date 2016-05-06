@@ -46,6 +46,7 @@ SPACK_PREFIX
 SPACK_ENV_PATH
 SPACK_DEBUG_LOG_DIR
 SPACK_COMPILER_SPEC
+SPACK_LOADER_LOOKUP
 SPACK_SHORT_SPEC"
 
 # The compiler input variables are checked for sanity later:
@@ -213,6 +214,15 @@ if [[ $mode == ccld ]]; then
     $add_rpaths && args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" "${args[@]}")
 elif [[ $mode == ld ]]; then
     $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
+fi
+
+# Decide on whether using rpath or runpath
+if [[ $SPACK_LOADER_LOOKUP == runpath ]]; then
+    if [[ $mode == ccld ]]; then
+        $add_rpaths && args=("-Wl,--enable-new-dtags" "${args[@]}")
+    elif [[ $mode == ld ]]; then
+        $add_rpaths && args=("--enable-new-dtags" "${args[@]}")
+    fi
 fi
 
 #

@@ -35,3 +35,11 @@ try:
     layout = layout_class(path)
 except:
      tty.die("Invalid install directory layout %s chosen." %layout_name)
+
+#
+# Set up which loader lookup should be used in the build artifacts
+#
+loader_options = ["rpath","runpath"]
+loader_lookup = config["loader_lookup"]
+if loader_lookup not in loader_options:
+    tty.die("Invalid loader lookup option %s chosen. Only %s supported." %(loader_lookup, loader_options))

@@ -272,7 +272,8 @@ section_schemas = {
                 'additionalProperties': False,
                 'properties': {
                     'path' : { 'type': 'string' },
-                    'layout' : { 'type': 'string' }
+                    'layout' : { 'type': 'string' },
+                    'loader_lookup' : { 'type': 'string' }
                 }
             },
         },
