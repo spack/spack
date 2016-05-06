@@ -817,6 +817,8 @@ class Spec(object):
         elif 'variants' in node:
             for name, value in node['variants'].items():
                 spec.variants[name] = VariantSpec(name, value)
+            for name in FlagMap.valid_compiler_flags():
+                spec.compiler_flags[name] = []
         else:
             raise SpackRecordError("Did not find a valid format for variants in YAML file")
 
