@@ -9,6 +9,7 @@ class TheSilverSearcher(Package):
 
     depends_on('pcre')
     depends_on('xz')
+    depends_on('pkg-config')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
