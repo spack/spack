@@ -9,6 +9,7 @@ class Modele(CMakePackage):
     # ModelE has no valid versions.
     # This must be built with "spack spconfig" in a local repo
     version('local', '68673158b46b6e88aea6bc4595444adb')
+    version('glint2', '68673158b46b6e88aea6bc4595444adb')
 
     # More variants will come from the rundeck
     variant('traps',
@@ -29,6 +30,8 @@ class Modele(CMakePackage):
         description='Build parallel version with MPI')
     variant('pnetcdf', default=False,
         description='Link with the PNetCDF library; required for some rundecks.')
+    variant('glint2', default=False,
+        description='Link with the Glint2 Ice Model Coupler')
 
 
     # Build dependencies
@@ -40,6 +43,8 @@ class Modele(CMakePackage):
     depends_on('fexception', when='+fexception')
     depends_on('everytrace', when='+everytrace')
     depends_on('parallel-netcdf+fortran~cxx', when='+pnetcdf')
+    depends_on('glint2+coupler', when='+glint2')
+
     # depends_on('netcdf-cxx', when='+pnetcdf')
 
     # Run dependencies

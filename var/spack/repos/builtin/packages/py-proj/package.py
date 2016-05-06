@@ -14,6 +14,10 @@ class PyProj(Package):
         git='https://github.com/citibeth/pyproj.git',
         branch='latlong2')
 
+    version('citibeth-glint2',
+        git='https://github.com/citibeth/pyproj.git',
+        branch='glint2')
+
     extends('python')
 
     depends_on('py-cython')
