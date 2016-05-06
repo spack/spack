@@ -756,7 +756,7 @@ class Spec(object):
         """
         yaml_text = yaml.dump(
             self.to_node_dict(), default_flow_style=True, width=sys.maxint)
-        print yaml_text
+#        print yaml_text
         sha = hashlib.sha1(yaml_text)
         return base64.b32encode(sha.digest()).lower()[:length]
 
