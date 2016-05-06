@@ -29,6 +29,7 @@ import argparse
 import llnl.util.tty as tty
 import spack
 import spack.cmd
+import spack.install_area
 import spack.repository
 from spack.cmd.find import display_specs
 
@@ -86,7 +87,7 @@ def concretize_specs(specs, allow_multiple_matches=False, force=False):
     specs_from_cli = []  # List of specs that match expressions given via command line
     has_errors = False
     for spec in specs:
-        matching = spack.installed_db.query(spec)
+        matching = spack.install_area.db.query(spec)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
@@ -159,7 +160,7 @@ def uninstall(parser, args):
     if not args.packages:
         tty.die("uninstall requires at least one package argument.")
 
-    with spack.installed_db.write_transaction():
+    with spack.install_area.db.write_transaction():
         specs = spack.cmd.parse_specs(args.packages)
         # Gets the list of installed specs that match the ones give via cli
         uninstall_list = concretize_specs(specs, args.all, args.force)  # takes care of '-a' is given in the cli

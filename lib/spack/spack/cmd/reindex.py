@@ -24,8 +24,8 @@
 ##############################################################################
 import argparse
 import spack
-
+import spack.install_area
 description = "Rebuild Spack's package database."
 
 def reindex(parser, args):
-    spack.installed_db.reindex(spack.install_layout)
+    spack.install_area.db.reindex(spack.install_area.layout)

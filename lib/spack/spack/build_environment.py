@@ -34,6 +34,7 @@ import shutil
 import sys
 
 import spack
+import spack.install_area
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
 from spack.environment import EnvironmentModifications, validate
@@ -152,7 +153,7 @@ def set_build_environment_variables(pkg, env):
     env.set(SPACK_PREFIX, pkg.prefix)
 
     # Install root prefix
-    env.set(SPACK_INSTALL, spack.install_path)
+    env.set(SPACK_INSTALL, spack.install_area.path)
 
     # Remove these vars from the environment during build because they
     # can affect how some packages find libraries.  We want to make

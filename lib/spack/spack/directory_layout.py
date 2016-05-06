@@ -34,7 +34,7 @@ import yaml
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
 
-from spack.spec import Spec
+import spack.spec
 from spack.error import SpackError
 
 
@@ -225,7 +225,7 @@ class YamlDirectoryLayout(DirectoryLayout):
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
         with open(path) as f:
-            spec = Spec.from_yaml(f)
+            spec = spack.spec.Spec.from_yaml(f)
 
         # Specs read from actual installations are always concrete
         spec._mark_concrete()

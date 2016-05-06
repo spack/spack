@@ -27,6 +27,7 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
+import spack.install_area
 from spack.graph import topological_sort
 
 description = "Deactivate a package extension."
@@ -54,7 +55,7 @@ def deactivate(parser, args):
     if args.all:
         if pkg.extendable:
             tty.msg("Deactivating all extensions of %s" % pkg.spec.short_spec)
-            ext_pkgs = spack.installed_db.installed_extensions_for(spec)
+            ext_pkgs = spack.install_area.db.installed_extensions_for(spec)
 
             for ext_pkg in ext_pkgs:
                 ext_pkg.spec.normalize()

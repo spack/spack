@@ -32,7 +32,7 @@ from llnl.util.lang import attr_setdefault
 import spack
 import spack.spec
 import spack.config
-
+import spack.install_area
 #
 # Settings for commands that modify configuration
 #
@@ -133,7 +133,7 @@ def elide_list(line_list, max_num=10):
 
 
 def disambiguate_spec(spec):
-    matching_specs = spack.installed_db.query(spec)
+    matching_specs = spack.install_area.db.query(spec)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
