@@ -301,7 +301,6 @@ class Database(object):
 
         """
         with self.write_transaction():
-            print "reindex"
             old_data = self._data
             try:
                 self._data = {}
