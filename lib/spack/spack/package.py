@@ -889,8 +889,8 @@ class Package(object):
             elif install_policy == "download":
                 tty.die("Download of binary package for %s failed." %self.name)
             else:
-                pass
-                
+                tty.warn("No binary package for %s found." %self.name)
+
         if not fake and not install_binary:
             if not skip_patch:
                 self.do_patch()

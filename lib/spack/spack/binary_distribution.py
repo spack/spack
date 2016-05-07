@@ -66,22 +66,16 @@ def download_tarball(package):
     Download binary tarball for given package into stage area
     Return True if successful 
     """
-    try:
-        download_url = os.environ["SPACK_DOWNLOAD_URL"]
-    except KeyError:
-        tty.die("Please set the SPACK_DOWNLOAD_URL environment variable for downloading pre-compiled packages.")   
-          
-    tarball = tarball_name(package.spec)
-    remote_tarball = os.path.join(download_url, tarball)
-    
+    if len(spack.config.get_config('mirrors')) == 0:
+        tty.die("Please add a spack mirror to allow download of pre-compiled packages.")
+
     # stage the tarball into standard place
-    # TODO: may make this a part of the package class
-    stage = Stage(remote_tarball,name=package.stage.path)   
+    tarball = tarball_name(package.spec)
+    stage = Stage(tarball,name=package.stage.path,mirror_path=tarball)
     try: 
-      stage.fetch()
+      stage.fetch(mirror_only = True)
       return True
     except fs.FetchError:
-      tty.warn("No binary package for %s found." %package.name)
       return False
 
 def extract_tarball(package):
