@@ -69,7 +69,7 @@ def get_full_system_from_platform():
     system = platform.system()
     if system == "Linux":
         pf = platform.linux_distribution(full_distribution_name=0)[0]
-        version = platform.linux_distribution(full_distribution_name=0)[1].split(".")[0]
+        version = platform.linux_distribution(full_distribution_name=0)[1]
     elif system == "Darwin":
         pf = "macos10"
         version = platform.mac_ver()[0].split(".")[1]
