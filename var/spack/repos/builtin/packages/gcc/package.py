@@ -38,6 +38,7 @@ class Gcc(Package):
     list_url = 'http://open-source-box.org/gcc/'
     list_depth = 2
 
+    version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
     version('5.3.0', 'c9616fd448f980259c31de613e575719')
     version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
     version('4.9.3', '6f831b4d251872736e8e9cc09746f327')

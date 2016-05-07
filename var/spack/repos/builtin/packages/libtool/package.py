@@ -8,6 +8,8 @@ class Libtool(Package):
     version('2.4.6' , 'addf44b646ddb4e3919805aa88fa7c5e')
     version('2.4.2' , 'd2f3b7d4627e69e13514a40e72a24d50')
 
+    depends_on('m4')
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
 
