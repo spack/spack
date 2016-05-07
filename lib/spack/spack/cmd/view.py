@@ -1,8 +1,3 @@
-'''
-Produce a file-system "view" of a Spack DAG.
-
-Concept from Nix, implemented by brett.viren@gmail.com ca 2016.
-'''
 ##############################################################################
 # Copyright (c) 2013, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -27,6 +22,45 @@ Concept from Nix, implemented by brett.viren@gmail.com ca 2016.
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+'''Produce a "view" of a Spack DAG.
+
+A "view" is the product of applying a function on a set of package specs.
+
+This set consists of:
+
+- specs resolved from the package names given by the user (the seeds)
+- all depenencies of the seeds unless user specifies `--no-depenencies`
+- less any specs with names matching the regular expressions given by `--exclude`
+
+The `view` command provides a number of functions (the "actions"):
+
+- symlink :: a file system view which is a directory hierarchy that is
+  the union of the hierarchies of the installed packages in the DAG
+  where installed files are referenced via symlinks.  
+
+- hardlink :: like the symlink view but hardlinks are used
+
+- statlink :: a view producing a status report of a symlink or
+  hardlink view.
+
+
+The file system view concept is imspired by Nix, implemented by
+brett.viren@gmail.com ca 2016.
+
+'''
+# Implementation notes:
+#
+# This is implemented as a visitor pattern on the set of package specs.
+#
+# The command line ACTION maps to a visitor_*() function which takes
+# the set of package specs and any args which may be specific to the
+# ACTION.
+#
+# To add a new view:
+# 1. add a new cmd line args sub parser ACTION
+# 2. add any action-specific options/arguments, most likely a list of specs.
+# 3. add a visitor_MYACTION() function
+# 4. add any visitor_MYALIAS assignments to match any command line aliases
 
 import os
 import re
@@ -38,33 +72,48 @@ import llnl.util.tty as tty
 
 description = "Produce a single-rooted directory view of a spec."
 
-def setup_parser(subparser):
-    setup_parser.parser = subparser
+def setup_parser(sp):
+    setup_parser.parser = sp
 
-    sp = subparser.add_subparsers(metavar='ACTION', dest='action')
+    sp.add_argument('-v','--verbose', action='store_true', default=False,
+                    help="Display verbose output.")
+    sp.add_argument('-e','--exclude', action='append', default=[],
+                    help="Exclude packages with names matching the given regex pattern.")
+    sp.add_argument('-d', '--dependencies', choices=['true','false','yes','no'],
+                    default='true',
+                    help="Follow dependencies.")
+
+
+    ssp = sp.add_subparsers(metavar='ACTION', dest='action')
 
     # The action parameterizes the command but in keeping with Spack
     # patterns we make it a subcommand.
-    sps = [
-        sp.add_parser('add', aliases=['link'],
-                      help='Add packages to the view, create view if needed.'),
-        sp.add_parser('remove', aliases=['rm'],
-                      help='Remove packages from the view, and view if empty.'),
-        sp.add_parser('status', aliases=['check'],
-                      help='Check status of packages in the view.')
+    file_system_view_actions = [
+        ssp.add_parser('symlink', aliases=['add','soft'],
+                      help='Add package files to a filesystem view via symbolic links.'),
+        ssp.add_parser('hardlink', aliases=['hard'],
+                      help='Add packages files to a filesystem via via hard links.'),
+        ssp.add_parser('remove', aliases=['rm'],
+                      help='Remove packages from a filesystem view.'),
+        ssp.add_parser('statlink', aliases=['status','check'],
+                      help='Check status of packages in a filesystem view.')
     ]
-
     # All these options and arguments are common to every action.
-    for p in sps:
-        p.add_argument('-e','--exclude', action='append', default=[],
-                       help="exclude any packages which the given re pattern")
-        p.add_argument('--no-dependencies', action='store_true', default=False,
-                       help="just operate on named packages and do not follow dependencies")
-        p.add_argument('prefix', nargs=1,
-                       help="Path to a top-level directory to receive the view.")
-        p.add_argument('specs', nargs=argparse.REMAINDER,
-                       help="specs of packages to expose in the view.")
+    for act in file_system_view_actions:
+        act.add_argument('path', nargs=1,
+                         help="Path to file system view directory.")
+        act.add_argument('specs', metavar='spec', nargs='+', 
+                         help="Seed specs of the packages to view.")
         
+    ## Other VIEW ACTIONS might be added here.
+    ## Some ideas are the following (and some are redundant with existing cmds)
+    ## A JSON view that dumps a DAG to a JSON file
+    ## A DOT view that dumps to a GraphViz file 
+    ## A SHELL INIT view that dumps bash/csh script setting up to use packages in the view
+    return
+
+
+### Util functions
 
 def assuredir(path):
     'Assure path exists as a directory'
@@ -79,7 +128,6 @@ def relative_to(prefix, path):
         reldir = reldir[1:]
     return reldir
 
-    
 def transform_path(spec, path, prefix=None):
     'Return the a relative path corresponding to given path spec.prefix'
     if os.path.isabs(path):
@@ -92,66 +140,6 @@ def transform_path(spec, path, prefix=None):
         path = os.path.join(prefix, path)
     return path
 
-def action_status(spec, prefix):
-    'Check status of view in prefix against spec'
-    dotspack = os.path.join(prefix, '.spack', spec.name)
-    if os.path.exists(os.path.join(dotspack)):
-        tty.info("Package added: %s"%spec.name)
-        return
-    tty.info("Package missing: %s"%spec.name)
-    return
-
-def action_remove(spec, prefix):
-    'Remove any files found in spec from prefix and purge empty directories.'
-
-    if not os.path.exists(prefix):
-        return
-
-    dotspack = transform_path(spec, '.spack', prefix)
-    if not os.path.exists(dotspack):
-        tty.info("Skipping nonexistent package %s"%spec.name)
-        return
-
-    tty.info("remove %s"%spec.name)
-    for dirpath,dirnames,filenames in os.walk(spec.prefix):
-        if not filenames:
-            continue
-
-        targdir = transform_path(spec, dirpath, prefix)
-        for fname in filenames:
-            src = os.path.join(dirpath, fname)
-            dst = os.path.join(targdir, fname)
-            if not os.path.exists(dst):
-                #tty.warn("Skipping nonexistent file for view: %s" % dst)
-                continue
-            os.unlink(dst)
-
-def action_link(spec, prefix):
-    'Symlink all files in `spec` into directory `prefix`.'
-
-    dotspack = transform_path(spec, '.spack', prefix)
-    if os.path.exists(dotspack):
-        tty.warn("Skipping previously added package %s"%spec.name)
-        return
-
-    tty.info("link %s" % spec.name)
-    for dirpath,dirnames,filenames in os.walk(spec.prefix):
-        if not filenames:
-            continue        # avoid explicitly making empty dirs
-
-        targdir = transform_path(spec, dirpath, prefix)
-        assuredir(targdir)
-
-        for fname in filenames:
-            src = os.path.join(dirpath, fname)
-            dst = os.path.join(targdir, fname)
-            if os.path.exists(dst):
-                if '.spack' in dst.split(os.path.sep):
-                    continue    # silence these
-                tty.warn("Skipping existing file for view: %s" % dst)
-                continue
-            os.symlink(src,dst)
-
 def purge_empty_directories(path):
     'Ascend up from the leaves accessible from `path` and remove empty directories.'
     for dirpath, subdirs, files in os.walk(path, topdown=False):
@@ -160,58 +148,144 @@ def purge_empty_directories(path):
             try:
                 os.rmdir(sdp)
             except OSError:
-                #tty.warn("Not removing directory with contents: %s" % sdp)
                 pass
 
-
-
-
-def view_action(action, parser, args):
-    'The view command parameterized by the action.'
-    to_exclude = [re.compile(e) for e in args.exclude]
+def filter_exclude(specs, exclude):
+    'Filter specs given sequence of exclude regex'
+    to_exclude = [re.compile(e) for e in exclude]
     def exclude(spec):
         for e in to_exclude:
             if e.match(spec.name):
                 return True
         return False
+    return [s for s in specs if not exclude(s)]
 
-    specs = spack.cmd.parse_specs(args.specs, normalize=True, concretize=True)
-    if not specs:
-        parser.print_help()
-        return 1
-
-    prefix = args.prefix[0]
-    assuredir(prefix)
-
+def flatten(seeds, descend=True):
+    'Normalize and flattend seed specs and descend hiearchy'
     flat = set()
-    for spec in specs:
-        if args.no_dependencies:
+    for spec in seeds:
+        if not descend:
             flat.add(spec)
             continue
         flat.update(spec.normalized().traverse())
+    return flat
 
-    for spec in flat:
-        if exclude(spec):
-            tty.info('Skipping excluded package: "%s"' % spec.name)
+
+### Action-specific helpers
+
+def check_one(spec, path, verbose=False):
+    'Check status of view in path against spec'
+    dotspack = os.path.join(path, '.spack', spec.name)
+    if os.path.exists(os.path.join(dotspack)):
+        tty.info('Package in view: "%s"'%spec.name)
+        return
+    tty.info('Package not in view: "%s"'%spec.name)
+    return
+
+def remove_one(spec, path, verbose=False):
+    'Remove any files found in `spec` from `path` and purge empty directories.'
+
+    if not os.path.exists(path):
+        return                  # done, short circuit
+
+    dotspack = transform_path(spec, '.spack', path)
+    if not os.path.exists(dotspack):
+        if verbose:
+            tty.info('Skipping nonexistent package: "%s"'%spec.name)
+        return
+
+    if verbose:
+        tty.info('Removing package: "%s"'%spec.name)
+    for dirpath,dirnames,filenames in os.walk(spec.prefix):
+        if not filenames:
             continue
-        if not os.path.exists(spec.prefix):
-            tty.warn('Skipping unknown package: %s in %s' % (spec.name, spec.prefix))
-            continue
-        action(spec, prefix)
+        targdir = transform_path(spec, dirpath, path)
+        for fname in filenames:
+            dst = os.path.join(targdir, fname)
+            if not os.path.exists(dst):
+                continue
+            os.unlink(dst)
 
-    if args.action in ['remove','rm']:
-        purge_empty_directories(prefix)
+def link_one(spec, path, link = os.symlink, verbose=False):
+    'Link all files in `spec` into directory `path`.'
 
+    dotspack = transform_path(spec, '.spack', path)
+    if os.path.exists(dotspack):
+        tty.warn('Skipping existing package: "%s"'%spec.name)
+        return
+
+    if verbose:
+        tty.info('Linking package: "%s"' % spec.name)
+    for dirpath,dirnames,filenames in os.walk(spec.prefix):
+        if not filenames:
+            continue        # avoid explicitly making empty dirs
+
+        targdir = transform_path(spec, dirpath, path)
+        assuredir(targdir)
+
+        for fname in filenames:
+            src = os.path.join(dirpath, fname)
+            dst = os.path.join(targdir, fname)
+            if os.path.exists(dst):
+                if '.spack' in dst.split(os.path.sep):
+                    continue    # silence these
+                tty.warn("Skipping existing file: %s" % dst)
+                continue
+            link(src,dst)
+
+
+### The canonically named visitor_* functions and their alias maps.
+### One for each action.
+
+def visitor_symlink(specs, args):
+    'Symlink all files found in specs'
+    path = args.path[0]
+    assuredir(path)
+    for spec in specs:
+        link_one(spec, path, verbose=args.verbose)
+visitor_add = visitor_symlink
+visitor_soft = visitor_symlink
+
+def visitor_hardlink(specs, args):
+    'Hardlink all files found in specs'
+    path = args.path[0]
+    assuredir(path)
+    for spec in specs:
+        link_one(spec, path, os.link, verbose=args.verbose)
+visitor_hard = visitor_hardlink
+
+def visitor_remove(specs, args):
+    'Remove all files and directories found in specs from args.path'
+    path = args.path[0]
+    for spec in specs:
+        remove_one(spec, path, verbose=args.verbose)
+    purge_empty_directories(path)
+visitor_rm = visitor_remove
+
+def visitor_statlink(specs, args):
+    'Give status of view in args.path relative to specs'
+    path = args.path[0]
+    for spec in specs:
+        check_one(spec, path, verbose=args.verbose)
+visitor_status = visitor_statlink
+visitor_check = visitor_statlink
+
+
+# Finally, the actual "view" command.  There should be no need to
+# modify anything below when new actions are added.
 
 
 def view(parser, args):
-    'The view command.'
-    action = {
-        'add': action_link,
-        'link': action_link,
-        'remove': action_remove,
-        'rm': action_remove,
-        'status': action_status,
-        'check': action_status
-        }[args.action]
-    view_action(action, parser, args)
+    'Produce a view of a set of packages.'
+
+    # Process common args 
+    seeds = [spack.cmd.disambiguate_spec(s) for s in args.specs]
+    specs = flatten(seeds, args.dependencies.lower() in ['yes','true'])
+    specs = filter_exclude(specs, args.exclude)
+    
+    # Execute the visitation.
+    try:
+        visitor = globals()['visitor_' + args.action]
+    except KeyError:
+        tty.error('Unknown action: "%s"' % args.action)
+    visitor(specs, args)

@@ -9,6 +9,7 @@ class TestA(Package):
     """The test-a package"""
 
     url = 'file://'+source
+    homepage = "http://www.example.com/"
 
     version('0.0', '4e823d0af4154fcf52b75dad41b7fd63')
 
