@@ -123,7 +123,7 @@ class Mvapich2(Package):
                 count += 1
         if count > 1:
             raise RuntimeError('network variants are mutually exclusive (only one can be selected at a time)')
-
+        network_options = []
         # From here on I can suppose that only one variant has been selected
         if self.enabled(Mvapich2.PSM) in spec:
             network_options = ["--with-device=ch3:psm"]
@@ -139,6 +139,19 @@ class Mvapich2(Package):
             network_options = ["--with-device=ch3:mrail", "--with-rdma=gen2"]
 
         configure_args.extend(network_options)
+
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        spack_env.set('MPICH_CC', spack_cc)
+        spack_env.set('MPICH_CXX', spack_cxx)
+        spack_env.set('MPICH_F77', spack_f77)
+        spack_env.set('MPICH_F90', spack_fc)
+        spack_env.set('MPICH_FC', spack_fc)
+
+    def setup_dependent_package(self, module, dep_spec):
+        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
+        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+        self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
     def install(self, spec, prefix):
         # we'll set different configure flags depending on our environment

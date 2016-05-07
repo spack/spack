@@ -37,7 +37,8 @@ class Hdf5(Package):
     list_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
 
-    version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618')
+    version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
+    version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618', preferred=True)
     version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
 
@@ -46,7 +47,6 @@ class Hdf5(Package):
 
     variant('cxx', default=True, description='Enable C++ support')
     variant('fortran', default=True, description='Enable Fortran support')
-    variant('unsupported', default=True, description='Enables unsupported configuration options')
 
     variant('mpi', default=False, description='Enable MPI support')
     variant('szip', default=False, description='Enable szip support')
@@ -74,27 +74,37 @@ class Hdf5(Package):
         self.validate(spec)
         # Handle compilation after spec validation
         extra_args = []
-        if '+debug' in spec:
-            extra_args.append('--enable-debug=all')
+
+        # Always enable this option. This does not actually enable any
+        # features: it only *allows* the user to specify certain
+        # combinations of other arguments. Enabling it just skips a
+        # sanity check in configure, so this doesn't merit a variant.
+        extra_args.append("--enable-unsupported")
+
+        if spec.satisfies('@1.10:'):
+            if '+debug' in spec:
+                extra_args.append('--enable-build-mode=debug')
+            else:
+                extra_args.append('--enable-build-mode=production')
         else:
-            extra_args.append('--enable-production')
+            if '+debug' in spec:
+                extra_args.append('--enable-debug=all')
+            else:
+                extra_args.append('--enable-production')
 
         if '+shared' in spec:
             extra_args.append('--enable-shared')
         else:
             extra_args.append('--enable-static-exec')
 
-        if '+unsupported' in spec:
-            extra_args.append("--enable-unsupported")
-
         if '+cxx' in spec:
             extra_args.append('--enable-cxx')
 
         if '+fortran' in spec:
-            extra_args.extend([
-                '--enable-fortran',
-                '--enable-fortran2003'
-            ])
+            extra_args.append('--enable-fortran')
+            # '--enable-fortran2003' no longer exists as of version 1.10.0
+            if spec.satisfies('@:1.8.16'):
+                extra_args.append('--enable-fortran2003')
 
         if '+mpi' in spec:
             # The HDF5 configure script warns if cxx and mpi are enabled
@@ -136,5 +146,7 @@ class Hdf5(Package):
             return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + v + ".tar.gz"
         elif version < Version("1.7"):
             return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + version.up_to(2) + "/hdf5-" + v + ".tar.gz"
-        else:
+        elif version < Version("1.10"):
             return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + v + "/src/hdf5-" + v + ".tar.gz"
+        else:
+            return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + version.up_to(2) + "/hdf5-" + v + "/src/hdf5-" + v + ".tar.gz"

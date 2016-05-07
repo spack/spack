@@ -25,9 +25,13 @@
 __all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree',
            'expand_user', 'working_dir', 'touch', 'touchp', 'mkdirp',
            'force_remove', 'join_path', 'ancestor', 'can_access', 'filter_file',
-           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink']
+           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
+           'set_executable', 'copy_mode', 'unset_executable_mode',
+           'remove_dead_links', 'remove_linked_tree', 'find_library_path',
+           'fix_darwin_install_name']
 
 import os
+import glob
 import sys
 import re
 import shutil
@@ -36,6 +40,7 @@ import errno
 import getpass
 from contextlib import contextmanager, closing
 from tempfile import NamedTemporaryFile
+import subprocess
 
 import llnl.util.tty as tty
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
@@ -152,15 +157,28 @@ def set_install_permissions(path):
 def copy_mode(src, dest):
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
-    if src_mode | stat.S_IXUSR: dest_mode |= stat.S_IXUSR
-    if src_mode | stat.S_IXGRP: dest_mode |= stat.S_IXGRP
-    if src_mode | stat.S_IXOTH: dest_mode |= stat.S_IXOTH
+    if src_mode & stat.S_IXUSR: dest_mode |= stat.S_IXUSR
+    if src_mode & stat.S_IXGRP: dest_mode |= stat.S_IXGRP
+    if src_mode & stat.S_IXOTH: dest_mode |= stat.S_IXOTH
     os.chmod(dest, dest_mode)
+
+
+def unset_executable_mode(path):
+    mode = os.stat(path).st_mode
+    mode &= ~stat.S_IXUSR
+    mode &= ~stat.S_IXGRP
+    mode &= ~stat.S_IXOTH
+    os.chmod(path, mode)
 
 
 def install(src, dest):
     """Manually install a file to a particular location."""
     tty.debug("Installing %s to %s" % (src, dest))
+
+    # Expand dsst to its eventual full path if it is a directory.
+    if os.path.isdir(dest):
+        dest = join_path(dest, os.path.basename(src))
+
     shutil.copy(src, dest)
     set_install_permissions(dest)
     copy_mode(src, dest)
@@ -235,7 +253,7 @@ def touchp(path):
 def force_symlink(src, dest):
     try:
         os.symlink(src, dest)
-    except OSError, e:
+    except OSError as e:
         os.remove(dest)
         os.symlink(src, dest)
 
@@ -339,3 +357,82 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
     if order == 'post':
         yield (source_path, dest_path)
+
+
+def set_executable(path):
+    st = os.stat(path)
+    os.chmod(path, st.st_mode | stat.S_IEXEC)
+
+
+def remove_dead_links(root):
+    """
+    Removes any dead link that is present in root
+
+    Args:
+        root: path where to search for dead links
+
+    """
+    for file in os.listdir(root):
+        path = join_path(root, file)
+        if os.path.islink(path):
+            real_path = os.path.realpath(path)
+            if not os.path.exists(real_path):
+                os.unlink(path)
+
+def remove_linked_tree(path):
+    """
+    Removes a directory and its contents.  If the directory is a
+    symlink, follows the link and removes the real directory before
+    removing the link.
+
+    Args:
+        path: directory to be removed
+
+    """
+    if os.path.exists(path):
+        if os.path.islink(path):
+            shutil.rmtree(os.path.realpath(path), True)
+            os.unlink(path)
+        else:
+            shutil.rmtree(path, True)
+
+
+def fix_darwin_install_name(path):
+    """
+    Fix install name of dynamic libraries on Darwin to have full path.
+    There are two parts of this task:
+    (i) use install_name('-id',...) to change install name of a single lib;
+    (ii) use install_name('-change',...) to change the cross linking between libs.
+    The function assumes that all libraries are in one folder and currently won't
+    follow subfolders.
+
+    Args:
+        path: directory in which .dylib files are alocated
+
+    """
+    libs = glob.glob(join_path(path,"*.dylib"))
+    for lib in libs:
+        # fix install name first:
+        subprocess.Popen(["install_name_tool", "-id",lib,lib], stdout=subprocess.PIPE).communicate()[0]
+        long_deps = subprocess.Popen(["otool", "-L",lib], stdout=subprocess.PIPE).communicate()[0].split('\n')
+        deps = [dep.partition(' ')[0][1::] for dep in long_deps[2:-1]]
+        # fix all dependencies:
+        for dep in deps:
+            for loc in libs:
+                if dep == os.path.basename(loc):
+                    subprocess.Popen(["install_name_tool", "-change",dep,loc,lib], stdout=subprocess.PIPE).communicate()[0]
+                    break
+
+
+def find_library_path(libname, *paths):
+    """Searches for a file called <libname> in each path.
+
+    Return:
+      directory where the library was found, if found.  None otherwise.
+
+    """
+    for path in paths:
+        library = join_path(path, libname)
+        if os.path.exists(library):
+            return path
+    return None

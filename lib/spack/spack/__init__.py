@@ -82,6 +82,20 @@ from spack.directory_layout import YamlDirectoryLayout
 install_layout = YamlDirectoryLayout(install_path)
 
 #
+# This controls how packages are sorted when trying to choose
+# the most preferred package.  More preferred packages are sorted
+# first.
+#
+from spack.preferred_packages import PreferredPackages
+pkgsort = PreferredPackages()
+
+#
+# This tests ABI compatibility between packages
+#
+from spack.abi import ABI
+abi = ABI()
+
+#
 # This controls how things are concretized in spack.
 # Replace it with a subclass if you want different
 # policies.
@@ -122,9 +136,7 @@ for path in _tmp_candidates:
     # don't add a second username if it's already unique by user.
     if not _tmp_user in path:
         tmp_dirs.append(join_path(path, '%u', 'spack-stage'))
-
-for path in _tmp_candidates:
-    if not path in tmp_dirs:
+    else:
         tmp_dirs.append(join_path(path, 'spack-stage'))
 
 # Whether spack should allow installation of unsafe versions of
@@ -174,3 +186,10 @@ __all__ += spack.directives.__all__
 import spack.util.executable
 from spack.util.executable import *
 __all__ += spack.util.executable.__all__
+
+from spack.package import \
+    install_dependency_symlinks, flatten_dependencies, DependencyConflictError, \
+    InstallError, ExternalPackageError
+__all__ += [
+    'install_dependency_symlinks', 'flatten_dependencies', 'DependencyConflictError',
+    'InstallError', 'ExternalPackageError']

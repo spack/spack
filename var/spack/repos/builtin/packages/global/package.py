@@ -11,6 +11,7 @@ class Global(Package):
     version('6.5', 'dfec818b4f53d91721e247cf7b218078')
 
     depends_on('exuberant-ctags')
+    depends_on('ncurses')
 
     def install(self, spec, prefix):
         config_args = ['--prefix={0}'.format(prefix)]

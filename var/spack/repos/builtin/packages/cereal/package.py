@@ -1,4 +1,5 @@
 from spack import *
+import os
 import shutil
 
 class Cereal(Package):
@@ -30,5 +31,8 @@ class Cereal(Package):
         # Install
         shutil.rmtree(join_path(prefix, 'doc'), ignore_errors=True)
         shutil.rmtree(join_path(prefix, 'include'), ignore_errors=True)
+        shutil.rmtree(join_path(prefix, 'lib'), ignore_errors=True)
         shutil.copytree('doc', join_path(prefix, 'doc'), symlinks=True)
         shutil.copytree('include', join_path(prefix, 'include'), symlinks=True)
+        # Create empty directory to avoid linker warnings later
+        os.mkdir(join_path(prefix, 'lib'))

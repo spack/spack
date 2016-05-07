@@ -26,12 +26,8 @@ import os
 import shutil
 
 from llnl.util.filesystem import *
-
-import spack
-from spack.version import ver
 from spack.stage import Stage
 from spack.util.executable import which
-
 
 #
 # VCS Systems used by mock repo code.

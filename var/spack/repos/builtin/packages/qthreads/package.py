@@ -16,7 +16,12 @@ class Qthreads(Package):
 
     version('1.10', '5af8c8bbe88c2a6d45361643780d1671')
 
+    patch("ldflags.patch")
+    patch("restrict.patch")
+    patch("trap.patch")
+
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure("--prefix=%s" % prefix,
+                  "--enable-guard-pages")
         make()
         make("install")

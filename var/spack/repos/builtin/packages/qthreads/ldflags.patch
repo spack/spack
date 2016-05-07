@@ -1,0 +1,11 @@
+--- a/configure
++++ b/configure
+@@ -40456,7 +40456,7 @@
+   hwloc_saved_LDFLAGS="$LDFLAGS"
+   if test "x$with_hwloc" != x; then
+   CPPFLAGS="-I$with_hwloc/include $CPPFLAGS"
+-		 LDFLAGS="-L$with_hwloc/lib $CPPFLAGS"
++		 LDFLAGS="-L$with_hwloc/lib $LDFLAGS"
+ fi
+   
+   

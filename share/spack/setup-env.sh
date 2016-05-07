@@ -1,4 +1,4 @@
-##############################################################################
+#####################################################################
 # Copyright (c) 2013, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -84,7 +84,10 @@ function spack {
             if [ "$_sp_arg" = "-h" ]; then
                 command spack cd -h
             else
-                cd $(spack location $_sp_arg "$@")
+                LOC="$(spack location $_sp_arg "$@")"
+                if [[ -d "$LOC" ]] ; then
+                    cd "$LOC"
+                fi
             fi
             return
             ;;
@@ -141,7 +144,7 @@ function _spack_pathadd {
     fi
 
     # Do the actual prepending here.
-    eval "_pa_oldvalue=\$${_pa_varname}"
+    eval "_pa_oldvalue=\${${_pa_varname}:-}"
 
     if [ -d "$_pa_new_path" ] && [[ ":$_pa_oldvalue:" != *":$_pa_new_path:"* ]]; then
         if [ -n "$_pa_oldvalue" ]; then

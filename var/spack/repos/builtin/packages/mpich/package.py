@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class Mpich(Package):
     """MPICH is a high performance and widely portable implementation of
        the Message Passing Interface (MPI) standard."""
@@ -46,14 +47,18 @@ class Mpich(Package):
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
-    def setup_dependent_environment(self, module, spec, dep_spec):
-        """For dependencies, make mpicc's use spack wrapper."""
-        os.environ['MPICH_CC']  = os.environ['CC']
-        os.environ['MPICH_CXX'] = os.environ['CXX']
-        os.environ['MPICH_F77'] = os.environ['F77']
-        os.environ['MPICH_F90'] = os.environ['FC']
-        os.environ['MPICH_FC'] = os.environ['FC']
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.set('MPICH_CC', spack_cc)
+        spack_env.set('MPICH_CXX', spack_cxx)
+        spack_env.set('MPICH_F77', spack_f77)
+        spack_env.set('MPICH_F90', spack_fc)
+        spack_env.set('MPICH_FC', spack_fc)
 
+    def setup_dependent_package(self, module, dep_spec):
+        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
+        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+        self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
     def install(self, spec, prefix):
         config_args = ["--prefix=" + prefix,
@@ -73,6 +78,9 @@ class Mpich(Package):
 
         if not self.compiler.fc:
             config_args.append("--disable-fc")
+
+        if not self.compiler.fc and not self.compiler.f77:
+            config_args.append("--disable-fortran")
 
         configure(*config_args)
         make()

@@ -19,7 +19,7 @@ written in pure Python, and specs allow package authors to write a
 single build script for many different builds of the same package.
 
 See the
-[Feature Overview](http://llnl.github.io/spack/features.html)
+[Feature Overview](http://software.llnl.gov/spack/features.html)
 for examples and highlights.
 
 To install spack and install your first package:
@@ -31,7 +31,7 @@ To install spack and install your first package:
 Documentation
 ----------------
 
-[**Full documentation**](http://llnl.github.io/spack) for Spack is
+[**Full documentation**](http://software.llnl.gov/spack) for Spack is
 the first place to look.
 
 See also:
@@ -59,7 +59,8 @@ can join it here:
 
 At the moment, contributing to Spack is relatively simple.  Just send us
 a [pull request](https://help.github.com/articles/using-pull-requests/).
-When you send your request, make ``develop`` the destination branch.
+When you send your request, make ``develop`` the destination branch on the
+[Spack repository](https://github.com/LLNL/spack).
 
 Spack is using a rough approximation of the [Git
 Flow](http://nvie.com/posts/a-successful-git-branching-model/)

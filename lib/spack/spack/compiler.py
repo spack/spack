@@ -97,6 +97,9 @@ class Compiler(object):
     # argument used to get C++11 options
     cxx11_flag = "-std=c++11"
 
+    # argument used to get C++14 options
+    cxx14_flag = "-std=c++1y"
+
 
     def __init__(self, cspec, cc, cxx, f77, fc):
         def check(exe):
@@ -256,12 +259,12 @@ class Compiler(object):
 
 
     def __repr__(self):
-        """Return a string represntation of the compiler toolchain."""
+        """Return a string representation of the compiler toolchain."""
         return self.__str__()
 
 
     def __str__(self):
-        """Return a string represntation of the compiler toolchain."""
+        """Return a string representation of the compiler toolchain."""
         return "%s(%s)" % (
             self.name, '\n     '.join((str(s) for s in (self.cc, self.cxx, self.f77, self.fc))))
 

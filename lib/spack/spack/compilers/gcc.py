@@ -40,7 +40,8 @@ class Gcc(Compiler):
     fc_names = ['gfortran']
 
     # MacPorts builds gcc versions with prefixes and -mp-X.Y suffixes.
-    suffixes = [r'-mp-\d\.\d']
+    # Homebrew and Linuxes may build gcc with -X, -X.Y suffixes
+    suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d']
 
     # Named wrapper links within spack.build_env_path
     link_paths = {'cc'  : 'gcc/gcc',
@@ -53,9 +54,16 @@ class Gcc(Compiler):
         if self.version < ver('4.3'):
             tty.die("Only gcc 4.3 and above support c++11.")
         elif self.version < ver('4.7'):
-            return "-std=gnu++0x"
+            return "-std=c++0x"
         else:
-            return "-std=gnu++11"
+            return "-std=c++11"
+
+    @property
+    def cxx14_flag(self):
+        if self.version < ver('4.8'):
+            tty.die("Only gcc 4.8 and above support c++14.")
+        else:
+            return "-std=c++14"
 
     @classmethod
     def fc_version(cls, fc):

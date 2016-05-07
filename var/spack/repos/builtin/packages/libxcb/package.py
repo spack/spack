@@ -14,6 +14,9 @@ class Libxcb(Package):
     depends_on("python")
     depends_on("xcb-proto")
 
+    # depends_on('pthread')    # Ubuntu: apt-get install libpthread-stubs0-dev
+    # depends_on('xau')        # Ubuntu: apt-get install libxau-dev
+
     def patch(self):
         filter_file('typedef struct xcb_auth_info_t {', 'typedef struct {', 'src/xcb.h')
 

@@ -23,11 +23,10 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-from filecmp import dircmp
-
 import spack
 import spack.mirror
-from spack.util.compression import decompressor_for
+
+from filecmp import dircmp
 from spack.test.mock_packages_test import *
 from spack.test.mock_repo import *
 
@@ -74,14 +73,14 @@ class MirrorTest(MockPackagesTest):
 
 
     def check_mirror(self):
-        stage = Stage('spack-mirror-test')
-        mirror_root = join_path(stage.path, 'test-mirror')
+        with Stage('spack-mirror-test') as stage:
+            mirror_root = join_path(stage.path, 'test-mirror')
 
-        # register mirror with spack config
-        mirrors = { 'spack-mirror-test' : 'file://' + mirror_root }
-        spack.config.update_config('mirrors', mirrors)
+            # register mirror with spack config
+            mirrors = { 'spack-mirror-test' : 'file://' + mirror_root }
+            spack.config.update_config('mirrors', mirrors)
 
-        try:
+
             os.chdir(stage.path)
             spack.mirror.create(
                 mirror_root, self.repos, no_checksum=True)
@@ -97,37 +96,28 @@ class MirrorTest(MockPackagesTest):
                 files = os.listdir(subdir)
                 self.assertEqual(len(files), 1)
 
-            # Now try to fetch each package.
-            for name, mock_repo in self.repos.items():
-                spec = Spec(name).concretized()
-                pkg = spec.package
+                # Now try to fetch each package.
+                for name, mock_repo in self.repos.items():
+                    spec = Spec(name).concretized()
+                    pkg = spec.package
 
-                saved_checksum_setting = spack.do_checksum
-                try:
-                    # Stage the archive from the mirror and cd to it.
-                    spack.do_checksum = False
-                    pkg.do_stage(mirror_only=True)
-
-                    # Compare the original repo with the expanded archive
-                    original_path = mock_repo.path
-                    if 'svn' in name:
-                        # have to check out the svn repo to compare.
-                        original_path = join_path(mock_repo.path, 'checked_out')
-                        svn('checkout', mock_repo.url, original_path)
-
-                    dcmp = dircmp(original_path, pkg.stage.source_path)
-
-                    # make sure there are no new files in the expanded tarball
-                    self.assertFalse(dcmp.right_only)
-
-                    # and that all original files are present.
-                    self.assertTrue(all(l in exclude for l in dcmp.left_only))
-
-                finally:
-                    spack.do_checksum = saved_checksum_setting
-                    pkg.do_clean()
-        finally:
-            stage.destroy()
+                    saved_checksum_setting = spack.do_checksum
+                    with pkg.stage:
+                        # Stage the archive from the mirror and cd to it.
+                        spack.do_checksum = False
+                        pkg.do_stage(mirror_only=True)
+                        # Compare the original repo with the expanded archive
+                        original_path = mock_repo.path
+                        if 'svn' in name:
+                            # have to check out the svn repo to compare.
+                            original_path = join_path(mock_repo.path, 'checked_out')
+                            svn('checkout', mock_repo.url, original_path)
+                        dcmp = dircmp(original_path, pkg.stage.source_path)
+                        # make sure there are no new files in the expanded tarball
+                        self.assertFalse(dcmp.right_only)
+                        # and that all original files are present.
+                        self.assertTrue(all(l in exclude for l in dcmp.left_only))
+                        spack.do_checksum = saved_checksum_setting
 
 
     def test_git_mirror(self):

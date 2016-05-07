@@ -6,6 +6,9 @@ class Autoconf(Package):
     url      = "http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz"
 
     version('2.69', '82d05e03b93e45f5a39b828dc9c6c29b')
+    version('2.62', '6c1f3b3734999035d77da5024aab4fbd')
+
+    depends_on("m4")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

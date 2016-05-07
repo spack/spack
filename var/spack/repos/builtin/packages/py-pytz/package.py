@@ -7,6 +7,7 @@ class PyPytz(Package):
 
     version('2014.10', 'eb1cb941a20c5b751352c52486aa1dd7')
     version('2015.4', '417a47b1c432d90333e42084a605d3d8')
+    version('2016.3', 'abae92c3301b27bd8a9f56b14f52cb29')
 
     extends('python')
 
