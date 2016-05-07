@@ -755,8 +755,7 @@ class Spec(object):
         """
         Return a hash of the entire spec DAG, including connectivity.
         """
-        print self, "++"
-        if getattr(self, 'hash', None):
+        if self.hash:
             return self.hash
         else:
             yaml_text = yaml.dump(
@@ -769,8 +768,7 @@ class Spec(object):
 
     def to_node_dict(self):
         params = dict( (name, v.value) for name, v in self.variants.items() )
-        params.update( dict( (name, []) for name in FlagMap.valid_compiler_flags() ) )
-        params.update( dict( (name, value) for name, value in self.compiler_flags.items()) ) #override
+        params.update( dict( (name, value) for name, value in self.compiler_flags.items()) )
         d = {
             'parameters' : params,
             'arch' : self.architecture,
@@ -1646,6 +1644,7 @@ class Spec(object):
         self.variants.spec = self
         self.external = other.external
         self.namespace = other.namespace
+        self.hash = other.hash
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
@@ -1771,7 +1770,8 @@ class Spec(object):
                 self.variants,
                 self.architecture,
                 self.compiler,
-                self.compiler_flags)
+                self.compiler_flags,
+                self.dag_hash())
 
 
     def eq_node(self, other):
@@ -2125,8 +2125,6 @@ class SpecParser(spack.parse.Parser):
 
         if spec_name != '':
             self.check_identifier(spec_name)
-
-        print spec_name, "++"
 
         # This will init the spec without calling __init__.
         spec = Spec.__new__(Spec)
