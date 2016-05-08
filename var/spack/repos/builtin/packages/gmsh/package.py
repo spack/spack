@@ -62,6 +62,9 @@ class Gmsh(Package):
 
         build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path
+        
+        # Prevent GMsh from using its own strange directory structure on OSX
+        options.append('-DENABLE_OS_SPECIFIC_INSTALL=OFF')
 
         if '+shared' in spec:
             options.extend(['-DENABLE_BUILD_SHARED:BOOL=ON',
