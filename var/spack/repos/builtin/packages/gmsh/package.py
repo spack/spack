@@ -36,29 +36,37 @@ class Gmsh(Package):
     homepage = 'http://gmsh.info'
     url = 'http://gmsh.info/src/gmsh-2.11.0-source.tgz'
 
+    version('2.12.0', '7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
     version('2.11.0', 'f15b6e7ac9ca649c9a74440e1259d0db')
 
-    # FIXME : Misses dependencies on gmm, PetsC, TetGen
-
-    variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('debug', default=False, description='Builds the library in debug mode')
-    variant('mpi', default=False, description='Builds MPI support for parser and solver')
-    variant('fltk', default=False, description='Enables the build of the FLTK GUI')
-    variant('hdf5', default=False, description='Enables HDF5 support')
-    variant('compression', default=True, description='Enables IO compression through zlib')
+    variant('shared',      default=True,  description='Enables the build of shared libraries')
+    variant('debug',       default=False, description='Builds the library in debug mode')
+    variant('mpi',         default=False, description='Builds MPI support for parser and solver')
+    variant('fltk',        default=False, description='Enables the build of the FLTK GUI')
+    variant('hdf5',        default=False, description='Enables HDF5 support')
+    variant('compression', default=True,  description='Enables IO compression through zlib')
+    variant('oce',         default=False, description='Build with OCE')
+    variant('petsc',       default=False, description='Build with PETSc')
+    variant('slepc',       default=False, description='Build with SLEPc (only when PETSc is enabled)')
 
     depends_on('blas')
     depends_on('lapack')
+    depends_on('cmake@2.8:')
     depends_on('gmp')
-    depends_on('mpi', when='+mpi')
+    depends_on('mpi',  when='+mpi')
     depends_on('fltk', when='+fltk')  # Assumes OpenGL with GLU is already provided by the system
     depends_on('hdf5', when='+hdf5')
-    depends_on('zlib', when='+compression')
+    depends_on('oce',  when='+oce')
+    depends_on('petsc+mpi', when='+petsc+mpi')
+    depends_on('petsc', when='+petsc~mpi')
+    depends_on('slepc', when='+slepc+petsc')
+    depends_on('zlib',  when='+compression')
 
     def install(self, spec, prefix):
 
         options = []
         options.extend(std_cmake_args)
+        options.extend(['-DENABLE_NATIVE_FILE_CHOOSER=ON'])
 
         build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path
@@ -67,6 +75,39 @@ class Gmsh(Package):
 
         # Prevent GMsh from using its own strange directory structure on OSX
         options.append('-DENABLE_OS_SPECIFIC_INSTALL=OFF')
+
+        # Make sure GMSH picks up correct blas-lapack by providing linker flags:
+        options.append('-DBLAS_LAPACK_LIBRARIES=%s %s' %
+                       (to_link_flags(spec['lapack'].lapack_shared_lib),
+                        to_link_flags(spec['blas'].blas_shared_lib)))
+
+        # Gmsh does not have an option to compile against external metis.
+        # Its own Metis, however, fails to build
+        options.append('-DENABLE_METIS=OFF')
+
+        if '+fltk' in spec:
+            options.append('-DENABLE_FLTK=ON')
+        else:
+            options.append('-DENABLE_FLTK=OFF')
+
+        if '+oce' in spec:
+            env['CASROOT'] = self.spec['oce'].prefix
+            options.extend(['-DENABLE_OCC=ON'])
+        else:
+            options.extend(['-DENABLE_OCC=OFF'])
+
+        if '+petsc' in spec:
+            env['PETSC_DIR'] = self.spec['petsc'].prefix
+            options.extend(['-DENABLE_PETSC=ON'])
+            #env['PETSC_ARCH'] = "real"
+        else:
+            options.extend(['-DENABLE_PETSC=OFF'])
+
+        if '+slepc' in spec:
+            env['SLEPC_DIR'] = self.spec['slepc'].prefix
+            options.extend(['-DENABLE_SLEPC=ON'])
+        else:
+            options.extend(['-DENABLE_SLEPC=OFF'])
 
         if '+shared' in spec:
             options.extend(['-DENABLE_BUILD_SHARED:BOOL=ON',
