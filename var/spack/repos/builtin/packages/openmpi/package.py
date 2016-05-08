@@ -26,6 +26,7 @@ class Openmpi(Package):
     patch('configure.patch', when="@1.10.0:1.10.1")
 
     variant('psm', default=False, description='Build support for the PSM library.')
+    variant('pmi', default=True, description='Build support for PMI-based launchers')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
 
     # TODO : variant support for other schedulers is missing
@@ -66,6 +67,9 @@ class Openmpi(Package):
 
         if '+psm' in spec:
             config_args.append("--with-psm")
+
+        if '+pmi' in spec:
+            config_args.append("--with-pmi") #TODO: let user specify directory when possible
 
         if '+verbs' in spec:
             # Up through version 1.6, this option was previously named --with-openib
