@@ -891,17 +891,10 @@ class Package(object):
             else:
                 tty.warn("No binary package for %s found." %self.name)
 
-        if not fake and not install_binary:
-            if not skip_patch:
-                self.do_patch()
-            else:
-                self.do_stage()
-
         # create the install directory.  The install layout
         # handles this in case so that it can use whatever
         # package naming scheme it likes.
         spack.install_layout.create_install_directory(self.spec)
-
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
@@ -910,7 +903,7 @@ class Package(object):
             """Forked for each build. Has its own process and python
                module space set up by build_environment.fork()."""
             start_time = time.time()
-            if not fake:
+            if not fake and not install_binary:
                 if not skip_patch:
                     self.do_patch()
                 else:
@@ -923,7 +916,6 @@ class Package(object):
                 # Run the pre-install hook in the child process after
                 # the directory is created.
                 spack.hooks.pre_install(self)
-
                 # Set up process's build environment before running install.
                 if install_binary == True:
                   spack.binary_distribution.extract_tarball(self)
