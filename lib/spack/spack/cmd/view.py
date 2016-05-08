@@ -38,11 +38,12 @@ The `view` command provides a number of functions (the "actions"):
   the union of the hierarchies of the installed packages in the DAG
   where installed files are referenced via symlinks.  
 
-- hardlink :: like the symlink view but hardlinks are used
+- hardlink :: like the symlink view but hardlinks are used.
 
 - statlink :: a view producing a status report of a symlink or
   hardlink view.
 
+- format :: a view printing one string per spec following a given format.
 
 The file system view concept is imspired by Nix, implemented by
 brett.viren@gmail.com ca 2016.
@@ -64,6 +65,7 @@ brett.viren@gmail.com ca 2016.
 
 import os
 import re
+import sys
 import argparse
 
 import spack
@@ -86,6 +88,9 @@ def setup_parser(sp):
 
     ssp = sp.add_subparsers(metavar='ACTION', dest='action')
 
+    specs_opts = dict(metavar='spec', nargs='+', 
+                      help="Seed specs of the packages to view.")
+
     # The action parameterizes the command but in keeping with Spack
     # patterns we make it a subcommand.
     file_system_view_actions = [
@@ -102,9 +107,15 @@ def setup_parser(sp):
     for act in file_system_view_actions:
         act.add_argument('path', nargs=1,
                          help="Path to file system view directory.")
-        act.add_argument('specs', metavar='spec', nargs='+', 
-                         help="Seed specs of the packages to view.")
+        act.add_argument('specs', **specs_opts)
         
+    # The formatted print action.
+    act = ssp.add_parser('print',
+                         help="Print a string to stdout based on given format")
+    act.add_argument('format', nargs=1, 
+                     help="Format describing per-package printout.")
+    act.add_argument('specs', **specs_opts)
+
     ## Other VIEW ACTIONS might be added here.
     ## Some ideas are the following (and some are redundant with existing cmds)
     ## A JSON view that dumps a DAG to a JSON file
@@ -170,6 +181,39 @@ def flatten(seeds, descend=True):
         flat.update(spec.normalized().traverse())
     return flat
 
+def spec2dict(spec):
+    'Convert info in a spec into a simple dictionary.'
+
+    # Expclitly convert instead of just returning spec.__dict__ as
+    # some things need processing or are properties.
+    #
+    pkg = spec.package
+    ret = dict(name = spec.name,
+               short = spec.short_spec,
+               cshort = spec.cshort_spec, # color
+               root = spec.root,
+               prefix = spec.prefix,
+               version = spec.version,
+               variants = spec.variants,
+               namespace = spec.namespace,
+               compiler = spec.compiler,
+               architecture = spec.architecture,
+               dependencies = ','.join(spec.dependencies.keys()),
+               dependents = ','.join(spec.dependents.keys()),
+               external = spec.external or "False",
+               hash = spec.dag_hash(),
+
+               # package related:
+               url = pkg.url,
+               stage = pkg.stage.path,
+               installed = pkg.installed,
+               installed_dependents = ','.join([s.name for s in pkg.installed_dependents]),
+               build_log = pkg.build_log_path,
+               rpath = ':'.join(pkg.rpath),
+
+               # ...
+               )
+    return ret
 
 ### Action-specific helpers
 
@@ -269,6 +313,20 @@ def visitor_statlink(specs, args):
         check_one(spec, path, verbose=args.verbose)
 visitor_status = visitor_statlink
 visitor_check = visitor_statlink
+
+def visitor_print(specs, args):
+    'Print a string for each spec using args.format.'
+    fmt = args.format[0]
+    for spec in specs:
+        kwds = spec2dict(spec)
+        try:
+            string = fmt.format(**kwds)
+        except KeyError:
+            tty.error("Format error, use keywords: %s" % (', '.join(kwds.keys()), ))
+            raise
+        # argparser escapes these
+        string = string.replace(r'\n', '\n').replace(r'\t', '\t')
+        sys.stdout.write(string)
 
 
 # Finally, the actual "view" command.  There should be no need to
