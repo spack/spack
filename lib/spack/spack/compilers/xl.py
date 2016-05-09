@@ -24,6 +24,8 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack.compiler import *
+import llnl.util.tty as tty
+from spack.version import ver
 
 class Xl(Compiler):
     # Subclasses use possible names of C compiler
@@ -43,6 +45,10 @@ class Xl(Compiler):
                    'cxx' : 'xl/xlc++',
                    'f77' : 'xl/xlf',
                    'fc'  : 'xl/xlf90' }
+
+    @property
+    def openmp_flag(self):
+        return "-qsmp=omp"
 
     @property
     def cxx11_flag(self):

@@ -94,12 +94,6 @@ class Compiler(object):
     # Names of generic arguments used by this compiler
     arg_rpath   = '-Wl,-rpath,%s'
 
-    # argument used to get C++11 options
-    cxx11_flag = "-std=c++11"
-
-    # argument used to get C++14 options
-    cxx14_flag = "-std=c++1y"
-
 
     def __init__(self, cspec, cc, cxx, f77, fc):
         def check(exe):
@@ -119,6 +113,37 @@ class Compiler(object):
     @property
     def version(self):
         return self.spec.version
+
+    # This property should be overridden in the compiler subclass if
+    # OpenMP is supported by that compiler
+    @property
+    def openmp_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support OpenMP.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
+    # This property should be overridden in the compiler subclass if
+    # C++11 is supported by that compiler
+    @property
+    def cxx11_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support C++11.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
+    # This property should be overridden in the compiler subclass if
+    # C++14 is supported by that compiler
+    @property
+    def cxx14_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support C++14.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
 
     #
     # Compiler classes have methods for querying the version of
