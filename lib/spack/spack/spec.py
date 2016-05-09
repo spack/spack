@@ -566,7 +566,7 @@ class Spec(object):
     #
     @property
     def fullname(self):
-        return '%s.%s' % (self.namespace, self.name) if self.namespace else self.name
+        return '%s.%s' % (self.namespace, self.name) if self.namespace else (self.name if self.name else '')
 
 
     @property
@@ -616,7 +616,7 @@ class Spec(object):
     @staticmethod
     def is_virtual(name):
         """Test if a name is virtual without requiring a Spec."""
-        return name != '' and not spack.repo.exists(name)
+        return (not name is None) and ( not spack.repo.exists(name) )
 
 
     @property
@@ -1044,7 +1044,7 @@ class Spec(object):
            with requirements of its pacakges.  See flatten() and normalize() for
            more details on this.
         """
-        if self.name == "":
+        if not self.name:
             raise SpecError("Attempting to concretize anonymous spec")
 
         if self._concrete:
@@ -1313,7 +1313,7 @@ class Spec(object):
            TODO: normalize should probably implement some form of cycle detection,
            to ensure that the spec is actually a DAG.
         """
-        if self.name == "":
+        if not self.name:
             raise SpecError("Attempting to normalize anonymous spec")
 
         if self._normal and not force:
@@ -1360,7 +1360,7 @@ class Spec(object):
         """
         for spec in self.traverse():
             # Don't get a package for a virtual name.
-            if not spec.virtual and spec.name != '':
+            if (not spec.virtual) and spec.name:
                 spack.repo.get(spec.fullname)
 
             # validate compiler in addition to the package name.
@@ -1381,7 +1381,7 @@ class Spec(object):
         """
         other = self._autospec(other)
 
-        if not (self.name == other.name or self.name == "" or other.name == ""):
+        if not (self.name == other.name or (not self.name) or (not other.name) ):
             raise UnsatisfiableSpecNameError(self.name, other.name)
 
         if other.namespace is not None:
@@ -1485,7 +1485,7 @@ class Spec(object):
 
         try:
             spec = spack.spec.Spec(spec_like)
-            if spec.name == "":
+            if not spec.name:
                 raise SpecError("anonymous package -- this will always be handled")
             return spec
         except SpecError:
@@ -1518,7 +1518,7 @@ class Spec(object):
             return False
 
         # Otherwise, first thing we care about is whether the name matches
-        if self.name != other.name and self.name != "" and other.name != "":
+        if self.name != other.name and (not self.name) and (not other.name):
             return False
 
         # namespaces either match, or other doesn't require one.
@@ -1540,7 +1540,7 @@ class Spec(object):
             return False
 
         var_strict = strict
-        if self.name == "" or other.name == "":
+        if (not self.name) or (not other.name):
             var_strict = True
         if not self.variants.satisfies(other.variants, strict=var_strict):
             return False
@@ -1559,7 +1559,7 @@ class Spec(object):
         # If we need to descend into dependencies, do it, otherwise we're done.
         if deps:
             deps_strict = strict
-            if self.name == "" or other.name == "":
+            if not (self.name and other.name):
                 deps_strict=True
             return self.satisfies_dependencies(other, strict=deps_strict)
         else:
@@ -1872,7 +1872,8 @@ class Spec(object):
                 fmt += 's'
 
                 if c == '_':
-                    out.write(fmt % self.name)
+                    if name = self.name if self.name else ''
+                    out.write(fmt % name)
                 elif c == '.':
                     out.write(fmt % self.fullname)
                 elif c == '@':
@@ -1923,6 +1924,7 @@ class Spec(object):
                     named_str += c
                     continue;
                 if named_str == 'PACKAGE':
+                    name = self.name if self.name else ''
                     write(fmt % self.name, '@')
                 if named_str == 'VERSION':
                     if self.versions and self.versions != _any_version:
@@ -2034,7 +2036,6 @@ class SpecLexer(spack.parse.Lexer):
             # This is more liberal than identifier_re (see above).
             # Checked by check_identifier() for better error messages.
             (r'([\"\'])(?:(?=(\\?))\2.)*?\1',lambda scanner, val: self.token(QT, val)),
-#            (r'([\"\'])([^\1]+?)(\1)',lambda scanner, val: self.token(QT, val)),
             (r'\w[\w.-]*', lambda scanner, val: self.token(ID,    val)),
             (r'\s+',       lambda scanner, val: None)])
 
@@ -2051,12 +2052,12 @@ class SpecParser(spack.parse.Parser):
             while self.next:
                 # TODO: clean this parsing up a bit
                 if self.previous:
-                    specs.append(self.previous.value)
+                    specs.append(self.spec(self.previous.value))
                 if self.accept(ID):
                     self.previous = self.token
                     if self.accept(EQ):
                         if not specs:
-                            specs.append(self.spec(''))
+                            specs.append(self.spec(None))
                         if self.accept(QT):
                             self.token.value = self.token.value[1:-1]
                         else:
@@ -2071,7 +2072,7 @@ class SpecParser(spack.parse.Parser):
                 elif self.accept(DEP):
                     if not specs:
                         self.previous = self.token
-                        specs.append(self.spec(''))
+                        specs.append(self.spec(None))
                         self.previous = None
                     if self.accept(HASH):
                         specs[-1]._add_dependency(self.spec_by_hash())
@@ -2082,7 +2083,7 @@ class SpecParser(spack.parse.Parser):
                 else:
                     # Attempt to construct an anonymous spec, but check that the first token is valid
                     # TODO: Is this check even necessary, or will it all be Lex errors now?
-                    specs.append(self.spec('',True))
+                    specs.append(self.spec(None,True))
 
         except spack.parse.ParseError, e:
             raise SpecParseError(e)
@@ -2107,14 +2108,7 @@ class SpecParser(spack.parse.Parser):
             tty.die("%s does not match any installed packages." %self.token.value)
 
         if len(matches) != 1:
-            tty.error("%s matches multiple installed packages:" %self.token.value)
-            print
-            display_specs(matches, long=True)
-            print
-            print "You can either:"
-            print "  a) Use a more specific hash, or"
-            print "  b) Specify the package by name."
-            sys.exit(1)
+            raise AmbiguousHashError("Multiple packages specify hash %s." % self.token.value, *matches)
 
         return matches[0]
 
@@ -2122,12 +2116,15 @@ class SpecParser(spack.parse.Parser):
     def spec(self, name, check_valid_token = False):
         """Parse a spec out of the input.  If a spec is supplied, then initialize
            and return it instead of creating a new one."""
-        spec_namespace, dot, spec_name = name.rpartition('.')
-        if not spec_namespace:
-            spec_namespace = None
-
-        if spec_name != '':
+        if name:
+            spec_namespace, dot, spec_name = name.rpartition('.')
+            if not spec_namespace:
+                spec_namespace = None
             self.check_identifier(spec_name)
+        else:
+            spec_name = None
+
+
 
         # This will init the spec without calling __init__.
         spec = Spec.__new__(Spec)
@@ -2155,6 +2152,8 @@ class SpecParser(spack.parse.Parser):
                 spec.add_dependency(self.spec_by_hash())
             else:
                 self.expect(ID)
+                if self.accept(EQ):
+                    raise SpecParseError(spack.parse.ParseError("","","Expected dependency received anonymous spec"))
                 spec.add_dependency(self.spec(self.token.value))
 
         while self.next:
@@ -2294,7 +2293,7 @@ def parse_anonymous_spec(spec_like, pkg_name):
         try:
             anon_spec = Spec(spec_like)
             if anon_spec.name != pkg_name:
-                raise SpecParseError(spack.parse.ParseError("","","anon spec created without proper name"))
+                raise SpecParseError(spack.parse.ParseError("","","Expected anonymous spec for package %s but found spec for package %s" % (pkg_name, anon_spec_name) ))
         except SpecParseError:
             anon_spec = Spec(pkg_name + ' ' +  spec_like)
             if anon_spec.name != pkg_name: raise ValueError(
@@ -2470,3 +2469,9 @@ class SpackYAMLError(spack.error.SpackError):
 class SpackRecordError(spack.error.SpackError):
     def __init__(self, msg):
         super(SpackRecordError, self).__init__(msg)
+
+class AmbiguousHashError(SpecError):
+    def __init__(self, msg, *specs):
+        super(AmbiguousHashError, self).__init__(msg)
+        for spec in specs:
+            print '    ', spec.format('$.$@$%@+$+$=$#')

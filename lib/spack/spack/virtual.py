@@ -67,7 +67,7 @@ class ProviderIndex(object):
         if type(spec) != spack.spec.Spec:
             spec = spack.spec.Spec(spec)
 
-        if spec.name == "":
+        if not spec.name:
             # Empty specs do not have a package
             return
 
