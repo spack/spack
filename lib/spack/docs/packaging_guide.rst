@@ -703,6 +703,127 @@ Fetching a revision
 Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the ``url``.
 
+
+.. _license:
+
+Licensed software
+------------------------------------------
+
+In order to install licensed software, Spack needs to know a few more
+details about a package. The following class attributes should be defined.
+
+``license_required``
+~~~~~~~~~~~~~~~~~~~~~
+
+Boolean. If set to ``True``, this software requires a license. If set to
+``False``, all of the following attributes will be ignored. Defaults to
+``False``.
+
+``license_comment``
+~~~~~~~~~~~~~~~~~~~~~
+
+String. Contains the symbol used by the license manager to denote a comment.
+Defaults to ``#``.
+
+``license_files``
+~~~~~~~~~~~~~~~~~~~~~
+
+List of strings. These are files that the software searches for when
+looking for a license. All file paths must be relative to the installation
+directory. More complex packages like Intel may require multiple
+licenses for individual components. Defaults to the empty list.
+
+``license_vars``
+~~~~~~~~~~~~~~~~~~~~~
+
+List of strings. Environment variables that can be set to tell the software
+where to look for a license if it is not in the usual location. Defaults
+to the empty list.
+
+``license_url``
+~~~~~~~~~~~~~~~~~~~~~
+
+String. A URL pointing to license setup instructions for the software.
+Defaults to the empty string.
+
+For example, let's take a look at the package for the PGI compilers.
+
+.. code-block:: python
+
+    # Licensing
+    license_required = True
+    license_comment  = '#'
+    license_files    = ['license.dat']
+    license_vars     = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
+    license_url      = 'http://www.pgroup.com/doc/pgiinstall.pdf'
+
+As you can see, PGI requires a license. Its license manager, FlexNet, uses
+the ``#`` symbol to denote a comment. It expects the license file to be
+named ``license.dat`` and to be located directly in the installation prefix.
+If you would like the installation file to be located elsewhere, simply set
+``PGROUPD_LICENSE_FILE`` or ``LM_LICENSE_FILE`` after installation. For
+further instructions on installation and licensing, see the URL provided.
+
+Let's walk through a sample PGI installation to see exactly what Spack is
+and isn't capable of. Since PGI does not provide a download URL, it must
+be downloaded manually. It can either be added to a mirror or located in
+the current directory when ``spack install pgi`` is run. See :ref:`mirrors`
+for instructions on setting up a mirror.
+
+After running ``spack install pgi``, the first thing that will happen is
+Spack will create a global license file located at
+``$SPACK_ROOT/etc/spack/licenses/pgi/license.dat``. It will then open up the
+file using the editor set in ``$EDITOR``, or vi if unset. It will look like
+this:
+
+.. code-block::
+
+    # A license is required to use pgi.
+    #
+    # The recommended solution is to store your license key in this global
+    # license file. After installation, the following symlink(s) will be
+    # added to point to this file (relative to the installation prefix):
+    #
+    #   license.dat
+    #
+    # Alternatively, use one of the following environment variable(s):
+    #
+    #   PGROUPD_LICENSE_FILE
+    #   LM_LICENSE_FILE
+    #
+    # If you choose to store your license in a non-standard location, you may
+    # set one of these variable(s) to the full pathname to the license file, or
+    # port@host if you store your license keys on a dedicated license server.
+    # You will likely want to set this variable in a module file so that it
+    # gets loaded every time someone tries to use pgi.
+    #
+    # For further information on how to acquire a license, please refer to:
+    #
+    #   http://www.pgroup.com/doc/pgiinstall.pdf
+    #
+    # You may enter your license below.
+
+You can add your license directly to this file, or tell FlexNet to use a
+license stored on a separate license server. Here is an example that
+points to a license server called licman1:
+
+.. code-block::
+
+    SERVER licman1.mcs.anl.gov 00163eb7fba5 27200
+    USE_SERVER
+
+If your package requires the license to install, you can reference the
+location of this global license using ``Package.global_license_file()``.
+After installation, symlinks for all of the files given in
+``license_files`` will be created, pointing to this global license.
+If you install a different version or variant of the package, Spack
+will automatically detect and reuse the already existing global license.
+
+If the software you are trying to package doesn't rely on license files,
+Spack will print a warning message, letting the user know that they
+need to set an environment variable or pointing them to installation
+documentation.
+
 .. _patching:
 
 Patches
