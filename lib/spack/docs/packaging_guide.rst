@@ -1803,15 +1803,15 @@ Compile-time library search paths
   * ``-L$dep_prefix/lib``
   * ``-L$dep_prefix/lib64``
 Runtime library search paths (RPATHs)
-  * ``-Wl,-rpath,$dep_prefix/lib``
-  * ``-Wl,-rpath,$dep_prefix/lib64``
+  * ``$rpath_flag$dep_prefix/lib``
+  * ``$rpath_flag$dep_prefix/lib64``
 Include search paths
   * ``-I$dep_prefix/include``
 
 An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
 build will have ``-I$LIBELF_PREFIX/include``,
-``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath,$LIBELF_PREFIX/lib``
+``-L$LIBELF_PREFIX/lib``, and ``$rpath_flag$LIBELF_PREFIX/lib``
 inserted on the command line.  This is done transparently to the
 project's build system, which will just think it's using a system
 where ``libelf`` is readily available.  Because of this, you **do
@@ -1831,6 +1831,14 @@ successfully find ``libdwarf.h`` and ``libdwarf.so``, without the
 packager having to provide ``--with-libdwarf=/path/to/libdwarf`` on
 the command line.
 
+.. note::
+
+    For most compilers, ``$rpath_flag`` is ``-Wl,-rpath,``. However, NAG
+    passes its flags to GCC instead of passing them directly to the linker.
+    Therefore, its ``$rpath_flag`` is doubly wrapped: ``-Wl,-Wl,,-rpath,``.
+    ``$rpath_flag`` can be overriden on a compiler specific basis in
+    ``lib/spack/spack/compilers/$compiler.py``.
+
 Compiler flags
 ~~~~~~~~~~~~~~
 In rare circumstances such as compiling and running small unit tests, a package
@@ -1847,8 +1855,6 @@ package supports additional variants like
 .. code-block:: python
 
    variant('openmp', default=True, description="Enable OpenMP support.")
-
-
 
 Message Parsing Interface (MPI)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
