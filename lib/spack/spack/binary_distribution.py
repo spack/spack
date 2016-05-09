@@ -19,8 +19,9 @@ def prepare():
     """
     dir = os.getcwd()
     patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
-    patchelf = spack.repo.get(patchelf_spec)
-    patchelf.do_install()
+    if not spack.install_layout.check_installed(patchelf_spec):
+        patchelf = spack.repo.get(patchelf_spec)
+        patchelf.do_install()
     os.chdir(dir)
 
 
