@@ -103,7 +103,7 @@ class Scotch(Package):
 
         makefile_inc.append('CCS       = $(CC)')
         makefile_inc.append('CCP       = %s' %
-            (os.path.join(self.spec['mpi'].prefix.bin, 'mpicc') if '+mpi' in self.spec else 'mpicc'))
+            (self.spec['mpi'].mpicc if '+mpi' in self.spec else 'mpicc'))
         makefile_inc.append('CCD       = $(CCS)')
 
         ## Extra Features ##
