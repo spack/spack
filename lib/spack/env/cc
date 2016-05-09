@@ -50,9 +50,10 @@ SPACK_SHORT_SPEC"
 
 # The compiler input variables are checked for sanity later:
 #   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
-# The default compiler flags are passed from the config files:
-#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FFLAGS, SPACK_LDFLAGS, SPACK_LDLIBS
-# Debug flag is optional; set to true for debug logging:
+# The default compiler flags are passed from these variables:
+#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FCFLAGS, SPACK_FFLAGS,
+#   SPACK_LDFLAGS, SPACK_LDLIBS
+# Debug env var is optional; set to true for debug logging:
 #   SPACK_DEBUG
 # Test command is used to unit test the compiler script.
 #   SPACK_TEST_COMMAND
@@ -91,24 +92,24 @@ case "$command" in
     cpp)
         mode=cpp
         ;;
-    cc|gcc|c89|c99|clang|xlc|icc|pgcc)
-        command=("$SPACK_CC")
+    cc|c89|c99|gcc|clang|icc|pgcc|xlc)
+        command="$SPACK_CC"
         language="C"
         lang_flags=C
         ;;
-    c++|CC|g++|clang++|xlC)
-        command=("$SPACK_CXX")
+    c++|CC|g++|clang++|icpc|pgc++|xlc++)
+        command="$SPACK_CXX"
         language="C++"
         lang_flags=CXX
         ;;
-    f77|xlf)
-        command=("$SPACK_F77")
-        language="Fortran 77"
-        lang_flags=F
-        ;;
-    fc|f90|f95|xlf90|gfortran|ifort|pgfortrn|nagfor)
+    f90|fc|f95|gfortran|ifort|pgfortran|xlf90|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
+        lang_flags=FC
+        ;;
+    f77|gfortran|ifort|pgfortran|xlf|nagfor)
+        command="$SPACK_F77"
+        language="Fortran 77"
         lang_flags=F
         ;;
     ld)
@@ -119,8 +120,10 @@ case "$command" in
         ;;
 esac
 
-# Check for vcheck mode
-if [ -z "$mode" ]; then
+# If any of the arguments below are present, then the mode is vcheck.
+# In vcheck mode, nothing is added in terms of extra search paths or
+# libraries.
+if [[ -z $mode ]]; then
     for arg in "$@"; do
         if [[ $arg == -v || $arg == -V || $arg == --version || $arg == -dumpversion ]]; then
             mode=vcheck
@@ -129,7 +132,7 @@ if [ -z "$mode" ]; then
     done
 fi
 
-# Finish setting the mode
+# Finish setting up the mode.
 if [[ -z $mode ]]; then
     mode=ccld
     for arg in "$@"; do
@@ -179,35 +182,35 @@ fi
 input_command="$@"
 args=("$@")
 
-# Prepend cppflags, cflags, cxxflags, fflags, and ldflags
+# Prepend cppflags, cflags, cxxflags, fcflags, fflags, and ldflags
+
+# Add cppflags
 case "$mode" in
     cppas|cc|ccld)
-        # Add cppflags
         args=(${SPACK_CPPFLAGS[@]} "${args[@]}") ;;
-    *)
-        ;;
 esac
+
+# Add compile flags.
 case "$mode" in
     cc|ccld)
-    # Add c, cxx, and f flags
+    # Add c, cxx, fc, and f flags
         case $lang_flags in
             C)
                 args=(${SPACK_CFLAGS[@]} "${args[@]}") ;;
             CXX)
                 args=(${SPACK_CXXFLAGS[@]} "${args[@]}") ;;
+            FC)
+                args=(${SPACK_FCFLAGS[@]} "${args[@]}") ;;
             F)
                 args=(${SPACK_FFLAGS[@]} "${args[@]}") ;;
         esac
         ;;
-    *)
-        ;;
 esac
+
+# Add ldflags
 case "$mode" in
     ld|ccld)
-        # Add ldflags
         args=(${SPACK_CPPFLAGS[@]} "${args[@]}") ;;
-    *)
-        ;;
 esac
 
 # Read spack dependencies from the path environment variable
@@ -254,8 +257,6 @@ fi
 case "$mode" in
     ld|ccld)
         args=("${args[@]}" ${SPACK_LDLIBS[@]}) ;;
-    *)
-        ;;
 esac
 
 #
@@ -287,7 +288,6 @@ for dir in "${env_path[@]}"; do
 done
 export PATH
 
-#ifdef NEW
 full_command=("$command" "${args[@]}")
 
 # In test command mode, write out full command for Spack tests.
