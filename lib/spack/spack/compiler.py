@@ -119,7 +119,9 @@ class Compiler(object):
     @property
     def openmp_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die("The compiler you have chosen does not currently support OpenMP. If you think it should, please edit the compiler subclass and submit a pull request or issue.")
+        tty.die("The compiler you have chosen does not currently support OpenMP.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
 
 
     # This property should be overridden in the compiler subclass if
@@ -127,14 +129,20 @@ class Compiler(object):
     @property
     def cxx11_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die("The compiler you have chosen does not currently support C++11. If you think it should, please edit the compiler subclass and submit a pull request or issue.")
+        tty.die("The compiler you have chosen does not currently support C++11.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
 
     # This property should be overridden in the compiler subclass if
     # C++14 is supported by that compiler
     @property
     def cxx14_flag(self):
         # If it is not overridden, assume it is not supported and warn the user
-        tty.die("The compiler you have chosen does not currently support C++14. If you think it should, please edit the compiler subclass and submit a pull request or issue.")
+        tty.die("The compiler you have chosen does not currently support C++14.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
 
 
     #
