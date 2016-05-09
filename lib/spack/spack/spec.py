@@ -73,8 +73,8 @@ Here is the EBNF grammar for a spec::
   spec         = id [ options ]
   options      = { @version-list | +variant | -variant | ~variant |
                    %compiler | arch=architecture | [ flag ]=value}
-  flag         = { cflags | cxxflags | fflags | cppflags | ldflags |
-                   ldlibs }
+  flag         = { cflags | cxxflags | fcflags | fflags | cppflags |
+                   ldflags | ldlibs }
   variant      = id
   architecture = id
   compiler     = id [ version-list ]
@@ -112,8 +112,8 @@ import spack
 import spack.parse
 import spack.error
 import spack.compilers as compilers
-import spack.compiler as Compiler
 
+# TODO: move display_specs to some other location.
 from spack.cmd.find import display_specs
 from spack.version import *
 from spack.util.string import *
@@ -377,7 +377,9 @@ class VariantMap(HashableMap):
         return ''.join(str(self[key]) for key in sorted_keys)
 
 
-_valid_compiler_flags = ['cflags', 'cxxflags', 'fflags', 'ldflags', 'ldlibs', 'cppflags']
+_valid_compiler_flags = [
+    'cflags', 'cxxflags', 'fcflags', 'fflags', 'ldflags', 'ldlibs', 'cppflags']
+
 class FlagMap(HashableMap):
     def __init__(self, spec):
         super(FlagMap, self).__init__()
@@ -486,7 +488,7 @@ class Spec(object):
         self.variants = other.variants
         self.variants.spec = self
         self.namespace = other.namespace
-        self.hash = other.hash
+        self._hash = other._hash
 
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
@@ -755,15 +757,15 @@ class Spec(object):
         """
         Return a hash of the entire spec DAG, including connectivity.
         """
-        if self.hash:
-            return self.hash
+        if self._hash:
+            return self._hash[:length]
         else:
             yaml_text = yaml.dump(
                 self.to_node_dict(), default_flow_style=True, width=sys.maxint)
             sha = hashlib.sha1(yaml_text)
             b32_hash = base64.b32encode(sha.digest()).lower()[:length]
             if self.concrete:
-                self.hash = b32_hash
+                self._hash = b32_hash
             return b32_hash
 
     def to_node_dict(self):
@@ -811,7 +813,7 @@ class Spec(object):
         spec.architecture = node['arch']
 
         if 'hash' in node:
-            spec.hash = node['hash']
+            spec._hash = node['hash']
 
         if node['compiler'] is None:
             spec.compiler = None
@@ -1644,7 +1646,7 @@ class Spec(object):
         self.variants.spec = self
         self.external = other.external
         self.namespace = other.namespace
-        self.hash = other.hash
+        self._hash = other._hash
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
@@ -2047,6 +2049,7 @@ class SpecParser(spack.parse.Parser):
 
         try:
             while self.next:
+                # TODO: clean this parsing up a bit
                 if self.previous:
                     specs.append(self.previous.value)
                 if self.accept(ID):
@@ -2138,7 +2141,7 @@ class SpecParser(spack.parse.Parser):
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
         spec.namespace = spec_namespace
-        spec.hash = None
+        spec._hash = None
 
         spec._normal = False
         spec._concrete = False
