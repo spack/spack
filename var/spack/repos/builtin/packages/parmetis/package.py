@@ -65,12 +65,10 @@ class Parmetis(Package):
         source_directory = self.stage.source_path
         metis_source = join_path(source_directory, 'metis')
 
-        # FIXME : Once a contract is defined, MPI compilers should be retrieved indirectly via spec['mpi'] in case
-        # FIXME : they use a non-standard name
         options.extend(['-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=spec['metis'].prefix.include),
                         '-DMETIS_PATH:PATH={metis_source}'.format(metis_source=spec['metis'].prefix),
-                        '-DCMAKE_C_COMPILER:STRING=mpicc',
-                        '-DCMAKE_CXX_COMPILER:STRING=mpicxx'])
+                        '-DCMAKE_C_COMPILER:STRING={mpicc}'.format(mpicc=spec['mpi'].mpicc),
+                        '-DCMAKE_CXX_COMPILER:STRING={mpicxx}'.format(mpicxx=spec['mpi'].mpicxx)])
 
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
