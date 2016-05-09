@@ -168,7 +168,7 @@ def get_existing_rpath(path_name, patchelf_executable):
         status, output = getstatusoutput(command)
         if status != 0:
              tty.warn('failed reading rpath for %s.' %path_name)
-            return False
+             return False
         return output.split(':')
     else:
         tty.die('relocation not supported for this platform')
