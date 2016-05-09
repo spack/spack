@@ -1872,7 +1872,7 @@ class Spec(object):
                 fmt += 's'
 
                 if c == '_':
-                    if name = self.name if self.name else ''
+                    name = self.name if self.name else ''
                     out.write(fmt % name)
                 elif c == '.':
                     out.write(fmt % self.fullname)
