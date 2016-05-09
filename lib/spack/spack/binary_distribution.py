@@ -12,6 +12,9 @@ import spack.cmd
 import spack
 from spack.stage import Stage
 import spack.fetch_strategy as fs
+from commands import getstatusoutput
+import sys
+import re
 
 def prepare():
     """
@@ -113,6 +116,8 @@ def needs_binary_relocation(filetype):
     check whether the given filetype is a binary that may need relocation
     """
     retval = False
+    if "relocatable" in filetype:
+        return False
     if platform.system() == 'Darwin':
         return ('Mach-O' in filetype)
     elif platform.system() == 'Linux':
@@ -129,11 +134,82 @@ def needs_text_relocation(filetype):
     return ("text" in filetype)
 
 
-def relocate_binary(path_name, patchelf_executable, rpath):
+def relocate_binary(path_name, topdir, new_root_dir, patchelf_executable):
     """
     Change RPATHs in given file
     """
-    os.system("%s --set-rpath %s %s"%(patchelf_executable,rpath,path_name) )
+    orig_rpath = get_existing_rpath(path_name, patchelf_executable)
+    new_rpath  = substitute_rpath(orig_rpath, topdir, new_root_dir)
+    modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable)
+
+def get_existing_rpath(path_name, patchelf_executable):
+    if platform.system() == 'Darwin':
+        command = which('otool')
+        output  = command("-l", path_name)
+        if command.returncode != 0:
+            tty.warn('failed reading rpath for %s.' %path_name)
+            return False
+        last_cmd = None
+        for line in output.split('\n'):
+            match = re.search('( *[a-zA-Z]+ )(.*)', line)
+            if match:
+                lhs = match.group(1).lstrip().rstrip()
+                rhs = match.group(2)
+                match2 = re.search('(.*) \(.*\)', rhs)
+                if match2:
+                    rhs = match2.group(1)
+                if lhs == 'cmd':
+                    last_cmd = rhs
+                if lhs == 'path' and last_cmd == 'LC_RPATH':
+                    path = rhs
+        return path.split(':')
+    elif platform.system() == 'Linux':
+        command = '%s --print-rpath %s ' %(patchelf_executable, path_name)
+        status, output = getstatusoutput(command)
+        if status != 0:
+             tty.warn('failed reading rpath for %s.' %path_name)
+            return False
+        return output.split(':')
+    else:
+        tty.die('relocation not supported for this platform')
+    return retval
+
+
+def substitute_rpath(orig_rpath, topdir, new_root_path):
+    head0, comp = os.path.split(new_root_path)
+    head, arch = os.path.split(head0)
+    arch_comp = os.path.join(arch, comp)
+    new_rpath = []
+    for path in orig_rpath:
+        new_path = re.sub('.*/' + arch_comp, new_root_path, path)
+        new_rpath.append(new_path)
+    return new_rpath
+
+
+def modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable):
+    if platform.system() == 'Darwin':
+        orig_joined = ':'.join(orig_rpath)
+        new_joined = ':'.join(new_rpath)
+        command = "install_name_tool -rpath '%s' '%s' '%s'" % \
+            (orig_joined, new_joined, path_name)
+        status, output = getstatusoutput(command)
+        if status != 0:
+             tty.warn('failed writing rpath for %s.' %path_name)
+        for orig, new in zip(orig_rpath, new_rpath):
+            command = "install_name_tool -rpath '%s' '%s' '%s'" % \
+                (orig, new, path_name)
+            status, output = getstatusoutput(command)
+            if status != 0:
+                 tty.warn('failed writing rpath for %s.' %path_name)
+    elif platform.system() == 'Linux':
+        new_joined = ':'.join(new_rpath)
+        command = "%s --force-rpath --set-rpath '%s' '%s'" % \
+            (patchelf_executable, new_joined, path_name)
+        status, output = getstatusoutput(command)
+        if status != 0:
+             tty.warn('failed writing rpath for %s.' %path_name)
+    else:
+        tty.die('relocation not supported for this platform')
 
 
 def relocate_text(path_name, original_path, new_path):
@@ -171,6 +247,6 @@ def relocate(package):
             path_name = os.path.join(root, filename)
             filetype = get_filetype(path_name)
             if needs_binary_relocation(filetype):
-                relocate_binary(path_name, patchelf_executable, rpath)
+                relocate_binary(path_name, original_path, new_path, patchelf_executable)
             elif needs_text_relocation(filetype):
                 relocate_text(path_name, original_path, new_path)
