@@ -62,7 +62,9 @@ class Gmsh(Package):
 
         build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path
-        
+
+        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
+
         # Prevent GMsh from using its own strange directory structure on OSX
         options.append('-DENABLE_OS_SPECIFIC_INSTALL=OFF')
 
