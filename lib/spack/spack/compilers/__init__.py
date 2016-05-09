@@ -39,7 +39,6 @@ import spack.config
 import spack.architecture
 
 from spack.util.multiproc import parmap
-import spack.compiler as Comp
 from spack.compiler import Compiler
 from spack.util.executable import which
 from spack.util.naming import mod_to_class

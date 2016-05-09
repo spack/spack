@@ -32,11 +32,11 @@ import sys
 import shutil
 import multiprocessing
 import platform
+
+import llnl.util.tty as tty
 from llnl.util.filesystem import *
 
 import spack
-import llnl.util.tty as tty
-from llnl.util.filesystem import *
 from spack.environment import EnvironmentModifications, validate
 import spack.compilers as compilers
 import spack.compiler as Compiler
@@ -99,16 +99,16 @@ def set_compiler_environment_variables(pkg, env):
     flags = pkg.spec.compiler_flags
 
     # Set compiler variables used by CMake and autotools
-    assert all(key in pkg.compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
+    assert all(key in compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
 
     # Populate an object with the list of environment modifications
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
     link_dir = spack.build_env_path
-    env.set('CC', join_path(link_dir, pkg.compiler.link_paths['cc']))
-    env.set('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
-    env.set('F77', join_path(link_dir, pkg.compiler.link_paths['f77']))
-    env.set('FC', join_path(link_dir, pkg.compiler.link_paths['fc']))
+    env.set('CC',  join_path(link_dir, compiler.link_paths['cc']))
+    env.set('CXX', join_path(link_dir, compiler.link_paths['cxx']))
+    env.set('F77', join_path(link_dir, compiler.link_paths['f77']))
+    env.set('FC',  join_path(link_dir, compiler.link_paths['fc']))
 
     # Set SPACK compiler variables so that our wrapper knows what to call
     if compiler.cc:
@@ -119,11 +119,11 @@ def set_compiler_environment_variables(pkg, env):
         env.set('SPACK_F77', compiler.f77)
     if compiler.fc:
         env.set('SPACK_FC', compiler.fc)
-    # Add every valid compiler flag to the environment, prefaced by "SPACK_"
+    # Add every valid compiler flag to the environment, prefixed with "SPACK_"
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Concreteness guarantees key safety here
         if flags[flag] != []:
-            env.set('SPACK_'+flag.upper(), ' '.join(f for f in flags[flag]))
+            env.set('SPACK_' + flag.upper(), ' '.join(f for f in flags[flag]))
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
     return env

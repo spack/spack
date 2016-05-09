@@ -353,7 +353,6 @@ class Database(object):
         temp_file = self._index_path + (
             '.%s.%s.temp' % (socket.getfqdn(), os.getpid()))
 
-
         # Write a temporary database file them move it into place
         try:
             with open(temp_file, 'w') as f:

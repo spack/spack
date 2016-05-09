@@ -43,7 +43,6 @@ from functools import partial
 from spec import DependencyMap
 from itertools import chain
 from spack.config import *
-import spack.compiler as Compiler
 
 
 class DefaultConcretizer(object):
@@ -279,8 +278,6 @@ class DefaultConcretizer(object):
         """
         ret = False
         for flag in spack.spec.FlagMap.valid_compiler_flags():
-#            if flag in spec.compiler_flags:
-#                continue
             try:
                 nearest = next(p for p in spec.traverse(direction='parents')
                                if ((p.compiler == spec.compiler and p is not spec)
@@ -317,25 +314,13 @@ class DefaultConcretizer(object):
                 if compiler.flags[flag] != []:
                     ret = True
             else:
-                if (sorted(spec.compiler_flags[flag]) != sorted(compiler.flags[flag])) and (not set(spec.compiler_flags[flag]) >= set(compiler.flags[flag])):
+                if ((sorted(spec.compiler_flags[flag]) != sorted(compiler.flags[flag])) and
+                    (not set(spec.compiler_flags[flag]) >= set(compiler.flags[flag]))):
                     ret = True
                     spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
                                                      set(compiler.flags[flag]))
 
         return ret
-
-
-#    def choose_provider(self, spec, providers):
-#        """This is invoked for virtual specs.  Given a spec with a virtual name,
-#           say "mpi", and a list of specs of possible providers of that spec,
-#           select a provider and return it.
-#        """
-#        assert(spec.virtual)
-#        assert(providers)
-#        index = spack.spec.index_specs(providers)
-#        first_key = sorted(index.keys())[0]
-#        latest_version = sorted(index[first_key])[-1]
-#        return latest_version
 
 
 def find_spec(spec, condition):

@@ -93,10 +93,10 @@ def display_specs(specs, **kwargs):
         hlen = None
 
     nfmt = '.' if namespace else '_'
-    format_string = '$%s$@$+' %nfmt
+    format_string = '$%s$@$+' % nfmt
     flags = kwargs.get('show_flags', False)
     if flags:
-        format_string = '$.$@$%+$+' if nfmt == '.' else '$_$@$%+$+'
+        format_string = '$%s$@$%%+$+' % nfmt
 
     # Make a dict with specs keyed by architecture and compiler.
     index = index_by(specs, ('architecture', 'compiler'))
