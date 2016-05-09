@@ -38,7 +38,7 @@ class Hdf5(Package):
     list_depth = 3
 
     version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
-    version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618')
+    version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618', preferred=True)
     version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
 
@@ -101,10 +101,10 @@ class Hdf5(Package):
             extra_args.append('--enable-cxx')
 
         if '+fortran' in spec:
-            extra_args.extend([
-                '--enable-fortran',
-                '--enable-fortran2003'
-            ])
+            extra_args.append('--enable-fortran')
+            # '--enable-fortran2003' no longer exists as of version 1.10.0
+            if spec.satisfies('@:1.8.16'):
+                extra_args.append('--enable-fortran2003')
 
         if '+mpi' in spec:
             # The HDF5 configure script warns if cxx and mpi are enabled

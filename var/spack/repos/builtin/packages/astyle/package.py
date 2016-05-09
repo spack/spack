@@ -14,4 +14,5 @@ class Astyle(Package):
             make('-f',
                 join_path(self.stage.source_path,'build','clang','Makefile'),
                 parallel=False)
+            mkdirp(self.prefix.bin)
             install(join_path(self.stage.source_path, 'src','bin','astyle'), self.prefix.bin)

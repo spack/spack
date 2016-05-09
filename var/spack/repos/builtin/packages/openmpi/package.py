@@ -29,6 +29,7 @@ class Openmpi(Package):
 
     variant('psm', default=False, description='Build support for the PSM library.')
     variant('psm2', default=False, description='Build support for the Intel PSM2 library.')
+    variant('pmi', default=True, description='Build support for PMI-based launchers')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
     variant('mxm', default=False, description='Build Mellanox Messaging support')
 
@@ -38,7 +39,6 @@ class Openmpi(Package):
     variant('tm', default=False, description='Build TM (Torque, PBSPro, and compatible) support')
     variant('slurm', default=False, description='Build SLURM scheduler component')
 
-    variant('pmi', default=False, description='Build PMI support, optionally adding DIR to the search path')
     variant('sqlite3', default=False, description='Build sqlite3 support')
 
     # TODO : support for CUDA is missing
@@ -66,6 +66,13 @@ class Openmpi(Package):
         # In version 1.7, it was renamed to be --with-verbs
         elif self.spec.satisfies('@1.7:'):
             return 'verbs'
+
+    def setup_dependent_package(self, module, dep_spec):
+        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
+        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+        self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+
 
     def install(self, spec, prefix):
         config_args = ["--prefix=%s" % prefix,

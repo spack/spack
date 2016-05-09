@@ -1,0 +1,13 @@
+diff --git a/eo/tutorial/Lesson3/exercise3.1.cpp b/eo/tutorial/Lesson3/exercise3.1.cpp
+index dc37479..d178941 100644
+--- a/eo/tutorial/Lesson3/exercise3.1.cpp
++++ b/eo/tutorial/Lesson3/exercise3.1.cpp
+@@ -289,7 +289,7 @@ void main_function(int argc, char **argv)
+     checkpoint.add(fdcStat);
+ 
+     // The Stdout monitor will print parameters to the screen ...
+-    eoStdoutMonitor monitor(false);
++    eoStdoutMonitor monitor;
+ 
+     // when called by the checkpoint (i.e. at every generation)
+     checkpoint.add(monitor);

@@ -211,6 +211,18 @@ class Stage(object):
         return False
 
     @property
+    def expected_archive_files(self):
+        """Possible archive file paths."""
+        paths = []
+        if isinstance(self.fetcher, fs.URLFetchStrategy):
+            paths.append(os.path.join(self.path, os.path.basename(self.fetcher.url)))
+
+        if self.mirror_path:
+            paths.append(os.path.join(self.path, os.path.basename(self.mirror_path)))
+
+        return paths
+
+    @property
     def archive_file(self):
         """Path to the source archive within this stage directory."""
         paths = []
