@@ -1,0 +1,5 @@
+esmumps				:	scotch
+					(cd esmumps ; $(MAKE) scotch && $(MAKE) install)
+
+ptesmumps			:	ptscotch
+					(cd esmumps ; $(MAKE) ptscotch && $(MAKE) ptinstall)
