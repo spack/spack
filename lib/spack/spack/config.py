@@ -548,7 +548,7 @@ def update_config(section, update_data, scope=None):
     if isinstance(update_data, list):
         configuration = update_data
     else:
-        configuration.extend(update_data)
+        configuration.update(update_data)
 
     # read only the requested section's data.
     scope.sections[section] = {section: configuration}
