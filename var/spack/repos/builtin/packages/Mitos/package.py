@@ -19,6 +19,8 @@ class Mitos(Package):
     depends_on('hwloc')
     depends_on('mpi')
 
+
+
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
             cmake('..', *std_cmake_args)

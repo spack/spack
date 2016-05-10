@@ -44,6 +44,7 @@ class NoSysTypeError(serr.SpackError):
             "Could not determine sys_type for this machine.")
 
 
+
 def get_sys_type_from_spack_globals():
     """Return the SYS_TYPE from spack globals, or None if it isn't set."""
     if not hasattr(spack, "sys_type"):
