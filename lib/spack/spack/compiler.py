@@ -91,8 +91,22 @@ class Compiler(object):
     # version suffix for gcc.
     suffixes = [r'-.*']
 
-    # Names of generic arguments used by this compiler
-    arg_rpath   = '-Wl,-rpath,%s'
+    # Default flags used by a compiler to set an rpath
+    @property
+    def cc_rpath_arg(self):
+        return '-Wl,-rpath,'
+
+    @property
+    def cxx_rpath_arg(self):
+        return '-Wl,-rpath,'
+
+    @property
+    def f77_rpath_arg(self):
+        return '-Wl,-rpath,'
+
+    @property
+    def fc_rpath_arg(self):
+        return '-Wl,-rpath,'
 
 
     def __init__(self, cspec, cc, cxx, f77, fc):
