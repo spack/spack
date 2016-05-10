@@ -1,5 +1,4 @@
 from spack import *
-import os
 
 class Nccmp(Package):
     """Compare NetCDF Files"""
@@ -15,16 +14,10 @@ class Nccmp(Package):
         # FCFLAGS respectively in this configure, please unset
         # F90/F90FLAGS and set FC/FCFLAGS instead and rerun configure
         # again.
-        os.environ['FC'] = os.environ['F90']
-        del os.environ['F90']
-        try:
-            os.environ['FCFLAGS'] = os.environ['F90FLAGS']
-            del os.environ['F90FLAGS']
-        except KeyError:    # There are no flags
-            pass
+        env.pop('F90', None)
+        env.pop('F90FLAGS', None)
 
         configure('--prefix=%s' % prefix)
-
         make()
         make("check")
         make("install")
