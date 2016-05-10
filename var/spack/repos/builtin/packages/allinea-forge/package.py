@@ -1,5 +1,6 @@
 from spack import *
 
+
 class AllineaForge(Package):
     """Allinea Forge is the complete toolsuite for software development - with
     everything needed to debug, profile, optimize, edit and build C, C++ and
@@ -17,12 +18,10 @@ class AllineaForge(Package):
     license_vars     = ['ALLINEA_LICENCE_FILE', 'ALLINEA_LICENSE_FILE']
     license_url      = 'http://www.allinea.com/user-guide/forge/Installation.html'
 
-
     def url_for_version(self, version):
         # TODO: add support for other architectures/distributions
         url = "http://content.allinea.com/downloads/"
         return url + "allinea-forge-%s-Redhat-6.0-x86_64.tar" % version
-
 
     def install(self, spec, prefix):
         textinstall = which('textinstall.sh')

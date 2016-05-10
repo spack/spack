@@ -1,6 +1,7 @@
 from spack import *
 import os
 
+
 class Nag(Package):
     """The NAG Fortran Compiler."""
     homepage = "http://www.nag.com/nagware/np.asp"
@@ -15,13 +16,11 @@ class Nag(Package):
     license_vars     = ['NAG_KUSARI_FILE']
     license_url      = 'http://www.nag.com/doc/inun/np61/lin-mac/klicence.txt'
 
-
     def url_for_version(self, version):
         # TODO: url and checksum are architecture dependent
         # TODO: We currently only support x86_64
         return 'http://www.nag.com/downloads/impl/npl6a%sna_amd64.tgz' % \
-                str(version).replace('.', '')
-
+               str(version).replace('.', '')
 
     def install(self, spec, prefix):
         # Set installation directories

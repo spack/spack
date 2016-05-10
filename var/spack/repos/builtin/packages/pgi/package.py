@@ -1,6 +1,7 @@
 from spack import *
 import os
 
+
 class Pgi(Package):
     """PGI optimizing multi-core x64 compilers for Linux, MacOS & Windows
     with support for debugging and profiling of local MPI processes.
@@ -18,12 +19,18 @@ class Pgi(Package):
 
     version('16.3', '618cb7ddbc57d4e4ed1f21a0ab25f427')
 
-    variant('network', default=True,  description="Perform a network install")
-    variant('single',  default=False, description="Perform a single system install")
-    variant('nvidia',  default=False, description="Enable installation of optional NVIDIA components, such as CUDA")
-    variant('amd',     default=False, description="Enable installation of optional AMD components")
-    variant('java',    default=False, description="Enable installation of Java Runtime Environment")
-    variant('mpi',     default=False, description="Enable installation of Open MPI")
+    variant('network', default=True,
+        description="Perform a network install")
+    variant('single',  default=False,
+        description="Perform a single system install")
+    variant('nvidia',  default=False,
+        description="Enable installation of optional NVIDIA components")
+    variant('amd',     default=False,
+        description="Enable installation of optional AMD components")
+    variant('java',    default=False,
+        description="Enable installation of Java Runtime Environment")
+    variant('mpi',     default=False,
+        description="Enable installation of Open MPI")
 
     # Licensing
     license_required = True
@@ -31,7 +38,6 @@ class Pgi(Package):
     license_files    = ['license.dat']
     license_vars     = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
     license_url      = 'http://www.pgroup.com/doc/pgiinstall.pdf'
-
 
     def install(self, spec, prefix):
         # Enable the silent installation feature
@@ -41,12 +47,13 @@ class Pgi(Package):
 
         if '+network' in spec and '~single' in spec:
             os.environ['PGI_INSTALL_TYPE'] = "network"
-            os.environ['PGI_INSTALL_LOCAL_DIR'] = "%s/%s/share_objects" % (prefix, self.version)
+            os.environ['PGI_INSTALL_LOCAL_DIR'] = "%s/%s/share_objects" % \
+                (prefix, self.version)
         elif '+single' in spec and '~network' in spec:
             os.environ['PGI_INSTALL_TYPE'] = "single"
         else:
-            msg  = 'You must choose either a network install or a single system install.\n'
-            msg += 'You cannot choose both.'
+            msg  = 'You must choose either a network install or a single '
+            msg += 'system install.\nYou cannot choose both.'
             raise RuntimeError(msg)
 
         if '+nvidia' in spec:

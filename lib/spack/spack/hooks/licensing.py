@@ -46,7 +46,7 @@ def set_up_license(pkg):
     # If not a file or variable, suggest a website for further info
     elif pkg.license_url:
         tty.warn("A license is required to use %s. See %s for details" %
-                (pkg.name, pkg.license_url))
+                 (pkg.name, pkg.license_url))
 
     # If all else fails, you're on your own
     else:
@@ -132,4 +132,6 @@ def symlink_license(pkg):
         link_name = join_path(pkg.prefix, filename)
         if os.path.exists(target):
             os.symlink(target, link_name)
-            tty.msg("Added local symlink %s to global license file" % link_name)
+            tty.msg("Added local symlink %s to global license file" %
+                    link_name)
+

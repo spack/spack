@@ -1,9 +1,11 @@
 from spack import *
 
+
 class AllineaReports(Package):
     """Allinea Performance Reports are the most effective way to characterize
-    and understand the performance of HPC application runs. One single-page HTML
-    report elegantly answers a range of vital questions for any HPC site"""
+    and understand the performance of HPC application runs. One single-page
+    HTML report elegantly answers a range of vital questions for any HPC site
+    """
 
     homepage = "http://www.allinea.com/products/allinea-performance-reports"
 
@@ -16,12 +18,10 @@ class AllineaReports(Package):
     license_vars     = ['ALLINEA_LICENCE_FILE', 'ALLINEA_LICENSE_FILE']
     license_url      = 'http://www.allinea.com/user-guide/reports/Installation.html'
 
-
     def url_for_version(self, version):
         # TODO: add support for other architectures/distributions
         url = "http://content.allinea.com/downloads/"
         return url + "allinea-reports-%s-Redhat-6.0-x86_64.tar" % version
-
 
     def install(self, spec, prefix):
         textinstall = which('textinstall.sh')
