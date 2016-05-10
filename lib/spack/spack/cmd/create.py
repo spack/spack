@@ -64,7 +64,8 @@ package_template = string.Template("""\
 # See the spack documentation for more information on building
 # packages.
 #
-from spack import depends_on, extends, python, version
+from spack import depends_on, extends, version
+from spack import configure, cmake, make, python, R
 from spack import Package
 
 
