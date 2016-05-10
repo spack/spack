@@ -206,6 +206,9 @@ def parse_version_offset(path):
         # e.g. lame-398-1
         (r'-((\d)+-\d)', stem),
 
+        # e.g. foobar_1.2-3
+        (r'_((\d+\.)+\d+(-\d+)?[a-z]?)', stem),
+
         # e.g. foobar-4.5.1
         (r'-((\d+\.)*\d+)$', stem),
 
