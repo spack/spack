@@ -23,6 +23,8 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack.compiler import *
+import llnl.util.tty as tty
+from spack.version import ver
 
 class Intel(Compiler):
     # Subclasses use possible names of C compiler
@@ -42,6 +44,13 @@ class Intel(Compiler):
                    'cxx' : 'intel/icpc',
                    'f77' : 'intel/ifort',
                    'fc'  : 'intel/ifort' }
+
+    @property
+    def openmp_flag(self):
+        if self.version < ver('16.0'):
+            return "-openmp"
+        else:
+            return "-qopenmp"
 
     @property
     def cxx11_flag(self):
@@ -68,5 +77,3 @@ class Intel(Compiler):
         """
         return get_compiler_version(
             comp, '--version', r'\((?:IFORT|ICC)\) ([^ ]+)')
-
-
