@@ -11,11 +11,25 @@ class ParallelNetcdf(Package):
     version('1.7.0', '267eab7b6f9dc78c4d0e6def2def3aea4bc7c9f0')
     version('1.6.1', '62a094eb952f9d1e15f07d56e535052604f1ac34')
 
+    variant('cxx', default=True, description='Build the C++ Interface')
+    variant('fortran', default=True, description='Build the Fortran Interface')
+    variant('fpic', default=True, description='Produce position-independent code (for use with shared libraries)')
+
     depends_on("m4")
     depends_on("mpi")
 
+    # See: https://trac.mcs.anl.gov/projects/parallel-netcdf/browser/trunk/INSTALL
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-mpi=%s" % spec['mpi'].prefix)
+        args = list()
+        if '+fpic' in spec:
+            args.extend(['CFLAGS=-fPIC', 'CXXFLAGS=-fPIC', 'FFLAGS=-fPIC'])
+        if '~cxx' in spec:
+            args.append('--disable-cxx')
+        if '~fortran' in spec:
+            args.append('--disable-fortran')
+
+        args.extend(["--prefix=%s" % prefix,
+                  "--with-mpi=%s" % spec['mpi'].prefix])
+        configure(*args)
         make()
         make("install")
