@@ -230,6 +230,10 @@ class Compiler(object):
                 return None
 
         successful = [key for key in parmap(check, checks) if key is not None]
+        # The 'successful' list is ordered like the input paths.
+        # Reverse it here so that the dict creation (last insert wins)
+        # does not spoil the intented precedence.
+        successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
 
     @classmethod
