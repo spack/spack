@@ -23,36 +23,34 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
-This module contains code for creating environment modules, which can include dotkits, tcl modules, lmod, and others.
+This module contains code for creating environment modules, which can include
+dotkits, tcl modules, lmod, and others.
 
-The various types of modules are installed by post-install hooks and removed after an uninstall by post-uninstall hooks.
-This class consolidates the logic for creating an abstract description of the information that module systems need.
-Currently that includes a number of directories to be appended to paths in the user's environment:
+The various types of modules are installed by post-install hooks and removed
+after an uninstall by post-uninstall hooks. This class consolidates the logic
+for creating an abstract description of the information that module systems
+need.
 
-  * /bin directories to be appended to PATH
-  * /lib* directories for LD_LIBRARY_PATH
-  * /include directories for CPATH
-  * /man* and /share/man* directories for MANPATH
-  * the package prefix for CMAKE_PREFIX_PATH
+This module also includes logic for coming up with unique names for the module
+files so that they can be found by the various shell-support files in
+$SPACK/share/spack/setup-env.*.
 
-This module also includes logic for coming up with unique names for the module files so that they can be found by the
-various shell-support files in $SPACK/share/spack/setup-env.*.
-
-Each hook in hooks/ implements the logic for writing its specific type of module file.
+Each hook implements the logic for writing its specific type of module.
 """
 import copy
 import datetime
 import os
 import os.path
 import re
-import textwrap
 import string
+import textwrap
 
 import llnl.util.tty as tty
 import spack
 import spack.config
 from llnl.util.filesystem import join_path, mkdirp
-from spack.build_environment import parent_class_modules, set_module_variables_for_package
+from spack.build_environment import parent_class_modules
+from spack.build_environment import set_module_variables_for_package
 from spack.environment import *
 
 __all__ = ['EnvModule', 'Dotkit', 'TclModule']
@@ -67,30 +65,26 @@ def print_help():
     """
     For use by commands to tell user how to activate shell support.
     """
-    tty.msg("This command requires spack's shell integration.",
-            "",
+    tty.msg("This command requires spack's shell integration.", "",
             "To initialize spack's shell commands, you must run one of",
             "the commands below.  Choose the right command for your shell.",
-            "",
-            "For bash and zsh:",
-            "    . %s/setup-env.sh" % spack.share_path,
-            "",
-            "For csh and tcsh:",
-            "    setenv SPACK_ROOT %s" % spack.prefix,
-            "    source %s/setup-env.csh" % spack.share_path,
-            "")
+            "", "For bash and zsh:",
+            "    . %s/setup-env.sh" % spack.share_path, "",
+            "For csh and tcsh:", "    setenv SPACK_ROOT %s" % spack.prefix,
+            "    source %s/setup-env.csh" % spack.share_path, "")
 
 
 def inspect_path(prefix):
     """
-    Inspects the prefix of an installation to search for common layouts. Issues a request to modify the environment
-    accordingly when an item is found.
+    Inspects the prefix of an installation to search for common layouts.
+    Issues a request to modify the environment when an item is found.
 
     Args:
         prefix: prefix of the installation
 
     Returns:
-        instance of EnvironmentModifications containing the requested modifications
+        instance of EnvironmentModifications containing the requested
+        modifications
     """
     env = EnvironmentModifications()
     # Inspect the prefix to check for the existence of common directories
@@ -105,18 +99,22 @@ def inspect_path(prefix):
 
 def dependencies(spec, request='all'):
     """
-    Returns the list of dependent specs for a given spec, according to the given request
+    Returns the list of dependent specs for a given spec, according to the
+    given request
 
     Args:
         spec: target spec
         request: either 'none', 'direct' or 'all'
 
     Returns:
-        empty list if 'none', direct dependency list if 'direct', all dependencies if 'all'
+        empty list if 'none', direct dependency list if 'direct', all
+        dependencies if 'all'
     """
     if request not in ('none', 'direct', 'all'):
-        raise tty.error("Wrong value for argument 'request' : should be one of ('none', 'direct', 'all') "
-                        " [current value is '%s']" % request)
+        message = "Wrong value for argument 'request' : "
+        message += "should be one of ('none', 'direct', 'all')"
+        message += " [current value is '{0}']"
+        raise tty.error(message.format(request))
 
     if request == 'none':
         return []
@@ -124,12 +122,19 @@ def dependencies(spec, request='all'):
     if request == 'direct':
         return [xx for _, xx in spec.dependencies.items()]
 
-    # FIXME : during module file creation nodes seem to be visited multiple times even if cover='nodes'
-    # FIXME : is given. This work around permits to get a unique list of spec anyhow.
-    # FIXME : Possibly we miss a merge step among nodes that refer to the same package.
+    # FIXME : during module file creation nodes seem to be visited
+    # FIXME : multiple times even if cover='nodes' is given. This work around
+    # FIXME : permits to get a unique list of spec anyhow. Maybe we miss a
+    # FIXME : merge step among nodes that refer to the same package?
     seen = set()
     seen_add = seen.add
-    l = [xx for xx in sorted(spec.traverse(order='post', depth=True, cover='nodes', root=False), reverse=True)]
+    l = [xx
+         for xx in sorted(
+             spec.traverse(order='post',
+                           depth=True,
+                           cover='nodes',
+                           root=False),
+             reverse=True)]
     return [xx for ii, xx in l if not (xx in seen or seen_add(xx))]
 
 
@@ -146,7 +151,8 @@ def update_dictionary_extending_lists(target, update):
 
 def parse_config_options(module_generator):
     """
-    Parse the configuration file and returns a bunch of items that will be needed during module file generation
+    Parse the configuration file and returns a bunch of items that will be
+    needed during module file generation
 
     Args:
         module_generator: module generator for a given spec
@@ -154,11 +160,14 @@ def parse_config_options(module_generator):
     Returns:
         autoloads: list of specs to be autoloaded
         prerequisites: list of specs to be marked as prerequisite
-        filters: list of environment variables whose modification is blacklisted in module files
-        env: list of custom environment modifications to be applied in the module file
+        filters: list of environment variables whose modification is
+        blacklisted in module files
+        env: list of custom environment modifications to be applied in the
+        module file
     """
     # Get the configuration for this kind of generator
-    module_configuration = copy.deepcopy(CONFIGURATION.get(module_generator.name, {}))
+    module_configuration = copy.deepcopy(CONFIGURATION.get(
+        module_generator.name, {}))
 
     #####
     # Merge all the rules
@@ -179,9 +188,12 @@ def parse_config_options(module_generator):
     #####
 
     # Automatic loading loads
-    module_file_actions['autoload'] = dependencies(module_generator.spec, module_file_actions.get('autoload', 'none'))
+    module_file_actions['autoload'] = dependencies(
+        module_generator.spec, module_file_actions.get('autoload', 'none'))
     # Prerequisites
-    module_file_actions['prerequisites'] = dependencies(module_generator.spec, module_file_actions.get('prerequisites', 'none'))
+    module_file_actions['prerequisites'] = dependencies(
+        module_generator.spec, module_file_actions.get('prerequisites',
+                                                       'none'))
     # Environment modifications
     environment_actions = module_file_actions.pop('environment', {})
     env = EnvironmentModifications()
@@ -189,7 +201,7 @@ def parse_config_options(module_generator):
     def process_arglist(arglist):
         if method == 'unset':
             for x in arglist:
-                yield (x,)
+                yield (x, )
         else:
             for x in arglist.iteritems():
                 yield x
@@ -198,19 +210,20 @@ def parse_config_options(module_generator):
         for args in process_arglist(arglist):
             getattr(env, method)(*args)
 
-        # for item in arglist:
-        #     if method == 'unset':
-        #         args = [item]
-        #     else:
-        #         args = item.split(',')
-        #     getattr(env, method)(*args)
+            # for item in arglist:
+            #     if method == 'unset':
+            #         args = [item]
+            #     else:
+            #         args = item.split(',')
+            #     getattr(env, method)(*args)
 
     return module_file_actions, env
 
 
 def filter_blacklisted(specs, module_name):
     """
-    Given a sequence of specs, filters the ones that are blacklisted in the module configuration file.
+    Given a sequence of specs, filters the ones that are blacklisted in the
+    module configuration file.
 
     Args:
         specs: sequence of spec instances
@@ -233,7 +246,8 @@ class EnvModule(object):
     class __metaclass__(type):
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
-            if cls.name != 'env_module' and cls.name in CONFIGURATION['enable']:
+            if cls.name != 'env_module' and cls.name in CONFIGURATION[
+                    'enable']:
                 module_types[cls.name] = cls
 
     def __init__(self, spec=None):
@@ -249,7 +263,8 @@ class EnvModule(object):
         # long description is the docstring with reduced whitespace.
         self.long_description = None
         if self.spec.package.__doc__:
-            self.long_description = re.sub(r'\s+', ' ', self.spec.package.__doc__)
+            self.long_description = re.sub(r'\s+', ' ',
+                                           self.spec.package.__doc__)
 
     @property
     def naming_scheme(self):
@@ -271,12 +286,14 @@ class EnvModule(object):
     @property
     def use_name(self):
         """
-        Subclasses should implement this to return the name the module command uses to refer to the package.
+        Subclasses should implement this to return the name the module command
+        uses to refer to the package.
         """
         naming_tokens = self.tokens
         naming_scheme = self.naming_scheme
         name = naming_scheme.format(**naming_tokens)
-        name += '-' + self.spec.dag_hash()  # Always append the hash to make the module file unique
+        name += '-' + self.spec.dag_hash(
+        )  # Always append the hash to make the module file unique
         # Not everybody is working on linux...
         parts = name.split('/')
         name = join_path(*parts)
@@ -296,8 +313,12 @@ class EnvModule(object):
     @property
     def blacklisted(self):
         configuration = CONFIGURATION.get(self.name, {})
-        whitelist_matches = [x for x in configuration.get('whitelist', []) if self.spec.satisfies(x)]
-        blacklist_matches = [x for x in configuration.get('blacklist', []) if self.spec.satisfies(x)]
+        whitelist_matches = [x
+                             for x in configuration.get('whitelist', [])
+                             if self.spec.satisfies(x)]
+        blacklist_matches = [x
+                             for x in configuration.get('blacklist', [])
+                             if self.spec.satisfies(x)]
         if whitelist_matches:
             message = '\tWHITELIST : %s [matches : ' % self.spec.cshort_spec
             for rule in whitelist_matches:
@@ -327,7 +348,8 @@ class EnvModule(object):
         """
         if self.blacklisted:
             return
-        tty.debug("\tWRITE : %s [%s]" % (self.spec.cshort_spec, self.file_name))
+        tty.debug("\tWRITE : %s [%s]" %
+                  (self.spec.cshort_spec, self.file_name))
 
         module_dir = os.path.dirname(self.file_name)
         if not os.path.exists(module_dir):
@@ -337,11 +359,12 @@ class EnvModule(object):
         # installation prefix
         env = inspect_path(self.spec.prefix)
 
-        # Let the extendee/dependency modify their extensions/dependencies before asking for
-        # package-specific modifications
+        # Let the extendee/dependency modify their extensions/dependencies
+        # before asking for package-specific modifications
         spack_env = EnvironmentModifications()
-        # TODO : the code down below is quite similar to build_environment.setup_package and needs to be
-        # TODO : factored out to a single place
+        # TODO : the code down below is quite similar to
+        # TODO : build_environment.setup_package and needs to be factored out
+        # TODO : to a single place
         for item in dependencies(self.spec, 'all'):
             package = self.spec[item.name].package
             modules = parent_class_modules(package.__class__)
@@ -358,14 +381,18 @@ class EnvModule(object):
         # Parse configuration file
         module_configuration, conf_env = parse_config_options(self)
         env.extend(conf_env)
-        filters = module_configuration.get('filter', {}).get('environment_blacklist',{})
+        filters = module_configuration.get('filter', {}).get(
+            'environment_blacklist', {})
         # Build up the module file content
         module_file_content = self.header
-        for x in filter_blacklisted(module_configuration.pop('autoload', []), self.name):
+        for x in filter_blacklisted(
+                module_configuration.pop('autoload', []), self.name):
             module_file_content += self.autoload(x)
-        for x in filter_blacklisted(module_configuration.pop('prerequisites', []), self.name):
+        for x in filter_blacklisted(
+                module_configuration.pop('prerequisites', []), self.name):
             module_file_content += self.prerequisite(x)
-        for line in self.process_environment_command(filter_environment_blacklist(env, filters)):
+        for line in self.process_environment_command(
+                filter_environment_blacklist(env, filters)):
             module_file_content += line
         for line in self.module_specific_content(module_configuration):
             module_file_content += line
@@ -392,10 +419,13 @@ class EnvModule(object):
     def process_environment_command(self, env):
         for command in env:
             try:
-                yield self.environment_modifications_formats[type(command)].format(**command.args)
+                yield self.environment_modifications_formats[type(
+                    command)].format(**command.args)
             except KeyError:
-                tty.warn('Cannot handle command of type {command} : skipping request'.format(command=type(command)))
-                tty.warn('{context} at {filename}:{lineno}'.format(**command.args))
+                message = 'Cannot handle command of type {command} : skipping request'  # NOQA: ignore=E501
+                tty.warn(message.format(command=type(command)))
+                context = '{context} at {filename}:{lineno}'
+                tty.warn(context.format(**command.args))
 
     @property
     def file_name(self):
@@ -408,9 +438,12 @@ class EnvModule(object):
         if os.path.exists(mod_file):
             try:
                 os.remove(mod_file)  # Remove the module file
-                os.removedirs(os.path.dirname(mod_file))  # Remove all the empty directories from the leaf up
+                os.removedirs(
+                    os.path.dirname(mod_file)
+                )  # Remove all the empty directories from the leaf up
             except OSError:
-                pass  # removedirs throws OSError on first non-empty directory found
+                # removedirs throws OSError on first non-empty directory found
+                pass
 
 
 class Dotkit(EnvModule):
@@ -424,13 +457,12 @@ class Dotkit(EnvModule):
 
     autoload_format = 'dk_op {module_file}\n'
 
-    prerequisite_format = None  # TODO : does something like prerequisite exist for dotkit?
-
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'
+    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
 
     @property
     def file_name(self):
-        return join_path(Dotkit.path, self.spec.architecture, '%s.dk' % self.use_name)
+        return join_path(Dotkit.path, self.spec.architecture,
+                         '%s.dk' % self.use_name)
 
     @property
     def header(self):
@@ -474,7 +506,7 @@ class TclModule(EnvModule):
 
     prerequisite_format = 'prereq {module_file}\n'
 
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'
+    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
 
     @property
     def file_name(self):
@@ -482,9 +514,10 @@ class TclModule(EnvModule):
 
     @property
     def header(self):
+        timestamp = datetime.datetime.now()
         # TCL Modulefile header
         header = '#%Module1.0\n'
-        header += '## Module file created by spack (https://github.com/LLNL/spack) on %s\n' % datetime.datetime.now()
+        header += '## Module file created by spack (https://github.com/LLNL/spack) on %s\n' % timestamp  # NOQA: ignore=E501
         header += '##\n'
         header += '## %s\n' % self.spec.short_spec
         header += '##\n'
@@ -509,16 +542,19 @@ class TclModule(EnvModule):
         f = string.Formatter()
         for item in conflict_format:
             line = 'conflict ' + item + '\n'
-            if len([x for x in f.parse(line)]) > 1:  # We do have placeholder to substitute
-                for naming_dir, conflict_dir in zip(self.naming_scheme.split('/'), item.split('/')):
+            if len([x for x in f.parse(line)
+                    ]) > 1:  # We do have placeholder to substitute
+                for naming_dir, conflict_dir in zip(
+                        self.naming_scheme.split('/'), item.split('/')):
                     if naming_dir != conflict_dir:
-                        message = 'conflict scheme does not match naming scheme [{spec}]\n\n'
+                        message = 'conflict scheme does not match naming'
+                        message += ' [{spec}]\n\n'
                         message += 'naming scheme   : "{nformat}"\n'
                         message += 'conflict scheme : "{cformat}"\n\n'
-                        message += '** You may want to check your `modules.yaml` configuration file **\n'
-                        tty.error(
-                            message.format(spec=self.spec, nformat=self.naming_scheme, cformat=item)
-                        )
+                        message += '** You may want to check your `modules.yaml` configuration file **\n'  # NOQA: ignore=E501
+                        tty.error(message.format(spec=self.spec,
+                                                 nformat=self.naming_scheme,
+                                                 cformat=item))
                         raise SystemExit('Module generation aborted.')
                 line = line.format(**naming_tokens)
             yield line
