@@ -813,7 +813,7 @@ points to a license server called licman1:
     USE_SERVER
 
 If your package requires the license to install, you can reference the
-location of this global license using ``Package.global_license_file()``.
+location of this global license using ``self.global_license_file``.
 After installation, symlinks for all of the files given in
 ``license_files`` will be created, pointing to this global license.
 If you install a different version or variant of the package, Spack

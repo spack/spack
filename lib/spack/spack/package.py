@@ -398,6 +398,17 @@ class Package(object):
             spack.repo.get(self.extendee_spec)._check_extendable()
 
     @property
+    def global_license_file(self):
+        """Returns the path where a global license file should be stored."""
+        if not self.license_files:
+            return
+        spack_root = ancestor(__file__, 4)
+        global_license_dir = join_path(spack_root, 'etc', 'spack', 'licenses')
+        return join_path(global_license_dir, self.name,
+                         os.path.basename(self.license_files[0]))
+
+
+    @property
     def version(self):
         if not self.spec.versions.concrete:
             raise ValueError("Can only get of package with concrete version.")
@@ -899,10 +910,6 @@ class Package(object):
             """Forked for each build. Has its own process and python
                module space set up by build_environment.fork()."""
 
-            # Set up a global license if one is required
-            if self.license_required:
-                self.set_up_license()
-
             start_time = time.time()
             if not fake:
                 if not skip_patch:
@@ -965,10 +972,6 @@ class Package(object):
             self._total_time = time.time() - start_time
             build_time = self._total_time - self._fetch_time
 
-            # Symlink local license to global license if one is required
-            if self.license_required and self.license_files:
-                self.symlink_license()
-
             tty.msg("Successfully installed %s" % self.name,
                     "Fetch: %s.  Build: %s.  Total: %s." %
                     (_hms(self._fetch_time), _hms(build_time),
@@ -1017,124 +1020,6 @@ class Package(object):
         if not installed:
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
-
-
-    def global_license_file(self):
-        """Returns the path where a global license file should be stored."""
-        if not self.license_files:
-            return
-        spack_root = ancestor(__file__, 4)
-        global_license_dir = join_path(spack_root, 'etc', 'spack', 'licenses')
-        return join_path(global_license_dir, self.name,
-                         os.path.basename(self.license_files[0]))
-
-
-    def set_up_license(self):
-        """Prompt the user, letting them know that a license is required."""
-
-        # If the license can be stored in a file, create one
-        if self.license_files:
-            license_path = self.global_license_file()
-            if not os.path.exists(license_path):
-                # Create a new license file
-                self.write_license_file(license_path)
-                # Open up file in user's favorite $EDITOR for editing
-                spack.editor(license_path)
-                tty.msg("Added global license file %s" % license_path)
-            else:
-                # Use already existing license file
-                tty.msg("Found already existing license %s" % license_path)
-
-        # If not a file, what about an environment variable?
-        elif self.license_vars:
-            tty.warn("A license is required to use %s. Please set %s to the "
-                     "full pathname to the license file, or port@host if you"
-                     " store your license keys on a dedicated license server" %
-                     (self.name, ' or '.join(self.license_vars)))
-
-        # If not a file or variable, suggest a website for further info
-        elif self.license_url:
-            tty.warn("A license is required to use %s. See %s for details" %
-                    (self.name, self.license_url))
-
-        # If all else fails, you're on your own
-        else:
-            tty.warn("A license is required to use %s" % self.name)
-
-
-    def write_license_file(self, license_path):
-        """Writes empty license file.
-
-        Comments give suggestions on alternative methods of
-        installing a license."""
-
-        comment = self.license_comment
-
-        # Global license directory may not already exist
-        if not os.path.exists(os.path.dirname(license_path)):
-            os.makedirs(os.path.dirname(license_path))
-        license = open(license_path, 'w')
-
-        # License files
-        license.write("""\
-{0} A license is required to use {1}.
-{0}
-{0} The recommended solution is to store your license key in this global
-{0} license file. After installation, the following symlink(s) will be
-{0} added to point to this file (relative to the installation prefix):
-{0}
-""".format(comment, self.name))
-
-        for filename in self.license_files:
-            license.write("{0}\t{1}\n".format(comment, filename))
-
-        license.write("{0}\n".format(comment))
-
-        # Environment variables
-        if self.license_vars:
-            license.write("""\
-{0} Alternatively, use one of the following environment variable(s):
-{0}
-""".format(comment))
-
-            for var in self.license_vars:
-                license.write("{0}\t{1}\n".format(comment, var))
-
-            license.write("""\
-{0}
-{0} If you choose to store your license in a non-standard location, you may
-{0} set one of these variable(s) to the full pathname to the license file, or
-{0} port@host if you store your license keys on a dedicated license server.
-{0} You will likely want to set this variable in a module file so that it
-{0} gets loaded every time someone tries to use {1}.
-{0}
-""".format(comment, self.name))
-
-        # Documentation
-        if self.license_url:
-            license.write("""\
-{0} For further information on how to acquire a license, please refer to:
-{0}
-{0}\t{1}
-{0}
-""".format(comment, self.license_url))
-
-        license.write("""\
-{0} You may enter your license below.
-
-""".format(comment))
-
-        license.close()
-
-
-    def symlink_license(self):
-        """Create local symlinks that point to the global license file."""
-        target = self.global_license_file()
-        for filename in self.license_files:
-            link_name = join_path(self.prefix, filename)
-            if os.path.exists(target):
-                os.symlink(target, link_name)
-                tty.msg("Added local symlink %s to global license file" % link_name)
 
 
     def do_install_dependencies(self, **kwargs):
