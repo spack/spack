@@ -175,8 +175,8 @@ def set_build_environment_variables(pkg, env):
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     pkg_config_dirs = []
     for p in dep_prefixes:
-        for libdir in ('lib', 'lib64'):
-            pcdir = join_path(p, libdir, 'pkgconfig')
+        for maybe in ('lib', 'lib64', 'share'):
+            pcdir = join_path(p, maybe, 'pkgconfig')
             if os.path.isdir(pcdir):
                 pkg_config_dirs.append(pcdir)
     env.set_path('PKG_CONFIG_PATH', pkg_config_dirs)
