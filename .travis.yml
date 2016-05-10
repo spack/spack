@@ -27,7 +27,7 @@ script:
   - coverage run bin/spack test
   # Checks if the file that have been changed are flake8 conformant
   - CHANGED_PYTHON_FILES=`git diff develop... --name-only | perl -ne 'print if /\.py$/'`
-  - if [[ ${CHANGED_PYTHON_FILES} ]] ; then flake8 --format pylint --config flake8.ini ${CHANGED_PYTHON_FILES} ; fi
+  - if [[ ${CHANGED_PYTHON_FILES} ]] ; then flake8 --format pylint --config flake8-framework.ini ${CHANGED_PYTHON_FILES} ; fi
 
 
 after_success:
