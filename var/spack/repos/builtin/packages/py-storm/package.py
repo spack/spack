@@ -1,4 +1,6 @@
-from spack import *
+from spack import depends_on, extends, python, version
+from spack import Package
+
 
 class PyStorm(Package):
     """Storm is an object-relational mapper (ORM) for Python"""
@@ -12,4 +14,3 @@ class PyStorm(Package):
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
-

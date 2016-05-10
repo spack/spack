@@ -1,13 +1,15 @@
-from spack import *
+from spack import depends_on, extends, python, version
+from spack import Package
+
 
 class PyMarkupsafe(Package):
     """
-    MarkupSafe is a library for Python that implements a unicode 
-    string that is aware of HTML escaping rules and can be used 
+    MarkupSafe is a library for Python that implements a unicode
+    string that is aware of HTML escaping rules and can be used
     to implement automatic string escaping. It is used by Jinja 2,
     the Mako templating engine, the Pylons web framework and many more.
     """
-    
+
     homepage = "http://www.pocoo.org/projects/markupsafe/"
     url      = "https://github.com/pallets/markupsafe/archive/0.23.tar.gz"
 

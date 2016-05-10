@@ -1,4 +1,6 @@
-from spack import *
+from spack import depends_on, extends, python, version
+from spack import Package
+
 
 class PyPy2neo(Package):
     """FIXME: put a proper description of your package here."""

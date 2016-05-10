@@ -1,4 +1,6 @@
-from spack import *
+from spack import depends_on, extends, python, version
+from spack import Package
+
 
 class PyAstroid(Package):
     homepage = "https://www.astroid.org/"

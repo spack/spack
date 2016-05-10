@@ -1,9 +1,11 @@
-from spack import *
+from spack import depends_on, extends, python, version
+from Spack import Package
+
 
 class PyPrettytable(Package):
     """
     PrettyTable is a simple Python library designed to make
-    it quick and easy to represent tabular data in visually 
+    it quick and easy to represent tabular data in visually
     appealing ASCII tables
     """
     homepage = "https://code.google.com/archive/p/prettytable/"
@@ -13,6 +15,6 @@ class PyPrettytable(Package):
 
     extends("python")
     depends_on("py-setuptools")
-    
+
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
