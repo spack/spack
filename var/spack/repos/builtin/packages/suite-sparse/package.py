@@ -1,5 +1,5 @@
 from spack import *
-
+import os
 
 class SuiteSparse(Package):
     """
@@ -12,6 +12,7 @@ class SuiteSparse(Package):
 
     # FIXME: (see below)
     # variant('tbb', default=True, description='Build with Intel TBB')
+    variant('fpic', default=True, description='Build position independent code (required to link with shared libraries)')
 
     depends_on('blas')
     depends_on('lapack')
@@ -36,8 +37,10 @@ class SuiteSparse(Package):
              'AUTOCC=no',
              'CC=cc',
              'CXX=c++',
-             'F77=f77',
+             'F77=f77'
         ])
+        if '+fpic' in spec:
+            make_args.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
 
         # use Spack's metis in CHOLMOD/Partition module,
         # otherwise internal Metis will be compiled
@@ -53,11 +56,36 @@ class SuiteSparse(Package):
                 'TBB=-L%s -ltbb' % spec['tbb'].prefix.lib,
             ])
 
+        # --------------- Locate BLAS and LAPACK
+        exts = ['.a', '.so']
+        if ('+fpic' in spec):
+            exts.reverse()
+
+        # Find BLAS for the not-so-powerful makefile
+        blas_lib = None
+        for ext in exts:
+            blas_lib = os.path.join(spec['blas'].prefix, 'lib', 'libblas' + ext)
+            if os.path.exists(blas_lib):
+                break
+        if blas_lib is None:
+            tty.error('Cannot find libblas in path %s')
+
+
+        # Find LAPACK for the not-so-powerful makefile
+        lapack_lib = None
+        for ext in exts:
+            lapack_lib = os.path.join(spec['lapack'].prefix, 'lib', 'liblapack' + ext)
+            if os.path.exists(lapack_lib):
+                break
+        if lapack_lib is None:
+            tty.error('Cannot find liblapack in path %s')
+        # ---------------------------------------------
+
         # BLAS arguments require path to libraries
         # FIXME : (blas / lapack always provide libblas and liblapack as aliases)
         make_args.extend([
-            'BLAS=-lblas',
-            'LAPACK=-llapack'
+            'BLAS=%s' % blas_lib,
+            'LAPACK=%s' % lapack_lib
         ])
 
         make('install', *make_args)
