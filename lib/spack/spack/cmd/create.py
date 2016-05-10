@@ -64,7 +64,9 @@ package_template = string.Template("""\
 # See the spack documentation for more information on building
 # packages.
 #
-from spack import *
+from spack import depends_on, extends, python, version
+from spack import Package
+
 
 class ${class_name}(Package):
     ""\"FIXME: put a proper description of your package here.""\"
