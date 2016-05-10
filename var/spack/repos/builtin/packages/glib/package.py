@@ -1,4 +1,5 @@
 from spack import *
+import sys
 
 class Glib(Package):
     """The GLib package contains a low-level libraries useful for
@@ -12,6 +13,8 @@ class Glib(Package):
 
     depends_on("libffi")
     depends_on("zlib")
+    depends_on("pkg-config")
+    depends_on('gettext', sys.platform=='darwin')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
