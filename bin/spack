@@ -152,7 +152,7 @@ def main():
     command = spack.cmd.get_command(args.command)
     try:
         return_val = command(parser, args)
-    except SpackError, e:
+    except SpackError as e:
         e.die()
     except KeyboardInterrupt:
         sys.stderr.write('\n')
