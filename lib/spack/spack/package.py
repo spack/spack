@@ -66,6 +66,40 @@ from urlparse import urlparse
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
+import threading
+
+class DoInstallThread(threading.Thread):
+  """
+  This is a lightweight thread class to take care of executing
+  do_install calls in parallel.
+
+  To avoid the same package to be build multiple times,
+  the queued builds are being recorded. If a package thread finds
+  its target package already being in the queue, it just waits for
+  the other thread to finish.
+
+  """
+  _do_install_threads = {}
+  _queue_lock = threading.Lock()
+
+  def __init__(self, package, kwargs):
+      threading.Thread.__init__(self)
+      self.package = package
+      self.kwargs = kwargs
+      self.to_wait_for = None
+      # check whether an equivalent thread already exists
+      with DoInstallThread._queue_lock:
+          if package in DoInstallThread._do_install_threads:
+              self.to_wait_for = DoInstallThread._do_install_threads[package]
+          else:
+              DoInstallThread._do_install_threads[package] = self
+
+  def run(self):
+      if self.to_wait_for:
+          self.to_wait_for.join()
+      else:
+          self.package.do_install(**self.kwargs)
+
 
 class Package(object):
     """This is the superclass for all spack packages.
@@ -308,6 +342,9 @@ class Package(object):
 
     """# jobs to use for parallel make. If set, overrides default of ncpus."""
     make_jobs = None
+
+    """# load to use for parallel make. If set, overrides default of ncpus."""
+    make_load = None
 
     """Most packages are NOT extendable.  Set to True if you want extensions."""
     extendable = False
@@ -835,22 +872,25 @@ class Package(object):
 
     def do_install(self,
                    keep_prefix=False,  keep_stage=False, ignore_deps=False,
-                   skip_patch=False, verbose=False, make_jobs=None, fake=False):
+                   skip_patch=False, verbose=False, make_jobs=None, make_load=None,
+                   fake=False, build_parallel=False):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
         their build process.
 
         Args:
-        keep_prefix -- Keep install prefix on failure. By default, destroys it.
-        keep_stage  -- By default, stage is destroyed only if there are no
-                       exceptions during build. Set to True to keep the stage
-                       even with exceptions.
-        ignore_deps -- Do not install dependencies before installing this package.
-        fake        -- Don't really build -- install fake stub files instead.
-        skip_patch  -- Skip patch stage of build if True.
-        verbose     -- Display verbose build output (by default, suppresses it)
-        make_jobs   -- Number of make jobs to use for install.  Default is ncpus.
+        keep_prefix    -- Keep install prefix on failure. By default, destroys it.
+        keep_stage     -- By default, stage is destroyed only if there are no
+                          exceptions during build. Set to True to keep the stage
+                          even with exceptions.
+        ignore_deps    -- Do not install dependencies before installing this package.
+        fake           -- Don't really build -- install fake stub files instead.
+        skip_patch     -- Skip patch stage of build if True.
+        verbose        -- Display verbose build output (by default, suppresses it)
+        make_jobs      -- Number of make jobs to use for install.  Default is ncpus.
+        make_load      -- Maximum load of parallel make. Default is ncpus.
+        build_parallel -- Whether to build dependencies in parallel
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -871,10 +911,12 @@ class Package(object):
         if not ignore_deps:
             self.do_install_dependencies(
                 keep_prefix=keep_prefix, keep_stage=keep_stage, ignore_deps=ignore_deps,
-                fake=fake, skip_patch=skip_patch, verbose=verbose, make_jobs=make_jobs)
+                fake=fake, skip_patch=skip_patch, verbose=verbose, make_jobs=make_jobs, 
+                make_load = make_load, build_parallel = build_parallel)
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
+        self.make_load = make_load
 
         # Then install the package itself.
         def build_process():
@@ -985,9 +1027,19 @@ class Package(object):
 
     def do_install_dependencies(self, **kwargs):
         # Pass along paths of dependencies here
+        deptasks = []
         for dep in self.spec.dependencies.values():
-            dep.package.do_install(**kwargs)
-
+            task = DoInstallThread(dep.package, kwargs)
+            if kwargs["build_parallel"]==False:
+                task.start()
+                task.join()
+            else:
+                deptasks.append(task)
+        if kwargs["build_parallel"]==True:
+            for task in deptasks:
+                task.start()
+            for task in deptasks:
+                task.join()
 
     @property
     def build_log_path(self):
