@@ -382,11 +382,11 @@ class EnvModule(object):
         return tuple()
 
     def autoload(self, spec):
-        m = TclModule(spec)
+        m = type(self)(spec)
         return self.autoload_format.format(module_file=m.use_name)
 
     def prerequisite(self, spec):
-        m = TclModule(spec)
+        m = type(self)(spec)
         return self.prerequisite_format.format(module_file=m.use_name)
 
     def process_environment_command(self, env):
@@ -448,6 +448,11 @@ class Dotkit(EnvModule):
             for line in textwrap.wrap(self.long_description, 72):
                 header += '#h %s\n' % line
         return header
+
+    def prerequisite(self, spec):
+        tty.warn('prerequisites:  not supported by dotkit module files')
+        tty.warn('\tYou may want to check  ~/.spack/modules.yaml')
+        return ''
 
 
 class TclModule(EnvModule):
