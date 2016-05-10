@@ -545,7 +545,10 @@ def update_config(section, update_data, scope=None):
     # read in the config to ensure we've got current data
     configuration = get_config(section)
 
-    configuration.update(update_data)
+    if isinstance(update_data, list):
+        configuration = update_data
+    else:
+        configuration.extend(update_data)
 
     # read only the requested section's data.
     scope.sections[section] = {section: configuration}
