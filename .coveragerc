@@ -1,6 +1,13 @@
+# -*- conf -*-
 # .coveragerc to control coverage.py
 [run]
 branch = True
+source = lib
+omit =
+     lib/spack/spack/test/*
+     lib/spack/env/*
+     lib/spack/docs/*
+     lib/spack/external/*
 
 [report]
 # Regexes for lines to exclude from consideration
