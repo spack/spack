@@ -29,7 +29,7 @@ class Openmpi(Package):
 
     variant('psm', default=False, description='Build support for the PSM library.')
     variant('psm2', default=False, description='Build support for the Intel PSM2 library.')
-    variant('pmi', default=True, description='Build support for PMI-based launchers')
+    variant('pmi', default=False, description='Build support for PMI-based launchers')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
     variant('mxm', default=False, description='Build Mellanox Messaging support')
 
@@ -47,6 +47,7 @@ class Openmpi(Package):
     provides('mpi@:3.0', when='@1.7.5:')
 
     depends_on('hwloc')
+    depends_on('sqlite', when='+sqlite3')
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)
