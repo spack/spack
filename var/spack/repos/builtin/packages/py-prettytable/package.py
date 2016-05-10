@@ -1,5 +1,5 @@
-from spack import depends_on, extends, python, version
-from Spack import Package
+from spack import depends_on, extends, version
+from spack import Package
 
 
 class PyPrettytable(Package):

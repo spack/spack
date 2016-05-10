@@ -1,4 +1,4 @@
-from spack import depends_on, extends, python, version
+from spack import depends_on, extends, version
 from spack import Package
 
 
