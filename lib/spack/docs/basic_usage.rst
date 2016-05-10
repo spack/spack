@@ -1246,6 +1246,38 @@ several variants:
 
        spack deactivate -a python
 
+A word of warning
+-----------------------
+
+If you run `spack find` and you get an error similar to the following:
+
+.. code-block:: sh
+    
+   $ ./spack find
+   Traceback (most recent call last):
+   File "./spack", line 176, in <module>
+     main()
+   File "./spack", line 154, in main
+     return_val = command(parser, args)
+   File "./spack/lib/spack/spack/cmd/find.py", line 170, in find
+     specs = set(spack.installed_db.query(**q_args))
+   File "./spack/lib/spack/spack/database.py", line 551, in query
+     with self.read_transaction():
+   File "./spack/lib/spack/spack/database.py", line 598, in __enter__
+     if self._enter() and self._acquire_fn:
+   File "./spack/lib/spack/spack/database.py", line 608, in _enter
+     return self._db.lock.acquire_read(self._timeout)
+   File "./spack/lib/spack/llnl/util/lock.py", line 103, in acquire_read
+     self._lock(fcntl.LOCK_SH, timeout)   # can raise LockError.
+   File "./spack/lib/spack/llnl/util/lock.py", line 64, in _lock
+     fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
+   IOError: [Errno 38] Function not implemented
+
+
+it most likely means that you are trying to run spack in a shared 
+network filesystem without support for lockf/flock. Currently this is not
+supported, and you should ask your system administrator to enable lockf/flock.
+
 
 Getting Help
 -----------------------
