@@ -1246,13 +1246,30 @@ several variants:
 
        spack deactivate -a python
 
-A word of warning
------------------------
+Filesystem requirements
+--------------------------
 
-If you run `spack find` and you get an error similar to the following:
+Spack currently needs to be run from a filesystem that supports
+``flock`` locking semantics.  Nearly all local filesystems and recent
+versions of NFS support this, but parallel filesystems may be mounted
+without ``flock`` support enabled.  You can determine how your
+filesystems are mounted with ``mount -p``.  The output for a Lustre
+filesystem might look like this:
 
 .. code-block:: sh
-    
+
+   $ mount -l | grep lscratch
+   pilsner-mds1-lnet0@o2ib100:/lsd on /p/lscratchd type lustre (rw,nosuid,noauto,_netdev,lazystatfs,flock)
+   porter-mds1-lnet0@o2ib100:/lse on /p/lscratche type lustre (rw,nosuid,noauto,_netdev,lazystatfs,flock)
+
+Note the ``flock`` option on both Lustre mounts.  If you do not see
+this or a similar option for your filesystem, you may need ot ask your
+system administrator to enable ``flock``.
+
+This issue typically manifests with the error below:
+
+.. code-block:: sh
+
    $ ./spack find
    Traceback (most recent call last):
    File "./spack", line 176, in <module>
@@ -1273,11 +1290,7 @@ If you run `spack find` and you get an error similar to the following:
      fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
    IOError: [Errno 38] Function not implemented
 
-
-it most likely means that you are trying to run spack in a shared 
-network filesystem without support for lockf/flock. Currently this is not
-supported, and you should ask your system administrator to enable lockf/flock.
-
+A nicer error message is TBD in future versions of Spack.
 
 Getting Help
 -----------------------
