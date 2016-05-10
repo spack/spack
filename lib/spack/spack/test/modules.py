@@ -47,7 +47,7 @@ configuration_alter_environment = {
             'filter': {'environment_blacklist': ['CMAKE_PREFIX_PATH']}
         },
         '=x86-linux': {
-            'environment': {'set': ['FOO,foo'], 'unset': ['BAR']}
+            'environment': {'set': {'FOO': 'foo'}, 'unset': ['BAR']}
         }
     }
 }
@@ -99,7 +99,6 @@ class TclTests(MockPackagesTest):
         spec = spack.spec.Spec('mpich@3.0.4=x86-linux')
         content = self.get_modulefile_content(spec)
         self.assertTrue('module-whatis "mpich @3.0.4"' in content )
-        self.assertEqual(len([x for x in content if x.startswith('prepend-path CMAKE_PREFIX_PATH')]), 1)
 
     def test_autoload(self):
         spack.modules.CONFIGURATION = configuration_autoload_direct

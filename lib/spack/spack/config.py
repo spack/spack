@@ -251,6 +251,14 @@ section_schemas = {
                     'type': 'string'
                 }
             },
+            'dictionary_of_strings': {
+                'type': 'object',
+                'patternProperties': {
+                    r'\w[\w-]*': {  # key
+                        'type': 'string'
+                    }
+                }
+            },
             'dependency_selection': {
                 'type': 'string',
                 'enum': ['none', 'direct', 'all']
@@ -282,10 +290,10 @@ section_schemas = {
                         'default': {},
                         'additionalProperties': False,
                         'properties': {
-                            'set': {'$ref': '#/definitions/array_of_strings'},
+                            'set': {'$ref': '#/definitions/dictionary_of_strings'},
                             'unset': {'$ref': '#/definitions/array_of_strings'},
-                            'prepend_path': {'$ref': '#/definitions/array_of_strings'},
-                            'append_path': {'$ref': '#/definitions/array_of_strings'}
+                            'prepend_path': {'$ref': '#/definitions/dictionary_of_strings'},
+                            'append_path': {'$ref': '#/definitions/dictionary_of_strings'}
                         }
                     }
                 }

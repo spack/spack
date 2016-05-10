@@ -185,13 +185,25 @@ def parse_config_options(module_generator):
     # Environment modifications
     environment_actions = module_file_actions.pop('environment', {})
     env = EnvironmentModifications()
+
+    def process_arglist(arglist):
+        if method == 'unset':
+            for x in arglist:
+                yield (x,)
+        else:
+            for x in arglist.iteritems():
+                yield x
+
     for method, arglist in environment_actions.items():
-        for item in arglist:
-            if method == 'unset':
-                args = [item]
-            else:
-                args = item.split(',')
+        for args in process_arglist(arglist):
             getattr(env, method)(*args)
+
+        # for item in arglist:
+        #     if method == 'unset':
+        #         args = [item]
+        #     else:
+        #         args = item.split(',')
+        #     getattr(env, method)(*args)
 
     return module_file_actions, env
 
