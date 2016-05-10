@@ -25,9 +25,12 @@ script:
   - spack install -v libdwarf
   # Run unit tests with code coverage
   - coverage run bin/spack test
-  # Checks if the file that have been changed are flake8 conformant
-  - CHANGED_PYTHON_FILES=`git diff develop... --name-only | perl -ne 'print if /\.py$/'`
+  # Checks if the file that have been changed are flake8 conformant [framework]
+  - CHANGED_PYTHON_FILES=`git diff develop... --name-only | perl -ne 'print if /\.py$/' |  perl -ne 'print if not /var/' `
   - if [[ ${CHANGED_PYTHON_FILES} ]] ; then flake8 --format pylint --config flake8-framework.ini ${CHANGED_PYTHON_FILES} ; fi
+  # Checks if the file that have been changed are flake8 conformant [packages]
+  - CHANGED_PACKAGES=`git diff develop... --name-only | perl -ne 'print if /\.py$/' |  perl -ne 'print if /var/' `
+  - if [[ ${CHANGED_PACKAGES} ]] ; then flake8 --format pylint --config flake8-packages.ini ${CHANGED_PACKAGES} ; fi
 
 
 after_success:
