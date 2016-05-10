@@ -34,15 +34,14 @@ import spack.error as serr
 
 class InvalidSysTypeError(serr.SpackError):
     def __init__(self, sys_type):
-        super(InvalidSysTypeError, self).__init__(
-            "Invalid sys_type value for Spack: " + sys_type)
+        super(InvalidSysTypeError,
+              self).__init__("Invalid sys_type value for Spack: " + sys_type)
 
 
 class NoSysTypeError(serr.SpackError):
     def __init__(self):
-        super(NoSysTypeError, self).__init__(
-            "Could not determine sys_type for this machine.")
-
+        super(NoSysTypeError,
+              self).__init__("Could not determine sys_type for this machine.")
 
 
 def get_sys_type_from_spack_globals():
@@ -70,15 +69,15 @@ def get_sys_type_from_platform():
 @memoized
 def sys_type():
     """Returns a SysType for the current machine."""
-    methods = [get_sys_type_from_spack_globals,
-               get_sys_type_from_environment,
+    methods = [get_sys_type_from_spack_globals, get_sys_type_from_environment,
                get_sys_type_from_platform]
 
     # search for a method that doesn't return None
     sys_type = None
     for method in methods:
         sys_type = method()
-        if sys_type: break
+        if sys_type:
+            break
 
     # Couldn't determine the sys_type for this machine.
     if sys_type is None:
