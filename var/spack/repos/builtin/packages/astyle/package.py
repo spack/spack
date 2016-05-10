@@ -11,8 +11,13 @@ class Astyle(Package):
     def install(self, spec, prefix):
 
         with working_dir('src'):
+            # unfortunately we need to edit the makefile in place to set compiler:
+            make_file = join_path(self.stage.source_path,'build','gcc','Makefile')
+            filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, make_file)
+
             make('-f',
-                join_path(self.stage.source_path,'build','clang','Makefile'),
+                make_file,
                 parallel=False)
+
             mkdirp(self.prefix.bin)
             install(join_path(self.stage.source_path, 'src','bin','astyle'), self.prefix.bin)
