@@ -10,6 +10,8 @@ class Bison(Package):
 
     version('3.0.4', 'a586e11cd4aff49c3ff6d3b6a4c9ccf8')
 
+    depends_on("m4")
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
 
