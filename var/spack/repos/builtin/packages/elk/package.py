@@ -25,6 +25,7 @@
 from spack import *
 import spack
 
+
 class Elk(Package):
     '''An all-electron full-potential linearised augmented-plane wave
     (FP-LAPW) code with many advanced features.'''
@@ -58,34 +59,29 @@ class Elk(Package):
         # Dictionary of configuration options
         config = {
             'MAKE':      'make',
-            'F90':       join_path(spack.build_env_path, 'f90'),
-            'F77':       join_path(spack.build_env_path, 'f77'),
-            'AR':        'ar',
-            'LIB_FFT':   'fftlib.a',
-            'SRC_MPI':   'mpi_stub.f90',
-            'SRC_OMP':   'omp_stub.f90',
-            'SRC_libxc': 'libxcifc_stub.f90',
-            'SRC_FFT':   'zfftifc.f90'
+            'AR':        'ar'
         }
 
         # Compiler-specific flags
         flags = ''
         if   self.compiler.name == 'intel':
-            flags = '-O3 -ip -unroll -no-prec-div -openmp'
+            flags = '-O3 -ip -unroll -no-prec-div'
         elif self.compiler.name == 'gcc':
-            flags = '-O3 -ffast-math -funroll-loops -fopenmp'
+            flags = '-O3 -ffast-math -funroll-loops'
         elif self.compiler.name == 'pgi':
-            flags = '-O3 -mp -lpthread'
+            flags = '-O3 -lpthread'
         elif self.compiler.name == 'g95':
             flags = '-O3 -fno-second-underscore'
         elif self.compiler.name == 'nag':
             flags = '-O4 -kind=byte -dusty -dcfuns'
         elif self.compiler.name == 'xl':
-            flags = '-O3 -qsmp=omp'
+            flags = '-O3'
         config['F90_OPTS'] = flags
         config['F77_OPTS'] = flags
 
         # BLAS/LAPACK support
+        # Note: BLAS/LAPACK must be compiled with OpenMP support
+        # if the +openmp variant is chosen
         blas   = 'blas.a'
         lapack = 'lapack.a'
         if '+blas'   in spec:
@@ -98,16 +94,25 @@ class Elk(Package):
         if '+fft' in spec:
             config['LIB_FFT'] = join_path(spec['fftw'].prefix.lib, 'libfftw3.so')
             config['SRC_FFT'] = 'zfftifc_fftw.f90'
+        else:
+            config['LIB_FFT'] = 'fftlib.a'
+            config['SRC_FFT'] = 'zfftifc.f90'
 
         # MPI support
         if '+mpi' in spec:
-            config.pop('SRC_MPI')
-            config['F90'] = join_path(spec['mpi'].prefix.bin, 'mpif90')
-            config['F77'] = join_path(spec['mpi'].prefix.bin, 'mpif77')
+            config['F90'] = join_path(spec['mpi'].mpifc)
+            config['F77'] = join_path(spec['mpi'].mpif77)
+        else:
+            config['F90'] = join_path(spack.build_env_path, 'f90'),
+            config['F77'] = join_path(spack.build_env_path, 'f77'),
+            config['SRC_MPI'] = 'mpi_stub.f90'
 
         # OpenMP support
         if '+openmp' in spec:
-            config.pop('SRC_OMP')
+            config['F90_OPTS'] += ' ' + self.compiler.openmp_flag
+            config['F77_OPTS'] += ' ' + self.compiler.openmp_flag
+        else:
+            config['SRC_OMP'] = 'omp_stub.f90'
 
         # Libxc support
         if '+libxc' in spec:
@@ -120,6 +125,8 @@ class Elk(Package):
                 'libxc.f90',
                 'libxcifc.f90'
             ])
+        else:
+            config['SRC_libxc'] = 'libxcifc_stub.f90'
 
         # Write configuration options to include file
         with open('make.inc', 'w') as inc:
