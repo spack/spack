@@ -315,6 +315,14 @@ section_schemas = {
                 'default': {},
                 'additionalProperties': False,
                 'properties': {
+                    'prefix_inspections': {
+                        'type': 'object',
+                        'patternProperties': {
+                            r'\w[\w-]*': {  # path to be inspected for existence (relative to prefix)
+                                '$ref': '#/definitions/array_of_strings'
+                            }
+                        }
+                    },
                     'enable': {
                         'type': 'array',
                         'default': [],

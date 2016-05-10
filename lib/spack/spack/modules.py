@@ -94,24 +94,12 @@ def inspect_path(prefix):
     """
     env = EnvironmentModifications()
     # Inspect the prefix to check for the existence of common directories
-    prefix_inspections = {
-        'bin': ('PATH',),
-        'man': ('MANPATH',),
-        'lib': ('LIBRARY_PATH', 'LD_LIBRARY_PATH'),
-        'lib64': ('LIBRARY_PATH', 'LD_LIBRARY_PATH'),
-        'include': ('CPATH',)
-    }
-    for attribute, variables in prefix_inspections.items():
-        expected = getattr(prefix, attribute)
+    prefix_inspections = CONFIGURATION.get('prefix_inspections', {})
+    for relative_path, variables in prefix_inspections.items():
+        expected = join_path(prefix, relative_path)
         if os.path.isdir(expected):
             for variable in variables:
                 env.prepend_path(variable, expected)
-    # PKGCONFIG
-    for expected in (join_path(prefix.lib, 'pkgconfig'), join_path(prefix.lib64, 'pkgconfig')):
-        if os.path.isdir(expected):
-            env.prepend_path('PKG_CONFIG_PATH', expected)
-    # CMake related variables
-    env.prepend_path('CMAKE_PREFIX_PATH', prefix)
     return env
 
 
