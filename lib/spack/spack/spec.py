@@ -2122,6 +2122,7 @@ class SpecParser(spack.parse.Parser):
                 spec_namespace = None
             self.check_identifier(spec_name)
         else:
+            spec_namespace = None
             spec_name = None
 
 
@@ -2293,7 +2294,8 @@ def parse_anonymous_spec(spec_like, pkg_name):
         try:
             anon_spec = Spec(spec_like)
             if anon_spec.name != pkg_name:
-                raise SpecParseError(spack.parse.ParseError("","","Expected anonymous spec for package %s but found spec for package %s" % (pkg_name, anon_spec_name) ))
+                print anon_spec.name, pkg_name
+                raise SpecParseError(spack.parse.ParseError("","","Expected anonymous spec for package %s but found spec for package %s" % (pkg_name, anon_spec.name) ))
         except SpecParseError:
             anon_spec = Spec(pkg_name + ' ' +  spec_like)
             if anon_spec.name != pkg_name: raise ValueError(
