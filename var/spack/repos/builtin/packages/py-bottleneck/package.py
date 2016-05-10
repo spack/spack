@@ -7,7 +7,7 @@ class PyBottleneck(Package):
 
     version('1.0.0', '380fa6f275bd24f27e7cf0e0d752f5d2')
 
-    extends('python', ignore=r'bin/f2py$')
+    extends('python')
     depends_on('py-numpy')
 
     def install(self, spec, prefix):

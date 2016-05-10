@@ -29,7 +29,8 @@ class Qt(Package):
     depends_on("zlib")
     depends_on("dbus", when='@4:')
     depends_on("libtiff")
-    depends_on("libpng")
+    depends_on("libpng@1.2.56", when='@3')
+    depends_on("libpng", when='@4:')
     depends_on("libmng")
     depends_on("jpeg")
 
@@ -100,7 +101,7 @@ class Qt(Package):
 
     @property
     def common_config_args(self):
-        return [
+        config_args = [
             '-prefix', self.prefix,
             '-v',
             '-opensource',
@@ -114,19 +115,29 @@ class Qt(Package):
             '-no-openvg',
             '-no-pch',
             # NIS is deprecated in more recent glibc
-            '-no-nis']
+            '-no-nis'
+        ]
+
+        if '+gtk' in self.spec:
+            config_args.append('-gtkstyle')
+        else:
+            config_args.append('-no-gtkstyle')
+
+        return config_args
+
     # Don't disable all the database drivers, but should
     # really get them into spack at some point.
 
     @when('@3')
     def configure(self):
+        # An user report that this was necessary to link Qt3 on ubuntu
+        os.environ['LD_LIBRARY_PATH'] = os.getcwd()+'/lib' 
         configure('-prefix', self.prefix,
                   '-v',
                   '-thread',
                   '-shared',
                   '-release',
-                  '-fast'
-                  )
+                  '-fast')
 
     @when('@4')
     def configure(self):

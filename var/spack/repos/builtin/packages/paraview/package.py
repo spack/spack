@@ -27,13 +27,14 @@ class Paraview(Package):
 
     depends_on('bzip2')
     depends_on('freetype')
-    depends_on('hdf5+mpi', when='+mpi')
-    depends_on('hdf5~mpi', when='~mpi')
+    #depends_on('hdf5+mpi', when='+mpi')
+    #depends_on('hdf5~mpi', when='~mpi')
     depends_on('jpeg')
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('libxml2')
-    depends_on('netcdf')
+    #depends_on('netcdf')
+    #depends_on('netcdf-cxx')
     #depends_on('protobuf') # version mismatches?
     #depends_on('sqlite') # external version not supported
     depends_on('zlib')
@@ -75,13 +76,13 @@ class Paraview(Package):
             cmake('..',
                 '-DCMAKE_INSTALL_PREFIX:PATH=%s' % prefix,
                 '-DBUILD_TESTING:BOOL=OFF',
-                '-DVTK_USER_SYSTEM_FREETYPE:BOOL=ON',
-                '-DVTK_USER_SYSTEM_HDF5:BOOL=ON',
-                '-DVTK_USER_SYSTEM_JPEG:BOOL=ON',
-                '-DVTK_USER_SYSTEM_LIBXML2:BOOL=ON',
-                '-DVTK_USER_SYSTEM_NETCDF:BOOL=ON',
-                '-DVTK_USER_SYSTEM_TIFF:BOOL=ON',
-                '-DVTK_USER_SYSTEM_ZLIB:BOOL=ON',
+                '-DVTK_USE_SYSTEM_FREETYPE:BOOL=ON',
+                '-DVTK_USE_SYSTEM_HDF5:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
+                '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
+                '-DVTK_USE_SYSTEM_NETCDF:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
+                '-DVTK_USE_SYSTEM_ZLIB:BOOL=ON',
                 *feature_args)
             make()
             make('install')

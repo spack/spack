@@ -43,6 +43,8 @@ class Mpich(Package):
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
 
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
+    variant('pmi', default=True, description='Build with PMI support')
+    variant('hydra', default=True, description='Build the hydra process manager')
 
     provides('mpi@:3.0', when='@3:')
     provides('mpi@:1.3', when='@1:')
@@ -55,12 +57,15 @@ class Mpich(Package):
         spack_env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
-        """For dependencies, make mpicc's use spack wrapper."""
-        # FIXME : is this necessary ? Shouldn't this be part of a contract with MPI providers?
-        module.mpicc = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
+        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+        self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
     def install(self, spec, prefix):
         config_args = ["--prefix=" + prefix,
+                       "--with-pmi=" + ("yes" if '+pmi' in spec else 'no'),
+                       "--with-pm=" + ('hydra' if '+hydra' in spec else 'no'),
                        "--enable-shared"]
 
         # Variants

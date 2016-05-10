@@ -1,4 +1,5 @@
 from spack.compiler import *
+import llnl.util.tty as tty
 
 class Nag(Compiler):
     # Subclasses use possible names of C compiler
@@ -19,6 +20,27 @@ class Nag(Compiler):
                    'cxx' : 'c++',
                    'f77' : 'nag/nagfor',
                    'fc'  : 'nag/nagfor' }
+
+    @property
+    def openmp_flag(self):
+        return "-openmp"
+
+    @property
+    def cxx11_flag(self):
+        # NAG does not have a C++ compiler
+        # However, it can be mixed with a compiler that does support it
+        return "-std=c++11"
+
+    # Unlike other compilers, the NAG compiler passes options to GCC, which
+    # then passes them to the linker. Therefore, we need to doubly wrap the
+    # options with '-Wl,-Wl,,'
+    @property
+    def f77_rpath_arg(self):
+        return '-Wl,-Wl,,-rpath,'
+
+    @property
+    def fc_rpath_arg(self):
+        return '-Wl,-Wl,,-rpath,'
 
     @classmethod
     def default_version(self, comp):

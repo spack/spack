@@ -1803,15 +1803,15 @@ Compile-time library search paths
   * ``-L$dep_prefix/lib``
   * ``-L$dep_prefix/lib64``
 Runtime library search paths (RPATHs)
-  * ``-Wl,-rpath,$dep_prefix/lib``
-  * ``-Wl,-rpath,$dep_prefix/lib64``
+  * ``$rpath_flag$dep_prefix/lib``
+  * ``$rpath_flag$dep_prefix/lib64``
 Include search paths
   * ``-I$dep_prefix/include``
 
 An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
 build will have ``-I$LIBELF_PREFIX/include``,
-``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath,$LIBELF_PREFIX/lib``
+``-L$LIBELF_PREFIX/lib``, and ``$rpath_flag$LIBELF_PREFIX/lib``
 inserted on the command line.  This is done transparently to the
 project's build system, which will just think it's using a system
 where ``libelf`` is readily available.  Because of this, you **do
@@ -1830,6 +1830,48 @@ Because of the ``-L`` and ``-I`` arguments, configure will
 successfully find ``libdwarf.h`` and ``libdwarf.so``, without the
 packager having to provide ``--with-libdwarf=/path/to/libdwarf`` on
 the command line.
+
+.. note::
+
+    For most compilers, ``$rpath_flag`` is ``-Wl,-rpath,``. However, NAG
+    passes its flags to GCC instead of passing them directly to the linker.
+    Therefore, its ``$rpath_flag`` is doubly wrapped: ``-Wl,-Wl,,-rpath,``.
+    ``$rpath_flag`` can be overriden on a compiler specific basis in
+    ``lib/spack/spack/compilers/$compiler.py``.
+
+Compiler flags
+~~~~~~~~~~~~~~
+In rare circumstances such as compiling and running small unit tests, a package
+developer may need to know what are the appropriate compiler flags to enable
+features like ``OpenMP``, ``c++11``, ``c++14`` and alike. To that end the
+compiler classes in ``spack`` implement the following _properties_ :
+``openmp_flag``, ``cxx11_flag``, ``cxx14_flag``, which can be accessed in a
+package by ``self.compiler.cxx11_flag`` and alike. Note that the implementation
+is such that if a given compiler version does not support this feature, an
+error will be produced. Therefore package developers can also use these properties
+to assert that a compiler supports the requested feature. This is handy when a
+package supports additional variants like
+
+.. code-block:: python
+
+   variant('openmp', default=True, description="Enable OpenMP support.")
+
+Message Parsing Interface (MPI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It is common for high performance computing software/packages to use ``MPI``.
+As a result of conretization, a given package can be built using different
+implementations of MPI such as ``Openmpi``, ``MPICH`` or ``IntelMPI``.
+In some scenarios to configure a package one have to provide it with appropriate MPI
+compiler wrappers such as ``mpicc``, ``mpic++``.
+However different implementations of ``MPI`` may have different names for those
+wrappers.  In order to make package's ``install()`` method indifferent to the
+choice ``MPI`` implementation, each package which implements ``MPI`` sets up
+``self.spec.mpicc``, ``self.spec.mpicxx``, ``self.spec.mpifc`` and ``self.spec.mpif77``
+to point to ``C``, ``C++``, ``Fortran 90`` and ``Fortran 77`` ``MPI`` wrappers.
+Package developers are advised to use these variables, for example ``self.spec['mpi'].mpicc``
+instead of hard-coding ``join_path(self.spec['mpi'].prefix.bin, 'mpicc')`` for
+the reasons outlined above.
+
 
 Forking ``install()``
 ~~~~~~~~~~~~~~~~~~~~~

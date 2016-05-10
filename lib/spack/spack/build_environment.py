@@ -98,21 +98,27 @@ def set_compiler_environment_variables(pkg, env):
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
     link_dir = spack.build_env_path
-    env.set('CC', join_path(link_dir, pkg.compiler.link_paths['cc']))
+    env.set('CC',  join_path(link_dir, pkg.compiler.link_paths['cc']))
     env.set('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
     env.set('F77', join_path(link_dir, pkg.compiler.link_paths['f77']))
-    env.set('FC', join_path(link_dir, pkg.compiler.link_paths['fc']))
+    env.set('FC',  join_path(link_dir, pkg.compiler.link_paths['fc']))
 
     # Set SPACK compiler variables so that our wrapper knows what to call
     compiler = pkg.compiler
     if compiler.cc:
-        env.set('SPACK_CC', compiler.cc)
+        env.set('SPACK_CC',  compiler.cc)
     if compiler.cxx:
         env.set('SPACK_CXX', compiler.cxx)
     if compiler.f77:
         env.set('SPACK_F77', compiler.f77)
     if compiler.fc:
-        env.set('SPACK_FC', compiler.fc)
+        env.set('SPACK_FC',  compiler.fc)
+
+    # Set SPACK compiler rpath flags so that our wrapper knows what to use
+    env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
+    env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
+    env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
+    env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
     return env
@@ -175,8 +181,8 @@ def set_build_environment_variables(pkg, env):
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     pkg_config_dirs = []
     for p in dep_prefixes:
-        for libdir in ('lib', 'lib64'):
-            pcdir = join_path(p, libdir, 'pkgconfig')
+        for maybe in ('lib', 'lib64', 'share'):
+            pcdir = join_path(p, maybe, 'pkgconfig')
             if os.path.isdir(pcdir):
                 pkg_config_dirs.append(pcdir)
     env.set_path('PKG_CONFIG_PATH', pkg_config_dirs)

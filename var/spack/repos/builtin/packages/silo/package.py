@@ -1,5 +1,6 @@
 from spack import *
 
+
 class Silo(Package):
     """Silo is a library for reading and writing a wide variety of scientific
        data to binary, disk files."""
@@ -12,6 +13,7 @@ class Silo(Package):
     version('4.8', 'b1cbc0e7ec435eb656dc4b53a23663c9')
 
     variant('fortran', default=True, description='Enable Fortran support')
+    variant('shared', default=True, description='Build shared libraries')
     variant('silex', default=False, description='Builds Silex, a GUI for viewing Silo files')
 
     depends_on('hdf5')
@@ -21,6 +23,7 @@ class Silo(Package):
         config_args = [
             '--enable-fortran' if '+fortran' in spec else '--disable-fortran',
             '--enable-silex' if '+silex' in spec else '--disable-silex',
+            '--enable-shared' if '+shared' in spec else '--disable-shared',
         ]
 
         if '+silex' in spec:
@@ -30,6 +33,7 @@ class Silo(Package):
             '--prefix=%s' % prefix,
             '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include, spec['hdf5'].prefix.lib),
             '--with-zlib=%s,%s' % (spec['zlib'].prefix.include, spec['zlib'].prefix.lib),
+            '--enable-install-lite-headers',
             *config_args)
 
         make()

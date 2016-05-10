@@ -50,13 +50,24 @@ class Gcc(Compiler):
                   'fc'  : 'gcc/gfortran' }
 
     @property
+    def openmp_flag(self):
+        return "-fopenmp"
+
+    @property
     def cxx11_flag(self):
         if self.version < ver('4.3'):
             tty.die("Only gcc 4.3 and above support c++11.")
         elif self.version < ver('4.7'):
-            return "-std=gnu++0x"
+            return "-std=c++0x"
         else:
-            return "-std=gnu++11"
+            return "-std=c++11"
+
+    @property
+    def cxx14_flag(self):
+        if self.version < ver('4.8'):
+            tty.die("Only gcc 4.8 and above support c++14.")
+        else:
+            return "-std=c++14"
 
     @classmethod
     def fc_version(cls, fc):

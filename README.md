@@ -1,7 +1,8 @@
 ![image](share/spack/logo/spack-logo-text-64.png "Spack")
 ============
 
-[![Build Status](https://travis-ci.org/LLNL/spack.png?branch=develop)](https://travis-ci.org/LLNL/spack)
+[![Build Status](https://travis-ci.org/LLNL/spack.svg?branch=develop)](https://travis-ci.org/LLNL/spack)
+[![Coverage Status](https://coveralls.io/repos/github/LLNL/spack/badge.svg?branch=develop)](https://coveralls.io/github/LLNL/spack?branch=develop)
 
 Spack is a package management tool designed to support multiple
 versions and configurations of software on a wide variety of platforms

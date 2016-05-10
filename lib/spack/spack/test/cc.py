@@ -67,6 +67,11 @@ class CompilerTest(unittest.TestCase):
         os.environ['SPACK_COMPILER_SPEC'] = "gcc@4.4.7"
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2"
 
+        os.environ['SPACK_CC_RPATH_ARG']  = "-Wl,-rpath,"
+        os.environ['SPACK_CXX_RPATH_ARG'] = "-Wl,-rpath,"
+        os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
+        os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
+
         # Make some fake dependencies
         self.tmp_deps = tempfile.mkdtemp()
         self.dep1 = join_path(self.tmp_deps, 'dep1')
@@ -219,3 +224,27 @@ class CompilerTest(unittest.TestCase):
 
                       ' '.join(test_command))
 
+    def test_ld_deps_reentrant(self):
+        """Make sure ld -r is handled correctly on OS's where it doesn't
+           support rpaths."""
+        os.environ['SPACK_DEPENDENCIES'] = ':'.join([self.dep1])
+
+        os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
+        reentrant_test_command = ['-r'] + test_command
+        self.check_ld('dump-args', reentrant_test_command,
+                      'ld ' +
+                      '-rpath ' + self.prefix + '/lib ' +
+                      '-rpath ' + self.prefix + '/lib64 ' +
+
+                      '-L' + self.dep1 + '/lib ' +
+                      '-rpath ' + self.dep1 + '/lib ' +
+
+                      '-r ' +
+                      ' '.join(test_command))
+
+        os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
+        self.check_ld('dump-args', reentrant_test_command,
+                      'ld ' +
+                      '-L' + self.dep1 + '/lib ' +
+                      '-r ' +
+                      ' '.join(test_command))
