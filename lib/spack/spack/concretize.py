@@ -102,7 +102,7 @@ class DefaultConcretizer(object):
         return usable
 
 
-    def choose_virtual_or_external(self, spec):
+    def __choose_virtual_or_external(self, spec):
         """Given a list of candidate virtual and external packages, try to
            find one that is most ABI compatible.
         """
@@ -130,6 +130,13 @@ class DefaultConcretizer(object):
         # Pull the candidates back out and return them in order
         candidates = [c for s,l,c in keys]
         return candidates
+
+    _memoize_choose_virtual_or_external = dict()
+    def choose_virtual_or_external(self, spec):
+        key = id(spec)
+        if key not in self._memoize_choose_virtual_or_external:
+            self._memoize_choose_virtual_or_external[key] = self.__choose_virtual_or_external(spec)
+        return self._memoize_choose_virtual_or_external[key]
 
 
     def concretize_version(self, spec):
@@ -269,7 +276,7 @@ class DefaultConcretizer(object):
         return True  # things changed.
 
 
-def find_spec(spec, condition):
+def __find_spec(spec, condition):
     """Searches the dag from spec in an intelligent order and looks
        for a spec that matches a condition"""
     # First search parents, then search children
@@ -294,6 +301,12 @@ def find_spec(spec, condition):
 
     return None   # Nothing matched the condition.
 
+_memoize_find_spec = dict()
+def find_spec(spec, condition):
+    key = (id(spec), condition)
+    if key not in _memoize_find_spec:
+        _memoize_find_spec[key] = __find_spec(spec, condition)
+    return _memoize_find_spec[key]
 
 def cmp_specs(lhs, rhs):
     # Package name sort order is not configurable, always goes alphabetical
