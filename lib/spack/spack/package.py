@@ -1006,7 +1006,7 @@ class Package(object):
                           fromlist=[self.__class__.__name__])
 
     def setup_environment(self, spack_env, run_env):
-        """Set up the compile and runtime environemnts for a package.
+        """Set up the compile and runtime environments for a package.
 
         `spack_env` and `run_env` are `EnvironmentModifications`
         objects.  Package authors can call methods on them to alter
