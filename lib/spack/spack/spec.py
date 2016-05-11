@@ -1375,7 +1375,7 @@ class Spec(object):
         except SpecError:
             return parse_anonymous_spec(spec_like, self.name)
 
-    def __satisfies(self, other, deps=True, strict=False):
+    def satisfies(self, other, deps=True, strict=False):
         """Determine if this spec satisfies all constraints of another.
 
         There are two senses for satisfies:
@@ -1439,12 +1439,12 @@ class Spec(object):
         else:
             return True
 
-    _memoize_satisfies = dict()
-    def satisfies(self, other, deps=True, strict=False):
-        key = (other, deps, strict)
-        if key not in self._memoize_satisfies:
-            self._memoize_satisfies[key] = self.__satisfies(other, deps=deps, strict=strict)
-        return self._memoize_satisfies[key]
+#    _memoize_satisfies = dict()
+#    def satisfies(self, other, deps=True, strict=False):
+#        key = (other, deps, strict)
+#        if key not in self._memoize_satisfies:
+#            self._memoize_satisfies[key] = self.__satisfies(other, deps=deps, strict=strict)
+#        return self._memoize_satisfies[key]
 
 
     def satisfies_dependencies(self, other, strict=False):
