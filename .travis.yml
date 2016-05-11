@@ -15,20 +15,22 @@ before_install:
   # Need this for the git tests to succeed.
   - git config --global user.email "spack@example.com"
   - git config --global user.name "Test User"
+
   # Need this to be able to compute the list of changed files
   - git fetch origin develop:develop
 
 script:
+  # Regular spack setup and tests
   - . share/spack/setup-env.sh
   - spack compilers
   - spack config get compilers
   - spack install -v libdwarf
+
   # Run unit tests with code coverage
   - coverage run bin/spack test
-  # Checks if the file that have been changed are flake8 conformant
-  - CHANGED_PYTHON_FILES=`git diff develop... --name-only | perl -ne 'print if /\.py$/'`
-  - if [[ ${CHANGED_PYTHON_FILES} ]] ; then flake8 --format pylint --config flake8.ini ${CHANGED_PYTHON_FILES} ; fi
 
+  # Run flake8 code style checks.
+  - share/spack/qa/run-flake8
 
 after_success:
   - coveralls
