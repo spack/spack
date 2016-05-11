@@ -1,9 +1,10 @@
 from spack import *
 
+
 class XcbUtilKeysyms(Package):
-    """FIXME: put a proper description of your package here."""
-    # FIXME: add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    """Standard X key constants and conversion to/from keycodes."""
+
+    homepage = "https://xcb.freedesktop.org/XcbUtil"
     url      = "https://xcb.freedesktop.org/dist/xcb-util-keysyms-0.3.9.tar.gz"
 
     version('0.4.0', '2decde7b02b4b3bde99a02c17b64d5dc')
