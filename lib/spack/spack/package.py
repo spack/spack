@@ -670,7 +670,7 @@ class Package(object):
     def remove_prefix(self):
         """
         Removes the prefix for a package along with any empty parent
-        directories
+        directories.
         """
         spack.install_area.layout.remove_install_directory(self.spec)
 
@@ -926,7 +926,7 @@ class Package(object):
                     self.sanity_check_prefix()
 
                     # Copy provenance into the install directory on success
-                    layout =  spack.install_area.layout
+                    layout = spack.install_area.layout
                     log_install_path = layout.build_log_path(self.spec)
                     env_install_path = layout.build_env_path(self.spec)
                     packages_dir     = layout.build_packages_path(self.spec)
@@ -986,7 +986,8 @@ class Package(object):
         check_paths(self.sanity_check_is_dir, 'directory', os.path.isdir)
 
         installed = set(os.listdir(self.prefix))
-        installed.difference_update(spack.install_area.layout.hidden_file_paths)
+        installed.difference_update(
+            spack.install_area.layout.hidden_file_paths)
         if not installed:
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
@@ -1196,7 +1197,8 @@ class Package(object):
 
         spack.install_area.layout.add_extension(self.extendee_spec, self.spec)
         tty.msg("Activated extension %s for %s"
-                % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+                % (self.spec.short_spec,
+                   self.extendee_spec.format("$_$@$+$%@")))
 
     def activate(self, extension, **kwargs):
         """Symlinks all files from the extension into extendee's install dir.
@@ -1227,9 +1229,9 @@ class Package(object):
         # Allow a force deactivate to happen.  This can unlink
         # spurious files if something was corrupted.
         if not force:
-            spack.install_area.layout.check_activated(self.extendee_spec, self.spec)
-
-            activated = spack.install_area.layout.extension_map(self.extendee_spec)
+            layout = spack.install_area.layout
+            layout.check_activated(self.extendee_spec, self.spec)
+            activated = layout.extension_map(self.extendee_spec)
             for name, aspec in activated.items():
                 if aspec == self.spec:
                     continue
@@ -1247,7 +1249,8 @@ class Package(object):
             spack.install_area.layout.remove_extension(self.extendee_spec, self.spec)
 
         tty.msg("Deactivated extension %s for %s"
-                % (self.spec.short_spec, self.extendee_spec.format("$_$@$+$%@")))
+                % (self.spec.short_spec,
+                   self.extendee_spec.format("$_$@$+$%@")))
 
     def deactivate(self, extension, **kwargs):
         """Unlinks all files from extension out of this package's install dir.

@@ -86,7 +86,8 @@ def module_find(mtype, spec_array):
 def module_refresh():
     """Regenerate all module files for installed packages known to
        spack (some packages may no longer exist)."""
-    specs = [s for s in spack.install_area.db.query(installed=True, known=True)]
+    specs = [s for s in spack.install_area.db.query(installed=True,
+                                                    known=True)]
 
     for name, cls in module_types.items():
         tty.msg("Regenerating %s module files." % name)

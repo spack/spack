@@ -64,7 +64,6 @@ SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
-
 class MakeExecutable(Executable):
     """Special callable executable object for make so the user can
        specify parallel or not on a per-invocation basis.  Using
@@ -93,11 +92,13 @@ class MakeExecutable(Executable):
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
     # Set compiler variables used by CMake and autotools
-    assert all(key in pkg.compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
+    assert all(key in pkg.compiler.link_paths
+               for key in ('cc', 'cxx', 'f77', 'fc'))
 
     # Populate an object with the list of environment modifications
     # and return it
-    # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
+    # TODO : add additional kwargs for better diagnostics,
+    #        like requestor, ttyout, ttyerr, etc.
     link_dir = spack.build_env_path
     env.set('CC',  join_path(link_dir, pkg.compiler.link_paths['cc']))
     env.set('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
@@ -140,7 +141,8 @@ def set_build_environment_variables(pkg, env):
     # handled by putting one in the <build_env_path>/case-insensitive
     # directory.  Add that to the path too.
     env_paths = []
-    for item in [spack.build_env_path, join_path(spack.build_env_path, pkg.compiler.name)]:
+    for item in [spack.build_env_path,
+                 join_path(spack.build_env_path, pkg.compiler.name)]:
         env_paths.append(item)
         ci = join_path(item, 'case-insensitive')
         if os.path.isdir(ci):
@@ -153,7 +155,8 @@ def set_build_environment_variables(pkg, env):
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
     dep_prefixes = [d.prefix for d in pkg.spec.traverse(root=False)]
     env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
-    env.set_path('CMAKE_PREFIX_PATH', dep_prefixes)  # Add dependencies to CMAKE_PREFIX_PATH
+    # Add dependencies to CMAKE_PREFIX_PATH
+    env.set_path('CMAKE_PREFIX_PATH', dep_prefixes)
 
     # Install prefix
     env.set(SPACK_PREFIX, pkg.prefix)
@@ -169,7 +172,8 @@ def set_build_environment_variables(pkg, env):
     env.unset('DYLD_LIBRARY_PATH')
 
     # Add bin directories from dependencies to the PATH for the build.
-    bin_dirs = reversed(filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))
+    bin_dirs = reversed(filter(os.path.isdir,
+                        ['%s/bin' % prefix for prefix in dep_prefixes]))
     for item in bin_dirs:
         env.prepend_path('PATH', item)
 
@@ -230,7 +234,8 @@ def set_module_variables_for_package(pkg, module):
 
     # Set up CMake rpath
     m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(pkg)))
+    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s'
+                            % ":".join(get_rpaths(pkg)))
 
     # Put spack compiler paths in module scope.
     link_dir = spack.build_env_path
@@ -273,13 +278,16 @@ def get_rpaths(pkg):
 
 
 def parent_class_modules(cls):
-    """Get list of super class modules that are all descend from spack.Package"""
+    """
+    Get list of super class modules that are
+    all descend from spack.Package
+    """
     if not issubclass(cls, spack.Package) or issubclass(spack.Package, cls):
         return []
     result = []
     module = sys.modules.get(cls.__module__)
     if module:
-        result = [ module ]
+        result = [module]
     for c in cls.__bases__:
         result.extend(parent_class_modules(c))
     return result
@@ -304,7 +312,8 @@ def setup_package(pkg):
     # throwaway environment, but it is kind of dirty.
     #
     # TODO: Think about how to avoid this fix and do something cleaner.
-    for s in pkg.spec.traverse(): s.package.spec = s
+    for s in pkg.spec.traverse():
+        s.package.spec = s
 
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env)
@@ -392,7 +401,8 @@ def fork(pkg, function):
         # message.  Just make the parent exit with an error code.
         pid, returncode = os.waitpid(pid, 0)
         if returncode != 0:
-            raise InstallError("Installation process had nonzero exit code.".format(str(returncode)))
+            raise InstallError("Installation process had nonzero exit code."
+                               .format(str(returncode)))
 
 
 class InstallError(spack.error.SpackError):
