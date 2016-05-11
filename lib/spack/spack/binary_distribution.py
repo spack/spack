@@ -2,6 +2,7 @@
 
 import os
 import re
+import stat
 import platform
 from commands import getstatusoutput
 
@@ -109,14 +110,11 @@ def get_filetype(path_name):
     """
     check the output of the file command for given string
     """
-    file_command = which("file")
-    output = file_command("-b",
-                          path_name,
-                          output=str,
-                          fail_on_error=False,
-                          error=str)
-    if file_command.returncode != 0:
-        tty.warn('getting filetype of "%s" failed' % path_name)
+    file_command = "LC_ALL=C file -b -h \"%s\"" % path_name
+    status, output = getstatusoutput(file_command)
+
+    if status!= 0:
+        tty.warn('getting filetype of "%s" failed' %path_name)
         return None
     return output.strip()
 
@@ -149,18 +147,20 @@ def relocate_binary(path_name, topdir, new_root_dir, patchelf_executable):
     Change RPATHs in given file
     """
     orig_rpath = get_existing_rpath(path_name, patchelf_executable)
-    new_rpath  = substitute_rpath(orig_rpath, topdir, new_root_dir)
-    modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable)
+    if orig_rpath:
+        new_rpath  = substitute_rpath(orig_rpath, topdir, new_root_dir)
+        modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable)
 
 
 def get_existing_rpath(path_name, patchelf_executable):
     if platform.system() == 'Darwin':
         command = which('otool')
-        output  = command("-l", path_name)
+        output  = command("-l", path_name,output=str,err=str)
         if command.returncode != 0:
             tty.warn('failed reading rpath for %s.' % path_name)
             return False
         last_cmd = None
+        path = None
         for line in output.split('\n'):
             match = re.search('( *[a-zA-Z]+ )(.*)', line)
             if match:
@@ -173,7 +173,10 @@ def get_existing_rpath(path_name, patchelf_executable):
                     last_cmd = rhs
                 if lhs == 'path' and last_cmd == 'LC_RPATH':
                     path = rhs
-        return path.split(':')
+        if path == None : 
+            return False
+        else: 
+            return path.split(':')
     elif platform.system() == 'Linux':
         command = '%s --print-rpath %s ' % (patchelf_executable, path_name)
         status, output = getstatusoutput(command)
@@ -198,20 +201,18 @@ def substitute_rpath(orig_rpath, topdir, new_root_path):
 
 
 def modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable):
+    st = os.stat(path_name)
+    wmode=os.access(path_name,os.W_OK)
+    if not wmode : os.chmod(path_name,st.st_mode | stat.S_IWUSR)    
     if platform.system() == 'Darwin':
         orig_joined = ':'.join(orig_rpath)
         new_joined = ':'.join(new_rpath)
-        command = "install_name_tool -rpath '%s' '%s' '%s'" % \
-            (orig_joined, new_joined, path_name)
-        status, output = getstatusoutput(command)
-        if status != 0:
-            tty.warn('failed writing rpath for %s.' % path_name)
         for orig, new in zip(orig_rpath, new_rpath):
-            command = "install_name_tool -rpath '%s' '%s' '%s'" % \
-                (orig, new, path_name)
-            status, output = getstatusoutput(command)
-            if status != 0:
-                tty.warn('failed writing rpath for %s.' % path_name)
+            command = which("install_name_tool")
+            output = command("-rpath", "%s" % orig,\
+                "%s" % new, "%s" % path_name, output=str, err=str )
+            if command.returncode != 0:
+                 tty.warn('failed writing rpath for %s.' %path_name)
     elif platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
         command = "%s --force-rpath --set-rpath '%s' '%s'" % \
@@ -221,7 +222,7 @@ def modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable):
             tty.warn('failed writing rpath for %s.' % path_name)
     else:
         tty.die('relocation not supported for this platform')
-
+    os.chmod(path_name,st.st_mode)
 
 def relocate_text(path_name, original_path, new_path):
     """
