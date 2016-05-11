@@ -54,7 +54,7 @@ class Elk(Package):
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
     depends_on('fftw',   when='+fft')
-    depends_on('mpi',    when='+mpi')
+    depends_on('mpi@2:', when='+mpi')
     depends_on('libxc',  when='+libxc')
 
     # Cannot be built in parallel
@@ -110,8 +110,8 @@ class Elk(Package):
             config['F90'] = spec['mpi'].mpifc
             config['F77'] = spec['mpi'].mpif77
         else:
-            config['F90'] = join_path(spack.build_env_path, 'f90'),
-            config['F77'] = join_path(spack.build_env_path, 'f77'),
+            config['F90'] = join_path(spack.build_env_path, 'f90')
+            config['F77'] = join_path(spack.build_env_path, 'f77')
             config['SRC_MPI'] = 'mpi_stub.f90'
 
         # OpenMP support
