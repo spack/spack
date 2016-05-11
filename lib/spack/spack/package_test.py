@@ -25,7 +25,8 @@
 from spack import *
 import os
 
-def compile_c_and_execute(source_file,include_flags, link_flags):
+
+def compile_c_and_execute(source_file, include_flags, link_flags):
     """Compile C @p source_file with @p include_flags and @p link_flags,
     run and return the output.
     """
@@ -46,14 +47,15 @@ def compare_output(current_output, blessed_output):
     if not (current_output == blessed_output):
         print "Produced output does not match expected output."
         print "Expected output:"
-        print '-'*80
+        print '-' * 80
         print blessed_output
-        print '-'*80
+        print '-' * 80
         print "Produced output:"
-        print '-'*80
+        print '-' * 80
         print current_output
-        print '-'*80
-        raise RuntimeError("Ouput check failed. See spack_output.log for details")
+        print '-' * 80
+        raise RuntimeError("Ouput check failed.",
+                           "See spack_output.log for details")
 
 
 def compare_output_file(current_output, blessed_output_file):
@@ -61,4 +63,4 @@ def compare_output_file(current_output, blessed_output_file):
     with open(blessed_output_file, 'r') as f:
         blessed_output = f.read()
 
-    compare_output(current_output,blessed_output)
+    compare_output(current_output, blessed_output)
