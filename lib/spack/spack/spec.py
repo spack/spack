@@ -1518,7 +1518,7 @@ class Spec(object):
             return False
 
         # Otherwise, first thing we care about is whether the name matches
-        if self.name != other.name and (not self.name) and (not other.name):
+        if self.name != other.name and self.name and other.name:
             return False
 
         # namespaces either match, or other doesn't require one.
