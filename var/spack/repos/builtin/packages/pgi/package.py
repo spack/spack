@@ -15,29 +15,29 @@ class Pgi(Package):
     set up a mirror, see http://software.llnl.gov/spack/mirrors.html"""
 
     homepage = "http://www.pgroup.com/"
-    url      = "file://%s/pgi-16.3.tar.gz" % os.getcwd()
+    url = "file://%s/pgi-16.3.tar.gz" % os.getcwd()
 
     version('16.3', '618cb7ddbc57d4e4ed1f21a0ab25f427')
 
     variant('network', default=True,
-        description="Perform a network install")
+            description="Perform a network install")
     variant('single',  default=False,
-        description="Perform a single system install")
+            description="Perform a single system install")
     variant('nvidia',  default=False,
-        description="Enable installation of optional NVIDIA components")
+            description="Enable installation of optional NVIDIA components")
     variant('amd',     default=False,
-        description="Enable installation of optional AMD components")
+            description="Enable installation of optional AMD components")
     variant('java',    default=False,
-        description="Enable installation of Java Runtime Environment")
+            description="Enable installation of Java Runtime Environment")
     variant('mpi',     default=False,
-        description="Enable installation of Open MPI")
+            description="Enable installation of Open MPI")
 
     # Licensing
     license_required = True
-    license_comment  = '#'
-    license_files    = ['license.dat']
-    license_vars     = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
-    license_url      = 'http://www.pgroup.com/doc/pgiinstall.pdf'
+    license_comment = '#'
+    license_files = ['license.dat']
+    license_vars = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
+    license_url = 'http://www.pgroup.com/doc/pgiinstall.pdf'
 
     def install(self, spec, prefix):
         # Enable the silent installation feature

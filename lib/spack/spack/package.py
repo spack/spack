@@ -407,7 +407,6 @@ class Package(object):
         return join_path(global_license_dir, self.name,
                          os.path.basename(self.license_files[0]))
 
-
     @property
     def version(self):
         if not self.spec.versions.concrete:
@@ -1021,7 +1020,6 @@ class Package(object):
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
 
-
     def do_install_dependencies(self, **kwargs):
         # Pass along paths of dependencies here
         for dep in self.spec.dependencies.values():
@@ -1349,11 +1347,9 @@ class Package(object):
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
         rpaths = [self.prefix.lib, self.prefix.lib64]
-        rpaths.extend(d.prefix.lib
-                      for d in self.spec.traverse(root=False)
+        rpaths.extend(d.prefix.lib for d in self.spec.traverse(root=False)
                       if os.path.isdir(d.prefix.lib))
-        rpaths.extend(d.prefix.lib64
-                      for d in self.spec.traverse(root=False)
+        rpaths.extend(d.prefix.lib64 for d in self.spec.traverse(root=False)
                       if os.path.isdir(d.prefix.lib64))
         return rpaths
 

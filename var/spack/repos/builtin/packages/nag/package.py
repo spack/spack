@@ -11,10 +11,10 @@ class Nag(Package):
 
     # Licensing
     license_required = True
-    license_comment  = '!'
-    license_files    = ['lib/nag.key']
-    license_vars     = ['NAG_KUSARI_FILE']
-    license_url      = 'http://www.nag.com/doc/inun/np61/lin-mac/klicence.txt'
+    license_comment = '!'
+    license_files = ['lib/nag.key']
+    license_vars = ['NAG_KUSARI_FILE']
+    license_url = 'http://www.nag.com/doc/inun/np61/lin-mac/klicence.txt'
 
     def url_for_version(self, version):
         # TODO: url and checksum are architecture dependent

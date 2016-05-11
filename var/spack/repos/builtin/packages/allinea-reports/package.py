@@ -13,10 +13,10 @@ class AllineaReports(Package):
 
     # Licensing
     license_required = True
-    license_comment  = '#'
-    license_files    = ['licences/Licence']
-    license_vars     = ['ALLINEA_LICENCE_FILE', 'ALLINEA_LICENSE_FILE']
-    license_url      = 'http://www.allinea.com/user-guide/reports/Installation.html'
+    license_comment = '#'
+    license_files = ['licences/Licence']
+    license_vars = ['ALLINEA_LICENCE_FILE', 'ALLINEA_LICENSE_FILE']
+    license_url = 'http://www.allinea.com/user-guide/reports/Installation.html'
 
     def url_for_version(self, version):
         # TODO: add support for other architectures/distributions

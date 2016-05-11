@@ -134,4 +134,3 @@ def symlink_license(pkg):
             os.symlink(target, link_name)
             tty.msg("Added local symlink %s to global license file" %
                     link_name)
-
