@@ -788,7 +788,7 @@ versions are now filtered out.
 
 .. _shell-support:
 
-Environment modules
+Integration with module systems
 -------------------------------
 
 .. note::
@@ -798,42 +798,50 @@ Environment modules
    interface and/or generated module names may change in future
    versions.
 
-Spack provides some limited integration with environment module
-systems to make it easier to use the packages it provides.
+Spack provides some integration with
+`Environment Modules <http://modules.sourceforge.net/>`_
+and `Dotkit <https://computing.llnl.gov/?set=jobs&page=dotkit>`_ to make
+it easier to use the packages it installed.
+
 
 
 Installing Environment Modules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to use Spack's generated environment modules, you must have
 installed the *Environment Modules* package.  On many Linux
-distributions, this can be installed from the vendor's repository.
-For example: ```yum install environment-modules``
-(Fedora/RHEL/CentOS).  If your Linux distribution does not have
-Environment Modules, you can get it with Spack:
+distributions, this can be installed from the vendor's repository:
 
-1. Install with::
+.. code-block:: sh
+
+    yum install environment-modules # (Fedora/RHEL/CentOS)
+    apt-get install environment-modules # (Ubuntu/Debian)
+
+If your Linux distribution does not have
+Environment Modules, you can get it with Spack:
 
 .. code-block:: sh
 
     spack install environment-modules
 
-2. Activate with::
 
-Add the following two lines to your ``.bashrc`` profile (or similar):
+In this case to activate it automatically you need to add the following two
+lines to your ``.bashrc`` profile (or similar):
 
 .. code-block:: sh
 
    MODULES_HOME=`spack location -i environment-modules`
    source ${MODULES_HOME}/Modules/init/bash
 
-In case you use a Unix shell other than bash, substitute ``bash`` by
-the appropriate file in ``${MODULES_HOME}/Modules/init/``.
+If you use a Unix shell other than ``bash``, modify the commands above
+accordingly and source the appropriate file in
+``${MODULES_HOME}/Modules/init/``.
 
 
-Spack and Environment Modules
+.. TODO : Add a similar section on how to install dotkit ?
+
+Spack and module systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 You can enable shell support by sourcing some files in the
 ``/share/spack`` directory.
 
@@ -841,7 +849,7 @@ For ``bash`` or ``ksh``, run:
 
 .. code-block:: sh
 
-   . $SPACK_ROOT/share/spack/setup-env.sh
+   . ${SPACK_ROOT}/share/spack/setup-env.sh
 
 For ``csh`` and ``tcsh`` run:
 
@@ -853,17 +861,19 @@ For ``csh`` and ``tcsh`` run:
 You can put the above code in your ``.bashrc`` or ``.cshrc``, and
 Spack's shell support will be available on the command line.
 
-When you install a package with Spack, it automatically generates an
-environment module that lets you add the package to your environment.
+When you install a package with Spack, it automatically generates a module file
+that lets you add the package to your environment.
 
-Currently, Spack supports the generation of `TCL Modules
+Currently, Spack supports the generation of `Environment Modules
 <http://wiki.tcl.tk/12999>`_ and `Dotkit
 <https://computing.llnl.gov/?set=jobs&page=dotkit>`_.  Generated
 module files for each of these systems can be found in these
 directories:
 
-  * ``$SPACK_ROOT/share/spack/modules``
-  * ``$SPACK_ROOT/share/spack/dotkit``
+.. code-block:: sh
+
+  ${SPACK_ROOT}/share/spack/modules
+  ${SPACK_ROOT}/share/spack/dotkit
 
 The directories are automatically added to your ``MODULEPATH`` and
 ``DK_NODE`` environment variables when you enable Spack's `shell
@@ -919,8 +929,7 @@ of installed packages.
 
 The names here should look familiar, they're the same ones from
 ``spack find``.  You *can* use the names here directly.  For example,
-you could type either of these commands to load the callpath module
-(assuming dotkit and modules are installed):
+you could type either of these commands to load the callpath module:
 
 .. code-block:: sh
 
@@ -935,7 +944,7 @@ easy to type.  Luckily, Spack has its own interface for using modules
 and dotkits.  You can use the same spec syntax you're used to:
 
   =========================  ==========================
-  Modules                    Dotkit
+  Environment Modules        Dotkit
   =========================  ==========================
   ``spack load <spec>``      ``spack use <spec>``
   ``spack unload <spec>``    ``spack unuse <spec>``
@@ -1002,15 +1011,216 @@ used ``gcc``.  You could therefore just type:
 
 To identify just the one built with the Intel compiler.
 
+Module files generation and customization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Regenerating Module files
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Environment Modules and Dotkit files are generated when packages are installed,
+and are placed in the following directories under the Spack root:
 
-Module and dotkit files are generated when packages are installed, and
-are placed in the following directories under the Spack root:
+.. code-block:: sh
 
-  * ``$SPACK_ROOT/share/spack/modules``
-  * ``$SPACK_ROOT/share/spack/dotkit``
+  ${SPACK_ROOT}/share/spack/modules
+  ${SPACK_ROOT}/share/spack/dotkit
+
+The content that gets written in each module file can be customized in two ways:
+
+  1. overriding part of the ``spack.Package`` API within a ``package.py``
+  2. writing dedicated configuration files
+
+Override ``Package`` API
+^^^^^^^^^^^^^^^^^^^^^^^^
+There are currently two methods in ``spack.Package`` that may affect the content
+of module files:
+
+.. code-block:: python
+
+  def setup_environment(self, spack_env, run_env):
+      """Set up the compile and runtime environments for a package."""
+      pass
+
+.. code-block:: python
+
+  def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+      """Set up the environment of packages that depend on this one"""
+      pass
+
+As briefly stated in the comments, the first method lets you customize the
+module file content for the package you are currently writing, the second
+allows for modifications to your dependees module file. In both cases one
+needs to fill ``run_env`` with the desired list of environment modifications.
+
+Example : ``builtin/packages/python/package.py``
+""""""""""""""""""""""""""""""""""""""""""""""""
+
+The ``python`` package that comes with the ``builtin`` Spack repository
+overrides ``setup_dependent_environment`` in the following way:
+
+.. code-block:: python
+
+  def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        # ...
+        if extension_spec.package.extends(self.spec):
+            run_env.prepend_path('PYTHONPATH', os.path.join(extension_spec.prefix, self.site_packages_dir))
+
+to insert the appropriate ``PYTHONPATH`` modifications in the module
+files of python packages.
+
+Configuration files
+^^^^^^^^^^^^^^^^^^^
+
+Another way of modifying the content of module files is writing a
+``modules.yaml`` configuration file. Following usual Spack conventions, this
+file can be placed either at *site* or *user* scope.
+
+The default site configuration reads:
+
+ .. literalinclude:: ../../../etc/spack/modules.yaml
+    :language: yaml
+
+It basically inspects the installation prefixes for the
+existence of a few folders and, if they exist, it prepends a path to a given
+list of environment variables.
+
+For each module system that can be enabled a finer configuration is possible:
+
+.. code-block:: yaml
+
+ modules:
+   tcl:
+     # contains environment modules specific customizations
+   dotkit:
+     # contains dotkit specific customizations
+
+The structure under the ``tcl`` and ``dotkit`` keys is almost equal, and will
+be showcased in the following by some examples.
+
+Select module files by spec constraints
+"""""""""""""""""""""""""""""""""""""""
+Using spec syntax it's possible to have different customizations for different
+groups of module files.
+
+Considering :
+
+.. code-block:: yaml
+
+ modules:
+   tcl:
+     all: # Default addition for every package
+       environment:
+         set:
+           BAR: 'bar'
+     ^openmpi:: # A double ':' overrides previous rules
+       environment:
+         set:
+           BAR: 'baz'
+     zlib:
+       environment:
+         prepend_path:
+           LD_LIBRARY_PATH: 'foo'
+     zlib%gcc@4.8:
+       environment:
+         unset:
+         - FOOBAR
+
+what will happen is that:
+
+ - every module file will set ``BAR=bar``
+ - unless the associated spec satisfies ``^openmpi`` in which case ``BAR=baz``
+ - any spec that satisfies ``zlib`` will additionally prepend ``foo`` to ``LD_LIBRARY_PATH``
+ - any spec that satisfies ``zlib%gcc@4.8`` will additionally unset ``FOOBAR``
+
+.. note::
+  Order does matter
+    The modifications associated with the ``all`` keyword are always evaluated
+    first, no matter where they appear in the configuration file. All the other
+    spec constraints are instead evaluated top to bottom.
+
+Filter modifications out of module files
+""""""""""""""""""""""""""""""""""""""""
+
+Modifications to certain environment variables in module files are generated by
+default. Suppose you would like to avoid having ``CPATH`` and ``LIBRARY_PATH``
+modified by your dotkit modules. Then :
+
+.. code-block:: yaml
+
+  modules:
+    dotkit:
+      all:
+        filter:
+          environment_blacklist: ['CPATH', 'LIBRARY_PATH']  # Exclude changes to any of these variables
+
+will generate dotkit module files that will not contain modifications to either
+``CPATH`` or ``LIBRARY_PATH`` and environment module files that instead will
+contain those modifications.
+
+Autoload dependencies
+"""""""""""""""""""""
+
+The following lines in ``modules.yaml``:
+
+.. code-block:: yaml
+
+  modules:
+    tcl:
+      all:
+        autoload: 'direct'
+
+will produce environment module files that will automatically load their direct
+dependencies.
+
+.. note::
+  Allowed values for ``autoload`` statements
+    Allowed values for ``autoload`` statements are either ``none``, ``direct``
+    or ``all``. In ``tcl`` configuration it is possible to use the option
+    ``prerequisites`` that accepts the same values and will add ``prereq``
+    statements instead of automatically loading other modules.
+
+Blacklist or whitelist the generation of specific module files
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Sometimes it is desirable not to generate module files, a common use case being
+not providing the users with software built using the system compiler.
+
+A configuration file like:
+
+.. code-block:: yaml
+
+  modules:
+    tcl:
+      whitelist: ['gcc', 'llvm']  # Whitelist will have precedence over blacklist
+      blacklist: ['%gcc@4.4.7']  # Assuming gcc@4.4.7 is the system compiler
+
+will skip module file generation for anything that satisfies ``%gcc@4.4.7``,
+with the exception of specs that satisfy ``gcc`` or ``llvm``.
+
+Customize the naming scheme and insert conflicts
+""""""""""""""""""""""""""""""""""""""""""""""""
+
+A configuration file like:
+
+.. code-block:: yaml
+
+  modules:
+    tcl:
+      naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
+      all:
+        conflict: ['{name}', 'intel/14.0.1']
+
+will create module files that will conflict with ``intel/14.0.1`` and with the
+base directory of the same module, effectively preventing the possibility to
+load two or more versions of the same software at the same time.
+
+.. note::
+  Tokens available for the naming scheme
+    currently only the tokens shown in the example are available to construct
+    the naming scheme
+
+.. note::
+  The ``conflict`` option is ``tcl`` specific
+
+Regenerating module files
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sometimes you may need to regenerate the modules files.  For example,
 if newer, fancier module support is added to Spack at some later date,
@@ -1020,7 +1230,7 @@ new features.
 .. _spack-module:
 
 ``spack module refresh``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""
 
 Running ``spack module refresh`` will remove the
 ``share/spack/modules`` and ``share/spack/dotkit`` directories, then

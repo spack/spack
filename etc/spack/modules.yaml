@@ -5,4 +5,14 @@
 # although users can override these settings in their ~/.spack/modules.yaml.
 # -------------------------------------------------------------------------
 modules:
+  prefix_inspections: {
+        bin: ['PATH'],
+        man: ['MANPATH'],
+        lib: ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        lib64: ['LIBRARY_PATH', 'LD_LIBRARY_PATH'],
+        include: ['CPATH'],
+        lib/pkgconfig: ['PKGCONFIG'],
+        lib64/pkgconfig: ['PKGCONFIG'],
+        '': ['CMAKE_PREFIX_PATH']
+  }
   enable: ['tcl', 'dotkit']
