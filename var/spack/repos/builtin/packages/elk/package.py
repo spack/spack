@@ -22,8 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 import spack
+from spack import *
 
 
 class Elk(Package):
@@ -36,14 +36,20 @@ class Elk(Package):
     version('3.3.17', 'f57f6230d14f3b3b558e5c71f62f0592')
 
     # Elk provides these libraries, but allows you to specify your own
-    variant('blas',   default=True, description='Build with custom BLAS library')
-    variant('lapack', default=True, description='Build with custom LAPACK library')
-    variant('fft',    default=True, description='Build with custom FFT library')
+    variant('blas',   default=True,
+        description='Build with custom BLAS library')
+    variant('lapack', default=True,
+        description='Build with custom LAPACK library')
+    variant('fft',    default=True,
+        description='Build with custom FFT library')
 
     # Elk does not provide these libraries, but allows you to use them
-    variant('mpi',    default=True, description='Enable MPI parallelism')
-    variant('openmp', default=True, description='Enable OpenMP support')
-    variant('libxc',  default=True, description='Link to Libxc functional library')
+    variant('mpi',    default=True,
+        description='Enable MPI parallelism')
+    variant('openmp', default=True,
+        description='Enable OpenMP support')
+    variant('libxc',  default=True,
+        description='Link to Libxc functional library')
 
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
@@ -54,17 +60,16 @@ class Elk(Package):
     # Cannot be built in parallel
     parallel = False
 
-
     def configure(self, spec):
         # Dictionary of configuration options
         config = {
-            'MAKE':      'make',
-            'AR':        'ar'
+            'MAKE': 'make',
+            'AR':   'ar'
         }
 
         # Compiler-specific flags
         flags = ''
-        if   self.compiler.name == 'intel':
+        if self.compiler.name == 'intel':
             flags = '-O3 -ip -unroll -no-prec-div'
         elif self.compiler.name == 'gcc':
             flags = '-O3 -ffast-math -funroll-loops'
@@ -84,15 +89,17 @@ class Elk(Package):
         # if the +openmp variant is chosen
         blas   = 'blas.a'
         lapack = 'lapack.a'
-        if '+blas'   in spec:
-            blas   = join_path(spec['blas'].prefix.lib,   'libblas.so')
+        if '+blas' in spec:
+            blas   = spec['blas'].blas_shared_lib
         if '+lapack' in spec:
-            lapack = join_path(spec['lapack'].prefix.lib, 'liblapack.so')
-        config['LIB_LPK'] = ' '.join([lapack, blas]) # lapack must come before blas
+            lapack = spec['lapack'].lapack_shared_lib
+        # lapack must come before blas
+        config['LIB_LPK'] = ' '.join([lapack, blas])
 
         # FFT support
         if '+fft' in spec:
-            config['LIB_FFT'] = join_path(spec['fftw'].prefix.lib, 'libfftw3.so')
+            config['LIB_FFT'] = join_path(spec['fftw'].prefix.lib,
+                                          'libfftw3.so')
             config['SRC_FFT'] = 'zfftifc_fftw.f90'
         else:
             config['LIB_FFT'] = 'fftlib.a'
@@ -100,8 +107,8 @@ class Elk(Package):
 
         # MPI support
         if '+mpi' in spec:
-            config['F90'] = join_path(spec['mpi'].mpifc)
-            config['F77'] = join_path(spec['mpi'].mpif77)
+            config['F90'] = spec['mpi'].mpifc
+            config['F77'] = spec['mpi'].mpif77
         else:
             config['F90'] = join_path(spack.build_env_path, 'f90'),
             config['F77'] = join_path(spack.build_env_path, 'f77'),
@@ -132,7 +139,6 @@ class Elk(Package):
         with open('make.inc', 'w') as inc:
             for key in config:
                 inc.write('{0} = {1}\n'.format(key, config[key]))
-
 
     def install(self, spec, prefix):
         # Elk only provides an interactive setup script
