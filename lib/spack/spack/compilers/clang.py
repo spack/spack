@@ -26,6 +26,8 @@ import re
 import spack.compiler as cpr
 from spack.compiler import *
 from spack.util.executable import *
+import llnl.util.tty as tty
+from spack.version import ver
 
 class Clang(Compiler):
     # Subclasses use possible names of C compiler
@@ -46,6 +48,29 @@ class Clang(Compiler):
                    # Use default wrappers for fortran, in case provided in compilers.yaml
                    'f77' : 'f77',
                    'fc'  : 'f90' }
+
+    @property
+    def is_apple(self):
+        ver_string = str(self.version)
+        return ver_string.endswith('-apple')
+
+    @property
+    def openmp_flag(self):
+        if self.is_apple:
+            tty.die("Clang from Apple does not support Openmp yet.")
+        else:
+            return "-fopenmp"
+
+    @property
+    def cxx11_flag(self):
+        if self.is_apple:
+            # FIXME: figure out from which version Apple's clang supports c++11
+            return "-std=c++11"
+        else:
+            if self.version < ver('3.3'):
+                tty.die("Only Clang 3.3 and above support c++11.")
+            else:
+                return "-std=c++11"
 
     @classmethod
     def default_version(self, comp):

@@ -29,6 +29,7 @@ class Binutils(Package):
         configure_args = [
             '--prefix=%s' % prefix,
             '--disable-dependency-tracking',
+            '--disable-werror',
             '--enable-interwork',
             '--enable-multilib',
             '--enable-shared',

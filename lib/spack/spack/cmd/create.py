@@ -124,10 +124,12 @@ class ConfigureGuesser(object):
         autotools = "configure('--prefix=%s' % prefix)"
         cmake     = "cmake('.', *std_cmake_args)"
         python    = "python('setup.py', 'install', '--prefix=%s' % prefix)"
+        r         = "R('CMD', 'INSTALL', '--library=%s' % self.module.r_lib_dir, '%s' % self.stage.archive_file)"
 
         config_lines = ((r'/configure$',      'autotools', autotools),
                         (r'/CMakeLists.txt$', 'cmake',     cmake),
-                        (r'/setup.py$',       'python',    python))
+                        (r'/setup.py$',       'python',    python),
+                        (r'/NAMESPACE$',      'r',         r))
 
         # Peek inside the tarball.
         tar = which('tar')
@@ -271,6 +273,10 @@ def create(parser, args):
     # Prepend 'py-' to python package names, by convention.
     if guesser.build_system == 'python':
         name = 'py-%s' % name
+
+    # Prepend 'r-' to R package names, by convention.
+    if guesser.build_system == 'r':
+        name = 'r-%s' % name
 
     # Create a directory for the new package.
     pkg_path = repo.filename_for_package_name(name)

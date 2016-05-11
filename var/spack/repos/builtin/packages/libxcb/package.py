@@ -13,6 +13,7 @@ class Libxcb(Package):
     version('1.11.1', '118623c15a96b08622603a71d8789bf3')
     depends_on("python")
     depends_on("xcb-proto")
+    depends_on("pkg-config")
 
     # depends_on('pthread')    # Ubuntu: apt-get install libpthread-stubs0-dev
     # depends_on('xau')        # Ubuntu: apt-get install libxau-dev

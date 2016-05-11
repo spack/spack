@@ -38,15 +38,20 @@
 #      -Wl,-rpath   arguments for dependency /lib directories.
 #
 
-# This is the list of environment variables that need to be set before
+# This is an array of environment variables that need to be set before
 # the script runs. They are set by routines in spack.build_environment
 # as part of spack.package.Package.do_install().
-parameters="
-SPACK_PREFIX
-SPACK_ENV_PATH
-SPACK_DEBUG_LOG_DIR
-SPACK_COMPILER_SPEC
-SPACK_SHORT_SPEC"
+parameters=(
+    SPACK_PREFIX
+    SPACK_ENV_PATH
+    SPACK_DEBUG_LOG_DIR
+    SPACK_COMPILER_SPEC
+    SPACK_CC_RPATH_ARG
+    SPACK_CXX_RPATH_ARG
+    SPACK_F77_RPATH_ARG
+    SPACK_FC_RPATH_ARG
+    SPACK_SHORT_SPEC
+)
 
 # The compiler input variables are checked for sanity later:
 #   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
@@ -67,7 +72,7 @@ function die {
     exit 1
 }
 
-for param in $parameters; do
+for param in ${parameters[@]}; do
     if [[ -z ${!param} ]]; then
         die "Spack compiler must be run from Spack! Input '$param' is missing."
     fi
@@ -88,6 +93,7 @@ done
 #    ccld    compile & link
 
 command=$(basename "$0")
+comp="CC"
 case "$command" in
     cpp)
         mode=cpp
@@ -95,21 +101,25 @@ case "$command" in
     cc|c89|c99|gcc|clang|icc|pgcc|xlc)
         command="$SPACK_CC"
         language="C"
+        comp="CC"
         lang_flags=C
         ;;
     c++|CC|g++|clang++|icpc|pgc++|xlc++)
         command="$SPACK_CXX"
         language="C++"
+        comp="CXX"
         lang_flags=CXX
         ;;
     f90|fc|f95|gfortran|ifort|pgfortran|xlf90|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
+        comp="FC"
         lang_flags=F
         ;;
     f77|gfortran|ifort|pgfortran|xlf|nagfor)
         command="$SPACK_F77"
         language="Fortran 77"
+        comp="F77"
         lang_flags=F
         ;;
     ld)
@@ -148,6 +158,9 @@ if [[ -z $mode ]]; then
         fi
     done
 fi
+
+# Set up rpath variable according to language.
+eval rpath=\$SPACK_${comp}_RPATH_ARG
 
 # Dump the version and exit if we're in testing mode.
 if [[ $SPACK_TEST_COMMAND == dump-mode ]]; then
@@ -231,7 +244,7 @@ for dep in "${deps[@]}"; do
     # Prepend lib and RPATH directories
     if [[ -d $dep/lib ]]; then
         if [[ $mode == ccld ]]; then
-            $add_rpaths && args=("-Wl,-rpath,$dep/lib" "${args[@]}")
+            $add_rpaths && args=("$rpath$dep/lib" "${args[@]}")
             args=("-L$dep/lib" "${args[@]}")
         elif [[ $mode == ld ]]; then
             $add_rpaths && args=("-rpath" "$dep/lib" "${args[@]}")
@@ -242,7 +255,7 @@ for dep in "${deps[@]}"; do
     # Prepend lib64 and RPATH directories
     if [[ -d $dep/lib64 ]]; then
         if [[ $mode == ccld ]]; then
-            $add_rpaths && args=("-Wl,-rpath,$dep/lib64" "${args[@]}")
+            $add_rpaths && args=("$rpath$dep/lib64" "${args[@]}")
             args=("-L$dep/lib64" "${args[@]}")
         elif [[ $mode == ld ]]; then
             $add_rpaths && args=("-rpath" "$dep/lib64" "${args[@]}")
@@ -253,9 +266,11 @@ done
 
 # Include all -L's and prefix/whatever dirs in rpath
 if [[ $mode == ccld ]]; then
-    $add_rpaths && args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("$rpath$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("$rpath$SPACK_PREFIX/lib"   "${args[@]}")
 elif [[ $mode == ld ]]; then
-    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib"   "${args[@]}")
 fi
 
 # Add SPACK_LDLIBS to args

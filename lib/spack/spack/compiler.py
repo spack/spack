@@ -91,14 +91,22 @@ class Compiler(object):
     # version suffix for gcc.
     suffixes = [r'-.*']
 
-    # Names of generic arguments used by this compiler
-    arg_rpath   = '-Wl,-rpath,%s'
+    # Default flags used by a compiler to set an rpath
+    @property
+    def cc_rpath_arg(self):
+        return '-Wl,-rpath,'
 
-    # argument used to get C++11 options
-    cxx11_flag = "-std=c++11"
+    @property
+    def cxx_rpath_arg(self):
+        return '-Wl,-rpath,'
 
-    # argument used to get C++14 options
-    cxx14_flag = "-std=c++1y"
+    @property
+    def f77_rpath_arg(self):
+        return '-Wl,-rpath,'
+
+    @property
+    def fc_rpath_arg(self):
+        return '-Wl,-rpath,'
 
 
     def __init__(self, cspec, cc, cxx, f77, fc, **kwargs):
@@ -128,6 +136,37 @@ class Compiler(object):
     @property
     def version(self):
         return self.spec.version
+
+    # This property should be overridden in the compiler subclass if
+    # OpenMP is supported by that compiler
+    @property
+    def openmp_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support OpenMP.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
+    # This property should be overridden in the compiler subclass if
+    # C++11 is supported by that compiler
+    @property
+    def cxx11_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support C++11.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
+    # This property should be overridden in the compiler subclass if
+    # C++14 is supported by that compiler
+    @property
+    def cxx14_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support C++14.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
 
     #
     # Compiler classes have methods for querying the version of
@@ -213,6 +252,10 @@ class Compiler(object):
                 return None
 
         successful = [key for key in parmap(check, checks) if key is not None]
+        # The 'successful' list is ordered like the input paths.
+        # Reverse it here so that the dict creation (last insert wins)
+        # does not spoil the intented precedence.
+        successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
 
     @classmethod

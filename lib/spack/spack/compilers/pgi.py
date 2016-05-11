@@ -23,6 +23,7 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack.compiler import *
+import llnl.util.tty as tty
 
 class Pgi(Compiler):
     # Subclasses use possible names of C compiler
@@ -43,6 +44,15 @@ class Pgi(Compiler):
                    'f77' : 'pgi/pgfortran',
                    'fc'  : 'pgi/pgfortran' }
 
+    @property
+    def openmp_flag(self):
+        return "-mp"
+
+    @property
+    def cxx11_flag(self):
+        return "-std=c++11"
+
+
     @classmethod
     def default_version(cls, comp):
         """The '-V' option works for all the PGI compilers.
@@ -54,4 +64,3 @@ class Pgi(Compiler):
         """
         return get_compiler_version(
             comp, '-V', r'pg[^ ]* ([^ ]+) \d\d\d?-bit target')
-

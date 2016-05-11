@@ -38,9 +38,6 @@ from llnl.util.filesystem import *
 
 import spack
 from spack.environment import EnvironmentModifications, validate
-import spack.compilers as compilers
-import spack.compiler as Compiler
-from spack.util.executable import Executable, which
 from spack.util.environment import *
 from spack.util.executable import Executable, which
 
@@ -118,7 +115,14 @@ def set_compiler_environment_variables(pkg, env):
     if compiler.f77:
         env.set('SPACK_F77', compiler.f77)
     if compiler.fc:
-        env.set('SPACK_FC', compiler.fc)
+        env.set('SPACK_FC',  compiler.fc)
+
+    # Set SPACK compiler rpath flags so that our wrapper knows what to use
+    env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
+    env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
+    env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
+    env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
+
     # Add every valid compiler flag to the environment, prefixed with "SPACK_"
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Concreteness guarantees key safety here
@@ -186,8 +190,8 @@ def set_build_environment_variables(pkg, env):
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     pkg_config_dirs = []
     for p in dep_prefixes:
-        for libdir in ('lib', 'lib64'):
-            pcdir = join_path(p, libdir, 'pkgconfig')
+        for maybe in ('lib', 'lib64', 'share'):
+            pcdir = join_path(p, maybe, 'pkgconfig')
             if os.path.isdir(pcdir):
                 pkg_config_dirs.append(pcdir)
     env.set_path('PKG_CONFIG_PATH', pkg_config_dirs)

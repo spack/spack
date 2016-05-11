@@ -144,7 +144,7 @@ class Executable(object):
 
         cmd = self.exe + list(args)
 
-        cmd_line = ' '.join(cmd)
+        cmd_line = "'%s'" % "' '".join(map(lambda arg: arg.replace("'", "'\"'\"'"), cmd))
         tty.debug(cmd_line)
 
         try:

@@ -24,6 +24,7 @@
 ##############################################################################
 
 from spack import *
+import shutil
 
 
 class Hdf5(Package):
@@ -114,14 +115,16 @@ class Hdf5(Package):
             # this is not actually a problem.
             extra_args.extend([
                 "--enable-parallel",
-                "CC=%s" % spec['mpi'].prefix.bin + "/mpicc",
+                "CC=%s" % join_path(spec['mpi'].prefix.bin, "mpicc"),
             ])
 
             if '+cxx' in spec:
-                extra_args.append("CXX=%s" % spec['mpi'].prefix.bin + "/mpic++")
+                extra_args.append("CXX=%s" % join_path(spec['mpi'].prefix.bin,
+                                                       "mpic++"))
 
             if '+fortran' in spec:
-                extra_args.append("FC=%s" % spec['mpi'].prefix.bin + "/mpifort")
+                extra_args.append("FC=%s" % join_path(spec['mpi'].prefix.bin,
+                                                      "mpifort"))
 
         if '+szip' in spec:
             extra_args.append("--with-szlib=%s" % spec['szip'].prefix)
@@ -138,6 +141,58 @@ class Hdf5(Package):
             *extra_args)
         make()
         make("install")
+        self.check_install(spec)
+
+    def check_install(self, spec):
+        "Build and run a small program to test the installed HDF5 library"
+        print "Checking HDF5 installation..."
+        checkdir = "spack-check"
+        with working_dir(checkdir, create=True):
+            source = r"""
+#include <hdf5.h>
+#include <assert.h>
+#include <stdio.h>
+int main(int argc, char **argv) {
+  unsigned majnum, minnum, relnum;
+  herr_t herr = H5get_libversion(&majnum, &minnum, &relnum);
+  assert(!herr);
+  printf("HDF5 version %d.%d.%d %u.%u.%u\n", H5_VERS_MAJOR, H5_VERS_MINOR,
+         H5_VERS_RELEASE, majnum, minnum, relnum);
+  return 0;
+}
+"""
+            expected = """\
+HDF5 version {version} {version}
+""".format(version=str(spec.version))
+            with open("check.c", 'w') as f:
+                f.write(source)
+            if '+mpi' in spec:
+                cc = which(join_path(spec['mpi'].prefix.bin, "mpicc"))
+            else:
+                cc = which('cc')
+            # TODO: Automate these path and library settings
+            cc('-c', "-I%s" % join_path(spec.prefix, "include"), "check.c")
+            cc('-o', "check", "check.o",
+               "-L%s" % join_path(spec.prefix, "lib"), "-lhdf5",
+               "-lz")
+            try:
+                check = Executable('./check')
+                output = check(return_output=True)
+            except:
+                output = ""
+            success = output == expected
+            if not success:
+                print "Produced output does not match expected output."
+                print "Expected output:"
+                print '-'*80
+                print expected
+                print '-'*80
+                print "Produced output:"
+                print '-'*80
+                print output
+                print '-'*80
+                raise RuntimeError("HDF5 install check failed")
+        shutil.rmtree(checkdir)
 
     def url_for_version(self, version):
         v = str(version)
