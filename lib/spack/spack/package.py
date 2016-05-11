@@ -834,6 +834,7 @@ class Package(object):
 
 
     def do_install(self,
+                   force=False,
                    keep_prefix=False,  keep_stage=False, ignore_deps=False,
                    skip_patch=False, verbose=False, make_jobs=None, fake=False):
         """Called by commands to install a package and its dependencies.
@@ -842,6 +843,7 @@ class Package(object):
         their build process.
 
         Args:
+        force       -- Overwrite existing install directory if present (top level package only)
         keep_prefix -- Keep install prefix on failure. By default, destroys it.
         keep_stage  -- By default, stage is destroyed only if there are no
                        exceptions during build. Set to True to keep the stage
@@ -942,6 +944,8 @@ class Package(object):
             print_pkg(self.prefix)
 
         try:
+            if force:
+                spack.install_layout.remove_install_directory(self.spec)
             # Create the install prefix and fork the build process.
             spack.install_layout.create_install_directory(self.spec)
             spack.build_environment.fork(self, build_process)
@@ -958,7 +962,8 @@ class Package(object):
 
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
-        spack.installed_db.add(self.spec, self.prefix)
+        if 'db' in install_phases:
+            spack.installed_db.add(self.spec, self.prefix)
 
 
     def sanity_check_prefix(self):
