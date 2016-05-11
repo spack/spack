@@ -8,8 +8,9 @@ class Modele(CMakePackage):
 
     # ModelE has no valid versions.
     # This must be built with "spack spconfig" in a local repo
-    version('local', '68673158b46b6e88aea6bc4595444adb')
-    version('glint2', '68673158b46b6e88aea6bc4595444adb')
+    version('landice',
+        git='simplex.giss.nasa.gov:/giss/gitrepo/modelE.git',
+        branch='landice')
 
     # More variants will come from the rundeck
     variant('traps',
@@ -32,7 +33,8 @@ class Modele(CMakePackage):
         description='Link with the PNetCDF library; required for some rundecks.')
     variant('glint2', default=False,
         description='Link with the Glint2 Ice Model Coupler')
-
+    variant('everytrace', default=True,
+        description='Link to enhanced staktrace capabilities')
 
     # Build dependencies
     depends_on('m4')
@@ -41,7 +43,7 @@ class Modele(CMakePackage):
     depends_on('mpi')
     depends_on('netcdf-fortran')
     depends_on('fexception', when='+fexception')
-    depends_on('everytrace', when='+everytrace')
+    depends_on('everytrace+fortran+mpi', when='+everytrace')
     depends_on('parallel-netcdf+fortran~cxx', when='+pnetcdf')
     depends_on('glint2+coupler', when='+glint2')
 
@@ -61,7 +63,8 @@ class Modele(CMakePackage):
             '-DMPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
             '-DUSE_PNETCDF=%s' % ('YES' if '+pnetcdf' in spec else 'NO'),
             '-DUSE_FEXCEPTION=%s' % ('YES' if '+fexception' in spec else 'NO'),
-            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO')]
+            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
+            '-DUSE_GLINT2=%s' % ('YES' if '+glint2' in spec else 'NO'),]
 
 
     def setup_environment(self, spack_env, env):

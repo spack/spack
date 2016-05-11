@@ -15,7 +15,8 @@ class Glint2(CMakePackage):
 
     extends('python', when='+python')
 
-#    depends_on('everytrace+fortran')
+#    depends_on('everytrace+fortran', when='~coupler')
+    depends_on('everytrace+mpi+fortran')
 
     depends_on('python@3:', when='+python')
     depends_on('py-cython', when='+python')
@@ -50,6 +51,7 @@ class Glint2(CMakePackage):
         return [
             '-DUSE_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
             '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO'),
+            '-DUSE_EVERYTRACE=YES',
             '-DPETSC_DIR=%s' % spec['petsc'].prefix]
 
     def setup_environment(self, spack_env, env):
