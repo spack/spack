@@ -378,7 +378,7 @@ class VariantMap(HashableMap):
 
 
 _valid_compiler_flags = [
-    'cflags', 'cxxflags', 'fcflags', 'fflags', 'ldflags', 'ldlibs', 'cppflags']
+    'cflags', 'cxxflags', 'fflags', 'ldflags', 'ldlibs', 'cppflags']
 
 class FlagMap(HashableMap):
     def __init__(self, spec):

@@ -105,7 +105,7 @@ case "$command" in
     f90|fc|f95|gfortran|ifort|pgfortran|xlf90|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
-        lang_flags=FC
+        lang_flags=F
         ;;
     f77|gfortran|ifort|pgfortran|xlf|nagfor)
         command="$SPACK_F77"
@@ -184,13 +184,13 @@ args=("$@")
 
 # Prepend cppflags, cflags, cxxflags, fcflags, fflags, and ldflags
 
-# Add cppflags
+# Add ldflags
 case "$mode" in
-    cppas|cc|ccld)
-        args=(${SPACK_CPPFLAGS[@]} "${args[@]}") ;;
+    ld|ccld)
+        args=(${SPACK_LDFLAGS[@]} "${args[@]}") ;;
 esac
 
-# Add compile flags.
+# Add compiler flags.
 case "$mode" in
     cc|ccld)
     # Add c, cxx, fc, and f flags
@@ -199,18 +199,23 @@ case "$mode" in
                 args=(${SPACK_CFLAGS[@]} "${args[@]}") ;;
             CXX)
                 args=(${SPACK_CXXFLAGS[@]} "${args[@]}") ;;
-            FC)
-                args=(${SPACK_FCFLAGS[@]} "${args[@]}") ;;
-            F)
-                args=(${SPACK_FFLAGS[@]} "${args[@]}") ;;
         esac
         ;;
 esac
 
-# Add ldflags
+# Add cppflags
 case "$mode" in
-    ld|ccld)
+    cpp|as|cc|ccld)
         args=(${SPACK_CPPFLAGS[@]} "${args[@]}") ;;
+esac
+
+case "$mode" in cc|ccld)
+        # Add fortran flags
+        case $lang_flags in
+            F)
+                args=(${SPACK_FFLAGS[@]} "${args[@]}") ;;
+        esac
+        ;;
 esac
 
 # Read spack dependencies from the path environment variable
