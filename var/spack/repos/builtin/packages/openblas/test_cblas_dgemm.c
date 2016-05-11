@@ -43,7 +43,7 @@ int main(void) {
   int ldb = 3;
   dgesv_(&n,&nrhs, &m[0], &lda, ipiv, &x[0], &ldb, &info);
   for (i=0; i<3; ++i)
-    printf("%5.1f %3d\n", x[i], ipiv[i]);
+    printf("%5.1f\n", x[i]);
 
   return 0;
 }
