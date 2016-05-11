@@ -29,21 +29,8 @@ script:
   # Run unit tests with code coverage
   - coverage run bin/spack test
 
-  # Check if changed files are flake8 conformant [framework]
-  - changed=$(git diff --name-only develop... | grep '.py$' | grep -v ^var/)
-  - [[ $changed ]] && \
-    flake8 --format pylint --config share/spack/qa/flake8-framework $changed
-
-  # Check if changed files are flake8 conformant [packages]
-  - changed=$(git diff --name-only develop... | grep '.py$' | grep ^var/)
-
-  # Exempt url lines in changed packages from overlong errors.
-  - for file in $changed; do \
-      [[ file = *package.py ]] && \
-      perl -i~ -pe 's/^(\s*url\s*=.*)$/\1 # NOQA/' $file; \
-    done
-  - [[ $changed ]] && \
-    flake8 --format pylint --config share/spack/qa/flake8-packages $changed
+  # Run flake8 code style checks.
+  - share/spack/qa/run-flake8
 
 after_success:
   - coveralls
