@@ -269,10 +269,10 @@ config_scopes = OrderedDict()
 
 
 def validate_section_name(section):
-    """Raise a ValueError if the section is not a valid section."""
+    """Exit if the section is not a valid section."""
     if section not in section_schemas:
-        raise ValueError("Invalid config section: '%s'.  Options are %s"
-                         % (section, section_schemas))
+        tty.die("Invalid config section: '%s'. Options are: %s"
+                % (section, " ".join(section_schemas.keys())))
 
 
 def extend_with_default(validator_class):
