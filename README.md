@@ -63,6 +63,11 @@ a [pull request](https://help.github.com/articles/using-pull-requests/).
 When you send your request, make ``develop`` the destination branch on the
 [Spack repository](https://github.com/LLNL/spack).
 
+Your contribution will need to pass all the tests run by the `spack test`
+command, as well as the formatting checks in `share/spack/qa/run-flake8`.
+You should run both of these before submitting your pull request, to
+ensure that the online checks succeed.
+
 Spack is using a rough approximation of the [Git
 Flow](http://nvie.com/posts/a-successful-git-branching-model/)
 branching model.  The ``develop`` branch contains the latest
