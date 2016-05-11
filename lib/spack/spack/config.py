@@ -1,3 +1,4 @@
+# flake8: noqa
 ##############################################################################
 # Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -401,12 +402,13 @@ def extend_with_default(validator_class):
             yield err
 
     return validators.extend(validator_class, {
-        "properties" : set_defaults,
-        "patternProperties" : set_pp_defaults
+        "properties": set_defaults,
+        "patternProperties": set_pp_defaults
     })
 
 
 DefaultSettingValidator = extend_with_default(Draft4Validator)
+
 
 def validate_section(data, schema):
     """Validate data read in from a Spack YAML file.
@@ -442,15 +444,13 @@ class ConfigScope(object):
         validate_section_name(section)
         return os.path.join(self.path, "%s.yaml" % section)
 
-
     def get_section(self, section):
-        if not section in self.sections:
+        if section not in self.sections:
             path   = self.get_section_filename(section)
             schema = section_schemas[section]
             data   = _read_config_file(path, schema)
             self.sections[section] = data
         return self.sections[section]
-
 
     def write_section(self, section):
         filename = self.get_section_filename(section)
@@ -464,7 +464,6 @@ class ConfigScope(object):
             raise ConfigSanityError(e, data)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError("Error writing to config file: '%s'" % str(e))
-
 
     def clear(self):
         """Empty cached config information."""
@@ -571,7 +570,7 @@ def _merge_yaml(dest, source):
     # Source dict is merged into dest.
     elif they_are(dict):
         for sk, sv in source.iteritems():
-            if not sk in dest:
+            if sk not in dest:
                 dest[sk] = copy.copy(sv)
             else:
                 dest[sk] = _merge_yaml(dest[sk], source[sk])
@@ -640,7 +639,10 @@ def update_config(section, update_data, scope=None):
     # read in the config to ensure we've got current data
     configuration = get_config(section)
 
-    configuration.update(update_data)
+    if isinstance(update_data, list):
+        configuration = update_data
+    else:
+        configuration.update(update_data)
 
     # read only the requested section's data.
     scope.sections[section] = {section: configuration}
@@ -682,22 +684,27 @@ def spec_externals(spec):
 def is_spec_buildable(spec):
     """Return true if the spec pkgspec is configured as buildable"""
     allpkgs = get_config('packages')
-    name = spec.name
-    if not spec.name in allpkgs:
+    if spec.name not in allpkgs:
         return True
-    if not 'buildable' in allpkgs[spec.name]:
+    if 'buildable' not in allpkgs[spec.name]:
         return True
     return allpkgs[spec.name]['buildable']
 
 
-class ConfigError(SpackError): pass
-class ConfigFileError(ConfigError): pass
+class ConfigError(SpackError):
+    pass
+
+
+class ConfigFileError(ConfigError):
+    pass
+
 
 def get_path(path, data):
     if path:
         return get_path(path[1:], data[path[0]])
     else:
         return data
+
 
 class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
@@ -732,6 +739,7 @@ class ConfigFormatError(ConfigError):
 
         message = '%s: %s' % (location, validation_error.message)
         super(ConfigError, self).__init__(message)
+
 
 class ConfigSanityError(ConfigFormatError):
     """Same as ConfigFormatError, raised when config is written by Spack."""

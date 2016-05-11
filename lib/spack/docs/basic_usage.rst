@@ -1456,6 +1456,51 @@ several variants:
 
        spack deactivate -a python
 
+Filesystem requirements
+--------------------------
+
+Spack currently needs to be run from a filesystem that supports
+``flock`` locking semantics.  Nearly all local filesystems and recent
+versions of NFS support this, but parallel filesystems may be mounted
+without ``flock`` support enabled.  You can determine how your
+filesystems are mounted with ``mount -p``.  The output for a Lustre
+filesystem might look like this:
+
+.. code-block:: sh
+
+   $ mount -l | grep lscratch
+   pilsner-mds1-lnet0@o2ib100:/lsd on /p/lscratchd type lustre (rw,nosuid,noauto,_netdev,lazystatfs,flock)
+   porter-mds1-lnet0@o2ib100:/lse on /p/lscratche type lustre (rw,nosuid,noauto,_netdev,lazystatfs,flock)
+
+Note the ``flock`` option on both Lustre mounts.  If you do not see
+this or a similar option for your filesystem, you may need ot ask your
+system administrator to enable ``flock``.
+
+This issue typically manifests with the error below:
+
+.. code-block:: sh
+
+   $ ./spack find
+   Traceback (most recent call last):
+   File "./spack", line 176, in <module>
+     main()
+   File "./spack", line 154, in main
+     return_val = command(parser, args)
+   File "./spack/lib/spack/spack/cmd/find.py", line 170, in find
+     specs = set(spack.installed_db.query(**q_args))
+   File "./spack/lib/spack/spack/database.py", line 551, in query
+     with self.read_transaction():
+   File "./spack/lib/spack/spack/database.py", line 598, in __enter__
+     if self._enter() and self._acquire_fn:
+   File "./spack/lib/spack/spack/database.py", line 608, in _enter
+     return self._db.lock.acquire_read(self._timeout)
+   File "./spack/lib/spack/llnl/util/lock.py", line 103, in acquire_read
+     self._lock(fcntl.LOCK_SH, timeout)   # can raise LockError.
+   File "./spack/lib/spack/llnl/util/lock.py", line 64, in _lock
+     fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
+   IOError: [Errno 38] Function not implemented
+
+A nicer error message is TBD in future versions of Spack.
 
 Getting Help
 -----------------------
