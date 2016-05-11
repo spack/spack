@@ -32,21 +32,18 @@ from llnl.util.filesystem import mkdirp
 from spack.modules import module_types
 from spack.util.string import *
 
-description = "Manipulate modules and dotkits."
+description ="Manipulate modules and dotkits."
 
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='module_command')
 
-    sp.add_parser('refresh', help='Regenerate all module files.')
+    refresh_parser = sp.add_parser('refresh', help='Regenerate all module files.')
 
     find_parser = sp.add_parser('find', help='Find module files for packages.')
-    find_parser.add_argument('module_type',
-                             help="Type of module to find file for. [" +
-                             '|'.join(module_types) + "]")
-    find_parser.add_argument('spec',
-                             nargs='+',
-                             help='spec to find a module file for.')
+    find_parser.add_argument(
+        'module_type', help="Type of module to find file for. [" + '|'.join(module_types) + "]")
+    find_parser.add_argument('spec', nargs='+', help='spec to find a module file for.')
 
 
 def module_find(mtype, spec_array):
@@ -56,8 +53,7 @@ def module_find(mtype, spec_array):
        should type to use that package's module.
     """
     if mtype not in module_types:
-        tty.die("Invalid module type: '%s'.  Options are %s" %
-                (mtype, comma_or(module_types)))
+        tty.die("Invalid module type: '%s'.  Options are %s" % (mtype, comma_or(module_types)))
 
     specs = spack.cmd.parse_specs(spec_array)
     if len(specs) > 1:

@@ -23,23 +23,53 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
-
-import llnl.util.tty as tty
+import unittest
 import nose
-import spack
-from llnl.util.filesystem import join_path
-from llnl.util.tty.colify import colify
+
 from spack.test.tally_plugin import Tally
+from llnl.util.filesystem import join_path
+import llnl.util.tty as tty
+from llnl.util.tty.colify import colify
+
+import spack
+
 """Names of tests to be included in Spack's test suite"""
-test_names = ['versions', 'url_parse', 'url_substitution', 'packages', 'stage',
-              'spec_syntax', 'spec_semantics', 'spec_dag', 'concretize',
-              'multimethod', 'install', 'package_sanity', 'config',
-              'directory_layout', 'pattern', 'python_version', 'git_fetch',
-              'svn_fetch', 'hg_fetch', 'mirror', 'modules', 'url_extrapolate',
-              'cc', 'link_tree', 'spec_yaml', 'optional_deps',
-              'make_executable', 'configure_guess', 'lock', 'database',
-              'namespace_trie', 'yaml', 'sbang', 'environment',
-              'cmd.uninstall', 'cmd.test_install']
+test_names = ['versions',
+              'url_parse',
+              'url_substitution',
+              'packages',
+              'stage',
+              'spec_syntax',
+              'spec_semantics',
+              'spec_dag',
+              'concretize',
+              'multimethod',
+              'install',
+              'package_sanity',
+              'config',
+              'directory_layout',
+              'pattern',
+              'python_version',
+              'git_fetch',
+              'svn_fetch',
+              'hg_fetch',
+              'mirror',
+              'modules',
+              'url_extrapolate',
+              'cc',
+              'link_tree',
+              'spec_yaml',
+              'optional_deps',
+              'make_executable',
+              'configure_guess',
+              'lock',
+              'database',
+              'namespace_trie',
+              'yaml',
+              'sbang',
+              'environment',
+              'cmd.uninstall',
+              'cmd.test_install']
 
 
 def list_tests():
@@ -50,6 +80,7 @@ def list_tests():
 def run(names, outputDir, verbose=False):
     """Run tests with the supplied names.  Names should be a list.  If
        it's empty, run ALL of Spack's tests."""
+    verbosity = 1 if not verbose else 2
 
     if not names:
         names = test_names
@@ -64,7 +95,7 @@ def run(names, outputDir, verbose=False):
     tally = Tally()
     for test in names:
         module = 'spack.test.' + test
-        print(module)
+        print module
 
         tty.msg("Running test: %s" % test)
 
@@ -74,13 +105,15 @@ def run(names, outputDir, verbose=False):
             xmlOutputFname = "unittests-{0}.xml".format(test)
             xmlOutputPath = join_path(outputDir, xmlOutputFname)
             runOpts += ["--with-xunit",
-                        "--xunit-file={0}".format(xmlOutputPath)]
+                "--xunit-file={0}".format(xmlOutputPath)]
         argv = [""] + runOpts + [module]
-        nose.run(argv=argv, addplugins=[tally])
+        result = nose.run(argv=argv, addplugins=[tally])
 
     succeeded = not tally.failCount and not tally.errorCount
-    tty.msg("Tests Complete.", "%5d tests run" % tally.numberOfTestsRun,
-            "%5d failures" % tally.failCount, "%5d errors" % tally.errorCount)
+    tty.msg("Tests Complete.",
+            "%5d tests run" % tally.numberOfTestsRun,
+            "%5d failures" % tally.failCount,
+            "%5d errors" % tally.errorCount)
 
     if succeeded:
         tty.info("OK", format='g')

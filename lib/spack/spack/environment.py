@@ -26,8 +26,7 @@ class SetEnv(NameValueModifier):
 
 class UnsetEnv(NameModifier):
     def execute(self):
-        # Avoid throwing if the variable was not set
-        os.environ.pop(self.name, None)
+        os.environ.pop(self.name, None)  # Avoid throwing if the variable was not set
 
 
 class SetPath(NameValueModifier):
@@ -56,9 +55,7 @@ class RemovePath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
         directories = environment_value.split(':') if environment_value else []
-        directories = [os.path.normpath(x)
-                       for x in directories
-                       if x != os.path.normpath(self.value)]
+        directories = [os.path.normpath(x) for x in directories if x != os.path.normpath(self.value)]
         os.environ[self.name] = ':'.join(directories)
 
 
@@ -66,8 +63,7 @@ class EnvironmentModifications(object):
     """
     Keeps track of requests to modify the current environment.
 
-    Each call to a method to modify the environment stores the extra
-    information on the caller in the request:
+    Each call to a method to modify the environment stores the extra information on the caller in the request:
     - 'filename' : filename of the module where the caller is defined
     - 'lineno': line number where the request occurred
     - 'context' : line of code that issued the request that failed
@@ -75,10 +71,10 @@ class EnvironmentModifications(object):
 
     def __init__(self, other=None):
         """
-        Initializes a new instance, copying commands from other if not None
+        Initializes a new instance, copying commands from other if it is not None
 
         Args:
-            other: another instance of EnvironmentModifications
+            other: another instance of EnvironmentModifications from which (optional)
         """
         self.env_modifications = []
         if other is not None:
@@ -97,7 +93,7 @@ class EnvironmentModifications(object):
     @staticmethod
     def _check_other(other):
         if not isinstance(other, EnvironmentModifications):
-            raise TypeError('not an instance of EnvironmentModifications')
+            raise TypeError('other must be an instance of EnvironmentModifications')
 
     def _get_outside_caller_attributes(self):
         stack = inspect.stack()
@@ -105,10 +101,12 @@ class EnvironmentModifications(object):
             _, filename, lineno, _, context, index = stack[2]
             context = context[index].strip()
         except Exception:
-            filename = 'unknown file'
-            lineno = 'unknown line'
-            context = 'unknown context'
-        args = {'filename': filename, 'lineno': lineno, 'context': context}
+            filename, lineno, context = 'unknown file', 'unknown line', 'unknown context'
+        args = {
+            'filename': filename,
+            'lineno': lineno,
+            'context': context
+        }
         return args
 
     def set(self, name, value, **kwargs):
@@ -172,7 +170,7 @@ class EnvironmentModifications(object):
 
     def remove_path(self, name, path, **kwargs):
         """
-        Stores in the current object a request to remove a path from a list
+        Stores in the current object a request to remove a path from a path list
 
         Args:
             name: name of the path list in the environment
@@ -187,8 +185,7 @@ class EnvironmentModifications(object):
         Returns a dict of the modifications grouped by variable name
 
         Returns:
-            dict mapping the environment variable name to the modifications
-            to be done on it
+            dict mapping the environment variable name to the modifications to be done on it
         """
         modifications = collections.defaultdict(list)
         for item in self:
@@ -206,8 +203,7 @@ class EnvironmentModifications(object):
         Applies the modifications and clears the list
         """
         modifications = self.group_by_name()
-        # Apply the modifications to the environment variables one variable
-        # at a time
+        # Apply the modifications to the environment variables one variable at a time
         for name, actions in sorted(modifications.items()):
             for x in actions:
                 x.execute()
@@ -228,17 +224,13 @@ def concatenate_paths(paths):
 
 def set_or_unset_not_first(variable, changes, errstream):
     """
-    Check if we are going to set or unset something after other modifications
-    have already been requested
+    Check if we are going to set or unset something after other modifications have already been requested
     """
-    indexes = [ii
-               for ii, item in enumerate(changes)
-               if ii != 0 and type(item) in [SetEnv, UnsetEnv]]
+    indexes = [ii for ii, item in enumerate(changes) if ii != 0 and type(item) in [SetEnv, UnsetEnv]]
     if indexes:
         good = '\t    \t{context} at {filename}:{lineno}'
         nogood = '\t--->\t{context} at {filename}:{lineno}'
-        message = 'Suspicious requests to set or unset the variable \'{var}\' found'  # NOQA: ignore=E501
-        errstream(message.format(var=variable))
+        errstream('Suspicious requests to set or unset the variable \'{var}\' found'.format(var=variable))
         for ii, item in enumerate(changes):
             print_format = nogood if ii in indexes else good
             errstream(print_format.format(**item.args))
@@ -246,8 +238,8 @@ def set_or_unset_not_first(variable, changes, errstream):
 
 def validate(env, errstream):
     """
-    Validates the environment modifications to check for the presence of
-    suspicious patterns. Prompts a warning for everything that was found
+    Validates the environment modifications to check for the presence of suspicious patterns. Prompts a warning for
+    everything that was found
 
     Current checks:
     - set or unset variables after other changes on the same variable
@@ -262,8 +254,7 @@ def validate(env, errstream):
 
 def filter_environment_blacklist(env, variables):
     """
-    Generator that filters out any change to environment variables present in
-    the input list
+    Generator that filters out any change to environment variables present in the input list
 
     Args:
         env: list of environment modifications

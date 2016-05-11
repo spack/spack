@@ -2,18 +2,14 @@ import collections
 from contextlib import contextmanager
 
 import StringIO
-import spack.modules
-from spack.test.mock_packages_test import MockPackagesTest
 
 FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
-
 
 # Monkey-patch open to write module files to a StringIO instance
 @contextmanager
 def mock_open(filename, mode):
     if not mode == 'w':
-        message = 'test.modules : unexpected opening mode [mock_open]'
-        raise RuntimeError(message)
+        raise RuntimeError('test.modules : unexpected opening mode for monkey-patched open')
 
     FILE_REGISTRY[filename] = StringIO.StringIO()
 
@@ -24,6 +20,7 @@ def mock_open(filename, mode):
         FILE_REGISTRY[filename] = handle.getvalue()
         handle.close()
 
+import spack.modules
 
 configuration_autoload_direct = {
     'enable': ['tcl'],
@@ -50,8 +47,7 @@ configuration_alter_environment = {
             'filter': {'environment_blacklist': ['CMAKE_PREFIX_PATH']}
         },
         '=x86-linux': {
-            'environment': {'set': {'FOO': 'foo'},
-                            'unset': ['BAR']}
+            'environment': {'set': {'FOO': 'foo'}, 'unset': ['BAR']}
         }
     }
 }
@@ -76,14 +72,15 @@ configuration_conflicts = {
     }
 }
 
+from spack.test.mock_packages_test import MockPackagesTest
+
 
 class TclTests(MockPackagesTest):
     def setUp(self):
         super(TclTests, self).setUp()
         self.configuration_obj = spack.modules.CONFIGURATION
         spack.modules.open = mock_open
-        # Make sure that a non-mocked configuration will trigger an error
-        spack.modules.CONFIGURATION = None
+        spack.modules.CONFIGURATION = None  # Make sure that a non-mocked configuration will trigger an error
 
     def tearDown(self):
         del spack.modules.open
@@ -101,7 +98,7 @@ class TclTests(MockPackagesTest):
         spack.modules.CONFIGURATION = configuration_autoload_direct
         spec = spack.spec.Spec('mpich@3.0.4=x86-linux')
         content = self.get_modulefile_content(spec)
-        self.assertTrue('module-whatis "mpich @3.0.4"' in content)
+        self.assertTrue('module-whatis "mpich @3.0.4"' in content )
 
     def test_autoload(self):
         spack.modules.CONFIGURATION = configuration_autoload_direct
@@ -120,22 +117,14 @@ class TclTests(MockPackagesTest):
         spack.modules.CONFIGURATION = configuration_alter_environment
         spec = spack.spec.Spec('mpileaks=x86-linux')
         content = self.get_modulefile_content(spec)
-        self.assertEqual(
-            len([x
-                 for x in content
-                 if x.startswith('prepend-path CMAKE_PREFIX_PATH')]), 0)
-        self.assertEqual(
-            len([x for x in content if 'setenv FOO "foo"' in x]), 1)
+        self.assertEqual(len([x for x in content if x.startswith('prepend-path CMAKE_PREFIX_PATH')]), 0)
+        self.assertEqual(len([x for x in content if 'setenv FOO "foo"' in x]), 1)
         self.assertEqual(len([x for x in content if 'unsetenv BAR' in x]), 1)
 
         spec = spack.spec.Spec('libdwarf=x64-linux')
         content = self.get_modulefile_content(spec)
-        self.assertEqual(
-            len([x
-                 for x in content
-                 if x.startswith('prepend-path CMAKE_PREFIX_PATH')]), 0)
-        self.assertEqual(
-            len([x for x in content if 'setenv FOO "foo"' in x]), 0)
+        self.assertEqual(len([x for x in content if x.startswith('prepend-path CMAKE_PREFIX_PATH')]), 0)
+        self.assertEqual(len([x for x in content if 'setenv FOO "foo"' in x]), 0)
         self.assertEqual(len([x for x in content if 'unsetenv BAR' in x]), 0)
 
     def test_blacklist(self):
@@ -149,9 +138,6 @@ class TclTests(MockPackagesTest):
         spack.modules.CONFIGURATION = configuration_conflicts
         spec = spack.spec.Spec('mpileaks=x86-linux')
         content = self.get_modulefile_content(spec)
-        self.assertEqual(
-            len([x for x in content if x.startswith('conflict')]), 2)
-        self.assertEqual(
-            len([x for x in content if x == 'conflict mpileaks']), 1)
-        self.assertEqual(
-            len([x for x in content if x == 'conflict intel/14.0.1']), 1)
+        self.assertEqual(len([x for x in content if x.startswith('conflict')]), 2)
+        self.assertEqual(len([x for x in content if x == 'conflict mpileaks']), 1)
+        self.assertEqual(len([x for x in content if x == 'conflict intel/14.0.1']), 1)

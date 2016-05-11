@@ -134,6 +134,8 @@ from yaml.error import MarkedYAMLError
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
+
+
 """Dict from section names -> schema for that section."""
 section_schemas = {
     'compilers': {
@@ -147,31 +149,25 @@ section_schemas = {
                 'default': {},
                 'additionalProperties': False,
                 'patternProperties': {
-                    r'\w[\w-]*': {  # architecture
+                    r'\w[\w-]*': {           # architecture
                         'type': 'object',
                         'additionalProperties': False,
                         'patternProperties': {
-                            r'\w[\w-]*@\w[\w-]*': {  # compiler spec
+                            r'\w[\w-]*@\w[\w-]*': {   # compiler spec
                                 'type': 'object',
                                 'additionalProperties': False,
                                 'required': ['cc', 'cxx', 'f77', 'fc'],
                                 'properties': {
-                                    'cc': {'anyOf': [{'type': 'string'},
-                                                     {'type': 'null'}]},
-                                    'cxx': {'anyOf': [{'type': 'string'},
-                                                      {'type': 'null'}]},
-                                    'f77': {'anyOf': [{'type': 'string'},
-                                                      {'type': 'null'}]},
-                                    'fc': {'anyOf': [{'type': 'string'},
-                                                     {'type': 'null'}]},
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    },
+                                    'cc':  { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cxx': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'f77': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'fc':  { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                },},},},},},},},
+
     'mirrors': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack mirror configuration file schema',
@@ -184,12 +180,8 @@ section_schemas = {
                 'additionalProperties': False,
                 'patternProperties': {
                     r'\w[\w-]*': {
-                        'type': 'string'
-                    },
-                },
-            },
-        },
-    },
+                        'type': 'string'},},},},},
+
     'repos': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack repository configuration file schema',
@@ -200,11 +192,8 @@ section_schemas = {
                 'type': 'array',
                 'default': [],
                 'items': {
-                    'type': 'string'
-                },
-            },
-        },
-    },
+                    'type': 'string'},},},},
+
     'packages': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack package configuration file schema',
@@ -216,48 +205,39 @@ section_schemas = {
                 'default': {},
                 'additionalProperties': False,
                 'patternProperties': {
-                    r'\w[\w-]*': {  # package name
+                    r'\w[\w-]*': { # package name
                         'type': 'object',
                         'default': {},
                         'additionalProperties': False,
                         'properties': {
                             'version': {
-                                'type': 'array',
-                                'default': [],
-                                'items': {'anyOf': [{'type': 'string'},
-                                                    {'type': 'number'}]}
-                            },  # version strings
+                                'type' : 'array',
+                                'default' : [],
+                                'items' : { 'anyOf' : [ { 'type' : 'string' },
+                                                        { 'type' : 'number'}]}}, #version strings
                             'compiler': {
-                                'type': 'array',
-                                'default': [],
-                                'items': {'type': 'string'}
-                            },  # compiler specs
+                                'type' : 'array',
+                                'default' : [],
+                                'items' : { 'type' : 'string' } }, #compiler specs
                             'buildable': {
-                                'type': 'boolean',
+                                'type':  'boolean',
                                 'default': True,
-                            },
+                             },
                             'providers': {
-                                'type': 'object',
+                                'type':  'object',
                                 'default': {},
                                 'additionalProperties': False,
                                 'patternProperties': {
                                     r'\w[\w-]*': {
-                                        'type': 'array',
-                                        'default': [],
-                                        'items': {'type': 'string'},
-                                    },
-                                },
-                            },
+                                        'type' : 'array',
+                                        'default' : [],
+                                        'items' : { 'type' : 'string' },},},},
                             'paths': {
-                                'type': 'object',
-                                'default': {},
+                                'type' : 'object',
+                                'default' : {},
                             }
-                        },
-                    },
-                },
-            },
-        },
-    },
+                        },},},},},},
+
     'modules': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack module file configuration file schema',
@@ -303,22 +283,17 @@ section_schemas = {
                         }
                     },
                     'autoload': {'$ref': '#/definitions/dependency_selection'},
-                    'prerequisites':
-                    {'$ref': '#/definitions/dependency_selection'},
+                    'prerequisites': {'$ref': '#/definitions/dependency_selection'},
                     'conflict': {'$ref': '#/definitions/array_of_strings'},
                     'environment': {
                         'type': 'object',
                         'default': {},
                         'additionalProperties': False,
                         'properties': {
-                            'set':
-                            {'$ref': '#/definitions/dictionary_of_strings'},
-                            'unset':
-                            {'$ref': '#/definitions/array_of_strings'},
-                            'prepend_path':
-                            {'$ref': '#/definitions/dictionary_of_strings'},
-                            'append_path':
-                            {'$ref': '#/definitions/dictionary_of_strings'}
+                            'set': {'$ref': '#/definitions/dictionary_of_strings'},
+                            'unset': {'$ref': '#/definitions/array_of_strings'},
+                            'prepend_path': {'$ref': '#/definitions/dictionary_of_strings'},
+                            'append_path': {'$ref': '#/definitions/dictionary_of_strings'}
                         }
                     }
                 }
@@ -329,20 +304,15 @@ section_schemas = {
                 'anyOf': [
                     {
                         'properties': {
-                            'whitelist':
-                            {'$ref': '#/definitions/array_of_strings'},
-                            'blacklist':
-                            {'$ref': '#/definitions/array_of_strings'},
+                            'whitelist': {'$ref': '#/definitions/array_of_strings'},
+                            'blacklist': {'$ref': '#/definitions/array_of_strings'},
                             'naming_scheme': {
-                                'type':
-                                'string'  # Can we be more specific here?
+                                'type': 'string'  # Can we be more specific here?
                             }
                         }
                     },
                     {
-                        'patternProperties':
-                        {r'\w[\w-]*':
-                         {'$ref': '#/definitions/module_file_configuration'}}
+                        'patternProperties': {r'\w[\w-]*': {'$ref': '#/definitions/module_file_configuration'}}
                     }
                 ]
             }
@@ -356,8 +326,7 @@ section_schemas = {
                     'prefix_inspections': {
                         'type': 'object',
                         'patternProperties': {
-                            r'\w[\w-]*':
-                            {  # path to be inspected (relative to prefix)
+                            r'\w[\w-]*': {  # path to be inspected for existence (relative to prefix)
                                 '$ref': '#/definitions/array_of_strings'
                             }
                         }
@@ -372,15 +341,13 @@ section_schemas = {
                     },
                     'tcl': {
                         'allOf': [
-                            {'$ref': '#/definitions/module_type_configuration'
-                             },  # Base configuration
+                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
                             {}  # Specific tcl extensions
                         ]
                     },
                     'dotkit': {
                         'allOf': [
-                            {'$ref': '#/definitions/module_type_configuration'
-                             },  # Base configuration
+                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
                             {}  # Specific dotkit extensions
                         ]
                     },
@@ -389,6 +356,7 @@ section_schemas = {
         },
     },
 }
+
 """OrderedDict of config scopes keyed by name.
    Later scopes will override earlier scopes.
 """
@@ -398,13 +366,12 @@ config_scopes = OrderedDict()
 def validate_section_name(section):
     """Raise a ValueError if the section is not a valid section."""
     if section not in section_schemas:
-        raise ValueError("Invalid config section: '%s'.  Options are %s" %
-                         (section, section_schemas))
+        raise ValueError("Invalid config section: '%s'.  Options are %s"
+                         % (section, section_schemas))
 
 
 def extend_with_default(validator_class):
-    """Add support for the 'default' attribute for
-       properties and patternProperties
+    """Add support for the 'default' attribute for properties and patternProperties.
 
        jsonschema does not handle this out of the box -- it only
        validates.  This allows us to set default values for configs
@@ -413,15 +380,13 @@ def extend_with_default(validator_class):
 
     """
     validate_properties = validator_class.VALIDATORS["properties"]
-    validate_pattern_properties = validator_class.VALIDATORS[
-        "patternProperties"]
+    validate_pattern_properties = validator_class.VALIDATORS["patternProperties"]
 
     def set_defaults(validator, properties, instance, schema):
         for property, subschema in properties.iteritems():
             if "default" in subschema:
                 instance.setdefault(property, subschema["default"])
-        for err in validate_properties(validator, properties, instance,
-                                       schema):
+        for err in validate_properties(validator, properties, instance, schema):
             yield err
 
     def set_pp_defaults(validator, properties, instance, schema):
@@ -432,18 +397,16 @@ def extend_with_default(validator_class):
                         if re.match(property, key) and val is None:
                             instance[key] = subschema["default"]
 
-        for err in validate_pattern_properties(validator, properties, instance,
-                                               schema):
+        for err in validate_pattern_properties(validator, properties, instance, schema):
             yield err
 
     return validators.extend(validator_class, {
-        "properties": set_defaults,
-        "patternProperties": set_pp_defaults
+        "properties" : set_defaults,
+        "patternProperties" : set_pp_defaults
     })
 
 
 DefaultSettingValidator = extend_with_default(Draft4Validator)
-
 
 def validate_section(data, schema):
     """Validate data read in from a Spack YAML file.
@@ -466,9 +429,9 @@ class ConfigScope(object):
     """
 
     def __init__(self, name, path):
-        self.name = name  # scope name.
-        self.path = path  # path to directory containing configs.
-        self.sections = {}  # sections read from config files.
+        self.name = name           # scope name.
+        self.path = path           # path to directory containing configs.
+        self.sections = {}         # sections read from config files.
 
         # Register in a dict of all ConfigScopes
         # TODO: make this cleaner.  Mocking up for testing is brittle.
@@ -479,13 +442,15 @@ class ConfigScope(object):
         validate_section_name(section)
         return os.path.join(self.path, "%s.yaml" % section)
 
+
     def get_section(self, section):
-        if section not in self.sections:
-            path = self.get_section_filename(section)
+        if not section in self.sections:
+            path   = self.get_section_filename(section)
             schema = section_schemas[section]
-            data = _read_config_file(path, schema)
+            data   = _read_config_file(path, schema)
             self.sections[section] = data
         return self.sections[section]
+
 
     def write_section(self, section):
         filename = self.get_section_filename(section)
@@ -498,8 +463,8 @@ class ConfigScope(object):
         except jsonschema.ValidationError as e:
             raise ConfigSanityError(e, data)
         except (yaml.YAMLError, IOError) as e:
-            raise ConfigFileError("Error writing to config file: '%s'" %
-                                  str(e))
+            raise ConfigFileError("Error writing to config file: '%s'" % str(e))
+
 
     def clear(self):
         """Empty cached config information."""
@@ -531,8 +496,8 @@ def validate_scope(scope):
         return config_scopes[scope]
 
     else:
-        raise ValueError("Invalid config scope: '%s'.  Must be one of %s" %
-                         (scope, config_scopes.keys()))
+        raise ValueError("Invalid config scope: '%s'.  Must be one of %s"
+                         % (scope, config_scopes.keys()))
 
 
 def _read_config_file(filename, schema):
@@ -558,12 +523,12 @@ def _read_config_file(filename, schema):
         return data
 
     except MarkedYAMLError as e:
-        raise ConfigFileError("Error parsing yaml%s: %s" %
-                              (str(e.context_mark), e.problem))
+        raise ConfigFileError(
+            "Error parsing yaml%s: %s" % (str(e.context_mark), e.problem))
 
     except IOError as e:
-        raise ConfigFileError("Error reading configuration file %s: %s" %
-                              (filename, str(e)))
+        raise ConfigFileError(
+            "Error reading configuration file %s: %s" % (filename, str(e)))
 
 
 def clear_config_caches():
@@ -586,7 +551,6 @@ def _merge_yaml(dest, source):
     parent instead of merging.
 
     """
-
     def they_are(t):
         return isinstance(dest, t) and isinstance(source, t)
 
@@ -607,7 +571,7 @@ def _merge_yaml(dest, source):
     # Source dict is merged into dest.
     elif they_are(dict):
         for sk, sv in source.iteritems():
-            if sk not in dest:
+            if not sk in dest:
                 dest[sk] = copy.copy(sv)
             else:
                 dest[sk] = _merge_yaml(dest[sk], source[sk])
@@ -689,7 +653,7 @@ def print_section(section):
         data = syaml.syaml_dict()
         data[section] = get_config(section)
         syaml.dump(data, stream=sys.stdout, default_flow_style=False)
-    except (yaml.YAMLError, IOError):
+    except (yaml.YAMLError, IOError) as e:
         raise ConfigError("Error reading configuration: %s" % section)
 
 
@@ -719,22 +683,15 @@ def is_spec_buildable(spec):
     """Return true if the spec pkgspec is configured as buildable"""
     allpkgs = get_config('packages')
     name = spec.name
-    if name not in allpkgs:
+    if not spec.name in allpkgs:
         return True
-    if 'buildable' not in allpkgs[name]:
+    if not 'buildable' in allpkgs[spec.name]:
         return True
     return allpkgs[spec.name]['buildable']
 
 
-class ConfigError(SpackError):
-
-    pass
-
-
-class ConfigFileError(ConfigError):
-
-    pass
-
+class ConfigError(SpackError): pass
+class ConfigFileError(ConfigError): pass
 
 def get_path(path, data):
     if path:
@@ -742,10 +699,8 @@ def get_path(path, data):
     else:
         return data
 
-
 class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
-
     def __init__(self, validation_error, data):
         # Try to get line number from erroneous instance and its parent
         instance_mark = getattr(validation_error.instance, '_start_mark', None)
@@ -777,7 +732,6 @@ class ConfigFormatError(ConfigError):
 
         message = '%s: %s' % (location, validation_error.message)
         super(ConfigError, self).__init__(message)
-
 
 class ConfigSanityError(ConfigFormatError):
     """Same as ConfigFormatError, raised when config is written by Spack."""
