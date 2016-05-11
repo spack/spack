@@ -1,4 +1,5 @@
 from spack import *
+from spack.package_test import *
 import sys
 import os
 import shutil
@@ -94,42 +95,18 @@ class Openblas(Package):
             self.spec.lapack_shared_lib = self.spec.blas_shared_lib
 
     def check_install(self, spec):
-        # TODO: Pull this out to the framework function which recieves a pair of xyz.c and xyz.output
-        print "Checking Openblas installation..."
         source_file = join_path(os.path.dirname(self.module.__file__),
                                 'test_cblas_dgemm.c')
-        output_file = join_path(os.path.dirname(self.module.__file__),
-                                'test_cblas_dgemm.output')
+        blessed_file = join_path(os.path.dirname(self.module.__file__),
+                                 'test_cblas_dgemm.output')
 
-        with open(output_file, 'r') as f:
-            expected = f.read()
-
-        cc = which('cc')
-        cc('-c', "-I%s" % join_path(spec.prefix, "include"), source_file)
+        include_flags = ["-I%s" % join_path(spec.prefix, "include")]
         link_flags = ["-L%s" % join_path(spec.prefix, "lib"),
                       "-llapack",
                       "-lblas",
-                      "-lpthread"
-                      ]
+                      "-lpthread"]
         if '+openmp' in spec:
             link_flags.extend([self.compiler.openmp_flag])
-        cc('-o', "check", "test_cblas_dgemm.o",
-            *link_flags)
 
-        try:
-            check = Executable('./check')
-            output = check(return_output=True)
-        except:
-            output = ""
-            success = output == expected
-            if not success:
-                print "Produced output does not match expected output."
-                print "Expected output:"
-                print '-'*80
-                print expected
-                print '-'*80
-                print "Produced output:"
-                print '-'*80
-                print output
-                print '-'*80
-                raise RuntimeError("Openblas install check failed")
+        output = compile_c_and_execute(source_file,include_flags,link_flags)
+        compare_output_file(output,blessed_file)
