@@ -577,7 +577,8 @@ class Package(object):
     @property
     def activated(self):
         if not self.is_extension:
-            raise ValueError("is_extension called on package that is not an extension.")
+            raise ValueError("is_extension called on package " +
+                             "that is not an extension.")
         exts = spack.install_area.layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
 
@@ -1185,7 +1186,6 @@ class Package(object):
         spack.install_area.layout.check_extension_conflict(
             self.extendee_spec, self.spec)
 
-
         # Activate any package dependencies that are also extensions.
         if not force:
             for spec in self.spec.traverse(root=False):
@@ -1246,7 +1246,8 @@ class Package(object):
         # redundant activation check -- makes SURE the spec is not
         # still activated even if something was wrong above.
         if self.activated:
-            spack.install_area.layout.remove_extension(self.extendee_spec, self.spec)
+            spack.install_area.layout.remove_extension(self.extendee_spec,
+                                                       self.spec)
 
         tty.msg("Deactivated extension %s for %s"
                 % (self.spec.short_spec,

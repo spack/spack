@@ -36,6 +36,7 @@ from spack.stage import DIYStage
 
 description = "Do-It-Yourself: build from an existing source directory."
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
@@ -77,14 +78,16 @@ def diy(self, args):
                 return
 
         if not spec.versions.concrete:
-            tty.die("spack diy spec must have a single, concrete version.  Did you forget a package version number?")
+            tty.die("spack diy spec must have a single, concrete version. " +
+                    "Did you forget a package version number?")
 
         spec.concretize()
         package = spack.repo.get(spec)
 
         if package.installed:
             tty.error("Already installed in %s" % package.prefix)
-            tty.msg("Uninstall or try adding a version suffix for this DIY build.")
+            tty.msg("Uninstall or try adding a version suffix " +
+                    "for this DIY build.")
             sys.exit(1)
 
         # Forces the build to run out of the current directory.

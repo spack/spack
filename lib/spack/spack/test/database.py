@@ -89,26 +89,28 @@ class DatabaseTest(MockDatabase):
         # query specs with multiple configurations
         mpileaks_specs = [s for s in all_specs if s.satisfies('mpileaks')]
         callpath_specs = [s for s in all_specs if s.satisfies('callpath')]
-        mpi_specs =      [s for s in all_specs if s.satisfies('mpi')]
+        mpi_specs      = [s for s in all_specs if s.satisfies('mpi')]
 
         self.assertEqual(len(mpileaks_specs), 3)
         self.assertEqual(len(callpath_specs), 3)
         self.assertEqual(len(mpi_specs),      3)
 
         # query specs with single configurations
-        dyninst_specs =  [s for s in all_specs if s.satisfies('dyninst')]
+        dyninst_specs  = [s for s in all_specs if s.satisfies('dyninst')]
         libdwarf_specs = [s for s in all_specs if s.satisfies('libdwarf')]
-        libelf_specs =   [s for s in all_specs if s.satisfies('libelf')]
+        libelf_specs   = [s for s in all_specs if s.satisfies('libelf')]
 
         self.assertEqual(len(dyninst_specs),  1)
         self.assertEqual(len(libdwarf_specs), 1)
         self.assertEqual(len(libelf_specs),   1)
 
         # Query by dependency
-        self.assertEqual(len([s for s in all_specs if s.satisfies('mpileaks ^mpich')]),  1)
-        self.assertEqual(len([s for s in all_specs if s.satisfies('mpileaks ^mpich2')]), 1)
-        self.assertEqual(len([s for s in all_specs if s.satisfies('mpileaks ^zmpi')]),   1)
-
+        self.assertEqual(
+            len([s for s in all_specs if s.satisfies('mpileaks ^mpich')]),  1)
+        self.assertEqual(
+            len([s for s in all_specs if s.satisfies('mpileaks ^mpich2')]), 1)
+        self.assertEqual(
+            len([s for s in all_specs if s.satisfies('mpileaks ^zmpi')]),   1)
 
     def test_015_write_and_read(self):
         # write and read DB
@@ -123,7 +125,6 @@ class DatabaseTest(MockDatabase):
             self.assertEqual(new_rec.path,      rec.path)
             self.assertEqual(new_rec.installed, rec.installed)
 
-
     def _check_db_sanity(self):
         """Utiilty function to check db against install layout."""
         expected = sorted(spack.install_area.layout.all_specs())
@@ -133,11 +134,9 @@ class DatabaseTest(MockDatabase):
         for e, a in zip(expected, actual):
             self.assertEqual(e, a)
 
-
     def test_020_db_sanity(self):
         """Make sure query() returns what's actually in the db."""
         self._check_db_sanity()
-
 
     def test_030_db_sanity_from_another_process(self):
         def read_and_modify():
@@ -153,30 +152,31 @@ class DatabaseTest(MockDatabase):
         with self.installed_db.read_transaction():
             self.assertEqual(len(self.installed_db.query('mpileaks ^zmpi')), 0)
 
-
     def test_040_ref_counts(self):
         """Ensure that we got ref counts right when we read the DB."""
         self.installed_db._check_ref_counts()
 
-
     def test_050_basic_query(self):
-        """Ensure that querying the database is consistent with what is installed."""
+        """
+        Ensure that querying the database is consistent
+         with what is installed.
+        """
         # query everything
         self.assertEqual(len(spack.install_area.db.query()), 13)
 
         # query specs with multiple configurations
         mpileaks_specs = self.installed_db.query('mpileaks')
         callpath_specs = self.installed_db.query('callpath')
-        mpi_specs =      self.installed_db.query('mpi')
+        mpi_specs      = self.installed_db.query('mpi')
 
         self.assertEqual(len(mpileaks_specs), 3)
         self.assertEqual(len(callpath_specs), 3)
         self.assertEqual(len(mpi_specs),      3)
 
         # query specs with single configurations
-        dyninst_specs =  self.installed_db.query('dyninst')
+        dyninst_specs  = self.installed_db.query('dyninst')
         libdwarf_specs = self.installed_db.query('libdwarf')
-        libelf_specs =   self.installed_db.query('libelf')
+        libelf_specs   = self.installed_db.query('libelf')
 
         self.assertEqual(len(dyninst_specs),  1)
         self.assertEqual(len(libdwarf_specs), 1)
@@ -186,7 +186,6 @@ class DatabaseTest(MockDatabase):
         self.assertEqual(len(self.installed_db.query('mpileaks ^mpich')),  1)
         self.assertEqual(len(self.installed_db.query('mpileaks ^mpich2')), 1)
         self.assertEqual(len(self.installed_db.query('mpileaks ^zmpi')),   1)
-
 
     def _check_remove_and_add_package(self, spec):
         """Remove a spec from the DB, then add it and make sure everything's
@@ -216,14 +215,11 @@ class DatabaseTest(MockDatabase):
         self._check_db_sanity()
         self.installed_db._check_ref_counts()
 
-
     def test_060_remove_and_add_root_package(self):
         self._check_remove_and_add_package('mpileaks ^mpich')
 
-
     def test_070_remove_and_add_dependency_package(self):
         self._check_remove_and_add_package('dyninst')
-
 
     def test_080_root_ref_counts(self):
         rec = self.installed_db.get_record('mpileaks ^mpich')
@@ -232,22 +228,25 @@ class DatabaseTest(MockDatabase):
         self.installed_db.remove('mpileaks ^mpich')
 
         # record no longer in DB
-        self.assertEqual(self.installed_db.query('mpileaks ^mpich', installed=any), [])
+        self.assertEqual(
+            self.installed_db.query('mpileaks ^mpich', installed=any), [])
 
         # record's deps have updated ref_counts
-        self.assertEqual(self.installed_db.get_record('callpath ^mpich').ref_count, 0)
+        self.assertEqual(
+            self.installed_db.get_record('callpath ^mpich').ref_count, 0)
         self.assertEqual(self.installed_db.get_record('mpich').ref_count, 1)
 
         # put the spec back
         self.installed_db.add(rec.spec, rec.path)
 
         # record is present again
-        self.assertEqual(len(self.installed_db.query('mpileaks ^mpich', installed=any)), 1)
+        self.assertEqual(len(self.installed_db.query('mpileaks ^mpich',
+                                                     installed=any)), 1)
 
         # dependencies have ref counts updated
-        self.assertEqual(self.installed_db.get_record('callpath ^mpich').ref_count, 1)
+        self.assertEqual(
+            self.installed_db.get_record('callpath ^mpich').ref_count, 1)
         self.assertEqual(self.installed_db.get_record('mpich').ref_count, 2)
-
 
     def test_090_non_root_ref_counts(self):
         mpileaks_mpich_rec = self.installed_db.get_record('mpileaks ^mpich')
@@ -257,19 +256,25 @@ class DatabaseTest(MockDatabase):
         self.installed_db.remove('callpath ^mpich')
 
         # record still in DB but marked uninstalled
-        self.assertEqual(self.installed_db.query('callpath ^mpich', installed=True), [])
-        self.assertEqual(len(self.installed_db.query('callpath ^mpich', installed=any)), 1)
+        self.assertEqual(self.installed_db.query('callpath ^mpich',
+                                                 installed=True), [])
+        self.assertEqual(len(self.installed_db.query('callpath ^mpich',
+                                                     installed=any)), 1)
 
         # record and its deps have same ref_counts
-        self.assertEqual(self.installed_db.get_record('callpath ^mpich', installed=any).ref_count, 1)
+        self.assertEqual(
+            self.installed_db.get_record('callpath ^mpich',
+                                         installed=any).ref_count, 1)
         self.assertEqual(self.installed_db.get_record('mpich').ref_count, 2)
 
         # remove only dependent of uninstalled callpath record
         self.installed_db.remove('mpileaks ^mpich')
 
         # record and parent are completely gone.
-        self.assertEqual(self.installed_db.query('mpileaks ^mpich', installed=any), [])
-        self.assertEqual(self.installed_db.query('callpath ^mpich', installed=any), [])
+        self.assertEqual(self.installed_db.query('mpileaks ^mpich',
+                                                 installed=any), [])
+        self.assertEqual(self.installed_db.query('callpath ^mpich',
+                                                 installed=any), [])
 
         # mpich ref count updated properly.
         mpich_rec = self.installed_db.get_record('mpich')

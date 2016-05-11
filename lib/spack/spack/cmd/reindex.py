@@ -27,5 +27,6 @@ import spack
 import spack.install_area
 description = "Rebuild Spack's package database."
 
+
 def reindex(parser, args):
     spack.install_area.db.reindex(spack.install_area.layout)

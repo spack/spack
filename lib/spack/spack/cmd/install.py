@@ -32,6 +32,7 @@ import spack.install_area
 
 description = "Build and install packages"
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
@@ -53,9 +54,11 @@ def setup_parser(subparser):
         help="Display verbose build output while installing.")
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
-        help="Fake install.  Just remove the prefix and touch a fake file in it.")
+        help="Fake install. Just remove the prefix and touch " +
+             "a fake file in it.")
     subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
+        'packages', nargs=argparse.REMAINDER,
+        help="specs of packages to install")
 
 
 def install(parser, args):
