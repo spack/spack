@@ -37,19 +37,19 @@ class Elk(Package):
 
     # Elk provides these libraries, but allows you to specify your own
     variant('blas',   default=True,
-        description='Build with custom BLAS library')
+            description='Build with custom BLAS library')
     variant('lapack', default=True,
-        description='Build with custom LAPACK library')
+            description='Build with custom LAPACK library')
     variant('fft',    default=True,
-        description='Build with custom FFT library')
+            description='Build with custom FFT library')
 
     # Elk does not provide these libraries, but allows you to use them
     variant('mpi',    default=True,
-        description='Enable MPI parallelism')
+            description='Enable MPI parallelism')
     variant('openmp', default=True,
-        description='Enable OpenMP support')
+            description='Enable OpenMP support')
     variant('libxc',  default=True,
-        description='Link to Libxc functional library')
+            description='Link to Libxc functional library')
 
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
@@ -156,4 +156,3 @@ class Elk(Package):
 
         install_tree('examples', join_path(prefix, 'examples'))
         install_tree('species',  join_path(prefix, 'species'))
-
