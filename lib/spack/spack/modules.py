@@ -168,7 +168,7 @@ def parse_config_options(module_generator):
     # Get the configuration for this kind of generator
     module_configuration = copy.deepcopy(CONFIGURATION.get(
         module_generator.name, {}))
-
+    print module_configuration
     #####
     # Merge all the rules
     #####
