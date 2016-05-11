@@ -120,7 +120,7 @@ _tmp_user = getpass.getuser()
 _tmp_candidates = (_default_tmp, '/nfs/tmp2', '/tmp', '/var/tmp')
 for path in _tmp_candidates:
     # don't add a second username if it's already unique by user.
-    if not _tmp_user in path:
+    if _tmp_user not in path:
         tmp_dirs.append(join_path(path, '%u', 'spack-stage'))
     else:
         tmp_dirs.append(join_path(path, 'spack-stage'))
@@ -152,12 +152,14 @@ sys_type = None
 # Spack internal code should call 'import spack' and accesses other
 # variables (spack.repo, paths, etc.) directly.
 #
-# TODO: maybe this should be separated out and should go in build_environment.py?
-# TODO: it's not clear where all the stuff that needs to be included in packages
+# TODO: maybe this should be separated out and
+#       should go in build_environment.py?
+# TODO: it's not clear where all the stuff that needs
+#       to be included in packages
 #       should live.  This file is overloaded for spack core vs. for packages.
 #
 __all__ = ['Package', 'Version', 'when', 'ver']
-from spack.package import Package, ExtensionConflictError
+from spack.package import Package
 from spack.version import Version, ver
 from spack.multimethod import when
 
@@ -174,8 +176,8 @@ from spack.util.executable import *
 __all__ += spack.util.executable.__all__
 
 from spack.package import \
-    install_dependency_symlinks, flatten_dependencies, DependencyConflictError, \
-    InstallError, ExternalPackageError
+    install_dependency_symlinks, flatten_dependencies, \
+    DependencyConflictError, InstallError, ExternalPackageError
 __all__ += [
-    'install_dependency_symlinks', 'flatten_dependencies', 'DependencyConflictError',
-    'InstallError', 'ExternalPackageError']
+    'install_dependency_symlinks', 'flatten_dependencies',
+    'DependencyConflictError', 'InstallError', 'ExternalPackageError']

@@ -22,7 +22,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
 import argparse
 
 import llnl.util.tty as tty
@@ -34,6 +33,7 @@ import spack.cmd.find
 import spack.install_area
 
 description = "List extensions for package."
+
 
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
@@ -48,7 +48,8 @@ def setup_parser(subparser):
         help='Show full dependency DAG of extensions')
 
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help='Spec of package to list extensions for')
+        'spec', nargs=argparse.REMAINDER,
+        help='Spec of package to list extensions for')
 
 
 def extensions(parser, args):
@@ -86,7 +87,8 @@ def extensions(parser, args):
     #
     # List specs of installed extensions.
     #
-    installed = [s.spec for s in spack.install_area.db.installed_extensions_for(spec)]
+    installed = [s.spec for s in
+                 spack.install_area.db.installed_extensions_for(spec)]
     print
     if not installed:
         tty.msg("None installed.")
@@ -103,4 +105,6 @@ def extensions(parser, args):
         tty.msg("None activated.")
         return
     tty.msg("%d currently activated:" % len(activated))
-    spack.cmd.find.display_specs(activated.values(), mode=args.mode, long=args.long)
+    spack.cmd.find.display_specs(activated.values(),
+                                 mode=args.mode,
+                                 long=args.long)

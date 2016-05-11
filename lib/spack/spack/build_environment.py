@@ -39,7 +39,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import *
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
-from spack.util.executable import Executable, which
+from spack.util.executable import Executable
 
 #
 # This can be set by the user to globally disable parallel builds.

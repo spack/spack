@@ -32,6 +32,7 @@ from spack.graph import topological_sort
 
 description = "Deactivate a package extension."
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true',
@@ -41,7 +42,8 @@ def setup_parser(subparser):
         help="Deactivate all extensions of an extendable package, or "
         "deactivate an extension AND its dependencies.")
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="spec of package extension to deactivate.")
+        'spec', nargs=argparse.REMAINDER,
+        help="spec of package extension to deactivate.")
 
 
 def deactivate(parser, args):
@@ -66,7 +68,8 @@ def deactivate(parser, args):
             if not args.force and not spec.package.activated:
                 tty.die("%s is not activated." % pkg.spec.short_spec)
 
-            tty.msg("Deactivating %s and all dependencies." % pkg.spec.short_spec)
+            tty.msg("Deactivating %s and all dependencies."
+                    % pkg.spec.short_spec)
 
             topo_order = topological_sort(spec)
             index = spec.index()
@@ -80,7 +83,8 @@ def deactivate(parser, args):
                         epkg.do_deactivate(force=args.force)
 
         else:
-            tty.die("spack deactivate --all requires an extendable package or an extension.")
+            tty.die("spack deactivate --all requires an " +
+                    "extendable package or an extension.")
 
     else:
         if not pkg.is_extension:
