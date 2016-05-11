@@ -58,17 +58,16 @@ def spconfig(self, args):
     # Take a write lock before checking for existence.
     with spack.installed_db.write_transaction():
         spec = specs[0]
-
-#        if not spack.repo.exists(spec.name):
-#            tty.warn("No such package: %s" % spec.name)
-#            create = tty.get_yes_or_no("Create this package?", default=False)
-#            if not create:
-#                tty.msg("Exiting without creating.")
-#                sys.exit(1)
-#            else:
-#                tty.msg("Running 'spack edit -f %s'" % spec.name)
-#                edit_package(spec.name, spack.repo.first_repo(), None, True)
-#                return
+        if not spack.repo.exists(spec.name):
+            tty.warn("No such package: %s" % spec.name)
+            create = tty.get_yes_or_no("Create this package?", default=False)
+            if not create:
+                tty.msg("Exiting without creating.")
+                sys.exit(1)
+            else:
+                tty.msg("Running 'spack edit -f %s'" % spec.name)
+                edit_package(spec.name, spack.repo.first_repo(), None, True)
+                return
 
         if not spec.versions.concrete:
             tty.die("spack spconfig spec must have a single, concrete version.  Did you forget a package version number?")
@@ -89,9 +88,8 @@ def spconfig(self, args):
         spack.do_checksum = False
 
         package.do_install(
-            force=True,              # Overwrite any "junk" in the install directory
-            keep_prefix=False,        # Don't remove stage, even if you think you should
+            keep_prefix=True,        # Don't remove install directory, even if you think you should
             ignore_deps=args.ignore_deps,
             verbose=args.verbose,
             keep_stage=True,   # don't remove source dir for SPCONFIG.
-            install_phases = set(['spconfig', 'provenance', 'db']))
+            install_phases = set(['spconfig', 'provenance']))

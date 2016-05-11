@@ -495,15 +495,9 @@ class Spec(object):
         return first_root
 
 
-    def __package(self):
-        return spack.repo.get(self)
-
-    _memoize_package = None
     @property
     def package(self):
-        if self._memoize_package is None:
-            self._memoize_package = self.__package()
-        return self._memoize_package
+        return spack.repo.get(self)
 
 
     @property
@@ -1375,6 +1369,7 @@ class Spec(object):
         except SpecError:
             return parse_anonymous_spec(spec_like, self.name)
 
+
     def satisfies(self, other, deps=True, strict=False):
         """Determine if this spec satisfies all constraints of another.
 
@@ -1438,13 +1433,6 @@ class Spec(object):
             return self.satisfies_dependencies(other, strict=strict)
         else:
             return True
-
-#    _memoize_satisfies = dict()
-#    def satisfies(self, other, deps=True, strict=False):
-#        key = (other, deps, strict)
-#        if key not in self._memoize_satisfies:
-#            self._memoize_satisfies[key] = self.__satisfies(other, deps=deps, strict=strict)
-#        return self._memoize_satisfies[key]
 
 
     def satisfies_dependencies(self, other, strict=False):
@@ -1663,7 +1651,6 @@ class Spec(object):
         return self._cmp_node() != other._cmp_node()
 
 
-    _memoize_cmp_key = None
     def _cmp_key(self):
         """This returns a key for the spec *including* DAG structure.
 
@@ -1671,11 +1658,9 @@ class Spec(object):
           1. A tuple describing this node in the DAG.
           2. The hash of each of this node's dependencies' cmp_keys.
         """
-        if self._memoize_cmp_key is None:
-            self._memoize_cmp_key = self._cmp_node() + (
-                tuple(hash(self.dependencies[name])
-                      for name in sorted(self.dependencies)),)
-        return self._memoize_cmp_key
+        return self._cmp_node() + (
+            tuple(hash(self.dependencies[name])
+                  for name in sorted(self.dependencies)),)
 
 
     def colorized(self):
