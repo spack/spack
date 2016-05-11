@@ -51,14 +51,13 @@ class Moab(Package):
             '--without-vtk',
             'CXX=%s' % spec['mpi'].mpicxx,
             'CC=%s' % spec['mpi'].mpicc,
-            'FC=%s' % spec['mpi'].mpifc
-            ]
+            'FC=%s' % spec['mpi'].mpifc]
 
         if '+shared' in spec:
-            options.append( '--enable-shared' )
+            options.append('--enable-shared')
         if '+netcdf' in spec:
-            options.append( '--with-netcdf=%s' % spec['netcdf'].prefix )
+            options.append('--with-netcdf=%s' % spec['netcdf'].prefix)
 
-        configure( *options )
+        configure(*options)
         make()
-        make( "install" )
+        make('install')
