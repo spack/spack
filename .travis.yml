@@ -15,23 +15,35 @@ before_install:
   # Need this for the git tests to succeed.
   - git config --global user.email "spack@example.com"
   - git config --global user.name "Test User"
+
   # Need this to be able to compute the list of changed files
   - git fetch origin develop:develop
 
 script:
+  # Regular spack setup and tests
   - . share/spack/setup-env.sh
   - spack compilers
   - spack config get compilers
   - spack install -v libdwarf
+
   # Run unit tests with code coverage
   - coverage run bin/spack test
-  # Checks if the file that have been changed are flake8 conformant [framework]
-  - CHANGED_PYTHON_FILES=`git diff develop... --name-only | perl -ne 'print if /\.py$/' |  perl -ne 'print if not /var/' `
-  - if [[ ${CHANGED_PYTHON_FILES} ]] ; then flake8 --format pylint --config flake8-framework.ini ${CHANGED_PYTHON_FILES} ; fi
-  # Checks if the file that have been changed are flake8 conformant [packages]
-  - CHANGED_PACKAGES=`git diff develop... --name-only | perl -ne 'print if /\.py$/' |  perl -ne 'print if /var/' `
-  - if [[ ${CHANGED_PACKAGES} ]] ; then flake8 --format pylint --config flake8-packages.ini ${CHANGED_PACKAGES} ; fi
 
+  # Check if changed files are flake8 conformant [framework]
+  - changed=$(git diff --name-only develop... | grep '.py$' | grep -v ^var/)
+  - [[ $changed ]] && \
+    flake8 --format pylint --config share/spack/qa/flake8-framework $changed
+
+  # Check if changed files are flake8 conformant [packages]
+  - changed=$(git diff --name-only develop... | grep '.py$' | grep ^var/)
+
+  # Exempt url lines in changed packages from overlong errors.
+  - for file in $changed; do \
+      [[ file = *package.py ]] && \
+      perl -i~ -pe 's/^(\s*url\s*=.*)$/\1 # NOQA/' $file; \
+    done
+  - [[ $changed ]] && \
+    flake8 --format pylint --config share/spack/qa/flake8-packages $changed
 
 after_success:
   - coveralls
