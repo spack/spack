@@ -6,6 +6,7 @@
 # E241: multiple spaces after ‘,’
 # F403: disable wildcard import
 # F821: undefined name (needed for build commands)
+# F999: Undefined undefined name (needed for build commands)
 #
-ignore = E221,E241,F403,F821
+ignore = E221,E241,F403,F821,F999
 max-line-length = 79

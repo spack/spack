@@ -24,7 +24,7 @@ class Imagemagick(Package):
     version(
         '6.8.9-10',
         'aa050bf9785e571c956c111377bbf57c',
-        url="http://sourceforge.net/projects/imagemagick/files/old-sources/6.x/6.8/ImageMagick-6.8.9-10.tar.gz/download")  # NOQA: ignore=E501
+        url="http://sourceforge.net/projects/imagemagick/files/old-sources/6.x/6.8/ImageMagick-6.8.9-10.tar.gz/download")
 
     depends_on('jpeg')
     depends_on('libtool')
