@@ -227,7 +227,7 @@ def relocate_text(path_name, original_path, new_path):
     """
     Replace old path with new path in text files
     """
-    os.system("sed -i -e s#%s#%s#g %s" % (original_path, new_path, path_name))
+    os.system("sed -i -e \"s#%s#%s#g\" \"%s\"" % (original_path, new_path, path_name))
 
 
 def relocate(package):
