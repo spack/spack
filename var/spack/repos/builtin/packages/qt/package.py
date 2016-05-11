@@ -1,6 +1,7 @@
 from spack import *
 import sys
 
+
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
 
@@ -36,16 +37,10 @@ class Qt(Package):
     depends_on("libpng", when='@4:')
     depends_on("libmng")
     depends_on("jpeg")
-
-    # Webkit
-    # depends_on("gperf")
-    # depends_on("flex")
-    # depends_on("bison")
-    # depends_on("ruby")
     depends_on("icu4c")
 
-    # OpenGL hardware acceleration
-    #depends_on("mesa", when='@4:+mesa')
+    # OpenGL
+    depends_on("mesa", when='@4:+mesa')
     if "darwin" in sys.platform:
         pass
 
@@ -62,36 +57,33 @@ class Qt(Package):
 
         if version >= Version('5'):
             url += "%s/%s/single/qt-everywhere-opensource-src-%s.tar.gz" % \
-                    (version.up_to(2), version, version)
+                   (version.up_to(2), version, version)
         elif version >= Version('4.8'):
             url += "%s/%s/qt-everywhere-opensource-src-%s.tar.gz" % \
-                    (version.up_to(2), version, version)
+                   (version.up_to(2), version, version)
         elif version >= Version('4.6'):
             url += "%s/qt-everywhere-opensource-src-%s.tar.gz" % \
-                    (version.up_to(2), version)
+                   (version.up_to(2), version)
         elif version >= Version('4.0'):
             url += "%s/qt-x11-opensource-src-%s.tar.gz" % \
-                    (version.up_to(2), version)
+                   (version.up_to(2), version)
         elif version >= Version('3'):
             url += "%s/qt-x11-free-%s.tar.gz" % \
-                    (version.up_to(1), version)
+                   (version.up_to(1), version)
         elif version >= Version('2.1'):
             url += "%s/qt-x11-%s.tar.gz" % \
-                    (version.up_to(1), version)
+                   (version.up_to(1), version)
         else:
             url += "%s/qt-%s.tar.gz" % \
-                    (version.up_to(1), version)
+                   (version.up_to(1), version)
 
         return url
-
 
     def setup_environment(self, spack_env, env):
         env.set('QTDIR', self.prefix)
 
-
     def setup_dependent_environment(self, spack_env, run_env, dspec):
         spack_env.set('QTDIR', self.prefix)
-
 
     def patch(self):
         if self.spec.satisfies('@4'):
@@ -109,7 +101,6 @@ class Qt(Package):
         filter_file(r'^QMAKE_CXX *=.*$',       'QMAKE_CXX = c++',     qmake_conf)
         filter_file(r'^QMAKE_LFLAGS_NOUNDEF *\+?=.*$',  'QMAKE_LFLAGS_NOUNDEF =', qmake_unix_conf)
 
-
     @property
     def common_config_args(self):
         config_args = [
@@ -120,10 +111,10 @@ class Qt(Package):
             '-release',
             '-shared',
             '-confirm-license',
-            #'-openssl-linked',
-            #'-dbus-linked',
+            # '-openssl-linked',
+            # '-dbus-linked',
             '-no-dbus',
-            #'-no-phonon',
+            # '-no-phonon',
             '-optimized-qmake',
             '-no-openvg',
             '-no-pch',
@@ -144,7 +135,7 @@ class Qt(Package):
     @when('@3')
     def configure(self):
         # An user report that this was necessary to link Qt3 on ubuntu
-        os.environ['LD_LIBRARY_PATH'] = os.getcwd()+'/lib' 
+        os.environ['LD_LIBRARY_PATH'] = os.getcwd()+'/lib'
         configure('-prefix', self.prefix,
                   '-v',
                   '-thread',
@@ -157,42 +148,37 @@ class Qt(Package):
         options = self.common_config_args[:]
 
         if "darwin" in sys.platform:
-            options.extend(['-fast',
-                    '-no-webkit',
-                    # XXX(osx): sdk stuff; should depend on the architecture and the SDKs available.
-                    '-arch', 'x86_64',
-                    '-sdk', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk',
-                    # XXX(osx): When using Xcode's clang rather than a GCC.
-                    '-platform', 'unsupported/macx-clang'])
+            options.extend(
+                ['-fast',
+                 # XXX(osx): sdk stuff; should depend on the architecture and the SDKs available.
+                 '-arch', 'x86_64',
+                 '-sdk', '/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk',
+                 # XXX(osx): When using Xcode's clang rather than a GCC.
+                 '-platform', 'unsupported/macx-clang'])
 
-        options.extend(['-no-webkit',
-                       ])
+        options.extend(['-fast',
+                        '-no-webkit'])
 
         configure(*options)
 
     @when('@5:5.5')
     def configure(self):
-        configure(#'-no-eglfs',
-                  #'-no-directfb',
-                  #'-qt-xcb',
-                  #'-arch', 'x86_64',
-                  #'-sdk', 'macosx10.11',
-                  # If someone wants to get a webkit build working, be my guest!
-                  '-skip', 'qtwebkit',
-                  '-skip', 'qtwebengine',
-                  *self.common_config_args)
+        configure(  # '-no-eglfs',
+                    # '-no-directfb',
+                    # '-qt-xcb',
+                    # '-arch', 'x86_64',
+                    # '-sdk', 'macosx10.11',
+                    #  If someone wants to get a webkit build working, be my guest!
+                    '-skip', 'qtwebkit',
+                    '-skip', 'qtwebengine',
+                    *self.common_config_args)
 
-
-    @when('@5.6')
+    @when('@5.6:')
     def configure(self):
         options = self.common_config_args[:]
 
-        # if "linux" in sys.platform:
-            # options.extend(["-qt-xcb"])
-
         configure('-skip', 'qtwebengine',
                   *options)
-
 
     def install(self, spec, prefix):
         self.configure()
