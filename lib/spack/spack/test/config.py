@@ -72,6 +72,10 @@ b_comps = {
     }
 }
 
+# Some Sample repo data
+repos_low = [ "/some/path" ]
+repos_high = [ "/some/other/path" ]
+
 class ConfigTest(MockPackagesTest):
 
     def setUp(self):
@@ -94,6 +98,12 @@ class ConfigTest(MockPackagesTest):
                 expected = comps[arch][key][c]
                 actual = config[arch][key][c]
                 self.assertEqual(expected, actual)
+
+    def test_write_list_in_memory(self):
+        spack.config.update_config('repos', repos_low, 'test_low_priority')
+        spack.config.update_config('repos', repos_high, 'test_high_priority')
+        config = spack.config.get_config('repos')
+        self.assertEqual(config, repos_high+repos_low)
 
     def test_write_key_in_memory(self):
         # Write b_comps "on top of" a_comps.
