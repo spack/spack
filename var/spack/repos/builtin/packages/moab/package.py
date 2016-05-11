@@ -52,9 +52,3 @@ class Moab(Package):
         configure(*options)
         make()
         make("install")
-
-        #   CXX=
-        #   CC=
-        #   FC=
-        #   F77=
-	#   MPIEXEC=`which mpirun`
