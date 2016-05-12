@@ -1,3 +1,4 @@
+_copyright = """\
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -22,6 +23,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+"""
 import string
 import os
 import hashlib
@@ -47,22 +49,22 @@ from spack.stage import Stage
 
 description = "Create a new package file from an archive URL"
 
-package_template = string.Template("""\
-# FIXME:
-# This is a template package file for Spack.  We've conveniently
-# put "FIXME" labels next to all the things you'll want to change.
+package_template = string.Template(
+    _copyright + """
 #
-# Once you've edited all the FIXME's, delete this whole message,
-# save this file, and test out your package like this:
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
 #
 #     spack install ${name}
 #
-# You can always get back here to change things with:
+# You can edit this file again by typing:
 #
 #     spack edit ${name}
 #
-# See the spack documentation for more information on building
-# packages.
+# See the Spack documentation for more information on packaging.
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
 #
 from spack import *
 
