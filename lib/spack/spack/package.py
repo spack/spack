@@ -374,12 +374,38 @@ class Package(object):
         if not hasattr(self, 'list_depth'):
             self.list_depth = 1
 
+        # Set default licensing information
+        if not hasattr(self, 'license_required'):
+            self.license_required = False
+
+        if not hasattr(self, 'license_comment'):
+            self.license_comment = '#'
+
+        if not hasattr(self, 'license_files'):
+            self.license_files = []
+
+        if not hasattr(self, 'license_vars'):
+            self.license_vars = []
+
+        if not hasattr(self, 'license_url'):
+            self.license_url = None
+
         # Set up some internal variables for timing.
         self._fetch_time = 0.0
         self._total_time = 0.0
 
         if self.is_extension:
             spack.repo.get(self.extendee_spec)._check_extendable()
+
+    @property
+    def global_license_file(self):
+        """Returns the path where a global license file should be stored."""
+        if not self.license_files:
+            return
+        spack_root = ancestor(__file__, 4)
+        global_license_dir = join_path(spack_root, 'etc', 'spack', 'licenses')
+        return join_path(global_license_dir, self.name,
+                         os.path.basename(self.license_files[0]))
 
     @property
     def version(self):
@@ -882,6 +908,7 @@ class Package(object):
         def build_process():
             """Forked for each build. Has its own process and python
                module space set up by build_environment.fork()."""
+
             start_time = time.time()
             if not fake:
                 if not skip_patch:
@@ -1320,11 +1347,9 @@ class Package(object):
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
         rpaths = [self.prefix.lib, self.prefix.lib64]
-        rpaths.extend(d.prefix.lib
-                      for d in self.spec.traverse(root=False)
+        rpaths.extend(d.prefix.lib for d in self.spec.traverse(root=False)
                       if os.path.isdir(d.prefix.lib))
-        rpaths.extend(d.prefix.lib64
-                      for d in self.spec.traverse(root=False)
+        rpaths.extend(d.prefix.lib64 for d in self.spec.traverse(root=False)
                       if os.path.isdir(d.prefix.lib64))
         return rpaths
 
