@@ -23,27 +23,29 @@
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import argparse
-import os
 
 import llnl.util.tty as tty
 
 import spack
 import spack.cmd
-from spack.util.executable import which
 from spack.binary_distribution import build_tarball
+
 
 description = "Create tarballs for given packages"
 
+
 def setup_parser(subparser):
-    subparser.add_argument('-r','--recurse',action='store_true',
+    subparser.add_argument('-r', '--recurse', action='store_true',
                            help="also make tarballs for dependencies.")
-    subparser.add_argument('-f','--force',action='store_true',
+    subparser.add_argument('-f', '--force', action='store_true',
                            help="overwrite tarball if it exists.")
-    subparser.add_argument('-d','--directory',default=".",
+    subparser.add_argument('-d', '--directory', default=".",
                            help="directory in which to save the tarballs.")
 
     subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER, help="specs of packages to package")
+        'packages', nargs=argparse.REMAINDER,
+        help="specs of packages to package")
+
 
 def create_tarball(parser, args):
     if not args.packages:
@@ -58,4 +60,3 @@ def create_tarball(parser, args):
     for pkg in pkgs:
         for spec in spack.cmd.parse_specs(pkg, concretize=True):
             build_tarball(spec, args.directory, args.force)
-

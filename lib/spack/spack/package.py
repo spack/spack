@@ -866,17 +866,22 @@ class Package(object):
         their build process.
 
         Args:
-        
-        keep_prefix    -- Keep install prefix on failure. By default, destroys it.
+
+        keep_prefix    -- Keep install prefix on failure.
+                          By default, destroys it.
         keep_stage     -- By default, stage is destroyed only if there are no
-                          exceptions during build. Set to True to keep the stage
-                          even with exceptions.
-        ignore_deps    -- Do not install dependencies before installing this package.
-        install_policy -- Whether to download a pre-compiled package or build from scratch
-        fake           -- Don't really build -- install fake stub files instead.
+                          exceptions during build. Set to True to keep the
+                          stage even with exceptions.
+        ignore_deps    -- Do not install dependencies before installing this
+                        package.
+        install_policy -- Whether to download a pre-compiled package
+                          or build from scratch
+        fake           -- Don't really build - install fake stub files instead.
         skip_patch     -- Skip patch stage of build if True.
-        verbose        -- Display verbose build output (by default, suppresses it)
-        make_jobs      -- Number of make jobs to use for install.  Default is ncpus.
+        verbose        -- Display verbose build output
+                          (by default, suppresses it)
+        make_jobs      -- Number of make jobs to use for install
+                          (default is ncpus)
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -896,8 +901,7 @@ class Package(object):
 
         # First, install dependencies recursively.
         if not ignore_deps:
-            self.do_install_dependencies(
-                                         keep_prefix=keep_prefix,
+            self.do_install_dependencies(keep_prefix=keep_prefix,
                                          keep_stage=keep_stage,
                                          ignore_deps=ignore_deps,
                                          fake=fake,
@@ -906,19 +910,20 @@ class Package(object):
                                          install_policy=install_policy,
                                          make_jobs=make_jobs)
 
-        start_time = time.time()
-        
         # check and prepare binary install option
         install_binary = False
-        if install_policy in ("download","lazy"):
-            tarball_available = spack.binary_distribution.download_tarball(self)
+        binary_distribution = spack.binary_distribution
+        if install_policy in ("download", "lazy"):
+            tarball_available = binary_distribution.download_tarball(self)
             if tarball_available:
                 install_binary = True
-                spack.binary_distribution.prepare()
+                binary_distribution.prepare()
             elif install_policy == "download":
-                tty.die("Download of binary package for %s failed." %self.name)
+                tty.die("Download of binary package for %s failed."
+                        % self.name)
             else:
-                tty.warn("No binary package for %s found." %self.name)
+                tty.warn("No binary package for %s found."
+                         % self.name)
 
         # create the install directory.  The install layout
         # handles this in case so that it can use whatever
@@ -947,9 +952,9 @@ class Package(object):
                 # the directory is created.
                 spack.hooks.pre_install(self)
                 # Set up process's build environment before running install.
-                if install_binary == True:
-                  spack.binary_distribution.extract_tarball(self)
-                  spack.binary_distribution.relocate(self)
+                if install_binary is True:
+                    spack.binary_distribution.extract_tarball(self)
+                    spack.binary_distribution.relocate(self)
                 elif fake:
                     self.do_fake_install()
                 else:
