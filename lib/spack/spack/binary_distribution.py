@@ -20,6 +20,8 @@ def prepare():
     Install patchelf as pre-requisite to the
     required relocation of binary packages
     """
+    if platform.system() == 'Darwin':
+        return
     dir = os.getcwd()
     patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
     if not spack.install_layout.check_installed(patchelf_spec):
@@ -147,9 +149,8 @@ def relocate_binary(path_name, topdir, new_root_dir, patchelf_executable):
     Change RPATHs in given file
     """
     orig_rpath = get_existing_rpath(path_name, patchelf_executable)
-    if orig_rpath:
-        new_rpath  = substitute_rpath(orig_rpath, topdir, new_root_dir)
-        modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable)
+    new_rpath  = substitute_rpath(orig_rpath, topdir, new_root_dir)
+    modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable)
 
 
 def get_existing_rpath(path_name, patchelf_executable):
@@ -160,7 +161,7 @@ def get_existing_rpath(path_name, patchelf_executable):
             tty.warn('failed reading rpath for %s.' % path_name)
             return False
         last_cmd = None
-        path = None
+        path = ()
         for line in output.split('\n'):
             match = re.search('( *[a-zA-Z]+ )(.*)', line)
             if match:
@@ -172,11 +173,8 @@ def get_existing_rpath(path_name, patchelf_executable):
                 if lhs == 'cmd':
                     last_cmd = rhs
                 if lhs == 'path' and last_cmd == 'LC_RPATH':
-                    path = rhs
-        if path == None : 
-            return False
-        else: 
-            return path.split(':')
+                    path.add(rhs)
+            return path
     elif platform.system() == 'Linux':
         command = '%s --print-rpath %s ' % (patchelf_executable, path_name)
         status, output = getstatusoutput(command)
@@ -228,7 +226,7 @@ def relocate_text(path_name, original_path, new_path):
     """
     Replace old path with new path in text files
     """
-    os.system("sed -i -e \"s#%s#%s#g\" \"%s\"" % (original_path, new_path, path_name))
+    os.system("LC_ALL=C sed -i -e \"s#%s#%s#g\" \"%s\"" % (original_path, new_path, path_name))
 
 
 def relocate(package):
