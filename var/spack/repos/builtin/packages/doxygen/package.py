@@ -39,6 +39,7 @@ class Doxygen(Package):
     homepage = "http://www.stack.nl/~dimitri/doxygen/"
     url      = "http://ftp.stack.nl/pub/users/dimitri/doxygen-1.8.10.src.tar.gz"
 
+    version('1.8.11', 'f4697a444feaed739cfa2f0644abc19b')
     version('1.8.10', '79767ccd986f12a0f949015efb5f058f')
 
     depends_on("cmake@2.8.12:")
