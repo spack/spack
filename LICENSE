@@ -1,56 +1,62 @@
-Copyright (c) 2013-2014, Lawrence Livermore National Security, LLC.
+########################################################################
+GNU LESSER GENERAL PUBLIC LICENSE (Lesser GPL)
+Version 2.1, February 1999
+########################################################################
+Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 Produced at the Lawrence Livermore National Laboratory.
 
 This file is part of Spack.
-Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 LLNL-CODE-647188
 
 For details, see https://github.com/llnl/spack
 
 This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License (as published by
-the Free Software Foundation) version 2.1 dated February 1999.
+it under the terms of the GNU Lesser General Public License (as
+published by the Free Software Foundation) version 2.1, February 1999.
 
 This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-conditions of the GNU General Public License for more details.
+conditions of the GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU Lesser General Public License
-along with this program; if not, write to the Free Software Foundation,
-Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+You should have received a copy of the GNU Lesser General Public
+License along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-OUR NOTICE AND TERMS AND CONDITIONS OF THE GNU GENERAL PUBLIC LICENSE
+########################################################################
+LLNL NOTICE AND TERMS AND CONDITIONS OF THE GNU LGPL
 
-Our Preamble Notice
+LLNL Preamble Notice
 
-A. This notice is required to be provided under our contract with the
-U.S. Department of Energy (DOE). This work was produced at the
-Lawrence Livermore National Laboratory under Contract
-No. DE-AC52-07NA27344 with the DOE.
+A. This notice is required to be provided under LLNL's contract with
+   the U.S. Department of Energy (DOE). This work was produced at the
+   Lawrence Livermore National Laboratory under Contract
+   No. DE-AC52-07NA27344 with the DOE.
 
 B. Neither the United States Government nor Lawrence Livermore
-National Security, LLC nor any of their employees, makes any warranty,
-express or implied, or assumes any liability or responsibility for the
-accuracy, completeness, or usefulness of any information, apparatus,
-product, or process disclosed, or represents that its use would not
-infringe privately-owned rights.
+   National Security, LLC nor any of their employees, makes any
+   warranty, express or implied, or assumes any liability or
+   responsibility for the accuracy, completeness, or usefulness of any
+   information, apparatus, product, or process disclosed, or
+   represents that its use would not infringe privately-owned rights.
 
 C. Also, reference herein to any specific commercial products,
-process, or services by trade name, trademark, manufacturer or
-otherwise does not necessarily constitute or imply its endorsement,
-recommendation, or favoring by the United States Government or
-Lawrence Livermore National Security, LLC. The views and opinions of
-authors expressed herein do not necessarily state or reflect those of
-the United States Government or Lawrence Livermore National Security,
-LLC, and shall not be used for advertising or product endorsement
-purposes.
+   process, or services by trade name, trademark, manufacturer or
+   otherwise does not necessarily constitute or imply its endorsement,
+   recommendation, or favoring by the United States Government or
+   Lawrence Livermore National Security, LLC. The views and opinions
+   of authors expressed herein do not necessarily state or reflect
+   those of the United States Government or Lawrence Livermore
+   National Security, LLC, and shall not be used for advertising or
+   product endorsement purposes.
 
 The precise terms and conditions for copying, distribution and
 modification follows.
 
-GNU Lesser GPL terms and Conditions for Copying, Distribution, and
-Modification
+########################################################################
+GNU LESSER GENERAL PUBLIC LICENSE
+TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
 
 0. This License Agreement applies to any software library or other
 program which contains a notice placed by the copyright holder or
