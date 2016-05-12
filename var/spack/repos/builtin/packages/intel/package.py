@@ -59,6 +59,7 @@ ACTIVATION_TYPE=license_file
 PHONEHOME_SEND_USAGE_DATA=no
 COMPONENTS=%s
 """ %(self.intel_prefix, self.global_license_file, self.intel_components))
+>>>>>>> e45b14f379ae750a01d49ff81b6b7f8d2665d0eb
 
         install_script = which("install.sh")
         install_script('--silent', silent_config_filename)
