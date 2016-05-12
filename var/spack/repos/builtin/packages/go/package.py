@@ -10,9 +10,10 @@ class Go(Package):
 
     # temporary fix until tags are pulled correctly
     version('1.4.2', git='https://go.googlesource.com/go', tag='go1.4.2')
+    version('1.5.0', git='https://go.googlesource.com/go', tag='go1.5.0')
 
     # to-do, make non-c self-hosting compilers possible
-    # depends_on('go@:1.4.2', when='@1.5:')
+    depends_on('go@:1.4.2', when='@1.5:')
 
     def install(self, spec, prefix):
       os.environ['GOROOT'] = os.getcwd()
