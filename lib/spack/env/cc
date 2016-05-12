@@ -238,6 +238,12 @@ unset LD_RUN_PATH
 unset DYLD_LIBRARY_PATH
 
 #
+# Set library path again if specified explicitly
+#
+LD_LIBRARY_PATH=SPACK_LD_LIBRARY_PATH
+DYLD_LIBRARY_PATH=SPACK_DYLD_LIBRARY_PATH
+
+#
 # Filter '.' and Spack environment directories out of PATH so that
 # this script doesn't just call itself
 #

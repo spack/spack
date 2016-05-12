@@ -86,9 +86,7 @@ def get_compiler_config(arch=None, scope=None):
         for compiler in compilers:
             config[arch].update(_to_dict(compiler))
         spack.config.update_config('compilers', config, scope=scope)
-
     config = spack.config.get_config('compilers', scope=scope)
-
     # Update the configuration if there are currently no compilers
     # configured.  Avoid updating automatically if there ARE site
     # compilers configured but no user ones.
@@ -204,7 +202,6 @@ def find_compilers(*path):
     # the overhead of spelunking all these directories.
     types = all_compiler_types()
     compiler_lists = parmap(lambda cls: cls.find(*filtered_path), types)
-
     # ensure all the version calls we made are cached in the parent
     # process, as well.  This speeds up Spack a lot.
     clist = reduce(lambda x,y: x+y, compiler_lists)

@@ -120,7 +120,7 @@ class Compiler(object):
         self.cxx = check(cxx)
         self.f77 = check(f77)
         self.fc  = check(fc)
-        self.ld_library_path = ld_library_path
+        self.LD_LIBRARY_PATH = ld_library_path
         self.spec = cspec
 
 
@@ -281,7 +281,8 @@ class Compiler(object):
             if ver == 'unknown':
                 continue
 
-            paths = tuple(pn[k] if k in pn else None for pn in dicts)
+            paths = tuple(pn[k] if k in pn else None for pn in dicts) +\
+                    ("",)  # '' is the empty LD_LIBRARY_PATH
             spec = spack.spec.CompilerSpec(cls.name, ver)
 
             if ver in compilers:
@@ -295,9 +296,7 @@ class Compiler(object):
                 # Don't add if it's not an improvement over prev compiler.
                 if newcount <= prevcount:
                     continue
-
             compilers[ver] = cls(spec, *paths)
-
         return list(compilers.values())
 
 

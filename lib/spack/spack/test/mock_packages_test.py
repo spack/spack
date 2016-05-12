@@ -42,11 +42,13 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
+      LD_LIBRARY_PATH : empty/dir
     gcc@4.5.0:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
+      LD_LIBRARY_PATH : empty/dir
 """
 
 mock_packages_config = """\
