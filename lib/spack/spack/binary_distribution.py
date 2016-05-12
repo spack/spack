@@ -115,8 +115,8 @@ def get_filetype(path_name):
     file_command = "LC_ALL=C file -b -h \"%s\"" % path_name
     status, output = getstatusoutput(file_command)
 
-    if status!= 0:
-        tty.warn('getting filetype of "%s" failed' %path_name)
+    if status != 0:
+        tty.warn('getting filetype of "%s" failed' % path_name)
         return None
     return output.strip()
 
@@ -156,7 +156,7 @@ def relocate_binary(path_name, topdir, new_root_dir, patchelf_executable):
 def get_existing_rpath(path_name, patchelf_executable):
     if platform.system() == 'Darwin':
         command = which('otool')
-        output  = command("-l", path_name,output=str,err=str)
+        output  = command("-l", path_name, output=str, err=str)
         if command.returncode != 0:
             tty.warn('failed reading rpath for %s.' % path_name)
             return False
@@ -200,17 +200,19 @@ def substitute_rpath(orig_rpath, topdir, new_root_path):
 
 def modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable):
     st = os.stat(path_name)
-    wmode=os.access(path_name,os.W_OK)
-    if not wmode : os.chmod(path_name,st.st_mode | stat.S_IWUSR)    
+    wmode = os.access(path_name, os.W_OK)
+    if not wmode:
+        os.chmod(path_name, st.st_mode | stat.S_IWUSR)
     if platform.system() == 'Darwin':
-        orig_joined = ':'.join(orig_rpath)
-        new_joined = ':'.join(new_rpath)
         for orig, new in zip(orig_rpath, new_rpath):
             command = which("install_name_tool")
-            output = command("-rpath", "%s" % orig,\
-                "%s" % new, "%s" % path_name, output=str, err=str )
+            output = command("-rpath", "%s" % orig,
+                             "%s" % new,
+                             "%s" % path_name,
+                             output=str,
+                             err=str)
             if command.returncode != 0:
-                 tty.warn('failed writing rpath for %s.' %path_name)
+                tty.warn('failed writing rpath for %s.' % path_name)
     elif platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
         command = "%s --force-rpath --set-rpath '%s' '%s'" % \
@@ -220,13 +222,15 @@ def modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable):
             tty.warn('failed writing rpath for %s.' % path_name)
     else:
         tty.die('relocation not supported for this platform')
-    os.chmod(path_name,st.st_mode)
+    os.chmod(path_name, st.st_mode)
+
 
 def relocate_text(path_name, original_path, new_path):
     """
     Replace old path with new path in text files
     """
-    os.system("LC_ALL=C sed -i -e \"s#%s#%s#g\" \"%s\"" % (original_path, new_path, path_name))
+    os.system("LC_ALL=C sed -i -e \"s#%s#%s#g\" \"%s\""
+              % (original_path, new_path, path_name))
 
 
 def relocate(package):
