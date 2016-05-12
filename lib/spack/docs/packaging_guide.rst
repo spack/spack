@@ -1994,6 +1994,19 @@ instead of hard-coding ``join_path(self.spec['mpi'].prefix.bin, 'mpicc')`` for
 the reasons outlined above.
 
 
+Blas and Lapack libraries
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Different packages provide implementation of ``Blas`` and ``Lapack`` routines.
+The names of the resulting static and/or shared libraries differ from package
+to package. In order to make ``install()`` method indifferent to the
+choice of ``Blas`` implementation, each package which provides it
+sets up ``self.spec.blas_shared_lib`` and ``self.spec.blas_static_lib `` to
+point to the shared and static ``Blas`` libraries, respectively. The same
+applies to packages which provide ``Lapack``. Package developers are advised to
+use these variables, for example ``spec['blas'].blas_shared_lib`` instead of
+hard-coding ``join_path(spec['blas'].prefix.lib, 'libopenblas.so')``.
+
+
 Forking ``install()``
 ~~~~~~~~~~~~~~~~~~~~~
 
