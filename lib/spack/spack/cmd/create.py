@@ -50,7 +50,7 @@ from spack.stage import Stage
 description = "Create a new package file from an archive URL"
 
 package_template = string.Template(
-    _copyright + """
+    _copyright + """\
 #
 # This is a template package file for Spack.  We've put "FIXME"
 # next to all the things you'll want to change. Once you've handled
@@ -68,8 +68,10 @@ package_template = string.Template(
 #
 from spack import *
 
+
 class ${class_name}(Package):
     ""\"FIXME: put a proper description of your package here.""\"
+
     # FIXME: add a proper url for your package's homepage here.
     homepage = "http://www.example.com"
     url      = "${url}"
@@ -123,10 +125,10 @@ class ConfigureGuesser(object):
         """Try to guess the type of build system used by the project, and return
            an appropriate configure line.
         """
-        autotools = "configure('--prefix=%s' % prefix)"
+        autotools = "configure('--prefix={0}'.format(prefix))"
         cmake     = "cmake('.', *std_cmake_args)"
-        python    = "python('setup.py', 'install', '--prefix=%s' % prefix)"
-        r         = "R('CMD', 'INSTALL', '--library=%s' % self.module.r_lib_dir, '%s' % self.stage.archive_file)"
+        python    = "python('setup.py', 'install', '--prefix={0}'.format(prefix))"
+        r         = "R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir), self.stage.archive_file)"
 
         config_lines = ((r'/configure$',      'autotools', autotools),
                         (r'/CMakeLists.txt$', 'cmake',     cmake),
@@ -214,11 +216,7 @@ def find_repository(spec, args):
 
 def fetch_tarballs(url, name, version):
     """Try to find versions of the supplied archive by scraping the web.
-
-    Prompts the user to select how many to download if many are found.
-
-
-    """
+    Prompts the user to select how many to download if many are found."""
     versions = spack.util.web.find_versions_of_archive(url)
     rkeys = sorted(versions.keys(), reverse=True)
     versions = OrderedDict(zip(rkeys, (versions[v] for v in rkeys)))
