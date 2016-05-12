@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Flex(Package):
     """Flex is a tool for generating scanners."""
 

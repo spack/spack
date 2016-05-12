@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Bertini(Package):
     """Bertini is a general-purpose solver, written in C, that was created
     for research about polynomial continuation. It solves for the numerical
