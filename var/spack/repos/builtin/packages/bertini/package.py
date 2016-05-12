@@ -24,19 +24,26 @@
 ##############################################################################
 from spack import *
 
-class Flex(Package):
-    """Flex is a tool for generating scanners."""
+class Bertini(Package):
+    """Bertini is a general-purpose solver, written in C, that was created
+    for research about polynomial continuation. It solves for the numerical
+    solution of systems of polynomial equations using homotopy continuation."""
 
-    homepage = "http://flex.sourceforge.net/"
-    url      = "http://download.sourceforge.net/flex/flex-2.5.39.tar.gz"
+    homepage = "https://bertini.nd.edu/"
+    url      = "https://bertini.nd.edu/BertiniSource_v1.5.tar.gz"
 
-    version('2.6.0', '5724bcffed4ebe39e9b55a9be80859ec')
-    version('2.5.39', 'e133e9ead8ec0a58d81166b461244fde')
+    version('1.5', 'e3f6cc6e7f9a0cf1d73185e8671af707')
 
+    variant('mpi', default=True, description='Compile in parallel')
+
+    depends_on('flex')
     depends_on('bison')
+    depends_on('gmp')
+    depends_on('mpfr')
+    depends_on('mpi', when='+mpi')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix=%s' % prefix)
 
         make()
         make("install")
