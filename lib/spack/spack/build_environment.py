@@ -82,6 +82,10 @@ SPACK_DEBUG            = 'SPACK_DEBUG'
 SPACK_SHORT_SPEC       = 'SPACK_SHORT_SPEC'
 SPACK_DEBUG_LOG_DIR    = 'SPACK_DEBUG_LOG_DIR'
 
+#
+# This is set in the compilers config file
+#
+LD_LIBRARY_PATH        = "LD_LIBRARY_PATH"
 
 # Platform-specific library suffix.
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
@@ -145,6 +149,7 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
+
     return env
 
 
@@ -190,6 +195,12 @@ def set_build_environment_variables(pkg, env):
     env.unset('LD_LIBRARY_PATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
+
+    # Resurrect some of the environment variables if specified for
+    # the given compiler
+    if compiler.ld_library_path != "":
+        env.set('LD_LIBRARY_PATH', compiler.ld_library_path)
+        env.set('DYLD_LIBRARY_PATH', compiler.ld_library_path)
 
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = reversed(filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))

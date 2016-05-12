@@ -159,6 +159,8 @@ section_schemas = {
                                 'additionalProperties': False,
                                 'required': ['cc', 'cxx', 'f77', 'fc'],
                                 'properties': {
+                                    'LD_LIBRARY_PATH' : {"type" : "string",
+                                                         "default": ""},
                                     'cc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
                                     'cxx': { 'anyOf': [ {'type' : 'string' },

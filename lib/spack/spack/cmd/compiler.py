@@ -121,7 +121,8 @@ def compiler_info(args):
             print "\tcxx = %s" % c.cxx
             print "\tf77 = %s" % c.f77
             print "\tfc  = %s" % c.fc
-
+            if c.ld_library_path != "":
+                print "\tld_library_path = %s" % c.ld_library_path
 
 def compiler_list(args):
     tty.msg("Available compilers")

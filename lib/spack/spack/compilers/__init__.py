@@ -45,7 +45,7 @@ from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
 
 _imported_compilers_module = 'spack.compilers'
-_required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
+_required_instance_vars = ['cc', 'cxx', 'f77', 'fc', "LD_LIBRARY_PATH"]
 
 # TODO: customize order in config file
 if platform.system() == 'Darwin':

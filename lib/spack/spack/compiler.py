@@ -109,7 +109,7 @@ class Compiler(object):
         return '-Wl,-rpath,'
 
 
-    def __init__(self, cspec, cc, cxx, f77, fc):
+    def __init__(self, cspec, cc, cxx, f77, fc, ld_library_path):
         def check(exe):
             if exe is None:
                 return None
@@ -120,7 +120,7 @@ class Compiler(object):
         self.cxx = check(cxx)
         self.f77 = check(f77)
         self.fc  = check(fc)
-
+        self.ld_library_path = ld_library_path
         self.spec = cspec
 
 
