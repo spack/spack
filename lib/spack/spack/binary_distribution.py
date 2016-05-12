@@ -69,7 +69,7 @@ def build_tarball(spec, outdir, force=False):
     with open(build_info_file(spec), "w") as package_file:
         package_file.write(spack.install_path)
 
-    tar("--directory=%s" % dirname, "-cf", tarfile, basename)
+    tar("--directory=%s" % dirname, "-czf", tarfile, basename)
     tty.msg(tarfile)
 
 
