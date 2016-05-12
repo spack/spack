@@ -1,28 +1,29 @@
-#####################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
+########################################################################
 #
 # This file is part of Spack and sets up the spack environment for
 # bash and zsh.  This includes dotkit support, module support, and
@@ -30,7 +31,6 @@
 #
 #    . /path/to/spack/share/spack/setup-env.sh
 #
-
 ########################################################################
 # This is a wrapper around the spack command that forwards calls to
 # 'spack use' and 'spack unuse' to shell functions.  This in turn
@@ -41,7 +41,7 @@
 # commands.  This allows the user to use packages without knowing all
 # their installation details.
 #
-# e.g., rather than requring a full spec for libelf, the user can type:
+# e.g., rather than requiring a full spec for libelf, the user can type:
 #
 #     spack use libelf
 #
@@ -113,11 +113,11 @@ function spack {
                         unuse $_sp_module_args $_sp_full_spec
                     fi ;;
                 "load")
-                    if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module find tcl $_sp_spec); then
                         module load $_sp_module_args $_sp_full_spec
                     fi ;;
                 "unload")
-                    if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module find tcl $_sp_spec); then
                         module unload $_sp_module_args $_sp_full_spec
                     fi ;;
             esac
