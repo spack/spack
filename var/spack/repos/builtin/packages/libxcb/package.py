@@ -44,7 +44,10 @@ class Libxcb(Package):
 
     def patch(self):
         filter_file('typedef struct xcb_auth_info_t {', 'typedef struct {', 'src/xcb.h')
-
+        filter_file('NEEDED="pthread-stubs xau >= 0.99.2"',
+                    'NEEDED_CFLAGS=" "; NEEDED_LIBS="-lXau"',
+                    'configure',
+                    when='@1.11')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
