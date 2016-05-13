@@ -1,16 +1,22 @@
 from spack import *
-import sys, os, re
+import os
+import re
+
 
 def filter_pick(input_list, regex_filter):
     """Returns the items in input_list that are found in the regex_filter"""
     return [l for l in input_list for m in (regex_filter(l),) if m]
 
+
 def unfilter_pick(input_list, regex_filter):
-    """Returns the items in input_list that are not found in the regex_filter"""
+    """Returns the items in input_list that are not found in the
+       regex_filter"""
     return [l for l in input_list for m in (regex_filter(l),) if not m]
 
+
 def get_all_components():
-    """Returns a list of all the components associated with the downloaded Intel package"""
+    """Returns a list of all the components associated with the downloaded
+       Intel package"""
     all_components = []
     with open("pset/mediaconfig.xml", "r") as f:
         lines = f.readlines()
@@ -19,6 +25,7 @@ def get_all_components():
                 component = line[line.find('<Abbr>') + 6:line.find('</Abbr>')]
                 all_components.append(component)
     return all_components
+
 
 class IntelInstaller(Package):
     """Base package containing common methods for installing Intel software"""
@@ -29,7 +36,8 @@ class IntelInstaller(Package):
     license_comment = '#'
     license_files = ['Licenses/license.lic']
     license_vars = ['INTEL_LICENSE_FILE']
-    license_url = 'https://software.intel.com/en-us/articles/intel-license-manager-faq'
+    license_url = \
+        'https://software.intel.com/en-us/articles/intel-license-manager-faq'
 
     @property
     def global_license_file(self):
@@ -41,9 +49,12 @@ class IntelInstaller(Package):
 
     def install(self, spec, prefix):
 
-        # remove the installation DB, otherwise it will try to install into location of other Intel builds
-        if os.path.exists(os.path.join(os.environ["HOME"], "intel", "intel_sdp_products.db")):
-            os.remove(os.path.join(os.environ["HOME"], "intel", "intel_sdp_products.db"))
+        # Remove the installation DB, otherwise it will try to install into
+        # location of other Intel builds
+        if os.path.exists(os.path.join(os.environ["HOME"], "intel",
+            "intel_sdp_products.db")):
+            os.remove(os.path.join(os.environ["HOME"], "intel",
+                "intel_sdp_products.db"))
 
         if not hasattr(self, "intel_prefix"):
             self.intel_prefix = self.prefix
@@ -58,6 +69,7 @@ PSET_INSTALL_DIR=%s
 ACTIVATION_LICENSE_FILE=%s
 ACTIVATION_TYPE=license_file
 PHONEHOME_SEND_USAGE_DATA=no
+CONTINUE_WITH_OPTIONAL_ERROR=yes
 COMPONENTS=%s
 """ %(self.intel_prefix, self.global_license_file, self.intel_components))
 
@@ -76,37 +88,39 @@ class Intel(IntelInstaller):
 
     # TODO: can also try the online installer (will download files on demand)
     version('16.0.2', '1133fb831312eb519f7da897fec223fa',
-            url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz" % os.getcwd())
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"\
+        % os.getcwd())
     version('16.0.3', '3208eeabee951fc27579177b593cefe9',
-            url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz" % os.getcwd())
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"\
+        % os.getcwd())
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
 
     def install(self, spec, prefix):
-
-        # remove the installation DB, otherwise it will try to install into location of other Intel builds
-        try:
-            os.remove(os.path.join(os.environ["HOME"], "intel", "intel_sdp_products.db"))
-        except OSError:
-            pass # if the file does not exist
-
         components = []
         all_components = get_all_components()
-        components = filter_pick(all_components, re.compile('(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)').search)
+        components = filter_pick(all_components,
+            re.compile('(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)'
+            ).search)
 
         self.intel_components = ';'.join(components)
         IntelInstaller.install(self, spec, prefix)
 
-        absbindir = os.path.split(os.path.realpath(os.path.join(self.prefix.bin, "icc")))[0]
-        abslibdir = os.path.split(os.path.realpath(os.path.join(self.prefix.lib, "intel64", "libimf.a")))[0]
+        absbindir = os.path.split(os.path.realpath(os.path.join(
+            self.prefix.bin, "icc")))[0]
+        abslibdir = os.path.split(os.path.realpath(os.path.join(
+            self.prefix.lib, "intel64", "libimf.a")))[0]
 
         # symlink or copy?
-        os.symlink(self.global_license_file, os.path.join(absbindir, "license.lic"))
+        os.symlink(self.global_license_file, os.path.join(absbindir,
+            "license.lic"))
 
         if spec.satisfies('+rpath'):
             for compiler_command in ["icc", "icpc", "ifort"]:
-                cfgfilename = os.path.join(absbindir, "%s.cfg" %(compiler_command))
+                cfgfilename = os.path.join(absbindir, "%s.cfg" %\
+                    compiler_command)
                 with open(cfgfilename, "w") as f:
-                    f.write('-Xlinker -rpath -Xlinker %s\n' %(abslibdir))
+                    f.write('-Xlinker -rpath -Xlinker %s\n' % abslibdir)
 
-        os.symlink(os.path.join(self.prefix.man, "common", "man1"), os.path.join(self.prefix.man, "man1"))
+        os.symlink(os.path.join(self.prefix.man, "common", "man1"),
+            os.path.join(self.prefix.man, "man1"))

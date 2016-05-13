@@ -1,7 +1,8 @@
 from spack import *
-import sys, os, re
+import os
 
 from spack.pkg.builtin.intel import IntelInstaller
+
 
 class Daal(IntelInstaller):
     """Intel Data Analytics Acceleration Library.
