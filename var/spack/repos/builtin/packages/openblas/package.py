@@ -48,11 +48,13 @@ class Openblas(Package):
     patch('make.patch')
 
     def install(self, spec, prefix):
-        # Openblas is picky about compilers. Configure fails with
-        # FC=/abs/path/to/f77, whereas FC=f77 works fine.
-        # To circumvent this, provide basename only:
-        make_defs = ['CC=%s' % os.path.basename(spack_cc),
-                     'FC=%s' % os.path.basename(spack_f77),
+        # Configure fails to pick up fortran from FC=/abs/path/to/f77, but
+        # works fine with FC=/abs/path/to/gfortran.
+        # When mixing compilers make sure that
+        # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
+        # names and hack them inside lib/spack/spack/compilers/<compiler>.py
+        make_defs = ['CC=%s' % spack_cc,
+                     'FC=%s' % spack_f77,
                      'MAKE_NO_J=1']
 
         make_targets = ['libs', 'netlib']
