@@ -159,6 +159,8 @@ class Stage(object):
         if lock:
             self._lock_file = join_path(spack.stage_path, self.name + '.lock')
             if not os.path.exists(self._lock_file):
+                directory, _ = os.path.split(self._lock_file)
+                mkdirp(directory)
                 touch(self._lock_file)
             self._lock = llnl.util.lock.Lock(self._lock_file)
 
