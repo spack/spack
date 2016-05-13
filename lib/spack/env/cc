@@ -153,6 +153,29 @@ fi
 # Save original command for debug logging
 input_command="$@"
 
+#
+# Filter '.' and Spack environment directories out of PATH so that
+# this script doesn't just call itself
+#
+IFS=':' read -ra env_path <<< "$PATH"
+IFS=':' read -ra spack_env_dirs <<< "$SPACK_ENV_PATH"
+spack_env_dirs+=(".")
+PATH=""
+for dir in "${env_path[@]}"; do
+    remove=""
+    for rm_dir in "${spack_env_dirs[@]}"; do
+        if [ "$dir" = "$rm_dir" ]; then remove=True; fi
+    done
+    if [ -z "$remove" ]; then
+        if [ -z "$PATH" ]; then
+            PATH="$dir"
+        else
+            PATH="$PATH:$dir"
+        fi
+    fi
+done
+export PATH
+
 if [ "$mode" == vcheck ] ; then
     exec ${command} "$@"
 fi
@@ -316,29 +339,6 @@ fi
 unset LD_LIBRARY_PATH
 unset LD_RUN_PATH
 unset DYLD_LIBRARY_PATH
-
-#
-# Filter '.' and Spack environment directories out of PATH so that
-# this script doesn't just call itself
-#
-IFS=':' read -ra env_path <<< "$PATH"
-IFS=':' read -ra spack_env_dirs <<< "$SPACK_ENV_PATH"
-spack_env_dirs+=(".")
-PATH=""
-for dir in "${env_path[@]}"; do
-    remove=""
-    for rm_dir in "${spack_env_dirs[@]}"; do
-        if [ "$dir" = "$rm_dir" ]; then remove=True; fi
-    done
-    if [ -z "$remove" ]; then
-        if [ -z "$PATH" ]; then
-            PATH="$dir"
-        else
-            PATH="$PATH:$dir"
-        fi
-    fi
-done
-export PATH
 
 full_command=("$command")
 full_command+=("${args[@]}")
