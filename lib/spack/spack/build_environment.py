@@ -232,7 +232,7 @@ def set_build_environment_variables(pkg):
             pcdir = join_path(p, libdir, 'pkgconfig')
             if os.path.isdir(pcdir):
                 pkg_config_dirs.append(pcdir)
-    path_set("PKG_CONFIG_PATH", pkg_config_dirs)
+    path_put_first("PKG_CONFIG_PATH", pkg_config_dirs)
 
     if pkg.spec.architecture.target.module_name:
         load_module(pkg.spec.architecture.target.module_name)
