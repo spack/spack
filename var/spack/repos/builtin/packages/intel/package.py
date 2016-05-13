@@ -2,12 +2,15 @@ from spack import *
 import sys, os, re
 
 def filter_pick(input_list, regex_filter):
+    """Returns the items in input_list that are found in the regex_filter"""
     return [l for l in input_list for m in (regex_filter(l),) if m]
 
 def unfilter_pick(input_list, regex_filter):
+    """Returns the items in input_list that are not found in the regex_filter"""
     return [l for l in input_list for m in (regex_filter(l),) if not m]
 
 def get_all_components():
+    """Returns a list of all the components associated with the downloaded Intel package"""
     all_components = []
     with open("pset/mediaconfig.xml", "r") as f:
         lines = f.readlines()
@@ -39,10 +42,8 @@ class IntelInstaller(Package):
     def install(self, spec, prefix):
 
         # remove the installation DB, otherwise it will try to install into location of other Intel builds
-        try:
+        if os.path.exists(os.path.join(os.environ["HOME"], "intel", "intel_sdp_products.db")):
             os.remove(os.path.join(os.environ["HOME"], "intel", "intel_sdp_products.db"))
-        except OSError:
-            pass # if the file does not exist
 
         if not hasattr(self, "intel_prefix"):
             self.intel_prefix = self.prefix
@@ -90,14 +91,8 @@ class Intel(IntelInstaller):
             pass # if the file does not exist
 
         components = []
-        with open("pset/mediaconfig.xml", "r") as f:
-            lines = f.readlines()
-            all_components = []
-            for line in lines:
-                if line.find('<Abbr>') != -1:
-                    component = line[line.find('<Abbr>') + 6:line.find('</Abbr>')]
-                    all_components.append(component)
-            components = filter_pick(all_components, re.compile('(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)').search)
+        all_components = get_all_components()
+        components = filter_pick(all_components, re.compile('(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)').search)
 
         self.intel_components = ';'.join(components)
         IntelInstaller.install(self, spec, prefix)

@@ -399,13 +399,15 @@ class Package(object):
 
     @property
     def global_license_dir(self):
-        """Returns the path where a global license file should be stored."""
+        """Returns the directory where global license files for all
+           packages are stored."""
         spack_root = ancestor(__file__, 4)
         return join_path(spack_root, 'etc', 'spack', 'licenses')
 
     @property
     def global_license_file(self):
-        """Returns the path where a global license file should be stored."""
+        """Returns the path where a global license file for this
+           particular package should be stored."""
         if not self.license_files:
             return
         return join_path(self.global_license_dir, self.name,

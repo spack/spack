@@ -1,9 +1,9 @@
 from spack import *
 import sys, os, re
 
-from spack.pkg.builtin.intel import IntelInstaller, filter_pick
+from spack.pkg.builtin.intel import IntelInstaller, filter_pick, get_all_components
 
-class IntelParallelstudio(IntelInstaller):
+class IntelParallelStudio(IntelInstaller):
     """Intel Parallel Studio.
 
     Note: You will have to add the download file to a
@@ -41,12 +41,6 @@ class IntelParallelstudio(IntelInstaller):
 
     def install(self, spec, prefix):
 
-        # remove the installation DB, otherwise it will try to install into location of other Intel builds
-        try:
-            os.remove(os.path.join(os.environ["HOME"], "intel", "intel_sdp_products.db"))
-        except OSError:
-            pass # if the file does not exist
-
         base_components = "ALL" # when in doubt, install everything
         mpi_components = ""
         mkl_components = ""
@@ -57,19 +51,13 @@ class IntelParallelstudio(IntelInstaller):
         if spec.satisfies('+all'):
             base_components = "ALL"
         else:
-            with open("pset/mediaconfig.xml", "r") as f:
-                lines = f.readlines()
-                all_components = []
-                for line in lines:
-                    if line.find('<Abbr>') != -1:
-                        component = line[line.find('<Abbr>') + 6:line.find('</Abbr>')]
-                        all_components.append(component)
-                base_components = filter_pick(all_components, re.compile('(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)').search)
-                mpi_components = filter_pick(all_components, re.compile('(icsxe|imb|mpi|itac|intel-tc|clck)').search)
-                mkl_components = filter_pick(all_components, re.compile('(mkl)').search)
-                daal_components = filter_pick(all_components, re.compile('(daal)').search)
-                ipp_components = filter_pick(all_components, re.compile('(ipp)').search)
-                tool_components = filter_pick(all_components, re.compile('(gdb|vtune|inspector|advisor)').search)
+            all_components = get_all_components()
+            base_components = filter_pick(all_components, re.compile('(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)').search)
+            mpi_components = filter_pick(all_components, re.compile('(icsxe|imb|mpi|itac|intel-tc|clck)').search)
+            mkl_components = filter_pick(all_components, re.compile('(mkl)').search)
+            daal_components = filter_pick(all_components, re.compile('(daal)').search)
+            ipp_components = filter_pick(all_components, re.compile('(ipp)').search)
+            tool_components = filter_pick(all_components, re.compile('(gdb|vtune|inspector|advisor)').search)
 
         components = base_components
         if not spec.satisfies('+all'):
@@ -87,10 +75,10 @@ class IntelParallelstudio(IntelInstaller):
         self.intel_components = ';'.join(components)
         IntelInstaller.install(self, spec, prefix)
 
-        absbindir = os.path.split(os.path.realpath(os.path.join(self.prefix.bin, "icc")))[0]
-        abslibdir = os.path.split(os.path.realpath(os.path.join(self.prefix.lib, "intel64", "libimf.a")))[0]
+        absbindir = os.path.dirname(os.path.realpath(os.path.join(self.prefix.bin, "icc")))
+        abslibdir = os.path.dirname(os.path.realpath(os.path.join(self.prefix.lib, "intel64", "libimf.a")))
 
-        # symlink or copy?
+        relbindir = absbindir.strip(os.path.commonprefix([self.prefix, absbindir]))
         os.symlink(self.global_license_file, os.path.join(absbindir, "license.lic"))
         if spec.satisfies('+tools') and (spec.satisfies('@cluster') or spec.satisfies('@professional')):
             os.mkdir(os.path.join(self.prefix, "inspector_xe/licenses"))
