@@ -39,7 +39,8 @@ class NameValueModifier(object):
     def __init__(self, name, value, **kwargs):
         self.name = name
         self.value = value
-        self.args = {'name': name, 'value': value}
+        self.separator = kwargs.get('separator', ':')
+        self.args = {'name': name, 'value': value, 'delim': self.separator}
         self.args.update(kwargs)
 
 
@@ -56,34 +57,34 @@ class UnsetEnv(NameModifier):
 
 class SetPath(NameValueModifier):
     def execute(self):
-        string_path = concatenate_paths(self.value)
+        string_path = concatenate_paths(self.value, separator=self.separator)
         os.environ[self.name] = string_path
 
 
 class AppendPath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(':') if environment_value else []
+        directories = environment_value.split(self.separator) if environment_value else []
         directories.append(os.path.normpath(self.value))
-        os.environ[self.name] = ':'.join(directories)
+        os.environ[self.name] = self.separator.join(directories)
 
 
 class PrependPath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(':') if environment_value else []
+        directories = environment_value.split(self.separator) if environment_value else []
         directories = [os.path.normpath(self.value)] + directories
-        os.environ[self.name] = ':'.join(directories)
+        os.environ[self.name] = self.separator.join(directories)
 
 
 class RemovePath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(':') if environment_value else []
+        directories = environment_value.split(self.separator) if environment_value else []
         directories = [os.path.normpath(x)
                        for x in directories
                        if x != os.path.normpath(self.value)]
-        os.environ[self.name] = ':'.join(directories)
+        os.environ[self.name] = self.separator.join(directories)
 
 
 class EnvironmentModifications(object):
@@ -238,7 +239,7 @@ class EnvironmentModifications(object):
                 x.execute()
 
 
-def concatenate_paths(paths):
+def concatenate_paths(paths, separator=';'):
     """
     Concatenates an iterable of paths into a  string of column separated paths
 
@@ -248,7 +249,7 @@ def concatenate_paths(paths):
     Returns:
         string
     """
-    return ':'.join(str(item) for item in paths)
+    return separator.join(str(item) for item in paths)
 
 
 def set_or_unset_not_first(variable, changes, errstream):

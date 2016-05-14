@@ -42,8 +42,16 @@ class Lua(Package):
     version('5.1.4', 'd0870f2de55d59c1c8419f36e8fac150')
     version('5.1.3', 'a70a8dfaa150e047866dc01a46272599')
 
+    extendable = True
+
     depends_on('ncurses')
     depends_on('readline')
+
+    resource(name="luarocks",
+             url="https://keplerproject.github.io/luarocks/releases/luarocks-2.3.0.tar.gz",
+             md5="a38126684cf42b7d0e7a3c7cf485defb",
+             destination="luarocks",
+             placement='luarocks')
 
     def install(self, spec, prefix):
         if spec.satisfies("=darwin-i686") or spec.satisfies("=darwin-x86_64"):
@@ -56,3 +64,71 @@ class Lua(Package):
         make('INSTALL_TOP=%s' % prefix,
              'MYLDFLAGS=-L%s -lncurses' % spec['ncurses'].prefix.lib,
              'install')
+
+        with working_dir(os.path.join('luarocks','luarocks')):
+            configure('--prefix=' + prefix,
+                      '--with-lua=' + prefix)
+            make('build')
+            make('install')
+
+    def append_paths(self, paths, cpaths, path):
+        paths.append(os.path.join(path, '?.lua'))
+        paths.append(os.path.join(path, '?', 'init.lua'))
+        cpaths.append(os.path.join(path, '?.so'))
+
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        lua_paths = [
+                ]
+        for d in extension_spec.traverse():
+            if d.package.extends(self.spec):
+                lua_paths.append(os.path.join(d.prefix, self.lua_lib_dir))
+                lua_paths.append(os.path.join(d.prefix, self.lua_share_dir))
+
+        lua_patterns = []
+        lua_cpatterns = []
+        for p in lua_paths:
+            if os.path.isdir(p):
+                self.append_paths(lua_patterns, lua_cpatterns, p)
+
+        # Always add this package's paths
+        for p in ( os.path.join(self.spec.prefix, self.lua_lib_dir), os.path.join(self.spec.prefix, self.lua_share_dir)):
+            self.append_paths(lua_patterns, lua_cpatterns, p)
+
+
+        spack_env.set('LUA_PATH', ';'.join(lua_patterns), separator=';')
+        spack_env.set('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
+
+        # For run time environment set only the path for extension_spec and prepend it to LUAPATH
+        if extension_spec.package.extends(self.spec):
+            run_env.prepend_path('LUA_PATH', ';'.join(lua_patterns), separator=';')
+            run_env.prepend_path('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
+            # run_env.prepend_path('LUA_PATH',  os.path.join(extension_spec.prefix, self.lua_lib_dir, '?.lua'), separator=';')
+            # run_env.prepend_path('LUA_PATH',  os.path.join(extension_spec.prefix, self.lua_lib_dir, '?', 'init.lua'), separator=';')
+            # run_env.prepend_path('LUA_CPATH', os.path.join(extension_spec.prefix, self.lua_lib_dir, '?.so'), separator=';')
+
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('LUA_PATH',  os.path.join(self.spec.prefix, self.lua_share_dir, '?.lua'), separator=';')
+        run_env.prepend_path('LUA_PATH',  os.path.join(self.spec.prefix, self.lua_share_dir, '?', 'init.lua'), separator=';')
+        run_env.prepend_path('LUA_PATH',  os.path.join(self.spec.prefix, self.lua_lib_dir, '?.lua'), separator=';')
+        run_env.prepend_path('LUA_PATH',  os.path.join(self.spec.prefix, self.lua_lib_dir, '?', 'init.lua'), separator=';')
+        run_env.prepend_path('LUA_CPATH', os.path.join(self.spec.prefix, self.lua_lib_dir, '?.so'), separator=';')
+
+    @property
+    def lua_lib_dir(self):
+        return os.path.join('lib', 'lua', '%d.%d' % self.version[:2])
+    @property
+    def lua_share_dir(self):
+        return os.path.join('share', 'lua', '%d.%d' % self.version[:2])
+
+    def setup_dependent_package(self, module, ext_spec):
+        """
+        Called before lua modules's install() methods.
+
+        In most cases, extensions will only need to have two lines::
+
+        luarocks('--tree=' + prefix, 'install', rock_spec_path)
+        """
+        # Lua extension builds can have lua and luarocks executable functions
+        module.lua = Executable(join_path(self.spec.prefix.bin, 'lua'))
+        module.luarocks = Executable(join_path(self.spec.prefix.bin, 'luarocks'))
+
