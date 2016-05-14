@@ -159,8 +159,6 @@ section_schemas = {
                                 'additionalProperties': False,
                                 'required': ['cc', 'cxx', 'f77', 'fc'],
                                 'properties': {
-                                    'LD_LIBRARY_PATH' : {"type" : "string",
-                                                         "default": ""},
                                     'cc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
                                     'cxx': { 'anyOf': [ {'type' : 'string' },
@@ -169,6 +167,21 @@ section_schemas = {
                                                         {'type' : 'null' }]},
                                     'fc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
+                                    'environment': {
+                                        'type': 'object',
+                                        'default': {},
+                                        'additionalProperties': False,
+                                        'properties' : {
+                                            'set': {
+                                                 'type': 'object',
+                                                 'additionalProperties' : False,
+                                                 'properties' : {
+                                                     'LD_LIBRARY_PATH' : {'type' : 'string'},
+                                                     'DYLD_LIBRARY_PATH' : {'type' : 'string'}
+                                                  }
+                                             }
+                                         }
+                                    }
                                 },},},},},},},},
 
     'mirrors': {

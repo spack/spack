@@ -457,6 +457,19 @@ For compilers, like ``clang``, that do not support Fortran, put
 Once you save the file, the configured compilers will show up in the
 list displayed by ``spack compilers``.
 
+In the exceptional case a compiler requires setting an explicit library
+path, this can bet set in an extra section as either "LD_LIBRARY_PATH" or
+"DYLD_LIBRARY_PATH", depending on your operating system::
+
+    gcc@4.9.3:
+        cc: /opt/gcc/bin/gcc
+        c++: /opt/gcc/bin/g++
+        f77: /opt/gcc/bin/gfortran
+        fc: /opt/gcc/bin/gfortran
+        environment:
+            set:
+                LD_LIBRARY_PATH : /opt/gcc/lib
+
 
 .. _sec-specs:
 

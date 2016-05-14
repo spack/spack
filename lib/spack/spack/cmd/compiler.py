@@ -37,6 +37,7 @@ from spack.util.environment import get_path
 
 description = "Manage compilers"
 
+
 def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='compiler_command')
@@ -44,28 +45,37 @@ def setup_parser(subparser):
     scopes = spack.config.config_scopes
 
     # Find
-    find_parser = sp.add_parser('find', aliases=['add'], help='Search the system for compilers to add to the Spack configuration.')
+    find_parser = sp.add_parser('find', aliases=['add'],
+                                help='Search the system for compilers ' +
+                                     'to add to the Spack configuration.')
     find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
-    find_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_modify_scope,
-                            help="Configuration scope to modify.")
+    find_parser.add_argument('--scope', choices=scopes,
+                             default=spack.cmd.default_modify_scope,
+                             help="Configuration scope to modify.")
 
     # Remove
-    remove_parser = sp.add_parser('remove', aliases=['rm'], help='Remove compiler by spec.')
-    remove_parser.add_argument(
-        '-a', '--all', action='store_true', help='Remove ALL compilers that match spec.')
+    remove_parser = sp.add_parser('remove',
+                                  aliases=['rm'],
+                                  help='Remove compiler by spec.')
+    remove_parser.add_argument('-a', '--all',
+                               action='store_true',
+                               help='Remove ALL compilers that match spec.')
     remove_parser.add_argument('compiler_spec')
-    remove_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+    remove_parser.add_argument('--scope', choices=scopes,
+                               default=spack.cmd.default_modify_scope,
                                help="Configuration scope to modify.")
 
     # List
     list_parser = sp.add_parser('list', help='list available compilers')
-    list_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_list_scope,
+    list_parser.add_argument('--scope', choices=scopes,
+                             default=spack.cmd.default_list_scope,
                              help="Configuration scope to read from.")
 
     # Info
     info_parser = sp.add_parser('info', help='Show compiler paths.')
     info_parser.add_argument('compiler_spec')
-    info_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_list_scope,
+    info_parser.add_argument('--scope', choices=scopes,
+                             default=spack.cmd.default_list_scope,
                              help="Configuration scope to read from.")
 
 
@@ -77,7 +87,8 @@ def compiler_find(args):
         paths = get_path('PATH')
 
     compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
-                 if c.spec not in spack.compilers.all_compilers(scope=args.scope)]
+                 if c.spec not in
+                 spack.compilers.all_compilers(scope=args.scope)]
 
     if compilers:
         spack.compilers.add_compilers_to_config(compilers, scope=args.scope)
@@ -99,11 +110,13 @@ def compiler_remove(args):
     elif not args.all and len(compilers) > 1:
         tty.error("Multiple compilers match spec %s. Choose one:" % cspec)
         colify(reversed(sorted([c.spec for c in compilers])), indent=4)
-        tty.msg("Or, you can use `spack compiler remove -a` to remove all of them.")
+        tty.msg("Or, you can use `spack compiler remove -a` " +
+                "to remove all of them.")
         sys.exit(1)
 
     for compiler in compilers:
-        spack.compilers.remove_compiler_from_config(compiler.spec, scope=args.scope)
+        spack.compilers.remove_compiler_from_config(compiler.spec,
+                                                    scope=args.scope)
         tty.msg("Removed compiler %s" % compiler.spec)
 
 
@@ -121,14 +134,20 @@ def compiler_info(args):
             print "\tcxx = %s" % c.cxx
             print "\tf77 = %s" % c.f77
             print "\tfc  = %s" % c.fc
-            if c.ld_library_path != "":
-                print "\tld_library_path = %s" % c.ld_library_path
+            if len(c.environment) != 0:
+                if len(c.environment['set']) != 0:
+                    print "\tenvironment:"
+                    print "\t    set:"
+                    for key, value in c.environment['set'].iteritems():
+                        print "\t        %s = %s" % (key, value)
+
 
 def compiler_list(args):
     tty.msg("Available compilers")
     index = index_by(spack.compilers.all_compilers(scope=args.scope), 'name')
     for i, (name, compilers) in enumerate(index.items()):
-        if i >= 1: print
+        if i >= 1:
+            print
 
         cname = "%s{%s}" % (spack.spec.compiler_color, name)
         tty.hline(colorize(cname), char='-')
@@ -136,10 +155,10 @@ def compiler_list(args):
 
 
 def compiler(parser, args):
-    action = { 'add'    : compiler_find,
-               'find'   : compiler_find,
-               'remove' : compiler_remove,
-               'rm'     : compiler_remove,
-               'info'   : compiler_info,
-               'list'   : compiler_list }
+    action = {'add': compiler_find,
+              'find': compiler_find,
+              'remove': compiler_remove,
+              'rm': compiler_remove,
+              'info': compiler_info,
+              'list': compiler_list}
     action[args.compiler_command](args)
