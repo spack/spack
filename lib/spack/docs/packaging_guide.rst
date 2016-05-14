@@ -377,6 +377,8 @@ add a line like this in the package class:
        version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
        ...
 
+Versions should be listed with the newest version first.
+
 Version URLs
 ~~~~~~~~~~~~~~~~~
 
@@ -385,8 +387,21 @@ in the package.  For example, Spack is smart enough to download
 version ``8.2.1.`` of the ``Foo`` package above from
 ``http://example.com/foo-8.2.1.tar.gz``.
 
-If spack *cannot* extrapolate the URL from the ``url`` field, or if
-the package doesn't have a ``url`` field, you can add a URL explicitly
+If spack *cannot* extrapolate the URL from the ``url`` field by
+default, you can write your own URL generation algorithm in place of
+the ``url`` declaration.  For example:
+
+.. code-block:: python
+   :linenos:
+
+   class Foo(Package):
+       def url_for_version(self, version):
+           return 'http://example.com/version_%s/foo-%s.tar.gz' \
+               % (version, version)
+       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
+       ...
+
+If a URL cannot be derived systematically, you can add an explicit URL
 for a particular version:
 
 .. code-block:: python
@@ -1215,6 +1230,19 @@ extendable package:
 Now, the ``py-numpy`` package can be used as an argument to ``spack
 activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
+
+Many packages produce Python extensions for *some* variants, but not
+others: they should extend ``python`` only if the apropriate
+variant(s) are selected.  This may be accomplished with conditional
+``extends()`` declarations:
+
+.. code-block:: python
+
+   class FooLib(Package):
+       variant('python', default=True, description= \
+           'Build the Python extension Module')
+       extends('python', when='+python')
+       ...
 
 Sometimes, certain files in one package will conflict with those in
 another, which means they cannot both be activated (symlinked) at the
@@ -2392,6 +2420,59 @@ File functions
 
 .. _package-lifecycle:
 
+Coding Style Guidelines
+---------------------------
+
+The following guidelines are provided, in the interests of making
+Spack packages work in a consistent manner:
+
+
+Variant Names
+~~~~~~~~~~~~~~
+
+Spack packages with variants similar to already-existing Spack
+packages should use the same name for their variants.  Standard
+variant names are:
+
+======= ======== ========================
+Name    Default   Description
+------- -------- ------------------------
+shared   True     Build shared libraries
+static            Build static libraries
+mpi               Use MPI
+python            Build Python extension
+------- -------- ------------------------
+
+If specified in this table, the corresponding default should be used
+when declaring a variant.
+
+
+Version Lists
+~~~~~~~~~~~~~~
+
+Spack packges should list supported versions with the newest first.
+
+Special Versions
+~~~~~~~~~~~~~~~~~
+
+The following *special* version names may be used when building a package:
+
+* *@system*: Indicates a hook to the OS-installed version of the
+   package.  This is useful, for example, to tell Spack to use the
+   OS-installed version in ``packages.yaml``::
+
+        openssl:
+            paths:
+                openssl@system: /usr
+            buildable: False
+
+   Certain Spack internals look for the *@system* version and do
+   appropriate things in that case.
+
+* *@local*: Indicates the version was built manually from some source
+  tree of unknown provenance (see ``spack setup``).
+
+
 Packaging workflow commands
 ---------------------------------
 
@@ -2715,7 +2796,7 @@ Imagine a developer creating a CMake-based (or Autotools) project in a local
 directory, which depends on libraries A-Z.  Once Spack has installed
 those dependencies, one would like to run ``cmake`` with appropriate
 command line and environment so CMake can find them.  The ``spack
-spconfig`` command does this conveniently, producing a CMake
+setup`` command does this conveniently, producing a CMake
 configuration that is essentially the same as how Spack *would have*
 configured the project.  This can be demonstrated with a usage
 example:
@@ -2723,7 +2804,7 @@ example:
 .. code-block:: bash
 
    cd myproject
-    spack spconfig myproject@local
+    spack setup myproject@local
     mkdir build; cd build
     ../spconfig.py ..
     make
@@ -2732,29 +2813,31 @@ example:
 Notes:
   * Spack must have ``myproject/package.py`` in its repository for
     this to work.
-  * ``spack spconfig`` produces the executable script ``spconfig.py``
-    in the local directory, and also creates the module file for the
-    package.  ``spconfig.py`` is normally run from the top level of
-    the source tree.
-
-  * The version number given to ``spack spconfig`` is arbitrary (just
-    like ``spack diy``).  ``myproject/package.py`` does not need to
+  * ``spack setup`` produces the executable script ``spconfig.py`` in
+    the local directory, and also creates the module file for the
+    package.  ``spconfig.py`` is normally run from the user's
+    out-of-source build directory.
+  * The version number given to ``spack setup`` is arbitrary, just
+    like ``spack diy``.  ``myproject/package.py`` does not need to
     have any valid downloadable versions listed (typical when a
     project is new).
   * spconfig.py produces a CMake configuration that *does not* use the
     Spack wrappers.  Any resulting binaries *will not* use RPATH,
     unless the user has enabled it.  This is recommended for
     development purposes, not production.
-  * spconfig.py is easily legible, and can serve as a developer
+  * ``spconfig.py`` is human readable, and can serve as a developer
     reference of what dependencies are being used.
   * ``make install`` installs the package into the Spack repository,
     where it may be used by other Spack packages.
-  * CMake-generated makefiles re-run CMake in some circumstances.  Use of ``spconfig.py`` breaks this behavior, requiring the developer to manually re-run ``spconfig.py`` when a ``CMakeLists.txt`` file has changed.
+  * CMake-generated makefiles re-run CMake in some circumstances.  Use
+    of ``spconfig.py`` breaks this behavior, requiring the developer
+    to manually re-run ``spconfig.py`` when a ``CMakeLists.txt`` file
+    has changed.
 
 CMakePackage
 ~~~~~~~~~~~~
 
-In order ot enable ``spack spconfig`` functionality, the author of
+In order ot enable ``spack setup`` functionality, the author of
 ``myproject/package.py`` must subclass from ``CMakePackage`` instead
 of the standard ``Package`` superclass.  Because CMake is
 standardized, the packager does not need to tell Spack how to run
@@ -2784,18 +2867,18 @@ StagedPackage
 
 ``CMakePackage`` is implemented by subclassing the ``StagedPackage``
 superclass, which breaks down the standard ``Package.install()``
-method into several sub-stages: ``spconfig``, ``configure``, ``build``
+method into several sub-stages: ``setup``, ``configure``, ``build``
 and ``install``.  Details:
 
 * Instead of implementing the standard ``install()`` method, package
   authors implement the methods for the sub-stages
-  ``install_spconfig()``, ``install_configure()``,
+  ``install_setup()``, ``install_configure()``,
   ``install_build()``, and ``install_install()``.
 
 * The ``spack install`` command runs the sub-stages ``configure``,
-  ``build`` and ``install`` in order.  (The ``spconfig`` stage is
+  ``build`` and ``install`` in order.  (The ``setup`` stage is
   not run by default; see below).
-* The ``spack spconfig`` command runs the sub-stages ``spconfig``
+* The ``spack setup`` command runs the sub-stages ``setup``
   and a dummy install (to create the module file).
 * The sub-stage install methods take no arguments (other than
   ``self``).  The arguments ``spec`` and ``prefix`` to the standard
@@ -2805,9 +2888,9 @@ and ``install``.  Details:
 GNU Autotools
 ~~~~~~~~~~~~~
 
-The ``spconfig`` functionality is currently only available for
+The ``setup`` functionality is currently only available for
 CMake-based packages.  Extending this functionality to GNU
 Autotools-based packages would be easy (and should be done by a
 developer who actively uses Autotools).  Packages that use
-non-standard build systems can gain ``spconfig`` functionality by
+non-standard build systems can gain ``setup`` functionality by
 subclassing ``StagedPackage`` directly.
