@@ -173,11 +173,11 @@ section_schemas = {
                                         'additionalProperties': False,
                                         'properties' : {
                                             'set': {
-                                                 'type': 'object',
-                                                 'additionalProperties' : False,
-                                                 'properties' : {
-                                                     'LD_LIBRARY_PATH' : {'type' : 'string'},
-                                                     'DYLD_LIBRARY_PATH' : {'type' : 'string'}
+                                                'type': 'object',
+                                                 'patternProperties': {
+                                                      r'\w[\w-]*': {  # key
+                                                      'type': 'string'
+                                                      }
                                                   }
                                              }
                                          }
