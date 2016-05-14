@@ -940,7 +940,7 @@ class Package(object):
                         packages_dir = spack.install_layout.build_packages_path(self.spec)
 
                         # Remove first if we're overwriting another build
-                        # (can happen with spack spconfig)
+                        # (can happen with spack setup)
                         try:
                             shutil.rmtree(packages_dir)   # log_install_path and env_install_path are inside this
                         except:
@@ -1461,9 +1461,9 @@ def _hms(seconds):
 class StagedPackage(Package):
     """A Package subclass where the install() is split up into stages."""
 
-    def install_spconfig(self):
-        """Creates an spconfig.py script to configure the package later if we like."""
-        raise InstallError("Package %s provides no install_spconfig() method!" % self.name)
+    def install_setup(self):
+        """Creates an spack_setup.py script to configure the package later if we like."""
+        raise InstallError("Package %s provides no install_setup() method!" % self.name)
 
     def install_configure(self):
         """Runs the configure process."""   
@@ -1478,8 +1478,8 @@ class StagedPackage(Package):
         raise InstallError("Package %s provides no install_install() method!" % self.name)
 
     def install(self, spec, prefix):
-        if 'spconfig' in self.install_phases:
-            self.install_spconfig()
+        if 'setup' in self.install_phases:
+            self.install_setup()
 
         if 'configure' in self.install_phases:
             self.install_configure()
@@ -1525,13 +1525,13 @@ class CMakePackage(StagedPackage):
         """Returns package-specific environment under which the configure command should be run."""
         return dict()
 
-    def cmake_transitive_include_path(self):
+    def spack_transitive_include_path(self):
         return ';'.join(
             os.path.join(dep, 'include')
             for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
         )
 
-    def install_spconfig(self):
+    def install_setup(self):
         cmd = [str(which('cmake'))] + \
             spack.build_environment.get_std_cmake_args(self) + \
             ['-DCMAKE_INSTALL_PREFIX=%s' % os.environ['SPACK_PREFIX'],
@@ -1542,11 +1542,11 @@ class CMakePackage(StagedPackage):
 
         env = dict()
         env['PATH'] = os.environ['PATH']
-        env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = self.cmake_transitive_include_path()
+        env['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.spack_transitive_include_path()
         env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
 
-        spconfig_fname = 'spconfig.py'
-        with open(spconfig_fname, 'w') as fout:
+        setup_fname = 'spconfig.py'
+        with open(setup_fname, 'w') as fout:
             fout.write(\
 r"""#!%s
 #
@@ -1557,7 +1557,6 @@ import subprocess
 
 def cmdlist(str):
 	return list(x.strip().replace("'",'') for x in str.split('\n') if x)
-#env = dict()
 env = dict(os.environ)
 """ % sys.executable)
 
@@ -1567,7 +1566,7 @@ env = dict(os.environ)
                 if string.find(name, 'PATH') < 0:
                     fout.write('env[%s] = %s\n' % (repr(name),repr(val)))
                 else:
-                    if name == 'CMAKE_TRANSITIVE_INCLUDE_PATH':
+                    if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
                         sep = ';'
                     else:
                         sep = ':'
@@ -1577,20 +1576,21 @@ env = dict(os.environ)
                         fout.write('    %s\n' % part)
                     fout.write('"""))\n')
 
+            fout.write("env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = env['SPACK_TRANSITIVE_INCLUDE_PATH']   # Deprecated\n")
             fout.write('\ncmd = cmdlist("""\n')
             fout.write('%s\n' % cmd[0])
             for arg in cmd[1:]:
                 fout.write('    %s\n' % arg)
             fout.write('""") + sys.argv[1:]\n')
             fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
-        make_executable(spconfig_fname)
+        make_executable(setup_fname)
 
 
     def install_configure(self):
         cmake = which('cmake')
         with working_dir(self.build_directory, create=True):
             os.environ.update(self.configure_env())
-            os.environ['CMAKE_TRANSITIVE_INCLUDE_PATH'] = self.cmake_transitive_include_path()
+            os.environ['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.spack_transitive_include_path()
             options = self.configure_args() + spack.build_environment.get_std_cmake_args(self)
             cmake(self.source_directory, *options)
 

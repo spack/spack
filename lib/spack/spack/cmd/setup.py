@@ -47,13 +47,13 @@ def setup_parser(subparser):
         help="specs to use for install.  Must contain package AND verison.")
 
 
-def spconfig(self, args):
+def setup(self, args):
     if not args.spec:
-        tty.die("spack spconfig requires a package spec argument.")
+        tty.die("spack setup requires a package spec argument.")
 
     specs = spack.cmd.parse_specs(args.spec)
     if len(specs) > 1:
-        tty.die("spack spconfig only takes one spec.")
+        tty.die("spack setup only takes one spec.")
 
     # Take a write lock before checking for existence.
     with spack.installed_db.write_transaction():
@@ -70,16 +70,12 @@ def spconfig(self, args):
                 return
 
         if not spec.versions.concrete:
-            tty.die("spack spconfig spec must have a single, concrete version.  Did you forget a package version number?")
+            tty.die("spack setup spec must have a single, concrete version.  Did you forget a package version number?")
 
         spec.concretize()
         package = spack.repo.get(spec)
 
         # It's OK if the package is already installed.
-        #if package.installed:
-        #    tty.error("Already installed in %s" % package.prefix)
-        #    tty.msg("Uninstall or try adding a version suffix for this SPCONFIG build.")
-        #    sys.exit(1)
 
         # Forces the build to run out of the current directory.
         package.stage = DIYStage(os.getcwd())
@@ -91,5 +87,5 @@ def spconfig(self, args):
             keep_prefix=True,        # Don't remove install directory, even if you think you should
             ignore_deps=args.ignore_deps,
             verbose=args.verbose,
-            keep_stage=True,   # don't remove source dir for SPCONFIG.
-            install_phases = set(['spconfig', 'provenance']))
+            keep_stage=True,   # don't remove source dir for SETUP.
+            install_phases = set(['setup', 'provenance']))
