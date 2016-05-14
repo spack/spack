@@ -1,5 +1,6 @@
 from spack import *
 
+
 class PyProj(Package):
     """Python interface to the PROJ.4 Library."""
     homepage = "http://jswhit.github.io/pyproj/"
