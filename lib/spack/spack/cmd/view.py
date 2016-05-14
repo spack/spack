@@ -317,16 +317,19 @@ visitor_check = visitor_statlink
 def visitor_print(specs, args):
     'Print a string for each spec using args.format.'
     fmt = args.format[0]
+    from string import Template
+    t = Template(fmt)
+
     for spec in specs:
         kwds = spec2dict(spec)
         try:
-            string = fmt.format(**kwds)
+            text = t.substitute(kwds)
         except KeyError:
             tty.error("Format error, use keywords: %s" % (', '.join(kwds.keys()), ))
             raise
         # argparser escapes these
-        string = string.replace(r'\n', '\n').replace(r'\t', '\t')
-        sys.stdout.write(string)
+        text = text.replace(r'\n', '\n').replace(r'\t', '\t')
+        sys.stdout.write(text)
 
 
 # Finally, the actual "view" command.  There should be no need to
