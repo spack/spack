@@ -330,6 +330,125 @@ of libelf would look like this:
 
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
 
+``spack view print``
+~~~~~~~~~~~~~~~~~~~~~~
+
+``spack view print`` is a subcommand of ``spack view`` which displays information about one or more installed packages and their dependencies using a user-provided format string.  The string can reverence variables in a shell-like manner for example ``$variable`` or ``${variable}text``.  It can also include ``\t`` for tabs and ``\n`` for new lines.  
+
+Some of the supported variables are:
+
+``name``
+    The package name.
+
+``version``
+    The package version.
+
+``spec``
+    The package specification.
+
+``root``
+    The root specification.
+
+``prefix``
+    The installation directory.
+
+``variants``
+    The collection of variants, if any.
+
+``namespace``
+    The package repository name space.
+
+``compiler``
+    The compiler \`name@versoin\` used to build the package.
+
+``architecture``
+    The architecture targeted by the compiler.
+
+``dependencies``
+    A comma-separated list of names of packages on which the package depends.
+
+``dependents``
+    A comma-separated list of names of packages which depend on the package.
+
+``hash``
+    The Spack hash for the package.
+
+``url``
+    The source URL for the package.
+
+``stage``
+    The directory for staging the build.
+
+``build_log``
+    The path to the build log file.
+
+``rpath``
+    The colon-separated library \`RPATH\` used in building the package.
+
+Here are some example uses of `spack view print`.  A simple line-oriented report of information can be produced:
+
+.. code-block:: sh
+
+    $ spack view print '$name\t$version\t$hash\n'  cmake@3.5.2
+    ncurses	6.0	bvbu4ixbnvtodpik4qzljlx3ukpyfrcz
+    zlib	1.2.8	ckki7zlryxrsetfqkgoxxahlhqqjni7n
+    openssl	1.0.2g	6zbar63sciso253nptxyrnhupymo7oyi
+    cmake	3.5.2	wprvmoczkpw4tiy5ybuk5zr7saus2d7g
+
+There are better ways to do this but a slow-and-dirty shell init procedure can be formed:
+
+.. code-block:: sh
+
+    $ spack view print 'export PATH="${prefix}/bin:$$PATH"\n'  m4
+    export PATH="/spack/opt/spack/linux-x86_64/gcc-5.2.1/libsigsegv-2.10-h6hsv76hffcjoe3nsaihzxemniwiedu2/bin:$PATH"
+    export PATH="/spack/opt/spack/linux-x86_64/gcc-5.2.1/m4-1.4.17-a4ikhddnk2zonr66mbwaqb226uhigcrp/bin:$PATH"
+    $ eval $(spack view print 'export PATH="${prefix}/bin:$$PATH"\n'  m4)
+    
+Or, maybe you have some external application that can chew on Spack data in which case you can dump it to some easily parsed markup syntax such as YAML:
+
+.. code-block:: sh
+
+    
+    $ spack view print '${name}:\n  - version: ${version}\n  - url : ${url}\n  - spec: ${spec}\n  - prefix: ${prefix}\n  - root : ${root}\n  - stage : ${stage}\n  - log: ${build_log}\n' m4
+
+Which might produce something like:
+
+.. code-block:: yaml
+
+    libsigsegv:
+      - version: 2.10
+      - url : ftp://ftp.gnu.org/gnu/libsigsegv/libsigsegv-2.10.tar.gz
+      - spec: libsigsegv@2.10%gcc@5.2.1=linux-x86_64-h6hsv76
+      - prefix: /spack/opt/spack/linux-x86_64/gcc-5.2.1/libsigsegv-2.10-h6hsv76hffcjoe3nsaihzxemniwiedu2
+      - root : m4@1.4.17%gcc@5.2.1+sigsegv=linux-x86_64^libsigsegv@2.10%gcc@5.2.1=linux-x86_64
+      - stage : /spack/var/spack/stage/libsigsegv-2.10-h6hsv76hffcjoe3nsaihzxemniwiedu2
+      - log: /spack/opt/spack/linux-x86_64/gcc-5.2.1/libsigsegv-2.10-h6hsv76hffcjoe3nsaihzxemniwiedu2/.spack/build.out
+    m4:
+      - version: 1.4.17
+      - url : ftp://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz
+      - spec: m4@1.4.17%gcc@5.2.1+sigsegv=linux-x86_64-a4ikhdd
+      - prefix: /spack/opt/spack/linux-x86_64/gcc-5.2.1/m4-1.4.17-a4ikhddnk2zonr66mbwaqb226uhigcrp
+      - root : m4@1.4.17%gcc@5.2.1+sigsegv=linux-x86_64^libsigsegv@2.10%gcc@5.2.1=linux-x86_64
+      - stage : /spack/var/spack/stage/m4-1.4.17-a4ikhddnk2zonr66mbwaqb226uhigcrp
+      - log: /spack/opt/spack/linux-x86_64/gcc-5.2.1/m4-1.4.17-a4ikhddnk2zonr66mbwaqb226uhigcrp/.spack/build.out
+    
+Or, maybe you want to do something with information about package dependencies by generating some ready-to-import Python code holding the tree:
+
+.. code-block:: sh
+
+    $ spack view print '$name = dict(name = "$name", parents = [$dependencies], children = [$dependents])\n' cmake@3.5.2
+
+Producing this Python code
+
+.. code-block:: python
+
+    ncurses = dict(name = "ncurses", parents = []])
+    zlib = dict(name = "zlib", parents = []])
+    openssl = dict(name = "openssl", parents = [zlib]])
+    cmake = dict(name = "cmake", parents = [ncurses,openssl]])
+
+
+
 
 Compiler configuration
 -----------------------------------
@@ -1034,6 +1153,120 @@ regenerate all module and dotkit files from scratch:
 
 
 .. _extensions:
+
+Filesystem Views
+-------------------------------
+
+.. Maybe this is not the right location for this documentation.
+
+The Spack installation area allows for many package installation trees
+to coexist and gives the user choices as to what versions and variants
+of packages to use.  To use them, the user must rely on a way to
+aggregate a subset of those packages.  The section on Environment
+Modules gives one good way to do that which relies on setting various
+environment variables.  An alternative way to aggregate is through
+**filesystem views**.
+
+A filesystem view is a single directory tree which is the union of the
+directory hierarchies of the individual package installation trees
+that have been included.  The files of the view's installed packages
+are brought into the view by symbolic or hard links back to their
+location in the original Spack installation area.  As the view is
+formed, any clashes due to a file having the exact same path in its
+package installation tree are handled in a first-come-first-served
+basis and a warning is printed.  Packages and their dependencies can
+be both added and removed.  During removal, empty directories will be
+purged.  These operations can be limited to pertain to just the
+packages listed by the user or to exclude specific dependencies and
+they allow for software installed outside of Spack to coexist inside
+the filesystem view tree.
+
+By its nature, a filesystem view represents a particular choice of one
+set of packages among all the versions and variants that are available
+in the Spack installation area.  It is thus equivalent to the
+directory hiearchy that might exist under ``/usr/local``.  While this
+limits a view to including only one version/variant of any package, it
+provides the benefits of having a simpler and traditional layout which
+may be used without any particular knowledge that its packages were
+built by Spack.
+
+Views can be used for a variety of purposes including:
+
+- A central installation in a traditional layout, eg ``/usr/local`` maintained over time by the sysadmin.
+- A self-contained installation area which may for the basis of a top-level atomic versioning scheme, eg ``/opt/pro`` vs ``/opt/dev``.
+- Providing an atomic and monolithic binary distribution, eg for delivery as a single tarball.
+- Producing ephemeral testing or developing environments.
+
+Using Filesystem Views
+~~~~~~~~~~~~~~~~~~~~~~
+
+A filesystem view is created and packages are linked in by the ``spack
+view`` command's ``symlink`` and ``hardlink`` sub-commands.  The
+``spack view remove`` command can be used to unlink some or all of the
+filesystem view.
+
+The following example creates a filesystem view based
+on an installed ``cmake`` package and then removes from the view the
+files in the ``cmake`` package while retaining its dependencies.
+
+.. code-block:: sh
+
+    
+    $ spack view -v symlink myview cmake@3.5.2
+    ==> Linking package: "ncurses"
+    ==> Linking package: "zlib"
+    ==> Linking package: "openssl"
+    ==> Linking package: "cmake"
+    
+    $ ls myview/
+    bin  doc  etc  include  lib  share
+
+    $ ls myview/bin/
+    captoinfo  clear  cpack     ctest    infotocap        openssl  tabs  toe   tset
+    ccmake     cmake  c_rehash  infocmp  ncurses6-config  reset    tic   tput
+    
+    $ spack view -v -d false rm myview cmake@3.5.2
+    ==> Removing package: "cmake"
+    
+    $ ls myview/bin/
+    captoinfo  c_rehash  infotocap        openssl  tabs  toe   tset
+    clear      infocmp   ncurses6-config  reset    tic   tput
+
+
+Limitations of Filesystem Views
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This section describes some limitations that should be considered in
+using filesystems views.  
+
+Filesystem views are merely organizational.  The binary executable
+programs, shared libraries and other build products found in a view
+are mere links into the "real" Spack installation area.  If a view is
+built with symbolic links it requires the Spack-installed package to
+be kept in place.  Building a view with hardlinks removes this
+requirement but any internal paths (eg, rpath or ``#!`` interpreter
+specifications) will still require the Spack-installed package files
+to be in place.
+
+.. FIXME: reference the relocation work of Hegner and Gartung.
+
+As described above, when a view is built only a single instance of a
+file may exist in the unified filesystem tree.  If more than one
+package provides a file at the same path (relative to its own root)
+then it is the first package added to the view that "wins".  A warning
+is printed and it is up to the user to determine if the conflict
+matters.
+
+It is up to the user to assure a consistent view is produced.  In
+particular if the user excludes packages, limits the following of
+dependencies or removes packages the view may become inconsistent.  In
+particular, if two packages require the same sub-tree of dependencies,
+removing one package (recursively) will remove its dependencies and
+leave the other package broken.
+
+
+
+
 
 Extensions & Python support
 ------------------------------------
