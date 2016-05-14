@@ -217,8 +217,8 @@ class Compiler(object):
 
                     match = re.match(regex, exe)
                     if match:
-                        key = (full_path,) + match.groups()
-                        checks.append(key)
+                        the_key = (full_path,) + match.groups()
+                        checks.append(the_key)
 
         def check(key):
             try:
