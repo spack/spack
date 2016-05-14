@@ -189,8 +189,8 @@ def spec2dict(spec):
     #
     pkg = spec.package
     ret = dict(name = spec.name,
-               short = spec.short_spec,
-               cshort = spec.cshort_spec, # color
+               spec = spec.short_spec,
+               colorspec = spec.cshort_spec, # color
                root = spec.root,
                prefix = spec.prefix,
                version = spec.version,
