@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
 This test checks that the Spack cc compiler wrapper is parsing
@@ -66,6 +66,11 @@ class CompilerTest(unittest.TestCase):
         os.environ['SPACK_DEBUG_LOG_DIR'] = "."
         os.environ['SPACK_COMPILER_SPEC'] = "gcc@4.4.7"
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2"
+
+        os.environ['SPACK_CC_RPATH_ARG']  = "-Wl,-rpath,"
+        os.environ['SPACK_CXX_RPATH_ARG'] = "-Wl,-rpath,"
+        os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
+        os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
 
         # Make some fake dependencies
         self.tmp_deps = tempfile.mkdtemp()
@@ -219,3 +224,27 @@ class CompilerTest(unittest.TestCase):
 
                       ' '.join(test_command))
 
+    def test_ld_deps_reentrant(self):
+        """Make sure ld -r is handled correctly on OS's where it doesn't
+           support rpaths."""
+        os.environ['SPACK_DEPENDENCIES'] = ':'.join([self.dep1])
+
+        os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
+        reentrant_test_command = ['-r'] + test_command
+        self.check_ld('dump-args', reentrant_test_command,
+                      'ld ' +
+                      '-rpath ' + self.prefix + '/lib ' +
+                      '-rpath ' + self.prefix + '/lib64 ' +
+
+                      '-L' + self.dep1 + '/lib ' +
+                      '-rpath ' + self.dep1 + '/lib ' +
+
+                      '-r ' +
+                      ' '.join(test_command))
+
+        os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
+        self.check_ld('dump-args', reentrant_test_command,
+                      'ld ' +
+                      '-L' + self.dep1 + '/lib ' +
+                      '-r ' +
+                      ' '.join(test_command))

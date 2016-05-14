@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 import os
 
@@ -29,7 +53,8 @@ class Qt(Package):
     depends_on("zlib")
     depends_on("dbus", when='@4:')
     depends_on("libtiff")
-    depends_on("libpng")
+    depends_on("libpng@1.2.56", when='@3')
+    depends_on("libpng", when='@4:')
     depends_on("libmng")
     depends_on("jpeg")
 
@@ -100,7 +125,7 @@ class Qt(Package):
 
     @property
     def common_config_args(self):
-        return [
+        config_args = [
             '-prefix', self.prefix,
             '-v',
             '-opensource',
@@ -114,19 +139,29 @@ class Qt(Package):
             '-no-openvg',
             '-no-pch',
             # NIS is deprecated in more recent glibc
-            '-no-nis']
+            '-no-nis'
+        ]
+
+        if '+gtk' in self.spec:
+            config_args.append('-gtkstyle')
+        else:
+            config_args.append('-no-gtkstyle')
+
+        return config_args
+
     # Don't disable all the database drivers, but should
     # really get them into spack at some point.
 
     @when('@3')
     def configure(self):
+        # An user report that this was necessary to link Qt3 on ubuntu
+        os.environ['LD_LIBRARY_PATH'] = os.getcwd()+'/lib' 
         configure('-prefix', self.prefix,
                   '-v',
                   '-thread',
                   '-shared',
                   '-release',
-                  '-fast'
-                  )
+                  '-fast')
 
     @when('@4')
     def configure(self):

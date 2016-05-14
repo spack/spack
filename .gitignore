@@ -10,3 +10,5 @@
 /share/spack/modules
 /TAGS
 *.swp
+/htmlcov
+.coverage

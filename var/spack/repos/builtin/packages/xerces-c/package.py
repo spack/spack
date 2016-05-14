@@ -1,19 +1,27 @@
-# FIXME:
-# This is a template package file for Spack.  We've conveniently
-# put "FIXME" labels next to all the things you'll want to change.
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
 #
-# Once you've edited all the FIXME's, delete this whole message,
-# save this file, and test out your package like this:
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
 #
-#     spack install xerces-c
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
 #
-# You can always get back here to change things with:
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
-#     spack edit xerces-c
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
 #
-# See the spack documentation for more information on building
-# packages.
-#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 
 class XercesC(Package):
@@ -24,8 +32,8 @@ class XercesC(Package):
     """
 
     homepage = "https://xerces.apache.org/xerces-c"
-    url      = "https://www.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.2.tar.gz"
-    version('3.1.2', '9eb1048939e88d6a7232c67569b23985')
+    url      = "https://www.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.3.tar.bz2"
+    version('3.1.3', '5e333b55cb43e6b025ddf0e5d0f0fb0d')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,

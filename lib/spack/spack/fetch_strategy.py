@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
 Fetch strategies are used to download source code into a staging area
@@ -157,12 +157,26 @@ class URLFetchStrategy(FetchStrategy):
             tty.msg("Already downloaded %s" % self.archive_file)
             return
 
+        possible_files = self.stage.expected_archive_files
+        save_file = None
+        partial_file = None
+        if possible_files:
+            save_file = self.stage.expected_archive_files[0]
+            partial_file = self.stage.expected_archive_files[0] + '.part'
+
         tty.msg("Trying to fetch from %s" % self.url)
 
-        curl_args = ['-O',  # save file to disk
+        if partial_file:
+            save_args = ['-C', '-',          # continue partial downloads
+                         '-o', partial_file] # use a .part file
+        else:
+            save_args = ['-O']
+
+        curl_args = save_args + [
                      '-f',  # fail on >400 errors
                      '-D', '-',  # print out HTML headers
-                     '-L', self.url, ]
+                     '-L',  # resolve 3xx redirects
+                     self.url, ]
 
         if sys.stdout.isatty():
             curl_args.append('-#')  # status bar when using a tty
@@ -177,6 +191,9 @@ class URLFetchStrategy(FetchStrategy):
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
+
+            if partial_file and os.path.exists(partial_file):
+                os.remove(partial_file)
 
             if spack.curl.returncode == 22:
                 # This is a 404.  Curl will print the error.
@@ -208,6 +225,9 @@ class URLFetchStrategy(FetchStrategy):
                      "The checksum will likely be bad.  If it is, you can use",
                      "'spack clean <package>' to remove the bad archive, then fix",
                      "your internet gateway issue and install again.")
+
+        if save_file:
+            os.rename(partial_file, save_file)
 
         if not self.archive_file:
             raise FailedDownloadError(self.url)

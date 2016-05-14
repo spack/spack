@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 import glob
 
@@ -6,7 +30,9 @@ class SuperluDist(Package):
     homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/"
     url      = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz"
 
-    version('4.3', 'ee66c84e37b4f7cc557771ccc3dc43ae')
+    version('5.0.0', '2b53baf1b0ddbd9fcf724992577f0670')
+    # default to version 4.3 since petsc and trilinos are not tested with 5.0.
+    version('4.3', 'ee66c84e37b4f7cc557771ccc3dc43ae', preferred=True)
     version('4.2', 'ae9fafae161f775fbac6eba11e530a65')
     version('4.1', '4edee38cc29f687bd0c8eb361096a455')
     version('4.0', 'c0b98b611df227ae050bc1635c6940e0')

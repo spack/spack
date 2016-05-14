@@ -1,27 +1,27 @@
 #!/bin/bash
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 #
 # Spack compiler wrapper script.
@@ -38,15 +38,20 @@
 #      -Wl,-rpath   arguments for dependency /lib directories.
 #
 
-# This is the list of environment variables that need to be set before
+# This is an array of environment variables that need to be set before
 # the script runs. They are set by routines in spack.build_environment
 # as part of spack.package.Package.do_install().
-parameters="
-SPACK_PREFIX
-SPACK_ENV_PATH
-SPACK_DEBUG_LOG_DIR
-SPACK_COMPILER_SPEC
-SPACK_SHORT_SPEC"
+parameters=(
+    SPACK_PREFIX
+    SPACK_ENV_PATH
+    SPACK_DEBUG_LOG_DIR
+    SPACK_COMPILER_SPEC
+    SPACK_CC_RPATH_ARG
+    SPACK_CXX_RPATH_ARG
+    SPACK_F77_RPATH_ARG
+    SPACK_FC_RPATH_ARG
+    SPACK_SHORT_SPEC
+)
 
 # The compiler input variables are checked for sanity later:
 #   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
@@ -64,7 +69,7 @@ function die {
     exit 1
 }
 
-for param in $parameters; do
+for param in ${parameters[@]}; do
     if [[ -z ${!param} ]]; then
         die "Spack compiler must be run from Spack! Input '$param' is missing."
     fi
@@ -85,6 +90,7 @@ done
 #    ccld    compile & link
 
 command=$(basename "$0")
+comp="CC"
 case "$command" in
     cpp)
         mode=cpp
@@ -92,18 +98,22 @@ case "$command" in
     cc|c89|c99|gcc|clang|icc|pgcc|xlc)
         command="$SPACK_CC"
         language="C"
+        comp="CC"
         ;;
     c++|CC|g++|clang++|icpc|pgc++|xlc++)
         command="$SPACK_CXX"
         language="C++"
+        comp="CXX"
         ;;
     f90|fc|f95|gfortran|ifort|pgfortran|xlf90|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
+        comp="FC"
         ;;
     f77|gfortran|ifort|pgfortran|xlf|nagfor)
         command="$SPACK_F77"
         language="Fortran 77"
+        comp="F77"
         ;;
     ld)
         mode=ld
@@ -142,6 +152,9 @@ if [[ -z $mode ]]; then
     done
 fi
 
+# Set up rpath variable according to language.
+eval rpath=\$SPACK_${comp}_RPATH_ARG
+
 # Dump the version and exit if we're in testing mode.
 if [[ $SPACK_TEST_COMMAND == dump-mode ]]; then
     echo "$mode"
@@ -162,7 +175,7 @@ fi
 # It doesn't work with -rpath.
 # This variable controls whether they are added.
 add_rpaths=true
-if [[ mode == ld && $OSTYPE == darwin* ]]; then
+if [[ $mode == ld && "$SPACK_SHORT_SPEC" =~ "darwin" ]]; then
     for arg in "$@"; do
         if [[ $arg == -r ]]; then
             add_rpaths=false
@@ -188,7 +201,7 @@ for dep in "${deps[@]}"; do
     # Prepend lib and RPATH directories
     if [[ -d $dep/lib ]]; then
         if [[ $mode == ccld ]]; then
-            $add_rpaths && args=("-Wl,-rpath,$dep/lib" "${args[@]}")
+            $add_rpaths && args=("$rpath$dep/lib" "${args[@]}")
             args=("-L$dep/lib" "${args[@]}")
         elif [[ $mode == ld ]]; then
             $add_rpaths && args=("-rpath" "$dep/lib" "${args[@]}")
@@ -199,7 +212,7 @@ for dep in "${deps[@]}"; do
     # Prepend lib64 and RPATH directories
     if [[ -d $dep/lib64 ]]; then
         if [[ $mode == ccld ]]; then
-            $add_rpaths && args=("-Wl,-rpath,$dep/lib64" "${args[@]}")
+            $add_rpaths && args=("$rpath$dep/lib64" "${args[@]}")
             args=("-L$dep/lib64" "${args[@]}")
         elif [[ $mode == ld ]]; then
             $add_rpaths && args=("-rpath" "$dep/lib64" "${args[@]}")
@@ -210,9 +223,11 @@ done
 
 # Include all -L's and prefix/whatever dirs in rpath
 if [[ $mode == ccld ]]; then
-    $add_rpaths && args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("$rpath$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("$rpath$SPACK_PREFIX/lib"   "${args[@]}")
 elif [[ $mode == ld ]]; then
-    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib"   "${args[@]}")
 fi
 
 #

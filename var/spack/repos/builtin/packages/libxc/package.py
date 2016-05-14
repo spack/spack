@@ -1,30 +1,42 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 
 class Libxc(Package):
-    """
-    Libxc is a library of exchange-correlation functionals for density-functional theory. 
-    The aim is to provide a portable, well tested and reliable set of exchange and 
-    correlation functionals that can be used by all the ETSF codes and also other codes.
-    In Libxc you can find different types of functionals: LDA, GGA, hybrids, and mGGA (experimental). 
-    These functionals depend on local information, in the sense that the value of the
-    potential at a given point depends only on the values of the density -- and the gradient 
-    of the density and the kinetic energy density, for the GGA and mGGA cases -- at a given point:
-
-    It can calculate the functional itself and its derivative; for some functionals, 
-    higher-order derivatives are available.
-    Libxc is written in C and has Fortran bindings. It is released under the LGPL license (v. 3.0). 
-    Contributions are welcome."""
+    """Libxc is a library of exchange-correlation functionals for
+    density-functional theory."""
 
     homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
     url      = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
 
     version('2.2.2', 'd9f90a0d6e36df6c1312b6422280f2ec')
 
-    # FIXME: This version does not compile due an include file in F90 code!
+    # This version does not compile due to an include file in F90 code!
     #version('2.0.0', 'b15303a3c1f82d157e474ec97edafd83')
 
     def install(self, spec, prefix):
         configure("--enable-fortran", "--enable-static", "--enable-shared", "--prefix=%s" % prefix)
-
         make(parallel=False)
         make("install")
