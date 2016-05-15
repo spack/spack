@@ -64,7 +64,8 @@ class SetPath(NameValueModifier):
 class AppendPath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(self.separator) if environment_value else []
+        directories = environment_value.split(
+            self.separator) if environment_value else []
         directories.append(os.path.normpath(self.value))
         os.environ[self.name] = self.separator.join(directories)
 
@@ -72,7 +73,8 @@ class AppendPath(NameValueModifier):
 class PrependPath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(self.separator) if environment_value else []
+        directories = environment_value.split(
+            self.separator) if environment_value else []
         directories = [os.path.normpath(self.value)] + directories
         os.environ[self.name] = self.separator.join(directories)
 
@@ -80,9 +82,9 @@ class PrependPath(NameValueModifier):
 class RemovePath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(self.separator) if environment_value else []
-        directories = [os.path.normpath(x)
-                       for x in directories
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        directories = [os.path.normpath(x) for x in directories
                        if x != os.path.normpath(self.value)]
         os.environ[self.name] = self.separator.join(directories)
 
@@ -257,16 +259,13 @@ def set_or_unset_not_first(variable, changes, errstream):
     Check if we are going to set or unset something after other modifications
     have already been requested
     """
-    indexes = [ii
-               for ii, item in enumerate(changes)
+    indexes = [ii for ii, item in enumerate(changes)
                if ii != 0 and type(item) in [SetEnv, UnsetEnv]]
     if indexes:
         good = '\t    \t{context} at {filename}:{lineno}'
         nogood = '\t--->\t{context} at {filename}:{lineno}'
         message = 'Suspicious requests to set or unset the variable \'{var}\' found'  # NOQA: ignore=E501
-        errstream(
-            message.format(
-                var=variable))
+        errstream(message.format(var=variable))
         for ii, item in enumerate(changes):
             print_format = nogood if ii in indexes else good
             errstream(print_format.format(**item.args))
