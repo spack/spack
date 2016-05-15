@@ -13,5 +13,4 @@ class LuaLuaposix(Package):
 
     def install(self, spec, prefix):
         rockspec = glob.glob('luaposix-*.rockspec')
-        print rockspec
         luarocks('--tree=' + prefix, 'install', rockspec[0])
