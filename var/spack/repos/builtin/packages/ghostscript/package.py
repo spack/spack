@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Ghostscript(Package):
     """an interpreter for the PostScript language and for PDF. """
     homepage = "http://ghostscript.com/"
@@ -34,7 +35,7 @@ class Ghostscript(Package):
     parallel = False
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" %prefix, "--enable-shared")
+        configure("--prefix=%s" % prefix, "--enable-shared")
 
         make()
         make("install")

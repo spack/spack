@@ -25,6 +25,7 @@
 from spack import *
 import sys
 
+
 class Graphviz(Package):
     """Graph Visualization Software"""
     homepage = "http://www.graphviz.org"
@@ -36,7 +37,7 @@ class Graphviz(Package):
     # related to missing Perl packages. If spack begins support for Perl in the
     # future, this package can be updated to depend_on('perl') and the
     # ncecessary devel packages.
-    variant('perl', default=False, description='Enable if you need the optional Perl language bindings.')
+    variant('perl', default=False, description='Enable if you need the optional Perl language bindings.')  # NOQA: ignore=E501
 
     parallel = False
 
@@ -47,7 +48,7 @@ class Graphviz(Package):
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
-        if not '+perl' in spec:
+        if '+perl' not in spec:
             options.append('--disable-perl')
 
         # On OSX fix the compiler error:

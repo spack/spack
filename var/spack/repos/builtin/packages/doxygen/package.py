@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
 class Doxygen(Package):
@@ -40,13 +39,13 @@ class Doxygen(Package):
     version('1.8.10', '79767ccd986f12a0f949015efb5f058f')
 
     # graphviz appears to be a run-time optional dependency
-    variant('graphviz', default=True, description='Build with dot command support from Graphviz.')
+    variant('graphviz', default=True, description='Build with dot command support from Graphviz.')  # NOQA: ignore=E501
 
     depends_on("cmake@2.8.12:")
     depends_on("flex")
     depends_on("bison")
 
-    #optional dependencies
+    # optional dependencies
     depends_on("graphviz", when="+graphviz")
 
     def install(self, spec, prefix):
