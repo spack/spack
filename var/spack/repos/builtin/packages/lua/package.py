@@ -50,7 +50,8 @@ class Lua(Package):
 
     resource(
         name="luarocks",
-        url="https://keplerproject.github.io/luarocks/releases/luarocks-2.3.0.tar.gz",
+        url="https://keplerproject.github.io/luarocks/releases/"
+        "luarocks-2.3.0.tar.gz",
         md5="a38126684cf42b7d0e7a3c7cf485defb",
         destination="luarocks",
         placement='luarocks')
@@ -97,7 +98,8 @@ class Lua(Package):
         spack_env.set('LUA_PATH', ';'.join(lua_patterns), separator=';')
         spack_env.set('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
 
-        # For run time environment set only the path for extension_spec and prepend it to LUAPATH
+        # For run time environment set only the path for extension_spec and
+        # prepend it to LUAPATH
         if extension_spec.package.extends(self.spec):
             run_env.prepend_path('LUA_PATH', ';'.join(lua_patterns),
                                  separator=';')
@@ -105,21 +107,26 @@ class Lua(Package):
                                  separator=';')
 
     def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('LUA_PATH', os.path.join(
-            self.spec.prefix, self.lua_share_dir, '?.lua'),
-                             separator=';')
-        run_env.prepend_path('LUA_PATH', os.path.join(
-            self.spec.prefix, self.lua_share_dir, '?', 'init.lua'),
-                             separator=';')
-        run_env.prepend_path('LUA_PATH', os.path.join(
-            self.spec.prefix, self.lua_lib_dir, '?.lua'),
-                             separator=';')
-        run_env.prepend_path('LUA_PATH', os.path.join(
-            self.spec.prefix, self.lua_lib_dir, '?', 'init.lua'),
-                             separator=';')
-        run_env.prepend_path('LUA_CPATH', os.path.join(
-            self.spec.prefix, self.lua_lib_dir, '?.so'),
-                             separator=';')
+        run_env.prepend_path(
+            'LUA_PATH',
+            os.path.join(self.spec.prefix, self.lua_share_dir, '?.lua'),
+            separator=';')
+        run_env.prepend_path(
+            'LUA_PATH', os.path.join(self.spec.prefix, self.lua_share_dir, '?',
+                                     'init.lua'),
+            separator=';')
+        run_env.prepend_path(
+            'LUA_PATH',
+            os.path.join(self.spec.prefix, self.lua_lib_dir, '?.lua'),
+            separator=';')
+        run_env.prepend_path(
+            'LUA_PATH',
+            os.path.join(self.spec.prefix, self.lua_lib_dir, '?', 'init.lua'),
+            separator=';')
+        run_env.prepend_path(
+            'LUA_CPATH',
+            os.path.join(self.spec.prefix, self.lua_lib_dir, '?.so'),
+            separator=';')
 
     @property
     def lua_lib_dir(self):
