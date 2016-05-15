@@ -52,9 +52,9 @@ class IntelInstaller(Package):
         # Remove the installation DB, otherwise it will try to install into
         # location of other Intel builds
         if os.path.exists(os.path.join(os.environ["HOME"], "intel",
-            "intel_sdp_products.db")):
+                          "intel_sdp_products.db")):
             os.remove(os.path.join(os.environ["HOME"], "intel",
-                "intel_sdp_products.db"))
+                      "intel_sdp_products.db"))
 
         if not hasattr(self, "intel_prefix"):
             self.intel_prefix = self.prefix
@@ -71,7 +71,7 @@ ACTIVATION_TYPE=license_file
 PHONEHOME_SEND_USAGE_DATA=no
 CONTINUE_WITH_OPTIONAL_ERROR=yes
 COMPONENTS=%s
-""" %(self.intel_prefix, self.global_license_file, self.intel_components))
+""" % (self.intel_prefix, self.global_license_file, self.intel_components))
 
         install_script = which("install.sh")
         install_script('--silent', silent_config_filename)
@@ -88,10 +88,10 @@ class Intel(IntelInstaller):
 
     # TODO: can also try the online installer (will download files on demand)
     version('16.0.2', '1133fb831312eb519f7da897fec223fa',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"\
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"  # NOQA: ignore=E501
         % os.getcwd())
     version('16.0.3', '3208eeabee951fc27579177b593cefe9',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"\
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"  # NOQA: ignore=E501
         % os.getcwd())
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
@@ -99,9 +99,8 @@ class Intel(IntelInstaller):
     def install(self, spec, prefix):
         components = []
         all_components = get_all_components()
-        components = filter_pick(all_components,
-            re.compile('(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)'
-            ).search)
+        regex = '(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)'
+        components = filter_pick(all_components, re.compile(regex).search)
 
         self.intel_components = ';'.join(components)
         IntelInstaller.install(self, spec, prefix)
@@ -113,14 +112,14 @@ class Intel(IntelInstaller):
 
         # symlink or copy?
         os.symlink(self.global_license_file, os.path.join(absbindir,
-            "license.lic"))
+                   "license.lic"))
 
         if spec.satisfies('+rpath'):
             for compiler_command in ["icc", "icpc", "ifort"]:
-                cfgfilename = os.path.join(absbindir, "%s.cfg" %\
-                    compiler_command)
+                cfgfilename = os.path.join(absbindir, "%s.cfg" %
+                                           compiler_command)
                 with open(cfgfilename, "w") as f:
                     f.write('-Xlinker -rpath -Xlinker %s\n' % abslibdir)
 
         os.symlink(os.path.join(self.prefix.man, "common", "man1"),
-            os.path.join(self.prefix.man, "man1"))
+                   os.path.join(self.prefix.man, "man1"))
