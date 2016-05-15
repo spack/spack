@@ -59,19 +59,10 @@ class Go(Package):
     def setup_dependent_environment(self, spack_env, run_env, ext_spec):
         """Called before go modules' install() methods.
 
-        In most cases, extensions will only need to have one line::
+        In most cases, extensions will only need to have two lines::
 
         go('get', '<package>')
+        shutil.copytree('bin', os.path.join(prefix, '/bin'))
         """
-        # spack_env.set("GOROOT", self.spec.prefix)
-        # run_env.set("GOROOT", self.spec.prefix)
-
-        # stage_path = os.path.realpath(ext_spec.package.stage.source_path)
-        # print "PREFIX: {}".format(stage_path)
-        # go_paths = [stage_path]
-        # for d in ext_spec.traverse():
-        #     if d.package.extends(self.spec):
-        #         go_paths.append(d.prefix)
-        # spack_env.prepend_path('GOPATH',  ':'.join(go_paths))
 
         spack_env.set('GOPATH', ext_spec.package.stage.source_path)
