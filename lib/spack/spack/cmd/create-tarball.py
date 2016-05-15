@@ -52,11 +52,15 @@ def create_tarball(parser, args):
         tty.die("tarball creation requires at least one package argument")
 
     pkgs = set(args.packages)
-    if args.recurse:
-        for name in args.packages:
-            for spec in spack.cmd.parse_specs(name, concretize=True):
-                pkgs.update(spec.flat_dependencies())
-
+    specs = set()
     for pkg in pkgs:
         for spec in spack.cmd.parse_specs(pkg, concretize=True):
-            build_tarball(spec, args.directory, args.force)
+            specs.add(spec)
+            if args.recurse:
+                tty.msg('recursing dependencies')
+                for d, node in spec.traverse(order='pre', depth=True):
+                    tty.msg('adding dependency %s' % node)
+                    specs.add(node)
+    for spec in specs:
+        tty.msg('creating tarball for package %s ' % spec)
+        build_tarball(spec, args.directory, args.force)

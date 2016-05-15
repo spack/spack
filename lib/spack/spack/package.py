@@ -44,6 +44,7 @@ import spack.build_environment
 import spack.compilers
 import spack.directives
 import spack.binary_distribution
+import spack.relocate
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -954,7 +955,7 @@ class Package(object):
                 # Set up process's build environment before running install.
                 if install_binary is True:
                     spack.binary_distribution.extract_tarball(self)
-                    spack.binary_distribution.relocate(self)
+                    spack.binary_distribution.relocate_package(self)
                 elif fake:
                     self.do_fake_install()
                 else:
