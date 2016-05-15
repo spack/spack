@@ -381,6 +381,60 @@ class VCSFetchStrategy(FetchStrategy):
     def __repr__(self):
         return "%s<%s>" % (self.__class__, self.url)
 
+class GoFetchStrategy(VCSFetchStrategy):
+    """Fetch strategy that employs the `go get` infrastructure
+       Use like this in a package:
+
+           version('name', go='github.com/monochromegane/the_platinum_searcher/...')
+
+       Go get does not natively support versions, they can be faked with git
+    """
+    enabled = True
+    required_attributes = ('go',)
+
+    def __init__(self, **kwargs):
+        # Discards the keywords in kwargs that may conflict with the next call to __init__
+        forwarded_args = copy.copy(kwargs)
+        forwarded_args.pop('name', None)
+
+        super(GoFetchStrategy, self).__init__('go', **forwarded_args)
+        self._go = None
+
+    @property
+    def go_version(self):
+        vstring = self.go('version', output=str).split(' ')[2]
+        return Version(vstring)
+
+    @property
+    def go(self):
+        if not self._go:
+            self._go = which('go', required=True)
+        return self._go
+
+    @_needs_stage
+    def fetch(self):
+        self.stage.chdir()
+
+        tty.msg("Trying to get go resource:", self.url)
+
+        try:
+            os.mkdir('go')
+        except OSError:
+            pass
+        env = dict(os.environ)
+        env['GOPATH'] = os.path.join(os.getcwd(),'go')
+	self.go('get', '-v', '-d', self.url, env=env)
+
+    def archive(self, destination):
+        super(GoFetchStrategy, self).archive(destination, exclude='.git')
+
+    @_needs_stage
+    def reset(self):
+        self.stage.chdir_to_source()
+        self.go('clean')
+
+    def __str__(self):
+        return "[go] %s" % self.url
 
 class GitFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a git repository.

@@ -1,33 +1,33 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
+# it under the terms of the GNU General Public License (as published by
+# the Free Software Foundation) version 2.1 dated February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
+# conditions of the GNU General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
 
 from contextlib import closing
 from glob import glob
 import sys
-import os
+
 
 class Gcc(Package):
     """The GNU Compiler Collection includes front ends for C, C++,
@@ -50,10 +50,12 @@ class Gcc(Package):
     version('4.6.4', 'b407a3d1480c11667f293bfb1f17d1a4')
     version('4.5.4', '27e459c2566b8209ab064570e1b378f7')
 
-    variant('binutils', default=sys.platform != 'darwin',
-        description="Build via binutils")
-    variant('gold', default=sys.platform != 'darwin',
-        description="Build the gold linker plugin for ld-based LTO")
+    variant('binutils',
+            default=sys.platform != 'darwin',
+            description="Build via binutils")
+    variant('gold',
+            default=sys.platform != 'darwin',
+            description="Build the gold linker plugin for ld-based LTO")
 
     depends_on("mpfr")
     depends_on("gmp")
@@ -62,12 +64,9 @@ class Gcc(Package):
     depends_on("binutils~libiberty", when='+binutils ~gold')
     depends_on("binutils~libiberty+gold", when='+binutils +gold')
 
-    if sys.platform != 'darwin':
-        provides('go_compiler' when='@4.7.1:')
-
     # TODO: integrate these libraries.
-    #depends_on("ppl")
-    #depends_on("cloog")
+    # depends_on("ppl")
+    # depends_on("cloog")
     if sys.platform == 'darwin':
         patch('darwin/gcc-4.9.patch1', when='@4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.3')
@@ -75,7 +74,7 @@ class Gcc(Package):
     def install(self, spec, prefix):
         # libjava/configure needs a minor fix to install into spack paths.
         filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure',
-            string=True)
+                    string=True)
 
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
 
@@ -83,48 +82,46 @@ class Gcc(Package):
             enabled_languages.add('go')
 
         # Generic options to compile GCC
-        options = ["--prefix=%s" % prefix,
-                   "--libdir=%s/lib64" % prefix,
+        options = ["--prefix=%s" % prefix, "--libdir=%s/lib64" % prefix,
                    "--disable-multilib",
                    "--enable-languages=" + ','.join(enabled_languages),
-                   "--with-mpc=%s" % spec['mpc'].prefix,
-                   "--with-mpfr=%s" % spec['mpfr'].prefix,
-                   "--with-gmp=%s" % spec['gmp'].prefix,
-                   "--enable-lto",
-                   "--with-quad"]
+                   "--with-mpc=%s" % spec['mpc'].prefix, "--with-mpfr=%s" %
+                   spec['mpfr'].prefix, "--with-gmp=%s" % spec['gmp'].prefix,
+                   "--enable-lto", "--with-quad"]
         # Binutils
         if spec.satisfies('+binutils'):
             static_bootstrap_flags = "-static-libstdc++ -static-libgcc"
-            binutils_options = ["--with-sysroot=/",
-                                "--with-stage1-ldflags=%s %s" %
-                                    (self.rpath_args, static_bootstrap_flags),
-                                "--with-boot-ldflags=%s %s" %
-                                    (self.rpath_args, static_bootstrap_flags),
-                                "--with-gnu-ld",
-                                "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
-                                "--with-gnu-as",
-                                "--with-as=%s/bin/as" % spec['binutils'].prefix]
+            binutils_options = [
+                "--with-sysroot=/", "--with-stage1-ldflags=%s %s" %
+                (self.rpath_args, static_bootstrap_flags),
+                "--with-boot-ldflags=%s %s" %
+                (self.rpath_args, static_bootstrap_flags), "--with-gnu-ld",
+                "--with-ld=%s/bin/ld" % spec['binutils'].prefix,
+                "--with-gnu-as",
+                "--with-as=%s/bin/as" % spec['binutils'].prefix
+            ]
             options.extend(binutils_options)
         # Isl
         if 'isl' in spec:
             isl_options = ["--with-isl=%s" % spec['isl'].prefix]
             options.extend(isl_options)
 
-        if sys.platform == 'darwin' :
-            darwin_options = [ "--with-build-config=bootstrap-debug" ]
+        if sys.platform == 'darwin':
+            darwin_options = ["--with-build-config=bootstrap-debug"]
             options.extend(darwin_options)
 
         build_dir = join_path(self.stage.path, 'spack-build')
-        configure = Executable( join_path(self.stage.source_path, 'configure') )
+        configure = Executable(join_path(self.stage.source_path, 'configure'))
         with working_dir(build_dir, create=True):
             # Rest of install is straightforward.
             configure(*options)
-            if sys.platform == 'darwin' : make("bootstrap")
-            else: make()
+            if sys.platform == 'darwin':
+                make("bootstrap")
+            else:
+                make()
             make("install")
 
         self.write_rpath_specs()
-
 
     @property
     def spec_dir(self):
@@ -132,13 +129,12 @@ class Gcc(Package):
         spec_dir = glob("%s/lib64/gcc/*/*" % self.prefix)
         return spec_dir[0] if spec_dir else None
 
-
     def write_rpath_specs(self):
         """Generate a spec file so the linker adds a rpath to the libs
            the compiler used to build the executable."""
         if not self.spec_dir:
             tty.warn("Could not install specs for %s." %
-                self.spec.format('$_$@'))
+                     self.spec.format('$_$@'))
             return
 
         gcc = Executable(join_path(self.prefix.bin, 'gcc'))
@@ -149,5 +145,5 @@ class Gcc(Package):
                 out.write(line + "\n")
                 if line.startswith("*link:"):
                     out.write("-rpath %s/lib:%s/lib64 \\\n" %
-                        (self.prefix, self.prefix))
+                              (self.prefix, self.prefix))
         set_install_permissions(specs_file)

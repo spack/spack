@@ -105,6 +105,8 @@ class Executable(object):
         fail_on_error = kwargs.pop("fail_on_error", True)
         ignore_errors = kwargs.pop("ignore_errors", ())
 
+	env = kwargs.get('env', None)
+
         # TODO: This is deprecated.  Remove in a future version.
         return_output = kwargs.pop("return_output", False)
 
@@ -149,7 +151,7 @@ class Executable(object):
 
         try:
             proc = subprocess.Popen(
-                cmd, stdin=istream, stderr=estream, stdout=ostream)
+                cmd, stdin=istream, stderr=estream, stdout=ostream, env=env)
             out, err = proc.communicate()
 
             rc = self.returncode = proc.returncode
