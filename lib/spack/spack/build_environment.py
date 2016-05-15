@@ -203,6 +203,7 @@ def set_build_environment_variables(pkg, env):
         env_to_set = environment['set']
         for key, value in env_to_set.iteritems():
             env.set('SPACK_%s' % key, value)
+            env.set('%s' % key, value)
         # Let shell know which variables to set
         env_variables = ":".join(env_to_set.keys())
         env.set('SPACK_ENV_TO_SET', env_variables)
