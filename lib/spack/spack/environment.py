@@ -241,12 +241,14 @@ class EnvironmentModifications(object):
                 x.execute()
 
 
-def concatenate_paths(paths, separator=';'):
+def concatenate_paths(paths, separator=':'):
     """
-    Concatenates an iterable of paths into a  string of column separated paths
+    Concatenates an iterable of paths into a string of paths separated by
+    separator, defaulting to colon
 
     Args:
         paths: iterable of paths
+        separator: the separator to use, default ':'
 
     Returns:
         string
