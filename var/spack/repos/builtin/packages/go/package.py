@@ -12,12 +12,14 @@ class Go(Package):
     version('1.4.2', git='https://go.googlesource.com/go', tag='go1.4.2')
     version('1.5.0', git='https://go.googlesource.com/go', tag='go1.5.0')
 
+
+    provides('go_compiler')
     # to-do, make non-c self-hosting compilers possible
-    depends_on('go@:1.4.2', when='@1.5:')
+    # should be go_compiler, but that creates an infinite loop
+    depends_on('gcc', when='@1.5:')
 
     def install(self, spec, prefix):
       os.environ['GOROOT'] = os.getcwd()
-      os.environ['GOBIN'] = join_path(os.getcwd(), 'bin')
       os.environ['GOROOT_FINAL'] = prefix
       bash = which('bash')
       bash('-c', 'env')

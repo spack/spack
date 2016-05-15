@@ -62,6 +62,9 @@ class Gcc(Package):
     depends_on("binutils~libiberty", when='+binutils ~gold')
     depends_on("binutils~libiberty+gold", when='+binutils +gold')
 
+    if sys.platform != 'darwin':
+        provides('go_compiler' when='@4.7.1:')
+
     # TODO: integrate these libraries.
     #depends_on("ppl")
     #depends_on("cloog")
