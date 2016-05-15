@@ -1,6 +1,7 @@
 from spack import *
 import glob
 
+
 class LuaLuaposix(Package):
     """Lua posix bindings, including ncurses"""
     homepage = "https://github.com/luaposix/luaposix/"
