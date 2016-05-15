@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
 
 class Graphviz(Package):
     """Graph Visualization Software"""
@@ -42,11 +43,19 @@ class Graphviz(Package):
     depends_on("swig")
     depends_on("python")
     depends_on("ghostscript")
+    depends_on("pkg-config")
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
         if not '+perl' in spec:
             options.append('--disable-perl')
+
+        # On OSX fix the compiler error:
+        # In file included from tkStubLib.c:15:
+        # /usr/include/tk.h:78:11: fatal error: 'X11/Xlib.h' file not found
+        #       include <X11/Xlib.h>
+        if sys.platform == 'darwin':
+            options.append('CFLAGS=-I/opt/X11/include')
 
         configure(*options)
         make()
