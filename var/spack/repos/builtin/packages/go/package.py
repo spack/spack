@@ -65,4 +65,6 @@ class Go(Package):
         shutil.copytree('bin', os.path.join(prefix, '/bin'))
         """
 
+        if os.environ.get('GOROOT', False):
+            tty.warn('GOROOT is set, this is not recommended')
         spack_env.set('GOPATH', ext_spec.package.stage.source_path)

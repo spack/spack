@@ -46,6 +46,8 @@ class Gcc(Package):
     if sys.platform == 'darwin':
         patch('darwin/gcc-4.9.patch1', when='@4.9.3')
         patch('darwin/gcc-4.9.patch2', when='@4.9.3')
+    else:
+        provides('golang', when='@4.7.1:')
 
     def install(self, spec, prefix):
         # libjava/configure needs a minor fix to install into spack paths.
