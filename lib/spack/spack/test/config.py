@@ -138,11 +138,17 @@ class ConfigTest(MockPackagesTest):
         """Check that named compilers in comps match Spack's config."""
         config = spack.config.get_config('compilers')
         compiler_list = ['cc', 'cxx', 'f77', 'fc']
-        for key in compiler_names:
-            for c in compiler_list:
-                expected = comps['all'][key][c]
-                actual = config['all'][key][c]
-                self.assertEqual(expected, actual)
+        param_list = ['modules', 'paths', 'spec', 'operating_system']
+        for alias, compiler in config.items():
+            if compiler['spec'] in compiler_names:
+                for p in param_list:
+                    expected = comps[alias][p]
+                    actual = config[alias][p]
+                    self.assertEqual(expected, actual)
+                for c in compiler_list:
+                    expected = comps[alias]['paths'][c]
+                    actual = config[alias]['paths'][c]
+                    self.assertEqual(expected, actual)
 
     def test_write_key_in_memory(self):
         # Write b_comps "on top of" a_comps.
