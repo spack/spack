@@ -32,8 +32,11 @@ from llnl.util.filesystem import join_path, mkdirp
 
 import spack.spec
 import spack.config
+import spack.url
+import spack.fetch_strategy as fs
 from spack.util.environment import get_path
 from spack.repository import *
+from spack.stage import Stage
 
 description = "Manage package source repositories."
 
@@ -83,7 +86,19 @@ def repo_create(args):
 def repo_add(args):
     """Add a package source to Spack's configuration."""
     path = args.path
-
+    dog = fs.from_url(path)
+    import pdb
+    spack_repo_config = spack.config.get_config('repos')
+    root_repo = Repo(spack_repo_config[0])
+    if isinstance(dog,fs.VCSFetchStrategy):
+        with Stage("newpath") as stage:
+            dog.set_stage(stage)
+            dog.fetch()
+            packageName = os.listdir(stage.path)[0]
+            shutil.rmtree(root_repo.packages_path+"/"+packageName)
+            shutil.move(stage.path+"/"+packageName,root_repo.packages_path) 
+            path=root_repo.packages_path+"/"+packageName
+    pdb.set_trace()
     # real_path is absolute and handles substitution.
     canon_path = canonicalize_path(path)
 
