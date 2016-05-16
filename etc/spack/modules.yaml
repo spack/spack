@@ -6,3 +6,10 @@
 # -------------------------------------------------------------------------
 modules:
   enable: ['tcl', 'dotkit']
+  tcl:
+    all:
+        autoload: 'all'
+        prerequisites: 'all'
+  dotkit:
+    all:
+        autoload: 'all'
