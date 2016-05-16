@@ -5,9 +5,8 @@ import shutil
 
 class ThePlatinumSearcher(Package):
     """Fast parallel recursive grep alternative"""
-    # FIXME: add a proper url for your package's homepage here.
     homepage = "https://github.com/monochromegane/the_platinum_searcher"
-    url      = "https://github.com/monochromegane/the_platinum_searcher"
+    url = "https://github.com/monochromegane/the_platinum_searcher"
 
     package = 'github.com/monochromegane/the_platinum_searcher/...'
 
