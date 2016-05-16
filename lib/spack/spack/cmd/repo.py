@@ -86,19 +86,20 @@ def repo_create(args):
 def repo_add(args):
     """Add a package source to Spack's configuration."""
     path = args.path
-    dog = fs.from_url(path)
-    import pdb
+    fetcher = fs.from_url(path)
     spack_repo_config = spack.config.get_config('repos')
-    root_repo = Repo(spack_repo_config[0])
-    if isinstance(dog,fs.VCSFetchStrategy):
+    root_repo = Repo(spack_repo_config[-1])
+    if isinstance(fetcher,fs.VCSFetchStrategy):
         with Stage("newpath") as stage:
-            dog.set_stage(stage)
-            dog.fetch()
+            fetcher.set_stage(stage)
+            fetcher.fetch()
             packageName = os.listdir(stage.path)[0]
-            shutil.rmtree(root_repo.packages_path+"/"+packageName)
+            try:
+                shutil.rmtree(root_repo.packages_path+"/"+packageName)
+            except OSError:
+                pass
             shutil.move(stage.path+"/"+packageName,root_repo.packages_path) 
             path=root_repo.packages_path+"/"+packageName
-    pdb.set_trace()
     # real_path is absolute and handles substitution.
     canon_path = canonicalize_path(path)
 

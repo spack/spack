@@ -660,7 +660,7 @@ def from_url(url):
        TODO: make this return appropriate fetch strategies for other
              types of URLs.
     """
-    if("github.com" in url):
+    if("github.com" in url or "stash." in url or "bitbucket" in url):
        return GitFetchStrategy(git=url)
     return URLFetchStrategy(url)
 
