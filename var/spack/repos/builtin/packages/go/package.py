@@ -67,4 +67,14 @@ class Go(Package):
 
         if os.environ.get('GOROOT', False):
             tty.warn('GOROOT is set, this is not recommended')
-        spack_env.set('GOPATH', ext_spec.package.stage.source_path)
+
+        # Set GOPATH to include paths of dependencies
+        for d in extension_spec.traverse():
+            if d.package.extends(self.spec):
+                spack_env.prepend_path('GOPATH', d.prefix)
+
+        # This *MUST* be first, this is where new code is installed
+        spack_env.prepend_path('GOPATH', ext_spec.package.stage.source_path)
+
+        # Allow packages to find this when using module or dotkit
+        run_env.prepend_path('GOPATH', ext_spec.prefix)
