@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 """
 This module contains all routines related to setting up the package
 build environment.  All of this is set up by package.py just before
@@ -98,21 +122,27 @@ def set_compiler_environment_variables(pkg, env):
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
     link_dir = spack.build_env_path
-    env.set('CC', join_path(link_dir, pkg.compiler.link_paths['cc']))
+    env.set('CC',  join_path(link_dir, pkg.compiler.link_paths['cc']))
     env.set('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
     env.set('F77', join_path(link_dir, pkg.compiler.link_paths['f77']))
-    env.set('FC', join_path(link_dir, pkg.compiler.link_paths['fc']))
+    env.set('FC',  join_path(link_dir, pkg.compiler.link_paths['fc']))
 
     # Set SPACK compiler variables so that our wrapper knows what to call
     compiler = pkg.compiler
     if compiler.cc:
-        env.set('SPACK_CC', compiler.cc)
+        env.set('SPACK_CC',  compiler.cc)
     if compiler.cxx:
         env.set('SPACK_CXX', compiler.cxx)
     if compiler.f77:
         env.set('SPACK_F77', compiler.f77)
     if compiler.fc:
-        env.set('SPACK_FC', compiler.fc)
+        env.set('SPACK_FC',  compiler.fc)
+
+    # Set SPACK compiler rpath flags so that our wrapper knows what to use
+    env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
+    env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
+    env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
+    env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
     return env
@@ -175,8 +205,8 @@ def set_build_environment_variables(pkg, env):
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     pkg_config_dirs = []
     for p in dep_prefixes:
-        for libdir in ('lib', 'lib64'):
-            pcdir = join_path(p, libdir, 'pkgconfig')
+        for maybe in ('lib', 'lib64', 'share'):
+            pcdir = join_path(p, maybe, 'pkgconfig')
             if os.path.isdir(pcdir):
                 pkg_config_dirs.append(pcdir)
     env.set_path('PKG_CONFIG_PATH', pkg_config_dirs)

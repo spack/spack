@@ -1,20 +1,45 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
-import sys
+from spack.package_test import *
 import os
-import shutil
+
 
 class Openblas(Package):
     """OpenBLAS: An optimized BLAS library"""
     homepage = "http://www.openblas.net"
     url      = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
+    version('0.2.18', '805e7f660877d588ea7e3792cda2ee65')
     version('0.2.17', '664a12807f2a2a7cda4781e3ab2ae0e1')
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
-    variant('shared', default=True, description="Build shared libraries as well as static libs.")
-    variant('openmp', default=True, description="Enable OpenMP support.")
-    variant('fpic', default=True, description="Build position independent code")
+    variant('shared', default=True,  description="Build shared libraries as well as static libs.")  # NOQA: ignore=E501
+    variant('openmp', default=False, description="Enable OpenMP support.")
+    variant('fpic',   default=True,  description="Build position independent code")  # NOQA: ignore=E501
 
     # virtual dependency
     provides('blas')
@@ -23,11 +48,13 @@ class Openblas(Package):
     patch('make.patch')
 
     def install(self, spec, prefix):
-        # Openblas is picky about compilers. Configure fails with
-        # FC=/abs/path/to/f77, whereas FC=f77 works fine.
-        # To circumvent this, provide basename only:
-        make_defs = ['CC=%s' % os.path.basename(spack_cc),
-                     'FC=%s' % os.path.basename(spack_f77),
+        # Configure fails to pick up fortran from FC=/abs/path/to/f77, but
+        # works fine with FC=/abs/path/to/gfortran.
+        # When mixing compilers make sure that
+        # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
+        # names and hack them inside lib/spack/spack/compilers/<compiler>.py
+        make_defs = ['CC=%s' % spack_cc,
+                     'FC=%s' % spack_f77,
                      'MAKE_NO_J=1']
 
         make_targets = ['libs', 'netlib']
@@ -45,8 +72,13 @@ class Openblas(Package):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
 
         # Add support for OpenMP
-        # Note: Make sure your compiler supports OpenMP
         if '+openmp' in spec:
+            # Openblas (as of 0.2.18) hardcoded that OpenMP cannot
+            # be used with any (!) compiler named clang, bummer.
+            if spec.satisfies('%clang'):
+                raise InstallError('OpenBLAS does not support ',
+                                   'OpenMP with clang!')
+
             make_defs += ['USE_OPENMP=1']
 
         make_args = make_defs + make_targets
@@ -62,84 +94,49 @@ class Openblas(Package):
             symlink('libopenblas.a', 'blas.a')
             symlink('libopenblas.a', 'libblas.a')
             if '+shared' in spec:
-                symlink('libopenblas.%s' % dso_suffix, 'libblas.%s' % dso_suffix)
+                symlink('libopenblas.%s' % dso_suffix,
+                        'libblas.%s' % dso_suffix)
 
         # Lapack virtual package should provide liblapack.a
         with working_dir(prefix.lib):
             symlink('libopenblas.a', 'liblapack.a')
             if '+shared' in spec:
-                symlink('libopenblas.%s' % dso_suffix, 'liblapack.%s' % dso_suffix)
+                symlink('libopenblas.%s' % dso_suffix,
+                        'liblapack.%s' % dso_suffix)
 
         # Openblas may pass its own test but still fail to compile Lapack
-        # symbols. To make sure we get working Blas and Lapack, do a small test.
+        # symbols. To make sure we get working Blas and Lapack, do a small
+        # test.
         self.check_install(spec)
-
 
     def setup_dependent_package(self, module, dspec):
         # This is WIP for a prototype interface for virtual packages.
         # We can update this as more builds start depending on BLAS/LAPACK.
-        libdir = find_library_path('libopenblas.a', self.prefix.lib64, self.prefix.lib)
+        libdir = find_library_path('libopenblas.a',
+                                   self.prefix.lib64,
+                                   self.prefix.lib)
 
         self.spec.blas_static_lib   = join_path(libdir, 'libopenblas.a')
         self.spec.lapack_static_lib = self.spec.blas_static_lib
 
         if '+shared' in self.spec:
-            self.spec.blas_shared_lib   = join_path(libdir, 'libopenblas.%s' % dso_suffix)
+            self.spec.blas_shared_lib   = join_path(libdir, 'libopenblas.%s' %
+                                                    dso_suffix)
             self.spec.lapack_shared_lib = self.spec.blas_shared_lib
 
     def check_install(self, spec):
-        "Build and run a small program to test that we have Lapack symbols"
-        print "Checking Openblas installation..."
-        checkdir = "spack-check"
-        with working_dir(checkdir, create=True):
-            source = r"""
-#include <cblas.h>
-#include <stdio.h>
-int main(void) {
-int i=0;
-double A[6] = {1.0, 2.0, 1.0, -3.0, 4.0, -1.0};
-double B[6] = {1.0, 2.0, 1.0, -3.0, 4.0, -1.0};
-double C[9] = {.5, .5, .5, .5, .5, .5, .5, .5, .5};
-cblas_dgemm(CblasColMajor, CblasNoTrans, CblasTrans,
-            3, 3, 2, 1, A, 3, B, 3, 2, C, 3);
-for (i = 0; i < 9; i++)
-  printf("%f\n", C[i]);
-return 0;
-}
-"""
-            expected = """\
-11.000000
--9.000000
-5.000000
--9.000000
-21.000000
--1.000000
-5.000000
--1.000000
-3.000000
-"""
-            with open("check.c", 'w') as f:
-                f.write(source)
-            cc = which('cc')
-            # TODO: Automate these path and library settings
-            cc('-c', "-I%s" % join_path(spec.prefix, "include"), "check.c")
-            cc('-o', "check", "check.o",
-               "-L%s" % join_path(spec.prefix, "lib"), "-llapack", "-lblas", "-lpthread")
-            try:
-                check = Executable('./check')
-                output = check(return_output=True)
-            except:
-                output = ""
-            success = output == expected
-            if not success:
-                print "Produced output does not match expected output."
-                print "Expected output:"
-                print '-'*80
-                print expected
-                print '-'*80
-                print "Produced output:"
-                print '-'*80
-                print output
-                print '-'*80
-                raise RuntimeError("Openblas install check failed")
-        shutil.rmtree(checkdir)
+        source_file = join_path(os.path.dirname(self.module.__file__),
+                                'test_cblas_dgemm.c')
+        blessed_file = join_path(os.path.dirname(self.module.__file__),
+                                 'test_cblas_dgemm.output')
+
+        include_flags = ["-I%s" % join_path(spec.prefix, "include")]
+        link_flags = ["-L%s" % join_path(spec.prefix, "lib"),
+                      "-llapack",
+                      "-lblas",
+                      "-lpthread"]
+        if '+openmp' in spec:
+            link_flags.extend([self.compiler.openmp_flag])
+
+        output = compile_c_and_execute(source_file, include_flags, link_flags)
+        compare_output_file(output, blessed_file)
