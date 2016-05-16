@@ -47,6 +47,17 @@ compilers:
       f77: None
       fc: None
     modules: 'None'
+  clang3.3SUSE:
+    spec: clang@3.3
+    operating_system:
+      name: SuSE
+      version: '11'
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
   clang3.3RHL:
     spec: clang@3.3
     operating_system:
@@ -67,6 +78,17 @@ compilers:
     operating_system:
       name: CNL
       version: '10'
+    spec: gcc@4.5.0
+    modules: 'None'
+  gcc4.5.0SUSE:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system:
+      name: SuSE
+      version: '11'
     spec: gcc@4.5.0
     modules: 'None'
   gcc4.5.0RHL:
