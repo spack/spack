@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 import sys
 
@@ -12,6 +36,7 @@ class Dealii(Package):
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('arpack',   default=True,  description='Compile with Arpack and PArpack (only with MPI)')
     variant('doc',      default=False, description='Compile with documentation')
+    variant('gsl' ,     default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,  description='Compile with HDF5 (only with MPI)')
     variant('metis',    default=True,  description='Compile with Metis')
     variant('netcdf',   default=True,  description='Compile with Netcdf (only with MPI)')
@@ -39,6 +64,8 @@ class Dealii(Package):
     depends_on ("mpi", when="+mpi")
     depends_on ("arpack-ng+mpi", when='+arpack+mpi')
     depends_on ("doxygen", when='+doc')
+    depends_on ("gsl", when='@8.5.0:+gsl')
+    depends_on ("gsl", when='@dev+gsl')
     depends_on ("hdf5+mpi~cxx", when='+hdf5+mpi') #FIXME NetCDF declares dependency with ~cxx, why?
     depends_on ("metis@5:", when='+metis')
     depends_on ("netcdf+mpi", when="+netcdf+mpi")
@@ -80,7 +107,6 @@ class Dealii(Package):
                 (join_path(spec['lapack'].prefix.lib,'liblapack.%s' % dsuf), # FIXME don't hardcode names
                  join_path(spec['blas'].prefix.lib,'libblas.%s' % dsuf)),    # FIXME don't hardcode names
             '-DMUPARSER_DIR=%s ' % spec['muparser'].prefix,
-            '-DP4EST_DIR=%s' % spec['p4est'].prefix,
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix
@@ -100,7 +126,7 @@ class Dealii(Package):
             ])
 
         # Optional dependencies for which librariy names are the same as CMake variables
-        for library in ('hdf5', 'p4est','petsc', 'slepc','trilinos','metis'):
+        for library in ('gsl','hdf5','p4est','petsc','slepc','trilinos','metis'):
             if library in spec:
                 options.extend([
                     '-D{library}_DIR={value}'.format(library=library.upper(), value=spec[library].prefix),
