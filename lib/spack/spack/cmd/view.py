@@ -29,14 +29,17 @@ A "view" is the product of applying a function on a set of package specs.
 This set consists of:
 
 - specs resolved from the package names given by the user (the seeds)
+
 - all depenencies of the seeds unless user specifies `--no-depenencies`
-- less any specs with names matching the regular expressions given by `--exclude`
+
+- less any specs with names matching the regular expressions given by
+  `--exclude`
 
 The `view` command provides a number of functions (the "actions"):
 
 - symlink :: a file system view which is a directory hierarchy that is
   the union of the hierarchies of the installed packages in the DAG
-  where installed files are referenced via symlinks.  
+  where installed files are referenced via symlinks.
 
 - hardlink :: like the symlink view but hardlinks are used.
 
@@ -66,71 +69,70 @@ brett.viren@gmail.com ca 2016.
 import os
 import re
 import sys
-import argparse
-
 import spack
 import spack.cmd
 import llnl.util.tty as tty
 
 description = "Produce a single-rooted directory view of a spec."
 
+
 def setup_parser(sp):
     setup_parser.parser = sp
 
-    sp.add_argument('-v','--verbose', action='store_true', default=False,
-                    help="Display verbose output.")
-    sp.add_argument('-e','--exclude', action='append', default=[],
-                    help="Exclude packages with names matching the given regex pattern.")
-    sp.add_argument('-d', '--dependencies', choices=['true','false','yes','no'],
-                    default='true',
-                    help="Follow dependencies.")
-
+    sp.add_argument(
+        '-v', '--verbose', action='store_true', default=False,
+        help="Display verbose output.")
+    sp.add_argument(
+        '-e', '--exclude', action='append', default=[],
+        help="Exclude packages with names matching the given regex pattern.")
+    sp.add_argument(
+        '-d', '--dependencies', choices=['true', 'false', 'yes', 'no'],
+        default='true',
+        help="Follow dependencies.")
 
     ssp = sp.add_subparsers(metavar='ACTION', dest='action')
 
-    specs_opts = dict(metavar='spec', nargs='+', 
+    specs_opts = dict(metavar='spec', nargs='+',
                       help="Seed specs of the packages to view.")
 
     # The action parameterizes the command but in keeping with Spack
     # patterns we make it a subcommand.
     file_system_view_actions = [
-        ssp.add_parser('symlink', aliases=['add','soft'],
-                      help='Add package files to a filesystem view via symbolic links.'),
-        ssp.add_parser('hardlink', aliases=['hard'],
-                      help='Add packages files to a filesystem via via hard links.'),
-        ssp.add_parser('remove', aliases=['rm'],
-                      help='Remove packages from a filesystem view.'),
-        ssp.add_parser('statlink', aliases=['status','check'],
-                      help='Check status of packages in a filesystem view.')
+        ssp.add_parser(
+            'symlink', aliases=['add', 'soft'],
+            help='Add package files to a filesystem view via symbolic links.'),
+        ssp.add_parser(
+            'hardlink', aliases=['hard'],
+            help='Add packages files to a filesystem via via hard links.'),
+        ssp.add_parser(
+            'remove', aliases=['rm'],
+            help='Remove packages from a filesystem view.'),
+        ssp.add_parser(
+            'statlink', aliases=['status', 'check'],
+            help='Check status of packages in a filesystem view.')
     ]
     # All these options and arguments are common to every action.
     for act in file_system_view_actions:
         act.add_argument('path', nargs=1,
                          help="Path to file system view directory.")
         act.add_argument('specs', **specs_opts)
-        
+
     # The formatted print action.
     act = ssp.add_parser('print',
                          help="Print a string to stdout based on given format")
-    act.add_argument('format', nargs=1, 
+    act.add_argument('format', nargs=1,
                      help="Format describing per-package printout.")
     act.add_argument('specs', **specs_opts)
 
-    ## Other VIEW ACTIONS might be added here.
-    ## Some ideas are the following (and some are redundant with existing cmds)
-    ## A JSON view that dumps a DAG to a JSON file
-    ## A DOT view that dumps to a GraphViz file 
-    ## A SHELL INIT view that dumps bash/csh script setting up to use packages in the view
     return
 
-
-### Util functions
 
 def assuredir(path):
     'Assure path exists as a directory'
     if not os.path.exists(path):
         os.makedirs(path)
-    
+
+
 def relative_to(prefix, path):
     'Return end of `path` relative to `prefix`'
     assert 0 == path.find(prefix)
@@ -139,37 +141,43 @@ def relative_to(prefix, path):
         reldir = reldir[1:]
     return reldir
 
+
 def transform_path(spec, path, prefix=None):
     'Return the a relative path corresponding to given path spec.prefix'
     if os.path.isabs(path):
         path = relative_to(spec.prefix, path)
     subdirs = path.split(os.path.sep)
     if subdirs[0] == '.spack':
-        lst = ['.spack',spec.name]+subdirs[1:]
+        lst = ['.spack', spec.name] + subdirs[1:]
         path = os.path.join(*lst)
     if prefix:
         path = os.path.join(prefix, path)
     return path
 
+
 def purge_empty_directories(path):
-    'Ascend up from the leaves accessible from `path` and remove empty directories.'
+    '''Ascend up from the leaves accessible from `path`
+    and remove empty directories.'''
     for dirpath, subdirs, files in os.walk(path, topdown=False):
         for sd in subdirs:
-            sdp = os.path.join(dirpath,sd)
+            sdp = os.path.join(dirpath, sd)
             try:
                 os.rmdir(sdp)
             except OSError:
                 pass
 
+
 def filter_exclude(specs, exclude):
     'Filter specs given sequence of exclude regex'
     to_exclude = [re.compile(e) for e in exclude]
+
     def exclude(spec):
         for e in to_exclude:
             if e.match(spec.name):
                 return True
         return False
     return [s for s in specs if not exclude(s)]
+
 
 def flatten(seeds, descend=True):
     'Normalize and flattend seed specs and descend hiearchy'
@@ -181,6 +189,7 @@ def flatten(seeds, descend=True):
         flat.update(spec.normalized().traverse())
     return flat
 
+
 def spec2dict(spec):
     'Convert info in a spec into a simple dictionary.'
 
@@ -188,43 +197,44 @@ def spec2dict(spec):
     # some things need processing or are properties.
     #
     pkg = spec.package
-    ret = dict(name = spec.name,
-               spec = spec.short_spec,
-               colorspec = spec.cshort_spec, # color
-               root = spec.root,
-               prefix = spec.prefix,
-               version = spec.version,
-               variants = spec.variants,
-               namespace = spec.namespace,
-               compiler = spec.compiler,
-               architecture = spec.architecture,
-               dependencies = ','.join(spec.dependencies.keys()),
-               dependents = ','.join(spec.dependents.keys()),
-               external = spec.external or "False",
-               hash = spec.dag_hash(),
+    inst_deps = ','.join([s.name for s in pkg.installed_dependents]),
+    ret = dict(name=spec.name,
+               spec=spec.short_spec,
+               colorspec=spec.cshort_spec,  # color
+               root=spec.root,
+               prefix=spec.prefix,
+               version=spec.version,
+               variants=spec.variants,
+               namespace=spec.namespace,
+               compiler=spec.compiler,
+               architecture=spec.architecture,
+               dependencies=','.join(spec.dependencies.keys()),
+               dependents=','.join(spec.dependents.keys()),
+               external=spec.external or "False",
+               hash=spec.dag_hash(),
 
                # package related:
-               url = pkg.url,
-               stage = pkg.stage.path,
-               installed = pkg.installed,
-               installed_dependents = ','.join([s.name for s in pkg.installed_dependents]),
-               build_log = pkg.build_log_path,
-               rpath = ':'.join(pkg.rpath),
+               url=pkg.url,
+               stage=pkg.stage.path,
+               installed=pkg.installed,
+               installed_dependents=inst_deps,
+               build_log=pkg.build_log_path,
+               rpath=':'.join(pkg.rpath),
 
                # ...
                )
     return ret
 
-### Action-specific helpers
 
 def check_one(spec, path, verbose=False):
     'Check status of view in path against spec'
     dotspack = os.path.join(path, '.spack', spec.name)
     if os.path.exists(os.path.join(dotspack)):
-        tty.info('Package in view: "%s"'%spec.name)
+        tty.info('Package in view: "%s"' % spec.name)
         return
-    tty.info('Package not in view: "%s"'%spec.name)
+    tty.info('Package not in view: "%s"' % spec.name)
     return
+
 
 def remove_one(spec, path, verbose=False):
     'Remove any files found in `spec` from `path` and purge empty directories.'
@@ -235,12 +245,12 @@ def remove_one(spec, path, verbose=False):
     dotspack = transform_path(spec, '.spack', path)
     if not os.path.exists(dotspack):
         if verbose:
-            tty.info('Skipping nonexistent package: "%s"'%spec.name)
+            tty.info('Skipping nonexistent package: "%s"' % spec.name)
         return
 
     if verbose:
-        tty.info('Removing package: "%s"'%spec.name)
-    for dirpath,dirnames,filenames in os.walk(spec.prefix):
+        tty.info('Removing package: "%s"' % spec.name)
+    for dirpath, dirnames, filenames in os.walk(spec.prefix):
         if not filenames:
             continue
         targdir = transform_path(spec, dirpath, path)
@@ -250,17 +260,18 @@ def remove_one(spec, path, verbose=False):
                 continue
             os.unlink(dst)
 
-def link_one(spec, path, link = os.symlink, verbose=False):
+
+def link_one(spec, path, link=os.symlink, verbose=False):
     'Link all files in `spec` into directory `path`.'
 
     dotspack = transform_path(spec, '.spack', path)
     if os.path.exists(dotspack):
-        tty.warn('Skipping existing package: "%s"'%spec.name)
+        tty.warn('Skipping existing package: "%s"' % spec.name)
         return
 
     if verbose:
         tty.info('Linking package: "%s"' % spec.name)
-    for dirpath,dirnames,filenames in os.walk(spec.prefix):
+    for dirpath, dirnames, filenames in os.walk(spec.prefix):
         if not filenames:
             continue        # avoid explicitly making empty dirs
 
@@ -275,11 +286,8 @@ def link_one(spec, path, link = os.symlink, verbose=False):
                     continue    # silence these
                 tty.warn("Skipping existing file: %s" % dst)
                 continue
-            link(src,dst)
+            link(src, dst)
 
-
-### The canonically named visitor_* functions and their alias maps.
-### One for each action.
 
 def visitor_symlink(specs, args):
     'Symlink all files found in specs'
@@ -290,6 +298,7 @@ def visitor_symlink(specs, args):
 visitor_add = visitor_symlink
 visitor_soft = visitor_symlink
 
+
 def visitor_hardlink(specs, args):
     'Hardlink all files found in specs'
     path = args.path[0]
@@ -297,6 +306,7 @@ def visitor_hardlink(specs, args):
     for spec in specs:
         link_one(spec, path, os.link, verbose=args.verbose)
 visitor_hard = visitor_hardlink
+
 
 def visitor_remove(specs, args):
     'Remove all files and directories found in specs from args.path'
@@ -306,6 +316,7 @@ def visitor_remove(specs, args):
     purge_empty_directories(path)
 visitor_rm = visitor_remove
 
+
 def visitor_statlink(specs, args):
     'Give status of view in args.path relative to specs'
     path = args.path[0]
@@ -313,6 +324,7 @@ def visitor_statlink(specs, args):
         check_one(spec, path, verbose=args.verbose)
 visitor_status = visitor_statlink
 visitor_check = visitor_statlink
+
 
 def visitor_print(specs, args):
     'Print a string for each spec using args.format.'
@@ -325,25 +337,22 @@ def visitor_print(specs, args):
         try:
             text = t.substitute(kwds)
         except KeyError:
-            tty.error("Format error, use keywords: %s" % (', '.join(kwds.keys()), ))
+            tty.error("Format error, use keywords: %s" %
+                      (', '.join(kwds.keys()), ))
             raise
         # argparser escapes these
         text = text.replace(r'\n', '\n').replace(r'\t', '\t')
         sys.stdout.write(text)
 
 
-# Finally, the actual "view" command.  There should be no need to
-# modify anything below when new actions are added.
-
-
 def view(parser, args):
     'Produce a view of a set of packages.'
 
-    # Process common args 
+    # Process common args
     seeds = [spack.cmd.disambiguate_spec(s) for s in args.specs]
-    specs = flatten(seeds, args.dependencies.lower() in ['yes','true'])
+    specs = flatten(seeds, args.dependencies.lower() in ['yes', 'true'])
     specs = filter_exclude(specs, args.exclude)
-    
+
     # Execute the visitation.
     try:
         visitor = globals()['visitor_' + args.action]
