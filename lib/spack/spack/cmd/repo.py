@@ -40,6 +40,7 @@ from spack.stage import Stage
 
 description = "Manage package source repositories."
 
+
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='repo_command')
     scopes = spack.config.config_scopes
@@ -60,13 +61,18 @@ def setup_parser(subparser):
 
     # Add
     add_parser = sp.add_parser('add', help=repo_add.__doc__)
-    add_parser.add_argument('path', help="Path to a Spack package repository directory.")
+    add_parser.add_argument(
+        'path',
+        help="Path to a Spack package repository directory")
+
     add_parser.add_argument(
         '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
         help="Configuration scope to modify.")
 
     # Remove
-    remove_parser = sp.add_parser('remove', help=repo_remove.__doc__, aliases=['rm'])
+    remove_parser = sp.add_parser(
+                    'remove',
+                    help=repo_remove.__doc__, aliases=['rm'])
     remove_parser.add_argument(
         'path_or_namespace',
         help="Path or namespace of a Spack package repository.")
@@ -89,17 +95,19 @@ def repo_add(args):
     fetcher = fs.from_url(path)
     spack_repo_config = spack.config.get_config('repos')
     root_repo = Repo(spack_repo_config[-1])
-    if isinstance(fetcher,fs.VCSFetchStrategy):
+    if isinstance(fetcher, fs.VCSFetchStrategy):
         with Stage("testpath") as stage:
             fetcher.set_stage(stage)
             fetcher.fetch()
             packageName = os.listdir(stage.path)[0]
             try:
-                shutil.rmtree(root_repo.packages_path+"/"+packageName)
+                shutil.rmtree(root_repo.packages_path + "/" + packageName)
             except OSError:
                 pass
-            shutil.move(stage.path+"/"+packageName,root_repo.packages_path) 
-            path=root_repo.packages_path+"/"+packageName
+            shutil.move(
+                stage.path + "/" + packageName,
+                root_repo.packages_path)
+            path = root_repo.packages_path + "/" + packageName
     # real_path is absolute and handles substitution.
     canon_path = canonicalize_path(path)
 
@@ -116,7 +124,8 @@ def repo_add(args):
 
     # If that succeeds, finally add it to the configuration.
     repos = spack.config.get_config('repos', args.scope)
-    if not repos: repos = []
+    if not repos: 
+            repos = []
 
     if repo.root in repos or path in repos:
         tty.die("Repository is already registered with Spack: %s" % path)
