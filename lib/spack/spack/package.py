@@ -888,6 +888,11 @@ class Package(object):
         # Ensure package is not already installed
         if spack.install_layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
+            rec = spack.installed_db.get_record(self.spec)
+            if (not rec.explicit) and explicit:
+                with spack.installed_db.write_transaction():
+                    rec = spack.installed_db.get_record(self.spec)
+                    rec.explicit = True
             return
 
         tty.msg("Installing %s" % self.name)
