@@ -90,7 +90,7 @@ def repo_add(args):
     spack_repo_config = spack.config.get_config('repos')
     root_repo = Repo(spack_repo_config[-1])
     if isinstance(fetcher,fs.VCSFetchStrategy):
-        with Stage("newpath") as stage:
+        with Stage("testpath") as stage:
             fetcher.set_stage(stage)
             fetcher.fetch()
             packageName = os.listdir(stage.path)[0]
