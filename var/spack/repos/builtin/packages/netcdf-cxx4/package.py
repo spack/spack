@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class NetcdfCxx4(Package):
     """C++ interface for NetCDF4"""
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
@@ -36,7 +37,8 @@ class NetcdfCxx4(Package):
     depends_on("autoconf")
 
     def install(self, spec, prefix):
-        which('autoreconf')('-ivf')    # Rebuild to prevent problems of inconsistency in git repo
+        # Rebuild to prevent problems of inconsistency in git repo
+        which('autoreconf')('-ivf')
         configure('--prefix=%s' % prefix)
         make()
         make("install")
