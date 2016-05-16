@@ -66,7 +66,10 @@ package_template = string.Template(
 # If you submit this package back to Spack as a pull request,
 # please first remove this boilerplate and all FIXME comments.
 #
-from spack import *
+from spack import depends_on, extends, version
+from spack import ${configure_imports}
+from spack import Package
+
 
 class ${class_name}(Package):
     ""\"FIXME: put a proper description of your package here.""\"
@@ -139,11 +142,16 @@ class ConfigureGuesser(object):
             "--exclude=*/*/*", "-tf", stage.archive_file, output=str)
         lines = output.split("\n")
 
+        # Prepare imports needed for configuring
+        configure_imports = "make"
+
         # Set the configure line to the one that matched.
         for pattern, bs, cl in config_lines:
             if any(re.search(pattern, l) for l in lines):
                 config_line = cl
                 build_system = bs
+                # the part before '(' in configure_line is what needs import
+                configure_imports += ", %s" % cl.split("(")[0]
                 break
         else:
             # None matched -- just put both, with cmake commented out
@@ -152,6 +160,7 @@ class ConfigureGuesser(object):
             config_line += "        # " + cmake
             build_system = 'unknown'
 
+        self.configure_imports = configure_imports
         self.configure = config_line
         self.build_system = build_system
 
@@ -226,11 +235,11 @@ def fetch_tarballs(url, name, version):
     archives_to_fetch = 1
     if not versions:
         # If the fetch failed for some reason, revert to what the user provided
-        versions = { version : url }
+        versions = {version: url}
     elif len(versions) > 1:
         tty.msg("Found %s versions of %s:" % (len(versions), name),
                 *spack.cmd.elide_list(
-                    ["%-10s%s" % (v,u) for v, u in versions.iteritems()]))
+                    ["%-10s%s" % (v, u) for v, u in versions.iteritems()]))
         print
         archives_to_fetch = tty.get_number(
             "Include how many checksums in the package file?",
@@ -293,6 +302,7 @@ def create(parser, args):
             package_template.substitute(
                 name=name,
                 configure=guesser.configure,
+                configure_imports=guesser.configure_imports,
                 class_name=mod_to_class(name),
                 url=url,
                 versions=make_version_calls(ver_hash_tuples)))
