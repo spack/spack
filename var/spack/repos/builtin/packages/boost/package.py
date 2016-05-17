@@ -127,7 +127,7 @@ class Boost(Package):
             dots, underscores)
 
     def determine_toolset(self, spec):
-        if spec.satisfies("=darwin-x86_64"):
+        if spec.satisfies("arch=darwin-x86_64"):
             return 'darwin'
 
         toolsets = {'g++': 'gcc',

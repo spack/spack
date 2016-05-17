@@ -42,6 +42,13 @@ class ConcretizeTest(MockPackagesTest):
         self.check_normalize('optional-dep-test+a',
                              Spec('optional-dep-test+a', Spec('a')))
 
+        self.check_normalize('optional-dep-test a=true',
+                             Spec('optional-dep-test a=true', Spec('a')))
+
+
+        self.check_normalize('optional-dep-test a=true',
+                             Spec('optional-dep-test+a', Spec('a')))
+
         self.check_normalize('optional-dep-test@1.1',
                              Spec('optional-dep-test@1.1', Spec('b')))
 

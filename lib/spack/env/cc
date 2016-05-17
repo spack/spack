@@ -55,7 +55,10 @@ parameters=(
 
 # The compiler input variables are checked for sanity later:
 #   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
-# Debug flag is optional; set to "TRUE" for debug logging:
+# The default compiler flags are passed from these variables:
+#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FCFLAGS, SPACK_FFLAGS,
+#   SPACK_LDFLAGS, SPACK_LDLIBS
+# Debug env var is optional; set to true for debug logging:
 #   SPACK_DEBUG
 # Test command is used to unit test the compiler script.
 #   SPACK_TEST_COMMAND
@@ -99,21 +102,25 @@ case "$command" in
         command="$SPACK_CC"
         language="C"
         comp="CC"
+        lang_flags=C
         ;;
     c++|CC|g++|clang++|icpc|pgc++|xlc++)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
+        lang_flags=CXX
         ;;
     f90|fc|f95|gfortran|ifort|pgfortran|xlf90|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
+        lang_flags=F
         ;;
     f77|gfortran|ifort|pgfortran|xlf|nagfor)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
+        lang_flags=F
         ;;
     ld)
         mode=ld
@@ -131,7 +138,7 @@ if [[ -z $mode ]]; then
         if [[ $arg == -v || $arg == -V || $arg == --version || $arg == -dumpversion ]]; then
             mode=vcheck
             break
-    fi
+        fi
     done
 fi
 
@@ -188,6 +195,42 @@ fi
 input_command="$@"
 args=("$@")
 
+# Prepend cppflags, cflags, cxxflags, fcflags, fflags, and ldflags
+
+# Add ldflags
+case "$mode" in
+    ld|ccld)
+        args=(${SPACK_LDFLAGS[@]} "${args[@]}") ;;
+esac
+
+# Add compiler flags.
+case "$mode" in
+    cc|ccld)
+    # Add c, cxx, fc, and f flags
+        case $lang_flags in
+            C)
+                args=(${SPACK_CFLAGS[@]} "${args[@]}") ;;
+            CXX)
+                args=(${SPACK_CXXFLAGS[@]} "${args[@]}") ;;
+        esac
+        ;;
+esac
+
+# Add cppflags
+case "$mode" in
+    cpp|as|cc|ccld)
+        args=(${SPACK_CPPFLAGS[@]} "${args[@]}") ;;
+esac
+
+case "$mode" in cc|ccld)
+        # Add fortran flags
+        case $lang_flags in
+            F)
+                args=(${SPACK_FFLAGS[@]} "${args[@]}") ;;
+        esac
+        ;;
+esac
+
 # Read spack dependencies from the path environment variable
 IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
 for dep in "${deps[@]}"; do
@@ -229,6 +272,12 @@ elif [[ $mode == ld ]]; then
     $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
     $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib"   "${args[@]}")
 fi
+
+# Add SPACK_LDLIBS to args
+case "$mode" in
+    ld|ccld)
+        args=("${args[@]}" ${SPACK_LDLIBS[@]}) ;;
+esac
 
 #
 # Unset pesky environment variables that could affect build sanity.

@@ -60,7 +60,7 @@ from spack.repository import UnknownPackageError
 _db_dirname = '.spack-db'
 
 # DB version.  This is stuck in the DB file to track changes in format.
-_db_version = Version('0.9')
+_db_version = Version('0.9.1')
 
 # Default timeout for spack database locks is 5 min.
 _db_lock_timeout = 60
@@ -205,6 +205,11 @@ class Database(object):
 
         spec_dict = installs[hash_key]['spec']
 
+        # Install records don't include hash with spec, so we add it in here
+        # to ensure it is read properly.
+        for name in spec_dict:
+            spec_dict[name]['hash'] = hash_key
+
         # Build spec from dict first.
         spec = Spec.from_node_dict(spec_dict)
 
@@ -250,13 +255,18 @@ class Database(object):
         check('installs' in db, "No 'installs' in YAML DB.")
         check('version'  in db, "No 'version' in YAML DB.")
 
+
+        installs = db['installs']
+
         # TODO: better version checking semantics.
         version = Version(db['version'])
-        if version != _db_version:
+        if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
+        elif version < _db_version:
+            self.reindex(spack.install_layout)
+            installs = dict((k, v.to_dict()) for k, v in self._data.items())
 
         # Iterate through database and check each record.
-        installs = db['installs']
         data = {}
         for hash_key, rec in installs.items():
             try:

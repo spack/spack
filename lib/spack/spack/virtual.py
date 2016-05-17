@@ -67,10 +67,15 @@ class ProviderIndex(object):
         if type(spec) != spack.spec.Spec:
             spec = spack.spec.Spec(spec)
 
+        if not spec.name:
+            # Empty specs do not have a package
+            return
+
         assert(not spec.virtual)
 
         pkg = spec.package
         for provided_spec, provider_spec in pkg.provided.iteritems():
+            provider_spec.compiler_flags = spec.compiler_flags.copy()#We want satisfaction other than flags
             if provider_spec.satisfies(spec, deps=False):
                 provided_name = provided_spec.name
 

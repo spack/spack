@@ -104,6 +104,8 @@ class SpecSyntaxTest(unittest.TestCase):
 
     def test_full_specs(self):
         self.check_parse("mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4^stackwalker@8.1_1e")
+        self.check_parse("mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2~qt_4^stackwalker@8.1_1e")
+        self.check_parse('mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3"+debug~qt_4^stackwalker@8.1_1e')
 
     def test_canonicalize(self):
         self.check_parse(
@@ -128,7 +130,10 @@ class SpecSyntaxTest(unittest.TestCase):
 
     def test_duplicate_variant(self):
         self.assertRaises(DuplicateVariantError, self.check_parse, "x@1.2+debug+debug")
-        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2+debug+debug")
+        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2+debug debug=true")
+        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2 debug=false debug=true")
+        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2 debug=false~debug")
+
 
     def test_duplicate_depdendence(self):
         self.assertRaises(DuplicateDependencyError, self.check_parse, "x ^y ^y")

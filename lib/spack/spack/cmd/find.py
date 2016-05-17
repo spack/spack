@@ -51,11 +51,14 @@ def setup_parser(subparser):
         help='Show full dependency DAG of installed packages')
 
     subparser.add_argument(
-        '-l', '--long', action='store_true',
+        '-l', '--long', action='store_true', dest='long',
         help='Show dependency hashes as well as versions.')
     subparser.add_argument(
-        '-L', '--very-long', action='store_true',
+        '-L', '--very-long', action='store_true', dest='very_long',
         help='Show dependency hashes as well as versions.')
+    subparser.add_argument(
+        '-f', '--show-flags', action='store_true', dest='show_flags',
+        help='Show spec compiler flags.')
 
     subparser.add_argument(
         '-e', '--explicit', action='store_true',
@@ -64,13 +67,13 @@ def setup_parser(subparser):
         '-E', '--implicit', action='store_true',
         help='Show only specs that were installed as dependencies')
     subparser.add_argument(
-        '-u', '--unknown', action='store_true',
+        '-u', '--unknown', action='store_true', dest='unknown',
         help='Show only specs Spack does not have a package for.')
     subparser.add_argument(
-        '-m', '--missing', action='store_true',
+        '-m', '--missing', action='store_true', dest='missing',
         help='Show missing dependencies as well as installed specs.')
     subparser.add_argument(
-        '-M', '--only-missing', action='store_true',
+        '-M', '--only-missing', action='store_true', dest='only_missing',
         help='Show only missing dependencies.')
     subparser.add_argument(
         '-N', '--namespace', action='store_true',
@@ -95,6 +98,12 @@ def display_specs(specs, **kwargs):
         hashes = True
         hlen = None
 
+    nfmt = '.' if namespace else '_'
+    format_string = '$%s$@$+' % nfmt
+    flags = kwargs.get('show_flags', False)
+    if flags:
+        format_string = '$%s$@$%%+$+' % nfmt
+
     # Make a dict with specs keyed by architecture and compiler.
     index = index_by(specs, ('architecture', 'compiler'))
 
@@ -110,8 +119,7 @@ def display_specs(specs, **kwargs):
         specs = index[(architecture,compiler)]
         specs.sort()
 
-        nfmt = '.' if namespace else '_'
-        abbreviated = [s.format('$%s$@$+' % nfmt, color=True) for s in specs]
+        abbreviated = [s.format(format_string, color=True) for s in specs]
         if mode == 'paths':
             # Print one spec per line along with prefix path
             width = max(len(s) for s in abbreviated)
@@ -126,20 +134,28 @@ def display_specs(specs, **kwargs):
         elif mode == 'deps':
             for spec in specs:
                 print spec.tree(
-                    format='$%s$@$+' % nfmt,
+                    format=format_string,
                     color=True,
                     indent=4,
                     prefix=(lambda s: gray_hash(s, hlen)) if hashes else None)
 
         elif mode == 'short':
-            def fmt(s):
-                string = ""
-                if hashes:
-                    string += gray_hash(s, hlen) + ' '
-                string += s.format('$-%s$@$+' % nfmt, color=True)
+            # Print columns of output if not printing flags
+            if not flags:
+                def fmt(s):
+                    string = ""
+                    if hashes:
+                        string += gray_hash(s, hlen) + ' '
+                    string += s.format('$-%s$@$+' % nfmt, color=True)
 
-                return string
-            colify(fmt(s) for s in specs)
+                    return string
+                colify(fmt(s) for s in specs)
+            # Print one entry per line if including flags
+            else:
+                for spec in specs:
+                    # Print the hash if necessary
+                    hsh = gray_hash(spec, hlen) + ' ' if hashes else ''
+                    print hsh + spec.format(format_string, color=True) + '\n'
 
         else:
             raise ValueError(
@@ -151,7 +167,7 @@ def find(parser, args):
     # Filter out specs that don't exist.
     query_specs = spack.cmd.parse_specs(args.query_specs)
     query_specs, nonexisting = partition_list(
-        query_specs, lambda s: spack.repo.exists(s.name))
+        query_specs, lambda s: spack.repo.exists(s.name) or not s.name)
 
     if nonexisting:
         msg = "No such package%s: " % ('s' if len(nonexisting) > 1 else '')
@@ -193,4 +209,4 @@ def find(parser, args):
     display_specs(specs, mode=args.mode,
                   long=args.long,
                   very_long=args.very_long,
-                  namespace=args.namespace)
+                  show_flags=args.show_flags)
