@@ -45,11 +45,8 @@ The available directives are:
   * ``resource``
 
 """
-__all__ = ['depends_on', 'extends', 'provides', 'patch', 'version',
-           'variant', 'resource']
 
 import re
-import inspect
 import os.path
 import functools
 
@@ -66,6 +63,9 @@ from spack.variant import Variant
 from spack.spec import Spec, parse_anonymous_spec
 from spack.resource import Resource
 from spack.fetch_strategy import from_kwargs
+
+__all__ = ['depends_on', 'extends', 'provides', 'patch', 'version', 'variant',
+           'resource']
 
 #
 # This is a list of all directives, built up as they are defined in
@@ -122,14 +122,13 @@ class directive(object):
 
     def __init__(self, dicts=None):
         if isinstance(dicts, basestring):
-            dicts = (dicts,)
+            dicts = (dicts, )
         elif type(dicts) not in (list, tuple):
             raise TypeError(
-                "dicts arg must be list, tuple, or string. Found %s"
-                % type(dicts))
+                "dicts arg must be list, tuple, or string. Found %s" %
+                type(dicts))
 
         self.dicts = dicts
-
 
     def ensure_dicts(self, pkg):
         """Ensure that a package has the dicts required by this directive."""
@@ -141,7 +140,6 @@ class directive(object):
             if not isinstance(attr, dict):
                 raise spack.error.SpackError(
                     "Package %s has non-dict %s attribute!" % (pkg, d))
-
 
     def __call__(self, directive_function):
         directives[directive_function.__name__] = self
@@ -259,11 +257,12 @@ def variant(pkg, name, default=False, description=""):
     """Define a variant for the package. Packager can specify a default
     value (on or off) as well as a text description."""
 
-    default     = bool(default)
+    default = bool(default)
     description = str(description).strip()
 
     if not re.match(spack.spec.identifier_re, name):
-        raise DirectiveError("Invalid variant name in %s: '%s'" % (pkg.name, name))
+        raise DirectiveError("Invalid variant name in %s: '%s'" %
+                             (pkg.name, name))
 
     pkg.variants[name] = Variant(default, description)
 
@@ -271,31 +270,37 @@ def variant(pkg, name, default=False, description=""):
 @directive('resources')
 def resource(pkg, **kwargs):
     """
-    Define an external resource to be fetched and staged when building the package. Based on the keywords present in the
-    dictionary the appropriate FetchStrategy will be used for the resource. Resources are fetched and staged in their
-    own folder inside spack stage area, and then linked into the stage area of the package that needs them.
+    Define an external resource to be fetched and staged when building the
+    package. Based on the keywords present in the dictionary the appropriate
+    FetchStrategy will be used for the resource. Resources are fetched and
+    staged in their own folder inside spack stage area, and then linked into
+    the stage area of the package that needs them.
 
     List of recognized keywords:
 
-    * 'when' : (optional) represents the condition upon which the resource is needed
-    * 'destination' : (optional) path where to link the resource. This path must be relative to the main package stage
-    area.
-    * 'placement' : (optional) gives the possibility to fine tune how the resource is linked into the main package stage
-    area.
+    * 'when' : (optional) represents the condition upon which the resource is
+    needed
+    * 'destination' : (optional) path where to link the resource. This path
+    must be relative to the main package stage area.
+    * 'placement' : (optional) gives the possibility to fine tune how the
+    resource is linked into the main package stage area.
     """
     when = kwargs.get('when', pkg.name)
     destination = kwargs.get('destination', "")
     placement = kwargs.get('placement', None)
     # Check if the path is relative
     if os.path.isabs(destination):
-        message = "The destination keyword of a resource directive can't be an absolute path.\n"
+        message = "The destination keyword of a resource directive can't be"
+        " an absolute path.\n"
         message += "\tdestination : '{dest}\n'".format(dest=destination)
         raise RuntimeError(message)
     # Check if the path falls within the main package stage area
-    test_path = 'stage_folder_root/'
-    normalized_destination = os.path.normpath(join_path(test_path, destination))  # Normalized absolute path
+    test_path = 'stage_folder_root'
+    normalized_destination = os.path.normpath(join_path(test_path, destination)
+                                              )  # Normalized absolute path
     if test_path not in normalized_destination:
-        message = "The destination folder of a resource must fall within the main package stage directory.\n"
+        message = "The destination folder of a resource must fall within the"
+        " main package stage directory.\n"
         message += "\tdestination : '{dest}'\n".format(dest=destination)
         raise RuntimeError(message)
     when_spec = parse_anonymous_spec(when, pkg.name)
@@ -307,6 +312,7 @@ def resource(pkg, **kwargs):
 
 class DirectiveError(spack.error.SpackError):
     """This is raised when something is wrong with a package directive."""
+
     def __init__(self, directive, message):
         super(DirectiveError, self).__init__(message)
         self.directive = directive
@@ -314,6 +320,7 @@ class DirectiveError(spack.error.SpackError):
 
 class CircularReferenceError(DirectiveError):
     """This is raised when something depends on itself."""
+
     def __init__(self, directive, package):
         super(CircularReferenceError, self).__init__(
             directive,

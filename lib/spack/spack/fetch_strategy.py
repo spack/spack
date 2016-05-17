@@ -57,7 +57,6 @@ from spack.version import Version, ver
 from spack.util.compression import decompressor_for, extension
 
 import spack.util.pattern as pattern
-
 """List of all fetch strategies, created by FetchStrategy metaclass."""
 all_strategies = []
 
@@ -82,6 +81,7 @@ class FetchStrategy(object):
 
     class __metaclass__(type):
         """This metaclass registers all fetch strategies in a list."""
+
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
             if cls.enabled:
@@ -89,8 +89,8 @@ class FetchStrategy(object):
 
     def __init__(self):
         # The stage is initialized late, so that fetch strategies can be
-        # constructed at package construction time
-        # This is where things will be fetched.
+        # constructed at package construction time.  This is where things
+        # will be fetched.
         self.stage = None
 
     def set_stage(self, stage):
@@ -176,16 +176,20 @@ class URLFetchStrategy(FetchStrategy):
         tty.msg("Trying to fetch from %s" % self.url)
 
         if partial_file:
-            save_args = ['-C', '-',           # continue partial downloads
-                         '-o', partial_file]  # use a .part file
+            save_args = ['-C',
+                         '-',  # continue partial downloads
+                         '-o',
+                         partial_file]  # use a .part file
         else:
             save_args = ['-O']
 
         curl_args = save_args + [
             '-f',  # fail on >400 errors
-            '-D', '-',  # print out HTML headers
+            '-D',
+            '-',  # print out HTML headers
             '-L',  # resolve 3xx redirects
-            self.url, ]
+            self.url,
+        ]
 
         if sys.stdout.isatty():
             curl_args.append('-#')  # status bar when using a tty
@@ -193,8 +197,7 @@ class URLFetchStrategy(FetchStrategy):
             curl_args.append('-sS')  # just errors when not.
 
         # Run curl but grab the mime type from the http headers
-        headers = spack.curl(
-            *curl_args, output=str, fail_on_error=False)
+        headers = spack.curl(*curl_args, output=str, fail_on_error=False)
 
         if spack.curl.returncode != 0:
             # clean up archive on failure.
@@ -212,12 +215,13 @@ class URLFetchStrategy(FetchStrategy):
             elif spack.curl.returncode == 60:
                 # This is a certificate error.  Suggest spack -k
                 raise FailedDownloadError(
-                    self.url, """
-                    Curl was unable to fetch due to invalid certificate.
-                    This may be an attack, or the cluster's SSL configuration
-                    is bad.  If you believe your SSL configuration is bad, you
-                    can try 'spack -k', which won't check SSL certificates.
-                    Use this at your own risk.""")
+                    self.url,
+                    "Curl was unable to fetch due to invalid certificate. "
+                    "This is either an attack, or your cluster's SSL "
+                    "configuration is bad.  If you believe your SSL "
+                    "configuration is bad, you can try running spack -k, "
+                    "which will not check SSL certificates."
+                    "Use this at your own risk.")
 
             else:
                 # This is some other curl error.  Curl will print the
@@ -314,13 +318,15 @@ class URLFetchStrategy(FetchStrategy):
         checker = crypto.Checker(self.digest)
         if not checker.check(self.archive_file):
             raise ChecksumError(
-                "%s checksum failed for %s" % (checker.hash_name,
-                                               self.archive_file),
+                "%s checksum failed for %s" %
+                (checker.hash_name, self.archive_file),
                 "Expected %s but got %s" % (self.digest, checker.sum))
 
     @_needs_stage
     def reset(self):
-        """Removes the source path if it exists, then reexpands the archive."""
+        """
+        Removes the source path if it exists, then re-expands the archive.
+        """
         if not self.archive_file:
             raise NoArchiveFileError(
                 "Tried to reset URLFetchStrategy before fetching",
@@ -361,7 +367,8 @@ class VCSFetchStrategy(FetchStrategy):
         if sum(k in kwargs for k in rev_types) > 1:
             raise FetchStrategyError(
                 "Supply only one of %s to fetch with %s" % (
-                    comma_or(rev_types), name))
+                    comma_or(rev_types), name
+                ))
 
         # Set attributes for each rev type.
         for rt in rev_types:
@@ -399,28 +406,88 @@ class VCSFetchStrategy(FetchStrategy):
         return "%s<%s>" % (self.__class__, self.url)
 
 
-class GitFetchStrategy(VCSFetchStrategy):
-    """Fetch strategy that gets source code from a git repository.
-       Use like this in a package:
+class GoFetchStrategy(VCSFetchStrategy):
+    """
+    Fetch strategy that employs the `go get` infrastructure
+    Use like this in a package:
 
-          version('name', git='https://github.com/project/repo.git')
+       version('name',
+               go='github.com/monochromegane/the_platinum_searcher/...')
 
-       Optionally, you can provide a branch, or commit to check out, e.g.:
-
-          version('1.1', git='https://github.com/project/repo.git', tag='v1.1')
-
-       You can use these three optional attributes in addition to ``git``:
-
-           * ``branch``: Particular branch to build from (default is master)
-           * ``tag``: Particular tag to check out
-           * ``commit``: Particular commit hash in the repo
+    Go get does not natively support versions, they can be faked with git
     """
     enabled = True
-    required_attributes = ('git',)
+    required_attributes = ('go', )
 
     def __init__(self, **kwargs):
-        # Discards the keywords in kwargs that may
-        # conflict with the next call to __init__
+        # Discards the keywords in kwargs that may conflict with the next
+        # call to __init__
+        forwarded_args = copy.copy(kwargs)
+        forwarded_args.pop('name', None)
+
+        super(GoFetchStrategy, self).__init__('go', **forwarded_args)
+        self._go = None
+
+    @property
+    def go_version(self):
+        vstring = self.go('version', output=str).split(' ')[2]
+        return Version(vstring)
+
+    @property
+    def go(self):
+        if not self._go:
+            self._go = which('go', required=True)
+        return self._go
+
+    @_needs_stage
+    def fetch(self):
+        self.stage.chdir()
+
+        tty.msg("Trying to get go resource:", self.url)
+
+        try:
+            os.mkdir('go')
+        except OSError:
+            pass
+        env = dict(os.environ)
+        env['GOPATH'] = os.path.join(os.getcwd(), 'go')
+        self.go('get', '-v', '-d', self.url, env=env)
+
+    def archive(self, destination):
+        super(GoFetchStrategy, self).archive(destination, exclude='.git')
+
+    @_needs_stage
+    def reset(self):
+        self.stage.chdir_to_source()
+        self.go('clean')
+
+    def __str__(self):
+        return "[go] %s" % self.url
+
+
+class GitFetchStrategy(VCSFetchStrategy):
+    """
+    Fetch strategy that gets source code from a git repository.
+    Use like this in a package:
+
+        version('name', git='https://github.com/project/repo.git')
+
+    Optionally, you can provide a branch, or commit to check out, e.g.:
+
+        version('1.1', git='https://github.com/project/repo.git', tag='v1.1')
+
+    You can use these three optional attributes in addition to ``git``:
+
+        * ``branch``: Particular branch to build from (default is master)
+        * ``tag``: Particular tag to check out
+        * ``commit``: Particular commit hash in the repo
+    """
+    enabled = True
+    required_attributes = ('git', )
+
+    def __init__(self, **kwargs):
+        # Discards the keywords in kwargs that may conflict with the next call
+        # to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop('name', None)
 
@@ -533,8 +600,8 @@ class SvnFetchStrategy(VCSFetchStrategy):
     required_attributes = ['svn']
 
     def __init__(self, **kwargs):
-        # Discards the keywords in kwargs that
-        # may conflict with the next call to __init__
+        # Discards the keywords in kwargs that may conflict with the next call
+        # to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop('name', None)
 
@@ -595,30 +662,30 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
 
 class HgFetchStrategy(VCSFetchStrategy):
-    """Fetch strategy that gets source code from a Mercurial repository.
-       Use like this in a package:
+    """
+    Fetch strategy that gets source code from a Mercurial repository.
+    Use like this in a package:
 
-           version('name',
-              hg='https://jay.grs.rwth-aachen.de/hg/lwm2')
+        version('name', hg='https://jay.grs.rwth-aachen.de/hg/lwm2')
 
-       Optionally, you can provide a branch, or revision to check out, e.g.:
+    Optionally, you can provide a branch, or revision to check out, e.g.:
 
-           version('torus',
-              hg='https://jay.grs.rwth-aachen.de/hg/lwm2', branch='torus')
+        version('torus',
+                hg='https://jay.grs.rwth-aachen.de/hg/lwm2', branch='torus')
 
-       You can use the optional 'revision' attribute to check out a
-       branch, tag, or particular revision in hg.  To prevent
-       non-reproducible builds, using a moving target like a branch is
-       discouraged.
+    You can use the optional 'revision' attribute to check out a
+    branch, tag, or particular revision in hg.  To prevent
+    non-reproducible builds, using a moving target like a branch is
+    discouraged.
 
-           * ``revision``: Particular revision, branch, or tag.
+        * ``revision``: Particular revision, branch, or tag.
     """
     enabled = True
     required_attributes = ['hg']
 
     def __init__(self, **kwargs):
-        # Discards the keywords in kwargs that
-        # may conflict with the next call to __init__
+        # Discards the keywords in kwargs that may conflict with the next call
+        # to __init__
         forwarded_args = copy.copy(kwargs)
         forwarded_args.pop('name', None)
 
@@ -766,8 +833,8 @@ class NoDigestError(FetchError):
 
 class InvalidArgsError(FetchError):
     def __init__(self, pkg, version):
-        msg = """Could not construct a fetch strategy for
-              package %s at version %s"""
+        msg = ("Could not construct a fetch strategy for package %s at "
+               "version %s")
         msg %= (pkg.name, version)
         super(InvalidArgsError, self).__init__(msg)
 
@@ -784,5 +851,5 @@ class NoStageError(FetchError):
 
     def __init__(self, method):
         super(NoStageError, self).__init__(
-            "Must call FetchStrategy.set_stage() before calling %s"
-            % method.__name__)
+            "Must call FetchStrategy.set_stage() before calling %s" %
+            method.__name__)
