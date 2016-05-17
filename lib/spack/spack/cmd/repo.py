@@ -96,14 +96,17 @@ def repo_add(args):
             fetcher.set_stage(stage)
             fetcher.fetch()
             packageName = os.listdir(stage.path)[0]
+            destination = root_repo.root.split("/")[:-1]
+            destination.extend([packageName])
+            destination = "/".join(destination)
             try:
-                shutil.rmtree(root_repo.packages_path + "/" + packageName)
+                shutil.rmtree(destination)
             except OSError:
                 pass
             shutil.move(
                 stage.path + "/" + packageName,
-                root_repo.packages_path)
-            path = root_repo.packages_path + "/" + packageName
+                destination)
+            path = destination
     # real_path is absolute and handles substitution.
     canon_path = canonicalize_path(path)
 
