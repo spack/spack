@@ -1,6 +1,7 @@
 #  "Benedikt Hegner (CERN)"
 
 import os
+import stat
 import platform
 from commands import getstatusoutput
 
@@ -18,7 +19,7 @@ def get_existing_rpath(path_name, patchelf_executable):
             tty.warn('failed reading rpath for %s.' % path_name)
             return False
         last_cmd = None
-        path = ()
+        path = set()
         for line in output.split('\n'):
             match = re.search('( *[a-zA-Z]+ )(.*)', line)
             if match:
@@ -31,7 +32,7 @@ def get_existing_rpath(path_name, patchelf_executable):
                     last_cmd = rhs
                 if lhs == 'path' and last_cmd == 'LC_RPATH':
                     path.add(rhs)
-            return path
+        return path
     elif platform.system() == 'Linux':
         command = '%s --print-rpath %s ' % (patchelf_executable, path_name)
         status, output = getstatusoutput(command)
