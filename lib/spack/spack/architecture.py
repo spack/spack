@@ -66,6 +66,25 @@ def get_sys_type_from_platform():
     return sys_type.lower()
 
 
+def get_full_system_from_platform():
+    system = platform.system()
+    if system == "Linux":
+        pf = platform.linux_distribution(full_distribution_name=0)[0]
+        version = platform.linux_distribution(full_distribution_name=0)[1]
+        if pf != 'Ubuntu':
+            # For non-Ubuntu major version number is enough
+            # to understand compatibility
+            version = version.split('.')[0]
+    elif system == "Darwin":
+        pf = "macos10"
+        version = platform.mac_ver()[0].split(".")[1]
+    else:
+        raise "System %s not supported" % system
+    sys_type = pf + version + '-' + platform.machine()
+    sys_type = re.sub(r'[^\w-]', '_', sys_type)
+    return sys_type.lower()
+
+
 @memoized
 def sys_type():
     """Returns a SysType for the current machine."""

@@ -43,6 +43,8 @@ import spack
 import spack.build_environment
 import spack.compilers
 import spack.directives
+import spack.binary_distribution
+import spack.relocate
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -855,25 +857,32 @@ class Package(object):
                    keep_stage=False,
                    ignore_deps=False,
                    skip_patch=False,
-                   verbose=False,
-                   make_jobs=None,
-                   fake=False):
+                   verbose=False, make_jobs=None,
+                   fake=False,
+                   install_policy="build"):
+
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
         their build process.
 
         Args:
-        keep_prefix -- Keep install prefix on failure. By default, destroys it.
-        keep_stage  -- By default, stage is destroyed only if there are no
-                       exceptions during build. Set to True to keep the stage
-                       even with exceptions.
-        ignore_deps -- Don't install dependencies before installing this
-                       package
-        fake        -- Don't really build -- install fake stub files instead.
-        skip_patch  -- Skip patch stage of build if True.
-        verbose     -- Display verbose build output (by default, suppresses it)
-        make_jobs   -- Number of make jobs to use for install. Default is ncpus
+
+        keep_prefix    -- Keep install prefix on failure.
+                          By default, destroys it.
+        keep_stage     -- By default, stage is destroyed only if there are no
+                          exceptions during build. Set to True to keep the
+                          stage even with exceptions.
+        ignore_deps    -- Do not install dependencies before installing this
+                        package.
+        install_policy -- Whether to download a pre-compiled package
+                          or build from scratch
+        fake           -- Don't really build - install fake stub files instead.
+        skip_patch     -- Skip patch stage of build if True.
+        verbose        -- Display verbose build output
+                          (by default, suppresses it)
+        make_jobs      -- Number of make jobs to use for install
+                          (default is ncpus)
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -899,8 +908,28 @@ class Package(object):
                                          fake=fake,
                                          skip_patch=skip_patch,
                                          verbose=verbose,
+                                         install_policy=install_policy,
                                          make_jobs=make_jobs)
 
+        # check and prepare binary install option
+        install_binary = False
+        binary_distribution = spack.binary_distribution
+        if install_policy in ("download", "lazy"):
+            tarball_available = binary_distribution.download_tarball(self)
+            if tarball_available:
+                install_binary = True
+                binary_distribution.prepare()
+            elif install_policy == "download":
+                tty.die("Download of binary package for %s failed."
+                        % self.name)
+            else:
+                tty.warn("No binary package for %s found."
+                         % self.name)
+
+        # create the install directory.  The install layout
+        # handles this in case so that it can use whatever
+        # package naming scheme it likes.
+        spack.install_layout.create_install_directory(self.spec)
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
@@ -910,7 +939,7 @@ class Package(object):
                module space set up by build_environment.fork()."""
 
             start_time = time.time()
-            if not fake:
+            if not fake and not install_binary:
                 if not skip_patch:
                     self.do_patch()
                 else:
@@ -923,8 +952,11 @@ class Package(object):
                 # Run the pre-install hook in the child process after
                 # the directory is created.
                 spack.hooks.pre_install(self)
-
-                if fake:
+                # Set up process's build environment before running install.
+                if install_binary is True:
+                    spack.binary_distribution.extract_tarball(self)
+                    spack.binary_distribution.relocate_package(self)
+                elif fake:
                     self.do_fake_install()
                 else:
                     # Do the real install in the source directory.
@@ -978,8 +1010,7 @@ class Package(object):
             print_pkg(self.prefix)
 
         try:
-            # Create the install prefix and fork the build process.
-            spack.install_layout.create_install_directory(self.spec)
+            # Fork the build process.
             spack.build_environment.fork(self, build_process)
         except:
             # remove the install prefix if anything went wrong during install.
