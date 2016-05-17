@@ -186,6 +186,7 @@ def relocate_package(package):
              "%s to %s." % (old_path, new_path))
 
     # as we may need patchelf, find out where it is
+    patchelf_executable = ''
     if platform.system() != 'Darwin':
         patchelf_spec = spack.cmd.parse_specs("patchelf", concretize=True)[0]
         patchelf = spack.repo.get(patchelf_spec)

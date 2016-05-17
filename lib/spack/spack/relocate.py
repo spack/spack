@@ -3,7 +3,9 @@
 import os
 import stat
 import platform
+import re
 from commands import getstatusoutput
+from spack.util.executable import which
 
 import llnl.util.tty as tty
 
@@ -44,6 +46,63 @@ def get_existing_rpath(path_name, patchelf_executable):
         tty.die('relocation not supported for this platform')
     return retval
 
+def change_dylib(path_name, rpaths):
+    """
+    Return the RPATHS in given file as a list of strings.
+    """
+    command = which('otool')
+    output  = command("-l", path_name, output=str, err=str)
+    if command.returncode != 0:
+        tty.warn('failed reading rpath for %s.' % path_name)
+        return False
+    last_cmd = None
+    path = ''
+    deps = set()
+    for line in output.split('\n'):
+        match = re.search('( *[a-zA-Z]+ )(.*)', line)
+        if match:
+            lhs = match.group(1).lstrip().rstrip()
+            rhs = match.group(2)
+            match2 = re.search('(.*) \(.*\)', rhs)
+            if match2:
+                rhs = match2.group(1)
+            if lhs == 'cmd':
+                last_cmd = rhs
+            if lhs == 'path' and last_cmd == 'LC_ID_DYLIB':
+                path=rhs
+            if lhs == 'path' and last_cmd == 'LC_LOAD_DYLIB':
+                deps.append(rhs)
+    id = None
+    ndeps = set()
+    for rpath in rpaths:
+        if re.match(rpath,path):
+            id = '@rpath/' + re.split(rpath,path)[1]
+        for dep in deps:
+            if re.match(rpath,dep):
+                ndep = '@rpath/' + re.split(rpath,dep)[1]
+                ndeps.append(ndep)
+
+    icommand = which("install_name_tool")
+
+    if id :
+        output = icommand("-id ", "%s" % id,
+                     "%s" % path_name,
+                     output=str,
+                     err=str)
+        if icommand.returncode != 0:
+            tty.warn('failed writing id for %s.' % path_name)
+
+    for orig, new in zip(deps, ndeps):
+        output = icommand("-change ", "%s" % orig,
+                         "%s" % new,
+                         "%s" % path_name,
+                         output=str,
+                         err=str)
+        if icommand.returncode != 0:
+            tty.warn('failed writing dep for %s.' % path_name)
+    return
+
+
 
 def get_filetype(path_name):
     """
@@ -75,6 +134,7 @@ def modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable):
                              err=str)
             if command.returncode != 0:
                 tty.warn('failed writing rpath for %s.' % path_name)
+        change_dylib(path_name,orig_rpath)
     elif platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
         command = "%s --force-rpath --set-rpath '%s' '%s'" % \
