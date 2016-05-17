@@ -167,6 +167,21 @@ section_schemas = {
                                                         {'type' : 'null' }]},
                                     'fc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
+                                    'environment': {
+                                        'type': 'object',
+                                        'default': {},
+                                        'additionalProperties': False,
+                                        'properties' : {
+                                            'set': {
+                                                'type': 'object',
+                                                 'patternProperties': {
+                                                      r'\w[\w-]*': {  # key
+                                                      'type': 'string'
+                                                      }
+                                                  }
+                                             }
+                                         }
+                                    }
                                 },},},},},},},},
 
     'mirrors': {

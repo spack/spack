@@ -238,6 +238,17 @@ unset LD_RUN_PATH
 unset DYLD_LIBRARY_PATH
 
 #
+# Set paths as defined in the 'environment' section of the compiler config
+#   names are stored in SPACK_ENV_TO_SET
+#   values are stored in SPACK_<varname>
+#
+IFS=':' read -ra varnames <<< "$SPACK_ENV_TO_SET"
+for varname in "${varnames[@]}"; do
+  spack_varname="SPACK_$varname"
+  export $varname=${!spack_varname}
+done
+
+#
 # Filter '.' and Spack environment directories out of PATH so that
 # this script doesn't just call itself
 #

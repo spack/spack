@@ -29,7 +29,7 @@ import imp
 import os
 import platform
 
-from llnl.util.lang import memoized, list_modules
+from llnl.util.lang import list_modules
 from llnl.util.filesystem import join_path
 
 import spack
@@ -39,13 +39,11 @@ import spack.config
 import spack.architecture
 
 from spack.util.multiproc import parmap
-from spack.compiler import Compiler
-from spack.util.executable import which
 from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
 
 _imported_compilers_module = 'spack.compilers'
-_required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
+_required_instance_vars = ['cc', 'cxx', 'f77', 'fc', "environment"]
 
 # TODO: customize order in config file
 if platform.system() == 'Darwin':
@@ -65,7 +63,7 @@ def _auto_compiler_spec(function):
 def _to_dict(compiler):
     """Return a dict version of compiler suitable to insert in YAML."""
     return {
-        str(compiler.spec) : dict(
+        str(compiler.spec): dict(
             (attr, getattr(compiler, attr, None))
             for attr in _required_instance_vars)
     }
@@ -86,9 +84,7 @@ def get_compiler_config(arch=None, scope=None):
         for compiler in compilers:
             config[arch].update(_to_dict(compiler))
         spack.config.update_config('compilers', config, scope=scope)
-
     config = spack.config.get_config('compilers', scope=scope)
-
     # Update the configuration if there are currently no compilers
     # configured.  Avoid updating automatically if there ARE site
     # compilers configured but no user ones.
@@ -123,7 +119,7 @@ def add_compilers_to_config(compilers, arch=None, scope=None):
             (c, getattr(compiler, c, "None"))
             for c in _required_instance_vars)
 
-    update = { arch : compiler_config }
+    update = {arch: compiler_config}
     spack.config.update_config('compilers', update, scope)
 
 
@@ -141,7 +137,7 @@ def remove_compiler_from_config(compiler_spec, arch=None, scope=None):
 
     compiler_config = get_compiler_config(arch, scope)
     del compiler_config[str(compiler_spec)]
-    update = { arch : compiler_config }
+    update = {arch: compiler_config}
 
     spack.config.update_config('compilers', update, scope)
 
@@ -204,10 +200,9 @@ def find_compilers(*path):
     # the overhead of spelunking all these directories.
     types = all_compiler_types()
     compiler_lists = parmap(lambda cls: cls.find(*filtered_path), types)
-
     # ensure all the version calls we made are cached in the parent
     # process, as well.  This speeds up Spack a lot.
-    clist = reduce(lambda x,y: x+y, compiler_lists)
+    clist = reduce(lambda x,  y: x + y, compiler_lists)
     return clist
 
 
@@ -230,7 +225,8 @@ def supported(compiler_spec):
 def find(compiler_spec, arch=None, scope=None):
     """Return specs of available compilers that match the supplied
        compiler spec.  Return an list if nothing found."""
-    return [c for c in all_compilers(arch, scope) if c.satisfies(compiler_spec)]
+    return [c for c in all_compilers(arch, scope)
+            if c.satisfies(compiler_spec)]
 
 
 @_auto_compiler_spec
@@ -299,4 +295,5 @@ class InvalidCompilerConfigurationError(spack.error.SpackError):
 
 class NoCompilersError(spack.error.SpackError):
     def __init__(self):
-        super(NoCompilersError, self).__init__("Spack could not find any compilers!")
+        super(NoCompilersError, self).__init__("Spack could not " +
+                                               "find any compilers!")

@@ -42,6 +42,9 @@ compilers:
       cxx: /path/to/clang++
       f77: None
       fc: None
+      environment:
+        set:
+          LD_LIBRARY_PATH : empty/dir
     gcc@4.5.0:
       cc: /path/to/gcc
       cxx: /path/to/g++
@@ -62,6 +65,7 @@ packages:
       externalvirtual@1.0%gcc@4.5.0: /path/to/external_virtual_gcc
 """
 
+
 class MockPackagesTest(unittest.TestCase):
     def initmock(self):
         # Use the mock packages database for these tests.  This allows
@@ -79,7 +83,8 @@ class MockPackagesTest(unittest.TestCase):
         self.mock_user_config = os.path.join(self.temp_config, 'user')
         mkdirp(self.mock_site_config)
         mkdirp(self.mock_user_config)
-        for confs in [('compilers.yaml', mock_compiler_config), ('packages.yaml', mock_packages_config)]:
+        for confs in [('compilers.yaml', mock_compiler_config),
+                      ('packages.yaml', mock_packages_config)]:
             conf_yaml = os.path.join(self.mock_site_config, confs[0])
             with open(conf_yaml, 'w') as f:
                 f.write(confs[1])
@@ -93,7 +98,6 @@ class MockPackagesTest(unittest.TestCase):
         # Store changes to the package's dependencies so we can
         # restore later.
         self.saved_deps = {}
-
 
     def set_pkg_dep(self, pkg_name, spec):
         """Alters dependence information for a package.
@@ -109,8 +113,7 @@ class MockPackagesTest(unittest.TestCase):
             self.saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
 
         # Change dep spec
-        pkg.dependencies[spec.name] = { Spec(pkg_name) : spec }
-
+        pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
 
     def cleanmock(self):
         """Restore the real packages path after any test."""
@@ -124,10 +127,8 @@ class MockPackagesTest(unittest.TestCase):
             pkg.dependencies.clear()
             pkg.dependencies.update(deps)
 
-
     def setUp(self):
         self.initmock()
-
 
     def tearDown(self):
         self.cleanmock()
