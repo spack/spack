@@ -1,4 +1,5 @@
 from spack import *
+import os
 
 
 class Hub(Package):
@@ -16,7 +17,8 @@ class Hub(Package):
     extends("go")
 
     def install(self, spec, prefix):
-        os.environ['GOPATH'] = os.getcwd()
+        env = os.environ
+        env['GOPATH'] = self.stage.source_path + ':' + env['GOPATH']
         bash = which('bash')
         bash(os.path.join('script', 'build'), '-o', os.path.join(prefix, 'bin',
                                                                  'hub'))

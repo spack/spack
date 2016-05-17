@@ -15,5 +15,7 @@ class ThePlatinumSearcher(Package):
     extends("go")
 
     def install(self, spec, prefix):
-        go('install', self.package)
+        env = os.environ
+        env['GOPATH'] = self.stage.source_path + ':' + env['GOPATH']
+        go('install', self.package, env=env)
         shutil.copytree('bin', os.path.join(prefix, 'bin'))
