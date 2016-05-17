@@ -9,6 +9,7 @@ from spack import *
 # * have go depend on itself
 # * have a sensible way to find gccgo without a dep on gcc
 
+
 class GoBootstrap(Package):
     """Old C-bootstrapped go to bootstrap real go"""
     homepage = "https://golang.org"
@@ -48,4 +49,3 @@ class GoBootstrap(Package):
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)
-

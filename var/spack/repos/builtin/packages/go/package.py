@@ -78,5 +78,3 @@ class Go(Package):
         # Allow packages to find this when using module or dotkit
         run_env.prepend_path('GOPATH', ':'.join(
             [ext_spec.prefix] + path_components))
-
-
