@@ -119,7 +119,7 @@ class Openmpi(Package):
             '--enable-mpi-thread-multiple' if '+thread_multiple' in spec else '--disable-mpi-thread-multiple',
             '--with-pmi' if '+pmi' in spec else '--without-pmi',
             '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
-            '--disable-vt' if '-vt' in spec else '--enable-vt'
+            '--enable-vt' if '+vt' in spec else '--disable-vt'
         ])
 
         # TODO: use variants for this, e.g. +lanl, +llnl, etc.
