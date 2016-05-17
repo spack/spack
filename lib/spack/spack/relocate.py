@@ -57,7 +57,7 @@ def change_dylib(path_name, rpaths):
         return False
     last_cmd = None
     path = ''
-    deps = set()
+    deps = []
     for line in output.split('\n'):
         match = re.search('( *[a-zA-Z]+ )(.*)', line)
         if match:
@@ -68,38 +68,39 @@ def change_dylib(path_name, rpaths):
                 rhs = match2.group(1)
             if lhs == 'cmd':
                 last_cmd = rhs
-            if lhs == 'path' and last_cmd == 'LC_ID_DYLIB':
+            if lhs == 'name' and last_cmd == 'LC_ID_DYLIB':
                 path=rhs
-            if lhs == 'path' and last_cmd == 'LC_LOAD_DYLIB':
+            if lhs == 'name' and last_cmd == 'LC_LOAD_DYLIB':
                 deps.append(rhs)
-    id = None
-    ndeps = set()
+    id = path
+    ndeps = []
     for rpath in rpaths:
         if re.match(rpath,path):
-            id = '@rpath/' + re.split(rpath,path)[1]
+            id = '@rpath'+re.split(rpath,path)[1]
         for dep in deps:
             if re.match(rpath,dep):
-                ndep = '@rpath/' + re.split(rpath,dep)[1]
+                ndep = '@rpath'+re.split(rpath,dep)[1]
                 ndeps.append(ndep)
 
-    icommand = which("install_name_tool")
+    st = os.stat(path_name)
+    wmode = os.access(path_name, os.W_OK)
+    if not wmode:
+        os.chmod(path_name, st.st_mode | stat.S_IWUSR)
 
     if id :
-        output = icommand("-id ", "%s" % id,
-                     "%s" % path_name,
-                     output=str,
-                     err=str)
-        if icommand.returncode != 0:
+        command = ("install_name_tool -id  %s  %s" % (id,path_name) )
+        status, output = getstatusoutput(command)
+        if status != 0:
             tty.warn('failed writing id for %s.' % path_name)
-
+            tty.warn(output)
     for orig, new in zip(deps, ndeps):
-        output = icommand("-change ", "%s" % orig,
-                         "%s" % new,
-                         "%s" % path_name,
-                         output=str,
-                         err=str)
-        if icommand.returncode != 0:
+        command = ("install_name_tool -change  %s %s %s" % 
+                         (orig, new, path_name))
+        status, output = getstatusoutput(command)
+        if status != 0:
             tty.warn('failed writing dep for %s.' % path_name)
+            tty.warn(output)
+    os.chmod(path_name, st.st_mode)
     return
 
 
@@ -134,7 +135,6 @@ def modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable):
                              err=str)
             if command.returncode != 0:
                 tty.warn('failed writing rpath for %s.' % path_name)
-        change_dylib(path_name,orig_rpath)
     elif platform.system() == 'Linux':
         new_joined = ':'.join(new_rpath)
         command = "%s --force-rpath --set-rpath '%s' '%s'" % \
@@ -177,6 +177,8 @@ def relocate_binary(path_name, old_dir, new_dir, patchelf_executable):
     orig_rpath = get_existing_rpath(path_name, patchelf_executable)
     new_rpath  = substitute_rpath(orig_rpath, old_dir, new_dir)
     modify_rpath(path_name, orig_rpath, new_rpath, patchelf_executable)
+    if platform.system() == 'Darwin':
+       change_dylib(path_name, orig_rpath)
 
 
 def relocate_text(path_name, old_dir, new_dir):
