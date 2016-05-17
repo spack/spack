@@ -35,6 +35,7 @@ class Tbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # Only version-specific URL's work for TBB
+    version('4.4.4', 'd4cee5e4ca75cab5181834877738619c56afeb71', url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160413oss_src.tgz')
     version('4.4.3', '80707e277f69d9b20eeebdd7a5f5331137868ce1', url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160128oss_src_0.tgz')
 
     def coerce_to_spack(self,tbb_build_subdir):
@@ -54,8 +55,10 @@ class Tbb(Package):
                         of.write(l);
 
     def install(self, spec, prefix):
-        #
-        # we need to follow TBB's compiler selection logic to get the proper build + link flags
+        if spec.satisfies('%gcc@6.1:') and spec.satisfies('@:4.4.3'):
+          raise InstallError('Only TBB 4.4.4 and above build with GCC 6.1!')
+
+        # We need to follow TBB's compiler selection logic to get the proper build + link flags
         # but we still need to use spack's compiler wrappers
         # to accomplish this, we do two things:
         #
