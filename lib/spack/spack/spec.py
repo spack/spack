@@ -1071,6 +1071,11 @@ class Spec(object):
         # If there is a provider for the vpkg, then use that instead of
         # the virtual package.
         if providers:
+            # Remove duplicate providers that can concretize to the same result.
+            for provider in providers:
+                for spec in providers:
+                    if spec is not provider and provider.satisfies(spec):
+                        providers.remove(spec)
             # Can't have multiple providers for the same thing in one spec.
             if len(providers) > 1:
                 raise MultipleProviderError(vdep, providers)
