@@ -102,9 +102,16 @@ class Hpl(Package):
                 makefile.write('{0}\n'.format(var))
 
     def install(self, spec, prefix):
+        # Arch used for file naming purposes only
         arch = '{0}-{1}'.format(platform.system(), platform.processor())
 
+        # Generate Makefile include
         self.configure(spec, arch)
 
         make('arch={0}'.format(arch))
+
+        # Manual installation
         install_tree(join_path('bin', arch), prefix.bin)
+        install_tree(join_path('lib', arch), prefix.lib)
+        install_tree(join_path('include', arch), prefix.include)
+        install_tree('man', prefix.man)
