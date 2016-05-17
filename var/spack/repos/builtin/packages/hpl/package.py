@@ -81,7 +81,7 @@ class Hpl(Package):
             'F2CDEFS      = -DAdd_ -DF77_INTEGER=int -DStringSunStyle',
             # HPL includes / libraries / specifics
             'HPL_INCLUDES = -I$(INCdir) -I$(INCdir)/$(ARCH) ' +
-                            '-I$(LAinc) -I$(MPinc)',
+            '-I$(LAinc) -I$(MPinc)',
             'HPL_LIBS     = $(HPLlib) $(LAlib) $(MPlib)',
             'HPL_OPTS     = -DHPL_DETAILED_TIMING -DHPL_PROGRESS_REPORT',
             'HPL_DEFS     = $(F2CDEFS) $(HPL_OPTS) $(HPL_INCLUDES)',
@@ -100,7 +100,6 @@ class Hpl(Package):
         with open('Make.{0}'.format(arch), 'w') as makefile:
             for var in config:
                 makefile.write('{0}\n'.format(var))
-
 
     def install(self, spec, prefix):
         arch = '{0}-{1}'.format(platform.system(), platform.processor())
