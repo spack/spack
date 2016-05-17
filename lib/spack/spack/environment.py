@@ -39,7 +39,8 @@ class NameValueModifier(object):
     def __init__(self, name, value, **kwargs):
         self.name = name
         self.value = value
-        self.args = {'name': name, 'value': value}
+        self.separator = kwargs.get('separator', ':')
+        self.args = {'name': name, 'value': value, 'delim': self.separator}
         self.args.update(kwargs)
 
 
@@ -56,34 +57,36 @@ class UnsetEnv(NameModifier):
 
 class SetPath(NameValueModifier):
     def execute(self):
-        string_path = concatenate_paths(self.value)
+        string_path = concatenate_paths(self.value, separator=self.separator)
         os.environ[self.name] = string_path
 
 
 class AppendPath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(':') if environment_value else []
+        directories = environment_value.split(
+            self.separator) if environment_value else []
         directories.append(os.path.normpath(self.value))
-        os.environ[self.name] = ':'.join(directories)
+        os.environ[self.name] = self.separator.join(directories)
 
 
 class PrependPath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(':') if environment_value else []
+        directories = environment_value.split(
+            self.separator) if environment_value else []
         directories = [os.path.normpath(self.value)] + directories
-        os.environ[self.name] = ':'.join(directories)
+        os.environ[self.name] = self.separator.join(directories)
 
 
 class RemovePath(NameValueModifier):
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(':') if environment_value else []
-        directories = [os.path.normpath(x)
-                       for x in directories
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        directories = [os.path.normpath(x) for x in directories
                        if x != os.path.normpath(self.value)]
-        os.environ[self.name] = ':'.join(directories)
+        os.environ[self.name] = self.separator.join(directories)
 
 
 class EnvironmentModifications(object):
@@ -238,17 +241,19 @@ class EnvironmentModifications(object):
                 x.execute()
 
 
-def concatenate_paths(paths):
+def concatenate_paths(paths, separator=':'):
     """
-    Concatenates an iterable of paths into a  string of column separated paths
+    Concatenates an iterable of paths into a string of paths separated by
+    separator, defaulting to colon
 
     Args:
         paths: iterable of paths
+        separator: the separator to use, default ':'
 
     Returns:
         string
     """
-    return ':'.join(str(item) for item in paths)
+    return separator.join(str(item) for item in paths)
 
 
 def set_or_unset_not_first(variable, changes, errstream):
@@ -256,16 +261,13 @@ def set_or_unset_not_first(variable, changes, errstream):
     Check if we are going to set or unset something after other modifications
     have already been requested
     """
-    indexes = [ii
-               for ii, item in enumerate(changes)
+    indexes = [ii for ii, item in enumerate(changes)
                if ii != 0 and type(item) in [SetEnv, UnsetEnv]]
     if indexes:
         good = '\t    \t{context} at {filename}:{lineno}'
         nogood = '\t--->\t{context} at {filename}:{lineno}'
         message = 'Suspicious requests to set or unset the variable \'{var}\' found'  # NOQA: ignore=E501
-        errstream(
-            message.format(
-                var=variable))
+        errstream(message.format(var=variable))
         for ii, item in enumerate(changes):
             print_format = nogood if ii in indexes else good
             errstream(print_format.format(**item.args))
