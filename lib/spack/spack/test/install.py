@@ -26,6 +26,7 @@ import shutil
 import tempfile
 
 import spack
+import spack.install_area
 from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
@@ -48,9 +49,8 @@ class InstallTest(MockPackagesTest):
         # Use a fake install directory to avoid conflicts bt/w
         # installed pkgs and mock packages.
         self.tmpdir = tempfile.mkdtemp()
-        self.orig_layout = spack.install_layout
-        spack.install_layout = YamlDirectoryLayout(self.tmpdir)
-
+        self.orig_layout = spack.install_area.layout
+        spack.install_area.layout = YamlDirectoryLayout(self.tmpdir)
 
     def tearDown(self):
         super(InstallTest, self).tearDown()
@@ -60,16 +60,14 @@ class InstallTest(MockPackagesTest):
         spack.do_checksum = True
 
         # restore spack's layout.
-        spack.install_layout = self.orig_layout
+        spack.install_area.layout = self.orig_layout
         shutil.rmtree(self.tmpdir, ignore_errors=True)
-
 
     def fake_fetchify(self, pkg):
         """Fake the URL for a package so it downloads from a file."""
         fetcher = FetchStrategyComposite()
         fetcher.append(URLFetchStrategy(self.repo.url))
         pkg.fetcher = fetcher
-
 
     def ztest_install_and_uninstall(self):
         # Get a basic concrete spec for the trivial install package.
@@ -89,8 +87,7 @@ class InstallTest(MockPackagesTest):
             pkg.remove_prefix()
             raise
 
-
-    def test_install_environment(self):
+    def test_install_area(self):
         spec = Spec('cmake-client').concretized()
 
         for s in spec.traverse():

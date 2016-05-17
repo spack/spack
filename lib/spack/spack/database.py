@@ -40,7 +40,6 @@ filesystem.
 
 """
 import os
-import time
 import socket
 
 import yaml
@@ -51,10 +50,10 @@ from llnl.util.filesystem import *
 from llnl.util.lock import *
 
 import spack.spec
+import spack.install_area
 from spack.version import Version
-from spack.spec import Spec
 from spack.error import SpackError
-from spack.repository import UnknownPackageError
+import spack.repository
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -204,7 +203,7 @@ class Database(object):
         spec_dict = installs[hash_key]['spec']
 
         # Build spec from dict first.
-        spec = Spec.from_node_dict(spec_dict)
+        spec = spack.spec.Spec.from_node_dict(spec_dict)
 
         # Add dependencies from other records in the install DB to
         # form a full spec.
@@ -367,7 +366,7 @@ class Database(object):
         else:
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
-            self.reindex(spack.install_layout)
+            self.reindex(spack.install_area.layout)
 
 
     def _add(self, spec, path, directory_layout=None):
@@ -507,7 +506,7 @@ class Database(object):
             try:
                 if s.package.extends(extendee_spec):
                     yield s.package
-            except UnknownPackageError as e:
+            except spack.repository.UnknownPackageError as e:
                 continue
             # skips unknown packages
             # TODO: conditional way to do this instead of catching exceptions

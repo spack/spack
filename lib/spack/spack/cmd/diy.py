@@ -30,10 +30,12 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
+import spack.install_area
 from spack.cmd.edit import edit_package
 from spack.stage import DIYStage
 
 description = "Do-It-Yourself: build from an existing source directory."
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -62,7 +64,7 @@ def diy(self, args):
         tty.die("spack diy only takes one spec.")
 
     # Take a write lock before checking for existence.
-    with spack.installed_db.write_transaction():
+    with spack.install_area.db.write_transaction():
         spec = specs[0]
         if not spack.repo.exists(spec.name):
             tty.warn("No such package: %s" % spec.name)
@@ -76,14 +78,16 @@ def diy(self, args):
                 return
 
         if not spec.versions.concrete:
-            tty.die("spack diy spec must have a single, concrete version.  Did you forget a package version number?")
+            tty.die("spack diy spec must have a single, concrete version. " +
+                    "Did you forget a package version number?")
 
         spec.concretize()
         package = spack.repo.get(spec)
 
         if package.installed:
             tty.error("Already installed in %s" % package.prefix)
-            tty.msg("Uninstall or try adding a version suffix for this DIY build.")
+            tty.msg("Uninstall or try adding a version suffix " +
+                    "for this DIY build.")
             sys.exit(1)
 
         # Forces the build to run out of the current directory.

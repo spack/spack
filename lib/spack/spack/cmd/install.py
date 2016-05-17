@@ -28,8 +28,10 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
+import spack.install_area
 
 description = "Build and install packages"
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -52,9 +54,11 @@ def setup_parser(subparser):
         help="Display verbose build output while installing.")
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
-        help="Fake install.  Just remove the prefix and touch a fake file in it.")
+        help="Fake install. Just remove the prefix and touch " +
+             "a fake file in it.")
     subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
+        'packages', nargs=argparse.REMAINDER,
+        help="specs of packages to install")
 
 
 def install(parser, args):
@@ -71,7 +75,7 @@ def install(parser, args):
     specs = spack.cmd.parse_specs(args.packages, concretize=True)
     for spec in specs:
         package = spack.repo.get(spec)
-        with spack.installed_db.write_transaction():
+        with spack.install_area.db.write_transaction():
             package.do_install(
                 keep_prefix=args.keep_prefix,
                 keep_stage=args.keep_stage,

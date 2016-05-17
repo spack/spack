@@ -356,6 +356,23 @@ section_schemas = {
             },
         },
     },
+    'install': {
+        '$schema': 'http://json-schema.org/schema#',
+        'title': 'Spack module file configuration file schema',
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            'install': {
+                'type': 'object',
+                'default' : {},
+                'additionalProperties': False,
+                'properties': {
+                    'path' : { 'type': 'string' },
+                    'layout' : { 'type': 'string' }
+                }
+            },
+        },
+    }
 }
 
 """OrderedDict of config scopes keyed by name.

@@ -32,11 +32,12 @@ from llnl.util.lang import attr_setdefault
 import spack
 import spack.spec
 import spack.config
-
+import spack.install_area
 #
 # Settings for commands that modify configuration
 #
-# Commands that modify confguration By default modify the *highest* priority scope.
+# Commands that modify confguration.
+# By default modify the *highest* priority scope.
 default_modify_scope = spack.config.highest_precedence_scope().name
 # Commands that list confguration list *all* scopes by default.
 default_list_scope = None
@@ -71,7 +72,7 @@ def get_module(name):
         module_name, fromlist=[name, SETUP_PARSER, DESCRIPTION],
         level=0)
 
-    attr_setdefault(module, SETUP_PARSER, lambda *args: None) # null-op
+    attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
 
     fn_name = get_cmd_function_name(name)
@@ -101,7 +102,7 @@ def parse_specs(args, **kwargs):
         specs = spack.spec.parse(args)
         for spec in specs:
             if concretize:
-                spec.concretize() # implies normalize
+                spec.concretize()  # implies normalize
             elif normalize:
                 spec.normalize()
 
@@ -127,18 +128,18 @@ def elide_list(line_list, max_num=10):
            [1, 2, 3, '...', 6]
     """
     if len(line_list) > max_num:
-        return line_list[:max_num-1] + ['...'] + line_list[-1:]
+        return line_list[:max_num - 1] + ['...'] + line_list[-1:]
     else:
         return line_list
 
 
 def disambiguate_spec(spec):
-    matching_specs = spack.installed_db.query(spec)
+    matching_specs = spack.install_area.db.query(spec)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
     elif len(matching_specs) > 1:
-        args =  ["%s matches multiple packages." % spec,
+        args  = ["%s matches multiple packages." % spec,
                  "Matching packages:"]
         args += ["  " + str(s) for s in matching_specs]
         args += ["Use a more specific spec."]

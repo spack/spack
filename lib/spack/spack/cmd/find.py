@@ -23,10 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
-import collections
-import itertools
 import argparse
-from StringIO import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import *
@@ -35,8 +32,9 @@ from llnl.util.lang import *
 
 import spack
 import spack.spec
+import spack.install_area
+description = "Find installed spack packages"
 
-description ="Find installed spack packages"
 
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
@@ -94,14 +92,15 @@ def display_specs(specs, **kwargs):
 
     # Traverse the index and print out each package
     for i, (architecture, compiler) in enumerate(sorted(index)):
-        if i > 0: print
+        if i > 0:
+            print
 
         header = "%s{%s} / %s{%s}" % (
             spack.spec.architecture_color, architecture,
             spack.spec.compiler_color, compiler)
         tty.hline(colorize(header), char='-')
 
-        specs = index[(architecture,compiler)]
+        specs = index[(architecture, compiler)]
         specs.sort()
 
         nfmt = '.' if namespace else '_'
@@ -137,8 +136,8 @@ def display_specs(specs, **kwargs):
 
         else:
             raise ValueError(
-                "Invalid mode for display_specs: %s. Must be one of (paths, deps, short)." % mode)
-
+                "Invalid mode for display_specs: " +
+                "%s. Must be one of (paths, deps, short)." % mode)
 
 
 def find(parser, args):
@@ -163,13 +162,14 @@ def find(parser, args):
         installed = any
     if args.unknown:
         known = False
-    q_args = { 'installed' : installed, 'known' : known }
+    q_args = {'installed': installed, 'known': known}
 
     # Get all the specs the user asked for
     if not query_specs:
-        specs = set(spack.installed_db.query(**q_args))
+        specs = set(spack.install_area.db.query(**q_args))
     else:
-        results = [set(spack.installed_db.query(qs, **q_args)) for qs in query_specs]
+        results = [set(spack.install_area.db.query(qs, **q_args))
+                   for qs in query_specs]
         specs = set.union(*results)
 
     if not args.mode:

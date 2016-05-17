@@ -27,9 +27,11 @@ import llnl.util.tty as tty
 
 import spack
 import spack.cmd
+import spack.install_area
 from spack.graph import topological_sort
 
 description = "Deactivate a package extension."
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -40,7 +42,8 @@ def setup_parser(subparser):
         help="Deactivate all extensions of an extendable package, or "
         "deactivate an extension AND its dependencies.")
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="spec of package extension to deactivate.")
+        'spec', nargs=argparse.REMAINDER,
+        help="spec of package extension to deactivate.")
 
 
 def deactivate(parser, args):
@@ -54,7 +57,7 @@ def deactivate(parser, args):
     if args.all:
         if pkg.extendable:
             tty.msg("Deactivating all extensions of %s" % pkg.spec.short_spec)
-            ext_pkgs = spack.installed_db.installed_extensions_for(spec)
+            ext_pkgs = spack.install_area.db.installed_extensions_for(spec)
 
             for ext_pkg in ext_pkgs:
                 ext_pkg.spec.normalize()
@@ -65,7 +68,8 @@ def deactivate(parser, args):
             if not args.force and not spec.package.activated:
                 tty.die("%s is not activated." % pkg.spec.short_spec)
 
-            tty.msg("Deactivating %s and all dependencies." % pkg.spec.short_spec)
+            tty.msg("Deactivating %s and all dependencies."
+                    % pkg.spec.short_spec)
 
             topo_order = topological_sort(spec)
             index = spec.index()
@@ -79,7 +83,8 @@ def deactivate(parser, args):
                         epkg.do_deactivate(force=args.force)
 
         else:
-            tty.die("spack deactivate --all requires an extendable package or an extension.")
+            tty.die("spack deactivate --all requires an " +
+                    "extendable package or an extension.")
 
     else:
         if not pkg.is_extension:

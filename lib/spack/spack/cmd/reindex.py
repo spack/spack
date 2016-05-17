@@ -22,10 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
 import spack
-
+import spack.install_area
 description = "Rebuild Spack's package database."
 
+
 def reindex(parser, args):
-    spack.installed_db.reindex(spack.install_layout)
+    spack.install_area.db.reindex(spack.install_area.layout)
