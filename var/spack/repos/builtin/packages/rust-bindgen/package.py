@@ -7,6 +7,8 @@ class RustBindgen(Package):
     homepage = "http://www.rust-lang.org"
     url = "https://github.com/crabtw/rust-bindgen"
 
+    version('0.16', tag='0.16', git='https://github.com/crabtw/rust-bindgen')
+
     extends("rust")
 
     def install(self, spec, prefix):
