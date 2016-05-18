@@ -717,8 +717,9 @@ class Spec(object):
         else:
             spec.compiler = CompilerSpec.from_dict(node)
 
-        for name, enabled in node['variants'].items():
-            spec.variants[name] = VariantSpec(name, enabled)
+        if 'variants' in node:
+            for name, enabled in node['variants'].items():
+                spec.variants[name] = VariantSpec(name, enabled)
 
         return spec
 
