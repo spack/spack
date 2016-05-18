@@ -116,10 +116,16 @@ abi = ABI()
 # policies.
 concretizer = DefaultConcretizer()
 
+<<<<<<< 2704ab71bffabac7b5622f6a12e670ad5aaff8bc
 #-----------------------------------------------------------------------------
 # config.yaml options
 #-----------------------------------------------------------------------------
 _config = spack.config.get_config('config')
+=======
+# Version information
+from spack.version import Version
+spack_version = Version("0.9.1")
+>>>>>>> Version bump to 0.9.1
 
 
 # Path where downloaded source code is cached
