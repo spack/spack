@@ -1,54 +1,52 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import argparse
 import sys
-from external import argparse
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
-from llnl.util.tty.colify import colify
-from llnl.util.lang import index_by
-
-import spack.architecture
-import spack.compiler
 import spack.compilers
-import spack.spec
 import spack.config
-from spack.util.environment import get_path
+import spack.spec
+from llnl.util.lang import index_by
+from llnl.util.tty.colify import colify
+from llnl.util.tty.color import colorize
 from spack.spec import CompilerSpec
+from spack.util.environment import get_path
 
 description = "Manage compilers"
 
 def setup_parser(subparser):
-    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='compiler_command')
+    sp = subparser.add_subparsers(
+        metavar='SUBCOMMAND', dest='compiler_command')
 
     scopes = spack.config.config_scopes
 
-    # Add
-    add_parser = sp.add_parser('add', help='Add compilers to the Spack configuration.')
-    add_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
-    add_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+    # Find
+    find_parser = sp.add_parser('find', aliases=['add'], help='Search the system for compilers to add to the Spack configuration.')
+    find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
+    find_parser.add_argument('--scope', choices=scopes, default=spack.cmd.default_modify_scope,
                             help="Configuration scope to modify.")
 
     # Remove
@@ -74,13 +72,11 @@ def setup_parser(subparser):
 def compiler_add(args):
     """Search either $PATH or a list of paths OR MODULES for compilers and add them
        to Spack's configuration."""
-
-
-    paths = args.add_paths # This might be a parser method. Parsing method to add_paths
+    paths = args.add_paths
     if not paths:
         paths = get_path('PATH')
 
-    compilers = [c for c in spack.compilers.find_compilers(*paths)
+    compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
                  if c.spec not in spack.compilers.all_compilers(scope=args.scope)]
 
     if compilers:

@@ -419,7 +419,7 @@ directory to the directory containing the downloaded archive before it
 calls your ``install`` method.  Within ``install``, the path to the
 downloaded archive is available as ``self.stage.archive_file``.
 
-Here is an example snippet for packages distribuetd as self-extracting
+Here is an example snippet for packages distributed as self-extracting
 archives.  The example sets permissions on the downloaded file to make
 it executable, then runs it with some arguments.
 
@@ -702,6 +702,127 @@ Fetching a revision
 
 Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the ``url``.
+
+
+.. _license:
+
+Licensed software
+------------------------------------------
+
+In order to install licensed software, Spack needs to know a few more
+details about a package. The following class attributes should be defined.
+
+``license_required``
+~~~~~~~~~~~~~~~~~~~~~
+
+Boolean. If set to ``True``, this software requires a license. If set to
+``False``, all of the following attributes will be ignored. Defaults to
+``False``.
+
+``license_comment``
+~~~~~~~~~~~~~~~~~~~~~
+
+String. Contains the symbol used by the license manager to denote a comment.
+Defaults to ``#``.
+
+``license_files``
+~~~~~~~~~~~~~~~~~~~~~
+
+List of strings. These are files that the software searches for when
+looking for a license. All file paths must be relative to the installation
+directory. More complex packages like Intel may require multiple
+licenses for individual components. Defaults to the empty list.
+
+``license_vars``
+~~~~~~~~~~~~~~~~~~~~~
+
+List of strings. Environment variables that can be set to tell the software
+where to look for a license if it is not in the usual location. Defaults
+to the empty list.
+
+``license_url``
+~~~~~~~~~~~~~~~~~~~~~
+
+String. A URL pointing to license setup instructions for the software.
+Defaults to the empty string.
+
+For example, let's take a look at the package for the PGI compilers.
+
+.. code-block:: python
+
+    # Licensing
+    license_required = True
+    license_comment  = '#'
+    license_files    = ['license.dat']
+    license_vars     = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
+    license_url      = 'http://www.pgroup.com/doc/pgiinstall.pdf'
+
+As you can see, PGI requires a license. Its license manager, FlexNet, uses
+the ``#`` symbol to denote a comment. It expects the license file to be
+named ``license.dat`` and to be located directly in the installation prefix.
+If you would like the installation file to be located elsewhere, simply set
+``PGROUPD_LICENSE_FILE`` or ``LM_LICENSE_FILE`` after installation. For
+further instructions on installation and licensing, see the URL provided.
+
+Let's walk through a sample PGI installation to see exactly what Spack is
+and isn't capable of. Since PGI does not provide a download URL, it must
+be downloaded manually. It can either be added to a mirror or located in
+the current directory when ``spack install pgi`` is run. See :ref:`mirrors`
+for instructions on setting up a mirror.
+
+After running ``spack install pgi``, the first thing that will happen is
+Spack will create a global license file located at
+``$SPACK_ROOT/etc/spack/licenses/pgi/license.dat``. It will then open up the
+file using the editor set in ``$EDITOR``, or vi if unset. It will look like
+this:
+
+.. code-block::
+
+    # A license is required to use pgi.
+    #
+    # The recommended solution is to store your license key in this global
+    # license file. After installation, the following symlink(s) will be
+    # added to point to this file (relative to the installation prefix):
+    #
+    #   license.dat
+    #
+    # Alternatively, use one of the following environment variable(s):
+    #
+    #   PGROUPD_LICENSE_FILE
+    #   LM_LICENSE_FILE
+    #
+    # If you choose to store your license in a non-standard location, you may
+    # set one of these variable(s) to the full pathname to the license file, or
+    # port@host if you store your license keys on a dedicated license server.
+    # You will likely want to set this variable in a module file so that it
+    # gets loaded every time someone tries to use pgi.
+    #
+    # For further information on how to acquire a license, please refer to:
+    #
+    #   http://www.pgroup.com/doc/pgiinstall.pdf
+    #
+    # You may enter your license below.
+
+You can add your license directly to this file, or tell FlexNet to use a
+license stored on a separate license server. Here is an example that
+points to a license server called licman1:
+
+.. code-block::
+
+    SERVER licman1.mcs.anl.gov 00163eb7fba5 27200
+    USE_SERVER
+
+If your package requires the license to install, you can reference the
+location of this global license using ``self.global_license_file``.
+After installation, symlinks for all of the files given in
+``license_files`` will be created, pointing to this global license.
+If you install a different version or variant of the package, Spack
+will automatically detect and reuse the already existing global license.
+
+If the software you are trying to package doesn't rely on license files,
+Spack will print a warning message, letting the user know that they
+need to set an environment variable or pointing them to installation
+documentation.
 
 .. _patching:
 
@@ -1556,14 +1677,14 @@ you ask for a particular spec.
 ``Concretization Policies``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A user may have certain perferrences for how packages should
+A user may have certain preferences for how packages should
 be concretized on their system.  For example, one user may prefer packages
 built with OpenMPI and the Intel compiler.  Another user may prefer
-packages be built with MVAPICH and GCC.  
+packages be built with MVAPICH and GCC.
 
-Spack can be configurated to prefer certain compilers, package
+Spack can be configured to prefer certain compilers, package
 versions, depends_on, and variants during concretization.
-The preferred configuration can be controlled via the 
+The preferred configuration can be controlled via the
 ``~/.spack/packages.yaml`` file for user configuations, or the
 ``etc/spack/packages.yaml`` site configuration.
 
@@ -1582,32 +1703,32 @@ Here's an example packages.yaml file that sets preferred packages:
         compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
         providers:
           mpi: [mvapich, mpich, openmpi]
-          
+
 
 At a high level, this example is specifying how packages should be
-concretized.  The dyninst package should prefer using gcc 4.9 and 
+concretized.  The dyninst package should prefer using gcc 4.9 and
 be built with debug options.  The gperftools package should prefer version
 2.2 over 2.4.  Every package on the system should prefer mvapich for
-its MPI and gcc 4.4.7 (except for Dyninst, which overrides this by perfering gcc 4.9).  
-These options are used to fill in implicit defaults.  Any of them can be overwritten 
+its MPI and gcc 4.4.7 (except for Dyninst, which overrides this by preferring gcc 4.9).
+These options are used to fill in implicit defaults.  Any of them can be overwritten
 on the command line if explicitly requested.
 
-Each packages.yaml file begin with the string ``packages:`` and 
+Each packages.yaml file begins with the string ``packages:`` and
 package names are specified on the next level. The special string ``all``
-applies settings to each package. Underneath each package name is 
-one or more components: ``compiler``, ``variants``, ``version``, 
-or ``providers``.  Each component has an ordered list of spec 
-``constraints``, with earlier entries in the list being prefered over
+applies settings to each package. Underneath each package name is
+one or more components: ``compiler``, ``variants``, ``version``,
+or ``providers``.  Each component has an ordered list of spec
+``constraints``, with earlier entries in the list being preferred over
 later entries.
 
-Sometimes a package installation may have constraints that forbid 
+Sometimes a package installation may have constraints that forbid
 the first concretization rule, in which case Spack will use the first
 legal concretization rule.  Going back to the example, if a user
-requests gperftools 2.3 or later, then Spack will install version 2.4 
+requests gperftools 2.3 or later, then Spack will install version 2.4
 as the 2.4 version of gperftools is preferred over 2.3.
 
-An explicit concretization rule in the preferred section will always 
-take preference over unlisted concretizations.  In the above example, 
+An explicit concretization rule in the preferred section will always
+take preference over unlisted concretizations.  In the above example,
 xlc isn't listed in the compiler list.  Every listed compiler from
 gcc to pgi will thus be preferred over the xlc compiler.
 
@@ -1803,15 +1924,15 @@ Compile-time library search paths
   * ``-L$dep_prefix/lib``
   * ``-L$dep_prefix/lib64``
 Runtime library search paths (RPATHs)
-  * ``-Wl,-rpath,$dep_prefix/lib``
-  * ``-Wl,-rpath,$dep_prefix/lib64``
+  * ``$rpath_flag$dep_prefix/lib``
+  * ``$rpath_flag$dep_prefix/lib64``
 Include search paths
   * ``-I$dep_prefix/include``
 
 An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
 build will have ``-I$LIBELF_PREFIX/include``,
-``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath,$LIBELF_PREFIX/lib``
+``-L$LIBELF_PREFIX/lib``, and ``$rpath_flag$LIBELF_PREFIX/lib``
 inserted on the command line.  This is done transparently to the
 project's build system, which will just think it's using a system
 where ``libelf`` is readily available.  Because of this, you **do
@@ -1831,6 +1952,48 @@ successfully find ``libdwarf.h`` and ``libdwarf.so``, without the
 packager having to provide ``--with-libdwarf=/path/to/libdwarf`` on
 the command line.
 
+.. note::
+
+    For most compilers, ``$rpath_flag`` is ``-Wl,-rpath,``. However, NAG
+    passes its flags to GCC instead of passing them directly to the linker.
+    Therefore, its ``$rpath_flag`` is doubly wrapped: ``-Wl,-Wl,,-rpath,``.
+    ``$rpath_flag`` can be overriden on a compiler specific basis in
+    ``lib/spack/spack/compilers/$compiler.py``.
+
+Compiler flags
+~~~~~~~~~~~~~~
+In rare circumstances such as compiling and running small unit tests, a package
+developer may need to know what are the appropriate compiler flags to enable
+features like ``OpenMP``, ``c++11``, ``c++14`` and alike. To that end the
+compiler classes in ``spack`` implement the following _properties_ :
+``openmp_flag``, ``cxx11_flag``, ``cxx14_flag``, which can be accessed in a
+package by ``self.compiler.cxx11_flag`` and alike. Note that the implementation
+is such that if a given compiler version does not support this feature, an
+error will be produced. Therefore package developers can also use these properties
+to assert that a compiler supports the requested feature. This is handy when a
+package supports additional variants like
+
+.. code-block:: python
+
+   variant('openmp', default=True, description="Enable OpenMP support.")
+
+Message Parsing Interface (MPI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It is common for high performance computing software/packages to use ``MPI``.
+As a result of conretization, a given package can be built using different
+implementations of MPI such as ``Openmpi``, ``MPICH`` or ``IntelMPI``.
+In some scenarios to configure a package one have to provide it with appropriate MPI
+compiler wrappers such as ``mpicc``, ``mpic++``.
+However different implementations of ``MPI`` may have different names for those
+wrappers.  In order to make package's ``install()`` method indifferent to the
+choice ``MPI`` implementation, each package which implements ``MPI`` sets up
+``self.spec.mpicc``, ``self.spec.mpicxx``, ``self.spec.mpifc`` and ``self.spec.mpif77``
+to point to ``C``, ``C++``, ``Fortran 90`` and ``Fortran 77`` ``MPI`` wrappers.
+Package developers are advised to use these variables, for example ``self.spec['mpi'].mpicc``
+instead of hard-coding ``join_path(self.spec['mpi'].prefix.bin, 'mpicc')`` for
+the reasons outlined above.
+
+
 Forking ``install()``
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -1843,6 +2006,20 @@ modify Spack internals, because each ``install()`` call has its own
 dedicated process.
 
 .. _prefix-objects:
+
+
+Failing the build
+----------------------
+
+Sometimes you don't want a package to successfully install unless some
+condition is true.  You can explicitly cause the build to fail from
+``install()`` by raising an ``InstallError``, for example:
+
+.. code-block:: python
+
+   if spec.architecture.startswith('darwin'):
+       raise InstallError('This package does not build on Mac OS X!')
+
 
 Prefix objects
 ----------------------
@@ -2158,6 +2335,62 @@ a package file, you can supply a keyword argument, ``parallel=False``,
 to the ``make`` wrapper to disable parallel make.  In the ``libelf``
 package, this allows us to avoid race conditions in the library's
 build system.
+
+
+.. _sanity-checks:
+
+Sanity checking an intallation
+--------------------------------
+
+By default, Spack assumes that a build has failed if nothing is
+written to the install prefix, and that it has succeeded if anything
+(a file, a directory, etc.)  is written to the install prefix after
+``install()`` completes.
+
+Consider a simple autotools build like this:
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       configure("--prefix=" + prefix)
+       make()
+       make("install")
+
+If you are using using standard autotools or CMake, ``configure`` and
+``make`` will not write anything to the install prefix.  Only ``make
+install`` writes the files, and only once the build is already
+complete.  Not all builds are like this.  Many builds of scientific
+software modify the install prefix *before* ``make install``. Builds
+like this can falsely report that they were successfully installed if
+an error occurs before the install is complete but after files have
+been written to the ``prefix``.
+
+
+``sanity_check_is_file`` and ``sanity_check_is_dir``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can optionally specify *sanity checks* to deal with this problem.
+Add properties like this to your package:
+
+.. code-block:: python
+
+   class MyPackage(Package):
+       ...
+
+       sanity_check_is_file = ['include/libelf.h']
+       sanity_check_is_dir  = [lib]
+
+       def install(self, spec, prefix):
+           configure("--prefix=" + prefix)
+           make()
+           make("install")
+
+Now, after ``install()`` runs, Spack will check whether
+``$prefix/include/libelf.h`` exists and is a file, and whether
+``$prefix/lib`` exists and is a directory.  If the checks fail, then
+the build will fail and the install prefix will be removed.  If they
+succeed, Spack considers the build succeeful and keeps the prefix in
+place.
 
 
 .. _file-manipulation:

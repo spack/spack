@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
 import re
@@ -92,27 +92,60 @@ class Compiler(object):
     # version suffix for gcc.
     suffixes = [r'-.*']
 
-    # Names of generic arguments used by this compiler
-    arg_rpath   = '-Wl,-rpath,%s'
+    # Default flags used by a compiler to set an rpath
+    @property
+    def cc_rpath_arg(self):
+        return '-Wl,-rpath,'
 
-    # argument used to get C++11 options
-    cxx11_flag = "-std=c++11"
+    @property
+    def cxx_rpath_arg(self):
+        return '-Wl,-rpath,'
 
+#ifdef NEW
+    @property
+    def f77_rpath_arg(self):
+        return '-Wl,-rpath,'
 
+    @property
+    def fc_rpath_arg(self):
+        return '-Wl,-rpath,'
+#else /* not NEW */
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv = None
 
     # Name of module used to switch versions of this compiler
     PrgEnv_compiler = None
+#endif /* not NEW */
 
+#ifdef NEW
+
+    def __init__(self, cspec, cc, cxx, f77, fc, **kwargs):
+#else /* not NEW */
 
     def __init__(self, cspec, operating_system, paths, modules=[], alias=None):
+#endif /* not NEW */
         def check(exe):
             if exe is None:
                 return None
             _verify_executables(exe)
             return exe
 
+#ifdef NEW
+        self.cc  = check(cc)
+        self.cxx = check(cxx)
+        self.f77 = check(f77)
+        self.fc  = check(fc)
+
+        # Unfortunately have to make sure these params are accepted
+        # in the same order they are returned by sorted(flags)
+        # in compilers/__init__.py
+        self.flags = {}
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            value = kwargs.get(flag, None)
+            if value is not None:
+                self.flags[flag] = value.split()
+
+#else /* not NEW */
         self.operating_system = operating_system
 
         self.cc  = check(paths[0])
@@ -124,6 +157,7 @@ class Compiler(object):
             else:
                 self.fc  = check(paths[3])
 
+#endif /* not NEW */
         self.spec = cspec
         self.modules = modules
         self.alias = alias
@@ -132,27 +166,86 @@ class Compiler(object):
     def version(self):
         return self.spec.version
 
+    # This property should be overridden in the compiler subclass if
+    # OpenMP is supported by that compiler
+    @property
+    def openmp_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support OpenMP.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
+    # This property should be overridden in the compiler subclass if
+    # C++11 is supported by that compiler
+    @property
+    def cxx11_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support C++11.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
+    # This property should be overridden in the compiler subclass if
+    # C++14 is supported by that compiler
+    @property
+    def cxx14_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support C++14.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
+
+    #
+    # Compiler classes have methods for querying the version of
+    # specific compiler executables.  This is used when discovering compilers.
+    #
+    # Compiler *instances* are just data objects, and can only be
+    # constructed from an actual set of executables.
+    #
+
+    @classmethod
+    def default_version(cls, cc):
+        """Override just this to override all compiler version functions."""
+        return dumpversion(cc)
+
+    @classmethod
+    def cc_version(cls, cc):
+        return cls.default_version(cc)
+
+    @classmethod
+    def cxx_version(cls, cxx):
+        return cls.default_version(cxx)
+
+    @classmethod
+    def f77_version(cls, f77):
+        return cls.default_version(f77)
+
+    @classmethod
+    def fc_version(cls, fc):
+        return cls.default_version(fc)
 
     @classmethod
     def _find_matches_in_path(cls, compiler_names, detect_version, *path):
         """Finds compilers in the paths supplied.
-        
-            Looks for all combinations of ``compiler_names`` with the
-            ``prefixes`` and ``suffixes`` defined for this compiler
-            class.  If any compilers match the compiler_names,
-            prefixes, or suffixes, uses ``detect_version`` to figure
-            out what version the compiler is.
- 
-            This returns a dict with compilers grouped by (prefix,
-            suffix, version) tuples.  This can be further organized by
-            find().
-         """
+
+           Looks for all combinations of ``compiler_names`` with the
+           ``prefixes`` and ``suffixes`` defined for this compiler
+           class.  If any compilers match the compiler_names,
+           prefixes, or suffixes, uses ``detect_version`` to figure
+           out what version the compiler is.
+
+           This returns a dict with compilers grouped by (prefix,
+           suffix, version) tuples.  This can be further organized by
+           find().
+        """
         if not path:
             path = get_path('PATH')
- 
+
         prefixes = [''] + cls.prefixes
         suffixes = [''] + cls.suffixes
- 
+
         checks = []
         for directory in path:
             if not (os.path.isdir(directory) and
@@ -188,15 +281,11 @@ class Compiler(object):
                 return None
 
         successful = [key for key in parmap(check, checks) if key is not None]
+        # The 'successful' list is ordered like the input paths.
+        # Reverse it here so that the dict creation (last insert wins)
+        # does not spoil the intented precedence.
+        successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
-
-    #
-    # Compiler classes have methods for querying the version of
-    # specific compiler executables.  This is used when discovering compilers.
-    #
-    # Compiler *instances* are just data objects, and can only be
-    # constructed from an actual set of executables.
-    #
 
     @classmethod
     def default_version(cls, cc):
@@ -226,7 +315,7 @@ class Compiler(object):
 
 
     def __str__(self):
-        """Return a string represntation of the compiler toolchain."""
+        """Return a string representation of the compiler toolchain."""
         return "%s(%s)" % (
             self.name, '\n     '.join((str(s) for s in (self.cc, self.cxx, self.f77, self.fc, self.modules, str(self.operating_system)))))
 
