@@ -6,17 +6,34 @@ python:
 # Use new Travis infrastructure (Docker can't sudo yet)
 sudo: false
 
-# No need to install any deps.
-install: true
+# Install coveralls to obtain code coverage
+install:
+  - "pip install coveralls"
+  - "pip install flake8"
 
 before_install:
   # Need this for the git tests to succeed.
   - git config --global user.email "spack@example.com"
   - git config --global user.name "Test User"
 
+  # Need this to be able to compute the list of changed files
+  - git fetch origin develop:develop
+
 script:
+  # Regular spack setup and tests
   - . share/spack/setup-env.sh
-  - spack test
+  - spack compilers
+  - spack config get compilers
+  - spack install -v libdwarf
+
+  # Run unit tests with code coverage
+  - coverage run bin/spack test
+
+  # Run flake8 code style checks.
+  - share/spack/qa/run-flake8
+
+after_success:
+  - coveralls
 
 notifications:
   email:

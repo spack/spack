@@ -1,29 +1,30 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack
 from spack.spec import Spec, CompilerSpec
+from spack.version import ver
 from spack.concretize import find_spec
 from spack.test.mock_packages_test import *
 
@@ -37,10 +38,19 @@ class ConcretizeTest(MockPackagesTest):
             for name in abstract.variants:
                 avariant = abstract.variants[name]
                 cvariant = concrete.variants[name]
-                self.assertEqual(avariant.enabled, cvariant.enabled)
+                self.assertEqual(avariant.value, cvariant.value)
+
+        if abstract.compiler_flags:
+            for flag in abstract.compiler_flags:
+                aflag = abstract.compiler_flags[flag]
+                cflag = concrete.compiler_flags[flag]
+                self.assertTrue(set(aflag) <= set(cflag))
 
         for name in abstract.package.variants:
             self.assertTrue(name in concrete.variants)
+
+        for flag in concrete.compiler_flags.valid_compiler_flags():
+            self.assertTrue(flag in concrete.compiler_flags)
 
         if abstract.compiler and abstract.compiler.concrete:
             self.assertEqual(abstract.compiler, concrete.compiler)
@@ -74,7 +84,20 @@ class ConcretizeTest(MockPackagesTest):
     def test_concretize_variant(self):
         self.check_concretize('mpich+debug')
         self.check_concretize('mpich~debug')
+        self.check_concretize('mpich debug=2')
         self.check_concretize('mpich')
+
+
+    def test_conretize_compiler_flags(self):
+        self.check_concretize('mpich cppflags="-O3"')
+
+
+    def test_concretize_preferred_version(self):
+        spec = self.check_concretize('python')
+        self.assertEqual(spec.versions, ver('2.7.11'))
+
+        spec = self.check_concretize('python@3.5.1')
+        self.assertEqual(spec.versions, ver('3.5.1'))
 
 
     def test_concretize_with_virtual(self):
@@ -142,6 +165,34 @@ class ConcretizeTest(MockPackagesTest):
                                 for spec in spack.repo.providers_for('mpi@3')))
 
 
+    def test_concretize_two_virtuals(self):
+        """Test a package with multiple virtual dependencies."""
+        s = Spec('hypre').concretize()
+
+
+    def test_concretize_two_virtuals_with_one_bound(self):
+        """Test a package with multiple virtual dependencies and one preset."""
+        s = Spec('hypre ^openblas').concretize()
+
+
+    def test_concretize_two_virtuals_with_two_bound(self):
+        """Test a package with multiple virtual dependencies and two of them preset."""
+        s = Spec('hypre ^openblas ^netlib-lapack').concretize()
+
+
+    def test_concretize_two_virtuals_with_dual_provider(self):
+        """Test a package with multiple virtual dependencies and force a provider
+           that provides both."""
+        s = Spec('hypre ^openblas-with-lapack').concretize()
+
+
+    def test_concretize_two_virtuals_with_dual_provider_and_a_conflict(self):
+        """Test a package with multiple virtual dependencies and force a provider
+           that provides both, and another conflicting package that provides one."""
+        s = Spec('hypre ^openblas-with-lapack ^netlib-lapack')
+        self.assertRaises(spack.spec.MultipleProviderError, s.concretize)
+
+
     def test_virtual_is_fully_expanded_for_callpath(self):
         # force dependence on fake "zmpi" by asking for MPI 10.0
         spec = Spec('callpath ^mpi@10.0')
@@ -194,7 +245,7 @@ class ConcretizeTest(MockPackagesTest):
 
 
     def test_external_package(self):
-        spec = Spec('externaltool')
+        spec = Spec('externaltool%gcc')
         spec.concretize()
 
         self.assertEqual(spec['externaltool'].external, '/path/to/external_tool')
@@ -282,3 +333,9 @@ class ConcretizeTest(MockPackagesTest):
                  Spec('e'))
         self.assertEqual(None, find_spec(s['b'], lambda s: '+foo' in s))
 
+
+    def test_compiler_child(self):
+        s = Spec('mpileaks%clang ^dyninst%gcc')
+        s.concretize()
+        self.assertTrue(s['mpileaks'].satisfies('%clang'))
+        self.assertTrue(s['dyninst'].satisfies('%gcc'))

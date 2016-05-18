@@ -1,0 +1,154 @@
+--- mrnet-3093918/include/mrnet/Types.h	2015-12-10 09:32:24.000000000 -0800
++++ mrnet_top_of_tree/include/mrnet/Types.h	2016-03-16 12:29:33.986132302 -0700
+@@ -23,7 +23,7 @@
+ #ifndef MRNET_VERSION_MAJOR
+ # define MRNET_VERSION_MAJOR 5
+ # define MRNET_VERSION_MINOR 0
+-# define MRNET_VERSION_REV   0
++# define MRNET_VERSION_REV   1
+ #endif
+ 
+ namespace MRN
+--- mrnet-3093918/include/mrnet_lightweight/Types.h	2015-12-10 09:32:24.000000000 -0800
++++ mrnet_top_of_tree/include/mrnet_lightweight/Types.h	2016-03-16 12:29:33.987132302 -0700
+@@ -30,7 +30,7 @@
+ #ifndef MRNET_VERSION_MAJOR
+ #define MRNET_VERSION_MAJOR 5
+ #define MRNET_VERSION_MINOR 0
+-#define MRNET_VERSION_REV   0
++#define MRNET_VERSION_REV   1
+ #endif
+ void get_Version(int* major,
+                  int* minor,
+--- mrnet-3093918/src/lightweight/SerialGraph.c	2015-12-10 09:32:24.000000000 -0800
++++ mrnet_top_of_tree/src/lightweight/SerialGraph.c	2016-03-16 12:29:33.995132302 -0700
+@@ -59,7 +59,7 @@
+ 
+     mrn_dbg_func_begin();
+ 
+-    sprintf(hoststr, "[%s:%hu:%u:", ihostname, iport, irank);
++    sprintf(hoststr, "[%s:%05hu:%u:", ihostname, iport, irank);
+     mrn_dbg(5, mrn_printf(FLF, stderr, "looking for SubTreeRoot: '%s'\n", hoststr));
+  
+     byte_array = sg->byte_array;
+@@ -110,7 +110,7 @@
+     
+     mrn_dbg_func_begin();
+ 
+-    len = (size_t) sprintf(hoststr, "[%s:%hu:%u:0]", ihostname, iport, irank);
++    len = (size_t) sprintf(hoststr, "[%s:%05hu:%u:0]", ihostname, iport, irank);
+     mrn_dbg(5, mrn_printf(FLF, stderr, "adding sub tree leaf: %s\n", hoststr));
+ 
+     len += strlen(sg->byte_array) + 1;
+@@ -139,7 +139,7 @@
+ 
+     mrn_dbg_func_begin();
+ 
+-    len = (size_t) sprintf(hoststr, "[%s:%hu:%u:1", ihostname, iport, irank);
++    len = (size_t) sprintf(hoststr, "[%s:%05hu:%u:1", ihostname, iport, irank);
+     mrn_dbg(5, mrn_printf(FLF, stderr, "adding sub tree root: %s\n", hoststr));
+ 
+     len += strlen(sg->byte_array) + 1;
+@@ -360,8 +360,8 @@
+     char old_hoststr[256];
+     char new_hoststr[256];
+ 
+-    sprintf(old_hoststr, "[%s:%hu:%u:", hostname, UnknownPort, irank);
+-    sprintf(new_hoststr, "[%s:%hu:%u:", hostname, port, irank);
++    sprintf(old_hoststr, "[%s:%05hu:%u:", hostname, UnknownPort, irank);
++    sprintf(new_hoststr, "[%s:%05hu:%u:", hostname, port, irank);
+     
+     old_byte_array = sg->byte_array;
+     new_byte_array = (char*) malloc( strlen(old_byte_array) + 10 );
+--- mrnet-3093918/xplat/src/lightweight/SocketUtils.c	2015-12-10 09:32:24.000000000 -0800
++++ mrnet_top_of_tree/xplat/src/lightweight/SocketUtils.c	2016-03-16 12:29:34.006132303 -0700
+@@ -15,7 +15,7 @@
+ #else
+ const XPlat_Socket InvalidSocket = INVALID_SOCKET;
+ #endif
+-const XPlat_Port InvalidPort = (XPlat_Port)-1;
++const XPlat_Port InvalidPort = (XPlat_Port)0;
+ 
+ static bool_t SetTcpNoDelay( XPlat_Socket sock )
+ {
+--- mrnet-3093918/conf/configure.in	2015-12-10 09:32:24.000000000 -0800
++++ mrnet_top_of_tree/conf/configure.in	2016-03-16 12:45:54.573196781 -0700
+@@ -107,6 +107,18 @@
+ AC_SUBST(PURIFY)
+ 
+ 
++AC_ARG_WITH(expat,
++            [AS_HELP_STRING([--with-expat=PATH],
++                            [Absolute path to installation of EXPAT libraries (note: specify the path to the directory containing "include" and "lib" sub-directories)])],
++            [EXPAT_DIR="${withval}"],
++            [EXPAT_DIR=""])
++
++if test "x$EXPAT_DIR" = "x" ; then
++   EXPAT_LIB=""
++else
++   EXPAT_LIB="-L$EXPAT_DIR/lib"
++fi
++
+ dnl === Checks for header files.
+ AC_CHECK_HEADERS([assert.h errno.h fcntl.h limits.h netdb.h signal.h stddef.h stdlib.h stdio.h string.h unistd.h arpa/inet.h netinet/in.h sys/ioctl.h sys/socket.h sys/sockio.h sys/time.h])
+ AC_HEADER_STDBOOL
+@@ -432,7 +444,7 @@
+         CRAYXT_ATH_LIBS_SO="$CRAYXT_ATH_LIBS -lalps"
+         CRAYXT_ATH_LIBS="$CRAYXT_ATH_LIBS -Wl,-Bstatic -lalps -lxmlrpc -Wl,-Bdynamic"
+         CRAYXE_ATH_LIBS_SO="$CRAYXE_ATH_LIBS -lalps"
+-        CRAYXE_ATH_LIBS="$CRAYXE_ATH_LIBS -Wl,-Bstatic -lalps -lxmlrpc-epi -lexpat -Wl,-Bdynamic"
++        CRAYXE_ATH_LIBS="$CRAYXE_ATH_LIBS -Wl,-Bstatic -lalps -lxmlrpc-epi $EXPAT_LIB -lexpat -Wl,-Bdynamic"
+ 
+         AC_CHECK_LIB( [alps], [alps_launch_tool_helper],
+                       [HAVE_ATH_LIBS="yes"; EXTRA_LIBS="$CRAYXT_ATH_LIBS $EXTRA_LIBS"; EXTRA_LIBS_SO="$CRAYXT_ATH_LIBS_SO $EXTRA_LIBS_SO"],
+--- mrnet-3093918/configure	2015-12-10 09:32:24.000000000 -0800
++++ mrnet_top_of_tree/configure	2016-03-16 13:47:20.386439143 -0700
+@@ -742,6 +742,7 @@
+ enable_debug
+ enable_ltwt_threadsafe
+ with_purify
++with_expat
+ '
+       ac_precious_vars='build_alias
+ host_alias
+@@ -1399,6 +1400,9 @@
+                           containing "include" and "lib" sub-directories)
+   --with-launchmon=PATH   Absolute path to installation of LaunchMON
+   --with-purify           Use purify for memory debugging
++  --with-expat=PATH       Absolute path to installation of EXPAT libraries
++                          (note: specify the path to the directory containing
++                          "include" and "lib" sub-directories)
+ 
+ Some influential environment variables:
+   CC          C compiler command
+@@ -3541,6 +3545,21 @@
+ 
+ 
+ 
++# Check whether --with-expat was given.
++if test "${with_expat+set}" = set; then :
++  withval=$with_expat; EXPAT_DIR="${withval}"
++else
++  EXPAT_DIR=""
++fi
++
++
++if test "x$EXPAT_DIR" = "x" ; then
++   EXPAT_LIB=""
++else
++   EXPAT_LIB="-L$EXPAT_DIR/lib"
++fi
++
++
+ ac_ext=cpp
+ ac_cpp='$CXXCPP $CPPFLAGS'
+ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+@@ -5473,7 +5492,7 @@
+         CRAYXT_ATH_LIBS_SO="$CRAYXT_ATH_LIBS -lalps"
+         CRAYXT_ATH_LIBS="$CRAYXT_ATH_LIBS -Wl,-Bstatic -lalps -lxmlrpc -Wl,-Bdynamic"
+         CRAYXE_ATH_LIBS_SO="$CRAYXE_ATH_LIBS -lalps"
+-        CRAYXE_ATH_LIBS="$CRAYXE_ATH_LIBS -Wl,-Bstatic -lalps -lxmlrpc-epi -lexpat -Wl,-Bdynamic"
++        CRAYXE_ATH_LIBS="$CRAYXE_ATH_LIBS -Wl,-Bstatic -lalps -lxmlrpc-epi $EXPAT_LIB -lexpat -Wl,-Bdynamic"
+ 
+         { $as_echo "$as_me:${as_lineno-$LINENO}: checking for alps_launch_tool_helper in -lalps" >&5
+ $as_echo_n "checking for alps_launch_tool_helper in -lalps... " >&6; }

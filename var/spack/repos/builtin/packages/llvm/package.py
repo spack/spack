@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by David Beckingsale, david@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
 import os, shutil
@@ -52,7 +52,7 @@ class Llvm(Package):
     depends_on('cmake @2.8.12.2:')
 
     # Universal dependency
-    depends_on('python@2.7:')
+    depends_on('python@2.7:2.8')  # Seems not to support python 3.X.Y
 
     # lldb dependencies
     depends_on('ncurses', when='+lldb')
@@ -130,6 +130,21 @@ class Llvm(Package):
                         'clang-tools-extra' : 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
                         'lldb' : 'http://llvm.org/svn/llvm-project/lldb/trunk',
                         'llvm-libunwind' : 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+                        }
+                  },
+                  {
+                    'version' : '3.8.0',
+                    'md5':'07a7a74f3c6bd65de4702bf941b511a0',
+                    'resources' : {
+                        'compiler-rt' : 'd6fcbe14352ffb708e4d1ac2e48bb025',
+                        'openmp' : '8fd7cc35d48051613cf1e750e9f22e40',
+                        'polly' : '1b3b20f52d34a4024e21a4ea7112caa7',
+                        'libcxx' : 'd6e0bdbbee39f7907ad74fd56d03b88a',
+                        'libcxxabi' : 'bbe6b4d72c7c5978550d370af529bcf7',
+                        'clang' : 'cc99e7019bb74e6459e80863606250c5',
+                        'clang-tools-extra' : 'c2344f50e0eea0b402f0092a80ddc036',
+                        'lldb' : 'a5da35ed9cc8c8817ee854e3dbfba00e',
+                        'llvm-libunwind' : '162ade468607f153cca12be90b5194fa',
                         }
                   },
                   {
