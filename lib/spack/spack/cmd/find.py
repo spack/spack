@@ -170,7 +170,7 @@ def find(parser, args):
     if args.unknown:
         known = False
 
-    explicit = None
+    explicit = any
     if args.explicit:
         explicit = False
     if args.implicit:
