@@ -167,6 +167,18 @@ section_schemas = {
                                     'f77': { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
                                     'fc':  { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cxxflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'fflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cppflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'ldflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'ldlibs': { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]}}},
                             'spec': { 'type': 'string'},#r'\w[\w-]*@\w[\w-]*'
                             'operating_system': {
@@ -234,15 +246,11 @@ section_schemas = {
                                 'items' : { 'type' : 'string' } }, #compiler specs
                             'buildable': {
                                 'type':  'boolean',
-#ifdef NEW
                                 'default': True,
-#else /* not NEW */
-                                'default': False,
                              },
-                            'module': {
-                                'anyOf' : [{'type': 'string'},
-                                           {'type': 'null'}]
-#endif /* not NEW */
+                            'modules': {
+                                'type' : 'object',
+                                'default' : {},
                              },
                             'providers': {
                                 'type':  'object',
@@ -687,7 +695,8 @@ def spec_externals(spec):
 
     external_specs = []
     pkg_paths = allpkgs.get(name, {}).get('paths', None)
-    if not pkg_paths:
+    pkg_modules = allpkgs.get(name, {}).get('modules', None)
+    if (not pkg_paths) and (not pkg_modules):
         return []
 
     for external_spec, path in pkg_paths.iteritems():
@@ -695,20 +704,21 @@ def spec_externals(spec):
             # skip entries without paths (avoid creating extra Specs)
             continue
 
-#ifdef NEW
         external_spec = spack.spec.Spec(external_spec, external=path)
         if external_spec.satisfies(spec):
             external_specs.append(external_spec)
+
+    for external_spec, module in pkg_modules.iteritems():
+        if not module:
+            continue
+
+        path = get_path_from_module(module)
+
+        external_spec = spack.spec.Spec(external_spec, external=path, external_module=module)
+        if external_spec.satisfies(spec):
+            external_specs.append(external_spec)
+
     return external_specs
-#else /* not NEW */
-        module = allpkgs.get(pkg, {}).get('module', None)
-        if not path:
-            if not module:
-                continue
-            path = get_path_from_module(module)
-        spec_locations.append( (spack.spec.Spec(pkg), path, module) )
-    return spec_locations
-#endif /* not NEW */
 
 
 def is_spec_buildable(spec):
