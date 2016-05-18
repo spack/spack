@@ -555,8 +555,8 @@ class Spec(object):
     #
     @property
     def fullname(self):
-        return '%s.%s' % ((self.namespace, self.name) if self.namespace else
-                          (self.name if self.name else ''))
+        return (('%s.%s' % (self.namespace, self.name)) if self.namespace else
+                           (self.name if self.name else ''))
 
     @property
     def root(self):
