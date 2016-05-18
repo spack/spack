@@ -182,6 +182,7 @@ if [[ $mode == ld && "$SPACK_SHORT_SPEC" =~ "darwin" ]]; then
             break
         fi
     done
+    args=("${args[@]}" "-headerpad_max_install_names")
 fi
 
 # Save original command for debug logging
