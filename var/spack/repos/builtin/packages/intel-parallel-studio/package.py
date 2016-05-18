@@ -32,6 +32,8 @@ class IntelParallelStudio(IntelInstaller):
         url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())  # NOQA: ignore=E501
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
+    variant('newdtags', default=False,
+            description="Allow use of --enable-new-dtags in MPI wrappers")
     variant('all', default=False,
             description="Install all files with the requested edition")
     variant('mpi', default=True,
@@ -116,6 +118,20 @@ VTune Amplifier, and Inspector tools""")
                 spec.satisfies('@cluster'):
                 os.symlink(self.global_license_file, os.path.join(
                            self.prefix, "itac_latest", "license.lic"))
+                if spec.satisfies('~newdtags'):
+                    wrappers = ["mpif77", "mpif77", "mpif90", "mpif90",
+                                "mpigcc", "mpigcc", "mpigxx", "mpigxx",
+                                "mpiicc", "mpiicc", "mpiicpc", "mpiicpc",
+                                "mpiifort", "mpiifort"]
+                    wrapper_paths = []
+                    for root, dirs, files in os.walk(spec.prefix):
+                        for name in files:
+                            if name in wrappers:
+                                wrapper_paths.append(os.path.join(spec.prefix,
+                                                                  root, name))
+                    for wrapper in wrapper_paths:
+                        filter_file(r'-Xlinker --enable-new-dtags', r' ',
+                                    wrapper)
 
         if spec.satisfies('+rpath'):
             for compiler_command in ["icc", "icpc", "ifort"]:
