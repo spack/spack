@@ -37,71 +37,59 @@ description = "Find installed spack packages"
 
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
-    format_group.add_argument('-s',
-                              '--short',
+    format_group.add_argument('-s', '--short',
                               action='store_const',
                               dest='mode',
                               const='short',
                               help='Show only specs (default)')
-    format_group.add_argument('-p',
-                              '--paths',
+    format_group.add_argument('-p', '--paths',
                               action='store_const',
                               dest='mode',
                               const='paths',
                               help='Show paths to package install directories')
     format_group.add_argument(
-        '-d',
-        '--deps',
+        '-d', '--deps',
         action='store_const',
         dest='mode',
         const='deps',
         help='Show full dependency DAG of installed packages')
 
-    subparser.add_argument('-l',
-                           '--long',
+    subparser.add_argument('-l', '--long',
                            action='store_true',
                            dest='long',
                            help='Show dependency hashes as well as versions.')
-    subparser.add_argument('-L',
-                           '--very-long',
+    subparser.add_argument('-L', '--very-long',
                            action='store_true',
                            dest='very_long',
                            help='Show dependency hashes as well as versions.')
-    subparser.add_argument('-f',
-                           '--show-flags',
+    subparser.add_argument('-f', '--show-flags',
                            action='store_true',
                            dest='show_flags',
                            help='Show spec compiler flags.')
 
     subparser.add_argument(
-        '-e',
-        '--explicit',
+        '-e', '--explicit',
         action='store_true',
         help='Show only specs that were installed explicitly')
     subparser.add_argument(
-        '-E',
-        '--implicit',
+        '-E', '--implicit',
         action='store_true',
         help='Show only specs that were installed as dependencies')
     subparser.add_argument(
-        '-u',
-        '--unknown',
+        '-u', '--unknown',
         action='store_true',
         dest='unknown',
         help='Show only specs Spack does not have a package for.')
     subparser.add_argument(
-        '-m',
-        '--missing',
+        '-m', '--missing',
         action='store_true',
         dest='missing',
         help='Show missing dependencies as well as installed specs.')
-    subparser.add_argument('-M',
-                           '--only-missing',
+    subparser.add_argument('-M', '--only-missing',
                            action='store_true',
                            dest='only_missing',
                            help='Show only missing dependencies.')
-    subparser.add_argument('-N',
-                           '--namespace',
+    subparser.add_argument('-N', '--namespace',
                            action='store_true',
                            help='Show fully qualified package names.')
 
@@ -187,7 +175,9 @@ def display_specs(specs, **kwargs):
                     print(hsh + spec.format(format_string, color=True) + '\n')
 
         else:
-            raise ValueError("Invalid mode for display_specs: %s. Must be one of (paths, deps, short)." % mode)  # NOQA: ignore=E501
+            raise ValueError(
+                "Invalid mode for display_specs: %s. Must be one of (paths,"
+                "deps, short)." % mode)  # NOQA: ignore=E501
 
 
 def find(parser, args):

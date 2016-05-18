@@ -246,6 +246,12 @@ Packages are divided into groups according to their architecture and
 compiler.  Within each group, Spack tries to keep the view simple, and
 only shows the version of installed packages.
 
+``spack find`` can filter the package list based on the package name, spec, or
+a number of properties of their installation status.  For example, missing
+dependencies of a spec can be shown with ``-m``, packages which were
+explicitly installed with ``spack install <package>`` can be singled out with
+``-e`` and those which have been pulled in only as dependencies with ``-E``.
+
 In some cases, there may be different configurations of the *same*
 version of a package installed.  For example, there are two
 installations of of ``libdwarf@20130729`` above.  We can look at them
