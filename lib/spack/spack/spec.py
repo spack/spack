@@ -497,14 +497,10 @@ class Spec(object):
         # package.py files for.
         self._normal = kwargs.get('normal', False)
         self._concrete = kwargs.get('concrete', False)
-#ifdef NEW
 
         # Allow a spec to be constructed with an external path.
         self.external  = kwargs.get('external', None)
-#else /* not NEW */
-        self.external = None
-        self.external_module = None
-#endif /* not NEW */
+        self.external_module = kwargs.get('external_module', None)
 
         # This allows users to construct a spec DAG with literals.
         # Note that given two specs a and b, Spec(a) copies a, but
@@ -538,8 +534,10 @@ class Spec(object):
         Known flags currently include "arch"
         """
         valid_flags = FlagMap.valid_compiler_flags()
-        if name == 'arch':
-            self._set_architecture(value)
+        if name == 'os' or name == 'operating_system':
+            self._set_os(value)
+        elif name == 'target':
+            self._set_target(value)
         elif name in valid_flags:
             assert(self.compiler_flags is not None)
             self.compiler_flags[name] = value.split()
@@ -553,12 +551,13 @@ class Spec(object):
         self.compiler = compiler
 
 
-    def _set_architecture(self, architecture):
-        """Called by the parser to set the architecture."""
-        if self.architecture: raise DuplicateArchitectureError(
-                "Spec for '%s' cannot have two architectures." % self.name)
-        self.architecture = architecture
+    def _set_os(self, value):
+        """Called by the parser to set the architecture operating system"""
+        self.architecture.platform_os = self.architecture.platform.operating_system(value)
 
+    def _set_target(self, value):
+        """Called by the parser to set the architecture target"""
+        self.architecture.target = self.architecture.platform.target(value)
 
     def _add_dependency(self, spec):
         """Called by the parser to add another spec as a dependency."""
@@ -793,9 +792,9 @@ class Spec(object):
         if self.architecture:
             # TODO: Fix the target.to_dict to account for the tuple
             # Want it to be a dict of dicts
-            d['architecture'] = self.architecture.to_dict()
+            d['arch'] = self.architecture.to_dict()
         else:
-            d['architecture'] = None
+            d['arch'] = None
 
         if self.compiler:
             d.update(self.compiler.to_dict())
@@ -824,17 +823,12 @@ class Spec(object):
         spec = Spec(name)
         spec.namespace = node.get('namespace', None)
         spec.versions = VersionList.from_dict(node)
-#ifdef NEW
-        spec.architecture = node['arch']
 
         if 'hash' in node:
             spec._hash = node['hash']
 
-#else /* not NEW */
-        # TODO: Need to fix the architecture.Target.from_dict
-        spec.architecture = spack.architecture.arch_from_dict(node['architecture'])
+        spec.architecture = spack.architecture.arch_from_dict(node['arch'])
 
-#endif /* not NEW */
         if node['compiler'] is None:
             spec.compiler = None
         else:
@@ -1423,9 +1417,19 @@ class Spec(object):
 
         # TODO: Check out the logic here
         if self.architecture is not None and other.architecture is not None:
-            if self.architecture != other.architecture:
-                raise UnsatisfiableArchitectureSpecError(self.architecture,
-                                                         other.architecture)
+            if self.architecture.platform is not None and other.architecture.platform is not None:
+                if self.architecture.platform != other.architecture.platform:
+                    raise UnsatisfiableArchitectureSpecError(self.architecture,
+                                                             other.architecture)
+            if self.architecture.platform_os is not None and other.architecture.platform_os is not None:
+                if self.architecture.platform_os != other.architecture.platform_os:
+                    raise UnsatisfiableArchitectureSpecError(self.architecture,
+                                                             other.architecture)
+            if self.architecture.target is not None and other.architecture.target is not None:
+                if self.architecture.target != other.architecture.target:
+                    raise UnsatisfiableArchitectureSpecError(self.architecture,
+                                                             other.architecture)
+                
 
         changed = False
         if self.compiler is not None and other.compiler is not None:
@@ -1440,7 +1444,14 @@ class Spec(object):
         changed |= self.compiler_flags.constrain(other.compiler_flags)
 
         old = self.architecture
-        self.architecture = self.architecture or other.architecture
+        if self.architecture is None or other.architecture is None:
+            self.architecture = self.architecture or other.architecture
+        elif self.architecture.platform is None or other.architecture.platform is None:
+            self.architecture.platform = self.architecture.platform or other.architecture.platform
+        elif self.architecture.platform_os is None of other.architecture.platform_os is None:
+            self.architecture.platform_os = self.architecture.platform_os or other.architecture.platform_os
+        elif self.architecture.target is None or other.architecture.target is None:
+            self.architecture.target = self.architecture.target or other.architecture.target
         changed |= (self.architecture != old)
 
         if deps:
@@ -1572,16 +1583,18 @@ class Spec(object):
 
         # Architecture satisfaction is currently just string equality.
         # If not strict, None means unconstrained.
-        if isinstance(self.architecture, basestring):
-            self.add_architecture_from_string(self.architecture)
-        if isinstance(other.architecture, basestring):
-            other.add_architecture_from_string(other.architecture)
+
 
         # TODO: Need to make sure that comparisons can be made via classes
         if self.architecture and other.architecture:
-            if self.architecture != other.architecture:
+            if ((self.architecture.platform and other.architecture.platform and self.architecture.platform != other.architecture.platform) or 
+                (self.architecture.platform_os and other.architecture.platform_os and self.architecture.platform_os != other.architecture.platform_os) or
+                (self.architecture.target and other.architecture.target and self.architecture.target != other.architecture.target)):
                 return False
-        elif strict and (other.architecture and not self.architecture):
+        elif strict and ((other.architecture and not self.architecture) or
+                         (other.architecture.platform and not self.architecture.platform) or
+                         (other.architecture.platform_os and not self.architecture.platform_os) or
+                         (other.architecture.target and not self.architecture.target)):
             return False
 
         if not self.compiler_flags.satisfies(other.compiler_flags, strict=strict):
@@ -1663,7 +1676,7 @@ class Spec(object):
                        self.architecture != other.architecture and self.compiler != other.compiler and \
                        self.variants != other.variants and self._normal != other._normal and \
                        self.concrete != other.concrete and self.external != other.external and \
-                       self.external_module != other.external_module)
+                       self.external_module != other.external_module and self.compiler_flags != other.compiler_flags)
 
         # Local node attributes get copied first.
         self.name = other.name
@@ -1677,12 +1690,9 @@ class Spec(object):
         self.variants = other.variants.copy()
         self.variants.spec = self
         self.external = other.external
-        self.namespace = other.namespace
-#ifdef NEW
-        self._hash = other._hash
-#else /* not NEW */
         self.external_module = other.external_module
-#endif /* not NEW */
+        self.namespace = other.namespace
+        self._hash = other._hash
 
         # If we copy dependencies, preserve DAG structure in the new spec
         if kwargs.get('deps', True):
@@ -1983,7 +1993,7 @@ class Spec(object):
                         write(fmt % str(self.variants), '+')
                 elif named_str == 'ARCHITECTURE':
                     if self.architecture:
-                        write(fmt % str(self.architecture), '=')
+                        write(fmt % str(self.architecture), ' arch=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
                         out.write(fmt % str(self.dag_hash(7)))
@@ -2202,14 +2212,11 @@ class SpecParser(spack.parse.Parser):
         spec.name = spec_name
         spec.versions = VersionList()
         spec.variants = VariantMap(spec)
-        spec.architecture = None
+        spec.architecture = spack.architecture.Arch()
         spec.compiler = None
         spec.external = None
-#ifdef NEW
-        spec.compiler_flags = FlagMap(spec)
-#else /* not NEW */
         spec.external_module = None
-#endif /* not NEW */
+        spec.compiler_flags = FlagMap(spec)
         spec.dependents   = DependencyMap()
         spec.dependencies = DependencyMap()
         spec.namespace = spec_namespace
@@ -2283,12 +2290,6 @@ class SpecParser(spack.parse.Parser):
             self.expect(ID)
             self.check_identifier()
             return self.token.value
-
-    def architecture(self):
-        #TODO: Make this work properly as a subcase of variant (includes adding names to grammar)
-        self.expect(ID)
-        return self.token.value
-
 
     def version(self):
         start = None

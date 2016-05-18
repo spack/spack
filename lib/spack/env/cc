@@ -174,6 +174,28 @@ if [[ -z $command ]]; then
     die "ERROR: Compiler '$SPACK_COMPILER_SPEC' does not support compiling $language programs."
 fi
 
+#
+# Filter '.' and Spack environment directories out of PATH so that
+# this script doesn't just call itself
+#
+IFS=':' read -ra env_path <<< "$PATH"
+IFS=':' read -ra spack_env_dirs <<< "$SPACK_ENV_PATH"
+spack_env_dirs+=("" ".")
+PATH=""
+for dir in "${env_path[@]}"; do
+    addpath=true
+    for env_dir in "${spack_env_dirs[@]}"; do
+        if [[ $dir == $env_dir ]]; then
+            addpath=false
+            break
+        fi
+    done
+    if $addpath; then
+        PATH="${PATH:+$PATH:}$dir"
+    fi
+done
+export PATH
+
 if [[ $mode == vcheck ]]; then
     exec ${command} "$@"
 fi
@@ -285,28 +307,6 @@ esac
 unset LD_LIBRARY_PATH
 unset LD_RUN_PATH
 unset DYLD_LIBRARY_PATH
-
-#
-# Filter '.' and Spack environment directories out of PATH so that
-# this script doesn't just call itself
-#
-IFS=':' read -ra env_path <<< "$PATH"
-IFS=':' read -ra spack_env_dirs <<< "$SPACK_ENV_PATH"
-spack_env_dirs+=("" ".")
-PATH=""
-for dir in "${env_path[@]}"; do
-    addpath=true
-    for env_dir in "${spack_env_dirs[@]}"; do
-        if [[ $dir == $env_dir ]]; then
-            addpath=false
-            break
-        fi
-    done
-    if $addpath; then
-        PATH="${PATH:+$PATH:}$dir"
-    fi
-done
-export PATH
 
 full_command=("$command" "${args[@]}")
 

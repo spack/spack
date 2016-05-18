@@ -44,7 +44,12 @@ class Pgi(Compiler):
                    'f77' : 'pgi/pgfortran',
                    'fc'  : 'pgi/pgfortran' }
 
-#ifdef NEW
+
+
+    PrgEnv = 'PrgEnv-pgi'
+    PrgEnv_compiler = 'pgi'
+
+
     @property
     def openmp_flag(self):
         return "-mp"
@@ -53,12 +58,6 @@ class Pgi(Compiler):
     def cxx11_flag(self):
         return "-std=c++11"
 
-
-#else /* not NEW */
-    PrgEnv = 'PrgEnv-pgi'
-    PrgEnv_compiler = 'pgi'
-
-#endif /* not NEW */
     @classmethod
     def default_version(cls, comp):
         """The '-V' option works for all the PGI compilers.
