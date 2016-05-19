@@ -1088,12 +1088,12 @@ class Spec(object):
 
 
         for s in self.traverse(root=False):
-            if spec.external_module:
-                compiler = spack.compilers.compiler_for_spec(spec.compiler, spec.architecture.platform_os)
+            if s.external_module:
+                compiler = spack.compilers.compiler_for_spec(s.compiler, s.architecture.platform_os)
                 for mod in compiler.modules:
                     load_module(mod)
 
-                spec.external = get_path_from_module(spec.external_module)
+                s.external = get_path_from_module(s.external_module)
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
@@ -1426,6 +1426,7 @@ class Spec(object):
                                                     other.variants[v])
 
         # TODO: Check out the logic here
+        print self.architecture, other.architecture, "^^^^^^^^^^^^^^^^^^^^^^^"
         if self.architecture is not None and other.architecture is not None:
             if self.architecture.platform is not None and other.architecture.platform is not None:
                 if self.architecture.platform != other.architecture.platform:
@@ -1453,16 +1454,17 @@ class Spec(object):
 
         changed |= self.compiler_flags.constrain(other.compiler_flags)
 
-        old = self.architecture
+        old = str(self.architecture)
         if self.architecture is None or other.architecture is None:
             self.architecture = self.architecture or other.architecture
-        elif self.architecture.platform is None or other.architecture.platform is None:
-            self.architecture.platform = self.architecture.platform or other.architecture.platform
-        elif self.architecture.platform_os is None or other.architecture.platform_os is None:
-            self.architecture.platform_os = self.architecture.platform_os or other.architecture.platform_os
-        elif self.architecture.target is None or other.architecture.target is None:
-            self.architecture.target = self.architecture.target or other.architecture.target
-        changed |= (self.architecture != old)
+        else:
+            if self.architecture.platform is None or other.architecture.platform is None:
+                self.architecture.platform = self.architecture.platform or other.architecture.platform
+            if self.architecture.platform_os is None or other.architecture.platform_os is None:
+                self.architecture.platform_os = self.architecture.platform_os or other.architecture.platform_os
+            if self.architecture.target is None or other.architecture.target is None:
+                self.architecture.target = self.architecture.target or other.architecture.target
+        changed |= (str(self.architecture) != old)
 
         if deps:
             changed |= self._constrain_dependencies(other)
