@@ -59,7 +59,7 @@ class Scotch(Package):
     def url_for_version(self, version):
         return super(Scotch, self).url_for_version(version)
 
-    @when(":6.0.0")
+    @when('@:6.0.0')
     def url_for_version(self, version):
         return '%s/scotch_%s_esmumps.tar.gz' % (Scotch.base_url, version)
 
