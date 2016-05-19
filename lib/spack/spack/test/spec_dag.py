@@ -29,6 +29,7 @@ You can find the dummy packages here::
     spack/lib/spack/spack/test/mock_packages
 """
 import spack
+import spack.architecture
 import spack.package
 
 from llnl.util.lang import list_modules
@@ -240,21 +241,12 @@ class SpecDagTest(MockPackagesTest):
         self.assertRaises(spack.spec.UnsatisfiableCompilerSpecError, spec.normalize)
 
 
-#ifdef NEW
     def test_unsatisfiable_architecture(self):
-        self.set_pkg_dep('mpileaks', 'mpich arch=bgqos_0')
-        spec = Spec('mpileaks ^mpich arch=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
-        self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
-#else /* not NEW */
-    def test_unsatisfiable_target(self):
         platform = spack.architecture.sys_type()
-        if len(platform.targets) > 1:
-            first = platform.targets.values()[0].name
-            second = platform.targets.values()[1].name
-            self.set_pkg_dep('mpileaks', 'mpich='+first)
-            spec = Spec('mpileaks ^mpich='+ second +' ^callpath ^dyninst ^libelf ^libdwarf')
-            self.assertRaises(spack.spec.UnsatisfiableTargetSpecError, spec.normalize)
-#endif /* not NEW */
+
+        self.set_pkg_dep('mpileaks', 'mpich target=%s' % platform.target('default_target'))
+        spec = Spec('mpileaks ^mpich target=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
+        self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
 
 
     def test_invalid_dep(self):
