@@ -24,14 +24,17 @@
 ##############################################################################
 
 from spack import *
-import glob, sys, os
+import glob
+import sys
+import os
+
 
 class Metis(Package):
-    """
-    METIS is a set of serial programs for partitioning graphs, partitioning finite element meshes, and producing fill
-    reducing orderings for sparse matrices. The algorithms implemented in METIS are based on the multilevel
-    recursive-bisection, multilevel k-way, and multi-constraint partitioning schemes.
-    """
+    """METIS is a set of serial programs for partitioning graphs, partitioning
+       finite element meshes, and producing fill reducing orderings for sparse
+       matrices. The algorithms implemented in METIS are based on the
+       multilevel recursive-bisection, multilevel k-way, and multi-constraint
+       partitioning schemes."""
 
     homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
     base_url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis"
@@ -47,22 +50,20 @@ class Metis(Package):
     variant('idx64', default=False, description='Use int64_t as default index type')
     variant('real64', default=False, description='Use double precision floating point types')
 
-    depends_on('cmake @2.8:', when='@5:')  # build-time dependency
+    depends_on('cmake@2.8:', when='@5:')  # build-time dependency
 
     patch('install_gklib_defs_rename.patch', when='@5:')
 
     def url_for_version(self, version):
-        version_dir = 'OLD/' if version < Version('4.0.3') else ''
-        return '%s/%smetis-%s.tar.gz' % (Metis.base_url, version_dir, version)
+        verdir = 'OLD/' if version < Version('4.0.3') else ''
+        return '%s/%smetis-%s.tar.gz' % (Metis.base_url, verdir, version)
 
-    @when('@4:4.0.3')
+    @when('@4')
     def install(self, spec, prefix):
-        if '+gdb' in spec:
-            raise InstallError('gdb support not implemented in METIS 4!')
-        if '+idx64' in spec:
-            raise InstallError('idx64 option not implemented in METIS 4!')
-        if '+double' in spec:
-            raise InstallError('double option not implemented for METIS 4!')
+        unsupp_vars = [v for v in ('+gdb', '+idx64', '+real64') if v in spec]
+        if unsupp_vars:
+            msg = 'Given variants %s are unsupported by METIS 4!' % unsupp_vars
+            raise InstallError(msg)
 
         options = ['COPTIONS=-fPIC']
         if '+debug' in spec:
@@ -70,9 +71,10 @@ class Metis(Package):
         make(*options)
 
         mkdir(prefix.bin)
-        for x in ('pmetis', 'kmetis', 'oemetis', 'onmetis', 'partnmesh',
-                  'partdmesh', 'mesh2nodal', 'mesh2dual', 'graphchk'):
-            install(x, prefix.bin)
+        binfiles = ('pmetis', 'kmetis', 'oemetis', 'onmetis', 'partnmesh',
+                    'partdmesh', 'mesh2nodal', 'mesh2dual', 'graphchk')
+        for binfile in binfiles:
+            install(binfile, prefix.bin)
 
         mkdir(prefix.lib)
         install('libmetis.a', prefix.lib)
@@ -82,12 +84,10 @@ class Metis(Package):
             install(h, prefix.include)
 
         mkdir(prefix.share)
-        for f in (join_path(*p)
-                  for p in (('Programs', 'io.c'),
-                            ('Test','mtest.c'),
-                            ('Graphs','4elt.graph'),
-                            ('Graphs', 'metis.mesh'),
-                            ('Graphs', 'test.mgraph'))):
+        sharefiles = (('Programs', 'io.c'), ('Test', 'mtest.c'),
+                      ('Graphs', '4elt.graph'), ('Graphs', 'metis.mesh'),
+                      ('Graphs', 'test.mgraph'))
+        for sharefile in tuple(join_path(*sf) for sf in sharefiles):
             install(f, prefix.share)
 
         if '+shared' in spec:
@@ -100,10 +100,10 @@ class Metis(Package):
                 load_flag = '-Wl,-whole-archive'
                 no_load_flag = '-Wl,-no-whole-archive'
 
-            os.system(spack_cc + ' -fPIC -shared ' + load_flag +
-                      ' libmetis.a ' + no_load_flag + ' -o libmetis.' +
-                      lib_dsuffix)
-            install('libmetis.' + lib_dsuffix, prefix.lib)
+            flags = (self.compiler.cc, load_flag, no_load_flag, lib_dsuffix)
+            build_cmd = '%s -fPIC -shared %s libmetis.a %s libmetis.%s' % flags
+            os.system(build_cmd)
+            install('libmetis.%s' % lib_dsuffix, prefix.lib)
 
         # Set up and run tests on installation
         symlink(join_path(prefix.share, 'io.c'), 'io.c')
@@ -125,7 +125,6 @@ class Metis(Package):
         os.system(join_path(prefix.bin, 'partdmesh') + metis_mesh + ' 10')
         os.system(join_path(prefix.bin, 'mesh2dual') + metis_mesh)
 
-
     @when('@5:')
     def install(self, spec, prefix):
         options = []
@@ -134,13 +133,14 @@ class Metis(Package):
         build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path
 
-        options.append('-DGKLIB_PATH:PATH={metis_source}/GKlib'.format(metis_source=source_directory))
+        options.append('-DGKLIB_PATH:PATH=%s/GKlib' % source_directory)
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         if '+shared' in spec:
             options.append('-DSHARED:BOOL=ON')
         if '+debug' in spec:
-            options.extend(['-DDEBUG:BOOL=ON', '-DCMAKE_BUILD_TYPE:STRING=Debug'])
+            options.extend(['-DDEBUG:BOOL=ON',
+                            '-DCMAKE_BUILD_TYPE:STRING=Debug'])
         if '+gdb' in spec:
             options.append('-DGDB:BOOL=ON')
 
@@ -153,9 +153,10 @@ class Metis(Package):
         # Make clang 7.3 happy.
         # Prevents "ld: section __DATA/__thread_bss extends beyond end of file"
         # See upstream LLVM issue https://llvm.org/bugs/show_bug.cgi?id=27059
-        # Adopted from https://github.com/Homebrew/homebrew-science/blob/master/metis.rb
+        # and https://github.com/Homebrew/homebrew-science/blob/master/metis.rb
         if spec.satisfies('%clang@7.3.0'):
-            filter_file('#define MAX_JBUFS 128', '#define MAX_JBUFS 24', join_path(source_directory, 'GKlib', 'error.c'))
+            filter_file('#define MAX_JBUFS 128', '#define MAX_JBUFS 24',
+                        join_path(source_directory, 'GKlib', 'error.c'))
 
         with working_dir(build_directory, create=True):
             cmake(source_directory, *options)
@@ -164,19 +165,19 @@ class Metis(Package):
 
             # now run some tests:
             for f in ['4elt', 'copter2', 'mdual']:
-                graph = join_path(source_directory,'graphs','%s.graph' % f)
-                Executable(join_path(prefix.bin,'graphchk'))(graph)
-                Executable(join_path(prefix.bin,'gpmetis'))(graph,'2')
-                Executable(join_path(prefix.bin,'ndmetis'))(graph)
+                graph = join_path(source_directory, 'graphs', '%s.graph' % f)
+                Executable(join_path(prefix.bin, 'graphchk'))(graph)
+                Executable(join_path(prefix.bin, 'gpmetis'))(graph, '2')
+                Executable(join_path(prefix.bin, 'ndmetis'))(graph)
 
-            graph = join_path(source_directory,'graphs','test.mgraph')
-            Executable(join_path(prefix.bin,'gpmetis'))(graph,'2')
-            graph = join_path(source_directory,'graphs','metis.mesh')
-            Executable(join_path(prefix.bin,'mpmetis'))(graph,'2')
+            graph = join_path(source_directory, 'graphs', 'test.mgraph')
+            Executable(join_path(prefix.bin, 'gpmetis'))(graph, '2')
+            graph = join_path(source_directory, 'graphs', 'metis.mesh')
+            Executable(join_path(prefix.bin, 'mpmetis'))(graph, '2')
 
             # install GKlib headers, which will be needed for ParMETIS
-            GKlib_dist = join_path(prefix.include,'GKlib')
+            GKlib_dist = join_path(prefix.include, 'GKlib')
             mkdirp(GKlib_dist)
-            fs = glob.glob(join_path(source_directory,'GKlib','*.h'))
-            for f in fs:
-                install(f, GKlib_dist)
+            hfiles = glob.glob(join_path(source_directory, 'GKlib', '*.h'))
+            for hfile in hfiles:
+                install(hfile, GKlib_dist)
