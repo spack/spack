@@ -113,7 +113,6 @@ class MakeExecutable(Executable):
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
-
 def load_module(mod):
     """Takes a module name and removes modules until it is possible to
     load that module. It then loads the provided module. Depends on the
@@ -145,7 +144,6 @@ def get_path_from_module(mod):
 
     # Read the module
     text = modulecmd('show', mod, output=str, error=str).split('\n')
-
     # If it lists its package directory, return that
     for line in text:
         if line.find(mod.upper()+'_DIR') >= 0:
@@ -166,15 +164,14 @@ def get_path_from_module(mod):
 
     # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
     for line in text:
-        if line.find('LD_LIBRARY_PATH') >= 0:
+        if line.find('LD_LIBRARY_PATH') >= 0: 
             words = line.split()
             path = words[2]
             return path[:path.find('/lib')]
-
     # Unable to find module path
     return None
 
-def set_compiler_environment_variables(pkg):
+def set_compiler_environment_variables(pkg, env):
     assert(pkg.spec.concrete)
     compiler = pkg.compiler
     flags = pkg.spec.compiler_flags
@@ -276,14 +273,12 @@ def set_build_environment_variables(pkg, env):
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
-    pkg_config_dirs = []
-    for p in dep_prefixes:
-        for maybe in ('lib', 'lib64', 'share'):
-            pcdir = join_path(p, maybe, 'pkgconfig')
+    for pre in dep_prefixes:
+        for directory in ('lib', 'lib64', 'share'):
+            pcdir = join_path(pre, directory, 'pkgconfig')
             if os.path.isdir(pcdir):
-                pkg_config_dirs.append(pcdir)
-
-    env.prepend_path('PKG_CONFIG_PATH', pkg_config_dirs)
+                #pkg_config_dirs.append(pcdir)
+                env.prepend_path('PKG_CONFIG_PATH',pcdir)
 
     if pkg.spec.architecture.target.module_name:
         load_module(pkg.spec.architecture.target.module_name)
@@ -369,8 +364,9 @@ def get_rpaths(pkg):
                   if os.path.isdir(d.prefix.lib))
     rpaths.extend(d.prefix.lib64 for d in pkg.spec.dependencies.values()
                   if os.path.isdir(d.prefix.lib64))
-    for mod in pkg.spec.compiler.modules:
-        rpaths.append(get_path_for_module(mod))
+    # Second module is our compiler mod name. We use that to get rpaths from
+    # module show output. 
+    rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
     return rpaths
 
 
