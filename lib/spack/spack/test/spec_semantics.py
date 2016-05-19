@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import unittest
 from spack.spec import *
 from spack.test.mock_packages_test import *
 
@@ -138,11 +139,11 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     def test_satisfies_architecture(self):
-        self.check_satisfies('foo=chaos_5_x86_64_ib', '=chaos_5_x86_64_ib')
-        self.check_satisfies('foo=bgqos_0', '=bgqos_0')
+        self.check_satisfies('foo arch=chaos_5_x86_64_ib', ' arch=chaos_5_x86_64_ib')
+        self.check_satisfies('foo arch=bgqos_0', ' arch=bgqos_0')
 
-        self.check_unsatisfiable('foo=bgqos_0', '=chaos_5_x86_64_ib')
-        self.check_unsatisfiable('foo=chaos_5_x86_64_ib', '=bgqos_0')
+        self.check_unsatisfiable('foo arch=bgqos_0', ' arch=chaos_5_x86_64_ib')
+        self.check_unsatisfiable('foo arch=chaos_5_x86_64_ib', ' arch=bgqos_0')
 
 
     def test_satisfies_dependencies(self):
@@ -190,12 +191,20 @@ class SpecSematicsTest(MockPackagesTest):
     def test_satisfies_matching_variant(self):
         self.check_satisfies('mpich+foo', 'mpich+foo')
         self.check_satisfies('mpich~foo', 'mpich~foo')
+        self.check_satisfies('mpich foo=1', 'mpich foo=1')
+
+        #confirm that synonymous syntax works correctly
+        self.check_satisfies('mpich+foo', 'mpich foo=True')
+        self.check_satisfies('mpich foo=true', 'mpich+foo')
+        self.check_satisfies('mpich~foo', 'mpich foo=FALSE')
+        self.check_satisfies('mpich foo=False', 'mpich~foo')
 
 
     def test_satisfies_unconstrained_variant(self):
         # only asked for mpich, no constraints.  Either will do.
         self.check_satisfies('mpich+foo', 'mpich')
         self.check_satisfies('mpich~foo', 'mpich')
+        self.check_satisfies('mpich foo=1', 'mpich')
 
 
     def test_unsatisfiable_variants(self):
@@ -204,16 +213,44 @@ class SpecSematicsTest(MockPackagesTest):
         # 'mpich' is not concrete:
         self.check_satisfies('mpich', 'mpich+foo', False)
         self.check_satisfies('mpich', 'mpich~foo', False)
+        self.check_satisfies('mpich', 'mpich foo=1', False)
 
         # 'mpich' is concrete:
         self.check_unsatisfiable('mpich', 'mpich+foo', True)
         self.check_unsatisfiable('mpich', 'mpich~foo', True)
+        self.check_unsatisfiable('mpich', 'mpich foo=1', True)
 
 
     def test_unsatisfiable_variant_mismatch(self):
         # No matchi in specs
         self.check_unsatisfiable('mpich~foo', 'mpich+foo')
         self.check_unsatisfiable('mpich+foo', 'mpich~foo')
+        self.check_unsatisfiable('mpich foo=1', 'mpich foo=2')
+
+
+    def test_satisfies_matching_compiler_flag(self):
+        self.check_satisfies('mpich cppflags="-O3"', 'mpich cppflags="-O3"')
+        self.check_satisfies('mpich cppflags="-O3 -Wall"', 'mpich cppflags="-O3 -Wall"')
+
+
+    def test_satisfies_unconstrained_compiler_flag(self):
+        # only asked for mpich, no constraints.  Any will do.
+        self.check_satisfies('mpich cppflags="-O3"', 'mpich')
+
+
+    def test_unsatisfiable_compiler_flag(self):
+        # This case is different depending on whether the specs are concrete.
+
+        # 'mpich' is not concrete:
+        self.check_satisfies('mpich', 'mpich cppflags="-O3"', False)
+
+        # 'mpich' is concrete:
+        self.check_unsatisfiable('mpich', 'mpich cppflags="-O3"', True)
+
+
+    def test_unsatisfiable_compiler_flag_mismatch(self):
+        # No matchi in specs
+        self.check_unsatisfiable('mpich cppflags="-O3"', 'mpich cppflags="-O2"')
 
 
     def test_satisfies_virtual(self):
@@ -301,18 +338,26 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain('libelf+debug+foo', 'libelf+debug', 'libelf+foo')
         self.check_constrain('libelf+debug+foo', 'libelf+debug', 'libelf+debug+foo')
 
+        self.check_constrain('libelf debug=2 foo=1', 'libelf debug=2', 'libelf foo=1')
+        self.check_constrain('libelf debug=2 foo=1', 'libelf debug=2', 'libelf debug=2 foo=1')
+
         self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf~foo')
         self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf+debug~foo')
 
 
+    def test_constrain_compiler_flags(self):
+        self.check_constrain('libelf cflags="-O3" cppflags="-Wall"', 'libelf cflags="-O3"', 'libelf cppflags="-Wall"')
+        self.check_constrain('libelf cflags="-O3" cppflags="-Wall"', 'libelf cflags="-O3"', 'libelf cflags="-O3" cppflags="-Wall"')
+
+
     def test_constrain_arch(self):
-        self.check_constrain('libelf=bgqos_0', 'libelf=bgqos_0', 'libelf=bgqos_0')
-        self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
+        self.check_constrain('libelf arch=bgqos_0', 'libelf arch=bgqos_0', 'libelf arch=bgqos_0')
+        self.check_constrain('libelf arch=bgqos_0', 'libelf', 'libelf arch=bgqos_0')
 
 
     def test_constrain_compiler(self):
-        self.check_constrain('libelf=bgqos_0', 'libelf=bgqos_0', 'libelf=bgqos_0')
-        self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
+        self.check_constrain('libelf %gcc@4.4.7', 'libelf %gcc@4.4.7', 'libelf %gcc@4.4.7')
+        self.check_constrain('libelf %gcc@4.4.7', 'libelf', 'libelf %gcc@4.4.7')
 
 
     def test_invalid_constraint(self):
@@ -321,8 +366,11 @@ class SpecSematicsTest(MockPackagesTest):
 
         self.check_invalid_constraint('libelf+debug', 'libelf~debug')
         self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
+        self.check_invalid_constraint('libelf debug=2', 'libelf debug=1')
 
-        self.check_invalid_constraint('libelf=bgqos_0', 'libelf=x86_54')
+        self.check_invalid_constraint('libelf cppflags="-O3"', 'libelf cppflags="-O2"')
+
+        self.check_invalid_constraint('libelf arch=bgqos_0', 'libelf arch=x86_54')
 
 
     def test_constrain_changed(self):
@@ -332,7 +380,9 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf%gcc', '%gcc@4.5')
         self.check_constrain_changed('libelf', '+debug')
         self.check_constrain_changed('libelf', '~debug')
-        self.check_constrain_changed('libelf', '=bgqos_0')
+        self.check_constrain_changed('libelf', 'debug=2')
+        self.check_constrain_changed('libelf', 'cppflags="-O3"')
+        self.check_constrain_changed('libelf', ' arch=bgqos_0')
 
 
     def test_constrain_not_changed(self):
@@ -343,7 +393,9 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf%gcc@4.5', '%gcc@4.5')
         self.check_constrain_not_changed('libelf+debug', '+debug')
         self.check_constrain_not_changed('libelf~debug', '~debug')
-        self.check_constrain_not_changed('libelf=bgqos_0', '=bgqos_0')
+        self.check_constrain_not_changed('libelf debug=2', 'debug=2')
+        self.check_constrain_not_changed('libelf cppflags="-O3"', 'cppflags="-O3"')
+        self.check_constrain_not_changed('libelf arch=bgqos_0', ' arch=bgqos_0')
         self.check_constrain_not_changed('libelf^foo', 'libelf^foo')
         self.check_constrain_not_changed('libelf^foo^bar', 'libelf^foo^bar')
 
@@ -355,7 +407,8 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf^foo%gcc', 'libelf^foo%gcc@4.5')
         self.check_constrain_changed('libelf^foo', 'libelf^foo+debug')
         self.check_constrain_changed('libelf^foo', 'libelf^foo~debug')
-        self.check_constrain_changed('libelf^foo', 'libelf^foo=bgqos_0')
+        self.check_constrain_changed('libelf^foo', 'libelf^foo cppflags="-O3"')
+        self.check_constrain_changed('libelf^foo', 'libelf^foo arch=bgqos_0')
 
 
     def test_constrain_dependency_not_changed(self):
@@ -365,4 +418,6 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf^foo%gcc@4.5', 'libelf^foo%gcc@4.5')
         self.check_constrain_not_changed('libelf^foo+debug', 'libelf^foo+debug')
         self.check_constrain_not_changed('libelf^foo~debug', 'libelf^foo~debug')
-        self.check_constrain_not_changed('libelf^foo=bgqos_0', 'libelf^foo=bgqos_0')
+        self.check_constrain_not_changed('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"')
+        self.check_constrain_not_changed('libelf^foo arch=bgqos_0', 'libelf^foo arch=bgqos_0')
+

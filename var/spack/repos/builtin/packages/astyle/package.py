@@ -41,7 +41,7 @@ class Astyle(Package):
             # we need to edit the makefile in place to set compiler:
             make_file = join_path(self.stage.source_path,
                                   'build', 'gcc', 'Makefile')
-            filter_file(r'^CXX\s*=.*', 'CXX=%s'.format(spack_cxx), make_file)
+            filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, make_file)
 
             make('-f',
                  make_file,

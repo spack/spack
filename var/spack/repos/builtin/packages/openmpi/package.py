@@ -70,6 +70,8 @@ class Openmpi(Package):
     variant('hwloc', default=True, description='Use hwloc')
     variant('dlopen', default=True, description='Use dlopen')
 
+    variant('vt', default=True, description='Build support for contributed package vt')
+
     # TODO : support for CUDA is missing
 
     provides('mpi@:2.2', when='@1.6.5')
@@ -124,6 +126,7 @@ class Openmpi(Package):
             '--enable-mpi-thread-multiple' if '+thread_multiple' in spec else '--disable-mpi-thread-multiple',
             '--with-pmi' if '+pmi' in spec else '--without-pmi',
             '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
+            '--enable-vt' if '+vt' in spec else '--disable-vt'
             "--with-hwloc=%s" % spec['hwloc'].prefix if '+hwloc' in spec else '', 
             '--disable-dlopen' if not '+dlopen' in spec else ''
         ])

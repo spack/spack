@@ -146,12 +146,12 @@ class when(object):
               def install(self, prefix):
                   # Do default install
 
-              @when('=chaos_5_x86_64_ib')
+              @when('arch=chaos_5_x86_64_ib')
               def install(self, prefix):
                   # This will be executed instead of the default install if
                   # the package's sys_type() is chaos_5_x86_64_ib.
 
-              @when('=bgqos_0")
+              @when('arch=bgqos_0")
               def install(self, prefix):
                   # This will be executed if the package's sys_type is bgqos_0
 
