@@ -28,10 +28,8 @@ import sys
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:
-# - https://github.com/hpcugent/easybuild-easyblocks/blob/master/easybuild\
-#   /easyblocks/t/trilinos.py#L111
-# - https://github.com/koecher/candi/blob/master/deal.II-toolchain/packages\
-#   /trilinos.package
+# - https://github.com/hpcugent/easybuild-easyblocks/blob/master/easybuild/easyblocks/t/trilinos.py#L111  # NOQA: ignore=E501
+# - https://github.com/koecher/candi/blob/master/deal.II-toolchain/packages/trilinos.package  # NOQA: ignore=E501
 # - https://gitlab.com/configurations/cluster-config/blob/master/trilinos.sh
 # - https://github.com/Homebrew/homebrew-science/blob/master/trilinos.rb
 # and some relevant documentation/examples:
@@ -83,12 +81,11 @@ class Trilinos(Package):
     depends_on('parmetis', when='+metis')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
-    # https://trilinos.org/docs/dev/packages/amesos2/doc/html/\
-    # classAmesos2_1_1MUMPS.html One could work it out by getting linking flags
-    # from mpif90 --showme:link (or alike) and adding results to
-    # -DTrilinos_EXTRA_LINK_FLAGS together with Blas and Lapack and ScaLAPACK
-    # and Blacs and -lgfortran and it may work at the end. But let's avoid all
-    # this by simply using shared libs
+    # https://trilinos.org/docs/dev/packages/amesos2/doc/html/classAmesos2_1_1MUMPS.html  # NOQA: ignore=E501
+    # One could work it out by getting linking flags from mpif90 --showme:link
+    # (or alike) and adding results to -DTrilinos_EXTRA_LINK_FLAGS together
+    # with Blas and Lapack and ScaLAPACK and Blacs and -lgfortran and it may
+    # work at the end. But let's avoid all this by simply using shared libs
     depends_on('mumps@5.0:+mpi+shared', when='+mumps')
     depends_on('scalapack', when='+mumps')
     depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
@@ -220,8 +217,7 @@ class Trilinos(Package):
                 # FIXME: for MKL it's mkl_scalapack_lp64;mkl_blacs_mpich_lp64
                 '-DSCALAPACK_LIBRARY_NAMES=scalapack'
             ])
-            # see https://github.com/trilinos/Trilinos/blob/master/packages\
-            #     /amesos/README-MUMPS
+            # see https://github.com/trilinos/Trilinos/blob/master/packages/amesos/README-MUMPS  # NOQA: ignore=E501
             cxx_flags.extend([
                 '-DMUMPS_5_0'
             ])
@@ -234,10 +230,8 @@ class Trilinos(Package):
         # superlu-dist:
         if '+superlu-dist' in spec:
             # Amesos, conflicting types of double and complex SLU_D
-            # see https://trilinos.org/pipermail/trilinos-users/2015-March\
-            #     /004731.html
-            # and https://trilinos.org/pipermail/trilinos-users/2015-March\
-            #     /004802.html
+            # see https://trilinos.org/pipermail/trilinos-users/2015-March/004731.html  # NOQA: ignore=E501
+            # and https://trilinos.org/pipermail/trilinos-users/2015-March/004802.html  # NOQA: ignore=E501
             options.extend([
                 '-DTeuchos_ENABLE_COMPLEX:BOOL=OFF',
                 '-DKokkosTSQR_ENABLE_Complex:BOOL=OFF'
@@ -295,9 +289,8 @@ class Trilinos(Package):
             # run-time error: Symbol not found: _PyBool_Type and prevents
             # Trilinos to be used in any C++ code, which links executable
             # against the libraries listed in Trilinos_LIBRARIES.  See
-            # https://github.com/Homebrew/homebrew-science/issues\
-            # /2148#issuecomment-103614509 A workaround it to remove PyTrilinos
-            # from the COMPONENTS_LIST :
+            # https://github.com/Homebrew/homebrew-science/issues/2148#issuecomment-103614509  # NOQA: ignore=E501
+            # A workaround it to remove PyTrilinos from the COMPONENTS_LIST :
             if '+python' in self.spec:
                 filter_file(r'(SET\(COMPONENTS_LIST.*)(PyTrilinos;)(.*)',
                             (r'\1\3'),

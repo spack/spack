@@ -71,9 +71,7 @@ class Petsc(Package):
     depends_on('parmetis', when='+metis+mpi')
     # Hypre does not support complex numbers.  Also PETSc prefer to build it
     # without internal superlu, likely due to conflict in headers see
-    # https://bitbucket.org/petsc/petsc/src\
-    # /90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config\
-    # /packages/hypre.py
+    # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py  # NOQA: ignore=E501
     depends_on('hypre~internal-superlu', when='+hypre+mpi~complex')
     depends_on('superlu-dist@:4.3', when='+superlu-dist+mpi')
     depends_on('mumps+mpi', when='+mumps+mpi')
