@@ -120,6 +120,7 @@ from spack.version import *
 from spack.util.string import *
 from spack.util.prefix import Prefix
 from spack.virtual import ProviderIndex
+from spack.build_environment import get_path_from_module, load_module
 
 # Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
@@ -1084,6 +1085,15 @@ class Spec(object):
             # compatibility across repositories as possible.
             if s.namespace is None:
                 s.namespace = spack.repo.repo_for_pkg(s.name).namespace
+
+
+        for s in self.traverse(root=False):
+            if spec.external_module:
+                compiler = spack.compilers.compiler_for_spec(spec.compiler, spec.architecture.platform_os)
+                for mod in compiler.modules:
+                    load_module(mod)
+
+                spec.external = get_path_from_module(spec.external_module)
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
