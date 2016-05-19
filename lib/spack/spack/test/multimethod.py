@@ -92,36 +92,18 @@ class MultiMethodTest(MockPackagesTest):
         self.assertEqual(pkg.has_a_default(), 'default')
 
 
-#ifdef NEW
-    def test_architecture_match(self):
-        pkg = spack.repo.get('multimethod arch=x86_64')
-        self.assertEqual(pkg.different_by_architecture(), 'x86_64')
-
-        pkg = spack.repo.get('multimethod arch=ppc64')
-        self.assertEqual(pkg.different_by_architecture(), 'ppc64')
-
-        pkg = spack.repo.get('multimethod arch=ppc32')
-        self.assertEqual(pkg.different_by_architecture(), 'ppc32')
-
-        pkg = spack.repo.get('multimethod arch=arm64')
-        self.assertEqual(pkg.different_by_architecture(), 'arm64')
-
-        pkg = spack.repo.get('multimethod arch=macos')
-        self.assertRaises(NoSuchMethodError, pkg.different_by_architecture)
-#else /* not NEW */
     def test_target_match(self):
         platform = spack.architecture.sys_type()
         targets = platform.targets.values()
         for target in targets[:-1]:
-            pkg = spack.repo.get('multimethod='+target.name)
+            pkg = spack.repo.get('multimethod target='+target.name)
             self.assertEqual(pkg.different_by_target(), target.name)
 
-        pkg = spack.repo.get('multimethod='+targets[-1].name)
+        pkg = spack.repo.get('multimethod target='+targets[-1].name)
         if len(targets) == 1:
             self.assertEqual(pkg.different_by_target(), targets[-1].name)
         else:
             self.assertRaises(NoSuchMethodError, pkg.different_by_target)
-#endif /* not NEW */
 
 
     def test_dependency_match(self):
