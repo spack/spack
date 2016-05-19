@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import re
 from spack import *
 
 
@@ -60,11 +59,9 @@ class Scotch(Package):
     def url_for_version(self, version):
         return super(Scotch, self).url_for_version(version)
 
+    @when(":6.0.0")
     def url_for_version(self, version):
-        if version <= Version('6.0.0'):
-            return '%s/scotch_%s_esmumps.tar.gz' % (Scotch.base_url, version)
-        else:
-            return super(Scotch, self).url_for_version(version)
+        return '%s/scotch_%s_esmumps.tar.gz' % (Scotch.base_url, version)
 
     def patch(self):
         self.configure()
@@ -168,15 +165,16 @@ class Scotch(Package):
                 # version prior to 6.0.0 there is no separated targets force
                 # ptesmumps, this library is built by the ptscotch target. This
                 # should explain the test for the can_make_parallel variable
-                can_make_parallel = not (target == 'ptesmumps'
-                                         or (self.spec.version < Version('6.0.0')
-                                             and target == 'ptscotch'))
+                can_make_parallel = \
+                    not (target == 'ptesmumps' or
+                         (self.spec.version < Version('6.0.0') and
+                          target == 'ptscotch'))
                 make(target, parallel=can_make_parallel)
 
         # todo change this to take into account darwin systems
         lib_ext = '.so' if '+shared' in self.spec else '.a'
-        # It seams easier to remove metis wrappers from the folder that will be installed than
-        # to tweak the Makefiles
+        # It seams easier to remove metis wrappers from the folder that will be
+        # installed than to tweak the Makefiles
         if '+metis' not in self.spec:
             with working_dir('lib'):
                 lib_ext = '.so' if '+shared' in self.spec else '.a'
