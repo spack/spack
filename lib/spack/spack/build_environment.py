@@ -213,13 +213,12 @@ def set_compiler_environment_variables(pkg):
         if flags[flag] != []:
             env.set('SPACK_' + flag.upper(), ' '.join(f for f in flags[flag]))
 
-#ifdef NEW
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
-    return env
-#else /* not NEW */
+
     for mod in compiler.modules:
         load_module(mod)
-#endif /* not NEW */
+
+    return env
 
 
 def set_build_environment_variables(pkg, env):
@@ -283,16 +282,13 @@ def set_build_environment_variables(pkg, env):
             pcdir = join_path(p, maybe, 'pkgconfig')
             if os.path.isdir(pcdir):
                 pkg_config_dirs.append(pcdir)
-#ifdef NEW
-    env.set_path('PKG_CONFIG_PATH', pkg_config_dirs)
 
-    return env
-#else /* not NEW */
-    path_put_first("PKG_CONFIG_PATH", pkg_config_dirs)
+    env.prepend_path('PKG_CONFIG_PATH', pkg_config_dirs)
 
     if pkg.spec.architecture.target.module_name:
         load_module(pkg.spec.architecture.target.module_name)
-#endif /* not NEW */
+
+    return env
 
 
 def set_module_variables_for_package(pkg, module):
@@ -368,16 +364,13 @@ def set_module_variables_for_package(pkg, module):
 
 def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
-    for spec in pkg.spec.traverse(root=False):
-        if spec.external_module:
-            load_module(spec.external_module)
-            spec.external = get_path_from_module(spec.external_module)
-
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
     rpaths.extend(d.prefix.lib for d in pkg.spec.dependencies.values()
                   if os.path.isdir(d.prefix.lib))
     rpaths.extend(d.prefix.lib64 for d in pkg.spec.dependencies.values()
                   if os.path.isdir(d.prefix.lib64))
+    for mod in pkg.spec.compiler.modules:
+        rpaths.append(get_path_for_module(mod))
     return rpaths
 
 

@@ -142,19 +142,6 @@ class ConfigTest(MockPackagesTest):
         """Check that named compilers in comps match Spack's config."""
         config = spack.config.get_config('compilers')
         compiler_list = ['cc', 'cxx', 'f77', 'fc']
-#ifdef NEW
-        for key in compiler_names:
-            for c in compiler_list:
-                expected = comps[arch][key][c]
-                actual = config[arch][key][c]
-                self.assertEqual(expected, actual)
-
-    def test_write_list_in_memory(self):
-        spack.config.update_config('repos', repos_low, 'test_low_priority')
-        spack.config.update_config('repos', repos_high, 'test_high_priority')
-        config = spack.config.get_config('repos')
-        self.assertEqual(config, repos_high+repos_low)
-#else /* not NEW */
         param_list = ['modules', 'paths', 'spec', 'operating_system']
         for alias, compiler in config.items():
             if compiler['spec'] in compiler_names:
@@ -166,7 +153,12 @@ class ConfigTest(MockPackagesTest):
                     expected = comps[alias]['paths'][c]
                     actual = config[alias]['paths'][c]
                     self.assertEqual(expected, actual)
-#endif /* not NEW */
+
+    def test_write_list_in_memory(self):
+        spack.config.update_config('repos', repos_low, 'test_low_priority')
+        spack.config.update_config('repos', repos_high, 'test_high_priority')
+        config = spack.config.get_config('repos')
+        self.assertEqual(config, repos_high+repos_low)
 
     def test_write_key_in_memory(self):
         # Write b_comps "on top of" a_comps.
@@ -187,9 +179,8 @@ class ConfigTest(MockPackagesTest):
         spack.config.clear_config_caches()
 
         # Same check again, to ensure consistency.
-#ifdef NEW
-        self.check_config(a_comps, 'x86_64_E5v2_IntelIB', 'gcc@4.7.3', 'gcc@4.5.0')
-        self.check_config(b_comps, 'x86_64_E5v3', 'icc@10.0', 'icc@11.1', 'clang@3.3')
+        self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
+        self.check_config(b_comps, 'icc@10.0', 'icc@11.1', 'clang@3.3')
 
     def test_write_to_same_priority_file(self):
         # Write b_comps in the same file as a_comps.
@@ -200,9 +191,5 @@ class ConfigTest(MockPackagesTest):
         spack.config.clear_config_caches()
 
         # Same check again, to ensure consistency.
-        self.check_config(a_comps, 'x86_64_E5v2_IntelIB', 'gcc@4.7.3', 'gcc@4.5.0')
-        self.check_config(b_comps, 'x86_64_E5v3', 'icc@10.0', 'icc@11.1', 'clang@3.3')
-#else /* not NEW */
         self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
         self.check_config(b_comps, 'icc@10.0', 'icc@11.1', 'clang@3.3')
-#endif /* not NEW */
