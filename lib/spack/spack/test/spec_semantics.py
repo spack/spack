@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import unittest
+import spack.architecture
 from spack.spec import *
 from spack.test.mock_packages_test import *
 
@@ -138,23 +139,31 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_unsatisfiable('foo %gcc@4.7', '%gcc@4.7.3')
 
 
-#ifdef NEW
     def test_satisfies_architecture(self):
-        self.check_satisfies('foo arch=chaos_5_x86_64_ib', ' arch=chaos_5_x86_64_ib')
-        self.check_satisfies('foo arch=bgqos_0', ' arch=bgqos_0')
+        platform = self.architecture.sys_type()
+        if platform.name == 'crayxc':
+            self.check_satisfies('foo target=frontend os=frontend', 'target=frontend os=frontend')
+            self.check_satisfies('foo target=backend os=backend', 'target=backend', 'os=backend')
+        self.check_satisfies('foo target=default_target os=default_os','target=default_target os=default_os')
 
-        self.check_unsatisfiable('foo arch=bgqos_0', ' arch=chaos_5_x86_64_ib')
-        self.check_unsatisfiable('foo arch=chaos_5_x86_64_ib', ' arch=bgqos_0')
-#else /* not NEW */
-    def test_satisfies_target(self):
-        platform = spack.architecture.sys_type()
-        targets = platform.targets.values()
-        for target in targets:
-            self.check_satisfies('foo='+target.name, '='+target.name)
-#endif /* not NEW */
 
-        for i in range(1,len(targets)):
-            self.check_unsatisfiable('foo='+targets[i-1].name, '='+targets[i].name)
+#ifdef NEW
+    #def test_satisfies_architecture(self):
+    #    self.check_satisfies('foo arch=chaos_5_x86_64_ib', ' arch=chaos_5_x86_64_ib')
+    #    self.check_satisfies('foo arch=bgqos_0', ' arch=bgqos_0')
+
+    #    self.check_unsatisfiable('foo arch=bgqos_0', ' arch=chaos_5_x86_64_ib')
+    #    self.check_unsatisfiable('foo arch=chaos_5_x86_64_ib', ' arch=bgqos_0')
+#els#e /* not NEW */
+    #def test_satisfies_target(self):
+    #    platform = spack.architecture.sys_type()
+    #    targets = platform.targets.values()
+    #    for target in targets:
+    #        self.check_satisfies('foo='+target.name, '='+target.name)
+#end#if /* not NEW */
+
+    #    for i in range(1,len(targets)):
+    #        self.check_unsatisfiable('foo='+targets[i-1].name, '='+targets[i].name)
 
     def test_satisfies_dependencies(self):
         self.check_satisfies('mpileaks^mpich', '^mpich')
@@ -355,22 +364,29 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf+debug~foo')
 
 
-#ifdef NEW
     def test_constrain_compiler_flags(self):
         self.check_constrain('libelf cflags="-O3" cppflags="-Wall"', 'libelf cflags="-O3"', 'libelf cppflags="-Wall"')
         self.check_constrain('libelf cflags="-O3" cppflags="-Wall"', 'libelf cflags="-O3"', 'libelf cflags="-O3" cppflags="-Wall"')
 
 
-    def test_constrain_arch(self):
-        self.check_constrain('libelf arch=bgqos_0', 'libelf arch=bgqos_0', 'libelf arch=bgqos_0')
-        self.check_constrain('libelf arch=bgqos_0', 'libelf', 'libelf arch=bgqos_0')
-#else /* not NEW */
-    def test_constrain_target(self):
-        platform = spack.architecture.sys_type()
-        target = platform.target('default_target').name
-        self.check_constrain('libelf='+target, 'libelf='+target, 'libelf='+target)
-        self.check_constrain('libelf='+target, 'libelf', 'libelf='+target)
-#endif /* not NEW */
+    def test_constrain_architecture(self):
+        self.check_constrain('libelf target=default_target os=default_os',
+                             'libelf target=default_target os=default_os',
+                             'libelf target=default_target os=default_os')
+        self.check_constrain('libelf target=default_target os=default_os',
+                             'libelf',
+                             'libelf target=default_target os=default_os')
+
+    #def test_constrain_arch(self):
+    #    self.check_constrain('libelf arch=bgqos_0', 'libelf arch=bgqos_0', 'libelf arch=bgqos_0')
+    #    self.check_constrain('libelf arch=bgqos_0', 'libelf', 'libelf arch=bgqos_0')
+#els#e /* not NEW */
+    #def test_constrain_target(self):
+    #    platform = spack.architecture.sys_type()
+    #    target = platform.target('default_target').name
+    #    self.check_constrain('libelf='+target, 'libelf='+target, 'libelf='+target)
+    #    self.check_constrain('libelf='+target, 'libelf', 'libelf='+target)
+#end#if /* not NEW */
 
 
     def test_constrain_compiler(self):
@@ -384,20 +400,11 @@ class SpecSematicsTest(MockPackagesTest):
 
         self.check_invalid_constraint('libelf+debug', 'libelf~debug')
         self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
-#ifdef NEW
         self.check_invalid_constraint('libelf debug=2', 'libelf debug=1')
 
         self.check_invalid_constraint('libelf cppflags="-O3"', 'libelf cppflags="-O2"')
-
-        self.check_invalid_constraint('libelf arch=bgqos_0', 'libelf arch=x86_54')
-#else /* not NEW */
-
-        platform = spack.architecture.sys_type()
-        targets = platform.targets.values()
-        if len(targets) > 1:
-            self.check_invalid_constraint('libelf='+targets[0].name, 'libelf='+targets[1].name)
-#endif /* not NEW */
-
+        self.check_invalid_constraint('libelf target=default_target os=default_os',
+                                      'libelf target=x86_64 os=ubuntu')
 
     def test_constrain_changed(self):
         self.check_constrain_changed('libelf', '@1.0')
@@ -406,14 +413,13 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf%gcc', '%gcc@4.5')
         self.check_constrain_changed('libelf', '+debug')
         self.check_constrain_changed('libelf', '~debug')
-#ifdef NEW
         self.check_constrain_changed('libelf', 'debug=2')
         self.check_constrain_changed('libelf', 'cppflags="-O3"')
         self.check_constrain_changed('libelf', ' arch=bgqos_0')
-#else /* not NEW */
+        
         platform = spack.architecture.sys_type()
-        self.check_constrain_changed('libelf', '='+platform.target('default_target').name)
-#endif /* not NEW */
+        self.check_constrain_changed('libelf', 'target='+platform.target('default_target').name)
+        self.check_constrain_changed('libelf', 'os='+platform.operating_system('default_os').name)
 
 
     def test_constrain_not_changed(self):
@@ -424,17 +430,12 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf%gcc@4.5', '%gcc@4.5')
         self.check_constrain_not_changed('libelf+debug', '+debug')
         self.check_constrain_not_changed('libelf~debug', '~debug')
-#ifdef NEW
         self.check_constrain_not_changed('libelf debug=2', 'debug=2')
         self.check_constrain_not_changed('libelf cppflags="-O3"', 'cppflags="-O3"')
-        self.check_constrain_not_changed('libelf arch=bgqos_0', ' arch=bgqos_0')
-#else /* not NEW */
+
         platform = spack.architecture.sys_type()
         default_target = platform.target('default_target').name
-        self.check_constrain_not_changed('libelf='+default_target, '='+default_target)
-#endif /* not NEW */
-        self.check_constrain_not_changed('libelf^foo', 'libelf^foo')
-        self.check_constrain_not_changed('libelf^foo^bar', 'libelf^foo^bar')
+        self.check_constrain_not_changed('libelf target='+default_target, 'target='+default_target)
 
 
     def test_constrain_dependency_changed(self):
@@ -444,14 +445,9 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf^foo%gcc', 'libelf^foo%gcc@4.5')
         self.check_constrain_changed('libelf^foo', 'libelf^foo+debug')
         self.check_constrain_changed('libelf^foo', 'libelf^foo~debug')
-#ifdef NEW
-        self.check_constrain_changed('libelf^foo', 'libelf^foo cppflags="-O3"')
-        self.check_constrain_changed('libelf^foo', 'libelf^foo arch=bgqos_0')
-#else /* not NEW */
         platform = spack.architecture.sys_type()
         default_target = platform.target('default_target').name
-        self.check_constrain_changed('libelf^foo', 'libelf^foo='+default_target)
-#endif /* not NEW */
+        self.check_constrain_changed('libelf^foo', 'libelf^foo target='+default_target)
 
 
     def test_constrain_dependency_not_changed(self):
@@ -461,13 +457,8 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf^foo%gcc@4.5', 'libelf^foo%gcc@4.5')
         self.check_constrain_not_changed('libelf^foo+debug', 'libelf^foo+debug')
         self.check_constrain_not_changed('libelf^foo~debug', 'libelf^foo~debug')
-#ifdef NEW
         self.check_constrain_not_changed('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"')
-        self.check_constrain_not_changed('libelf^foo arch=bgqos_0', 'libelf^foo arch=bgqos_0')
 
-#else /* not NEW */
         platform = spack.architecture.sys_type()
         default_target = platform.target('default_target').name
-        self.check_constrain_not_changed('libelf^foo='+default_target, 'libelf^foo='+default_target)
-
-#endif /* not NEW */
+        self.check_constrain_not_changed('libelf^foo target='+default_target, 'libelf^foo target='+default_target)
