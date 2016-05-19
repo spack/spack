@@ -254,17 +254,18 @@ def compilers_for_spec(compiler_spec, scope=None):
             else:
                 operating_system = None
 
-            compilers.append(cls(cspec, operating_system, compiler_paths, mods, alias))
+            flags = {}
+            for f in spack.spec.FlagMap.valid_compiler_flags():
+                if f in items:
+                    flags[f] = items[f]
 
-#ifdef NEW
-        flags = {}
-        for f in spack.spec.FlagMap.valid_compiler_flags():
-            if f in items:
-                flags[f] = items[f]
-        return cls(cspec, *compiler_paths, **flags)
-#else /* not NEW */
-        return compilers
-#endif /* not NEW */
+            compilers.append(cls(cspec, operating_system, compiler_paths, mods, alias, **flags))
+
+##ifdef NEW
+#        return cls(cspec, *compiler_paths, **flags)
+##else /* not NEW */
+#        return compilers
+##endif /* not NEW */
 
     matches = set(find(compiler_spec, scope))
     compilers = []
