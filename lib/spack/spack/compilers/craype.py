@@ -47,10 +47,11 @@ class Craype(Compiler):
     PrgEnv = 'PrgEnv-cray'
     PrgEnv_compiler = 'craype'
 
-#    @property
-#    def cxx11_flag(self):
-#        return "-hstd=c++11"
-    
+    link_paths = { 'cc'  : 'cc',
+                   'cxx' : 'c++',
+                   'f77' : 'f77',
+                   'fc'  : 'fc'}
+ 
     @classmethod
     def default_version(cls, comp):
         return get_compiler_version(comp, r'([Vv]ersion).*(\d+(\.\d+)+)')
