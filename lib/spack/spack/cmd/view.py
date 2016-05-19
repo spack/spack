@@ -24,9 +24,8 @@
 ##############################################################################
 '''Produce a "view" of a Spack DAG.
 
-A "view" is the product of applying a function on a set of package specs.
-
-This set consists of:
+A "view" is file hierarchy representing the union of a number of
+Spack-installed package file hierarchies.  The union is formed from:
 
 - specs resolved from the package names given by the user (the seeds)
 
@@ -35,7 +34,7 @@ This set consists of:
 - less any specs with names matching the regular expressions given by
   `--exclude`
 
-The `view` command provides a number of functions (the "actions"):
+The `view` can be built and tore down via a number of methods (the "actions"):
 
 - symlink :: a file system view which is a directory hierarchy that is
   the union of the hierarchies of the installed packages in the DAG
@@ -45,8 +44,6 @@ The `view` command provides a number of functions (the "actions"):
 
 - statlink :: a view producing a status report of a symlink or
   hardlink view.
-
-- format :: a view printing one string per spec following a given format.
 
 The file system view concept is imspired by Nix, implemented by
 brett.viren@gmail.com ca 2016.
@@ -68,7 +65,6 @@ brett.viren@gmail.com ca 2016.
 
 import os
 import re
-import sys
 import spack
 import spack.cmd
 import llnl.util.tty as tty
@@ -116,13 +112,6 @@ def setup_parser(sp):
         act.add_argument('path', nargs=1,
                          help="Path to file system view directory.")
         act.add_argument('specs', **specs_opts)
-
-    # The formatted print action.
-    act = ssp.add_parser('print',
-                         help="Print a string to stdout based on given format")
-    act.add_argument('format', nargs=1,
-                     help="Format describing per-package printout.")
-    act.add_argument('specs', **specs_opts)
 
     return
 
@@ -188,42 +177,6 @@ def flatten(seeds, descend=True):
             continue
         flat.update(spec.normalized().traverse())
     return flat
-
-
-def spec2dict(spec):
-    'Convert info in a spec into a simple dictionary.'
-
-    # Expclitly convert instead of just returning spec.__dict__ as
-    # some things need processing or are properties.
-    #
-    pkg = spec.package
-    inst_deps = ','.join([s.name for s in pkg.installed_dependents]),
-    ret = dict(name=spec.name,
-               spec=spec.short_spec,
-               colorspec=spec.cshort_spec,  # color
-               root=spec.root,
-               prefix=spec.prefix,
-               version=spec.version,
-               variants=spec.variants,
-               namespace=spec.namespace,
-               compiler=spec.compiler,
-               architecture=spec.architecture,
-               dependencies=','.join(spec.dependencies.keys()),
-               dependents=','.join(spec.dependents.keys()),
-               external=spec.external or "False",
-               hash=spec.dag_hash(),
-
-               # package related:
-               url=pkg.url,
-               stage=pkg.stage.path,
-               installed=pkg.installed,
-               installed_dependents=inst_deps,
-               build_log=pkg.build_log_path,
-               rpath=':'.join(pkg.rpath),
-
-               # ...
-               )
-    return ret
 
 
 def check_one(spec, path, verbose=False):
@@ -324,25 +277,6 @@ def visitor_statlink(specs, args):
         check_one(spec, path, verbose=args.verbose)
 visitor_status = visitor_statlink
 visitor_check = visitor_statlink
-
-
-def visitor_print(specs, args):
-    'Print a string for each spec using args.format.'
-    fmt = args.format[0]
-    from string import Template
-    t = Template(fmt)
-
-    for spec in specs:
-        kwds = spec2dict(spec)
-        try:
-            text = t.substitute(kwds)
-        except KeyError:
-            tty.error("Format error, use keywords: %s" %
-                      (', '.join(kwds.keys()), ))
-            raise
-        # argparser escapes these
-        text = text.replace(r'\n', '\n').replace(r'\t', '\t')
-        sys.stdout.write(text)
 
 
 def view(parser, args):
