@@ -282,11 +282,8 @@ class DefaultConcretizer(object):
             return False
 
         #Find the another spec that has a compiler, or the root if none do
-#ifdef NEW
         other_spec = spec if spec.compiler else find_spec(spec, lambda(x) : x.compiler)
-#else /* not NEW */
-        other_spec = find_spec(spec, lambda(x) : x.compiler)
-#endif /* not NEW */
+
         if not other_spec:
             other_spec = spec.root
         other_compiler = other_spec.compiler
@@ -321,6 +318,10 @@ class DefaultConcretizer(object):
         compiler is used, defaulting to no compiler flags in the spec.
         Default specs set at the compiler level will still be added later.
         """
+        if not spec.architecture.platform_os:
+            #Although this usually means changed, this means awaiting other changes
+            return True
+
         ret = False
         for flag in spack.spec.FlagMap.valid_compiler_flags():
             try:
@@ -352,7 +353,7 @@ class DefaultConcretizer(object):
         # Include the compiler flag defaults from the config files
         # This ensures that spack will detect conflicts that stem from a change
         # in default compiler flags.
-        compiler = spack.compilers.compiler_for_spec(spec.compiler)
+        compiler = spack.compilers.compiler_for_spec(spec.compiler, spec.architecture.platform_os)
         for flag in compiler.flags:
             if flag not in spec.compiler_flags:
                 spec.compiler_flags[flag] = compiler.flags[flag]
