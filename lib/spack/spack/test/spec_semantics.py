@@ -140,7 +140,7 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     def test_satisfies_architecture(self):
-        platform = self.architecture.sys_type()
+        platform = spack.architecture.sys_type()
         if platform.name == 'crayxc':
             self.check_satisfies('foo target=frontend os=frontend', 'target=frontend os=frontend')
             self.check_satisfies('foo target=backend os=backend', 'target=backend', 'os=backend')
@@ -377,34 +377,28 @@ class SpecSematicsTest(MockPackagesTest):
                              'libelf',
                              'libelf target=default_target os=default_os')
 
-    #def test_constrain_arch(self):
-    #    self.check_constrain('libelf arch=bgqos_0', 'libelf arch=bgqos_0', 'libelf arch=bgqos_0')
-    #    self.check_constrain('libelf arch=bgqos_0', 'libelf', 'libelf arch=bgqos_0')
-#els#e /* not NEW */
-    #def test_constrain_target(self):
-    #    platform = spack.architecture.sys_type()
-    #    target = platform.target('default_target').name
-    #    self.check_constrain('libelf='+target, 'libelf='+target, 'libelf='+target)
-    #    self.check_constrain('libelf='+target, 'libelf', 'libelf='+target)
-#end#if /* not NEW */
-
-
     def test_constrain_compiler(self):
         self.check_constrain('libelf %gcc@4.4.7', 'libelf %gcc@4.4.7', 'libelf %gcc@4.4.7')
         self.check_constrain('libelf %gcc@4.4.7', 'libelf', 'libelf %gcc@4.4.7')
 
 
     def test_invalid_constraint(self):
-        self.check_invalid_constraint('libelf@0:2.0', 'libelf@2.1:3')
-        self.check_invalid_constraint('libelf@0:2.5%gcc@4.8:4.9', 'libelf@2.1:3%gcc@4.5:4.7')
+#        self.check_invalid_constraint('libelf@0:2.0', 'libelf@2.1:3')
+#        self.check_invalid_constraint('libelf@0:2.5%gcc@4.8:4.9', 'libelf@2.1:3%gcc@4.5:4.7')
 
-        self.check_invalid_constraint('libelf+debug', 'libelf~debug')
-        self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
-        self.check_invalid_constraint('libelf debug=2', 'libelf debug=1')
+#        self.check_invalid_constraint('libelf+debug', 'libelf~debug')
+#        self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
+#        self.check_invalid_constraint('libelf debug=2', 'libelf debug=1')
 
-        self.check_invalid_constraint('libelf cppflags="-O3"', 'libelf cppflags="-O2"')
-        self.check_invalid_constraint('libelf target=default_target os=default_os',
-                                      'libelf target=x86_64 os=ubuntu')
+#        self.check_invalid_constraint('libelf cppflags="-O3"', 'libelf cppflags="-O2"')
+        platform = spack.architecture.sys_type()
+        if len(platform.operating_sys.keys()) > 1 or len(platform.targets.keys()) > 1:
+            os1 = platform.operating_sys.keys()[0]
+            os2 = platform.operating_sys.keys()[-1]
+            target1 = platform.targets.keys()[0]
+            target2 = platform.targets.keys()[-1]
+            self.check_invalid_constraint('libelf target=%s os=%s' % (target1, os1), 
+                                          'libelf target=%s os=%s' % (target2, os2))
 
     def test_constrain_changed(self):
         self.check_constrain_changed('libelf', '@1.0')
@@ -447,6 +441,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf^foo', 'libelf^foo~debug')
         platform = spack.architecture.sys_type()
         default_target = platform.target('default_target').name
+        print default_target
         self.check_constrain_changed('libelf^foo', 'libelf^foo target='+default_target)
 
 
