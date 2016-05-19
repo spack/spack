@@ -72,7 +72,7 @@ class ArchitectureTest(MockPackagesTest):
         """
         frontend_os = self.platform.operating_system("frontend")
         frontend_target = self.platform.target("frontend")
-        frontend_spec = Spec("libelf=frontend")
+        frontend_spec = Spec("libelf os=frontend target=frontend")
         frontend_spec.concretize()
         self.assertEqual(frontend_os, frontend_spec.architecture.platform_os)
         self.assertEqual(frontend_target, frontend_spec.architecture.target)
@@ -83,7 +83,7 @@ class ArchitectureTest(MockPackagesTest):
         """
         backend_os = self.platform.operating_system("backend")
         backend_target = self.platform.target("backend")
-        backend_spec = Spec("libelf=backend")
+        backend_spec = Spec("libelf os=backend target=backend")
         backend_spec.concretize()
         self.assertEqual(backend_os, backend_spec.architecture.platform_os)
         self.assertEqual(backend_target, backend_spec.architecture.target)
@@ -109,8 +109,7 @@ class ArchitectureTest(MockPackagesTest):
         results = []
         for arch in combinations:
             o,t = arch
-            arch_spec = "-".join(arch)
-            spec = Spec("libelf=%s" % arch_spec)
+            spec = Spec("libelf os=%s target=%s" % (o, t))
             spec.concretize()
             results.append(spec.architecture.platform_os == self.platform.operating_system(o))
             results.append(spec.architecture.target == self.platform.target(t))

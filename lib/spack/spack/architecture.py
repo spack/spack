@@ -323,8 +323,8 @@ class Arch(object):
         target = self.target
 
         d['platform'] = self.platform.name
-        d['platform_os'] = self.platform_os.to_dict()
-        d['target'] = self.target.to_dict()
+        d['platform_os'] = self.platform_os.to_dict() if self.platform_os else None
+        d['target'] = self.target.to_dict() if self.target else None
 
         return d
 
@@ -362,8 +362,8 @@ def arch_from_dict(d):
     os_dict = d['platform_os']
     target_dict = d['target']
 
-    target = _target_from_dict(target_dict)
-    platform_os = _operating_system_from_dict(os_dict)
+    target = _target_from_dict(target_dict) if os_dict else None
+    platform_os = _operating_system_from_dict(os_dict) if os_dict else None
     arch.target = target
     arch.platform_os = platform_os
 

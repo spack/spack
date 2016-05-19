@@ -239,5 +239,5 @@ def find(parser, args):
                   mode=args.mode,
                   long=args.long,
                   very_long=args.very_long,
-                  show_flags=args.show_flags)
+                  show_flags=args.show_flags,
                   namespace=args.namespace)

@@ -1458,7 +1458,7 @@ class Spec(object):
             self.architecture = self.architecture or other.architecture
         elif self.architecture.platform is None or other.architecture.platform is None:
             self.architecture.platform = self.architecture.platform or other.architecture.platform
-        elif self.architecture.platform_os is None of other.architecture.platform_os is None:
+        elif self.architecture.platform_os is None or other.architecture.platform_os is None:
             self.architecture.platform_os = self.architecture.platform_os or other.architecture.platform_os
         elif self.architecture.target is None or other.architecture.target is None:
             self.architecture.target = self.architecture.target or other.architecture.target
