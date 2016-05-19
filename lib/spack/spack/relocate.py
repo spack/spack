@@ -80,14 +80,14 @@ def modify_macho_object(path_name, old_dir, new_dir):
             if lhs == 'name' and last_cmd == 'LC_LOAD_DYLIB':
                 deps.append(rhs)
     id = idpath.replace(old_dir,new_dir)
-    ndeps = []
     nrpaths = []
     for rpath in rpaths:
         nrpath = rpath.replace(old_dir,new_dir)
         nrpaths.append(nrpath)
-        for dep in deps:
-            ndep = dep.replace(old_dir,new_dir)
-            ndeps.append(ndep)
+    ndeps = []
+    for dep in deps:
+        ndep = dep.replace(old_dir,new_dir)
+        ndeps.append(ndep)
 
     st = os.stat(path_name)
     wmode = os.access(path_name, os.W_OK)
