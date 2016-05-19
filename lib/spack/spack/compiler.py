@@ -101,7 +101,6 @@ class Compiler(object):
     def cxx_rpath_arg(self):
         return '-Wl,-rpath,'
 
-#ifdef NEW
     @property
     def f77_rpath_arg(self):
         return '-Wl,-rpath,'
@@ -109,44 +108,18 @@ class Compiler(object):
     @property
     def fc_rpath_arg(self):
         return '-Wl,-rpath,'
-#else /* not NEW */
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv = None
-
     # Name of module used to switch versions of this compiler
     PrgEnv_compiler = None
-#endif /* not NEW */
 
-#ifdef NEW
-
-    def __init__(self, cspec, cc, cxx, f77, fc, **kwargs):
-#else /* not NEW */
-
-    def __init__(self, cspec, operating_system, paths, modules=[], alias=None):
-#endif /* not NEW */
+    def __init__(self, cspec, operating_system, 
+                 paths, modules=[], alias=None, **kwargs):
         def check(exe):
             if exe is None:
                 return None
             _verify_executables(exe)
             return exe
-
-#ifdef NEW
-        self.cc  = check(cc)
-        self.cxx = check(cxx)
-        self.f77 = check(f77)
-        self.fc  = check(fc)
-
-        # Unfortunately have to make sure these params are accepted
-        # in the same order they are returned by sorted(flags)
-        # in compilers/__init__.py
-        self.flags = {}
-        for flag in spack.spec.FlagMap.valid_compiler_flags():
-            value = kwargs.get(flag, None)
-            if value is not None:
-                self.flags[flag] = value.split()
-
-#else /* not NEW */
-        self.operating_system = operating_system
 
         self.cc  = check(paths[0])
         self.cxx = check(paths[1])
@@ -157,7 +130,21 @@ class Compiler(object):
             else:
                 self.fc  = check(paths[3])
 
-#endif /* not NEW */
+        #self.cc  = check(cc)
+        #self.cxx = check(cxx)
+        #self.f77 = check(f77)
+        #self.fc  = check(fc)
+
+        # Unfortunately have to make sure these params are accepted
+        # in the same order they are returned by sorted(flags)
+        # in compilers/__init__.py
+        self.flags = {}
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            value = kwargs.get(flag, None)
+            if value is not None:
+                self.flags[flag] = value.split()
+
+        self.operating_system = operating_system
         self.spec = cspec
         self.modules = modules
         self.alias = alias
@@ -286,28 +273,6 @@ class Compiler(object):
         # does not spoil the intented precedence.
         successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
-
-    @classmethod
-    def default_version(cls, cc):
-        """Override just this to override all compiler version functions."""
-        return dumpversion(cc)
-
-    @classmethod
-    def cc_version(cls, cc):
-        return cls.default_version(cc)
-
-    @classmethod
-    def cxx_version(cls, cxx):
-        return cls.default_version(cxx)
-
-    @classmethod
-    def f77_version(cls, f77):
-        return cls.default_version(f77)
-
-    @classmethod
-    def fc_version(cls, fc):
-        return cls.default_version(fc)
-
 
     def __repr__(self):
         """Return a string representation of the compiler toolchain."""
