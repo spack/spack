@@ -302,10 +302,10 @@ class DefaultConcretizer(object):
             raise UnavailableCompilerVersionError(other_compiler)
 
         # copy concrete version into other_compiler
-        index = len(matches)-1
+        index = 0
         while not _proper_compiler_style(matches[index], spec.architecture):
-            index -= 1
-            if index == 0:
+            index += 1
+            if index == len(matches) - 1:
                 raise NoValidVersionError(spec)
         spec.compiler = matches[index].copy()
         assert(spec.compiler.concrete)
