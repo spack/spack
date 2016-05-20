@@ -29,15 +29,18 @@ import unittest
 
 
 class Bunch(object):
+
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
 
 class FindTest(unittest.TestCase):
+
     def test_query_arguments(self):
         query_arguments = spack.cmd.find.query_arguments
         # Default arguments
-        args = Bunch(only_missing=False, missing=False, unknown=False, explicit=False, implicit=False)
+        args = Bunch(only_missing=False, missing=False,
+                     unknown=False, explicit=False, implicit=False)
         q_args = query_arguments(args)
         self.assertTrue('installed' in q_args)
         self.assertTrue('known' in q_args)
