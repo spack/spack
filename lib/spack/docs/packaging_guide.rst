@@ -1648,8 +1648,8 @@ point will Spack call the ``install()`` method for your package.
 Concretization in Spack is based on certain selection policies that
 tell Spack how to select, e.g., a version, when one is not specified
 explicitly.  Concretization policies are discussed in more detail in
-:ref:`site-configuration`.  Sites using Spack can customize them to
-match the preferences of their own users.
+:ref:`configuration`.  Sites using Spack can customize them to match
+the preferences of their own users.
 
 .. _spack-spec:
 
@@ -1682,60 +1682,8 @@ be concretized on their system.  For example, one user may prefer packages
 built with OpenMPI and the Intel compiler.  Another user may prefer
 packages be built with MVAPICH and GCC.
 
-Spack can be configured to prefer certain compilers, package
-versions, depends_on, and variants during concretization.
-The preferred configuration can be controlled via the
-``~/.spack/packages.yaml`` file for user configuations, or the
-``etc/spack/packages.yaml`` site configuration.
-
-
-Here's an example packages.yaml file that sets preferred packages:
-
-.. code-block:: sh
-
-    packages:
-      dyninst:
-        compiler: [gcc@4.9]
-        variants: +debug
-      gperftools:
-        version: [2.2, 2.4, 2.3]
-      all:
-        compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
-        providers:
-          mpi: [mvapich, mpich, openmpi]
-
-
-At a high level, this example is specifying how packages should be
-concretized.  The dyninst package should prefer using gcc 4.9 and
-be built with debug options.  The gperftools package should prefer version
-2.2 over 2.4.  Every package on the system should prefer mvapich for
-its MPI and gcc 4.4.7 (except for Dyninst, which overrides this by preferring gcc 4.9).
-These options are used to fill in implicit defaults.  Any of them can be overwritten
-on the command line if explicitly requested.
-
-Each packages.yaml file begins with the string ``packages:`` and
-package names are specified on the next level. The special string ``all``
-applies settings to each package. Underneath each package name is
-one or more components: ``compiler``, ``variants``, ``version``,
-or ``providers``.  Each component has an ordered list of spec
-``constraints``, with earlier entries in the list being preferred over
-later entries.
-
-Sometimes a package installation may have constraints that forbid
-the first concretization rule, in which case Spack will use the first
-legal concretization rule.  Going back to the example, if a user
-requests gperftools 2.3 or later, then Spack will install version 2.4
-as the 2.4 version of gperftools is preferred over 2.3.
-
-An explicit concretization rule in the preferred section will always
-take preference over unlisted concretizations.  In the above example,
-xlc isn't listed in the compiler list.  Every listed compiler from
-gcc to pgi will thus be preferred over the xlc compiler.
-
-The syntax for the ``provider`` section differs slightly from other
-concretization rules.  A provider lists a value that packages may
-``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
-dependency.
+See the `documentation in the config section <concretization-preferences_>`_
+for more details.
 
 .. _install-method:
 
