@@ -10,6 +10,9 @@ class RustBindgen(Package):
     version('0.16', tag='0.16', git='https://github.com/crabtw/rust-bindgen')
 
     extends("rust")
+    depends_on("llvm")
 
     def install(self, spec, prefix):
-        cargo('install', '--root', prefix)
+        env = dict(os.environ)
+        env['LIBCLANG_PATH'] = os.path.join(spec['llvm'].prefix, 'lib')
+        cargo('install', '--root', prefix, env=env)

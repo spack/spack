@@ -21,6 +21,7 @@ class Rust(Package):
     extendable = True
 
     # Rust
+    depends_on("llvm")
     depends_on("curl")
     depends_on("git")
     depends_on("cmake")
@@ -30,8 +31,8 @@ class Rust(Package):
     depends_on("openssl")
 
     def install(self, spec, prefix):
-        get_submodules()
-        configure('--prefix=%s' % prefix)
+        configure('--prefix=%s' % prefix,
+                  '--llvm-root=' + spec['llvm'].prefix)
 
         make()
         make("install")
