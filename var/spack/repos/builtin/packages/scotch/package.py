@@ -171,15 +171,13 @@ class Scotch(Package):
                           target == 'ptscotch'))
                 make(target, parallel=can_make_parallel)
 
-        # todo change this to take into account darwin systems
-        lib_ext = '.so' if '+shared' in self.spec else '.a'
+        lib_ext = dso_suffix if '+shared' in self.spec else 'a'
         # It seams easier to remove metis wrappers from the folder that will be
         # installed than to tweak the Makefiles
         if '+metis' not in self.spec:
             with working_dir('lib'):
-                lib_ext = '.so' if '+shared' in self.spec else '.a'
-                force_remove('libscotchmetis{0}'.format(lib_ext))
-                force_remove('libptscotchparmetis{0}'.format(lib_ext))
+                force_remove('libscotchmetis.{0}'.format(lib_ext))
+                force_remove('libptscotchparmetis.{0}'.format(lib_ext))
 
             with working_dir('include'):
                 force_remove('metis.h')
@@ -187,8 +185,8 @@ class Scotch(Package):
 
         if '~esmumps' in self.spec and self.spec.version < Version('6.0.0'):
             with working_dir('lib'):
-                force_remove('libesmumps{0}'.format(lib_ext))
-                force_remove('libptesmumps{0}'.format(lib_ext))
+                force_remove('libesmumps.{0}'.format(lib_ext))
+                force_remove('libptesmumps.{0}'.format(lib_ext))
 
             with working_dir('include'):
                 force_remove('esmumps.h')
