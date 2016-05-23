@@ -1750,8 +1750,7 @@ class Spec(object):
                 self.variants,
                 self.architecture,
                 self.compiler,
-                self.compiler_flags,
-                self.dag_hash())
+                self.compiler_flags)
 
     def eq_node(self, other):
         """Equality with another spec, not including dependencies."""
