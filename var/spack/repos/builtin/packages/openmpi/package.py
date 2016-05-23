@@ -61,9 +61,9 @@ class Openmpi(Package):
 
     # TODO : variant support for alps, loadleveler  is missing
     variant('tm', default=False, description='Build TM (Torque, PBSPro, and compatible) support')
-    # TODO : this is a hack, when variant will allow to specify string, will go away
-    variant('tm_custom', default=False, 
-            description='the tm_custom void module is used to provide PBS installation path')
+    # TODO : this is a hack, to be removed when variant will support string
+    variant('tm_custom', default=False,
+            description='tm_custom void module used for PBS install path')
     variant('slurm', default=False, description='Build SLURM scheduler component')
 
     variant('sqlite3', default=False, description='Build sqlite3 support')
@@ -84,7 +84,6 @@ class Openmpi(Package):
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)
 
-
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('OMPI_CC', spack_cc)
         spack_env.set('OMPI_CXX', spack_cxx)
@@ -99,7 +98,7 @@ class Openmpi(Package):
 
     @property
     def verbs(self):
-        # Up through version 1.6, this option was previously named --with-openib
+        # Up through version 1.6, this option was named --with-openib
         if self.spec.satisfies('@:1.6'):
             return 'openib'
         # In version 1.7, it was renamed to be --with-verbs
