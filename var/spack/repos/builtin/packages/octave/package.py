@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
+
 
 class Octave(Package):
     """GNU Octave is a high-level language, primarily intended for numerical
@@ -34,6 +36,7 @@ class Octave(Package):
     homepage = "https://www.gnu.org/software/octave/"
     url      = "ftp://ftp.gnu.org/gnu/octave/octave-4.0.0.tar.gz"
 
+    version('4.0.2' , 'c2a5cacc6e4c52f924739cdf22c2c687')
     version('4.0.0' , 'a69f8320a4f20a8480c1b278b1adb799')
 
     # Variants
@@ -62,7 +65,10 @@ class Octave(Package):
     # Required dependencies
     depends_on('blas')
     depends_on('lapack')
+    # Octave does not configure with sed from darwin:
+    depends_on('sed', sys.platform == 'darwin')
     depends_on('pcre')
+    depends_on('pkg-config')
 
     # Strongly recommended dependencies
     depends_on('readline',    when='+readline')
