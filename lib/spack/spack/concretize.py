@@ -198,7 +198,7 @@ class DefaultConcretizer(object):
                 spec.architecture.platform_os = spec.root.architecture.platform_os
         else:
             spec.architecture.platform_os = spec.architecture.platform.operating_system('default_os')
-            return True #changed
+        return True #changed
 
     def _concretize_target(self, spec):
         platform = spec.architecture.platform
@@ -210,7 +210,19 @@ class DefaultConcretizer(object):
                 spec.architecture.target = spec.root.architecture.target
         else:
             spec.architecture.target = spec.architecture.platform.target('default_target')
-            return True #changed
+        print spec.architecture, spec.architecture.platform, spec.architecture.platform_os, spec.architecture.target
+        return True #changed
+
+    def _concretize_platform(self, spec):
+        if spec.architecture.platform is not None and isinstance(
+                spec.architecture.platform, spack.architecture.Platform):
+            return False
+        if spec.root.architecture and spec.root.architecture.platform:
+            if isinstance(spec.root.architecture.platform,spack.architecture.Platform):
+                spec.architecture.platform = spec.root.architecture.platform
+        else:
+            spec.architecture.platform = spack.architecture.sys_type()
+        return True #changed?
 
     def concretize_architecture(self, spec):
         """If the spec is empty provide the defaults of the platform. If the
@@ -227,10 +239,11 @@ class DefaultConcretizer(object):
             # Set the architecture to all defaults
             spec.architecture = spack.architecture.Arch()
             return True
-            
+
             # Concretize the operating_system and target based of the spec
-        ret =  any((self._concretize_operating_system(spec),
-                             self._concretize_target(spec)))
+        ret =  any((self._concretize_platform(spec),
+                    self._concretize_operating_system(spec),
+                    self._concretize_target(spec)))
         return ret
 
 

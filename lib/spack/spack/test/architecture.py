@@ -26,12 +26,14 @@ class ArchitectureTest(MockPackagesTest):
     
     def test_dict_functions_for_architecture(self):
         arch = Arch()
+        arch.platform = spack.architecture.sys_type()
         arch.platform_os = arch.platform.operating_system('default_os')
         arch.target = arch.platform.target('default_target')
 
         d = arch.to_dict()
 
         new_arch = spack.architecture.arch_from_dict(d)
+
         self.assertEqual(arch, new_arch)
 
         self.assertTrue( isinstance(arch, Arch) )
