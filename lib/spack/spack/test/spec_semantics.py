@@ -383,14 +383,14 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     def test_invalid_constraint(self):
-#        self.check_invalid_constraint('libelf@0:2.0', 'libelf@2.1:3')
-#        self.check_invalid_constraint('libelf@0:2.5%gcc@4.8:4.9', 'libelf@2.1:3%gcc@4.5:4.7')
+        self.check_invalid_constraint('libelf@0:2.0', 'libelf@2.1:3')
+        self.check_invalid_constraint('libelf@0:2.5%gcc@4.8:4.9', 'libelf@2.1:3%gcc@4.5:4.7')
 
-#        self.check_invalid_constraint('libelf+debug', 'libelf~debug')
-#        self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
-#        self.check_invalid_constraint('libelf debug=2', 'libelf debug=1')
+        self.check_invalid_constraint('libelf+debug', 'libelf~debug')
+        self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
+        self.check_invalid_constraint('libelf debug=2', 'libelf debug=1')
 
-#        self.check_invalid_constraint('libelf cppflags="-O3"', 'libelf cppflags="-O2"')
+        self.check_invalid_constraint('libelf cppflags="-O3"', 'libelf cppflags="-O2"')
         platform = spack.architecture.sys_type()
         if len(platform.operating_sys.keys()) > 1 or len(platform.targets.keys()) > 1:
             os1 = platform.operating_sys.keys()[0]
@@ -439,9 +439,9 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf^foo%gcc', 'libelf^foo%gcc@4.5')
         self.check_constrain_changed('libelf^foo', 'libelf^foo+debug')
         self.check_constrain_changed('libelf^foo', 'libelf^foo~debug')
+
         platform = spack.architecture.sys_type()
         default_target = platform.target('default_target').name
-        print default_target
         self.check_constrain_changed('libelf^foo', 'libelf^foo target='+default_target)
 
 
