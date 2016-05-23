@@ -22,6 +22,58 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+""" 
+This module contains all the elements that are required to create an 
+architecture object. These include, the target processor, the operating system, 
+and the architecture platform (i.e. cray, darwin, linux, bgq, etc) classes. 
+
+On a multiple architecture machine, the architecture spec field can be set to 
+build a package against any target and operating system that is present on the 
+platform. On Cray platforms or any other architecture that has different front and
+back end environments, the operating system will determine the method of compiler
+detection. 
+
+There are two different types of compiler detection: 
+    1. Through the $PATH env variable (front-end detection)
+    2. Through the tcl module system. (back-end detection)
+
+Depending on which operating system is specified, the compiler will be detected
+using one of those methods. 
+
+For platforms such as linux and darwin, the operating system is autodetected and
+the target is set to be x86_64. 
+
+The command line syntax for specifying an architecture is as follows:
+
+    target=<Target name> os=<OperatingSystem name>
+
+If the user wishes to use the defaults, either target or os can be left out of
+the command line and Spack will concretize using the default. These defaults are
+set in the 'platforms/' directory which contains the different subclasses for
+platforms. If the machine has multiple architectures, the user can
+also enter front-end, or fe or back-end or be. These settings will concretize
+to their respective front-end and back-end targets and operating systems.  
+Additional platforms can be added by creating a subclass of Platform
+and adding it inside the platform directory. 
+
+Platforms are an abstract class that are extended by subclasses. If the user
+wants to add a new type of platform (such as cray_xe), they can create a subclass
+and set all the class attributes such as priority, front_target ,back_target, 
+front_os, back_os. Platforms also contain a priority class attribute. A lower
+number signifies higher priority. These numbers are arbitrarily set and can be
+changed though often there isn't much need unless a new platform is added and
+the user wants that to be detected first. 
+
+Targets are created inside the platform subclasses. Most architecture (like linux,
+and darwin) will have only one target (x86_64) but in the case of Cray machines,
+there is both a frontend and backend processor. The user can specify which targets
+are present on front-end and back-end architecture
+
+Depending on the platform, operating systems are either auto-detected or are 
+set. The user can set the front-end and back-end operating setting by the class
+attributes front_os and back_os. The operating system as described earlier, will
+be responsible for compiler detection. 
+"""
 import os
 from collections import namedtuple
 import imp
