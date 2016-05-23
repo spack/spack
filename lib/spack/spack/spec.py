@@ -99,6 +99,7 @@ import sys
 import itertools
 import hashlib
 import base64
+import imp
 from StringIO import StringIO
 from operator import attrgetter
 import yaml
@@ -107,6 +108,7 @@ from yaml.error import MarkedYAMLError
 import llnl.util.tty as tty
 from llnl.util.lang import *
 from llnl.util.tty.color import *
+from llnl.util.filesystem import join_path
 
 import spack
 import spack.architecture
@@ -119,6 +121,7 @@ from spack.cmd.find import display_specs
 from spack.version import *
 from spack.util.string import *
 from spack.util.prefix import Prefix
+from spack.util.naming import mod_to_class
 from spack.virtual import ProviderIndex
 from spack.build_environment import get_path_from_module, load_module
 
@@ -535,10 +538,24 @@ class Spec(object):
         Known flags currently include "arch"
         """
         valid_flags = FlagMap.valid_compiler_flags()
-        if name == 'os' or name == 'operating_system':
-            self._set_os(value)
+#        if name == 'arch' or name == 'architecture':
+#            platform, op_sys, target = value.split('-')
+#            print platform, op_sys, target, '+++++++'
+#            self._set_platform(platform)
+#            self._set_os(op_sys)
+#            self._set_target(target)
+        if name == 'platform':
+            self._set_platform(value)
+        elif name == 'os' or name == 'operating_system':
+            if self.architecture.platform:
+                self._set_os(value)
+            else:
+                self.architecture.os_string = value
         elif name == 'target':
-            self._set_target(value)
+            if self.architecture.platform:
+                self._set_target(value)
+            else:
+                self.architecture.target_string = value
         elif name in valid_flags:
             assert(self.compiler_flags is not None)
             self.compiler_flags[name] = value.split()
@@ -551,6 +568,39 @@ class Spec(object):
                 "Spec for '%s' cannot have two compilers." % self.name)
         self.compiler = compiler
 
+    def _set_platform(self, value):
+        """Called by the parser to set the architecture platform"""
+        if isinstance(value, basestring):
+            mod_path = spack.platform_path
+            mod_string = 'spack.platformss'
+            names = list_modules(mod_path)
+            if value in names:
+                # Create a platform object from the name
+                mod_name = mod_string + value
+                path = join_path(mod_path, value) + '.py'
+                mod = imp.load_source(mod_name, path)
+                class_name = mod_to_class(value)
+                if not hasattr(mod, class_name):
+                    tty.die('No class %s defined in %s' % (class_name, mod_name))
+                cls = getattr(mod, class_name)
+                if not inspect.isclass(cls):
+                    tty.die('%s.%s is not a class' % (mod_name, class_name))
+                platform = cls()
+            else:
+                tty.die("No platform class %s defined." % value)
+        else:
+            # The value is a platform
+            platform = value
+
+        self.architecture.platform = platform
+
+        # Set os and target if we previously got strings for them
+        if self.architecture.os_string:
+            self._set_os(self.architecture.os_string)
+            self.architecture.os_string = None
+        if self.architecture.target_string:
+            self._set_target(self.architecture.target_string)
+            self.architecture.target_string = None
 
     def _set_os(self, value):
         """Called by the parser to set the architecture operating system"""
@@ -1016,6 +1066,7 @@ class Spec(object):
                         changed = True
                         spec.dependencies = DependencyMap()
                     replacement.dependencies = DependencyMap()
+                    replacement.architecture = self.architecture
 
                 # TODO: could this and the stuff in _dup be cleaned up?
                 def feq(cfield, sfield):
@@ -1426,7 +1477,6 @@ class Spec(object):
                                                     other.variants[v])
 
         # TODO: Check out the logic here
-        print self.architecture, other.architecture, "^^^^^^^^^^^^^^^^^^^^^^^"
         if self.architecture is not None and other.architecture is not None:
             if self.architecture.platform is not None and other.architecture.platform is not None:
                 if self.architecture.platform != other.architecture.platform:
@@ -1831,8 +1881,7 @@ class Spec(object):
                 self.variants,
                 self.architecture,
                 self.compiler,
-                self.compiler_flags,
-                self.dag_hash())
+                self.compiler_flags)
 
 
     def eq_node(self, other):
@@ -1946,7 +1995,7 @@ class Spec(object):
                     if self.variants:
                         write(fmt % str(self.variants), c)
                 elif c == '=':
-                    if self.architecture:
+                    if self.architecture and str(self.architecture):
                         write(fmt % (' arch' + c + str(self.architecture)), c)
                 elif c == '#':
                     out.write('-' + fmt % (self.dag_hash(7)))
@@ -2004,7 +2053,7 @@ class Spec(object):
                     if self.variants:
                         write(fmt % str(self.variants), '+')
                 elif named_str == 'ARCHITECTURE':
-                    if self.architecture:
+                    if self.architecture and str(self.architecture):
                         write(fmt % str(self.architecture), ' arch=')
                 elif named_str == 'SHA1':
                     if self.dependencies:
@@ -2054,13 +2103,13 @@ class Spec(object):
                          self.variants, other.variants)
 
         #Target
-        if self.target != other.target:
-            return spack.pkgsort.target_compare(pkgname,
-                         self.target, other.target)
+        if self.architecture != other.architecture:
+            return spack.pkgsort.architecture_compare(pkgname,
+                         self.architecture, other.architecture)
 
         #Dependency is not configurable
-        if self.dep_hash() != other.dep_hash():
-            return -1 if self.dep_hash() < other.dep_hash() else 1
+        if self.dependencies != other.dependencies:
+            return -1 if self.dependencies < other.dependencies else 1
 
         #Equal specs
         return 0
@@ -2181,6 +2230,11 @@ class SpecParser(spack.parse.Parser):
             raise SpecParseError(e)
 
 
+        # If the spec has an os or a target and no platform, give it the default platform
+        for spec in specs:
+            for s in spec.traverse():
+                if s.architecture.os_string or s.architecture.target_string:
+                    s._set_platform(spack.architecture.sys_type())
         return specs
 
 
@@ -2400,7 +2454,6 @@ class SpecError(spack.error.SpackError):
     """Superclass for all errors that occur while constructing specs."""
     def __init__(self, message):
         super(SpecError, self).__init__(message)
-
 
 class SpecParseError(SpecError):
     """Wrapper for ParseError for when we're parsing specs."""

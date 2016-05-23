@@ -71,12 +71,6 @@ class SpecSyntaxTest(unittest.TestCase):
             spec = expected
         output = spack.spec.parse(spec)
 
-        # Remove architectures that get added by parser.
-        if remove_arch:
-            for spec in output:
-                for s in spec.traverse():
-                    s.architecture = None
-
         parsed = (" ".join(str(spec) for spec in output))
         self.assertEqual(expected, parsed)
 
