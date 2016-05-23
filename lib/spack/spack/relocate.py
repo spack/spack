@@ -185,7 +185,7 @@ def relocate_binary(path_name, old_dir, new_dir, patchelf_executable):
         modify_macho_object(path_name, old_dir, new_dir)
     elif platform.system() == 'Linux':
         orig_rpaths = get_existing_elf_rpaths(path_name, patchelf_executable)
-        new_rpaths  = substitute_rpath(orig_rpath, old_dir, new_dir)
+        new_rpaths  = substitute_rpath(orig_rpaths, old_dir, new_dir)
         modify_elf_object(path_name, orig_rpaths, new_rpaths, patchelf_executable)
     else:
         tty.die("Relocation not implemented for %s" % platform.system())
