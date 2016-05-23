@@ -11,7 +11,7 @@ from spack.util.executable import which
 import llnl.util.tty as tty
 
 
-def get_existing_elf_rpaths(path_name, old_dir, new_dir):
+def get_existing_elf_rpaths(path_name, patchelf_executable):
     """
     Return the RPATHS in given elf file as a list of strings.
     """
