@@ -381,6 +381,8 @@ class EnvModule(object):
         for x in filter_blacklisted(
                 module_configuration.pop('autoload', []), self.name):
             module_file_content += self.autoload(x)
+        for x in module_configuration.pop('load', []):
+            module_file_content += self.autoload(x)
         for x in filter_blacklisted(
                 module_configuration.pop('prerequisites', []), self.name):
             module_file_content += self.prerequisite(x)
@@ -402,8 +404,12 @@ class EnvModule(object):
         return tuple()
 
     def autoload(self, spec):
-        m = type(self)(spec)
-        return self.autoload_format.format(module_file=m.use_name)
+        if not isinstance(spec, str):
+            m = type(self)(spec)
+            module_file = m.use_name
+        else:
+            module_file = spec
+        return self.autoload_format.format(module_file=module_file)
 
     def prerequisite(self, spec):
         m = type(self)(spec)
