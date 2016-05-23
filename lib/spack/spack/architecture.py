@@ -157,12 +157,25 @@ class Platform(object):
         self.operating_sys = {}
         self.name = name
 
+    def to_dict(self):
+        n = {}
+        n['targets'] = dict((name, target.to_dict()) for (name, target) in self.targets.items())
+        n['operating_systems'] = dict((name, os.to_dict()) for (name, os) in self.operating_sys.items())
+        n['priority'] = self.priority
+        n['default_front_end_target'] = self.front_end
+        n['default_back_end_target'] = self.back_end
+        n['default_target'] = self.default
+        n['default_front_end_os'] = self.front_os
+        n['default_back_end_os'] = self.back_os
+        n['default_os'] = self.default_os
+        return {self.name: n}
+
     def add_target(self, name, target):
         """Used by the platform specific subclass to list available targets.
         Raises an error if the platform specifies a name
         that is reserved by spack as an alias.
         """
-        if name in ['front_end', 'fe', 'back_end', 'be', 'default']:
+        if name in ['frontend', 'fe', 'backend', 'be', 'default_target']:
             raise ValueError(
                 "%s is a spack reserved alias "
                 "and cannot be the name of a target" % name)
@@ -187,6 +200,10 @@ class Platform(object):
         """ Add the operating_system class object into the
             platform.operating_sys dictionary
         """
+        if name in ['frontend', 'fe', 'backend', 'be', 'default_os']:
+            raise ValueError(
+                "%s is a spack reserved alias "
+                "and cannot be the name of an OS" % name)
         self.operating_sys[name] = os_class
 
     def operating_system(self, name):
@@ -336,15 +353,18 @@ class OperatingSystem(object):
 class Arch(object):
     "Architecture is now a class to help with setting attributes"
 
-    def __init__(self, platform_os=None, target=None):
-        self.platform = sys_type()
-        if platform_os:
-            platform_os = self.platform.operating_system(platform_os)
+    def __init__(self, platform=None, platform_os=None, target=None):
+        self.platform = platform
+        if platform and platform_os:
+                platform_os = self.platform.operating_system(platform_os)
         self.platform_os = platform_os
-        if target:
+        if platform and target:
             target = self.platform.target(target)
         self.target = target
 
+        # Hooks for parser to use when platform is set after target or os
+        self.target_string = None
+        self.os_string = None
 
     @property
     def concrete(self):
@@ -354,16 +374,19 @@ class Arch(object):
 
 
     def __str__(self):
-        if self.platform.name == 'darwin':
-            os_name = self.platform_os.name
-        else:
-            os_name = str(self.platform_os)
+        if self.platform or self.platform_os or self.target:
+            if self.platform.name == 'darwin':
+                os_name = self.platform_os.name
+            else:
+                os_name = str(self.platform_os)
 
-        return (str(self.platform) +"-"+
-                os_name + "-" + str(self.target))
+            return (str(self.platform) +"-"+
+                    os_name + "-" + str(self.target))
+        else:
+            return ''
 
     def _cmp_key(self):
-        platform = self.platform.name
+        platform = self.platform.name if isinstance(self.platform, Platform) else self.platform
         os = self.platform_os.name if isinstance(self.platform_os, OperatingSystem) else self.platform_os
         target = self.target.name if isinstance(self.target, Target) else self.target
         return (platform, os, target)
@@ -374,7 +397,7 @@ class Arch(object):
         platform_os = self.platform_os
         target = self.target
 
-        d['platform'] = self.platform.name
+        d['platform'] = self.platform.to_dict() if self.platform else None
         d['platform_os'] = self.platform_os.to_dict() if self.platform_os else None
         d['target'] = self.target.to_dict() if self.target else None
 
@@ -402,6 +425,27 @@ def _operating_system_from_dict(os_dict):
     operating_system.version = os_dict['version']
     return operating_system
 
+def _platform_from_dict(platform_dict):
+    """ Constructs a platform from a dictionary. """
+    platform = Platform.__new__(Platform)
+    name, p_dict = platform_dict.items()[0]
+    platform.name = name
+    platform.targets = {}
+    for name, t_dict in p_dict['targets'].items():
+        platform.add_target(name, _target_from_dict(t_dict))
+    platform.operating_sys = {}
+    for name, o_dict in p_dict['operating_systems'].items():
+        platform.add_operating_system(name, _operating_system_from_dict(o_dict))
+    platform.priority = p_dict['priority']
+    platform.front_end = p_dict['default_front_end_target']
+    platform.back_end = p_dict['default_back_end_target']
+    platform.default = p_dict['default_target']
+    platform.front_os = p_dict['default_front_end_os']
+    platform.back_os = p_dict['default_back_end_os']
+    platform.default_os = p_dict['default_os']
+
+    return platform
+
 def arch_from_dict(d):
     """ Uses _platform_from_dict, _operating_system_from_dict, _target_from_dict
         helper methods to recreate the arch tuple from the dictionary read from
@@ -411,13 +455,19 @@ def arch_from_dict(d):
 
     if d is None:
         return None
+    platform_dict = d['platform']
     os_dict = d['platform_os']
     target_dict = d['target']
 
+    platform = _platform_from_dict(platform_dict) if platform_dict else None
     target = _target_from_dict(target_dict) if os_dict else None
     platform_os = _operating_system_from_dict(os_dict) if os_dict else None
+    arch.platform = platform
     arch.target = target
     arch.platform_os = platform_os
+
+    arch.os_string = None
+    arch.target_string = None
 
     return arch
 
