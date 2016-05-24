@@ -72,6 +72,8 @@ class Metis(Package):
         make(*options)
 
         # Compile and install library files
+        ccompile = Executable(self.compiler.cc)
+
         mkdir(prefix.bin)
         binfiles = ('pmetis', 'kmetis', 'oemetis', 'onmetis', 'partnmesh',
                     'partdmesh', 'mesh2nodal', 'mesh2dual', 'graphchk')
@@ -86,8 +88,7 @@ class Metis(Package):
             install(h, prefix.include)
 
         mkdir(prefix.share)
-        sharefiles = (('Programs', 'io.c'), ('Test', 'mtest.c'),
-                      ('Graphs', '4elt.graph'), ('Graphs', 'metis.mesh'),
+        sharefiles = (('Graphs', '4elt.graph'), ('Graphs', 'metis.mesh'),
                       ('Graphs', 'test.mgraph'))
         for sharefile in tuple(join_path(*sf) for sf in sharefiles):
             install(sharefile, prefix.share)
@@ -102,28 +103,20 @@ class Metis(Package):
                 load_flag = '-Wl,-whole-archive'
                 no_load_flag = '-Wl,-no-whole-archive'
 
-            os.system('%s -fPIC -shared %s libmetis.a %s -o libmetis.%s' % \
-                      (self.compiler.cc, load_flag, no_load_flag, lib_dsuffix))
-            install('libmetis.%s' % lib_dsuffix, prefix.lib)
+            ccompile('-fPIC', '-shared', load_flag, 'libmetis.a', no_load_flag,
+                     '-o', '%s/libmetis.%s' % (prefix.lib, lib_dsuffix))
 
         # Set up and run tests on installation
-        inc_flags = '-I%s' % prefix.include
-        lib_flags = '-L%s' % prefix.lib
-        if '+shared' in spec:
-            lib_flags += ' -Wl,-rpath=%s' % prefix.lib
-
-        symlink(join_path(prefix.share, 'io.c'), 'io.c')
-        symlink(join_path(prefix.share, 'mtest.c'), 'mtest.c')
-
-        os.system('%s %s -c io.c' % (self.compiler.cc, inc_flags))
-        os.system('%s %s %s mtest.c io.o -o mtest -lmetis -lm' % \
-                  (self.compiler.cc, inc_flags, lib_flags))
+        ccompile('-I%s' % prefix.include, '-L%s' % prefix.lib,
+                 '-Wl,-rpath=%s' % (prefix.lib if '+shared' in spec else ''),
+                 join_path('Programs', 'io.o'), join_path('Test', 'mtest.c'),
+                 '-o', '%s/mtest' % prefix.bin, '-lmetis', '-lm')
 
         test_bin = lambda testname: join_path(prefix.bin, testname)
         test_graph = lambda graphname: join_path(prefix.share, graphname)
 
         graph = test_graph('4elt.graph')
-        os.system('./mtest %s' % graph)
+        os.system('%s %s' % (test_bin('mtest'), graph))
         os.system('%s %s 40' % (test_bin('kmetis'), graph))
         os.system('%s %s' % (test_bin('onmetis'), graph))
         graph = test_graph('test.mgraph')
