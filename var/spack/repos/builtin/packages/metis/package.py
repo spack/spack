@@ -58,8 +58,9 @@ class Metis(Package):
         verdir = 'OLD/' if version < Version('4.0.3') else ''
         return '%s/%smetis-%s.tar.gz' % (Metis.base_url, verdir, version)
 
-    @when('@4')
+    @when('@:4')
     def install(self, spec, prefix):
+        # Process library spec and options
         unsupp_vars = [v for v in ('+gdb', '+idx64', '+real64') if v in spec]
         if unsupp_vars:
             msg = 'Given variants %s are unsupported by METIS 4!' % unsupp_vars
@@ -70,6 +71,7 @@ class Metis(Package):
             options.append('OPTFLAGS=-g -O0')
         make(*options)
 
+        # Compile and install library files
         mkdir(prefix.bin)
         binfiles = ('pmetis', 'kmetis', 'oemetis', 'onmetis', 'partnmesh',
                     'partdmesh', 'mesh2nodal', 'mesh2dual', 'graphchk')
@@ -88,7 +90,7 @@ class Metis(Package):
                       ('Graphs', '4elt.graph'), ('Graphs', 'metis.mesh'),
                       ('Graphs', 'test.mgraph'))
         for sharefile in tuple(join_path(*sf) for sf in sharefiles):
-            install(f, prefix.share)
+            install(sharefile, prefix.share)
 
         if '+shared' in spec:
             if sys.platform == 'darwin':
@@ -100,30 +102,38 @@ class Metis(Package):
                 load_flag = '-Wl,-whole-archive'
                 no_load_flag = '-Wl,-no-whole-archive'
 
-            flags = (self.compiler.cc, load_flag, no_load_flag, lib_dsuffix)
-            build_cmd = '%s -fPIC -shared %s libmetis.a %s libmetis.%s' % flags
-            os.system(build_cmd)
+            os.system('%s -fPIC -shared %s libmetis.a %s -o libmetis.%s' % \
+                      (self.compiler.cc, load_flag, no_load_flag, lib_dsuffix))
             install('libmetis.%s' % lib_dsuffix, prefix.lib)
 
         # Set up and run tests on installation
+        inc_flags = '-I%s' % prefix.include
+        lib_flags = '-L%s' % prefix.lib
+        if '+shared' in spec:
+            lib_flags += ' -Wl,-rpath=%s' % prefix.lib
+
         symlink(join_path(prefix.share, 'io.c'), 'io.c')
         symlink(join_path(prefix.share, 'mtest.c'), 'mtest.c')
-        os.system(spack_cc + ' -I%s' % prefix.include + ' -c io.c')
-        os.system(spack_cc + ' -I%s' % prefix.include +
-                  ' -L%s' % prefix.lib + ' -lmetis mtest.c io.o -o mtest')
-        _4eltgraph = join_path(prefix.share, '4elt.graph')
-        test_mgraph = join_path(prefix.share, 'test.mgraph')
-        metis_mesh = join_path(prefix.share, 'metis.mesh')
-        kmetis = join_path(prefix.bin, 'kmetis')
-        os.system('./mtest ' + _4eltgraph)
-        os.system(kmetis + ' ' + _4eltgraph + ' 40')
-        os.system(join_path(prefix.bin, 'onmetis') + ' ' + _4eltgraph)
-        os.system(join_path(prefix.bin, 'pmetis') + ' ' + test_mgraph + ' 2')
-        os.system(kmetis + ' ' + test_mgraph + ' 2')
-        os.system(kmetis + ' ' + test_mgraph + ' 5')
-        os.system(join_path(prefix.bin, 'partnmesh') + metis_mesh + ' 10')
-        os.system(join_path(prefix.bin, 'partdmesh') + metis_mesh + ' 10')
-        os.system(join_path(prefix.bin, 'mesh2dual') + metis_mesh)
+
+        os.system('%s %s -c io.c' % (self.compiler.cc, inc_flags))
+        os.system('%s %s %s mtest.c io.o -o mtest -lmetis -lm' % \
+                  (self.compiler.cc, inc_flags, lib_flags))
+
+        test_bin = lambda testname: join_path(prefix.bin, testname)
+        test_graph = lambda graphname: join_path(prefix.share, graphname)
+
+        graph = test_graph('4elt.graph')
+        os.system('./mtest %s' % graph)
+        os.system('%s %s 40' % (test_bin('kmetis'), graph))
+        os.system('%s %s' % (test_bin('onmetis'), graph))
+        graph = test_graph('test.mgraph')
+        os.system('%s %s 2' % (test_bin('pmetis'), graph))
+        os.system('%s %s 2' % (test_bin('kmetis'), graph))
+        os.system('%s %s 5' % (test_bin('kmetis'), graph))
+        graph = test_graph('metis.mesh')
+        os.system('%s %s 10' % (test_bin('partnmesh'), graph))
+        os.system('%s %s 10' % (test_bin('partdmesh'), graph))
+        os.system('%s %s' % (test_bin('mesh2dual'), graph))
 
     @when('@5:')
     def install(self, spec, prefix):
