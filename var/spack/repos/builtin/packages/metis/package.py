@@ -128,6 +128,25 @@ class Metis(Package):
         os.system('%s %s 10' % (test_bin('partdmesh'), graph))
         os.system('%s %s' % (test_bin('mesh2dual'), graph))
 
+        # TODO: The following code should replace the testing code in the
+        # block above since it causes installs to fail when one or more of the
+        # Metis tests fail, but it currently doesn't work because the 'mtest',
+        # 'onmetis', and 'partnmesh' tests return error codes that trigger
+        # false positives for failure.
+        """
+        Executable(test_bin('mtest'))(test_graph('4elt.graph'))
+        Executable(test_bin('kmetis'))(test_graph('4elt.graph'), '40')
+        Executable(test_bin('onmetis'))(test_graph('4elt.graph'))
+
+        Executable(test_bin('pmetis'))(test_graph('test.mgraph'), '2')
+        Executable(test_bin('kmetis'))(test_graph('test.mgraph'), '2')
+        Executable(test_bin('kmetis'))(test_graph('test.mgraph'), '5')
+
+        Executable(test_bin('partnmesh'))(test_graph('metis.mesh'), '10')
+        Executable(test_bin('partdmesh'))(test_graph('metis.mesh'), '10')
+        Executable(test_bin('mesh2dual'))(test_graph('metis.mesh'))
+        """
+
     @when('@5:')
     def install(self, spec, prefix):
         options = []
