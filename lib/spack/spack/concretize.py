@@ -210,7 +210,6 @@ class DefaultConcretizer(object):
                 spec.architecture.target = spec.root.architecture.target
         else:
             spec.architecture.target = spec.architecture.platform.target('default_target')
-        print spec.architecture, spec.architecture.platform, spec.architecture.platform_os, spec.architecture.target
         return True #changed
 
     def _concretize_platform(self, spec):
