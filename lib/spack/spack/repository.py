@@ -104,7 +104,7 @@ class RepoPath(object):
         self.by_namespace = NamespaceTrie()
         self.by_path = {}
 
-        self._all_package_names = []
+        self._all_package_names = None
         self._provider_index = None
 
         # If repo_dirs is empty, just use the configuration
@@ -163,11 +163,6 @@ class RepoPath(object):
         self.by_namespace[repo.full_namespace] = repo
         self.by_path[repo.root] = repo
 
-        # add names to the cached name list
-        new_pkgs = set(repo.all_package_names())
-        new_pkgs.update(set(self._all_package_names))
-        self._all_package_names = sorted(new_pkgs, key=lambda n:n.lower())
-
 
     def put_first(self, repo):
         """Add repo first in the search path."""
@@ -214,6 +209,12 @@ class RepoPath(object):
 
     def all_package_names(self):
         """Return all unique package names in all repositories."""
+        if self._all_package_names is None:
+            all_pkgs = set()
+            for repo in self.repos:
+                for name in repo.all_package_names():
+                    all_pkgs.add(name)
+            self._all_package_names = sorted(all_pkgs, key=lambda n:n.lower())
         return self._all_package_names
 
 
@@ -682,10 +683,16 @@ class Repo(object):
 
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists."""
-        # This does a binary search in the sorted list.
-        idx = bisect_left(self.all_package_names(), pkg_name)
-        return (idx < len(self._all_package_names) and
-                self._all_package_names[idx] == pkg_name)
+        if self._all_package_names:
+            # This does a binary search in the sorted list.
+            idx = bisect_left(self.all_package_names(), pkg_name)
+            return (idx < len(self._all_package_names) and
+                    self._all_package_names[idx] == pkg_name)
+
+        # If we haven't generated the full package list, don't.
+        # Just check whether the file exists.
+        filename = self.filename_for_package_name(pkg_name)
+        return os.path.exists(filename)
 
 
     def _get_pkg_module(self, pkg_name):
