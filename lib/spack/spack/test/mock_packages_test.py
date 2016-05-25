@@ -69,6 +69,17 @@ compilers:
       f77: None
       fc: None
     modules: 'None'
+  clang3.3OSX:
+    spec: clang@3.3
+    operating_system:
+      name: yosemite
+      version: '10.10'
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
   gcc4.5.0CNL:
     paths:
       cc: /path/to/gcc
@@ -98,8 +109,19 @@ compilers:
       f77: /path/to/gfortran
       fc: /path/to/gfortran
     operating_system:
-      name: RHL
+      name: redhat
       version: '6.7'
+    spec: gcc@4.5.0
+    modules: 'None'
+  gcc4.5.0OSX:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system:
+      name: yosemite
+      version: '10.10'
     spec: gcc@4.5.0
     modules: 'None'
 """
