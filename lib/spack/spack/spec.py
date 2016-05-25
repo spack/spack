@@ -1649,9 +1649,18 @@ class Spec(object):
 
         # TODO: Need to make sure that comparisons can be made via classes
         if self.architecture and other.architecture:
+            print self.architecture, other.architecture
             if ((self.architecture.platform and other.architecture.platform and self.architecture.platform != other.architecture.platform) or 
                 (self.architecture.platform_os and other.architecture.platform_os and self.architecture.platform_os != other.architecture.platform_os) or
                 (self.architecture.target and other.architecture.target and self.architecture.target != other.architecture.target)):
+                d1 = self.architecture.platform.to_dict()
+                d2 = other.architecture.platform.to_dict()
+                print d1
+                print d2
+                print d1==d2
+                print self.architecture.platform == other.architecture.platform
+                print self.architecture.platform._cmp_key()
+                print other.architecture.platform._cmp_key()
                 return False
         elif strict and ((other.architecture and not self.architecture) or
                          (other.architecture.platform and not self.architecture.platform) or

@@ -141,10 +141,9 @@ class SpecSematicsTest(MockPackagesTest):
 
     def test_satisfies_architecture(self):
         platform = spack.architecture.sys_type()
-        if platform.name == 'crayxc':
-            self.check_satisfies('foo target=frontend os=frontend', 'target=frontend os=frontend')
-            self.check_satisfies('foo target=backend os=backend', 'target=backend', 'os=backend')
-        self.check_satisfies('foo target=default_target os=default_os','target=default_target os=default_os')
+        self.check_satisfies('foo platform=test target=frontend os=frontend', 'platform=test target=frontend os=frontend')
+        self.check_satisfies('foo platform=test target=backend os=backend', 'platform=test target=backend', 'platform=test os=backend')
+        self.check_satisfies('foo platform=test target=default_target os=default_os','platform=test target=default_target os=default_os')
 
 
 #ifdef NEW
@@ -391,14 +390,8 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_invalid_constraint('libelf debug=2', 'libelf debug=1')
 
         self.check_invalid_constraint('libelf cppflags="-O3"', 'libelf cppflags="-O2"')
-        platform = spack.architecture.sys_type()
-        if len(platform.operating_sys.keys()) > 1 or len(platform.targets.keys()) > 1:
-            os1 = platform.operating_sys.keys()[0]
-            os2 = platform.operating_sys.keys()[-1]
-            target1 = platform.targets.keys()[0]
-            target2 = platform.targets.keys()[-1]
-            self.check_invalid_constraint('libelf target=%s os=%s' % (target1, os1), 
-                                          'libelf target=%s os=%s' % (target2, os2))
+        self.check_invalid_constraint('libelf platform=test target=be os=be', 
+                                          'libelf target=fe os=fe')
 
     def test_constrain_changed(self):
         self.check_constrain_changed('libelf', '@1.0')

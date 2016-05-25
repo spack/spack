@@ -233,8 +233,17 @@ class Platform(object):
         return self.name
 
     def _cmp_key(self):
-        return (self.name, (_cmp_key(t) for t in self.targets.values()),
-                (_cmp_key(o) for o in self.operating_sys.values()))
+        t_keys = ''.join(str(t._cmp_key()) for t in sorted(self.targets.values()))
+        o_keys = ''.join(str(o._cmp_key()) for o in sorted(self.operating_sys.values()))
+        return (self.name, 
+                self.default,
+                self.front_end,
+                self.back_end,
+                self.default_os,
+                self.front_os,
+                self.back_os,
+                t_keys,
+                o_keys)
 
 @key_ordering
 class OperatingSystem(object):
