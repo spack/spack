@@ -102,8 +102,8 @@ that the packages is installed:
    ==> adept-utils is already installed in /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/adept-utils@1.0-5adef8da.
    ==> Trying to fetch from https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
    ######################################################################## 100.0%
-   ==> Staging archive: /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7=chaos_5_x86_64_ib-59f6ad23/mpileaks-1.0.tar.gz
-   ==> Created stage in /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7=chaos_5_x86_64_ib-59f6ad23.
+   ==> Staging archive: /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=chaos_5_x86_64_ib-59f6ad23/mpileaks-1.0.tar.gz
+   ==> Created stage in /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=chaos_5_x86_64_ib-59f6ad23.
    ==> No patches needed for mpileaks.
    ==> Building mpileaks.
 
@@ -132,10 +132,10 @@ sites, as installing a version that one user needs will not disrupt
 existing installations for other users.
 
 In addition to different versions, Spack can customize the compiler,
-compile-time options (variants), and platform (for cross compiles) of
-an installation.  Spack is unique in that it can also configure the
-*dependencies* a package is built with.  For example, two
-configurations of the same version of a package, one built with boost
+compile-time options (variants), compiler flags, and platform (for
+cross compiles) of an installation.  Spack is unique in that it can
+also configure the *dependencies* a package is built with.  For example,
+two configurations of the same version of a package, one built with boost
 1.39.0, and the other version built with version 1.43.0, can coexist.
 
 This can all be done on the command line using the *spec* syntax.
@@ -334,6 +334,11 @@ of libelf would look like this:
    -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
    libdwarf@20130729-d9b90962
 
+We can also search for packages that have a certain attribute. For example,
+``spack find -l libdwarf +debug`` will show only installations of libdwarf
+with the 'debug' compile-time option enabled, while ``spack find -l +debug``
+will find every installed package with a 'debug' compile-time option enabled.
+
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
 
 
@@ -463,6 +468,26 @@ For compilers, like ``clang``, that do not support Fortran, put
 Once you save the file, the configured compilers will show up in the
 list displayed by ``spack compilers``.
 
+You can also add compiler flags to manually configured compilers. The
+valid flags are ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``,
+``ldflags``, and ``ldlibs``. For example,::
+
+    ...
+    chaos_5_x86_64_ib:
+      ...
+      intel@15.0.0:
+          cc: /usr/local/bin/icc-15.0.024-beta
+          cxx: /usr/local/bin/icpc-15.0.024-beta
+          f77: /usr/local/bin/ifort-15.0.024-beta
+          fc: /usr/local/bin/ifort-15.0.024-beta
+          cppflags: -O3 -fPIC
+      ...
+
+These flags will be treated by spack as if they were enterred from
+the command line each time this compiler is used. The compiler wrappers
+then inject those flags into the compiler command. Compiler flags
+enterred from the command line will be discussed in more detail in the
+following section.
 
 .. _sec-specs:
 
@@ -480,7 +505,7 @@ the full syntax of specs.
 
 Here is an example of a much longer spec than we've seen thus far::
 
-   mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt =bgqos_0 ^callpath @1.1 %gcc@4.7.2
+   mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt arch=bgq_os ^callpath @1.1 %gcc@4.7.2
 
 If provided to ``spack install``, this will install the ``mpileaks``
 library at some version between ``1.2`` and ``1.4`` (inclusive),
@@ -498,8 +523,12 @@ More formally, a spec consists of the following pieces:
 * ``%`` Optional compiler specifier, with an optional compiler version
   (``gcc`` or ``gcc@4.7.3``)
 * ``+`` or ``-`` or ``~`` Optional variant specifiers (``+debug``,
-  ``-qt``, or ``~qt``)
-* ``=`` Optional architecture specifier (``bgqos_0``)
+  ``-qt``, or ``~qt``) for boolean variants
+* ``name=<value>`` Optional variant specifiers that are not restricted to
+boolean variants
+* ``name=<value>`` Optional compiler flag specifiers. Valid flag names are
+``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
+* ``arch=<value>`` Optional architecture specifier (``arch=bgq_os``)
 * ``^`` Dependency specs (``^callpath@1.1``)
 
 There are two things to notice here.  The first is that specs are
@@ -579,7 +608,7 @@ compilers, variants, and architectures just like any other spec.
 Specifiers are associated with the nearest package name to their left.
 For example, above, ``@1.1`` and ``%gcc@4.7.2`` associates with the
 ``callpath`` package, while ``@1.2:1.4``, ``%gcc@4.7.5``, ``+debug``,
-``-qt``, and ``=bgqos_0`` all associate with the ``mpileaks`` package.
+``-qt``, and ``arch=bgq_os`` all associate with the ``mpileaks`` package.
 
 In the diagram above, ``mpileaks`` depends on ``mpich`` with an
 unspecified version, but packages can depend on other packages with
@@ -635,22 +664,25 @@ based on site policies.
 Variants
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. Note::
-
-   Variants are not yet supported, but will be in the next Spack
-   release (0.9), due in Q2 2015.
-
-Variants are named options associated with a particular package, and
-they can be turned on or off.  For example, above, supplying
-``+debug`` causes ``mpileaks`` to be built with debug flags.  The
-names of particular variants available for a package depend on what
-was provided by the package author.  ``spack info <package>`` will
+Variants are named options associated with a particular package. They are
+optional, as each package must provide default values for each variant it
+makes available. Variants can be specified using
+a flexible parameter syntax ``name=<value>``. For example,
+``spack install libelf debug=True`` will install libelf build with debug
+flags. The names of particular variants available for a package depend on
+what was provided by the package author. ``spack into <package>`` will
 provide information on what build variants are available.
 
-Depending on the package a variant may be on or off by default.  For
-``mpileaks`` here, ``debug`` is off by default, and we turned it on
-with ``+debug``.  If a package is on by default you can turn it off by
-either adding ``-name`` or ``~name`` to the spec.
+For compatibility with earlier versions, variants which happen to be
+boolean in nature can be specified by a syntax that represents turning
+options on and off. For example, in the previous spec we could have
+supplied ``libelf +debug`` with the same effect of enabling the debug
+compile time option for the libelf package.
+
+Depending on the package a variant may have any default value.  For
+``libelf`` here, ``debug`` is ``False`` by default, and we turned it on
+with ``debug=True`` or ``+debug``.  If a package is ``True`` by default
+you can turn it off by either adding ``-name`` or ``~name`` to the spec.
 
 There are two syntaxes here because, depending on context, ``~`` and
 ``-`` may mean different things.  In most shells, the following will
@@ -662,7 +694,7 @@ result in the shell performing home directory substitution:
    mpileaks~debug    # use this instead
 
 If there is a user called ``debug``, the ``~`` will be incorrectly
-expanded.  In this situation, you would want to write ``mpileaks
+expanded.  In this situation, you would want to write ``libelf
 -debug``.  However, ``-`` can be ambiguous when included after a
 package name without spaces:
 
@@ -677,12 +709,35 @@ package, not a request for ``mpileaks`` built without ``debug``
 options.  In this scenario, you should write ``mpileaks~debug`` to
 avoid ambiguity.
 
-When spack normalizes specs, it prints them out with no spaces and
-uses only ``~`` for disabled variants.  We allow ``-`` and spaces on
-the command line is provided for convenience and legibility.
+When spack normalizes specs, it prints them out with no spaces boolean
+variants using the backwards compatibility syntax and uses only ``~``
+for disabled boolean variants.  We allow ``-`` and spaces on the command
+line is provided for convenience and legibility.
 
 
-Architecture specifier
+Compiler Flags
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Compiler flags are specified using the same syntax as non-boolean variants,
+but fulfill a different purpose. While the function of a variant is set by
+the package, compiler flags are used by the compiler wrappers to inject
+flags into the compile line of the build. Additionally, compiler flags are
+inherited by dependencies. ``spack install libdwarf cppflags=\"-g\"`` will
+install both libdwarf and libelf with the ``-g`` flag injected into their
+compile line.
+
+Notice that the value of the compiler flags must be escape quoted on the
+command line. From within python files, the same spec would be specified
+``libdwarf cppflags="-g"``. This is necessary because of how the shell
+handles the quote symbols.
+
+The six compiler flags are injected in the order of implicit make commands
+in gnu autotools. If all flags are set, the order is
+``$cppflags $cflags|$cxxflags $ldflags command $ldlibs`` for C and C++ and
+``$fflags $cppflags $ldflags command $ldlibs`` for fortran.
+
+
+Architecture specifiers
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. Note::
@@ -690,12 +745,9 @@ Architecture specifier
    Architecture specifiers are part of specs but are not yet
    functional. They will be in Spack version 1.0, due in Q3 2015.
 
-The architecture specifier starts with a ``=`` and also comes after
-some package name within a spec.  It allows a user to specify a
-particular architecture for the package to be built.  This is mostly
-used for architectures that need cross-compilation, and in most cases,
-users will not need to specify the architecture when they install a
-package.
+The architecture specifier looks identical to a variant specifier for a
+non-boolean variant. The architecture can be specified only using the
+reserved name ``arch`` (``arch=bgq_os``).
 
 
 .. _sec-virtual-dependencies:
@@ -772,6 +824,23 @@ any MPI implementation will do.  If another package depends on
 (e.g., one that provides only ``mpi@:1``), then Spack will raise an
 error.  Likewise, if you try to plug in some package that doesn't
 provide MPI, Spack will raise an error.
+
+Specifying Specs by Hash
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Complicated specs can become cumbersome to enter on the command line,
+especially when many of the qualifications are necessary to
+distinguish between similar installs, for example when using the
+``uninstall`` command. To avoid this, when referencing an existing spec,
+Spack allows you to reference specs by their hash. We previously
+discussed the spec hash that Spack computes. In place of a spec in any
+command, substitute ``/<hash>`` where ``<hash>`` is any amount from
+the beginning of a spec hash. If the given spec hash is sufficient
+to be unique, Spack will replace the reference with the spec to which
+it refers. Otherwise, it will prompt for a more qualified hash.
+
+Note that this will not work to reinstall a depencency uninstalled by
+``spack uninstall -f``.
 
 .. _spack-providers:
 
@@ -1002,8 +1071,8 @@ than one installed package matches it), then Spack will warn you:
 
    $ spack load libelf
    ==> Error: Multiple matches for spec libelf.  Choose one:
-   libelf@0.8.13%gcc@4.4.7=chaos_5_x86_64_ib
-   libelf@0.8.13%intel@15.0.0=chaos_5_x86_64_ib
+   libelf@0.8.13%gcc@4.4.7 arch=chaos_5_x86_64_ib
+   libelf@0.8.13%intel@15.0.0 arch=chaos_5_x86_64_ib
 
 You can either type the ``spack load`` command again with a fully
 qualified argument, or you can add just enough extra constraints to
@@ -1282,7 +1351,7 @@ You can find extensions for your Python installation like this:
 .. code-block:: sh
 
    $ spack extensions python
-   ==> python@2.7.8%gcc@4.4.7=chaos_5_x86_64_ib-703c7a96
+   ==> python@2.7.8%gcc@4.4.7 arch=chaos_5_x86_64_ib-703c7a96
    ==> 36 extensions:
    geos          py-ipython     py-pexpect    py-pyside            py-sip
    py-basemap    py-libxml2     py-pil        py-pytz              py-six
@@ -1372,9 +1441,9 @@ installation:
 .. code-block:: sh
 
    $ spack activate py-numpy
-   ==> Activated extension py-setuptools@11.3.1%gcc@4.4.7=chaos_5_x86_64_ib-3c74eb69 for python@2.7.8%gcc@4.4.7.
-   ==> Activated extension py-nose@1.3.4%gcc@4.4.7=chaos_5_x86_64_ib-5f70f816 for python@2.7.8%gcc@4.4.7.
-   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-setuptools@11.3.1%gcc@4.4.7 arch=chaos_5_x86_64_ib-3c74eb69 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-nose@1.3.4%gcc@4.4.7 arch=chaos_5_x86_64_ib-5f70f816 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
 
 Several things have happened here.  The user requested that
 ``py-numpy`` be activated in the ``python`` installation it was built
@@ -1389,7 +1458,7 @@ packages listed as activated:
 .. code-block:: sh
 
    $ spack extensions python
-   ==> python@2.7.8%gcc@4.4.7=chaos_5_x86_64_ib-703c7a96
+   ==> python@2.7.8%gcc@4.4.7  arch=chaos_5_x86_64_ib-703c7a96
    ==> 36 extensions:
    geos          py-ipython     py-pexpect    py-pyside            py-sip
    py-basemap    py-libxml2     py-pil        py-pytz              py-six
@@ -1437,7 +1506,7 @@ dependencies, you can use ``spack activate -f``:
 .. code-block:: sh
 
    $ spack activate -f py-numpy
-   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
 
 .. _spack-deactivate:
 

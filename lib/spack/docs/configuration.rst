@@ -70,9 +70,9 @@ directory. Here's an example of an external configuration:
    packages:
       openmpi:
          paths:
-            openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
-            openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
-            openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
+            openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
+            openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
+            openmpi@1.6.5%intel@10.1 arch=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
 
 This example lists three installations of OpenMPI, one built with gcc,
 one built with gcc and debug information, and another built with Intel.
@@ -108,9 +108,9 @@ be:
   packages:
     openmpi:
       paths:
-        openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
-        openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
-        openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
+        openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
+        openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
+        openmpi@1.6.5%intel@10.1 arch=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
       buildable: False
 
 The addition of the ``buildable`` flag tells Spack that it should never build
