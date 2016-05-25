@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 import os
 
 from spack import *
@@ -28,15 +52,28 @@ class Openmpi(Package):
     patch('configure.patch', when="@1.10.0:1.10.1")
 
     variant('psm', default=False, description='Build support for the PSM library.')
+    variant('psm2', default=False, description='Build support for the Intel PSM2 library.')
+    variant('pmi', default=False, description='Build support for PMI-based launchers')
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
+    variant('mxm', default=False, description='Build Mellanox Messaging support')
 
-    # TODO : variant support for other schedulers is missing
+    variant('thread_multiple', default=False, description='Enable MPI_THREAD_MULTIPLE support')
+
+    # TODO : variant support for alps, loadleveler  is missing
     variant('tm', default=False, description='Build TM (Torque, PBSPro, and compatible) support')
+    variant('slurm', default=False, description='Build SLURM scheduler component')
+
+    variant('sqlite3', default=False, description='Build sqlite3 support')
+
+    variant('vt', default=True, description='Build support for contributed package vt')
+
+    # TODO : support for CUDA is missing
 
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
 
     depends_on('hwloc')
+    depends_on('sqlite', when='+sqlite3')
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)
@@ -48,27 +85,42 @@ class Openmpi(Package):
         spack_env.set('OMPI_FC', spack_fc)
         spack_env.set('OMPI_F77', spack_f77)
 
+    def setup_dependent_package(self, module, dep_spec):
+        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
+        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+        self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+
+    @property
+    def verbs(self):
+        # Up through version 1.6, this option was previously named --with-openib
+        if self.spec.satisfies('@:1.6'):
+            return 'openib'
+        # In version 1.7, it was renamed to be --with-verbs
+        elif self.spec.satisfies('@1.7:'):
+            return 'verbs'
 
     def install(self, spec, prefix):
         config_args = ["--prefix=%s" % prefix,
                        "--with-hwloc=%s" % spec['hwloc'].prefix,
                        "--enable-shared",
                        "--enable-static"]
-
-        # Variants
-        if '+tm' in spec:
-            config_args.append("--with-tm")  # necessary for Torque support
-
-        if '+psm' in spec:
-            config_args.append("--with-psm")
-
-        if '+verbs' in spec:
-            # Up through version 1.6, this option was previously named --with-openib
-            if spec.satisfies('@:1.6'):
-                config_args.append("--with-openib")
-            # In version 1.7, it was renamed to be --with-verbs
-            elif spec.satisfies('@1.7:'):
-                config_args.append("--with-verbs")
+        # Variant based arguments
+        config_args.extend([
+            # Schedulers
+            '--with-tm' if '+tm' in spec else '--without-tm',
+            '--with-slurm' if '+slurm' in spec else '--without-slurm',
+            # Fabrics
+            '--with-psm' if '+psm' in spec else '--without-psm',
+            '--with-psm2' if '+psm2' in spec else '--without-psm2',
+            ('--with-%s' % self.verbs) if '+verbs' in spec else ('--without-%s' % self.verbs),
+            '--with-mxm' if '+mxm' in spec else '--without-mxm',
+            # Other options
+            '--enable-mpi-thread-multiple' if '+thread_multiple' in spec else '--disable-mpi-thread-multiple',
+            '--with-pmi' if '+pmi' in spec else '--without-pmi',
+            '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
+            '--enable-vt' if '+vt' in spec else '--disable-vt'
+        ])
 
         # TODO: use variants for this, e.g. +lanl, +llnl, etc.
         # use this for LANL builds, but for LLNL builds, we need:
@@ -76,9 +128,6 @@ class Openmpi(Package):
         if self.version == ver("1.6.5") and '+lanl' in spec:
             config_args.append("--with-platform=contrib/platform/lanl/tlcc2/optimized-nopanasas")
 
-        # TODO: Spack should make it so that you can't actually find
-        # these compilers if they're "disabled" for the current
-        # compiler configuration.
         if not self.compiler.f77 and not self.compiler.fc:
             config_args.append("--enable-mpi-fortran=no")
 

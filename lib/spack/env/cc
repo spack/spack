@@ -1,27 +1,27 @@
 #!/bin/bash
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 #
 # Spack compiler wrapper script.
@@ -38,19 +38,27 @@
 #      -Wl,-rpath   arguments for dependency /lib directories.
 #
 
-# This is the list of environment variables that need to be set before
-# the script runs.  They are set by routines in spack.build_environment
+# This is an array of environment variables that need to be set before
+# the script runs. They are set by routines in spack.build_environment
 # as part of spack.package.Package.do_install().
-parameters="
-SPACK_PREFIX
-SPACK_ENV_PATH
-SPACK_DEBUG_LOG_DIR
-SPACK_COMPILER_SPEC
-SPACK_SHORT_SPEC"
+parameters=(
+    SPACK_PREFIX
+    SPACK_ENV_PATH
+    SPACK_DEBUG_LOG_DIR
+    SPACK_COMPILER_SPEC
+    SPACK_CC_RPATH_ARG
+    SPACK_CXX_RPATH_ARG
+    SPACK_F77_RPATH_ARG
+    SPACK_FC_RPATH_ARG
+    SPACK_SHORT_SPEC
+)
 
 # The compiler input variables are checked for sanity later:
 #   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
-# Debug flag is optional; set to true for debug logging:
+# The default compiler flags are passed from these variables:
+#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FCFLAGS, SPACK_FFLAGS,
+#   SPACK_LDFLAGS, SPACK_LDLIBS
+# Debug env var is optional; set to true for debug logging:
 #   SPACK_DEBUG
 # Test command is used to unit test the compiler script.
 #   SPACK_TEST_COMMAND
@@ -64,13 +72,12 @@ function die {
     exit 1
 }
 
-for param in $parameters; do
+for param in ${parameters[@]}; do
     if [[ -z ${!param} ]]; then
-        die "Spack compiler must be run from spack!  Input $param was missing!"
+        die "Spack compiler must be run from Spack! Input '$param' is missing."
     fi
 done
 
-#
 # Figure out the type of compiler, the language, and the mode so that
 # the compiler script knows what to do.
 #
@@ -78,88 +85,85 @@ done
 # 'command' is set based on the input command to $SPACK_[CC|CXX|F77|F90]
 #
 # 'mode' is set to one of:
+#    vcheck  version check
 #    cpp     preprocess
 #    cc      compile
 #    as      assemble
 #    ld      link
 #    ccld    compile & link
-#    vcheck  version check
-#
-# Depending on the mode, we may or may not add extra rpaths.
-# This variable controls whether they are added.
-add_rpaths=true
 
 command=$(basename "$0")
+comp="CC"
 case "$command" in
+    cpp)
+        mode=cpp
+        ;;
     cc|c89|c99|gcc|clang|icc|pgcc|xlc)
         command="$SPACK_CC"
         language="C"
+        comp="CC"
+        lang_flags=C
         ;;
     c++|CC|g++|clang++|icpc|pgc++|xlc++)
         command="$SPACK_CXX"
         language="C++"
+        comp="CXX"
+        lang_flags=CXX
         ;;
     f90|fc|f95|gfortran|ifort|pgfortran|xlf90|nagfor)
         command="$SPACK_FC"
         language="Fortran 90"
+        comp="FC"
+        lang_flags=F
         ;;
     f77|gfortran|ifort|pgfortran|xlf|nagfor)
         command="$SPACK_F77"
         language="Fortran 77"
-        ;;
-    cpp)
-        mode=cpp
+        comp="F77"
+        lang_flags=F
         ;;
     ld)
         mode=ld
-
-        # Darwin's linker has a -r argument that merges object files
-        # together. It doesn't work with -rpath.
-        if [[ $OSTYPE = darwin* ]]; then
-            for arg in "$@"; do
-                if [ "$arg" = -r ]; then
-                    add_rpaths=false
-                    break
-	            fi
-            done
-        fi
         ;;
     *)
         die "Unkown compiler: $command"
         ;;
 esac
 
-# If any of the arguments below is present then the mode is vcheck. In
-# vcheck mode nothing is added in terms of extra search paths or
-# libraries
-if [ -z "$mode" ]; then
+# If any of the arguments below are present, then the mode is vcheck.
+# In vcheck mode, nothing is added in terms of extra search paths or
+# libraries.
+if [[ -z $mode ]]; then
     for arg in "$@"; do
-        if [ "$arg" = -v -o "$arg" = -V -o "$arg" = --version -o "$arg" = -dumpversion ]; then
+        if [[ $arg == -v || $arg == -V || $arg == --version || $arg == -dumpversion ]]; then
             mode=vcheck
             break
-    fi
+        fi
     done
 fi
 
 # Finish setting up the mode.
-if [ -z "$mode" ]; then
+if [[ -z $mode ]]; then
     mode=ccld
     for arg in "$@"; do
-        if [ "$arg" = -E ]; then
+        if [[ $arg == -E ]]; then
             mode=cpp
             break
-        elif [ "$arg" = -S ]; then
+        elif [[ $arg == -S ]]; then
             mode=as
             break
-        elif [ "$arg" = -c ]; then
+        elif [[ $arg == -c ]]; then
             mode=cc
             break
         fi
     done
 fi
 
+# Set up rpath variable according to language.
+eval rpath=\$SPACK_${comp}_RPATH_ARG
+
 # Dump the version and exit if we're in testing mode.
-if [ "$SPACK_TEST_COMMAND" = "dump-mode" ]; then
+if [[ $SPACK_TEST_COMMAND == dump-mode ]]; then
     echo "$mode"
     exit
 fi
@@ -170,30 +174,79 @@ if [[ -z $command ]]; then
     die "ERROR: Compiler '$SPACK_COMPILER_SPEC' does not support compiling $language programs."
 fi
 
-if [ "$mode" == vcheck ] ; then
+if [[ $mode == vcheck ]]; then
     exec ${command} "$@"
+fi
+
+# Darwin's linker has a -r argument that merges object files together.
+# It doesn't work with -rpath.
+# This variable controls whether they are added.
+add_rpaths=true
+if [[ $mode == ld && "$SPACK_SHORT_SPEC" =~ "darwin" ]]; then
+    for arg in "$@"; do
+        if [[ $arg == -r ]]; then
+            add_rpaths=false
+            break
+        fi
+    done
 fi
 
 # Save original command for debug logging
 input_command="$@"
 args=("$@")
 
+# Prepend cppflags, cflags, cxxflags, fcflags, fflags, and ldflags
+
+# Add ldflags
+case "$mode" in
+    ld|ccld)
+        args=(${SPACK_LDFLAGS[@]} "${args[@]}") ;;
+esac
+
+# Add compiler flags.
+case "$mode" in
+    cc|ccld)
+    # Add c, cxx, fc, and f flags
+        case $lang_flags in
+            C)
+                args=(${SPACK_CFLAGS[@]} "${args[@]}") ;;
+            CXX)
+                args=(${SPACK_CXXFLAGS[@]} "${args[@]}") ;;
+        esac
+        ;;
+esac
+
+# Add cppflags
+case "$mode" in
+    cpp|as|cc|ccld)
+        args=(${SPACK_CPPFLAGS[@]} "${args[@]}") ;;
+esac
+
+case "$mode" in cc|ccld)
+        # Add fortran flags
+        case $lang_flags in
+            F)
+                args=(${SPACK_FFLAGS[@]} "${args[@]}") ;;
+        esac
+        ;;
+esac
+
 # Read spack dependencies from the path environment variable
 IFS=':' read -ra deps <<< "$SPACK_DEPENDENCIES"
 for dep in "${deps[@]}"; do
     # Prepend include directories
     if [[ -d $dep/include ]]; then
-        if [[ $mode = cpp || $mode = cc || $mode = as || $mode = ccld ]]; then
+        if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
             args=("-I$dep/include" "${args[@]}")
         fi
     fi
 
     # Prepend lib and RPATH directories
     if [[ -d $dep/lib ]]; then
-        if [[ $mode = ccld ]]; then
-            $add_rpaths && args=("-Wl,-rpath,$dep/lib" "${args[@]}")
+        if [[ $mode == ccld ]]; then
+            $add_rpaths && args=("$rpath$dep/lib" "${args[@]}")
             args=("-L$dep/lib" "${args[@]}")
-        elif [[ $mode = ld ]]; then
+        elif [[ $mode == ld ]]; then
             $add_rpaths && args=("-rpath" "$dep/lib" "${args[@]}")
             args=("-L$dep/lib" "${args[@]}")
         fi
@@ -201,10 +254,10 @@ for dep in "${deps[@]}"; do
 
     # Prepend lib64 and RPATH directories
     if [[ -d $dep/lib64 ]]; then
-        if [[ $mode = ccld ]]; then
-            $add_rpaths && args=("-Wl,-rpath,$dep/lib64" "${args[@]}")
+        if [[ $mode == ccld ]]; then
+            $add_rpaths && args=("$rpath$dep/lib64" "${args[@]}")
             args=("-L$dep/lib64" "${args[@]}")
-        elif [[ $mode = ld ]]; then
+        elif [[ $mode == ld ]]; then
             $add_rpaths && args=("-rpath" "$dep/lib64" "${args[@]}")
             args=("-L$dep/lib64" "${args[@]}")
         fi
@@ -212,11 +265,19 @@ for dep in "${deps[@]}"; do
 done
 
 # Include all -L's and prefix/whatever dirs in rpath
-if [[ $mode = ccld ]]; then
-    $add_rpaths && args=("-Wl,-rpath,$SPACK_PREFIX/lib" "-Wl,-rpath,$SPACK_PREFIX/lib64" "${args[@]}")
-elif [[ $mode = ld ]]; then
-    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib" "-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
+if [[ $mode == ccld ]]; then
+    $add_rpaths && args=("$rpath$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("$rpath$SPACK_PREFIX/lib"   "${args[@]}")
+elif [[ $mode == ld ]]; then
+    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib64" "${args[@]}")
+    $add_rpaths && args=("-rpath" "$SPACK_PREFIX/lib"   "${args[@]}")
 fi
+
+# Add SPACK_LDLIBS to args
+case "$mode" in
+    ld|ccld)
+        args=("${args[@]}" ${SPACK_LDLIBS[@]}) ;;
+esac
 
 #
 # Unset pesky environment variables that could affect build sanity.
@@ -234,11 +295,14 @@ IFS=':' read -ra spack_env_dirs <<< "$SPACK_ENV_PATH"
 spack_env_dirs+=("" ".")
 PATH=""
 for dir in "${env_path[@]}"; do
-    remove=""
-    for rm_dir in "${spack_env_dirs[@]}"; do
-        if [[ $dir = $rm_dir ]]; then remove=True; fi
+    addpath=true
+    for env_dir in "${spack_env_dirs[@]}"; do
+        if [[ $dir == $env_dir ]]; then
+            addpath=false
+            break
+        fi
     done
-    if [[ -z $remove ]]; then
+    if $addpath; then
         PATH="${PATH:+$PATH:}$dir"
     fi
 done
@@ -247,7 +311,7 @@ export PATH
 full_command=("$command" "${args[@]}")
 
 # In test command mode, write out full command for Spack tests.
-if [[ $SPACK_TEST_COMMAND = dump-args ]]; then
+if [[ $SPACK_TEST_COMMAND == dump-args ]]; then
     echo "${full_command[@]}"
     exit
 elif [[ -n $SPACK_TEST_COMMAND ]]; then
@@ -257,7 +321,7 @@ fi
 #
 # Write the input and output commands to debug logs if it's asked for.
 #
-if [[ $SPACK_DEBUG = TRUE ]]; then
+if [[ $SPACK_DEBUG == TRUE ]]; then
     input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.in.log"
     output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.out.log"
     echo "[$mode] $command $input_command" >> $input_log

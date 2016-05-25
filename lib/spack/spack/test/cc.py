@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
 This test checks that the Spack cc compiler wrapper is parsing
@@ -56,16 +56,26 @@ class CompilerTest(unittest.TestCase):
         self.cc = Executable(join_path(spack.build_env_path, "cc"))
         self.ld = Executable(join_path(spack.build_env_path, "ld"))
         self.cpp = Executable(join_path(spack.build_env_path, "cpp"))
+        self.cxx = Executable(join_path(spack.build_env_path, "c++"))
+        self.fc = Executable(join_path(spack.build_env_path, "fc"))
 
         self.realcc = "/bin/mycc"
         self.prefix = "/spack-test-prefix"
 
         os.environ['SPACK_CC'] = self.realcc
+        os.environ['SPACK_CXX'] = self.realcc
+        os.environ['SPACK_FC'] = self.realcc
+
         os.environ['SPACK_PREFIX'] = self.prefix
         os.environ['SPACK_ENV_PATH']="test"
         os.environ['SPACK_DEBUG_LOG_DIR'] = "."
         os.environ['SPACK_COMPILER_SPEC'] = "gcc@4.4.7"
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2"
+
+        os.environ['SPACK_CC_RPATH_ARG']  = "-Wl,-rpath,"
+        os.environ['SPACK_CXX_RPATH_ARG'] = "-Wl,-rpath,"
+        os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
+        os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
 
         # Make some fake dependencies
         self.tmp_deps = tempfile.mkdtemp()
@@ -95,6 +105,15 @@ class CompilerTest(unittest.TestCase):
     def check_cc(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
         self.assertEqual(self.cc(*args, output=str).strip(), expected)
+
+
+    def check_cxx(self, command, args, expected):
+        os.environ['SPACK_TEST_COMMAND'] = command
+        self.assertEqual(self.cxx(*args, output=str).strip(), expected)
+
+    def check_fc(self, command, args, expected):
+        os.environ['SPACK_TEST_COMMAND'] = command
+        self.assertEqual(self.fc(*args, output=str).strip(), expected)
 
 
     def check_ld(self, command, args, expected):
@@ -135,6 +154,64 @@ class CompilerTest(unittest.TestCase):
     def test_ld_mode(self):
         self.check_ld('dump-mode', [], "ld")
         self.check_ld('dump-mode', ['foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo'], "ld")
+
+
+    def test_flags(self):
+        os.environ['SPACK_LDFLAGS'] = '-L foo'
+        os.environ['SPACK_LDLIBS'] = '-lfoo'
+        os.environ['SPACK_CPPFLAGS'] = '-g -O1'
+        os.environ['SPACK_CFLAGS'] = '-Wall'
+        os.environ['SPACK_CXXFLAGS'] = '-Werror'
+        os.environ['SPACK_FFLAGS'] = '-w'
+
+        # Test ldflags added properly in ld mode
+        self.check_ld('dump-args', test_command,
+                      "ld " +
+                      '-rpath ' + self.prefix + '/lib ' +
+                      '-rpath ' + self.prefix + '/lib64 ' +
+                      '-L foo ' +
+                      ' '.join(test_command) + ' ' +
+                      '-lfoo')
+
+        # Test cppflags added properly in cpp mode
+        self.check_cpp('dump-args', test_command,
+                       "cpp " +
+                      '-g -O1 ' +
+                      ' '.join(test_command))
+
+        # Test ldflags, cppflags, and language specific flags are added in proper order
+        self.check_cc('dump-args', test_command,
+                      self.realcc + ' ' +
+                      '-Wl,-rpath,' + self.prefix + '/lib ' +
+                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
+                      '-g -O1 ' +
+                      '-Wall ' +
+                      '-L foo ' +
+                      ' '.join(test_command) + ' ' +
+                      '-lfoo')
+
+        self.check_cxx('dump-args', test_command,
+                      self.realcc + ' ' +
+                      '-Wl,-rpath,' + self.prefix + '/lib ' +
+                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
+                      '-g -O1 ' +
+                      '-Werror ' +
+                      '-L foo ' +
+                      ' '.join(test_command) + ' ' +
+                      '-lfoo')
+
+        self.check_fc('dump-args', test_command,
+                      self.realcc + ' ' +
+                      '-Wl,-rpath,' + self.prefix + '/lib ' +
+                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
+                      '-w ' +
+                      '-g -O1 ' +
+                      '-L foo ' +
+                      ' '.join(test_command) + ' ' +
+                      '-lfoo')
+
+        os.environ['SPACK_LDFLAGS']=''
+        os.environ['SPACK_LDLIBS']=''
 
 
     def test_dep_rpath(self):
@@ -219,3 +296,27 @@ class CompilerTest(unittest.TestCase):
 
                       ' '.join(test_command))
 
+    def test_ld_deps_reentrant(self):
+        """Make sure ld -r is handled correctly on OS's where it doesn't
+           support rpaths."""
+        os.environ['SPACK_DEPENDENCIES'] = ':'.join([self.dep1])
+
+        os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=linux-x86_64"
+        reentrant_test_command = ['-r'] + test_command
+        self.check_ld('dump-args', reentrant_test_command,
+                      'ld ' +
+                      '-rpath ' + self.prefix + '/lib ' +
+                      '-rpath ' + self.prefix + '/lib64 ' +
+
+                      '-L' + self.dep1 + '/lib ' +
+                      '-rpath ' + self.dep1 + '/lib ' +
+
+                      '-r ' +
+                      ' '.join(test_command))
+
+        os.environ['SPACK_SHORT_SPEC'] = "foo@1.2=darwin-x86_64"
+        self.check_ld('dump-args', reentrant_test_command,
+                      'ld ' +
+                      '-L' + self.dep1 + '/lib ' +
+                      '-r ' +
+                      ' '.join(test_command))

@@ -9,3 +9,5 @@
 /share/spack/dotkit
 /share/spack/modules
 /TAGS
+/htmlcov
+.coverage

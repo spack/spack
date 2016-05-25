@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 """
 This module contains all routines related to setting up the package
 build environment.  All of this is set up by package.py just before
@@ -27,15 +51,16 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
-import multiprocessing
 import os
-import platform
-import shutil
 import sys
+import shutil
+import multiprocessing
+import platform
 
-import spack
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
+
+import spack
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
 from spack.util.executable import Executable, which
@@ -91,20 +116,22 @@ class MakeExecutable(Executable):
 
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
+    compiler = pkg.compiler
+    flags = pkg.spec.compiler_flags
+
     # Set compiler variables used by CMake and autotools
-    assert all(key in pkg.compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
+    assert all(key in compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
 
     # Populate an object with the list of environment modifications
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
     link_dir = spack.build_env_path
-    env.set('CC', join_path(link_dir, pkg.compiler.link_paths['cc']))
-    env.set('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
-    env.set('F77', join_path(link_dir, pkg.compiler.link_paths['f77']))
-    env.set('FC', join_path(link_dir, pkg.compiler.link_paths['fc']))
+    env.set('CC',  join_path(link_dir, compiler.link_paths['cc']))
+    env.set('CXX', join_path(link_dir, compiler.link_paths['cxx']))
+    env.set('F77', join_path(link_dir, compiler.link_paths['f77']))
+    env.set('FC',  join_path(link_dir, compiler.link_paths['fc']))
 
     # Set SPACK compiler variables so that our wrapper knows what to call
-    compiler = pkg.compiler
     if compiler.cc:
         env.set('SPACK_CC', compiler.cc)
     if compiler.cxx:
@@ -112,7 +139,19 @@ def set_compiler_environment_variables(pkg, env):
     if compiler.f77:
         env.set('SPACK_F77', compiler.f77)
     if compiler.fc:
-        env.set('SPACK_FC', compiler.fc)
+        env.set('SPACK_FC',  compiler.fc)
+
+    # Set SPACK compiler rpath flags so that our wrapper knows what to use
+    env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
+    env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
+    env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
+    env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
+
+    # Add every valid compiler flag to the environment, prefixed with "SPACK_"
+    for flag in spack.spec.FlagMap.valid_compiler_flags():
+        # Concreteness guarantees key safety here
+        if flags[flag] != []:
+            env.set('SPACK_' + flag.upper(), ' '.join(f for f in flags[flag]))
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
     return env
@@ -175,8 +214,8 @@ def set_build_environment_variables(pkg, env):
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     pkg_config_dirs = []
     for p in dep_prefixes:
-        for libdir in ('lib', 'lib64'):
-            pcdir = join_path(p, libdir, 'pkgconfig')
+        for maybe in ('lib', 'lib64', 'share'):
+            pcdir = join_path(p, maybe, 'pkgconfig')
             if os.path.isdir(pcdir):
                 pkg_config_dirs.append(pcdir)
     env.set_path('PKG_CONFIG_PATH', pkg_config_dirs)
@@ -213,7 +252,7 @@ def set_module_variables_for_package(pkg, module):
     # TODO: of build dependencies, as opposed to link dependencies.
     # TODO: Currently, everything is a link dependency, but tools like
     # TODO: this shouldn't be.
-    m.cmake = which("cmake")
+    m.cmake = Executable('cmake')
 
     # standard CMake arguments
     m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % pkg.prefix,
@@ -278,21 +317,6 @@ def parent_class_modules(cls):
     return result
 
 
-def setup_module_variables_for_dag(pkg):
-    """Set module-scope variables for all packages in the DAG."""
-    for spec in pkg.spec.traverse(order='post'):
-        # If a user makes their own package repo, e.g.
-        # spack.repos.mystuff.libelf.Libelf, and they inherit from
-        # an existing class like spack.repos.original.libelf.Libelf,
-        # then set the module variables for both classes so the
-        # parent class can still use them if it gets called.
-        spkg = spec.package
-        modules = parent_class_modules(spkg.__class__)
-        for mod in modules:
-            set_module_variables_for_package(spkg, mod)
-        set_module_variables_for_package(spkg, spkg.module)
-
-
 def setup_package(pkg):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
@@ -316,20 +340,27 @@ def setup_package(pkg):
 
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env)
-    setup_module_variables_for_dag(pkg)
 
-    # Allow dependencies to modify the module
+    # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
-    for dependency_spec in spec.traverse(root=False):
-        dpkg = dependency_spec.package
-        dpkg.setup_dependent_package(pkg.module, spec)
+    for dspec in pkg.spec.traverse(order='post', root=False):
+        # If a user makes their own package repo, e.g.
+        # spack.repos.mystuff.libelf.Libelf, and they inherit from
+        # an existing class like spack.repos.original.libelf.Libelf,
+        # then set the module variables for both classes so the
+        # parent class can still use them if it gets called.
+        spkg = dspec.package
+        modules = parent_class_modules(spkg.__class__)
+        for mod in modules:
+            set_module_variables_for_package(spkg, mod)
+        set_module_variables_for_package(spkg, spkg.module)
 
-    # Allow dependencies to set up environment as well
-    for dependency_spec in spec.traverse(root=False):
-        dpkg = dependency_spec.package
+        # Allow dependencies to modify the module
+        dpkg = dspec.package
+        dpkg.setup_dependent_package(pkg.module, spec)
         dpkg.setup_dependent_environment(spack_env, run_env, spec)
 
-    # Allow the package to apply some settings.
+    set_module_variables_for_package(pkg, pkg.module)
     pkg.setup_environment(spack_env, run_env)
 
     # Make sure nothing's strange about the Spack environment.
