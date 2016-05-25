@@ -244,8 +244,8 @@ class SpecDagTest(MockPackagesTest):
     def test_unsatisfiable_architecture(self):
         platform = spack.architecture.sys_type()
 
-        self.set_pkg_dep('mpileaks', 'mpich target=%s' % platform.target('default_target'))
-        spec = Spec('mpileaks ^mpich target=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
+        self.set_pkg_dep('mpileaks', 'mpich platform=test target=be')
+        spec = Spec('mpileaks ^mpich platform=test target=fe ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
 
 
