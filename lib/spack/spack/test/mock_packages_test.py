@@ -62,7 +62,7 @@ compilers:
     spec: clang@3.3
     operating_system:
       name: redhat
-      version: '6.7'
+      version: '6'
     paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
@@ -110,7 +110,7 @@ compilers:
       fc: /path/to/gfortran
     operating_system:
       name: redhat
-      version: '6.7'
+      version: '6'
     spec: gcc@4.5.0
     modules: 'None'
   gcc4.5.0OSX:
