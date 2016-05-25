@@ -94,17 +94,19 @@ class Metis(Package):
             install(sharefile, prefix.share)
 
         if '+shared' in spec:
+            shared_flags = ['-fPIC', '-shared']
             if sys.platform == 'darwin':
-                lib_dsuffix = 'dylib'
-                load_flag = '-Wl,-all_load'
-                no_load_flag = ''
+                shared_suffix = 'dylib'
+                shared_flags.extend(['-Wl,-all_load', 'libmetis.a'])
             else:
-                lib_dsuffix = 'so'
-                load_flag = '-Wl,-whole-archive'
-                no_load_flag = '-Wl,-no-whole-archive'
+                shared_suffix = 'so'
+                shared_flags.extend(['-Wl,-whole-archive', 'libmetis.a',
+                                     '-Wl,-no-whole-archive'])
 
-            ccompile('-fPIC', '-shared', load_flag, 'libmetis.a', no_load_flag,
-                     '-o', '%s/libmetis.%s' % (prefix.lib, lib_dsuffix))
+            shared_out = '%s/libmetis.%s' % (prefix.lib, shared_suffix)
+            shared_flags.extend(['-o', shared_out])
+
+            ccompile(*shared_flags)
 
         # Set up and run tests on installation
         ccompile('-I%s' % prefix.include, '-L%s' % prefix.lib,
@@ -128,7 +130,7 @@ class Metis(Package):
         os.system('%s %s 10' % (test_bin('partdmesh'), graph))
         os.system('%s %s' % (test_bin('mesh2dual'), graph))
 
-        # TODO: The following code should replace the testing code in the
+        # FIXME: The following code should replace the testing code in the
         # block above since it causes installs to fail when one or more of the
         # Metis tests fail, but it currently doesn't work because the 'mtest',
         # 'onmetis', and 'partnmesh' tests return error codes that trigger
