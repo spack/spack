@@ -255,7 +255,11 @@ def compilers_for_spec(compiler_spec, arch=None, scope=None):
             else:
                 compiler_paths.append(None)
 
-        return cls(cspec, *compiler_paths)
+        flags = {}
+        for f in spack.spec.FlagMap.valid_compiler_flags():
+            if f in items:
+                flags[f] = items[f]
+        return cls(cspec, *compiler_paths, **flags)
 
     matches = find(compiler_spec, arch, scope)
     return [get_compiler(cspec) for cspec in matches]

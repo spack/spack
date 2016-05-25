@@ -92,7 +92,7 @@ def concretize_specs(specs, allow_multiple_matches=False, force=False):
         if not allow_multiple_matches and len(matching) > 1:
             tty.error("%s matches multiple packages:" % spec)
             print()
-            display_specs(matching, long=True)
+            display_specs(matching, long=True, show_flags=True)
             print()
             has_errors = True
 
@@ -186,7 +186,7 @@ def uninstall(parser, args):
         if not args.yes_to_all:
             tty.msg("The following packages will be uninstalled : ")
             print('')
-            display_specs(uninstall_list, long=True)
+            display_specs(uninstall_list, long=True, show_flags=True)
             print('')
             ask_for_confirmation('Do you want to proceed ? ')
 

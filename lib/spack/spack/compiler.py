@@ -109,7 +109,7 @@ class Compiler(object):
         return '-Wl,-rpath,'
 
 
-    def __init__(self, cspec, cc, cxx, f77, fc):
+    def __init__(self, cspec, cc, cxx, f77, fc, **kwargs):
         def check(exe):
             if exe is None:
                 return None
@@ -120,6 +120,15 @@ class Compiler(object):
         self.cxx = check(cxx)
         self.f77 = check(f77)
         self.fc  = check(fc)
+
+        # Unfortunately have to make sure these params are accepted
+        # in the same order they are returned by sorted(flags)
+        # in compilers/__init__.py
+        self.flags = {}
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            value = kwargs.get(flag, None)
+            if value is not None:
+                self.flags[flag] = value.split()
 
         self.spec = cspec
 
@@ -187,7 +196,6 @@ class Compiler(object):
     @classmethod
     def fc_version(cls, fc):
         return cls.default_version(fc)
-
 
     @classmethod
     def _find_matches_in_path(cls, compiler_names, detect_version, *path):

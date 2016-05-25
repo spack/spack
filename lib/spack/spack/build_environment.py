@@ -51,15 +51,16 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
-import multiprocessing
 import os
-import platform
-import shutil
 import sys
+import shutil
+import multiprocessing
+import platform
 
-import spack
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
+
+import spack
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
 from spack.util.executable import Executable, which
@@ -115,22 +116,24 @@ class MakeExecutable(Executable):
 
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
+    compiler = pkg.compiler
+    flags = pkg.spec.compiler_flags
+
     # Set compiler variables used by CMake and autotools
-    assert all(key in pkg.compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
+    assert all(key in compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
 
     # Populate an object with the list of environment modifications
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
     link_dir = spack.build_env_path
-    env.set('CC',  join_path(link_dir, pkg.compiler.link_paths['cc']))
-    env.set('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
-    env.set('F77', join_path(link_dir, pkg.compiler.link_paths['f77']))
-    env.set('FC',  join_path(link_dir, pkg.compiler.link_paths['fc']))
+    env.set('CC',  join_path(link_dir, compiler.link_paths['cc']))
+    env.set('CXX', join_path(link_dir, compiler.link_paths['cxx']))
+    env.set('F77', join_path(link_dir, compiler.link_paths['f77']))
+    env.set('FC',  join_path(link_dir, compiler.link_paths['fc']))
 
     # Set SPACK compiler variables so that our wrapper knows what to call
-    compiler = pkg.compiler
     if compiler.cc:
-        env.set('SPACK_CC',  compiler.cc)
+        env.set('SPACK_CC', compiler.cc)
     if compiler.cxx:
         env.set('SPACK_CXX', compiler.cxx)
     if compiler.f77:
@@ -143,6 +146,12 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
+
+    # Add every valid compiler flag to the environment, prefixed with "SPACK_"
+    for flag in spack.spec.FlagMap.valid_compiler_flags():
+        # Concreteness guarantees key safety here
+        if flags[flag] != []:
+            env.set('SPACK_' + flag.upper(), ' '.join(f for f in flags[flag]))
 
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
     return env

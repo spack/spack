@@ -28,9 +28,9 @@ from spack import *
 class Ghostscript(Package):
     """an interpreter for the PostScript language and for PDF. """
     homepage = "http://ghostscript.com/"
-    url      = "http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-9.16.tar.gz"
+    url      = "http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-9.18.tar.gz"
 
-    version('9.16', '829319325bbdb83f5c81379a8f86f38f')
+    version('9.18', '33a47567d7a591c00a253caddd12a88a')
 
     parallel = False
 
