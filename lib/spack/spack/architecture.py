@@ -90,7 +90,7 @@ from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
 from spack.util.multiproc import parmap
 import spack.error as serr
-
+import spack.platforms
 
 class InvalidSysTypeError(serr.SpackError):
     def __init__(self, sys_type):
@@ -462,21 +462,27 @@ def arch_from_dict(d):
     """
     arch = Arch()
 
-    if d is None:
-        return None
-    platform_dict = d['platform']
-    os_dict = d['platform_os']
-    target_dict = d['target']
+    if isinstance(d, basestring):
+        # We have an old spec using a string for the architecture
+        arch.platform = spack.platforms.spack_compatibility.SpackCompatibility()
+        arch.platform_os = arch.platform.operating_system('default')
+        arch.target = Target(d)
 
-    platform = _platform_from_dict(platform_dict) if platform_dict else None
-    target = _target_from_dict(target_dict) if os_dict else None
-    platform_os = _operating_system_from_dict(os_dict) if os_dict else None
-    arch.platform = platform
-    arch.target = target
-    arch.platform_os = platform_os
+        arch.os_string = None
+        arch.target_string = None
+    else:
+        if d is None:
+            return None
+        platform_dict = d['platform']
+        os_dict = d['platform_os']
+        target_dict = d['target']
 
-    arch.os_string = None
-    arch.target_string = None
+        arch.platform = _platform_from_dict(platform_dict) if platform_dict else None
+        arch.target = _target_from_dict(target_dict) if os_dict else None
+        arch.platform_os = _operating_system_from_dict(os_dict) if os_dict else None
+
+        arch.os_string = None
+        arch.target_string = None
 
     return arch
 
