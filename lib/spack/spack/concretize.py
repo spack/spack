@@ -330,6 +330,8 @@ class DefaultConcretizer(object):
         compiler is used, defaulting to no compiler flags in the spec.
         Default specs set at the compiler level will still be added later.
         """
+
+            
         if not spec.architecture.platform_os:
             #Although this usually means changed, this means awaiting other changes
             return True
@@ -340,9 +342,9 @@ class DefaultConcretizer(object):
                 nearest = next(p for p in spec.traverse(direction='parents')
                                if ((p.compiler == spec.compiler and p is not spec)
                                and flag in p.compiler_flags))
-                if ((not flag in spec.compiler_flags) or
-                    sorted(spec.compiler_flags[flag]) != sorted(nearest.compiler_flags[flag])):
-                    if flag in spec.compiler_flags:
+                if not flag in spec.compiler_flags or \
+                    not (sorted(spec.compiler_flags[flag]) >= sorted(nearest.compiler_flags[flag])):
+                    if flag in spec.compiler_flag: 
                         spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
                                                          set(nearest.compiler_flags[flag]))
                     else:
