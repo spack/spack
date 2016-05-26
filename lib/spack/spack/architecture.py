@@ -90,7 +90,6 @@ from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
 from spack.util.multiproc import parmap
 import spack.error as serr
-import spack.platforms
 
 class InvalidSysTypeError(serr.SpackError):
     def __init__(self, sys_type):
@@ -464,8 +463,8 @@ def arch_from_dict(d):
 
     if isinstance(d, basestring):
         # We have an old spec using a string for the architecture
-        arch.platform = spack.platforms.spack_compatibility.SpackCompatibility()
-        arch.platform_os = arch.platform.operating_system('default')
+        arch.platform = Platform('spack_compatibility')
+        arch.platform_os = OperatingSystem('pre_version', '1.0')
         arch.target = Target(d)
 
         arch.os_string = None
