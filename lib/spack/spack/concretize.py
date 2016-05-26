@@ -344,7 +344,7 @@ class DefaultConcretizer(object):
                                and flag in p.compiler_flags))
                 if not flag in spec.compiler_flags or \
                     not (sorted(spec.compiler_flags[flag]) >= sorted(nearest.compiler_flags[flag])):
-                    if flag in spec.compiler_flag: 
+                    if flag in spec.compiler_flags: 
                         spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
                                                          set(nearest.compiler_flags[flag]))
                     else:
