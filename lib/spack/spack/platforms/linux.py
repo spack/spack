@@ -12,10 +12,10 @@ class Linux(Platform):
         super(Linux, self).__init__('linux')
         self.add_target(self.default, Target(self.default))
         linux_dist = LinuxDistro()
-        self.default_os = linux_dist.name
-        self.front_os = linux_dist.name
-        self.back_os = linux_dist.name
-        self.add_operating_system(linux_dist.name, linux_dist)
+        self.default_os = str(linux_dist)
+        self.front_os = self.default_os
+        self.back_os = self.default._os
+        self.add_operating_system(str(linux_dist), linux_dist)
 
     @classmethod
     def detect(self):

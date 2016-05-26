@@ -9,16 +9,16 @@ class CrayXc(Platform):
     back_end    = 'ivybridge'
     default     = 'ivybridge'
 
-    front_os    = "SuSE"
-    back_os     = "CNL"
-    default_os  = "CNL" 
+    front_os    = "SuSE11"
+    back_os     = "CNL10"
+    default_os  = "CNL10" 
 
     def __init__(self):
         ''' Since cori doesn't have ivybridge as a front end it's better
             if we use CRAY_CPU_TARGET as the default. This will ensure
             that if we're on a XC-40 or XC-30 then we can detect the target
         '''
-        super(CrayXc, self).__init__('crayxc')
+        super(CrayXc, self).__init__('cray_xc')
 
         # Handle the default here so we can check for a key error
         if 'CRAY_CPU_TARGET' in os.environ:
@@ -37,8 +37,8 @@ class CrayXc(Platform):
         self.add_target('haswell', 
                         Target('haswell','craype-haswell'))         
 
-        self.add_operating_system('SuSE', LinuxDistro())
-        self.add_operating_system('CNL', Cnl())
+        self.add_operating_system('SuSE11', LinuxDistro())
+        self.add_operating_system('CNL10', Cnl())
 
     @classmethod
     def detect(self):

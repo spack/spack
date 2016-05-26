@@ -538,13 +538,17 @@ class Spec(object):
         Known flags currently include "arch"
         """
         valid_flags = FlagMap.valid_compiler_flags()
-#        if name == 'arch' or name == 'architecture':
-#            platform, op_sys, target = value.split('-')
-#            print platform, op_sys, target, '+++++++'
-#            self._set_platform(platform)
-#            self._set_os(op_sys)
-#            self._set_target(target)
-        if name == 'platform':
+        if name == 'arch' or name == 'architecture':
+            platform, op_sys, target = value.split('-')
+            assert(self.architecture.platform is None)
+            assert(self.architecture.platform_os is None)
+            assert(self.architecture.target is None)
+            assert(self.architecture.os_string is None)
+            assert(self.architecture.target_string is None)
+            self._set_platform(platform)
+            self._set_os(op_sys)
+            self._set_target(target)
+        elif name == 'platform':
             self._set_platform(value)
         elif name == 'os' or name == 'operating_system':
             if self.architecture.platform:

@@ -402,7 +402,6 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf', '~debug')
         self.check_constrain_changed('libelf', 'debug=2')
         self.check_constrain_changed('libelf', 'cppflags="-O3"')
-        self.check_constrain_changed('libelf', ' arch=bgqos_0')
         
         platform = spack.architecture.sys_type()
         self.check_constrain_changed('libelf', 'target='+platform.target('default_target').name)
