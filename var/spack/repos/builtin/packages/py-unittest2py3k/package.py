@@ -25,30 +25,18 @@
 from spack import *
 
 
-class Serf(Package):
-    """Apache Serf - a high performance C-based HTTP client library
-    built upon the Apache Portable Runtime (APR) library"""
-    homepage  = 'https://serf.apache.org/'
-    url       = 'https://archive.apache.org/dist/serf/serf-1.3.8.tar.bz2'
+class PyUnittest2py3k(Package):
+    """unittest2 is a backport of the new features added to the unittest
+    testing framework in Python 2.7 and 3.2. This is a Python 3 compatible
+    version of unittest2."""
 
-    version('1.3.8',     '1d45425ca324336ce2f4ae7d7b4cfbc5567c5446')
+    homepage = "https://pypi.python.org/pypi/unittest2py3k"
+    url      = "https://pypi.python.org/packages/4e/3d/d44421e8d828af1399c1509c196db92e2a58f3764b01a0ee928d7025d1ca/unittest2py3k-0.5.1.tar.gz"
 
-    depends_on('apr')
-    depends_on('apr-util')
-    depends_on('scons')
-    depends_on('expat')
-    depends_on('openssl')
-    depends_on('zlib')
+    version('0.5.1', '8824ff92044310d9365f90d892bf0f09')
+
+    extends('python')
+    depends_on('py-setuptools')
 
     def install(self, spec, prefix):
-        options = ['PREFIX=%s' % prefix]
-        options.append('APR=%s' % spec['apr'].prefix)
-        options.append('APU=%s' % spec['apr-util'].prefix)
-        options.append('OPENSSL=%s' % spec['openssl'].prefix)
-        options.append('LINKFLAGS=-L%s/lib -L%s/lib' %
-                       (spec['expat'].prefix, spec['zlib'].prefix))
-        options.append('CPPFLAGS=-I%s/include -I%s/include' %
-                       (spec['expat'].prefix, spec['zlib'].prefix))
-
-        scons(*options)
-        scons('install')
+        python('setup.py', 'install', '--prefix=%s' % prefix)

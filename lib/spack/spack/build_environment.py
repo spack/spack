@@ -290,7 +290,7 @@ def set_module_variables_for_package(pkg, module):
     """Populate the module scope of install() with some useful functions.
        This makes things easier for package writers.
     """
-    # number of jobs spack will to build with.
+    # number of jobs spack will build with.
     jobs = multiprocessing.cpu_count()
     if not pkg.parallel:
         jobs = 1
@@ -303,6 +303,7 @@ def set_module_variables_for_package(pkg, module):
     # TODO: make these build deps that can be installed if not found.
     m.make  = MakeExecutable('make', jobs)
     m.gmake = MakeExecutable('gmake', jobs)
+    m.scons = MakeExecutable('scons', jobs)
 
     # easy shortcut to os.environ
     m.env = os.environ

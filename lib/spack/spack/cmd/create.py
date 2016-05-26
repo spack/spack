@@ -1,4 +1,3 @@
-_copyright = """\
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -23,10 +22,8 @@ _copyright = """\
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-"""
 import string
 import os
-import hashlib
 import re
 
 from ordereddict_backport import OrderedDict
@@ -41,16 +38,37 @@ import spack.util.web
 from spack.spec import Spec
 from spack.util.naming import *
 from spack.repository import Repo, RepoError
-import spack.util.crypto as crypto
 
 from spack.util.executable import which
-from spack.stage import Stage
 
 
 description = "Create a new package file from an archive URL"
 
-package_template = string.Template(
-    _copyright + """
+package_template = string.Template("""\
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 #
 # This is a template package file for Spack.  We've put "FIXME"
 # next to all the things you'll want to change. Once you've handled
@@ -68,8 +86,10 @@ package_template = string.Template(
 #
 from spack import *
 
+
 class ${class_name}(Package):
     ""\"FIXME: put a proper description of your package here.""\"
+
     # FIXME: add a proper url for your package's homepage here.
     homepage = "http://www.example.com"
     url      = "${url}"
@@ -80,12 +100,10 @@ ${versions}
     # depends_on("foo")
 
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
+        # FIXME: Modify the installation instructions here
         ${configure}
-
-        # FIXME: Add logic to build and install here
-        make()
-        make("install")
+        ${build}
+        ${install}
 """)
 
 
@@ -120,39 +138,78 @@ def setup_parser(subparser):
 
 class ConfigureGuesser(object):
     def __call__(self, stage):
-        """Try to guess the type of build system used by the project, and return
-           an appropriate configure line.
-        """
-        autotools = "configure('--prefix=%s' % prefix)"
-        cmake     = "cmake('.', *std_cmake_args)"
-        python    = "python('setup.py', 'install', '--prefix=%s' % prefix)"
-        r         = "R('CMD', 'INSTALL', '--library=%s' % self.module.r_lib_dir, '%s' % self.stage.archive_file)"
+        """Try to guess the type of build system used by the project. Set the
+        appropriate default configure, build, and install instructions."""
 
-        config_lines = ((r'/configure$',      'autotools', autotools),
-                        (r'/CMakeLists.txt$', 'cmake',     cmake),
-                        (r'/setup.py$',       'python',    python),
-                        (r'/NAMESPACE$',      'r',         r))
+        # Default configure instructions
+        configureDict = {
+            'autotools': "configure('--prefix={0}'.format(prefix))",
+            'cmake':     "cmake('.', *std_cmake_args)",
+            'scons':     "",
+            'python':    "",
+            'r':         "",
+            'unknown':   "# FIXME: Unknown build system"
+        }
 
-        # Peek inside the tarball.
-        tar = which('tar')
-        output = tar(
-            "--exclude=*/*/*", "-tf", stage.archive_file, output=str)
-        lines = output.split("\n")
+        # Default build instructions
+        buildDict = {
+            'autotools': "make()",
+            'cmake':     "make()",
+            'scons':     "scons('prefix={0}'.format(prefix))",
+            'python':    "",
+            'r':         "",
+            'unknown':   "make()",
+        }
 
-        # Set the configure line to the one that matched.
-        for pattern, bs, cl in config_lines:
+        # Default install instructions
+        installDict = {
+            'autotools': "make('install')",
+            'cmake':     "make('install')",
+            'scons':     "scons('install')",
+            'python':    "python('setup.py', 'install', " +
+                         "'--prefix={0}'.format(prefix))",
+            'r':         "R('CMD', 'INSTALL', '--library={0}'.format(" +
+                         "self.module.r_lib_dir), self.stage.archive_file)",
+            'unknown':   "make('install')",
+        }
+
+        # A list of clues that give us an idea of the build system a package
+        # uses. If the regular expression matches a file contained in the
+        # archive, the corresponding build system is assumed.
+        clues = [
+            (r'/configure$',      'autotools'),
+            (r'/CMakeLists.txt$', 'cmake'),
+            (r'/SConstruct$',     'scons'),
+            (r'/setup.py$',       'python'),
+            (r'/NAMESPACE$',      'r')
+        ]
+
+        # Peek inside the compressed file.
+        output = ''
+        if stage.archive_file.endswith(('.tar', '.tar.gz', '.tar.bz2',
+                                        '.tgz', '.tbz2')):
+            tar    = which('tar')
+            output = tar('--exclude=*/*/*', '-tf',
+                         stage.archive_file, output=str)
+        elif stage.archive_file.endswith('.gz'):
+            gunzip = which('gunzip')
+            output = gunzip('-l', stage.archive_file, output=str)
+        elif stage.archive_file.endswith('.zip'):
+            unzip  = which('unzip')
+            output = unzip('-l', stage.archive_file, output=str)
+        lines = output.split('\n')
+
+        # Determine the build system based on the files contained
+        # in the archive.
+        build_system = 'unknown'
+        for pattern, bs in clues:
             if any(re.search(pattern, l) for l in lines):
-                config_line = cl
                 build_system = bs
-                break
-        else:
-            # None matched -- just put both, with cmake commented out
-            config_line =  "# FIXME: Spack couldn't guess one, so here are some options:\n"
-            config_line += "        # " + autotools + "\n"
-            config_line += "        # " + cmake
-            build_system = 'unknown'
 
-        self.configure = config_line
+        self.configure = configureDict[build_system]
+        self.build     = buildDict[build_system]
+        self.install   = installDict[build_system]
+
         self.build_system = build_system
 
 
@@ -168,7 +225,7 @@ def guess_name_and_version(url, args):
     else:
         try:
             name = spack.url.parse_name(url, version)
-        except spack.url.UndetectableNameError, e:
+        except spack.url.UndetectableNameError:
             # Use a user-supplied name if one is present
             tty.die("Couldn't guess a name for this package. Try running:", "",
                     "spack create --name <name> <url>")
@@ -182,7 +239,8 @@ def guess_name_and_version(url, args):
 def find_repository(spec, args):
     # figure out namespace for spec
     if spec.namespace and args.namespace and spec.namespace != args.namespace:
-        tty.die("Namespaces '%s' and '%s' do not match." % (spec.namespace, args.namespace))
+        tty.die("Namespaces '%s' and '%s' do not match." % (spec.namespace,
+                                                            args.namespace))
 
     if not spec.namespace and args.namespace:
         spec.namespace = args.namespace
@@ -193,8 +251,8 @@ def find_repository(spec, args):
         try:
             repo = Repo(repo_path)
             if spec.namespace and spec.namespace != repo.namespace:
-                tty.die("Can't create package with namespace %s in repo with namespace %s"
-                        % (spec.namespace, repo.namespace))
+                tty.die("Can't create package with namespace %s in repo with "
+                        "namespace %s" % (spec.namespace, repo.namespace))
         except RepoError as e:
             tty.die(str(e))
     else:
@@ -214,11 +272,7 @@ def find_repository(spec, args):
 
 def fetch_tarballs(url, name, version):
     """Try to find versions of the supplied archive by scraping the web.
-
-    Prompts the user to select how many to download if many are found.
-
-
-    """
+    Prompts the user to select how many to download if many are found."""
     versions = spack.util.web.find_versions_of_archive(url)
     rkeys = sorted(versions.keys(), reverse=True)
     versions = OrderedDict(zip(rkeys, (versions[v] for v in rkeys)))
@@ -226,11 +280,11 @@ def fetch_tarballs(url, name, version):
     archives_to_fetch = 1
     if not versions:
         # If the fetch failed for some reason, revert to what the user provided
-        versions = { version : url }
+        versions = {version: url}
     elif len(versions) > 1:
         tty.msg("Found %s versions of %s:" % (len(versions), name),
                 *spack.cmd.elide_list(
-                    ["%-10s%s" % (v,u) for v, u in versions.iteritems()]))
+                    ["%-10s%s" % (v, u) for v, u in versions.iteritems()]))
         print
         archives_to_fetch = tty.get_number(
             "Include how many checksums in the package file?",
@@ -292,10 +346,12 @@ def create(parser, args):
         pkg_file.write(
             package_template.substitute(
                 name=name,
-                configure=guesser.configure,
                 class_name=mod_to_class(name),
                 url=url,
-                versions=make_version_calls(ver_hash_tuples)))
+                versions=make_version_calls(ver_hash_tuples),
+                configure=guesser.configure,
+                build=guesser.build,
+                install=guesser.install))
 
     # If everything checks out, go ahead and edit.
     spack.editor(pkg_path)
