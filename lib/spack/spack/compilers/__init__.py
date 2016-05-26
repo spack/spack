@@ -102,15 +102,18 @@ def get_compiler_config(scope=None):
     # configured.  Avoid updating automatically if there ARE site
     # compilers configured but no user ones.
 #    if (isinstance(arch, basestring) or arch == my_arch) and arch not in config:
-    if scope is None:
-        # We know no compilers were configured in any scope.
-        init_compiler_config()
-    elif scope == 'user':
-        # Check the site config and update the user config if
-        # nothing is configured at the site level.
-        site_config = spack.config.get_config('compilers', scope='site')
-        if not site_config:
+    if not config:
+        if scope is None:
+            # We know no compilers were configured in any scope.
             init_compiler_config()
+            config = spack.config.get_config('compilers', scope=scope)
+        elif scope == 'user':
+            # Check the site config and update the user config if
+            # nothing is configured at the site level.
+            site_config = spack.config.get_config('compilers', scope='site')
+            if not site_config:
+                init_compiler_config()
+                config = spack.config.get_config('compilers', scope=scope)
 
     return config
 
