@@ -50,8 +50,8 @@ class Dealii(Package):
     depends_on ("blas")
     # Boost 1.58 is blacklisted, see https://github.com/dealii/dealii/issues/1591
     # require at least 1.59
-    depends_on ("boost@1.59.0:",     when='~mpi')
-    depends_on ("boost@1.59.0:+mpi", when='+mpi')
+    depends_on ("boost@1.59.0:+thread+system+serialization+iostreams",     when='~mpi')
+    depends_on ("boost@1.59.0:+mpi+thread+system+serialization+iostreams", when='+mpi')
     depends_on ("bzip2")
     depends_on ("cmake")
     depends_on ("lapack")
@@ -63,10 +63,11 @@ class Dealii(Package):
     # optional dependencies
     depends_on ("mpi", when="+mpi")
     depends_on ("arpack-ng+mpi", when='+arpack+mpi')
-    depends_on ("doxygen", when='+doc')
+    depends_on ("doxygen+graphviz", when='+doc')
+    depends_on ("graphviz", when='+doc')
     depends_on ("gsl", when='@8.5.0:+gsl')
     depends_on ("gsl", when='@dev+gsl')
-    depends_on ("hdf5+mpi~cxx", when='+hdf5+mpi') #FIXME NetCDF declares dependency with ~cxx, why?
+    depends_on ("hdf5+mpi", when='+hdf5+mpi')
     depends_on ("metis@5:", when='+metis')
     depends_on ("netcdf+mpi", when="+netcdf+mpi")
     depends_on ("netcdf-cxx", when='+netcdf+mpi')
@@ -104,8 +105,8 @@ class Dealii(Package):
                 (spec['lapack'].prefix.include,
                  spec['blas'].prefix.include),
             '-DLAPACK_LIBRARIES=%s;%s' %
-                (join_path(spec['lapack'].prefix.lib,'liblapack.%s' % dsuf), # FIXME don't hardcode names
-                 join_path(spec['blas'].prefix.lib,'libblas.%s' % dsuf)),    # FIXME don't hardcode names
+                (spec['lapack'].lapack_shared_lib,
+                 spec['blas'].blas_shared_lib),
             '-DMUPARSER_DIR=%s ' % spec['muparser'].prefix,
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
@@ -116,9 +117,9 @@ class Dealii(Package):
         if '+mpi' in spec:
             options.extend([
                 '-DDEAL_II_WITH_MPI:BOOL=ON',
-                '-DCMAKE_C_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpicc'), # FIXME: avoid hardcoding mpi wrappers names
-                '-DCMAKE_CXX_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpic++'),
-                '-DCMAKE_Fortran_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
+                '-DCMAKE_C_COMPILER=%s'       % spec['mpi'].mpicc,
+                '-DCMAKE_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
+                '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             ])
         else:
             options.extend([
