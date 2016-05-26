@@ -28,10 +28,11 @@ from spack import *
 class Serf(Package):
     """Apache Serf - a high performance C-based HTTP client library
     built upon the Apache Portable Runtime (APR) library"""
+
     homepage  = 'https://serf.apache.org/'
     url       = 'https://archive.apache.org/dist/serf/serf-1.3.8.tar.bz2'
 
-    version('1.3.8',     '1d45425ca324336ce2f4ae7d7b4cfbc5567c5446')
+    version('1.3.8', '1d45425ca324336ce2f4ae7d7b4cfbc5567c5446')
 
     depends_on('apr')
     depends_on('apr-util')

@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import spack
 import os
 
 
@@ -58,13 +57,13 @@ class Cantera(Package):
     depends_on('py-cython', when='+python')
     depends_on('py-3to2',   when='+python')
     # TODO: these "when" specs don't actually work
-    #depends_on('py-unittest2',     when='+python^python@2.6')
-    #depends_on('py-unittest2py3k', when='+python^python@3.1')
+    # depends_on('py-unittest2',     when='+python^python@2.6')
+    # depends_on('py-unittest2py3k', when='+python^python@3.1')
 
     # Matlab toolbox dependencies
     # TODO: add Matlab package
     # TODO: allow packages to extend multiple other packages
-    #extends('matlab',   when='+matlab')
+    # extends('matlab',   when='+matlab')
 
     def install(self, spec, prefix):
         # Required options
@@ -143,7 +142,7 @@ class Cantera(Package):
 
         if '+python' in spec:
             # Tests will always fail if Python dependencies aren't built
-            #scons('test')  # TODO: 3 expected failures, not sure what's wrong
+            # scons('test')  # TODO: 3 expected failures, not sure what's wrong
             pass
 
         scons('install')
