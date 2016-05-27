@@ -22,26 +22,39 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import *
 
 
-class Launchmon(Package):
-    """Software infrastructure that enables HPC run-time tools to
-       co-locate tool daemons with a parallel job."""
-    homepage = "https://github.com/LLNL/LaunchMON"
-    url      = "https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz"  # NOQA: ignore=E501
+import spack.cmd.find
+import unittest
 
-    version('1.0.2', '8d6ba77a0ec2eff2fde2c5cc8fa7ff7a')
 
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
+class Bunch(object):
 
-    def install(self, spec, prefix):
-        configure(
-            "--prefix=" + prefix,
-            "--with-bootfabric=cobo",
-            "--with-rm=slurm")
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
 
-        make()
-        make("install")
+
+class FindTest(unittest.TestCase):
+
+    def test_query_arguments(self):
+        query_arguments = spack.cmd.find.query_arguments
+        # Default arguments
+        args = Bunch(only_missing=False, missing=False,
+                     unknown=False, explicit=False, implicit=False)
+        q_args = query_arguments(args)
+        self.assertTrue('installed' in q_args)
+        self.assertTrue('known' in q_args)
+        self.assertTrue('explicit' in q_args)
+        self.assertEqual(q_args['installed'], True)
+        self.assertEqual(q_args['known'], any)
+        self.assertEqual(q_args['explicit'], any)
+        # Check that explicit works correctly
+        args.explicit = True
+        q_args = query_arguments(args)
+        self.assertEqual(q_args['explicit'], True)
+        args.explicit = False
+        args.implicit = True
+        q_args = query_arguments(args)
+        self.assertEqual(q_args['explicit'], False)
+        args.explicit = True
+        self.assertRaises(SystemExit, query_arguments, args)

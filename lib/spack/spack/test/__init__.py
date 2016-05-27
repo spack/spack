@@ -39,7 +39,7 @@ test_names = ['architecture', 'versions', 'url_parse', 'url_substitution', 'pack
               'svn_fetch', 'hg_fetch', 'mirror', 'modules', 'url_extrapolate',
               'cc', 'link_tree', 'spec_yaml', 'optional_deps',
               'make_executable', 'configure_guess', 'lock', 'database',
-              'namespace_trie', 'yaml', 'sbang', 'environment',
+              'namespace_trie', 'yaml', 'sbang', 'environment', 'cmd.find',
               'cmd.uninstall', 'cmd.test_install']
 
 
