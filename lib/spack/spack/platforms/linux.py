@@ -14,7 +14,7 @@ class Linux(Platform):
         linux_dist = LinuxDistro()
         self.default_os = str(linux_dist)
         self.front_os = self.default_os
-        self.back_os = self.default._os
+        self.back_os = self.default_os
         self.add_operating_system(str(linux_dist), linux_dist)
 
     @classmethod
