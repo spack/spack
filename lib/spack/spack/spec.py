@@ -1065,7 +1065,7 @@ class Spec(object):
                             continue
 
                 # If replacement is external then trim the dependencies
-                if replacement.external:
+                if replacement.external or replacement.external_module:
                     if (spec.dependencies):
                         changed = True
                         spec.dependencies = DependencyMap()
@@ -1082,7 +1082,8 @@ class Spec(object):
                     feq(replacement.architecture, spec.architecture) and
                     feq(replacement.dependencies, spec.dependencies) and
                     feq(replacement.variants, spec.variants) and
-                    feq(replacement.external, spec.external)):
+                    feq(replacement.external, spec.external) and 
+                    feq(replacement.external_module, spec.external_module)):
                     continue
 
                 # Refine this spec to the candidate. This uses
@@ -1653,18 +1654,9 @@ class Spec(object):
 
         # TODO: Need to make sure that comparisons can be made via classes
         if self.architecture and other.architecture:
-            print self.architecture, other.architecture
             if ((self.architecture.platform and other.architecture.platform and self.architecture.platform != other.architecture.platform) or 
                 (self.architecture.platform_os and other.architecture.platform_os and self.architecture.platform_os != other.architecture.platform_os) or
                 (self.architecture.target and other.architecture.target and self.architecture.target != other.architecture.target)):
-                d1 = self.architecture.platform.to_dict()
-                d2 = other.architecture.platform.to_dict()
-                print d1
-                print d2
-                print d1==d2
-                print self.architecture.platform == other.architecture.platform
-                print self.architecture.platform._cmp_key()
-                print other.architecture.platform._cmp_key()
                 return False
         elif strict and ((other.architecture and not self.architecture) or
                          (other.architecture.platform and not self.architecture.platform) or
