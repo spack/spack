@@ -1221,11 +1221,13 @@ just as easily provide a version range:
 
    depends_on("libelf@0.8.2:0.8.4:")
 
-Or a requirement for a particular variant:
+Or a requirement for a particular variant or compiler flags:
 
 .. code-block:: python
 
    depends_on("libelf@0.8+debug")
+   depends_on('libelf debug=True')
+   depends_on('libelf cppflags="-fPIC")
 
 Both users *and* package authors can use the same spec syntax to refer
 to different package configurations.  Users use the spec syntax on the
@@ -1623,21 +1625,21 @@ the user runs ``spack install`` and the time the ``install()`` method
 is called.  The concretized version of the spec above might look like
 this::
 
-   mpileaks@2.3%gcc@4.7.3=linux-ppc64
-       ^callpath@1.0%gcc@4.7.3+debug=linux-ppc64
-           ^dyninst@8.1.2%gcc@4.7.3=linux-ppc64
-               ^libdwarf@20130729%gcc@4.7.3=linux-ppc64
-                   ^libelf@0.8.11%gcc@4.7.3=linux-ppc64
-           ^mpich@3.0.4%gcc@4.7.3=linux-ppc64
+   mpileaks@2.3%gcc@4.7.3 arch=linux-ppc64
+       ^callpath@1.0%gcc@4.7.3+debug arch=linux-ppc64
+           ^dyninst@8.1.2%gcc@4.7.3 arch=linux-ppc64
+               ^libdwarf@20130729%gcc@4.7.3 arch=linux-ppc64
+                   ^libelf@0.8.11%gcc@4.7.3 arch=linux-ppc64
+           ^mpich@3.0.4%gcc@4.7.3 arch=linux-ppc64
 
 .. graphviz::
 
    digraph {
-       "mpileaks@2.3\n%gcc@4.7.3\n=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n=linux-ppc64"
-       "mpileaks@2.3\n%gcc@4.7.3\n=linux-ppc64" -> "callpath@1.0\n%gcc@4.7.3+debug\n=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n=linux-ppc64"
-       "callpath@1.0\n%gcc@4.7.3+debug\n=linux-ppc64" -> "dyninst@8.1.2\n%gcc@4.7.3\n=linux-ppc64"
-       "dyninst@8.1.2\n%gcc@4.7.3\n=linux-ppc64" -> "libdwarf@20130729\n%gcc@4.7.3\n=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n=linux-ppc64"
-       "dyninst@8.1.2\n%gcc@4.7.3\n=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n=linux-ppc64"
+       "mpileaks@2.3\n%gcc@4.7.3\n arch=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n arch=linux-ppc64"
+       "mpileaks@2.3\n%gcc@4.7.3\n arch=linux-ppc64" -> "callpath@1.0\n%gcc@4.7.3+debug\n arch=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n arch=linux-ppc64"
+       "callpath@1.0\n%gcc@4.7.3+debug\n arch=linux-ppc64" -> "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64"
+       "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64" -> "libdwarf@20130729\n%gcc@4.7.3\n arch=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n arch=linux-ppc64"
+       "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n arch=linux-ppc64"
    }
 
 Here, all versions, compilers, and platforms are filled in, and there
@@ -1648,8 +1650,8 @@ point will Spack call the ``install()`` method for your package.
 Concretization in Spack is based on certain selection policies that
 tell Spack how to select, e.g., a version, when one is not specified
 explicitly.  Concretization policies are discussed in more detail in
-:ref:`site-configuration`.  Sites using Spack can customize them to
-match the preferences of their own users.
+:ref:`configuration`.  Sites using Spack can customize them to match
+the preferences of their own users.
 
 .. _spack-spec:
 
@@ -1666,9 +1668,9 @@ running ``spack spec``.  For example:
        ^libdwarf
            ^libelf
 
-   dyninst@8.0.1%gcc@4.7.3=linux-ppc64
-       ^libdwarf@20130729%gcc@4.7.3=linux-ppc64
-           ^libelf@0.8.13%gcc@4.7.3=linux-ppc64
+   dyninst@8.0.1%gcc@4.7.3 arch=linux-ppc64
+       ^libdwarf@20130729%gcc@4.7.3 arch=linux-ppc64
+           ^libelf@0.8.13%gcc@4.7.3 arch=linux-ppc64
 
 This is useful when you want to know exactly what Spack will do when
 you ask for a particular spec.
@@ -1682,60 +1684,8 @@ be concretized on their system.  For example, one user may prefer packages
 built with OpenMPI and the Intel compiler.  Another user may prefer
 packages be built with MVAPICH and GCC.
 
-Spack can be configured to prefer certain compilers, package
-versions, depends_on, and variants during concretization.
-The preferred configuration can be controlled via the
-``~/.spack/packages.yaml`` file for user configuations, or the
-``etc/spack/packages.yaml`` site configuration.
-
-
-Here's an example packages.yaml file that sets preferred packages:
-
-.. code-block:: sh
-
-    packages:
-      dyninst:
-        compiler: [gcc@4.9]
-        variants: +debug
-      gperftools:
-        version: [2.2, 2.4, 2.3]
-      all:
-        compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
-        providers:
-          mpi: [mvapich, mpich, openmpi]
-
-
-At a high level, this example is specifying how packages should be
-concretized.  The dyninst package should prefer using gcc 4.9 and
-be built with debug options.  The gperftools package should prefer version
-2.2 over 2.4.  Every package on the system should prefer mvapich for
-its MPI and gcc 4.4.7 (except for Dyninst, which overrides this by preferring gcc 4.9).
-These options are used to fill in implicit defaults.  Any of them can be overwritten
-on the command line if explicitly requested.
-
-Each packages.yaml file begins with the string ``packages:`` and
-package names are specified on the next level. The special string ``all``
-applies settings to each package. Underneath each package name is
-one or more components: ``compiler``, ``variants``, ``version``,
-or ``providers``.  Each component has an ordered list of spec
-``constraints``, with earlier entries in the list being preferred over
-later entries.
-
-Sometimes a package installation may have constraints that forbid
-the first concretization rule, in which case Spack will use the first
-legal concretization rule.  Going back to the example, if a user
-requests gperftools 2.3 or later, then Spack will install version 2.4
-as the 2.4 version of gperftools is preferred over 2.3.
-
-An explicit concretization rule in the preferred section will always
-take preference over unlisted concretizations.  In the above example,
-xlc isn't listed in the compiler list.  Every listed compiler from
-gcc to pgi will thus be preferred over the xlc compiler.
-
-The syntax for the ``provider`` section differs slightly from other
-concretization rules.  A provider lists a value that packages may
-``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
-dependency.
+See the `documentation in the config section <concretization-preferences_>`_
+for more details.
 
 .. _install-method:
 
@@ -1959,6 +1909,12 @@ the command line.
     Therefore, its ``$rpath_flag`` is doubly wrapped: ``-Wl,-Wl,,-rpath,``.
     ``$rpath_flag`` can be overriden on a compiler specific basis in
     ``lib/spack/spack/compilers/$compiler.py``.
+
+The compiler wrappers also pass the compiler flags specified by the user from
+the command line (``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``,
+and/or ``ldlibs``). They do not override the canonical autotools flags with the
+same names (but in ALL-CAPS) that may be passed into the build by particularly
+challenging package scripts.
 
 Compiler flags
 ~~~~~~~~~~~~~~
@@ -2206,12 +2162,12 @@ example:
        def install(self, prefix):
            # Do default install
 
-       @when('=chaos_5_x86_64_ib')
+       @when('arch=chaos_5_x86_64_ib')
        def install(self, prefix):
            # This will be executed instead of the default install if
            # the package's sys_type() is chaos_5_x86_64_ib.
 
-       @when('=bgqos_0")
+       @when('arch=bgqos_0")
        def install(self, prefix):
            # This will be executed if the package's sys_type is bgqos_0
 
@@ -2801,11 +2757,11 @@ build it:
    $ spack stage libelf
    ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
    ######################################################################## 100.0%
-   ==> Staging archive: /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3=linux-ppc64/libelf-0.8.13.tar.gz
-   ==> Created stage in /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3=linux-ppc64.
+   ==> Staging archive: /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64/libelf-0.8.13.tar.gz
+   ==> Created stage in /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64.
    $ spack cd libelf
    $ pwd
-   /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3=linux-ppc64/libelf-0.8.13
+   /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64/libelf-0.8.13
 
 ``spack cd`` here changed he current working directory to the
 directory containing the expanded ``libelf`` source code.  There are a

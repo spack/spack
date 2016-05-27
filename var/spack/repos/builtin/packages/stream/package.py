@@ -25,23 +25,38 @@
 from spack import *
 
 
-class Launchmon(Package):
-    """Software infrastructure that enables HPC run-time tools to
-       co-locate tool daemons with a parallel job."""
-    homepage = "https://github.com/LLNL/LaunchMON"
-    url      = "https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz"  # NOQA: ignore=E501
+class Stream(Package):
+    """The STREAM benchmark is a simple synthetic benchmark program that
+    measures sustainable memory bandwidth (in MB/s) and the corresponding
+    computation rate for simple vector kernels."""
 
-    version('1.0.2', '8d6ba77a0ec2eff2fde2c5cc8fa7ff7a')
+    homepage = "https://www.cs.virginia.edu/stream/ref.html"
 
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
+    version('5.10', git='https://github.com/jeffhammond/STREAM.git')
+
+    variant('openmp', default=False, description='Build with OpenMP support')
+
+    def patch(self):
+        makefile = FileFilter('Makefile')
+
+        # Use the Spack compiler wrappers
+        makefile.filter('CC = .*', 'CC = cc')
+        makefile.filter('FC = .*', 'FC = f77')
+
+        cflags = '-O2'
+        fflags = '-O2'
+        if '+openmp' in self.spec:
+            cflags += ' ' + self.compiler.openmp_flag
+            fflags += ' ' + self.compiler.openmp_flag
+
+        # Set the appropriate flags for this compiler
+        makefile.filter('CFLAGS = .*', 'CFLAGS = {0}'.format(cflags))
+        makefile.filter('FFLAGS = .*', 'FFLAGS = {0}'.format(fflags))
 
     def install(self, spec, prefix):
-        configure(
-            "--prefix=" + prefix,
-            "--with-bootfabric=cobo",
-            "--with-rm=slurm")
-
         make()
-        make("install")
+
+        # Manual installation
+        mkdir(prefix.bin)
+        install('stream_c.exe', prefix.bin)
+        install('stream_f.exe', prefix.bin)

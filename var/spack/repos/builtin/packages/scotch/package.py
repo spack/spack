@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-import re
 from spack import *
 
 
@@ -32,7 +31,7 @@ class Scotch(Package):
        partitioning, graph clustering, and sparse matrix ordering."""
 
     homepage = "http://www.labri.fr/perso/pelegrin/scotch/"
-    url      = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.3.tar.gz"
+    url = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.3.tar.gz"
     base_url = "http://gforge.inria.fr/frs/download.php/latestfile/298"
     list_url = "http://gforge.inria.fr/frs/?group_id=248"
 
@@ -44,6 +43,7 @@ class Scotch(Package):
     variant('compression', default=True, description='Activate the posibility to use compressed files')
     variant('esmumps', default=False, description='Activate the compilation of esmumps needed by mumps')
     variant('shared', default=True, description='Build a shared version of the library')
+    variant('metis', default=True, description='Build metis and parmetis wrapper libraries')
 
     depends_on('flex')
     depends_on('bison')
@@ -56,37 +56,15 @@ class Scotch(Package):
     # from the Scotch hosting site.  These alternative archives include a
     # superset of the behavior in their default counterparts, so we choose to
     # always grab these versions for older Scotch versions for simplicity.
+    def url_for_version(self, version):
+        return super(Scotch, self).url_for_version(version)
+
     @when('@:6.0.0')
     def url_for_version(self, version):
         return '%s/scotch_%s_esmumps.tar.gz' % (Scotch.base_url, version)
 
-    @when('@6.0.1:')
-    def url_for_version(self, version):
-        return super(Scotch, self).url_for_version(version)
-
-    # NOTE: Several of the 'esmumps' enabled Scotch releases up to version
-    # 6.0.0 have broken build scripts that don't properly build 'esmumps' as a
-    # separate target, so we need a patch procedure to remove 'esmumps' from
-    # existing targets and to add it as a standalone target.
-    @when('@:6.0.0')
     def patch(self):
-        makefile_path = os.path.join('src', 'Makefile')
-        with open(makefile_path, 'r') as makefile:
-            esmumps_enabled = any(re.search(r'^esmumps(\s*):(.*)$', line)
-                                  for line in makefile.readlines())
-
-        if not esmumps_enabled:
-            mff = FileFilter(makefile_path)
-            mff.filter(r'^.*((esmumps)|(ptesmumps)).*(install).*$', '')
-
-            mfesmumps_dir = os.path.dirname(os.path.realpath(__file__))
-            mfesmumps_path = os.path.join(mfesmumps_dir, 'Makefile.esmumps')
-            with open(makefile_path, 'a') as makefile:
-                makefile.write('\ninclude %s\n' % mfesmumps_path)
-
-    @when('@6.0.1:')
-    def patch(self):
-        pass
+        self.configure()
 
     # NOTE: Configuration of Scotch is achieved by writing a 'Makefile.inc'
     # file that contains all of the configuration variables and their desired
@@ -103,13 +81,13 @@ class Scotch(Package):
         ]
 
         # Library Build Type #
-
         if '+shared' in self.spec:
             makefile_inc.extend([
+                # todo change for Darwin systems
                 'LIB       = .so',
                 'CLIBFLAGS = -shared -fPIC',
                 'RANLIB    = echo',
-                'AR	       = $(CC)',
+                'AR        = $(CC)',
                 'ARFLAGS   = -shared $(LDFLAGS) -o'
             ])
             cflags.append('-fPIC')
@@ -118,7 +96,7 @@ class Scotch(Package):
                 'LIB       = .a',
                 'CLIBFLAGS = ',
                 'RANLIB    = ranlib',
-                'AR	       = ar',
+                'AR        = ar',
                 'ARFLAGS   = -ruv '
             ])
 
@@ -171,20 +149,49 @@ class Scotch(Package):
                 fh.write('\n'.join(makefile_inc))
 
     def install(self, spec, prefix):
-        self.configure()
-
         targets = ['scotch']
         if '+mpi' in self.spec:
             targets.append('ptscotch')
 
-        if '+esmumps' in self.spec:
-            targets.append('esmumps')
-            if '+mpi' in self.spec:
-                targets.append('ptesmumps')
+        if self.spec.version >= Version('6.0.0'):
+            if '+esmumps' in self.spec:
+                targets.append('esmumps')
+                if '+mpi' in self.spec:
+                    targets.append('ptesmumps')
 
         with working_dir('src'):
             for target in targets:
-                make(target, parallel=(target != 'ptesmumps'))
+                # It seams that building ptesmumps in parallel fails, for
+                # version prior to 6.0.0 there is no separated targets force
+                # ptesmumps, this library is built by the ptscotch target. This
+                # should explain the test for the can_make_parallel variable
+                can_make_parallel = \
+                    not (target == 'ptesmumps' or
+                         (self.spec.version < Version('6.0.0') and
+                          target == 'ptscotch'))
+                make(target, parallel=can_make_parallel)
+
+        # todo change this to take into account darwin systems
+        lib_ext = '.so' if '+shared' in self.spec else '.a'
+        # It seams easier to remove metis wrappers from the folder that will be
+        # installed than to tweak the Makefiles
+        if '+metis' not in self.spec:
+            with working_dir('lib'):
+                lib_ext = '.so' if '+shared' in self.spec else '.a'
+                force_remove('libscotchmetis{0}'.format(lib_ext))
+                force_remove('libptscotchparmetis{0}'.format(lib_ext))
+
+            with working_dir('include'):
+                force_remove('metis.h')
+                force_remove('parmetis.h')
+
+        if '~esmumps' in self.spec and self.spec.version < Version('6.0.0'):
+            with working_dir('lib'):
+                force_remove('libesmumps{0}'.format(lib_ext))
+                force_remove('libptesmumps{0}'.format(lib_ext))
+
+            with working_dir('include'):
+                force_remove('esmumps.h')
 
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)

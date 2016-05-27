@@ -1,4 +1,4 @@
-##############################################################################
+#
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+#
 """
 Fetch strategies are used to download source code into a staging area
 in order to build it.  They need to define the following methods:
@@ -75,11 +75,13 @@ def _needs_stage(fun):
 
 
 class FetchStrategy(object):
+
     """Superclass of all fetch strategies."""
     enabled = False  # Non-abstract subclasses should be enabled.
     required_attributes = None  # Attributes required in version() args.
 
     class __metaclass__(type):
+
         """This metaclass registers all fetch strategies in a list."""
 
         def __init__(cls, name, bases, dict):
@@ -126,6 +128,7 @@ class FetchStrategy(object):
 
 @pattern.composite(interface=FetchStrategy)
 class FetchStrategyComposite(object):
+
     """
     Composite for a FetchStrategy object. Implements the GoF composite pattern.
     """
@@ -134,6 +137,7 @@ class FetchStrategyComposite(object):
 
 
 class URLFetchStrategy(FetchStrategy):
+
     """FetchStrategy that pulls source code from a URL for an archive,
        checks the archive against a checksum,and decompresses the archive.
     """
@@ -235,12 +239,13 @@ class URLFetchStrategy(FetchStrategy):
         # redirects properly.
         content_types = re.findall(r'Content-Type:[^\r\n]+', headers)
         if content_types and 'text/html' in content_types[-1]:
-            tty.warn(
-                "The contents of " + self.archive_file + " look like HTML.",
-                "The checksum will likely be bad.  If it is, you can use",
-                "'spack clean <package>' to remove the bad archive, then fix",
-                "your internet gateway issue and install again.")
-
+            tty.warn("The contents of ",
+                     (self.archive_file if self.archive_file is not None
+                      else "the archive"),
+                     " look like HTML.",
+                     "The checksum will likely be bad.  If it is, you can use",
+                     "'spack clean <package>' to remove the bad archive, then",
+                     "fix your internet gateway issue and install again.")
         if save_file:
             os.rename(partial_file, save_file)
 
@@ -353,6 +358,7 @@ class URLFetchStrategy(FetchStrategy):
 
 
 class VCSFetchStrategy(FetchStrategy):
+
     def __init__(self, name, *rev_types, **kwargs):
         super(VCSFetchStrategy, self).__init__()
         self.name = name
@@ -407,6 +413,7 @@ class VCSFetchStrategy(FetchStrategy):
 
 
 class GoFetchStrategy(VCSFetchStrategy):
+
     """
     Fetch strategy that employs the `go get` infrastructure
     Use like this in a package:
@@ -466,6 +473,7 @@ class GoFetchStrategy(VCSFetchStrategy):
 
 
 class GitFetchStrategy(VCSFetchStrategy):
+
     """
     Fetch strategy that gets source code from a git repository.
     Use like this in a package:
@@ -586,6 +594,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
 
 class SvnFetchStrategy(VCSFetchStrategy):
+
     """Fetch strategy that gets source code from a subversion repository.
        Use like this in a package:
 
@@ -662,6 +671,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
 
 class HgFetchStrategy(VCSFetchStrategy):
+
     """
     Fetch strategy that gets source code from a Mercurial repository.
     Use like this in a package:
@@ -806,11 +816,13 @@ def for_package_version(pkg, version):
 
 
 class FetchError(spack.error.SpackError):
+
     def __init__(self, msg, long_msg=None):
         super(FetchError, self).__init__(msg, long_msg)
 
 
 class FailedDownloadError(FetchError):
+
     """Raised wen a download fails."""
 
     def __init__(self, url, msg=""):
@@ -820,16 +832,19 @@ class FailedDownloadError(FetchError):
 
 
 class NoArchiveFileError(FetchError):
+
     def __init__(self, msg, long_msg):
         super(NoArchiveFileError, self).__init__(msg, long_msg)
 
 
 class NoDigestError(FetchError):
+
     def __init__(self, msg, long_msg=None):
         super(NoDigestError, self).__init__(msg, long_msg)
 
 
 class InvalidArgsError(FetchError):
+
     def __init__(self, pkg, version):
         msg = ("Could not construct a fetch strategy for package %s at "
                "version %s")
@@ -838,6 +853,7 @@ class InvalidArgsError(FetchError):
 
 
 class ChecksumError(FetchError):
+
     """Raised when archive fails to checksum."""
 
     def __init__(self, message, long_msg=None):
@@ -845,6 +861,7 @@ class ChecksumError(FetchError):
 
 
 class NoStageError(FetchError):
+
     """Raised when fetch operations are called before set_stage()."""
 
     def __init__(self, method):
