@@ -180,6 +180,29 @@ def display_specs(specs, **kwargs):
                 "deps, short)." % mode)  # NOQA: ignore=E501
 
 
+def query_arguments(args):
+    # Check arguments
+    if args.explicit and args.implicit:
+        tty.error('You can\'t pass -E and -e options simultaneously.')
+        raise SystemExit(1)
+
+    # Set up query arguments.
+    installed, known = True, any
+    if args.only_missing:
+        installed = False
+    elif args.missing:
+        installed = any
+    if args.unknown:
+        known = False
+    explicit = any
+    if args.explicit:
+        explicit = True
+    if args.implicit:
+        explicit = False
+    q_args = {'installed': installed, 'known': known, "explicit": explicit}
+    return q_args
+
+
 def find(parser, args):
     # Filter out specs that don't exist.
     query_specs = spack.cmd.parse_specs(args.query_specs)
@@ -194,22 +217,7 @@ def find(parser, args):
         if not query_specs:
             return
 
-    # Set up query arguments.
-    installed, known = True, any
-    if args.only_missing:
-        installed = False
-    elif args.missing:
-        installed = any
-    if args.unknown:
-        known = False
-
-    explicit = any
-    if args.explicit:
-        explicit = False
-    if args.implicit:
-        explicit = True
-
-    q_args = {'installed': installed, 'known': known, "explicit": explicit}
+    q_args = query_arguments(args)
 
     # Get all the specs the user asked for
     if not query_specs:
