@@ -91,7 +91,7 @@ class Cantera(Package):
                 'build_thread_safe=yes',
                 'boost_inc_dir={0}'.format(spec['boost'].prefix.include),
                 'boost_lib_dir={0}'.format(spec['boost'].prefix.lib),
-                'boost_thread_lib=boost_thread-mt'
+                'boost_thread_lib=boost_thread-mt,boost_system-mt'
             ])
         else:
             options.append('build_thread_safe=no')
@@ -142,7 +142,55 @@ class Cantera(Package):
 
         if '+python' in spec:
             # Tests will always fail if Python dependencies aren't built
-            # scons('test')  # TODO: 3 expected failures, not sure what's wrong
-            pass
+            scons('test', parallel=False)
 
         scons('install')
+
+        self.filter_compilers()
+
+    def filter_compilers(self):
+        """Run after install to tell the Makefile and SConstruct files to use
+        the compilers that Spack built the package with.
+
+        If this isn't done, they'll have CC, CXX, F77, and FC set to Spack's
+        generic cc, c++, f77, and f90. We want them to be bound to whatever
+        compiler they were built with."""
+
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
+        dirname = os.path.join(self.prefix, 'share/cantera/samples')
+
+        cc_files = [
+            'cxx/rankine/Makefile',   'cxx/NASA_coeffs/Makefile',
+            'cxx/kinetics1/Makefile', 'cxx/flamespeed/Makefile',
+            'cxx/combustor/Makefile', 'f77/SConstruct'
+        ]
+
+        cxx_files = [
+            'cxx/rankine/Makefile',   'cxx/NASA_coeffs/Makefile',
+            'cxx/kinetics1/Makefile', 'cxx/flamespeed/Makefile',
+            'cxx/combustor/Makefile'
+        ]
+
+        f77_files = [
+            'f77/Makefile', 'f77/SConstruct'
+        ]
+
+        fc_files = [
+            'f90/Makefile', 'f90/SConstruct'
+        ]
+
+        for filename in cc_files:
+            filter_file(os.environ['CC'], self.compiler.cc,
+                        os.path.join(dirname, filename), **kwargs)
+
+        for filename in cxx_files:
+            filter_file(os.environ['CXX'], self.compiler.cxx,
+                        os.path.join(dirname, filename), **kwargs)
+
+        for filename in f77_files:
+            filter_file(os.environ['F77'], self.compiler.f77,
+                        os.path.join(dirname, filename), **kwargs)
+
+        for filename in fc_files:
+            filter_file(os.environ['FC'], self.compiler.fc,
+                        os.path.join(dirname, filename), **kwargs)
