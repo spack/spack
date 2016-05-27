@@ -19,16 +19,20 @@ class Openscenegraph(Package):
     depends_on('zlib')
 
     def install(self, spec, prefix):
-        cmake_args = [
-            '-DCMAKE_BUILD_TYPE=%s' % ( 'Release' if '+debug' in spec else 'Debug' ),
-            '-DDYNAMIC_OPENSCENEGRAPH=%s' % ( 'ON' if '+shared' in spec else 'OFF' ),
-            '-DDYNAMIC_OPENTHREADS=%s' % ( 'ON' if '+shared' in spec else 'OFF' ),
-        ]
+        cmake_args = []
+
+        cmake_args.extend(std_cmake_args)
+        cmake_args.extend([
+            '-DCMAKE_BUILD_TYPE=%s' % ('Release' if '+debug' in spec else 'Debug'),
+            '-DDYNAMIC_OPENSCENEGRAPH=%s' % ('ON' if '+shared' in spec else 'OFF'),
+            '-DDYNAMIC_OPENTHREADS=%s' % ('ON' if '+shared' in spec else 'OFF'),
+        ])
 
         mkdirp('build')
         cd('build')
 
-        cmake('..',
+        cmake(
+            '..',
             '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
             '-DCMAKE_C_COMPILER=%s' % self.compilers.cc,
             '-DCMAKE_CXX_COMPILER=%s' % self.compilers.cxx,
@@ -40,7 +44,8 @@ class Openscenegraph(Package):
             '-DFFMPEG_LIBAVUTIL_INCLUDE_DIRS=""',
             '-DOSG_NOTIFY_DISABLED=ON',
             '-DLIB_POSTFIX=""',
-            *cmake_args)
+            *cmake_args
+        )
 
         make()
         make('install')
