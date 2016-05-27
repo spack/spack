@@ -356,6 +356,22 @@ section_schemas = {
             },
         },
     },
+
+    'fetchers': {
+        '$schema': 'http://json-schema.org/schema#',
+        'title': 'Spack archive fetcher configuration file schema',
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            r'fetchers:?': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'properties': {
+                    'show_status': {
+                        'type': 'boolean',
+                        'default': True},},},},},
+
 }
 
 """OrderedDict of config scopes keyed by name.
