@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack
+import spack.architecture
 from spack.spec import Spec, CompilerSpec
 from spack.version import ver
 from spack.concretize import find_spec
@@ -252,7 +253,8 @@ class ConcretizeTest(MockPackagesTest):
         self.assertFalse('externalprereq' in spec)
         self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
 
-
+    @unittest.skipIf(spack.architecture.sys_type().name == 'darwin', 
+                                         "No tcl modules on darwin machines")
     def test_external_package_module(self):
         spec = Spec('externalmodule')
         spec.concretize()
@@ -269,7 +271,7 @@ class ConcretizeTest(MockPackagesTest):
             got_error = True
         self.assertTrue(got_error)
 
-
+    
     def test_external_and_virtual(self):
         spec = Spec('externaltest')
         spec.concretize()
