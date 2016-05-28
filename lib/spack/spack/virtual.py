@@ -25,8 +25,12 @@
 """
 The ``virtual`` module contains utility classes for virtual dependencies.
 """
-import spack.spec
 import itertools
+import yaml
+from yaml.error import MarkedYAMLError
+
+import spack
+
 
 class ProviderIndex(object):
     """This is a dict of dicts used for finding providers of particular
@@ -45,10 +49,11 @@ class ProviderIndex(object):
        Calling providers_for(spec) will find specs that provide a
        matching implementation of MPI.
     """
-    def __init__(self, specs, **kwargs):
+    def __init__(self, specs=None, **kwargs):
         # TODO: come up with another name for this.  This "restricts" values to
         # the verbatim impu specs (i.e., it doesn't pre-apply package's constraints, and
         # keeps things as broad as possible, so it's really the wrong name)
+        if specs is None: specs = []
         self.restrict = kwargs.setdefault('restrict', False)
 
         self.providers = {}
@@ -64,7 +69,7 @@ class ProviderIndex(object):
 
 
     def update(self, spec):
-        if type(spec) != spack.spec.Spec:
+        if not isinstance(spec, spack.spec.Spec):
             spec = spack.spec.Spec(spec)
 
         if not spec.name:
@@ -75,7 +80,8 @@ class ProviderIndex(object):
 
         pkg = spec.package
         for provided_spec, provider_spec in pkg.provided.iteritems():
-            provider_spec.compiler_flags = spec.compiler_flags.copy()#We want satisfaction other than flags
+            # We want satisfaction other than flags
+            provider_spec.compiler_flags = spec.compiler_flags.copy()
             if provider_spec.satisfies(spec, deps=False):
                 provided_name = provided_spec.name
 
@@ -164,3 +170,44 @@ class ProviderIndex(object):
                 result[name] = crossed
 
         return all(c in result for c in common)
+
+
+    def to_yaml(self, stream=None):
+        provider_list = dict(
+            (name, [[vpkg.to_node_dict(), [p.to_node_dict() for p in pset]]
+                    for vpkg, pset in pdict.items()])
+             for name, pdict in self.providers.items())
+
+        yaml.dump({'provider_index': {'providers': provider_list}},
+                  stream=stream)
+
+
+    @staticmethod
+    def from_yaml(stream):
+        try:
+            yfile = yaml.load(stream)
+        except MarkedYAMLError, e:
+            raise spack.spec.SpackYAMLError(
+                "error parsing YAML ProviderIndex cache:", str(e))
+
+        if not isinstance(yfile, dict):
+            raise spack.spec.SpackYAMLError(
+                "YAML ProviderIndex was not a dict.")
+
+        if not 'provider_index' in yfile:
+            raise spack.spec.SpackYAMLError(
+                "YAML ProviderIndex does not start with 'provider_index'")
+
+        index = ProviderIndex()
+        providers = yfile['provider_index']['providers']
+        index.providers = dict(
+            (name, dict((spack.spec.Spec.from_node_dict(vpkg),
+                         set(spack.spec.Spec.from_node_dict(p) for p in plist))
+                        for vpkg, plist in pdict_list))
+            for name, pdict_list in providers.items())
+
+        return index
+
+
+    def __eq__(self, other):
+        return self.providers == other.providers

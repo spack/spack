@@ -51,6 +51,7 @@ repo_namespace     = 'spack.pkg'
 # These names describe how repos should be laid out in the filesystem.
 #
 repo_config_name   = 'repo.yaml'   # Top-level filename for repo config.
+repo_index_name    = 'index.yaml'  # Top-level filename for repository index.
 packages_dir_name  = 'packages'    # Top-level repo directory containing pkgs.
 package_file_name  = 'package.py'  # Filename for packages in a repository.
 
