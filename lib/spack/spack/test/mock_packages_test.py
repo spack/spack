@@ -124,6 +124,28 @@ compilers:
       version: '10.10'
     spec: gcc@4.5.0
     modules: 'None'
+  gcc4.5.0ELCAP:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system:
+      name: elcapitan
+      version: '10.11'
+    spec: gcc@4.5.0
+    modules: 'None' 
+  clang3.3ELCAP:
+    spec: clang@3.3
+    operating_system:
+      name: elcapitan
+      version: '10.11'
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
 """
 
 mock_packages_config = """\
