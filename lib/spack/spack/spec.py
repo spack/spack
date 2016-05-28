@@ -1002,11 +1002,12 @@ class Spec(object):
         """
         # Make an index of stuff this spec already provides
         self_index = ProviderIndex(self.traverse(), restrict=True)
-
         changed = False
         done = False
+
         while not done:
             done = True
+
             for spec in list(self.traverse()):
                 replacement = None
                 if spec.virtual:
@@ -1329,7 +1330,7 @@ class Spec(object):
 
         # if we descend into a virtual spec, there's nothing more
         # to normalize.  Concretize will finish resolving it later.
-        if self.virtual or self.external:
+        if self.virtual or self.external or self.external_module:
             return False
 
         # Combine constraints from package deps with constraints from
@@ -1376,7 +1377,6 @@ class Spec(object):
 
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_names()
-
         # Get all the dependencies into one DependencyMap
         spec_deps = self.flat_dependencies(copy=False)
 
