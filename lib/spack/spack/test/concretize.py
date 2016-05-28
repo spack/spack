@@ -253,6 +253,13 @@ class ConcretizeTest(MockPackagesTest):
         self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
 
 
+    def test_external_package_module(self):
+        spec = Spec('externalmodule')
+        spec.concretize()
+        self.assertEqual(spec['externalmodule'].external_module, 'external-module')
+        self.assertFalse('externalprereq' in spec)
+        self.assertTrue(spec['externalmodule'].compiler.satisfies('gcc'))
+
     def test_nobuild_package(self):
         got_error = False
         spec = Spec('externaltool%clang')
