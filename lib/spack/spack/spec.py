@@ -904,19 +904,25 @@ class Spec(object):
             return b32_hash
 
     def to_node_dict(self):
+        d = {}
+
         params = dict((name, v.value) for name, v in self.variants.items())
         params.update(dict((name, value)
                       for name, value in self.compiler_flags.items()))
-        deps = self.dependencies_dict(deptype=('link', 'run'))
-        d = {
-            'parameters': params,
-            'arch': self.architecture,
-            'dependencies': dict(
+
+        if params:
+            d['parameters'] = params
+
+        if self.architecture is not None:
+            d['arch'] = self.architecture
+
+        if self.dependencies:
+            deps = self.dependencies_dict(deptype=('link', 'run'))
+            d['dependencies'] = dict(
                 (name, {
                     'hash': dspec.spec.dag_hash(),
                     'type': [str(s) for s in dspec.deptypes]})
                 for name, dspec in deps.items())
-        }
 
         # Older concrete specs do not have a namespace.  Omit for
         # consistent hashing.
@@ -932,9 +938,9 @@ class Spec(object):
 
         if self.compiler:
             d.update(self.compiler.to_dict())
-        else:
-            d['compiler'] = None
-        d.update(self.versions.to_dict())
+
+        if self.versions:
+            d.update(self.versions.to_dict())
 
         return {self.name: d}
 
@@ -954,17 +960,17 @@ class Spec(object):
 
         spec = Spec(name)
         spec.namespace = node.get('namespace', None)
-        spec.versions = VersionList.from_dict(node)
+        spec._hash = node.get('hash', None)
 
-        if 'hash' in node:
-            spec._hash = node['hash']
+        if 'version' in node or 'versions' in node:
+            spec.versions = VersionList.from_dict(node)
 
         spec.architecture = spack.architecture.arch_from_dict(node['arch'])
 
-        if node['compiler'] is None:
-            spec.compiler = None
-        else:
+        if 'compiler' in node:
             spec.compiler = CompilerSpec.from_dict(node)
+        else:
+            spec.compiler = None
 
         if 'parameters' in node:
             for name, value in node['parameters'].items():
@@ -972,14 +978,12 @@ class Spec(object):
                     spec.compiler_flags[name] = value
                 else:
                     spec.variants[name] = VariantSpec(name, value)
+
         elif 'variants' in node:
             for name, value in node['variants'].items():
                 spec.variants[name] = VariantSpec(name, value)
             for name in FlagMap.valid_compiler_flags():
                 spec.compiler_flags[name] = []
-        else:
-            raise SpackRecordError(
-                "Did not find a valid format for variants in YAML file")
 
         # Don't read dependencies here; from_node_dict() is used by
         # from_yaml() to read the root *and* each dependency spec.
@@ -1037,6 +1041,10 @@ class Spec(object):
         for node in nodes:
             # get dependency dict from the node.
             name = next(iter(node))
+
+            if 'dependencies' not in node[name]:
+                continue
+
             yaml_deps = node[name]['dependencies']
             for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
                 # Fill in dependencies by looking them up by name in deps dict
@@ -2822,12 +2830,6 @@ class SpackYAMLError(spack.error.SpackError):
 
     def __init__(self, msg, yaml_error):
         super(SpackYAMLError, self).__init__(msg, str(yaml_error))
-
-
-class SpackRecordError(spack.error.SpackError):
-
-    def __init__(self, msg):
-        super(SpackRecordError, self).__init__(msg)
 
 
 class AmbiguousHashError(SpecError):
