@@ -39,7 +39,7 @@ test_names = ['versions', 'url_parse', 'url_substitution', 'packages', 'stage',
               'cc', 'link_tree', 'spec_yaml', 'optional_deps',
               'make_executable', 'configure_guess', 'lock', 'database',
               'namespace_trie', 'yaml', 'sbang', 'environment', 'cmd.find',
-              'cmd.uninstall', 'cmd.test_install']
+              'virtual', 'cmd.uninstall', 'cmd.test_install']
 
 
 def list_tests():
