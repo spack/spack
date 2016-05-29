@@ -227,6 +227,20 @@ class ProviderIndex(object):
                 spdict[provided_spec] += opdict[provided_spec]
 
 
+    def remove_provider(self, pkg_name):
+        """Remove a provider from the ProviderIndex."""
+        for pkg in self.providers:
+            pkg_dict = self.providers[pkg]
+            for provided, pset in pkg_dict.items():
+                for provider in pset:
+                    if provider.fullname == pkg_name:
+                        pset.remove(provider)
+                if not pset:
+                    del pkg_dict[provided]
+            if not pkg_dict:
+                del self.providers[pkg]
+
+
     def copy(self):
         """Deep copy of this ProviderIndex."""
         clone = ProviderIndex()

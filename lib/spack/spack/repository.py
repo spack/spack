@@ -23,6 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import stat
+import shutil
+import errno
 import exceptions
 import sys
 import inspect
@@ -33,6 +36,7 @@ from bisect import bisect_left
 from external import yaml
 
 import llnl.util.tty as tty
+from llnl.util.lock import Lock
 from llnl.util.filesystem import *
 
 import spack.error
@@ -394,12 +398,24 @@ class Repo(object):
             if not condition: raise BadRepoError(msg)
 
         # Validate repository layout.
-        self.config_file   = join_path(self.root, repo_config_name)
+        self.config_file = join_path(self.root, repo_config_name)
         check(os.path.isfile(self.config_file),
               "No %s found in '%s'" % (repo_config_name, root))
+
         self.packages_path = join_path(self.root, packages_dir_name)
         check(os.path.isdir(self.packages_path),
               "No directory '%s' found in '%s'" % (repo_config_name, root))
+
+        self.index_file = join_path(self.root, repo_index_name)
+        check(not os.path.exists(self.index_file) or
+              (os.path.isfile(self.index_file) and os.access(self.index_file, os.R_OK|os.W_OK)),
+              "Cannot access repository index file in %s" % root)
+
+        # lock file for reading/writing the index
+        self._lock_path = join_path(self.root, 'lock')
+        if not os.path.exists(self._lock_path):
+            touch(self._lock_path)
+        self._lock = Lock(self._lock_path)
 
         # Read configuration and validate namespace
         config = self._read_config()
@@ -424,7 +440,14 @@ class Repo(object):
         self._modules = {}
         self._classes = {}
         self._instances = {}
+
+        # list of packages that are newer than the index.
+        self._needs_update = []
+
+        # Index of virtual dependencies
         self._provider_index = None
+
+        # Cached list of package names.
         self._all_package_names = None
 
         # make sure the namespace for packages in this repo exists.
@@ -611,13 +634,56 @@ class Repo(object):
         self._instances.clear()
 
 
+    def _update_provider_index(self):
+        # Check modification dates of all packages
+        self._fast_package_check()
+
+        def read():
+            with open(self.index_file) as f:
+                self._provider_index = ProviderIndex.from_yaml(f)
+
+        # Read the old ProviderIndex, or make a new one.
+        index_existed = os.path.isfile(self.index_file)
+        if index_existed and not self._needs_update:
+            self._lock.acquire_read()
+            try:
+                read()
+            finally:
+                self._lock.release_read()
+
+        else:
+            self._lock.acquire_write()
+            try:
+                if index_existed:
+                    with open(self.index_file) as f:
+                        self._provider_index = ProviderIndex.from_yaml(f)
+                else:
+                    self._provider_index = ProviderIndex()
+
+                for pkg_name in self._needs_update:
+                    namespaced_name = '%s.%s' % (self.namespace, pkg_name)
+                    self._provider_index.remove_provider(namespaced_name)
+                    self._provider_index.update(namespaced_name)
+
+
+                tmp = self.index_file + '.tmp'
+                with open(tmp, 'w') as f:
+                    self._provider_index.to_yaml(f)
+                os.rename(tmp, self.index_file)
+
+            except:
+                shutil.rmtree(tmp, ignore_errors=True)
+                raise
+
+            finally:
+                self._lock.release_write()
+
+
     @property
     def provider_index(self):
         """A provider index with names *specific* to this repo."""
         if self._provider_index is None:
-            namespaced_names = ['%s.%s' % (self.namespace, n)
-                                for n in self.all_package_names()]
-            self._provider_index = ProviderIndex(namespaced_names)
+            self._update_provider_index()
         return self._provider_index
 
 
@@ -663,21 +729,33 @@ class Repo(object):
         return join_path(pkg_dir, package_file_name)
 
 
-    def all_package_names(self):
-        """Returns a sorted list of all package names in the Repo."""
+    def _fast_package_check(self):
+        """List packages in the repo and cehck whether index is up to date.
+
+        Both of these opreations require checking all `package.py`
+        files so we do them at the same time.  We list the repo
+        directory and look at package.py files, and we compare the
+        index modification date with the ost recently modified package
+        file, storing the result.
+
+        The implementation here should try to minimize filesystem
+        calls.  At the moment, it is O(number of packages) and makes
+        about one stat call per package.  This is resonably fast, and
+        avoids actually importing packages in Spack, which is slow.
+
+        """
         if self._all_package_names is None:
             self._all_package_names = []
+
+            # Get index modification time.
+            index_mtime = 0
+            if os.path.exists(self.index_file):
+                sinfo = os.stat(self.index_file)
+                index_mtime = sinfo.st_mtime
 
             for pkg_name in os.listdir(self.packages_path):
                 # Skip non-directories in the package root.
                 pkg_dir = join_path(self.packages_path, pkg_name)
-                if not os.path.isdir(pkg_dir):
-                    continue
-
-                # Skip directories without a package.py in them.
-                pkg_file = join_path(self.packages_path, pkg_name, package_file_name)
-                if not os.path.isfile(pkg_file):
-                    continue
 
                 # Warn about invalid names that look like packages.
                 if not valid_module_name(pkg_name):
@@ -685,14 +763,50 @@ class Repo(object):
                              % (pkg_dir, pkg_name))
                     continue
 
+                # construct the file name from the directory
+                pkg_file = join_path(
+                    self.packages_path, pkg_name, package_file_name)
+
+                # Use stat here to avoid lots of calls to the filesystem.
+                try:
+                    sinfo = os.stat(pkg_file)
+                except OSError as e:
+                    if e.errno == errno.ENOENT:
+                        # No package.py file here.
+                        continue
+                    elif e.errno == errno.EACCES:
+                        tty.warn("Can't read package file %s." % pkg_file)
+                        continue
+                    raise e
+
+                # if it's not a file, skip it.
+                if stat.S_ISDIR(sinfo.st_mode):
+                    continue
+
                 # All checks passed.  Add it to the list.
                 self._all_package_names.append(pkg_name)
+
+                # record the package if it is newer than the index.
+                if sinfo.st_mtime > index_mtime:
+                    self._needs_update.append(pkg_name)
+
             self._all_package_names.sort()
 
         return self._all_package_names
 
 
+    def all_package_names(self):
+        """Returns a sorted list of all package names in the Repo."""
+        self._fast_package_check()
+        return self._all_package_names
+
+
     def all_packages(self):
+        """Iterator over all packages in the repository.
+
+        Use this with care, because loading packages is slow.
+
+        """
         for name in self.all_package_names():
             yield self.get(name)
 
