@@ -31,7 +31,7 @@ class RBiocgenerics(Package):
     homepage = 'https://www.bioconductor.org/packages/release/bioc/html/BiocGenerics.html'
     url = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.16.1.tar.gz"
 
-    version('0.16.1', 'c2148ffd86fc6f1f819c7f68eb2c744f', expand=False)
+    version('0.18.0', 'baaff00eb2c2b15396fed2f7f43e634c', expand=False)
 
     extends('R')
 
