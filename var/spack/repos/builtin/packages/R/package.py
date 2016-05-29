@@ -73,15 +73,15 @@ class R(Package):
 
     def install(self, spec, prefix):
         rlibdir = join_path(prefix, 'rlib')
-        options = ['--prefix=%s' % prefix,
-                   '--libdir=%s' % rlibdir,
-                   '--enable-R-shlib',
-                   '--enable-BLAS-shlib',
-                   '--enable-R-framework=no']
+        configure_args = ['--prefix=%s' % prefix,
+                          '--libdir=%s' % rlibdir,
+                          '--enable-R-shlib',
+                          '--enable-BLAS-shlib',
+                          '--enable-R-framework=no']
         if '+external-lapack' in spec:
-            options.extend(['--with-blas', '--with-lapack'])
+            configure_args.extend(['--with-blas', '--with-lapack'])
 
-        configure(*options)
+        configure(*configure_args)
         make()
         make('install')
 
@@ -111,7 +111,7 @@ class R(Package):
                 extension_spec.prefix, self.r_lib_dir))
 
     def setup_dependent_package(self, module, ext_spec):
-        """Called before R modules' install() methods.  In most cases,
+        """Called before R modules' install() methods. In most cases,
         extensions will only need to have one line:
             R('CMD', 'INSTALL', '--library=%s' % self.module.r_lib_dir, '%s' %
             self.stage.archive_file)"""
