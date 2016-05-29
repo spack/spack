@@ -40,6 +40,7 @@ class R(Package):
 
     extendable = True
 
+    version('3.3.0', '5a7506c8813432d1621c9725e86baf7a')
     version('3.2.3', '1ba3dac113efab69e706902810cc2970')
     version('3.2.2', '57cef5c2e210a5454da1979562a10e5b')
     version('3.2.1', 'c2aac8b40f84e08e7f8c9068de9239a3')
@@ -67,6 +68,8 @@ class R(Package):
     depends_on('freetype')
     depends_on('tcl')
     depends_on('tk')
+    depends_on('curl')
+    depends_on('pcre')
 
     def install(self, spec, prefix):
         rlibdir = join_path(prefix, 'rlib')
