@@ -209,5 +209,33 @@ class ProviderIndex(object):
         return index
 
 
+    def merge(self, other):
+        """Merge `other` ProviderIndex into this one."""
+        other = other.copy()   # defensive copy.
+
+        for pkg in other.providers:
+            if pkg not in self.providers:
+                self.providers[pkg] = other.providers[pkg]
+                continue
+
+            spdict, opdict = self.providers[pkg], other.providers[pkg]
+            for provided_spec in opdict:
+                if provided_spec not in spdict:
+                    spdict[provided_spec] = opdict[provided_spec]
+                    continue
+
+                spdict[provided_spec] += opdict[provided_spec]
+
+
+    def copy(self):
+        """Deep copy of this ProviderIndex."""
+        clone = ProviderIndex()
+        clone.providers = dict(
+            (name, dict((vpkg, set((p.copy() for p in pset)))
+                        for vpkg, pset in pdict.items()))
+             for name, pdict in self.providers.items())
+        return clone
+
+
     def __eq__(self, other):
         return self.providers == other.providers

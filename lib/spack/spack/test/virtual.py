@@ -41,3 +41,9 @@ class VirtualTest(unittest.TestCase):
         q = ProviderIndex.from_yaml(istream)
 
         self.assertTrue(p == q)
+
+
+    def test_copy(self):
+        p = ProviderIndex(spack.repo.all_package_names())
+        q = p.copy()
+        self.assertTrue(p == q)

@@ -224,12 +224,20 @@ class RepoPath(object):
             yield self.get(name)
 
 
+    @property
+    def provider_index(self):
+        """Merged ProviderIndex from all Repos in the RepoPath."""
+        if self._provider_index is None:
+            self._provider_index = ProviderIndex()
+            for repo in reversed(self.repos):
+                self._provider_index.merge(repo.provider_index)
+
+        return self._provider_index
+
+
     @_autospec
     def providers_for(self, vpkg_spec):
-        if self._provider_index is None:
-            self._provider_index = ProviderIndex(self.all_package_names())
-
-        providers = self._provider_index.providers_for(vpkg_spec)
+        providers = self.provider_index.providers_for(vpkg_spec)
         if not providers:
             raise UnknownPackageError(vpkg_spec.name)
         return providers
@@ -603,12 +611,19 @@ class Repo(object):
         self._instances.clear()
 
 
+    @property
+    def provider_index(self):
+        """A provider index with names *specific* to this repo."""
+        if self._provider_index is None:
+            namespaced_names = ['%s.%s' % (self.namespace, n)
+                                for n in self.all_package_names()]
+            self._provider_index = ProviderIndex(namespaced_names)
+        return self._provider_index
+
+
     @_autospec
     def providers_for(self, vpkg_spec):
-        if self._provider_index is None:
-            self._provider_index = ProviderIndex(self.all_package_names())
-
-        providers = self._provider_index.providers_for(vpkg_spec)
+        providers = self.provider_index.providers_for(vpkg_spec)
         if not providers:
             raise UnknownPackageError(vpkg_spec.name)
         return providers
