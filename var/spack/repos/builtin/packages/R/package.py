@@ -22,28 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import functools
-import glob
-import inspect
 import os
-import re
-from contextlib import closing
 
-import spack
-from llnl.util.lang import match_predicate
 from spack import *
 from spack.util.environment import *
 
 
 class R(Package):
-    """
-    R is 'GNU S', a freely available language and environment for statistical computing and graphics which provides a
-    wide variety of statistical and graphical techniques: linear and nonlinear modelling, statistical tests, time series
-    analysis, classification, clustering, etc. Please consult the R project homepage for further information.
-    """
+    """R is 'GNU S', a freely available language and environment for
+    statistical computing and graphics which provides a wide variety of
+    statistical and graphical techniques: linear and nonlinear modelling,
+    statistical tests, time series analysis, classification, clustering, etc.
+    Please consult the R project homepage for further information."""
+
     homepage = "https://www.r-project.org"
     url = "http://cran.cnr.berkeley.edu/src/base/R-3/R-3.1.2.tar.gz"
-    
+
     extendable = True
 
     version('3.2.3', '1ba3dac113efab69e706902810cc2970')
@@ -53,7 +47,8 @@ class R(Package):
     version('3.1.3', '53a85b884925aa6b5811dfc361d73fc4')
     version('3.1.2', '3af29ec06704cbd08d4ba8d69250ae74')
 
-    variant('external-lapack', default=False, description='Links to externally installed BLAS/LAPACK')
+    variant('external-lapack', default=False,
+            description='Links to externally installed BLAS/LAPACK')
 
     # Virtual dependencies
     depends_on('blas', when='+external-lapack')
@@ -106,25 +101,24 @@ class R(Package):
         r_libs_path = ':'.join(r_libs_path)
         spack_env.set('R_LIBS', r_libs_path)
 
-        # For run time environment set only the path for extension_spec and prepend it to R_LIBS
+        # For run time environment set only the path for extension_spec and
+        # prepend it to R_LIBS
         if extension_spec.package.extends(self.spec):
-            run_env.prepend_path('R_LIBS', os.path.join(extension_spec.prefix, self.r_lib_dir))
-
+            run_env.prepend_path('R_LIBS', os.path.join(
+                extension_spec.prefix, self.r_lib_dir))
 
     def setup_dependent_package(self, module, ext_spec):
-        """
-        Called before R modules' install() methods.
-
-        In most cases, extensions will only need to have one line::
-
-	R('CMD', 'INSTALL', '--library=%s' % self.module.r_lib_dir, '%s' % self.stage.archive_file)
-        """
+        """Called before R modules' install() methods.  In most cases,
+        extensions will only need to have one line:
+            R('CMD', 'INSTALL', '--library=%s' % self.module.r_lib_dir, '%s' %
+            self.stage.archive_file)"""
         # R extension builds can have a global R executable function
         module.R = Executable(join_path(self.spec.prefix.bin, 'R'))
 
         # Add variable for library directry
         module.r_lib_dir = os.path.join(ext_spec.prefix, self.r_lib_dir)
 
-        # Make the site packages directory for extensions, if it does not exist already.
+        # Make the site packages directory for extensions, if it does not exist
+        # already.
         if ext_spec.package.is_extension:
             mkdirp(module.r_lib_dir)
