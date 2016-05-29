@@ -39,7 +39,8 @@ class Pcre(Package):
     patch("intel.patch")
 
     variant('utf', default=True,
-            description='Enable support for UTF-8/16/32, incompatible with EBCDIC.')
+            description='Enable support for UTF-8/16/32, '
+            'incompatible with EBCDIC.')
 
     def install(self, spec, prefix):
         configure_args = ['--prefix=%s' % prefix]

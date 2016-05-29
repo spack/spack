@@ -28,8 +28,8 @@ from spack import *
 class RBiocgenerics(Package):
     """S4 generic functions needed by many Bioconductor packages."""
 
-    homepage = 'https://www.bioconductor.org/packages/release/bioc/html/BiocGenerics.html'
-    url = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.16.1.tar.gz"
+    homepage = 'https://bioconductor.org/packages/BiocGenerics/'
+    url = 'https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.18.0.tar.gz'
 
     version('0.18.0', 'baaff00eb2c2b15396fed2f7f43e634c', expand=False)
 
