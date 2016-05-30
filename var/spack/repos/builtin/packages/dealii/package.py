@@ -228,29 +228,33 @@ class Dealii(Package):
 
         # take step-40 which can use both PETSc and Trilinos
         # FIXME: switch step-40 to MPI run
-        if spec.satisfies('@8.4.0:'):
-            with working_dir('examples/step-40'):
-                print('=====================================')
-                print('========== Step-40 PETSc ============')
-                print('=====================================')
-                # list the number of cycles to speed up
-                filter_file(r'(const unsigned int n_cycles = 8;)',
-                            ('const unsigned int n_cycles = 2;'), 'step-40.cc')
-                cmake('.')
-                if '^petsc' in spec:
-                    make('release')
-                    make('run', parallel=False)
-            
-                print('=====================================')
-                print('========= Step-40 Trilinos ==========')
-                print('=====================================')
-                # change Linear Algebra to Trilinos
+        with working_dir('examples/step-40'):
+            print('=====================================')
+            print('========== Step-40 PETSc ============')
+            print('=====================================')
+            # list the number of cycles to speed up
+            filter_file(r'(const unsigned int n_cycles = 8;)',
+                        ('const unsigned int n_cycles = 2;'), 'step-40.cc')
+            cmake('.')
+            if '^petsc' in spec:
+                make('release')
+                make('run', parallel=False)
+
+            print('=====================================')
+            print('========= Step-40 Trilinos ==========')
+            print('=====================================')
+            # change Linear Algebra to Trilinos
+            if spec.satisfies('@8.4.0:'):
                 filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',
                             ('#define FORCE_USE_OF_TRILINOS'), 'step-40.cc')
-                if '^trilinos+hypre' in spec:
-                    make('release')
-                    make('run', parallel=False)
+            else:
+                filter_file(r'(#define USE_PETSC_LA.*)',
+                            ('// #define USE_PETSC_LA'), 'step-40.cc')
+            if '^trilinos+hypre' in spec:
+                make('release')
+                make('run', parallel=False)
 
+            if spec.satisfies('@8.4.0:'):
                 print('=====================================')
                 print('=== Step-40 Trilinos SuperluDist ====')
                 print('=====================================')
