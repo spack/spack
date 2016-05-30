@@ -607,48 +607,11 @@ class Package(object):
         exts = spack.install_layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
 
-    def preorder_traversal(self, visited=None, **kwargs):
-        """This does a preorder traversal of the package's dependence DAG."""
-        virtual = kwargs.get("virtual", False)
-
-        if visited is None:
-            visited = set()
-
-        if self.name in visited:
-            return
-        visited.add(self.name)
-
-        if not virtual:
-            yield self
-
-        for name in sorted(self.dependencies.keys()):
-            spec = self.dependencies[name]
-
-            # currently, we do not descend into virtual dependencies, as this
-            # makes doing a sensible traversal much harder.  We just assume
-            # that ANY of the virtual deps will work, which might not be true
-            # (due to conflicts or unsatisfiable specs).  For now this is ok
-            # but we might want to reinvestigate if we start using a lot of
-            # complicated virtual dependencies
-            # TODO: reinvestigate this.
-            if spec.virtual:
-                if virtual:
-                    yield spec
-                continue
-
-            for pkg in spack.repo.get(name).preorder_traversal(visited,
-                                                               **kwargs):
-                yield pkg
-
     def provides(self, vpkg_name):
         """
         True if this package provides a virtual package with the specified name
         """
         return any(s.name == vpkg_name for s in self.provided)
-
-    def virtual_dependencies(self, visited=None):
-        for spec in sorted(set(self.preorder_traversal(virtual=True))):
-            yield spec
 
     @property
     def installed(self):
