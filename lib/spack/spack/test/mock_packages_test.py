@@ -34,8 +34,41 @@ from ordereddict_backport import OrderedDict
 from spack.repository import RepoPath
 from spack.spec import Spec
 
+platform = spack.architecture.sys_type()
+
+linux_os_name = 'debian'
+linux_os_version = '6'
+
+if platform.name == 'linux':
+    global linux_os_name, linux_os_version
+    linux_os = platform.operating_system("default_os")
+    linux_os_name = linux_os.name
+    linux_os_version = linux_os.version
+
 mock_compiler_config = """\
 compilers:
+  clang3.3GENLINUX:
+    spec: clang@3.3
+    operating_system:
+      name: {0} 
+      version: '{1}'
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+  gcc4.5GENLINUX: 
+    spec: gcc@4.5.0  
+    operating_system: 
+      name: {0} 
+      version: '{1}' 
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    modules: 'None'
   clang3.3CNL:
     spec: clang@3.3
     operating_system:
@@ -146,7 +179,7 @@ compilers:
       f77: None
       fc: None
     modules: 'None'
-"""
+""".format(linux_os_name, linux_os_version)
 
 mock_packages_config = """\
 packages:
