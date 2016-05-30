@@ -27,6 +27,26 @@ import os
 from spack import *
 
 
+def _verbs_dir():
+    """
+    Try to find the directory where the OpenFabrics verbs package is
+    installed. Return None if not found.
+    """
+    try:
+        # Try to locate Verbs by looking for a utility in the path
+        ibv_devices = which("ibv_devices")
+        # Run it (silently) to ensure it works
+        ibv_devices(output=str, error=str)
+        # Get path to executable
+        path = ibv_devices.exe[0]
+        # Remove executable name and "bin" directory
+        path = os.path.dirname(path)
+        path = os.path.dirname(path)
+        return path
+    except:
+        return None
+
+
 class Openmpi(Package):
     """Open MPI is a project combining technologies and resources from
        several other projects (FT-MPI, LA-MPI, LAM/MPI, and PACX-MPI)
@@ -54,7 +74,7 @@ class Openmpi(Package):
     variant('psm', default=False, description='Build support for the PSM library.')
     variant('psm2', default=False, description='Build support for the Intel PSM2 library.')
     variant('pmi', default=False, description='Build support for PMI-based launchers')
-    variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
+    variant('verbs', default=_verbs_dir() is not None, description='Build support for OpenFabrics verbs.')
     variant('mxm', default=False, description='Build Mellanox Messaging support')
 
     variant('thread_multiple', default=False, description='Enable MPI_THREAD_MULTIPLE support')
@@ -119,7 +139,6 @@ class Openmpi(Package):
             # Fabrics
             '--with-psm' if '+psm' in spec else '--without-psm',
             '--with-psm2' if '+psm2' in spec else '--without-psm2',
-            ('--with-%s' % self.verbs) if '+verbs' in spec else ('--without-%s' % self.verbs),
             '--with-mxm' if '+mxm' in spec else '--without-mxm',
             # Other options
             '--enable-mpi-thread-multiple' if '+thread_multiple' in spec else '--disable-mpi-thread-multiple',
@@ -129,6 +148,14 @@ class Openmpi(Package):
             "--with-hwloc=%s" % spec['hwloc'].prefix if '+hwloc' in spec else '', 
             '--disable-dlopen' if not '+dlopen' in spec else ''
         ])
+        if '+verbs' in spec:
+            path = _verbs_dir()
+            if path is not None:
+                config_args.append('--with-%s=%s' % (self.verbs, path))
+            else:
+                config_args.append('--with-%s' % self.verbs)
+        else:
+            config_args.append('--without-%s' % self.verbs)
 
         # TODO: use variants for this, e.g. +lanl, +llnl, etc.
         # use this for LANL builds, but for LLNL builds, we need:
