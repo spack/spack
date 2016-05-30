@@ -418,8 +418,7 @@ class FlagMap(HashableMap):
         return clone
 
     def _cmp_key(self):
-        return ''.join(str(key) + ' '.join(str(v) for v in value)
-                       for key, value in sorted(self.items()))
+        return tuple((k, tuple(v)) for k, v in sorted(self.iteritems()))
 
     def __str__(self):
         sorted_keys = filter(
