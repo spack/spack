@@ -7,8 +7,9 @@ import re
 import os
 
 
-class OpenfoamExtend(Package):
-    """OpenFOAM-extend or foam-extend"""
+class FoamExtend(Package):
+    """The foam-extend project is a fork of the OpenFOAM open source library
+      for Computational Fluid Dynamics (CFD)."""
 
     version('3.2', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.2')
     version('3.1', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.1')
