@@ -584,7 +584,7 @@ class Spec(object):
         """Internal package call gets only the class object for a package.
            Use this to just get package metadata.
         """
-        return spack.repo.get_pkg_class(self.name)
+        return spack.repo.get_pkg_class(self.fullname)
 
     @property
     def virtual(self):
@@ -1339,7 +1339,7 @@ class Spec(object):
            UnsupportedCompilerError.
         """
         for spec in self.traverse():
-            # Don't get a package for a virtual name.
+            # raise an UnknownPackageError if the spec's package isn't real.
             if (not spec.virtual) and spec.name:
                 spack.repo.get(spec.fullname)
 
