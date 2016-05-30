@@ -253,8 +253,9 @@ class ConcretizeTest(MockPackagesTest):
         self.assertFalse('externalprereq' in spec)
         self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
 
-    @unittest.skipIf(spack.architecture.sys_type().name == 'darwin', 
-                                         "No tcl modules on darwin machines")
+    @unittest.skipIf(spack.architecture.sys_type().name == 'darwin' or
+                     spack.architecture.sys_type().name == 'linux', 
+                                         "No tcl modules on darwin/linux machines")
     def test_external_package_module(self):
         spec = Spec('externalmodule')
         spec.concretize()
