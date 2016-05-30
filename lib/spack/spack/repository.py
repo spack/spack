@@ -864,6 +864,12 @@ class Repo(object):
         package. Then extracts the package class from the module
         according to Spack's naming convention.
         """
+        fullname = pkg_name
+        namespace, _, pkg_name = pkg_name.rpartition('.')
+        if namespace and (namespace != self.namespace):
+            raise InvalidNamespaceError('Invalid namespace for %s repo: %s'
+                                        % (self.namespace, namespace))
+
         class_name = mod_to_class(pkg_name)
         module = self._get_pkg_module(pkg_name)
 
