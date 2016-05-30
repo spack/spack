@@ -244,6 +244,8 @@ class Dealii(Package):
             print('========= Step-40 Trilinos ==========')
             print('=====================================')
             # change Linear Algebra to Trilinos
+	    # The below filter_file should be different for versions
+	    # before and after 8.4.0
             if spec.satisfies('@8.4.0:'):
                 filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',
                             ('#define FORCE_USE_OF_TRILINOS'), 'step-40.cc')
@@ -254,6 +256,8 @@ class Dealii(Package):
                 make('release')
                 make('run', parallel=False)
 
+	    # the rest of the tests on step 40 only works for
+	    # dealii version 8.4.0 and after
             if spec.satisfies('@8.4.0:'):
                 print('=====================================')
                 print('=== Step-40 Trilinos SuperluDist ====')
