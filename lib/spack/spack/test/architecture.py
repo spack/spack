@@ -3,7 +3,7 @@
 """
 import unittest
 import os
-import platform
+import platform as py_platform
 import spack
 from spack.architecture import *
 from spack.spec import *
@@ -61,9 +61,9 @@ class ArchitectureTest(MockPackagesTest):
             my_platform_class = CrayXc()
         elif os.path.exists('/bgsys'):
             my_platform_class = Bgq()
-        elif 'Linux' in platform.system():
+        elif 'Linux' in py_platform.system():
             my_platform_class = Linux()
-        elif 'Darwin' in platform.system():
+        elif 'Darwin' in py_platform.system():
             my_platform_class = Darwin()
 
         self.assertEqual(str(output_platform_class), str(my_platform_class))
