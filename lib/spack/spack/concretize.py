@@ -84,7 +84,8 @@ class DefaultConcretizer(object):
             raise NoBuildError(spec)
 
         def cmp_externals(a, b):
-            if a.name != b.name:
+            if a.name != b.name and (not a.external or a.external_module and
+                    not b.external and b.external_module):
                 # We're choosing between different providers, so
                 # maintain order from provider sort
                 return candidates.index(a) - candidates.index(b)
