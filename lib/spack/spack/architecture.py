@@ -487,25 +487,23 @@ def arch_from_dict(d):
 
 @memoized
 def all_platforms():
-    modules = []
-
+    classes = []
     mod_path = spack.platform_path
-    mod_string = "spack.platformss"
+    parent_module = "spack.platforms"
 
     for name in list_modules(mod_path):
-        mod_name = mod_string + name
-        path = join_path(mod_path, name) + ".py"
-        mod = imp.load_source(mod_name, path)
+        mod_name = '%s.%s' % (parent_module, name)
         class_name = mod_to_class(name)
+        mod = __import__(mod_name, fromlist=[class_name])
         if not hasattr(mod, class_name):
             tty.die('No class %s defined in %s' % (class_name, mod_name))
         cls = getattr(mod, class_name)
         if not inspect.isclass(cls):
             tty.die('%s.%s is not a class' % (mod_name, class_name))
 
-        modules.append(cls)
+        classes.append(cls)
 
-    return modules
+    return classes
 
 @memoized
 def sys_type():

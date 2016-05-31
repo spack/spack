@@ -1,3 +1,4 @@
+import re
 import platform as py_platform
 from spack.architecture import OperatingSystem
 
@@ -9,7 +10,13 @@ class LinuxDistro(OperatingSystem):
         platform.dist()
     """
     def __init__(self):
-        name = py_platform.dist()[0]
-        version = py_platform.dist()[1].split(".")[0] # Grabs major version from tuple 
+        distname, version, _ = py_platform.linux_distribution(
+            full_distribution_name=False)
 
-        super(LinuxDistro, self).__init__(name, version)
+        # Grabs major version from tuple on redhat; on other platforms
+        # grab the first legal identifier in the version field.  On
+        # debian you get things like 'wheezy/sid'; sid means unstable.
+        # We just record 'wheezy' and don't get quite so detailed.
+        version = re.split(r'[^\w-]', version)[0]
+
+        super(LinuxDistro, self).__init__(distname, version)
