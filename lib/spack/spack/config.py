@@ -167,6 +167,18 @@ section_schemas = {
                                                         {'type' : 'null' }]},
                                     'fc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
+                                    'fflags':  { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cppflags':  { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cflags':  { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cxxflags':  { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'ldflags':  { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'ldlibs':  { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
                                 },},},},},},},},
 
     'mirrors': {
