@@ -42,6 +42,7 @@ class Eigen(Package):
     variant('scotch', default=True, description='Enables scotch backend')
     variant('fftw', default=True, description='Enables FFTW backend')
     variant('suitesparse', default=True, description='Enables SuiteSparse support')
+    variant('mpfr', default=True, description='Enables support for multi-precisions floating points via mpfr')
 
     # TODO : dependency on googlehash, superlu, adolc missing
 
@@ -50,8 +51,8 @@ class Eigen(Package):
     depends_on('scotch', when='+scotch')
     depends_on('fftw', when='+fftw')
     depends_on('suite-sparse', when='+suitesparse')
-    depends_on('mpfr@2.3.0:')  # Eigen 3.2.7 requires at least 2.3.0
-    depends_on('gmp')
+    depends_on('mpfr@2.3.0:', when="+mpfr")  # Eigen 3.2.7 requires at least 2.3.0
+    depends_on('gmp', when="+mpfr")
 
     def install(self, spec, prefix):
 
