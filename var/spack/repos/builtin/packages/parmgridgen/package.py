@@ -57,19 +57,15 @@ class Parmgridgen(Package):
 
         make(*make_opts, parallel=False)
 
-        include_path = join_path(self.prefix, 'include')
-        lib_path = join_path(self.prefix, 'lib')
-        bin_path = join_path(self.prefix, 'bin')
+        mkdirp(self.prefix.include, self.prefix.lib, self.prefix.bin)
 
-        mkdirp(include_path, lib_path, bin_path)
-
-        install("mgridgen.h", include_path)
-        install("parmgridgen.h", include_path)
+        install("mgridgen.h", self.prefix.include)
+        install("parmgridgen.h", self.prefix.include)
 
         install("MGridGen/IMlib/libIMlib.a",
-                join_path(lib_path, 'libimlib.a'))
-        install("libmgrid.a", lib_path)
-        install("libparmgrid.a", lib_path)
+                join_path(self.prefix.lib, 'libIMlib.a'))
+        install("libmgrid.a", self.prefix.lib)
+        install("libparmgrid.a", self.prefix.lib)
 
-        install("mgridgen", bin_path)
-        install("parmgridgen", bin_path)
+        install("mgridgen", self.prefix.bin)
+        install("parmgridgen", self.prefix.bin)

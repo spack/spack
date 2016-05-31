@@ -3,13 +3,14 @@ from spack.environment import *
 
 import multiprocessing
 import subprocess
-import re
 import os
 
 
 class FoamExtend(Package):
     """The foam-extend project is a fork of the OpenFOAM open source library
       for Computational Fluid Dynamics (CFD)."""
+
+    homepage = "http://www.extend-project.de/"
 
     version('3.2', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.2')
     version('3.1', git='http://git.code.sf.net/p/foam-extend/foam-extend-3.1')
@@ -21,16 +22,13 @@ class FoamExtend(Package):
     variant('metis', default=True, description='Activate Metis as a possible decomposition library')
     variant('parmetis', default=True, description='Activate Parmetis as a possible decomposition library')
     variant('parmgridgen', default=True, description='Activate Parmgridgen support')
+    variant('source', default=True, description='Installs also the source folder')
 
     supported_compilers = {'clang': 'Clang', 'gcc': 'Gcc', 'intel': 'Icc'}
 
     depends_on('mpi')
-    depends_on('cmake')
     depends_on('python')
     depends_on('flex@:2.5.99')
-    depends_on('bison')
-    depends_on('m4')
-    depends_on('hwloc')
     depends_on('zlib')
 
     depends_on('scotch ~ metis', when='~ptscotch+scotch')
@@ -40,17 +38,19 @@ class FoamExtend(Package):
     depends_on('parmgridgen', when='+parmgridgen')
 
     depends_on('paraview', when='+paraview')
-    depends_on('qt@:4', when='+paraview')
 
     def _get_env(self, command):
-        variable_set = re.compile(r'(.+?)=(.*)')
         proc = subprocess.Popen(['bash', '-c', command],
                                 stdout=subprocess.PIPE)
         env = {}
         for line in proc.stdout:
-            match_grp = variable_set.match(line)
-            if match_grp:
-                env[match_grp.group(1)] = match_grp.group(2)
+            try:
+                key, val = line.split('=', 1)
+                env[key] = val.strip()
+            except:
+                # it may fail due to some bash functions that are on
+                # multiple lines
+                pass
         return env
 
     def set_arch(self):
@@ -64,13 +64,13 @@ class FoamExtend(Package):
         if sysname == 'Linux':
             arch = 'linux'
             if foam_compiler == 'Clang':
-                raise RuntimeError('OS, compiler combinaison not\
+                raise RuntimeError('OS, compiler combination not\
                 supported ({0} {1})'.format(sysname, foam_compiler))
         elif sysname == 'Darwin':
             if machine == 'x86_64':
                 arch = 'darwinIntel'
             if foam_compiler == 'Icc':
-                raise RuntimeError('OS, compiler combinaison not\
+                raise RuntimeError('OS, compiler combination not\
                 supported ({0} {1})'.format(sysname, foam_compiler))
         else:
             raise RuntimeError('{0} {1} is not a \
@@ -80,24 +80,31 @@ class FoamExtend(Package):
 
     def get_openfoam_environment(self, env_openfoam):
         env_before = self._get_env('env')
-
+        # This gets the environment set in case the etc/bashrc file is
+        # sourced
         with working_dir(self.stage.source_path):
             env_after = self._get_env('source etc/bashrc && env')
 
+        # Removes some PATH to not add useless information in the
+        # environment later on
         if 'PATH' in env_after:
             del env_after['PATH']
 
         if 'LD_LIBRARY_PATH' in env_after:
             del env_after['LD_LIBRARY_PATH']
 
+        # Checks what was set in addition to the current environment,
+        # that should be the variables set by the bashrc
         for key, value in env_after.iteritems():
             if key not in env_before or not value == env_before[key]:
                 env_openfoam.set(key, value)
 
     def patch(self):
+        # change names to match the package and not the one patch in
+        # the Third-Party of foam-extend
         if '+parmgridgen' in self.spec:
-            filter_file(r'-lIMlib -lMGridGen',
-                        r'-limlib -lmgrid',
+            filter_file(r'-lMGridGen',
+                        r'-lmgrid',
                         'src/dbns/Make/options')
 
             filter_file(
@@ -105,6 +112,7 @@ class FoamExtend(Package):
                 r'-lmgrid',
                 'src/fvAgglomerationMethods/MGridGenGamgAgglomeration/Make/options')  # NOQA: ignore=501
 
+        # Get the wmake arch and compiler
         (arch, foam_compiler) = self.set_arch()
 
         prefs_dict = {
@@ -126,15 +134,8 @@ class FoamExtend(Package):
             'BISON_SYSTEM': 1,
             'BISON_DIR': self.spec['flex'].prefix,
 
-            'M4_SYSTEM': 1,
-            'M4_DIR': self.spec['m4'].prefix,
-
             'ZLIB_SYSTEM': 1,
             'ZLIB_DIR': self.spec['zlib'].prefix,
-
-            'HWLOC_SYSTEM': 1,
-            'HWLOC_DIR': self.spec['hwloc'].prefix,
-            'HWLOC_BIN_DIR': self.spec['hwloc'].prefix.bin,
         }
 
         if '+scotch' in self.spec or '+ptscotch' in self.spec:
@@ -178,6 +179,9 @@ class FoamExtend(Package):
             prefs_dict['QT_DIR'] = self.spec['qt'].prefix,
             prefs_dict['QT_BIN_DIR'] = self.spec['qt'].prefix.bin,
 
+        # write the prefs files to define the configuration needed,
+        # only the prefs.sh is used by this script but both are
+        # installed for end users
         with working_dir('.'):
             with open("etc/prefs.sh", "w") as fh:
                 for key in sorted(prefs_dict):
@@ -187,6 +191,9 @@ class FoamExtend(Package):
                 for key in sorted(prefs_dict):
                     fh.write('setenv {0}={1}\n'.format(key, prefs_dict[key]))
 
+        # Defining a different mpi and optimisation file to be able to
+        # make wmake get spack info with minimum modifications on
+        # configurations scripts
         mpi_info = [
             'PFLAGS = -DOMPI_SKIP_MPICXX -DMPICH_IGNORE_CXX_SEEK',
             'PINC = -I{0}'.format(self.spec['mpi'].prefix.include),
@@ -235,8 +242,6 @@ class FoamExtend(Package):
         run_env.set('FOAM_INST_DIR', self.prefix)
 
     def install(self, spec, prefix):
-        self.patch()
-
         env_openfoam = EnvironmentModifications()
         self.get_openfoam_environment(env_openfoam)
         env_openfoam.apply_modifications()
@@ -244,9 +249,6 @@ class FoamExtend(Package):
         if self.parallel:
             os.environ['WM_NCOMPPROCS'] = str(self.make_jobs) \
                 if self.make_jobs else str(multiprocessing.cpu_count())
-
-        # for key in sorted(os.environ):
-        #     print("{0} = {1}".format(key, os.environ[key]))
 
         allwmake = Executable('./Allwmake')
         allwmake()
