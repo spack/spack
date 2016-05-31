@@ -96,6 +96,7 @@ def bootstrap(parser, args):
     git('fetch', 'origin', '%s:refs/remotes/origin/%s' % (branch, branch),
                            '-n', '-q')
     git('reset', '--hard', 'origin/%s' % branch, '-q')
+    git('checkout', '-B', branch, 'origin/%s' % branch, '-q')
 
     tty.msg("Successfully created a new spack in %s" % prefix,
             "Run %s/bin/spack to use this installation." % prefix)
