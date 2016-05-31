@@ -24,6 +24,8 @@
 ##############################################################################
 from spack import *
 
+import sys
+
 
 class Doxygen(Package):
     """Doxygen is the de facto standard tool for generating documentation
