@@ -39,9 +39,14 @@ def setup_parser(subparser):
     subparser.add_argument('prefix', help="names of prefix where we should install spack")
 
 
-def get_origin_url():
+def get_origin_info():
     git_dir = join_path(spack.prefix, '.git')
     git = which('git', required=True)
+    try:
+        branch = git('symbolic-ref', '--short', 'HEAD', output=str)
+    except ProcessError:
+        branch = 'develop'
+        tty.warn('No branch found; using default branch: %s' % branch)
     try:
         origin_url = git(
             '--git-dir=%s' % git_dir,
@@ -51,11 +56,11 @@ def get_origin_url():
         origin_url = _SPACK_UPSTREAM
         tty.warn('No git repository found; '
                  'using default upstream URL: %s' % origin_url)
-    return origin_url.strip()
+    return (origin_url.strip(), branch.strip())
 
 
 def bootstrap(parser, args):
-    origin_url = get_origin_url()
+    origin_url, branch = get_origin_info()
     prefix = args.prefix
 
     tty.msg("Fetching spack from origin: %s" % origin_url)
@@ -81,8 +86,9 @@ def bootstrap(parser, args):
     git = which('git', required=True)
     git('init', '--shared', '-q')
     git('remote', 'add', 'origin', origin_url)
-    git('fetch', 'origin', 'master:refs/remotes/origin/master', '-n', '-q')
-    git('reset', '--hard', 'origin/master', '-q')
+    git('fetch', 'origin', '%s:refs/remotes/origin/%s' % (branch, branch),
+                           '-n', '-q')
+    git('reset', '--hard', 'origin/%s' % branch, '-q')
 
     tty.msg("Successfully created a new spack in %s" % prefix,
             "Run %s/bin/spack to use this installation." % prefix)
