@@ -43,6 +43,8 @@ class Hpl(Package):
     depends_on('mpi@1.1:')
     depends_on('blas')
 
+    parallel = False
+
     def configure(self, spec, arch):
         # List of configuration options
         # Order is important
