@@ -31,6 +31,8 @@ class MsgpackC(Package):
 
     version('1.4.1', 'e2fd3a7419b9bc49e5017fdbefab87e0')
 
+    depends_on('cmake', type='build')
+
     def install(self, spec, prefix):
         cmake('.', *std_cmake_args)
 
