@@ -124,10 +124,19 @@ class Mvapich2(Package):
             raise RuntimeError(" %s : 'slurm' cannot be activated together with other process managers" % self.name)
 
         process_manager_options = []
+        # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if self.enabled(Mvapich2.SLURM) in spec:
-            process_manager_options = [
-                "--with-pm=slurm"
-            ]
+            if self.version > Version('2.0'):
+                process_manager_options = [
+                    "--with-pmi=pmi2",
+                    "--with-pm=slurm"
+                ]
+            else:
+                process_manager_options = [
+                    "--with-pmi=slurm",
+                    "--with-pm=no"
+                ]
+
         elif has_slurm_incompatible_variants:
             pms = []
             # The variant name is equal to the process manager name in the configuration options
@@ -164,6 +173,11 @@ class Mvapich2(Package):
 
         configure_args.extend(network_options)
 
+    def setup_environment(self, spack_env, run_env):
+        if self.enabled(Mvapich2.SLURM) in self.spec and \
+           self.version > Version('2.0'):
+            run_env.set('SLURM_MPI_TYPE', 'pmi2')
+        
     def setup_dependent_environment(self, spack_env, run_env, extension_spec):
         spack_env.set('MPICH_CC', spack_cc)
         spack_env.set('MPICH_CXX', spack_cxx)
@@ -176,7 +190,7 @@ class Mvapich2(Package):
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
         self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
-
+    
     def install(self, spec, prefix):
         # we'll set different configure flags depending on our environment
         configure_args = [
