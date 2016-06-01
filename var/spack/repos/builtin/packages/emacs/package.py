@@ -31,15 +31,27 @@ class Emacs(Package):
 
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
+    variant('use-system-deps', default=True, description='Uses the library on the system to compile')
+    
     depends_on('ncurses')
     # Emacs also depends on:
     #     GTK or other widget library
     #     libtiff, png, etc.
     # For now, we assume the system provides all that stuff.
     # For Ubuntu 14.04 LTS:
-    #     sudo apt-get install libgtk-3-dev libxpm-dev libtiff5-dev libjpeg8-dev libgif-dev libpng12-dev
+    #     sudo apt-get install libgtk-3-dev libxpm-dev libtiff5-dev libjpeg8-dev libgif-dev libpng12-dev 
+    depends_on('libtiff', when='~use-system-deps')
+    depends_on('libpng', when='~use-system-deps')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        if '~use-system-deps' in self.spec:
+            args = [
+                '--with-xpm=no',
+                '--with-gif=no',
+                ]
+        else:
+            args = []
+            
+        configure('--prefix=%s' % prefix, *args)
         make()
         make("install")
