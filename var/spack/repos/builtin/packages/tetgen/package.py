@@ -24,11 +24,13 @@
 ##############################################################################
 from spack import *
 
+
 class Tetgen(Package):
-    """TetGen is a program and library that can be used to generate tetrahedral
-       meshes for given 3D polyhedral domains. TetGen generates exact constrained
-       Delaunay tetrahedralizations, boundary conforming Delaunay meshes, and
-       Voronoi paritions."""
+    """TetGen is a program and library that can be used to generate
+       tetrahedral meshes for given 3D polyhedral domains. TetGen
+       generates exact constrained Delaunay tetrahedralizations,
+       boundary conforming Delaunay meshes, and Voronoi paritions.
+    """
 
     homepage = "http://www.tetgen.org"
     url      = "http://www.tetgen.org/files/tetgen1.4.3.tar.gz"
