@@ -46,9 +46,9 @@ class Parmgridgen(Package):
             'COPTIONS=-fPIC',
             'LDOPTIONS=-fPIC',
             'CC={0}'.format(self.compiler.cc),
-            'PARCC={0}'.format(self.spec['mpi'].mpicc),
+            'PARCC={0}'.format(spec['mpi'].mpicc),
             'LD={0}'.format(self.compiler.cc),
-            'PARLD={0}'.format(self.spec['mpi'].mpicc),
+            'PARLD={0}'.format(spec['mpi'].mpicc),
             'LIBDIR=-L../..',
             'PARLIBS=-L../../ -lparmgrid -lmgrid -lm',
             'LIBS=-L../../ -lmgrid -lm',
@@ -57,15 +57,15 @@ class Parmgridgen(Package):
 
         make(*make_opts, parallel=False)
 
-        mkdirp(self.prefix.include, self.prefix.lib, self.prefix.bin)
+        mkdirp(prefix.include, prefix.lib, prefix.bin)
 
-        install("mgridgen.h", self.prefix.include)
-        install("parmgridgen.h", self.prefix.include)
+        install("mgridgen.h", prefix.include)
+        install("parmgridgen.h", prefix.include)
 
         install("MGridGen/IMlib/libIMlib.a",
-                join_path(self.prefix.lib, 'libIMlib.a'))
-        install("libmgrid.a", self.prefix.lib)
-        install("libparmgrid.a", self.prefix.lib)
+                join_path(prefix.lib, 'libIMlib.a'))
+        install("libmgrid.a", prefix.lib)
+        install("libparmgrid.a", prefix.lib)
 
-        install("mgridgen", self.prefix.bin)
-        install("parmgridgen", self.prefix.bin)
+        install("mgridgen", prefix.bin)
+        install("parmgridgen", prefix.bin)
