@@ -34,6 +34,7 @@ class Tetgen(Package):
     url      = "http://www.tetgen.org/files/tetgen1.4.3.tar.gz"
 
     version('1.4.3', 'd6a4bcdde2ac804f7ec66c29dcb63c18')
+    version('1.5.0', '3b9fd9cdec121e52527b0308f7aad5c1', url='http://www.tetgen.org/1.5/src/tetgen1.5.0.tar.gz')
 
     # TODO: Make this a build dependency once build dependencies are supported
     # (see: https://github.com/LLNL/spack/pull/378).
