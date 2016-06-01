@@ -123,7 +123,7 @@ class Fenics(Package):
             with working_dir(join_path('depends', package)):
                 python('setup.py', 'install', '--prefix=%s' % prefix)
 
-        cmake_args.extend([
+        cmake_args = [
             '-DCMAKE_BUILD_TYPE:STRING={0}'.format(
                 'Debug' if '+debug' in spec else 'RelWithDebInfo'),
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
@@ -165,7 +165,8 @@ class Fenics(Package):
                 self.cmake_is_on('vtk')),
             '-DDOLFIN_ENABLE_ZLIB:BOOL={0}'.format(
                 self.cmake_is_on('zlib')),
-        ])
+        ]
+
         cmake_args.extend(std_cmake_args)
 
         with working_dir('build', create=True):
