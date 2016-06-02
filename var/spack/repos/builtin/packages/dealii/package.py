@@ -244,38 +244,47 @@ class Dealii(Package):
             print('========= Step-40 Trilinos ==========')
             print('=====================================')
             # change Linear Algebra to Trilinos
-            filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',
-                        ('#define FORCE_USE_OF_TRILINOS'), 'step-40.cc')
+            # The below filter_file should be different for versions
+            # before and after 8.4.0
+            if spec.satisfies('@8.4.0:'):
+                filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',
+                            ('#define FORCE_USE_OF_TRILINOS'), 'step-40.cc')
+            else:
+                filter_file(r'(#define USE_PETSC_LA.*)',
+                            ('// #define USE_PETSC_LA'), 'step-40.cc')
             if '^trilinos+hypre' in spec:
                 make('release')
                 make('run', parallel=False)
 
-            print('=====================================')
-            print('=== Step-40 Trilinos SuperluDist ====')
-            print('=====================================')
-            # change to direct solvers
-            filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')  # NOQA: ignore=E501
-            filter_file(r'(LA::MPI::PreconditionAMG preconditioner;)',
-                        (''), 'step-40.cc')
-            filter_file(r'(LA::MPI::PreconditionAMG::AdditionalData data;)',
-                        (''), 'step-40.cc')
-            filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',
-                        (''), 'step-40.cc')
-            filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')  # NOQA: ignore=E501
-            filter_file(r'(preconditioner\);)',  (''), 'step-40.cc')
-            if '^trilinos+superlu-dist' in spec:
-                make('release')
-                make('run', paralle=False)
+            # the rest of the tests on step 40 only works for
+            # dealii version 8.4.0 and after
+            if spec.satisfies('@8.4.0:'):
+                print('=====================================')
+                print('=== Step-40 Trilinos SuperluDist ====')
+                print('=====================================')
+                # change to direct solvers
+                filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')  # NOQA: ignore=E501
+                filter_file(r'(LA::MPI::PreconditionAMG preconditioner;)',
+                            (''), 'step-40.cc')
+                filter_file(r'(LA::MPI::PreconditionAMG::AdditionalData data;)',
+                            (''), 'step-40.cc')
+                filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',
+                            (''), 'step-40.cc')
+                filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')  # NOQA: ignore=E501
+                filter_file(r'(preconditioner\);)',  (''), 'step-40.cc')
+                if '^trilinos+superlu-dist' in spec:
+                    make('release')
+                    make('run', paralle=False)
 
-            print('=====================================')
-            print('====== Step-40 Trilinos MUMPS =======')
-            print('=====================================')
-            # switch to Mumps
-            filter_file(r'(Amesos_Superludist)',
-                        ('Amesos_Mumps'), 'step-40.cc')
-            if '^trilinos+mumps' in spec:
-                make('release')
-                make('run', parallel=False)
+                print('=====================================')
+                print('====== Step-40 Trilinos MUMPS =======')
+                print('=====================================')
+                # switch to Mumps
+                filter_file(r'(Amesos_Superludist)',
+                            ('Amesos_Mumps'), 'step-40.cc')
+                if '^trilinos+mumps' in spec:
+                    make('release')
+                    make('run', parallel=False)
 
         print('=====================================')
         print('============ Step-36 ================')
