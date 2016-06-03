@@ -88,22 +88,19 @@ from spack import *
 
 
 class ${class_name}(Package):
-    ""\"FIXME: put a proper description of your package here.""\"
+    ""\"FIXME: Put a proper description of your package here.""\"
 
-    # FIXME: add a proper url for your package's homepage here.
+    # FIXME: Add a proper url for your package's homepage here.
     homepage = "http://www.example.com"
     url      = "${url}"
 
 ${versions}
-
+${extends}
     # FIXME: Add dependencies if this package requires them.
     # depends_on("foo")
 
     def install(self, spec, prefix):
-        # FIXME: Modify the installation instructions here
-        ${configure}
-        ${build}
-        ${install}
+${install}
 """)
 
 
@@ -138,39 +135,47 @@ def setup_parser(subparser):
 
 class ConfigureGuesser(object):
     def __call__(self, stage):
-        """Try to guess the type of build system used by the project. Set the
-        appropriate default configure, build, and install instructions."""
+        """Try to guess the type of build system used by the project.
+        Set the appropriate default installation instructions and any
+        necessary extensions for Python and R."""
 
-        # Default configure instructions
-        configureDict = {
-            'autotools': "configure('--prefix={0}'.format(prefix))",
-            'cmake':     "cmake('.', *std_cmake_args)",
-            'scons':     "",
-            'python':    "",
-            'r':         "",
-            'unknown':   "# FIXME: Unknown build system"
-        }
-
-        # Default build instructions
-        buildDict = {
-            'autotools': "make()",
-            'cmake':     "make()",
-            'scons':     "scons('prefix={0}'.format(prefix))",
-            'python':    "",
-            'r':         "",
-            'unknown':   "make()",
-        }
-
-        # Default install instructions
+        # Default installation instructions
         installDict = {
-            'autotools': "make('install')",
-            'cmake':     "make('install')",
-            'scons':     "scons('install')",
-            'python':    "python('setup.py', 'install', " +
-                         "'--prefix={0}'.format(prefix))",
-            'r':         "R('CMD', 'INSTALL', '--library={0}'.format(" +
-                         "self.module.r_lib_dir), self.stage.archive_file)",
-            'unknown':   "make('install')",
+            'autotools': """\
+        # FIXME: Modify the configure line to suit your build system here.
+        configure('--prefix={0}'.format(prefix))
+
+        # FIXME: Add logic to build and install here.
+        make()
+        make('install')""",
+
+            'cmake':     """\
+        with working_dir('spack-build', create=True):
+            # FIXME: Modify the cmake line to suit your build system here.
+            cmake('..', *std_cmake_args)
+
+            # FIXME: Add logic to build and install here.
+            make()
+            make('install')""",
+
+            'scons':     """\
+        # FIXME: Add logic to build and install here.
+        scons('prefix={0}'.format(prefix))
+        scons('install')""",
+
+            'python':    """\
+        # FIXME: Add logic to build and install here.
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))""",
+
+            'R':         """\
+        # FIXME: Add logic to build and install here.
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),""" +
+            " self.stage.archive_file)""",
+
+            'unknown':   """\
+        # FIXME: Unknown build system
+        make()
+        make('install')"""
         }
 
         # A list of clues that give us an idea of the build system a package
@@ -181,7 +186,7 @@ class ConfigureGuesser(object):
             (r'/CMakeLists.txt$', 'cmake'),
             (r'/SConstruct$',     'scons'),
             (r'/setup.py$',       'python'),
-            (r'/NAMESPACE$',      'r')
+            (r'/NAMESPACE$',      'R')
         ]
 
         # Peek inside the compressed file.
@@ -206,11 +211,17 @@ class ConfigureGuesser(object):
             if any(re.search(pattern, l) for l in lines):
                 build_system = bs
 
-        self.configure = configureDict[build_system]
-        self.build     = buildDict[build_system]
-        self.install   = installDict[build_system]
-
         self.build_system = build_system
+
+        # Set any necessary extensions for Python and R
+        extensions = ''
+        if build_system in ['python', 'R']:
+            extensions = "\n    extends('{0}')\n".format(build_system)
+
+        self.extends = extensions
+
+        # Set the appropriate default installation instructions
+        self.install = installDict[build_system]
 
 
 def guess_name_and_version(url, args):
@@ -331,7 +342,7 @@ def create(parser, args):
         name = 'py-%s' % name
 
     # Prepend 'r-' to R package names, by convention.
-    if guesser.build_system == 'r':
+    if guesser.build_system == 'R':
         name = 'r-%s' % name
 
     # Create a directory for the new package.
@@ -349,8 +360,7 @@ def create(parser, args):
                 class_name=mod_to_class(name),
                 url=url,
                 versions=make_version_calls(ver_hash_tuples),
-                configure=guesser.configure,
-                build=guesser.build,
+                extends=guesser.extends,
                 install=guesser.install))
 
     # If everything checks out, go ahead and edit.
