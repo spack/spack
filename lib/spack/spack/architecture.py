@@ -384,7 +384,6 @@ class Arch(object):
             target = self.target.name
         else:
             target = self.target
-        print (platform, platform_os, target)
         return (platform, platform_os, target)
 
     def to_dict(self):
@@ -421,19 +420,10 @@ def _operating_system_from_dict(os_name, platform=None):
 
 def _platform_from_dict(platform_name):
     """ Constructs a platform from a dictionary. """
-    platform_path = spack.platform_path
-    mod_string = "spack.platforms"
-
-    for p in list_modules(platform_path):
-        if platform_name == p:
-            mod_name = mod_string + platform_name
-            path = join_path(platform_path, platform_name) + ".py"
-            mod = imp.load_source(mod_name, path)
-            platform_class = mod_to_class(platform_name)
-            cls = getattr(mod, platform_class)
-            platform = cls()
-            return platform
-    return None
+    platform_list = all_platforms()
+    for p in platform_list:
+        if platform_name.replace("_", "").lower() == p.__name__.lower():
+            return p()
 
 
 def arch_from_dict(d):
