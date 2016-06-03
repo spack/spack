@@ -30,9 +30,13 @@ class Dealii(Package):
     """C++ software library providing well-documented tools to build finite
     element codes for a broad variety of PDEs."""
     homepage = "https://www.dealii.org"
-    url      = "https://github.com/dealii/dealii/releases/download/v8.4.0/dealii-8.4.0.tar.gz"
+    url      = "https://github.com/dealii/dealii/releases/download/v8.4.1/dealii-8.4.1.tar.gz"
 
+    version('8.4.1', 'efbaf16f9ad59cfccad62302f36c3c1d')
     version('8.4.0', 'ac5dbf676096ff61e092ce98c80c2b00')
+    version('8.3.0', 'fc6cdcb16309ef4bea338a4f014de6fa')
+    version('8.2.1', '71c728dbec14f371297cd405776ccf08')
+    version('8.1.0', 'aa8fadc2ce5eb674f44f997461bf668d')
     version('dev', git='https://github.com/dealii/dealii.git')
 
     variant('mpi',      default=True,  description='Compile with MPI')
