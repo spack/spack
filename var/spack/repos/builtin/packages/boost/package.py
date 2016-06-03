@@ -25,7 +25,6 @@
 from spack import *
 import spack
 import sys
-
 import os
 
 
@@ -91,6 +90,7 @@ class Boost(Package):
                                 'system',
                                 'test',
                                 'thread',
+                                'timer',
                                 'wave'])
 
     # mpi/python are not installed by default because they pull in many
