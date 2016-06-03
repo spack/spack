@@ -214,9 +214,10 @@ class Database(object):
 
         # Add dependencies from other records in the install DB to
         # form a full spec.
-        for dep_hash in spec_dict[spec.name]['dependencies'].values():
-            child = self._read_spec_from_yaml(dep_hash, installs, hash_key)
-            spec._add_dependency(child)
+        if 'dependencies' in spec_dict[spec.name]:
+            for dep_hash in spec_dict[spec.name]['dependencies'].values():
+                child = self._read_spec_from_yaml(dep_hash, installs, hash_key)
+                spec._add_dependency(child)
 
         # Specs from the database need to be marked concrete because
         # they represent actual installations.
@@ -289,7 +290,8 @@ class Database(object):
             except Exception as e:
                 tty.warn("Invalid database reecord:",
                          "file:  %s" % self._index_path,
-                         "hash:  %s" % hash_key, "cause: %s" % str(e))
+                         "hash:  %s" % hash_key,
+                         "cause: %s: %s" % (type(e).__name__, str(e)))
                 raise
 
         self._data = data
