@@ -170,7 +170,7 @@ class ConfigureGuesser(object):
             'R':         """\
         # FIXME: Add logic to build and install here.
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),""" +
-            " self.stage.archive_file)""",
+            " self.stage.source_path)""",
 
             'unknown':   """\
         # FIXME: Unknown build system
