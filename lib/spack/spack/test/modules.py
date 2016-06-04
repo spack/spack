@@ -103,6 +103,7 @@ configuration_conflicts = {
 
 
 class HelperFunctionsTests(unittest.TestCase):
+
     def test_update_dictionary_extending_list(self):
         target = {
             'foo': {
@@ -139,6 +140,7 @@ class HelperFunctionsTests(unittest.TestCase):
 
 
 class TclTests(MockPackagesTest):
+
     def setUp(self):
         super(TclTests, self).setUp()
         self.configuration_obj = spack.modules.CONFIGURATION
@@ -163,7 +165,8 @@ class TclTests(MockPackagesTest):
         spec = spack.spec.Spec('mpich@3.0.4 arch=x86-linux')
         content = self.get_modulefile_content(spec)
         self.assertTrue('module-whatis "mpich @3.0.4"' in content)
-        self.assertRaises(TypeError, spack.modules.dependencies, spec, 'non-existing-tag')
+        self.assertRaises(TypeError, spack.modules.dependencies,
+                          spec, 'non-existing-tag')
 
     def test_autoload(self):
         spack.modules.CONFIGURATION = configuration_autoload_direct
