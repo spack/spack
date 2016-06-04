@@ -135,6 +135,17 @@ configuration_wrong_conflicts = {
     }
 }
 
+configuration_suffix = {
+    'enable': ['tcl'],
+    'tcl': {
+        'mpileaks': {
+            'suffixes': {
+                '+debug': 'foo',
+                '~debug': 'bar'
+            }
+        }
+    }
+}
 
 class HelperFunctionsTests(unittest.TestCase):
 
@@ -281,6 +292,20 @@ class TclTests(MockPackagesTest):
 
         spack.modules.CONFIGURATION = configuration_wrong_conflicts
         self.assertRaises(SystemExit, self.get_modulefile_content, spec)
+
+
+    def test_suffixes(self):
+        spack.modules.CONFIGURATION = configuration_suffix
+        spec = spack.spec.Spec('mpileaks+debug arch=x86-linux')
+        spec.concretize()
+        generator = spack.modules.TclModule(spec)
+        self.assertTrue('foo' in generator.use_name)
+
+        spec = spack.spec.Spec('mpileaks~debug arch=x86-linux')
+        spec.concretize()
+        generator = spack.modules.TclModule(spec)
+        self.assertTrue('bar' in generator.use_name)
+
 
 configuration_dotkit = {
     'enable': ['dotkit'],
