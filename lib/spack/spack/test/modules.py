@@ -211,6 +211,9 @@ class TclTests(MockPackagesTest):
         print('\n'.join(content))
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 1)
         self.assertEqual(len([x for x in content if 'module load ' in x]), 1)
+        spec = spack.spec.Spec('callpath arch=x86-linux')
+        # Returns a StringIO instead of a string as no module file was written
+        self.assertRaises(AttributeError, self.get_modulefile_content, spec)
 
     def test_conflicts(self):
         spack.modules.CONFIGURATION = configuration_conflicts
