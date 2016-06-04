@@ -101,6 +101,7 @@ configuration_conflicts = {
     }
 }
 
+
 class HelperFunctionsTests(unittest.TestCase):
     def test_update_dictionary_extending_list(self):
         target = {
@@ -127,6 +128,14 @@ class HelperFunctionsTests(unittest.TestCase):
         self.assertTrue(len(target['foo']) == 4)
         self.assertTrue(len(target['bar']) == 4)
         self.assertEqual(target['baz'], 'foobaz')
+
+    def test_inspect_path(self):
+        env = spack.modules.inspect_path('/usr')
+        names = [item.name for item in env]
+        self.assertTrue('PATH' in names)
+        self.assertTrue('LIBRARY_PATH' in names)
+        self.assertTrue('LD_LIBRARY_PATH' in names)
+        self.assertTrue('CPATH' in names)
 
 
 class TclTests(MockPackagesTest):
