@@ -163,6 +163,7 @@ class TclTests(MockPackagesTest):
         spec = spack.spec.Spec('mpich@3.0.4 arch=x86-linux')
         content = self.get_modulefile_content(spec)
         self.assertTrue('module-whatis "mpich @3.0.4"' in content)
+        self.assertRaises(TypeError, spack.modules.dependencies, spec, 'non-existing-tag')
 
     def test_autoload(self):
         spack.modules.CONFIGURATION = configuration_autoload_direct
