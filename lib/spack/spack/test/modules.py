@@ -147,6 +147,7 @@ configuration_suffix = {
     }
 }
 
+
 class HelperFunctionsTests(unittest.TestCase):
 
     def test_update_dictionary_extending_list(self):
@@ -292,7 +293,6 @@ class TclTests(MockPackagesTest):
 
         spack.modules.CONFIGURATION = configuration_wrong_conflicts
         self.assertRaises(SystemExit, self.get_modulefile_content, spec)
-
 
     def test_suffixes(self):
         spack.modules.CONFIGURATION = configuration_suffix
