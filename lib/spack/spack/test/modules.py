@@ -68,6 +68,24 @@ configuration_autoload_all = {
     }
 }
 
+configuration_prerequisites_direct = {
+    'enable': ['tcl'],
+    'tcl': {
+        'all': {
+            'prerequisites': 'direct'
+        }
+    }
+}
+
+configuration_prerequisites_all = {
+    'enable': ['tcl'],
+    'tcl': {
+        'all': {
+            'prerequisites': 'all'
+        }
+    }
+}
+
 configuration_alter_environment = {
     'enable': ['tcl'],
     'tcl': {
@@ -186,6 +204,17 @@ class TclTests(MockPackagesTest):
         content = self.get_modulefile_content(spec)
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 5)
         self.assertEqual(len([x for x in content if 'module load ' in x]), 5)
+
+    def test_prerequisites(self):
+        spack.modules.CONFIGURATION = configuration_prerequisites_direct
+        spec = spack.spec.Spec('mpileaks arch=x86-linux')
+        content = self.get_modulefile_content(spec)
+        self.assertEqual(len([x for x in content if 'prereq' in x]), 2)
+
+        spack.modules.CONFIGURATION = configuration_prerequisites_all
+        spec = spack.spec.Spec('mpileaks arch=x86-linux')
+        content = self.get_modulefile_content(spec)
+        self.assertEqual(len([x for x in content if 'prereq' in x]), 5)
 
     def test_alter_environment(self):
         spack.modules.CONFIGURATION = configuration_alter_environment
