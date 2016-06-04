@@ -125,6 +125,16 @@ configuration_conflicts = {
     }
 }
 
+configuration_wrong_conflicts = {
+    'enable': ['tcl'],
+    'tcl': {
+        'naming_scheme': '{name}/{version}-{compiler.name}',
+        'all': {
+            'conflict': ['{name}/{compiler.name}']
+        }
+    }
+}
+
 
 class HelperFunctionsTests(unittest.TestCase):
 
@@ -268,3 +278,45 @@ class TclTests(MockPackagesTest):
             len([x for x in content if x == 'conflict mpileaks']), 1)
         self.assertEqual(
             len([x for x in content if x == 'conflict intel/14.0.1']), 1)
+
+        spack.modules.CONFIGURATION = configuration_wrong_conflicts
+        self.assertRaises(SystemExit, self.get_modulefile_content, spec)
+
+configuration_dotkit = {
+    'enable': ['dotkit'],
+    'dotkit': {
+        'all': {
+            'prerequisites': 'direct'
+        }
+    }
+}
+
+
+class DotkitTests(MockPackagesTest):
+
+    def setUp(self):
+        super(DotkitTests, self).setUp()
+        self.configuration_obj = spack.modules.CONFIGURATION
+        spack.modules.open = mock_open
+        # Make sure that a non-mocked configuration will trigger an error
+        spack.modules.CONFIGURATION = None
+
+    def tearDown(self):
+        del spack.modules.open
+        spack.modules.CONFIGURATION = self.configuration_obj
+        super(DotkitTests, self).tearDown()
+
+    def get_modulefile_content(self, spec):
+        spec.concretize()
+        generator = spack.modules.Dotkit(spec)
+        generator.write()
+        content = FILE_REGISTRY[generator.file_name].split('\n')
+        return content
+
+    def test_dotkit(self):
+        spack.modules.CONFIGURATION = configuration_dotkit
+        spec = spack.spec.Spec('mpileaks arch=x86-linux')
+        content = self.get_modulefile_content(spec)
+        print('\n'.join(content))
+        self.assertTrue('#c spack' in content)
+        self.assertTrue('#d mpileaks @2.3' in content)
