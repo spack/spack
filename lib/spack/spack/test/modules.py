@@ -75,8 +75,13 @@ configuration_alter_environment = {
             'filter': {'environment_blacklist': ['CMAKE_PREFIX_PATH']}
         },
         'arch=x86-linux': {
-            'environment': {'set': {'FOO': 'foo'},
-                            'unset': ['BAR']}
+            'environment': {
+                'set': {'FOO': 'foo'},
+                'unset': ['BAR']
+            }
+        },
+        'arch=x64-linux': {
+            'load': ['foo/bar']
         }
     }
 }
@@ -203,6 +208,8 @@ class TclTests(MockPackagesTest):
         self.assertEqual(
             len([x for x in content if 'setenv FOO "foo"' in x]), 0)
         self.assertEqual(len([x for x in content if 'unsetenv BAR' in x]), 0)
+        self.assertEqual(len([x for x in content if 'is-loaded foo/bar' in x]), 1)
+        self.assertEqual(len([x for x in content if 'module load foo/bar' in x]), 1)
 
     def test_blacklist(self):
         spack.modules.CONFIGURATION = configuration_blacklist
