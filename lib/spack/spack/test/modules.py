@@ -84,7 +84,8 @@ configuration_alter_environment = {
 configuration_blacklist = {
     'enable': ['tcl'],
     'tcl': {
-        'blacklist': ['callpath'],
+        'whitelist': ['zmpi'],
+        'blacklist': ['callpath', 'mpi'],
         'all': {
             'autoload': 'direct'
         }
@@ -207,6 +208,7 @@ class TclTests(MockPackagesTest):
         spack.modules.CONFIGURATION = configuration_blacklist
         spec = spack.spec.Spec('mpileaks arch=x86-linux')
         content = self.get_modulefile_content(spec)
+        print('\n'.join(content))
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 1)
         self.assertEqual(len([x for x in content if 'module load ' in x]), 1)
 
