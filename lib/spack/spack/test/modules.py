@@ -27,6 +27,7 @@ from contextlib import contextmanager
 
 import StringIO
 import spack.modules
+import unittest
 from spack.test.mock_packages_test import MockPackagesTest
 
 FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
@@ -99,6 +100,33 @@ configuration_conflicts = {
         }
     }
 }
+
+class HelperFunctionsTests(unittest.TestCase):
+    def test_update_dictionary_extending_list(self):
+        target = {
+            'foo': {
+                'a': 1,
+                'b': 2,
+                'd': 4
+            },
+            'bar': [1, 2, 4],
+            'baz': 'foobar'
+        }
+        update = {
+            'foo': {
+                'c': 3,
+            },
+            'bar': [3],
+            'baz': 'foobaz',
+            'newkey': {
+                'd': 4
+            }
+        }
+        spack.modules.update_dictionary_extending_lists(target, update)
+        self.assertTrue(len(target) == 4)
+        self.assertTrue(len(target['foo']) == 4)
+        self.assertTrue(len(target['bar']) == 4)
+        self.assertEqual(target['baz'], 'foobaz')
 
 
 class TclTests(MockPackagesTest):
