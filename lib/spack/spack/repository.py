@@ -652,6 +652,7 @@ class Repo(object):
                 self._lock.release_read()
 
         else:
+            tmp = self.index_file + '.tmp'
             self._lock.acquire_write()
             try:
                 if index_existed:
@@ -666,7 +667,6 @@ class Repo(object):
                     self._provider_index.update(namespaced_name)
 
 
-                tmp = self.index_file + '.tmp'
                 with open(tmp, 'w') as f:
                     self._provider_index.to_yaml(f)
                 os.rename(tmp, self.index_file)
