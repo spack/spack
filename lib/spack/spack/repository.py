@@ -42,7 +42,7 @@ from llnl.util.filesystem import *
 import spack.error
 import spack.config
 import spack.spec
-from spack.virtual import ProviderIndex
+from spack.provider_index import ProviderIndex
 from spack.util.naming import *
 
 #

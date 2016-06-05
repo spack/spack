@@ -32,6 +32,8 @@ from llnl.util.tty.colify import colify
 from spack.test.tally_plugin import Tally
 """Names of tests to be included in Spack's test suite"""
 
+# All the tests Spack knows about.
+# Keep these one per line so that it's easy to see changes in diffs.
 test_names = [
     'architecture',
     'build_system_guess',
@@ -74,10 +76,9 @@ test_names = [
     'url_parse',
     'url_substitution',
     'versions',
-    'virtual',
+    'provider_index',
     'yaml',
 ]
-
 
 def list_tests():
     """Return names of all tests that can be run for Spack."""

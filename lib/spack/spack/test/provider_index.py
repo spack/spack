@@ -26,15 +26,15 @@ from StringIO import StringIO
 import unittest
 
 import spack
-from spack.virtual import ProviderIndex
+from spack.provider_index import ProviderIndex
 
 
-class VirtualTest(unittest.TestCase):
+class ProviderIndexTest(unittest.TestCase):
 
     def test_write_and_read(self):
         p = ProviderIndex(spack.repo.all_package_names())
 
-        ostream = StringIO ()
+        ostream = StringIO()
         p.to_yaml(ostream)
 
         istream = StringIO(ostream.getvalue())

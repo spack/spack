@@ -102,23 +102,26 @@ import sys
 from StringIO import StringIO
 from operator import attrgetter
 
+import yaml
+from yaml.error import MarkedYAMLError
+
 import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
+from llnl.util.lang import *
+from llnl.util.tty.color import *
+
 import spack
 import spack.architecture
 import spack.compilers as compilers
 import spack.error
 import spack.parse
-import yaml
-from llnl.util.filesystem import join_path
-from llnl.util.lang import *
-from llnl.util.tty.color import *
 from spack.build_environment import get_path_from_module, load_module
 from spack.util.naming import mod_to_class
 from spack.util.prefix import Prefix
 from spack.util.string import *
 from spack.version import *
-from spack.virtual import ProviderIndex
-from yaml.error import MarkedYAMLError
+from spack.provider_index import ProviderIndex
+
 
 # Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
