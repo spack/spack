@@ -342,6 +342,7 @@ will find every installed package with a 'debug' compile-time option enabled.
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
 
 
+
 Compiler configuration
 -----------------------------------
 
@@ -1319,6 +1320,120 @@ regenerate all module and dotkit files from scratch:
 
 
 .. _extensions:
+
+Filesystem Views
+-------------------------------
+
+.. Maybe this is not the right location for this documentation.
+
+The Spack installation area allows for many package installation trees
+to coexist and gives the user choices as to what versions and variants
+of packages to use.  To use them, the user must rely on a way to
+aggregate a subset of those packages.  The section on Environment
+Modules gives one good way to do that which relies on setting various
+environment variables.  An alternative way to aggregate is through
+**filesystem views**.
+
+A filesystem view is a single directory tree which is the union of the
+directory hierarchies of the individual package installation trees
+that have been included.  The files of the view's installed packages
+are brought into the view by symbolic or hard links back to their
+location in the original Spack installation area.  As the view is
+formed, any clashes due to a file having the exact same path in its
+package installation tree are handled in a first-come-first-served
+basis and a warning is printed.  Packages and their dependencies can
+be both added and removed.  During removal, empty directories will be
+purged.  These operations can be limited to pertain to just the
+packages listed by the user or to exclude specific dependencies and
+they allow for software installed outside of Spack to coexist inside
+the filesystem view tree.
+
+By its nature, a filesystem view represents a particular choice of one
+set of packages among all the versions and variants that are available
+in the Spack installation area.  It is thus equivalent to the
+directory hiearchy that might exist under ``/usr/local``.  While this
+limits a view to including only one version/variant of any package, it
+provides the benefits of having a simpler and traditional layout which
+may be used without any particular knowledge that its packages were
+built by Spack.
+
+Views can be used for a variety of purposes including:
+
+- A central installation in a traditional layout, eg ``/usr/local`` maintained over time by the sysadmin.
+- A self-contained installation area which may for the basis of a top-level atomic versioning scheme, eg ``/opt/pro`` vs ``/opt/dev``.
+- Providing an atomic and monolithic binary distribution, eg for delivery as a single tarball.
+- Producing ephemeral testing or developing environments.
+
+Using Filesystem Views
+~~~~~~~~~~~~~~~~~~~~~~
+
+A filesystem view is created and packages are linked in by the ``spack
+view`` command's ``symlink`` and ``hardlink`` sub-commands.  The
+``spack view remove`` command can be used to unlink some or all of the
+filesystem view.
+
+The following example creates a filesystem view based
+on an installed ``cmake`` package and then removes from the view the
+files in the ``cmake`` package while retaining its dependencies.
+
+.. code-block:: sh
+
+    
+    $ spack view -v symlink myview cmake@3.5.2
+    ==> Linking package: "ncurses"
+    ==> Linking package: "zlib"
+    ==> Linking package: "openssl"
+    ==> Linking package: "cmake"
+    
+    $ ls myview/
+    bin  doc  etc  include  lib  share
+
+    $ ls myview/bin/
+    captoinfo  clear  cpack     ctest    infotocap        openssl  tabs  toe   tset
+    ccmake     cmake  c_rehash  infocmp  ncurses6-config  reset    tic   tput
+    
+    $ spack view -v -d false rm myview cmake@3.5.2
+    ==> Removing package: "cmake"
+    
+    $ ls myview/bin/
+    captoinfo  c_rehash  infotocap        openssl  tabs  toe   tset
+    clear      infocmp   ncurses6-config  reset    tic   tput
+
+
+Limitations of Filesystem Views
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This section describes some limitations that should be considered in
+using filesystems views.  
+
+Filesystem views are merely organizational.  The binary executable
+programs, shared libraries and other build products found in a view
+are mere links into the "real" Spack installation area.  If a view is
+built with symbolic links it requires the Spack-installed package to
+be kept in place.  Building a view with hardlinks removes this
+requirement but any internal paths (eg, rpath or ``#!`` interpreter
+specifications) will still require the Spack-installed package files
+to be in place.
+
+.. FIXME: reference the relocation work of Hegner and Gartung.
+
+As described above, when a view is built only a single instance of a
+file may exist in the unified filesystem tree.  If more than one
+package provides a file at the same path (relative to its own root)
+then it is the first package added to the view that "wins".  A warning
+is printed and it is up to the user to determine if the conflict
+matters.
+
+It is up to the user to assure a consistent view is produced.  In
+particular if the user excludes packages, limits the following of
+dependencies or removes packages the view may become inconsistent.  In
+particular, if two packages require the same sub-tree of dependencies,
+removing one package (recursively) will remove its dependencies and
+leave the other package broken.
+
+
+
+
 
 Extensions & Python support
 ------------------------------------
