@@ -50,9 +50,10 @@ class ProviderIndex(object):
        matching implementation of MPI.
     """
     def __init__(self, specs=None, **kwargs):
-        # TODO: come up with another name for this.  This "restricts" values to
-        # the verbatim impu specs (i.e., it doesn't pre-apply package's constraints, and
-        # keeps things as broad as possible, so it's really the wrong name)
+        # TODO: come up with another name for this.  This "restricts"
+        # values to the verbatim impu specs (i.e., it doesn't
+        # pre-apply package's constraints, and keeps things as broad
+        # as possible, so it's really the wrong name)
         if specs is None: specs = []
         self.restrict = kwargs.setdefault('restrict', False)
 
@@ -229,16 +230,24 @@ class ProviderIndex(object):
 
     def remove_provider(self, pkg_name):
         """Remove a provider from the ProviderIndex."""
-        for pkg in self.providers:
-            pkg_dict = self.providers[pkg]
+        empty_pkg_dict = []
+        for pkg, pkg_dict in self.providers.items():
+            empty_pset = []
             for provided, pset in pkg_dict.items():
-                for provider in pset:
-                    if provider.fullname == pkg_name:
-                        pset.remove(provider)
+                same_name = set(p for p in pset if p.fullname == pkg_name)
+                pset.difference_update(same_name)
+
                 if not pset:
-                    del pkg_dict[provided]
+                    empty_pset.append(provided)
+
+            for provided in empty_pset:
+                del pkg_dict[provided]
+
             if not pkg_dict:
-                del self.providers[pkg]
+                empty_pkg_dict.append(pkg)
+
+        for pkg in empty_pkg_dict:
+            del self.providers[pkg]
 
 
     def copy(self):
