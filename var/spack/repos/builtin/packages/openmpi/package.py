@@ -81,9 +81,14 @@ class Openmpi(Package):
 
     # TODO : variant support for alps, loadleveler  is missing
     variant('tm', default=False, description='Build TM (Torque, PBSPro, and compatible) support')
+    # TODO : this is a hack, to be removed when variant will support string
+    variant('tm_custom', default=False,
+            description='tm_custom void module used for PBS install path')
     variant('slurm', default=False, description='Build SLURM scheduler component')
 
     variant('sqlite3', default=False, description='Build sqlite3 support')
+    variant('hwloc', default=True, description='Use hwloc')
+    variant('dlopen', default=True, description='Use dlopen')
 
     variant('vt', default=True, description='Build support for contributed package vt')
 
@@ -92,12 +97,12 @@ class Openmpi(Package):
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
 
-    depends_on('hwloc')
+    depends_on('hwloc', when='+hwloc')
     depends_on('sqlite', when='+sqlite3')
+    depends_on('tm', when='+tm_custom')
 
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)
-
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('OMPI_CC', spack_cc)
@@ -113,7 +118,7 @@ class Openmpi(Package):
 
     @property
     def verbs(self):
-        # Up through version 1.6, this option was previously named --with-openib
+        # Up through version 1.6, this option was named --with-openib
         if self.spec.satisfies('@:1.6'):
             return 'openib'
         # In version 1.7, it was renamed to be --with-verbs
@@ -122,13 +127,14 @@ class Openmpi(Package):
 
     def install(self, spec, prefix):
         config_args = ["--prefix=%s" % prefix,
-                       "--with-hwloc=%s" % spec['hwloc'].prefix,
+                       "--with-hwloc=%s" % spec['hwloc'].prefix if '+hwloc' in spec else '',
                        "--enable-shared",
                        "--enable-static"]
         # Variant based arguments
         config_args.extend([
             # Schedulers
-            '--with-tm' if '+tm' in spec else '--without-tm',
+            '--with-tm' if '+tm' in spec else 
+                '--with-tm=%s' % spec['tm'].prefix if '+tm_custom' in spec else '--without-tm',
             '--with-slurm' if '+slurm' in spec else '--without-slurm',
             # Fabrics
             '--with-psm' if '+psm' in spec else '--without-psm',
@@ -139,6 +145,8 @@ class Openmpi(Package):
             '--with-pmi' if '+pmi' in spec else '--without-pmi',
             '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
             '--enable-vt' if '+vt' in spec else '--disable-vt'
+            "--with-hwloc=%s" % spec['hwloc'].prefix if '+hwloc' in spec else '', 
+            '--disable-dlopen' if not '+dlopen' in spec else ''
         ])
         if '+verbs' in spec:
             path = _verbs_dir()
