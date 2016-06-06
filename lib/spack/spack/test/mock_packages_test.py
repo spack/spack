@@ -40,7 +40,6 @@ linux_os_name = 'debian'
 linux_os_version = '6'
 
 if platform.name == 'linux':
-    global linux_os_name, linux_os_version
     linux_os = platform.operating_system("default_os")
     linux_os_name = linux_os.name
     linux_os_version = linux_os.version
