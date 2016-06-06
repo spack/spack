@@ -280,10 +280,12 @@ class DefaultConcretizer(object):
         # Only use a matching compiler if it is of the proper style
         # Takes advantage of the proper logic already existing in compiler_for_spec
         # Should think whether this can be more efficient
-        def _proper_compiler_style(cspec, architecture):
-            compilers = spack.compilers.compilers_for_spec(cspec)
-            return filter(lambda c: c.operating_system == 
-                                    architecture.platform_os, compilers)
+        def _proper_compiler_style(cspec, arch):
+            platform = arch.platform
+            compilers = spack.compilers.compilers_for_spec(cspec,
+                                                           platform=platform)
+            return filter(lambda c: c.operating_system ==
+                                    arch.platform_os, compilers)
             #return compilers
 
 
@@ -368,7 +370,7 @@ class DefaultConcretizer(object):
         # Include the compiler flag defaults from the config files
         # This ensures that spack will detect conflicts that stem from a change
         # in default compiler flags.
-        compiler = spack.compilers.compiler_for_spec(spec.compiler, spec.architecture.platform_os)
+        compiler = spack.compilers.compiler_for_spec(spec.compiler, spec.architecture)
         for flag in compiler.flags:
             if flag not in spec.compiler_flags:
                 spec.compiler_flags[flag] = compiler.flags[flag]
