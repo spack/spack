@@ -61,13 +61,7 @@ def mirror_archive_filename(spec, fetcher):
         # Otherwise we'll make a .tar.gz ourselves
         ext = 'tar.gz'
 
-    tokens = [spec.package.name, spec.version]
-    digests = spec.package.digests
-    if digests:
-        # If a package has multiple digests, any one is sufficient to identify it
-        digestType, digest = sorted(digests.iteritems())[0]
-        tokens.extend([digestType, digest])
-    filename = '-'.join(str(t) for t in tokens)
+    filename = "%s-%s" % (spec.package.name, spec.version)
     if ext:
         filename += ".%s" % ext
     return filename

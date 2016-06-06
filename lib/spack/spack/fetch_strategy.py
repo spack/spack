@@ -343,13 +343,32 @@ class URLFetchStrategy(FetchStrategy):
 
     def __repr__(self):
         url = self.url if self.url else "no url"
-        return "URLFetchStrategy<%s>" % url
+        return "%s<%s>" % (self.__class__.__name__, url)
 
     def __str__(self):
         if self.url:
             return self.url
         else:
             return "[no url]"
+
+
+class URLMirrorFetchStrategy(URLFetchStrategy):
+    """The resource associated with a URL at a mirror may be out of date.
+    """
+    def __init__(self, *args, **kwargs):
+        super(URLMirrorFetchStrategy, self).__init__(*args, **kwargs)
+    
+    @_needs_stage
+    def fetch(self):
+        super(URLMirrorFetchStrategy, self).fetch()
+        if self.digest:
+            try:
+                self.check()
+            except ChecksumError:
+                # Future fetchers will assume they don't need to download if the
+                # file remains
+                os.remove(self.archive_file)
+                raise
 
 
 class VCSFetchStrategy(FetchStrategy):
@@ -816,7 +835,7 @@ class FsCache(object):
         
     def fetcher(self, targetPath, digest):
         url = "file://" + join_path(self.root, targetPath)
-        return URLFetchStrategy(url, digest)
+        return URLMirrorFetchStrategy(url, digest)
 
 
 class FetchError(spack.error.SpackError):
