@@ -190,18 +190,19 @@ class ConfigureGuesser(object):
         ]
 
         # Peek inside the compressed file.
-        output = ''
-        if stage.archive_file.endswith(('.tar', '.tar.gz', '.tar.bz2',
-                                        '.tgz', '.tbz2')):
-            tar    = which('tar')
-            output = tar('--exclude=*/*/*', '-tf',
+        if stage.archive_file.endswith('.zip'):
+            try:
+                unzip  = which('unzip')
+                output = unzip('-l', stage.archive_file, output=str)
+            except:
+                output = ''
+        else:
+            try:
+                tar    = which('tar')
+                output = tar('--exclude=*/*/*', '-tf',
                          stage.archive_file, output=str)
-        elif stage.archive_file.endswith('.gz'):
-            gunzip = which('gunzip')
-            output = gunzip('-l', stage.archive_file, output=str)
-        elif stage.archive_file.endswith('.zip'):
-            unzip  = which('unzip')
-            output = unzip('-l', stage.archive_file, output=str)
+            except:
+                output = ''
         lines = output.split('\n')
 
         # Determine the build system based on the files contained
