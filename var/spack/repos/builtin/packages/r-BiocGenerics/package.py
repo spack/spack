@@ -38,6 +38,19 @@ class RBiocgenerics(Package):
 
     extends('R')
 
+    def validate(self, spec):
+        """
+        Checks that the version of R is appropriate for the Bioconductor
+        version.
+        """
+        if spec.satisfies('@bioc-3.3'):
+            if not spec.satisfies('^R@3.3.0:3.3.9'):
+                raise InstallError('Must use R-3.3 for Bioconductor-3.3')
+        elif spec.satisfies('@bioc-3.2'):
+            if not spec.satisfies('^R@3.2.0:3.2.9'):
+                raise InstallError('Must use R-3.2 for Bioconductor-3.2')
+
     def install(self, spec, prefix):
+        self.validate(spec)
         R('CMD', 'INSTALL', '--library=%s' %
           self.module.r_lib_dir, '%s' % self.stage.source_path)
