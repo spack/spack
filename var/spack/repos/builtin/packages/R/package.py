@@ -115,7 +115,7 @@ class R(Package):
         """Called before R modules' install() methods. In most cases,
         extensions will only need to have one line:
             R('CMD', 'INSTALL', '--library=%s' % self.module.r_lib_dir, '%s' %
-            self.stage.archive_file)"""
+            self.stage.source_path)"""
         # R extension builds can have a global R executable function
         module.R = Executable(join_path(self.spec.prefix.bin, 'R'))
 
