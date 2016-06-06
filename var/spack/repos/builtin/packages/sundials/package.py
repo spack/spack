@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Sundials(Package):
@@ -30,14 +31,14 @@ class Sundials(Package):
     Solvers)"""
 
     homepage = "http://computation.llnl.gov/casc/sundials/"
-    url = "http://computation.llnl.gov/projects/sundials-suite-nonlinear-differential-algebraic-equation-solvers/download/sundials-2.6.2.tar.gz"
+    url      = "http://computation.llnl.gov/projects/sundials-suite-nonlinear-differential-algebraic-equation-solvers/download/sundials-2.6.2.tar.gz"
 
     version('2.6.2', '3deeb0ede9f514184c6bd83ecab77d95')
 
     variant('mpi',     default=True,  description='Enable MPI support')
     variant('lapack',  default=True,  description='Build with external BLAS/LAPACK libraries')
-    variant('klu',     default=True,  description='Build with SuiteSparse KLU libraries')
-    variant('superlu', default=True,  description='Build with SuperLU_MT libraries')
+    variant('klu',     default=False, description='Build with SuiteSparse KLU libraries')
+    variant('superlu', default=False, description='Build with SuperLU_MT libraries')
     variant('openmp',  default=False, description='Enable OpenMP support')
     variant('pthread', default=True,  description='Enable POSIX threads support')
 
@@ -49,10 +50,14 @@ class Sundials(Package):
     depends_on('superlu-mt+pthread', when='+superlu+pthread')
 
     def install(self, spec, prefix):
-        cmake_args = std_cmake_args
+        cmake_args = std_cmake_args[:]
         cmake_args.extend([
             '-DBUILD_SHARED_LIBS=ON',
-            '-DCMAKE_C_FLAGS=-fPIC'
+            '-DCMAKE_C_FLAGS=-fPIC',
+            '-DCMAKE_Fortran_FLAGS=-fPIC',
+            '-DEXAMPLES_ENABLE=ON',
+            '-DEXAMPLES_INSTALL=ON',
+            '-DFCMIX_ENABLE=ON'
         ])
 
         # MPI support
@@ -128,3 +133,41 @@ class Sundials(Package):
             make('install')
 
         install('LICENSE', prefix)
+
+        self.filter_compilers()
+
+    def filter_compilers(self):
+        """Run after install to tell the Makefiles to use
+        the compilers that Spack built the package with.
+
+        If this isn't done, they'll have CC, CPP, and F77 set to
+        Spack's generic cc and f77. We want them to be bound to
+        whatever compiler they were built with."""
+
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
+        dirname = os.path.join(self.prefix, 'examples')
+
+        cc_files = [
+            'arkode/C_serial/Makefile',  'arkode/C_parallel/Makefile',
+            'cvode/serial/Makefile',     'cvode/parallel/Makefile',
+            'cvodes/serial/Makefile',    'cvodes/parallel/Makefile',
+            'ida/serial/Makefile',       'ida/parallel/Makefile',
+            'idas/serial/Makefile',      'idas/parallel/Makefile',
+            'kinsol/serial/Makefile',    'kinsol/parallel/Makefile',
+            'nvector/serial/Makefile',   'nvector/parallel/Makefile',
+            'nvector/pthreads/Makefile'
+        ]
+
+        f77_files = [
+            'arkode/F77_serial/Makefile', 'cvode/fcmix_serial/Makefile',
+            'ida/fcmix_serial/Makefile',  'ida/fcmix_pthreads/Makefile',
+            'kinsol/fcmix_serial/Makefile'
+        ]
+
+        for filename in cc_files:
+            filter_file(os.environ['CC'], self.compiler.cc,
+                        os.path.join(dirname, filename), **kwargs)
+
+        for filename in f77_files:
+            filter_file(os.environ['F77'], self.compiler.f77,
+                        os.path.join(dirname, filename), **kwargs)

@@ -142,6 +142,7 @@ class Cantera(Package):
 
         if '+python' in spec:
             # Tests will always fail if Python dependencies aren't built
+            # In addition, 3 of the tests fail when run in parallel
             scons('test', parallel=False)
 
         scons('install')
