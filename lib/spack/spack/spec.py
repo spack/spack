@@ -1124,7 +1124,7 @@ class Spec(object):
 
         for s in self.traverse(root=False):
             if s.external_module:
-                compiler = spack.compilers.compiler_for_spec(s.compiler, s.architecture.platform_os)
+                compiler = spack.compilers.compiler_for_spec(s.compiler, s.architecture)
                 for mod in compiler.modules:
                     load_module(mod)
 
