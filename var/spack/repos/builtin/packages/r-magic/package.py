@@ -34,7 +34,7 @@ class RMagic(Package):
     homepage = "https://cran.r-project.org/"
     url = "https://cran.r-project.org/src/contrib/magic_1.5-6.tar.gz"
 
-    version('1.5-6', 'a68e5ced253b2196af842e1fc84fd029', expand=False)
+    version('1.5-6', 'a68e5ced253b2196af842e1fc84fd029')
 
     extends('R')
 
@@ -42,4 +42,4 @@ class RMagic(Package):
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library=%s' %
-          self.module.r_lib_dir, '%s' % self.stage.archive_file)
+          self.module.r_lib_dir, '%s' % self.stage.source_path)

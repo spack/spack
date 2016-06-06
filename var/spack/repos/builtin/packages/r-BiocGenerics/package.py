@@ -29,12 +29,15 @@ class RBiocgenerics(Package):
     """S4 generic functions needed by many Bioconductor packages."""
 
     homepage = 'https://bioconductor.org/packages/BiocGenerics/'
-    url = 'https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.18.0.tar.gz'
-
-    version('0.18.0', 'baaff00eb2c2b15396fed2f7f43e634c', expand=False)
+    version('bioc-3.3',
+            git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
+            branch='release-3.3')
+    version('bioc-3.2',
+            git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
+            branch='release-3.2')
 
     extends('R')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library=%s' %
-          self.module.r_lib_dir, '%s' % self.stage.archive_file)
+          self.module.r_lib_dir, '%s' % self.stage.source_path)

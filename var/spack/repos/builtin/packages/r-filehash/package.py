@@ -39,10 +39,10 @@ class RFilehash(Package):
     homepage = 'https://cran.r-project.org/'
     url = "https://cran.r-project.org/src/contrib/filehash_2.3.tar.gz"
 
-    version('2.3', '01fffafe09b148ccadc9814c103bdc2f', expand=False)
+    version('2.3', '01fffafe09b148ccadc9814c103bdc2f')
 
     extends('R')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library=%s' %
-          self.module.r_lib_dir, '%s' % self.stage.archive_file)
+          self.module.r_lib_dir, '%s' % self.stage.source_path)

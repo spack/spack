@@ -61,6 +61,7 @@ class R(Package):
     depends_on('icu')
     depends_on('glib')
     depends_on('zlib')
+    depends_on('bzip2')
     depends_on('libtiff')
     depends_on('jpeg')
     depends_on('cairo')
