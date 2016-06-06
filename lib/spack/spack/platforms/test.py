@@ -10,8 +10,8 @@ class Test(Platform):
     back_end    = 'x86_64'
     default     = 'x86_64'
     
-    back_os = 'CNL'
-    default_os = 'CNL'
+    back_os = 'CNL10'
+    default_os = 'CNL10'
 
     def __init__(self):
         super(Test, self).__init__('test')
