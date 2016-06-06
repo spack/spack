@@ -682,7 +682,7 @@ class Package(object):
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
         return spack.compilers.compiler_for_spec(self.spec.compiler, 
-                self.spec.architecture.platform_os)
+                self.spec.architecture)
 
     def url_version(self, version):
         """
