@@ -200,7 +200,7 @@ class ConfigureGuesser(object):
             try:
                 tar    = which('tar')
                 output = tar('--exclude=*/*/*', '-tf',
-                         stage.archive_file, output=str)
+                             stage.archive_file, output=str)
             except:
                 output = ''
         lines = output.split('\n')
