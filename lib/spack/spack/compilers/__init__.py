@@ -220,10 +220,11 @@ def find(compiler_spec, scope=None):
 
 
 @_auto_compiler_spec
-def compilers_for_spec(compiler_spec, scope=None):
+def compilers_for_spec(compiler_spec, scope=None, **kwargs):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
+    platform = kwargs.get("platform", None)
     config = all_compilers_config(scope)
 
     def get_compilers(cspec):
@@ -253,7 +254,7 @@ def compilers_for_spec(compiler_spec, scope=None):
                 mods = []
 
             if 'operating_system' in items:
-                operating_system = spack.architecture._operating_system_from_dict( items['operating_system'] )
+                operating_system = spack.architecture._operating_system_from_dict(items['operating_system'], platform)
             else:
                 operating_system = None
 
@@ -275,12 +276,13 @@ def compilers_for_spec(compiler_spec, scope=None):
 
 
 @_auto_compiler_spec
-def compiler_for_spec(compiler_spec, operating_system):
+def compiler_for_spec(compiler_spec, arch):
     """Get the compiler that satisfies compiler_spec.  compiler_spec must
        be concrete."""
+    operating_system = arch.platform_os
     assert(compiler_spec.concrete)
 
-    compilers = [c for c in compilers_for_spec(compiler_spec)
+    compilers = [c for c in compilers_for_spec(compiler_spec, platform=arch.platform)
                 if c.operating_system == operating_system]
     if len(compilers) < 1:
         raise NoCompilerForSpecError(compiler_spec, operating_system)
@@ -334,7 +336,7 @@ class NoCompilersError(spack.error.SpackError):
 
 class NoCompilerForSpecError(spack.error.SpackError):
     def __init__(self, compiler_spec, target):
-        super(NoCompilerForSpecError, self).__init__("No compilers for target %s satisfy spec %s" % (
+        super(NoCompilerForSpecError, self).__init__("No compilers for operating system %s satisfy spec %s" % (
                                                      target, compiler_spec))
 
 class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
