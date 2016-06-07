@@ -337,7 +337,7 @@ class Stage(object):
 
 
     def cache_local(self):
-        spack.cache.store(self.fetcher.archive, self.mirror_path)
+        spack.cache.store(self.fetcher, self.mirror_path)
 
 
     def expand_archive(self):

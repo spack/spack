@@ -828,10 +828,22 @@ class FsCache(object):
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
-    def store(self, copyCmd, relativeDst):
+    def store(self, fetcher, relativeDst):
+        unique = False
+        uidGroups = [['tag', 'commit'], ['digest'], ['revision']]
+        for grp in uidGroups:
+            try:
+                unique |= any(getattr(fetcher, x) for x in grp)
+            except AttributeError:
+                pass
+            if unique:
+                break
+        if not unique:
+            return
+
         dst = join_path(self.root, relativeDst)
         mkdirp(os.path.dirname(dst))
-        copyCmd(dst)
+        fetcher.archive(dst)
         
     def fetcher(self, targetPath, digest):
         url = "file://" + join_path(self.root, targetPath)
