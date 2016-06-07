@@ -16,7 +16,7 @@ There are two key parts of Spack:
       software according to a spec.
 
 Specs allow a user to describe a *particular* build in a way that a
-package author can understand.  Packages allow a the packager to
+package author can understand.  Packages allow the packager to
 encapsulate the build logic for different versions, compilers,
 options, platforms, and dependency combinations in one place.
 Essentially, a package translates a spec into build logic.
@@ -300,7 +300,7 @@ Package Names
 Packages are named after the directory containing ``package.py``.  So,
 ``libelf``'s ``package.py`` lives in a directory called ``libelf``.
 The ``package.py`` file defines a class called ``Libelf``, which
-extends Spack's ``Package`` class.  for example, here is
+extends Spack's ``Package`` class.  For example, here is
 ``$SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py``:
 
 .. code-block:: python
@@ -1936,7 +1936,7 @@ package supports additional variants like
 Message Parsing Interface (MPI)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 It is common for high performance computing software/packages to use ``MPI``.
-As a result of conretization, a given package can be built using different
+As a result of concretization, a given package can be built using different
 implementations of MPI such as ``Openmpi``, ``MPICH`` or ``IntelMPI``.
 In some scenarios to configure a package one have to provide it with appropriate MPI
 compiler wrappers such as ``mpicc``, ``mpic++``.
@@ -2270,19 +2270,10 @@ to execute shell commands:
 
 We've tried to make this a bit easier by providing callable wrapper
 objects for some shell commands.  By default, ``configure``,
-``cmake``, and ``make`` wrappers are are provided, so you can call
+``cmake``, and ``make`` wrappers are provided, so you can call
 them more naturally in your package files.
 
-If you need other commands, you can use ``which`` to get them:
-
-.. code-block:: python
-
-   sed = which('sed')
-   sed('s/foo/bar/', filename)
-
-The ``which`` function will search the ``PATH`` for the application.
-
-Callable wrappers also allow spack to provide some special features.
+Callable wrappers also allow Spack to provide some special features.
 For example, in Spack, ``make`` is parallel by default, and Spack
 figures out the number of cores on your machine and passes an
 appropriate value for ``-j<numjobs>`` when it calls ``make`` (see the
@@ -2292,6 +2283,24 @@ to the ``make`` wrapper to disable parallel make.  In the ``libelf``
 package, this allows us to avoid race conditions in the library's
 build system.
 
+Spack also provides an easy way to source shell scripts, allowing
+you to set environment variables in the current process. Simply run
+the ``source`` command and give it the name of your shell script.
+By default, ``source`` uses bash as its shell. If you need to source
+another scripting language, specify it through the ``shell`` argument:
+
+.. code-block:: python
+
+   source('sourceme.csh', shell='csh')
+
+If you need other commands, you can use ``which`` to get them:
+
+.. code-block:: python
+
+   sed = which('sed')
+   sed('s/foo/bar/', filename)
+
+The ``which`` function will search the ``PATH`` for the application.
 
 .. _sanity-checks:
 
@@ -2345,7 +2354,7 @@ Now, after ``install()`` runs, Spack will check whether
 ``$prefix/include/libelf.h`` exists and is a file, and whether
 ``$prefix/lib`` exists and is a directory.  If the checks fail, then
 the build will fail and the install prefix will be removed.  If they
-succeed, Spack considers the build succeeful and keeps the prefix in
+succeed, Spack considers the build successful and keeps the prefix in
 place.
 
 
