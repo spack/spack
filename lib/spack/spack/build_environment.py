@@ -384,6 +384,13 @@ def parent_class_modules(cls):
     return result
 
 
+def load_external_modules(pkg):
+    """ traverse the spec list and find any specs that have external modules.
+    """
+    for dep in list(pkg.spec.traverse()):
+        if dep.external_module:
+            load_module(dep.external_module)
+    
 def setup_package(pkg):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
@@ -407,7 +414,7 @@ def setup_package(pkg):
 
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env)
-
+    load_external_modules(pkg)
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
     for dspec in pkg.spec.traverse(order='post', root=False):
