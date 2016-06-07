@@ -195,6 +195,7 @@ class Platform(object):
             name = self.back_os
 
         return self.operating_sys.get(name, None)
+    
 
     @classmethod
     def detect(self):
@@ -333,6 +334,12 @@ class OperatingSystem(object):
 
         return list(compilers.values())
 
+    def to_dict(self):
+        d = {}
+        d['name'] = self.name
+        d['version'] = self.version
+        
+        return d
 
 @key_ordering
 class Arch(object):
@@ -410,7 +417,8 @@ def _operating_system_from_dict(os_name, platform=None):
     """
     if not platform:
         platform = sys_type()
-    if isinstance(os_name, spack.util.spack_yaml.syaml_dict):
+    if isinstance(os_name, spack.util.spack_yaml.syaml_dict) or \
+            isinstance(os_name, dict):
         name = os_name['name']
         version = os_name['version']
         return platform.operating_system(name+version)
