@@ -25,7 +25,6 @@
 from spack import *
 import os
 import sys
-import glob
 import subprocess
 
 
@@ -48,7 +47,6 @@ class Mumps(Package):
     variant('idx64', default=False, description='Use int64_t/integer*8 as default index type')
     variant('shared', default=True, description='Build shared libraries')
 
-
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
     depends_on('scotch + esmumps + mpi', when='+ptscotch')
     depends_on('metis@5:', when='+metis')
@@ -59,50 +57,63 @@ class Mumps(Package):
     depends_on('mpi', when='+mpi')
 
     patch('mumps-shared.patch', when='+shared')
-    
+
     # this function is not a patch function because in case scalapack
     # is needed it uses self.spec['scalapack'].fc_link set by the
     # setup_dependent_environment in scalapck. This happen after patch
     # end before install
     # def patch(self):
     def write_makefile_inc(self):
-        if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and '+mpi' not in self.spec:
-            raise RuntimeError('You cannot use the variants parmetis or ptscotch without mpi')
+        if (('+parmetis' in self.spec or
+             '+ptscotch' in self.spec)) and '+mpi' not in self.spec:
+            raise RuntimeError('You cannot use the variants parmetis or ptscotch without mpi')  # NOQA: E501
 
-        makefile_conf = ["LIBBLAS = -L%s -lblas" % self.spec['blas'].prefix.lib]
+        makefile_conf = [
+            "LIBBLAS = -L%s -lblas" % self.spec['blas'].prefix.lib
+        ]
 
         orderings = ['-Dpord']
 
         if '+ptscotch' in self.spec or '+scotch' in self.spec:
             join_lib = ' -l%s' % ('pt' if '+ptscotch' in self.spec else '')
-            makefile_conf.extend(
-                ["ISCOTCH = -I%s" % self.spec['scotch'].prefix.include,
-                 "LSCOTCH = -L%s %s%s" % (self.spec['scotch'].prefix.lib,
-                                          join_lib,
-                                          join_lib.join(['esmumps', 'scotch', 'scotcherr']))])
+            makefile_conf.extend([
+                "ISCOTCH = -I%s" % self.spec['scotch'].prefix.include,
+                "LSCOTCH = -L%s %s%s" % (self.spec['scotch'].prefix.lib,
+                                         join_lib,
+                                         join_lib.join(['esmumps',
+                                                        'scotch',
+                                                        'scotcherr']))
+            ])
             orderings.append('-Dscotch')
             if '+ptscotch' in self.spec:
                 orderings.append('-Dptscotch')
 
         if '+parmetis' in self.spec and '+metis' in self.spec:
-            libname = 'parmetis' if '+parmetis' in self.spec else 'metis'
-            makefile_conf.extend(
-                ["IMETIS = -I%s" % self.spec['parmetis'].prefix.include,
-                 "LMETIS = -L%s -l%s -L%s -l%s" % (self.spec['parmetis'].prefix.lib, 'parmetis',self.spec['metis'].prefix.lib, 'metis')])
+            makefile_conf.extend([
+                "IMETIS = -I%s" % self.spec['parmetis'].prefix.include,
+                "LMETIS = -L%s -l%s -L%s -l%s" % (
+                    self.spec['parmetis'].prefix.lib, 'parmetis',
+                    self.spec['metis'].prefix.lib, 'metis')
+            ])
 
             orderings.append('-Dparmetis')
         elif '+metis' in self.spec:
-            makefile_conf.extend(
-                ["IMETIS = -I%s" % self.spec['metis'].prefix.include,
-                 "LMETIS = -L%s -l%s" % (self.spec['metis'].prefix.lib, 'metis')])
+            makefile_conf.extend([
+                "IMETIS = -I%s" % self.spec['metis'].prefix.include,
+                "LMETIS = -L%s -l%s" % (self.spec['metis'].prefix.lib,
+                                        'metis')
+            ])
 
             orderings.append('-Dmetis')
 
         makefile_conf.append("ORDERINGSF = %s" % (' '.join(orderings)))
 
-        # when building shared libs need -fPIC, otherwise
-        # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1' can not be used when making a shared object; recompile with -fPIC
+        # when building shared libs need -fPIC, otherwise /usr/bin/ld:
+        # graph.o: relocation R_X86_64_32 against `.rodata.str1.1' can
+        # not be used when making a shared object; recompile with
+        # -fPIC
         fpic = '-fPIC' if '+shared' in self.spec else ''
+
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
         if '+idx64' in self.spec:
@@ -110,7 +121,7 @@ class Mumps(Package):
                 # the fortran compilation flags most probably are
                 # working only for intel and gnu compilers this is
                 # perhaps something the compiler should provide
-                ['OPTF    = %s -O  -DALLOW_NON_INIT %s' % (fpic,'-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8'),
+                ['OPTF    = %s -O  -DALLOW_NON_INIT %s' % (fpic, '-fdefault-integer-8' if self.compiler.name == "gcc" else '-i8'),  # NOQA: E501
                  'OPTL    = %s -O ' % fpic,
                  'OPTC    = %s -O -DINTSIZE64' % fpic])
         else:
@@ -118,7 +129,6 @@ class Mumps(Package):
                 ['OPTF    = %s -O  -DALLOW_NON_INIT' % fpic,
                  'OPTL    = %s -O ' % fpic,
                  'OPTC    = %s -O ' % fpic])
-
 
         if '+mpi' in self.spec:
             makefile_conf.extend(
@@ -143,11 +153,13 @@ class Mumps(Package):
             makefile_conf.append('SHLIBEXT = .%s' % dso_suffix)
             if sys.platform == 'darwin':
                 makefile_conf.append(
-                    'LDFLAGS = -dynamiclib -Wl,-install_name -Wl,{0}/$(notdir $@) {1}{0} -undefined dynamic_lookup'.format(prefix.lib, self.compiler.fc_rpath_arg)
+                    'LDFLAGS = -dynamiclib -Wl,-install_name -Wl,{0}/$(notdir $@) {1}{0} -undefined dynamic_lookup'.format(prefix.lib, self.compiler.fc_rpath_arg)  # NOQA: E501
                 )
             else:
                 makefile_conf.append(
-                    'LDFLAGS = -shared {1}{0}'.format(prefix.lib, self.compiler.fc_rpath_arg)
+                    'LDFLAGS = -shared {0}{1}'.format(
+                        self.compiler.fc_rpath_arg,
+                        prefix.lib)
                 )
 
         makefile_conf.extend([
@@ -156,8 +168,9 @@ class Mumps(Package):
             'RANLIB = ranlib'
         ])
 
-        makefile_inc_template = join_path(os.path.dirname(self.module.__file__),
-                                          'Makefile.inc')
+        makefile_inc_template = \
+            join_path(os.path.dirname(self.module.__file__),
+                      'Makefile.inc')
         with open(makefile_inc_template, "r") as fh:
             makefile_conf.extend(fh.read().split('\n'))
 
@@ -165,8 +178,6 @@ class Mumps(Package):
             with open("Makefile.inc", "w") as fh:
                 makefile_inc = '\n'.join(makefile_conf)
                 fh.write(makefile_inc)
-
-
 
     def install(self, spec, prefix):
         make_libs = []
@@ -191,15 +202,17 @@ class Mumps(Package):
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
 
-        if '~mpi' in spec:            
+        if '~mpi' in spec:
             install('libseq/libmpiseq.a', prefix.lib)
             if '+shared' in spec:
                 install('libseq/libmpiseq.{0}'.format(dso_suffix), prefix.lib)
             install('libseq/mpi.h', prefix.include)
             install('libseq/mpif.h', prefix.include)
 
-        # FIXME: extend the tests to mpirun -np 2 (or alike) when build with MPI
-        # FIXME: use something like numdiff to compare blessed output with the current
+        # FIXME: extend the tests to mpirun -np 2 (or alike) when
+        # build with MPI
+        # FIXME: use something like numdiff to compare blessed output
+        # with the current
         # TODO: test the installed mumps and not the one in stage
         for t in make_libs:
             make('{0}examples'.format(t))
