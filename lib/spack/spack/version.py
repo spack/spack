@@ -124,6 +124,17 @@ class Version(object):
         # last element of separators is ''
         self.separators = tuple(re.split(segment_regex, string)[1:-1])
 
+    @property
+    def dotted(self):
+        return '.'.join(str(x) for x in self.version)
+
+    @property
+    def underscored(self):
+        return '_'.join(str(x) for x in self.version)
+
+    @property
+    def dashed(self):
+        return '-'.join(str(x) for x in self.version)
 
     def up_to(self, index):
         """Return a version string up to the specified component, exclusive.

@@ -105,6 +105,9 @@ class Lua(Package):
         spack_env.set('LUA_PATH', ';'.join(lua_patterns), separator=';')
         spack_env.set('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
 
+        # Add LUA to PATH for dependent packages
+        spack_env.prepend_path('PATH', self.prefix.bin)
+
         # For run time environment set only the path for extension_spec and
         # prepend it to LUAPATH
         if extension_spec.package.extends(self.spec):
@@ -153,5 +156,4 @@ class Lua(Package):
         """
         # Lua extension builds can have lua and luarocks executable functions
         module.lua = Executable(join_path(self.spec.prefix.bin, 'lua'))
-        module.luarocks = Executable(join_path(self.spec.prefix.bin,
-                                               'luarocks'))
+        module.luarocks = Executable(join_path(self.spec.prefix.bin, 'luarocks'))
