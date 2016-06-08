@@ -24,6 +24,7 @@
 ##############################################################################
 
 from spack import *
+import re
 import shutil
 
 
@@ -162,9 +163,10 @@ int main(int argc, char **argv) {
   return 0;
 }
 """
+            version = re.sub(r"-patch.*", "", str(spec.version))
             expected = """\
 HDF5 version {version} {version}
-""".format(version=str(spec.version))
+""".format(version=version)
             with open("check.c", 'w') as f:
                 f.write(source)
             if '+mpi' in spec:
