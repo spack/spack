@@ -34,6 +34,8 @@ class Pcre(Package):
     version('8.36', 'b767bc9af0c20bc9c1fe403b0d41ad97')
     version('8.38', '00aabbfe56d5a48b270f999b508c5ad2')
 
+    patch("intel.patch")
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
