@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Pcre(Package):
     """The PCRE package contains Perl Compatible Regular Expression
        libraries. These are useful for implementing regular expression
