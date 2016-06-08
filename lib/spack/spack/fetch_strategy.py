@@ -352,15 +352,14 @@ class URLFetchStrategy(FetchStrategy):
             return "[no url]"
 
 
-class URLMirrorFetchStrategy(URLFetchStrategy):
-    """The resource associated with a URL at a mirror may be out of date.
-    """
+class CacheURLFetchStrategy(URLFetchStrategy):
+    """The resource associated with a cache URL may be out of date."""
     def __init__(self, *args, **kwargs):
-        super(URLMirrorFetchStrategy, self).__init__(*args, **kwargs)
+        super(CacheURLFetchStrategy, self).__init__(*args, **kwargs)
     
     @_needs_stage
     def fetch(self):
-        super(URLMirrorFetchStrategy, self).fetch()
+        super(CacheURLFetchStrategy, self).fetch()
         if self.digest:
             try:
                 self.check()
@@ -847,7 +846,7 @@ class FsCache(object):
         
     def fetcher(self, targetPath, digest):
         url = "file://" + join_path(self.root, targetPath)
-        return URLMirrorFetchStrategy(url, digest)
+        return CacheURLFetchStrategy(url, digest)
 
 
 class FetchError(spack.error.SpackError):
