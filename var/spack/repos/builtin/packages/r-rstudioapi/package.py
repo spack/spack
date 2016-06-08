@@ -37,5 +37,5 @@ class RRstudioapi(Package):
     extends('R')
 
     def install(self, spec, prefix):
-        R('CMD', 'INSTALL',
-          '--library={0}'.format(self.module.r_lib_dir), self.stage.source_path)
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)
