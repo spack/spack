@@ -34,7 +34,7 @@ class Lmod(Package):
     variable. Modulefiles for Library packages provide environment variables
     that specify where the library and header files can be found.
     """
-    homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
+    homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'  # NOQA: ignore=E501
     url = 'https://github.com/TACC/Lmod/archive/6.4.1.tar.gz'
 
     version('6.4.1', '7978ba777c8aa41a4d8c05fec5f780f4')
@@ -48,8 +48,10 @@ class Lmod(Package):
     parallel = False
 
     def setup_environment(self, spack_env, run_env):
-        stage_lua_path = join_path(self.stage.path, 'Lmod-{version}', 'src', '?.lua')
-        spack_env.append_path('LUA_PATH', stage_lua_path.format(version=self.version), separator=';')
+        stage_lua_path = join_path(
+            self.stage.path, 'Lmod-{version}', 'src', '?.lua')
+        spack_env.append_path('LUA_PATH', stage_lua_path.format(
+            version=self.version), separator=';')
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)

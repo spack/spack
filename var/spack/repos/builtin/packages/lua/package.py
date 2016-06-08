@@ -57,7 +57,7 @@ class Lua(Package):
         placement='luarocks')
 
     def install(self, spec, prefix):
-        if spec.satisfies("arch=darwin-i686") or spec.satisfies("arch=darwin-x86_64"):
+        if spec.satisfies("arch=darwin-i686") or spec.satisfies("arch=darwin-x86_64"):  # NOQA: ignore=E501
             target = 'macosx'
         else:
             target = 'linux'
@@ -156,4 +156,5 @@ class Lua(Package):
         """
         # Lua extension builds can have lua and luarocks executable functions
         module.lua = Executable(join_path(self.spec.prefix.bin, 'lua'))
-        module.luarocks = Executable(join_path(self.spec.prefix.bin, 'luarocks'))
+        module.luarocks = Executable(
+            join_path(self.spec.prefix.bin, 'luarocks'))

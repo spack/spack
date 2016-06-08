@@ -27,11 +27,13 @@ from spack import *
 
 class LuaLuafilesystem(Package):
     """
-    LuaFileSystem is a Lua library developed to complement the set of functions related to file
-    systems offered by the standard Lua distribution.
+    LuaFileSystem is a Lua library developed to complement the set of
+    functions related to file systems offered by the standard Lua distribution.
 
-    LuaFileSystem offers a portable way to access the underlying directory structure and file attributes. LuaFileSystem
-    is free software and uses the same license as Lua 5.1
+    LuaFileSystem offers a portable way to access the underlying directory
+    structure and file attributes.
+
+    LuaFileSystem is free software and uses the same license as Lua 5.1
     """
     homepage = 'http://keplerproject.github.io/luafilesystem'
     url = 'https://github.com/keplerproject/luafilesystem/archive/v_1_6_3.tar.gz'
@@ -41,6 +43,9 @@ class LuaLuafilesystem(Package):
     extends('lua')
 
     def install(self, spec, prefix):
-        version = self.spec.version
-        rockspec_format = join_path(self.stage.path, 'luafilesystem-v_{version.underscored}', 'rockspecs', 'luafilesystem-{version.dotted}-1.rockspec')
-        luarocks('--tree=' + prefix, 'install', rockspec_format.format(version=self.spec.version))
+        rockspec_fmt = join_path(self.stage.path,
+                                 'luafilesystem-v_{version.underscored}',
+                                 'rockspecs',
+                                 'luafilesystem-{version.dotted}-1.rockspec')
+        luarocks('--tree=' + prefix, 'install',
+                 rockspec_fmt.format(version=self.spec.version))

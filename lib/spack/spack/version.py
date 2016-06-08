@@ -43,15 +43,15 @@ be called on any of the types::
   intersection
   concrete
 """
-import os
-import sys
 import re
 from bisect import bisect_left
 from functools import wraps
+
 from functools_backport import total_ordering
 
 # Valid version characters
 VALID_VERSION = r'[A-Za-z0-9_.-]'
+
 
 def int_if_int(string):
     """Convert a string to int if possible.  Otherwise, return a string."""
@@ -62,10 +62,11 @@ def int_if_int(string):
 
 
 def coerce_versions(a, b):
-    """Convert both a and b to the 'greatest' type between them, in this order:
+    """
+    Convert both a and b to the 'greatest' type between them, in this order:
            Version < VersionRange < VersionList
-       This is used to simplify comparison operations below so that we're always
-       comparing things that are of the same type.
+    This is used to simplify comparison operations below so that we're always
+    comparing things that are of the same type.
     """
     order = (Version, VersionRange, VersionList)
     ta, tb = type(a), type(b)
@@ -105,6 +106,7 @@ def coerced(method):
 @total_ordering
 class Version(object):
     """Class to represent versions"""
+
     def __init__(self, string):
         string = str(string)
 
@@ -142,14 +144,11 @@ class Version(object):
         """
         return '.'.join(str(x) for x in self[:index])
 
-
     def lowest(self):
         return self
 
-
     def highest(self):
         return self
-
 
     @coerced
     def satisfies(self, other):
@@ -158,10 +157,9 @@ class Version(object):
            gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
            a suitable compiler.
         """
-        nself  = len(self.version)
+        nself = len(self.version)
         nother = len(other.version)
         return nother <= nself and self.version[:nother] == other.version
-
 
     def wildcard(self):
         """Create a regex that will match variants of this version string."""
@@ -192,27 +190,21 @@ class Version(object):
         wc += '(?:[a-z]|alpha|beta)?)?' * (len(segments) - 1)
         return wc
 
-
     def __iter__(self):
         return iter(self.version)
-
 
     def __getitem__(self, idx):
         return tuple(self.version[idx])
 
-
     def __repr__(self):
         return self.string
-
 
     def __str__(self):
         return self.string
 
-
     @property
     def concrete(self):
         return self
-
 
     @coerced
     def __lt__(self, other):
@@ -246,27 +238,22 @@ class Version(object):
         # If the common prefix is equal, the one with more segments is bigger.
         return len(self.version) < len(other.version)
 
-
     @coerced
     def __eq__(self, other):
         return (other is not None and
                 type(other) == Version and self.version == other.version)
 
-
     def __ne__(self, other):
         return not (self == other)
 
-
     def __hash__(self):
         return hash(self.version)
-
 
     @coerced
     def __contains__(self, other):
         if other is None:
             return False
         return other.version[:len(self.version)] == self.version
-
 
     def is_predecessor(self, other):
         """True if the other version is the immediate predecessor of this one.
@@ -280,15 +267,12 @@ class Version(object):
         ol = other.version[-1]
         return type(sl) == int and type(ol) == int and (ol - sl == 1)
 
-
     def is_successor(self, other):
         return other.is_predecessor(self)
-
 
     @coerced
     def overlaps(self, other):
         return self in other or other in self
-
 
     @coerced
     def union(self, other):
@@ -298,7 +282,6 @@ class Version(object):
             return other
         else:
             return VersionList([self, other])
-
 
     @coerced
     def intersection(self, other):
@@ -310,6 +293,7 @@ class Version(object):
 
 @total_ordering
 class VersionRange(object):
+
     def __init__(self, start, end):
         if isinstance(start, basestring):
             start = Version(start)
@@ -321,14 +305,11 @@ class VersionRange(object):
         if start and end and end < start:
             raise ValueError("Invalid Version range: %s" % self)
 
-
     def lowest(self):
         return self.start
 
-
     def highest(self):
         return self.end
-
 
     @coerced
     def __lt__(self, other):
@@ -342,11 +323,10 @@ class VersionRange(object):
 
         s, o = self, other
         if s.start != o.start:
-            return s.start is None or (o.start is not None and s.start < o.start)
+            return s.start is None or (o.start is not None and s.start < o.start)  # NOQA: ignore=E501
 
         return (s.end != o.end and
                 o.end is None or (s.end is not None and s.end < o.end))
-
 
     @coerced
     def __eq__(self, other):
@@ -354,15 +334,12 @@ class VersionRange(object):
                 type(other) == VersionRange and
                 self.start == other.start and self.end == other.end)
 
-
     def __ne__(self, other):
         return not (self == other)
-
 
     @property
     def concrete(self):
         return self.start if self.start == self.end else None
-
 
     @coerced
     def __contains__(self, other):
@@ -384,57 +361,55 @@ class VersionRange(object):
                         other.end in self.end)))
         return in_upper
 
-
     @coerced
     def satisfies(self, other):
-        """A VersionRange satisfies another if some version in this range
-           would satisfy some version in the other range.  To do this it must
-           either:
-             a) Overlap with the other range
-             b) The start of this range satisfies the end of the other range.
+        """
+        A VersionRange satisfies another if some version in this range
+        would satisfy some version in the other range.  To do this it must
+        either:
+          a) Overlap with the other range
+          b) The start of this range satisfies the end of the other range.
 
-           This is essentially the same as overlaps(), but overlaps assumes
-           that its arguments are specific.  That is, 4.7 is interpreted as
-           4.7.0.0.0.0... .  This funciton assumes that 4.7 woudl be satisfied
-           by 4.7.3.5, etc.
+        This is essentially the same as overlaps(), but overlaps assumes
+        that its arguments are specific.  That is, 4.7 is interpreted as
+        4.7.0.0.0.0... .  This funciton assumes that 4.7 woudl be satisfied
+        by 4.7.3.5, etc.
 
-           Rationale:
-           If a user asks for gcc@4.5:4.7, and a package is only compatible with
-           gcc@4.7.3:4.8, then that package should be able to build under the
-           constraints.  Just using overlaps() would not work here.
+        Rationale:
+        If a user asks for gcc@4.5:4.7, and a package is only compatible with
+        gcc@4.7.3:4.8, then that package should be able to build under the
+        constraints.  Just using overlaps() would not work here.
 
-           Note that we don't need to check whether the end of this range
-           would satisfy the start of the other range, because overlaps()
-           already covers that case.
+        Note that we don't need to check whether the end of this range
+        would satisfy the start of the other range, because overlaps()
+        already covers that case.
 
-           Note further that overlaps() is a symmetric operation, while
-           satisfies() is not.
+        Note further that overlaps() is a symmetric operation, while
+        satisfies() is not.
         """
         return (self.overlaps(other) or
                 # if either self.start or other.end are None, then this can't
                 # satisfy, or overlaps() would've taken care of it.
                 self.start and other.end and self.start.satisfies(other.end))
 
-
     @coerced
     def overlaps(self, other):
-        return ((self.start == None or other.end is None or
+        return ((self.start is None or other.end is None or
                  self.start <= other.end or
                  other.end in self.start or self.start in other.end) and
-                (other.start is None or self.end == None or
+                (other.start is None or self.end is None or
                  other.start <= self.end or
                  other.start in self.end or self.end in other.start))
-
 
     @coerced
     def union(self, other):
         if not self.overlaps(other):
             if (self.end is not None and other.start is not None and
-                self.end.is_predecessor(other.start)):
+                    self.end.is_predecessor(other.start)):
                 return VersionRange(self.start, other.end)
 
             if (other.end is not None and self.start is not None and
-                other.end.is_predecessor(self.start)):
+                    other.end.is_predecessor(self.start)):
                 return VersionRange(other.start, self.end)
 
             return VersionList([self, other])
@@ -453,12 +428,11 @@ class VersionRange(object):
         else:
             end = self.end
             # TODO: See note in intersection() about < and in discrepancy.
-            if not other.end in self.end:
+            if other.end not in self.end:
                 if end in other.end or other.end > self.end:
                     end = other.end
 
         return VersionRange(start, end)
-
 
     @coerced
     def intersection(self, other):
@@ -481,7 +455,7 @@ class VersionRange(object):
                 #     1.6 < 1.6.5  = True  (lexicographic)
                 # Should 1.6 NOT be less than 1.6.5?  Hm.
                 # Here we test (not end in other.end) first to avoid paradox.
-                if other.end is not None and not end in other.end:
+                if other.end is not None and end not in other.end:
                     if other.end < end or other.end in end:
                         end = other.end
 
@@ -490,14 +464,11 @@ class VersionRange(object):
         else:
             return VersionList()
 
-
     def __hash__(self):
         return hash((self.start, self.end))
 
-
     def __repr__(self):
         return self.__str__()
-
 
     def __str__(self):
         out = ""
@@ -512,6 +483,7 @@ class VersionRange(object):
 @total_ordering
 class VersionList(object):
     """Sorted, non-redundant list of Versions and VersionRanges."""
+
     def __init__(self, vlist=None):
         self.versions = []
         if vlist is not None:
@@ -526,7 +498,6 @@ class VersionList(object):
                 for v in vlist:
                     self.add(ver(v))
 
-
     def add(self, version):
         if type(version) in (Version, VersionRange):
             # This normalizes single-value version ranges.
@@ -535,9 +506,9 @@ class VersionList(object):
 
             i = bisect_left(self, version)
 
-            while i-1 >= 0 and version.overlaps(self[i-1]):
-                version = version.union(self[i-1])
-                del self.versions[i-1]
+            while i - 1 >= 0 and version.overlaps(self[i - 1]):
+                version = version.union(self[i - 1])
+                del self.versions[i - 1]
                 i -= 1
 
             while i < len(self) and version.overlaps(self[i]):
@@ -553,7 +524,6 @@ class VersionList(object):
         else:
             raise TypeError("Can't add %s to VersionList" % type(version))
 
-
     @property
     def concrete(self):
         if len(self) == 1:
@@ -561,10 +531,8 @@ class VersionList(object):
         else:
             return None
 
-
     def copy(self):
         return VersionList(self)
-
 
     def lowest(self):
         """Get the lowest version in the list."""
@@ -573,14 +541,12 @@ class VersionList(object):
         else:
             return self[0].lowest()
 
-
     def highest(self):
         """Get the highest version in the list."""
         if not self:
             return None
         else:
             return self[-1].highest()
-
 
     @coerced
     def overlaps(self, other):
@@ -597,14 +563,12 @@ class VersionList(object):
                 o += 1
         return False
 
-
     def to_dict(self):
         """Generate human-readable dict for YAML."""
         if self.concrete:
-            return { 'version'  : str(self[0]) }
+            return {'version': str(self[0])}
         else:
-            return { 'versions' : [str(v) for v in self] }
-
+            return {'versions': [str(v) for v in self]}
 
     @staticmethod
     def from_dict(dictionary):
@@ -615,7 +579,6 @@ class VersionList(object):
             return VersionList([dictionary['version']])
         else:
             raise ValueError("Dict must have 'version' or 'versions' in it.")
-
 
     @coerced
     def satisfies(self, other, strict=False):
@@ -644,19 +607,16 @@ class VersionList(object):
                 o += 1
         return False
 
-
     @coerced
     def update(self, other):
         for v in other.versions:
             self.add(v)
-
 
     @coerced
     def union(self, other):
         result = self.copy()
         result.update(other)
         return result
-
 
     @coerced
     def intersection(self, other):
@@ -666,7 +626,6 @@ class VersionList(object):
             for o in other:
                 result.add(s.intersection(o))
         return result
-
 
     @coerced
     def intersect(self, other):
@@ -689,49 +648,39 @@ class VersionList(object):
             if i == 0:
                 if version not in self[0]:
                     return False
-            elif all(version not in v for v in self[i-1:]):
+            elif all(version not in v for v in self[i - 1:]):
                 return False
 
         return True
 
-
     def __getitem__(self, index):
         return self.versions[index]
-
 
     def __iter__(self):
         return iter(self.versions)
 
-
     def __reversed__(self):
         return reversed(self.versions)
 
-
     def __len__(self):
         return len(self.versions)
-
 
     @coerced
     def __eq__(self, other):
         return other is not None and self.versions == other.versions
 
-
     def __ne__(self, other):
         return not (self == other)
-
 
     @coerced
     def __lt__(self, other):
         return other is not None and self.versions < other.versions
 
-
     def __hash__(self):
         return hash(tuple(self.versions))
 
-
     def __str__(self):
         return ",".join(str(v) for v in self.versions)
-
 
     def __repr__(self):
         return str(self.versions)
@@ -741,7 +690,7 @@ def _string_to_version(string):
     """Converts a string to a Version, VersionList, or VersionRange.
        This is private.  Client code should use ver().
     """
-    string = string.replace(' ','')
+    string = string.replace(' ', '')
 
     if ',' in string:
         return VersionList(string.split(','))
@@ -749,7 +698,7 @@ def _string_to_version(string):
     elif ':' in string:
         s, e = string.split(':')
         start = Version(s) if s else None
-        end   = Version(e) if e else None
+        end = Version(e) if e else None
         return VersionRange(start, end)
 
     else:
