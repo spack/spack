@@ -109,6 +109,7 @@ class Boost(Package):
     variant('multithreaded', default=True, description="Build multi-threaded versions of libraries")
     variant('singlethreaded', default=True, description="Build single-threaded versions of libraries")
     variant('icu_support', default=False, description="Include ICU support (for regex/locale libraries)")
+    variant('graph', default=False, description="Build the Boost Graph library")
 
     depends_on('icu', when='+icu_support')
     depends_on('python', when='+python')
@@ -235,6 +236,10 @@ class Boost(Package):
             withLibs.remove('chrono')
         if not spec.satisfies('@1.43.0:'):
             withLibs.remove('random')
+        
+        if '+graph' in spec and '+mpi' in spec:
+            withLibs.remove('graph')
+            withLibs.append('graph_parallel')
 
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = './'
