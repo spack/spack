@@ -133,7 +133,7 @@ class Mumps(Package):
         if '+mpi' in self.spec:
             makefile_conf.extend(
                 ["CC = %s" % self.spec['mpi'].mpicc,
-                 "FC = %s" % self.spec['mpi'].mpif90,
+                 "FC = %s" % self.spec['mpi'].mpifc,
                  "SCALAP = %s" % self.spec['scalapack'].fc_link,
                  "MUMPS_TYPE = par"])
         else:
@@ -214,17 +214,18 @@ class Mumps(Package):
         # FIXME: use something like numdiff to compare blessed output
         # with the current
         # TODO: test the installed mumps and not the one in stage
-        for t in make_libs:
-            make('{0}examples'.format(t))
-
-        with working_dir('examples'):
+        if '~mpi' in spec:
             for t in make_libs:
-                input_file = 'input_simpletest_{0}'.format(
-                    'real' if t in ['s', 'd'] else 'cmplx')
-                with open(input_file) as input:
-                    test = './{0}simpletest'.format(t)
-                    ret = subprocess.call(test,
-                                          stdin=input)
-                    if ret is not 0:
-                        raise RuntimeError(
-                            'The test {0} did not pass'.format(test))
+                make('{0}examples'.format(t))
+
+            with working_dir('examples'):
+                for t in make_libs:
+                    input_file = 'input_simpletest_{0}'.format(
+                        'real' if t in ['s', 'd'] else 'cmplx')
+                    with open(input_file) as input:
+                        test = './{0}simpletest'.format(t)
+                        ret = subprocess.call(test,
+                                              stdin=input)
+                        if ret is not 0:
+                            raise RuntimeError(
+                                'The test {0} did not pass'.format(test))
