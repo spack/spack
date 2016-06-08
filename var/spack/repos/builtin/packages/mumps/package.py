@@ -23,7 +23,11 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os, sys, glob
+import os
+import sys
+import glob
+import subprocess
+
 
 class Mumps(Package):
     """MUMPS: a MUltifrontal Massively Parallel sparse direct Solver"""
@@ -54,6 +58,8 @@ class Mumps(Package):
     depends_on('scalapack', when='+mpi')
     depends_on('mpi', when='+mpi')
 
+    patch('mumps-shared.patch', when='+shared')
+    
     # this function is not a patch function because in case scalapack
     # is needed it uses self.spec['scalapack'].fc_link set by the
     # setup_dependent_environment in scalapck. This happen after patch
@@ -116,43 +122,39 @@ class Mumps(Package):
 
         if '+mpi' in self.spec:
             makefile_conf.extend(
-                ["CC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpicc'),
-                 "FC = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
-                 "FL = %s" % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
+                ["CC = %s" % self.spec['mpi'].mpicc,
+                 "FC = %s" % self.spec['mpi'].mpif90,
                  "SCALAP = %s" % self.spec['scalapack'].fc_link,
                  "MUMPS_TYPE = par"])
         else:
             makefile_conf.extend(
                 ["CC = cc",
                  "FC = fc",
-                 "FL = fc",
                  "MUMPS_TYPE = seq"])
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        makefile_conf.append("CDEFS   = -DAdd_")
+        makefile_conf.extend([
+            'CDEFS   = -DAdd_',
+            'FL = $(FC)',
+        ])
 
         if '+shared' in self.spec:
+            makefile_conf.append('SHLIBEXT = .%s' % dso_suffix)
             if sys.platform == 'darwin':
-                # Building dylibs with mpif90 causes segfaults on 10.8 and 10.10. Use gfortran. (Homebrew)
-                makefile_conf.extend([
-                    'LIBEXT=.dylib',
-                    'AR=%s -dynamiclib -Wl,-install_name -Wl,%s/$(notdir $@) -undefined dynamic_lookup -o ' % (os.environ['FC'],prefix.lib),
-                    'RANLIB=echo'
-                ])
+                makefile_conf.append(
+                    'LDFLAGS = -dynamiclib -Wl,-install_name -Wl,{0}/$(notdir $@) {1}{0} -undefined dynamic_lookup'.format(prefix.lib, self.compiler.fc_rpath_arg)
+                )
             else:
-                makefile_conf.extend([
-                    'LIBEXT=.so',
-                    'AR=$(FL) -shared -Wl,-soname -Wl,%s/$(notdir $@) -o' % prefix.lib,
-                    'RANLIB=echo'
-                ])
-        else:
-            makefile_conf.extend([
-                'LIBEXT  = .a',
-                'AR = ar vr',
-                'RANLIB = ranlib'
-            ])
+                makefile_conf.append(
+                    'LDFLAGS = -shared {1}{0}'.format(prefix.lib, self.compiler.fc_rpath_arg)
+                )
 
+        makefile_conf.extend([
+            'LIBEXT  = .a',
+            'AR = ar vr ',
+            'RANLIB = ranlib'
+        ])
 
         makefile_inc_template = join_path(os.path.dirname(self.module.__file__),
                                           'Makefile.inc')
@@ -172,38 +174,44 @@ class Mumps(Package):
         # the choice to compile ?examples is to have kind of a sanity
         # check on the libraries generated.
         if '+float' in spec:
-            make_libs.append('sexamples')
+            make_libs.append('s')
             if '+complex' in spec:
-                make_libs.append('cexamples')
+                make_libs.append('c')
 
         if '+double' in spec:
-            make_libs.append('dexamples')
+            make_libs.append('d')
             if '+complex' in spec:
-                make_libs.append('zexamples')
+                make_libs.append('z')
 
         self.write_makefile_inc()
 
-        # Build fails in parallel
-        make(*make_libs, parallel=False)
+        make('mumps_lib', parallel=False)
+        make(*make_libs)
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
 
         if '~mpi' in spec:            
-            lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
-            lib_suffix = lib_dsuffix if '+shared' in spec else '.a'
-            install('libseq/libmpiseq%s' % lib_suffix, prefix.lib)
-            for f in glob.glob(join_path('libseq','*.h')):
-                install(f, prefix.include)
+            install('libseq/libmpiseq.a', prefix.lib)
+            if '+shared' in spec:
+                install('libseq/libmpiseq.{0}'.format(dso_suffix), prefix.lib)
+            install('libseq/mpi.h', prefix.include)
+            install('libseq/mpif.h', prefix.include)
 
         # FIXME: extend the tests to mpirun -np 2 (or alike) when build with MPI
         # FIXME: use something like numdiff to compare blessed output with the current
+        # TODO: test the installed mumps and not the one in stage
+        for t in make_libs:
+            make('{0}examples'.format(t))
+
         with working_dir('examples'):
-            if '+float' in spec:
-                os.system('./ssimpletest < input_simpletest_real')
-                if '+complex' in spec:
-                    os.system('./csimpletest < input_simpletest_real')
-            if '+double' in spec:
-                os.system('./dsimpletest < input_simpletest_real')
-                if '+complex' in spec:
-                    os.system('./zsimpletest < input_simpletest_cmplx')
+            for t in make_libs:
+                input_file = 'input_simpletest_{0}'.format(
+                    'real' if t in ['s', 'd'] else 'cmplx')
+                with open(input_file) as input:
+                    test = './{0}simpletest'.format(t)
+                    ret = subprocess.call(test,
+                                          stdin=input)
+                    if ret is not 0:
+                        raise RuntimeError(
+                            'The test {0} did not pass'.format(test))
