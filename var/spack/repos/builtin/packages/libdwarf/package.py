@@ -27,6 +27,7 @@ from spack import *
 # Only build certain parts of dwarf because the other ones break.
 dwarf_dirs = ['libdwarf', 'dwarfdump2']
 
+
 class Libdwarf(Package):
     """The DWARF Debugging Information Format is of interest to
        programmers working on compilers and debuggers (and any one
@@ -50,7 +51,6 @@ class Libdwarf(Package):
     depends_on("libelf")
 
     parallel = False
-
 
     def install(self, spec, prefix):
         # dwarf build does not set arguments for ar properly
