@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
-from subprocess import check_call
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
@@ -35,11 +34,14 @@ _SPACK_UPSTREAM = 'https://github.com/llnl/spack'
 
 description = "Create a new installation of spack in another prefix"
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-r', '--remote', action='store', dest='remote',
         help="name of the remote to bootstrap from", default='origin')
-    subparser.add_argument('prefix', help="names of prefix where we should install spack")
+    subparser.add_argument(
+        'prefix',
+        help="names of prefix where we should install spack")
 
 
 def get_origin_info(remote):
@@ -82,7 +84,8 @@ def bootstrap(parser, args):
 
     files_in_the_way = os.listdir(prefix)
     if files_in_the_way:
-        tty.die("There are already files there!  Delete these files before boostrapping spack.",
+        tty.die("There are already files there! "
+                "Delete these files before boostrapping spack.",
                 *files_in_the_way)
 
     tty.msg("Installing:",
