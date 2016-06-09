@@ -100,10 +100,13 @@ class Openmpi(Package):
 
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('OMPI_CC', spack_cc)
-        spack_env.set('OMPI_CXX', spack_cxx)
-        spack_env.set('OMPI_FC', spack_fc)
-        spack_env.set('OMPI_F77', spack_f77)
+        # We set up OpenMPI's compilers in filter_compilers below;
+        # here we only need to make sure that environment variables
+        # don't accidentally overwrite this.
+        spack_env.unset('OMPI_CC')
+        spack_env.unset('OMPI_CXX')
+        spack_env.unset('OMPI_FC')
+        spack_env.unset('OMPI_F77')
 
     def setup_dependent_package(self, module, dep_spec):
         self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
