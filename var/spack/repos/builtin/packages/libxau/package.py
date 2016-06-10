@@ -24,9 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class Libxau(Package):
-    """The libXau package contains a library implementing the X11 
-    Authorization Protocol. This is useful for restricting client 
+    """The libXau package contains a library implementing the X11
+    Authorization Protocol. This is useful for restricting client
     access to the display."""
 
     homepage = "http://www.linuxfromscratch.org/blfs/view/7.9/index.html"
