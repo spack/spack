@@ -23,10 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 # Only build certain parts of dwarf because the other ones break.
 dwarf_dirs = ['libdwarf', 'dwarfdump2']
+
 
 class Libdwarf(Package):
     """The DWARF Debugging Information Format is of interest to
@@ -45,11 +45,12 @@ class Libdwarf(Package):
     list_url = homepage
 
     version('20160507', 'ae32d6f9ece5daf05e2d4b14822ea811')
-
+    version('20130729', '4cc5e48693f7b93b7aa0261e63c0e21d')
+    version('20130207', '64b42692e947d5180e162e46c689dfbf')
+    version('20130126', 'ded74a5e90edb5a12aac3c29d260c5db')
     depends_on("libelf")
 
     parallel = False
-
 
     def install(self, spec, prefix):
         # dwarf build does not set arguments for ar properly
@@ -67,7 +68,11 @@ class Libdwarf(Package):
             install('libdwarf.h',  prefix.include)
             install('dwarf.h',     prefix.include)
 
-        with working_dir('dwarfdump'):
+        if spec.satisfies('@20130126:20130729'):
+            dwarfdump_dir = 'dwarfdump2'
+        else:
+            dwarfdump_dir = 'dwarfdump'
+        with working_dir(dwarfdump_dir):
             configure("--prefix=" + prefix)
 
             # This makefile has strings of copy commands that
