@@ -46,132 +46,108 @@ if platform.name == 'linux':
 
 mock_compiler_config = """\
 compilers:
-  clang3.3GENLINUX:
+- compiler:
     spec: clang@3.3
-    operating_system:
-      name: {0} 
-      version: '{1}'
+    operating_system: {0}{1}
     paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
       f77: None
       fc: None
     modules: 'None'
-  gcc4.5GENLINUX: 
+- compiler:
     spec: gcc@4.5.0  
-    operating_system: 
-      name: {0} 
-      version: '{1}' 
+    operating_system: {0}{1}
     paths:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: None
       fc: None
     modules: 'None'
-  clang3.3CNL:
+- compiler:
     spec: clang@3.3
-    operating_system:
-      name: CNL
-      version: '10'
+    operating_system: CNL10
     paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
       f77: None
       fc: None
     modules: 'None'
-  clang3.3SUSE:
+- compiler:
     spec: clang@3.3
-    operating_system:
-      name: SuSE
-      version: '11'
+    operating_system: SuSE11
     paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
       f77: None
       fc: None
     modules: 'None'
-  clang3.3RHL:
+- compiler:
     spec: clang@3.3
-    operating_system:
-      name: redhat
-      version: '6'
+    operating_system: redhat6
     paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
       f77: None
       fc: None
     modules: 'None'
-  clang3.3OSX:
+- compiler:
     spec: clang@3.3
-    operating_system:
-      name: yosemite
-      version: '10.10'
+    operating_system: yosemite
     paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
       f77: None
       fc: None
     modules: 'None'
-  gcc4.5.0CNL:
+- compiler:
     paths:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-    operating_system:
-      name: CNL
-      version: '10'
+    operating_system: CNL10
     spec: gcc@4.5.0
     modules: 'None'
-  gcc4.5.0SUSE:
+- compiler:
     paths:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-    operating_system:
-      name: SuSE
-      version: '11'
+    operating_system: SuSE11
     spec: gcc@4.5.0
     modules: 'None'
-  gcc4.5.0RHL:
+- compiler:
     paths:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-    operating_system:
-      name: redhat
-      version: '6'
+    operating_system: redhat6
     spec: gcc@4.5.0
     modules: 'None'
-  gcc4.5.0OSX:
+- compiler:
     paths:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-    operating_system:
-      name: yosemite
-      version: '10.10'
+    operating_system: yosemite
     spec: gcc@4.5.0
     modules: 'None'
-  gcc4.5.0ELCAP:
+- compiler:
     paths:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-    operating_system:
-      name: elcapitan
-      version: '10.11'
+    operating_system: elcapitan
     spec: gcc@4.5.0
     modules: 'None' 
-  clang3.3ELCAP:
+- compiler:
     spec: clang@3.3
-    operating_system:
-      name: elcapitan
-      version: '10.11'
+    operating_system: elcapitan
     paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
