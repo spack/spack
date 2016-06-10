@@ -25,39 +25,17 @@
 from spack import *
 
 
-class PyAstropy(Package):
-    """The Astropy Project is a community effort to develop a single core
-    package for Astronomy in Python and foster interoperability between
-    Python astronomy packages."""
+class PyEmcee(Package):
+    """emcee is an MIT licensed pure-Python implementation of Goodman & Weare's
+    Affine Invariant Markov chain Monte Carlo (MCMC) Ensemble sampler."""
 
-    homepage = 'http://www.astropy.org/'
-    url = 'https://pypi.python.org/packages/source/a/astropy/astropy-1.1.2.tar.gz'
+    homepage = "http://dan.iel.fm/emcee/current/"
+    url = "https://pypi.python.org/packages/source/e/emcee/emcee-2.1.0.tar.gz"
 
-    version('1.1.2',     'cbe32023b5b1177d1e2498a0d00cda51')
-    version('1.1.post1', 'b52919f657a37d45cc45f5cb0f58c44d')
+    version('2.1.0', 'c6b6fad05c824d40671d4a4fc58dfff7')
 
-    # Required dependencies
-    extends('python@2.6.5:2.7,3.3:')
-    depends_on('py-numpy@1.6.0:')
-
-    # Optional dependencies
-    depends_on('cfitsio')
-    depends_on('expat')
-    depends_on('py-h5py')
-    depends_on('py-pyyaml')
-    depends_on('py-scipy')
-    depends_on('py-matplotlib')
-    depends_on('py-pytz')
-    depends_on('py-scikit-image')
-    depends_on('py-pandas')
-
-    # TODO: Add packages
-    # depends_on('py-beautiful-soup')
-    # depends_on('py-xmllint')
-    # depends_on('py-wcsaxes')
-    # depends_on('py-objgraph')
+    extends('python')
+    depends_on('py-numpy')
 
     def install(self, spec, prefix):
-        python('setup.py', 'build', '--use-system-cfitsio',
-               '--use-system-expat')
         python('setup.py', 'install', '--prefix={0}'.format(prefix))
