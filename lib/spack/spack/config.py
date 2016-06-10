@@ -146,11 +146,9 @@ section_schemas = {
         'additionalProperties': False,
         'patternProperties': {
             'compilers:?': {  # optional colon for overriding site config.
-                'type': 'object',
-                'default': {},
-                'additionalProperties': False,
-                'patternProperties': {
-                    r'\w[\w-]*': {   # alias
+                'type': 'array',
+                'items': {
+                    'compiler': {
                         'type': 'object',
                         'additionalProperties': False,
                         'required': ['paths', 'spec', 'modules', 'operating_system'],
@@ -180,15 +178,10 @@ section_schemas = {
                                                         {'type' : 'null' }]},
                                     'ldlibs': { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]}}},
-                            'spec': { 'type': 'string'},#r'\w[\w-]*@\w[\w-]*'
-                            'operating_system': {
-                                'type': 'object',
-                                'required': ['name', 'version'],
-                                'additionalProperties': False,
-                                'properties': {
-                                    'name': {'type': 'string'},
-                                    'version': {'type': 'string'}
-                                    }},
+                            'spec': { 'type': 'string'},
+                            'operating_system': { 'type': 'string'},
+                            'alias': { 'anyOf': [ {'type' : 'string'},
+                                                    {'type' : 'null' }]},
                             'modules': { 'anyOf': [ {'type' : 'string'},
                                                     {'type' : 'null' },
                                                     {'type': 'array'},
@@ -591,8 +584,7 @@ def _merge_yaml(dest, source):
 
     # Source list is prepended (for precedence)
     if they_are(list):
-        seen = set(source)
-        dest[:] = source + [x for x in dest if x not in seen]
+        dest[:] = source + [x for x in dest if x not in source]
         return dest
 
     # Source dict is merged into dest.

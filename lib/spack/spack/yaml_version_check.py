@@ -44,9 +44,9 @@ def check_compiler_yaml_version():
                 data = syaml.load(f)
 
         if data:
-            compilers = data['compilers'].items()
+            compilers = data['compilers']
             if len(compilers) > 0:
-                if 'operating_system' not in compilers[0][1]:
+                if 'operating_system' not in compilers[0]['compiler']:
                     new_file = os.path.join(scope.path, '_old_compilers.yaml')
                     tty.warn('%s in out of date compilers format. ' 
                              'Moved to %s. Spack automatically generate '
