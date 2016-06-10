@@ -73,16 +73,14 @@ def _to_dict(compiler):
     d = {}
     d['spec'] = str(compiler.spec)
     d['paths'] = dict( (attr, getattr(compiler, attr, None)) for attr in _path_instance_vars )
-    d['operating_system'] = compiler.operating_system.to_dict()
+    d['operating_system'] = str(compiler.operating_system)
     d['modules'] = compiler.modules
 
-    if not compiler.alias:
-        yaml_text = yaml.dump(
-            d, default_flow_style=True, width=sys.maxint)
-        sha = hashlib.sha1(yaml_text)
-        compiler.alias = base64.b32encode(sha.digest()).lower()[:8]
+    if compiler.alias:
+        d['alias'] = compiler.alias
+
     return {
-            compiler.alias: d
+            'compiler': d
     }
 
 
@@ -91,11 +89,11 @@ def get_compiler_config(scope=None):
     """
     def init_compiler_config():
         """Compiler search used when Spack has no compilers."""
-        config = {}
         compilers = find_compilers()
+        compilers_dict = []
         for compiler in compilers:
-            config.update(_to_dict(compiler))
-        spack.config.update_config('compilers', config, scope=scope)
+            compilers_dict.append(_to_dict(compiler))
+        spack.config.update_config('compilers', compilers_dict, scope=scope)
 
     config = spack.config.get_config('compilers', scope=scope)
     # Update the configuration if there are currently no compilers
@@ -127,7 +125,7 @@ def add_compilers_to_config(compilers, scope=None):
     """
     compiler_config = get_compiler_config(scope)
     for compiler in compilers:
-        compiler_config = _to_dict(compiler)
+        compiler_config.append(_to_dict(compiler))
 
     spack.config.update_config('compilers', compiler_config, scope)
 
@@ -167,8 +165,8 @@ def all_compilers_config(scope=None):
 
 def all_compilers(scope=None):
     # Return compiler specs from the merged config.
-    return [spack.spec.CompilerSpec(s['spec'])
-            for s in all_compilers_config(scope).values()]
+    return [spack.spec.CompilerSpec(s['compiler']['spec'])
+            for s in all_compilers_config(scope)]
 
 
 def default_compiler():
@@ -230,11 +228,10 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
     def get_compilers(cspec):
         compilers = []
 
-        for aka, cmp in config.items():
-            if cmp['spec'] != str(cspec):
+        for items in config:
+            if items['compiler']['spec'] != str(cspec):
                 continue
-            items = cmp
-            alias = aka
+            items = items['compiler']
         
             if not ('paths' in items and all(n in items['paths'] for n in _path_instance_vars)):
                 raise InvalidCompilerConfigurationError(cspec)
@@ -257,6 +254,9 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
                 operating_system = spack.architecture._operating_system_from_dict(items['operating_system'], platform)
             else:
                 operating_system = None
+
+            
+            alias = items['alias'] if 'alias' in items else None
 
             flags = {}
             for f in spack.spec.FlagMap.valid_compiler_flags():

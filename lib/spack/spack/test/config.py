@@ -32,8 +32,8 @@ from ordereddict_backport import OrderedDict
 from spack.test.mock_packages_test import *
 
 # Some sample compiler config data
-a_comps =  {
-    'gcc473': {
+a_comps =  [
+    {'compiler': {
         'paths': {
             "cc" : "/gcc473",
             "cxx": "/g++473",
@@ -42,12 +42,9 @@ a_comps =  {
             },
         'modules': None,
         'spec': 'gcc@4.7.3',
-        'operating_system': {
-            'name': 'CNL',
-            'version': '10'
-            }
-        },
-    'gcc450': {
+        'operating_system': 'CNL10'
+        }},
+    {'compiler': {
         'paths': {
             "cc" : "/gcc450",
             "cxx": "/g++450",
@@ -56,12 +53,9 @@ a_comps =  {
             },
         'modules': None,
         'spec': 'gcc@4.5.0',
-        'operating_system': {
-            'name': 'CNL',
-            'version': '10'
-            }
-        },
-    'clang33': {
+        'operating_system': 'CNL10'
+        }},
+    {'compiler': {
         'paths': {
             "cc" : "<overwritten>",
             "cxx": "<overwritten>",
@@ -69,15 +63,12 @@ a_comps =  {
             "fc" : '<overwritten>' },
         'modules': None,
         'spec': 'clang@3.3',
-        'operating_system': {
-            'name': 'CNL',
-            'version': '10'
-            }
-        }
-}
+        'operating_system': 'CNL10'
+        }}
+]
 
-b_comps = {
-    'icc100': {
+b_comps = [
+    {'compiler': {
         'paths': {
             "cc" : "/icc100",
             "cxx": "/icp100",
@@ -86,12 +77,9 @@ b_comps = {
             },
         'modules': None,
         'spec': 'icc@10.0',
-        'operating_system': {
-            'name': 'CNL',
-            'version': '10'
-            }
-        },
-    'icc111': {
+        'operating_system': 'CNL10'
+        }},
+    {'compiler': {
         'paths': {
             "cc" : "/icc111",
             "cxx": "/icp111",
@@ -100,12 +88,9 @@ b_comps = {
             },
         'modules': None,
         'spec': 'icc@11.1',
-        'operating_system': {
-            'name': 'CNL',
-            'version': '10'
-            }
-        },
-    'clang33': {
+        'operating_system': 'CNL10'
+        }},
+    {'compiler': {
         'paths': {
             "cc" : "<overwritten>",
             "cxx": "<overwritten>",
@@ -113,12 +98,9 @@ b_comps = {
             "fc" : '<overwritten>' },
         'modules': None,
         'spec': 'clang@3.3',
-        'operating_system': {
-            'name': 'CNL',
-            'version': '10'
-            }
-        }
-}
+        'operating_system': 'CNL10'
+        }}
+]
 
 # Some Sample repo data
 repos_low = [ "/some/path" ]
@@ -143,15 +125,21 @@ class ConfigTest(MockPackagesTest):
         config = spack.config.get_config('compilers')
         compiler_list = ['cc', 'cxx', 'f77', 'fc']
         param_list = ['modules', 'paths', 'spec', 'operating_system']
-        for alias, compiler in config.items():
-            if compiler['spec'] in compiler_names:
+        for compiler in config:
+            conf = compiler['compiler']
+            if conf['spec'] in compiler_names:
+                comp = None
+                for c in comps:
+                    if c['compiler']['spec'] == conf['spec']:
+                        comp = c['compiler']
+                        break
+                if not comp:
+                    self.fail('Bad config spec')
                 for p in param_list:
-                    expected = comps[alias][p]
-                    actual = config[alias][p]
-                    self.assertEqual(expected, actual)
+                    self.assertEqual(conf[p], comp[p])
                 for c in compiler_list:
-                    expected = comps[alias]['paths'][c]
-                    actual = config[alias]['paths'][c]
+                    expected = comp['paths'][c]
+                    actual = conf['paths'][c]
                     self.assertEqual(expected, actual)
 
     def test_write_list_in_memory(self):
