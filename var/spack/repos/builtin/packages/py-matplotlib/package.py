@@ -42,7 +42,6 @@ class PyMatplotlib(Package):
 
     # Required dependencies
     extends('python@2.7:2.8,3.4:3.5', ignore=r'bin/nosetests.*$|bin/pbr$')
-    #extends('python', ignore=r'bin/nosetests.*$|bin/pbr$')
     depends_on('py-numpy@1.6:')
     depends_on('py-setuptools')
     depends_on('py-dateutil@1.1:')
