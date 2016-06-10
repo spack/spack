@@ -30,7 +30,7 @@ class PyUnittest2(Package):
     testing framework in Python 2.7 and onwards."""
 
     homepage = "https://pypi.python.org/pypi/unittest2"
-    url      = "https://pypi.python.org/packages/7f/c4/2b0e2d185d9d60772c10350d9853646832609d2f299a8300ab730f199db4/unittest2-1.1.0.tar.gz"
+    url      = "https://pypi.python.org/packages/source/u/unittest2/unittest2-1.1.0.tar.gz"
 
     version('1.1.0', 'f72dae5d44f091df36b6b513305ea000')
 

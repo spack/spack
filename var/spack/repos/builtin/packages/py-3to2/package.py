@@ -30,7 +30,7 @@ class Py3to2(Package):
     for Python version 3.x into Python version 2.x."""
 
     homepage = "https://pypi.python.org/pypi/3to2"
-    url = "https://pypi.python.org/packages/8f/ab/58a363eca982c40e9ee5a7ca439e8ffc5243dde2ae660ba1ffdd4868026b/3to2-1.1.1.zip"
+    url      = "https://pypi.python.org/packages/source/3/3to2/3to2-1.1.1.zip"
 
     version('1.1.1', 'cbeed28e350dbdaef86111ace3052824')
 

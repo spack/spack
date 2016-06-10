@@ -31,7 +31,7 @@ class PyUnittest2py3k(Package):
     version of unittest2."""
 
     homepage = "https://pypi.python.org/pypi/unittest2py3k"
-    url      = "https://pypi.python.org/packages/4e/3d/d44421e8d828af1399c1509c196db92e2a58f3764b01a0ee928d7025d1ca/unittest2py3k-0.5.1.tar.gz"
+    url      = "https://pypi.python.org/packages/source/u/unittest2py3k/unittest2py3k-0.5.1.tar.gz"
 
     version('0.5.1', '8824ff92044310d9365f90d892bf0f09')
 
