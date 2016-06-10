@@ -24,8 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class Serf(Package):
-    """Apache Serf - a high performance C-based HTTP client library built upon the Apache Portable Runtime (APR) library"""
+    """Apache Serf - a high performance C-based HTTP client library
+    built upon the Apache Portable Runtime (APR) library"""
     homepage  = 'https://serf.apache.org/'
     url       = 'https://archive.apache.org/dist/serf/serf-1.3.8.tar.bz2'
 
@@ -46,9 +48,9 @@ class Serf(Package):
         options.append('APU=%s' % spec['apr-util'].prefix)
         options.append('OPENSSL=%s' % spec['openssl'].prefix)
         options.append('LINKFLAGS=-L%s/lib -L%s/lib' %
-                       ( spec['expat'].prefix, spec['zlib'].prefix ))
+                       (spec['expat'].prefix, spec['zlib'].prefix))
         options.append('CPPFLAGS=-I%s/include -I%s/include' %
-                       ( spec['expat'].prefix, spec['zlib'].prefix ))
+                       (spec['expat'].prefix, spec['zlib'].prefix))
 
         scons(*options)
         scons('install')
