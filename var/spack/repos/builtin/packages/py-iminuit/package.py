@@ -42,13 +42,5 @@ class PyIminuit(Package):
     depends_on('py-matplotlib')
 
     def install(self, spec, prefix):
-        site_packages = '{0}/lib/python{1}/site-packages'.format(
-            prefix, spec['python'].version.up_to(2))
-
-        # site-packages directory must already exist
-        mkdirp(site_packages)
-
-        # PYTHONPATH must include site-packages directory
-        env['PYTHONPATH'] += ':{0}'.format(site_packages)
-
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        python('setup.py', 'install', '--single-version-externally-managed',
+               '--root=/', '--prefix={0}'.format(prefix))

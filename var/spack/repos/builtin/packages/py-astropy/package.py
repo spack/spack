@@ -60,4 +60,5 @@ class PyAstropy(Package):
     def install(self, spec, prefix):
         python('setup.py', 'build', '--use-system-cfitsio',
                '--use-system-expat')
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        python('setup.py', 'install', '--single-version-externally-managed',
+               '--root=/', '--prefix={0}'.format(prefix))

@@ -39,6 +39,7 @@ class PyH5py(Package):
     variant('mpi', default=False, description='Build with MPI support')
 
     extends('python', ignore=r'bin/cy.*')
+
     depends_on('hdf5@1.8.4:+mpi', when='+mpi')
     depends_on('hdf5@1.8.4:~mpi', when='~mpi')
     depends_on('py-numpy@1.6.1:')
@@ -53,4 +54,5 @@ class PyH5py(Package):
             env['CC'] = spec['mpi'].mpicc
             python('setup.py', 'configure', '--mpi')
 
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        python('setup.py', 'install', '--single-version-externally-managed',
+               '--root=/', '--prefix={0}'.format(prefix))
