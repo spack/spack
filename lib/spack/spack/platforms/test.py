@@ -15,8 +15,8 @@ class Test(Platform):
 
     def __init__(self):
         super(Test, self).__init__('test')
-        self.add_target(self.default, Target(self.default))
-        self.add_target(self.front_end, Target(self.front_end))
+        self.add_target(Target(self.default))
+        self.add_target(Target(self.front_end))
 
         self.add_operating_system(self.default_os, Cnl())
         linux_dist = LinuxDistro()

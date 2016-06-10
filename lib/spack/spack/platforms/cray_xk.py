@@ -14,9 +14,8 @@ class CrayXk(Platform):
     default_os  = "CNL10" 
 
     def __init__(self):
-        ''' Since cori doesn't have ivybridge as a front end it's better
-            if we use CRAY_CPU_TARGET as the default. This will ensure
-            that if we're on a XC-40 or XC-30 then we can detect the target
+        ''' Create a Cray XK system platform using CRAY_CPU_TARGET as the
+        default. 
         '''
         super(CrayXk, self).__init__('cray_xk')
 
@@ -26,9 +25,10 @@ class CrayXk(Platform):
 
         # Could switch to use modules and fe targets for front end
         # Currently using compilers by path for front end.
-        self.add_target('istanbul', Target('istanbul', 'craype-mc8'))
-        self.add_target('interlagos', 
-                        Target('interlagos', 'craype-interlagos'))
+        self.add_target(Target('istanbul', {'craype-mc8', 'dynamic-link'}))
+        self.add_target(Target('interlagos', 'craype-interlagos'))
+        self.add_target(Target('interlagos_dynamic',
+                               {'craype-interlagos', 'dynamic-link'}))
 
         self.add_operating_system('SuSE11', LinuxDistro())
         self.add_operating_system('CNL10', Cnl())
