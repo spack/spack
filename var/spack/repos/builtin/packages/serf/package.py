@@ -36,6 +36,7 @@ class Serf(Package):
     depends_on('scons')
     depends_on('expat')
     depends_on('openssl')
+    depends_on('zlib')
 
     def install(self, spec, prefix):
         scons = which("scons")
@@ -44,8 +45,10 @@ class Serf(Package):
         options.append('APR=%s' % spec['apr'].prefix)
         options.append('APU=%s' % spec['apr-util'].prefix)
         options.append('OPENSSL=%s' % spec['openssl'].prefix)
-        options.append('LINKFLAGS=-L%s/lib' % spec['expat'].prefix)
-        options.append('CPPFLAGS=-I%s/include' % spec['expat'].prefix)
+        options.append('LINKFLAGS=-L%s/lib -L%s/lib' %
+                       ( spec['expat'].prefix, spec['zlib'].prefix ))
+        options.append('CPPFLAGS=-I%s/include -I%s/include' %
+                       ( spec['expat'].prefix, spec['zlib'].prefix ))
 
         scons(*options)
         scons('install')
