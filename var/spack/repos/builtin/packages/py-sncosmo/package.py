@@ -36,7 +36,7 @@ class PySncosmo(Package):
 
     # Required dependencies
     # py-sncosmo binaries are duplicates of those from py-astropy
-    extends('python@2.6:2.7,3.3:', ignore=r'bin/*')
+    extends('python', ignore=r'bin/*')
     depends_on('py-numpy')
     depends_on('py-scipy')
     depends_on('py-astropy')
@@ -48,5 +48,4 @@ class PySncosmo(Package):
     depends_on('py-nestle')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--single-version-externally-managed',
-               '--root=/', '--prefix={0}'.format(prefix))
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))

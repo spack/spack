@@ -54,5 +54,4 @@ class PyH5py(Package):
             env['CC'] = spec['mpi'].mpicc
             python('setup.py', 'configure', '--mpi')
 
-        python('setup.py', 'install', '--single-version-externally-managed',
-               '--root=/', '--prefix={0}'.format(prefix))
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))

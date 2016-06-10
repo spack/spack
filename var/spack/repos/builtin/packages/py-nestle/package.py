@@ -35,7 +35,7 @@ class PyNestle(Package):
 
     # Required dependencies
     extends('python')
-    depends_on('py-numpy@1.6:')
+    depends_on('py-numpy')
 
     # Optional dependencies
     depends_on('py-scipy')

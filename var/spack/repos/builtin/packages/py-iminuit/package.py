@@ -34,7 +34,7 @@ class PyIminuit(Package):
     version('1.2', '4701ec472cae42015e26251703e6e984')
 
     # Required dependencies
-    extends('python@2.7:2.8,3.4:')
+    extends('python')
     depends_on('py-setuptools')
 
     # Optional dependencies
@@ -42,5 +42,4 @@ class PyIminuit(Package):
     depends_on('py-matplotlib')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--single-version-externally-managed',
-               '--root=/', '--prefix={0}'.format(prefix))
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))

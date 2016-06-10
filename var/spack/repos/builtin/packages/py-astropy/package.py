@@ -37,8 +37,8 @@ class PyAstropy(Package):
     version('1.1.post1', 'b52919f657a37d45cc45f5cb0f58c44d')
 
     # Required dependencies
-    extends('python@2.6.5:2.7,3.3:')
-    depends_on('py-numpy@1.6.0:')
+    extends('python')
+    depends_on('py-numpy')
 
     # Optional dependencies
     depends_on('cfitsio')
@@ -60,5 +60,4 @@ class PyAstropy(Package):
     def install(self, spec, prefix):
         python('setup.py', 'build', '--use-system-cfitsio',
                '--use-system-expat')
-        python('setup.py', 'install', '--single-version-externally-managed',
-               '--root=/', '--prefix={0}'.format(prefix))
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))
