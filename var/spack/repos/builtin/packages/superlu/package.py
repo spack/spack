@@ -39,8 +39,7 @@ class Superlu(Package):
 
     def install(self, spec, prefix):
         cmake_args = [
-            '-DCMAKE_C_FLAGS=-fPIC',
-            '-DCMAKE_Fortran_FLAGS=-fPIC',
+            '-DCMAKE_POSITION_INDEPENDENT_CODE=ON',
             # BLAS support
             '-Denable_blaslib=OFF',
             '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].blas_shared_lib)
