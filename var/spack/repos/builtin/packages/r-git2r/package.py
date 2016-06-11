@@ -31,7 +31,8 @@ class RGit2r(Package):
     data and running some basic 'Git' commands."""
 
     homepage = "https://github.com/ropensci/git2r"
-    url = "https://cran.r-project.org/src/contrib/git2r_0.15.0.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/git2r_0.15.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/git2r"
 
     version('0.15.0', '57658b3298f9b9aadc0dd77b4ef6a1e1')
 

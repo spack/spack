@@ -30,7 +30,8 @@ class RMime(Package):
     from /etc/mime.types in UNIX-type systems."""
 
     homepage = "https://github.com/yihui/mime"
-    url = "https://cran.r-project.org/src/contrib/mime_0.4.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/mime_0.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/mime"
 
     version('0.4', '789cb33e41db2206c6fc7c3e9fbc2c02')
 

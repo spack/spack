@@ -37,7 +37,8 @@ class RCurl(Package):
     package with http specific tools and logic."""
 
     homepage = "https://github.com/jeroenooms/curl"
-    url = "https://cran.r-project.org/src/contrib/curl_0.9.7.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/curl_0.9.7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RCurl"
 
     version('0.9.7', 'a101f7de948cb828fef571c730f39217')
 

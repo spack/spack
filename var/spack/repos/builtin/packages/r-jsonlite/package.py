@@ -38,7 +38,8 @@ class RJsonlite(Package):
     use with dynamic data in systems and applications."""
 
     homepage = "https://github.com/jeroenooms/jsonlite"
-    url = "https://cran.r-project.org/src/contrib/jsonlite_0.9.21.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/jsonlite_0.9.21.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/jsonlite"
 
     version('0.9.21', '4fc382747f88a79ff0718a0d06bed45d')
 

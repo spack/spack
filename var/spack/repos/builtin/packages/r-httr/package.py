@@ -31,7 +31,8 @@ class RHttr(Package):
     request components (authenticate(), add_headers() and so on)."""
 
     homepage = "https://github.com/hadley/httr"
-    url = "https://cran.r-project.org/src/contrib/httr_1.1.0.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/httr_1.1.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/httr"
 
     version('1.1.0', '5ffbbc5c2529e49f00aaa521a2b35600')
 

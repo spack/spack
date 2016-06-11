@@ -29,7 +29,8 @@ class RDevtools(Package):
     """Collection of package development tools."""
 
     homepage = "https://github.com/hadley/devtools"
-    url = "https://cran.r-project.org/src/contrib/devtools_1.11.1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/devtools_1.11.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/devtools"
 
     version('1.11.1', '242672ee27d24dddcbdaac88c586b6c2')
 

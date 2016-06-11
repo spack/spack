@@ -44,7 +44,8 @@ class RDigest(Package):
     used."""
 
     homepage = "http://dirk.eddelbuettel.com/code/digest.html"
-    url = "https://cran.r-project.org/src/contrib/digest_0.6.9.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/digest_0.6.9.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/digest"
 
     version('0.6.9', '48048ce6c466bdb124716e45ba4a0e83')
 
