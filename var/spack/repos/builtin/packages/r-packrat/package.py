@@ -29,9 +29,9 @@ class RPackrat(Package):
     """Manage the R packages your project depends on in an isolated, portable,
     and reproducible way."""
 
-    homepage = 'https://github.com/rstudio/packrat/'
+    homepage = "https://github.com/rstudio/packrat/"
     url      = "https://cran.r-project.org/src/contrib/packrat_0.4.7-1.tar.gz"
-    list_url = 'https://cran.r-project.org/src/contrib/Archive/packrat'
+    list_url = "https://cran.r-project.org/src/contrib/Archive/packrat"
 
     version('0.4.7-1', '80c2413269b292ade163a70ba5053e84')
 
