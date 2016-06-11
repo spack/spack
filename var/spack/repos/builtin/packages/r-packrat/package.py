@@ -30,7 +30,8 @@ class RPackrat(Package):
     and reproducible way."""
 
     homepage = 'https://github.com/rstudio/packrat/'
-    url = "https://cran.r-project.org/src/contrib/packrat_0.4.7-1.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/packrat_0.4.7-1.tar.gz"
+    list_url = 'https://cran.r-project.org/src/contrib/Archive/packrat'
 
     version('0.4.7-1', '80c2413269b292ade163a70ba5053e84')
 
