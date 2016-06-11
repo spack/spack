@@ -423,3 +423,11 @@ class VersionsTest(unittest.TestCase):
 
         self.assert_satisfies('4.8.0', '4.2, 4.3:4.8')
         self.assert_satisfies('4.8.2', '4.2, 4.3:4.8')
+
+    def test_formatted_strings(self):
+        versions = '1.2.3', '1_2_3', '1-2-3'
+        for item in versions:
+            v = Version(item)
+            self.assertEqual(v.dotted, '1.2.3')
+            self.assertEqual(v.dashed, '1-2-3')
+            self.assertEqual(v.underscored, '1_2_3')
