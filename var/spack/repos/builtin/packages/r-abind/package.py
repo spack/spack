@@ -32,13 +32,13 @@ class RAbind(Package):
     'afill' for manipulating, extracting and replacing data in arrays."""
 
     homepage = "https://cran.r-project.org/"
-    url = "https://cran.r-project.org/src/contrib/abind_1.4-3.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/abind_1.4-3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/abind"
 
     version('1.4-3', '10fcf80c677b991bf263d38be35a1fc5')
 
     extends('R')
 
     def install(self, spec, prefix):
-
-        R('CMD', 'INSTALL', '--library=%s' %
-          self.module.r_lib_dir, '%s' % self.stage.source_path)
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

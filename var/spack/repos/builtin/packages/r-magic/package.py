@@ -32,7 +32,8 @@ class RMagic(Package):
     arrays."""
 
     homepage = "https://cran.r-project.org/"
-    url = "https://cran.r-project.org/src/contrib/magic_1.5-6.tar.gz"
+    url      = "https://cran.r-project.org/src/contrib/magic_1.5-6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/magic"
 
     version('1.5-6', 'a68e5ced253b2196af842e1fc84fd029')
 
@@ -41,5 +42,5 @@ class RMagic(Package):
     depends_on('r-abind')
 
     def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library=%s' %
-          self.module.r_lib_dir, '%s' % self.stage.source_path)
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)
