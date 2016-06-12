@@ -24,13 +24,14 @@
 ##############################################################################
 import collections
 import inspect
+import json
 import os
 import os.path
 import subprocess
-import shlex
-import json
+
 
 class NameModifier(object):
+
     def __init__(self, name, **kwargs):
         self.name = name
         self.args = {'name': name}
@@ -38,6 +39,7 @@ class NameModifier(object):
 
 
 class NameValueModifier(object):
+
     def __init__(self, name, value, **kwargs):
         self.name = name
         self.value = value
@@ -47,23 +49,27 @@ class NameValueModifier(object):
 
 
 class SetEnv(NameValueModifier):
+
     def execute(self):
         os.environ[self.name] = str(self.value)
 
 
 class UnsetEnv(NameModifier):
+
     def execute(self):
         # Avoid throwing if the variable was not set
         os.environ.pop(self.name, None)
 
 
 class SetPath(NameValueModifier):
+
     def execute(self):
         string_path = concatenate_paths(self.value, separator=self.separator)
         os.environ[self.name] = string_path
 
 
 class AppendPath(NameValueModifier):
+
     def execute(self):
         environment_value = os.environ.get(self.name, '')
         directories = environment_value.split(
@@ -73,6 +79,7 @@ class AppendPath(NameValueModifier):
 
 
 class PrependPath(NameValueModifier):
+
     def execute(self):
         environment_value = os.environ.get(self.name, '')
         directories = environment_value.split(
@@ -82,6 +89,7 @@ class PrependPath(NameValueModifier):
 
 
 class RemovePath(NameValueModifier):
+
     def execute(self):
         environment_value = os.environ.get(self.name, '')
         directories = environment_value.split(
@@ -270,7 +278,7 @@ class EnvironmentModifications(object):
         shell = '{shell}'.format(**info)
         shell_options = '{shell_options}'.format(**info)
         source_file = '{source_command} {file} {concatenate_on_success}'
-        dump_environment = 'python -c "import os, json; print json.dumps(dict(os.environ))"'
+        dump_environment = 'python -c "import os, json; print json.dumps(dict(os.environ))"'  # NOQA: ignore=E501
         # Construct the command that will be executed
         command = [source_file.format(file=file, **info) for file in args]
         command.append(dump_environment)
@@ -282,7 +290,8 @@ class EnvironmentModifications(object):
         ]
 
         # Try to source all the files,
-        proc = subprocess.Popen(command, stdout=subprocess.PIPE, env=os.environ)
+        proc = subprocess.Popen(
+            command, stdout=subprocess.PIPE, env=os.environ)
         proc.wait()
         if proc.returncode != 0:
             raise RuntimeError('sourcing files returned a non-zero exit code')
@@ -306,10 +315,12 @@ class EnvironmentModifications(object):
         for x in unset_variables:
             env.unset(x)
         # Variables that have been modified
-        common_variables = set(this_environment).intersection(set(after_source_env))
-        modified_variables = [x for x in common_variables if this_environment[x] != after_source_env[x]]
+        common_variables = set(this_environment).intersection(
+            set(after_source_env))
+        modified_variables = [x for x in common_variables if this_environment[x] != after_source_env[x]]  # NOQA: ignore=E501
         for x in modified_variables:
-            # TODO : we may be smarter here, and try to parse if we could compose append_path
+            # TODO : we may be smarter here, and try to parse
+            # TODO : if we could compose append_path
             # TODO : and prepend_path to modify the value
             env.set(x, after_source_env[x])
         return env

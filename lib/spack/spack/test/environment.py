@@ -31,12 +31,13 @@ from spack.environment import EnvironmentModifications, SetEnv, UnsetEnv
 
 
 class EnvironmentTest(unittest.TestCase):
+
     def setUp(self):
         os.environ.clear()
         os.environ['UNSET_ME'] = 'foo'
         os.environ['EMPTY_PATH_LIST'] = ''
         os.environ['PATH_LIST'] = '/path/second:/path/third'
-        os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'
+        os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'  # NOQA: ignore=E501
 
     def test_set(self):
         env = EnvironmentModifications()
@@ -77,9 +78,18 @@ class EnvironmentTest(unittest.TestCase):
         env.remove_path('REMOVE_PATH_LIST', '/duplicate/')
 
         env.apply_modifications()
-        self.assertEqual('/path/first:/path/second:/path/third:/path/last', os.environ['PATH_LIST'])
-        self.assertEqual('/path/first:/path/middle:/path/last', os.environ['EMPTY_PATH_LIST'])
-        self.assertEqual('/path/first:/path/middle:/path/last', os.environ['NEWLY_CREATED_PATH_LIST'])
+        self.assertEqual(
+            '/path/first:/path/second:/path/third:/path/last',
+            os.environ['PATH_LIST']
+        )
+        self.assertEqual(
+            '/path/first:/path/middle:/path/last',
+            os.environ['EMPTY_PATH_LIST']
+        )
+        self.assertEqual(
+            '/path/first:/path/middle:/path/last',
+            os.environ['NEWLY_CREATED_PATH_LIST']
+        )
         self.assertEqual('/a/b:/a/c:/a/d:/f/g', os.environ['REMOVE_PATH_LIST'])
 
     def test_extra_arguments(self):
@@ -100,7 +110,8 @@ class EnvironmentTest(unittest.TestCase):
             assert x is y
 
     def test_source_files(self):
-        datadir = join_path(spack_root, 'lib', 'spack', 'spack', 'test', 'data')
+        datadir = join_path(spack_root, 'lib', 'spack',
+                            'spack', 'test', 'data')
         files = [
             join_path(datadir, 'sourceme_first.sh'),
             join_path(datadir, 'sourceme_second.sh')
@@ -115,7 +126,8 @@ class EnvironmentTest(unittest.TestCase):
         self.assertEqual(modifications['NEW_VAR'][0].value, 'new')
         # Unset variables
         self.assertEqual(len(modifications['EMPTY_PATH_LIST']), 1)
-        self.assertTrue(isinstance(modifications['EMPTY_PATH_LIST'][0], UnsetEnv))
+        self.assertTrue(isinstance(
+            modifications['EMPTY_PATH_LIST'][0], UnsetEnv))
         # Modified variables
         self.assertEqual(len(modifications['UNSET_ME']), 1)
         self.assertTrue(isinstance(modifications['UNSET_ME'][0], SetEnv))
@@ -123,12 +135,19 @@ class EnvironmentTest(unittest.TestCase):
 
         self.assertEqual(len(modifications['PATH_LIST']), 1)
         self.assertTrue(isinstance(modifications['PATH_LIST'][0], SetEnv))
-        self.assertEqual(modifications['PATH_LIST'][0].value, '/path/first:/path/second:/path/third:/path/fourth')
+        self.assertEqual(
+            modifications['PATH_LIST'][0].value,
+            '/path/first:/path/second:/path/third:/path/fourth'
+        )
 
         # TODO : with reference to the TODO in spack/environment.py
         # TODO : remove the above and insert
         # self.assertEqual(len(modifications['PATH_LIST']), 2)
-        # self.assertTrue(isinstance(modifications['PATH_LIST'][0], PrependPath))
+        # self.assertTrue(
+        #     isinstance(modifications['PATH_LIST'][0], PrependPath)
+        # )
         # self.assertEqual(modifications['PATH_LIST'][0].value, '/path/first')
-        # self.assertTrue(isinstance(modifications['PATH_LIST'][1], AppendPath))
+        # self.assertTrue(
+        #     isinstance(modifications['PATH_LIST'][1], AppendPath)
+        # )
         # self.assertEqual(modifications['PATH_LIST'][1].value, '/path/fourth')
