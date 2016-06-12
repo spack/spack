@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Tcl(Package):
     """Tcl (Tool Command Language) is a very powerful but easy to
        learn dynamic programming language, suitable for a very wide
@@ -49,3 +50,9 @@ class Tcl(Package):
             configure("--prefix=%s" % prefix)
             make()
             make("install")
+
+    # When using Tkinter from within spack provided python+tk, python
+    # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
+    def setup_environment(self, spack_env, env):
+        env.set('TCL_LIBRARY', self.prefix.lib + "/tcl%s" %
+                Version(self.spec.version).up_to(2))

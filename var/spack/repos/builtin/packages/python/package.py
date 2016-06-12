@@ -49,12 +49,15 @@ class Python(Package):
     version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
     version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
 
+    variant('tk', default=False, description='Provide support for Tkinter (Tcl/Tk)')
     depends_on("openssl")
     depends_on("bzip2")
     depends_on("readline")
     depends_on("ncurses")
     depends_on("sqlite")
     depends_on("zlib")
+    depends_on("tk", when="+tk")
+    depends_on("tcl", when="+tk")
 
     def install(self, spec, prefix):
         # Need this to allow python build to find the Python installation.
@@ -64,21 +67,36 @@ class Python(Package):
         # Rest of install is pretty standard except setup.py needs to
         # be able to read the CPPFLAGS and LDFLAGS as it scans for the
         # library and headers to build
-        configure_args= [
-                  "--prefix=%s" % prefix,
-                  "--with-threads",
-                  "--enable-shared",
-                  "CPPFLAGS=-I%s/include -I%s/include -I%s/include -I%s/include -I%s/include -I%s/include" % (
+        configure_args = []
+        configure_args.extend(['--prefix=%s' % prefix,
+                               '--with-threads',
+                               '--enable-shared'])
+
+        cppflags = '-I%s/include -I%s/include -I%s/include -I%s/include' % (
                        spec['openssl'].prefix, spec['bzip2'].prefix,
-                       spec['readline'].prefix, spec['ncurses'].prefix,
-                       spec['sqlite'].prefix, spec['zlib'].prefix),
-                  "LDFLAGS=-L%s/lib -L%s/lib -L%s/lib -L%s/lib -L%s/lib -L%s/lib" % (
+            spec['readline'].prefix, spec['ncurses'].prefix)
+        cppflags += ' -I%s/include -I%s/include' % (
+            spec['sqlite'].prefix, spec['zlib'].prefix)
+        ldflags = '-L%s/lib -L%s/lib -L%s/lib -L%s/lib' % (
                        spec['openssl'].prefix, spec['bzip2'].prefix,
-                       spec['readline'].prefix, spec['ncurses'].prefix,
+            spec['readline'].prefix, spec['ncurses'].prefix)
+        ldflags += ' -L%s/lib -L%s/lib' % (
                        spec['sqlite'].prefix, spec['zlib'].prefix)
-                  ]
+        if '+tk' in spec:
+            configure_args.extend([
+                '--with-tcltk-includes=-I%s/include -I%s/include' % (
+                    spec['tk'].prefix, spec['tcl'].prefix),
+                '--with-tcltk-libs=%s/lib %s/lib' % (
+                    spec['tk'].prefix, spec['tcl'].prefix)])
+            cppflags += ' -I%s/include -I%s/include' % (
+                spec['tk'].prefix, spec['tcl'].prefix)
+            ldflags += ' -L%s/lib -L%s/lib' % (
+                spec['tk'].prefix, spec['tcl'].prefix)
+
+        configure_args.extend(['CPPFLAGS=%s' % cppflags,
+                               'LDFLAGS=%s' % ldflags])
         if spec.satisfies('@3:'):
-            configure_args.append('--without-ensurepip')
+            configure_args.extend(['--without-ensurepip'])
         configure(*configure_args)
         make()
         make("install")
@@ -134,6 +152,14 @@ class Python(Package):
         if extension_spec.package.extends(self.spec):
             run_env.prepend_path('PYTHONPATH', os.path.join(extension_spec.prefix, self.site_packages_dir))
 
+        # In the future, to build a package that depends on python with
+        # Tkinter, it may be necessary to set TCL_LIBRARY and TK_LIBRARY in the
+        # spack environment.
+        # if '+tk' in spec:
+        #     spack_env.set('TCL_LIBRARY', spec('tcl').prefix.lib+"/tcl%s"
+        #                   % (version.up_to(2),spec('tcl').version))
+        #     speck_env.set('TK_LIBRARY', spec('tk').prefix.lib+"/tk%s"
+        #                   % (version.up_to(2),spec('tk').version))
 
     def setup_dependent_package(self, module, ext_spec):
         """
