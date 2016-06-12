@@ -1,4 +1,4 @@
-##############################################################################
+#
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+#
 import collections
 import inspect
 import json
@@ -100,6 +100,7 @@ class RemovePath(NameValueModifier):
 
 
 class EnvironmentModifications(object):
+
     """
     Keeps track of requests to modify the current environment.
 
@@ -315,14 +316,57 @@ class EnvironmentModifications(object):
         for x in unset_variables:
             env.unset(x)
         # Variables that have been modified
-        common_variables = set(this_environment).intersection(
-            set(after_source_env))
+        common_variables = set(this_environment).intersection(set(after_source_env))  # NOQA: ignore=E501
         modified_variables = [x for x in common_variables if this_environment[x] != after_source_env[x]]  # NOQA: ignore=E501
+
+        def return_separator_if_any(first_value, second_value):
+            separators = ':', ';'
+            for separator in separators:
+                if separator in first_value and separator in second_value:
+                    return separator
+            return None
+
         for x in modified_variables:
-            # TODO : we may be smarter here, and try to parse
-            # TODO : if we could compose append_path
-            # TODO : and prepend_path to modify the value
-            env.set(x, after_source_env[x])
+            current = this_environment[x]
+            modified = after_source_env[x]
+            sep = return_separator_if_any(current, modified)
+            if sep is None:
+                # We just need to set the variable to the new value
+                env.set(x, after_source_env[x])
+            else:
+                current_list = current.split(sep)
+                modified_list = modified.split(sep)
+                # Paths that have been removed
+                remove_list = [
+                    ii for ii in current_list if ii not in modified_list]
+                # Check that nothing has been added in the middle of vurrent
+                # list
+                remaining_list = [
+                    ii for ii in current_list if ii in modified_list]
+                start = modified_list.index(remaining_list[0])
+                end = modified_list.index(remaining_list[-1])
+                search = sep.join(modified_list[start:end + 1])
+                if search not in current:
+                    # We just need to set the variable to the new value
+                    env.set(x, after_source_env[x])
+                    break
+                else:
+                    try:
+                        prepend_list = modified_list[:start]
+                    except KeyError:
+                        prepend_list = []
+                    try:
+                        append_list = modified_list[end + 1:]
+                    except KeyError:
+                        append_list = []
+
+                    for item in remove_list:
+                        env.remove_path(x, item)
+                    for item in append_list:
+                        env.append_path(x, item)
+                    for item in prepend_list:
+                        env.prepend_path(x, item)
+
         return env
 
 

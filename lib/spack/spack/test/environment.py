@@ -27,7 +27,9 @@ import os
 
 from spack import spack_root
 from llnl.util.filesystem import join_path
-from spack.environment import EnvironmentModifications, SetEnv, UnsetEnv
+from spack.environment import EnvironmentModifications
+from spack.environment import SetEnv, UnsetEnv
+from spack.environment import RemovePath, PrependPath, AppendPath
 
 
 class EnvironmentTest(unittest.TestCase):
@@ -133,21 +135,16 @@ class EnvironmentTest(unittest.TestCase):
         self.assertTrue(isinstance(modifications['UNSET_ME'][0], SetEnv))
         self.assertEqual(modifications['UNSET_ME'][0].value, 'overridden')
 
-        self.assertEqual(len(modifications['PATH_LIST']), 1)
-        self.assertTrue(isinstance(modifications['PATH_LIST'][0], SetEnv))
-        self.assertEqual(
-            modifications['PATH_LIST'][0].value,
-            '/path/first:/path/second:/path/third:/path/fourth'
+        self.assertEqual(len(modifications['PATH_LIST']), 3)
+        self.assertTrue(
+            isinstance(modifications['PATH_LIST'][0], RemovePath)
         )
-
-        # TODO : with reference to the TODO in spack/environment.py
-        # TODO : remove the above and insert
-        # self.assertEqual(len(modifications['PATH_LIST']), 2)
-        # self.assertTrue(
-        #     isinstance(modifications['PATH_LIST'][0], PrependPath)
-        # )
-        # self.assertEqual(modifications['PATH_LIST'][0].value, '/path/first')
-        # self.assertTrue(
-        #     isinstance(modifications['PATH_LIST'][1], AppendPath)
-        # )
-        # self.assertEqual(modifications['PATH_LIST'][1].value, '/path/fourth')
+        self.assertEqual(modifications['PATH_LIST'][0].value, '/path/third')
+        self.assertTrue(
+            isinstance(modifications['PATH_LIST'][1], AppendPath)
+        )
+        self.assertEqual(modifications['PATH_LIST'][1].value, '/path/fourth')
+        self.assertTrue(
+            isinstance(modifications['PATH_LIST'][2], PrependPath)
+        )
+        self.assertEqual(modifications['PATH_LIST'][2].value, '/path/first')
