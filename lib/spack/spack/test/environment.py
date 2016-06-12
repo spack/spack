@@ -24,7 +24,10 @@
 ##############################################################################
 import unittest
 import os
-from spack.environment import EnvironmentModifications
+
+from spack import spack_root
+from llnl.util.filesystem import join_path
+from spack.environment import EnvironmentModifications, SetEnv, UnsetEnv
 
 
 class EnvironmentTest(unittest.TestCase):
@@ -95,3 +98,37 @@ class EnvironmentTest(unittest.TestCase):
         self.assertEqual(len(copy_construct), 2)
         for x, y in zip(env, copy_construct):
             assert x is y
+
+    def test_source_files(self):
+        datadir = join_path(spack_root, 'lib', 'spack', 'spack', 'test', 'data')
+        files = [
+            join_path(datadir, 'sourceme_first.sh'),
+            join_path(datadir, 'sourceme_second.sh')
+        ]
+        env = EnvironmentModifications.from_sourcing_files(*files)
+        modifications = env.group_by_name()
+
+        self.assertEqual(len(modifications), 4)
+        # Set new variables
+        self.assertEqual(len(modifications['NEW_VAR']), 1)
+        self.assertTrue(isinstance(modifications['NEW_VAR'][0], SetEnv))
+        self.assertEqual(modifications['NEW_VAR'][0].value, 'new')
+        # Unset variables
+        self.assertEqual(len(modifications['EMPTY_PATH_LIST']), 1)
+        self.assertTrue(isinstance(modifications['EMPTY_PATH_LIST'][0], UnsetEnv))
+        # Modified variables
+        self.assertEqual(len(modifications['UNSET_ME']), 1)
+        self.assertTrue(isinstance(modifications['UNSET_ME'][0], SetEnv))
+        self.assertEqual(modifications['UNSET_ME'][0].value, 'overridden')
+
+        self.assertEqual(len(modifications['PATH_LIST']), 1)
+        self.assertTrue(isinstance(modifications['PATH_LIST'][0], SetEnv))
+        self.assertEqual(modifications['PATH_LIST'][0].value, '/path/first:/path/second:/path/third:/path/fourth')
+
+        # TODO : with reference to the TODO in spack/environment.py
+        # TODO : remove the above and insert
+        # self.assertEqual(len(modifications['PATH_LIST']), 2)
+        # self.assertTrue(isinstance(modifications['PATH_LIST'][0], PrependPath))
+        # self.assertEqual(modifications['PATH_LIST'][0].value, '/path/first')
+        # self.assertTrue(isinstance(modifications['PATH_LIST'][1], AppendPath))
+        # self.assertEqual(modifications['PATH_LIST'][1].value, '/path/fourth')

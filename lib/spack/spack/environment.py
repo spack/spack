@@ -26,7 +26,9 @@ import collections
 import inspect
 import os
 import os.path
-
+import subprocess
+import shlex
+import json
 
 class NameModifier(object):
     def __init__(self, name, **kwargs):
@@ -239,6 +241,78 @@ class EnvironmentModifications(object):
         for name, actions in sorted(modifications.items()):
             for x in actions:
                 x.execute()
+
+    @staticmethod
+    def from_sourcing_files(*args, **kwargs):
+        """
+        Creates an instance of EnvironmentModifications that, if executed,
+        has the same effect on the environment as sourcing the files passed as
+        parameters
+
+        Args:
+            *args: list of files to be sourced
+
+        Returns:
+            instance of EnvironmentModifications
+        """
+        env = EnvironmentModifications()
+        # Check if the files are actually there
+        if not all(os.path.isfile(file) for file in args):
+            raise RuntimeError('trying to source non-existing files')
+        # Relevant kwd parameters and formats
+        info = dict(kwargs)
+        info.setdefault('shell', '/bin/bash')
+        info.setdefault('shell_options', '-c')
+        info.setdefault('source_command', 'source')
+        info.setdefault('suppress_output', '&> /dev/null')
+        info.setdefault('concatenate_on_success', '&&')
+
+        shell = '{shell}'.format(**info)
+        shell_options = '{shell_options}'.format(**info)
+        source_file = '{source_command} {file} {concatenate_on_success}'
+        dump_environment = 'python -c "import os, json; print json.dumps(dict(os.environ))"'
+        # Construct the command that will be executed
+        command = [source_file.format(file=file, **info) for file in args]
+        command.append(dump_environment)
+        command = ' '.join(command)
+        command = [
+            shell,
+            shell_options,
+            command
+        ]
+
+        # Try to source all the files,
+        proc = subprocess.Popen(command, stdout=subprocess.PIPE, env=os.environ)
+        proc.wait()
+        if proc.returncode != 0:
+            raise RuntimeError('sourcing files returned a non-zero exit code')
+        output = ''.join([line for line in proc.stdout])
+        # Construct a dictionary with all the variables in the environment
+        after_source_env = dict(json.loads(output))
+
+        # Filter variables that are due to how we source
+        after_source_env.pop('SHLVL')
+        after_source_env.pop('_')
+        after_source_env.pop('PWD')
+
+        # Fill the EnvironmentModifications instance
+        this_environment = dict(os.environ)
+        # New variables
+        new_variables = set(after_source_env) - set(this_environment)
+        for x in new_variables:
+            env.set(x, after_source_env[x])
+        # Variables that have been unset
+        unset_variables = set(this_environment) - set(after_source_env)
+        for x in unset_variables:
+            env.unset(x)
+        # Variables that have been modified
+        common_variables = set(this_environment).intersection(set(after_source_env))
+        modified_variables = [x for x in common_variables if this_environment[x] != after_source_env[x]]
+        for x in modified_variables:
+            # TODO : we may be smarter here, and try to parse if we could compose append_path
+            # TODO : and prepend_path to modify the value
+            env.set(x, after_source_env[x])
+        return env
 
 
 def concatenate_paths(paths, separator=':'):
