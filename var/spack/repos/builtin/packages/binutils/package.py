@@ -46,6 +46,7 @@ class Binutils(Package):
     patch('binutilskrell-2.24.patch', when='@2.24+krellpatch')
 
     patch('cr16.patch')
+    patch('update_symbol-2.26.patch', when='@2.26')
 
     variant('libiberty', default=False, description='Also install libiberty.')
 
