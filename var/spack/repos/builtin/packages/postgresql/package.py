@@ -34,8 +34,10 @@ class Postgresql(Package):
     url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
 
     version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
+    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
 
-    depends_on("openssl")
+    depends_on('openssl')
+    depends_on('readline')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,
