@@ -38,13 +38,13 @@ class Psi4(Package):
     variant('mpi', default=True, description='Enable MPI parallelization')
 
     # Required dependencies
-    depends_on('python@2.7:')
-    depends_on('py-numpy')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('cmake@3.0:')
-    depends_on('boost@1.55.0:+chrono+filesystem~mpi+python+regex+serialization+system+timer+thread', when='~mpi')
-    depends_on('boost@1.55.0:+chrono+filesystem+mpi+python+regex+serialization+system+timer+thread', when='+mpi')
+    depends_on('boost+chrono+filesystem~mpi+python+regex+serialization+system+timer+thread', when='~mpi')
+    depends_on('boost+chrono+filesystem+mpi+python+regex+serialization+system+timer+thread', when='+mpi')
+    depends_on('python')
+    depends_on('cmake')
+    depends_on('py-numpy')
 
     # Optional dependencies
     depends_on('mpi', when='+mpi')
@@ -62,17 +62,9 @@ class Psi4(Package):
             '-DLAPACK_LIBRARIES={0}'.format(spec['lapack'].lapack_shared_lib),
             '-DBOOST_INCLUDEDIR={0}'.format(spec['boost'].prefix.include),
             '-DBOOST_LIBRARYDIR={0}'.format(spec['boost'].prefix.lib),
+            '-DENABLE_MPI={0}'.format('ON' if '+mpi' in spec else 'OFF'),
             '-DENABLE_CHEMPS2=OFF'
         ]
-
-        if '+mpi' in spec:
-            cmake_args.extend([
-                '-DENABLE_MPI=ON'
-                #'-DMPI_C_COMPILER={0}'.format(spec['mpi'].mpicc)
-                #'-DMPI_C_INCLUDE_PATH={0}'.format(spec['mpi'].prefix.include),
-            ])
-        else:
-            cmake_args.append('-DENABLE_MPI=OFF')
 
         cmake_args.extend(std_cmake_args)
 
@@ -80,5 +72,5 @@ class Psi4(Package):
             cmake('..', *cmake_args)
 
             make()
-            #ctest()
+            # ctest()
             make('install')
