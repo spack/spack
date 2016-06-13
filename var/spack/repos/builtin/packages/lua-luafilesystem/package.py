@@ -25,34 +25,27 @@
 from spack import *
 
 
-class Lmod(Package):
+class LuaLuafilesystem(Package):
     """
-    Lmod is a Lua based module system that easily handles the MODULEPATH
-    Hierarchical problem. Environment Modules provide a convenient way to
-    dynamically change the users' environment through modulefiles. This
-    includes easily adding or removing directories to the PATH environment
-    variable. Modulefiles for Library packages provide environment variables
-    that specify where the library and header files can be found.
+    LuaFileSystem is a Lua library developed to complement the set of
+    functions related to file systems offered by the standard Lua distribution.
+
+    LuaFileSystem offers a portable way to access the underlying directory
+    structure and file attributes.
+
+    LuaFileSystem is free software and uses the same license as Lua 5.1
     """
-    homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'  # NOQA: ignore=E501
-    url = 'https://github.com/TACC/Lmod/archive/6.4.1.tar.gz'
+    homepage = 'http://keplerproject.github.io/luafilesystem'
+    url = 'https://github.com/keplerproject/luafilesystem/archive/v_1_6_3.tar.gz'
 
-    version('6.4.1', '7978ba777c8aa41a4d8c05fec5f780f4')
-    version('6.3.7', '0fa4d5a24c41cae03776f781aa2dedc1')
-    version('6.0.1', '91abf52fe5033bd419ffe2842ebe7af9')
+    version('1_6_3', 'd0552c7e5a082f5bb2865af63fb9dc95')
 
-    depends_on('lua@5.2:')
-    depends_on('lua-luaposix')
-    depends_on('lua-luafilesystem')
-
-    parallel = False
-
-    def setup_environment(self, spack_env, run_env):
-        stage_lua_path = join_path(
-            self.stage.path, 'Lmod-{version}', 'src', '?.lua')
-        spack_env.append_path('LUA_PATH', stage_lua_path.format(
-            version=self.version), separator=';')
+    extends('lua')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make('install')
+        rockspec_fmt = join_path(self.stage.path,
+                                 'luafilesystem-v_{version.underscored}',
+                                 'rockspecs',
+                                 'luafilesystem-{version.dotted}-1.rockspec')
+        luarocks('--tree=' + prefix, 'install',
+                 rockspec_fmt.format(version=self.spec.version))
