@@ -35,7 +35,9 @@ class Tk(Package):
     homepage = "http://www.tcl.tk"
 
     def url_for_version(self, version):
-        return "http://prdownloads.sourceforge.net/tcl/tk%s-src.tar.gz" % version
+        return (
+            "http://prdownloads.sourceforge.net/tcl/tk%s-src.tar.gz" %
+            version)
 
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
 

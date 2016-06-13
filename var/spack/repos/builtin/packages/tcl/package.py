@@ -36,7 +36,9 @@ class Tcl(Package):
     homepage = "http://www.tcl.tk"
 
     def url_for_version(self, version):
-        return 'http://prdownloads.sourceforge.net/tcl/tcl%s-src.tar.gz' % version
+        return (
+            'http://prdownloads.sourceforge.net/tcl/tcl%s-src.tar.gz' %
+            version)
 
     version('8.6.5', '0e6426a4ca9401825fbc6ecf3d89a326')
     version('8.6.4', 'd7cbb91f1ded1919370a30edd1534304')
