@@ -30,6 +30,7 @@ class RXlconnectjars(Package):
 
     homepage = "http://miraisolutions.wordpress.com/"
     url      = "https://cran.r-project.org/src/contrib/XLConnectJars_0.2-9.tar.gz"
+    list_url ="https://cran.r-project.org/src/contrib/Archive/XLConnectJars"
 
     version('0.2-9', 'e6d6b1acfede26acaa616ee421bd30fb')
 
