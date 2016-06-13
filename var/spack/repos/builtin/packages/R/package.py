@@ -71,6 +71,7 @@ class R(Package):
     depends_on('tk')
     depends_on('curl')
     depends_on('pcre')
+    depends_on('jdk')
 
     def install(self, spec, prefix):
         rlibdir = join_path(prefix, 'rlib')
