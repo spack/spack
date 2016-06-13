@@ -26,12 +26,27 @@ from StringIO import StringIO
 import unittest
 
 import spack
+from spack.spec import Spec
 from spack.provider_index import ProviderIndex
+from spack.test.mock_packages_test import *
 
+# Test assume that mock packages provide this:
+#
+# {'blas':   {
+#      blas: set([netlib-blas, openblas, openblas-with-lapack])},
+#  'lapack': {lapack: set([netlib-lapack, openblas-with-lapack])},
+#  'mpi': {mpi@:1: set([mpich@:1]),
+#                   mpi@:2.0: set([mpich2]),
+#                   mpi@:2.1: set([mpich2@1.1:]),
+#                   mpi@:2.2: set([mpich2@1.2:]),
+#                   mpi@:3: set([mpich@3:]),
+#                   mpi@:10.0: set([zmpi])},
+#   'stuff': {stuff: set([externalvirtual])}}
+#
 
-class ProviderIndexTest(unittest.TestCase):
+class ProviderIndexTest(MockPackagesTest):
 
-    def test_write_and_read(self):
+    def test_yaml_round_trip(self):
         p = ProviderIndex(spack.repo.all_package_names())
 
         ostream = StringIO()
@@ -40,10 +55,46 @@ class ProviderIndexTest(unittest.TestCase):
         istream = StringIO(ostream.getvalue())
         q = ProviderIndex.from_yaml(istream)
 
-        self.assertTrue(p == q)
+        self.assertEqual(p, q)
+
+
+    def test_providers_for_simple(self):
+        p = ProviderIndex(spack.repo.all_package_names())
+
+        blas_providers = p.providers_for('blas')
+        self.assertTrue(Spec('netlib-blas') in blas_providers)
+        self.assertTrue(Spec('openblas') in blas_providers)
+        self.assertTrue(Spec('openblas-with-lapack') in blas_providers)
+
+        lapack_providers = p.providers_for('lapack')
+        self.assertTrue(Spec('netlib-lapack') in lapack_providers)
+        self.assertTrue(Spec('openblas-with-lapack') in lapack_providers)
+
+
+    def test_mpi_providers(self):
+        p = ProviderIndex(spack.repo.all_package_names())
+
+        mpi_2_providers = p.providers_for('mpi@2')
+        self.assertTrue(Spec('mpich2') in mpi_2_providers)
+        self.assertTrue(Spec('mpich@3:') in mpi_2_providers)
+
+        mpi_3_providers = p.providers_for('mpi@3')
+        self.assertTrue(Spec('mpich2') not in mpi_3_providers)
+        self.assertTrue(Spec('mpich@3:') in mpi_3_providers)
+        self.assertTrue(Spec('zmpi') in mpi_3_providers)
+
+
+    def test_equal(self):
+        p = ProviderIndex(spack.repo.all_package_names())
+        q = ProviderIndex(spack.repo.all_package_names())
+        self.assertEqual(p, q)
 
 
     def test_copy(self):
         p = ProviderIndex(spack.repo.all_package_names())
         q = p.copy()
-        self.assertTrue(p == q)
+        self.assertEqual(p, q)
+
+
+    def test_copy(self):
+        pass

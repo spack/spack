@@ -26,6 +26,8 @@
 The ``virtual`` module contains utility classes for virtual dependencies.
 """
 import itertools
+from pprint import pformat
+
 import yaml
 from yaml.error import MarkedYAMLError
 
@@ -48,15 +50,30 @@ class ProviderIndex(object):
 
        Calling providers_for(spec) will find specs that provide a
        matching implementation of MPI.
-    """
-    def __init__(self, specs=None, **kwargs):
-        # TODO: come up with another name for this.  This "restricts"
-        # values to the verbatim impu specs (i.e., it doesn't
-        # pre-apply package's constraints, and keeps things as broad
-        # as possible, so it's really the wrong name)
-        if specs is None: specs = []
-        self.restrict = kwargs.setdefault('restrict', False)
 
+    """
+
+
+    def __init__(self, specs=None, restrict=False):
+        """Create a new ProviderIndex.
+
+        Optional arguments:
+
+        specs
+            List (or sequence) of specs.  If provided, will call
+            `update` on this ProviderIndex with each spec in the list.
+
+        restrict
+            "restricts" values to the verbatim input specs; do not
+            pre-apply package's constraints.
+
+            TODO: rename this.  It is intended to keep things as broad
+            as possible without overly restricting results, so it is
+            not the best name.
+        """
+        if specs is None: specs = []
+
+        self.restrict = restrict
         self.providers = {}
 
         for spec in specs:
@@ -174,10 +191,9 @@ class ProviderIndex(object):
 
 
     def to_yaml(self, stream=None):
-        provider_list = dict(
-            (name, [[vpkg.to_node_dict(), [p.to_node_dict() for p in pset]]
-                    for vpkg, pset in pdict.items()])
-             for name, pdict in self.providers.items())
+        provider_list = self._transform(
+            lambda vpkg, pset: [
+                vpkg.to_node_dict(), [p.to_node_dict() for p in pset]], list)
 
         yaml.dump({'provider_index': {'providers': provider_list}},
                   stream=stream)
@@ -201,12 +217,11 @@ class ProviderIndex(object):
 
         index = ProviderIndex()
         providers = yfile['provider_index']['providers']
-        index.providers = dict(
-            (name, dict((spack.spec.Spec.from_node_dict(vpkg),
-                         set(spack.spec.Spec.from_node_dict(p) for p in plist))
-                        for vpkg, plist in pdict_list))
-            for name, pdict_list in providers.items())
-
+        index.providers = _transform(
+            providers,
+            lambda vpkg, plist: (
+                spack.spec.Spec.from_node_dict(vpkg),
+                set(spack.spec.Spec.from_node_dict(p) for p in plist)))
         return index
 
 
@@ -253,12 +268,39 @@ class ProviderIndex(object):
     def copy(self):
         """Deep copy of this ProviderIndex."""
         clone = ProviderIndex()
-        clone.providers = dict(
-            (name, dict((vpkg, set((p.copy() for p in pset)))
-                        for vpkg, pset in pdict.items()))
-             for name, pdict in self.providers.items())
+        clone.providers = self._transform(
+            lambda vpkg, pset: (vpkg, set((p.copy() for p in pset))))
         return clone
 
 
     def __eq__(self, other):
         return self.providers == other.providers
+
+
+    def _transform(self, transform_fun, out_mapping_type=dict):
+        return _transform(self.providers, transform_fun, out_mapping_type)
+
+
+    def __str__(self):
+        return pformat(
+            _transform(self.providers,
+                       lambda k, v: (k, list(v))))
+
+
+def _transform(providers, transform_fun, out_mapping_type=dict):
+    """Syntactic sugar for transforming a providers dict.
+
+    transform_fun takes a (vpkg, pset) mapping and runs it on each
+    pair in nested dicts.
+
+    """
+    def mapiter(mappings):
+        if isinstance(mappings, dict):
+            return mappings.iteritems()
+        else:
+            return iter(mappings)
+
+    return dict(
+        (name, out_mapping_type([
+            transform_fun(vpkg, pset) for vpkg, pset in mapiter(mappings)]))
+        for name, mappings in providers.items())

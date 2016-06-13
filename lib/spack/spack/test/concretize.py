@@ -153,9 +153,6 @@ class ConcretizeTest(MockPackagesTest):
         self.assertTrue(not any(spec.satisfies('mpich2@:1.1')
                                 for spec in spack.repo.providers_for('mpi@2.2')))
 
-        self.assertTrue(not any(spec.satisfies('mpich2@:1.1')
-                                for spec in spack.repo.providers_for('mpi@2.2')))
-
         self.assertTrue(not any(spec.satisfies('mpich@:1')
                                 for spec in spack.repo.providers_for('mpi@2')))
 
