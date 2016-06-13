@@ -58,11 +58,12 @@ class Trilinos(Package):
     variant('python',       default=False, description='Build python wrappers')
     variant('shared',       default=True,  description='Enables the build of shared libraries')
     variant('debug',        default=False, description='Builds a debug version of the libraries')
+    variant('boost',        default=True, description='Compile with Boost')
 
     # Everything should be compiled with -fpic
     depends_on('blas')
     depends_on('lapack')
-    depends_on('boost')
+    depends_on('boost', when='+boost')
     depends_on('matio')
     depends_on('glm')
     depends_on('swig')
@@ -121,9 +122,6 @@ class Trilinos(Package):
                         '-DTPL_ENABLE_LAPACK=ON',
                         '-DLAPACK_LIBRARY_NAMES=lapack',
                         '-DLAPACK_LIBRARY_DIRS=%s' % spec['lapack'].prefix,
-                        '-DTPL_ENABLE_Boost:BOOL=ON',
-                        '-DBoost_INCLUDE_DIRS:PATH=%s' % spec['boost'].prefix.include,
-                        '-DBoost_LIBRARY_DIRS:PATH=%s' % spec['boost'].prefix.lib,
                         '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
                         '-DTrilinos_ENABLE_CXX11:BOOL=ON',
                         '-DTPL_ENABLE_Netcdf:BOOL=ON',
@@ -131,6 +129,14 @@ class Trilinos(Package):
                         '-DTPL_ENABLE_HDF5:BOOL=%s' % ('ON' if '+hdf5' in spec else 'OFF'),
                         ])
 
+        if '+boost' in spec:
+            options.extend([
+                '-DTPL_ENABLE_Boost:BOOL=ON',
+                '-DBoost_INCLUDE_DIRS:PATH=%s' % spec['boost'].prefix.include,
+                '-DBoost_LIBRARY_DIRS:PATH=%s' % spec['boost'].prefix.lib
+            ])
+        else:
+            options.extend(['-DTPL_ENABLE_Boost:BOOL=OFF'])
         # Fortran lib
         libgfortran = os.path.dirname (os.popen('%s --print-file-name libgfortran.a' % join_path(mpi_bin,'mpif90') ).read())
         options.extend([
