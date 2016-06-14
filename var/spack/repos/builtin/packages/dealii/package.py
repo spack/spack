@@ -80,8 +80,8 @@ class Dealii(Package):
     depends_on("netcdf-cxx",       when='+netcdf+mpi')
     depends_on("oce",              when='+oce')
     depends_on("p4est",            when='+p4est+mpi')
-    depends_on("petsc+mpi",        when='+petsc+mpi')
-    depends_on("slepc",            when='+slepc+petsc+mpi')
+    depends_on("petsc@:3.6.4+mpi", when='+petsc+mpi') # FIXME: update after 3.7 is supported upstream
+    depends_on("slepc@:3.6.3",     when='+slepc+petsc+mpi')
     depends_on("trilinos",         when='+trilinos+mpi')
 
     # developer dependnecies
