@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 class Psi4(Package):
@@ -74,3 +75,26 @@ class Psi4(Package):
             make()
             # ctest()
             make('install')
+
+        self.filter_compilers()
+
+    def filter_compilers(self):
+        """Run after install to tell the configuration files to
+        use the compilers that Spack built the package with.
+
+        If this isn't done, they'll have PLUGIN_CXX set to
+        Spack's generic cxx. We want it to be bound to
+        whatever compiler it was built with."""
+
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
+
+        cc_files  = ['bin/psi4-config']
+        cxx_files = ['bin/psi4-config', 'include/psi4/psiconfig.h']
+
+        for filename in cc_files:
+            filter_file(os.environ['CC'], self.compiler.cc,
+                        os.path.join(self.prefix, filename), **kwargs)
+
+        for filename in cxx_files:
+            filter_file(os.environ['CXX'], self.compiler.cxx,
+                        os.path.join(self.prefix, filename), **kwargs)
