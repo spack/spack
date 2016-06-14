@@ -38,7 +38,7 @@ class Slepc(Package):
     version('3.6.3', '384939d009546db37bc05ed81260c8b5ba451093bf891391d32eb7109ccff876')
     version('3.6.2', '2ab4311bed26ccf7771818665991b2ea3a9b15f97e29fd13911ab1293e8e65df')
 
-    variant('arpack', default=False, description='Enables Arpack wrappers')
+    variant('arpack', default=True, description='Enables Arpack wrappers')
 
     depends_on('petsc@3.7:', when='@3.7.1:')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
