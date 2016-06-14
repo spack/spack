@@ -35,6 +35,8 @@ class Petsc(Package):
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
 
+    version('3.7.2', '50da49867ce7a49e7a0c1b37f4ec7b34')
+    version('3.6.4', '7632da2375a3df35b8891c9526dbdde7')
     version('3.6.3', '91dd3522de5a5ef039ff8f50800db606')
     version('3.5.3', 'd4fd2734661e89f18ac6014b5dd1ef2f')
     version('3.5.2', 'ad170802b3b058b5deb9cd1f968e7e13')
@@ -72,7 +74,8 @@ class Petsc(Package):
     # Also PETSc prefer to build it without internal superlu, likely due to conflict in headers
     # see https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
     depends_on('hypre~internal-superlu', when='+hypre+mpi~complex')
-    depends_on('superlu-dist', when='+superlu-dist+mpi')
+    depends_on('superlu-dist@:4.3', when='@:3.6.4+superlu-dist+mpi')
+    depends_on('superlu-dist@5.0.0:', when='@3.7:+superlu-dist+mpi')
     depends_on('mumps+mpi', when='+mumps+mpi')
     depends_on('scalapack', when='+mumps+mpi')
 
