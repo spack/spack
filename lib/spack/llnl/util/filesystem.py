@@ -28,7 +28,7 @@ __all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree'
            'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
            'set_executable', 'copy_mode', 'unset_executable_mode',
            'remove_dead_links', 'remove_linked_tree', 'find_library_path',
-           'fix_darwin_install_name']
+           'fix_darwin_install_name','to_link_flags']
 
 import os
 import glob
@@ -422,6 +422,19 @@ def fix_darwin_install_name(path):
                 if dep == os.path.basename(loc):
                     subprocess.Popen(["install_name_tool", "-change",dep,loc,lib], stdout=subprocess.PIPE).communicate()[0]
                     break
+
+
+def to_link_flags(library):
+    """Transforms a path to a <library> into linking flags -L<dir> -l<name>.
+
+    Return:
+      A string of linking flags.
+    """
+    dir  = os.path.dirname(library)
+    # Asume   libXYZ.suffix
+    name = os.path.basename(library)[3:].split(".")[0]
+    res = '-L%s -l%s' % (dir,name)
+    return res
 
 
 def find_library_path(libname, *paths):
