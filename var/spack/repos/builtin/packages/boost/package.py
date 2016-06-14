@@ -147,8 +147,8 @@ class Boost(Package):
                     'icpc': 'intel',
                     'clang++': 'clang'}
 
-        if spec.satisfies('@1.47:') :
-            toolsets['icpc'] += '-'+platform
+        if spec.satisfies('@1.47:'):
+            toolsets['icpc'] += '-' + platform
 
         for cc, toolset in toolsets.iteritems():
             if cc in self.compiler.cxx_names:
@@ -167,8 +167,8 @@ class Boost(Package):
                            join_path(spec['python'].prefix.bin, 'python'))
 
         with open('user-config.jam', 'w') as f:
-            compiler_wrapper = join_path(spack.build_env_path, 'c++')
 #already defined in bottstrap#
+#            compiler_wrapper = join_path(spack.build_env_path, 'c++')
 #            f.write("using {0} : : {1} ;\n".format(boostToolsetId,
 #                    compiler_wrapper))
 
