@@ -696,10 +696,10 @@ class Package(object):
         """
         if not self.spec.concrete:
             raise ValueError("Can only fetch concrete packages.")
-        if 'curl' in self.spec: 
-	    spack_curl=spack.util.executable.which("curl", required=True)
+        if 'curl' in self.spec:
+            spack_curl = spack.util.executable.which("curl", required=True)
             tty.msg(
-                "using spack built curl: path: "+str(spack_curl))
+                "using spack built curl: path: " + str(spack_curl))
             spack.curl = spack_curl
 
         start_time = time.time()
