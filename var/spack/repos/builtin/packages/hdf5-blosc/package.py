@@ -29,6 +29,21 @@ import sys
 
 from spack import *
 
+def _install_shlib(name, src, dst):
+    """Install a shared library from directory src to directory dst"""
+    if sys.platform == "darwin":
+        shlib0 = name + ".0.dylib"
+        shlib = name + ".dylib"
+        shutil.copyfile(join_path(src, shlib0), join_path(dst, shlib0))
+        os.symlink(shlib0, join_path(dst, shlib))
+    else:
+        shlib000 = name + ".so.0.0.0"
+        shlib0 = name + ".so.0"
+        shlib = name + ".dylib"
+        shutil.copyfile(join_path(src, shlib000), join_path(dst, shlib000))
+        os.symlink(shlib000, join_path(dst, shlib0))
+        os.symlink(shlib0, join_path(dst, shlib))
+
 class Hdf5Blosc(Package):
     """Blosc filter for HDF5"""
     homepage = "https://github.com/Blosc/hdf5-blosc"
@@ -72,11 +87,7 @@ class Hdf5Blosc(Package):
                     "blosc_filter.lo",
                     "-L%s" % spec["c-blosc"].prefix.lib, "-lblosc",
                     "-L%s" % spec["hdf5"].prefix.lib, "-lhdf5")
-            shlib0 = "libblosc_filter.0.%s" % shlibext
-            shlib = "libblosc_filter.%s" % shlibext
-            shutil.copyfile(join_path(".libs", shlib0),
-                            join_path(prefix.lib, shlib0))
-            os.symlink(shlib0, join_path(prefix.lib, shlib))
+            _install_shlib("libblosc_filter", ".libs", prefix.lib)
 
             # Build and install plugin
             # The plugin requires at least HDF5 1.8.11:
@@ -92,13 +103,10 @@ class Hdf5Blosc(Package):
                         "-L%s" % prefix.lib, "-lblosc_filter",
                         "-L%s" % spec["c-blosc"].prefix.lib, "-lblosc",
                         "-L%s" % spec["hdf5"].prefix.lib, "-lhdf5")
-                shlib0 = "libblosc_plugin.0.%s" % shlibext
-                shlib = "libblosc_plugin.%s" % shlibext
-                shutil.copyfile(join_path(".libs", shlib0),
-                                join_path(prefix.lib, shlib0))
-                os.symlink(shlib0, join_path(prefix.lib, shlib))
+                _install_shlib("libblosc_plugin", ".libs", prefix.lib)
 
         self.check_install(spec)
+
     def check_install(self, spec):
         "Build and run a small program to test the installed HDF5 Blosc plugin"
         print "Checking HDF5-Blosc plugin..."
