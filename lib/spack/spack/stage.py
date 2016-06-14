@@ -430,7 +430,8 @@ class Stage(object):
         """
         # Create the top-level stage directory
         mkdirp(spack.stage_path)
-        remove_dead_links(spack.stage_path)
+        remove_if_dead_link(self.path)
+
         # If a tmp_root exists then create a directory there and then link it
         # in the stage area, otherwise create the stage directory in self.path
         if self._need_to_create_path():
