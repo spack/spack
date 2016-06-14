@@ -37,7 +37,10 @@ class Gmp(Package):
     version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
     version('6.0.0',  '6ef5869ae735db9995619135bd856b84')
 
+    variant("curl", default=False, description="Add  support of curl for https fetching")
+
     depends_on("m4", type='build')
+    depends_on("curl", when="+curl")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
