@@ -61,6 +61,7 @@ class Openmpi(Package):
     list_url = "http://www.open-mpi.org/software/ompi/"
     list_depth = 3
 
+    version('1.10.3', 'e2fe4513200e2aaa1500b762342c674b')
     version('1.10.2', 'b2f43d9635d2d52826e5ef9feb97fd4c')
     version('1.10.1', 'f0fcd77ed345b7eafb431968124ba16e')
     version('1.10.0', '280cf952de68369cebaca886c5ce0304')
