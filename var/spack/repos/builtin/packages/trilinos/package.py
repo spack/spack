@@ -91,7 +91,8 @@ class Trilinos(Package):
     # work at the end. But let's avoid all this by simply using shared libs
     depends_on('mumps@5.0:+mpi+shared', when='+mumps')
     depends_on('scalapack', when='+mumps')
-    depends_on('superlu-dist', when='+superlu-dist')
+    depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
+    depends_on('superlu-dist', when='@12.6.2:+superlu-dist')
     depends_on('hypre~internal-superlu', when='+hypre')
     depends_on('hdf5+mpi', when='+hdf5')
     depends_on('python', when='+python')
