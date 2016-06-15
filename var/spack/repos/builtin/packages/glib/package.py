@@ -35,6 +35,7 @@ class Glib(Package):
 
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
 
+    depends_on("gettext")
     depends_on("libffi")
     depends_on("zlib")
     depends_on("pkg-config")

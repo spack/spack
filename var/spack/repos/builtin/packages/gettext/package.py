@@ -25,30 +25,15 @@
 from spack import *
 
 class Gettext(Package):
-    """GNU internationalization (i18n) and localization (l10n) library."""
+    """TODO"""
     homepage = "https://www.gnu.org/software/gettext/"
-    url      = "http://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
+    url      = "http://ftp.gnu.org/pub/gnu/gettext/gettext-0.19.6.tar.xz"
 
-    version('0.19.7', 'f81e50556da41b44c1d59ac93474dca5')
+    version('0.19.6', '69d79254ee3b41df23f41c2f4fd720d9')
+
+    depends_on("libffi")
 
     def install(self, spec, prefix):
-        options = ['--disable-dependency-tracking',
-                   '--disable-silent-rules',
-                   '--disable-debug',
-                   '--prefix=%s' % prefix,
-                   '--with-included-gettext',
-                   '--with-included-glib',
-                   '--with-included-libcroco',
-                   '--with-included-libunistring',
-                   '--with-emacs',
-                   '--with-lispdir=%s/emacs/site-lisp/gettext' % prefix.share,
-                   '--disable-java',
-                   '--disable-csharp',
-                   '--without-git', # Don't use VCS systems to create these archives
-                   '--without-cvs',
-                   '--without-xz']
-
-        configure(*options)
-
+        configure("--prefix=%s" % prefix)
         make()
         make("install")

@@ -30,7 +30,7 @@ class Paraview(Package):
     _url_str = 'http://www.paraview.org/files/v%s/ParaView-v%s-source.tar.gz'
 
     version('4.4.0', 'fa1569857dd680ebb4d7ff89c2227378')
-    version('5.0.0', '4598f0b421460c8bbc635c9a1c3bdbee')
+    version('5.0.1', 'fdf206113369746e2276b95b257d2c9b')
 
     variant('python', default=False, description='Enable Python support')
 
@@ -79,6 +79,7 @@ class Paraview(Package):
                 return feature_to_bool(feature, on='OFF', off='ON')
 
             feature_args = std_cmake_args[:]
+
             feature_args.append('-DPARAVIEW_BUILD_QT_GUI:BOOL=%s' % feature_to_bool('+qt'))
             feature_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=%s' % feature_to_bool('+python'))
             if '+python' in spec:

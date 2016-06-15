@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libxcb(Package):
     """The X protocol C-language Binding (XCB) is a replacement
     for Xlib featuring a small footprint, latency hiding, direct
@@ -39,12 +40,14 @@ class Libxcb(Package):
     depends_on("xcb-proto")
     depends_on("pkg-config")
 
-    # depends_on('pthread')    # Ubuntu: apt-get install libpthread-stubs0-dev
-    # depends_on('xau')        # Ubuntu: apt-get install libxau-dev
+    # Ubuntu: apt-get install libpthread-stubs0-dev
+    depends_on('libpthread-stubs')
+    depends_on('libXau')  # Ubuntu: apt-get install libxau-dev
+    depends_on('xproto')
 
     def patch(self):
-        filter_file('typedef struct xcb_auth_info_t {', 'typedef struct {', 'src/xcb.h')
-
+        filter_file('typedef struct xcb_auth_info_t {', 'typedef struct {',
+                    'src/xcb.h')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
