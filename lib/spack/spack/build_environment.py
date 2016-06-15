@@ -321,6 +321,7 @@ def set_module_variables_for_package(pkg, module):
     # TODO: Currently, everything is a link dependency, but tools like
     # TODO: this shouldn't be.
     m.cmake = Executable('cmake')
+    m.ctest = Executable('ctest')
 
     # standard CMake arguments
     m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % pkg.prefix,
