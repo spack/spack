@@ -73,12 +73,12 @@ class Psi4(Package):
             cmake('..', *cmake_args)
 
             make()
-            # ctest()
+            ctest()
             make('install')
 
-        self.filter_compilers()
+        self.filter_compilers(spec)
 
-    def filter_compilers(self):
+    def filter_compilers(self, spec):
         """Run after install to tell the configuration files to
         use the compilers that Spack built the package with.
 
@@ -90,6 +90,7 @@ class Psi4(Package):
 
         cc_files  = ['bin/psi4-config']
         cxx_files = ['bin/psi4-config', 'include/psi4/psiconfig.h']
+        template  = 'share/psi4/plugin/Makefile.template'
 
         for filename in cc_files:
             filter_file(os.environ['CC'], self.compiler.cc,
@@ -98,3 +99,22 @@ class Psi4(Package):
         for filename in cxx_files:
             filter_file(os.environ['CXX'], self.compiler.cxx,
                         os.path.join(self.prefix, filename), **kwargs)
+
+        # The binary still keeps track of the compiler used to install Psi4
+        # and uses it when creating a plugin template
+        filter_file('@PLUGIN_CXX@', self.compiler.cxx,
+                    os.path.join(self.prefix, template), **kwargs)
+
+        # The binary links to the build include directory instead of the
+        # installation include directory:
+        # https://github.com/psi4/psi4/issues/410
+        filter_file('@PLUGIN_INCLUDES@', '-I{0}'.format(
+                        ' -I'.join(
+                            spec['psi4'].prefix.include,
+                            spec['boost'].prefix.include,
+                            spec['lapack'].prefix.include,
+                            spec['blas'].prefix.include,
+                            spec['python'].prefix.include,
+                            '/usr/include'
+                        )
+                    ), os.path.join(self.prefix, template), **kwargs)
