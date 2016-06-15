@@ -46,10 +46,10 @@ def check_compiler_yaml_version():
         if data:
             compilers = data['compilers'].items()
             if len(compilers) > 0:
-                if 'operating_system' not in compilers[0][1]:
+                if (not isinstance(compilers, list)) or 'operating_system' not in compilers[0][1]:
                     new_file = os.path.join(scope.path, '_old_compilers.yaml')
-                    tty.warn('%s in out of date compilers format. ' 
+                    tty.warn('%s in out of date compilers format. '
                              'Moved to %s. Spack automatically generate '
-                             'a compilers config file ' 
+                             'a compilers config file '
                              % (file_name, new_file))
                     os.rename(file_name, new_file)
