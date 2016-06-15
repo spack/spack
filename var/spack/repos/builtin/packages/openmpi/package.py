@@ -173,40 +173,33 @@ class Openmpi(Package):
            be bound to whatever compiler they were built with.
         """
         kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
-        dir = os.path.join(self.prefix, 'share/openmpi/')
+        wrapper_basepath = join_path(self.prefix, 'share', 'openmpi')
 
-        cc_wrappers = ['mpicc-vt-wrapper-data.txt', 'mpicc-wrapper-data.txt',
-                       'ortecc-wrapper-data.txt', 'shmemcc-wrapper-data.txt']
+        wrappers = [
+            ('mpicc-vt-wrapper-data.txt', self.compiler.cc),
+            ('mpicc-wrapper-data.txt', self.compiler.cc),
+            ('ortecc-wrapper-data.txt', self.compiler.cc),
+            ('shmemcc-wrapper-data.txt', self.compiler.cc),
+            ('mpic++-vt-wrapper-data.txt', self.compiler.cxx),
+            ('mpic++-wrapper-data.txt', self.compiler.cxx),
+            ('ortec++-wrapper-data.txt', self.compiler.cxx),
+            ('mpifort-vt-wrapper-data.txt', self.compiler.fc),
+            ('mpifort-wrapper-data.txt', self.compiler.fc),
+            ('shmemfort-wrapper-data.txt', self.compiler.fc),
+            ('mpif90-vt-wrapper-data.txt', self.compiler.fc),
+            ('mpif90-wrapper-data.txt', self.compiler.fc),
+            ('mpif77-vt-wrapper-data.txt',  self.compiler.f77),
+            ('mpif77-wrapper-data.txt',  self.compiler.f77)
+        ]
 
-        cxx_wrappers = ['mpic++-vt-wrapper-data.txt', 'mpic++-wrapper-data.txt',
-                        'ortec++-wrapper-data.txt']
-
-        fc_wrappers = ['mpifort-vt-wrapper-data.txt',
-                       'mpifort-wrapper-data.txt', 'shmemfort-wrapper-data.txt']
-
-        for wrapper in cc_wrappers:
-            filter_file('compiler=.*', 'compiler=%s' % self.compiler.cc,
-                        os.path.join(dir, wrapper), **kwargs)
-
-        for wrapper in cxx_wrappers:
-            filter_file('compiler=.*', 'compiler=%s' % self.compiler.cxx,
-                        os.path.join(dir, wrapper), **kwargs)
-
-        for wrapper in fc_wrappers:
-            filter_file('compiler=.*', 'compiler=%s' % self.compiler.fc,
-                        os.path.join(dir, wrapper), **kwargs)
-
-        # These are symlinks in newer versions, so check that here
-        f77_wrappers = ['mpif77-vt-wrapper-data.txt', 'mpif77-wrapper-data.txt']
-        f90_wrappers = ['mpif90-vt-wrapper-data.txt', 'mpif90-wrapper-data.txt']
-
-        for wrapper in f77_wrappers:
-            path = os.path.join(dir, wrapper)
-            if not os.path.islink(path):
-                filter_file('compiler=.*', 'compiler=%s' % self.compiler.f77,
-                            path, **kwargs)
-        for wrapper in f90_wrappers:
-            path = os.path.join(dir, wrapper)
-            if not os.path.islink(path):
-                filter_file('compiler=.*', 'compiler=%s' % self.compiler.fc,
-                            path, **kwargs)
+        for wrapper_name, compiler in wrappers:
+            wrapper = join_path(wrapper_basepath, wrapper_name)
+            if not os.path.islink(wrapper):
+                # Substitute Spack compile wrappers for the real
+                # underlying compiler
+                match = 'compiler=.*'
+                substitute = 'compiler={compiler}'.format(compiler=compiler)
+                filter_file(match, substitute, wrapper, **kwargs)
+                # Remove this linking flag if present
+                # (it turns RPATH into RUNPATH)
+                filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)
