@@ -74,7 +74,7 @@ def _to_dict(compiler):
     d['spec'] = str(compiler.spec)
     d['paths'] = dict( (attr, getattr(compiler, attr, None)) for attr in _path_instance_vars )
     d['operating_system'] = str(compiler.operating_system)
-    d['modules'] = compiler.modules
+    d['modules'] = compiler.modules if compiler.modules else []
 
     if compiler.alias:
         d['alias'] = compiler.alias
@@ -139,11 +139,11 @@ def remove_compiler_from_config(compiler_spec, scope=None):
       - scope:          configuration scope to modify.
     """
     compiler_config = get_compiler_config(scope)
-    matches = [(a,c) for (a,c) in compiler_config.items() if c['spec'] == compiler_spec]    
+    matches = [(a,c) for (a,c) in compiler_config.items() if c['spec'] == compiler_spec]
     if len(matches) == 1:
         del compiler_config[matches[0][0]]
     else:
-        CompilerSpecInsufficientlySpecificError(compiler_spec)        
+        CompilerSpecInsufficientlySpecificError(compiler_spec)
 
     spack.config.update_config('compilers', compiler_config, scope)
 
@@ -232,7 +232,7 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
             if items['compiler']['spec'] != str(cspec):
                 continue
             items = items['compiler']
-        
+
             if not ('paths' in items and all(n in items['paths'] for n in _path_instance_vars)):
                 raise InvalidCompilerConfigurationError(cspec)
 
@@ -255,7 +255,7 @@ def compilers_for_spec(compiler_spec, scope=None, **kwargs):
             else:
                 operating_system = None
 
-            
+
             alias = items['alias'] if 'alias' in items else None
 
             flags = {}
@@ -311,7 +311,7 @@ def all_os_classes():
     this platform
     """
     classes = []
-    
+
     platform = spack.architecture.sys_type()
     for os_class in platform.operating_sys.values():
         classes.append(os_class)
