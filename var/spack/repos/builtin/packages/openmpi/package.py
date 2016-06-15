@@ -72,20 +72,27 @@ class Openmpi(Package):
     patch('configure.patch', when="@1.10.0:1.10.1")
 
     variant('psm', default=False, description='Build support for the PSM library.')
-    variant('psm2', default=False, description='Build support for the Intel PSM2 library.')
-    variant('pmi', default=False, description='Build support for PMI-based launchers')
-    variant('verbs', default=_verbs_dir() is not None, description='Build support for OpenFabrics verbs.')
+    variant('psm2', default=False,
+            description='Build support for the Intel PSM2 library.')
+    variant('pmi', default=False,
+            description='Build support for PMI-based launchers')
+    variant('verbs', default=_verbs_dir() is not None,
+            description='Build support for OpenFabrics verbs.')
     variant('mxm', default=False, description='Build Mellanox Messaging support')
 
-    variant('thread_multiple', default=False, description='Enable MPI_THREAD_MULTIPLE support')
+    variant('thread_multiple', default=False,
+            description='Enable MPI_THREAD_MULTIPLE support')
 
     # TODO : variant support for alps, loadleveler  is missing
-    variant('tm', default=False, description='Build TM (Torque, PBSPro, and compatible) support')
-    variant('slurm', default=False, description='Build SLURM scheduler component')
+    variant('tm', default=False,
+            description='Build TM (Torque, PBSPro, and compatible) support')
+    variant('slurm', default=False,
+            description='Build SLURM scheduler component')
 
     variant('sqlite3', default=False, description='Build sqlite3 support')
 
-    variant('vt', default=True, description='Build support for contributed package vt')
+    variant('vt', default=True,
+            description='Build support for contributed package vt')
 
     # TODO : support for CUDA is missing
 
@@ -96,8 +103,7 @@ class Openmpi(Package):
     depends_on('sqlite', when='+sqlite3')
 
     def url_for_version(self, version):
-        return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)
-
+        return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)  # NOQA: ignore=E501
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('OMPI_CC', spack_cc)
@@ -106,14 +112,15 @@ class Openmpi(Package):
         spack_env.set('OMPI_F77', spack_f77)
 
     def setup_dependent_package(self, module, dep_spec):
-        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
-        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+        self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
     @property
     def verbs(self):
-        # Up through version 1.6, this option was previously named --with-openib
+        # Up through version 1.6, this option was previously named
+        # --with-openib
         if self.spec.satisfies('@:1.6'):
             return 'openib'
         # In version 1.7, it was renamed to be --with-verbs
@@ -135,7 +142,7 @@ class Openmpi(Package):
             '--with-psm2' if '+psm2' in spec else '--without-psm2',
             '--with-mxm' if '+mxm' in spec else '--without-mxm',
             # Other options
-            '--enable-mpi-thread-multiple' if '+thread_multiple' in spec else '--disable-mpi-thread-multiple',
+            '--enable-mpi-thread-multiple' if '+thread_multiple' in spec else '--disable-mpi-thread-multiple',  # NOQA: ignore=E501
             '--with-pmi' if '+pmi' in spec else '--without-pmi',
             '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
             '--enable-vt' if '+vt' in spec else '--disable-vt'
@@ -153,7 +160,7 @@ class Openmpi(Package):
         # use this for LANL builds, but for LLNL builds, we need:
         #     "--with-platform=contrib/platform/llnl/optimized"
         if self.version == ver("1.6.5") and '+lanl' in spec:
-            config_args.append("--with-platform=contrib/platform/lanl/tlcc2/optimized-nopanasas")
+            config_args.append("--with-platform=contrib/platform/lanl/tlcc2/optimized-nopanasas")  # NOQA: ignore=E501
 
         if not self.compiler.f77 and not self.compiler.fc:
             config_args.append("--enable-mpi-fortran=no")

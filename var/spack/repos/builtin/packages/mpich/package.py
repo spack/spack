@@ -29,8 +29,8 @@ class Mpich(Package):
     """MPICH is a high performance and widely portable implementation of
        the Message Passing Interface (MPI) standard."""
     homepage = "http://www.mpich.org"
-    url      = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
-    list_url   = "http://www.mpich.org/static/downloads/"
+    url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+    list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 2
 
     version('3.2',   'f414cfa77099cd1fa1a5ae4e22db508a')
@@ -41,7 +41,8 @@ class Mpich(Package):
     version('3.1',   '5643dd176499bfb7d25079aaff25f2ec')
     version('3.0.4', '9c5d5d4fe1e17dd12153f40bc5b6dbc0')
 
-    variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
+    variant('verbs', default=False,
+            description='Build support for OpenFabrics verbs.')
     variant('pmi', default=True, description='Build with PMI support')
     variant('hydra', default=True, description='Build the hydra process manager')
 
@@ -56,9 +57,9 @@ class Mpich(Package):
         spack_env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
-        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
-        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+        self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
     def install(self, spec, prefix):
@@ -91,7 +92,6 @@ class Mpich(Package):
 
         self.filter_compilers()
 
-
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
            compilers that Spack built the package with.
@@ -101,23 +101,27 @@ class Mpich(Package):
            be bound to whatever compiler they were built with.
         """
         bin = self.prefix.bin
-        mpicc  = join_path(bin, 'mpicc')
+        mpicc = join_path(bin, 'mpicc')
         mpicxx = join_path(bin, 'mpicxx')
         mpif77 = join_path(bin, 'mpif77')
         mpif90 = join_path(bin, 'mpif90')
 
-        spack_cc  = env['CC']
+        spack_cc = env['CC']
         spack_cxx = env['CXX']
         spack_f77 = env['F77']
-        spack_fc  = env['FC']
+        spack_fc = env['FC']
 
         # Substitute Spack compile wrappers for the real
         # underlying compiler
-        kwargs = { 'ignore_absent' : True, 'backup' : False, 'string' : True }
-        filter_file('CC="%s"' % spack_cc , 'CC="%s"'  % self.compiler.cc,  mpicc,  **kwargs)
-        filter_file('CXX="%s"'% spack_cxx, 'CXX="%s"' % self.compiler.cxx, mpicxx, **kwargs)
-        filter_file('F77="%s"'% spack_f77, 'F77="%s"' % self.compiler.f77, mpif77, **kwargs)
-        filter_file('FC="%s"' % spack_fc , 'FC="%s"'  % self.compiler.fc,  mpif90, **kwargs)
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
+        filter_file('CC="%s"' % spack_cc,
+                    'CC="%s"' % self.compiler.cc,  mpicc,  **kwargs)
+        filter_file('CXX="%s"' % spack_cxx,
+                    'CXX="%s"' % self.compiler.cxx, mpicxx, **kwargs)
+        filter_file('F77="%s"' % spack_f77,
+                    'F77="%s"' % self.compiler.f77, mpif77, **kwargs)
+        filter_file('FC="%s"' % spack_fc,
+                    'FC="%s"' % self.compiler.fc,  mpif90, **kwargs)
 
         # Remove this linking flag if present
         # (it turns RPATH into RUNPATH)
