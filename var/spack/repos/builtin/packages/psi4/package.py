@@ -36,19 +36,15 @@ class Psi4(Package):
 
     version('0.5', '53041b8a9be3958384171d0d22f9fdd0')
 
-    variant('mpi', default=True, description='Enable MPI parallelization')
-
     # Required dependencies
     depends_on('blas')
     depends_on('lapack')
-    depends_on('boost+chrono+filesystem~mpi+python+regex+serialization+system+timer+thread', when='~mpi')
-    depends_on('boost+chrono+filesystem+mpi+python+regex+serialization+system+timer+thread', when='+mpi')
+    depends_on('boost+chrono+filesystem+python+regex+serialization+system+timer+thread')
     depends_on('python')
     depends_on('cmake')
     depends_on('py-numpy')
 
     # Optional dependencies
-    depends_on('mpi', when='+mpi')
     # TODO: add packages for these
     # depends_on('perl')
     # depends_on('erd')
@@ -63,7 +59,6 @@ class Psi4(Package):
             '-DLAPACK_LIBRARIES={0}'.format(spec['lapack'].lapack_shared_lib),
             '-DBOOST_INCLUDEDIR={0}'.format(spec['boost'].prefix.include),
             '-DBOOST_LIBRARYDIR={0}'.format(spec['boost'].prefix.lib),
-            '-DENABLE_MPI={0}'.format('ON' if '+mpi' in spec else 'OFF'),
             '-DENABLE_CHEMPS2=OFF'
         ]
 
@@ -73,12 +68,11 @@ class Psi4(Package):
             cmake('..', *cmake_args)
 
             make()
-            ctest()
             make('install')
 
-        self.filter_compilers(spec)
+        self.filter_compilers(spec, prefix)
 
-    def filter_compilers(self, spec):
+    def filter_compilers(self, spec, prefix):
         """Run after install to tell the configuration files to
         use the compilers that Spack built the package with.
 
@@ -94,27 +88,28 @@ class Psi4(Package):
 
         for filename in cc_files:
             filter_file(os.environ['CC'], self.compiler.cc,
-                        os.path.join(self.prefix, filename), **kwargs)
+                        os.path.join(prefix, filename), **kwargs)
 
         for filename in cxx_files:
             filter_file(os.environ['CXX'], self.compiler.cxx,
-                        os.path.join(self.prefix, filename), **kwargs)
+                        os.path.join(prefix, filename), **kwargs)
 
         # The binary still keeps track of the compiler used to install Psi4
         # and uses it when creating a plugin template
         filter_file('@PLUGIN_CXX@', self.compiler.cxx,
-                    os.path.join(self.prefix, template), **kwargs)
+                    os.path.join(prefix, template), **kwargs)
 
         # The binary links to the build include directory instead of the
         # installation include directory:
         # https://github.com/psi4/psi4/issues/410
         filter_file('@PLUGIN_INCLUDES@', '-I{0}'.format(
-                        ' -I'.join(
-                            spec['psi4'].prefix.include,
-                            spec['boost'].prefix.include,
-                            spec['lapack'].prefix.include,
-                            spec['blas'].prefix.include,
-                            spec['python'].prefix.include,
-                            '/usr/include'
-                        )
-                    ), os.path.join(self.prefix, template), **kwargs)
+            ' -I'.join([
+                os.path.join(spec['psi4'].prefix.include, 'psi4'),
+                os.path.join(spec['boost'].prefix.include, 'boost'),
+                os.path.join(spec['python'].prefix.include, 'python{0}'.format(
+                    spec['python'].version.up_to(2))),
+                spec['lapack'].prefix.include,
+                spec['blas'].prefix.include,
+                '/usr/include'
+            ])
+        ), os.path.join(prefix, template), **kwargs)
