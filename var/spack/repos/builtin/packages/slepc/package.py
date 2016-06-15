@@ -42,8 +42,8 @@ class Slepc(Package):
 
     depends_on('petsc@3.7:', when='@3.7.1:')
     depends_on('petsc@3.6.3:3.6.4', when='@3.6.2:3.6.3')
-    depends_on('arpack-ng~mpi',when='+arpack^petsc~mpi')
-    depends_on('arpack-ng+mpi',when='+arpack^petsc+mpi')
+    depends_on('arpack-ng~mpi', when='+arpack^petsc~mpi')
+    depends_on('arpack-ng+mpi', when='+arpack^petsc+mpi')
 
     def install(self, spec, prefix):
         # set SLEPC_DIR for installation
@@ -67,7 +67,7 @@ class Slepc(Package):
         configure('--prefix=%s' % prefix, *options)
 
         make('MAKE_NP=%s' % make_jobs, parallel=False)
-        #FIXME:
+        # FIXME:
         # make('test')
         make('install')
 
