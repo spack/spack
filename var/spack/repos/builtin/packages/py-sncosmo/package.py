@@ -36,7 +36,7 @@ class PySncosmo(Package):
 
     # Required dependencies
     # py-sncosmo binaries are duplicates of those from py-astropy
-    extends('python', ignore=r'bin/*')
+    extends('python', ignore=r'bin/.*')
     depends_on('py-numpy')
     depends_on('py-scipy')
     depends_on('py-astropy')

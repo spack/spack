@@ -38,13 +38,20 @@ class PyH5py(Package):
 
     variant('mpi', default=False, description='Build with MPI support')
 
-    extends('python', ignore=r'bin/cy.*')
+    extends('python')
 
+    # Build dependencies
+    depends_on('py-cython@0.19:')
+    depends_on('pkg-config')
     depends_on('hdf5@1.8.4:+mpi', when='+mpi')
     depends_on('hdf5@1.8.4:~mpi', when='~mpi')
-    depends_on('py-numpy@1.6.1:')
-    depends_on('py-cython')
     depends_on('mpi', when='+mpi')
+
+    # Build and runtime dependencies
+    depends_on('py-numpy@1.6.1:')
+
+    # Runtime dependencies
+    depends_on('py-six')
 
     def install(self, spec, prefix):
         python('setup.py', 'configure',

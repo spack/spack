@@ -167,14 +167,13 @@ class Python(Package):
         ignore_arg = args.get('ignore', lambda f: False)
 
         # Always ignore easy-install.pth, as it needs to be merged.
-        patterns = [r'easy-install\.pth$']
+        patterns = [r'site-packages/easy-install\.pth$']
 
         # Ignore pieces of setuptools installed by other packages.
         if ext_pkg.name != 'py-setuptools':
-            patterns.append(r'/site[^/]*\.pyc?$')
-            patterns.append(r'setuptools\.pth')
             patterns.append(r'bin/easy_install[^/]*$')
-            patterns.append(r'setuptools.*egg$')
+            patterns.append(r'site-packages/setuptools\.pth$')
+            patterns.append(r'site-packages/site[^/]*\.pyc?$')
         if ext_pkg.name != 'py-numpy':
             patterns.append(r'bin/f2py$')
 

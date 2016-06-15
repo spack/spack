@@ -40,6 +40,7 @@ class PyIminuit(Package):
     # Optional dependencies
     depends_on('py-numpy')
     depends_on('py-matplotlib')
+    depends_on('py-cython')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix={0}'.format(prefix))
