@@ -214,15 +214,15 @@ class ConfigureGuesser(object):
 
         self.build_system = build_system
 
+        # Set the appropriate default installation instructions
+        self.install = installDict[build_system]
+
         # Set any necessary extensions for Python and R
         extensions = ''
         if build_system in ['python', 'R']:
             extensions = "\n    extends('{0}')\n".format(build_system)
 
         self.extends = extensions
-
-        # Set the appropriate default installation instructions
-        self.install = installDict[build_system]
 
 
 def guess_name_and_version(url, args):
