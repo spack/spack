@@ -34,7 +34,7 @@ class Freetype(Package):
     depends_on('libpng')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure("--prefix=%s" % prefix, "--with-harfbuzz=no")
 
         make()
         make("install")
