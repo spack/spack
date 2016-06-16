@@ -451,7 +451,7 @@ def arch_from_dict(d):
     if isinstance(d, basestring):
         # We have an old spec using a string for the architecture
         arch.platform = Platform('spack_compatibility')
-        arch.platform_os = OperatingSystem('pre_version', '1.0')
+        arch.platform_os = OperatingSystem('unknown', '')
         arch.target = Target(d)
 
         arch.os_string = None
