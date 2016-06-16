@@ -56,8 +56,9 @@ class Xl(Compiler):
         else:
             return "-qlanglvl=extended0x"
 
+
     @classmethod
-    def default_version(self, comp):
+    def default_version(cls, comp):
         """The '-qversion' is the standard option fo XL compilers.
            Output looks like this::
 
@@ -82,6 +83,7 @@ class Xl(Compiler):
 
         return get_compiler_version(
             comp, '-qversion',r'([0-9]?[0-9]\.[0-9])')
+
 
     @classmethod
     def fc_version(cls, fc):

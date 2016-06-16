@@ -24,16 +24,19 @@
 ##############################################################################
 import unittest
 import os
+import copy
 from spack.environment import EnvironmentModifications
 
 
 class EnvironmentTest(unittest.TestCase):
     def setUp(self):
-        os.environ.clear()
         os.environ['UNSET_ME'] = 'foo'
         os.environ['EMPTY_PATH_LIST'] = ''
         os.environ['PATH_LIST'] = '/path/second:/path/third'
         os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'
+
+    def tearDown(self):
+        pass
 
     def test_set(self):
         env = EnvironmentModifications()
