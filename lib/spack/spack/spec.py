@@ -526,7 +526,12 @@ class Spec(object):
         """
         valid_flags = FlagMap.valid_compiler_flags()
         if name == 'arch' or name == 'architecture':
-            platform, op_sys, target = value.split('-')
+            parts = value.split('-')
+            if len(parts) == 3:
+                platform, op_sys, target = parts
+            else:
+                platform, op_sys, target = None, None, value
+
             assert(self.architecture.platform is None)
             assert(self.architecture.platform_os is None)
             assert(self.architecture.target is None)
@@ -596,11 +601,13 @@ class Spec(object):
 
     def _set_os(self, value):
         """Called by the parser to set the architecture operating system"""
-        self.architecture.platform_os = self.architecture.platform.operating_system(value)
+        if self.architecture.platform:
+            self.architecture.platform_os = self.architecture.platform.operating_system(value)
 
     def _set_target(self, value):
         """Called by the parser to set the architecture target"""
-        self.architecture.target = self.architecture.platform.target(value)
+        if self.architecture.platform:
+            self.architecture.target = self.architecture.platform.target(value)
 
     def _add_dependency(self, spec):
         """Called by the parser to add another spec as a dependency."""
@@ -1063,7 +1070,7 @@ class Spec(object):
                     feq(replacement.architecture, spec.architecture) and
                     feq(replacement.dependencies, spec.dependencies) and
                     feq(replacement.variants, spec.variants) and
-                    feq(replacement.external, spec.external) and 
+                    feq(replacement.external, spec.external) and
                     feq(replacement.external_module, spec.external_module)):
                     continue
                 # Refine this spec to the candidate. This uses
@@ -1468,7 +1475,7 @@ class Spec(object):
                 if self.architecture.target != other.architecture.target:
                     raise UnsatisfiableArchitectureSpecError(self.architecture,
                                                              other.architecture)
-                
+
 
         changed = False
         if self.compiler is not None and other.compiler is not None:
@@ -1619,7 +1626,7 @@ class Spec(object):
         # Architecture satisfaction is currently just string equality.
         # If not strict, None means unconstrained.
         if self.architecture and other.architecture:
-            if ((self.architecture.platform and other.architecture.platform and self.architecture.platform != other.architecture.platform) or 
+            if ((self.architecture.platform and other.architecture.platform and self.architecture.platform != other.architecture.platform) or
                 (self.architecture.platform_os and other.architecture.platform_os and self.architecture.platform_os != other.architecture.platform_os) or
                 (self.architecture.target and other.architecture.target and self.architecture.target != other.architecture.target)):
                 return False
