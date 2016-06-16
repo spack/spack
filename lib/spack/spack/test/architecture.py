@@ -23,7 +23,7 @@ class ArchitectureTest(MockPackagesTest):
 
     def tearDown(self):
         super(ArchitectureTest, self).tearDown()
-    
+
     def test_dict_functions_for_architecture(self):
         arch = Arch()
         arch.platform = spack.architecture.sys_type()
@@ -45,14 +45,6 @@ class ArchitectureTest(MockPackagesTest):
         self.assertTrue( isinstance(new_arch.platform_os, OperatingSystem) )
         self.assertTrue( isinstance(new_arch.target, Target) )
 
-
-#    def test_platform_class_and_compiler_strategies(self):
-#        a = CrayXc()
-#        t = a.operating_system('default_os')
-#        self.assertEquals(t.compiler_strategy, 'MODULES')
-#        b = Linux()
-#        s = b.operating_system('default_os')
-#        self.assertEquals(s.compiler_strategy, 'PATH')
 
     def test_sys_type(self):
         output_platform_class = sys_type()
@@ -101,12 +93,12 @@ class ArchitectureTest(MockPackagesTest):
 
     def test_user_input_combination(self):
         os_list = self.platform.operating_sys.keys()
-        target_list = self.platform.targets.keys()  
+        target_list = self.platform.targets.keys()
         additional = ["fe", "be", "frontend", "backend"]
 
         os_list.extend(additional)
-        target_list.extend(additional)  
-        
+        target_list.extend(additional)
+
         combinations = itertools.product(os_list, target_list)
         results = []
         for arch in combinations:
@@ -117,5 +109,4 @@ class ArchitectureTest(MockPackagesTest):
             results.append(spec.architecture.target == self.platform.target(t))
         res = all(results)
 
-        self.assertTrue(res) 
-
+        self.assertTrue(res)
