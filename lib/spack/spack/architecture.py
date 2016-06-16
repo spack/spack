@@ -195,7 +195,7 @@ class Platform(object):
             name = self.back_os
 
         return self.operating_sys.get(name, None)
-    
+
 
     @classmethod
     def detect(self):
@@ -206,11 +206,14 @@ class Platform(object):
         """
         raise NotImplementedError()
 
+
     def __repr__(self):
         return self.__str__()
 
+
     def __str__(self):
         return self.name
+
 
     def _cmp_key(self):
         t_keys = ''.join(str(t._cmp_key()) for t in
@@ -338,7 +341,6 @@ class OperatingSystem(object):
         d = {}
         d['name'] = self.name
         d['version'] = self.version
-        
         return d
 
 @key_ordering
@@ -377,6 +379,11 @@ class Arch(object):
                     os_name + "-" + str(self.target))
         else:
             return ''
+
+
+    def __contains__(self, string):
+        return string in str(self)
+
 
     def _cmp_key(self):
         if isinstance(self.platform, Platform):
