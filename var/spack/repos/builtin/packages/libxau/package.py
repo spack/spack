@@ -24,31 +24,21 @@
 ##############################################################################
 from spack import *
 
-class Libxcb(Package):
-    """The X protocol C-language Binding (XCB) is a replacement
-    for Xlib featuring a small footprint, latency hiding, direct
-    access to the protocol, improved threading support, and
-    extensibility."""
-
+class Libxau(Package):
+    """The libXau package contains a library implementing the X11
+       Authorization Protocol. This is useful for restricting client
+       access to the display."""
     homepage = "http://xcb.freedesktop.org/"
-    url      = "http://xcb.freedesktop.org/dist/libxcb-1.11.tar.gz"
+    url      = "http://ftp.x.org/pub/individual/lib/libXau-1.0.8.tar.bz2"
 
-    version('1.11', '1698dd837d7e6e94d029dbe8b3a82deb')
-    version('1.11.1', '118623c15a96b08622603a71d8789bf3')
+    version('1.0.8', '685f8abbffa6d145c0f930f00703b21b')
 
-    depends_on("python")
-    depends_on("xcb-proto")
-    depends_on("pkg-config")
-    depends_on("libpthread-stubs")
-    depends_on('libxau')
-
-    def patch(self):
-        filter_file('typedef struct xcb_auth_info_t {', 'typedef struct {', 'src/xcb.h')
-
+    depends_on('xproto')
 
     def install(self, spec, prefix):
-        env['PKG_CONFIG_PATH'] = env['PKG_CONFIG_PATH'] + ':/usr/lib64/pkgconfig'
-        configure("--prefix=%s" % prefix)
+        # FIXME: Modify the configure line to suit your build system here.
+        configure('--prefix=%s' % prefix)
 
+        # FIXME: Add logic to build and install here
         make()
         make("install")

@@ -24,31 +24,15 @@
 ##############################################################################
 from spack import *
 
-class Libxcb(Package):
-    """The X protocol C-language Binding (XCB) is a replacement
-    for Xlib featuring a small footprint, latency hiding, direct
-    access to the protocol, improved threading support, and
-    extensibility."""
+class XorgUtilMacros(Package):
+    """The util-macros package contains the m4 macros used by all of the Xorg packages."""
 
-    homepage = "http://xcb.freedesktop.org/"
-    url      = "http://xcb.freedesktop.org/dist/libxcb-1.11.tar.gz"
+    homepage = "http://www.example.com"
+    url      = "http://ftp.x.org/pub/individual/util/util-macros-1.19.0.tar.bz2"
 
-    version('1.11', '1698dd837d7e6e94d029dbe8b3a82deb')
-    version('1.11.1', '118623c15a96b08622603a71d8789bf3')
-
-    depends_on("python")
-    depends_on("xcb-proto")
-    depends_on("pkg-config")
-    depends_on("libpthread-stubs")
-    depends_on('libxau')
-
-    def patch(self):
-        filter_file('typedef struct xcb_auth_info_t {', 'typedef struct {', 'src/xcb.h')
-
+    version('1.19.0', '1cf984125e75f8204938d998a8b6c1e1')
 
     def install(self, spec, prefix):
-        env['PKG_CONFIG_PATH'] = env['PKG_CONFIG_PATH'] + ':/usr/lib64/pkgconfig'
         configure("--prefix=%s" % prefix)
-
         make()
         make("install")

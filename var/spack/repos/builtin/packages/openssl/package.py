@@ -100,7 +100,7 @@ class Openssl(Package):
         # in the environment, then this will override what is set in the
         # Makefile, leading to build errors.
         env.pop('APPS', None)
-        if spec.satisfies("arch=darwin-x86_64") or spec.satisfies("arch=ppc64"):
+        if spec.satisfies("target=x86_64") or spec.satisfies("target=ppc64"):
             # This needs to be done for all 64-bit architectures (except Linux,
             # where it happens automatically?)
             env['KERNEL_BITS'] = '64'
