@@ -80,11 +80,6 @@ class Python(Package):
         ldflags += ' -L%s/lib -L%s/lib' % (
             spec['sqlite'].prefix, spec['zlib'].prefix)
         if '+tk' in spec:
-            configure_args.extend([
-                '--with-tcltk-includes=-I%s/include -I%s/include' % (
-                    spec['tk'].prefix, spec['tcl'].prefix),
-                '--with-tcltk-libs=%s/lib %s/lib' % (
-                    spec['tk'].prefix, spec['tcl'].prefix)])
             cppflags += ' -I%s/include -I%s/include' % (
                 spec['tk'].prefix, spec['tcl'].prefix)
             ldflags += ' -L%s/lib -L%s/lib' % (
