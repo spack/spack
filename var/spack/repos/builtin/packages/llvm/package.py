@@ -267,16 +267,16 @@ class Llvm(Package):
 
         if '+all_targets' not in spec: # all is default on cmake
             targets = ['CppBackend', 'NVPTX', 'AMDGPU']
-            if 'x86' in spec.architecture.lower():
+            if 'x86' in spec.architecture.target.lower():
                 targets.append('X86')
-            elif 'arm' in spec.architecture.lower():
+            elif 'arm' in spec.architecture.target.lower():
                 targets.append('ARM')
-            elif 'aarch64' in spec.architecture.lower():
+            elif 'aarch64' in spec.architecture.target.lower():
                 targets.append('AArch64')
-            elif 'sparc' in spec.architecture.lower():
+            elif 'sparc' in spec.architecture.target.lower():
                 targets.append('sparc')
-            elif ('ppc' in spec.architecture.lower() or
-                  'power' in spec.architecture.lower()):
+            elif ('ppc' in spec.architecture.target.lower() or
+                  'power' in spec.architecture.target.lower()):
                 targets.append('PowerPC')
 
             cmake_args.append('-DLLVM_TARGETS_TO_BUILD:Bool=' + ';'.join(targets))

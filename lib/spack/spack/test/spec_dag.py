@@ -29,6 +29,7 @@ You can find the dummy packages here::
     spack/lib/spack/spack/test/mock_packages
 """
 import spack
+import spack.architecture
 import spack.package
 
 from llnl.util.lang import list_modules
@@ -241,8 +242,10 @@ class SpecDagTest(MockPackagesTest):
 
 
     def test_unsatisfiable_architecture(self):
-        self.set_pkg_dep('mpileaks', 'mpich arch=bgqos_0')
-        spec = Spec('mpileaks ^mpich arch=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
+        platform = spack.architecture.sys_type()
+
+        self.set_pkg_dep('mpileaks', 'mpich platform=test target=be')
+        spec = Spec('mpileaks ^mpich platform=test target=fe ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
 
 

@@ -676,11 +676,13 @@ class Package(object):
         return self.spec.prefix
 
     @property
+    #TODO: Change this to architecture
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
-        return spack.compilers.compiler_for_spec(self.spec.compiler)
+        return spack.compilers.compiler_for_spec(self.spec.compiler, 
+                self.spec.architecture)
 
     def url_version(self, version):
         """
