@@ -13,11 +13,11 @@ class Darwin(Platform):
         self.add_target(self.default, Target(self.default))
         mac_os = MacOsx()
         
-        self.default_os = mac_os.name
-        self.front_os = mac_os.name
-        self.back_os =  mac_os.name 
+        self.default_os = str(mac_os)
+        self.front_os   = str(mac_os)
+        self.back_os    = str(mac_os)
 
-        self.add_operating_system(mac_os.name, mac_os)
+        self.add_operating_system(str(mac_os), mac_os)
 
     @classmethod
     def detect(self):

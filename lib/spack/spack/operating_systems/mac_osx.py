@@ -21,9 +21,8 @@ class MacOsx(OperatingSystem):
                         "10.11": "elcapitan"}     
 
         mac_ver = py_platform.mac_ver()[0][:-2]
-        try:
-            name = mac_releases[mac_ver]
-        except KeyError:
-            name = "mac_os"
-
+        name = mac_releases.get(mac_ver, "mac_osx")
         super(MacOsx, self).__init__(name, mac_ver)
+
+    def __str__(self):
+        return self.name
