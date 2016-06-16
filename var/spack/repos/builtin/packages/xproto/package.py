@@ -25,29 +25,15 @@
 from spack import *
 
 
-class Libxcb(Package):
-    """The X protocol C-language Binding (XCB) is a replacement
-    for Xlib featuring a small footprint, latency hiding, direct
-    access to the protocol, improved threading support, and
-    extensibility."""
+class Xproto(Package):
+    """The Xorg protocol headers provide the header files required to
+    build the system, and to allow other applications to build against
+    the installed X Window system."""
 
-    homepage = "http://xcb.freedesktop.org/"
-    url      = "http://xcb.freedesktop.org/dist/libxcb-1.11.tar.gz"
+    homepage = "http://www.linuxfromscratch.org/blfs/view/cvs/index.html"
+    url      = "https://www.x.org/archive/individual/proto/xproto-7.0.29.tar.gz"  # NOQA: ignore=E501
 
-    version('1.11', '1698dd837d7e6e94d029dbe8b3a82deb')
-    version('1.11.1', '118623c15a96b08622603a71d8789bf3')
-    depends_on("python")
-    depends_on("xcb-proto")
-    depends_on("pkg-config")
-
-    # depends_on('pthread')  # Ubuntu: apt-get install libpthread-stubs0-dev
-    depends_on('libxau')
-
-    def patch(self):
-        filter_file('NEEDED="pthread-stubs xau >= 0.99.2"',
-                    'NEEDED="xau >= 0.99.2"', 'configure')
-        filter_file('typedef struct xcb_auth_info_t {',
-                    'typedef struct {', 'src/xcb.h')
+    version('7.0.29', '16a78dd2c5ad73011105c96235f6a0af')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
