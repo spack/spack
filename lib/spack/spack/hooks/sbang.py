@@ -24,7 +24,6 @@
 ##############################################################################
 import os
 
-from llnl.util.filesystem import *
 import llnl.util.tty as tty
 
 import spack
