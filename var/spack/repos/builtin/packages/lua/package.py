@@ -57,7 +57,7 @@ class Lua(Package):
         placement='luarocks')
 
     def install(self, spec, prefix):
-        if spec.satisfies("arch=darwin-i686") or spec.satisfies("arch=darwin-x86_64"):
+        if spec.satisfies("platform=darwin"):
             target = 'macosx'
         else:
             target = 'linux'
