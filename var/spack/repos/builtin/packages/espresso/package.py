@@ -87,7 +87,7 @@ class Espresso(Package):
         configure(*options)
         make('all')
 
-        if spec.architecture.startswith('darwin'):
+        if spec.satisfies('platform=darwin'):
             mkdirp(prefix.bin)
             for filename in glob("bin/*.x"):
                 install(filename, prefix.bin)
