@@ -398,13 +398,19 @@ class Package(object):
             spack.repo.get(self.extendee_spec)._check_extendable()
 
     @property
+    def global_license_dir(self):
+        """Returns the directory where global license files for all
+           packages are stored."""
+        spack_root = ancestor(__file__, 4)
+        return join_path(spack_root, 'etc', 'spack', 'licenses')
+
+    @property
     def global_license_file(self):
-        """Returns the path where a global license file should be stored."""
+        """Returns the path where a global license file for this
+           particular package should be stored."""
         if not self.license_files:
             return
-        spack_root = ancestor(__file__, 4)
-        global_license_dir = join_path(spack_root, 'etc', 'spack', 'licenses')
-        return join_path(global_license_dir, self.name,
+        return join_path(self.global_license_dir, self.name,
                          os.path.basename(self.license_files[0]))
 
     @property
