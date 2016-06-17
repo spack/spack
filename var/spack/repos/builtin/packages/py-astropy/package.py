@@ -24,29 +24,38 @@
 ##############################################################################
 from spack import *
 
-class PyAstropy(Package):
-    """
-    The Astropy Project is a community effort to develop a single core
-    package for Astronomy in Python and foster interoperability between
-    Python astronomy packages.
-    """
-    homepage = 'http://www.astropy.org/'
 
+class PyAstropy(Package):
+    """The Astropy Project is a community effort to develop a single core
+    package for Astronomy in Python and foster interoperability between
+    Python astronomy packages."""
+
+    homepage = 'http://www.astropy.org/'
+    url = 'https://pypi.python.org/packages/source/a/astropy/astropy-1.1.2.tar.gz'
+
+    version('1.1.2',     'cbe32023b5b1177d1e2498a0d00cda51')
     version('1.1.post1', 'b52919f657a37d45cc45f5cb0f58c44d')
 
-    def url_for_version(self, version):
-        return 'https://pypi.python.org/packages/source/a/astropy/astropy-{0}.tar.gz'.format(version)
-
+    # Required dependencies
     extends('python')
+    depends_on('py-numpy')
 
+    # Optional dependencies
+    depends_on('py-h5py')
+    depends_on('py-beautifulsoup4')
+    depends_on('py-pyyaml')
+    depends_on('py-scipy')
+    depends_on('libxml2')
+    depends_on('py-matplotlib')
+    depends_on('py-pytz')
+    depends_on('py-scikit-image')
+    depends_on('py-pandas')
+
+    # System dependencies
     depends_on('cfitsio')
     depends_on('expat')
-    depends_on('py-h5py')
-    depends_on('py-numpy')
-    depends_on('py-scipy')
 
     def install(self, spec, prefix):
         python('setup.py', 'build', '--use-system-cfitsio',
-                                    '--use-system-expat')
-        python('setup.py', 'install', '--prefix=' + prefix)
-
+               '--use-system-expat')
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))
