@@ -28,9 +28,11 @@ import argparse
 from llnl.util.tty.colify import colify
 
 import spack
-import fnmatch, re
+import fnmatch
+import re
 
-description ="List available spack packages"
+description = "List available spack packages"
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -76,10 +78,10 @@ def list(parser, args):
         pkgs = [p for p in pkgs if any(match(p, f) for f in res)]
 
     # sort before displaying.
-    sorted_packages = sorted(pkgs, key=lambda s:s.lower())
+    sorted_packages = sorted(pkgs, key=lambda s: s.lower())
 
     # Print all the package names in columns
-    indent=0
+    indent = 0
     if sys.stdout.isatty():
         tty.msg("%d packages." % len(sorted_packages))
     colify(sorted_packages, indent=indent)
