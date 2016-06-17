@@ -25,10 +25,10 @@ class CrayXk(Platform):
 
         # Could switch to use modules and fe targets for front end
         # Currently using compilers by path for front end.
-        self.add_target(Target('istanbul', {'craype-mc8', 'dynamic-link'}))
+        self.add_target(Target('istanbul', set(('craype-mc8', 'dynamic-link'))))
         self.add_target(Target('interlagos', 'craype-interlagos'))
         self.add_target(Target('interlagos_dynamic',
-                               {'craype-interlagos', 'dynamic-link'}))
+                               set(('craype-interlagos', 'dynamic-link'))))
 
         self.add_operating_system('SuSE11', LinuxDistro())
         self.add_operating_system('CNL10', Cnl())
