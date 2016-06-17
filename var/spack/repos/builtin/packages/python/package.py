@@ -22,9 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import functools
-import glob
-import inspect
 import os
 import re
 from contextlib import closing
@@ -49,12 +46,15 @@ class Python(Package):
     version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
     version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
 
+    variant('tk', default=False, description='Provide support for Tkinter (Tcl/Tk)')
     depends_on("openssl")
     depends_on("bzip2")
     depends_on("readline")
     depends_on("ncurses")
     depends_on("sqlite")
     depends_on("zlib")
+    depends_on("tk", when="+tk")
+    depends_on("tcl", when="+tk")
 
     def install(self, spec, prefix):
         # Need this to allow python build to find the Python installation.
@@ -64,21 +64,32 @@ class Python(Package):
         # Rest of install is pretty standard except setup.py needs to
         # be able to read the CPPFLAGS and LDFLAGS as it scans for the
         # library and headers to build
-        configure_args= [
-                  "--prefix=%s" % prefix,
-                  "--with-threads",
-                  "--enable-shared",
-                  "CPPFLAGS=-I%s/include -I%s/include -I%s/include -I%s/include -I%s/include -I%s/include" % (
-                       spec['openssl'].prefix, spec['bzip2'].prefix,
-                       spec['readline'].prefix, spec['ncurses'].prefix,
-                       spec['sqlite'].prefix, spec['zlib'].prefix),
-                  "LDFLAGS=-L%s/lib -L%s/lib -L%s/lib -L%s/lib -L%s/lib -L%s/lib" % (
-                       spec['openssl'].prefix, spec['bzip2'].prefix,
-                       spec['readline'].prefix, spec['ncurses'].prefix,
-                       spec['sqlite'].prefix, spec['zlib'].prefix)
-                  ]
+        configure_args = []
+        configure_args.extend(['--prefix=%s' % prefix,
+                               '--with-threads',
+                               '--enable-shared'])
+
+        cppflags = '-I%s/include -I%s/include -I%s/include -I%s/include' % (
+            spec['openssl'].prefix, spec['bzip2'].prefix,
+            spec['readline'].prefix, spec['ncurses'].prefix)
+        cppflags += ' -I%s/include -I%s/include' % (
+            spec['sqlite'].prefix, spec['zlib'].prefix)
+        ldflags = '-L%s/lib -L%s/lib -L%s/lib -L%s/lib' % (
+            spec['openssl'].prefix, spec['bzip2'].prefix,
+            spec['readline'].prefix, spec['ncurses'].prefix)
+        ldflags += ' -L%s/lib -L%s/lib' % (
+            spec['sqlite'].prefix, spec['zlib'].prefix)
+        if '+tk' in spec:
+            cppflags += ' -I%s/include -I%s/include' % (
+                spec['tk'].prefix, spec['tcl'].prefix)
+            ldflags += ' -L%s/lib -L%s/lib' % (
+                spec['tk'].prefix, spec['tcl'].prefix)
+
+        configure_args.extend(['CPPFLAGS=%s' % cppflags,
+                               'LDFLAGS=%s' % ldflags])
+
         if spec.satisfies('@3:'):
-            configure_args.append('--without-ensurepip')
+            configure_args.extend(['--without-ensurepip'])
         configure(*configure_args)
         make()
         make("install")
@@ -87,16 +98,19 @@ class Python(Package):
         # building site packages outside of spack
         filter_file(r'([/s]=?)([\S=]*)/lib/spack/env(/[^\s/]*)?/(\S*)(\s)',
                     (r'\4\5'),
-                    join_path(prefix.lib, 'python%d.%d' % self.version[:2], '_sysconfigdata.py'))
+                    join_path(prefix.lib, 'python%d.%d' % self.version[:2],
+                              '_sysconfigdata.py'))
 
         python3_version = ''
         if spec.satisfies('@3:'):
             python3_version = '-%d.%dm' % self.version[:2]
-        makefile_filepath = join_path(prefix.lib, 'python%d.%d' % self.version[:2], 'config%s' % python3_version, 'Makefile')
+        makefile_filepath = join_path(prefix.lib,
+                                      'python%d.%d' % self.version[:2],
+                                      'config%s' % python3_version,
+                                      'Makefile')
         filter_file(r'([/s]=?)([\S=]*)/lib/spack/env(/[^\s/]*)?/(\S*)(\s)',
                     (r'\4\5'),
                     makefile_filepath)
-
 
     # ========================================================================
     # Set up environment to make install easy for python extensions.
@@ -106,34 +120,43 @@ class Python(Package):
     def python_lib_dir(self):
         return os.path.join('lib', 'python%d.%d' % self.version[:2])
 
-
     @property
     def python_include_dir(self):
         return os.path.join('include', 'python%d.%d' % self.version[:2])
-
 
     @property
     def site_packages_dir(self):
         return os.path.join(self.python_lib_dir, 'site-packages')
 
-
     def setup_dependent_environment(self, spack_env, run_env, extension_spec):
         # TODO: do this only for actual extensions.
 
-        # Set PYTHONPATH to include site-packages dir for the
-        # extension and any other python extensions it depends on.
+        # Set PYTHONPATH to include site-packages dir for the extension and any
+        # other python extensions it depends on.
         python_paths = []
         for d in extension_spec.traverse():
             if d.package.extends(self.spec):
-                python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
+                python_paths.append(os.path.join(d.prefix,
+                                                 self.site_packages_dir))
 
         pythonpath = ':'.join(python_paths)
         spack_env.set('PYTHONPATH', pythonpath)
 
-        # For run time environment set only the path for extension_spec and prepend it to PYTHONPATH
+        # For run time environment set only the path for extension_spec and
+        # prepend it to PYTHONPATH
         if extension_spec.package.extends(self.spec):
-            run_env.prepend_path('PYTHONPATH', os.path.join(extension_spec.prefix, self.site_packages_dir))
+            run_env.prepend_path('PYTHONPATH',
+                                 os.path.join(extension_spec.prefix,
+                                              self.site_packages_dir))
 
+        # In the future, to build a package that depends on python with
+        # Tkinter, it may be necessary to set TCL_LIBRARY and TK_LIBRARY in the
+        # spack environment.
+        # if '+tk' in spec:
+        #     spack_env.set('TCL_LIBRARY', spec('tcl').prefix.lib+"/tcl%s"
+        #                   % (version.up_to(2),spec('tcl').version))
+        #     spack_env.set('TK_LIBRARY', spec('tk').prefix.lib+"/tk%s"
+        #                   % (version.up_to(2),spec('tk').version))
 
     def setup_dependent_package(self, module, ext_spec):
         """
@@ -144,17 +167,24 @@ class Python(Package):
         python('setup.py', 'install', '--prefix=%s' % prefix)
         """
         # Python extension builds can have a global python executable function
-        if self.version >= Version("3.0.0") and self.version < Version("4.0.0"):
-            module.python = Executable(join_path(self.spec.prefix.bin, 'python3'))
+        if ((self.version >= Version("3.0.0") and
+             self.version < Version("4.0.0"))):
+            module.python = Executable(join_path(self.spec.prefix.bin,
+                                                 'python3'))
         else:
-            module.python = Executable(join_path(self.spec.prefix.bin, 'python'))
+            module.python = Executable(join_path(self.spec.prefix.bin,
+                                                 'python'))
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
-        module.python_lib_dir     = os.path.join(ext_spec.prefix, self.python_lib_dir)
-        module.python_include_dir = os.path.join(ext_spec.prefix, self.python_include_dir)
-        module.site_packages_dir  = os.path.join(ext_spec.prefix, self.site_packages_dir)
+        module.python_lib_dir     = os.path.join(ext_spec.prefix,
+                                                 self.python_lib_dir)
+        module.python_include_dir = os.path.join(ext_spec.prefix,
+                                                 self.python_include_dir)
+        module.site_packages_dir  = os.path.join(ext_spec.prefix,
+                                                 self.site_packages_dir)
 
-        # Make the site packages directory for extensions, if it does not exist already.
+        # Make the site packages directory for extensions, if it does not exist
+        # already.
         if ext_spec.package.is_extension:
             mkdirp(module.site_packages_dir)
 
@@ -180,11 +210,11 @@ class Python(Package):
 
         return match_predicate(ignore_arg, patterns)
 
-
     def write_easy_install_pth(self, exts):
         paths = []
         for ext in sorted(exts.values()):
-            ext_site_packages = os.path.join(ext.prefix, self.site_packages_dir)
+            ext_site_packages = os.path.join(ext.prefix,
+                                             self.site_packages_dir)
             easy_pth = "%s/easy-install.pth" % ext_site_packages
 
             if not os.path.isfile(easy_pth):
@@ -195,10 +225,13 @@ class Python(Package):
                     line = line.rstrip()
 
                     # Skip lines matching these criteria
-                    if not line: continue
-                    if re.search(r'^(import|#)', line): continue
-                    if (ext.name != 'py-setuptools' and
-                        re.search(r'setuptools.*egg$', line)): continue
+                    if not line:
+                        continue
+                    if re.search(r'^(import|#)', line):
+                        continue
+                    if ((ext.name != 'py-setuptools' and
+                         re.search(r'setuptools.*egg$', line))):
+                        continue
 
                     paths.append(line)
 
@@ -214,12 +247,13 @@ class Python(Package):
                 f.write("import sys; sys.__plen = len(sys.path)\n")
                 for path in paths:
                     f.write("%s\n" % path)
-                f.write("import sys; new=sys.path[sys.__plen:]; del sys.path[sys.__plen:]; "
-                        "p=getattr(sys,'__egginsert',0); sys.path[p:p]=new; sys.__egginsert = p+len(new)\n")
-
+                f.write("import sys; new=sys.path[sys.__plen:]; "
+                        "del sys.path[sys.__plen:]; "
+                        "p=getattr(sys,'__egginsert',0); sys.path[p:p]=new; "
+                        "sys.__egginsert = p+len(new)\n")
 
     def activate(self, ext_pkg, **args):
-        ignore=self.python_ignore(ext_pkg, args)
+        ignore = self.python_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
         super(Python, self).activate(ext_pkg, **args)
@@ -227,7 +261,6 @@ class Python(Package):
         exts = spack.install_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
         self.write_easy_install_pth(exts)
-
 
     def deactivate(self, ext_pkg, **args):
         args.update(ignore=self.python_ignore(ext_pkg, args))
