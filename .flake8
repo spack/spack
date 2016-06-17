@@ -19,5 +19,5 @@
 # - F999: name name be undefined or undefined from star imports.
 #
 [flake8]
-ignore = E221,E241,E731,F403,F821,F999
+ignore = E221,E241,E731,F403,F821,F999,F405
 max-line-length = 79
