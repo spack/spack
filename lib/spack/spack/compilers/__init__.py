@@ -79,12 +79,10 @@ def _to_dict(compiler):
     if compiler.alias:
         d['alias'] = compiler.alias
 
-    return {
-            'compiler': d
-    }
+    return {'compiler': d}
 
 
-def get_compiler_config(scope=None):
+def get_compiler_config(scope=None, init_config=True):
     """Return the compiler configuration for the specified architecture.
     """
     def init_compiler_config():
@@ -100,7 +98,8 @@ def get_compiler_config(scope=None):
     # configured.  Avoid updating automatically if there ARE site
     # compilers configured but no user ones.
 #    if (isinstance(arch, basestring) or arch == my_arch) and arch not in config:
-    if not config:
+    empty_config = []
+    if not config and init_config:
         if scope is None:
             # We know no compilers were configured in any scope.
             init_compiler_config()
@@ -112,18 +111,20 @@ def get_compiler_config(scope=None):
             if not site_config:
                 init_compiler_config()
                 config = spack.config.get_config('compilers', scope=scope)
+        return config
+    else:
+        return empty_config
 
-    return config
 
-
-def add_compilers_to_config(compilers, scope=None):
+def add_compilers_to_config(compilers, scope=None, init_config=True):
     """Add compilers to the config for the specified architecture.
 
     Arguments:
       - compilers: a list of Compiler objects.
       - scope:     configuration scope to modify.
     """
-    compiler_config = get_compiler_config(scope)
+    compiler_config = get_compiler_config(scope, init_config)
+    print compiler_config
     for compiler in compilers:
         compiler_config.append(_to_dict(compiler))
 
@@ -148,25 +149,23 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     spack.config.update_config('compilers', compiler_config, scope)
 
 _cache_config_file = {}
-
-def all_compilers_config(scope=None):
+def all_compilers_config(scope=None, init_config=True):
     """Return a set of specs for all the compiler versions currently
        available to build with.  These are instances of CompilerSpec.
     """
     # Get compilers for this architecture.
     global _cache_config_file #Create a cache of the config file so we don't load all the time.
-
     if not _cache_config_file:
-        _cache_config_file = get_compiler_config(scope)
+        _cache_config_file = get_compiler_config(scope, init_config)
         return _cache_config_file
-
     else:
         return _cache_config_file
 
-def all_compilers(scope=None):
+
+def all_compilers(scope=None, init_config=True):
     # Return compiler specs from the merged config.
     return [spack.spec.CompilerSpec(s['compiler']['spec'])
-            for s in all_compilers_config(scope)]
+            for s in all_compilers_config(scope, init_config)]
 
 
 def default_compiler():
@@ -181,7 +180,13 @@ def default_compiler():
     return sorted(versions)[-1]
 
 
-def find_compilers():
+def find_compilers(*paths):
+    """ Call find compilers help and return the list it finds using
+    the operating system method (PATHS, MODULES) """
+    return _find_compilers(*paths)
+
+
+def _find_compilers(*paths):
     """Return a list of compilers found in the suppied paths.
        This invokes the find_compilers() method for each operating
        system associated with the host platform, and appends
@@ -190,9 +195,8 @@ def find_compilers():
     # Find compilers for each operating system class
     oss = all_os_classes()
     compiler_lists = []
-    for os in oss:
-        compiler_lists.extend(os.find_compilers())
-
+    for o in oss:
+        compiler_lists.extend(o.find_compilers(*paths))
     return compiler_lists
 
 def supported_compilers():
