@@ -69,7 +69,7 @@ def setup_parser(subparser):
                              help="Configuration scope to read from.")
 
 
-def compiler_add(args):
+def compiler_find(args):
     """Search either $PATH or a list of paths OR MODULES for compilers and add them
        to Spack's configuration."""
     paths = args.add_paths
@@ -79,7 +79,6 @@ def compiler_add(args):
     compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
                  if c.spec not in spack.compilers.all_compilers(scope=args.scope,
                      init_config=False)]
-
     if compilers:
         spack.compilers.add_compilers_to_config(compilers, scope=args.scope,
                                                 init_config=False)
@@ -139,9 +138,10 @@ def compiler_list(args):
 
 
 def compiler(parser, args):
-    action = { 'add'    : compiler_add,
-               'remove' : compiler_remove,
-               'rm'     : compiler_remove,
-               'info'   : compiler_info,
-               'list'   : compiler_list }
+    action = {'add'    : compiler_find, 
+              'find'   : compiler_find,
+              'remove' : compiler_remove,
+              'rm'     : compiler_remove,
+              'info'   : compiler_info,
+              'list'   : compiler_list }
     action[args.compiler_command](args)
