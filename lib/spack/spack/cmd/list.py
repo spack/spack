@@ -52,16 +52,14 @@ def list(parser, args):
 
     # filter if a filter arg was provided
     if args.filter:
-        filters = []
+        res = []
         for f in args.filter:
             if '*' not in f and '?' not in f:
-                filters.append('*' + f + '*')
+                r = fnmatch.translate('*' + f + '*')
             else:
-                filters.append(f)
-
-        res = [re.compile(fnmatch.translate(f),
-                          flags=re.I if args.insensitive else 0)
-                          for f in filters]
+                r = fnmatch.translate(f)
+            rc = re.compile(r, flags=re.I if args.insensitive else 0)
+            res.append(rc)
 
         if args.search_description:
             def match(p, f):
