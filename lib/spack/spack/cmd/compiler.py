@@ -77,11 +77,9 @@ def compiler_find(args):
         paths = get_path('PATH')
 
     compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
-                 if c.spec not in spack.compilers.all_compilers(scope=args.scope,
-                     init_config=False)]
+                 if c.spec not in spack.compilers.all_compilers(scope=args.scope)]
     if compilers:
-        spack.compilers.add_compilers_to_config(compilers, scope=args.scope,
-                                                init_config=False)
+        spack.compilers.add_compilers_to_config(compilers, scope=args.scope)
         n = len(compilers)
         s = 's' if n > 1 else ''
         filename = spack.config.get_config_filename(args.scope, 'compilers')
@@ -94,7 +92,6 @@ def compiler_find(args):
 def compiler_remove(args):
     cspec = CompilerSpec(args.compiler_spec)
     compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
-
     if not compilers:
         tty.die("No compilers match spec %s" % cspec)
     elif not args.all and len(compilers) > 1:
