@@ -135,7 +135,7 @@ from yaml.error import MarkedYAMLError
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
-
+from spack.build_environment import get_path_from_module
 
 """Dict from section names -> schema for that section."""
 section_schemas = {
@@ -146,18 +146,17 @@ section_schemas = {
         'additionalProperties': False,
         'patternProperties': {
             'compilers:?': {  # optional colon for overriding site config.
-                'type': 'object',
-                'default': {},
-                'additionalProperties': False,
-                'patternProperties': {
-                    r'\w[\w-]*': {           # architecture
+                'type': 'array',
+                'items': {
+                    'compiler': {
                         'type': 'object',
                         'additionalProperties': False,
-                        'patternProperties': {
-                            r'\w[\w-]*@\w[\w-]*': {   # compiler spec
+                        'required': ['paths', 'spec', 'modules', 'operating_system'],
+                        'properties': {
+                            'paths': {
                                 'type': 'object',
-                                'additionalProperties': False,
                                 'required': ['cc', 'cxx', 'f77', 'fc'],
+                                'additionalProperties': False,
                                 'properties': {
                                     'cc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
@@ -167,8 +166,27 @@ section_schemas = {
                                                         {'type' : 'null' }]},
                                     'fc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
-                                },},},},},},},},
-
+                                    'cflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cxxflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'fflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cppflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'ldflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'ldlibs': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]}}},
+                            'spec': { 'type': 'string'},
+                            'operating_system': { 'type': 'string'},
+                            'alias': { 'anyOf': [ {'type' : 'string'},
+                                                    {'type' : 'null' }]},
+                            'modules': { 'anyOf': [ {'type' : 'string'},
+                                                    {'type' : 'null' },
+                                                    {'type': 'array'},
+                                                    ]}
+                            },},},},},},
     'mirrors': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack mirror configuration file schema',
@@ -194,7 +212,6 @@ section_schemas = {
                 'default': [],
                 'items': {
                     'type': 'string'},},},},
-
     'packages': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack package configuration file schema',
@@ -223,6 +240,10 @@ section_schemas = {
                             'buildable': {
                                 'type':  'boolean',
                                 'default': True,
+                             },
+                            'modules': {
+                                'type' : 'object',
+                                'default' : {},
                              },
                             'providers': {
                                 'type':  'object',
@@ -565,8 +586,7 @@ def _merge_yaml(dest, source):
 
     # Source list is prepended (for precedence)
     if they_are(list):
-        seen = set(source)
-        dest[:] = source + [x for x in dest if x not in seen]
+        dest[:] = source + [x for x in dest if x not in source]
         return dest
 
     # Source dict is merged into dest.
@@ -669,7 +689,8 @@ def spec_externals(spec):
 
     external_specs = []
     pkg_paths = allpkgs.get(name, {}).get('paths', None)
-    if not pkg_paths:
+    pkg_modules = allpkgs.get(name, {}).get('modules', None)
+    if (not pkg_paths) and (not pkg_modules):
         return []
 
     for external_spec, path in pkg_paths.iteritems():
@@ -680,6 +701,17 @@ def spec_externals(spec):
         external_spec = spack.spec.Spec(external_spec, external=path)
         if external_spec.satisfies(spec):
             external_specs.append(external_spec)
+
+    for external_spec, module in pkg_modules.iteritems():
+        if not module:
+            continue
+
+        path = get_path_from_module(module)
+
+        external_spec = spack.spec.Spec(external_spec, external=path, external_module=module)
+        if external_spec.satisfies(spec):
+            external_specs.append(external_spec)
+
     return external_specs
 
 

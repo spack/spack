@@ -69,8 +69,8 @@ def setup_parser(subparser):
                              help="Configuration scope to read from.")
 
 
-def compiler_find(args):
-    """Search either $PATH or a list of paths for compilers and add them
+def compiler_add(args):
+    """Search either $PATH or a list of paths OR MODULES for compilers and add them
        to Spack's configuration."""
     paths = args.add_paths
     if not paths:
@@ -121,6 +121,8 @@ def compiler_info(args):
             print "\tcxx = %s" % c.cxx
             print "\tf77 = %s" % c.f77
             print "\tfc  = %s" % c.fc
+            print "\tmodules  = %s" % c.modules
+            print "\toperating system  = %s" % c.operating_system
 
 
 def compiler_list(args):
@@ -135,8 +137,7 @@ def compiler_list(args):
 
 
 def compiler(parser, args):
-    action = { 'add'    : compiler_find,
-               'find'   : compiler_find,
+    action = { 'add'    : compiler_add,
                'remove' : compiler_remove,
                'rm'     : compiler_remove,
                'info'   : compiler_info,

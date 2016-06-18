@@ -198,8 +198,13 @@ def colify(elts, **options):
         for col in xrange(cols):
             elt = col * rows + row
             width = config.widths[col] + cextra(elts[elt])
-            fmt = '%%-%ds' % width
-            output.write(fmt % elts[elt])
+            if col < cols - 1:
+                fmt = '%%-%ds' % width
+                output.write(fmt % elts[elt])
+            else:
+                # Don't pad the rightmost column (sapces can wrap on
+                # small teriminals if one line is overlong)
+                output.write(elts[elt])
 
         output.write("\n")
         row += 1

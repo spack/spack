@@ -257,7 +257,7 @@ def variant(pkg, name, default=False, description=""):
     """Define a variant for the package. Packager can specify a default
     value (on or off) as well as a text description."""
 
-    default = bool(default)
+    default     = default
     description = str(description).strip()
 
     if not re.match(spack.spec.identifier_re, name):

@@ -34,20 +34,127 @@ from ordereddict_backport import OrderedDict
 from spack.repository import RepoPath
 from spack.spec import Spec
 
+platform = spack.architecture.sys_type()
+
+linux_os_name = 'debian'
+linux_os_version = '6'
+
+if platform.name == 'linux':
+    linux_os = platform.operating_system("default_os")
+    linux_os_name = linux_os.name
+    linux_os_version = linux_os.version
+
 mock_compiler_config = """\
 compilers:
-  all:
-    clang@3.3:
+- compiler:
+    spec: clang@3.3
+    operating_system: {0}{1}
+    paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
       f77: None
       fc: None
-    gcc@4.5.0:
+    modules: 'None'
+- compiler:
+    spec: gcc@4.5.0  
+    operating_system: {0}{1}
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: CNL10
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: SuSE11
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: redhat6
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: yosemite
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    paths:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-"""
+    operating_system: CNL10
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: SuSE11
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: redhat6
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: yosemite
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: elcapitan
+    spec: gcc@4.5.0
+    modules: 'None' 
+- compiler:
+    spec: clang@3.3
+    operating_system: elcapitan
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+""".format(linux_os_name, linux_os_version)
 
 mock_packages_config = """\
 packages:
@@ -60,6 +167,10 @@ packages:
     paths:
       externalvirtual@2.0%clang@3.3: /path/to/external_virtual_clang
       externalvirtual@1.0%gcc@4.5.0: /path/to/external_virtual_gcc
+  externalmodule:
+    buildable: False
+    modules:
+      externalmodule@1.0%gcc@4.5.0: external-module
 """
 
 class MockPackagesTest(unittest.TestCase):

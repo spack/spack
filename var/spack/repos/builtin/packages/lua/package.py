@@ -57,7 +57,7 @@ class Lua(Package):
         placement='luarocks')
 
     def install(self, spec, prefix):
-        if spec.satisfies("arch=darwin-i686") or spec.satisfies("arch=darwin-x86_64"):
+        if spec.satisfies("platform=darwin"):
             target = 'macosx'
         else:
             target = 'linux'
@@ -104,6 +104,9 @@ class Lua(Package):
 
         spack_env.set('LUA_PATH', ';'.join(lua_patterns), separator=';')
         spack_env.set('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
+
+        # Add LUA to PATH for dependent packages
+        spack_env.prepend_path('PATH', self.prefix.bin)
 
         # For run time environment set only the path for extension_spec and
         # prepend it to LUAPATH
@@ -153,5 +156,5 @@ class Lua(Package):
         """
         # Lua extension builds can have lua and luarocks executable functions
         module.lua = Executable(join_path(self.spec.prefix.bin, 'lua'))
-        module.luarocks = Executable(join_path(self.spec.prefix.bin,
-                                               'luarocks'))
+        module.luarocks = Executable(
+            join_path(self.spec.prefix.bin, 'luarocks'))

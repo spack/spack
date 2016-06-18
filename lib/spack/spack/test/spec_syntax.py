@@ -58,7 +58,7 @@ class SpecSyntaxTest(unittest.TestCase):
     # ================================================================================
     # Parse checks
     # ================================================================================
-    def check_parse(self, expected, spec=None):
+    def check_parse(self, expected, spec=None, remove_arch=True):
         """Assert that the provided spec is able to be parsed.
            If this is called with one argument, it assumes that the string is
            canonical (i.e., no spaces and ~ instead of - for variants) and that it
@@ -70,6 +70,7 @@ class SpecSyntaxTest(unittest.TestCase):
         if spec is None:
             spec = expected
         output = spack.spec.parse(spec)
+
         parsed = (" ".join(str(spec) for spec in output))
         self.assertEqual(expected, parsed)
 

@@ -92,6 +92,9 @@ configuration_alter_environment = {
         'all': {
             'filter': {'environment_blacklist': ['CMAKE_PREFIX_PATH']}
         },
+        'platform=test target=x86_64': {
+            'environment': {'set': {'FOO': 'foo'},
+                            'unset': ['BAR']}
         'arch=x86-linux': {
             'environment': {
                 'set': {'FOO': 'foo'},
@@ -201,6 +204,7 @@ class TclTests(MockPackagesTest):
 
     def get_modulefile_content(self, spec):
         spec.concretize()
+        print spec, '&&&&&'
         generator = spack.modules.TclModule(spec)
         generator.write()
         content = FILE_REGISTRY[generator.file_name].split('\n')
@@ -208,7 +212,7 @@ class TclTests(MockPackagesTest):
 
     def test_simple_case(self):
         spack.modules.CONFIGURATION = configuration_autoload_direct
-        spec = spack.spec.Spec('mpich@3.0.4 arch=x86-linux')
+        spec = spack.spec.Spec('mpich@3.0.4')
         content = self.get_modulefile_content(spec)
         self.assertTrue('module-whatis "mpich @3.0.4"' in content)
         self.assertRaises(TypeError, spack.modules.dependencies,
@@ -216,13 +220,13 @@ class TclTests(MockPackagesTest):
 
     def test_autoload(self):
         spack.modules.CONFIGURATION = configuration_autoload_direct
-        spec = spack.spec.Spec('mpileaks arch=x86-linux')
+        spec = spack.spec.Spec('mpileaks')
         content = self.get_modulefile_content(spec)
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 2)
         self.assertEqual(len([x for x in content if 'module load ' in x]), 2)
 
         spack.modules.CONFIGURATION = configuration_autoload_all
-        spec = spack.spec.Spec('mpileaks arch=x86-linux')
+        spec = spack.spec.Spec('mpileaks')
         content = self.get_modulefile_content(spec)
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 5)
         self.assertEqual(len([x for x in content if 'module load ' in x]), 5)
@@ -240,8 +244,9 @@ class TclTests(MockPackagesTest):
 
     def test_alter_environment(self):
         spack.modules.CONFIGURATION = configuration_alter_environment
-        spec = spack.spec.Spec('mpileaks arch=x86-linux')
+        spec = spack.spec.Spec('mpileaks platform=test target=x86_64')
         content = self.get_modulefile_content(spec)
+        print content
         self.assertEqual(
             len([x
                  for x in content
@@ -250,8 +255,9 @@ class TclTests(MockPackagesTest):
             len([x for x in content if 'setenv FOO "foo"' in x]), 1)
         self.assertEqual(len([x for x in content if 'unsetenv BAR' in x]), 1)
 
-        spec = spack.spec.Spec('libdwarf arch=x64-linux')
+        spec = spack.spec.Spec('libdwarf %clang platform=test target=x86_32')
         content = self.get_modulefile_content(spec)
+        print content
         self.assertEqual(
             len([x
                  for x in content
@@ -266,7 +272,7 @@ class TclTests(MockPackagesTest):
 
     def test_blacklist(self):
         spack.modules.CONFIGURATION = configuration_blacklist
-        spec = spack.spec.Spec('mpileaks arch=x86-linux')
+        spec = spack.spec.Spec('mpileaks')
         content = self.get_modulefile_content(spec)
         print('\n'.join(content))
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 1)
@@ -282,7 +288,7 @@ class TclTests(MockPackagesTest):
 
     def test_conflicts(self):
         spack.modules.CONFIGURATION = configuration_conflicts
-        spec = spack.spec.Spec('mpileaks arch=x86-linux')
+        spec = spack.spec.Spec('mpileaks')
         content = self.get_modulefile_content(spec)
         self.assertEqual(
             len([x for x in content if x.startswith('conflict')]), 2)
