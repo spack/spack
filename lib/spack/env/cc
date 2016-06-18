@@ -324,8 +324,8 @@ fi
 if [[ $SPACK_DEBUG == TRUE ]]; then
     input_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.in.log"
     output_log="$SPACK_DEBUG_LOG_DIR/spack-cc-$SPACK_SHORT_SPEC.out.log"
-    echo "[$mode] $command $input_command" >> $input_log
-    echo "[$mode] ${full_command[@]}" >> $output_log
+    echo "[$mode] $command $input_command" >> "$input_log"
+    echo "[$mode] ${full_command[@]}" >> "$output_log"
 fi
 
 exec "${full_command[@]}"
