@@ -1,0 +1,22 @@
+--- old/Makefile.spack
++++ new/Makefile.spack
+@@ -0,0 +1,19 @@
++# Set PREFIX to the install location for both building and installing
++
++all: cdd dplex_test
++
++cdd: cdd.lo cddio.lo cddarith.lo dplex.lo setoper.lo
++	libtool --mode=link --tag=CC cc -g -O2 -o $@ $^
++
++dplex_test: dplex.lo dplex_test.lo setoper.lo
++	libtool --mode=link --tag=CC cc -g -O2 -o $@ $^
++
++%.lo: %.c
++	libtool --mode=compile --tag=CC cc -g -O2 -c $*.c
++
++install:
++	mkdir -p $(PREFIX)/bin
++	libtool --mode=install cp cdd $(PREFIX)/bin/cdd
++	libtool --mode=install cp dplex_test $(PREFIX)/bin/dplex_test
++
++.PHONY: all install
