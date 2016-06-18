@@ -165,6 +165,7 @@ class Executable(object):
                 raise ProcessError("Command exited with status %d:" %
                                    proc.returncode, cmd_line)
 
+
             if output is str or error is str:
                 result = ''
                 if output is str:

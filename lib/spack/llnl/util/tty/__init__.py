@@ -64,12 +64,14 @@ def info(message, *args, **kwargs):
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
     wrap   = kwargs.get('wrap', False)
+    break_long_words = kwargs.get('break_long_words', False)
 
     cprint("@%s{==>} %s" % (format, cescape(str(message))), stream=stream)
     for arg in args:
         if wrap:
             lines = textwrap.wrap(
-                str(arg), initial_indent=indent, subsequent_indent=indent)
+                str(arg), initial_indent=indent, subsequent_indent=indent,
+                break_long_words=break_long_words)
             for line in lines:
                 stream.write(line + '\n')
         else:

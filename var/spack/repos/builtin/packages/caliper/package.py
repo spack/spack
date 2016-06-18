@@ -34,7 +34,7 @@ class Caliper(Package):
     homepage = "https://github.com/LLNL/Caliper"
     url      = ""
 
-    version('master', git='ssh://git@github.com:LLNL/Caliper.git')
+    version('master', git='https://github.com/LLNL/Caliper.git')
 
     variant('mpi', default=False, description='Enable MPI function wrappers.')
 
