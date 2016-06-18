@@ -25,40 +25,17 @@
 from spack import *
 
 
-class PyH5py(Package):
-    """The h5py package provides both a high- and low-level interface to the
-    HDF5 library from Python."""
+class PyBeautifulsoup4(Package):
+    """Beautiful Soup is a Python library for pulling data out of HTML and
+    XML files. It works with your favorite parser to provide idiomatic ways
+    of navigating, searching, and modifying the parse tree."""
 
-    homepage = "https://pypi.python.org/pypi/h5py"
-    url      = "https://pypi.python.org/packages/source/h/h5py/h5py-2.4.0.tar.gz"
+    homepage = "https://www.crummy.com/software/BeautifulSoup"
+    url = "https://pypi.python.org/packages/source/b/beautifulsoup4/beautifulsoup4-4.4.1.tar.gz"
 
-    version('2.6.0', 'ec476211bd1de3f5ac150544189b0bf4')
-    version('2.5.0', '6e4301b5ad5da0d51b0a1e5ac19e3b74')
-    version('2.4.0', '80c9a94ae31f84885cc2ebe1323d6758')
-
-    variant('mpi', default=False, description='Build with MPI support')
+    version('4.4.1', '8fbd9a7cac0704645fa20d1419036815')
 
     extends('python')
 
-    # Build dependencies
-    depends_on('py-cython@0.19:')
-    depends_on('pkg-config')
-    depends_on('hdf5@1.8.4:+mpi', when='+mpi')
-    depends_on('hdf5@1.8.4:~mpi', when='~mpi')
-    depends_on('mpi', when='+mpi')
-
-    # Build and runtime dependencies
-    depends_on('py-numpy@1.6.1:')
-
-    # Runtime dependencies
-    depends_on('py-six')
-
     def install(self, spec, prefix):
-        python('setup.py', 'configure',
-               '--hdf5={0}'.format(spec['hdf5'].prefix))
-
-        if '+mpi' in spec:
-            env['CC'] = spec['mpi'].mpicc
-            python('setup.py', 'configure', '--mpi')
-
         python('setup.py', 'install', '--prefix={0}'.format(prefix))

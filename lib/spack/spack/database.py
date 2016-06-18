@@ -311,7 +311,11 @@ class Database(object):
                 for spec in directory_layout.all_specs():
                     # Create a spec for each known package and add it.
                     path = directory_layout.path_for_spec(spec)
-                    self._add(spec, path, directory_layout)
+                    old_info = old_data.get(spec.dag_hash())
+                    explicit = False
+                    if old_info is not None:
+                        explicit = old_info.explicit
+                    self._add(spec, path, directory_layout, explicit=explicit)
 
                 self._check_ref_counts()
 

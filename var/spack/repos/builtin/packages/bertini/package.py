@@ -25,40 +25,26 @@
 from spack import *
 
 
-class PyH5py(Package):
-    """The h5py package provides both a high- and low-level interface to the
-    HDF5 library from Python."""
+class Bertini(Package):
+    """Bertini is a general-purpose solver, written in C, that was created
+    for research about polynomial continuation. It solves for the numerical
+    solution of systems of polynomial equations using homotopy continuation."""
 
-    homepage = "https://pypi.python.org/pypi/h5py"
-    url      = "https://pypi.python.org/packages/source/h/h5py/h5py-2.4.0.tar.gz"
+    homepage = "https://bertini.nd.edu/"
+    url      = "https://bertini.nd.edu/BertiniSource_v1.5.tar.gz"
 
-    version('2.6.0', 'ec476211bd1de3f5ac150544189b0bf4')
-    version('2.5.0', '6e4301b5ad5da0d51b0a1e5ac19e3b74')
-    version('2.4.0', '80c9a94ae31f84885cc2ebe1323d6758')
+    version('1.5', 'e3f6cc6e7f9a0cf1d73185e8671af707')
 
-    variant('mpi', default=False, description='Build with MPI support')
+    variant('mpi', default=True, description='Compile in parallel')
 
-    extends('python')
-
-    # Build dependencies
-    depends_on('py-cython@0.19:')
-    depends_on('pkg-config')
-    depends_on('hdf5@1.8.4:+mpi', when='+mpi')
-    depends_on('hdf5@1.8.4:~mpi', when='~mpi')
+    depends_on('flex')
+    depends_on('bison')
+    depends_on('gmp')
+    depends_on('mpfr')
     depends_on('mpi', when='+mpi')
 
-    # Build and runtime dependencies
-    depends_on('py-numpy@1.6.1:')
-
-    # Runtime dependencies
-    depends_on('py-six')
-
     def install(self, spec, prefix):
-        python('setup.py', 'configure',
-               '--hdf5={0}'.format(spec['hdf5'].prefix))
+        configure('--prefix=%s' % prefix)
 
-        if '+mpi' in spec:
-            env['CC'] = spec['mpi'].mpicc
-            python('setup.py', 'configure', '--mpi')
-
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        make()
+        make("install")
