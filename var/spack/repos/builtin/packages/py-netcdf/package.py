@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
+
 
 class PyNetcdf(Package):
     """Python interface to the netCDF Library."""
@@ -37,4 +39,12 @@ class PyNetcdf(Package):
     depends_on('netcdf')
 
     def install(self, spec, prefix):
+
+        # Work around lack of RPATH in Python extensions
+        py_numpy = self.spec['py-numpy']
+        if 'blas' in py_numpy:
+            LD_LIBRARY_PATH = [join_path(dep.prefix, 'lib')
+                for dep in self.unique_dependencies(py_numpy['blas'])]
+            os.environ['LD_LIBRARY_PATH'] = ':'.join(LD_LIBRARY_PATH)
+
         python('setup.py', 'install', '--prefix=%s' % prefix)
