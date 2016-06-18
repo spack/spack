@@ -93,17 +93,14 @@ configuration_alter_environment = {
             'filter': {'environment_blacklist': ['CMAKE_PREFIX_PATH']}
         },
         'platform=test target=x86_64': {
-            'environment': {'set': {'FOO': 'foo'},
-                            'unset': ['BAR']}
-        'arch=x86-linux': {
             'environment': {
                 'set': {'FOO': 'foo'},
                 'unset': ['BAR']
             }
         },
-        'arch=x64-linux': {
+        'platform=test target=x86_32': {
             'load': ['foo/bar']
-        }
+       }
     }
 }
 
@@ -246,7 +243,6 @@ class TclTests(MockPackagesTest):
         spack.modules.CONFIGURATION = configuration_alter_environment
         spec = spack.spec.Spec('mpileaks platform=test target=x86_64')
         content = self.get_modulefile_content(spec)
-        print content
         self.assertEqual(
             len([x
                  for x in content
@@ -257,7 +253,6 @@ class TclTests(MockPackagesTest):
 
         spec = spack.spec.Spec('libdwarf %clang platform=test target=x86_32')
         content = self.get_modulefile_content(spec)
-        print content
         self.assertEqual(
             len([x
                  for x in content
