@@ -100,7 +100,7 @@ configuration_alter_environment = {
         },
         'platform=test target=x86_32': {
             'load': ['foo/bar']
-       }
+        }
     }
 }
 
@@ -201,7 +201,6 @@ class TclTests(MockPackagesTest):
 
     def get_modulefile_content(self, spec):
         spec.concretize()
-        print spec, '&&&&&'
         generator = spack.modules.TclModule(spec)
         generator.write()
         content = FILE_REGISTRY[generator.file_name].split('\n')
@@ -269,7 +268,6 @@ class TclTests(MockPackagesTest):
         spack.modules.CONFIGURATION = configuration_blacklist
         spec = spack.spec.Spec('mpileaks')
         content = self.get_modulefile_content(spec)
-        print('\n'.join(content))
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 1)
         self.assertEqual(len([x for x in content if 'module load ' in x]), 1)
         spec = spack.spec.Spec('callpath arch=x86-linux')
@@ -277,7 +275,6 @@ class TclTests(MockPackagesTest):
         self.assertRaises(AttributeError, self.get_modulefile_content, spec)
         spec = spack.spec.Spec('zmpi arch=x86-linux')
         content = self.get_modulefile_content(spec)
-        print('\n'.join(content))
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 1)
         self.assertEqual(len([x for x in content if 'module load ' in x]), 1)
 
@@ -343,6 +340,5 @@ class DotkitTests(MockPackagesTest):
         spack.modules.CONFIGURATION = configuration_dotkit
         spec = spack.spec.Spec('mpileaks arch=x86-linux')
         content = self.get_modulefile_content(spec)
-        print('\n'.join(content))
         self.assertTrue('#c spack' in content)
         self.assertTrue('#d mpileaks @2.3' in content)
