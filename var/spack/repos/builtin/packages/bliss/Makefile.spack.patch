@@ -20,14 +20,14 @@
 +all: libbliss_gmp.la bliss_gmp
 +
 +libbliss_gmp.la: $(OBJS)
-+	libtool --mode=link --tag=CXX c++ -g -O2			\
++	libtool --mode=link --tag=CXX c++ -g -O3			\
 +		-rpath $(PREFIX)/lib -o $@ $^ -L$(GMP_PREFIX)/lib -lgmp
 +
 +bliss_gmp: bliss.lo libbliss_gmp.la
-+	libtool --mode=link --tag=CXX c++ -g -O2 -o $@ $^
++	libtool --mode=link --tag=CXX c++ -g -O3 -o $@ $^
 +
 +%.lo: %.cc
-+	libtool --mode=compile --tag=CXX c++ -g -O2 -DBLISS_USE_GMP -c $*.cc
++	libtool --mode=compile --tag=CXX c++ -g -O3 -DBLISS_USE_GMP -c $*.cc
 +
 +install:
 +	mkdir -p $(PREFIX)/bin
