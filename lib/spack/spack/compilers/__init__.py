@@ -124,7 +124,7 @@ def add_compilers_to_config(compilers, scope=None):
       - compilers: a list of Compiler objects.
       - scope:     configuration scope to modify.
     """
-    compiler_config = get_compiler_config(scope, init_config)
+    compiler_config = get_compiler_config(scope)
     for compiler in compilers:
         compiler_config.append(_to_dict(compiler))
     global _cache_config_file
@@ -185,12 +185,6 @@ def default_compiler():
 
 
 def find_compilers(*paths):
-    """ Call find compilers help and return the list it finds using
-    the operating system method (PATHS, MODULES) """
-    return _find_compilers(*paths)
-
-
-def _find_compilers(*paths):
     """Return a list of compilers found in the suppied paths.
        This invokes the find_compilers() method for each operating
        system associated with the host platform, and appends
@@ -202,6 +196,7 @@ def _find_compilers(*paths):
     for o in oss:
         compiler_lists.extend(o.find_compilers(*paths))
     return compiler_lists
+
 
 def supported_compilers():
     """Return a set of names of compilers supported by Spack.
