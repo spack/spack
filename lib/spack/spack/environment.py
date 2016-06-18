@@ -297,16 +297,18 @@ class EnvironmentModifications(object):
         if proc.returncode != 0:
             raise RuntimeError('sourcing files returned a non-zero exit code')
         output = ''.join([line for line in proc.stdout])
-        # Construct a dictionary with all the variables in the environment
+        # Construct a dictionary with all the variables in the new environment
         after_source_env = dict(json.loads(output))
+        this_environment = dict(os.environ)
 
-        # Filter variables that are due to how we source
-        after_source_env.pop('SHLVL')
-        after_source_env.pop('_')
-        after_source_env.pop('PWD')
+        # Filter variables that are not related to sourcing a file
+        to_be_filtered = 'SHLVL', '_', 'PWD', 'OLDPWD'
+        for d in after_source_env, this_environment:
+            for name in to_be_filtered:
+                d.pop(name, None)
 
         # Fill the EnvironmentModifications instance
-        this_environment = dict(os.environ)
+
         # New variables
         new_variables = set(after_source_env) - set(this_environment)
         for x in new_variables:
