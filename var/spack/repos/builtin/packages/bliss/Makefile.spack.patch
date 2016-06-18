@@ -1,0 +1,38 @@
+--- old/Makefile.spack
++++ new/Makefile.spack
+@@ -0,0 +1,35 @@
++# Set PREFIX to the install location for both building and installing
++# Set GMP_PREFIX to the location where GMP is installed
++
++SRCS =						\
++	bliss_C.cc				\
++	defs.cc					\
++	graph.cc				\
++	heap.cc					\
++	orbit.cc				\
++	partition.cc				\
++	timer.cc				\
++	uintseqhash.cc				\
++	utils.cc
++
++OBJS = $(SRCS:%.cc=%.lo)
++
++all: libbliss_gmp.la bliss_gmp
++
++libbliss_gmp.la: $(OBJS)
++	libtool --mode=link --tag=CXX c++ -g -O2			\
++		-rpath $(PREFIX)/lib -o $@ $^ -L$(GMP_PREFIX)/lib -lgmp
++
++bliss_gmp: bliss.lo libbliss_gmp.la
++	libtool --mode=link --tag=CXX c++ -g -O2 -o $@ $^
++
++%.lo: %.cc
++	libtool --mode=compile --tag=CXX c++ -g -O2 -DBLISS_USE_GMP -c $*.cc
++
++install:
++	mkdir -p $(PREFIX)/bin
++	mkdir -p $(PREFIX)/lib
++	libtool --mode=install cp bliss_gmp $(PREFIX)/bin/bliss_gmp
++	libtool --mode=install cp libbliss_gmp.la $(PREFIX)/lib/libbliss_gmp.la
++
++.PHONY: all install
