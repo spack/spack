@@ -1,6 +1,6 @@
 --- old/Makefile.spack
 +++ new/Makefile.spack
-@@ -0,0 +1,54 @@
+@@ -0,0 +1,57 @@
 +# Set PREFIX to the install location for both building and installing
 +# Set BOOST_PREFIX to the location where BOOST is installed
 +# Set GMP_PREFIX to the location where GMP is installed
@@ -42,6 +42,7 @@
 +
 +install:
 +	mkdir -p $(PREFIX)/bin
++	mkdir -p $(PREFIX)/include
 +	mkdir -p $(PREFIX)/lib
 +	libtool --mode=install cp 2nash $(PREFIX)/bin/2nash
 +	libtool --mode=install cp fourier $(PREFIX)/bin/fourier
@@ -52,6 +53,8 @@
 +	libtool --mode=install cp redund1 $(PREFIX)/bin/redund1
 +	libtool --mode=install cp setnash $(PREFIX)/bin/setnash
 +	libtool --mode=install cp setnash2 $(PREFIX)/bin/setnash2
++	libtool --mode=install cp lrsgmp.h $(PREFIX)/include/lrsgmp.h
++	libtool --mode=install cp lrslib.h $(PREFIX)/include/lrslib.h
 +	libtool --mode=install cp liblrsgmp.la $(PREFIX)/lib/liblrsgmp.la
 +
 +.PHONY: all install
