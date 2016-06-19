@@ -1,11 +1,12 @@
 --- old/Makefile.spack
 +++ new/Makefile.spack
-@@ -0,0 +1,55 @@
+@@ -0,0 +1,54 @@
 +# Set PREFIX to the install location for both building and installing
 +# Set BOOST_PREFIX to the location where BOOST is installed
 +# Set GMP_PREFIX to the location where GMP is installed
 +
-+all: liblrsgmp.la 2nash lrs lrs1 lrsnash redund redund1 setnash setnash2
++all: liblrsgmp.la							\
++	2nash fourier lrs lrs1 lrsnash redund redund1 setnash setnash2
 +
 +liblrsgmp.la: lrslib-GMP.lo lrsgmp-GMP.lo
 +	libtool --mode=link --tag=CC cc -g -O3				\
@@ -16,20 +17,20 @@
 +	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
 +redund1: redund-LONG.lo lrslib-LONG.lo lrslong-LONG.lo
 +	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
++lrs: lrs-GMP.lo lrslib-GMP.lo lrsmp-GMP.lo liblrsgmp.la
++	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
++redund: redund-GMP.lo lrslib-GMP.lo lrsmp-GMP.lo liblrsgmp.la
++	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
++fourier: fourier-GMP.lo lrslib-GMP.lo lrsgmp-GMP.lo liblrsgmp.la
++	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
++lrsnash: lrsnash-GMP.lo lrsnashlib-GMP.lo lrslib-GMP.lo lrsmp-GMP.lo \
++		liblrsgmp.la
++	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
++2nash: 2nash.lo
++	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
 +setnash: setupnash.lo lrslib.lo lrsmp.lo
 +	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
 +setnash2: setupnash2.lo lrslib.lo lrsmp.lo
-+	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
-+lrs: lrs.lo lrslib.lo lrsmp.lo
-+	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^	\
-+		-L$(GMP_PREFIX)/lib -lgmp
-+redund: redund.lo lrslib.lo lrsmp.lo
-+	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^	\
-+		-L$(GMP_PREFIX)/lib -lgmp
-+lrsnash: lrsnash.lo lrsnashlib.lo lrslib.lo lrsmp.lo
-+	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^	\
-+		-L$(GMP_PREFIX)/lib -lgmp
-+2nash: 2nash.lo
 +	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
 +
 +%.lo: %.c
@@ -38,14 +39,12 @@
 +	libtool --mode=compile --tag=CC cc -g -O3 -o $@	-DGMP -c $*.c
 +%-LONG.lo: %.c
 +	libtool --mode=compile --tag=CC cc -g -O3 -o $@ -DLRSLONG -c $*.c
-+%-SIGNALS.lo: %.c
-+	libtool --mode=compile --tag=CC cc -g -O3 -o $@	\
-+		-DTIMES -DSIGNALS -c $*.c
 +
 +install:
 +	mkdir -p $(PREFIX)/bin
 +	mkdir -p $(PREFIX)/lib
 +	libtool --mode=install cp 2nash $(PREFIX)/bin/2nash
++	libtool --mode=install cp fourier $(PREFIX)/bin/fourier
 +	libtool --mode=install cp lrs $(PREFIX)/bin/lrs
 +	libtool --mode=install cp lrs1 $(PREFIX)/bin/lrs1
 +	libtool --mode=install cp lrsnash $(PREFIX)/bin/lrsnash
