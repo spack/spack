@@ -1,6 +1,6 @@
 --- old/Makefile.spack
 +++ new/Makefile.spack
-@@ -0,0 +1,48 @@
+@@ -0,0 +1,59 @@
 +# Set PREFIX to the install location for both building and installing
 +# Set GMP_PREFIX to the location where GMP is installed
 +
@@ -33,18 +33,29 @@
 +%.lo: %.cc
 +	libtool --mode=compile --tag=CXX c++ -g -O3 -o $@ -c $*.cc
 +%.gmp.lo: %.cc
-+	libtool --mode=compile --tag=CXX c++ -g -O3 -o $@ \
++	libtool --mode=compile --tag=CXX c++ -g -O3 -o $@	\
 +		-c -DBLISS_USE_GMP $*.cc
 +
 +install:
 +	mkdir -p $(PREFIX)/bin
-+	mkdir -p $(PREFIX)/include
++	mkdir -p $(PREFIX)/include/bliss
 +	mkdir -p $(PREFIX)/lib
 +	libtool --mode=install cp bliss $(PREFIX)/bin/bliss
 +	libtool --mode=install cp bliss_gmp $(PREFIX)/bin/bliss_gmp
-+	libtool --mode=install cp bliss_C.h $(PREFIX)/include/bliss_C.h
-+	libtool --mode=install cp graph.hh $(PREFIX)/include/graph.hh
-+	libtool --mode=install cp utils.hh $(PREFIX)/include/utils.hh
++	libtool --mode=install cp bignum.hh $(PREFIX)/include/bliss/bignum.hh
++	libtool --mode=install cp bliss_C.h $(PREFIX)/include/bliss/bliss_C.h
++	libtool --mode=install cp defs.hh $(PREFIX)/include/bliss/defs.hh
++	libtool --mode=install cp graph.hh $(PREFIX)/include/bliss/graph.hh
++	libtool --mode=install cp heap.hh $(PREFIX)/include/bliss/heap.hh
++	libtool --mode=install cp kqueue.hh $(PREFIX)/include/bliss/kqueue.hh
++	libtool --mode=install cp kstack.hh $(PREFIX)/include/bliss/kstack.hh
++	libtool --mode=install cp orbit.hh $(PREFIX)/include/bliss/orbit.hh
++	libtool --mode=install cp partition.hh		\
++		$(PREFIX)/include/bliss/partition.hh
++	libtool --mode=install cp timer.hh $(PREFIX)/include/bliss/timer.hh
++	libtool --mode=install cp uintseqhash.hh	\
++		$(PREFIX)/include/bliss/uintseqhash.hh
++	libtool --mode=install cp utils.hh $(PREFIX)/include/bliss/utils.hh
 +	libtool --mode=install cp libbliss.la $(PREFIX)/lib/libbliss.la
 +	libtool --mode=install cp libbliss_gmp.la $(PREFIX)/lib/libbliss_gmp.la
 +
