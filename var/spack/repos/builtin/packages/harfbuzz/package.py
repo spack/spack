@@ -34,6 +34,8 @@ class Harfbuzz(Package):
     depends_on("glib")
     depends_on("icu")
     depends_on("freetype")
+    depends_on("cairo")
+    depends_on("zlib")
 
     def patch(self):
         change_sed_delimiter('@', ';', 'src/Makefile.in')
