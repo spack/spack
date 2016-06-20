@@ -76,8 +76,13 @@ def compiler_find(args):
     if not paths:
         paths = get_path('PATH')
 
-    compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
-                 if c.spec not in spack.compilers.all_compilers(scope=args.scope)]
+    # Don't initialize compilers config via compilers.get_compiler_config. 
+    # Just let compiler_find do the 
+    # entire process and return an empty config from all_compilers
+    # Default for any other process is init_config=True
+    compilers = [c for c in spack.compilers.find_compilers(*paths)
+                 if c.spec not in spack.compilers.all_compilers(
+                     scope=args.scope, init_config=False)] 
     if compilers:
         spack.compilers.add_compilers_to_config(compilers, scope=args.scope)
         n = len(compilers)
