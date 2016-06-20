@@ -38,7 +38,7 @@ All packages whose names contain "sql" case insensitive:
 
 All packages whose names start with a capital M:
 
-.. command-output:: spack list M*
+.. command-output:: spack list 'M*'
 
 All packages whose names or descriptions contain Documentation:
 
