@@ -39,7 +39,9 @@ spack_file = join_path(spack_root, "bin", "spack")
 lib_path       = join_path(spack_root, "lib", "spack")
 build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
+platform_path  = join_path(module_path, 'platforms')
 compilers_path = join_path(module_path, "compilers")
+operating_system_path = join_path(module_path, 'operating_systems')
 test_path      = join_path(module_path, "test")
 hooks_path     = join_path(module_path, "hooks")
 var_path       = join_path(spack_root, "var", "spack")
@@ -109,7 +111,7 @@ concretizer = DefaultConcretizer()
 
 # Version information
 from spack.version import Version
-spack_version = Version("0.9")
+spack_version = Version("0.9.1")
 
 #
 # Executables used by Spack

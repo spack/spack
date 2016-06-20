@@ -49,6 +49,9 @@ class Gcc(Compiler):
                   'f77' : 'gcc/gfortran',
                   'fc'  : 'gcc/gfortran' }
 
+    PrgEnv = 'PrgEnv-gnu'
+    PrgEnv_compiler = 'gcc'
+
     @property
     def openmp_flag(self):
         return "-fopenmp"
@@ -74,9 +77,9 @@ class Gcc(Compiler):
         return get_compiler_version(
             fc, '-dumpversion',
             # older gfortran versions don't have simple dumpversion output.
-            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)')
+            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)', module)
 
 
     @classmethod
     def f77_version(cls, f77):
-        return cls.fc_version(f77)
+        return cls.fc_version(f77, module)

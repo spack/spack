@@ -31,6 +31,7 @@ import spack.spec
 from llnl.util.lang import *
 from llnl.util.tty.colify import *
 from llnl.util.tty.color import *
+from llnl.util.lang import *
 
 description = "Find installed spack packages"
 
@@ -85,6 +86,11 @@ def setup_parser(subparser):
         action='store_true',
         dest='missing',
         help='Show missing dependencies as well as installed specs.')
+    subparser.add_argument(
+        '-v', '--variants',
+        action='store_true',
+        dest='variants',
+        help='Show variants in output (can be long)')
     subparser.add_argument('-M', '--only-missing',
                            action='store_true',
                            dest='only_missing',
@@ -106,6 +112,8 @@ def display_specs(specs, **kwargs):
     mode = kwargs.get('mode', 'short')
     hashes = kwargs.get('long', False)
     namespace = kwargs.get('namespace', False)
+    flags = kwargs.get('show_flags', False)
+    variants = kwargs.get('variants', False)
 
     hlen = 7
     if kwargs.get('very_long', False):
@@ -113,10 +121,9 @@ def display_specs(specs, **kwargs):
         hlen = None
 
     nfmt = '.' if namespace else '_'
-    format_string = '$%s$@$+' % nfmt
-    flags = kwargs.get('show_flags', False)
-    if flags:
-        format_string = '$%s$@$%%+$+' % nfmt
+    ffmt = '$%+' if flags else ''
+    vfmt = '$+' if variants else ''
+    format_string = '$%s$@%s%s' % (nfmt, ffmt, vfmt)
 
     # Make a dict with specs keyed by architecture and compiler.
     index = index_by(specs, ('architecture', 'compiler'))
@@ -162,7 +169,7 @@ def display_specs(specs, **kwargs):
                     string = ""
                     if hashes:
                         string += gray_hash(s, hlen) + ' '
-                    string += s.format('$-%s$@$+' % nfmt, color=True)
+                    string += s.format('$-%s$@%s' % (nfmt, vfmt), color=True)
 
                     return string
 
@@ -180,6 +187,29 @@ def display_specs(specs, **kwargs):
                 "deps, short)." % mode)  # NOQA: ignore=E501
 
 
+def query_arguments(args):
+    # Check arguments
+    if args.explicit and args.implicit:
+        tty.error('You can\'t pass -E and -e options simultaneously.')
+        raise SystemExit(1)
+
+    # Set up query arguments.
+    installed, known = True, any
+    if args.only_missing:
+        installed = False
+    elif args.missing:
+        installed = any
+    if args.unknown:
+        known = False
+    explicit = any
+    if args.explicit:
+        explicit = True
+    if args.implicit:
+        explicit = False
+    q_args = {'installed': installed, 'known': known, "explicit": explicit}
+    return q_args
+
+
 def find(parser, args):
     # Filter out specs that don't exist.
     query_specs = spack.cmd.parse_specs(args.query_specs)
@@ -194,22 +224,7 @@ def find(parser, args):
         if not query_specs:
             return
 
-    # Set up query arguments.
-    installed, known = True, any
-    if args.only_missing:
-        installed = False
-    elif args.missing:
-        installed = any
-    if args.unknown:
-        known = False
-
-    explicit = any
-    if args.explicit:
-        explicit = False
-    if args.implicit:
-        explicit = True
-
-    q_args = {'installed': installed, 'known': known, "explicit": explicit}
+    q_args = query_arguments(args)
 
     # Get all the specs the user asked for
     if not query_specs:
@@ -228,4 +243,6 @@ def find(parser, args):
                   mode=args.mode,
                   long=args.long,
                   very_long=args.very_long,
-                  show_flags=args.show_flags)
+                  show_flags=args.show_flags,
+                  namespace=args.namespace,
+                  variants=args.variants)

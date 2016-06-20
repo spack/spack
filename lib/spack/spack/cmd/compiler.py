@@ -70,7 +70,7 @@ def setup_parser(subparser):
 
 
 def compiler_find(args):
-    """Search either $PATH or a list of paths for compilers and add them
+    """Search either $PATH or a list of paths OR MODULES for compilers and add them
        to Spack's configuration."""
     paths = args.add_paths
     if not paths:
@@ -78,7 +78,6 @@ def compiler_find(args):
 
     compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
                  if c.spec not in spack.compilers.all_compilers(scope=args.scope)]
-
     if compilers:
         spack.compilers.add_compilers_to_config(compilers, scope=args.scope)
         n = len(compilers)
@@ -93,7 +92,6 @@ def compiler_find(args):
 def compiler_remove(args):
     cspec = CompilerSpec(args.compiler_spec)
     compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
-
     if not compilers:
         tty.die("No compilers match spec %s" % cspec)
     elif not args.all and len(compilers) > 1:
@@ -121,6 +119,8 @@ def compiler_info(args):
             print "\tcxx = %s" % c.cxx
             print "\tf77 = %s" % c.f77
             print "\tfc  = %s" % c.fc
+            print "\tmodules  = %s" % c.modules
+            print "\toperating system  = %s" % c.operating_system
 
 
 def compiler_list(args):
@@ -135,10 +135,10 @@ def compiler_list(args):
 
 
 def compiler(parser, args):
-    action = { 'add'    : compiler_find,
-               'find'   : compiler_find,
-               'remove' : compiler_remove,
-               'rm'     : compiler_remove,
-               'info'   : compiler_info,
-               'list'   : compiler_list }
+    action = {'add'    : compiler_find, 
+              'find'   : compiler_find,
+              'remove' : compiler_remove,
+              'rm'     : compiler_remove,
+              'info'   : compiler_info,
+              'list'   : compiler_list }
     action[args.compiler_command](args)
