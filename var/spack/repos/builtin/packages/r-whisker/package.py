@@ -25,32 +25,18 @@
 from spack import *
 
 
-class Tmux(Package):
-    """tmux is a terminal multiplexer. What is a terminal multiplexer? It lets
-       you switch easily between several programs in one terminal, detach them
-       (they keep running in the background) and reattach them to a different
-       terminal. And do a lot more.
-    """
+class RWhisker(Package):
+    """logicless templating, reuse templates in many programming languages
+    including R"""
 
-    homepage = "http://tmux.github.io"
-    url = "https://github.com/tmux/tmux/releases/download/2.2/tmux-2.2.tar.gz"
+    homepage = "http://github.com/edwindj/whisker"
+    url      = "https://cran.r-project.org/src/contrib/whisker_0.3-2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/whisker"
 
-    version('1.9a', 'b07601711f96f1d260b390513b509a2d')
-    version('2.1', '74a2855695bccb51b6e301383ad4818c')
-    version('2.2', 'bd95ee7205e489c62c616bb7af040099')
+    version('0.3-2', 'c4b9bf9a22e69ce003fe68663ab5e8e6')
 
-    depends_on('libevent')
-    depends_on('ncurses')
+    extends('R')
 
     def install(self, spec, prefix):
-        pkg_config_path = ':'.join([
-            spec['libevent'].prefix,
-            spec['ncurses'].prefix
-        ])
-
-        configure(
-            "--prefix=%s" % prefix,
-            "PKG_CONFIG_PATH=%s" % pkg_config_path)
-
-        make()
-        make("install")
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

@@ -22,8 +22,8 @@ modules:
     include:
       - CPATH
     lib/pkgconfig:
-      - PKGCONFIG
+      - PKG_CONFIG_PATH
     lib64/pkgconfig:
-      - PKGCONFIG
+      - PKG_CONFIG_PATH
     '':
       - CMAKE_PREFIX_PATH

@@ -25,32 +25,28 @@
 from spack import *
 
 
-class Tmux(Package):
-    """tmux is a terminal multiplexer. What is a terminal multiplexer? It lets
-       you switch easily between several programs in one terminal, detach them
-       (they keep running in the background) and reattach them to a different
-       terminal. And do a lot more.
-    """
+class ROpenssl(Package):
+    """Bindings to OpenSSL libssl and libcrypto, plus custom SSH pubkey
+    parsers. Supports RSA, DSA and EC curves P-256, P-384 and P-521.
+    Cryptographic signatures can either be created and verified manually or via
+    x509 certificates. AES can be used in cbc, ctr or gcm mode for symmetric
+    encryption; RSA for asymmetric (public key) encryption or EC for Diffie
+    Hellman. High-level envelope functions combine RSA and AES for encrypting
+    arbitrary sized data. Other utilities include key generators, hash
+    functions (md5, sha1, sha256, etc), base64 encoder, a secure random number
+    generator, and 'bignum' math methods for manually performing crypto
+    calculations on large multibyte integers."""
 
-    homepage = "http://tmux.github.io"
-    url = "https://github.com/tmux/tmux/releases/download/2.2/tmux-2.2.tar.gz"
+    homepage = "https://github.com/jeroenooms/openssl#readme"
+    url      = "https://cran.r-project.org/src/contrib/openssl_0.9.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/openssl"
 
-    version('1.9a', 'b07601711f96f1d260b390513b509a2d')
-    version('2.1', '74a2855695bccb51b6e301383ad4818c')
-    version('2.2', 'bd95ee7205e489c62c616bb7af040099')
+    version('0.9.4', '82a890e71ed0e74499878bedacfb8ccb')
 
-    depends_on('libevent')
-    depends_on('ncurses')
+    extends('R')
+
+    depends_on('openssl')
 
     def install(self, spec, prefix):
-        pkg_config_path = ':'.join([
-            spec['libevent'].prefix,
-            spec['ncurses'].prefix
-        ])
-
-        configure(
-            "--prefix=%s" % prefix,
-            "PKG_CONFIG_PATH=%s" % pkg_config_path)
-
-        make()
-        make("install")
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

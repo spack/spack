@@ -25,32 +25,26 @@
 from spack import *
 
 
-class Tmux(Package):
-    """tmux is a terminal multiplexer. What is a terminal multiplexer? It lets
-       you switch easily between several programs in one terminal, detach them
-       (they keep running in the background) and reattach them to a different
-       terminal. And do a lot more.
-    """
+class RJsonlite(Package):
+    """A fast JSON parser and generator optimized for statistical data and the
+    web. Started out as a fork of 'RJSONIO', but has been completely rewritten
+    in recent versions. The package offers flexible, robust, high performance
+    tools for working with JSON in R and is particularly powerful for building
+    pipelines and interacting with a web API. The implementation is based on
+    the mapping described in the vignette (Ooms, 2014). In addition to
+    converting JSON data from/to R objects, 'jsonlite' contains functions to
+    stream, validate, and prettify JSON data. The unit tests included with the
+    package verify that all edge cases are encoded and decoded consistently for
+    use with dynamic data in systems and applications."""
 
-    homepage = "http://tmux.github.io"
-    url = "https://github.com/tmux/tmux/releases/download/2.2/tmux-2.2.tar.gz"
+    homepage = "https://github.com/jeroenooms/jsonlite"
+    url      = "https://cran.r-project.org/src/contrib/jsonlite_0.9.21.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/jsonlite"
 
-    version('1.9a', 'b07601711f96f1d260b390513b509a2d')
-    version('2.1', '74a2855695bccb51b6e301383ad4818c')
-    version('2.2', 'bd95ee7205e489c62c616bb7af040099')
+    version('0.9.21', '4fc382747f88a79ff0718a0d06bed45d')
 
-    depends_on('libevent')
-    depends_on('ncurses')
+    extends('R')
 
     def install(self, spec, prefix):
-        pkg_config_path = ':'.join([
-            spec['libevent'].prefix,
-            spec['ncurses'].prefix
-        ])
-
-        configure(
-            "--prefix=%s" % prefix,
-            "PKG_CONFIG_PATH=%s" % pkg_config_path)
-
-        make()
-        make("install")
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

@@ -25,32 +25,30 @@
 from spack import *
 
 
-class Tmux(Package):
-    """tmux is a terminal multiplexer. What is a terminal multiplexer? It lets
-       you switch easily between several programs in one terminal, detach them
-       (they keep running in the background) and reattach them to a different
-       terminal. And do a lot more.
-    """
+class Superlu(Package):
+    """SuperLU is a general purpose library for the direct solution of large,
+    sparse, nonsymmetric systems of linear equations on high performance
+    machines. SuperLU is designed for sequential machines."""
 
-    homepage = "http://tmux.github.io"
-    url = "https://github.com/tmux/tmux/releases/download/2.2/tmux-2.2.tar.gz"
+    homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu"
+    url      = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_5.2.1.tar.gz"
 
-    version('1.9a', 'b07601711f96f1d260b390513b509a2d')
-    version('2.1', '74a2855695bccb51b6e301383ad4818c')
-    version('2.2', 'bd95ee7205e489c62c616bb7af040099')
+    version('5.2.1', '3a1a9bff20cb06b7d97c46d337504447')
 
-    depends_on('libevent')
-    depends_on('ncurses')
+    depends_on('blas')
 
     def install(self, spec, prefix):
-        pkg_config_path = ':'.join([
-            spec['libevent'].prefix,
-            spec['ncurses'].prefix
-        ])
+        cmake_args = [
+            '-DCMAKE_POSITION_INDEPENDENT_CODE=ON',
+            # BLAS support
+            '-Denable_blaslib=OFF',
+            '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].blas_shared_lib)
+        ]
 
-        configure(
-            "--prefix=%s" % prefix,
-            "PKG_CONFIG_PATH=%s" % pkg_config_path)
+        cmake_args.extend(std_cmake_args)
 
-        make()
-        make("install")
+        with working_dir('spack-build', create=True):
+            cmake('..', *cmake_args)
+
+            make()
+            make('install')

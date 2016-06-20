@@ -24,7 +24,6 @@
 ##############################################################################
 import os
 
-from llnl.util.filesystem import *
 import llnl.util.tty as tty
 
 import spack
@@ -33,6 +32,7 @@ import spack.modules
 # Character limit for shebang line.  Using Linux's 127 characters
 # here, as it is the shortest I could find on a modern OS.
 shebang_limit = 127
+
 
 def shebang_too_long(path):
     """Detects whether a file has a shebang line that is too long."""
@@ -57,15 +57,9 @@ def filter_shebang(path):
     if original.startswith(new_sbang_line):
         return
 
-    backup = path + ".shebang.bak"
-    os.rename(path, backup)
-
     with open(path, 'w') as new_file:
         new_file.write(new_sbang_line)
         new_file.write(original)
-
-    copy_mode(backup, path)
-    unset_executable_mode(backup)
 
     tty.warn("Patched overly long shebang in %s" % path)
 

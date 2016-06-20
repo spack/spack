@@ -25,32 +25,27 @@
 from spack import *
 
 
-class Tmux(Package):
-    """tmux is a terminal multiplexer. What is a terminal multiplexer? It lets
-       you switch easily between several programs in one terminal, detach them
-       (they keep running in the background) and reattach them to a different
-       terminal. And do a lot more.
-    """
+class RCurl(Package):
+    """The curl() and curl_download() functions provide highly configurable
+    drop-in replacements for base url() and download.file() with better
+    performance, support for encryption (https, ftps), gzip compression,
+    authentication, and other libcurl goodies. The core of the package
+    implements a framework for performing fully customized requests where data
+    can be processed either in memory, on disk, or streaming via the callback
+    or connection interfaces. Some knowledge of libcurl is recommended; for a
+    more-user-friendly web client see the 'httr' package which builds on this
+    package with http specific tools and logic."""
 
-    homepage = "http://tmux.github.io"
-    url = "https://github.com/tmux/tmux/releases/download/2.2/tmux-2.2.tar.gz"
+    homepage = "https://github.com/jeroenooms/curl"
+    url      = "https://cran.r-project.org/src/contrib/curl_0.9.7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RCurl"
 
-    version('1.9a', 'b07601711f96f1d260b390513b509a2d')
-    version('2.1', '74a2855695bccb51b6e301383ad4818c')
-    version('2.2', 'bd95ee7205e489c62c616bb7af040099')
+    version('0.9.7', 'a101f7de948cb828fef571c730f39217')
 
-    depends_on('libevent')
-    depends_on('ncurses')
+    extends('R')
+
+    depends_on('curl')
 
     def install(self, spec, prefix):
-        pkg_config_path = ':'.join([
-            spec['libevent'].prefix,
-            spec['ncurses'].prefix
-        ])
-
-        configure(
-            "--prefix=%s" % prefix,
-            "PKG_CONFIG_PATH=%s" % pkg_config_path)
-
-        make()
-        make("install")
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

@@ -61,6 +61,7 @@ class Openmpi(Package):
     list_url = "http://www.open-mpi.org/software/ompi/"
     list_depth = 3
 
+    version('1.10.3', 'e2fe4513200e2aaa1500b762342c674b')
     version('1.10.2', 'b2f43d9635d2d52826e5ef9feb97fd4c')
     version('1.10.1', 'f0fcd77ed345b7eafb431968124ba16e')
     version('1.10.0', '280cf952de68369cebaca886c5ce0304')
@@ -72,20 +73,27 @@ class Openmpi(Package):
     patch('configure.patch', when="@1.10.0:1.10.1")
 
     variant('psm', default=False, description='Build support for the PSM library.')
-    variant('psm2', default=False, description='Build support for the Intel PSM2 library.')
-    variant('pmi', default=False, description='Build support for PMI-based launchers')
-    variant('verbs', default=_verbs_dir() is not None, description='Build support for OpenFabrics verbs.')
+    variant('psm2', default=False,
+            description='Build support for the Intel PSM2 library.')
+    variant('pmi', default=False,
+            description='Build support for PMI-based launchers')
+    variant('verbs', default=_verbs_dir() is not None,
+            description='Build support for OpenFabrics verbs.')
     variant('mxm', default=False, description='Build Mellanox Messaging support')
 
-    variant('thread_multiple', default=False, description='Enable MPI_THREAD_MULTIPLE support')
+    variant('thread_multiple', default=False,
+            description='Enable MPI_THREAD_MULTIPLE support')
 
     # TODO : variant support for alps, loadleveler  is missing
-    variant('tm', default=False, description='Build TM (Torque, PBSPro, and compatible) support')
-    variant('slurm', default=False, description='Build SLURM scheduler component')
+    variant('tm', default=False,
+            description='Build TM (Torque, PBSPro, and compatible) support')
+    variant('slurm', default=False,
+            description='Build SLURM scheduler component')
 
     variant('sqlite3', default=False, description='Build sqlite3 support')
 
-    variant('vt', default=True, description='Build support for contributed package vt')
+    variant('vt', default=True,
+            description='Build support for contributed package vt')
 
     # TODO : support for CUDA is missing
 
@@ -96,8 +104,7 @@ class Openmpi(Package):
     depends_on('sqlite', when='+sqlite3')
 
     def url_for_version(self, version):
-        return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)
-
+        return "http://www.open-mpi.org/software/ompi/v%s/downloads/openmpi-%s.tar.bz2" % (version.up_to(2), version)  # NOQA: ignore=E501
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('OMPI_CC', spack_cc)
@@ -106,14 +113,15 @@ class Openmpi(Package):
         spack_env.set('OMPI_F77', spack_f77)
 
     def setup_dependent_package(self, module, dep_spec):
-        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
-        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+        self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
     @property
     def verbs(self):
-        # Up through version 1.6, this option was previously named --with-openib
+        # Up through version 1.6, this option was previously named
+        # --with-openib
         if self.spec.satisfies('@:1.6'):
             return 'openib'
         # In version 1.7, it was renamed to be --with-verbs
@@ -121,6 +129,13 @@ class Openmpi(Package):
             return 'verbs'
 
     def install(self, spec, prefix):
+        # As of 06/2016 there is no mechanism to specify that packages which
+        # depends on MPI need C or/and Fortran implementation. For now
+        # require both.
+        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+            raise InstallError('OpenMPI requires both C and Fortran ',
+                               'compilers!')
+
         config_args = ["--prefix=%s" % prefix,
                        "--with-hwloc=%s" % spec['hwloc'].prefix,
                        "--enable-shared",
@@ -135,7 +150,7 @@ class Openmpi(Package):
             '--with-psm2' if '+psm2' in spec else '--without-psm2',
             '--with-mxm' if '+mxm' in spec else '--without-mxm',
             # Other options
-            '--enable-mpi-thread-multiple' if '+thread_multiple' in spec else '--disable-mpi-thread-multiple',
+            '--enable-mpi-thread-multiple' if '+thread_multiple' in spec else '--disable-mpi-thread-multiple',  # NOQA: ignore=E501
             '--with-pmi' if '+pmi' in spec else '--without-pmi',
             '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
             '--enable-vt' if '+vt' in spec else '--disable-vt'
@@ -153,7 +168,7 @@ class Openmpi(Package):
         # use this for LANL builds, but for LLNL builds, we need:
         #     "--with-platform=contrib/platform/llnl/optimized"
         if self.version == ver("1.6.5") and '+lanl' in spec:
-            config_args.append("--with-platform=contrib/platform/lanl/tlcc2/optimized-nopanasas")
+            config_args.append("--with-platform=contrib/platform/lanl/tlcc2/optimized-nopanasas")  # NOQA: ignore=E501
 
         if not self.compiler.f77 and not self.compiler.fc:
             config_args.append("--enable-mpi-fortran=no")
@@ -173,40 +188,33 @@ class Openmpi(Package):
            be bound to whatever compiler they were built with.
         """
         kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
-        dir = os.path.join(self.prefix, 'share/openmpi/')
+        wrapper_basepath = join_path(self.prefix, 'share', 'openmpi')
 
-        cc_wrappers = ['mpicc-vt-wrapper-data.txt', 'mpicc-wrapper-data.txt',
-                       'ortecc-wrapper-data.txt', 'shmemcc-wrapper-data.txt']
+        wrappers = [
+            ('mpicc-vt-wrapper-data.txt', self.compiler.cc),
+            ('mpicc-wrapper-data.txt', self.compiler.cc),
+            ('ortecc-wrapper-data.txt', self.compiler.cc),
+            ('shmemcc-wrapper-data.txt', self.compiler.cc),
+            ('mpic++-vt-wrapper-data.txt', self.compiler.cxx),
+            ('mpic++-wrapper-data.txt', self.compiler.cxx),
+            ('ortec++-wrapper-data.txt', self.compiler.cxx),
+            ('mpifort-vt-wrapper-data.txt', self.compiler.fc),
+            ('mpifort-wrapper-data.txt', self.compiler.fc),
+            ('shmemfort-wrapper-data.txt', self.compiler.fc),
+            ('mpif90-vt-wrapper-data.txt', self.compiler.fc),
+            ('mpif90-wrapper-data.txt', self.compiler.fc),
+            ('mpif77-vt-wrapper-data.txt',  self.compiler.f77),
+            ('mpif77-wrapper-data.txt',  self.compiler.f77)
+        ]
 
-        cxx_wrappers = ['mpic++-vt-wrapper-data.txt', 'mpic++-wrapper-data.txt',
-                        'ortec++-wrapper-data.txt']
-
-        fc_wrappers = ['mpifort-vt-wrapper-data.txt',
-                       'mpifort-wrapper-data.txt', 'shmemfort-wrapper-data.txt']
-
-        for wrapper in cc_wrappers:
-            filter_file('compiler=.*', 'compiler=%s' % self.compiler.cc,
-                        os.path.join(dir, wrapper), **kwargs)
-
-        for wrapper in cxx_wrappers:
-            filter_file('compiler=.*', 'compiler=%s' % self.compiler.cxx,
-                        os.path.join(dir, wrapper), **kwargs)
-
-        for wrapper in fc_wrappers:
-            filter_file('compiler=.*', 'compiler=%s' % self.compiler.fc,
-                        os.path.join(dir, wrapper), **kwargs)
-
-        # These are symlinks in newer versions, so check that here
-        f77_wrappers = ['mpif77-vt-wrapper-data.txt', 'mpif77-wrapper-data.txt']
-        f90_wrappers = ['mpif90-vt-wrapper-data.txt', 'mpif90-wrapper-data.txt']
-
-        for wrapper in f77_wrappers:
-            path = os.path.join(dir, wrapper)
-            if not os.path.islink(path):
-                filter_file('compiler=.*', 'compiler=%s' % self.compiler.f77,
-                            path, **kwargs)
-        for wrapper in f90_wrappers:
-            path = os.path.join(dir, wrapper)
-            if not os.path.islink(path):
-                filter_file('compiler=.*', 'compiler=%s' % self.compiler.fc,
-                            path, **kwargs)
+        for wrapper_name, compiler in wrappers:
+            wrapper = join_path(wrapper_basepath, wrapper_name)
+            if not os.path.islink(wrapper):
+                # Substitute Spack compile wrappers for the real
+                # underlying compiler
+                match = 'compiler=.*'
+                substitute = 'compiler={compiler}'.format(compiler=compiler)
+                filter_file(match, substitute, wrapper, **kwargs)
+                # Remove this linking flag if present
+                # (it turns RPATH into RUNPATH)
+                filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)
