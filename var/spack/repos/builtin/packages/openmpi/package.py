@@ -121,6 +121,13 @@ class Openmpi(Package):
             return 'verbs'
 
     def install(self, spec, prefix):
+        # As of 06/2016 there is no mechanism to specify that packages which
+        # depends on MPI need C or/and Fortran implementation. For now
+        # require both.
+        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+            raise InstallError('OpenMPI requires both C and Fortran ',
+                               'compilers!')
+
         config_args = ["--prefix=%s" % prefix,
                        "--with-hwloc=%s" % spec['hwloc'].prefix,
                        "--enable-shared",
