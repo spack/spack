@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
 
 
 class Mvapich2(Package):
@@ -245,27 +244,20 @@ class Mvapich2(Package):
            be bound to whatever compiler they were built with.
         """
         bin = self.prefix.bin
-        mpicc  = os.path.join(bin, 'mpicc')
-        mpicxx = os.path.join(bin, 'mpicxx')
-        mpif77 = os.path.join(bin, 'mpif77')
-        mpif90 = os.path.join(bin, 'mpif90')
+        mpicc  = join_path(bin, 'mpicc')
+        mpicxx = join_path(bin, 'mpicxx')
+        mpif77 = join_path(bin, 'mpif77')
+        mpif90 = join_path(bin, 'mpif90')
 
-        spack_cc  = os.environ['CC']
-        spack_cxx = os.environ['CXX']
-        spack_f77 = os.environ['F77']
-        spack_fc  = os.environ['FC']
+        # Substitute Spack compile wrappers for the real
+        # underlying compiler
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
+        filter_file(env['CC'], self.compiler.cc, mpicc, **kwargs)
+        filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
+        filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
+        filter_file(env['FC'], self.compiler.fc, mpif90, **kwargs)
 
-        kwargs = {
-            'ignore_absent': True,
-            'backup': False,
-            'string': True
-        }
-
-        filter_file('CC="%s"' % spack_cc,
-                    'CC="%s"' % self.compiler.cc, mpicc, **kwargs)
-        filter_file('CXX="%s"' % spack_cxx,
-                    'CXX="%s"' % self.compiler.cxx, mpicxx, **kwargs)
-        filter_file('F77="%s"' % spack_f77,
-                    'F77="%s"' % self.compiler.f77, mpif77, **kwargs)
-        filter_file('FC="%s"' % spack_fc,
-                    'FC="%s"' % self.compiler.fc, mpif90, **kwargs)
+        # Remove this linking flag if present
+        # (it turns RPATH into RUNPATH)
+        for wrapper in (mpicc, mpicxx, mpif77, mpif90):
+            filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)
