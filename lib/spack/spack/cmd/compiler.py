@@ -84,7 +84,8 @@ def compiler_find(args):
                  if c.spec not in spack.compilers.all_compilers(
                      scope=args.scope, init_config=False)] 
     if compilers:
-        spack.compilers.add_compilers_to_config(compilers, scope=args.scope)
+        spack.compilers.add_compilers_to_config(compilers, scope=args.scope,
+                init_config=False)
         n = len(compilers)
         s = 's' if n > 1 else ''
         filename = spack.config.get_config_filename(args.scope, 'compilers')
