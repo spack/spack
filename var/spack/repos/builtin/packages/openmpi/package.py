@@ -24,6 +24,8 @@
 ##############################################################################
 import os
 
+import llnl.util.tty as tty
+
 from spack import *
 
 
@@ -118,6 +120,21 @@ class Openmpi(Package):
         self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
+    def setup_environment(self, spack_env, run_env):
+        # As of 06/2016 there is no mechanism to specify that packages which
+        # depends on MPI need C or/and Fortran implementation. For now
+        # require both.
+        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+            tty.warn('OpenMPI : FORTRAN compiler not found')
+            tty.warn('OpenMPI : FORTRAN bindings will be disabled')
+            spack_env.unset('FC')
+            spack_env.unset('F77')
+            # Setting an attribute here and using it in the 'install'
+            # method is needed to ensure tty.warn is actually displayed
+            # to user and not redirected to spack-build.out
+            self.config_extra = ['--enable-mpi-fortran=none',
+                                 '--disable-oshmem-fortran']
+
     @property
     def verbs(self):
         # Up through version 1.6, this option was previously named
@@ -129,17 +146,14 @@ class Openmpi(Package):
             return 'verbs'
 
     def install(self, spec, prefix):
-        # As of 06/2016 there is no mechanism to specify that packages which
-        # depends on MPI need C or/and Fortran implementation. For now
-        # require both.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            raise InstallError('OpenMPI requires both C and Fortran ',
-                               'compilers!')
-
         config_args = ["--prefix=%s" % prefix,
                        "--with-hwloc=%s" % spec['hwloc'].prefix,
                        "--enable-shared",
                        "--enable-static"]
+
+        if getattr(self, 'config_extra', None) is not None:
+            config_args.extend(self.config_extra)
+
         # Variant based arguments
         config_args.extend([
             # Schedulers
@@ -169,9 +183,6 @@ class Openmpi(Package):
         #     "--with-platform=contrib/platform/llnl/optimized"
         if self.version == ver("1.6.5") and '+lanl' in spec:
             config_args.append("--with-platform=contrib/platform/lanl/tlcc2/optimized-nopanasas")  # NOQA: ignore=E501
-
-        if not self.compiler.f77 and not self.compiler.fc:
-            config_args.append("--enable-mpi-fortran=no")
 
         configure(*config_args)
         make()
