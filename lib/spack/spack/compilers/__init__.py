@@ -52,6 +52,7 @@ from spack.util.environment import get_path
 _imported_compilers_module = 'spack.compilers'
 _path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
 _other_instance_vars = ['modules', 'operating_system']
+_cache_config_file = []
 
 # TODO: customize order in config file
 if platform.system() == 'Darwin':
@@ -79,9 +80,7 @@ def _to_dict(compiler):
     if compiler.alias:
         d['alias'] = compiler.alias
 
-    return {
-            'compiler': d
-    }
+    return {'compiler': d}
 
 
 def get_compiler_config(scope=None):
@@ -99,7 +98,6 @@ def get_compiler_config(scope=None):
     # Update the configuration if there are currently no compilers
     # configured.  Avoid updating automatically if there ARE site
     # compilers configured but no user ones.
-#    if (isinstance(arch, basestring) or arch == my_arch) and arch not in config:
     if not config:
         if scope is None:
             # We know no compilers were configured in any scope.
@@ -112,8 +110,11 @@ def get_compiler_config(scope=None):
             if not site_config:
                 init_compiler_config()
                 config = spack.config.get_config('compilers', scope=scope)
-
-    return config
+        return config
+    elif config:
+        return config
+    else:
+        return []  # Return empty list which we will later append to.
 
 
 def add_compilers_to_config(compilers, scope=None):
@@ -126,7 +127,8 @@ def add_compilers_to_config(compilers, scope=None):
     compiler_config = get_compiler_config(scope)
     for compiler in compilers:
         compiler_config.append(_to_dict(compiler))
-
+    global _cache_config_file
+    _cache_config_file = compiler_config
     spack.config.update_config('compilers', compiler_config, scope)
 
 
@@ -139,15 +141,17 @@ def remove_compiler_from_config(compiler_spec, scope=None):
       - scope:          configuration scope to modify.
     """
     compiler_config = get_compiler_config(scope)
-    matches = [(a,c) for (a,c) in compiler_config.items() if c['spec'] == compiler_spec]
-    if len(matches) == 1:
-        del compiler_config[matches[0][0]]
-    else:
+    config_length = len(compiler_config)
+    
+    filtered_compiler_config = [comp for comp in compiler_config 
+               if spack.spec.CompilerSpec(comp['compiler']['spec']) != compiler_spec]
+    # Need a better way for this
+    global _cache_config_file
+    _cache_config_file = filtered_compiler_config # Update the cache for changes
+    if len(filtered_compiler_config) == config_length: # No items removed
         CompilerSpecInsufficientlySpecificError(compiler_spec)
+    spack.config.update_config('compilers', filtered_compiler_config, scope)
 
-    spack.config.update_config('compilers', compiler_config, scope)
-
-_cache_config_file = {}
 
 def all_compilers_config(scope=None):
     """Return a set of specs for all the compiler versions currently
@@ -155,13 +159,12 @@ def all_compilers_config(scope=None):
     """
     # Get compilers for this architecture.
     global _cache_config_file #Create a cache of the config file so we don't load all the time.
-
     if not _cache_config_file:
         _cache_config_file = get_compiler_config(scope)
         return _cache_config_file
-
     else:
         return _cache_config_file
+
 
 def all_compilers(scope=None):
     # Return compiler specs from the merged config.
@@ -181,7 +184,7 @@ def default_compiler():
     return sorted(versions)[-1]
 
 
-def find_compilers():
+def find_compilers(*paths):
     """Return a list of compilers found in the suppied paths.
        This invokes the find_compilers() method for each operating
        system associated with the host platform, and appends
@@ -190,10 +193,10 @@ def find_compilers():
     # Find compilers for each operating system class
     oss = all_os_classes()
     compiler_lists = []
-    for os in oss:
-        compiler_lists.extend(os.find_compilers())
-
+    for o in oss:
+        compiler_lists.extend(o.find_compilers(*paths))
     return compiler_lists
+
 
 def supported_compilers():
     """Return a set of names of compilers supported by Spack.
