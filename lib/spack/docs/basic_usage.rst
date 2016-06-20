@@ -27,7 +27,7 @@ Spack can install:
 The packages are listed by name in alphabetical order.  If you specify a
 pattern to match, it will follow this set of rules.  A pattern with no
 wildcards, ``*`` or ``?``, will be treated as though it started and ended iwth
-``*``, so ``util`` is equivalent to ``*util*``.  A pattern with no capitol
+``*``, so ``util`` is equivalent to ``*util*``.  A pattern with no capital
 letters will be treated as case-insensitive. You can also add the ``-i`` flag
 to specify a case insensitive search, or ``-d`` to search the description of
 the package in addition to the name.  Some examples:
@@ -36,7 +36,7 @@ All packages whose names contain "sql" case insensitive:
 
 .. command-output:: spack list sql
 
-All packages whose names start with a capitol M:
+All packages whose names start with a capital M:
 
 .. command-output:: spack list M*
 
