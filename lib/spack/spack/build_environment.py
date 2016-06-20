@@ -112,12 +112,13 @@ class MakeExecutable(Executable):
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
+
 def load_module(mod):
     """Takes a module name and removes modules until it is possible to
     load that module. It then loads the provided module. Depends on the
     modulecmd implementation of modules used in cray and lmod.
     """
-    #Create an executable of the module command that will output python code
+    # Create an executable of the module command that will output python code
     modulecmd = which('modulecmd')
     modulecmd.add_default_arg('python')
 
@@ -128,10 +129,12 @@ def load_module(mod):
     text = modulecmd('show', mod, output=str, error=str).split()
     for i, word in enumerate(text):
         if word == 'conflict':
-            exec(compile(modulecmd('unload', text[i+1], output=str, error=str), '<string>', 'exec'))
+            exec(compile(modulecmd('unload', text[i + 1], output=str,
+                                   error=str), '<string>', 'exec'))
     # Load the module now that there are no conflicts
     load = modulecmd('load', mod, output=str, error=str)
     exec(compile(load, '<string>', 'exec'))
+
 
 def get_path_from_module(mod):
     """Inspects a TCL module for entries that indicate the absolute path
@@ -145,7 +148,7 @@ def get_path_from_module(mod):
     text = modulecmd('show', mod, output=str, error=str).split('\n')
     # If it lists its package directory, return that
     for line in text:
-        if line.find(mod.upper()+'_DIR') >= 0:
+        if line.find(mod.upper() + '_DIR') >= 0:
             words = line.split()
             return words[2]
 
@@ -153,22 +156,23 @@ def get_path_from_module(mod):
     for line in text:
         rpath = line.find('-rpath/')
         if rpath >= 0:
-            return line[rpath+6:line.find('/lib')]
+            return line[rpath + 6:line.find('/lib')]
 
     # If it lists a -L instruction, use that
     for line in text:
         L = line.find('-L/')
         if L >= 0:
-            return line[L+2:line.find('/lib')]
+            return line[L + 2:line.find('/lib')]
 
     # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
     for line in text:
-        if line.find('LD_LIBRARY_PATH') >= 0: 
+        if line.find('LD_LIBRARY_PATH') >= 0:
             words = line.split()
             path = words[2]
             return path[:path.find('/lib')]
     # Unable to find module path
     return None
+
 
 def set_compiler_environment_variables(pkg, env):
     assert(pkg.spec.concrete)
@@ -281,8 +285,7 @@ def set_build_environment_variables(pkg, env):
         for directory in ('lib', 'lib64', 'share'):
             pcdir = join_path(pre, directory, 'pkgconfig')
             if os.path.isdir(pcdir):
-                #pkg_config_dirs.append(pcdir)
-                env.prepend_path('PKG_CONFIG_PATH',pcdir)
+                env.prepend_path('PKG_CONFIG_PATH', pcdir)
 
     if pkg.spec.architecture.target.module_name:
         load_module(pkg.spec.architecture.target.module_name)
@@ -372,7 +375,7 @@ def get_rpaths(pkg):
     rpaths.extend(d.prefix.lib64 for d in pkg.spec.dependencies.values()
                   if os.path.isdir(d.prefix.lib64))
     # Second module is our compiler mod name. We use that to get rpaths from
-    # module show output. 
+    # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
     return rpaths
@@ -397,7 +400,8 @@ def load_external_modules(pkg):
     for dep in list(pkg.spec.traverse()):
         if dep.external_module:
             load_module(dep.external_module)
-    
+
+
 def setup_package(pkg):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
