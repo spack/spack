@@ -26,7 +26,7 @@ Spack can install:
 
 The packages are listed by name in alphabetical order.  If you specify a
 pattern to match, it will follow this set of rules.  A pattern with no
-wildcards, ``*`` or ``?``, will be treated as though it started and ended iwth
+wildcards, ``*`` or ``?``, will be treated as though it started and ended with
 ``*``, so ``util`` is equivalent to ``*util*``.  A pattern with no capital
 letters will be treated as case-insensitive. You can also add the ``-i`` flag
 to specify a case insensitive search, or ``-d`` to search the description of
