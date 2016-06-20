@@ -183,20 +183,20 @@ def set_compiler_environment_variables(pkg, env):
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
     link_dir = spack.build_env_path
-    env.set('CC',  join_path(link_dir, compiler.link_paths['cc']))
-    env.set('CXX', join_path(link_dir, compiler.link_paths['cxx']))
-    env.set('F77', join_path(link_dir, compiler.link_paths['f77']))
-    env.set('FC',  join_path(link_dir, compiler.link_paths['fc']))
 
     # Set SPACK compiler variables so that our wrapper knows what to call
     if compiler.cc:
         env.set('SPACK_CC', compiler.cc)
+        env.set('CC', join_path(link_dir, compiler.link_paths['cc']))
     if compiler.cxx:
         env.set('SPACK_CXX', compiler.cxx)
+        env.set('CXX', join_path(link_dir, compiler.link_paths['cxx']))
     if compiler.f77:
         env.set('SPACK_F77', compiler.f77)
+        env.set('F77', join_path(link_dir, compiler.link_paths['f77']))
     if compiler.fc:
         env.set('SPACK_FC',  compiler.fc)
+        env.set('FC', join_path(link_dir, compiler.link_paths['fc']))
 
     # Set SPACK compiler rpath flags so that our wrapper knows what to use
     env.set('SPACK_CC_RPATH_ARG',  compiler.cc_rpath_arg)
