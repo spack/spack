@@ -42,7 +42,7 @@ def setup_parser(subparser):
         '-i', '--insensitive', action='store_true', default=False,
         help='Filtering will be case insensitive.')
     subparser.add_argument(
-        '-s', '--search_description', action='store_true', default=False,
+        '-d', '--search-description', action='store_true', default=False,
         help='Filtering will also search the description for a match.')
 
 
