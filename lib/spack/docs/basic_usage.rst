@@ -24,12 +24,29 @@ Spack can install:
 
 .. command-output:: spack list
 
-The packages are listed by name in alphabetical order.  You can also
-do wildcats searches using ``*``:
+The packages are listed by name in alphabetical order.  If you specify a
+pattern to match, it will follow this set of rules.  A pattern with no
+wildcards, ``*`` or ``?``, will be treated as though it started and ended iwth
+``*``, so ``util`` is equivalent to ``*util*``.  A pattern with no capitol
+letters will be treated as case-insensitive. You can also add the ``-i`` flag
+to specify a case insensitive search, or ``-d`` to search the description of
+the package in addition to the name.  Some examples:
 
-.. command-output:: spack list m*
+All packages whose names contain "sql" case insensitive:
 
-.. command-output:: spack list *util*
+.. command-output:: spack list sql
+
+All packages whose names start with a capitol M:
+
+.. command-output:: spack list M*
+
+All packages whose names or descriptions contain Documentation:
+
+.. command-output:: spack list -d Documentation
+
+All packages whose names contain documentation case insensitive:
+
+.. command-output:: spack list -d documentation
 
 .. _spack-info:
 

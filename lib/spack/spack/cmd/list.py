@@ -58,7 +58,8 @@ def list(parser, args):
                 r = fnmatch.translate('*' + f + '*')
             else:
                 r = fnmatch.translate(f)
-            rc = re.compile(r, flags=re.I if args.insensitive else 0)
+            rc = re.compile(r, flags=re.I if args.insensitive or not any(
+                l.isupper() for l in f) else 0)
             res.append(rc)
 
         if args.search_description:
