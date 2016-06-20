@@ -23,16 +23,17 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
+import inspect
+import json
 import os
 import re
 import subprocess
-import inspect
 
 import llnl.util.tty as tty
 import spack
 import spack.error
 
-__all__ = ['Executable', 'which', 'ProcessError']
+__all__ = ['Executable', 'which', 'source', 'ProcessError']
 
 
 class Executable(object):
@@ -65,7 +66,7 @@ class Executable(object):
 
             Raise an exception if the subprocess returns an
             error. Default is True.  When not set, the return code is
-            avaiale as `exe.returncode`.
+            available as `exe.returncode`.
 
           ignore_errors
 
@@ -224,6 +225,18 @@ def which(name, **kwargs):
     if required:
         tty.die("spack requires %s.  Make sure it is in your path." % name)
     return None
+
+
+def source(script, shell='bash'):
+    """Sources a script and adds the exported environment variables to the
+    current process. The shell parameter can be used to support different
+    shells."""
+
+    dump = 'python -c "import os, json; print json.dumps(dict(os.environ))"'
+    output = subprocess.check_output([
+        shell, '-c', 'source {0} && {1}'.format(script, dump)
+    ])
+    os.environ = json.loads(output)
 
 
 class ProcessError(spack.error.SpackError):
