@@ -93,7 +93,7 @@ def get_compiler_config(scope=None, init_config=True):
         for compiler in compilers:
             compilers_dict.append(_to_dict(compiler))
         spack.config.update_config('compilers', compilers_dict, scope=scope)
-
+    
     config = spack.config.get_config('compilers', scope=scope)
     # Update the configuration if there are currently no compilers
     # configured.  Avoid updating automatically if there ARE site
@@ -117,14 +117,14 @@ def get_compiler_config(scope=None, init_config=True):
         return []  # Return empty list which we will later append to.
 
 
-def add_compilers_to_config(compilers, scope=None):
+def add_compilers_to_config(compilers, scope=None, init_config=True):
     """Add compilers to the config for the specified architecture.
 
     Arguments:
       - compilers: a list of Compiler objects.
       - scope:     configuration scope to modify.
     """
-    compiler_config = get_compiler_config(scope)
+    compiler_config = get_compiler_config(scope, init_config)
     for compiler in compilers:
         compiler_config.append(_to_dict(compiler))
     global _cache_config_file
