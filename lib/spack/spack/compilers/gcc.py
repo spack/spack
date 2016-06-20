@@ -77,9 +77,9 @@ class Gcc(Compiler):
         return get_compiler_version(
             fc, '-dumpversion',
             # older gfortran versions don't have simple dumpversion output.
-            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)', module)
+            r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)')
 
 
     @classmethod
     def f77_version(cls, f77):
-        return cls.fc_version(f77, module)
+        return cls.fc_version(f77)
