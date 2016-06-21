@@ -25,31 +25,16 @@
 from spack import *
 
 
-class Serf(Package):
-    """Apache Serf - a high performance C-based HTTP client library
-    built upon the Apache Portable Runtime (APR) library"""
+class Py3to2(Package):
+    """lib3to2 is a set of fixers that are intended to backport code written
+    for Python version 3.x into Python version 2.x."""
 
-    homepage  = 'https://serf.apache.org/'
-    url       = 'https://archive.apache.org/dist/serf/serf-1.3.8.tar.bz2'
+    homepage = "https://pypi.python.org/pypi/3to2"
+    url      = "https://pypi.python.org/packages/source/3/3to2/3to2-1.1.1.zip"
 
-    version('1.3.8', '1d45425ca324336ce2f4ae7d7b4cfbc5567c5446')
+    version('1.1.1', 'cbeed28e350dbdaef86111ace3052824')
 
-    depends_on('apr')
-    depends_on('apr-util')
-    depends_on('scons')
-    depends_on('expat')
-    depends_on('openssl')
-    depends_on('zlib')
+    extends('python')
 
     def install(self, spec, prefix):
-        options = ['PREFIX=%s' % prefix]
-        options.append('APR=%s' % spec['apr'].prefix)
-        options.append('APU=%s' % spec['apr-util'].prefix)
-        options.append('OPENSSL=%s' % spec['openssl'].prefix)
-        options.append('LINKFLAGS=-L%s/lib -L%s/lib' %
-                       (spec['expat'].prefix, spec['zlib'].prefix))
-        options.append('CPPFLAGS=-I%s/include -I%s/include' %
-                       (spec['expat'].prefix, spec['zlib'].prefix))
-
-        scons(*options)
-        scons('install')
+        python('setup.py', 'install', '--prefix=%s' % prefix)
