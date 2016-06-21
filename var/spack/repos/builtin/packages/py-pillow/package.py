@@ -34,27 +34,35 @@ class PyPillow(Package):
     homepage = "https://python-pillow.org/"
     url      = "https://pypi.python.org/packages/source/P/Pillow/Pillow-3.0.0.tar.gz"
 
-    version('3.2.0', '7cfd093c11205d9e2ebe3c51dfcad510')
+    # TODO: This version should be deleted once the next release comes out.
+    # TODO: It fixes a bug that prevented us from linking to Tk/Tcl.
+    # TODO: Tk/Tcl support is necessary for tkinter bitmap and photo images.
+    # TODO: If you require this support, run the following command:
+    # TODO:     `spack install py-pillow@3.3.0.dev0 ^python+tk`
+    version('3.3.0.dev0', git='https://github.com/python-pillow/Pillow.git',
+            commit='30eced62868141a6c859a4370efd40b9434a7c3f')
+
+    version('3.2.0', '7cfd093c11205d9e2ebe3c51dfcad510', preferred=True)
     version('3.0.0', 'fc8ac44e93da09678eac7e30c9b7377d')
 
+    provides('pil')
+
     # These defaults correspond to Pillow defaults
-    variant('jpeg',     default=True,  description='Provide JPEG functionality')
-    variant('zlib',     default=True,  description='Access to compressed PNGs')
-    variant('tiff',     default=False, description='Access to TIFF files')
+    variant('jpeg', default=True, description='Provide JPEG functionality')
+    variant('zlib', default=True, description='Access to compressed PNGs')
+    variant('tiff', default=False, description='Access to TIFF files')
     variant('freetype', default=False, description='Font related services')
-    variant('lcms',     default=False, description='Color management')
-    variant('tk',       default=False, description='Support for tkinter bitmap and photo images')
+    variant('lcms', default=False, description='Color management')
     variant('jpeg2000', default=False, description='Provide JPEG 2000 functionality')
 
     # Spack does not (yet) support these modes of building
-    # variant('webp',       default=False, description='Provide the WebP format')
-    # variant('webpmux',    default=False, description='WebP metadata, relies on WebP support')
+    # variant('webp', default=False, description='Provide the WebP format')
+    # variant('webpmux', default=False, description='WebP metadata, relies on WebP support')
     # variant('imagequant', default=False, description='Provide improved color quantization')
-
-    provides('PIL')
 
     # Required dependencies
     extends('python')
+    depends_on('binutils')
     depends_on('py-setuptools')
 
     # Recommended dependencies
@@ -62,16 +70,14 @@ class PyPillow(Package):
     depends_on('zlib', when='+zlib')
 
     # Optional dependencies
-    depends_on('libtiff',  when='+tiff')
+    depends_on('libtiff', when='+tiff')
     depends_on('freetype', when='+freetype')
-    depends_on('lcms',     when='+lcms')
-    depends_on('tcl',      when='+tk')
-    depends_on('tk',       when='+tk')
+    depends_on('lcms', when='+lcms')
     depends_on('openjpeg', when='+jpeg2000')
 
     # Spack does not (yet) support these modes of building
-    # depends_on('webp',       when='+webp')
-    # depends_on('webpmux',    when='+webpmux')
+    # depends_on('webp', when='+webp')
+    # depends_on('webpmux', when='+webpmux')
     # depends_on('imagequant', when='+imagequant')
 
     def patch(self):
@@ -106,11 +112,6 @@ class PyPillow(Package):
                          'LCMS_ROOT = ("{0}", "{1}")'.format(
                             spec['lcms'].prefix.lib,
                             spec['lcms'].prefix.include))
-        if '+tk' in spec:
-            setup.filter('TCL_ROOT = None',
-                         'TCL_ROOT = ("{0}", "{1}")'.format(
-                            spec['tcl'].prefix.lib,
-                            spec['tcl'].prefix.include))
         if '+jpeg2000' in spec:
             setup.filter('JPEG2K_ROOT = None',
                          'JPEG2K_ROOT = ("{0}", "{1}")'.format(
@@ -118,18 +119,12 @@ class PyPillow(Package):
                             spec['openjpeg'].prefix.include))
 
     def install(self, spec, prefix):
-        build_args = [
-            '--{0}-jpeg'.format('enable' if '+jpeg' in spec else 'disable'),
-            '--{0}-zlib'.format('enable' if '+zlib' in spec else 'disable'),
-            '--{0}-tiff'.format('enable' if '+tiff' in spec else 'disable'),
-            '--{0}-freetype'.format(
-                'enable' if '+freetype' in spec else 'disable'),
-            '--{0}-lcms'.format('enable' if '+lcms' in spec else 'disable'),
-            '--{0}-tk'.format('enable' if '+tk' in spec else 'disable'),
-            '--{0}-tcl'.format('enable' if '+tk' in spec else 'disable'),
-            '--{0}-jpeg2000'.format(
-                'enable' if '+jpeg2000' in spec else 'disable')
-        ]
+        def variant_to_flag(variant):
+            able = 'enable' if '+{0}'.format(variant) in spec else 'disable'
+            return '--{0}-{1}'.format(able, variant)
+
+        variants = ['jpeg', 'zlib', 'tiff', 'freetype', 'lcms', 'jpeg2000']
+        build_args = list(map(variant_to_flag, variants))
 
         python('setup.py', 'build_ext', *build_args)
         python('setup.py', 'install', '--prefix={0}'.format(prefix))
