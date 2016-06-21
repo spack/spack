@@ -35,12 +35,15 @@ class Modele(CMakePackage):
         description='Link with the Glint2 Ice Model Coupler')
     variant('everytrace', default=True,
         description='Link to enhanced staktrace capabilities')
+    variant('tests', default=True,
+        description='Build unit tests')
 
     # Build dependencies
     depends_on('m4')
 
     # Link dependencies
     depends_on('mpi')
+    depends_on('pfunit+mpi', when='+tests')
     depends_on('netcdf-fortran')
     depends_on('fexception', when='+fexception')
     depends_on('everytrace+fortran+mpi', when='+everytrace')
@@ -64,7 +67,8 @@ class Modele(CMakePackage):
             '-DUSE_PNETCDF=%s' % ('YES' if '+pnetcdf' in spec else 'NO'),
             '-DUSE_FEXCEPTION=%s' % ('YES' if '+fexception' in spec else 'NO'),
             '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
-            '-DUSE_GLINT2=%s' % ('YES' if '+glint2' in spec else 'NO'),]
+            '-DUSE_GLINT2=%s' % ('YES' if '+glint2' in spec else 'NO'),
+            '-DWITH_PFUNIT=%s' % ('YES' if '+tests' in spec else 'NO')]
 
 
     def setup_environment(self, spack_env, env):
