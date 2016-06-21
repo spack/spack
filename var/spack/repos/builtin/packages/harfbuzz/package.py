@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Harfbuzz(Package):
     """The Harfbuzz package contains an OpenType text shaping engine."""
     homepage = "http://www.freedesktop.org/wiki/Software/HarfBuzz/"
