@@ -57,8 +57,8 @@ class PyPillow(Package):
 
     # Spack does not (yet) support these modes of building
     # variant('webp', default=False, description='Provide the WebP format')
-    # variant('webpmux', default=False, description='WebP metadata, relies on WebP support')
-    # variant('imagequant', default=False, description='Provide improved color quantization')
+    # variant('webpmux', default=False, description='WebP metadata, relies on WebP support')  # NOQA: ignore=E501
+    # variant('imagequant', default=False, description='Provide improved color quantization') # NOQA: ignore=E501
 
     # Required dependencies
     extends('python')
@@ -90,33 +90,33 @@ class PyPillow(Package):
         if '+jpeg' in spec:
             setup.filter('JPEG_ROOT = None',
                          'JPEG_ROOT = ("{0}", "{1}")'.format(
-                            spec['jpeg'].prefix.lib,
-                            spec['jpeg'].prefix.include))
+                             spec['jpeg'].prefix.lib,
+                             spec['jpeg'].prefix.include))
         if '+zlib' in spec:
             setup.filter('ZLIB_ROOT = None',
                          'ZLIB_ROOT = ("{0}", "{1}")'.format(
-                            spec['zlib'].prefix.lib,
-                            spec['zlib'].prefix.include))
+                             spec['zlib'].prefix.lib,
+                             spec['zlib'].prefix.include))
         if '+tiff' in spec:
             setup.filter('TIFF_ROOT = None',
                          'TIFF_ROOT = ("{0}", "{1}")'.format(
-                            spec['libtiff'].prefix.lib,
-                            spec['libtiff'].prefix.include))
+                             spec['libtiff'].prefix.lib,
+                             spec['libtiff'].prefix.include))
         if '+freetype' in spec:
             setup.filter('FREETYPE_ROOT = None',
                          'FREETYPE_ROOT = ("{0}", "{1}")'.format(
-                            spec['freetype'].prefix.lib,
-                            spec['freetype'].prefix.include))
+                             spec['freetype'].prefix.lib,
+                             spec['freetype'].prefix.include))
         if '+lcms' in spec:
             setup.filter('LCMS_ROOT = None',
                          'LCMS_ROOT = ("{0}", "{1}")'.format(
-                            spec['lcms'].prefix.lib,
-                            spec['lcms'].prefix.include))
+                             spec['lcms'].prefix.lib,
+                             spec['lcms'].prefix.include))
         if '+jpeg2000' in spec:
             setup.filter('JPEG2K_ROOT = None',
                          'JPEG2K_ROOT = ("{0}", "{1}")'.format(
-                            spec['openjpeg'].prefix.lib,
-                            spec['openjpeg'].prefix.include))
+                             spec['openjpeg'].prefix.lib,
+                             spec['openjpeg'].prefix.include))
 
     def install(self, spec, prefix):
         def variant_to_flag(variant):
