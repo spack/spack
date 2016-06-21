@@ -25,23 +25,21 @@
 from spack import *
 
 
-class Postgresql(Package):
-    """PostgreSQL is a powerful, open source object-relational database system.
-    It has more than 15 years of active development and a proven architecture
-    that has earned it a strong reputation for reliability, data integrity, and
-    correctness."""
+class RRsqlite(Package):
+    """This package embeds the SQLite database engine in R and provides an
+    interface compliant with the DBI package. The source for the SQLite engine
+    (version 3.8.6) is included."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "https://github.com/rstats-db/RSQLite"
+    url      = "https://cran.r-project.org/src/contrib/RSQLite_1.0.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RSQLite"
 
-    version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
-    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
+    version('1.0.0', 'e6cbe2709612b687c13a10d30c7bad45')
 
-    depends_on('openssl')
-    depends_on('readline')
+    extends('R')
+
+    depends_on('r-DBI')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-openssl")
-        make()
-        make("install")
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

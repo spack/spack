@@ -25,23 +25,19 @@
 from spack import *
 
 
-class Postgresql(Package):
-    """PostgreSQL is a powerful, open source object-relational database system.
-    It has more than 15 years of active development and a proven architecture
-    that has earned it a strong reputation for reliability, data integrity, and
-    correctness."""
+class RRodbc(Package):
+    """An ODBC database interface."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "https://cran.rstudio.com/web/packages/RODBC/"
+    url      = "https://cran.rstudio.com/src/contrib/RODBC_1.3-13.tar.gz"
+    list_url = "https://cran.rstudio.com/src/contrib/Archive/RODBC"
 
-    version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
-    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
+    version('1.3-13', 'c52ef9139c2ed85adc53ad6effa7d68e')
 
-    depends_on('openssl')
-    depends_on('readline')
+    extends('R')
+
+    depends_on('unixODBC')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-openssl")
-        make()
-        make("install")
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

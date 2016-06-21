@@ -25,23 +25,28 @@
 from spack import *
 
 
-class Postgresql(Package):
-    """PostgreSQL is a powerful, open source object-relational database system.
-    It has more than 15 years of active development and a proven architecture
-    that has earned it a strong reputation for reliability, data integrity, and
-    correctness."""
+class RRpostgresql(Package):
+    """Database interface and PostgreSQL driver for R This package provides a
+    Database Interface (DBI) compliant driver for R to access PostgreSQL
+    database systems. In order to build and install this package from source,
+    PostgreSQL itself must be present your system to provide PostgreSQL
+    functionality via its libraries and header files. These files are provided
+    as postgresql-devel package under some Linux distributions. On Microsoft
+    Windows system the attached libpq library source will be used. A wiki and
+    issue tracking system for the package are available at Google Code at
+    https://code.google.com/p/rpostgresql/."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "https://code.google.com/p/rpostgresql/"
+    url      = "https://cran.r-project.org/src/contrib/RPostgreSQL_0.4-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/RPostgreSQL"
 
-    version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
-    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
+    version('0.4-1', 'e7b22e212afbb2cbb88bab937f93e55a')
 
-    depends_on('openssl')
-    depends_on('readline')
+    extends('R')
+
+    depends_on('r-DBI')
+    depends_on('postgresql')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-openssl")
-        make()
-        make("install")
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

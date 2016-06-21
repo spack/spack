@@ -25,23 +25,19 @@
 from spack import *
 
 
-class Postgresql(Package):
-    """PostgreSQL is a powerful, open source object-relational database system.
-    It has more than 15 years of active development and a proven architecture
-    that has earned it a strong reputation for reliability, data integrity, and
-    correctness."""
+class RDbi(Package):
+    """A database interface definition for communication between R and
+    relational database management systems. All classes in this package are
+    virtual and need to be extended by the various R/DBMS implementations."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "https://github.com/rstats-db/DBI"
+    url      = "https://cran.r-project.org/src/contrib/DBI_0.4-1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/DBI"
 
-    version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
-    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
+    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
 
-    depends_on('openssl')
-    depends_on('readline')
+    extends('R')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-openssl")
-        make()
-        make("install")
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

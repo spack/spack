@@ -25,23 +25,18 @@
 from spack import *
 
 
-class Postgresql(Package):
-    """PostgreSQL is a powerful, open source object-relational database system.
-    It has more than 15 years of active development and a proven architecture
-    that has earned it a strong reputation for reliability, data integrity, and
-    correctness."""
+class Unixodbc(Package):
+    """ODBC is an open specification for providing application developers with
+    a predictable API with which to access Data Sources. Data Sources include
+    SQL Servers and any Data Source with an ODBC Driver."""
 
-    homepage = "http://www.postgresql.org/"
-    url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
+    homepage = "http://www.unixodbc.org/"
+    url      = "ftp://ftp.unixodbc.org/pub/unixODBC/unixODBC-2.3.4.tar.gz"
 
-    version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
-    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
-
-    depends_on('openssl')
-    depends_on('readline')
+    version('2.3.4', 'bd25d261ca1808c947cb687e2034be81')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--with-openssl")
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        make('install')
