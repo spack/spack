@@ -29,8 +29,10 @@ from llnl.util.tty.colify import colify
 
 import spack
 import fnmatch
+import re
 
-description ="List available spack packages"
+description = "List available spack packages"
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -39,26 +41,46 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--insensitive', action='store_true', default=False,
         help='Filtering will be case insensitive.')
+    subparser.add_argument(
+        '-d', '--search-description', action='store_true', default=False,
+        help='Filtering will also search the description for a match.')
 
 
 def list(parser, args):
     # Start with all package names.
-    pkgs = spack.repo.all_package_names()
+    pkgs = set(spack.repo.all_package_names())
 
     # filter if a filter arg was provided
     if args.filter:
-        def match(p, f):
-            if args.insensitive:
-                p = p.lower()
-                f = f.lower()
-            return fnmatch.fnmatchcase(p, f)
-        pkgs = [p for p in pkgs if any(match(p, f) for f in args.filter)]
+        res = []
+        for f in args.filter:
+            if '*' not in f and '?' not in f:
+                r = fnmatch.translate('*' + f + '*')
+            else:
+                r = fnmatch.translate(f)
+            rc = re.compile(r, flags=re.I if args.insensitive or not any(
+                l.isupper() for l in f) else 0)
+            res.append(rc)
+
+        if args.search_description:
+            def match(p, f):
+                if f.match(p):
+                    return True
+
+                pkg = spack.repo.get(p)
+                if pkg.__doc__:
+                    return f.match(pkg.__doc__)
+                return False
+        else:
+            def match(p, f):
+                return f.match(p)
+        pkgs = [p for p in pkgs if any(match(p, f) for f in res)]
 
     # sort before displaying.
-    sorted_packages = sorted(pkgs, key=lambda s:s.lower())
+    sorted_packages = sorted(pkgs, key=lambda s: s.lower())
 
     # Print all the package names in columns
-    indent=0
+    indent = 0
     if sys.stdout.isatty():
         tty.msg("%d packages." % len(sorted_packages))
     colify(sorted_packages, indent=indent)
