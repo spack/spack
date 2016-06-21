@@ -47,7 +47,7 @@ Table of Contents
    basic_usage
    packaging_guide
    mirrors
-   site_configuration
+   configuration
    developer_guide
    case_studies
    command_index

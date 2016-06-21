@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
 import re
@@ -91,14 +91,25 @@ class Compiler(object):
     # version suffix for gcc.
     suffixes = [r'-.*']
 
-    # Names of generic arguments used by this compiler
-    arg_rpath   = '-Wl,-rpath,%s'
+    # Default flags used by a compiler to set an rpath
+    @property
+    def cc_rpath_arg(self):
+        return '-Wl,-rpath,'
 
-    # argument used to get C++11 options
-    cxx11_flag = "-std=c++11"
+    @property
+    def cxx_rpath_arg(self):
+        return '-Wl,-rpath,'
+
+    @property
+    def f77_rpath_arg(self):
+        return '-Wl,-rpath,'
+
+    @property
+    def fc_rpath_arg(self):
+        return '-Wl,-rpath,'
 
 
-    def __init__(self, cspec, cc, cxx, f77, fc):
+    def __init__(self, cspec, cc, cxx, f77, fc, **kwargs):
         def check(exe):
             if exe is None:
                 return None
@@ -110,12 +121,52 @@ class Compiler(object):
         self.f77 = check(f77)
         self.fc  = check(fc)
 
+        # Unfortunately have to make sure these params are accepted
+        # in the same order they are returned by sorted(flags)
+        # in compilers/__init__.py
+        self.flags = {}
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            value = kwargs.get(flag, None)
+            if value is not None:
+                self.flags[flag] = value.split()
+
         self.spec = cspec
 
 
     @property
     def version(self):
         return self.spec.version
+
+    # This property should be overridden in the compiler subclass if
+    # OpenMP is supported by that compiler
+    @property
+    def openmp_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support OpenMP.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
+    # This property should be overridden in the compiler subclass if
+    # C++11 is supported by that compiler
+    @property
+    def cxx11_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support C++11.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
+    # This property should be overridden in the compiler subclass if
+    # C++14 is supported by that compiler
+    @property
+    def cxx14_flag(self):
+        # If it is not overridden, assume it is not supported and warn the user
+        tty.die("The compiler you have chosen does not currently support C++14.",
+                "If you think it should, please edit the compiler subclass and",
+                "submit a pull request or issue.")
+
+
 
     #
     # Compiler classes have methods for querying the version of
@@ -145,7 +196,6 @@ class Compiler(object):
     @classmethod
     def fc_version(cls, fc):
         return cls.default_version(fc)
-
 
     @classmethod
     def _find_matches_in_path(cls, compiler_names, detect_version, *path):
@@ -202,6 +252,10 @@ class Compiler(object):
                 return None
 
         successful = [key for key in parmap(check, checks) if key is not None]
+        # The 'successful' list is ordered like the input paths.
+        # Reverse it here so that the dict creation (last insert wins)
+        # does not spoil the intented precedence.
+        successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
 
     @classmethod

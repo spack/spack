@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
 Functions here are used to take abstract specs and make them concrete.
@@ -43,6 +43,7 @@ from functools import partial
 from spec import DependencyMap
 from itertools import chain
 from spack.config import *
+
 
 class DefaultConcretizer(object):
     """This class doesn't have any state, it just provides some methods for
@@ -269,6 +270,59 @@ class DefaultConcretizer(object):
         return True  # things changed.
 
 
+    def concretize_compiler_flags(self, spec):
+        """
+        The compiler flags are updated to match those of the spec whose
+        compiler is used, defaulting to no compiler flags in the spec.
+        Default specs set at the compiler level will still be added later.
+        """
+        ret = False
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            try:
+                nearest = next(p for p in spec.traverse(direction='parents')
+                               if ((p.compiler == spec.compiler and p is not spec)
+                               and flag in p.compiler_flags))
+                if ((not flag in spec.compiler_flags) or
+                    sorted(spec.compiler_flags[flag]) != sorted(nearest.compiler_flags[flag])):
+                    if flag in spec.compiler_flags:
+                        spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
+                                                         set(nearest.compiler_flags[flag]))
+                    else:
+                        spec.compiler_flags[flag] = nearest.compiler_flags[flag]
+                    ret = True
+
+            except StopIteration:
+                if (flag in spec.root.compiler_flags and ((not flag in spec.compiler_flags) or
+                    sorted(spec.compiler_flags[flag]) != sorted(spec.root.compiler_flags[flag]))):
+                    if flag in spec.compiler_flags:
+                        spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
+                                                         set(spec.root.compiler_flags[flag]))
+                    else:
+                        spec.compiler_flags[flag] = spec.root.compiler_flags[flag]
+                    ret = True
+                else:
+                    if not flag in spec.compiler_flags:
+                        spec.compiler_flags[flag] = []
+
+        # Include the compiler flag defaults from the config files
+        # This ensures that spack will detect conflicts that stem from a change
+        # in default compiler flags.
+        compiler = spack.compilers.compiler_for_spec(spec.compiler)
+        for flag in compiler.flags:
+            if flag not in spec.compiler_flags:
+                spec.compiler_flags[flag] = compiler.flags[flag]
+                if compiler.flags[flag] != []:
+                    ret = True
+            else:
+                if ((sorted(spec.compiler_flags[flag]) != sorted(compiler.flags[flag])) and
+                    (not set(spec.compiler_flags[flag]) >= set(compiler.flags[flag]))):
+                    ret = True
+                    spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
+                                                     set(compiler.flags[flag]))
+
+        return ret
+
+
 def find_spec(spec, condition):
     """Searches the dag from spec in an intelligent order and looks
        for a spec that matches a condition"""
@@ -328,7 +382,6 @@ def cmp_specs(lhs, rhs):
 
     # Equal specs
     return 0
-
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):

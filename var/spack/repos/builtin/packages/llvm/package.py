@@ -1,29 +1,29 @@
 ##############################################################################
-# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by David Beckingsale, david@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os, shutil
+import os, glob
 
 
 class Llvm(Package):
@@ -46,7 +46,9 @@ class Llvm(Package):
     variant('libcxx', default=True, description="Build the LLVM C++ standard library")
     variant('compiler-rt', default=True, description="Build the LLVM compiler runtime, including sanitizers")
     variant('gold', default=True, description="Add support for LTO with the gold linker plugin")
-
+    variant('shared_libs', default=False, description="Build all components as shared libraries, faster, less memory to build, less stable")
+    variant('link_dylib', default=False, description="Build and link the libLLVM shared library rather than static")
+    variant('all_targets', default=True, description="Build all supported targets, default targets <current arch>,NVPTX,AMDGPU,CppBackend")
 
     # Build dependency
     depends_on('cmake @2.8.12.2:')
@@ -257,6 +259,28 @@ class Llvm(Package):
         if '+compiler-rt' not in spec:
             cmake_args.append('-DLLVM_EXTERNAL_COMPILER_RT_BUILD:Bool=OFF')
 
+        if '+shared_libs' in spec:
+            cmake_args.append('-DBUILD_SHARED_LIBS:Bool=ON')
+
+        if '+link_dylib' in spec:
+            cmake_args.append('-DLLVM_LINK_LLVM_DYLIB:Bool=ON')
+
+        if '+all_targets' not in spec: # all is default on cmake
+            targets = ['CppBackend', 'NVPTX', 'AMDGPU']
+            if 'x86' in spec.architecture.lower():
+                targets.append('X86')
+            elif 'arm' in spec.architecture.lower():
+                targets.append('ARM')
+            elif 'aarch64' in spec.architecture.lower():
+                targets.append('AArch64')
+            elif 'sparc' in spec.architecture.lower():
+                targets.append('sparc')
+            elif ('ppc' in spec.architecture.lower() or
+                  'power' in spec.architecture.lower()):
+                targets.append('PowerPC')
+
+            cmake_args.append('-DLLVM_TARGETS_TO_BUILD:Bool=' + ';'.join(targets))
+
         if  '+clang' not in spec:
             if '+clang_extra' in spec:
                 raise SpackException('The clang_extra variant requires the clang variant to be selected')
@@ -267,7 +291,5 @@ class Llvm(Package):
             cmake(*cmake_args)
             make()
             make("install")
-            query_path = os.path.join('bin', 'clang-query')
-            # Manually install clang-query, because llvm doesn't...
-            if os.path.exists(query_path):
-                shutil.copy(query_path, os.path.join(prefix, 'bin'))
+            cp = which('cp')
+            cp('-a', 'bin/', prefix)

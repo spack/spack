@@ -102,8 +102,8 @@ that the packages is installed:
    ==> adept-utils is already installed in /home/gamblin2/spack/opt/chaos_5_x86_64_ib/gcc@4.4.7/adept-utils@1.0-5adef8da.
    ==> Trying to fetch from https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
    ######################################################################## 100.0%
-   ==> Staging archive: /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7=chaos_5_x86_64_ib-59f6ad23/mpileaks-1.0.tar.gz
-   ==> Created stage in /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7=chaos_5_x86_64_ib-59f6ad23.
+   ==> Staging archive: /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=chaos_5_x86_64_ib-59f6ad23/mpileaks-1.0.tar.gz
+   ==> Created stage in /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=chaos_5_x86_64_ib-59f6ad23.
    ==> No patches needed for mpileaks.
    ==> Building mpileaks.
 
@@ -132,10 +132,10 @@ sites, as installing a version that one user needs will not disrupt
 existing installations for other users.
 
 In addition to different versions, Spack can customize the compiler,
-compile-time options (variants), and platform (for cross compiles) of
-an installation.  Spack is unique in that it can also configure the
-*dependencies* a package is built with.  For example, two
-configurations of the same version of a package, one built with boost
+compile-time options (variants), compiler flags, and platform (for
+cross compiles) of an installation.  Spack is unique in that it can
+also configure the *dependencies* a package is built with.  For example,
+two configurations of the same version of a package, one built with boost
 1.39.0, and the other version built with version 1.43.0, can coexist.
 
 This can all be done on the command line using the *spec* syntax.
@@ -246,6 +246,12 @@ Packages are divided into groups according to their architecture and
 compiler.  Within each group, Spack tries to keep the view simple, and
 only shows the version of installed packages.
 
+``spack find`` can filter the package list based on the package name, spec, or
+a number of properties of their installation status.  For example, missing
+dependencies of a spec can be shown with ``-m``, packages which were
+explicitly installed with ``spack install <package>`` can be singled out with
+``-e`` and those which have been pulled in only as dependencies with ``-E``.
+
 In some cases, there may be different configurations of the *same*
 version of a package installed.  For example, there are two
 installations of of ``libdwarf@20130729`` above.  We can look at them
@@ -327,6 +333,11 @@ of libelf would look like this:
    ==> 1 installed packages.
    -- chaos_5_x86_64_ib / gcc@4.4.7 --------------------------------
    libdwarf@20130729-d9b90962
+
+We can also search for packages that have a certain attribute. For example,
+``spack find -l libdwarf +debug`` will show only installations of libdwarf
+with the 'debug' compile-time option enabled, while ``spack find -l +debug``
+will find every installed package with a 'debug' compile-time option enabled.
 
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
 
@@ -457,6 +468,26 @@ For compilers, like ``clang``, that do not support Fortran, put
 Once you save the file, the configured compilers will show up in the
 list displayed by ``spack compilers``.
 
+You can also add compiler flags to manually configured compilers. The
+valid flags are ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``,
+``ldflags``, and ``ldlibs``. For example,::
+
+    ...
+    chaos_5_x86_64_ib:
+      ...
+      intel@15.0.0:
+          cc: /usr/local/bin/icc-15.0.024-beta
+          cxx: /usr/local/bin/icpc-15.0.024-beta
+          f77: /usr/local/bin/ifort-15.0.024-beta
+          fc: /usr/local/bin/ifort-15.0.024-beta
+          cppflags: -O3 -fPIC
+      ...
+
+These flags will be treated by spack as if they were enterred from
+the command line each time this compiler is used. The compiler wrappers
+then inject those flags into the compiler command. Compiler flags
+enterred from the command line will be discussed in more detail in the
+following section.
 
 .. _sec-specs:
 
@@ -474,7 +505,7 @@ the full syntax of specs.
 
 Here is an example of a much longer spec than we've seen thus far::
 
-   mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt =bgqos_0 ^callpath @1.1 %gcc@4.7.2
+   mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt arch=bgq_os ^callpath @1.1 %gcc@4.7.2
 
 If provided to ``spack install``, this will install the ``mpileaks``
 library at some version between ``1.2`` and ``1.4`` (inclusive),
@@ -492,8 +523,12 @@ More formally, a spec consists of the following pieces:
 * ``%`` Optional compiler specifier, with an optional compiler version
   (``gcc`` or ``gcc@4.7.3``)
 * ``+`` or ``-`` or ``~`` Optional variant specifiers (``+debug``,
-  ``-qt``, or ``~qt``)
-* ``=`` Optional architecture specifier (``bgqos_0``)
+  ``-qt``, or ``~qt``) for boolean variants
+* ``name=<value>`` Optional variant specifiers that are not restricted to
+boolean variants
+* ``name=<value>`` Optional compiler flag specifiers. Valid flag names are
+``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
+* ``arch=<value>`` Optional architecture specifier (``arch=bgq_os``)
 * ``^`` Dependency specs (``^callpath@1.1``)
 
 There are two things to notice here.  The first is that specs are
@@ -573,7 +608,7 @@ compilers, variants, and architectures just like any other spec.
 Specifiers are associated with the nearest package name to their left.
 For example, above, ``@1.1`` and ``%gcc@4.7.2`` associates with the
 ``callpath`` package, while ``@1.2:1.4``, ``%gcc@4.7.5``, ``+debug``,
-``-qt``, and ``=bgqos_0`` all associate with the ``mpileaks`` package.
+``-qt``, and ``arch=bgq_os`` all associate with the ``mpileaks`` package.
 
 In the diagram above, ``mpileaks`` depends on ``mpich`` with an
 unspecified version, but packages can depend on other packages with
@@ -629,22 +664,25 @@ based on site policies.
 Variants
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. Note::
-
-   Variants are not yet supported, but will be in the next Spack
-   release (0.9), due in Q2 2015.
-
-Variants are named options associated with a particular package, and
-they can be turned on or off.  For example, above, supplying
-``+debug`` causes ``mpileaks`` to be built with debug flags.  The
-names of particular variants available for a package depend on what
-was provided by the package author.  ``spack info <package>`` will
+Variants are named options associated with a particular package. They are
+optional, as each package must provide default values for each variant it
+makes available. Variants can be specified using
+a flexible parameter syntax ``name=<value>``. For example,
+``spack install libelf debug=True`` will install libelf build with debug
+flags. The names of particular variants available for a package depend on
+what was provided by the package author. ``spack into <package>`` will
 provide information on what build variants are available.
 
-Depending on the package a variant may be on or off by default.  For
-``mpileaks`` here, ``debug`` is off by default, and we turned it on
-with ``+debug``.  If a package is on by default you can turn it off by
-either adding ``-name`` or ``~name`` to the spec.
+For compatibility with earlier versions, variants which happen to be
+boolean in nature can be specified by a syntax that represents turning
+options on and off. For example, in the previous spec we could have
+supplied ``libelf +debug`` with the same effect of enabling the debug
+compile time option for the libelf package.
+
+Depending on the package a variant may have any default value.  For
+``libelf`` here, ``debug`` is ``False`` by default, and we turned it on
+with ``debug=True`` or ``+debug``.  If a package is ``True`` by default
+you can turn it off by either adding ``-name`` or ``~name`` to the spec.
 
 There are two syntaxes here because, depending on context, ``~`` and
 ``-`` may mean different things.  In most shells, the following will
@@ -656,7 +694,7 @@ result in the shell performing home directory substitution:
    mpileaks~debug    # use this instead
 
 If there is a user called ``debug``, the ``~`` will be incorrectly
-expanded.  In this situation, you would want to write ``mpileaks
+expanded.  In this situation, you would want to write ``libelf
 -debug``.  However, ``-`` can be ambiguous when included after a
 package name without spaces:
 
@@ -671,12 +709,35 @@ package, not a request for ``mpileaks`` built without ``debug``
 options.  In this scenario, you should write ``mpileaks~debug`` to
 avoid ambiguity.
 
-When spack normalizes specs, it prints them out with no spaces and
-uses only ``~`` for disabled variants.  We allow ``-`` and spaces on
-the command line is provided for convenience and legibility.
+When spack normalizes specs, it prints them out with no spaces boolean
+variants using the backwards compatibility syntax and uses only ``~``
+for disabled boolean variants.  We allow ``-`` and spaces on the command
+line is provided for convenience and legibility.
 
 
-Architecture specifier
+Compiler Flags
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Compiler flags are specified using the same syntax as non-boolean variants,
+but fulfill a different purpose. While the function of a variant is set by
+the package, compiler flags are used by the compiler wrappers to inject
+flags into the compile line of the build. Additionally, compiler flags are
+inherited by dependencies. ``spack install libdwarf cppflags=\"-g\"`` will
+install both libdwarf and libelf with the ``-g`` flag injected into their
+compile line.
+
+Notice that the value of the compiler flags must be escape quoted on the
+command line. From within python files, the same spec would be specified
+``libdwarf cppflags="-g"``. This is necessary because of how the shell
+handles the quote symbols.
+
+The six compiler flags are injected in the order of implicit make commands
+in gnu autotools. If all flags are set, the order is
+``$cppflags $cflags|$cxxflags $ldflags command $ldlibs`` for C and C++ and
+``$fflags $cppflags $ldflags command $ldlibs`` for fortran.
+
+
+Architecture specifiers
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. Note::
@@ -684,12 +745,9 @@ Architecture specifier
    Architecture specifiers are part of specs but are not yet
    functional. They will be in Spack version 1.0, due in Q3 2015.
 
-The architecture specifier starts with a ``=`` and also comes after
-some package name within a spec.  It allows a user to specify a
-particular architecture for the package to be built.  This is mostly
-used for architectures that need cross-compilation, and in most cases,
-users will not need to specify the architecture when they install a
-package.
+The architecture specifier looks identical to a variant specifier for a
+non-boolean variant. The architecture can be specified only using the
+reserved name ``arch`` (``arch=bgq_os``).
 
 
 .. _sec-virtual-dependencies:
@@ -767,6 +825,23 @@ any MPI implementation will do.  If another package depends on
 error.  Likewise, if you try to plug in some package that doesn't
 provide MPI, Spack will raise an error.
 
+Specifying Specs by Hash
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Complicated specs can become cumbersome to enter on the command line,
+especially when many of the qualifications are necessary to
+distinguish between similar installs, for example when using the
+``uninstall`` command. To avoid this, when referencing an existing spec,
+Spack allows you to reference specs by their hash. We previously
+discussed the spec hash that Spack computes. In place of a spec in any
+command, substitute ``/<hash>`` where ``<hash>`` is any amount from
+the beginning of a spec hash. If the given spec hash is sufficient
+to be unique, Spack will replace the reference with the spec to which
+it refers. Otherwise, it will prompt for a more qualified hash.
+
+Note that this will not work to reinstall a depencency uninstalled by
+``spack uninstall -f``.
+
 .. _spack-providers:
 
 ``spack providers``
@@ -788,7 +863,7 @@ versions are now filtered out.
 
 .. _shell-support:
 
-Environment modules
+Integration with module systems
 -------------------------------
 
 .. note::
@@ -798,42 +873,50 @@ Environment modules
    interface and/or generated module names may change in future
    versions.
 
-Spack provides some limited integration with environment module
-systems to make it easier to use the packages it provides.
+Spack provides some integration with
+`Environment Modules <http://modules.sourceforge.net/>`_
+and `Dotkit <https://computing.llnl.gov/?set=jobs&page=dotkit>`_ to make
+it easier to use the packages it installed.
+
 
 
 Installing Environment Modules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to use Spack's generated environment modules, you must have
 installed the *Environment Modules* package.  On many Linux
-distributions, this can be installed from the vendor's repository.
-For example: ```yum install environment-modules``
-(Fedora/RHEL/CentOS).  If your Linux distribution does not have
-Environment Modules, you can get it with Spack:
+distributions, this can be installed from the vendor's repository:
 
-1. Install with::
+.. code-block:: sh
+
+    yum install environment-modules # (Fedora/RHEL/CentOS)
+    apt-get install environment-modules # (Ubuntu/Debian)
+
+If your Linux distribution does not have
+Environment Modules, you can get it with Spack:
 
 .. code-block:: sh
 
     spack install environment-modules
 
-2. Activate with::
 
-Add the following two lines to your ``.bashrc`` profile (or similar):
+In this case to activate it automatically you need to add the following two
+lines to your ``.bashrc`` profile (or similar):
 
 .. code-block:: sh
 
    MODULES_HOME=`spack location -i environment-modules`
    source ${MODULES_HOME}/Modules/init/bash
 
-In case you use a Unix shell other than bash, substitute ``bash`` by
-the appropriate file in ``${MODULES_HOME}/Modules/init/``.
+If you use a Unix shell other than ``bash``, modify the commands above
+accordingly and source the appropriate file in
+``${MODULES_HOME}/Modules/init/``.
 
 
-Spack and Environment Modules
+.. TODO : Add a similar section on how to install dotkit ?
+
+Spack and module systems
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 You can enable shell support by sourcing some files in the
 ``/share/spack`` directory.
 
@@ -841,7 +924,7 @@ For ``bash`` or ``ksh``, run:
 
 .. code-block:: sh
 
-   . $SPACK_ROOT/share/spack/setup-env.sh
+   . ${SPACK_ROOT}/share/spack/setup-env.sh
 
 For ``csh`` and ``tcsh`` run:
 
@@ -853,17 +936,19 @@ For ``csh`` and ``tcsh`` run:
 You can put the above code in your ``.bashrc`` or ``.cshrc``, and
 Spack's shell support will be available on the command line.
 
-When you install a package with Spack, it automatically generates an
-environment module that lets you add the package to your environment.
+When you install a package with Spack, it automatically generates a module file
+that lets you add the package to your environment.
 
-Currently, Spack supports the generation of `TCL Modules
+Currently, Spack supports the generation of `Environment Modules
 <http://wiki.tcl.tk/12999>`_ and `Dotkit
 <https://computing.llnl.gov/?set=jobs&page=dotkit>`_.  Generated
 module files for each of these systems can be found in these
 directories:
 
-  * ``$SPACK_ROOT/share/spack/modules``
-  * ``$SPACK_ROOT/share/spack/dotkit``
+.. code-block:: sh
+
+  ${SPACK_ROOT}/share/spack/modules
+  ${SPACK_ROOT}/share/spack/dotkit
 
 The directories are automatically added to your ``MODULEPATH`` and
 ``DK_NODE`` environment variables when you enable Spack's `shell
@@ -919,8 +1004,7 @@ of installed packages.
 
 The names here should look familiar, they're the same ones from
 ``spack find``.  You *can* use the names here directly.  For example,
-you could type either of these commands to load the callpath module
-(assuming dotkit and modules are installed):
+you could type either of these commands to load the callpath module:
 
 .. code-block:: sh
 
@@ -935,7 +1019,7 @@ easy to type.  Luckily, Spack has its own interface for using modules
 and dotkits.  You can use the same spec syntax you're used to:
 
   =========================  ==========================
-  Modules                    Dotkit
+  Environment Modules        Dotkit
   =========================  ==========================
   ``spack load <spec>``      ``spack use <spec>``
   ``spack unload <spec>``    ``spack unuse <spec>``
@@ -987,8 +1071,8 @@ than one installed package matches it), then Spack will warn you:
 
    $ spack load libelf
    ==> Error: Multiple matches for spec libelf.  Choose one:
-   libelf@0.8.13%gcc@4.4.7=chaos_5_x86_64_ib
-   libelf@0.8.13%intel@15.0.0=chaos_5_x86_64_ib
+   libelf@0.8.13%gcc@4.4.7 arch=chaos_5_x86_64_ib
+   libelf@0.8.13%intel@15.0.0 arch=chaos_5_x86_64_ib
 
 You can either type the ``spack load`` command again with a fully
 qualified argument, or you can add just enough extra constraints to
@@ -1001,6 +1085,60 @@ used ``gcc``.  You could therefore just type:
    $ spack load libelf %intel
 
 To identify just the one built with the Intel compiler.
+
+Module files generation and customization
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Environment Modules and Dotkit files are generated when packages are installed,
+and are placed in the following directories under the Spack root:
+
+.. code-block:: sh
+
+  ${SPACK_ROOT}/share/spack/modules
+  ${SPACK_ROOT}/share/spack/dotkit
+
+The content that gets written in each module file can be customized in two ways:
+
+  1. overriding part of the ``spack.Package`` API within a ``package.py``
+  2. writing dedicated configuration files
+
+Override ``Package`` API
+^^^^^^^^^^^^^^^^^^^^^^^^
+There are currently two methods in ``spack.Package`` that may affect the content
+of module files:
+
+.. code-block:: python
+
+  def setup_environment(self, spack_env, run_env):
+      """Set up the compile and runtime environments for a package."""
+      pass
+
+.. code-block:: python
+
+  def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+      """Set up the environment of packages that depend on this one"""
+      pass
+
+As briefly stated in the comments, the first method lets you customize the
+module file content for the package you are currently writing, the second
+allows for modifications to your dependees module file. In both cases one
+needs to fill ``run_env`` with the desired list of environment modifications.
+
+Example : ``builtin/packages/python/package.py``
+""""""""""""""""""""""""""""""""""""""""""""""""
+
+The ``python`` package that comes with the ``builtin`` Spack repository
+overrides ``setup_dependent_environment`` in the following way:
+
+.. code-block:: python
+
+  def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        # ...
+        if extension_spec.package.extends(self.spec):
+            run_env.prepend_path('PYTHONPATH', os.path.join(extension_spec.prefix, self.site_packages_dir))
+
+to insert the appropriate ``PYTHONPATH`` modifications in the module
+files of python packages.
 
 
 Recursive Modules
@@ -1078,8 +1216,162 @@ Regenerating Module files
 Module and dotkit files are generated when packages are installed, and
 are placed in the following directories under the Spack root:
 
-  * ``$SPACK_ROOT/share/spack/modules``
-  * ``$SPACK_ROOT/share/spack/dotkit``
+Configuration files
+^^^^^^^^^^^^^^^^^^^
+
+Another way of modifying the content of module files is writing a
+``modules.yaml`` configuration file. Following usual Spack conventions, this
+file can be placed either at *site* or *user* scope.
+
+The default site configuration reads:
+
+ .. literalinclude:: ../../../etc/spack/modules.yaml
+    :language: yaml
+
+It basically inspects the installation prefixes for the
+existence of a few folders and, if they exist, it prepends a path to a given
+list of environment variables.
+
+For each module system that can be enabled a finer configuration is possible:
+
+.. code-block:: yaml
+
+ modules:
+   tcl:
+     # contains environment modules specific customizations
+   dotkit:
+     # contains dotkit specific customizations
+
+The structure under the ``tcl`` and ``dotkit`` keys is almost equal, and will
+be showcased in the following by some examples.
+
+Select module files by spec constraints
+"""""""""""""""""""""""""""""""""""""""
+Using spec syntax it's possible to have different customizations for different
+groups of module files.
+
+Considering :
+
+.. code-block:: yaml
+
+ modules:
+   tcl:
+     all: # Default addition for every package
+       environment:
+         set:
+           BAR: 'bar'
+     ^openmpi:: # A double ':' overrides previous rules
+       environment:
+         set:
+           BAR: 'baz'
+     zlib:
+       environment:
+         prepend_path:
+           LD_LIBRARY_PATH: 'foo'
+     zlib%gcc@4.8:
+       environment:
+         unset:
+         - FOOBAR
+
+what will happen is that:
+
+ - every module file will set ``BAR=bar``
+ - unless the associated spec satisfies ``^openmpi`` in which case ``BAR=baz``
+ - any spec that satisfies ``zlib`` will additionally prepend ``foo`` to ``LD_LIBRARY_PATH``
+ - any spec that satisfies ``zlib%gcc@4.8`` will additionally unset ``FOOBAR``
+
+.. note::
+  Order does matter
+    The modifications associated with the ``all`` keyword are always evaluated
+    first, no matter where they appear in the configuration file. All the other
+    spec constraints are instead evaluated top to bottom.
+
+Filter modifications out of module files
+""""""""""""""""""""""""""""""""""""""""
+
+Modifications to certain environment variables in module files are generated by
+default. Suppose you would like to avoid having ``CPATH`` and ``LIBRARY_PATH``
+modified by your dotkit modules. Then :
+
+.. code-block:: yaml
+
+  modules:
+    dotkit:
+      all:
+        filter:
+          environment_blacklist: ['CPATH', 'LIBRARY_PATH']  # Exclude changes to any of these variables
+
+will generate dotkit module files that will not contain modifications to either
+``CPATH`` or ``LIBRARY_PATH`` and environment module files that instead will
+contain those modifications.
+
+Autoload dependencies
+"""""""""""""""""""""
+
+The following lines in ``modules.yaml``:
+
+.. code-block:: yaml
+
+  modules:
+    tcl:
+      all:
+        autoload: 'direct'
+
+will produce environment module files that will automatically load their direct
+dependencies.
+
+.. note::
+  Allowed values for ``autoload`` statements
+    Allowed values for ``autoload`` statements are either ``none``, ``direct``
+    or ``all``. In ``tcl`` configuration it is possible to use the option
+    ``prerequisites`` that accepts the same values and will add ``prereq``
+    statements instead of automatically loading other modules.
+
+Blacklist or whitelist the generation of specific module files
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+Sometimes it is desirable not to generate module files, a common use case being
+not providing the users with software built using the system compiler.
+
+A configuration file like:
+
+.. code-block:: yaml
+
+  modules:
+    tcl:
+      whitelist: ['gcc', 'llvm']  # Whitelist will have precedence over blacklist
+      blacklist: ['%gcc@4.4.7']  # Assuming gcc@4.4.7 is the system compiler
+
+will skip module file generation for anything that satisfies ``%gcc@4.4.7``,
+with the exception of specs that satisfy ``gcc`` or ``llvm``.
+
+Customize the naming scheme and insert conflicts
+""""""""""""""""""""""""""""""""""""""""""""""""
+
+A configuration file like:
+
+.. code-block:: yaml
+
+  modules:
+    tcl:
+      naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
+      all:
+        conflict: ['{name}', 'intel/14.0.1']
+
+will create module files that will conflict with ``intel/14.0.1`` and with the
+base directory of the same module, effectively preventing the possibility to
+load two or more versions of the same software at the same time.
+
+.. note::
+  Tokens available for the naming scheme
+    currently only the tokens shown in the example are available to construct
+    the naming scheme
+
+.. note::
+  The ``conflict`` option is ``tcl`` specific
+
+Regenerating module files
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sometimes you may need to regenerate the modules files.  For example,
 if newer, fancier module support is added to Spack at some later date,
@@ -1089,7 +1381,7 @@ new features.
 .. _spack-module:
 
 ``spack module refresh``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""
 
 Running ``spack module refresh`` will remove the
 ``share/spack/modules`` and ``share/spack/dotkit`` directories, then
@@ -1135,7 +1427,7 @@ You can find extensions for your Python installation like this:
 .. code-block:: sh
 
    $ spack extensions python
-   ==> python@2.7.8%gcc@4.4.7=chaos_5_x86_64_ib-703c7a96
+   ==> python@2.7.8%gcc@4.4.7 arch=chaos_5_x86_64_ib-703c7a96
    ==> 36 extensions:
    geos          py-ipython     py-pexpect    py-pyside            py-sip
    py-basemap    py-libxml2     py-pil        py-pytz              py-six
@@ -1225,9 +1517,9 @@ installation:
 .. code-block:: sh
 
    $ spack activate py-numpy
-   ==> Activated extension py-setuptools@11.3.1%gcc@4.4.7=chaos_5_x86_64_ib-3c74eb69 for python@2.7.8%gcc@4.4.7.
-   ==> Activated extension py-nose@1.3.4%gcc@4.4.7=chaos_5_x86_64_ib-5f70f816 for python@2.7.8%gcc@4.4.7.
-   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-setuptools@11.3.1%gcc@4.4.7 arch=chaos_5_x86_64_ib-3c74eb69 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-nose@1.3.4%gcc@4.4.7 arch=chaos_5_x86_64_ib-5f70f816 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
 
 Several things have happened here.  The user requested that
 ``py-numpy`` be activated in the ``python`` installation it was built
@@ -1242,7 +1534,7 @@ packages listed as activated:
 .. code-block:: sh
 
    $ spack extensions python
-   ==> python@2.7.8%gcc@4.4.7=chaos_5_x86_64_ib-703c7a96
+   ==> python@2.7.8%gcc@4.4.7  arch=chaos_5_x86_64_ib-703c7a96
    ==> 36 extensions:
    geos          py-ipython     py-pexpect    py-pyside            py-sip
    py-basemap    py-libxml2     py-pil        py-pytz              py-six
@@ -1290,7 +1582,7 @@ dependencies, you can use ``spack activate -f``:
 .. code-block:: sh
 
    $ spack activate -f py-numpy
-   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
 
 .. _spack-deactivate:
 
@@ -1315,6 +1607,51 @@ several variants:
 
        spack deactivate -a python
 
+Filesystem requirements
+--------------------------
+
+Spack currently needs to be run from a filesystem that supports
+``flock`` locking semantics.  Nearly all local filesystems and recent
+versions of NFS support this, but parallel filesystems may be mounted
+without ``flock`` support enabled.  You can determine how your
+filesystems are mounted with ``mount -p``.  The output for a Lustre
+filesystem might look like this:
+
+.. code-block:: sh
+
+   $ mount -l | grep lscratch
+   pilsner-mds1-lnet0@o2ib100:/lsd on /p/lscratchd type lustre (rw,nosuid,noauto,_netdev,lazystatfs,flock)
+   porter-mds1-lnet0@o2ib100:/lse on /p/lscratche type lustre (rw,nosuid,noauto,_netdev,lazystatfs,flock)
+
+Note the ``flock`` option on both Lustre mounts.  If you do not see
+this or a similar option for your filesystem, you may need ot ask your
+system administrator to enable ``flock``.
+
+This issue typically manifests with the error below:
+
+.. code-block:: sh
+
+   $ ./spack find
+   Traceback (most recent call last):
+   File "./spack", line 176, in <module>
+     main()
+   File "./spack", line 154, in main
+     return_val = command(parser, args)
+   File "./spack/lib/spack/spack/cmd/find.py", line 170, in find
+     specs = set(spack.installed_db.query(**q_args))
+   File "./spack/lib/spack/spack/database.py", line 551, in query
+     with self.read_transaction():
+   File "./spack/lib/spack/spack/database.py", line 598, in __enter__
+     if self._enter() and self._acquire_fn:
+   File "./spack/lib/spack/spack/database.py", line 608, in _enter
+     return self._db.lock.acquire_read(self._timeout)
+   File "./spack/lib/spack/llnl/util/lock.py", line 103, in acquire_read
+     self._lock(fcntl.LOCK_SH, timeout)   # can raise LockError.
+   File "./spack/lib/spack/llnl/util/lock.py", line 64, in _lock
+     fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
+   IOError: [Errno 38] Function not implemented
+
+A nicer error message is TBD in future versions of Spack.
 
 Getting Help
 -----------------------

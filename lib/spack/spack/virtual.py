@@ -1,32 +1,36 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
 The ``virtual`` module contains utility classes for virtual dependencies.
 """
-import spack.spec
 import itertools
+import yaml
+from yaml.error import MarkedYAMLError
+
+import spack
+
 
 class ProviderIndex(object):
     """This is a dict of dicts used for finding providers of particular
@@ -45,10 +49,11 @@ class ProviderIndex(object):
        Calling providers_for(spec) will find specs that provide a
        matching implementation of MPI.
     """
-    def __init__(self, specs, **kwargs):
+    def __init__(self, specs=None, **kwargs):
         # TODO: come up with another name for this.  This "restricts" values to
         # the verbatim impu specs (i.e., it doesn't pre-apply package's constraints, and
         # keeps things as broad as possible, so it's really the wrong name)
+        if specs is None: specs = []
         self.restrict = kwargs.setdefault('restrict', False)
 
         self.providers = {}
@@ -64,13 +69,19 @@ class ProviderIndex(object):
 
 
     def update(self, spec):
-        if type(spec) != spack.spec.Spec:
+        if not isinstance(spec, spack.spec.Spec):
             spec = spack.spec.Spec(spec)
+
+        if not spec.name:
+            # Empty specs do not have a package
+            return
 
         assert(not spec.virtual)
 
         pkg = spec.package
         for provided_spec, provider_spec in pkg.provided.iteritems():
+            # We want satisfaction other than flags
+            provider_spec.compiler_flags = spec.compiler_flags.copy()
             if provider_spec.satisfies(spec, deps=False):
                 provided_name = provided_spec.name
 
@@ -159,3 +170,86 @@ class ProviderIndex(object):
                 result[name] = crossed
 
         return all(c in result for c in common)
+
+
+    def to_yaml(self, stream=None):
+        provider_list = dict(
+            (name, [[vpkg.to_node_dict(), [p.to_node_dict() for p in pset]]
+                    for vpkg, pset in pdict.items()])
+             for name, pdict in self.providers.items())
+
+        yaml.dump({'provider_index': {'providers': provider_list}},
+                  stream=stream)
+
+
+    @staticmethod
+    def from_yaml(stream):
+        try:
+            yfile = yaml.load(stream)
+        except MarkedYAMLError, e:
+            raise spack.spec.SpackYAMLError(
+                "error parsing YAML ProviderIndex cache:", str(e))
+
+        if not isinstance(yfile, dict):
+            raise spack.spec.SpackYAMLError(
+                "YAML ProviderIndex was not a dict.")
+
+        if not 'provider_index' in yfile:
+            raise spack.spec.SpackYAMLError(
+                "YAML ProviderIndex does not start with 'provider_index'")
+
+        index = ProviderIndex()
+        providers = yfile['provider_index']['providers']
+        index.providers = dict(
+            (name, dict((spack.spec.Spec.from_node_dict(vpkg),
+                         set(spack.spec.Spec.from_node_dict(p) for p in plist))
+                        for vpkg, plist in pdict_list))
+            for name, pdict_list in providers.items())
+
+        return index
+
+
+    def merge(self, other):
+        """Merge `other` ProviderIndex into this one."""
+        other = other.copy()   # defensive copy.
+
+        for pkg in other.providers:
+            if pkg not in self.providers:
+                self.providers[pkg] = other.providers[pkg]
+                continue
+
+            spdict, opdict = self.providers[pkg], other.providers[pkg]
+            for provided_spec in opdict:
+                if provided_spec not in spdict:
+                    spdict[provided_spec] = opdict[provided_spec]
+                    continue
+
+                spdict[provided_spec] += opdict[provided_spec]
+
+
+    def remove_provider(self, pkg_name):
+        """Remove a provider from the ProviderIndex."""
+        for pkg in self.providers:
+            pkg_dict = self.providers[pkg]
+            for provided, pset in pkg_dict.items():
+                for provider in pset:
+                    if provider.fullname == pkg_name:
+                        pset.remove(provider)
+                if not pset:
+                    del pkg_dict[provided]
+            if not pkg_dict:
+                del self.providers[pkg]
+
+
+    def copy(self):
+        """Deep copy of this ProviderIndex."""
+        clone = ProviderIndex()
+        clone.providers = dict(
+            (name, dict((vpkg, set((p.copy() for p in pset)))
+                        for vpkg, pset in pdict.items()))
+             for name, pdict in self.providers.items())
+        return clone
+
+
+    def __eq__(self, other):
+        return self.providers == other.providers

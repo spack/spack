@@ -1,0 +1,63 @@
+#!/bin/bash
+#
+# This script runs source code style checks on Spack.
+#
+# It should be executed from the top-level directory of the repo,
+# e.g.:
+#
+#    share/spack/qa/run-flake8
+#
+# To run it, you'll need to have the Python flake8 installed locally.
+#
+PYTHONPATH=./lib/spack:$PYTHONPATH
+
+flake8="$(which flake8)"
+if [[ ! $flake8 ]]; then
+    echo "ERROR: flake8 is required to run this script."
+    exit 1
+fi
+
+# Check if changed files are flake8 conformant [framework]
+changed=$(git diff --name-only develop... | grep '.py$')
+
+# Add approved style exemptions to the changed packages.
+for file in $changed; do
+    if [[ $file = *package.py ]]; then
+        cp "$file" "$file~"
+
+        # Exempt lines with urls and descriptions from overlong line errors.
+        perl -i -pe 's/^(\s*url\s*=.*)$/\1  # NOQA: ignore=E501/' $file
+        perl -i -pe 's/^(\s*version\(.*\).*)$/\1  # NOQA: ignore=E501/' $file
+        perl -i -pe 's/^(\s*variant\(.*\).*)$/\1  # NOQA: ignore=E501/' $file
+
+        # Exempt '@when' decorated functions from redefinition errors.
+        perl -i -pe 's/^(\s*\@when\(.*\).*)$/\1  # NOQA: ignore=F811/' $file
+    fi
+done
+
+return_code=0
+if [[ $changed ]]; then
+    echo =======================================================
+    echo  flake8: running flake8 code checks on spack.
+    echo
+    echo  Modified files:
+    echo  $changed | perl -pe 's/^/  /;s/ +/\n  /g'
+    echo =======================================================
+    if flake8 --format pylint $changed; then
+        echo "Flake8 checks were clean."
+    else
+        echo "Flake8 found errors."
+        return_code=1
+    fi
+else
+    echo No core framework files modified.
+fi
+
+# Restore original package files after modifying them.
+for file in $changed; do
+    if [[ $file = *package.py ]]; then
+        mv "${file}~" "${file}"
+    fi
+done
+
+exit $return_code

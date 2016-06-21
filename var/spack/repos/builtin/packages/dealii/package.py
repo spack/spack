@@ -1,8 +1,34 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 import sys
 
+
 class Dealii(Package):
-    """C++ software library providing well-documented tools to build finite element codes for a broad variety of PDEs."""
+    """C++ software library providing well-documented tools to build finite
+    element codes for a broad variety of PDEs."""
     homepage = "https://www.dealii.org"
     url      = "https://github.com/dealii/dealii/releases/download/v8.4.0/dealii-8.4.0.tar.gz"
 
@@ -12,6 +38,7 @@ class Dealii(Package):
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('arpack',   default=True,  description='Compile with Arpack and PArpack (only with MPI)')
     variant('doc',      default=False, description='Compile with documentation')
+    variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,  description='Compile with HDF5 (only with MPI)')
     variant('metis',    default=True,  description='Compile with Metis')
     variant('netcdf',   default=True,  description='Compile with Netcdf (only with MPI)')
@@ -22,36 +49,40 @@ class Dealii(Package):
     variant('trilinos', default=True,  description='Compile with Trilinos (only with MPI)')
 
     # required dependencies, light version
-    depends_on ("blas")
-    # Boost 1.58 is blacklisted, see https://github.com/dealii/dealii/issues/1591
-    # require at least 1.59
-    depends_on ("boost@1.59.0:",     when='~mpi')
-    depends_on ("boost@1.59.0:+mpi", when='+mpi')
-    depends_on ("bzip2")
-    depends_on ("cmake")
-    depends_on ("lapack")
-    depends_on ("muparser")
-    depends_on ("suite-sparse")
-    depends_on ("tbb")
-    depends_on ("zlib")
+    depends_on("blas")
+    # Boost 1.58 is blacklisted, see
+    # https://github.com/dealii/dealii/issues/1591
+    # Require at least 1.59
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",     when='~mpi')  # NOQA: ignore=E501
+    depends_on("boost@1.59.0:+mpi+thread+system+serialization+iostreams", when='+mpi')  # NOQA: ignore=E501
+    depends_on("bzip2")
+    depends_on("cmake")
+    depends_on("lapack")
+    depends_on("muparser")
+    depends_on("suite-sparse")
+    depends_on("tbb")
+    depends_on("zlib")
 
     # optional dependencies
-    depends_on ("mpi", when="+mpi")
-    depends_on ("arpack-ng+mpi", when='+arpack+mpi')
-    depends_on ("doxygen", when='+doc')
-    depends_on ("hdf5+mpi~cxx", when='+hdf5+mpi') #FIXME NetCDF declares dependency with ~cxx, why?
-    depends_on ("metis@5:", when='+metis')
-    depends_on ("netcdf+mpi", when="+netcdf+mpi")
-    depends_on ("netcdf-cxx", when='+netcdf+mpi')
-    depends_on ("oce", when='+oce')
-    depends_on ("p4est", when='+p4est+mpi')
-    depends_on ("petsc+mpi", when='+petsc+mpi')
-    depends_on ("slepc", when='+slepc+petsc+mpi')
-    depends_on ("trilinos", when='+trilinos+mpi')
+    depends_on("mpi",              when="+mpi")
+    depends_on("arpack-ng+mpi",    when='+arpack+mpi')
+    depends_on("doxygen+graphviz", when='+doc')
+    depends_on("graphviz",         when='+doc')
+    depends_on("gsl",              when='@8.5.0:+gsl')
+    depends_on("gsl",              when='@dev+gsl')
+    depends_on("hdf5+mpi",         when='+hdf5+mpi')
+    depends_on("metis@5:",         when='+metis')
+    depends_on("netcdf+mpi",       when="+netcdf+mpi")
+    depends_on("netcdf-cxx",       when='+netcdf+mpi')
+    depends_on("oce",              when='+oce')
+    depends_on("p4est",            when='+p4est+mpi')
+    depends_on("petsc+mpi",        when='+petsc+mpi')
+    depends_on("slepc",            when='+slepc+petsc+mpi')
+    depends_on("trilinos",         when='+trilinos+mpi')
 
     # developer dependnecies
-    depends_on ("numdiff", when='@dev')
-    depends_on ("astyle@2.04", when='@dev')
+    depends_on("numdiff",     when='@dev')
+    depends_on("astyle@2.04", when='@dev')
 
     def install(self, spec, prefix):
         options = []
@@ -69,18 +100,17 @@ class Dealii(Package):
             '-DDEAL_II_WITH_THREADS:BOOL=ON',
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
             '-DBZIP2_DIR=%s' % spec['bzip2'].prefix,
-            # CMake's FindBlas/Lapack may pickup system's blas/lapack instead of Spack's.
-            # Be more specific to avoid this.
-            # Note that both lapack and blas are provided in -DLAPACK_XYZ variables
+            # CMake's FindBlas/Lapack may pickup system's blas/lapack instead
+            # of Spack's. Be more specific to avoid this.
+            # Note that both lapack and blas are provided in -DLAPACK_XYZ.
             '-DLAPACK_FOUND=true',
             '-DLAPACK_INCLUDE_DIRS=%s;%s' %
                 (spec['lapack'].prefix.include,
                  spec['blas'].prefix.include),
             '-DLAPACK_LIBRARIES=%s;%s' %
-                (join_path(spec['lapack'].prefix.lib,'liblapack.%s' % dsuf), # FIXME don't hardcode names
-                 join_path(spec['blas'].prefix.lib,'libblas.%s' % dsuf)),    # FIXME don't hardcode names
-            '-DMUPARSER_DIR=%s ' % spec['muparser'].prefix,
-            '-DP4EST_DIR=%s' % spec['p4est'].prefix,
+                (spec['lapack'].lapack_shared_lib,
+                 spec['blas'].blas_shared_lib),
+            '-DMUPARSER_DIR=%s' % spec['muparser'].prefix,
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix
@@ -90,32 +120,33 @@ class Dealii(Package):
         if '+mpi' in spec:
             options.extend([
                 '-DDEAL_II_WITH_MPI:BOOL=ON',
-                '-DCMAKE_C_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpicc'), # FIXME: avoid hardcoding mpi wrappers names
-                '-DCMAKE_CXX_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpic++'),
-                '-DCMAKE_Fortran_COMPILER=%s' % join_path(self.spec['mpi'].prefix.bin, 'mpif90'),
+                '-DCMAKE_C_COMPILER=%s'       % spec['mpi'].mpicc,
+                '-DCMAKE_CXX_COMPILER=%s'     % spec['mpi'].mpicxx,
+                '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc,
             ])
         else:
             options.extend([
                 '-DDEAL_II_WITH_MPI:BOOL=OFF',
             ])
 
-        # Optional dependencies for which librariy names are the same as CMake variables
-        for library in ('hdf5', 'p4est','petsc', 'slepc','trilinos','metis'):
+        # Optional dependencies for which librariy names are the same as CMake
+        # variables:
+        for library in ('gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis'):  # NOQA: ignore=E501
             if library in spec:
                 options.extend([
-                    '-D{library}_DIR={value}'.format(library=library.upper(), value=spec[library].prefix),
-                    '-DDEAL_II_WITH_{library}:BOOL=ON'.format(library=library.upper())
+                    '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),
+                    '-DDEAL_II_WITH_%s:BOOL=ON' % library.upper()
                 ])
             else:
                 options.extend([
-                    '-DDEAL_II_WITH_{library}:BOOL=OFF'.format(library=library.upper())
+                    '-DDEAL_II_WITH_%s:BOOL=OFF' % library.upper()
                 ])
 
         # doxygen
         options.extend([
-            '-DDEAL_II_COMPONENT_DOCUMENTATION=%s' % ('ON' if '+doc' in spec else 'OFF'),
+            '-DDEAL_II_COMPONENT_DOCUMENTATION=%s' %
+            ('ON' if '+doc' in spec else 'OFF'),
         ])
-
 
         # arpack
         if '+arpack' in spec:
@@ -134,11 +165,13 @@ class Dealii(Package):
             options.extend([
                 '-DNETCDF_FOUND=true',
                 '-DNETCDF_LIBRARIES=%s;%s' %
-                    (join_path(spec['netcdf-cxx'].prefix.lib,'libnetcdf_c++.%s' % dsuf),
-                    join_path(spec['netcdf'].prefix.lib,'libnetcdf.%s' % dsuf)),
+                    (join_path(spec['netcdf-cxx'].prefix.lib,
+                               'libnetcdf_c++.%s' % dsuf),
+                     join_path(spec['netcdf'].prefix.lib,
+                               'libnetcdf.%s' % dsuf)),
                 '-DNETCDF_INCLUDE_DIRS=%s;%s' %
                     (spec['netcdf-cxx'].prefix.include,
-                    spec['netcdf'].prefix.include),
+                     spec['netcdf'].prefix.include),
             ])
         else:
             options.extend([
@@ -174,7 +207,7 @@ class Dealii(Package):
         with working_dir('examples/step-3'):
             cmake('.')
             make('release')
-            make('run',parallel=False)
+            make('run', parallel=False)
 
         # An example which uses Metis + PETSc
         # FIXME: switch step-18 to MPI
@@ -187,7 +220,7 @@ class Dealii(Package):
             if '^petsc' in spec and '^metis' in spec:
                 cmake('.')
                 make('release')
-                make('run',parallel=False)
+                make('run', parallel=False)
 
         # take step-40 which can use both PETSc and Trilinos
         # FIXME: switch step-40 to MPI run
@@ -196,43 +229,49 @@ class Dealii(Package):
             print('========== Step-40 PETSc ============')
             print('=====================================')
             # list the number of cycles to speed up
-            filter_file(r'(const unsigned int n_cycles = 8;)',  ('const unsigned int n_cycles = 2;'), 'step-40.cc')
+            filter_file(r'(const unsigned int n_cycles = 8;)',
+                        ('const unsigned int n_cycles = 2;'), 'step-40.cc')
             cmake('.')
             if '^petsc' in spec:
                 make('release')
-                make('run',parallel=False)
+                make('run', parallel=False)
 
             print('=====================================')
             print('========= Step-40 Trilinos ==========')
             print('=====================================')
             # change Linear Algebra to Trilinos
-            filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',  ('#define FORCE_USE_OF_TRILINOS'), 'step-40.cc')
+            filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',
+                        ('#define FORCE_USE_OF_TRILINOS'), 'step-40.cc')
             if '^trilinos+hypre' in spec:
                 make('release')
-                make('run',parallel=False)
+                make('run', parallel=False)
 
             print('=====================================')
             print('=== Step-40 Trilinos SuperluDist ====')
             print('=====================================')
             # change to direct solvers
-            filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')
-            filter_file(r'(LA::MPI::PreconditionAMG preconditioner;)',  (''), 'step-40.cc')
-            filter_file(r'(LA::MPI::PreconditionAMG::AdditionalData data;)',  (''), 'step-40.cc')
-            filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',  (''), 'step-40.cc')
-            filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')
+            filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')  # NOQA: ignore=E501
+            filter_file(r'(LA::MPI::PreconditionAMG preconditioner;)',
+                        (''), 'step-40.cc')
+            filter_file(r'(LA::MPI::PreconditionAMG::AdditionalData data;)',
+                        (''), 'step-40.cc')
+            filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',
+                        (''), 'step-40.cc')
+            filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')  # NOQA: ignore=E501
             filter_file(r'(preconditioner\);)',  (''), 'step-40.cc')
             if '^trilinos+superlu-dist' in spec:
                 make('release')
-                make('run',paralle=False)
+                make('run', paralle=False)
 
             print('=====================================')
             print('====== Step-40 Trilinos MUMPS =======')
             print('=====================================')
             # switch to Mumps
-            filter_file(r'(Amesos_Superludist)',  ('Amesos_Mumps'), 'step-40.cc')
+            filter_file(r'(Amesos_Superludist)',
+                        ('Amesos_Mumps'), 'step-40.cc')
             if '^trilinos+mumps' in spec:
                 make('release')
-                make('run',parallel=False)
+                make('run', parallel=False)
 
         print('=====================================')
         print('============ Step-36 ================')
@@ -241,7 +280,7 @@ class Dealii(Package):
             if 'slepc' in spec:
                 cmake('.')
                 make('release')
-                make('run',parallel=False)
+                make('run', parallel=False)
 
         print('=====================================')
         print('============ Step-54 ================')
@@ -250,7 +289,7 @@ class Dealii(Package):
             if 'oce' in spec:
                 cmake('.')
                 make('release')
-                make('run',parallel=False)
+                make('run', parallel=False)
 
     def setup_environment(self, spack_env, env):
         env.set('DEAL_II_DIR', self.prefix)

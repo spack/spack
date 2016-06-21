@@ -1,0 +1,23 @@
+# -*- conf -*-
+# flake8 settings for Spack.
+#
+# Below we describe which flake8 checks Spack ignores and what the
+# rationale is.
+#
+# Let people line things up nicely:
+# - E221: multiple spaces before operator
+# - E241: multiple spaces after ‘,’
+#
+# Let people use terse Python features:
+# - E731 : lambda expressions
+#
+# Spack allows wildcard imports:
+# - F403: disable wildcard import
+#
+# These are required to get the package.py files to test clean.
+# - F821: undefined name (needed for cmake, configure, etc.)
+# - F999: name name be undefined or undefined from star imports.
+#
+[flake8]
+ignore = E221,E241,E731,F403,F821,F999
+max-line-length = 79
