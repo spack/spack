@@ -130,13 +130,8 @@ def load_module(mod):
     text = modulecmd('show', mod, output=str, error=str).split()
     for i, word in enumerate(text):
         if word == 'conflict':
-<<<<<<< HEAD
-            exec(compile(modulecmd('unload', text[
-                 i + 1], output=str, error=str), '<string>', 'exec'))
-=======
             exec(compile(modulecmd('unload', text[i + 1], output=str,
                                    error=str), '<string>', 'exec'))
->>>>>>> aa86488fd9809ced16704e4bd4d607c89d6dda75
     # Load the module now that there are no conflicts
     load = modulecmd('load', mod, output=str, error=str)
     exec(compile(load, '<string>', 'exec'))
@@ -244,13 +239,8 @@ def set_build_environment_variables(pkg, env):
     # handled by putting one in the <build_env_path>/case-insensitive
     # directory.  Add that to the path too.
     env_paths = []
-<<<<<<< HEAD
     compiler_specific = join_path(spack.build_env_path, pkg.compiler.name)
     for item in [spack.build_env_path, compiler_specific]:
-=======
-    for item in [spack.build_env_path, join_path(spack.build_env_path,
-                                                 pkg.compiler.name)]:
->>>>>>> aa86488fd9809ced16704e4bd4d607c89d6dda75
         env_paths.append(item)
         ci = join_path(item, 'case-insensitive')
         if os.path.isdir(ci):
@@ -280,13 +270,8 @@ def set_build_environment_variables(pkg, env):
     env.unset('DYLD_LIBRARY_PATH')
 
     # Add bin directories from dependencies to the PATH for the build.
-<<<<<<< HEAD
     bin_dirs = reversed(
         filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))
-=======
-    bin_dirs = reversed(filter(os.path.isdir,
-                               ['%s/bin' % prefix for prefix in dep_prefixes]))
->>>>>>> aa86488fd9809ced16704e4bd4d607c89d6dda75
     for item in bin_dirs:
         env.prepend_path('PATH', item)
 
@@ -301,10 +286,6 @@ def set_build_environment_variables(pkg, env):
         for directory in ('lib', 'lib64', 'share'):
             pcdir = join_path(pre, directory, 'pkgconfig')
             if os.path.isdir(pcdir):
-<<<<<<< HEAD
-                # pkg_config_dirs.append(pcdir)
-=======
->>>>>>> aa86488fd9809ced16704e4bd4d607c89d6dda75
                 env.prepend_path('PKG_CONFIG_PATH', pcdir)
 
     if pkg.spec.architecture.target.module_name:
@@ -402,13 +383,9 @@ def get_rpaths(pkg):
 
 
 def parent_class_modules(cls):
-<<<<<<< HEAD
     """
     Get list of super class modules that are all descend from spack.Package
     """
-=======
-    """Get list of super class modules that all descend from spack.Package"""
->>>>>>> aa86488fd9809ced16704e4bd4d607c89d6dda75
     if not issubclass(cls, spack.Package) or issubclass(spack.Package, cls):
         return []
     result = []
