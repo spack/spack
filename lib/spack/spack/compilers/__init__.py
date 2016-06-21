@@ -83,7 +83,7 @@ def _to_dict(compiler):
     return {'compiler': d}
 
 
-def get_compiler_config(scope=None):
+def get_compiler_config(scope=None, init_config=True):
     """Return the compiler configuration for the specified architecture.
     """
     def init_compiler_config():
@@ -93,12 +93,12 @@ def get_compiler_config(scope=None):
         for compiler in compilers:
             compilers_dict.append(_to_dict(compiler))
         spack.config.update_config('compilers', compilers_dict, scope=scope)
-
+    
     config = spack.config.get_config('compilers', scope=scope)
     # Update the configuration if there are currently no compilers
     # configured.  Avoid updating automatically if there ARE site
     # compilers configured but no user ones.
-    if not config:
+    if not config and init_config:
         if scope is None:
             # We know no compilers were configured in any scope.
             init_compiler_config()
@@ -117,14 +117,14 @@ def get_compiler_config(scope=None):
         return []  # Return empty list which we will later append to.
 
 
-def add_compilers_to_config(compilers, scope=None):
+def add_compilers_to_config(compilers, scope=None, init_config=True):
     """Add compilers to the config for the specified architecture.
 
     Arguments:
       - compilers: a list of Compiler objects.
       - scope:     configuration scope to modify.
     """
-    compiler_config = get_compiler_config(scope)
+    compiler_config = get_compiler_config(scope, init_config)
     for compiler in compilers:
         compiler_config.append(_to_dict(compiler))
     global _cache_config_file
@@ -153,23 +153,23 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     spack.config.update_config('compilers', filtered_compiler_config, scope)
 
 
-def all_compilers_config(scope=None):
+def all_compilers_config(scope=None, init_config=True):
     """Return a set of specs for all the compiler versions currently
        available to build with.  These are instances of CompilerSpec.
     """
     # Get compilers for this architecture.
     global _cache_config_file #Create a cache of the config file so we don't load all the time.
     if not _cache_config_file:
-        _cache_config_file = get_compiler_config(scope)
+        _cache_config_file = get_compiler_config(scope, init_config)
         return _cache_config_file
     else:
         return _cache_config_file
 
 
-def all_compilers(scope=None):
+def all_compilers(scope=None, init_config=True):
     # Return compiler specs from the merged config.
     return [spack.spec.CompilerSpec(s['compiler']['spec'])
-            for s in all_compilers_config(scope)]
+            for s in all_compilers_config(scope, init_config)]
 
 
 def default_compiler():
