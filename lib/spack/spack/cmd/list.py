@@ -39,8 +39,9 @@ def setup_parser(subparser):
         'filter', nargs=argparse.REMAINDER,
         help='Optional glob patterns to filter results.')
     subparser.add_argument(
-        '-i', '--insensitive', action='store_true', default=False,
-        help='Filtering will be case insensitive.')
+        '-s', '--sensitive', action='store_true', default=False,
+        help='Use case-sensitive filtering. Default is case sensitive, '
+        'unless the query contains a capital letter.')
     subparser.add_argument(
         '-d', '--search-description', action='store_true', default=False,
         help='Filtering will also search the description for a match.')
@@ -58,8 +59,11 @@ def list(parser, args):
                 r = fnmatch.translate('*' + f + '*')
             else:
                 r = fnmatch.translate(f)
-            rc = re.compile(r, flags=re.I if args.insensitive or not any(
-                l.isupper() for l in f) else 0)
+
+            re_flags = re.I
+            if any(l.isupper for l in f) or args.sensitive:
+                re_flags = 0
+            rc = re.compile(r, flags=re_flags)
             res.append(rc)
 
         if args.search_description:
