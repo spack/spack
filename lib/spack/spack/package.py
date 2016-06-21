@@ -976,8 +976,6 @@ class Package(object):
                 pass
 
         try:
-            # Create the install prefix and fork the build process.
-            spack.install_layout.create_install_directory(self.spec)
             spack.build_environment.fork(self, build_process)
         except:
             # remove the install prefix if anything went wrong during install.
