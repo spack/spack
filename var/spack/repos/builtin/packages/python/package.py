@@ -203,8 +203,10 @@ class Python(Package):
                 r'site-packages/site[^/]*\.pyc?$',
                 r'site-packages/__pycache__/site[^/]*\.pyc?$'
             ])
+        if ext_pkg.name != 'py-pygments':
+            patterns.append(r'bin/pygmentize$')
         if ext_pkg.name != 'py-numpy':
-            patterns.append(r'bin/f2py$')
+            patterns.append(r'bin/f2py3?$')
 
         return match_predicate(ignore_arg, patterns)
 
