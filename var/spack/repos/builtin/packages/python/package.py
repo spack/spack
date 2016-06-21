@@ -206,8 +206,7 @@ class Python(Package):
         if ext_pkg.name != 'py-pygments':
             patterns.append(r'bin/pygmentize$')
         if ext_pkg.name != 'py-numpy':
-            patterns.append(r'bin/f2py$')
-            patterns.append(r'bin/f2py3$')
+            patterns.append(r'bin/f2py3?$')
 
         return match_predicate(ignore_arg, patterns)
 
