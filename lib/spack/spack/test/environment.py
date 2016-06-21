@@ -123,7 +123,12 @@ class EnvironmentTest(unittest.TestCase):
         env = EnvironmentModifications.from_sourcing_files(*files)
         modifications = env.group_by_name()
 
-        self.assertEqual(len(modifications), 4)
+        # This is sensitive to the user's environment; can include
+        # spurious entries for things like PS1
+        #
+        # TODO: figure out how to make a bit more robust.
+        self.assertTrue(len(modifications) >= 4)
+
         # Set new variables
         self.assertEqual(len(modifications['NEW_VAR']), 1)
         self.assertTrue(isinstance(modifications['NEW_VAR'][0], SetEnv))
