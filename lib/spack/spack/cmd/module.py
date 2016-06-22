@@ -52,6 +52,10 @@ def setup_parser(subparser):
         '-s', '--shell', action='store_true', dest='shell',
         help='Generate shell script (instead of input for module command)')
 
+    find_parser.add_argument(
+        '-p', '--prefix', dest='prefix',
+        help='Prepend to module names when issuing module load commands')
+
     find_parser.add_argument('spec', nargs='+', help='spec to find a module file for.')
 
 
@@ -62,6 +66,9 @@ def module_find(mtype, flags, spec_array):
        matches any.  If it does, check whether there is a module file
        of type <mtype> there, and print out the name that the user
        should type to use that package's module.
+    prefix:
+        Prepend this to module names when issuing "module load" commands.
+        Some systems seem to need it.
     """
 
     # --------------------------------------
@@ -121,7 +128,7 @@ def module_find(mtype, flags, spec_array):
         for spec,mod in modules_unique:
             if flags.shell:
                 print('# %s' % spec.format())
-                print('%s %s' % (module_cmd, mod.use_name))
+                print('%s %s%s' % (module_cmd, flags.prefix, mod.use_name))
             else:
                 print(mod.use_name)
 
