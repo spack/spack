@@ -31,7 +31,7 @@ class Graphviz(Package):
     homepage = "http://www.graphviz.org"
     url      = "http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.38.0.tar.gz"
 
-    version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
+    version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae', url="http://pkgs.fedoraproject.org/repo/pkgs/graphviz/graphviz-2.38.0.tar.gz/5b6a829b2ac94efcd5fa3c223ed6d3ae/graphviz-2.38.0.tar.gz")
 
     # By default disable optional Perl language support to prevent build issues
     # related to missing Perl packages. If spack begins support for Perl in the
