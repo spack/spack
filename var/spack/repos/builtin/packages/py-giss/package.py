@@ -8,6 +8,7 @@ class PyGiss(Package):
 
     version('0.1.2', '1c1c745c2818a6930c29c6ec7f835943')
     version('0.1.1', '172d468690a8b8f474884d7a60064bc7')
+    version('develop', git='https://github.com/citibeth/pygiss.git', branch='develop')
     version('glint2', git='https://github.com/citibeth/pygiss.git', branch='glint2')
 
     # Requires python@3:
