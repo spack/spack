@@ -48,6 +48,9 @@ class Graphviz(Package):
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
+        # We don't depend on java, so we can't guarantee that Java is available.
+        options.append('--disable-java')
+
         if '+perl' not in spec:
             options.append('--disable-perl')
 
