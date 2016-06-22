@@ -937,7 +937,6 @@ class Package(object):
         # create the install directory.  The install layout
         # handles this in case so that it can use whatever
         # package naming scheme it likes.
-        spack.install_layout.create_install_directory(self.spec)
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
@@ -1020,7 +1019,6 @@ class Package(object):
         try:
             # Create the install prefix and fork the build process.
             spack.install_layout.create_install_directory(self.spec)
-            # Fork the build process.
             spack.build_environment.fork(self, build_process)
         except:
             # remove the install prefix if anything went wrong during install.
