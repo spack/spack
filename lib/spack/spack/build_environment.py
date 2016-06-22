@@ -63,7 +63,7 @@ from llnl.util.filesystem import *
 import spack
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
-from spack.util.executable import Executable
+from spack.util.executable import Executable, which
 
 #
 # This can be set by the user to globally disable parallel builds.
