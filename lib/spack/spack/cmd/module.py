@@ -1,49 +1,45 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
+from __future__ import print_function
 import os
 import shutil
-import argparse
+import sys
 
 import llnl.util.tty as tty
-from llnl.util.lang import partition_list
-from llnl.util.filesystem import mkdirp
-
 import spack.cmd
+from llnl.util.filesystem import mkdirp
 from spack.modules import module_types
 from spack.util.string import *
 
-from spack.spec import Spec
-
-description ="Manipulate modules and dotkits."
+description = "Manipulate modules and dotkits."
 
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='module_command')
 
-    refresh_parser = sp.add_parser('refresh', help='Regenerate all module files.')
+    sp.add_parser('refresh', help='Regenerate all module files.')
 
     find_parser = sp.add_parser('find', help='Find module files for packages.')
     find_parser.add_argument(
@@ -56,6 +52,10 @@ def setup_parser(subparser):
         '-s', '--shell', action='store_true', dest='shell',
         help='Generate shell script (instead of input for module command)')
 
+    find_parser.add_argument(
+        '-p', '--prefix', dest='prefix',
+        help='Prepend to module names when issuing module load commands')
+
     find_parser.add_argument('spec', nargs='+', help='spec to find a module file for.')
 
 
@@ -66,6 +66,9 @@ def module_find(mtype, flags, spec_array):
        matches any.  If it does, check whether there is a module file
        of type <mtype> there, and print out the name that the user
        should type to use that package's module.
+    prefix:
+        Prepend this to module names when issuing "module load" commands.
+        Some systems seem to need it.
     """
 
     # --------------------------------------
@@ -88,7 +91,8 @@ def module_find(mtype, flags, spec_array):
     # --------------------------------------
 
     if mtype not in module_types:
-        tty.die("Invalid module type: '%s'.  Options are %s" % (mtype, comma_or(module_types)))
+        tty.die("Invalid module type: '%s'.  Options are %s" %
+                (mtype, comma_or(module_types)))
 
     raw_specs = spack.cmd.parse_specs(spec_array)
     modules = set()    # Modules we will load
@@ -123,10 +127,10 @@ def module_find(mtype, flags, spec_array):
             module_cmd = {'tcl' : 'module load', 'dotkit' : 'dotkit use'}[mtype]
         for spec,mod in modules_unique:
             if flags.shell:
-                print '# %s' % spec.format()
-                print '%s %s' % (module_cmd, mod.use_name)
+                print('# %s' % spec.format())
+                print('%s %s%s' % (module_cmd, flags.prefix, mod.use_name))
             else:
-                print mod.use_name
+                print(mod.use_name)
 
 def module_refresh():
     """Regenerate all module files for installed packages known to
@@ -139,9 +143,7 @@ def module_refresh():
             shutil.rmtree(cls.path, ignore_errors=False)
         mkdirp(cls.path)
         for spec in specs:
-            tty.debug("   Writing file for %s" % spec)
             cls(spec).write()
-
 
 
 def module(parser, args):
