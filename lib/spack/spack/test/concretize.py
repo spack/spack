@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack
+import spack.architecture
 from spack.spec import Spec, CompilerSpec
 from spack.version import ver
 from spack.concretize import find_spec
@@ -38,10 +39,19 @@ class ConcretizeTest(MockPackagesTest):
             for name in abstract.variants:
                 avariant = abstract.variants[name]
                 cvariant = concrete.variants[name]
-                self.assertEqual(avariant.enabled, cvariant.enabled)
+                self.assertEqual(avariant.value, cvariant.value)
+
+        if abstract.compiler_flags:
+            for flag in abstract.compiler_flags:
+                aflag = abstract.compiler_flags[flag]
+                cflag = concrete.compiler_flags[flag]
+                self.assertTrue(set(aflag) <= set(cflag))
 
         for name in abstract.package.variants:
             self.assertTrue(name in concrete.variants)
+
+        for flag in concrete.compiler_flags.valid_compiler_flags():
+            self.assertTrue(flag in concrete.compiler_flags)
 
         if abstract.compiler and abstract.compiler.concrete:
             self.assertEqual(abstract.compiler, concrete.compiler)
@@ -75,7 +85,12 @@ class ConcretizeTest(MockPackagesTest):
     def test_concretize_variant(self):
         self.check_concretize('mpich+debug')
         self.check_concretize('mpich~debug')
+        self.check_concretize('mpich debug=2')
         self.check_concretize('mpich')
+
+
+    def test_conretize_compiler_flags(self):
+        self.check_concretize('mpich cppflags="-O3"')
 
 
     def test_concretize_preferred_version(self):
@@ -231,13 +246,26 @@ class ConcretizeTest(MockPackagesTest):
 
 
     def test_external_package(self):
-        spec = Spec('externaltool')
+        spec = Spec('externaltool%gcc')
         spec.concretize()
 
         self.assertEqual(spec['externaltool'].external, '/path/to/external_tool')
         self.assertFalse('externalprereq' in spec)
         self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
 
+
+    def test_external_package_module(self):
+        # No tcl modules on darwin/linux machines
+        # TODO: improved way to check for this.
+        if (spack.architecture.sys_type().name == 'darwin' or
+            spack.architecture.sys_type().name == 'linux'):
+            return
+
+        spec = Spec('externalmodule')
+        spec.concretize()
+        self.assertEqual(spec['externalmodule'].external_module, 'external-module')
+        self.assertFalse('externalprereq' in spec)
+        self.assertTrue(spec['externalmodule'].compiler.satisfies('gcc'))
 
     def test_nobuild_package(self):
         got_error = False

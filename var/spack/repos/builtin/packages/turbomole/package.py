@@ -26,21 +26,22 @@ from spack import *
 import os
 import subprocess
 
+
 class Turbomole(Package):
     """TURBOMOLE: Program Package for ab initio Electronic Structure
        Calculations. NB: Requires a license to download."""
-       
-   # NOTE: Turbomole requires purchase of a license to download. Go to the
-   # NOTE: Turbomole home page, http://www.turbomole-gmbh.com, for details.
-   # NOTE: Spack will search the current directory for this file. It is
-   # NOTE: probably best to add this file to a Spack mirror so that it can be
-   # NOTE: found from anywhere.  For information on setting up a Spack mirror
-   # NOTE: see http://software.llnl.gov/spack/mirrors.html
+
+    # NOTE: Turbomole requires purchase of a license to download. Go to the
+    # NOTE: Turbomole home page, http://www.turbomole-gmbh.com, for details.
+    # NOTE: Spack will search the current directory for this file. It is
+    # NOTE: probably best to add this file to a Spack mirror so that it can be
+    # NOTE: found from anywhere.  For information on setting up a Spack mirror
+    # NOTE: see http://software.llnl.gov/spack/mirrors.html
 
     homepage = "http://www.turbomole-gmbh.com/"
 
     version('7.0.2', '92b97e1e52e8dcf02a4d9ac0147c09d6',
-        url="file://%s/turbolinux702.tar.gz" % os.getcwd())
+            url="file://%s/turbolinux702.tar.gz" % os.getcwd())
 
     variant('mpi', default=False, description='Set up MPI environment')
     variant('smp', default=False, description='Set up SMP environment')
@@ -56,33 +57,31 @@ class Turbomole(Package):
 
     def do_fetch(self, mirror_only=True):
         if '+mpi' in self.spec and '+smp' in self.spec:
-            raise InstallError('Can not have both SMP and MPI enabled in the same build.')
+            raise InstallError('Can not have both SMP and MPI enabled in the '
+                               'same build.')
         super(Turbomole, self).do_fetch(mirror_only)
 
     def get_tm_arch(self):
-        # For python-2.7 we could use `tm_arch = subprocess.check_output()`
-        # Use the following for compatibility with python 2.6
         if 'TURBOMOLE' in os.getcwd():
-            tm_arch = subprocess.Popen(['sh', 'scripts/sysname'],
-                stdout=subprocess.PIPE).communicate()[0]
+            tm_sysname = Executable('./scripts/sysname')
+            tm_arch = tm_sysname(output=str)
             return tm_arch.rstrip('\n')
         else:
             return
-        
+
     def install(self, spec, prefix):
         if spec.satisfies('@:7.0.2'):
             calculate_version = 'calculate_2.4_linux64'
             molecontrol_version = 'MoleControl_2.5'
 
-        tm_arch=self.get_tm_arch()
+        tm_arch = self.get_tm_arch()
 
         tar = which('tar')
         dst = join_path(prefix, 'TURBOMOLE')
 
         tar('-x', '-z', '-f', 'thermocalc.tar.gz')
         with working_dir('thermocalc'):
-            cmd = 'sh install <<<y'
-            subprocess.call(cmd, shell=True)
+            subprocess.call('./install<<<y', shell=True)
 
         install_tree('basen', join_path(dst, 'basen'))
         install_tree('cabasen', join_path(dst, 'cabasen'))
@@ -108,13 +107,19 @@ class Turbomole(Package):
         install('TURBOMOLE_702_LinuxPC', dst)
 
         if '+mpi' in spec:
-            install_tree('bin/%s_mpi' % tm_arch, join_path(dst, 'bin', '%s_mpi' % tm_arch))
-            install_tree('libso/%s_mpi' % tm_arch, join_path(dst, 'libso', '%s_mpi' % tm_arch))
-            install_tree('mpirun_scripts/%s_mpi' % tm_arch, join_path(dst, 'mpirun_scripts', '%s_mpi' % tm_arch))
+            install_tree('bin/%s_mpi' % tm_arch,
+                         join_path(dst, 'bin', '%s_mpi' % tm_arch))
+            install_tree('libso/%s_mpi' % tm_arch,
+                         join_path(dst, 'libso', '%s_mpi' % tm_arch))
+            install_tree('mpirun_scripts/%s_mpi' % tm_arch,
+                         join_path(dst, 'mpirun_scripts', '%s_mpi' % tm_arch))
         elif '+smp' in spec:
-            install_tree('bin/%s_smp' % tm_arch, join_path(dst, 'bin', '%s_smp' % tm_arch))
-            install_tree('libso/%s_smp' % tm_arch, join_path(dst, 'libso', '%s_smp' % tm_arch))
-            install_tree('mpirun_scripts/%s_smp' % tm_arch, join_path(dst, 'mpirun_scripts', '%s_smp' % tm_arch))
+            install_tree('bin/%s_smp' % tm_arch,
+                         join_path(dst, 'bin', '%s_smp' % tm_arch))
+            install_tree('libso/%s_smp' % tm_arch,
+                         join_path(dst, 'libso', '%s_smp' % tm_arch))
+            install_tree('mpirun_scripts/%s_smp' % tm_arch,
+                         join_path(dst, 'mpirun_scripts', '%s_smp' % tm_arch))
         else:
             install_tree('bin/%s' % tm_arch, join_path(dst, 'bin', tm_arch))
         if '+mpi' in spec or '+smp' in spec:
@@ -131,18 +136,29 @@ class Turbomole(Package):
         if self.spec.satisfies('@:7.0.2'):
             molecontrol_version = 'MoleControl_2.5'
 
-        tm_arch=self.get_tm_arch()
+        tm_arch = self.get_tm_arch()
 
         run_env.set('TURBODIR', join_path(self.prefix, 'TURBOMOLE'))
-        run_env.set('MOLE_CONTROL', join_path(self.prefix, 'TURBOMOLE', molecontrol_version))
+        run_env.set('MOLE_CONTROL',
+                    join_path(self.prefix, 'TURBOMOLE', molecontrol_version))
 
-        run_env.prepend_path('PATH', join_path(self.prefix, 'TURBOMOLE', 'thermocalc'))
-        run_env.prepend_path('PATH', join_path(self.prefix, 'TURBOMOLE', 'scripts'))
+        run_env.prepend_path('PATH',
+                             join_path(self.prefix, 'TURBOMOLE', 'thermocalc'))
+        run_env.prepend_path('PATH',
+                             join_path(self.prefix, 'TURBOMOLE', 'scripts'))
         if '+mpi' in self.spec:
             run_env.set('PARA_ARCH', 'MPI')
-            run_env.prepend_path('PATH', join_path(self.prefix, 'TURBOMOLE', 'bin', '%s_mpi' % tm_arch))
+            run_env.prepend_path('PATH',
+                                 join_path(self.prefix,
+                                           'TURBOMOLE', 'bin', '%s_mpi'
+                                           % tm_arch))
         elif '+smp' in self.spec:
             run_env.set('PARA_ARCH', 'SMP')
-            run_env.prepend_path('PATH', join_path(self.prefix, 'TURBOMOLE', 'bin', '%s_smp' % tm_arch))
+            run_env.prepend_path('PATH',
+                                 join_path(self.prefix,
+                                           'TURBOMOLE', 'bin', '%s_smp'
+                                           % tm_arch))
         else:
-            run_env.prepend_path('PATH', join_path(self.prefix, 'TURBOMOLE', 'bin', tm_arch))
+            run_env.prepend_path('PATH',
+                                 join_path(self.prefix,
+                                           'TURBOMOLE', 'bin', tm_arch))

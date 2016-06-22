@@ -485,9 +485,9 @@ class TclModule(EnvModule):
     path = join_path(spack.share_path, "modules")
 
     environment_modifications_formats = {
-        PrependPath: 'prepend-path {name} \"{value}\"\n',
-        AppendPath: 'append-path {name} \"{value}\"\n',
-        RemovePath: 'remove-path {name} \"{value}\"\n',
+        PrependPath: 'prepend-path --delim "{delim}" {name} \"{value}\"\n',
+        AppendPath: 'append-path   --delim "{delim}" {name} \"{value}\"\n',
+        RemovePath: 'remove-path   --delim "{delim}" {name} \"{value}\"\n',
         SetEnv: 'setenv {name} \"{value}\"\n',
         UnsetEnv: 'unsetenv {name}\n'
     }

@@ -87,4 +87,5 @@ def install(parser, args):
                 make_jobs=args.jobs,
                 verbose=args.verbose,
                 fake=args.fake,
-                install_policy=args.install_policy)
+                install_policy=args.install_policy,
+                explicit=True)

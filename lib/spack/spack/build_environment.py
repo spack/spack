@@ -51,15 +51,16 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
-import multiprocessing
 import os
-import platform
-import shutil
 import sys
+import shutil
+import multiprocessing
+import platform
 
-import spack
 import llnl.util.tty as tty
 from llnl.util.filesystem import *
+
+import spack
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
 from spack.util.executable import Executable, which
@@ -112,25 +113,84 @@ class MakeExecutable(Executable):
 
         return super(MakeExecutable, self).__call__(*args, **kwargs)
 
+def load_module(mod):
+    """Takes a module name and removes modules until it is possible to
+    load that module. It then loads the provided module. Depends on the
+    modulecmd implementation of modules used in cray and lmod.
+    """
+    #Create an executable of the module command that will output python code
+    modulecmd = which('modulecmd')
+    modulecmd.add_default_arg('python')
+
+    # Read the module and remove any conflicting modules
+    # We do this without checking that they are already installed
+    # for ease of programming because unloading a module that is not
+    # loaded does nothing.
+    text = modulecmd('show', mod, output=str, error=str).split()
+    for i, word in enumerate(text):
+        if word == 'conflict':
+            exec(compile(modulecmd('unload', text[i+1], output=str, error=str), '<string>', 'exec'))
+    # Load the module now that there are no conflicts
+    load = modulecmd('load', mod, output=str, error=str)
+    exec(compile(load, '<string>', 'exec'))
+
+def get_path_from_module(mod):
+    """Inspects a TCL module for entries that indicate the absolute path
+    at which the library supported by said module can be found.
+    """
+    # Create a modulecmd executable
+    modulecmd = which('modulecmd')
+    modulecmd.add_default_arg('python')
+
+    # Read the module
+    text = modulecmd('show', mod, output=str, error=str).split('\n')
+    # If it lists its package directory, return that
+    for line in text:
+        if line.find(mod.upper()+'_DIR') >= 0:
+            words = line.split()
+            return words[2]
+
+    # If it lists a -rpath instruction, use that
+    for line in text:
+        rpath = line.find('-rpath/')
+        if rpath >= 0:
+            return line[rpath+6:line.find('/lib')]
+
+    # If it lists a -L instruction, use that
+    for line in text:
+        L = line.find('-L/')
+        if L >= 0:
+            return line[L+2:line.find('/lib')]
+
+    # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
+    for line in text:
+        if line.find('LD_LIBRARY_PATH') >= 0: 
+            words = line.split()
+            path = words[2]
+            return path[:path.find('/lib')]
+    # Unable to find module path
+    return None
 
 def set_compiler_environment_variables(pkg, env):
-    assert pkg.spec.concrete
+    assert(pkg.spec.concrete)
+    compiler = pkg.compiler
+    flags = pkg.spec.compiler_flags
+
     # Set compiler variables used by CMake and autotools
-    assert all(key in pkg.compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
+    assert all(key in compiler.link_paths for key in ('cc', 'cxx', 'f77', 'fc'))
 
     # Populate an object with the list of environment modifications
     # and return it
     # TODO : add additional kwargs for better diagnostics, like requestor, ttyout, ttyerr, etc.
     link_dir = spack.build_env_path
-    env.set('CC',  join_path(link_dir, pkg.compiler.link_paths['cc']))
-    env.set('CXX', join_path(link_dir, pkg.compiler.link_paths['cxx']))
-    env.set('F77', join_path(link_dir, pkg.compiler.link_paths['f77']))
-    env.set('FC',  join_path(link_dir, pkg.compiler.link_paths['fc']))
+    env.set('CC',  join_path(link_dir, compiler.link_paths['cc']))
+    env.set('CXX', join_path(link_dir, compiler.link_paths['cxx']))
+    env.set('F77', join_path(link_dir, compiler.link_paths['f77']))
+    env.set('FC',  join_path(link_dir, compiler.link_paths['fc']))
 
     # Set SPACK compiler variables so that our wrapper knows what to call
-    compiler = pkg.compiler
     if compiler.cc:
-        env.set('SPACK_CC',  compiler.cc)
+        env.set('SPACK_CC', compiler.cc)
     if compiler.cxx:
         env.set('SPACK_CXX', compiler.cxx)
     if compiler.f77:
@@ -144,7 +204,17 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
 
+    # Add every valid compiler flag to the environment, prefixed with "SPACK_"
+    for flag in spack.spec.FlagMap.valid_compiler_flags():
+        # Concreteness guarantees key safety here
+        if flags[flag] != []:
+            env.set('SPACK_' + flag.upper(), ' '.join(f for f in flags[flag]))
+
     env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
+
+    for mod in compiler.modules:
+        load_module(mod)
+
     return env
 
 
@@ -203,13 +273,15 @@ def set_build_environment_variables(pkg, env):
     env.set(SPACK_DEBUG_LOG_DIR, spack.spack_working_dir)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
-    pkg_config_dirs = []
-    for p in dep_prefixes:
-        for maybe in ('lib', 'lib64', 'share'):
-            pcdir = join_path(p, maybe, 'pkgconfig')
+    for pre in dep_prefixes:
+        for directory in ('lib', 'lib64', 'share'):
+            pcdir = join_path(pre, directory, 'pkgconfig')
             if os.path.isdir(pcdir):
-                pkg_config_dirs.append(pcdir)
-    env.set_path('PKG_CONFIG_PATH', pkg_config_dirs)
+                #pkg_config_dirs.append(pcdir)
+                env.prepend_path('PKG_CONFIG_PATH',pcdir)
+
+    if pkg.spec.architecture.target.module_name:
+        load_module(pkg.spec.architecture.target.module_name)
 
     return env
 
@@ -292,6 +364,10 @@ def get_rpaths(pkg):
                   if os.path.isdir(d.prefix.lib))
     rpaths.extend(d.prefix.lib64 for d in pkg.spec.dependencies.values()
                   if os.path.isdir(d.prefix.lib64))
+    # Second module is our compiler mod name. We use that to get rpaths from
+    # module show output. 
+    if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
+        rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
     return rpaths
 
 
@@ -308,6 +384,13 @@ def parent_class_modules(cls):
     return result
 
 
+def load_external_modules(pkg):
+    """ traverse the spec list and find any specs that have external modules.
+    """
+    for dep in list(pkg.spec.traverse()):
+        if dep.external_module:
+            load_module(dep.external_module)
+    
 def setup_package(pkg):
     """Execute all environment setup routines."""
     spack_env = EnvironmentModifications()
@@ -331,7 +414,7 @@ def setup_package(pkg):
 
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env)
-
+    load_external_modules(pkg)
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
     for dspec in pkg.spec.traverse(order='post', root=False):

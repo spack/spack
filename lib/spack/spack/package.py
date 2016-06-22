@@ -678,11 +678,13 @@ class Package(object):
         return self.spec.prefix
 
     @property
+    #TODO: Change this to architecture
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
-        return spack.compilers.compiler_for_spec(self.spec.compiler)
+        return spack.compilers.compiler_for_spec(self.spec.compiler, 
+                self.spec.architecture)
 
     def url_version(self, version):
         """
@@ -857,10 +859,11 @@ class Package(object):
                    keep_stage=False,
                    ignore_deps=False,
                    skip_patch=False,
-                   verbose=False, make_jobs=None,
+                   verbose=False,
+                   make_jobs=None,
                    fake=False,
+                   explicit=False,
                    install_policy="build"):
-
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -896,6 +899,11 @@ class Package(object):
         # Ensure package is not already installed
         if spack.install_layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
+            rec = spack.installed_db.get_record(self.spec)
+            if (not rec.explicit) and explicit:
+                with spack.installed_db.write_transaction():
+                    rec = spack.installed_db.get_record(self.spec)
+                    rec.explicit = True
             return
 
         tty.msg("Installing %s" % self.name)
@@ -1026,7 +1034,7 @@ class Package(object):
 
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
-        spack.installed_db.add(self.spec, self.prefix)
+        spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
 
     def sanity_check_prefix(self):
         """This function checks whether install succeeded."""
