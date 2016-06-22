@@ -862,8 +862,8 @@ class Package(object):
                    verbose=False,
                    make_jobs=None,
                    fake=False,
-                   explicit=False,
-                   install_policy="build"):
+                   install_policy="build",
+                   explicit=False):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
