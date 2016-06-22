@@ -164,7 +164,7 @@ int main(int argc, char **argv) {
 """
             expected = """\
 HDF5 version {version} {version}
-""".format(version=str(spec.version))
+""".format(version=str(spec.version.up_to(3)))
             with open("check.c", 'w') as f:
                 f.write(source)
             if '+mpi' in spec:
