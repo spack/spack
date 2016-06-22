@@ -44,6 +44,12 @@ class Pgi(Compiler):
                    'f77' : 'pgi/pgfortran',
                    'fc'  : 'pgi/pgfortran' }
 
+
+
+    PrgEnv = 'PrgEnv-pgi'
+    PrgEnv_compiler = 'pgi'
+
+
     @property
     def openmp_flag(self):
         return "-mp"
@@ -51,7 +57,6 @@ class Pgi(Compiler):
     @property
     def cxx11_flag(self):
         return "-std=c++11"
-
 
     @classmethod
     def default_version(cls, comp):

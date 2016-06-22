@@ -33,6 +33,7 @@ from llnl.util.filesystem import join_path
 
 import spack.error
 import spack.spec
+import spack.architecture
 from spack.util.multiproc import parmap
 from spack.util.executable import *
 from spack.util.environment import get_path
@@ -107,19 +108,32 @@ class Compiler(object):
     @property
     def fc_rpath_arg(self):
         return '-Wl,-rpath,'
+    # Cray PrgEnv name that can be used to load this compiler
+    PrgEnv = None
+    # Name of module used to switch versions of this compiler
+    PrgEnv_compiler = None
 
-
-    def __init__(self, cspec, cc, cxx, f77, fc, **kwargs):
+    def __init__(self, cspec, operating_system, 
+                 paths, modules=[], alias=None, **kwargs):
         def check(exe):
             if exe is None:
                 return None
             _verify_executables(exe)
             return exe
 
-        self.cc  = check(cc)
-        self.cxx = check(cxx)
-        self.f77 = check(f77)
-        self.fc  = check(fc)
+        self.cc  = check(paths[0])
+        self.cxx = check(paths[1])
+        if len(paths) > 2:
+            self.f77 = check(paths[2])
+            if len(paths) == 3:
+                self.fc = self.f77
+            else:
+                self.fc  = check(paths[3])
+
+        #self.cc  = check(cc)
+        #self.cxx = check(cxx)
+        #self.f77 = check(f77)
+        #self.fc  = check(fc)
 
         # Unfortunately have to make sure these params are accepted
         # in the same order they are returned by sorted(flags)
@@ -130,8 +144,10 @@ class Compiler(object):
             if value is not None:
                 self.flags[flag] = value.split()
 
+        self.operating_system = operating_system
         self.spec = cspec
-
+        self.modules = modules
+        self.alias = alias
 
     @property
     def version(self):
@@ -258,57 +274,6 @@ class Compiler(object):
         successful.reverse()
         return dict(((v, p, s), path) for v, p, s, path in successful)
 
-    @classmethod
-    def find(cls, *path):
-        """Try to find this type of compiler in the user's
-           environment. For each set of compilers found, this returns
-           compiler objects with the cc, cxx, f77, fc paths and the
-           version filled in.
-
-           This will search for compilers with the names in cc_names,
-           cxx_names, etc. and it will group them if they have common
-           prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
-           be grouped with g++-mp-4.7 and gfortran-mp-4.7.
-        """
-        dicts = parmap(
-            lambda t: cls._find_matches_in_path(*t),
-            [(cls.cc_names,  cls.cc_version)  + tuple(path),
-             (cls.cxx_names, cls.cxx_version) + tuple(path),
-             (cls.f77_names, cls.f77_version) + tuple(path),
-             (cls.fc_names,  cls.fc_version)  + tuple(path)])
-
-        all_keys = set()
-        for d in dicts:
-            all_keys.update(d)
-
-        compilers = {}
-        for k in all_keys:
-            ver, pre, suf = k
-
-            # Skip compilers with unknown version.
-            if ver == 'unknown':
-                continue
-
-            paths = tuple(pn[k] if k in pn else None for pn in dicts)
-            spec = spack.spec.CompilerSpec(cls.name, ver)
-
-            if ver in compilers:
-                prev = compilers[ver]
-
-                # prefer the one with more compilers.
-                prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
-                newcount  = len([p for p in paths      if p is not None])
-                prevcount = len([p for p in prev_paths if p is not None])
-
-                # Don't add if it's not an improvement over prev compiler.
-                if newcount <= prevcount:
-                    continue
-
-            compilers[ver] = cls(spec, *paths)
-
-        return list(compilers.values())
-
-
     def __repr__(self):
         """Return a string representation of the compiler toolchain."""
         return self.__str__()
@@ -317,7 +282,7 @@ class Compiler(object):
     def __str__(self):
         """Return a string representation of the compiler toolchain."""
         return "%s(%s)" % (
-            self.name, '\n     '.join((str(s) for s in (self.cc, self.cxx, self.f77, self.fc))))
+            self.name, '\n     '.join((str(s) for s in (self.cc, self.cxx, self.f77, self.fc, self.modules, str(self.operating_system)))))
 
 
 class CompilerAccessError(spack.error.SpackError):

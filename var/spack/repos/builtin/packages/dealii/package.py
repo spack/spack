@@ -80,8 +80,8 @@ class Dealii(Package):
     depends_on("netcdf-cxx",       when='+netcdf+mpi')
     depends_on("oce",              when='+oce')
     depends_on("p4est",            when='+p4est+mpi')
-    depends_on("petsc+mpi",        when='+petsc+mpi')
-    depends_on("slepc",            when='+slepc+petsc+mpi')
+    depends_on("petsc@:3.6.4+mpi", when='+petsc+mpi')  # FIXME: update after 3.7 is supported upstream.  # NOQA: ignore=E501
+    depends_on("slepc@:3.6.3",     when='+slepc+petsc+mpi')
     depends_on("trilinos",         when='+trilinos+mpi')
 
     # developer dependnecies
@@ -108,12 +108,11 @@ class Dealii(Package):
             # of Spack's. Be more specific to avoid this.
             # Note that both lapack and blas are provided in -DLAPACK_XYZ.
             '-DLAPACK_FOUND=true',
-            '-DLAPACK_INCLUDE_DIRS=%s;%s' %
-                (spec['lapack'].prefix.include,
-                 spec['blas'].prefix.include),
-            '-DLAPACK_LIBRARIES=%s;%s' %
-                (spec['lapack'].lapack_shared_lib,
-                 spec['blas'].blas_shared_lib),
+            '-DLAPACK_INCLUDE_DIRS=%s;%s' % (
+                spec['lapack'].prefix.include, spec['blas'].prefix.include),
+            '-DLAPACK_LIBRARIES=%s;%s' % (
+                spec['lapack'].lapack_shared_lib,
+                spec['blas'].blas_shared_lib),
             '-DMUPARSER_DIR=%s' % spec['muparser'].prefix,
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
@@ -168,14 +167,14 @@ class Dealii(Package):
         if '+netcdf' in spec:
             options.extend([
                 '-DNETCDF_FOUND=true',
-                '-DNETCDF_LIBRARIES=%s;%s' %
-                    (join_path(spec['netcdf-cxx'].prefix.lib,
-                               'libnetcdf_c++.%s' % dsuf),
-                     join_path(spec['netcdf'].prefix.lib,
-                               'libnetcdf.%s' % dsuf)),
-                '-DNETCDF_INCLUDE_DIRS=%s;%s' %
-                    (spec['netcdf-cxx'].prefix.include,
-                     spec['netcdf'].prefix.include),
+                '-DNETCDF_LIBRARIES=%s;%s' % (
+                    join_path(spec['netcdf-cxx'].prefix.lib,
+                              'libnetcdf_c++.%s' % dsuf),
+                    join_path(spec['netcdf'].prefix.lib,
+                              'libnetcdf.%s' % dsuf)),
+                '-DNETCDF_INCLUDE_DIRS=%s;%s' % (
+                    spec['netcdf-cxx'].prefix.include,
+                    spec['netcdf'].prefix.include),
             ])
         else:
             options.extend([
@@ -244,38 +243,47 @@ class Dealii(Package):
             print('========= Step-40 Trilinos ==========')
             print('=====================================')
             # change Linear Algebra to Trilinos
-            filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',
-                        ('#define FORCE_USE_OF_TRILINOS'), 'step-40.cc')
+            # The below filter_file should be different for versions
+            # before and after 8.4.0
+            if spec.satisfies('@8.4.0:'):
+                filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',
+                            ('#define FORCE_USE_OF_TRILINOS'), 'step-40.cc')
+            else:
+                filter_file(r'(#define USE_PETSC_LA.*)',
+                            ('// #define USE_PETSC_LA'), 'step-40.cc')
             if '^trilinos+hypre' in spec:
                 make('release')
                 make('run', parallel=False)
 
-            print('=====================================')
-            print('=== Step-40 Trilinos SuperluDist ====')
-            print('=====================================')
-            # change to direct solvers
-            filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')  # NOQA: ignore=E501
-            filter_file(r'(LA::MPI::PreconditionAMG preconditioner;)',
-                        (''), 'step-40.cc')
-            filter_file(r'(LA::MPI::PreconditionAMG::AdditionalData data;)',
-                        (''), 'step-40.cc')
-            filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',
-                        (''), 'step-40.cc')
-            filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')  # NOQA: ignore=E501
-            filter_file(r'(preconditioner\);)',  (''), 'step-40.cc')
-            if '^trilinos+superlu-dist' in spec:
-                make('release')
-                make('run', paralle=False)
+            # the rest of the tests on step 40 only works for
+            # dealii version 8.4.0 and after
+            if spec.satisfies('@8.4.0:'):
+                print('=====================================')
+                print('=== Step-40 Trilinos SuperluDist ====')
+                print('=====================================')
+                # change to direct solvers
+                filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')  # NOQA: ignore=E501
+                filter_file(r'(LA::MPI::PreconditionAMG preconditioner;)',
+                            (''), 'step-40.cc')
+                filter_file(r'(LA::MPI::PreconditionAMG::AdditionalData data;)',  # NOQA: ignore=E501
+                            (''), 'step-40.cc')
+                filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',  # NOQA: ignore=E501
+                            (''), 'step-40.cc')
+                filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')  # NOQA: ignore=E501
+                filter_file(r'(preconditioner\);)',  (''), 'step-40.cc')
+                if '^trilinos+superlu-dist' in spec:
+                    make('release')
+                    make('run', paralle=False)
 
-            print('=====================================')
-            print('====== Step-40 Trilinos MUMPS =======')
-            print('=====================================')
-            # switch to Mumps
-            filter_file(r'(Amesos_Superludist)',
-                        ('Amesos_Mumps'), 'step-40.cc')
-            if '^trilinos+mumps' in spec:
-                make('release')
-                make('run', parallel=False)
+                print('=====================================')
+                print('====== Step-40 Trilinos MUMPS =======')
+                print('=====================================')
+                # switch to Mumps
+                filter_file(r'(Amesos_Superludist)',
+                            ('Amesos_Mumps'), 'step-40.cc')
+                if '^trilinos+mumps' in spec:
+                    make('release')
+                    make('run', parallel=False)
 
         print('=====================================')
         print('============ Step-36 ================')

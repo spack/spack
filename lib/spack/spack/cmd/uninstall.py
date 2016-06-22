@@ -39,6 +39,13 @@ error_message = """You can either:
     b) use spack uninstall -a to uninstall ALL matching specs.
 """
 
+# Arguments for display_specs when we find ambiguity
+display_args = {
+    'long': True,
+    'show_flags': True,
+    'variants':True
+}
+
 
 def ask_for_confirmation(message):
     while True:
@@ -92,7 +99,7 @@ def concretize_specs(specs, allow_multiple_matches=False, force=False):
         if not allow_multiple_matches and len(matching) > 1:
             tty.error("%s matches multiple packages:" % spec)
             print()
-            display_specs(matching, long=True, show_flags=True)
+            display_specs(matching, **display_args)
             print()
             has_errors = True
 
@@ -172,7 +179,7 @@ def uninstall(parser, args):
                 tty.error("Will not uninstall %s" % spec.format("$_$@$%@$#", color=True))
                 print('')
                 print("The following packages depend on it:")
-                display_specs(lst, long=True)
+                display_specs(lst, **display_args)
                 print('')
                 has_error = True
         elif args.dependents:
@@ -186,7 +193,7 @@ def uninstall(parser, args):
         if not args.yes_to_all:
             tty.msg("The following packages will be uninstalled : ")
             print('')
-            display_specs(uninstall_list, long=True, show_flags=True)
+            display_specs(uninstall_list, **display_args)
             print('')
             ask_for_confirmation('Do you want to proceed ? ')
 

@@ -48,6 +48,13 @@ class Openblas(Package):
     patch('make.patch')
 
     def install(self, spec, prefix):
+        # As of 06/2016 there is no mechanism to specify that packages which
+        # depends on Blas/Lapack need C or/and Fortran symbols. For now
+        # require both.
+        if self.compiler.f77 is None:
+            raise InstallError('OpenBLAS requires both C and Fortran ',
+                               'compilers!')
+
         # Configure fails to pick up fortran from FC=/abs/path/to/f77, but
         # works fine with FC=/abs/path/to/gfortran.
         # When mixing compilers make sure that

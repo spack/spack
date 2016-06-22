@@ -24,12 +24,12 @@
 ##############################################################################
 from spack import *
 import os
-import shutil
+
 
 class Arpack(Package):
     """A collection of Fortran77 subroutines designed to solve large scale
-       eigenvalue problems.
-    """
+    eigenvalue problems."""
+
     homepage = "http://www.caam.rice.edu/software/ARPACK/"
     url      = "http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz"
 
@@ -39,27 +39,35 @@ class Arpack(Package):
     depends_on('lapack')
 
     def patch(self):
-        # Filter the cray makefile to make a spack one.
-        shutil.move('ARMAKES/ARmake.CRAY', 'ARmake.inc')
         makefile = FileFilter('ARmake.inc')
 
-        # Be sure to use Spack F77 wrapper
-        makefile.filter('^FC.*', 'FC = f77')
-        makefile.filter('^FFLAGS.*', 'FFLAGS = -O2 -g')
+        # Section 1: Paths and Libraries
 
-        # Set up some variables.
-        makefile.filter('^PLAT.*',      'PLAT = ')
-        makefile.filter('^home.*',    'home = %s' % os.getcwd())
-        makefile.filter('^BLASdir.*',   'BLASdir = %s' % self.spec['blas'].prefix)
-        makefile.filter('^LAPACKdir.*', 'LAPACKdir = %s' % self.spec['lapack'].prefix)
+        # Change the build directory
+        makefile.filter('^home.*', 'home = %s' % os.getcwd())
 
-        # build the library in our own prefix.
-        makefile.filter('^ARPACKLIB.*', 'ARPACKLIB = %s/libarpack.a' % os.getcwd())
+        # Use external BLAS/LAPACK
+        makefile.filter('^BLASdir.*',
+                        'BLASdir = %s'   % self.spec['blas'].prefix)
+        makefile.filter('^LAPACKdir.*',
+                        'LAPACKdir = %s' % self.spec['lapack'].prefix)
 
+        # Do not include the platform in the library name
+        makefile.filter('^PLAT.*', 'PLAT = ')
+        makefile.filter('^ARPACKLIB.*', 'ARPACKLIB = $(home)/libarpack.a')
+
+        # Section 2: Compilers
+
+        # Be sure to use the Spack compiler wrapper
+        makefile.filter('^FC.*', 'FC = {0}'.format(os.environ['F77']))
+        makefile.filter('^FFLAGS.*', 'FFLAGS = -O2 -g -fPIC')
+
+        if not which('ranlib'):
+            makefile.filter('^RANLIB.*', 'RANLIB = touch')
 
     def install(self, spec, prefix):
         with working_dir('SRC'):
             make('all')
 
-        mkdirp(prefix.lib)
+        mkdir(prefix.lib)
         install('libarpack.a', prefix.lib)
