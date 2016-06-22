@@ -22,8 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
-import os
+
 
 class Julia(Package):
     """The Julia Language: A fresh approach to technical computing"""
@@ -101,15 +102,16 @@ class Julia(Package):
         # problem. Given how Spack sets up compilers, Julia should
         # still use Spack's compilers, even if we don't specify them
         # explicitly.
-        options = [#"CC=cc",
-                   #"CXX=c++",
-                   #"FC=fc",
-                   #"USE_SYSTEM_ARPACK=1",
-                   #"USE_SYSTEM_FFTW=1",
-                   #"USE_SYSTEM_GMP=1",
-                   #"USE_SYSTEM_MPFR=1",
-                   #TODO "USE_SYSTEM_PCRE=1",
-                   "prefix=%s" % prefix]
+        options = [
+            # "CC=cc",
+            # "CXX=c++",
+            # "FC=fc",
+            # "USE_SYSTEM_ARPACK=1",
+            # "USE_SYSTEM_FFTW=1",
+            # "USE_SYSTEM_GMP=1",
+            # "USE_SYSTEM_MPFR=1",
+            # "USE_SYSTEM_PCRE=1",
+            "prefix=%s" % prefix]
         with open('Make.user', 'w') as f:
             f.write('\n'.join(options) + '\n')
         make()
