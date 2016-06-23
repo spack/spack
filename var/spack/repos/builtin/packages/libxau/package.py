@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libxau(Package):
     """The libXau package contains a library implementing the X11
        Authorization Protocol. This is useful for restricting client
@@ -34,11 +35,10 @@ class Libxau(Package):
     version('1.0.8', '685f8abbffa6d145c0f930f00703b21b')
 
     depends_on('xproto')
+    depends_on('pkg-config')
 
     def install(self, spec, prefix):
-        # FIXME: Modify the configure line to suit your build system here.
         configure('--prefix=%s' % prefix)
 
-        # FIXME: Add logic to build and install here
         make()
         make("install")
