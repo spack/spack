@@ -136,7 +136,8 @@ def build_tarball(spec, outdir, force=False):
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec)
-    tar("--directory=%s" % dirname, "-czf", tarfile, basename)
+    if not os.path.exists(tarfile):
+        tar("--directory=%s" % dirname, "-czf", tarfile, basename)
     tty.msg(tarfile)
 
 
