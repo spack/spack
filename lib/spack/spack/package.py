@@ -985,8 +985,9 @@ class Package(object):
                 tty.warn("Keeping install prefix in place despite error.",
                          "Spack will think this package is installed. " +
                          "Manually remove this directory to fix:",
-                         self.prefix,
                          wrap=True)
+                # Do not wrap long filenames that must be cut-n-pasted
+                tty.warn(self.prefix, wrap=False)
             raise
 
         # note: PARENT of the build process adds the new package to
