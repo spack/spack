@@ -483,6 +483,8 @@ def arch_from_dict(d):
 
 
 def get_full_system_from_platform():
+    import platform
+    import re
     system = platform.system()
     if system == "Linux":
         pf = platform.linux_distribution(full_distribution_name=0)[0]
