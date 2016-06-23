@@ -121,6 +121,7 @@ def build_tarball(spec, outdir, force=False):
             os.remove(tarfile)
         else:
             tty.warn("file exists, use -f to force overwrite: %s" % tarfile)
+            return
     if not os.path.exists(tarfile_dir):
         mkdirp(tarfile_dir)
 
@@ -136,8 +137,7 @@ def build_tarball(spec, outdir, force=False):
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec)
-    if not os.path.exists(tarfile):
-        tar("--directory=%s" % dirname, "-czf", tarfile, basename)
+    tar("--directory=%s" % dirname, "-czf", tarfile, basename)
     tty.msg(tarfile)
 
 
