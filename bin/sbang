@@ -79,6 +79,15 @@
 # Obviously, for this to work, `sbang` needs to have a short enough
 # path that *it* will run without hitting OS limits.
 #
+# For Lua, scripts the second line can't start with #!, as # is not
+# the comment character in lua (even though lua ignores #! on the
+# *first* line of a script).  So, instrument a lua script like this,
+# using -- instead of # on the second line:
+#
+#     1    #!/bin/bash /path/to/sbang
+#     2    --!/long/path/to/lua with arguments
+#     3
+#     4    print "success!"
 #
 # How it works
 # -----------------------------
@@ -95,6 +104,8 @@ lines=0
 while read line && ((lines < 2)) ; do
     if [[ "$line" = '#!'* ]]; then
         interpreter="${line#\#!}"
+    elif [[ "$line" = '--!'*lua* ]]; then
+        interpreter="${line#--!}"
     fi
     lines=$((lines+1))
 done < "$script"
