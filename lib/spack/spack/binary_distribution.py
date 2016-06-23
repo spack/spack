@@ -120,7 +120,7 @@ def build_tarball(spec, outdir, force=False):
         if force:
             os.remove(tarfile)
         else:
-            tty.die("file exists, use -f to force overwrite: %s" % tarfile)
+            tty.warn("file exists, use -f to force overwrite: %s" % tarfile)
     if not os.path.exists(tarfile_dir):
         mkdirp(tarfile_dir)
 
