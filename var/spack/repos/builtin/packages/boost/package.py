@@ -136,10 +136,8 @@ class Boost(Package):
         return "http://downloads.sourceforge.net/project/boost/boost/%s/boost_%s.tar.bz2" % (dots, underscores)
 
     def determine_toolset(self, spec):
-        if spec.satisfies("arch=darwin-x86_64"):
-            platform = 'darwin'
-            if not spec.satisfies('@1.47:') :
-	        return platform
+        if spec.satisfies("platform=darwin"):
+            return 'darwin'
         else :
             platform = 'linux'
 
