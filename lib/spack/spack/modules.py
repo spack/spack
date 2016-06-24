@@ -247,12 +247,6 @@ class EnvModule(object):
         self.spec = spec
         self.pkg = spec.package  # Just stored for convenience
 
-        # short description default is just the package + version
-        # packages can provide this optional attribute
-        self.short_description = spec.format("$_ $@")
-        if hasattr(self.pkg, 'short_description'):
-            self.short_description = self.pkg.short_description
-
         # long description is the docstring with reduced whitespace.
         self.long_description = None
         if self.spec.package.__doc__:
@@ -266,6 +260,17 @@ class EnvModule(object):
         except KeyError:
             naming_scheme = self.default_naming_format
         return naming_scheme
+
+    @property
+    def short_description_scheme(self):
+        if hasattr(self.pkg, 'short_description'):
+            scheme = self.short_description = self.pkg.short_description
+        else:
+            try:
+                scheme = CONFIGURATION[self.name]['short_description_scheme']
+            except KeyError:
+                scheme = self.default_short_description_format
+        return scheme
 
     @property
     def tokens(self):
@@ -291,6 +296,14 @@ class EnvModule(object):
         parts = name.split('/')
         name = join_path(*parts)
         return name
+
+    @property
+    def short_description(self):
+        """
+        The short description used in the modulefile. Packages can provide this
+        optional attribute. The default is: package + version.
+        """
+        return self.short_description_scheme.format(**self.tokens)
 
     @property
     def category(self):
@@ -452,6 +465,8 @@ class Dotkit(EnvModule):
 
     default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
 
+    default_short_description_format = '{name} @{version}'
+
     @property
     def file_name(self):
         return join_path(Dotkit.path, self.spec.architecture,
@@ -500,6 +515,8 @@ class TclModule(EnvModule):
     prerequisite_format = 'prereq {module_file}\n'
 
     default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
+
+    default_short_description_format = '{name} @{version}'
 
     @property
     def file_name(self):
