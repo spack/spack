@@ -9,6 +9,7 @@ class Pfunit(Package):
 
     version('3.2.7', '7e994e031c679ed0b446be8b853d5e69')
 
+    # Shared library support.
     version('3.2.7-citibeth', git='git://git.code.sf.net/u/citibeth2/pfunit',
         branch='3.2.7-citibeth')
 
