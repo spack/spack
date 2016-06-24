@@ -317,6 +317,10 @@ class Package(object):
        directories, sanity checks will fail.
     """
     sanity_check_is_dir = []
+    """Path to the  dynamic-linker that should be used when building
+       dependents of this package.
+    """
+    dynamic_linker = None
 
     def __init__(self, spec):
         # this determines how the package should be built.

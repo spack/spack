@@ -210,6 +210,10 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
 
+    # Set SPACK compiler dynamic-linker flags so that our wrapper knows what
+    # to use
+    env.set('SPACK_CC_DYNAMIC_LINKER_ARG',  compiler.cc_dynamic_linker_arg)
+
     # Add every valid compiler flag to the environment, prefixed with "SPACK_"
     for flag in spack.spec.FlagMap.valid_compiler_flags():
         # Concreteness guarantees key safety here
@@ -250,8 +254,17 @@ def set_build_environment_variables(pkg, env):
         env.prepend_path('PATH', item)
     env.set_path(SPACK_ENV_PATH, env_paths)
 
+    dep_prefixes = []
+    for d in pkg.spec.traverse(root=False):
+        # Set the dynamic linker to the path specified by the dependency
+        dep_pkg = d.package_class
+        if dep_pkg.dynamic_linker:
+            env.set('SPACK_DYNAMIC_LINKER',
+                    os.path.join(d.prefix, dep_pkg.dynamic_linker))
+        else:
+            dep_prefixes.append(d.prefix)
+
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
-    dep_prefixes = [d.prefix for d in pkg.spec.traverse(root=False)]
     env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
     # Add dependencies to CMAKE_PREFIX_PATH
     env.set_path('CMAKE_PREFIX_PATH', dep_prefixes)
