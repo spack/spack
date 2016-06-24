@@ -1,4 +1,5 @@
 from spack import *
+import os
 
 class Pfunit(Package):
     """Regridding/Coupling library for GCM + Ice Sheet Model"""
@@ -8,6 +9,8 @@ class Pfunit(Package):
 
     version('3.2.7', '7e994e031c679ed0b446be8b853d5e69')
 
+    version('3.2.7-citibeth', git='git://git.code.sf.net/u/citibeth2/pfunit',
+        branch='3.2.7-citibeth')
 
     depends_on('mpi', when='+mpi')
     depends_on('openmp', when='+openmp')
@@ -16,18 +19,24 @@ class Pfunit(Package):
     depends_on('cmake')
     depends_on('doxygen')
 
-    variant('mpi', default=True, description='Test MPI-based programs')
-    variant('openmp', default=False, description='Test OpenMP-based programs')
+    variant('shared', default=True,
+        description='Build shared library in addition to static')
+    variant('mpi', default=True,
+        description='Test MPI-based programs')
+    variant('openmp', default=False,
+        description='Test OpenMP-based programs')
 
     def install(self, spec, prefix):
-        options = std_cmake_args + [
-            '-DMPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
-            '-OPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
-            '-DINSTALL_PATH=%s' % prefix]
-        which('cmake')(self.stage.source_path, *options)
-#        make('tests')
-        make()
-        make('install', 'INSTALL_DIR=%s' % prefix)
+        with working_dir('spack-build', create=True):
+            options = std_cmake_args + [
+                '-DBUILD_SHARED=%s' % ('YES' if '+shared' in spec else 'NO'),
+                '-DMPI=%s' % ('YES' if '+mpi' in spec else 'NO'),
+                '-OPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
+                '-DINSTALL_PATH=%s' % prefix]
+            which('cmake')(self.stage.source_path, *options)
+#            make('tests')
+            make()
+            make('install', 'INSTALL_DIR=%s' % prefix)
 
     def setup_dependent_package(self, module, dspec):
         self.spec.pfunit_prefix = self.prefix
