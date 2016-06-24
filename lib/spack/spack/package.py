@@ -398,6 +398,12 @@ class Package(object):
             spack.repo.get(self.extendee_spec)._check_extendable()
 
     @property
+    def package_dir(self):
+        """Return the directory where the package.py file lives."""
+        return os.path.dirname(self.module.__file__)
+
+
+    @property
     def global_license_dir(self):
         """Returns the directory where global license files for all
            packages are stored."""
@@ -687,7 +693,7 @@ class Package(object):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
-        return spack.compilers.compiler_for_spec(self.spec.compiler, 
+        return spack.compilers.compiler_for_spec(self.spec.compiler,
                 self.spec.architecture)
 
     def url_version(self, version):
