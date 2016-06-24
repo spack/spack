@@ -311,7 +311,7 @@ if [[ -n "$SPACK_DYNAMIC_LINKER" && -e "$SPACK_DYNAMIC_LINKER" ]]; then
     dynamic_linker_dir="$(dirname $SPACK_DYNAMIC_LINKER)"
     if [[ $mode == ccld ]]; then
         $add_rpaths && args=("$dynamic_linker$SPACK_DYNAMIC_LINKER" "${args[@]}")
-        $add_rpaths && args=("-Wl,-rpath=$dynamic_linker_dir" "${args[@]}")
+        $add_rpaths && args=("$rpath$dynamic_linker_dir" "${args[@]}")
     elif [[ $mode == ld ]]; then
         $add_rpaths && args=("--dynamic-linker" "$SPACK_DYNAMIC_LINKER" "${args[@]}")
         $add_rpaths && args=("-rpath" "$dynamic_linker_dir" "${args[@]}")
