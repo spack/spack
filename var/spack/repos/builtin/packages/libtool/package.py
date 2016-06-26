@@ -25,17 +25,28 @@
 from spack import *
 
 class Libtool(Package):
-    """libtool -- library building part of autotools"""
-    homepage = "https://www.gnu.org/software/libtool/"
-    url      = "http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz"
+    """
+    libtool -- library building part of autotools
+    """
+    homepage = 'https://www.gnu.org/software/libtool/'
+    url = 'http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz'
 
-    version('2.4.6' , 'addf44b646ddb4e3919805aa88fa7c5e')
-    version('2.4.2' , 'd2f3b7d4627e69e13514a40e72a24d50')
+    version('2.4.6', 'addf44b646ddb4e3919805aa88fa7c5e')
+    version('2.4.2', 'd2f3b7d4627e69e13514a40e72a24d50')
 
     depends_on('m4')
 
+    def _make_executable(self, name):
+        return Executable(join_path(self.prefix.bin, name))
+
+    def setup_dependent_package(self, module, dependent_spec):
+        # Automake is very likely to be a build dependency,
+        # so we add the tools it provides to the dependent module
+        executables = ['libtoolize', 'libtool']
+        for name in executables:
+            setattr(module, name, self._make_executable(name))
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
-
         make()
         make("install")
