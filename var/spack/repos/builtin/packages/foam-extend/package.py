@@ -39,20 +39,6 @@ class FoamExtend(Package):
 
     depends_on('paraview', when='+paraview')
 
-    def _get_env(self, command):
-        proc = subprocess.Popen(['bash', '-c', command],
-                                stdout=subprocess.PIPE)
-        env = {}
-        for line in proc.stdout:
-            try:
-                key, val = line.split('=', 1)
-                env[key] = val.strip()
-            except:
-                # it may fail due to some bash functions that are on
-                # multiple lines
-                pass
-        return env
-
     def set_arch(self):
         (sysname, nodename, release, version, machine) = os.uname()
 
@@ -78,26 +64,11 @@ class FoamExtend(Package):
 
         return (arch, foam_compiler)
 
-    def get_openfoam_environment(self, env_openfoam):
-        env_before = self._get_env('env')
-        # This gets the environment set in case the etc/bashrc file is
-        # sourced
-        with working_dir(self.stage.source_path):
-            env_after = self._get_env('source etc/bashrc && env')
-
-        # Removes some PATH to not add useless information in the
-        # environment later on
-        if 'PATH' in env_after:
-            del env_after['PATH']
-
-        if 'LD_LIBRARY_PATH' in env_after:
-            del env_after['LD_LIBRARY_PATH']
-
-        # Checks what was set in addition to the current environment,
-        # that should be the variables set by the bashrc
-        for key, value in env_after.iteritems():
-            if key not in env_before or not value == env_before[key]:
-                env_openfoam.set(key, value)
+    def get_openfoam_environment(self):
+        return EnvironmentModifications.from_sourcing_files(
+            join_path(self.stage.source_path,
+                      'etc/bashrc')
+            )
 
     def patch(self):
         # change names to match the package and not the one patch in
@@ -242,8 +213,7 @@ class FoamExtend(Package):
         run_env.set('FOAM_INST_DIR', self.prefix)
 
     def install(self, spec, prefix):
-        env_openfoam = EnvironmentModifications()
-        self.get_openfoam_environment(env_openfoam)
+        env_openfoam = self.get_openfoam_environment()
         env_openfoam.apply_modifications()
 
         if self.parallel:
