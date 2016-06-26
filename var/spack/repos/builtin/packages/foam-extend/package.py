@@ -2,7 +2,6 @@ from spack import *
 from spack.environment import *
 
 import multiprocessing
-import subprocess
 import os
 
 
@@ -67,8 +66,7 @@ class FoamExtend(Package):
     def get_openfoam_environment(self):
         return EnvironmentModifications.from_sourcing_files(
             join_path(self.stage.source_path,
-                      'etc/bashrc')
-            )
+                      'etc/bashrc'))
 
     def patch(self):
         # change names to match the package and not the one patch in
