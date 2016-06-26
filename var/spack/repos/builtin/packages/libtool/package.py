@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libtool(Package):
     """
     libtool -- library building part of autotools
