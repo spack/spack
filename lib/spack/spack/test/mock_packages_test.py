@@ -34,7 +34,7 @@ from ordereddict_backport import OrderedDict
 from spack.repository import RepoPath
 from spack.spec import Spec
 
-platform = spack.architecture.sys_type()
+platform = spack.architecture.platform()
 
 linux_os_name = 'debian'
 linux_os_version = '6'
@@ -56,7 +56,7 @@ compilers:
       fc: None
     modules: 'None'
 - compiler:
-    spec: gcc@4.5.0  
+    spec: gcc@4.5.0
     operating_system: {0}{1}
     paths:
       cc: /path/to/gcc
@@ -144,7 +144,7 @@ compilers:
       fc: /path/to/gfortran
     operating_system: elcapitan
     spec: gcc@4.5.0
-    modules: 'None' 
+    modules: 'None'
 - compiler:
     spec: clang@3.3
     operating_system: elcapitan

@@ -106,17 +106,11 @@ class Multimethod(Package):
     #
     # Make sure we can switch methods on different target
     #
-#    for platform_name in ['cray_xc', 'darwin', 'linux']:
-#        file_path = join_path(spack.platform_path, platform_name)
-#        platform_mod = imp.load_source('spack.platforms', file_path + '.py')
-#        cls = getattr(platform_mod, mod_to_class(platform_name))
-        
-#        platform = cls()
-    platform = spack.architecture.sys_type()
+    platform = spack.architecture.platform()
     targets = platform.targets.values()
     if len(targets) > 1:
         targets = targets[:-1]
-    
+
     for target in targets:
         @when('target='+target.name)
         def different_by_target(self):

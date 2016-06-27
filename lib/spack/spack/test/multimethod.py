@@ -93,7 +93,7 @@ class MultiMethodTest(MockPackagesTest):
 
 
     def test_target_match(self):
-        platform = spack.architecture.sys_type()
+        platform = spack.architecture.platform()
         targets = platform.targets.values()
         for target in targets[:-1]:
             pkg = spack.repo.get('multimethod target='+target.name)

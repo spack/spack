@@ -93,7 +93,7 @@ def get_compiler_config(scope=None, init_config=True):
         for compiler in compilers:
             compilers_dict.append(_to_dict(compiler))
         spack.config.update_config('compilers', compilers_dict, scope=scope)
-    
+
     config = spack.config.get_config('compilers', scope=scope)
     # Update the configuration if there are currently no compilers
     # configured.  Avoid updating automatically if there ARE site
@@ -142,8 +142,8 @@ def remove_compiler_from_config(compiler_spec, scope=None):
     """
     compiler_config = get_compiler_config(scope)
     config_length = len(compiler_config)
-    
-    filtered_compiler_config = [comp for comp in compiler_config 
+
+    filtered_compiler_config = [comp for comp in compiler_config
                if spack.spec.CompilerSpec(comp['compiler']['spec']) != compiler_spec]
     # Need a better way for this
     global _cache_config_file
@@ -315,7 +315,7 @@ def all_os_classes():
     """
     classes = []
 
-    platform = spack.architecture.sys_type()
+    platform = spack.architecture.platform()
     for os_class in platform.operating_sys.values():
         classes.append(os_class)
 
