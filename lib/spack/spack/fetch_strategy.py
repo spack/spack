@@ -307,9 +307,6 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
-        if not extension(destination) == extension(self.archive_file):
-            raise ValueError("Cannot archive without matching extensions.")
-
         shutil.move(self.archive_file, destination)
 
     @_needs_stage
