@@ -516,3 +516,20 @@ def platform():
     for platform_cls in platform_list:
         if platform_cls.detect():
             return platform_cls()
+
+
+@memoized
+def sys_type():
+    """Print out the "default" platform-os-target tuple for this machine.
+
+    On machines with only one target OS/target, prints out the
+    platform-os-target for the frontend.  For machines with a frontend
+    and a backend, prints the default backend.
+
+    TODO: replace with use of more explicit methods to get *all* the
+    backends, as client code should really be aware of cross-compiled
+    architectures.
+
+    """
+    arch = Arch(platform(), 'default_os', 'default_target')
+    return str(arch)
