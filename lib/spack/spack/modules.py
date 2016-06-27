@@ -285,11 +285,18 @@ class EnvModule(object):
         naming_tokens = self.tokens
         naming_scheme = self.naming_scheme
         name = naming_scheme.format(**naming_tokens)
-        name += '-' + self.spec.dag_hash(
-        )  # Always append the hash to make the module file unique
         # Not everybody is working on linux...
         parts = name.split('/')
         name = join_path(*parts)
+        # Add optional suffixes based on constraints
+        configuration, _ = parse_config_options(self)
+        suffixes = [name]
+        for constraint, suffix in configuration.get('suffixes', {}).items():
+            if constraint in self.spec:
+                suffixes.append(suffix)
+        # Always append the hash to make the module file unique
+        suffixes.append(self.spec.dag_hash())
+        name = '-'.join(suffixes)
         return name
 
     @property
@@ -381,6 +388,8 @@ class EnvModule(object):
         for x in filter_blacklisted(
                 module_configuration.pop('autoload', []), self.name):
             module_file_content += self.autoload(x)
+        for x in module_configuration.pop('load', []):
+            module_file_content += self.autoload(x)
         for x in filter_blacklisted(
                 module_configuration.pop('prerequisites', []), self.name):
             module_file_content += self.prerequisite(x)
@@ -402,8 +411,12 @@ class EnvModule(object):
         return tuple()
 
     def autoload(self, spec):
-        m = type(self)(spec)
-        return self.autoload_format.format(module_file=m.use_name)
+        if not isinstance(spec, str):
+            m = type(self)(spec)
+            module_file = m.use_name
+        else:
+            module_file = spec
+        return self.autoload_format.format(module_file=module_file)
 
     def prerequisite(self, spec):
         m = type(self)(spec)

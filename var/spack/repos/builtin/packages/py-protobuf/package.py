@@ -23,28 +23,28 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Glib(Package):
-    """The GLib package contains a low-level libraries useful for
-       providing data structure handling for C, portability wrappers
-       and interfaces for such runtime functionality as an event loop,
-       threads, dynamic loading and an object system."""
-    homepage = "https://developer.gnome.org/glib/"
-    url = "http://ftp.gnome.org/pub/gnome/sources/glib/2.42/glib-2.42.1.tar.xz"
+class PyProtobuf(Package):
+    """Protocol buffers are Google's language-neutral, platform-neutral,
+    extensible mechanism for serializing structured data - think XML, but
+    smaller, faster, and simpler. You define how you want your data to be
+    structured once, then you can use special generated source code to easily
+    write and read your structured data to and from a variety of data streams
+    and using a variety of languages."""
 
-    version('2.42.1', '89c4119e50e767d3532158605ee9121a')
+    homepage = 'https://developers.google.com/protocol-buffers/'
+    url      = 'https://pypi.python.org/packages/source/p/protobuf/protobuf-3.0.0b2.tar.gz'
 
-    depends_on("libffi")
-    depends_on("zlib")
-    depends_on("pkg-config")
-    depends_on('gettext', sys.platform == 'darwin')
+    version('3.0.0b2', 'f0d3bd2394345a9af4a277cd0302ae83')
+    version('2.6.1', '6bf843912193f70073db7f22e2ea55e2')
+    version('2.5.0', '338813f3629d59e9579fed9035ecd457')
+    version('2.4.1', '72f5141d20ab1bcae6b1e00acfb1068a')
+    version('2.3.0', 'bb020c962f252fe81bfda8fb433bafdd')
 
-    # The following patch is needed for gcc-6.1
-    patch('g_date_strftime.patch')
+    extends('python')
+
+    depends_on('py-setuptools')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install", parallel=False)
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))

@@ -23,28 +23,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
-class Glib(Package):
-    """The GLib package contains a low-level libraries useful for
-       providing data structure handling for C, portability wrappers
-       and interfaces for such runtime functionality as an event loop,
-       threads, dynamic loading and an object system."""
-    homepage = "https://developer.gnome.org/glib/"
-    url = "http://ftp.gnome.org/pub/gnome/sources/glib/2.42/glib-2.42.1.tar.xz"
+class Giflib(Package):
+    """The GIFLIB project maintains the giflib service library, which has
+    been pulling images out of GIFs since 1989."""
 
-    version('2.42.1', '89c4119e50e767d3532158605ee9121a')
+    homepage = "http://giflib.sourceforge.net/"
+    url      = "https://downloads.sourceforge.net/project/giflib/giflib-5.1.4.tar.bz2"
 
-    depends_on("libffi")
-    depends_on("zlib")
-    depends_on("pkg-config")
-    depends_on('gettext', sys.platform == 'darwin')
-
-    # The following patch is needed for gcc-6.1
-    patch('g_date_strftime.patch')
+    version('5.1.4', '2c171ced93c0e83bb09e6ccad8e3ba2b')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix=%s' % prefix)
+
         make()
-        make("install", parallel=False)
+        make("install")
