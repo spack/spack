@@ -53,6 +53,7 @@ in the first directory it finds to which it has write access.  Add
 more elements to the list to indicate where your own site's temporary
 directory is.
 
+.. _sec-external_packages:
 
 External Packages
 ----------------------------
