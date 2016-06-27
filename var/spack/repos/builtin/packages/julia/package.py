@@ -22,8 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
-import os
+
 
 class Julia(Package):
     """The Julia Language: A fresh approach to technical computing"""
@@ -32,10 +33,14 @@ class Julia(Package):
 
     version('master',
             git='https://github.com/JuliaLang/julia.git', branch='master')
+    version('release-0.4',
+            git='https://github.com/JuliaLang/julia.git', branch='release-0.4')
+    version('0.4.6', 'd88db18c579049c23ab8ef427ccedf5d', preferred=True)
     version('0.4.5', '69141ff5aa6cee7c0ec8c85a34aa49a6')
     version('0.4.3', '8a4a59fd335b05090dd1ebefbbe5aaac')
 
-    patch('gc.patch')
+    patch('gc.patch', when='@0.4:0.4.5')
+    patch('gc.patch', when='@release-0.4')
     patch('openblas.patch', when='@0.4:0.4.5')
 
     # Build-time dependencies:
@@ -92,25 +97,21 @@ class Julia(Package):
     depends_on("mpi")
 
     def install(self, spec, prefix):
-        if '@master' in spec:
-            # Julia needs to know the offset from a specific commit
-            git = which('git')
-            git('fetch', '--unshallow')
-
         # Explicitly setting CC, CXX, or FC breaks building libuv, one
         # of Julia's dependencies. This might be a Darwin-specific
         # problem. Given how Spack sets up compilers, Julia should
         # still use Spack's compilers, even if we don't specify them
         # explicitly.
-        options = [#"CC=cc",
-                   #"CXX=c++",
-                   #"FC=fc",
-                   #"USE_SYSTEM_ARPACK=1",
-                   #"USE_SYSTEM_FFTW=1",
-                   #"USE_SYSTEM_GMP=1",
-                   #"USE_SYSTEM_MPFR=1",
-                   #TODO "USE_SYSTEM_PCRE=1",
-                   "prefix=%s" % prefix]
+        options = [
+            # "CC=cc",
+            # "CXX=c++",
+            # "FC=fc",
+            # "USE_SYSTEM_ARPACK=1",
+            # "USE_SYSTEM_FFTW=1",
+            # "USE_SYSTEM_GMP=1",
+            # "USE_SYSTEM_MPFR=1",
+            # "USE_SYSTEM_PCRE=1",
+            "prefix=%s" % prefix]
         with open('Make.user', 'w') as f:
             f.write('\n'.join(options) + '\n')
         make()
