@@ -145,7 +145,8 @@ class ConfigureGuesser(object):
             'cmake':     "depends_on('cmake')",
             'scons':     "depends_on('scons')",
             'python':    "extends('python')",
-            'R':         "extends('R')"
+            'R':         "extends('R')",
+            'unknown':   "# depends_on('foo')"
         }
 
         # Default installation instructions
