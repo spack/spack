@@ -148,7 +148,7 @@ configuration_suffix = {
 }
 
 
-class HelperFunctionsTests(unittest.TestCase):
+class HelperFunctionsTests(MockPackagesTest):
 
     def test_update_dictionary_extending_list(self):
         target = {
