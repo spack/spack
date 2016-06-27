@@ -57,6 +57,9 @@ class Fenics(Package):
     # variant('slepc4py',     default=True,  description='Uses SLEPc4py')
     # variant('pastix',       default=True,  description='Compile with Pastix')
 
+    patch('petsc-3.7.patch', when='^petsc@3.7:')
+    patch('petsc-version-detection.patch', when='@:1.6.1')
+
     extends('python')
 
     depends_on('py-numpy')
