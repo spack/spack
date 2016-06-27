@@ -45,6 +45,8 @@ class Trilinos(Package):
     homepage = "https://trilinos.org/"
     url = "http://trilinos.csbsju.edu/download/files/trilinos-12.2.1-Source.tar.gz"
 
+    version('12.6.3', '960f5f4d3f7c3da818e5a5fb4684559eff7e0c25f959ef576561b8a52f0e4d1e')
+    version('12.6.2', '0c076090508170ddee5efeed317745027f9418319720dc40a072e478775279f9')
     version('12.6.1', 'adcf2d3aab74cdda98f88fee19cd1442604199b0515ee3da4d80cbe8f37d00e4')
     version('12.4.2', '7c830f7f0f68b8ad324690603baf404e')
     version('12.2.1', '6161926ea247863c690e927687f83be9')
@@ -89,7 +91,8 @@ class Trilinos(Package):
     # work at the end. But let's avoid all this by simply using shared libs
     depends_on('mumps@5.0:+mpi+shared', when='+mumps')
     depends_on('scalapack', when='+mumps')
-    depends_on('superlu-dist', when='+superlu-dist')
+    depends_on('superlu-dist@:4.3', when='@:12.6.1+superlu-dist')
+    depends_on('superlu-dist', when='@12.6.2:+superlu-dist')
     depends_on('hypre~internal-superlu', when='+hypre')
     depends_on('hdf5+mpi', when='+hdf5')
     depends_on('python', when='+python')

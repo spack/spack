@@ -34,10 +34,12 @@ from llnl.util.filesystem import *
 from spack.hooks.sbang import filter_shebangs_in_directory
 import spack
 
-short_line = "#!/this/is/short/bin/bash\n"
-long_line  = "#!/this/" + ('x' * 200) + "/is/long\n"
-sbang_line = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
-last_line = "last!\n"
+short_line       = "#!/this/is/short/bin/bash\n"
+long_line        = "#!/this/" + ('x' * 200) + "/is/long\n"
+lua_line         = "#!/this/" + ('x' * 200) + "/is/lua\n"
+lua_line_patched = "--!/this/" + ('x' * 200) + "/is/lua\n"
+sbang_line       = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
+last_line        = "last!\n"
 
 class SbangTest(unittest.TestCase):
     def setUp(self):
@@ -59,6 +61,12 @@ class SbangTest(unittest.TestCase):
             f.write(long_line)
             f.write(last_line)
 
+        # Lua script with long shebang
+        self.lua_shebang = os.path.join(self.tempdir, 'lua')
+        with open(self.lua_shebang, 'w') as f:
+            f.write(lua_line)
+            f.write(last_line)
+
         # Script already using sbang.
         self.has_shebang = os.path.join(self.tempdir, 'shebang')
         with open(self.has_shebang, 'w') as f:
@@ -69,7 +77,6 @@ class SbangTest(unittest.TestCase):
 
     def tearDown(self):
          shutil.rmtree(self.tempdir, ignore_errors=True)
-
 
 
     def test_shebang_handling(self):
@@ -84,6 +91,12 @@ class SbangTest(unittest.TestCase):
         with open(self.long_shebang, 'r') as f:
             self.assertEqual(f.readline(), sbang_line)
             self.assertEqual(f.readline(), long_line)
+            self.assertEqual(f.readline(), last_line)
+
+        # Make sure this got patched.
+        with open(self.lua_shebang, 'r') as f:
+            self.assertEqual(f.readline(), sbang_line)
+            self.assertEqual(f.readline(), lua_line_patched)
             self.assertEqual(f.readline(), last_line)
 
         # Make sure this is untouched

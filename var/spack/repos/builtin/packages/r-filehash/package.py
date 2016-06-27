@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class RFilehash(Package):
     """Implements a simple key-value style database where character string keys
     are associated with data values that are stored on the disk. A simple
@@ -37,10 +38,12 @@ class RFilehash(Package):
 
     homepage = 'https://cran.r-project.org/'
     url      = "https://cran.r-project.org/src/contrib/filehash_2.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/filehash"
 
-    version('2.3', '01fffafe09b148ccadc9814c103bdc2f', expand=False)
+    version('2.3', '01fffafe09b148ccadc9814c103bdc2f')
 
     extends('R')
 
     def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library=%s' % self.module.r_lib_dir, '%s' % self.stage.archive_file)
+        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
+          self.stage.source_path)

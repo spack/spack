@@ -29,6 +29,8 @@ for file in $changed; do
         perl -i -pe 's/^(\s*url\s*=.*)$/\1  # NOQA: ignore=E501/' $file
         perl -i -pe 's/^(\s*version\(.*\).*)$/\1  # NOQA: ignore=E501/' $file
         perl -i -pe 's/^(\s*variant\(.*\).*)$/\1  # NOQA: ignore=E501/' $file
+        perl -i -pe 's/^(\s*depends_on\(.*\).*)$/\1  # NOQA: ignore=E501/' $file
+        perl -i -pe 's/^(\s*extends\(.*\).*)$/\1  # NOQA: ignore=E501/' $file
 
         # Exempt '@when' decorated functions from redefinition errors.
         perl -i -pe 's/^(\s*\@when\(.*\).*)$/\1  # NOQA: ignore=F811/' $file

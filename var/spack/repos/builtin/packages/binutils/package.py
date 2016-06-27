@@ -24,11 +24,12 @@
 ##############################################################################
 from spack import *
 
+
 class Binutils(Package):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
-    homepage = "http://www.gnu.org/software/binutils/"
 
-    url="https://ftp.gnu.org/gnu/binutils/binutils-2.25.tar.bz2"
+    homepage = "http://www.gnu.org/software/binutils/"
+    url      = "https://ftp.gnu.org/gnu/binutils/binutils-2.25.tar.bz2"
 
     # 2.26 is incompatible with py-pillow build for some reason.
     version('2.26', '64146a0faa3b411ba774f47d41de239f')
@@ -41,12 +42,15 @@ class Binutils(Package):
     depends_on('flex')
     depends_on('bison')
 
-    # Add a patch that creates binutils libiberty_pic.a which is preferred by OpenSpeedShop and cbtf-krell
-    variant('krellpatch', default=False, description="build with openspeedshop based patch.")
+    # Add a patch that creates binutils libiberty_pic.a which is preferred by
+    # OpenSpeedShop and cbtf-krell
+    variant('krellpatch', default=False,
+            description="build with openspeedshop based patch.")
     variant('gold', default=True, description="build the gold linker")
     patch('binutilskrell-2.24.patch', when='@2.24+krellpatch')
 
     patch('cr16.patch')
+    patch('update_symbol-2.26.patch', when='@2.26')
 
     variant('libiberty', default=False, description='Also install libiberty.')
 

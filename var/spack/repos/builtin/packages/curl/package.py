@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Curl(Package):
     """cURL is an open source command line tool and library for
     transferring data with URL syntax"""
@@ -31,6 +32,7 @@ class Curl(Package):
     homepage = "http://curl.haxx.se"
     url      = "http://curl.haxx.se/download/curl-7.46.0.tar.bz2"
 
+    version('7.49.1', '6bb1f7af5b58b30e4e6414b8c1abccab')
     version('7.47.1', '9ea3123449439bbd960cd25cf98796fb')
     version('7.46.0', '9979f989a2a9930d10f1b3deeabc2148')
     version('7.45.0', '62c1a352b28558f25ba6209214beadc8')

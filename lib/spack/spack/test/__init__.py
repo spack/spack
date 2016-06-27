@@ -40,7 +40,7 @@ test_names = ['architecture', 'versions', 'url_parse', 'url_substitution', 'pack
               'cc', 'link_tree', 'spec_yaml', 'optional_deps',
               'make_executable', 'configure_guess', 'lock', 'database',
               'namespace_trie', 'yaml', 'sbang', 'packaging', 'environment', 'cmd.find',
-              'cmd.uninstall', 'cmd.test_install']
+              'cmd.uninstall', 'cmd.test_install', 'cmd.test_compiler_cmd']
 
 
 def list_tests():

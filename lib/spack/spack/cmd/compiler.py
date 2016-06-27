@@ -69,18 +69,23 @@ def setup_parser(subparser):
                              help="Configuration scope to read from.")
 
 
-def compiler_add(args):
+def compiler_find(args):
     """Search either $PATH or a list of paths OR MODULES for compilers and add them
        to Spack's configuration."""
     paths = args.add_paths
     if not paths:
         paths = get_path('PATH')
 
-    compilers = [c for c in spack.compilers.find_compilers(*args.add_paths)
-                 if c.spec not in spack.compilers.all_compilers(scope=args.scope)]
-
+    # Don't initialize compilers config via compilers.get_compiler_config. 
+    # Just let compiler_find do the 
+    # entire process and return an empty config from all_compilers
+    # Default for any other process is init_config=True
+    compilers = [c for c in spack.compilers.find_compilers(*paths)
+                 if c.spec not in spack.compilers.all_compilers(
+                     scope=args.scope, init_config=False)] 
     if compilers:
-        spack.compilers.add_compilers_to_config(compilers, scope=args.scope)
+        spack.compilers.add_compilers_to_config(compilers, scope=args.scope,
+                init_config=False)
         n = len(compilers)
         s = 's' if n > 1 else ''
         filename = spack.config.get_config_filename(args.scope, 'compilers')
@@ -93,7 +98,6 @@ def compiler_add(args):
 def compiler_remove(args):
     cspec = CompilerSpec(args.compiler_spec)
     compilers = spack.compilers.compilers_for_spec(cspec, scope=args.scope)
-
     if not compilers:
         tty.die("No compilers match spec %s" % cspec)
     elif not args.all and len(compilers) > 1:
@@ -137,9 +141,10 @@ def compiler_list(args):
 
 
 def compiler(parser, args):
-    action = { 'add'    : compiler_add,
-               'remove' : compiler_remove,
-               'rm'     : compiler_remove,
-               'info'   : compiler_info,
-               'list'   : compiler_list }
+    action = {'add'    : compiler_find, 
+              'find'   : compiler_find,
+              'remove' : compiler_remove,
+              'rm'     : compiler_remove,
+              'info'   : compiler_info,
+              'list'   : compiler_list }
     action[args.compiler_command](args)

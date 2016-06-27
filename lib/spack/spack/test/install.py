@@ -28,6 +28,7 @@ import tempfile
 import spack
 from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
+from spack.database import Database
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.test.mock_packages_test import *
 from spack.test.mock_repo import MockArchive
@@ -49,7 +50,10 @@ class InstallTest(MockPackagesTest):
         # installed pkgs and mock packages.
         self.tmpdir = tempfile.mkdtemp()
         self.orig_layout = spack.install_layout
+        self.orig_db = spack.installed_db
+
         spack.install_layout = YamlDirectoryLayout(self.tmpdir)
+        spack.installed_db   = Database(self.tmpdir)
 
 
     def tearDown(self):
@@ -61,6 +65,7 @@ class InstallTest(MockPackagesTest):
 
         # restore spack's layout.
         spack.install_layout = self.orig_layout
+        spack.installed_db   = self.orig_db
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
 
@@ -71,7 +76,7 @@ class InstallTest(MockPackagesTest):
         pkg.fetcher = fetcher
 
 
-    def ztest_install_and_uninstall(self):
+    def test_install_and_uninstall(self):
         # Get a basic concrete spec for the trivial install package.
         spec = Spec('trivial_install_test_package')
         spec.concretize()
