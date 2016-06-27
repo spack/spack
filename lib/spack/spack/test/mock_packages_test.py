@@ -56,7 +56,7 @@ compilers:
       fc: None
     modules: 'None'
 - compiler:
-    spec: gcc@4.5.0  
+    spec: gcc@4.5.0
     operating_system: {0}{1}
     paths:
       cc: /path/to/gcc
@@ -144,7 +144,7 @@ compilers:
       fc: /path/to/gfortran
     operating_system: elcapitan
     spec: gcc@4.5.0
-    modules: 'None' 
+    modules: 'None'
 - compiler:
     spec: clang@3.3
     operating_system: elcapitan
@@ -201,6 +201,10 @@ class MockPackagesTest(unittest.TestCase):
         spack.config.ConfigScope('site', self.mock_site_config)
         spack.config.ConfigScope('user', self.mock_user_config)
 
+        # Keep tests from interfering with the actual module path.
+        self.real_share_path = spack.share_path
+        spack.share_path = tempfile.mkdtemp()
+
         # Store changes to the package's dependencies so we can
         # restore later.
         self.saved_deps = {}
@@ -234,6 +238,9 @@ class MockPackagesTest(unittest.TestCase):
         for pkg_name, (pkg, deps) in self.saved_deps.items():
             pkg.dependencies.clear()
             pkg.dependencies.update(deps)
+
+        shutil.rmtree(spack.share_path, ignore_errors=True)
+        spack.share_path = self.real_share_path
 
 
     def setUp(self):

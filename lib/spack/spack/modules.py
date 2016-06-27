@@ -454,7 +454,6 @@ class EnvModule(object):
 
 class Dotkit(EnvModule):
     name = 'dotkit'
-    path = join_path(spack.share_path, "dotkit")
 
     environment_modifications_formats = {
         PrependPath: 'dk_alter {name} {value}\n',
@@ -467,7 +466,7 @@ class Dotkit(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(Dotkit.path, self.spec.architecture,
+        return join_path(spack.share_path, "dotkit", self.spec.architecture,
                          '%s.dk' % self.use_name)
 
     @property
@@ -495,7 +494,6 @@ class Dotkit(EnvModule):
 
 class TclModule(EnvModule):
     name = 'tcl'
-    path = join_path(spack.share_path, "modules")
 
     environment_modifications_formats = {
         PrependPath: 'prepend-path --delim "{delim}" {name} \"{value}\"\n',
@@ -516,7 +514,7 @@ class TclModule(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(TclModule.path, self.spec.architecture, self.use_name)
+        return join_path(spack.share_path, "modules", self.spec.architecture, self.use_name)
 
     @property
     def header(self):
