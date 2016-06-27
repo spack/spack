@@ -165,7 +165,7 @@ class DirectoryLayout(object):
 class YamlDirectoryLayout(DirectoryLayout):
     """Lays out installation directories like this::
            <install root>/
-               <target>/
+               <platform-os-target>/
                    <compiler>-<compiler version>/
                        <name>-<version>-<variants>-<hash>
 
