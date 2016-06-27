@@ -140,7 +140,6 @@ Here's an example packages.yaml file that sets preferred packages:
     packages:
       dyninst:
         compiler: [gcc@4.9]
-        variants: +debug
       gperftools:
         version: [2.2, 2.4, 2.3]
       all:
@@ -150,8 +149,8 @@ Here's an example packages.yaml file that sets preferred packages:
 
 
 At a high level, this example is specifying how packages should be
-concretized.  The dyninst package should prefer using gcc 4.9 and
-be built with debug options.  The gperftools package should prefer version
+concretized.  The dyninst package should prefer using gcc 4.9.
+The gperftools package should prefer version
 2.2 over 2.4.  Every package on the system should prefer mvapich for
 its MPI and gcc 4.4.7 (except for Dyninst, which overrides this by preferring gcc 4.9).
 These options are used to fill in implicit defaults.  Any of them can be overwritten
@@ -160,7 +159,7 @@ on the command line if explicitly requested.
 Each packages.yaml file begins with the string ``packages:`` and
 package names are specified on the next level. The special string ``all``
 applies settings to each package. Underneath each package name is
-one or more components: ``compiler``, ``variants``, ``version``,
+one or more components: ``compiler``, ``version``,
 or ``providers``.  Each component has an ordered list of spec
 ``constraints``, with earlier entries in the list being preferred over
 later entries.
