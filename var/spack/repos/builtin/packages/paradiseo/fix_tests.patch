@@ -1,0 +1,13 @@
+diff --git a/moeo/test/t-moeo2DMinHypervolumeArchive.cpp b/moeo/test/t-moeo2DMinHypervolumeArchive.cpp
+index 994a9a4..c4ba77b 100644
+--- a/moeo/test/t-moeo2DMinHypervolumeArchive.cpp
++++ b/moeo/test/t-moeo2DMinHypervolumeArchive.cpp
+@@ -41,7 +41,7 @@
+ #include <moeo>
+ #include <cassert>
+ 
+-#include<archive/moeo2DMinHyperVolumeArchive.h>
++#include<archive/moeo2DMinHypervolumeArchive.h>
+ 
+ //-----------------------------------------------------------------------------
+ 

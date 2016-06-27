@@ -1,32 +1,38 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """This module contains functions related to finding compilers on the
 system and configuring Spack to use multiple compilers.
 """
 import imp
 import os
+import platform
+import copy
+import hashlib
+import base64
+import yaml
+import sys
 
 from llnl.util.lang import memoized, list_modules
 from llnl.util.filesystem import join_path
@@ -35,6 +41,7 @@ import spack
 import spack.error
 import spack.spec
 import spack.config
+import spack.architecture
 
 from spack.util.multiproc import parmap
 from spack.compiler import Compiler
@@ -43,98 +50,152 @@ from spack.util.naming import mod_to_class
 from spack.util.environment import get_path
 
 _imported_compilers_module = 'spack.compilers'
-_required_instance_vars = ['cc', 'cxx', 'f77', 'fc']
+_path_instance_vars = ['cc', 'cxx', 'f77', 'fc']
+_other_instance_vars = ['modules', 'operating_system']
+_cache_config_file = []
 
-_default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc']
+# TODO: customize order in config file
+if platform.system() == 'Darwin':
+    _default_order = ['clang', 'gcc', 'intel']
+else:
+    _default_order = ['gcc', 'intel', 'pgi', 'clang', 'xlc', 'nag']
+
 
 def _auto_compiler_spec(function):
-    def converter(cspec_like):
+    def converter(cspec_like, *args, **kwargs):
         if not isinstance(cspec_like, spack.spec.CompilerSpec):
             cspec_like = spack.spec.CompilerSpec(cspec_like)
-        return function(cspec_like)
+        return function(cspec_like, *args, **kwargs)
     return converter
 
 
-def _get_config():
-    """Get a Spack config, but make sure it has compiler configuration
-       first."""
-    # If any configuration file has compilers, just stick with the
-    # ones already configured.
-    config = spack.config.get_compilers_config()
-    existing = [spack.spec.CompilerSpec(s)
-                for s in config]
-    if existing:
+def _to_dict(compiler):
+    """Return a dict version of compiler suitable to insert in YAML."""
+    d = {}
+    d['spec'] = str(compiler.spec)
+    d['paths'] = dict( (attr, getattr(compiler, attr, None)) for attr in _path_instance_vars )
+    d['operating_system'] = str(compiler.operating_system)
+    d['modules'] = compiler.modules if compiler.modules else []
+
+    if compiler.alias:
+        d['alias'] = compiler.alias
+
+    return {'compiler': d}
+
+
+def get_compiler_config(scope=None, init_config=True):
+    """Return the compiler configuration for the specified architecture.
+    """
+    def init_compiler_config():
+        """Compiler search used when Spack has no compilers."""
+        compilers = find_compilers()
+        compilers_dict = []
+        for compiler in compilers:
+            compilers_dict.append(_to_dict(compiler))
+        spack.config.update_config('compilers', compilers_dict, scope=scope)
+
+    config = spack.config.get_config('compilers', scope=scope)
+    # Update the configuration if there are currently no compilers
+    # configured.  Avoid updating automatically if there ARE site
+    # compilers configured but no user ones.
+    if not config and init_config:
+        if scope is None:
+            # We know no compilers were configured in any scope.
+            init_compiler_config()
+            config = spack.config.get_config('compilers', scope=scope)
+        elif scope == 'user':
+            # Check the site config and update the user config if
+            # nothing is configured at the site level.
+            site_config = spack.config.get_config('compilers', scope='site')
+            if not site_config:
+                init_compiler_config()
+                config = spack.config.get_config('compilers', scope=scope)
         return config
-
-    compilers = find_compilers(*get_path('PATH'))
-    add_compilers_to_config('user', *compilers)
-
-    # After writing compilers to the user config, return a full config
-    # from all files.
-    return spack.config.get_compilers_config()
+    elif config:
+        return config
+    else:
+        return []  # Return empty list which we will later append to.
 
 
-_cached_default_compiler = None
+def add_compilers_to_config(compilers, scope=None, init_config=True):
+    """Add compilers to the config for the specified architecture.
+
+    Arguments:
+      - compilers: a list of Compiler objects.
+      - scope:     configuration scope to modify.
+    """
+    compiler_config = get_compiler_config(scope, init_config)
+    for compiler in compilers:
+        compiler_config.append(_to_dict(compiler))
+    global _cache_config_file
+    _cache_config_file = compiler_config
+    spack.config.update_config('compilers', compiler_config, scope)
+
+
+@_auto_compiler_spec
+def remove_compiler_from_config(compiler_spec, scope=None):
+    """Remove compilers from the config, by spec.
+
+    Arguments:
+      - compiler_specs: a list of CompilerSpec objects.
+      - scope:          configuration scope to modify.
+    """
+    compiler_config = get_compiler_config(scope)
+    config_length = len(compiler_config)
+
+    filtered_compiler_config = [comp for comp in compiler_config
+               if spack.spec.CompilerSpec(comp['compiler']['spec']) != compiler_spec]
+    # Need a better way for this
+    global _cache_config_file
+    _cache_config_file = filtered_compiler_config # Update the cache for changes
+    if len(filtered_compiler_config) == config_length: # No items removed
+        CompilerSpecInsufficientlySpecificError(compiler_spec)
+    spack.config.update_config('compilers', filtered_compiler_config, scope)
+
+
+def all_compilers_config(scope=None, init_config=True):
+    """Return a set of specs for all the compiler versions currently
+       available to build with.  These are instances of CompilerSpec.
+    """
+    # Get compilers for this architecture.
+    global _cache_config_file #Create a cache of the config file so we don't load all the time.
+    if not _cache_config_file:
+        _cache_config_file = get_compiler_config(scope, init_config)
+        return _cache_config_file
+    else:
+        return _cache_config_file
+
+
+def all_compilers(scope=None, init_config=True):
+    # Return compiler specs from the merged config.
+    return [spack.spec.CompilerSpec(s['compiler']['spec'])
+            for s in all_compilers_config(scope, init_config)]
+
+
 def default_compiler():
-    global _cached_default_compiler
-    if _cached_default_compiler:
-        return _cached_default_compiler
     versions = []
-    for name in _default_order:  # TODO: customize order.
+    for name in _default_order:
         versions = find(name)
-        if versions: break
-
-    if not versions:
+        if versions:
+            break
+    else:
         raise NoCompilersError()
 
-    _cached_default_compiler = sorted(versions)[-1]
-    return _cached_default_compiler
+    return sorted(versions)[-1]
 
 
-def find_compilers(*path):
+def find_compilers(*paths):
     """Return a list of compilers found in the suppied paths.
-       This invokes the find() method for each Compiler class,
-       and appends the compilers detected to a list.
+       This invokes the find_compilers() method for each operating
+       system associated with the host platform, and appends
+       the compilers detected to a list.
     """
-    # Make sure path elements exist, and include /bin directories
-    # under prefixes.
-    filtered_path = []
-    for p in path:
-        # Eliminate symlinks and just take the real directories.
-        p = os.path.realpath(p)
-        if not os.path.isdir(p):
-            continue
-        filtered_path.append(p)
-
-        # Check for a bin directory, add it if it exists
-        bin = join_path(p, 'bin')
-        if os.path.isdir(bin):
-            filtered_path.append(os.path.realpath(bin))
-
-    # Once the paths are cleaned up, do a search for each type of
-    # compiler.  We can spawn a bunch of parallel searches to reduce
-    # the overhead of spelunking all these directories.
-    types = all_compiler_types()
-    compiler_lists = parmap(lambda cls: cls.find(*filtered_path), types)
-
-    # ensure all the version calls we made are cached in the parent
-    # process, as well.  This speeds up Spack a lot.
-    clist = reduce(lambda x,y: x+y, compiler_lists)
-    return clist
-
-
-def add_compilers_to_config(scope, *compilers):
-    compiler_config_tree = {}
-    for compiler in compilers:
-        compiler_entry = {}
-        for c in _required_instance_vars:
-            val = getattr(compiler, c)
-            if not val:
-                val = "None"
-            compiler_entry[c] = val
-        compiler_config_tree[str(compiler.spec)] = compiler_entry
-    spack.config.add_to_compiler_config(compiler_config_tree, scope)
-
+    # Find compilers for each operating system class
+    oss = all_os_classes()
+    compiler_lists = []
+    for o in oss:
+        compiler_lists.extend(o.find_compilers(*paths))
+    return compiler_lists
 
 
 def supported_compilers():
@@ -152,56 +213,84 @@ def supported(compiler_spec):
     return compiler_spec.name in supported_compilers()
 
 
-def all_compilers():
-    """Return a set of specs for all the compiler versions currently
-       available to build with.  These are instances of CompilerSpec.
-    """
-    configuration = _get_config()
-    return [spack.spec.CompilerSpec(s) for s in configuration]
-
-
 @_auto_compiler_spec
-def find(compiler_spec):
+def find(compiler_spec, scope=None):
     """Return specs of available compilers that match the supplied
        compiler spec.  Return an list if nothing found."""
-    return [c for c in all_compilers() if c.satisfies(compiler_spec)]
+    return [c for c in all_compilers(scope) if c.satisfies(compiler_spec)]
 
 
 @_auto_compiler_spec
-def compilers_for_spec(compiler_spec):
+def compilers_for_spec(compiler_spec, scope=None, **kwargs):
     """This gets all compilers that satisfy the supplied CompilerSpec.
        Returns an empty list if none are found.
     """
-    config = _get_config()
+    platform = kwargs.get("platform", None)
+    config = all_compilers_config(scope)
 
-    def get_compiler(cspec):
-        items = config[str(cspec)]
+    def get_compilers(cspec):
+        compilers = []
 
-        if not all(n in items for n in _required_instance_vars):
-            raise InvalidCompilerConfigurationError(cspec)
+        for items in config:
+            if items['compiler']['spec'] != str(cspec):
+                continue
+            items = items['compiler']
 
-        cls  = class_for_compiler_name(cspec.name)
-        compiler_paths = []
-        for c in _required_instance_vars:
-            compiler_path = items[c]
-            if compiler_path != "None":
-                compiler_paths.append(compiler_path)
+            if not ('paths' in items and all(n in items['paths'] for n in _path_instance_vars)):
+                raise InvalidCompilerConfigurationError(cspec)
+
+            cls  = class_for_compiler_name(cspec.name)
+
+            compiler_paths = []
+            for c in _path_instance_vars:
+                compiler_path = items['paths'][c]
+                if compiler_path != "None":
+                    compiler_paths.append(compiler_path)
+                else:
+                    compiler_paths.append(None)
+
+            mods = items.get('modules')
+            if mods == 'None':
+                mods = []
+
+            if 'operating_system' in items:
+                operating_system = spack.architecture._operating_system_from_dict(items['operating_system'], platform)
             else:
-                compiler_paths.append(None)
+                operating_system = None
 
-        return cls(cspec, *compiler_paths)
 
-    matches = find(compiler_spec)
-    return [get_compiler(cspec) for cspec in matches]
+            alias = items['alias'] if 'alias' in items else None
+
+            flags = {}
+            for f in spack.spec.FlagMap.valid_compiler_flags():
+                if f in items:
+                    flags[f] = items[f]
+
+            compilers.append(cls(cspec, operating_system, compiler_paths, mods, alias, **flags))
+
+        return compilers
+
+    matches = set(find(compiler_spec, scope))
+    compilers = []
+    for cspec in matches:
+        compilers.extend(get_compilers(cspec))
+    return compilers
+#    return [get_compilers(cspec) for cspec in matches]
 
 
 @_auto_compiler_spec
-def compiler_for_spec(compiler_spec):
+def compiler_for_spec(compiler_spec, arch):
     """Get the compiler that satisfies compiler_spec.  compiler_spec must
        be concrete."""
+    operating_system = arch.platform_os
     assert(compiler_spec.concrete)
-    compilers = compilers_for_spec(compiler_spec)
-    assert(len(compilers) == 1)
+
+    compilers = [c for c in compilers_for_spec(compiler_spec, platform=arch.platform)
+                if c.operating_system == operating_system]
+    if len(compilers) < 1:
+        raise NoCompilerForSpecError(compiler_spec, operating_system)
+    if len(compilers) > 1:
+        raise CompilerSpecInsufficientlySpecificError(compiler_spec)
     return compilers[0]
 
 
@@ -219,6 +308,19 @@ def class_for_compiler_name(compiler_name):
     return cls
 
 
+def all_os_classes():
+    """
+    Return the list of classes for all operating systems available on
+    this platform
+    """
+    classes = []
+
+    platform = spack.architecture.platform()
+    for os_class in platform.operating_sys.values():
+        classes.append(os_class)
+
+    return classes
+
 def all_compiler_types():
     return [class_for_compiler_name(c) for c in supported_compilers()]
 
@@ -228,9 +330,19 @@ class InvalidCompilerConfigurationError(spack.error.SpackError):
         super(InvalidCompilerConfigurationError, self).__init__(
             "Invalid configuration for [compiler \"%s\"]: " % compiler_spec,
             "Compiler configuration must contain entries for all compilers: %s"
-            % _required_instance_vars)
+            % _path_instance_vars)
 
 
 class NoCompilersError(spack.error.SpackError):
     def __init__(self):
         super(NoCompilersError, self).__init__("Spack could not find any compilers!")
+
+class NoCompilerForSpecError(spack.error.SpackError):
+    def __init__(self, compiler_spec, target):
+        super(NoCompilerForSpecError, self).__init__("No compilers for operating system %s satisfy spec %s" % (
+                                                     target, compiler_spec))
+
+class CompilerSpecInsufficientlySpecificError(spack.error.SpackError):
+    def __init__(self, compiler_spec):
+        super(CompilerSpecInsufficientlySpecificError, self).__init__("Multiple compilers satisfy spec %s",
+                                                                      compiler_spec)

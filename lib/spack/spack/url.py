@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
 This module has methods for parsing names and versions of packages from URLs.
@@ -142,7 +142,7 @@ def split_url_extension(path):
 
 def downloaded_file_extension(path):
     """This returns the type of archive a URL refers to.  This is
-       sometimes confusing becasue of URLs like:
+       sometimes confusing because of URLs like:
 
            (1) https://github.com/petdance/ack/tarball/1.93_02
 
@@ -206,6 +206,9 @@ def parse_version_offset(path):
         # e.g. lame-398-1
         (r'-((\d)+-\d)', stem),
 
+        # e.g. foobar_1.2-3
+        (r'_((\d+\.)+\d+(-\d+)?[a-z]?)', stem),
+
         # e.g. foobar-4.5.1
         (r'-((\d+\.)*\d+)$', stem),
 
@@ -225,7 +228,7 @@ def parse_version_offset(path):
         (r'_((\d+\.)+\d+[a-z]?)[.]orig$', stem),
 
         # e.g. http://www.openssl.org/source/openssl-0.9.8s.tar.gz
-        (r'-([^-]+(-alpha|-beta)?)', stem),
+        (r'-v?([^-]+(-alpha|-beta)?)', stem),
 
         # e.g. astyle_1.23_macosx.tar.gz
         (r'_([^_]+(_alpha|_beta)?)', stem),

@@ -18,7 +18,7 @@ configurations can coexist on the same system.
 Most importantly, Spack is *simple*.  It offers a simple *spec* syntax
 so that users can specify versions and configuration options
 concisely.  Spack is also simple for package authors: package files
-are writtin in pure Python, and specs allow package authors to
+are written in pure Python, and specs allow package authors to
 maintain a single file for many different builds of the same package.
 
 See the :doc:`features` for examples and highlights.
@@ -47,7 +47,7 @@ Table of Contents
    basic_usage
    packaging_guide
    mirrors
-   site_configuration
+   configuration
    developer_guide
    command_index
    package_list

@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import textwrap
 from llnl.util.tty.colify import *
@@ -52,7 +52,7 @@ def print_text_info(pkg):
     print "Safe versions:  "
 
     if not pkg.versions:
-        print("None")
+        print("    None")
     else:
         pad = padder(pkg.versions, 4)
         for v in reversed(sorted(pkg.versions)):
@@ -62,7 +62,7 @@ def print_text_info(pkg):
     print
     print "Variants:"
     if not pkg.variants:
-        print "None"
+        print "    None"
     else:
         pad = padder(pkg.variants, 4)
 
@@ -105,5 +105,5 @@ def print_text_info(pkg):
 
 
 def info(parser, args):
-    pkg = spack.db.get(args.name)
+    pkg = spack.repo.get(args.name)
     print_text_info(pkg)

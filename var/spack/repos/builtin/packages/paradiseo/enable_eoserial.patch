@@ -1,0 +1,14 @@
+diff --git a/eo/src/CMakeLists.txt b/eo/src/CMakeLists.txt
+index b2b445a..d45ddc7 100644
+--- a/eo/src/CMakeLists.txt
++++ b/eo/src/CMakeLists.txt
+@@ -47,7 +47,7 @@ install(DIRECTORY do es ga gp other utils
+ add_subdirectory(es)
+ add_subdirectory(ga)
+ add_subdirectory(utils)
+-#add_subdirectory(serial)
++add_subdirectory(serial) # Required when including <paradiseo/eo/utils/eoTimer.h> , which is need by <paradiseo/eo/mpi/eoMpi.h>
+ 
+ if(ENABLE_PYEO)
+   add_subdirectory(pyeo)
+ 

@@ -1,27 +1,27 @@
 #!/usr/bin/env python
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
 if not sys.version_info[:2] >= (2,6):
@@ -41,6 +41,14 @@ sys.path.insert(0, SPACK_LIB_PATH)
 SPACK_EXTERNAL_LIBS = os.path.join(SPACK_LIB_PATH, "external")
 sys.path.insert(0, SPACK_EXTERNAL_LIBS)
 
+import warnings
+# Avoid warnings when nose is installed with the python exe being used to run
+# spack. Note this must be done after Spack's external libs directory is added
+# to sys.path.
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", ".*nose was already imported")
+    import nose
+
 # Quick and dirty check to clean orphaned .pyc files left over from
 # previous revisions.  These files were present in earlier versions of
 # Spack, were removed, but shadow system modules that Spack still
@@ -54,7 +62,7 @@ for pyc_file in orphaned_pyc_files:
     try:
         os.remove(pyc_file)
     except OSError as e:
-        print "WARNING: Spack may fail mysteriously. Couldn't remove orphaned .pyc file: %s" % pyc
+        print "WARNING: Spack may fail mysteriously. Couldn't remove orphaned .pyc file: %s" % pyc_file
 
 # If there is no working directory, use the spack prefix.
 try:
@@ -69,7 +77,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import *
 import spack
 from spack.error import SpackError
-from external import argparse
+import argparse
 
 # Command parsing
 parser = argparse.ArgumentParser(
@@ -130,10 +138,13 @@ def main():
         import spack.util.debug as debug
         debug.register_interrupt_handler()
 
+    from spack.yaml_version_check import check_yaml_versions
+    check_yaml_versions()
+
     spack.spack_working_dir = working_dir
     if args.mock:
-        from spack.packages import PackageDB
-        spack.db = PackageDB(spack.mock_packages_path)
+        from spack.repository import RepoPath
+        spack.repo.swap(RepoPath(spack.mock_packages_path))
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
@@ -144,7 +155,7 @@ def main():
     command = spack.cmd.get_command(args.command)
     try:
         return_val = command(parser, args)
-    except SpackError, e:
+    except SpackError as e:
         e.die()
     except KeyboardInterrupt:
         sys.stderr.write('\n')

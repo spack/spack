@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
 These tests check Spec DAG operations using dummy packages.
@@ -29,6 +29,7 @@ You can find the dummy packages here::
     spack/lib/spack/spack/test/mock_packages
 """
 import spack
+import spack.architecture
 import spack.package
 
 from llnl.util.lang import list_modules
@@ -40,8 +41,8 @@ from spack.test.mock_packages_test import *
 class SpecDagTest(MockPackagesTest):
 
     def test_conflicting_package_constraints(self):
-        set_pkg_dep('mpileaks', 'mpich@1.0')
-        set_pkg_dep('callpath', 'mpich@2.0')
+        self.set_pkg_dep('mpileaks', 'mpich@1.0')
+        self.set_pkg_dep('callpath', 'mpich@2.0')
 
         spec = Spec('mpileaks ^mpich ^callpath ^dyninst ^libelf ^libdwarf')
 
@@ -223,26 +224,28 @@ class SpecDagTest(MockPackagesTest):
 
 
     def test_unsatisfiable_version(self):
-        set_pkg_dep('mpileaks', 'mpich@1.0')
+        self.set_pkg_dep('mpileaks', 'mpich@1.0')
         spec = Spec('mpileaks ^mpich@2.0 ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableVersionSpecError, spec.normalize)
 
 
     def test_unsatisfiable_compiler(self):
-        set_pkg_dep('mpileaks', 'mpich%gcc')
+        self.set_pkg_dep('mpileaks', 'mpich%gcc')
         spec = Spec('mpileaks ^mpich%intel ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableCompilerSpecError, spec.normalize)
 
 
     def test_unsatisfiable_compiler_version(self):
-        set_pkg_dep('mpileaks', 'mpich%gcc@4.6')
+        self.set_pkg_dep('mpileaks', 'mpich%gcc@4.6')
         spec = Spec('mpileaks ^mpich%gcc@4.5 ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableCompilerSpecError, spec.normalize)
 
 
     def test_unsatisfiable_architecture(self):
-        set_pkg_dep('mpileaks', 'mpich=bgqos_0')
-        spec = Spec('mpileaks ^mpich=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
+        platform = spack.architecture.platform()
+
+        self.set_pkg_dep('mpileaks', 'mpich platform=test target=be')
+        spec = Spec('mpileaks ^mpich platform=test target=fe ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
 
 

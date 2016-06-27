@@ -1,31 +1,32 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import unittest
+
 import spack.spec
-from spack.spec import *
 from spack.parse import Token
+from spack.spec import *
 
 # Sample output for a complex lexing.
 complex_lex = [Token(ID, 'mvapich_foo'),
@@ -57,7 +58,7 @@ class SpecSyntaxTest(unittest.TestCase):
     # ================================================================================
     # Parse checks
     # ================================================================================
-    def check_parse(self, expected, spec=None):
+    def check_parse(self, expected, spec=None, remove_arch=True):
         """Assert that the provided spec is able to be parsed.
            If this is called with one argument, it assumes that the string is
            canonical (i.e., no spaces and ~ instead of - for variants) and that it
@@ -69,6 +70,7 @@ class SpecSyntaxTest(unittest.TestCase):
         if spec is None:
             spec = expected
         output = spack.spec.parse(spec)
+
         parsed = (" ".join(str(spec) for spec in output))
         self.assertEqual(expected, parsed)
 
@@ -103,6 +105,8 @@ class SpecSyntaxTest(unittest.TestCase):
 
     def test_full_specs(self):
         self.check_parse("mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4^stackwalker@8.1_1e")
+        self.check_parse("mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2~qt_4^stackwalker@8.1_1e")
+        self.check_parse('mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3"+debug~qt_4^stackwalker@8.1_1e')
 
     def test_canonicalize(self):
         self.check_parse(
@@ -127,7 +131,10 @@ class SpecSyntaxTest(unittest.TestCase):
 
     def test_duplicate_variant(self):
         self.assertRaises(DuplicateVariantError, self.check_parse, "x@1.2+debug+debug")
-        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2+debug+debug")
+        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2+debug debug=true")
+        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2 debug=false debug=true")
+        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2 debug=false~debug")
+
 
     def test_duplicate_depdendence(self):
         self.assertRaises(DuplicateDependencyError, self.check_parse, "x ^y ^y")

@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
 Test for multi_method dispatch.
@@ -33,97 +33,95 @@ from spack.version import *
 from spack.spec import Spec
 from spack.multimethod import when
 from spack.test.mock_packages_test import *
+from spack.version import *
 
 
 class MultiMethodTest(MockPackagesTest):
 
     def test_no_version_match(self):
-        pkg = spack.db.get('multimethod@2.0')
+        pkg = spack.repo.get('multimethod@2.0')
         self.assertRaises(NoSuchMethodError, pkg.no_version_2)
 
 
     def test_one_version_match(self):
-        pkg = spack.db.get('multimethod@1.0')
+        pkg = spack.repo.get('multimethod@1.0')
         self.assertEqual(pkg.no_version_2(), 1)
 
-        pkg = spack.db.get('multimethod@3.0')
+        pkg = spack.repo.get('multimethod@3.0')
         self.assertEqual(pkg.no_version_2(), 3)
 
-        pkg = spack.db.get('multimethod@4.0')
+        pkg = spack.repo.get('multimethod@4.0')
         self.assertEqual(pkg.no_version_2(), 4)
 
 
     def test_version_overlap(self):
-        pkg = spack.db.get('multimethod@2.0')
+        pkg = spack.repo.get('multimethod@2.0')
         self.assertEqual(pkg.version_overlap(), 1)
 
-        pkg = spack.db.get('multimethod@5.0')
+        pkg = spack.repo.get('multimethod@5.0')
         self.assertEqual(pkg.version_overlap(), 2)
 
 
     def test_mpi_version(self):
-        pkg = spack.db.get('multimethod^mpich@3.0.4')
+        pkg = spack.repo.get('multimethod^mpich@3.0.4')
         self.assertEqual(pkg.mpi_version(), 3)
 
-        pkg = spack.db.get('multimethod^mpich2@1.2')
+        pkg = spack.repo.get('multimethod^mpich2@1.2')
         self.assertEqual(pkg.mpi_version(), 2)
 
-        pkg = spack.db.get('multimethod^mpich@1.0')
+        pkg = spack.repo.get('multimethod^mpich@1.0')
         self.assertEqual(pkg.mpi_version(), 1)
 
 
     def test_undefined_mpi_version(self):
-        pkg = spack.db.get('multimethod^mpich@0.4')
+        pkg = spack.repo.get('multimethod^mpich@0.4')
         self.assertEqual(pkg.mpi_version(), 1)
 
-        pkg = spack.db.get('multimethod^mpich@1.4')
+        pkg = spack.repo.get('multimethod^mpich@1.4')
         self.assertEqual(pkg.mpi_version(), 1)
 
 
     def test_default_works(self):
-        pkg = spack.db.get('multimethod%gcc')
+        pkg = spack.repo.get('multimethod%gcc')
         self.assertEqual(pkg.has_a_default(), 'gcc')
 
-        pkg = spack.db.get('multimethod%intel')
+        pkg = spack.repo.get('multimethod%intel')
         self.assertEqual(pkg.has_a_default(), 'intel')
 
-        pkg = spack.db.get('multimethod%pgi')
+        pkg = spack.repo.get('multimethod%pgi')
         self.assertEqual(pkg.has_a_default(), 'default')
 
 
-    def test_architecture_match(self):
-        pkg = spack.db.get('multimethod=x86_64')
-        self.assertEqual(pkg.different_by_architecture(), 'x86_64')
+    def test_target_match(self):
+        platform = spack.architecture.platform()
+        targets = platform.targets.values()
+        for target in targets[:-1]:
+            pkg = spack.repo.get('multimethod target='+target.name)
+            self.assertEqual(pkg.different_by_target(), target.name)
 
-        pkg = spack.db.get('multimethod=ppc64')
-        self.assertEqual(pkg.different_by_architecture(), 'ppc64')
-
-        pkg = spack.db.get('multimethod=ppc32')
-        self.assertEqual(pkg.different_by_architecture(), 'ppc32')
-
-        pkg = spack.db.get('multimethod=arm64')
-        self.assertEqual(pkg.different_by_architecture(), 'arm64')
-
-        pkg = spack.db.get('multimethod=macos')
-        self.assertRaises(NoSuchMethodError, pkg.different_by_architecture)
+        pkg = spack.repo.get('multimethod target='+targets[-1].name)
+        if len(targets) == 1:
+            self.assertEqual(pkg.different_by_target(), targets[-1].name)
+        else:
+            self.assertRaises(NoSuchMethodError, pkg.different_by_target)
 
 
     def test_dependency_match(self):
-        pkg = spack.db.get('multimethod^zmpi')
+        pkg = spack.repo.get('multimethod^zmpi')
         self.assertEqual(pkg.different_by_dep(), 'zmpi')
 
-        pkg = spack.db.get('multimethod^mpich')
+        pkg = spack.repo.get('multimethod^mpich')
         self.assertEqual(pkg.different_by_dep(), 'mpich')
 
         # If we try to switch on some entirely different dep, it's ambiguous,
         # but should take the first option
-        pkg = spack.db.get('multimethod^foobar')
+        pkg = spack.repo.get('multimethod^foobar')
         self.assertEqual(pkg.different_by_dep(), 'mpich')
 
 
     def test_virtual_dep_match(self):
-        pkg = spack.db.get('multimethod^mpich2')
+        pkg = spack.repo.get('multimethod^mpich2')
         self.assertEqual(pkg.different_by_virtual_dep(), 2)
 
-        pkg = spack.db.get('multimethod^mpich@1.0')
+        pkg = spack.repo.get('multimethod^mpich@1.0')
         self.assertEqual(pkg.different_by_virtual_dep(), 1)

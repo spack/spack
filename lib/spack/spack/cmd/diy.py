@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
 import os
@@ -46,6 +46,9 @@ def setup_parser(subparser):
         '--skip-patch', action='store_true',
         help="Skip patching for the DIY build.")
     subparser.add_argument(
+        '-q', '--quiet', action='store_true', dest='quiet',
+        help="Do not display verbose build output while installing.")
+    subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install.  Must contain package AND verison.")
 
@@ -61,7 +64,7 @@ def diy(self, args):
     # Take a write lock before checking for existence.
     with spack.installed_db.write_transaction():
         spec = specs[0]
-        if not spack.db.exists(spec.name):
+        if not spack.repo.exists(spec.name):
             tty.warn("No such package: %s" % spec.name)
             create = tty.get_yes_or_no("Create this package?", default=False)
             if not create:
@@ -69,14 +72,14 @@ def diy(self, args):
                 sys.exit(1)
             else:
                 tty.msg("Running 'spack edit -f %s'" % spec.name)
-                edit_package(spec.name, True)
+                edit_package(spec.name, spack.repo.first_repo(), None, True)
                 return
 
-        if not spec.version.concrete:
-            tty.die("spack diy spec must have a single, concrete version.")
+        if not spec.versions.concrete:
+            tty.die("spack diy spec must have a single, concrete version.  Did you forget a package version number?")
 
         spec.concretize()
-        package = spack.db.get(spec)
+        package = spack.repo.get(spec)
 
         if package.installed:
             tty.error("Already installed in %s" % package.prefix)
@@ -92,4 +95,5 @@ def diy(self, args):
         package.do_install(
             keep_prefix=args.keep_prefix,
             ignore_deps=args.ignore_deps,
+            verbose=not args.quiet,
             keep_stage=True)   # don't remove source dir for DIY.

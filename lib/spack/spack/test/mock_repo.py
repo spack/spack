@@ -1,37 +1,33 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
 import shutil
 
 from llnl.util.filesystem import *
-
-import spack
-from spack.version import ver
 from spack.stage import Stage
 from spack.util.executable import which
-
 
 #
 # VCS Systems used by mock repo code.
@@ -53,6 +49,12 @@ class MockRepo(object):
         # Full path to the repo within the stage.
         self.path = join_path(self.stage.path, repo_name)
         mkdirp(self.path)
+
+
+    def destroy(self):
+        """Destroy resources associated with this mock repo."""
+        if self.stage:
+            self.stage.destroy()
 
 
 class MockArchive(MockRepo):
@@ -141,7 +143,7 @@ class MockGitRepo(MockVCSRepo):
             self.url = self.path
 
     def rev_hash(self, rev):
-        return git('rev-parse', rev, return_output=True).strip()
+        return git('rev-parse', rev, output=str).strip()
 
 
 class MockSvnRepo(MockVCSRepo):
@@ -193,4 +195,4 @@ class MockHgRepo(MockVCSRepo):
 
     def get_rev(self):
         """Get current mercurial revision."""
-        return hg('id', '-i', return_output=True).strip()
+        return hg('id', '-i', output=str).strip()

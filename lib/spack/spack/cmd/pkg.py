@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
 
@@ -77,15 +77,16 @@ def get_git():
 
 def list_packages(rev):
     git = get_git()
-    relpath = spack.packages_path[len(spack.prefix + os.path.sep):] + os.path.sep
+    pkgpath = os.path.join(spack.packages_path, 'packages')
+    relpath = pkgpath[len(spack.prefix + os.path.sep):] + os.path.sep
     output = git('ls-tree', '--full-tree', '--name-only', rev, relpath,
-                 return_output=True)
+                 output=str)
     return sorted(line[len(relpath):] for line in output.split('\n') if line)
 
 
 def pkg_add(args):
     for pkg_name in args.packages:
-        filename = spack.db.filename_for_package_name(pkg_name)
+        filename = spack.repo.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
             tty.die("No such package: %s.  Path does not exist:" % pkg_name, filename)
 

@@ -1,39 +1,37 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """\
 Test that the Stage class works correctly.
 """
-import unittest
-import shutil
 import os
-import getpass
+import shutil
+import unittest
 from contextlib import *
 
-from llnl.util.filesystem import *
-
 import spack
+from llnl.util.filesystem import *
 from spack.stage import Stage
 from spack.util.executable import which
 
@@ -192,116 +190,125 @@ class StageTest(unittest.TestCase):
 
     def test_setup_and_destroy_name_with_tmp(self):
         with use_tmp(True):
-            stage = Stage(archive_url, name=stage_name)
-            self.check_setup(stage, stage_name)
-
-            stage.destroy()
+            with Stage(archive_url, name=stage_name) as stage:
+                self.check_setup(stage, stage_name)
             self.check_destroy(stage, stage_name)
 
 
     def test_setup_and_destroy_name_without_tmp(self):
         with use_tmp(False):
-            stage = Stage(archive_url, name=stage_name)
-            self.check_setup(stage, stage_name)
-
-            stage.destroy()
+            with Stage(archive_url, name=stage_name) as stage:
+                self.check_setup(stage, stage_name)
             self.check_destroy(stage, stage_name)
 
 
     def test_setup_and_destroy_no_name_with_tmp(self):
         with use_tmp(True):
-            stage = Stage(archive_url)
-            self.check_setup(stage, None)
-
-            stage.destroy()
+            with Stage(archive_url) as stage:
+                self.check_setup(stage, None)
             self.check_destroy(stage, None)
 
 
     def test_setup_and_destroy_no_name_without_tmp(self):
         with use_tmp(False):
-            stage = Stage(archive_url)
-            self.check_setup(stage, None)
-
-            stage.destroy()
+            with Stage(archive_url) as stage:
+                self.check_setup(stage, None)
             self.check_destroy(stage, None)
 
 
     def test_chdir(self):
-        stage = Stage(archive_url, name=stage_name)
-
-        stage.chdir()
-        self.check_setup(stage, stage_name)
-        self.check_chdir(stage, stage_name)
-
-        stage.destroy()
+        with Stage(archive_url, name=stage_name) as stage:
+            stage.chdir()
+            self.check_setup(stage, stage_name)
+            self.check_chdir(stage, stage_name)
         self.check_destroy(stage, stage_name)
 
 
     def test_fetch(self):
-        stage = Stage(archive_url, name=stage_name)
-
-        stage.fetch()
-        self.check_setup(stage, stage_name)
-        self.check_chdir(stage, stage_name)
-        self.check_fetch(stage, stage_name)
-
-        stage.destroy()
+        with Stage(archive_url, name=stage_name) as stage:
+            stage.fetch()
+            self.check_setup(stage, stage_name)
+            self.check_chdir(stage, stage_name)
+            self.check_fetch(stage, stage_name)
         self.check_destroy(stage, stage_name)
 
 
     def test_expand_archive(self):
-        stage = Stage(archive_url, name=stage_name)
-
-        stage.fetch()
-        self.check_setup(stage, stage_name)
-        self.check_fetch(stage, stage_name)
-
-        stage.expand_archive()
-        self.check_expand_archive(stage, stage_name)
-
-        stage.destroy()
+        with Stage(archive_url, name=stage_name) as stage:
+            stage.fetch()
+            self.check_setup(stage, stage_name)
+            self.check_fetch(stage, stage_name)
+            stage.expand_archive()
+            self.check_expand_archive(stage, stage_name)
         self.check_destroy(stage, stage_name)
 
 
     def test_expand_archive(self):
-        stage = Stage(archive_url, name=stage_name)
-
-        stage.fetch()
-        self.check_setup(stage, stage_name)
-        self.check_fetch(stage, stage_name)
-
-        stage.expand_archive()
-        stage.chdir_to_source()
-        self.check_expand_archive(stage, stage_name)
-        self.check_chdir_to_source(stage, stage_name)
-
-        stage.destroy()
+        with Stage(archive_url, name=stage_name) as stage:
+            stage.fetch()
+            self.check_setup(stage, stage_name)
+            self.check_fetch(stage, stage_name)
+            stage.expand_archive()
+            stage.chdir_to_source()
+            self.check_expand_archive(stage, stage_name)
+            self.check_chdir_to_source(stage, stage_name)
         self.check_destroy(stage, stage_name)
 
 
     def test_restage(self):
-        stage = Stage(archive_url, name=stage_name)
+        with Stage(archive_url, name=stage_name) as stage:
+            stage.fetch()
+            stage.expand_archive()
+            stage.chdir_to_source()
+            self.check_expand_archive(stage, stage_name)
+            self.check_chdir_to_source(stage, stage_name)
 
-        stage.fetch()
-        stage.expand_archive()
-        stage.chdir_to_source()
-        self.check_expand_archive(stage, stage_name)
-        self.check_chdir_to_source(stage, stage_name)
+            # Try to make a file in the old archive dir
+            with open('foobar', 'w') as file:
+                file.write("this file is to be destroyed.")
 
-        # Try to make a file in the old archive dir
-        with open('foobar', 'w') as file:
-            file.write("this file is to be destroyed.")
+            self.assertTrue('foobar' in os.listdir(stage.source_path))
 
-        self.assertTrue('foobar' in os.listdir(stage.source_path))
-
-        # Make sure the file is not there after restage.
-        stage.restage()
-        self.check_chdir(stage, stage_name)
-        self.check_fetch(stage, stage_name)
-
-        stage.chdir_to_source()
-        self.check_chdir_to_source(stage, stage_name)
-        self.assertFalse('foobar' in os.listdir(stage.source_path))
-
-        stage.destroy()
+            # Make sure the file is not there after restage.
+            stage.restage()
+            self.check_chdir(stage, stage_name)
+            self.check_fetch(stage, stage_name)
+            stage.chdir_to_source()
+            self.check_chdir_to_source(stage, stage_name)
+            self.assertFalse('foobar' in os.listdir(stage.source_path))
         self.check_destroy(stage, stage_name)
+
+
+    def test_no_keep_without_exceptions(self):
+        with Stage(archive_url, name=stage_name, keep=False) as stage:
+            pass
+        self.check_destroy(stage, stage_name)
+
+
+    def test_keep_without_exceptions(self):
+        with Stage(archive_url, name=stage_name, keep=True) as stage:
+            pass
+        path = self.get_stage_path(stage, stage_name)
+        self.assertTrue(os.path.isdir(path))
+
+
+    def test_no_keep_with_exceptions(self):
+        try:
+            with Stage(archive_url, name=stage_name, keep=False) as stage:
+                raise Exception()
+
+            path = self.get_stage_path(stage, stage_name)
+            self.assertTrue(os.path.isdir(path))
+        except:
+            pass # ignore here.
+
+
+    def test_keep_exceptions(self):
+        try:
+            with Stage(archive_url, name=stage_name, keep=True) as stage:
+                raise Exception()
+
+            path = self.get_stage_path(stage, stage_name)
+            self.assertTrue(os.path.isdir(path))
+        except:
+            pass # ignore here.

@@ -84,7 +84,7 @@ always choose to download just one tarball initially, and run
 
    If it fails entirely, you can get minimal boilerplate by using
    :ref:`spack-edit-f`, or you can manually create a directory and
-   ``package.py`` file for the package in ``var/spack/packages``.
+   ``package.py`` file for the package in ``var/spack/repos/builtin/packages``.
 
 .. note::
 
@@ -203,7 +203,7 @@ edit`` command:
 So, if you used ``spack create`` to create a package, then saved and
 closed the resulting file, you can get back to it with ``spack edit``.
 The ``cmake`` package actually lives in
-``$SPACK_ROOT/var/spack/packages/cmake/package.py``, but this provides
+``$SPACK_ROOT/var/spack/repos/builtin/packages/cmake/package.py``, but this provides
 a much simpler shortcut and saves you the trouble of typing the full
 path.
 
@@ -269,18 +269,18 @@ live in Spack's directory structure.  In general, `spack-create`_ and
 `spack-edit`_ handle creating package files for you, so you can skip
 most of the details here.
 
-``var/spack/packages``
+``var/spack/repos/builtin/packages``
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 A Spack installation directory is structured like a standard UNIX
 install prefix (``bin``, ``lib``, ``include``, ``var``, ``opt``,
 etc.).  Most of the code for Spack lives in ``$SPACK_ROOT/lib/spack``.
-Packages themselves live in ``$SPACK_ROOT/var/spack/packages``.
+Packages themselves live in ``$SPACK_ROOT/var/spack/repos/builtin/packages``.
 
 If you ``cd`` to that directory, you will see directories for each
 package:
 
-.. command-output::  cd $SPACK_ROOT/var/spack/packages;  ls -CF
+.. command-output::  cd $SPACK_ROOT/var/spack/repos/builtin/packages;  ls -CF
    :shell:
    :ellipsis: 10
 
@@ -288,7 +288,7 @@ Each directory contains a file called ``package.py``, which is where
 all the python code for the package goes.  For example, the ``libelf``
 package lives in::
 
-   $SPACK_ROOT/var/spack/packages/libelf/package.py
+   $SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py
 
 Alongside the ``package.py`` file, a package may contain extra
 directories or files (like patches) that it needs to build.
@@ -301,7 +301,7 @@ Packages are named after the directory containing ``package.py``.  So,
 ``libelf``'s ``package.py`` lives in a directory called ``libelf``.
 The ``package.py`` file defines a class called ``Libelf``, which
 extends Spack's ``Package`` class.  for example, here is
-``$SPACK_ROOT/var/spack/packages/libelf/package.py``:
+``$SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py``:
 
 .. code-block:: python
    :linenos:
@@ -328,7 +328,7 @@ these:
    $ spack install libelf@0.8.13
 
 Spack sees the package name in the spec and looks for
-``libelf/package.py`` in ``var/spack/packages``.  Likewise, if you say
+``libelf/package.py`` in ``var/spack/repos/builtin/packages``.  Likewise, if you say
 ``spack install py-numpy``, then Spack looks for
 ``py-numpy/package.py``.
 
@@ -400,6 +400,35 @@ construct the new one for ``8.2.1``.
 
 When you supply a custom URL for a version, Spack uses that URL
 *verbatim* and does not perform extrapolation.
+
+Skipping the expand step
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spack normally expands archives automatically after downloading
+them. If you want to skip this step (e.g., for self-extracting
+executables and other custom archive types), you can add
+``expand=False`` to a ``version`` directive.
+
+.. code-block:: python
+
+   version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
+           url='http://example.com/foo-8.2.1-special-version.tar.gz', 'expand=False')
+
+When ``expand`` is set to ``False``, Spack sets the current working
+directory to the directory containing the downloaded archive before it
+calls your ``install`` method.  Within ``install``, the path to the
+downloaded archive is available as ``self.stage.archive_file``.
+
+Here is an example snippet for packages distributed as self-extracting
+archives.  The example sets permissions on the downloaded file to make
+it executable, then runs it with some arguments.
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       set_executable(self.stage.archive_file)
+       installer = Executable(self.stage.archive_file)
+       installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
 
 Checksums
 ~~~~~~~~~~~~~~~~~
@@ -632,7 +661,7 @@ Default
   revision instead.
 
 Revisions
-  Add ``hg`` and ``revision``parameters:
+  Add ``hg`` and ``revision`` parameters:
 
   .. code-block:: python
 
@@ -674,6 +703,127 @@ Fetching a revision
 Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the ``url``.
 
+
+.. _license:
+
+Licensed software
+------------------------------------------
+
+In order to install licensed software, Spack needs to know a few more
+details about a package. The following class attributes should be defined.
+
+``license_required``
+~~~~~~~~~~~~~~~~~~~~~
+
+Boolean. If set to ``True``, this software requires a license. If set to
+``False``, all of the following attributes will be ignored. Defaults to
+``False``.
+
+``license_comment``
+~~~~~~~~~~~~~~~~~~~~~
+
+String. Contains the symbol used by the license manager to denote a comment.
+Defaults to ``#``.
+
+``license_files``
+~~~~~~~~~~~~~~~~~~~~~
+
+List of strings. These are files that the software searches for when
+looking for a license. All file paths must be relative to the installation
+directory. More complex packages like Intel may require multiple
+licenses for individual components. Defaults to the empty list.
+
+``license_vars``
+~~~~~~~~~~~~~~~~~~~~~
+
+List of strings. Environment variables that can be set to tell the software
+where to look for a license if it is not in the usual location. Defaults
+to the empty list.
+
+``license_url``
+~~~~~~~~~~~~~~~~~~~~~
+
+String. A URL pointing to license setup instructions for the software.
+Defaults to the empty string.
+
+For example, let's take a look at the package for the PGI compilers.
+
+.. code-block:: python
+
+    # Licensing
+    license_required = True
+    license_comment  = '#'
+    license_files    = ['license.dat']
+    license_vars     = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
+    license_url      = 'http://www.pgroup.com/doc/pgiinstall.pdf'
+
+As you can see, PGI requires a license. Its license manager, FlexNet, uses
+the ``#`` symbol to denote a comment. It expects the license file to be
+named ``license.dat`` and to be located directly in the installation prefix.
+If you would like the installation file to be located elsewhere, simply set
+``PGROUPD_LICENSE_FILE`` or ``LM_LICENSE_FILE`` after installation. For
+further instructions on installation and licensing, see the URL provided.
+
+Let's walk through a sample PGI installation to see exactly what Spack is
+and isn't capable of. Since PGI does not provide a download URL, it must
+be downloaded manually. It can either be added to a mirror or located in
+the current directory when ``spack install pgi`` is run. See :ref:`mirrors`
+for instructions on setting up a mirror.
+
+After running ``spack install pgi``, the first thing that will happen is
+Spack will create a global license file located at
+``$SPACK_ROOT/etc/spack/licenses/pgi/license.dat``. It will then open up the
+file using the editor set in ``$EDITOR``, or vi if unset. It will look like
+this:
+
+.. code-block::
+
+    # A license is required to use pgi.
+    #
+    # The recommended solution is to store your license key in this global
+    # license file. After installation, the following symlink(s) will be
+    # added to point to this file (relative to the installation prefix):
+    #
+    #   license.dat
+    #
+    # Alternatively, use one of the following environment variable(s):
+    #
+    #   PGROUPD_LICENSE_FILE
+    #   LM_LICENSE_FILE
+    #
+    # If you choose to store your license in a non-standard location, you may
+    # set one of these variable(s) to the full pathname to the license file, or
+    # port@host if you store your license keys on a dedicated license server.
+    # You will likely want to set this variable in a module file so that it
+    # gets loaded every time someone tries to use pgi.
+    #
+    # For further information on how to acquire a license, please refer to:
+    #
+    #   http://www.pgroup.com/doc/pgiinstall.pdf
+    #
+    # You may enter your license below.
+
+You can add your license directly to this file, or tell FlexNet to use a
+license stored on a separate license server. Here is an example that
+points to a license server called licman1:
+
+.. code-block::
+
+    SERVER licman1.mcs.anl.gov 00163eb7fba5 27200
+    USE_SERVER
+
+If your package requires the license to install, you can reference the
+location of this global license using ``self.global_license_file``.
+After installation, symlinks for all of the files given in
+``license_files`` will be created, pointing to this global license.
+If you install a different version or variant of the package, Spack
+will automatically detect and reuse the already existing global license.
+
+If the software you are trying to package doesn't rely on license files,
+Spack will print a warning message, letting the user know that they
+need to set an environment variable or pointing them to installation
+documentation.
+
 .. _patching:
 
 Patches
@@ -703,7 +853,7 @@ supply is a filename, then the patch needs to live within the spack
 source tree.  For example, the patch above lives in a directory
 structure like this::
 
-   $SPACK_ROOT/var/spack/packages/
+   $SPACK_ROOT/var/spack/repos/builtin/packages/
        mvapich2/
            package.py
            ad_lustre_rwcontig_open_source.patch
@@ -1071,11 +1221,13 @@ just as easily provide a version range:
 
    depends_on("libelf@0.8.2:0.8.4:")
 
-Or a requirement for a particular variant:
+Or a requirement for a particular variant or compiler flags:
 
 .. code-block:: python
 
    depends_on("libelf@0.8+debug")
+   depends_on('libelf debug=True')
+   depends_on('libelf cppflags="-fPIC")
 
 Both users *and* package authors can use the same spec syntax to refer
 to different package configurations.  Users use the spec syntax on the
@@ -1473,21 +1625,21 @@ the user runs ``spack install`` and the time the ``install()`` method
 is called.  The concretized version of the spec above might look like
 this::
 
-   mpileaks@2.3%gcc@4.7.3=linux-ppc64
-       ^callpath@1.0%gcc@4.7.3+debug=linux-ppc64
-           ^dyninst@8.1.2%gcc@4.7.3=linux-ppc64
-               ^libdwarf@20130729%gcc@4.7.3=linux-ppc64
-                   ^libelf@0.8.11%gcc@4.7.3=linux-ppc64
-           ^mpich@3.0.4%gcc@4.7.3=linux-ppc64
+   mpileaks@2.3%gcc@4.7.3 arch=linux-ppc64
+       ^callpath@1.0%gcc@4.7.3+debug arch=linux-ppc64
+           ^dyninst@8.1.2%gcc@4.7.3 arch=linux-ppc64
+               ^libdwarf@20130729%gcc@4.7.3 arch=linux-ppc64
+                   ^libelf@0.8.11%gcc@4.7.3 arch=linux-ppc64
+           ^mpich@3.0.4%gcc@4.7.3 arch=linux-ppc64
 
 .. graphviz::
 
    digraph {
-       "mpileaks@2.3\n%gcc@4.7.3\n=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n=linux-ppc64"
-       "mpileaks@2.3\n%gcc@4.7.3\n=linux-ppc64" -> "callpath@1.0\n%gcc@4.7.3+debug\n=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n=linux-ppc64"
-       "callpath@1.0\n%gcc@4.7.3+debug\n=linux-ppc64" -> "dyninst@8.1.2\n%gcc@4.7.3\n=linux-ppc64"
-       "dyninst@8.1.2\n%gcc@4.7.3\n=linux-ppc64" -> "libdwarf@20130729\n%gcc@4.7.3\n=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n=linux-ppc64"
-       "dyninst@8.1.2\n%gcc@4.7.3\n=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n=linux-ppc64"
+       "mpileaks@2.3\n%gcc@4.7.3\n arch=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n arch=linux-ppc64"
+       "mpileaks@2.3\n%gcc@4.7.3\n arch=linux-ppc64" -> "callpath@1.0\n%gcc@4.7.3+debug\n arch=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n arch=linux-ppc64"
+       "callpath@1.0\n%gcc@4.7.3+debug\n arch=linux-ppc64" -> "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64"
+       "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64" -> "libdwarf@20130729\n%gcc@4.7.3\n arch=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n arch=linux-ppc64"
+       "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n arch=linux-ppc64"
    }
 
 Here, all versions, compilers, and platforms are filled in, and there
@@ -1498,8 +1650,8 @@ point will Spack call the ``install()`` method for your package.
 Concretization in Spack is based on certain selection policies that
 tell Spack how to select, e.g., a version, when one is not specified
 explicitly.  Concretization policies are discussed in more detail in
-:ref:`site-configuration`.  Sites using Spack can customize them to
-match the preferences of their own users.
+:ref:`configuration`.  Sites using Spack can customize them to match
+the preferences of their own users.
 
 .. _spack-spec:
 
@@ -1516,13 +1668,24 @@ running ``spack spec``.  For example:
        ^libdwarf
            ^libelf
 
-   dyninst@8.0.1%gcc@4.7.3=linux-ppc64
-       ^libdwarf@20130729%gcc@4.7.3=linux-ppc64
-           ^libelf@0.8.13%gcc@4.7.3=linux-ppc64
+   dyninst@8.0.1%gcc@4.7.3 arch=linux-ppc64
+       ^libdwarf@20130729%gcc@4.7.3 arch=linux-ppc64
+           ^libelf@0.8.13%gcc@4.7.3 arch=linux-ppc64
 
 This is useful when you want to know exactly what Spack will do when
 you ask for a particular spec.
 
+
+``Concretization Policies``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A user may have certain preferences for how packages should
+be concretized on their system.  For example, one user may prefer packages
+built with OpenMPI and the Intel compiler.  Another user may prefer
+packages be built with MVAPICH and GCC.
+
+See the `documentation in the config section <concretization-preferences_>`_
+for more details.
 
 .. _install-method:
 
@@ -1533,7 +1696,7 @@ The last element of a package is its ``install()`` method.  This is
 where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
-.. literalinclude::  ../../../var/spack/packages/libelf/package.py
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/libelf/package.py
    :start-after: 0.8.12
    :linenos:
 
@@ -1711,15 +1874,15 @@ Compile-time library search paths
   * ``-L$dep_prefix/lib``
   * ``-L$dep_prefix/lib64``
 Runtime library search paths (RPATHs)
-  * ``-Wl,-rpath=$dep_prefix/lib``
-  * ``-Wl,-rpath=$dep_prefix/lib64``
+  * ``$rpath_flag$dep_prefix/lib``
+  * ``$rpath_flag$dep_prefix/lib64``
 Include search paths
   * ``-I$dep_prefix/include``
 
 An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
 build will have ``-I$LIBELF_PREFIX/include``,
-``-L$LIBELF_PREFIX/lib``, and ``-Wl,-rpath=$LIBELF_PREFIX/lib``
+``-L$LIBELF_PREFIX/lib``, and ``$rpath_flag$LIBELF_PREFIX/lib``
 inserted on the command line.  This is done transparently to the
 project's build system, which will just think it's using a system
 where ``libelf`` is readily available.  Because of this, you **do
@@ -1739,6 +1902,67 @@ successfully find ``libdwarf.h`` and ``libdwarf.so``, without the
 packager having to provide ``--with-libdwarf=/path/to/libdwarf`` on
 the command line.
 
+.. note::
+
+    For most compilers, ``$rpath_flag`` is ``-Wl,-rpath,``. However, NAG
+    passes its flags to GCC instead of passing them directly to the linker.
+    Therefore, its ``$rpath_flag`` is doubly wrapped: ``-Wl,-Wl,,-rpath,``.
+    ``$rpath_flag`` can be overriden on a compiler specific basis in
+    ``lib/spack/spack/compilers/$compiler.py``.
+
+The compiler wrappers also pass the compiler flags specified by the user from
+the command line (``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``,
+and/or ``ldlibs``). They do not override the canonical autotools flags with the
+same names (but in ALL-CAPS) that may be passed into the build by particularly
+challenging package scripts.
+
+Compiler flags
+~~~~~~~~~~~~~~
+In rare circumstances such as compiling and running small unit tests, a package
+developer may need to know what are the appropriate compiler flags to enable
+features like ``OpenMP``, ``c++11``, ``c++14`` and alike. To that end the
+compiler classes in ``spack`` implement the following _properties_ :
+``openmp_flag``, ``cxx11_flag``, ``cxx14_flag``, which can be accessed in a
+package by ``self.compiler.cxx11_flag`` and alike. Note that the implementation
+is such that if a given compiler version does not support this feature, an
+error will be produced. Therefore package developers can also use these properties
+to assert that a compiler supports the requested feature. This is handy when a
+package supports additional variants like
+
+.. code-block:: python
+
+   variant('openmp', default=True, description="Enable OpenMP support.")
+
+Message Parsing Interface (MPI)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It is common for high performance computing software/packages to use ``MPI``.
+As a result of conretization, a given package can be built using different
+implementations of MPI such as ``Openmpi``, ``MPICH`` or ``IntelMPI``.
+In some scenarios to configure a package one have to provide it with appropriate MPI
+compiler wrappers such as ``mpicc``, ``mpic++``.
+However different implementations of ``MPI`` may have different names for those
+wrappers.  In order to make package's ``install()`` method indifferent to the
+choice ``MPI`` implementation, each package which implements ``MPI`` sets up
+``self.spec.mpicc``, ``self.spec.mpicxx``, ``self.spec.mpifc`` and ``self.spec.mpif77``
+to point to ``C``, ``C++``, ``Fortran 90`` and ``Fortran 77`` ``MPI`` wrappers.
+Package developers are advised to use these variables, for example ``self.spec['mpi'].mpicc``
+instead of hard-coding ``join_path(self.spec['mpi'].prefix.bin, 'mpicc')`` for
+the reasons outlined above.
+
+
+Blas and Lapack libraries
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Different packages provide implementation of ``Blas`` and ``Lapack`` routines.
+The names of the resulting static and/or shared libraries differ from package
+to package. In order to make ``install()`` method indifferent to the
+choice of ``Blas`` implementation, each package which provides it
+sets up ``self.spec.blas_shared_lib`` and ``self.spec.blas_static_lib `` to
+point to the shared and static ``Blas`` libraries, respectively. The same
+applies to packages which provide ``Lapack``. Package developers are advised to
+use these variables, for example ``spec['blas'].blas_shared_lib`` instead of
+hard-coding ``join_path(spec['blas'].prefix.lib, 'libopenblas.so')``.
+
+
 Forking ``install()``
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -1751,6 +1975,20 @@ modify Spack internals, because each ``install()`` call has its own
 dedicated process.
 
 .. _prefix-objects:
+
+
+Failing the build
+----------------------
+
+Sometimes you don't want a package to successfully install unless some
+condition is true.  You can explicitly cause the build to fail from
+``install()`` by raising an ``InstallError``, for example:
+
+.. code-block:: python
+
+   if spec.architecture.startswith('darwin'):
+       raise InstallError('This package does not build on Mac OS X!')
+
 
 Prefix objects
 ----------------------
@@ -1937,12 +2175,12 @@ example:
        def install(self, prefix):
            # Do default install
 
-       @when('=chaos_5_x86_64_ib')
+       @when('arch=chaos_5_x86_64_ib')
        def install(self, prefix):
            # This will be executed instead of the default install if
            # the package's sys_type() is chaos_5_x86_64_ib.
 
-       @when('=bgqos_0")
+       @when('arch=bgqos_0")
        def install(self, prefix):
            # This will be executed if the package's sys_type is bgqos_0
 
@@ -2068,6 +2306,62 @@ package, this allows us to avoid race conditions in the library's
 build system.
 
 
+.. _sanity-checks:
+
+Sanity checking an intallation
+--------------------------------
+
+By default, Spack assumes that a build has failed if nothing is
+written to the install prefix, and that it has succeeded if anything
+(a file, a directory, etc.)  is written to the install prefix after
+``install()`` completes.
+
+Consider a simple autotools build like this:
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       configure("--prefix=" + prefix)
+       make()
+       make("install")
+
+If you are using using standard autotools or CMake, ``configure`` and
+``make`` will not write anything to the install prefix.  Only ``make
+install`` writes the files, and only once the build is already
+complete.  Not all builds are like this.  Many builds of scientific
+software modify the install prefix *before* ``make install``. Builds
+like this can falsely report that they were successfully installed if
+an error occurs before the install is complete but after files have
+been written to the ``prefix``.
+
+
+``sanity_check_is_file`` and ``sanity_check_is_dir``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can optionally specify *sanity checks* to deal with this problem.
+Add properties like this to your package:
+
+.. code-block:: python
+
+   class MyPackage(Package):
+       ...
+
+       sanity_check_is_file = ['include/libelf.h']
+       sanity_check_is_dir  = [lib]
+
+       def install(self, spec, prefix):
+           configure("--prefix=" + prefix)
+           make()
+           make("install")
+
+Now, after ``install()`` runs, Spack will check whether
+``$prefix/include/libelf.h`` exists and is a file, and whether
+``$prefix/lib`` exists and is a directory.  If the checks fail, then
+the build will fail and the install prefix will be removed.  If they
+succeed, Spack considers the build succeeful and keeps the prefix in
+place.
+
+
 .. _file-manipulation:
 
 File manipulation functions
@@ -2107,6 +2401,15 @@ Filtering functions
   string for the particular match.
 
   Examples:
+
+  #. Filtering a Makefile to force it to use Spack's compiler wrappers:
+
+     .. code-block:: python
+
+        filter_file(r'^CC\s*=.*',  spack_cc,  'Makefile')
+        filter_file(r'^CXX\s*=.*', spack_cxx, 'Makefile')
+        filter_file(r'^F77\s*=.*', spack_f77, 'Makefile')
+        filter_file(r'^FC\s*=.*',  spack_fc,  'Makefile')
 
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 
@@ -2467,11 +2770,11 @@ build it:
    $ spack stage libelf
    ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
    ######################################################################## 100.0%
-   ==> Staging archive: /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3=linux-ppc64/libelf-0.8.13.tar.gz
-   ==> Created stage in /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3=linux-ppc64.
+   ==> Staging archive: /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64/libelf-0.8.13.tar.gz
+   ==> Created stage in /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64.
    $ spack cd libelf
    $ pwd
-   /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3=linux-ppc64/libelf-0.8.13
+   /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64/libelf-0.8.13
 
 ``spack cd`` here changed he current working directory to the
 directory containing the expanded ``libelf`` source code.  There are a

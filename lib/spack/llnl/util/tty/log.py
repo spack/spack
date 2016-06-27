@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """Utility classes for logging the output of blocks of code.
 """
@@ -122,6 +122,10 @@ class log_output(object):
         self.force_color = force_color
         self.debug = debug
 
+        # Default is to try file-descriptor reassignment unless the system 
+        # out/err streams do not have an associated file descriptor
+        self.directAssignment = False
+
     def trace(self, frame, event, arg):
         """Jumps to __exit__ on the child process."""
         raise _SkipWithBlock()
@@ -185,13 +189,21 @@ class log_output(object):
             # Child: redirect output, execute the with block.
             os.close(read)
 
-            # Save old stdout and stderr
-            self._stdout = os.dup(sys.stdout.fileno())
-            self._stderr = os.dup(sys.stderr.fileno())
+            try:
+                # Save old stdout and stderr
+                self._stdout = os.dup(sys.stdout.fileno())
+                self._stderr = os.dup(sys.stderr.fileno())
 
-            # redirect to the pipe.
-            os.dup2(write, sys.stdout.fileno())
-            os.dup2(write, sys.stderr.fileno())
+                # redirect to the pipe.
+                os.dup2(write, sys.stdout.fileno())
+                os.dup2(write, sys.stderr.fileno())
+            except AttributeError:
+                self.directAssignment = True
+                self._stdout = sys.stdout
+                self._stderr = sys.stderr
+                output_redirect = os.fdopen(write, 'w')
+                sys.stdout = output_redirect
+                sys.stderr = output_redirect
 
             if self.force_color:
                 color._force_color = True
@@ -218,8 +230,12 @@ class log_output(object):
                 #
                 # TODO: think about how this works outside install.
                 # TODO: ideally would propagate exception to parent...
-                os.dup2(self._stdout, sys.stdout.fileno())
-                os.dup2(self._stderr, sys.stderr.fileno())
+                if self.directAssignment:
+                    sys.stdout = self._stdout
+                    sys.stderr = self._stderr
+                else:
+                    os.dup2(self._stdout, sys.stdout.fileno())
+                    os.dup2(self._stderr, sys.stderr.fileno())                    
 
                 return False
 

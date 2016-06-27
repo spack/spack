@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
 import sys
@@ -36,6 +36,7 @@ import spack.config
 import spack.mirror
 from spack.spec import Spec
 from spack.error import SpackError
+from spack.util.spack_yaml import syaml_dict
 
 description = "Manage mirrors."
 
@@ -47,28 +48,46 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='mirror_command')
 
+    # Create
     create_parser = sp.add_parser('create', help=mirror_create.__doc__)
     create_parser.add_argument('-d', '--directory', default=None,
                                help="Directory in which to create mirror.")
     create_parser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="Specs of packages to put in mirror")
+        'specs', nargs=argparse.REMAINDER,
+        help="Specs of packages to put in mirror")
     create_parser.add_argument(
         '-f', '--file', help="File with specs of packages to put in mirror.")
     create_parser.add_argument(
-        '-D', '--dependencies', action='store_true', help="Also fetch all dependencies")
+        '-D', '--dependencies', action='store_true',
+        help="Also fetch all dependencies")
     create_parser.add_argument(
         '-o', '--one-version-per-spec', action='store_const', const=1, default=0,
         help="Only fetch one 'preferred' version per spec, not all known versions.")
 
+    scopes = spack.config.config_scopes
+
+    # Add
     add_parser = sp.add_parser('add', help=mirror_add.__doc__)
     add_parser.add_argument('name', help="Mnemonic name for mirror.")
     add_parser.add_argument(
         'url', help="URL of mirror directory created by 'spack mirror create'.")
+    add_parser.add_argument(
+        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        help="Configuration scope to modify.")
 
-    remove_parser = sp.add_parser('remove', help=mirror_remove.__doc__)
+    # Remove
+    remove_parser = sp.add_parser('remove', aliases=['rm'],
+                                  help=mirror_remove.__doc__)
     remove_parser.add_argument('name')
+    remove_parser.add_argument(
+        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
+        help="Configuration scope to modify.")
 
+    # List
     list_parser = sp.add_parser('list', help=mirror_list.__doc__)
+    list_parser.add_argument(
+        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
+        help="Configuration scope to read from.")
 
 
 def mirror_add(args):
@@ -77,43 +96,65 @@ def mirror_add(args):
     if url.startswith('/'):
         url = 'file://' + url
 
-    mirror_dict = { args.name : url }
-    spack.config.add_to_mirror_config({ args.name : url })
+    mirrors = spack.config.get_config('mirrors', scope=args.scope)
+    if not mirrors:
+        mirrors = syaml_dict()
+
+    for name, u in mirrors.items():
+        if name == args.name:
+            tty.die("Mirror with name %s already exists." % name)
+        if u == url:
+            tty.die("Mirror with url %s already exists." % url)
+        # should only be one item per mirror dict.
+
+    items = [(n,u) for n,u in mirrors.items()]
+    items.insert(0, (args.name, url))
+    mirrors = syaml_dict(items)
+    spack.config.update_config('mirrors', mirrors, scope=args.scope)
 
 
 def mirror_remove(args):
     """Remove a mirror by name."""
     name = args.name
 
-    rmd_something = spack.config.remove_from_config('mirrors', name)
-    if not rmd_something:
-        tty.die("No such mirror: %s" % name)
+    mirrors = spack.config.get_config('mirrors', scope=args.scope)
+    if not mirrors:
+        mirrors = syaml_dict()
+
+    if not name in mirrors:
+        tty.die("No mirror with name %s" % name)
+
+    old_value = mirrors.pop(name)
+    spack.config.update_config('mirrors', mirrors, scope=args.scope)
+    tty.msg("Removed mirror %s with url %s" % (name, old_value))
 
 
 def mirror_list(args):
     """Print out available mirrors to the console."""
-    sec_names = spack.config.get_mirror_config()
-    if not sec_names:
+    mirrors = spack.config.get_config('mirrors', scope=args.scope)
+    if not mirrors:
         tty.msg("No mirrors configured.")
         return
 
-    max_len = max(len(s) for s in sec_names)
+    max_len = max(len(n) for n in mirrors.keys())
     fmt = "%%-%ds%%s" % (max_len + 4)
 
-    for name, val in sec_names.iteritems():
-        print fmt % (name, val)
+    for name in mirrors:
+        print fmt % (name, mirrors[name])
 
 
 def _read_specs_from_file(filename):
+    specs = []
     with open(filename, "r") as stream:
         for i, string in enumerate(stream):
             try:
                 s = Spec(string)
                 s.package
-                args.specs.append(s)
+                specs.append(s)
             except SpackError, e:
                 tty.die("Parse error in %s, line %d:" % (args.file, i+1),
                         ">>> " + string, str(e))
+    return specs
 
 
 def mirror_create(args):
@@ -130,9 +171,10 @@ def mirror_create(args):
 
     # If nothing is passed, use all packages.
     if not specs:
-        specs = [Spec(n) for n in spack.db.all_package_names()]
+        specs = [Spec(n) for n in spack.repo.all_package_names()]
         specs.sort(key=lambda s: s.format("$_$@").lower())
 
+    # If the user asked for dependencies, traverse spec DAG get them.
     if args.dependencies:
         new_specs = set()
         for spec in specs:
@@ -161,7 +203,7 @@ def mirror_create(args):
 
     verb = "updated" if existed else "created"
     tty.msg(
-        "Successfully %s mirror in %s." % (verb, directory),
+        "Successfully %s mirror in %s" % (verb, directory),
         "Archive stats:",
         "  %-4d already present"  % p,
         "  %-4d added"            % m,
@@ -175,6 +217,7 @@ def mirror(parser, args):
     action = { 'create' : mirror_create,
                'add'    : mirror_add,
                'remove' : mirror_remove,
+               'rm'     : mirror_remove,
                'list'   : mirror_list }
 
     action[args.mirror_command](args)

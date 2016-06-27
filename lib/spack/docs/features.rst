@@ -31,14 +31,21 @@ platform, all on the command line.
    # Specify a compiler (and its version), with %
    $ spack install mpileaks@1.1.2 %gcc@4.7.3
 
-   # Add special compile-time options with +
+   # Add special compile-time options by name
+   $ spack install mpileaks@1.1.2 %gcc@4.7.3 debug=True
+
+   # Add special boolean compile-time options with +
    $ spack install mpileaks@1.1.2 %gcc@4.7.3 +debug
 
-   # Cross-compile for a different architecture with =
-   $ spack install mpileaks@1.1.2 =bgqos_0
+   # Add compiler flags using the conventional names
+   $ spack install mpileaks@1.1.2 %gcc@4.7.3 cppflags=\"-O3 -floop-block\"
 
-Users can specify as many or few options as they care about.  Spack
-will fill in the unspecified values with sensible defaults.
+   # Cross-compile for a different architecture with arch=
+   $ spack install mpileaks@1.1.2 arch=bgqos_0
+
+Users can specify as many or few options as they care about. Spack
+will fill in the unspecified values with sensible defaults. The two listed
+syntaxes for variants are identical when the value is boolean.
 
 
 Customize dependencies
@@ -103,7 +110,7 @@ creates a simple python file:
 It doesn't take much python coding to get from there to a working
 package:
 
-.. literalinclude:: ../../../var/spack/packages/libelf/package.py
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/libelf/package.py
    :lines: 25-
 
 Spack also provides wrapper functions around common commands like

@@ -1,56 +1,57 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """\
 This test verifies that the Spack directory layout works properly.
 """
-import unittest
-import tempfile
-import shutil
 import os
-
-from llnl.util.filesystem import *
+import shutil
+import tempfile
 
 import spack
-from spack.spec import Spec
-from spack.packages import PackageDB
+from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
+from spack.repository import RepoPath
+from spack.spec import Spec
+from spack.test.mock_packages_test import *
 
 # number of packages to test (to reduce test time)
 max_packages = 10
 
 
-class DirectoryLayoutTest(unittest.TestCase):
+class DirectoryLayoutTest(MockPackagesTest):
     """Tests that a directory layout works correctly and produces a
        consistent install path."""
 
     def setUp(self):
+        super(DirectoryLayoutTest, self).setUp()
         self.tmpdir = tempfile.mkdtemp()
         self.layout = YamlDirectoryLayout(self.tmpdir)
 
 
     def tearDown(self):
+        super(DirectoryLayoutTest, self).tearDown()
         shutil.rmtree(self.tmpdir, ignore_errors=True)
         self.layout = None
 
@@ -62,9 +63,12 @@ class DirectoryLayoutTest(unittest.TestCase):
            finally that the directory can be removed by the directory
            layout.
         """
-        packages = list(spack.db.all_packages())[:max_packages]
+        packages = list(spack.repo.all_packages())[:max_packages]
 
         for pkg in packages:
+            if pkg.name.startswith('external'):
+                #External package tests cannot be installed
+                continue            
             spec = pkg.spec
 
             # If a spec fails to concretize, just skip it.  If it is a
@@ -123,17 +127,17 @@ class DirectoryLayoutTest(unittest.TestCase):
            information about installed packages' specs to uninstall
            or query them again if the package goes away.
         """
-        mock_db = PackageDB(spack.mock_packages_path)
+        mock_db = RepoPath(spack.mock_packages_path)
 
         not_in_mock = set.difference(
-            set(spack.db.all_package_names()),
+            set(spack.repo.all_package_names()),
             set(mock_db.all_package_names()))
         packages = list(not_in_mock)[:max_packages]
 
         # Create all the packages that are not in mock.
         installed_specs = {}
         for pkg_name in packages:
-            spec = spack.db.get(pkg_name).spec
+            spec = spack.repo.get(pkg_name).spec
 
             # If a spec fails to concretize, just skip it.  If it is a
             # real error, it will be caught by concretization tests.
@@ -145,8 +149,7 @@ class DirectoryLayoutTest(unittest.TestCase):
             self.layout.create_install_directory(spec)
             installed_specs[spec] = self.layout.path_for_spec(spec)
 
-        tmp = spack.db
-        spack.db = mock_db
+        spack.repo.swap(mock_db)
 
         # Now check that even without the package files, we know
         # enough to read a spec from the spec file.
@@ -161,16 +164,19 @@ class DirectoryLayoutTest(unittest.TestCase):
             self.assertTrue(spec.eq_dag(spec_from_file))
             self.assertEqual(spec.dag_hash(), spec_from_file.dag_hash())
 
-        spack.db = tmp
+        spack.repo.swap(mock_db)
 
 
     def test_find(self):
         """Test that finding specs within an install layout works."""
-        packages = list(spack.db.all_packages())[:max_packages]
+        packages = list(spack.repo.all_packages())[:max_packages]
 
         # Create install prefixes for all packages in the list
         installed_specs = {}
         for pkg in packages:
+            if pkg.name.startswith('external'):
+                #External package tests cannot be installed
+                continue
             spec = pkg.spec.concretized()
             installed_specs[spec.name] = spec
             self.layout.create_install_directory(spec)
