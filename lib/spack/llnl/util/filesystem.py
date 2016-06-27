@@ -48,7 +48,7 @@ __all__ = ['set_install_permissions', 'install', 'install_tree',
 def filter_file(regex, repl, *filenames, **kwargs):
     """Like sed, but uses python regular expressions.
 
-       Filters every line of file through regex and replaces the file
+       Filters every line of each file through regex and replaces the file
        with a filtered version.  Preserves mode of filtered files.
 
        As with re.sub, ``repl`` can be either a string or a callable.
@@ -59,7 +59,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
 
        Keyword Options:
          string[=False]         If True, treat regex as a plain string.
-         backup[=True]          Make a backup files suffixed with ~
+         backup[=True]          Make backup file(s) suffixed with ~
          ignore_absent[=False]  Ignore any files that don't exist.
     """
     string = kwargs.get('string', False)
@@ -80,26 +80,26 @@ def filter_file(regex, repl, *filenames, **kwargs):
         regex = re.escape(regex)
 
     for filename in filenames:
-        backup = filename + "~"
+        backup_filename = filename + "~"
 
         if ignore_absent and not os.path.exists(filename):
             continue
 
-        shutil.copy(filename, backup)
+        shutil.copy(filename, backup_filename)
         try:
-            with closing(open(backup)) as infile:
+            with closing(open(backup_filename)) as infile:
                 with closing(open(filename, 'w')) as outfile:
                     for line in infile:
                         foo = re.sub(regex, repl, line)
                         outfile.write(foo)
         except:
             # clean up the original file on failure.
-            shutil.move(backup, filename)
+            shutil.move(backup_filename, filename)
             raise
 
         finally:
             if not backup:
-                shutil.rmtree(backup, ignore_errors=True)
+                os.remove(backup_filename)
 
 
 class FileFilter(object):
@@ -114,7 +114,7 @@ class FileFilter(object):
 def change_sed_delimiter(old_delim, new_delim, *filenames):
     """Find all sed search/replace commands and change the delimiter.
        e.g., if the file contains seds that look like 's///', you can
-       call change_sed_delimeter('/', '@', file) to change the
+       call change_sed_delimiter('/', '@', file) to change the
        delimiter to '@'.
 
        NOTE that this routine will fail if the delimiter is ' or ".
@@ -179,7 +179,7 @@ def install(src, dest):
     """Manually install a file to a particular location."""
     tty.debug("Installing %s to %s" % (src, dest))
 
-    # Expand dsst to its eventual full path if it is a directory.
+    # Expand dest to its eventual full path if it is a directory.
     if os.path.isdir(dest):
         dest = join_path(dest, os.path.basename(src))
 
@@ -219,7 +219,7 @@ def mkdirp(*paths):
         if not os.path.exists(path):
             os.makedirs(path)
         elif not os.path.isdir(path):
-            raise OSError(errno.EEXIST, "File alredy exists", path)
+            raise OSError(errno.EEXIST, "File already exists", path)
 
 
 def force_remove(*paths):
@@ -309,7 +309,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
     Optional args:
 
-    order=[pre|post] -- Whether to do pre- or post-order traveral.
+    order=[pre|post] -- Whether to do pre- or post-order traversal.
 
     ignore=<predicate> -- Predicate indicating which files to ignore.
 
@@ -414,7 +414,7 @@ def fix_darwin_install_name(path):
     currently won't follow subfolders.
 
     Args:
-        path: directory in which .dylib files are alocated
+        path: directory in which .dylib files are located
 
     """
     libs = glob.glob(join_path(path, "*.dylib"))
@@ -438,7 +438,7 @@ def to_link_flags(library):
       A string of linking flags.
     """
     dir  = os.path.dirname(library)
-    # Asume   libXYZ.suffix
+    # Assume libXYZ.suffix
     name = os.path.basename(library)[3:].split(".")[0]
     res = '-L%s -l%s' % (dir, name)
     return res
