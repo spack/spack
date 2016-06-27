@@ -141,7 +141,6 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     def test_satisfies_architecture(self):
-        platform = spack.architecture.sys_type()
         self.check_satisfies(
             'foo platform=test target=frontend os=frontend',
             'platform=test target=frontend os=frontend')
@@ -396,7 +395,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf', 'debug=2')
         self.check_constrain_changed('libelf', 'cppflags="-O3"')
 
-        platform = spack.architecture.sys_type()
+        platform = spack.architecture.platform()
         self.check_constrain_changed('libelf', 'target='+platform.target('default_target').name)
         self.check_constrain_changed('libelf', 'os='+platform.operating_system('default_os').name)
 
@@ -412,7 +411,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf debug=2', 'debug=2')
         self.check_constrain_not_changed('libelf cppflags="-O3"', 'cppflags="-O3"')
 
-        platform = spack.architecture.sys_type()
+        platform = spack.architecture.platform()
         default_target = platform.target('default_target').name
         self.check_constrain_not_changed('libelf target='+default_target, 'target='+default_target)
 
@@ -425,7 +424,7 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf^foo', 'libelf^foo+debug')
         self.check_constrain_changed('libelf^foo', 'libelf^foo~debug')
 
-        platform = spack.architecture.sys_type()
+        platform = spack.architecture.platform()
         default_target = platform.target('default_target').name
         self.check_constrain_changed('libelf^foo', 'libelf^foo target='+default_target)
 
@@ -439,6 +438,6 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf^foo~debug', 'libelf^foo~debug')
         self.check_constrain_not_changed('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"')
 
-        platform = spack.architecture.sys_type()
+        platform = spack.architecture.platform()
         default_target = platform.target('default_target').name
         self.check_constrain_not_changed('libelf^foo target='+default_target, 'libelf^foo target='+default_target)

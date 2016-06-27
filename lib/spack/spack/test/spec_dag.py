@@ -242,7 +242,7 @@ class SpecDagTest(MockPackagesTest):
 
 
     def test_unsatisfiable_architecture(self):
-        platform = spack.architecture.sys_type()
+        platform = spack.architecture.platform()
 
         self.set_pkg_dep('mpileaks', 'mpich platform=test target=be')
         spec = Spec('mpileaks ^mpich platform=test target=fe ^callpath ^dyninst ^libelf ^libdwarf')

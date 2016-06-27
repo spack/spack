@@ -34,7 +34,7 @@ from ordereddict_backport import OrderedDict
 from spack.repository import RepoPath
 from spack.spec import Spec
 
-platform = spack.architecture.sys_type()
+platform = spack.architecture.platform()
 
 linux_os_name = 'debian'
 linux_os_version = '6'

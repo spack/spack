@@ -2216,7 +2216,7 @@ class SpecParser(spack.parse.Parser):
         for spec in specs:
             for s in spec.traverse():
                 if s.architecture.os_string or s.architecture.target_string:
-                    s._set_platform(spack.architecture.sys_type())
+                    s._set_platform(spack.architecture.platform())
         return specs
 
     def parse_compiler(self, text):
