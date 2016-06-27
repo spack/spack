@@ -70,7 +70,8 @@ class Hdf5(Package):
             raise RuntimeError(msg)
 
         if '+threadsafe' in spec and ('+cxx' in spec or '+fortran' in spec):
-                raise RuntimeError("cannot use variant +threadsafe with either +cxx or +fortran")
+            msg = 'cannot use variant +threadsafe with either +cxx or +fortran'
+            raise RuntimeError(msg)
 
     def install(self, spec, prefix):
         self.validate(spec)
@@ -164,7 +165,7 @@ int main(int argc, char **argv) {
 """
             expected = """\
 HDF5 version {version} {version}
-""".format(version=str(spec.version))
+""".format(version=str(spec.version.up_to(3)))
             with open("check.c", 'w') as f:
                 f.write(source)
             if '+mpi' in spec:
@@ -185,24 +186,30 @@ HDF5 version {version} {version}
             if not success:
                 print "Produced output does not match expected output."
                 print "Expected output:"
-                print '-'*80
+                print '-' * 80
                 print expected
-                print '-'*80
+                print '-' * 80
                 print "Produced output:"
-                print '-'*80
+                print '-' * 80
                 print output
-                print '-'*80
+                print '-' * 80
                 raise RuntimeError("HDF5 install check failed")
         shutil.rmtree(checkdir)
 
     def url_for_version(self, version):
-        v = str(version)
+        base_url = "http://www.hdfgroup.org/ftp/HDF5/releases"
 
         if version == Version("1.2.2"):
-            return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + v + ".tar.gz"
+            return "{0}/hdf5-{1}.tar.gz".format(base_url, version)
+        elif version < Version("1.6.6"):
+            return "{0}/hdf5-{1}/hdf5-{2}.tar.gz".format(
+                base_url, version.up_to(2), version)
         elif version < Version("1.7"):
-            return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + version.up_to(2) + "/hdf5-" + v + ".tar.gz"
+            return "{0}/hdf5-{1}/hdf5-{2}/src/hdf5-{2}.tar.gz".format(
+                base_url, version.up_to(2), version)
         elif version < Version("1.10"):
-            return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + v + "/src/hdf5-" + v + ".tar.gz"
+            return "{0}/hdf5-{1}/src/hdf5-{1}.tar.gz".format(
+                base_url, version)
         else:
-            return "http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-" + version.up_to(2) + "/hdf5-" + v + "/src/hdf5-" + v + ".tar.gz"
+            return "{0}/hdf5-{1}/hdf5-{2}/src/hdf5-{2}.tar.gz".format(
+                base_url, version.up_to(2), version)
