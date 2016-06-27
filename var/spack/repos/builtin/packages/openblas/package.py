@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+
 from spack import *
 from spack.package_test import *
 import os
@@ -37,9 +38,17 @@ class Openblas(Package):
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
-    variant('shared', default=True,  description="Build shared libraries as well as static libs.")  # NOQA: ignore=E501
-    variant('openmp', default=False, description="Enable OpenMP support.")
-    variant('fpic',   default=True,  description="Build position independent code")  # NOQA: ignore=E501
+    variant('ilp64', default=False,
+            description="Use 64-bit indices " +
+            "(i.e. usie int64_t or integer*8 to describe array sizes)")
+    variant('openmp', default=False,
+            description="Enable OpenMP support")
+    variant('fpic',   default=True,
+            description="Build position-independent code")
+    variant('shared', default=True,
+            description="Build shared libraries as well as static libraries")
+
+    depends_on('objconv', '+ilp64')
 
     # virtual dependency
     provides('blas')
@@ -74,7 +83,10 @@ class Openblas(Package):
                 make_defs.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
             make_defs += ['NO_SHARED=1']
 
-        # fix missing _dggsvd_ and _sggsvd_
+        if "+ilp64" in  spec:
+            make_defs += ['INTERFACE64=1', 'SYMBOLSUFFIX=64_']
+
+        # Fix missing _dggsvd_ and _sggsvd_
         if spec.satisfies('@0.2.16'):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
 
@@ -85,15 +97,10 @@ class Openblas(Package):
             if spec.satisfies('%clang'):
                 raise InstallError('OpenBLAS does not support ',
                                    'OpenMP with clang!')
-
             make_defs += ['USE_OPENMP=1']
 
-        make_args = make_defs + make_targets
-        make(*make_args)
-
+        make(*(make_targets + make_defs))
         make("tests", *make_defs)
-
-        # no quotes around prefix (spack doesn't use a shell)
         make('install', "PREFIX=%s" % prefix, *make_defs)
 
         # Blas virtual package should provide blas.a and libblas.a
@@ -137,8 +144,8 @@ class Openblas(Package):
         blessed_file = join_path(os.path.dirname(self.module.__file__),
                                  'test_cblas_dgemm.output')
 
-        include_flags = ["-I%s" % join_path(spec.prefix, "include")]
-        link_flags = ["-L%s" % join_path(spec.prefix, "lib"),
+        include_flags = ["-I%s" % spec.prefix.include]
+        link_flags = ["-L%s" % spec.prefix.lib,
                       "-llapack",
                       "-lblas",
                       "-lpthread"]
