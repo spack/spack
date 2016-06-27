@@ -36,7 +36,7 @@ gitlab_env.set('GIT_SSL_NO_VERIFY', 1)
 gitlab_env.apply_modifications()
 
 
-class Swift(Package):
+class Swiftsim(Package):
     """
     SPH With Inter-dependent Fine-grained Tasking (SWIFT) provides
     astrophysicists with a state of the art framework to perform
