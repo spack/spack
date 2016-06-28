@@ -32,73 +32,115 @@ from llnl.util.filesystem import mkdirp
 from spack.modules import module_types
 from spack.util.string import *
 
-description = "Manipulate modules and dotkits."
+from spack.cmd.uninstall import ask_for_confirmation
+
+description = "Manipulate module files"
+
+
+def _add_common_arguments(subparser):
+    type_help = 'Type of module files'
+    subparser.add_argument('--module-type', help=type_help, required=True, choices=module_types)
+    constraint_help = 'Optional constraint to select a subset of installed packages'
+    subparser.add_argument('constraint', nargs='*', help=constraint_help)
 
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='module_command')
+    # spack module refresh
+    refresh_parser = sp.add_parser('refresh', help='Regenerate all module files.')
+    refresh_parser.add_argument('--delete-tree', help='Delete the module file tree before refresh', action='store_true')
+    _add_common_arguments(refresh_parser)
 
-    sp.add_parser('refresh', help='Regenerate all module files.')
-
+    # spack module find
     find_parser = sp.add_parser('find', help='Find module files for packages.')
-    find_parser.add_argument('module_type',
-                             help="Type of module to find file for. [" +
-                             '|'.join(module_types) + "]")
-    find_parser.add_argument('spec',
-                             nargs='+',
-                             help='spec to find a module file for.')
+    _add_common_arguments(find_parser)
 
 
-def module_find(mtype, spec_array):
-    """Look at all installed packages and see if the spec provided
-       matches any.  If it does, check whether there is a module file
-       of type <mtype> there, and print out the name that the user
-       should type to use that package's module.
+class MultipleMatches(Exception):
+    pass
+
+
+class NoMatch(Exception):
+    pass
+
+
+def module_find(mtype, specs, args):
     """
-    if mtype not in module_types:
-        tty.die("Invalid module type: '%s'.  Options are %s" %
-                (mtype, comma_or(module_types)))
-
-    specs = spack.cmd.parse_specs(spec_array)
-    if len(specs) > 1:
-        tty.die("You can only pass one spec.")
-    spec = specs[0]
-
-    specs = spack.installed_db.query(spec)
+    Look at all installed packages and see if the spec provided
+    matches any.  If it does, check whether there is a module file
+    of type <mtype> there, and print out the name that the user
+    should type to use that package's module.
+    """
     if len(specs) == 0:
-        tty.die("No installed packages match spec %s" % spec)
+        raise NoMatch()
 
     if len(specs) > 1:
-        tty.error("Multiple matches for spec %s.  Choose one:" % spec)
-        for s in specs:
-            sys.stderr.write(s.tree(color=True))
-        sys.exit(1)
+        raise MultipleMatches()
 
-    mt = module_types[mtype]
-    mod = mt(specs[0])
+    mod = module_types[mtype](specs.pop())
     if not os.path.isfile(mod.file_name):
         tty.die("No %s module is installed for %s" % (mtype, spec))
 
     print(mod.use_name)
 
 
-def module_refresh():
-    """Regenerate all module files for installed packages known to
-       spack (some packages may no longer exist)."""
-    specs = [s for s in spack.installed_db.query(installed=True, known=True)]
+def module_refresh(name, specs, args):
+    """
+    Regenerate all module files for installed packages known to
+    spack (some packages may no longer exist).
+    """
+    # Prompt a message to the user about what is going to change
+    if not specs:
+        tty.msg('No package matches your query')
+        return
 
-    for name, cls in module_types.items():
-        tty.msg("Regenerating %s module files." % name)
-        if os.path.isdir(cls.path):
-            shutil.rmtree(cls.path, ignore_errors=False)
-        mkdirp(cls.path)
-        for spec in specs:
-            cls(spec).write()
+    tty.msg('You are about to regenerate the {name} module files for the following specs:'.format(name=name))
+    for s in specs:
+        print(s.format(color=True))
+    ask_for_confirmation('Do you want to proceed ? ')
+
+    cls = module_types[name]
+    tty.msg('Regenerating {name} module files'.format(name=name))
+    if os.path.isdir(cls.path) and args.delete_tree:
+        shutil.rmtree(cls.path, ignore_errors=False)
+    mkdirp(cls.path)
+    for spec in specs:
+        cls(spec).write()
+
+# Qualifiers to be used when querying the db for specs
+constraint_qualifiers = {
+    'refresh': {
+        'installed': True,
+        'known': True
+    },
+    'find': {
+    }
+}
+
+# Dictionary of callbacks based on the value of module_command
+callbacks = {
+    'refresh': module_refresh,
+    'find': module_find
+}
 
 
 def module(parser, args):
-    if args.module_command == 'refresh':
-        module_refresh()
-
-    elif args.module_command == 'find':
-        module_find(args.module_type, args.spec)
+    module_type = args.module_type
+    # Query specs from command line
+    qualifiers = constraint_qualifiers[args.module_command]
+    specs = [s for s in spack.installed_db.query(**qualifiers)]
+    constraint = ' '.join(args.constraint)
+    if constraint:
+        specs = [x for x in specs if x.satisfies(constraint, strict=True)]
+    # Call the appropriate function
+    try:
+        callbacks[args.module_command](module_type, specs, args)
+    except MultipleMatches:
+        message = 'the constraint \'{query}\' matches multiple packages, and this is not allowed in this context'
+        tty.error(message.format(query=constraint))
+        for s in specs:
+            sys.stderr.write(s.format(color=True) + '\n')
+        raise SystemExit(1)
+    except NoMatch:
+        message = 'the constraint \'{query}\' match no package, and this is not allowed in this context'
+        tty.die(message.format(query=constraint))
