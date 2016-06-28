@@ -28,13 +28,6 @@ from spack import *
 import spack.environment
 import llnl.util.tty as tty
 
-# Needed to be able to download from the Durham gitlab repository
-tty.warn('Setting "GIT_SSL_NO_VERIFY=1"')
-tty.warn('This is needed to clone SWIFT repository')
-gitlab_env = spack.environment.EnvironmentModifications()
-gitlab_env.set('GIT_SSL_NO_VERIFY', 1)
-gitlab_env.apply_modifications()
-
 
 class Swiftsim(Package):
     """
@@ -60,6 +53,12 @@ class Swiftsim(Package):
     depends_on('metis')
     depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+mpi', when='+mpi')
+
+    def setup_environment(self, spack_env, run_env):
+        # Needed to be able to download from the Durham gitlab repository
+        tty.warn('Setting "GIT_SSL_NO_VERIFY=1"')
+        tty.warn('This is needed to clone SWIFT repository')
+        spack_env.set('GIT_SSL_NO_VERIFY', 1)
 
     def install(self, spec, prefix):
         # Generate configure from configure.ac
