@@ -36,7 +36,7 @@ class OctaveSplines(Package):
     extends('octave@3.6.0:')
 
     def install(self, spec, prefix):
-        Octave('--quiet',
+        octave('--quiet',
                '--norc',
                '--built-in-docstrings-file=/dev/null',
                '--texi-macros-file=/dev/null',

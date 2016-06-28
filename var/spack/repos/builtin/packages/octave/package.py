@@ -223,7 +223,7 @@ class Octave(Package):
         """Called before Octave modules' install() methods.
 
         In most cases, extensions will only need to have one line:
-            Octave('--eval', 'pkg install %s' % self.stage.archive_file)
+            octave('--eval', 'pkg install %s' % self.stage.archive_file)
         """
         # Octave extension builds can have a global Octave executable function
-        module.Octave = Executable(join_path(self.spec.prefix.bin, 'octave'))
+        module.octave = Executable(join_path(self.spec.prefix.bin, 'octave'))
