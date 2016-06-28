@@ -25,7 +25,6 @@
 
 from spack import *
 
-import spack.environment
 import llnl.util.tty as tty
 
 
