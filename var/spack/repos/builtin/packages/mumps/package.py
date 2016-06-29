@@ -197,7 +197,6 @@ class Mumps(Package):
         self.write_makefile_inc()
 
         make('mumps_lib', parallel=False)
-        make(*make_libs)
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
@@ -214,18 +213,27 @@ class Mumps(Package):
         # FIXME: use something like numdiff to compare blessed output
         # with the current
         # TODO: test the installed mumps and not the one in stage
-        if '~mpi' in spec:
-            for t in make_libs:
-                make('{0}examples'.format(t))
 
-            with working_dir('examples'):
-                for t in make_libs:
-                    input_file = 'input_simpletest_{0}'.format(
-                        'real' if t in ['s', 'd'] else 'cmplx')
-                    with open(input_file) as input:
-                        test = './{0}simpletest'.format(t)
-                        ret = subprocess.call(test,
-                                              stdin=input)
-                        if ret is not 0:
-                            raise RuntimeError(
-                                'The test {0} did not pass'.format(test))
+        # Note that the example below can be run both for ~mpi and +mpi.
+        for t in make_libs:
+            make('{0}examples'.format(t))
+
+        with working_dir('examples'):
+            # c_example is a part of "d" target.
+            # Run it seprately as it does not require an input file
+            print('====== c_example =======')
+            ret = subprocess.call('./c_example')
+            if ret is not 0:
+                raise RuntimeError('The test c_example did not pass')
+
+            for t in make_libs:
+                input_file = 'input_simpletest_{0}'.format(
+                    'real' if t in ['s', 'd'] else 'cmplx')
+                with open(input_file) as input:
+                    test = './{0}simpletest'.format(t)
+                    print('====== %s =======' % test)
+                    ret = subprocess.call(test,
+                                          stdin=input)
+                    if ret is not 0:
+                        raise RuntimeError(
+                            'The test {0} did not pass'.format(test))
