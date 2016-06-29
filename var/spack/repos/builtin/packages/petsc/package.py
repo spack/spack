@@ -148,6 +148,21 @@ class Petsc(Package):
         make('MAKE_NP=%s' % make_jobs, parallel=False)
         make("install")
 
+        # solve Poisson equation in 2D to make sure nothing is broken:
+        with working_dir('src/ksp/ksp/examples/tutorials'):
+            os.system('%s ex50.c -I%s -L%s -lpetsc -o ex50' % (
+                self.spec['mpi'].mpicc, prefix.include, prefix.lib))
+            ex50 = Executable('./ex50')
+            ex50('-da_grid_x', '4', '-da_grid_y','4')
+            if 'superlu-dist' in spec:
+                ex50('-da_grid_x', '4', '-da_grid_y','4','-pc_type','lu', '-pc_factor_mat_solver_package', 'superlu_dist')  # NOQA: ignore=E501
+
+            if 'mumps' in spec:
+                ex50('-da_grid_x', '4', '-da_grid_y','4','-pc_type','lu', '-pc_factor_mat_solver_package', 'mumps')  # NOQA: ignore=E501
+
+            if 'hypre' in spec:
+                ex50('-da_grid_x', '4', '-da_grid_y','4', '-pc_type', 'hypre', '-pc_hypre_type', 'boomeramg')  # NOQA: ignore=E501
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up PETSC_DIR for everyone using PETSc package
         spack_env.set('PETSC_DIR', self.prefix)
