@@ -361,7 +361,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
     """The resource associated with a cache URL may be out of date."""
     def __init__(self, *args, **kwargs):
         super(CacheURLFetchStrategy, self).__init__(*args, **kwargs)
-    
+
     @_needs_stage
     def fetch(self):
         super(CacheURLFetchStrategy, self).fetch()
@@ -853,10 +853,13 @@ class FsCache(object):
         dst = join_path(self.root, relativeDst)
         mkdirp(os.path.dirname(dst))
         fetcher.archive(dst)
-        
+
     def fetcher(self, targetPath, digest):
         url = "file://" + join_path(self.root, targetPath)
         return CacheURLFetchStrategy(url, digest)
+
+    def destroy(self):
+        shutil.rmtree(self.root, ignore_errors=True)
 
 
 class FetchError(spack.error.SpackError):
