@@ -36,6 +36,8 @@ class Octave(Package):
     homepage = "https://www.gnu.org/software/octave/"
     url      = "ftp://ftp.gnu.org/gnu/octave/octave-4.0.0.tar.gz"
 
+    extendable = True
+
     version('4.0.2', 'c2a5cacc6e4c52f924739cdf22c2c687')
     version('4.0.0', 'a69f8320a4f20a8480c1b278b1adb799')
 
@@ -212,3 +214,16 @@ class Octave(Package):
 
         make()
         make("install")
+
+    # ========================================================================
+    # Set up environment to make install easy for Octave extensions.
+    # ========================================================================
+
+    def setup_dependent_package(self, module, ext_spec):
+        """Called before Octave modules' install() methods.
+
+        In most cases, extensions will only need to have one line:
+            octave('--eval', 'pkg install %s' % self.stage.archive_file)
+        """
+        # Octave extension builds can have a global Octave executable function
+        module.octave = Executable(join_path(self.spec.prefix.bin, 'octave'))
