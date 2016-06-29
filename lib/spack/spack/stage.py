@@ -304,6 +304,7 @@ class Stage(object):
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
                 fetchers.insert(0, fs.URLFetchStrategy(url, digest))
+            fetchers.insert(0, spack.cache.fetcher(self.mirror_path, digest))
 
         for fetcher in fetchers:
             try:
@@ -320,6 +321,7 @@ class Stage(object):
             self.fetcher = self.default_fetcher
             raise fs.FetchError(errMessage, None)
 
+
     def check(self):
         """Check the downloaded archive against a checksum digest.
            No-op if this stage checks code out of a repository."""
@@ -332,6 +334,11 @@ class Stage(object):
                      "this mirror is secure!.")
         else:
             self.fetcher.check()
+
+
+    def cache_local(self):
+        spack.cache.store(self.fetcher, self.mirror_path)
+
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -436,7 +443,7 @@ class ResourceStage(Stage):
                 shutil.move(source_path, destination_path)
 
 
-@pattern.composite(method_list=['fetch', 'create', 'check', 'expand_archive',  'restage', 'destroy'])
+@pattern.composite(method_list=['fetch', 'create', 'check', 'expand_archive',  'restage', 'destroy', 'cache_local'])
 class StageComposite:
     """
     Composite for Stage type objects. The first item in this composite is considered to be the root package, and
@@ -510,6 +517,9 @@ class DIYStage(object):
     def destroy(self):
         # No need to destroy DIY stage.
         pass
+
+    def cache_local(self):
+        tty.msg("Sources for DIY stages are not cached")
 
 
 def _get_mirrors():
