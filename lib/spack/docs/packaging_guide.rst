@@ -776,7 +776,7 @@ Spack will create a global license file located at
 file using the editor set in ``$EDITOR``, or vi if unset. It will look like
 this:
 
-.. code-block::
+.. code-block:: sh
 
     # A license is required to use pgi.
     #
@@ -807,7 +807,7 @@ You can add your license directly to this file, or tell FlexNet to use a
 license stored on a separate license server. Here is an example that
 points to a license server called licman1:
 
-.. code-block::
+.. code-block:: sh
 
     SERVER licman1.mcs.anl.gov 00163eb7fba5 27200
     USE_SERVER
