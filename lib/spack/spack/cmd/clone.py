@@ -22,19 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
+import shutil
+import os
 
 import llnl.util.tty as tty
-import json
 
 import spack
 import spack.cmd
 
 
-from spack.fetch_strategy import URLFetchStrategy
+from spack.fetch_strategy import GitFetchStrategy
 from spack.stage import Stage
+from llnl.util.filesystem import join_path
+from spack.repository import create_repo, canonicalize_path, BadRepoError, Repo
 
 description = "Build and install packages"
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -45,60 +48,58 @@ def setup_parser(subparser):
         help="Github URL from which to retrieve the package")
 
 
-
-def getDescriptorURL(url):
-    builtUrl = url
-    return builtUrl.replace("github.com","api.github.com/repos").replace("www.","")
-
-def getDownloadURL(url, filename, branch="master"):
-    builtUrl = url
-    return ((builtUrl.replace("www.github.com","raw.githubusercontent.com"))+"/"+branch+"/"+filename)
-                    
 def clone(parser, args):
+    def repo_add_if_not_exists(path, scope=spack.cmd.default_list_scope):
+        """Add a package source to Spack's configuration."""
+
+        # real_path is absolute and handles substitution.
+        canon_path = canonicalize_path(path)
+
+        # check if the path exists
+        if not os.path.exists(canon_path):
+            tty.die("No such file or directory: %s" % path)
+
+        # Make sure the path is a directory.
+        if not os.path.isdir(canon_path):
+            tty.die("Not a Spack repository: %s" % path)
+
+        # Make sure it's actually a spack repository by constructing it.
+        repo = Repo(canon_path)
+
+        # If that succeeds, finally add it to the configuration.
+        repos = spack.config.get_config('repos', scope)
+        if not repos:
+            repos = []
+
+        if repo.root in repos or path in repos:
+            return
+
+        repos.insert(0, canon_path)
+        spack.config.update_config('repos', repos, scope)
+        tty.msg("Created repo with namespace '%s'." % repo.namespace)
     if not args.url:
         tty.die("Clone requires a github URL")
     # https://api.github.com/repos/DavidPoliakoff/spack
-    descriptorURL = getDescriptorURL(args.url)
-    repoStatusFetcher = URLFetchStrategy(url=descriptorURL)
-    repoStatusDict = {}
-    branchStatusDict = {}
-    branchName = ""
-    with Stage(repoStatusFetcher) as stage:
-        repoStatusFetcher.fetch()
-        descriptor = stage.path + "/" + descriptorURL.split("/")[-1]
-        with open(descriptor,"r") as statusFile:
-            repoStatusDict = json.load(statusFile)
-            branchName = repoStatusDict["default_branch"]
+    descriptorURL = args.url
+    repoFetcher = GitFetchStrategy(git=descriptorURL)
+    packageName = descriptorURL.split("/")[-1]
+    spack_git_repo_path = join_path(spack.repos_path, "git")
+    try:
+        create_repo(spack_git_repo_path, "git")
+    except BadRepoError:
+        pass
+    repo_add_if_not_exists(spack_git_repo_path)
+    git_repo = Repo(spack_git_repo_path)
+    packageDest = join_path(spack_git_repo_path, "packages", packageName)
+    if not os.path.isdir(packageDest):
+        os.mkdir(packageDest)
+    with Stage(repoFetcher) as stage:
+        repoFetcher.fetch()
+        packagePath = stage.path + "/" + packageName + "/package.py"
+        shutil.copy2(packagePath, packageDest)
+    specs = spack.cmd.parse_specs(packageName, concretize=True)
 
-    branchStatusFetcher = URLFetchStrategy(url=descriptorURL + '/branches/' + branchName)
-    with Stage(branchStatusFetcher) as stage:
-        branchStatusFetcher.fetch()
-        descriptor = stage.path + "/" + branchName
-        with open(descriptor,"r") as statusFile:
-            branchStatusDict = json.load(statusFile)
-
-    downloadURL = getDownloadURL(args.url,"package.py",branchName)
-    print "DOWNLOADING" +downloadURL
-    packageFetcher = URLFetchStrategy(url=downloadURL)
-
-    from spack import repository, config
-    roots = spack.config.get_config('repos', spack.cmd.default_list_scope)
-    testRepo = repository.Repo(roots[0])
-
-    with Stage(packageFetcher) as stage:
-        packageFetcher.fetch()
-        descriptor = stage.path + "/package.py"
-        packageDir = descriptor
-    tty.die("All tty's must die")
-    #specs = spack.cmd.parse_specs(args.packages, concretize=True)
-    #for spec in specs:
-    #    package = spack.repo.get(spec)
-    #    with spack.installed_db.write_transaction():
-    #        package.do_install(
-    #            keep_prefix=args.keep_prefix,
-    #            keep_stage=args.keep_stage,
-    #            ignore_deps=args.ignore_deps,
-    #            make_jobs=args.jobs,
-    #            verbose=args.verbose,
-    #            fake=args.fake,
-    #            explicit=True)
+    for spec in specs:
+        package = git_repo.get(spec)
+        with spack.installed_db.write_transaction():
+            package.do_install(explicit=True)
