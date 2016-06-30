@@ -307,6 +307,8 @@ section_schemas = {
                     'autoload': {'$ref': '#/definitions/dependency_selection'},
                     'prerequisites': {'$ref': '#/definitions/dependency_selection'},
                     'conflict': {'$ref': '#/definitions/array_of_strings'},
+                    'load': {'$ref': '#/definitions/array_of_strings'},
+                    'suffixes': {'$ref': '#/definitions/dictionary_of_strings'},
                     'environment': {
                         'type': 'object',
                         'default': {},

@@ -285,11 +285,18 @@ class EnvModule(object):
         naming_tokens = self.tokens
         naming_scheme = self.naming_scheme
         name = naming_scheme.format(**naming_tokens)
-        name += '-' + self.spec.dag_hash(
-        )  # Always append the hash to make the module file unique
         # Not everybody is working on linux...
         parts = name.split('/')
         name = join_path(*parts)
+        # Add optional suffixes based on constraints
+        configuration, _ = parse_config_options(self)
+        suffixes = [name]
+        for constraint, suffix in configuration.get('suffixes', {}).items():
+            if constraint in self.spec:
+                suffixes.append(suffix)
+        # Always append the hash to make the module file unique
+        suffixes.append(self.spec.dag_hash())
+        name = '-'.join(suffixes)
         return name
 
     @property
@@ -381,6 +388,8 @@ class EnvModule(object):
         for x in filter_blacklisted(
                 module_configuration.pop('autoload', []), self.name):
             module_file_content += self.autoload(x)
+        for x in module_configuration.pop('load', []):
+            module_file_content += self.autoload(x)
         for x in filter_blacklisted(
                 module_configuration.pop('prerequisites', []), self.name):
             module_file_content += self.prerequisite(x)
@@ -402,8 +411,12 @@ class EnvModule(object):
         return tuple()
 
     def autoload(self, spec):
-        m = type(self)(spec)
-        return self.autoload_format.format(module_file=m.use_name)
+        if not isinstance(spec, str):
+            m = type(self)(spec)
+            module_file = m.use_name
+        else:
+            module_file = spec
+        return self.autoload_format.format(module_file=module_file)
 
     def prerequisite(self, spec):
         m = type(self)(spec)
@@ -441,7 +454,6 @@ class EnvModule(object):
 
 class Dotkit(EnvModule):
     name = 'dotkit'
-    path = join_path(spack.share_path, "dotkit")
 
     environment_modifications_formats = {
         PrependPath: 'dk_alter {name} {value}\n',
@@ -454,7 +466,7 @@ class Dotkit(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(Dotkit.path, self.spec.architecture,
+        return join_path(spack.share_path, "dotkit", self.spec.architecture,
                          '%s.dk' % self.use_name)
 
     @property
@@ -482,7 +494,6 @@ class Dotkit(EnvModule):
 
 class TclModule(EnvModule):
     name = 'tcl'
-    path = join_path(spack.share_path, "modules")
 
     environment_modifications_formats = {
         PrependPath: 'prepend-path --delim "{delim}" {name} \"{value}\"\n',
@@ -503,7 +514,7 @@ class TclModule(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(TclModule.path, self.spec.architecture, self.use_name)
+        return join_path(spack.share_path, "modules", self.spec.architecture, self.use_name)
 
     @property
     def header(self):

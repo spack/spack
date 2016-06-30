@@ -24,16 +24,21 @@
 ##############################################################################
 import unittest
 import os
-import copy
+
+from spack import spack_root
+from llnl.util.filesystem import join_path
 from spack.environment import EnvironmentModifications
+from spack.environment import SetEnv, UnsetEnv
+from spack.environment import RemovePath, PrependPath, AppendPath
 
 
 class EnvironmentTest(unittest.TestCase):
+
     def setUp(self):
         os.environ['UNSET_ME'] = 'foo'
         os.environ['EMPTY_PATH_LIST'] = ''
         os.environ['PATH_LIST'] = '/path/second:/path/third'
-        os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'
+        os.environ['REMOVE_PATH_LIST'] = '/a/b:/duplicate:/a/c:/remove/this:/a/d:/duplicate/:/f/g'  # NOQA: ignore=E501
 
     def tearDown(self):
         pass
@@ -77,9 +82,18 @@ class EnvironmentTest(unittest.TestCase):
         env.remove_path('REMOVE_PATH_LIST', '/duplicate/')
 
         env.apply_modifications()
-        self.assertEqual('/path/first:/path/second:/path/third:/path/last', os.environ['PATH_LIST'])
-        self.assertEqual('/path/first:/path/middle:/path/last', os.environ['EMPTY_PATH_LIST'])
-        self.assertEqual('/path/first:/path/middle:/path/last', os.environ['NEWLY_CREATED_PATH_LIST'])
+        self.assertEqual(
+            '/path/first:/path/second:/path/third:/path/last',
+            os.environ['PATH_LIST']
+        )
+        self.assertEqual(
+            '/path/first:/path/middle:/path/last',
+            os.environ['EMPTY_PATH_LIST']
+        )
+        self.assertEqual(
+            '/path/first:/path/middle:/path/last',
+            os.environ['NEWLY_CREATED_PATH_LIST']
+        )
         self.assertEqual('/a/b:/a/c:/a/d:/f/g', os.environ['REMOVE_PATH_LIST'])
 
     def test_extra_arguments(self):
@@ -98,3 +112,46 @@ class EnvironmentTest(unittest.TestCase):
         self.assertEqual(len(copy_construct), 2)
         for x, y in zip(env, copy_construct):
             assert x is y
+
+    def test_source_files(self):
+        datadir = join_path(spack_root, 'lib', 'spack',
+                            'spack', 'test', 'data')
+        files = [
+            join_path(datadir, 'sourceme_first.sh'),
+            join_path(datadir, 'sourceme_second.sh')
+        ]
+        env = EnvironmentModifications.from_sourcing_files(*files)
+        modifications = env.group_by_name()
+
+        # This is sensitive to the user's environment; can include
+        # spurious entries for things like PS1
+        #
+        # TODO: figure out how to make a bit more robust.
+        self.assertTrue(len(modifications) >= 4)
+
+        # Set new variables
+        self.assertEqual(len(modifications['NEW_VAR']), 1)
+        self.assertTrue(isinstance(modifications['NEW_VAR'][0], SetEnv))
+        self.assertEqual(modifications['NEW_VAR'][0].value, 'new')
+        # Unset variables
+        self.assertEqual(len(modifications['EMPTY_PATH_LIST']), 1)
+        self.assertTrue(isinstance(
+            modifications['EMPTY_PATH_LIST'][0], UnsetEnv))
+        # Modified variables
+        self.assertEqual(len(modifications['UNSET_ME']), 1)
+        self.assertTrue(isinstance(modifications['UNSET_ME'][0], SetEnv))
+        self.assertEqual(modifications['UNSET_ME'][0].value, 'overridden')
+
+        self.assertEqual(len(modifications['PATH_LIST']), 3)
+        self.assertTrue(
+            isinstance(modifications['PATH_LIST'][0], RemovePath)
+        )
+        self.assertEqual(modifications['PATH_LIST'][0].value, '/path/third')
+        self.assertTrue(
+            isinstance(modifications['PATH_LIST'][1], AppendPath)
+        )
+        self.assertEqual(modifications['PATH_LIST'][1].value, '/path/fourth')
+        self.assertTrue(
+            isinstance(modifications['PATH_LIST'][2], PrependPath)
+        )
+        self.assertEqual(modifications['PATH_LIST'][2].value, '/path/first')

@@ -23,77 +23,108 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
+
 
 class PyPillow(Package):
-    """Pillow is the friendly PIL fork by Alex Clark and Contributors. PIL is the Python Imaging Library by Fredrik Lundh and Contributors. The Python Imaging Library (PIL) adds image processing capabilities to your Python interpreter. This library supports many file formats, and provides powerful image processing and graphics capabilities."""
+    """Pillow is a fork of the Python Imaging Library (PIL). It adds image
+    processing capabilities to your Python interpreter. This library supports
+    many file formats, and provides powerful image processing and graphics
+    capabilities."""
 
-    homepage = "https://python-pillow.github.io/"
+    homepage = "https://python-pillow.org/"
     url      = "https://pypi.python.org/packages/source/P/Pillow/Pillow-3.0.0.tar.gz"
 
+    # TODO: This version should be deleted once the next release comes out.
+    # TODO: It fixes a bug that prevented us from linking to Tk/Tcl.
+    # TODO: Tk/Tcl support is necessary for tkinter bitmap and photo images.
+    # TODO: If you require this support, run the following command:
+    # TODO:     `spack install py-pillow@3.3.0.dev0 ^python+tk`
+    version('3.3.0.dev0', git='https://github.com/python-pillow/Pillow.git',
+            commit='30eced62868141a6c859a4370efd40b9434a7c3f')
+
+    version('3.2.0', '7cfd093c11205d9e2ebe3c51dfcad510', preferred=True)
     version('3.0.0', 'fc8ac44e93da09678eac7e30c9b7377d')
-    provides('PIL')
+
+    provides('pil')
 
     # These defaults correspond to Pillow defaults
     variant('jpeg', default=True, description='Provide JPEG functionality')
     variant('zlib', default=True, description='Access to compressed PNGs')
     variant('tiff', default=False, description='Access to TIFF files')
     variant('freetype', default=False, description='Font related services')
-    variant('tk', default=False, description='Support for tkinter bitmap and photo images')
     variant('lcms', default=False, description='Color management')
+    variant('jpeg2000', default=False, description='Provide JPEG 2000 functionality')
 
     # Spack does not (yet) support these modes of building
-    # variant('webp', default=False, description='')
-    # variant('webpmux', default=False, description='')
-    # variant('jpeg2000', default=False, description='')
+    # variant('webp', default=False, description='Provide the WebP format')
+    # variant('webpmux', default=False, description='WebP metadata, relies on WebP support')  # NOQA: ignore=E501
+    # variant('imagequant', default=False, description='Provide improved color quantization') # NOQA: ignore=E501
 
+    # Required dependencies
     extends('python')
     depends_on('binutils')
     depends_on('py-setuptools')
 
-    depends_on('jpeg', when='+jpeg')   # BUG: It will use the system libjpeg anyway
+    # Recommended dependencies
+    depends_on('jpeg', when='+jpeg')
     depends_on('zlib', when='+zlib')
-    depends_on('tiff', when='+tiff')
+
+    # Optional dependencies
+    depends_on('libtiff', when='+tiff')
     depends_on('freetype', when='+freetype')
     depends_on('lcms', when='+lcms')
-    depends_on('tcl', when='+tk')
-    depends_on('tk', when='+tk')
+    depends_on('openjpeg', when='+jpeg2000')
 
-    def install(self, spec, prefix):
-        libpath=[]
+    # Spack does not (yet) support these modes of building
+    # depends_on('webp', when='+webp')
+    # depends_on('webpmux', when='+webpmux')
+    # depends_on('imagequant', when='+imagequant')
+
+    def patch(self):
+        """Patch setup.py to provide lib and include directories
+        for dependencies."""
+
+        spec = self.spec
+        setup = FileFilter('setup.py')
 
         if '+jpeg' in spec:
-            libpath.append(join_path(spec['jpeg'].prefix, 'lib'))
+            setup.filter('JPEG_ROOT = None',
+                         'JPEG_ROOT = ("{0}", "{1}")'.format(
+                             spec['jpeg'].prefix.lib,
+                             spec['jpeg'].prefix.include))
         if '+zlib' in spec:
-            libpath.append(join_path(spec['zlib'].prefix, 'lib'))
+            setup.filter('ZLIB_ROOT = None',
+                         'ZLIB_ROOT = ("{0}", "{1}")'.format(
+                             spec['zlib'].prefix.lib,
+                             spec['zlib'].prefix.include))
         if '+tiff' in spec:
-            libpath.append(join_path(spec['tiff'].prefix, 'lib'))
+            setup.filter('TIFF_ROOT = None',
+                         'TIFF_ROOT = ("{0}", "{1}")'.format(
+                             spec['libtiff'].prefix.lib,
+                             spec['libtiff'].prefix.include))
         if '+freetype' in spec:
-            libpath.append(join_path(spec['freetype'].prefix, 'lib'))
+            setup.filter('FREETYPE_ROOT = None',
+                         'FREETYPE_ROOT = ("{0}", "{1}")'.format(
+                             spec['freetype'].prefix.lib,
+                             spec['freetype'].prefix.include))
         if '+lcms' in spec:
-            libpath.append(join_path(spec['lcms'].prefix, 'lib'))
+            setup.filter('LCMS_ROOT = None',
+                         'LCMS_ROOT = ("{0}", "{1}")'.format(
+                             spec['lcms'].prefix.lib,
+                             spec['lcms'].prefix.include))
+        if '+jpeg2000' in spec:
+            setup.filter('JPEG2K_ROOT = None',
+                         'JPEG2K_ROOT = ("{0}", "{1}")'.format(
+                             spec['openjpeg'].prefix.lib,
+                             spec['openjpeg'].prefix.include))
 
-        # This has not been tested, and likely needs some other treatment.
-        #if '+tk' in spec:
-        #    libpath.append(join_path(spec['tcl'].prefix, 'lib'))
-        #    libpath.append(join_path(spec['tk'].prefix, 'lib'))
+    def install(self, spec, prefix):
+        def variant_to_flag(variant):
+            able = 'enable' if '+{0}'.format(variant) in spec else 'disable'
+            return '--{0}-{1}'.format(able, variant)
 
-        # -------- Building
-        cmd = ['build_ext',
-            '--%s-jpeg' % ('enable' if '+jpeg' in spec else 'disable'),
-            '--%s-zlib' % ('enable' if '+zlib' in spec else 'disable'),
-            '--%s-tiff' % ('enable' if '+tiff' in spec else 'disable'),
-            '--%s-freetype' % ('enable' if '+freetype' in spec else 'disable'),
-            '--%s-lcms' % ('enable' if '+lcms' in spec else 'disable'),
-            '-L'+':'.join(libpath)    # NOTE: This does not make it find libjpeg
-            ]
+        variants = ['jpeg', 'zlib', 'tiff', 'freetype', 'lcms', 'jpeg2000']
+        build_args = list(map(variant_to_flag, variants))
 
-        #if '+tk' in spec:
-        #    cmd.extend(['--enable-tcl', '--enable-tk'])
-        #else:
-        #    cmd.extend(['--disable-tcl', '--disable-tk'])
-
-        # --------- Installation
-        cmd.extend(['install', '--prefix=%s' % prefix])
-
-        python('setup.py', *cmd)
+        python('setup.py', 'build_ext', *build_args)
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))

@@ -91,16 +91,10 @@ from spack.util.multiproc import parmap
 import spack.error as serr
 
 
-class InvalidSysTypeError(serr.SpackError):
-    def __init__(self, sys_type):
-        super(InvalidSysTypeError, self).__init__(
-            "Invalid sys_type value for Spack: " + sys_type)
-
-
-class NoSysTypeError(serr.SpackError):
+class NoPlatformError(serr.SpackError):
     def __init__(self):
-        super(NoSysTypeError, self).__init__(
-            "Could not determine sys_type for this machine.")
+        super(NoPlatformError, self).__init__(
+            "Could not determine a platform for this machine.")
 
 
 @key_ordering
@@ -345,14 +339,17 @@ class OperatingSystem(object):
 
 @key_ordering
 class Arch(object):
-    "Architecture is now a class to help with setting attributes"
+    """Architecture is now a class to help with setting attributes.
 
-    def __init__(self, platform=None, platform_os=None, target=None):
-        self.platform = platform
-        if platform and platform_os:
-                platform_os = self.platform.operating_system(platform_os)
-        self.platform_os = platform_os
-        if platform and target:
+    TODO: refactor so that we don't need this class.
+    """
+
+    def __init__(self, plat=None, os=None, target=None):
+        self.platform = plat
+        if plat and os:
+            os = self.platform.operating_system(os)
+        self.platform_os = os
+        if plat and target:
             target = self.platform.target(target)
         self.target = target
 
@@ -409,27 +406,27 @@ class Arch(object):
         return d
 
 
-def _target_from_dict(target_name, platform=None):
+def _target_from_dict(target_name, plat=None):
     """ Creates new instance of target and assigns all the attributes of
         that target from the dictionary
     """
-    if not platform:
-        platform = sys_type()
-    return platform.target(target_name)
+    if not plat:
+        plat = platform()
+    return plat.target(target_name)
 
 
-def _operating_system_from_dict(os_name, platform=None):
+def _operating_system_from_dict(os_name, plat=None):
     """ uses platform's operating system method to grab the constructed
         operating systems that are valid on the platform.
     """
-    if not platform:
-        platform = sys_type()
+    if not plat:
+        plat = platform()
     if isinstance(os_name, dict):
         name = os_name['name']
         version = os_name['version']
-        return platform.operating_system(name+version)
+        return plat.operating_system(name+version)
     else:
-        return platform.operating_system(os_name)
+        return plat.operating_system(os_name)
 
 
 def _platform_from_dict(platform_name):
@@ -525,16 +522,35 @@ def all_platforms():
 
 
 @memoized
-def sys_type():
-    """ Gather a list of all available subclasses of platforms.
-        Sorts the list according to their priority looking. Priority is
-        an arbitrarily set number. Detects platform either using uname or
-        a file path (/opt/cray...)
+def platform():
+    """Detects the platform for this machine.
+
+    Gather a list of all available subclasses of platforms.
+    Sorts the list according to their priority looking. Priority is
+    an arbitrarily set number. Detects platform either using uname or
+    a file path (/opt/cray...)
     """
     # Try to create a Platform object using the config file FIRST
     platform_list = all_platforms()
     platform_list.sort(key=lambda a: a.priority)
 
-    for platform in platform_list:
-        if platform.detect():
-            return platform()
+    for platform_cls in platform_list:
+        if platform_cls.detect():
+            return platform_cls()
+
+
+@memoized
+def sys_type():
+    """Print out the "default" platform-os-target tuple for this machine.
+
+    On machines with only one target OS/target, prints out the
+    platform-os-target for the frontend.  For machines with a frontend
+    and a backend, prints the default backend.
+
+    TODO: replace with use of more explicit methods to get *all* the
+    backends, as client code should really be aware of cross-compiled
+    architectures.
+
+    """
+    arch = Arch(platform(), 'default_os', 'default_target')
+    return str(arch)

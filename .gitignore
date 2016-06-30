@@ -1,4 +1,5 @@
 /var/spack/stage
+/var/spack/cache
 *.pyc
 /opt/
 *~

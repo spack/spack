@@ -5,7 +5,7 @@ import unittest
 import os
 import platform as py_platform
 import spack
-from spack.architecture import *
+import spack.architecture
 from spack.spec import *
 from spack.platforms.cray_xc import CrayXc
 from spack.platforms.linux import Linux
@@ -19,14 +19,14 @@ class ArchitectureTest(MockPackagesTest):
 
     def setUp(self):
         super(ArchitectureTest, self).setUp()
-        self.platform = sys_type()
+        self.platform = spack.architecture.platform()
 
     def tearDown(self):
         super(ArchitectureTest, self).tearDown()
 
     def test_dict_functions_for_architecture(self):
-        arch = Arch()
-        arch.platform = spack.architecture.sys_type()
+        arch = spack.architecture.Arch()
+        arch.platform = spack.architecture.platform()
         arch.platform_os = arch.platform.operating_system('default_os')
         arch.target = arch.platform.target('default_target')
 
@@ -36,18 +36,23 @@ class ArchitectureTest(MockPackagesTest):
 
         self.assertEqual(arch, new_arch)
 
-        self.assertTrue( isinstance(arch, Arch) )
-        self.assertTrue( isinstance(arch.platform, Platform) )
-        self.assertTrue( isinstance(arch.platform_os, OperatingSystem) )
-        self.assertTrue( isinstance(arch.target, Target) )
-        self.assertTrue( isinstance(new_arch, Arch) )
-        self.assertTrue( isinstance(new_arch.platform, Platform) )
-        self.assertTrue( isinstance(new_arch.platform_os, OperatingSystem) )
-        self.assertTrue( isinstance(new_arch.target, Target) )
+        self.assertTrue( isinstance(arch, spack.architecture.Arch) )
+        self.assertTrue( isinstance(arch.platform, spack.architecture.Platform) )
+        self.assertTrue( isinstance(arch.platform_os,
+                                    spack.architecture.OperatingSystem) )
+        self.assertTrue( isinstance(arch.target,
+                                    spack.architecture.Target) )
+        self.assertTrue( isinstance(new_arch, spack.architecture.Arch) )
+        self.assertTrue( isinstance(new_arch.platform,
+                                    spack.architecture.Platform) )
+        self.assertTrue( isinstance(new_arch.platform_os,
+                                    spack.architecture.OperatingSystem) )
+        self.assertTrue( isinstance(new_arch.target,
+                                    spack.architecture.Target) )
 
 
-    def test_sys_type(self):
-        output_platform_class = sys_type()
+    def test_platform(self):
+        output_platform_class = spack.architecture.platform()
         my_arch_class = None
         if os.path.exists('/opt/cray/craype'):
             my_platform_class = CrayXc()

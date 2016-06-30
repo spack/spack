@@ -221,7 +221,7 @@ class DefaultConcretizer(object):
             if isinstance(spec.root.architecture.platform,spack.architecture.Platform):
                 spec.architecture.platform = spec.root.architecture.platform
         else:
-            spec.architecture.platform = spack.architecture.sys_type()
+            spec.architecture.platform = spack.architecture.platform()
         return True #changed?
 
     def concretize_architecture(self, spec):
@@ -334,7 +334,7 @@ class DefaultConcretizer(object):
         Default specs set at the compiler level will still be added later.
         """
 
-            
+
         if not spec.architecture.platform_os:
             #Although this usually means changed, this means awaiting other changes
             return True
@@ -347,7 +347,7 @@ class DefaultConcretizer(object):
                                and flag in p.compiler_flags))
                 if not flag in spec.compiler_flags or \
                     not (sorted(spec.compiler_flags[flag]) >= sorted(nearest.compiler_flags[flag])):
-                    if flag in spec.compiler_flags: 
+                    if flag in spec.compiler_flags:
                         spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
                                                          set(nearest.compiler_flags[flag]))
                     else:
