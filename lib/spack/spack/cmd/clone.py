@@ -44,6 +44,7 @@ def setup_parser(subparser):
         '--url',  action='store', dest='url',
         help="Github URL from which to retrieve the package")
 
+
 def getSpackGitRepo():
     def repo_add_if_not_exists(path, scope=spack.cmd.default_list_scope):
         """Add a package source to Spack's configuration."""
@@ -82,6 +83,7 @@ def getSpackGitRepo():
     git_repo = Repo(spack_git_repo_path)
     return git_repo
 
+
 def integrate_github_package(url):
     repoFetcher = GitFetchStrategy(git=url)
     packageName = url.split("/")[-1]
@@ -96,7 +98,8 @@ def integrate_github_package(url):
         shutil.copy2(packagePath, packageDest)
     return packageName
 
-def clone(parser,args):
+
+def clone(parser, args):
     if not args.url:
         tty.die("Clone requires a github URL")
     packageName = integrate_github_package(args.url)
