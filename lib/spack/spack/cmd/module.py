@@ -25,6 +25,7 @@
 import os
 import shutil
 import sys
+import collections
 
 import llnl.util.tty as tty
 import spack.cmd
@@ -100,12 +101,32 @@ def module_refresh(name, specs, args):
     ask_for_confirmation('Do you want to proceed ? ')
 
     cls = module_types[name]
+
+    # Detect name clashes
+    writers = [cls(spec) for spec in specs]
+    file2writer = collections.defaultdict(list)
+    for item in writers:
+        file2writer[item.file_name].append(item)
+
+    if len(file2writer) != len(writers):
+        message = 'Name clashes detected in module files:\n'
+        for filename, writer_list in file2writer.items():
+            if len(writer_list) > 1:
+                message += 'file : {0}\n'.format(filename)
+                for x in writer_list:
+                    message += 'spec : {0}\n'.format(x.spec.format(color=True))
+                message += '\n'
+        tty.error(message)
+        tty.error('Operation aborted')
+        raise SystemExit(1)
+
+    # Proceed regenerating module files
     tty.msg('Regenerating {name} module files'.format(name=name))
     if os.path.isdir(cls.path) and args.delete_tree:
         shutil.rmtree(cls.path, ignore_errors=False)
     mkdirp(cls.path)
-    for spec in specs:
-        cls(spec).write()
+    for x in writers:
+        x.write(overwrite=True)
 
 # Qualifiers to be used when querying the db for specs
 constraint_qualifiers = {
