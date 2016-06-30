@@ -79,7 +79,6 @@ def clone(parser, args):
         tty.msg("Created repo with namespace '%s'." % repo.namespace)
     if not args.url:
         tty.die("Clone requires a github URL")
-    # https://api.github.com/repos/DavidPoliakoff/spack
     descriptorURL = args.url
     repoFetcher = GitFetchStrategy(git=descriptorURL)
     packageName = descriptorURL.split("/")[-1]
