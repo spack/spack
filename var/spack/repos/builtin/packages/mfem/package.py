@@ -32,7 +32,7 @@ class Mfem(Package):
     url      = 'https://github.com/mfem/mfem'
 
     version('3.2', '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
-            url='http://goo.gl/Y9T75B', expand=False)
+            url='http://goo.gl/Y9T75B', expand=False, preferred=True)
 
     version('3.1', '841ea5cf58de6fae4de0f553b0e01ebaab9cd9c67fa821e8a715666ecf18fc57',
             url='http://goo.gl/xrScXn', expand=False)
