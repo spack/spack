@@ -41,9 +41,6 @@ description = "Build and install packages"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '--fetch', action='store_true', dest='fetch',
-        help="Only fetch the remote package, don't install it")
-    subparser.add_argument(
         '--url',  action='store', dest='url',
         help="Github URL from which to retrieve the package")
 
