@@ -95,9 +95,10 @@ def module_refresh(name, specs, args):
         tty.msg('No package matches your query')
         return
 
-    tty.msg('You are about to regenerate the {name} module files for the following specs:'.format(name=name))
+    tty.msg('You are about to regenerate the {name} module files for the following specs:\n'.format(name=name))
     for s in specs:
         print(s.format(color=True))
+    print('')
     ask_for_confirmation('Do you want to proceed ? ')
 
     cls = module_types[name]
@@ -112,10 +113,9 @@ def module_refresh(name, specs, args):
         message = 'Name clashes detected in module files:\n'
         for filename, writer_list in file2writer.items():
             if len(writer_list) > 1:
-                message += 'file : {0}\n'.format(filename)
+                message += '\nfile : {0}\n'.format(filename)
                 for x in writer_list:
                     message += 'spec : {0}\n'.format(x.spec.format(color=True))
-                message += '\n'
         tty.error(message)
         tty.error('Operation aborted')
         raise SystemExit(1)

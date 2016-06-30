@@ -77,7 +77,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import *
 import spack
 from spack.error import SpackError
-import argparse
+from external import argparse
 
 # Command parsing
 parser = argparse.ArgumentParser(
