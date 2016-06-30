@@ -44,8 +44,7 @@ def setup_parser(subparser):
         '--url',  action='store', dest='url',
         help="Github URL from which to retrieve the package")
 
-
-def clone(parser, args):
+def getSpackGitRepo():
     def repo_add_if_not_exists(path, scope=spack.cmd.default_list_scope):
         """Add a package source to Spack's configuration."""
 
@@ -74,11 +73,6 @@ def clone(parser, args):
         repos.insert(0, canon_path)
         spack.config.update_config('repos', repos, scope)
         tty.msg("Created repo with namespace '%s'." % repo.namespace)
-    if not args.url:
-        tty.die("Clone requires a github URL")
-    descriptorURL = args.url
-    repoFetcher = GitFetchStrategy(git=descriptorURL)
-    packageName = descriptorURL.split("/")[-1]
     spack_git_repo_path = join_path(spack.repos_path, "git")
     try:
         create_repo(spack_git_repo_path, "git")
@@ -86,15 +80,28 @@ def clone(parser, args):
         pass
     repo_add_if_not_exists(spack_git_repo_path)
     git_repo = Repo(spack_git_repo_path)
-    packageDest = join_path(spack_git_repo_path, "packages", packageName)
+    return git_repo
+
+def integrate_github_package(url):
+    repoFetcher = GitFetchStrategy(git=url)
+    packageName = url.split("/")[-1]
+    git_repo = getSpackGitRepo()
+    spack_git_repo_path = git_repo.packages_path
+    packageDest = join_path(spack_git_repo_path, packageName)
     if not os.path.isdir(packageDest):
         os.mkdir(packageDest)
     with Stage(repoFetcher) as stage:
         repoFetcher.fetch()
         packagePath = stage.path + "/" + packageName + "/package.py"
         shutil.copy2(packagePath, packageDest)
-    specs = spack.cmd.parse_specs(packageName, concretize=True)
+    return packageName
 
+def clone(parser,args):
+    if not args.url:
+        tty.die("Clone requires a github URL")
+    packageName = integrate_github_package(args.url)
+    specs = spack.cmd.parse_specs(packageName, concretize=True)
+    git_repo = getSpackGitRepo()
     for spec in specs:
         package = git_repo.get(spec)
         with spack.installed_db.write_transaction():
