@@ -65,7 +65,7 @@ def setup_parser(subparser):
         help='Generate shell script (instead of input for module command)')
 
     find_parser.add_argument(
-        '-p', '--prefix', dest='prefix',
+        '-p', '--prefix', dest='prefix', default='',
         help='Prepend to module names when issuing module load commands')
     _add_common_arguments(find_parser)
 
