@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
 from pprint import pprint
@@ -31,6 +31,7 @@ from llnl.util.lang import list_modules
 
 import spack
 import spack.test
+from spack.fetch_strategy import FetchError
 
 description ="Run unit tests"
 
@@ -50,6 +51,24 @@ def setup_parser(subparser):
         help="verbose output")
 
 
+class MockCache(object):
+    def store(self, copyCmd, relativeDst):
+        pass
+
+    def fetcher(self, targetPath, digest):
+        return MockCacheFetcher()
+
+
+class MockCacheFetcher(object):
+    def set_stage(self, stage):
+        pass
+    
+    def fetch(self):
+        raise FetchError("Mock cache always fails for tests")
+
+    def __str__(self):
+        return "[mock fetcher]"
+
 def test(parser, args):
     if args.list:
         print "Available tests:"
@@ -66,4 +85,5 @@ def test(parser, args):
             
             if not os.path.exists(outputDir):
                 mkdirp(outputDir)
+        spack.cache = MockCache()
         spack.test.run(args.names, outputDir, args.verbose)

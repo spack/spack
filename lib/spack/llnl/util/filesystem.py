@@ -1,51 +1,54 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-__all__ = ['set_install_permissions', 'install', 'install_tree', 'traverse_tree',
-           'expand_user', 'working_dir', 'touch', 'touchp', 'mkdirp',
-           'force_remove', 'join_path', 'ancestor', 'can_access', 'filter_file',
-           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
-           'set_executable', 'copy_mode', 'unset_executable_mode',
-           'remove_dead_links', 'remove_linked_tree']
-
 import os
-import sys
+import glob
 import re
 import shutil
 import stat
 import errno
 import getpass
 from contextlib import contextmanager, closing
-from tempfile import NamedTemporaryFile
+import subprocess
 
 import llnl.util.tty as tty
-from spack.util.compression import ALLOWED_ARCHIVE_TYPES
+
+__all__ = ['set_install_permissions', 'install', 'install_tree',
+           'traverse_tree',
+           'expand_user', 'working_dir', 'touch', 'touchp', 'mkdirp',
+           'force_remove', 'join_path', 'ancestor', 'can_access',
+           'filter_file',
+           'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
+           'set_executable', 'copy_mode', 'unset_executable_mode',
+           'remove_dead_links', 'remove_linked_tree', 'find_library_path',
+           'fix_darwin_install_name', 'to_link_flags']
+
 
 def filter_file(regex, repl, *filenames, **kwargs):
     """Like sed, but uses python regular expressions.
 
-       Filters every line of file through regex and replaces the file
+       Filters every line of each file through regex and replaces the file
        with a filtered version.  Preserves mode of filtered files.
 
        As with re.sub, ``repl`` can be either a string or a callable.
@@ -56,7 +59,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
 
        Keyword Options:
          string[=False]         If True, treat regex as a plain string.
-         backup[=True]          Make a backup files suffixed with ~
+         backup[=True]          Make backup file(s) suffixed with ~
          ignore_absent[=False]  Ignore any files that don't exist.
     """
     string = kwargs.get('string', False)
@@ -66,6 +69,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
     # Allow strings to use \1, \2, etc. for replacement, like sed
     if not callable(repl):
         unescaped = repl.replace(r'\\', '\\')
+
         def replace_groups_with_groupid(m):
             def groupid_to_group(x):
                 return m.group(int(x.group(1)))
@@ -76,26 +80,26 @@ def filter_file(regex, repl, *filenames, **kwargs):
         regex = re.escape(regex)
 
     for filename in filenames:
-        backup = filename + "~"
+        backup_filename = filename + "~"
 
         if ignore_absent and not os.path.exists(filename):
             continue
 
-        shutil.copy(filename, backup)
+        shutil.copy(filename, backup_filename)
         try:
-            with closing(open(backup)) as infile:
+            with closing(open(backup_filename)) as infile:
                 with closing(open(filename, 'w')) as outfile:
                     for line in infile:
                         foo = re.sub(regex, repl, line)
                         outfile.write(foo)
         except:
             # clean up the original file on failure.
-            shutil.move(backup, filename)
+            shutil.move(backup_filename, filename)
             raise
 
         finally:
             if not backup:
-                shutil.rmtree(backup, ignore_errors=True)
+                os.remove(backup_filename)
 
 
 class FileFilter(object):
@@ -110,7 +114,7 @@ class FileFilter(object):
 def change_sed_delimiter(old_delim, new_delim, *filenames):
     """Find all sed search/replace commands and change the delimiter.
        e.g., if the file contains seds that look like 's///', you can
-       call change_sed_delimeter('/', '@', file) to change the
+       call change_sed_delimiter('/', '@', file) to change the
        delimiter to '@'.
 
        NOTE that this routine will fail if the delimiter is ' or ".
@@ -154,9 +158,12 @@ def set_install_permissions(path):
 def copy_mode(src, dest):
     src_mode = os.stat(src).st_mode
     dest_mode = os.stat(dest).st_mode
-    if src_mode & stat.S_IXUSR: dest_mode |= stat.S_IXUSR
-    if src_mode & stat.S_IXGRP: dest_mode |= stat.S_IXGRP
-    if src_mode & stat.S_IXOTH: dest_mode |= stat.S_IXOTH
+    if src_mode & stat.S_IXUSR:
+        dest_mode |= stat.S_IXUSR
+    if src_mode & stat.S_IXGRP:
+        dest_mode |= stat.S_IXGRP
+    if src_mode & stat.S_IXOTH:
+        dest_mode |= stat.S_IXOTH
     os.chmod(dest, dest_mode)
 
 
@@ -172,7 +179,7 @@ def install(src, dest):
     """Manually install a file to a particular location."""
     tty.debug("Installing %s to %s" % (src, dest))
 
-    # Expand dsst to its eventual full path if it is a directory.
+    # Expand dest to its eventual full path if it is a directory.
     if os.path.isdir(dest):
         dest = join_path(dest, os.path.basename(src))
 
@@ -212,7 +219,7 @@ def mkdirp(*paths):
         if not os.path.exists(path):
             os.makedirs(path)
         elif not os.path.isdir(path):
-            raise OSError(errno.EEXIST, "File alredy exists", path)
+            raise OSError(errno.EEXIST, "File already exists", path)
 
 
 def force_remove(*paths):
@@ -221,8 +228,9 @@ def force_remove(*paths):
     for path in paths:
         try:
             os.remove(path)
-        except OSError, e:
+        except OSError:
             pass
+
 
 @contextmanager
 def working_dir(dirname, **kwargs):
@@ -237,7 +245,7 @@ def working_dir(dirname, **kwargs):
 
 def touch(path):
     """Creates an empty file at the specified path."""
-    with open(path, 'a') as file:
+    with open(path, 'a'):
         os.utime(path, None)
 
 
@@ -250,7 +258,7 @@ def touchp(path):
 def force_symlink(src, dest):
     try:
         os.symlink(src, dest)
-    except OSError as e:
+    except OSError:
         os.remove(dest)
         os.symlink(src, dest)
 
@@ -272,7 +280,7 @@ def ancestor(dir, n=1):
 
 def can_access(file_name):
     """True if we have read/write access to the file."""
-    return os.access(file_name, os.R_OK|os.W_OK)
+    return os.access(file_name, os.R_OK | os.W_OK)
 
 
 def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
@@ -301,7 +309,7 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
     Optional args:
 
-    order=[pre|post] -- Whether to do pre- or post-order traveral.
+    order=[pre|post] -- Whether to do pre- or post-order traversal.
 
     ignore=<predicate> -- Predicate indicating which files to ignore.
 
@@ -340,13 +348,14 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
 
         # Treat as a directory
         if os.path.isdir(source_child) and (
-            follow_links or not os.path.islink(source_child)):
+                follow_links or not os.path.islink(source_child)):
 
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
-                tuples = traverse_tree(source_root, dest_root, rel_child, **kwargs)
-                for t in tuples: yield t
+                tuples = traverse_tree(source_root, dest_root, rel_child, **kwargs)  # NOQA: ignore=E501
+                for t in tuples:
+                    yield t
 
         # Treat as a file.
         elif not ignore(os.path.join(rel_path, f)):
@@ -376,6 +385,7 @@ def remove_dead_links(root):
             if not os.path.exists(real_path):
                 os.unlink(path)
 
+
 def remove_linked_tree(path):
     """
     Removes a directory and its contents.  If the directory is a
@@ -392,3 +402,57 @@ def remove_linked_tree(path):
             os.unlink(path)
         else:
             shutil.rmtree(path, True)
+
+
+def fix_darwin_install_name(path):
+    """
+    Fix install name of dynamic libraries on Darwin to have full path.
+    There are two parts of this task:
+    (i) use install_name('-id',...) to change install name of a single lib;
+    (ii) use install_name('-change',...) to change the cross linking between
+    libs. The function assumes that all libraries are in one folder and
+    currently won't follow subfolders.
+
+    Args:
+        path: directory in which .dylib files are located
+
+    """
+    libs = glob.glob(join_path(path, "*.dylib"))
+    for lib in libs:
+        # fix install name first:
+        subprocess.Popen(["install_name_tool", "-id", lib, lib], stdout=subprocess.PIPE).communicate()[0]  # NOQA: ignore=E501
+        long_deps = subprocess.Popen(["otool", "-L", lib], stdout=subprocess.PIPE).communicate()[0].split('\n')  # NOQA: ignore=E501
+        deps = [dep.partition(' ')[0][1::] for dep in long_deps[2:-1]]
+        # fix all dependencies:
+        for dep in deps:
+            for loc in libs:
+                if dep == os.path.basename(loc):
+                    subprocess.Popen(["install_name_tool", "-change", dep, loc, lib], stdout=subprocess.PIPE).communicate()[0]  # NOQA: ignore=E501
+                    break
+
+
+def to_link_flags(library):
+    """Transforms a path to a <library> into linking flags -L<dir> -l<name>.
+
+    Return:
+      A string of linking flags.
+    """
+    dir  = os.path.dirname(library)
+    # Assume libXYZ.suffix
+    name = os.path.basename(library)[3:].split(".")[0]
+    res = '-L%s -l%s' % (dir, name)
+    return res
+
+
+def find_library_path(libname, *paths):
+    """Searches for a file called <libname> in each path.
+
+    Return:
+      directory where the library was found, if found.  None otherwise.
+
+    """
+    for path in paths:
+        library = join_path(path, libname)
+        if os.path.exists(library):
+            return path
+    return None

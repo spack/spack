@@ -80,10 +80,11 @@ with a high level view of Spack's directory structure::
 
      var/
         spack/            <- build & stage directories
-        repos/            <- contains package repositories
-           builtin/       <- pkg repository that comes with Spack
-              repo.yaml   <- descriptor for the builtin repository
-              packages/   <- directories under here contain packages
+            repos/            <- contains package repositories
+               builtin/       <- pkg repository that comes with Spack
+                  repo.yaml   <- descriptor for the builtin repository
+                  packages/   <- directories under here contain packages
+            cache/        <- saves resources downloaded during installs
 
      opt/
         spack/            <- packages are installed here

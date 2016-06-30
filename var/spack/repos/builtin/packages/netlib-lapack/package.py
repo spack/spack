@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 
 
@@ -31,10 +55,20 @@ class NetlibLapack(Package):
     depends_on('cmake')
     depends_on('blas', when='+external-blas')
 
-    def install(self, spec, prefix):
-        cmake_args = ['-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if '+shared' in spec else 'OFF'),
+
+    def patch(self):
+        # Fix cblas CMakeLists.txt -- has wrong case for subdirectory name.
+        if self.spec.satisfies('@3.6.0:'):
+            filter_file('${CMAKE_CURRENT_SOURCE_DIR}/CMAKE/',
+                        '${CMAKE_CURRENT_SOURCE_DIR}/cmake/', 'CBLAS/CMakeLists.txt', string=True)
+
+    def install_one(self, spec, prefix, shared):
+        cmake_args = ['-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if shared else 'OFF'),
                       '-DCMAKE_BUILD_TYPE:STRING=%s' % ('Debug' if '+debug' in spec else 'Release'),
                       '-DLAPACKE:BOOL=%s' % ('ON' if '+lapacke' in spec else 'OFF')]
+        if spec.satisfies('@3.6.0:'):
+            cmake_args.extend(['-DCBLAS=ON']) # always build CBLAS
+
         if '+external-blas' in spec:
             # TODO : the mechanism to specify the library should be more general,
             # TODO : but this allows to have an hook to an external blas
@@ -45,7 +79,30 @@ class NetlibLapack(Package):
 
         cmake_args.extend(std_cmake_args)
 
-        with working_dir('spack-build', create=True):
+        build_dir = 'spack-build' + ('-shared' if shared else '-static')
+        with working_dir(build_dir, create=True):
             cmake('..', *cmake_args)
             make()
             make("install")
+
+
+    def install(self, spec, prefix):
+        # Always build static libraries.
+        self.install_one(spec, prefix, False)
+
+        # Build shared libraries if requested.
+        if '+shared' in spec:
+            self.install_one(spec, prefix, True)
+
+
+    def setup_dependent_package(self, module, dspec):
+        # This is WIP for a prototype interface for virtual packages.
+        # We can update this as more builds start depending on BLAS/LAPACK.
+        libdir = find_library_path('libblas.a', self.prefix.lib64, self.prefix.lib)
+
+        self.spec.blas_static_lib   = join_path(libdir, 'libblas.a')
+        self.spec.lapack_static_lib = join_path(libdir, 'liblapack.a')
+
+        if '+shared' in self.spec:
+            self.spec.blas_shared_lib   = join_path(libdir, 'libblas.%s' % dso_suffix)
+            self.spec.lapack_shared_lib = join_path(libdir, 'liblapack.%s' % dso_suffix)

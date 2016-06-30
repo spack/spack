@@ -1,5 +1,29 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
-import os
+
 
 class Mvapich2(Package):
     """MVAPICH2 is an MPI implementation for Infiniband networks."""
@@ -19,8 +43,9 @@ class Mvapich2(Package):
     variant('debug', default=False, description='Enables debug information and error messages at run-time')
 
     ##########
-    # TODO : Process managers should be grouped into the same variant, as soon as variant capabilities will be extended
-    # See https://groups.google.com/forum/#!topic/spack/F8-f8B4_0so
+    # TODO : Process managers should be grouped into the same variant,
+    # as soon as variant capabilities will be extended See
+    # https://groups.google.com/forum/#!topic/spack/F8-f8B4_0so
     SLURM = 'slurm'
     HYDRA = 'hydra'
     GFORKER = 'gforker'
@@ -33,7 +58,8 @@ class Mvapich2(Package):
     ##########
 
     ##########
-    # TODO : Network types should be grouped into the same variant, as soon as variant capabilities will be extended
+    # TODO : Network types should be grouped into the same variant, as
+    # soon as variant capabilities will be extended
     PSM = 'psm'
     SOCK = 'sock'
     NEMESISIBTCP = 'nemesisibtcp'
@@ -60,8 +86,8 @@ class Mvapich2(Package):
 
     @staticmethod
     def enabled(x):
-        """
-        Given a variant name returns the string that means the variant is enabled
+        """Given a variant name returns the string that means the variant is
+        enabled
 
         :param x: variant name
         :return:
@@ -69,8 +95,8 @@ class Mvapich2(Package):
         return '+' + x
 
     def set_build_type(self, spec, configure_args):
-        """
-        Appends to configure_args the flags that depends only on the build type (i.e. release or debug)
+        """Appends to configure_args the flags that depends only on the build
+        type (i.e. release or debug)
 
         :param spec: spec
         :param configure_args: list of current configure arguments
@@ -80,7 +106,8 @@ class Mvapich2(Package):
                 "--disable-fast",
                 "--enable-error-checking=runtime",
                 "--enable-error-messages=all",
-                "--enable-g=dbg", "--enable-debuginfo"  # Permits debugging with TotalView
+                # Permits debugging with TotalView
+                "--enable-g=dbg", "--enable-debuginfo"
             ]
         else:
             build_type_options = ["--enable-fast=all"]
@@ -88,25 +115,41 @@ class Mvapich2(Package):
         configure_args.extend(build_type_options)
 
     def set_process_manager(self, spec, configure_args):
-        """
-        Appends to configure_args the flags that will enable the appropriate process managers
+        """Appends to configure_args the flags that will enable the
+        appropriate process managers
 
         :param spec: spec
         :param configure_args: list of current configure arguments
         """
-        # Check that slurm variant is not activated together with other pm variants
-        has_slurm_incompatible_variants = any(self.enabled(x) in spec for x in Mvapich2.SLURM_INCOMPATIBLE_PMS)
-        if self.enabled(Mvapich2.SLURM) in spec and has_slurm_incompatible_variants:
-            raise RuntimeError(" %s : 'slurm' cannot be activated together with other process managers" % self.name)
+        # Check that slurm variant is not activated together with
+        # other pm variants
+        has_slurm_incompatible_variants = \
+            any(self.enabled(x) in spec
+                for x in Mvapich2.SLURM_INCOMPATIBLE_PMS)
+
+        if self.enabled(Mvapich2.SLURM) in spec and \
+           has_slurm_incompatible_variants:
+            raise RuntimeError(" %s : 'slurm' cannot be activated \
+            together with other process managers" % self.name)
 
         process_manager_options = []
+        # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if self.enabled(Mvapich2.SLURM) in spec:
-            process_manager_options = [
-                "--with-pm=slurm"
-            ]
+            if self.version > Version('2.0'):
+                process_manager_options = [
+                    "--with-pmi=pmi2",
+                    "--with-pm=slurm"
+                ]
+            else:
+                process_manager_options = [
+                    "--with-pmi=slurm",
+                    "--with-pm=no"
+                ]
+
         elif has_slurm_incompatible_variants:
             pms = []
-            # The variant name is equal to the process manager name in the configuration options
+            # The variant name is equal to the process manager name in
+            # the configuration options
             for x in Mvapich2.SLURM_INCOMPATIBLE_PMS:
                 if self.enabled(x) in spec:
                     pms.append(x)
@@ -122,7 +165,9 @@ class Mvapich2(Package):
             if self.enabled(x) in spec:
                 count += 1
         if count > 1:
-            raise RuntimeError('network variants are mutually exclusive (only one can be selected at a time)')
+            raise RuntimeError('network variants are mutually exclusive \
+            (only one can be selected at a time)')
+
         network_options = []
         # From here on I can suppose that only one variant has been selected
         if self.enabled(Mvapich2.PSM) in spec:
@@ -140,8 +185,32 @@ class Mvapich2(Package):
 
         configure_args.extend(network_options)
 
+    def setup_environment(self, spack_env, run_env):
+        if self.enabled(Mvapich2.SLURM) in self.spec and \
+           self.version > Version('2.0'):
+            run_env.set('SLURM_MPI_TYPE', 'pmi2')
+
+    def setup_dependent_environment(self, spack_env, run_env, extension_spec):
+        spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
+        spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpicxx'))
+        spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+        spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+
+        spack_env.set('MPICH_CC', spack_cc)
+        spack_env.set('MPICH_CXX', spack_cxx)
+        spack_env.set('MPICH_F77', spack_f77)
+        spack_env.set('MPICH_F90', spack_fc)
+        spack_env.set('MPICH_FC', spack_fc)
+
+    def setup_dependent_package(self, module, dep_spec):
+        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+        self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
+        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+        self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+
     def install(self, spec, prefix):
-        # we'll set different configure flags depending on our environment
+        # we'll set different configure flags depending on our
+        # environment
         configure_args = [
             "--prefix=%s" % prefix,
             "--enable-shared",
@@ -171,7 +240,6 @@ class Mvapich2(Package):
 
         self.filter_compilers()
 
-
     def filter_compilers(self):
         """Run after install to make the MPI compilers use the
            compilers that Spack built the package with.
@@ -181,18 +249,20 @@ class Mvapich2(Package):
            be bound to whatever compiler they were built with.
         """
         bin = self.prefix.bin
-        mpicc  = os.path.join(bin, 'mpicc')
-        mpicxx = os.path.join(bin, 'mpicxx')
-        mpif77 = os.path.join(bin, 'mpif77')
-        mpif90 = os.path.join(bin, 'mpif90')
+        mpicc  = join_path(bin, 'mpicc')
+        mpicxx = join_path(bin, 'mpicxx')
+        mpif77 = join_path(bin, 'mpif77')
+        mpif90 = join_path(bin, 'mpif90')
 
-        spack_cc  = os.environ['CC']
-        spack_cxx = os.environ['CXX']
-        spack_f77 = os.environ['F77']
-        spack_fc  = os.environ['FC']
+        # Substitute Spack compile wrappers for the real
+        # underlying compiler
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
+        filter_file(env['CC'], self.compiler.cc, mpicc, **kwargs)
+        filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
+        filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
+        filter_file(env['FC'], self.compiler.fc, mpif90, **kwargs)
 
-        kwargs = { 'ignore_absent' : True, 'backup' : False, 'string' : True }
-        filter_file('CC="%s"' % spack_cc , 'CC="%s"'  % self.compiler.cc,  mpicc,  **kwargs)
-        filter_file('CXX="%s"'% spack_cxx, 'CXX="%s"' % self.compiler.cxx, mpicxx, **kwargs)
-        filter_file('F77="%s"'% spack_f77, 'F77="%s"' % self.compiler.f77, mpif77, **kwargs)
-        filter_file('FC="%s"' % spack_fc , 'FC="%s"'  % self.compiler.fc,  mpif90, **kwargs)
+        # Remove this linking flag if present
+        # (it turns RPATH into RUNPATH)
+        for wrapper in (mpicc, mpicxx, mpif77, mpif90):
+            filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)

@@ -1,17 +1,44 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 
+
 class Postgresql(Package):
-    """PostgreSQL is a powerful, open source object-relational
-       database system. It has more than 15 years of active
-       development and a proven architecture that has earned it a
-       strong reputation for reliability, data integrity, and
-       correctness."""
+    """PostgreSQL is a powerful, open source object-relational database system.
+    It has more than 15 years of active development and a proven architecture
+    that has earned it a strong reputation for reliability, data integrity, and
+    correctness."""
+
     homepage = "http://www.postgresql.org/"
     url      = "http://ftp.postgresql.org/pub/source/v9.3.4/postgresql-9.3.4.tar.bz2"
 
     version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
+    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
 
-    depends_on("openssl")
+    depends_on('openssl')
+    depends_on('readline')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,

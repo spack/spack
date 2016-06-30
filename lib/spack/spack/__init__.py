@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
 import sys
@@ -39,13 +39,19 @@ spack_file = join_path(spack_root, "bin", "spack")
 lib_path       = join_path(spack_root, "lib", "spack")
 build_env_path = join_path(lib_path, "env")
 module_path    = join_path(lib_path, "spack")
+platform_path  = join_path(module_path, 'platforms')
 compilers_path = join_path(module_path, "compilers")
+operating_system_path = join_path(module_path, 'operating_systems')
 test_path      = join_path(module_path, "test")
 hooks_path     = join_path(module_path, "hooks")
 var_path       = join_path(spack_root, "var", "spack")
 stage_path     = join_path(var_path, "stage")
 repos_path     = join_path(var_path, "repos")
 share_path     = join_path(spack_root, "share", "spack")
+cache_path     = join_path(var_path, "cache")
+
+import spack.fetch_strategy
+cache = spack.fetch_strategy.FsCache(cache_path)
 
 prefix = spack_root
 opt_path       = join_path(prefix, "opt")
@@ -105,7 +111,7 @@ concretizer = DefaultConcretizer()
 
 # Version information
 from spack.version import Version
-spack_version = Version("0.8.15")
+spack_version = Version("0.9.1")
 
 #
 # Executables used by Spack
@@ -136,9 +142,7 @@ for path in _tmp_candidates:
     # don't add a second username if it's already unique by user.
     if not _tmp_user in path:
         tmp_dirs.append(join_path(path, '%u', 'spack-stage'))
-
-for path in _tmp_candidates:
-    if not path in tmp_dirs:
+    else:
         tmp_dirs.append(join_path(path, 'spack-stage'))
 
 # Whether spack should allow installation of unsafe versions of

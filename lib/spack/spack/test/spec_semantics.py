@@ -1,27 +1,29 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import unittest
+import spack.architecture
 from spack.spec import *
 from spack.test.mock_packages_test import *
 
@@ -106,7 +108,8 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     def test_satisfies_namespaced_dep(self):
-        """Ensure spec from same or unspecified namespace satisfies namespace constraint."""
+        """Ensure spec from same or unspecified namespace satisfies namespace
+           constraint."""
         self.check_satisfies('mpileaks ^builtin.mock.mpich', '^mpich')
 
         self.check_satisfies('mpileaks ^builtin.mock.mpich', '^mpi')
@@ -138,11 +141,15 @@ class SpecSematicsTest(MockPackagesTest):
 
 
     def test_satisfies_architecture(self):
-        self.check_satisfies('foo=chaos_5_x86_64_ib', '=chaos_5_x86_64_ib')
-        self.check_satisfies('foo=bgqos_0', '=bgqos_0')
-
-        self.check_unsatisfiable('foo=bgqos_0', '=chaos_5_x86_64_ib')
-        self.check_unsatisfiable('foo=chaos_5_x86_64_ib', '=bgqos_0')
+        self.check_satisfies(
+            'foo platform=test target=frontend os=frontend',
+            'platform=test target=frontend os=frontend')
+        self.check_satisfies(
+            'foo platform=test target=backend os=backend',
+            'platform=test target=backend', 'platform=test os=backend')
+        self.check_satisfies(
+            'foo platform=test target=default_target os=default_os',
+            'platform=test target=default_target os=default_os')
 
 
     def test_satisfies_dependencies(self):
@@ -157,10 +164,14 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_satisfies('mpileaks^mpich@2.0', '^mpich@1:3')
         self.check_unsatisfiable('mpileaks^mpich@1.2', '^mpich@2.0')
 
-        self.check_satisfies('mpileaks^mpich@2.0^callpath@1.5', '^mpich@1:3^callpath@1.4:1.6')
-        self.check_unsatisfiable('mpileaks^mpich@4.0^callpath@1.5', '^mpich@1:3^callpath@1.4:1.6')
-        self.check_unsatisfiable('mpileaks^mpich@2.0^callpath@1.7', '^mpich@1:3^callpath@1.4:1.6')
-        self.check_unsatisfiable('mpileaks^mpich@4.0^callpath@1.7', '^mpich@1:3^callpath@1.4:1.6')
+        self.check_satisfies(
+            'mpileaks^mpich@2.0^callpath@1.5', '^mpich@1:3^callpath@1.4:1.6')
+        self.check_unsatisfiable(
+            'mpileaks^mpich@4.0^callpath@1.5', '^mpich@1:3^callpath@1.4:1.6')
+        self.check_unsatisfiable(
+            'mpileaks^mpich@2.0^callpath@1.7', '^mpich@1:3^callpath@1.4:1.6')
+        self.check_unsatisfiable(
+            'mpileaks^mpich@4.0^callpath@1.7', '^mpich@1:3^callpath@1.4:1.6')
 
 
     def test_satisfies_virtual_dependencies(self):
@@ -190,12 +201,20 @@ class SpecSematicsTest(MockPackagesTest):
     def test_satisfies_matching_variant(self):
         self.check_satisfies('mpich+foo', 'mpich+foo')
         self.check_satisfies('mpich~foo', 'mpich~foo')
+        self.check_satisfies('mpich foo=1', 'mpich foo=1')
+
+        #confirm that synonymous syntax works correctly
+        self.check_satisfies('mpich+foo', 'mpich foo=True')
+        self.check_satisfies('mpich foo=true', 'mpich+foo')
+        self.check_satisfies('mpich~foo', 'mpich foo=FALSE')
+        self.check_satisfies('mpich foo=False', 'mpich~foo')
 
 
     def test_satisfies_unconstrained_variant(self):
         # only asked for mpich, no constraints.  Either will do.
         self.check_satisfies('mpich+foo', 'mpich')
         self.check_satisfies('mpich~foo', 'mpich')
+        self.check_satisfies('mpich foo=1', 'mpich')
 
 
     def test_unsatisfiable_variants(self):
@@ -204,16 +223,44 @@ class SpecSematicsTest(MockPackagesTest):
         # 'mpich' is not concrete:
         self.check_satisfies('mpich', 'mpich+foo', False)
         self.check_satisfies('mpich', 'mpich~foo', False)
+        self.check_satisfies('mpich', 'mpich foo=1', False)
 
         # 'mpich' is concrete:
         self.check_unsatisfiable('mpich', 'mpich+foo', True)
         self.check_unsatisfiable('mpich', 'mpich~foo', True)
+        self.check_unsatisfiable('mpich', 'mpich foo=1', True)
 
 
     def test_unsatisfiable_variant_mismatch(self):
         # No matchi in specs
         self.check_unsatisfiable('mpich~foo', 'mpich+foo')
         self.check_unsatisfiable('mpich+foo', 'mpich~foo')
+        self.check_unsatisfiable('mpich foo=1', 'mpich foo=2')
+
+
+    def test_satisfies_matching_compiler_flag(self):
+        self.check_satisfies('mpich cppflags="-O3"', 'mpich cppflags="-O3"')
+        self.check_satisfies('mpich cppflags="-O3 -Wall"', 'mpich cppflags="-O3 -Wall"')
+
+
+    def test_satisfies_unconstrained_compiler_flag(self):
+        # only asked for mpich, no constraints.  Any will do.
+        self.check_satisfies('mpich cppflags="-O3"', 'mpich')
+
+
+    def test_unsatisfiable_compiler_flag(self):
+        # This case is different depending on whether the specs are concrete.
+
+        # 'mpich' is not concrete:
+        self.check_satisfies('mpich', 'mpich cppflags="-O3"', False)
+
+        # 'mpich' is concrete:
+        self.check_unsatisfiable('mpich', 'mpich cppflags="-O3"', True)
+
+
+    def test_unsatisfiable_compiler_flag_mismatch(self):
+        # No matchi in specs
+        self.check_unsatisfiable('mpich cppflags="-O3"', 'mpich cppflags="-O2"')
 
 
     def test_satisfies_virtual(self):
@@ -301,18 +348,29 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain('libelf+debug+foo', 'libelf+debug', 'libelf+foo')
         self.check_constrain('libelf+debug+foo', 'libelf+debug', 'libelf+debug+foo')
 
+        self.check_constrain('libelf debug=2 foo=1', 'libelf debug=2', 'libelf foo=1')
+        self.check_constrain('libelf debug=2 foo=1', 'libelf debug=2', 'libelf debug=2 foo=1')
+
         self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf~foo')
         self.check_constrain('libelf+debug~foo', 'libelf+debug', 'libelf+debug~foo')
 
 
-    def test_constrain_arch(self):
-        self.check_constrain('libelf=bgqos_0', 'libelf=bgqos_0', 'libelf=bgqos_0')
-        self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
+    def test_constrain_compiler_flags(self):
+        self.check_constrain('libelf cflags="-O3" cppflags="-Wall"', 'libelf cflags="-O3"', 'libelf cppflags="-Wall"')
+        self.check_constrain('libelf cflags="-O3" cppflags="-Wall"', 'libelf cflags="-O3"', 'libelf cflags="-O3" cppflags="-Wall"')
 
+
+    def test_constrain_architecture(self):
+        self.check_constrain('libelf target=default_target os=default_os',
+                             'libelf target=default_target os=default_os',
+                             'libelf target=default_target os=default_os')
+        self.check_constrain('libelf target=default_target os=default_os',
+                             'libelf',
+                             'libelf target=default_target os=default_os')
 
     def test_constrain_compiler(self):
-        self.check_constrain('libelf=bgqos_0', 'libelf=bgqos_0', 'libelf=bgqos_0')
-        self.check_constrain('libelf=bgqos_0', 'libelf', 'libelf=bgqos_0')
+        self.check_constrain('libelf %gcc@4.4.7', 'libelf %gcc@4.4.7', 'libelf %gcc@4.4.7')
+        self.check_constrain('libelf %gcc@4.4.7', 'libelf', 'libelf %gcc@4.4.7')
 
 
     def test_invalid_constraint(self):
@@ -321,9 +379,11 @@ class SpecSematicsTest(MockPackagesTest):
 
         self.check_invalid_constraint('libelf+debug', 'libelf~debug')
         self.check_invalid_constraint('libelf+debug~foo', 'libelf+debug+foo')
+        self.check_invalid_constraint('libelf debug=2', 'libelf debug=1')
 
-        self.check_invalid_constraint('libelf=bgqos_0', 'libelf=x86_54')
-
+        self.check_invalid_constraint('libelf cppflags="-O3"', 'libelf cppflags="-O2"')
+        self.check_invalid_constraint('libelf platform=test target=be os=be',
+                                          'libelf target=fe os=fe')
 
     def test_constrain_changed(self):
         self.check_constrain_changed('libelf', '@1.0')
@@ -332,7 +392,12 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf%gcc', '%gcc@4.5')
         self.check_constrain_changed('libelf', '+debug')
         self.check_constrain_changed('libelf', '~debug')
-        self.check_constrain_changed('libelf', '=bgqos_0')
+        self.check_constrain_changed('libelf', 'debug=2')
+        self.check_constrain_changed('libelf', 'cppflags="-O3"')
+
+        platform = spack.architecture.platform()
+        self.check_constrain_changed('libelf', 'target='+platform.target('default_target').name)
+        self.check_constrain_changed('libelf', 'os='+platform.operating_system('default_os').name)
 
 
     def test_constrain_not_changed(self):
@@ -343,9 +408,12 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf%gcc@4.5', '%gcc@4.5')
         self.check_constrain_not_changed('libelf+debug', '+debug')
         self.check_constrain_not_changed('libelf~debug', '~debug')
-        self.check_constrain_not_changed('libelf=bgqos_0', '=bgqos_0')
-        self.check_constrain_not_changed('libelf^foo', 'libelf^foo')
-        self.check_constrain_not_changed('libelf^foo^bar', 'libelf^foo^bar')
+        self.check_constrain_not_changed('libelf debug=2', 'debug=2')
+        self.check_constrain_not_changed('libelf cppflags="-O3"', 'cppflags="-O3"')
+
+        platform = spack.architecture.platform()
+        default_target = platform.target('default_target').name
+        self.check_constrain_not_changed('libelf target='+default_target, 'target='+default_target)
 
 
     def test_constrain_dependency_changed(self):
@@ -355,7 +423,10 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_changed('libelf^foo%gcc', 'libelf^foo%gcc@4.5')
         self.check_constrain_changed('libelf^foo', 'libelf^foo+debug')
         self.check_constrain_changed('libelf^foo', 'libelf^foo~debug')
-        self.check_constrain_changed('libelf^foo', 'libelf^foo=bgqos_0')
+
+        platform = spack.architecture.platform()
+        default_target = platform.target('default_target').name
+        self.check_constrain_changed('libelf^foo', 'libelf^foo target='+default_target)
 
 
     def test_constrain_dependency_not_changed(self):
@@ -365,4 +436,8 @@ class SpecSematicsTest(MockPackagesTest):
         self.check_constrain_not_changed('libelf^foo%gcc@4.5', 'libelf^foo%gcc@4.5')
         self.check_constrain_not_changed('libelf^foo+debug', 'libelf^foo+debug')
         self.check_constrain_not_changed('libelf^foo~debug', 'libelf^foo~debug')
-        self.check_constrain_not_changed('libelf^foo=bgqos_0', 'libelf^foo=bgqos_0')
+        self.check_constrain_not_changed('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"')
+
+        platform = spack.architecture.platform()
+        default_target = platform.target('default_target').name
+        self.check_constrain_not_changed('libelf^foo target='+default_target, 'libelf^foo target='+default_target)

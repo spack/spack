@@ -1,26 +1,27 @@
+# flake8: noqa
 ##############################################################################
-# Copyright (c) 2013-2015, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """This module implements Spack's configuration file handling.
 
@@ -117,26 +118,24 @@ Will make Spack take compilers *only* from the user configuration, and
 the site configuration will be ignored.
 
 """
+import copy
 import os
 import re
 import sys
-import copy
+
 import jsonschema
-from jsonschema import Draft4Validator, validators
-import yaml
-from yaml.error import MarkedYAMLError
-from ordereddict_backport import OrderedDict
-
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-import copy
-
 import spack
+import yaml
+from jsonschema import Draft4Validator, validators
+from llnl.util.filesystem import mkdirp
+from ordereddict_backport import OrderedDict
 from spack.error import SpackError
+from yaml.error import MarkedYAMLError
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
-
+from spack.build_environment import get_path_from_module
 
 """Dict from section names -> schema for that section."""
 section_schemas = {
@@ -146,19 +145,18 @@ section_schemas = {
         'type': 'object',
         'additionalProperties': False,
         'patternProperties': {
-            'compilers:?': { # optional colon for overriding site config.
-                'type': 'object',
-                'default': {},
-                'additionalProperties': False,
-                'patternProperties': {
-                    r'\w[\w-]*': {           # architecture
+            'compilers:?': {  # optional colon for overriding site config.
+                'type': 'array',
+                'items': {
+                    'compiler': {
                         'type': 'object',
                         'additionalProperties': False,
-                        'patternProperties': {
-                            r'\w[\w-]*@\w[\w-]*': {   # compiler spec
+                        'required': ['paths', 'spec', 'modules', 'operating_system'],
+                        'properties': {
+                            'paths': {
                                 'type': 'object',
-                                'additionalProperties': False,
                                 'required': ['cc', 'cxx', 'f77', 'fc'],
+                                'additionalProperties': False,
                                 'properties': {
                                     'cc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
@@ -168,8 +166,27 @@ section_schemas = {
                                                         {'type' : 'null' }]},
                                     'fc':  { 'anyOf': [ {'type' : 'string' },
                                                         {'type' : 'null' }]},
-                                },},},},},},},},
-
+                                    'cflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cxxflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'fflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'cppflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'ldflags': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]},
+                                    'ldlibs': { 'anyOf': [ {'type' : 'string' },
+                                                        {'type' : 'null' }]}}},
+                            'spec': { 'type': 'string'},
+                            'operating_system': { 'type': 'string'},
+                            'alias': { 'anyOf': [ {'type' : 'string'},
+                                                    {'type' : 'null' }]},
+                            'modules': { 'anyOf': [ {'type' : 'string'},
+                                                    {'type' : 'null' },
+                                                    {'type': 'array'},
+                                                    ]}
+                            },},},},},},
     'mirrors': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack mirror configuration file schema',
@@ -224,6 +241,10 @@ section_schemas = {
                                 'type':  'boolean',
                                 'default': True,
                              },
+                            'modules': {
+                                'type' : 'object',
+                                'default' : {},
+                             },
                             'providers': {
                                 'type':  'object',
                                 'default': {},
@@ -238,24 +259,122 @@ section_schemas = {
                                 'default' : {},
                             }
                         },},},},},},
+
     'modules': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack module file configuration file schema',
         'type': 'object',
         'additionalProperties': False,
+        'definitions': {
+            'array_of_strings': {
+                'type': 'array',
+                'default': [],
+                'items': {
+                    'type': 'string'
+                }
+            },
+            'dictionary_of_strings': {
+                'type': 'object',
+                'patternProperties': {
+                    r'\w[\w-]*': {  # key
+                        'type': 'string'
+                    }
+                }
+            },
+            'dependency_selection': {
+                'type': 'string',
+                'enum': ['none', 'direct', 'all']
+            },
+            'module_file_configuration': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'properties': {
+                    'filter': {
+                        'type': 'object',
+                        'default': {},
+                        'additionalProperties': False,
+                        'properties': {
+                            'environment_blacklist': {
+                                'type': 'array',
+                                'default': [],
+                                'items': {
+                                    'type': 'string'
+                                }
+                            }
+                        }
+                    },
+                    'autoload': {'$ref': '#/definitions/dependency_selection'},
+                    'prerequisites': {'$ref': '#/definitions/dependency_selection'},
+                    'conflict': {'$ref': '#/definitions/array_of_strings'},
+                    'load': {'$ref': '#/definitions/array_of_strings'},
+                    'suffixes': {'$ref': '#/definitions/dictionary_of_strings'},
+                    'environment': {
+                        'type': 'object',
+                        'default': {},
+                        'additionalProperties': False,
+                        'properties': {
+                            'set': {'$ref': '#/definitions/dictionary_of_strings'},
+                            'unset': {'$ref': '#/definitions/array_of_strings'},
+                            'prepend_path': {'$ref': '#/definitions/dictionary_of_strings'},
+                            'append_path': {'$ref': '#/definitions/dictionary_of_strings'}
+                        }
+                    }
+                }
+            },
+            'module_type_configuration': {
+                'type': 'object',
+                'default': {},
+                'anyOf': [
+                    {
+                        'properties': {
+                            'whitelist': {'$ref': '#/definitions/array_of_strings'},
+                            'blacklist': {'$ref': '#/definitions/array_of_strings'},
+                            'naming_scheme': {
+                                'type': 'string'  # Can we be more specific here?
+                            }
+                        }
+                    },
+                    {
+                        'patternProperties': {r'\w[\w-]*': {'$ref': '#/definitions/module_file_configuration'}}
+                    }
+                ]
+            }
+        },
         'patternProperties': {
             r'modules:?': {
                 'type': 'object',
                 'default': {},
                 'additionalProperties': False,
                 'properties': {
+                    'prefix_inspections': {
+                        'type': 'object',
+                        'patternProperties': {
+                            r'\w[\w-]*': {  # path to be inspected for existence (relative to prefix)
+                                '$ref': '#/definitions/array_of_strings'
+                            }
+                        }
+                    },
                     'enable': {
                         'type': 'array',
                         'default': [],
                         'items': {
-                            'type': 'string'
+                            'type': 'string',
+                            'enum': ['tcl', 'dotkit']
                         }
-                    }
+                    },
+                    'tcl': {
+                        'allOf': [
+                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
+                            {}  # Specific tcl extensions
+                        ]
+                    },
+                    'dotkit': {
+                        'allOf': [
+                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
+                            {}  # Specific dotkit extensions
+                        ]
+                    },
                 }
             },
         },
@@ -269,10 +388,10 @@ config_scopes = OrderedDict()
 
 
 def validate_section_name(section):
-    """Raise a ValueError if the section is not a valid section."""
+    """Exit if the section is not a valid section."""
     if section not in section_schemas:
-        raise ValueError("Invalid config section: '%s'.  Options are %s"
-                         % (section, section_schemas))
+        tty.die("Invalid config section: '%s'. Options are: %s"
+                % (section, " ".join(section_schemas.keys())))
 
 
 def extend_with_default(validator_class):
@@ -306,12 +425,13 @@ def extend_with_default(validator_class):
             yield err
 
     return validators.extend(validator_class, {
-        "properties" : set_defaults,
-        "patternProperties" : set_pp_defaults
+        "properties": set_defaults,
+        "patternProperties": set_pp_defaults
     })
 
 
 DefaultSettingValidator = extend_with_default(Draft4Validator)
+
 
 def validate_section(data, schema):
     """Validate data read in from a Spack YAML file.
@@ -347,15 +467,13 @@ class ConfigScope(object):
         validate_section_name(section)
         return os.path.join(self.path, "%s.yaml" % section)
 
-
     def get_section(self, section):
-        if not section in self.sections:
+        if section not in self.sections:
             path   = self.get_section_filename(section)
             schema = section_schemas[section]
             data   = _read_config_file(path, schema)
             self.sections[section] = data
         return self.sections[section]
-
 
     def write_section(self, section):
         filename = self.get_section_filename(section)
@@ -369,7 +487,6 @@ class ConfigScope(object):
             raise ConfigSanityError(e, data)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError("Error writing to config file: '%s'" % str(e))
-
 
     def clear(self):
         """Empty cached config information."""
@@ -413,7 +530,7 @@ def _read_config_file(filename, schema):
 
     elif not os.path.isfile(filename):
         raise ConfigFileError(
-            "Invlaid configuration. %s exists but is not a file." % filename)
+            "Invalid configuration. %s exists but is not a file." % filename)
 
     elif not os.access(filename, os.R_OK):
         raise ConfigFileError("Config file is not readable: %s" % filename)
@@ -469,14 +586,13 @@ def _merge_yaml(dest, source):
 
     # Source list is prepended (for precedence)
     if they_are(list):
-        seen = set(source)
-        dest[:] = source + [x for x in dest if x not in seen]
+        dest[:] = source + [x for x in dest if x not in source]
         return dest
 
     # Source dict is merged into dest.
     elif they_are(dict):
         for sk, sv in source.iteritems():
-            if not sk in dest:
+            if sk not in dest:
                 dest[sk] = copy.copy(sv)
             else:
                 dest[sk] = _merge_yaml(dest[sk], source[sk])
@@ -539,14 +655,19 @@ def update_config(section, update_data, scope=None):
        other yaml-ish structure.
 
     """
-    # read in the config to ensure we've got current data
-    get_config(section)
+    validate_section_name(section)  # validate section name
+    scope = validate_scope(scope)  # get ConfigScope object from string.
 
-    validate_section_name(section)       # validate section name
-    scope = validate_scope(scope)   # get ConfigScope object from string.
+    # read in the config to ensure we've got current data
+    configuration = get_config(section)
+
+    if isinstance(update_data, list):
+        configuration = update_data
+    else:
+        configuration.update(update_data)
 
     # read only the requested section's data.
-    scope.sections[section] = { section : update_data }
+    scope.sections[section] = {section: configuration}
     scope.write_section(section)
 
 
@@ -568,7 +689,8 @@ def spec_externals(spec):
 
     external_specs = []
     pkg_paths = allpkgs.get(name, {}).get('paths', None)
-    if not pkg_paths:
+    pkg_modules = allpkgs.get(name, {}).get('modules', None)
+    if (not pkg_paths) and (not pkg_modules):
         return []
 
     for external_spec, path in pkg_paths.iteritems():
@@ -579,28 +701,44 @@ def spec_externals(spec):
         external_spec = spack.spec.Spec(external_spec, external=path)
         if external_spec.satisfies(spec):
             external_specs.append(external_spec)
+
+    for external_spec, module in pkg_modules.iteritems():
+        if not module:
+            continue
+
+        path = get_path_from_module(module)
+
+        external_spec = spack.spec.Spec(external_spec, external=path, external_module=module)
+        if external_spec.satisfies(spec):
+            external_specs.append(external_spec)
+
     return external_specs
 
 
 def is_spec_buildable(spec):
     """Return true if the spec pkgspec is configured as buildable"""
     allpkgs = get_config('packages')
-    name = spec.name
-    if not spec.name in allpkgs:
+    if spec.name not in allpkgs:
         return True
-    if not 'buildable' in allpkgs[spec.name]:
+    if 'buildable' not in allpkgs[spec.name]:
         return True
     return allpkgs[spec.name]['buildable']
 
 
-class ConfigError(SpackError): pass
-class ConfigFileError(ConfigError): pass
+class ConfigError(SpackError):
+    pass
+
+
+class ConfigFileError(ConfigError):
+    pass
+
 
 def get_path(path, data):
     if path:
         return get_path(path[1:], data[path[0]])
     else:
         return data
+
 
 class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
@@ -635,6 +773,7 @@ class ConfigFormatError(ConfigError):
 
         message = '%s: %s' % (location, validation_error.message)
         super(ConfigError, self).__init__(message)
+
 
 class ConfigSanityError(ConfigFormatError):
     """Same as ConfigFormatError, raised when config is written by Spack."""

@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
 Functions here are used to take abstract specs and make them concrete.
@@ -43,6 +43,7 @@ from functools import partial
 from spec import DependencyMap
 from itertools import chain
 from spack.config import *
+
 
 class DefaultConcretizer(object):
     """This class doesn't have any state, it just provides some methods for
@@ -83,7 +84,8 @@ class DefaultConcretizer(object):
             raise NoBuildError(spec)
 
         def cmp_externals(a, b):
-            if a.name != b.name:
+            if a.name != b.name and (not a.external or a.external_module and
+                    not b.external and b.external_module):
                 # We're choosing between different providers, so
                 # maintain order from provider sort
                 return candidates.index(a) - candidates.index(b)
@@ -186,31 +188,64 @@ class DefaultConcretizer(object):
 
         return True   # Things changed
 
-
-    def concretize_architecture(self, spec):
-        """If the spec already had an architecture, return.  Otherwise if
-           the root of the DAG has an architecture, then use that.
-           Otherwise take the system's default architecture.
-
-           Intuition: Architectures won't be set a lot, and generally you
-           want the host system's architecture.  When architectures are
-           mised in a spec, it is likely because the tool requries a
-           cross-compiled component, e.g. for tools that run on BlueGene
-           or Cray machines.  These constraints will likely come directly
-           from packages, so require the user to be explicit if they want
-           to mess with the architecture, and revert to the default when
-           they're not explicit.
-        """
-        if spec.architecture is not None:
+    def _concretize_operating_system(self, spec):
+        platform = spec.architecture.platform
+        if spec.architecture.platform_os is not None and isinstance(
+            spec.architecture.platform_os,spack.architecture.OperatingSystem):
             return False
 
-        if spec.root.architecture:
-            spec.architecture = spec.root.architecture
+        if spec.root.architecture and spec.root.architecture.platform_os:
+            if isinstance(spec.root.architecture.platform_os,spack.architecture.OperatingSystem):
+                spec.architecture.platform_os = spec.root.architecture.platform_os
         else:
-            spec.architecture = spack.architecture.sys_type()
+            spec.architecture.platform_os = spec.architecture.platform.operating_system('default_os')
+        return True #changed
 
-        assert(spec.architecture is not None)
-        return True   # changed
+    def _concretize_target(self, spec):
+        platform = spec.architecture.platform
+        if spec.architecture.target is not None and isinstance(
+                spec.architecture.target, spack.architecture.Target):
+            return False
+        if spec.root.architecture and spec.root.architecture.target:
+            if isinstance(spec.root.architecture.target,spack.architecture.Target):
+                spec.architecture.target = spec.root.architecture.target
+        else:
+            spec.architecture.target = spec.architecture.platform.target('default_target')
+        return True #changed
+
+    def _concretize_platform(self, spec):
+        if spec.architecture.platform is not None and isinstance(
+                spec.architecture.platform, spack.architecture.Platform):
+            return False
+        if spec.root.architecture and spec.root.architecture.platform:
+            if isinstance(spec.root.architecture.platform,spack.architecture.Platform):
+                spec.architecture.platform = spec.root.architecture.platform
+        else:
+            spec.architecture.platform = spack.architecture.platform()
+        return True #changed?
+
+    def concretize_architecture(self, spec):
+        """If the spec is empty provide the defaults of the platform. If the
+        architecture is not a basestring, then check if either the platform,
+        target or operating system are concretized. If any of the fields are
+        changed then return True. If everything is concretized (i.e the
+        architecture attribute is a namedtuple of classes) then return False.
+        If the target is a string type, then convert the string into a
+        concretized architecture. If it has no architecture and the root of the
+        DAG has an architecture, then use the root otherwise use the defaults
+        on the platform.
+        """
+        if spec.architecture is None:
+            # Set the architecture to all defaults
+            spec.architecture = spack.architecture.Arch()
+            return True
+
+            # Concretize the operating_system and target based of the spec
+        ret =  any((self._concretize_platform(spec),
+                    self._concretize_operating_system(spec),
+                    self._concretize_target(spec)))
+        return ret
+
 
 
     def concretize_variants(self, spec):
@@ -237,6 +272,23 @@ class DefaultConcretizer(object):
            build with the compiler that will be used by libraries that
            link to this one, to maximize compatibility.
         """
+        # Pass on concretizing the compiler if the target is not yet determined
+        if not spec.architecture.platform_os:
+            #Although this usually means changed, this means awaiting other changes
+            return True
+
+        # Only use a matching compiler if it is of the proper style
+        # Takes advantage of the proper logic already existing in compiler_for_spec
+        # Should think whether this can be more efficient
+        def _proper_compiler_style(cspec, arch):
+            platform = arch.platform
+            compilers = spack.compilers.compilers_for_spec(cspec,
+                                                           platform=platform)
+            return filter(lambda c: c.operating_system ==
+                                    arch.platform_os, compilers)
+            #return compilers
+
+
         all_compilers = spack.compilers.all_compilers()
 
         if (spec.compiler and
@@ -246,6 +298,7 @@ class DefaultConcretizer(object):
 
         #Find the another spec that has a compiler, or the root if none do
         other_spec = spec if spec.compiler else find_spec(spec, lambda(x) : x.compiler)
+
         if not other_spec:
             other_spec = spec.root
         other_compiler = other_spec.compiler
@@ -264,9 +317,73 @@ class DefaultConcretizer(object):
             raise UnavailableCompilerVersionError(other_compiler)
 
         # copy concrete version into other_compiler
-        spec.compiler = matches[0].copy()
+        index = 0
+        while not _proper_compiler_style(matches[index], spec.architecture):
+            index += 1
+            if index == len(matches) - 1:
+                raise NoValidVersionError(spec)
+        spec.compiler = matches[index].copy()
         assert(spec.compiler.concrete)
         return True  # things changed.
+
+
+    def concretize_compiler_flags(self, spec):
+        """
+        The compiler flags are updated to match those of the spec whose
+        compiler is used, defaulting to no compiler flags in the spec.
+        Default specs set at the compiler level will still be added later.
+        """
+
+
+        if not spec.architecture.platform_os:
+            #Although this usually means changed, this means awaiting other changes
+            return True
+
+        ret = False
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            try:
+                nearest = next(p for p in spec.traverse(direction='parents')
+                               if ((p.compiler == spec.compiler and p is not spec)
+                               and flag in p.compiler_flags))
+                if not flag in spec.compiler_flags or \
+                    not (sorted(spec.compiler_flags[flag]) >= sorted(nearest.compiler_flags[flag])):
+                    if flag in spec.compiler_flags:
+                        spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
+                                                         set(nearest.compiler_flags[flag]))
+                    else:
+                        spec.compiler_flags[flag] = nearest.compiler_flags[flag]
+                    ret = True
+
+            except StopIteration:
+                if (flag in spec.root.compiler_flags and ((not flag in spec.compiler_flags) or
+                    sorted(spec.compiler_flags[flag]) != sorted(spec.root.compiler_flags[flag]))):
+                    if flag in spec.compiler_flags:
+                        spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
+                                                         set(spec.root.compiler_flags[flag]))
+                    else:
+                        spec.compiler_flags[flag] = spec.root.compiler_flags[flag]
+                    ret = True
+                else:
+                    if not flag in spec.compiler_flags:
+                        spec.compiler_flags[flag] = []
+
+        # Include the compiler flag defaults from the config files
+        # This ensures that spack will detect conflicts that stem from a change
+        # in default compiler flags.
+        compiler = spack.compilers.compiler_for_spec(spec.compiler, spec.architecture)
+        for flag in compiler.flags:
+            if flag not in spec.compiler_flags:
+                spec.compiler_flags[flag] = compiler.flags[flag]
+                if compiler.flags[flag] != []:
+                    ret = True
+            else:
+                if ((sorted(spec.compiler_flags[flag]) != sorted(compiler.flags[flag])) and
+                    (not set(spec.compiler_flags[flag]) >= set(compiler.flags[flag]))):
+                    ret = True
+                    spec.compiler_flags[flag] = list(set(spec.compiler_flags[flag]) |
+                                                     set(compiler.flags[flag]))
+
+        return ret
 
 
 def find_spec(spec, condition):
@@ -328,7 +445,6 @@ def cmp_specs(lhs, rhs):
 
     # Equal specs
     return 0
-
 
 
 class UnavailableCompilerVersionError(spack.error.SpackError):

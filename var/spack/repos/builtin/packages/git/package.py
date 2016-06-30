@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 
 class Git(Package):
@@ -7,7 +31,8 @@ class Git(Package):
     homepage = "http://git-scm.com"
     url      = "https://github.com/git/git/tarball/v2.7.1"
 
-    version('2.8.0-rc2', 'c2cf9f2cc70e35f2fafbaf9258f82e4c')
+    version('2.8.1', '1308448d95afa41a4135903f22262fc8')
+    version('2.8.0', 'eca687e46e9750121638f258cff8317b')
     version('2.7.3', 'fa1c008b56618c355a32ba4a678305f6')
     version('2.7.1', 'bf0706b433a8dedd27a63a72f9a66060')
 
@@ -23,18 +48,12 @@ class Git(Package):
     #version('2.2.1', 'ff41fdb094eed1ec430aed8ee9b9849c')
 
 
-    # Git compiles with curl support by default on but if your system
-    # does not have it you will not be able to clone https repos
-    variant("curl", default=False, description="Add the internal support of curl for https clone")
-
-    # Git compiles with expat support by default on but if your system
-    # does not have it you will not be able to push https repos
-    variant("expat", default=False, description="Add the internal support of expat for https push")
-
     depends_on("openssl")
     depends_on("autoconf")
-    depends_on("curl", when="+curl")
-    depends_on("expat", when="+expat")
+    depends_on("curl")
+    depends_on("expat")
+
+    # Also depends_on gettext: apt-get install gettext (Ubuntu)
 
     # Use system perl for now.
     # depends_on("perl")
@@ -47,23 +66,12 @@ class Git(Package):
             "--prefix=%s" % prefix,
             "--without-pcre",
             "--with-openssl=%s" % spec['openssl'].prefix,
-            "--with-zlib=%s" % spec['zlib'].prefix
+            "--with-zlib=%s" % spec['zlib'].prefix,
+            "--with-curl=%s" % spec['curl'].prefix,
+            "--with-expat=%s" % spec['expat'].prefix,
             ]
-
-        if '+curl' in spec:
-            configure_args.append("--with-curl=%s" % spec['curl'].prefix)
-
-        if '+expat' in spec:
-            configure_args.append("--with-expat=%s" % spec['expat'].prefix)
 
         which('autoreconf')('-i')
         configure(*configure_args)
         make()
         make("install")
-
-
-
-
-
-
-

@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
 import shutil
@@ -34,20 +34,127 @@ from ordereddict_backport import OrderedDict
 from spack.repository import RepoPath
 from spack.spec import Spec
 
+platform = spack.architecture.platform()
+
+linux_os_name = 'debian'
+linux_os_version = '6'
+
+if platform.name == 'linux':
+    linux_os = platform.operating_system("default_os")
+    linux_os_name = linux_os.name
+    linux_os_version = linux_os.version
+
 mock_compiler_config = """\
 compilers:
-  all:
-    clang@3.3:
+- compiler:
+    spec: clang@3.3
+    operating_system: {0}{1}
+    paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
       f77: None
       fc: None
-    gcc@4.5.0:
+    modules: 'None'
+- compiler:
+    spec: gcc@4.5.0
+    operating_system: {0}{1}
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: CNL10
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: SuSE11
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: redhat6
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: yosemite
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    paths:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-"""
+    operating_system: CNL10
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: SuSE11
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: redhat6
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: yosemite
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: elcapitan
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: elcapitan
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+""".format(linux_os_name, linux_os_version)
 
 mock_packages_config = """\
 packages:
@@ -60,6 +167,10 @@ packages:
     paths:
       externalvirtual@2.0%clang@3.3: /path/to/external_virtual_clang
       externalvirtual@1.0%gcc@4.5.0: /path/to/external_virtual_gcc
+  externalmodule:
+    buildable: False
+    modules:
+      externalmodule@1.0%gcc@4.5.0: external-module
 """
 
 class MockPackagesTest(unittest.TestCase):
@@ -89,6 +200,10 @@ class MockPackagesTest(unittest.TestCase):
         spack.config.config_scopes = OrderedDict()
         spack.config.ConfigScope('site', self.mock_site_config)
         spack.config.ConfigScope('user', self.mock_user_config)
+
+        # Keep tests from interfering with the actual module path.
+        self.real_share_path = spack.share_path
+        spack.share_path = tempfile.mkdtemp()
 
         # Store changes to the package's dependencies so we can
         # restore later.
@@ -123,6 +238,9 @@ class MockPackagesTest(unittest.TestCase):
         for pkg_name, (pkg, deps) in self.saved_deps.items():
             pkg.dependencies.clear()
             pkg.dependencies.update(deps)
+
+        shutil.rmtree(spack.share_path, ignore_errors=True)
+        spack.share_path = self.real_share_path
 
 
     def setUp(self):
