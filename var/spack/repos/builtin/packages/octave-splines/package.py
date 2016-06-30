@@ -22,17 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
-import spack.modules
-
-description ="Add package to environment using modules."
-
-def setup_parser(subparser):
-    """Parser is only constructed so that this prints a nice help
-       message with -h. """
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="Spec of package to load with modules.  (If -, read specs from STDIN)")
+from spack import *
 
 
-def load(parser, args):
-    spack.modules.print_help()
+class OctaveSplines(Package):
+    """Additional spline functions."""
+
+    homepage = "http://octave.sourceforge.net/splines/index.html"
+    url      = "http://downloads.sourceforge.net/octave/splines-1.3.1.tar.gz"
+
+    version('1.3.1', 'f9665d780c37aa6a6e17d1f424c49bdeedb89d1192319a4e39c08784122d18f9')
+
+    extends('octave@3.6.0:')
+
+    def install(self, spec, prefix):
+        octave('--quiet',
+               '--norc',
+               '--built-in-docstrings-file=/dev/null',
+               '--texi-macros-file=/dev/null',
+               '--eval', 'pkg prefix %s; pkg install %s' %
+               (prefix, self.stage.archive_file))

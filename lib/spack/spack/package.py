@@ -748,6 +748,9 @@ class Package(object):
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
 
+        self.stage.cache_local()
+        
+
     def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
            directory."""

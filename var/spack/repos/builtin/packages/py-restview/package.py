@@ -22,17 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
-import spack.modules
-
-description ="Add package to environment using modules."
-
-def setup_parser(subparser):
-    """Parser is only constructed so that this prints a nice help
-       message with -h. """
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="Spec of package to load with modules.  (If -, read specs from STDIN)")
+from spack import *
 
 
-def load(parser, args):
-    spack.modules.print_help()
+class PyRestview(Package):
+    """A viewer for ReStructuredText documents that renders them on the fly."""
+
+    homepage = "https://mg.pov.lt/restview/"
+    url = "https://pypi.python.org/packages/source/r/restview/restview-2.6.1.tar.gz"
+
+    version('2.6.1', 'ac8b70e15b8f1732d1733d674813666b')
+
+    extends('python')
+    depends_on('py-docutils')
+    depends_on('py-pygments')
+
+    def install(self, spec, prefix):
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))

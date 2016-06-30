@@ -95,9 +95,9 @@ class ${class_name}(Package):
     url      = "${url}"
 
 ${versions}
-${extends}
-    # FIXME: Add dependencies if this package requires them.
-    # depends_on("foo")
+
+    # FIXME: Add additional dependencies if required.
+    ${dependencies}
 
     def install(self, spec, prefix):
 ${install}
@@ -136,8 +136,18 @@ def setup_parser(subparser):
 class ConfigureGuesser(object):
     def __call__(self, stage):
         """Try to guess the type of build system used by the project.
-        Set the appropriate default installation instructions and any
-        necessary extensions for Python and R."""
+        Set any necessary build dependencies or extensions.
+        Set the appropriate default installation instructions."""
+
+        # Build dependencies and extensions
+        dependenciesDict = {
+            'autotools': "# depends_on('foo')",
+            'cmake':     "depends_on('cmake')",
+            'scons':     "depends_on('scons')",
+            'python':    "extends('python')",
+            'R':         "extends('R')",
+            'unknown':   "# depends_on('foo')"
+        }
 
         # Default installation instructions
         installDict = {
@@ -214,15 +224,11 @@ class ConfigureGuesser(object):
 
         self.build_system = build_system
 
+        # Set any necessary build dependencies or extensions.
+        self.dependencies = dependenciesDict[build_system]
+
         # Set the appropriate default installation instructions
         self.install = installDict[build_system]
-
-        # Set any necessary extensions for Python and R
-        extensions = ''
-        if build_system in ['python', 'R']:
-            extensions = "\n    extends('{0}')\n".format(build_system)
-
-        self.extends = extensions
 
 
 def guess_name_and_version(url, args):
@@ -361,7 +367,7 @@ def create(parser, args):
                 class_name=mod_to_class(name),
                 url=url,
                 versions=make_version_calls(ver_hash_tuples),
-                extends=guesser.extends,
+                dependencies=guesser.dependencies,
                 install=guesser.install))
 
     # If everything checks out, go ahead and edit.

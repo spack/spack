@@ -22,17 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import argparse
-import spack.modules
-
-description ="Add package to environment using modules."
-
-def setup_parser(subparser):
-    """Parser is only constructed so that this prints a nice help
-       message with -h. """
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="Spec of package to load with modules.  (If -, read specs from STDIN)")
+from spack import *
 
 
-def load(parser, args):
-    spack.modules.print_help()
+class PyDocutils(Package):
+    """Docutils is an open-source text processing system for processing
+    plaintext documentation into useful formats, such as HTML, LaTeX,
+    man-pages, open-document or XML. It includes reStructuredText, the
+    easy to read, easy to use, what-you-see-is-what-you-get plaintext
+    markup language."""
+
+    homepage = "http://docutils.sourceforge.net/"
+    url      = "https://pypi.python.org/packages/source/d/docutils/docutils-0.12.tar.gz"
+
+    version('0.12', '4622263b62c5c771c03502afa3157768')
+
+    extends('python')
+
+    def install(self, spec, prefix):
+        python('setup.py', 'install', '--prefix={0}'.format(prefix))

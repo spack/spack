@@ -703,6 +703,13 @@ Fetching a revision
 Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the ``url``.
 
+Automatic caching of files fetched during installation
+------------------------------------------------------
+
+Spack maintains a cache (described :ref:`here <caching>`) which saves files
+retrieved during package installations to avoid re-downloading in the case that
+a package is installed with a different specification (but the same version) or
+reinstalled on account of a change in the hashing scheme.
 
 .. _license:
 
@@ -776,7 +783,7 @@ Spack will create a global license file located at
 file using the editor set in ``$EDITOR``, or vi if unset. It will look like
 this:
 
-.. code-block::
+.. code-block:: sh
 
     # A license is required to use pgi.
     #
@@ -807,7 +814,7 @@ You can add your license directly to this file, or tell FlexNet to use a
 license stored on a separate license server. Here is an example that
 points to a license server called licman1:
 
-.. code-block::
+.. code-block:: sh
 
     SERVER licman1.mcs.anl.gov 00163eb7fba5 27200
     USE_SERVER
@@ -2618,11 +2625,16 @@ build process will start from scratch.
 
 ``spack purge``
 ~~~~~~~~~~~~~~~~~
-Cleans up all of Spack's temporary files.  Use this to recover disk
-space if temporary files from interrupted or failed installs
-accumulate in the staging area.  This is equivalent to running ``spack
-clean`` for every package you have fetched or staged.
+Cleans up all of Spack's temporary and cached files.  This can be used to 
+recover disk space if temporary files from interrupted or failed installs 
+accumulate in the staging area.  
 
+When called with ``--stage`` or ``--all`` (or without arguments, in which case
+the default is ``--all``) this removes all staged files; this is equivalent to 
+running ``spack clean`` for every package you have fetched or staged.
+
+When called with ``--cache`` or ``--all`` this will clear all resources 
+:ref:`cached <caching>` during installs.
 
 Keeping the stage directory on success
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

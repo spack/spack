@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+from __future__ import print_function
 import os
 import shutil
 import sys
@@ -54,6 +55,18 @@ def setup_parser(subparser):
 
     # spack module find
     find_parser = sp.add_parser('find', help='Find module files for packages.')
+    find_parser.add_argument(
+        '-r', '--dependencies', action='store_true',
+        dest='recurse_dependencies',
+        help='Recursively traverse dependencies for modules to load.')
+
+    find_parser.add_argument(
+        '-s', '--shell', action='store_true', dest='shell',
+        help='Generate shell script (instead of input for module command)')
+
+    find_parser.add_argument(
+        '-p', '--prefix', dest='prefix',
+        help='Prepend to module names when issuing module load commands')
     _add_common_arguments(find_parser)
 
 
@@ -78,11 +91,54 @@ def module_find(mtype, specs, args):
     if len(specs) > 1:
         raise MultipleMatches()
 
-    mod = module_types[mtype](specs.pop())
-    if not os.path.isfile(mod.file_name):
-        tty.die("No %s module is installed for %s" % (mtype, spec))
+    spec = specs.pop()
+    if not args.recurse_dependencies:
+        mod = module_types[mtype](spec)
+        if not os.path.isfile(mod.file_name):
+            tty.die("No %s module is installed for %s" % (mtype, spec))
 
-    print(mod.use_name)
+        print(mod.use_name)
+    else:
+
+        def _find_modules(spec, modules_list):
+            """Finds all modules and sub-modules for a spec"""
+            if str(spec.version) == 'system':
+                # No Spack module for system-installed packages
+                return
+
+            if args.recurse_dependencies:
+                for dep in spec.dependencies.values():
+                    _find_modules(dep, modules_list)
+
+            mod = module_types[mtype](spec)
+            if not os.path.isfile(mod.file_name):
+                tty.die("No %s module is installed for %s" % (mtype, spec))
+            modules_list.append((spec, mod))
+        # --------------------------------------
+
+        modules = set()    # Modules we will load
+        seen = set()
+
+        # ----------- Chase down modules for it and all its dependencies
+        modules_dups = list()
+        _find_modules(spec, modules_dups)
+
+        # Remove duplicates while keeping order
+        modules_unique = list()
+        for spec, mod in modules_dups:
+            if mod.use_name not in seen:
+                modules_unique.append((spec,mod))
+                seen.add(mod.use_name)
+
+        # Output...
+        if args.shell:
+            module_cmd = {'tcl': 'module load', 'dotkit': 'dotkit use'}[mtype]
+        for spec, mod in modules_unique:
+            if args.shell:
+                print('# %s' % spec.format())
+                print('%s %s%s' % (module_cmd, args.prefix, mod.use_name))
+            else:
+                print(mod.use_name)
 
 
 def module_refresh(name, specs, args):
