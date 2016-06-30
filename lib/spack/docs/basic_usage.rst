@@ -114,13 +114,13 @@ that the packages is installed:
 
    $ spack install mpileaks
    ==> Installing mpileaks
-   ==> mpich is already installed in /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/mpich@3.0.4.
-   ==> callpath is already installed in /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/callpath@1.0.2-5dce4318.
-   ==> adept-utils is already installed in /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/adept-utils@1.0-5adef8da.
+   ==> mpich is already installed in /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4.
+   ==> callpath is already installed in /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/callpath@1.0.2-5dce4318.
+   ==> adept-utils is already installed in /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/adept-utils@1.0-5adef8da.
    ==> Trying to fetch from https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
    ######################################################################## 100.0%
-   ==> Staging archive: /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-x86_64-debian7-59f6ad23/mpileaks-1.0.tar.gz
-   ==> Created stage in /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-x86_64-debian7-59f6ad23.
+   ==> Staging archive: /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23/mpileaks-1.0.tar.gz
+   ==> Created stage in /home/gamblin2/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23.
    ==> No patches needed for mpileaks.
    ==> Building mpileaks.
 
@@ -128,7 +128,7 @@ that the packages is installed:
 
    ==> Successfully installed mpileaks.
      Fetch: 2.16s.  Build: 9.82s.  Total: 11.98s.
-   [+] /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/mpileaks@1.0-59f6ad23
+   [+] /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpileaks@1.0-59f6ad23
 
 The last line, with the ``[+]``, indicates where the package is
 installed.
@@ -230,7 +230,7 @@ Running ``spack find`` with no arguments lists installed packages:
 
    $ spack find
    ==> 74 installed packages.
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
    ImageMagick@6.8.9-10  libdwarf@20130729  py-dateutil@2.4.0
    adept-utils@1.0       libdwarf@20130729  py-ipython@2.3.1
    atk@2.14.0            libelf@0.8.12      py-matplotlib@1.4.2
@@ -256,7 +256,7 @@ Running ``spack find`` with no arguments lists installed packages:
    lcms@2.6              pixman@0.32.6      xz@5.2.0
    libdrm@2.4.33         py-dateutil@2.4.0  zlib@1.2.8
 
-   -- linux-x86_64-debian7 / gcc@4.9.2 --------------------------------
+   -- linux-debian7-x86_64 / gcc@4.9.2 --------------------------------
    libelf@0.8.10  mpich@3.0.4
 
 Packages are divided into groups according to their architecture and
@@ -279,7 +279,7 @@ in more detail using ``spack find -d``, and by asking only to show
 
    $ spack find --deps libdwarf
    ==> 2 installed packages.
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
        libdwarf@20130729-d9b90962
            ^libelf@0.8.12
        libdwarf@20130729-b52fac98
@@ -295,7 +295,7 @@ want to know whether two packages' dependencies differ, you can use
 
    $ spack find -l libdwarf
    ==> 2 installed packages.
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
    libdwarf@20130729-d9b90962  libdwarf@20130729-b52fac98
 
 Now the ``libwarf`` installs have hashes after their names.  These are
@@ -309,14 +309,14 @@ use ``spack find -p``:
 
    $ spack find -p
    ==> 74 installed packages.
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
-       ImageMagick@6.8.9-10  /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/ImageMagick@6.8.9-10-4df950dd
-       adept-utils@1.0       /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/adept-utils@1.0-5adef8da
-       atk@2.14.0            /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/atk@2.14.0-3d09ac09
-       boost@1.55.0          /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/boost@1.55.0
-       bzip2@1.0.6           /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/bzip2@1.0.6
-       cairo@1.14.0          /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/cairo@1.14.0-fcc2ab44
-       callpath@1.0.2        /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/callpath@1.0.2-5dce4318
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
+       ImageMagick@6.8.9-10  /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/ImageMagick@6.8.9-10-4df950dd
+       adept-utils@1.0       /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/adept-utils@1.0-5adef8da
+       atk@2.14.0            /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/atk@2.14.0-3d09ac09
+       boost@1.55.0          /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/boost@1.55.0
+       bzip2@1.0.6           /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/bzip2@1.0.6
+       cairo@1.14.0          /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/cairo@1.14.0-fcc2ab44
+       callpath@1.0.2        /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/callpath@1.0.2-5dce4318
    ...
 
 And, finally, you can restrict your search to a particular package
@@ -325,10 +325,10 @@ by supplying its name:
 .. code-block:: sh
 
    $ spack find -p libelf
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
-       libelf@0.8.11  /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/libelf@0.8.11
-       libelf@0.8.12  /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/libelf@0.8.12
-       libelf@0.8.13  /home/gamblin2/spack/opt/linux-x86_64-debian7/gcc@4.4.7/libelf@0.8.13
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
+       libelf@0.8.11  /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.11
+       libelf@0.8.12  /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.12
+       libelf@0.8.13  /home/gamblin2/spack/opt/linux-debian7-x86_64/gcc@4.4.7/libelf@0.8.13
 
 ``spack find`` actually does a lot more than this.  You can use
 *specs* to query for specific configurations and builds of each
@@ -338,7 +338,7 @@ package. If you want to find only libelf versions greater than version
 .. code-block:: sh
 
    $ spack find libelf@0.8.12:
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
        libelf@0.8.12  libelf@0.8.13
 
 Finding just the versions of libdwarf built with a particular version
@@ -348,7 +348,7 @@ of libelf would look like this:
 
    $ spack find -l libdwarf ^libelf@0.8.12
    ==> 1 installed packages.
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
    libdwarf@20130729-d9b90962
 
 We can also search for packages that have a certain attribute. For example,
@@ -359,6 +359,7 @@ will find every installed package with a 'debug' compile-time option enabled.
 The full spec syntax is discussed in detail in :ref:`sec-specs`.
 
 
+.. _compiler-config:
 
 Compiler configuration
 -----------------------------------
@@ -445,7 +446,7 @@ If you want to see specifics on a particular compiler, you can run
            fc  = /usr/local/bin/ifort-15.0.090
 
 This shows which C, C++, and Fortran compilers were detected by Spack.
-Notice also that we didn't have to be too specific about the
+Notice also that we didn\'t have to be too specific about the
 version. We just said ``intel@15``, and information about the only
 matching Intel compiler was displayed.
 
@@ -471,27 +472,6 @@ Each compiler configuration in the file looks like this::
           fc: /usr/local/bin/ifort-15.0.024-beta
 
           spec: intel@15.0.0:
-
-If you're on a Cray system, the modules array will hold the names of the
-compiler module as well as the corresponding PrgEnv. For example, on Edison
-at NERSC the intel compiler looks just like this::
-    ...
-    - compiler:
-        modules:
-          - PrEnv-intel
-          - intel/15.0.109
-    ...
-
-The compiler paths will also look different on a Cray system. Since most 
-compilers are invoked using cc, CC and ftn, the paths for each compiler are
-replaced with their respective Cray compiler wrapper names::
-    ...
-    paths:
-      cc: cc
-      cxx: CC
-      f77: ftn
-      fc: ftn
-    ...
 
 For compilers, like ``clang``, that do not support Fortran, put
 ``None`` for ``f77`` and ``fc``::
@@ -538,10 +518,10 @@ Spack, that descriptor is called a *spec*.  Spack uses specs to refer
 to a particular build configuration (or configurations) of a package.
 Specs are more than a package name and a version; you can use them to
 specify the compiler, compiler version, architecture, compile options,
-and dependency options for a build.  In this section, we'll go over
+and dependency options for a build.  In this section, we\'ll go over
 the full syntax of specs.
 
-Here is an example of a much longer spec than we've seen thus far::
+Here is an example of a much longer spec than we\'ve seen thus far::
 
    mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt arch=bgq_os ^callpath @1.1 %gcc@4.7.2
 
@@ -778,20 +758,18 @@ in gnu autotools. If all flags are set, the order is
 Architecture specifiers
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The architecture specifier looks identical to a variant specifier for a
-non-boolean variant. The architecture can be specified by using the reserved
-words ``target`` and/or ``os`` (``target=x86-64 os=debian7``). 
+The architecture can be specified by using the reserved
+words ``target`` and/or ``os`` (``target=x86-64 os=debian7``). You can also
+use the triplet form of platform, operating system and processor.
 
-If you are on a Cray system, you can specify which target processor to 
-build with. For example, if you want to build against a compute node processor 
-with the compute node operating system, you would specify 
-``target=haswell os=CNL10``. Spack will then load the appropriate module for 
-the target. Additionally, Spack can also intepret the following values: 
-``be, backend, fe, frontend``. Backend is used for specifying the compute-node 
-processor and operating sytem, and frontend is used for login nodes. 
-If you decide to leave this field empty, Spack will use the 
-default architecture (compute nodes). The architecture spec is displayed as a 
-triplet of platform-target-operating_system. (``arch=linux-x86_64-debian7``)
+.. code-block:: sh
+    
+    spack install libelf arch=cray_xc-CNL10-haswell
+
+Users on non-Cray systems won't have to worry about specifying the architecture.
+Spack will autodetect what kind of operating system is on your machine as well
+as the processor. For more information on how the architecture can be 
+used on Cray machines, check here :ref:`spack-cray`
 
 
 .. _sec-virtual-dependencies:
@@ -1011,7 +989,7 @@ of installed packages.
 
      $ module avail
 
-     ------- /home/gamblin2/spack/share/spack/modules/linux-x86_64-debian7 --------
+     ------- /home/gamblin2/spack/share/spack/modules/linux-debian7-x86_64 --------
      adept-utils@1.0%gcc@4.4.7-5adef8da   libelf@0.8.13%gcc@4.4.7
      automaded@1.0%gcc@4.4.7-d9691bb0     libelf@0.8.13%intel@15.0.0
      boost@1.55.0%gcc@4.4.7               mpc@1.0.2%gcc@4.4.7-559607f5
@@ -1082,7 +1060,7 @@ Spack.  For example, this will add the ``mpich`` package built with
    $ spack use mpich %gcc@4.4.7
    Prepending: mpich@3.0.4%gcc@4.4.7 (ok)
    $ which mpicc
-   ~/src/spack/opt/linux-x86_64-debian7/gcc@4.4.7/mpich@3.0.4/bin/mpicc
+   ~/src/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
 
 Or, similarly with modules, you could type:
 
@@ -1115,8 +1093,8 @@ than one installed package matches it), then Spack will warn you:
 
    $ spack load libelf
    ==> Error: Multiple matches for spec libelf.  Choose one:
-   libelf@0.8.13%gcc@4.4.7 arch=linux-x86_64-debian7
-   libelf@0.8.13%intel@15.0.0 arch=linux-x86_64-debian7
+   libelf@0.8.13%gcc@4.4.7 arch=linux-debian7-x86_64
+   libelf@0.8.13%intel@15.0.0 arch=linux-debian7-x86_64
 
 You can either type the ``spack load`` command again with a fully
 qualified argument, or you can add just enough extra constraints to
@@ -1496,7 +1474,7 @@ an *extension*.  Suppose you have Python installed like so:
 
    $ spack find python
    ==> 1 installed packages.
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
    python@2.7.8
 
 .. _spack-extensions:
@@ -1509,7 +1487,7 @@ You can find extensions for your Python installation like this:
 .. code-block:: sh
 
    $ spack extensions python
-   ==> python@2.7.8%gcc@4.4.7 arch=linux-x86_64-debian7-703c7a96
+   ==> python@2.7.8%gcc@4.4.7 arch=linux-debian7-x86_64-703c7a96
    ==> 36 extensions:
    geos          py-ipython     py-pexpect    py-pyside            py-sip
    py-basemap    py-libxml2     py-pil        py-pytz              py-six
@@ -1521,7 +1499,7 @@ You can find extensions for your Python installation like this:
    py-h5py       py-numpy       py-pyqt       py-shiboken
 
    ==> 12 installed:
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
    py-dateutil@2.4.0    py-nose@1.3.4       py-pyside@1.2.2
    py-dateutil@2.4.0    py-numpy@1.9.1      py-pytz@2014.10
    py-ipython@2.3.1     py-pygments@2.0.1   py-setuptools@11.3.1
@@ -1537,8 +1515,8 @@ prefixes, and you can see this with ``spack find -p``:
 
    $ spack find -p py-numpy
    ==> 1 installed packages.
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
-       py-numpy@1.9.1  /g/g21/gamblin2/src/spack/opt/linux-x86_64-debian7/gcc@4.4.7/py-numpy@1.9.1-66733244
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
+       py-numpy@1.9.1  /g/g21/gamblin2/src/spack/opt/linux-debian7-x86_64/gcc@4.4.7/py-numpy@1.9.1-66733244
 
 However, even though this package is installed, you cannot use it
 directly when you run ``python``:
@@ -1599,9 +1577,9 @@ installation:
 .. code-block:: sh
 
    $ spack activate py-numpy
-   ==> Activated extension py-setuptools@11.3.1%gcc@4.4.7 arch=linux-x86_64-debian7-3c74eb69 for python@2.7.8%gcc@4.4.7.
-   ==> Activated extension py-nose@1.3.4%gcc@4.4.7 arch=linux-x86_64-debian7-5f70f816 for python@2.7.8%gcc@4.4.7.
-   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=linux-x86_64-debian7-66733244 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-setuptools@11.3.1%gcc@4.4.7 arch=linux-debian7-x86_64-3c74eb69 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-nose@1.3.4%gcc@4.4.7 arch=linux-debian7-x86_64-5f70f816 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=linux-debian7-x86_64-66733244 for python@2.7.8%gcc@4.4.7.
 
 Several things have happened here.  The user requested that
 ``py-numpy`` be activated in the ``python`` installation it was built
@@ -1616,7 +1594,7 @@ packages listed as activated:
 .. code-block:: sh
 
    $ spack extensions python
-   ==> python@2.7.8%gcc@4.4.7  arch=linux-x86_64-debian7-703c7a96
+   ==> python@2.7.8%gcc@4.4.7  arch=linux-debian7-x86_64-703c7a96
    ==> 36 extensions:
    geos          py-ipython     py-pexpect    py-pyside            py-sip
    py-basemap    py-libxml2     py-pil        py-pytz              py-six
@@ -1628,14 +1606,14 @@ packages listed as activated:
    py-h5py       py-numpy       py-pyqt       py-shiboken
 
    ==> 12 installed:
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
    py-dateutil@2.4.0    py-nose@1.3.4       py-pyside@1.2.2
    py-dateutil@2.4.0    py-numpy@1.9.1      py-pytz@2014.10
    py-ipython@2.3.1     py-pygments@2.0.1   py-setuptools@11.3.1
    py-matplotlib@1.4.2  py-pyparsing@2.0.3  py-six@1.9.0
 
    ==> 3 currently activated:
-   -- linux-x86_64-debian7 / gcc@4.4.7 --------------------------------
+   -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
    py-nose@1.3.4  py-numpy@1.9.1  py-setuptools@11.3.1
 
 
@@ -1664,7 +1642,7 @@ dependencies, you can use ``spack activate -f``:
 .. code-block:: sh
 
    $ spack activate -f py-numpy
-   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=chaos_5_x86_64_ib-66733244 for python@2.7.8%gcc@4.4.7.
+   ==> Activated extension py-numpy@1.9.1%gcc@4.4.7 arch=linux-debian7-x86_64-66733244 for python@2.7.8%gcc@4.4.7.
 
 .. _spack-deactivate:
 
@@ -1736,18 +1714,140 @@ This issue typically manifests with the error below:
 A nicer error message is TBD in future versions of Spack.
 
 
+.. _spack-cray:
+
 Spack on Cray
 -----------------------------
 
-Spack is able to detect compilers through the module avail command. Once it
-detects the compiler it writes the appropriate PrgEnv and compiler module 
-name to compilers.yaml and sets the paths to each compiler with Cray\'s 
-compiler wrapper names ie (cc, CC, ftn). During build time, Spack will
-load the correct PrgEnv and compiler module and will call either cc, CC
-or ftn. If you want to use default compilers for each PrgEnv and also be able
-to link to cray external modules, you will need to set up a packages.yaml 
-:ref:`Exernal Packages`<sec-external packages>
+Spack differs slightly when used on a Cray system. The architecture spec 
+can differentiate between the front-end and back-end processor and operating system.
+For example, on Edison at NERSC, the back-end target processor 
+is \"Ivy Bridge\", so you can specify to use the back-end this way:
 
+.. code-block:: sh
+    
+    spack install zlib target=ivybridge
+
+You can also use the operating system to build against the back-end:
+
+.. code-block:: sh
+    
+    spack install zlib os=CNL10
+
+Notice that the name includes both the operating system name and the major 
+version number concatenated together.
+
+Alternatively, if you want to build something for the front-end, 
+you can specify the front-end target processor. The processor for a login node 
+on Edison is \"Sandy bridge\" so we specify on the command line like so:
+
+.. code-block:: sh
+    
+    spack install zlib target=sandybridge
+
+And the front-end operating system is:
+
+.. code-block:: sh
+    
+    spack install zlib os=SuSE11
+
+
+
+Cray compiler detection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Spack can detect compilers using two methods. For the front-end, we treat 
+everything the same. The difference lies in back-end compiler detection. 
+Back-end compiler detection is made via the Tcl module avail command. 
+Once it detects the compiler it writes the appropriate PrgEnv and compiler 
+module name to compilers.yaml and sets the paths to each compiler with Cray\'s 
+compiler wrapper names (i.e. cc, CC, ftn). During build time, Spack will load 
+the correct PrgEnv and compiler module and will call appropriate wrapper. 
+
+The compilers.yaml config file will also differ. There is a
+modules section that is filled with the compiler\'s Programming Environment
+and module name. On other systems, this field is empty []::
+
+    ...
+    - compiler:
+        modules:
+          - PrgEnv-intel
+          - intel/15.0.109
+    ...
+
+As mentioned earlier, the compiler paths will look different on a Cray system. 
+Since most compilers are invoked using cc, CC and ftn, the paths for each 
+compiler are replaced with their respective Cray compiler wrapper names::
+
+    ...
+     paths:
+       cc: cc
+       cxx: CC
+       f77: ftn
+       fc: ftn
+    ...
+
+As opposed to an explicit path to the compiler executable. This allows Spack
+to call the Cray compiler wrappers during build time. 
+
+For more on compiler configuration, check out :ref:`compiler-config`.
+
+Setting defaults and using Cray modules
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to use default compilers for each PrgEnv and also be able
+to load cray external modules, you will need to set up a packages.yaml.
+
+Here\'s an example of an external configuration for cray modules:
+
+.. code-block:: yaml
+
+  packages:
+      mpi:
+        modules:
+            mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10: cray-mpich
+            mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10: cray-mpich
+
+This tells Spack that for whatever package that depends on mpi, load the
+cray-mpich module into the environment. You can then be able to use whatever
+environment variables, libraries, etc, that are brought into the environment
+via module load. 
+
+You can set the default compiler that Spack can use for each compiler type. 
+If you want to use the Cray defaults, then set them under *all:* in packages.yaml. 
+In the compiler field, set the compiler specs in your order of preference. 
+Whenever you build with that compiler type, Spack will concretize to that version.
+
+Here is an example of a full packages.yaml used at NERSC
+
+.. code-block:: yaml
+
+   packages:
+    mpi:
+        modules:
+            mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-mpich
+            mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge: cray-mpich
+        buildable: False
+    netcdf:
+        modules:
+            netcdf@4.3.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-netcdf
+            netcdf@4.3.3.1%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-netcdf
+        buildable: False
+    hdf5:
+        modules:
+            hdf5@1.8.14%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-hdf5
+            hdf5@1.8.14%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-hdf5
+        buildable: False
+    all:
+        compiler: [gcc@5.2.0, intel@16.0.0.109]
+
+Here we tell spack that whenever we want to build with gcc use version 5.2.0 or
+if we want to build with intel compilers, use version 16.0.0.109. We add a spec
+for each compiler type for each cray modules. This ensures that for each 
+compiler on our system we can use that external module.
+
+
+For more on external packages check out the section :ref:`sec-external_packages`. 
 
 Getting Help
 -----------------------
