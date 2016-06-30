@@ -188,6 +188,7 @@ def parse_config_options(module_generator):
     #####
 
     # Automatic loading loads
+    module_file_actions['hash_length'] = module_configuration.get('hash_length', 7)
     module_file_actions['autoload'] = dependencies(
         module_generator.spec, module_file_actions.get('autoload', 'none'))
     # Prerequisites
@@ -295,7 +296,9 @@ class EnvModule(object):
             if constraint in self.spec:
                 suffixes.append(suffix)
         # Always append the hash to make the module file unique
-        suffixes.append(self.spec.dag_hash())
+        hash_length = configuration.pop('hash_length', 7)
+        if hash_length != 0:
+            suffixes.append(self.spec.dag_hash(length=hash_length))
         name = '-'.join(suffixes)
         return name
 
@@ -338,7 +341,7 @@ class EnvModule(object):
 
         return False
 
-    def write(self):
+    def write(self, overwrite=False):
         """
         Writes out a module file for this object.
 
@@ -398,6 +401,15 @@ class EnvModule(object):
             module_file_content += line
         for line in self.module_specific_content(module_configuration):
             module_file_content += line
+
+        # Print a warning in case I am accidentally overwriting
+        # a module file that is already there (name clash)
+        if not overwrite and os.path.exists(self.file_name):
+            message = 'Module file already exists : skipping creation\n'
+            message += 'file : {0.file_name}\n'
+            message += 'spec : {0.spec}'
+            tty.warn(message.format(self))
+            return
 
         # Dump to file
         with open(self.file_name, 'w') as f:
