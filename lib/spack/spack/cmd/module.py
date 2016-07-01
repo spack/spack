@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from __future__ import print_function
+
 import os
 import shutil
 import sys
@@ -41,7 +42,7 @@ description = "Manipulate module files"
 
 def _add_common_arguments(subparser):
     type_help = 'Type of module files'
-    subparser.add_argument('--module-type', help=type_help, required=True, choices=module_types)
+    subparser.add_argument('--module-type', help=type_help, default='tcl', choices=module_types)
     constraint_help = 'Optional constraint to select a subset of installed packages'
     subparser.add_argument('constraint', nargs='*', help=constraint_help)
 
@@ -55,19 +56,26 @@ def setup_parser(subparser):
 
     # spack module find
     find_parser = sp.add_parser('find', help='Find module files for packages.')
-    find_parser.add_argument(
+    _add_common_arguments(find_parser)
+
+    # spack module env
+    loadlist_parser = sp.add_parser(
+        'load-list',
+        help='Prompt the list of modules associated with packages that satisfy a contraint'
+    )
+    loadlist_parser.add_argument(
         '-r', '--dependencies', action='store_true',
         dest='recurse_dependencies',
         help='Recursively traverse dependencies for modules to load.')
 
-    find_parser.add_argument(
+    loadlist_parser.add_argument(
         '-s', '--shell', action='store_true', dest='shell',
         help='Generate shell script (instead of input for module command)')
 
-    find_parser.add_argument(
+    loadlist_parser.add_argument(
         '-p', '--prefix', dest='prefix', default='',
         help='Prepend to module names when issuing module load commands')
-    _add_common_arguments(find_parser)
+    _add_common_arguments(loadlist_parser)
 
 
 class MultipleMatches(Exception):
@@ -78,7 +86,45 @@ class NoMatch(Exception):
     pass
 
 
-def module_find(mtype, specs, args):
+def load_list(mtype, specs, args):
+
+    # Get a comprehensive list of specs
+    if args.recurse_dependencies:
+        specs_from_user_constraint = specs[:]
+        specs = []
+        # FIXME : during module file creation nodes seem to be visited multiple
+        # FIXME : times even if cover='nodes' is given. This work around permits
+        # FIXME : to get a unique list of spec anyhow. Do we miss a merge
+        # FIXME : step among nodes that refer to the same package?
+        # FIXME : (same problem as in spack/modules.py)
+        seen = set()
+        seen_add = seen.add
+        for spec in specs_from_user_constraint:
+            specs.extend(
+                [item for item in spec.traverse(order='post', cover='nodes') if not (item in seen or seen_add(item))]
+            )
+
+    module_cls = module_types[mtype]
+    modules = [(spec, module_cls(spec).use_name) for spec in specs if os.path.exists(module_cls(spec).file_name)]
+
+    module_commands = {
+        'tcl': 'module load ',
+        'dotkit': 'dotkit use '
+    }
+
+    d = {
+        'command': '' if not args.shell else module_commands[mtype],
+        'prefix': args.prefix
+    }
+
+    prompt_template = '{comment}{command}{prefix}{name}'
+    for spec, mod in modules:
+        d['comment'] = '' if not args.shell else '# {0}\n'.format(spec.format())
+        d['name'] = mod
+        print( prompt_template.format(**d))
+
+
+def find(mtype, specs, args):
     """
     Look at all installed packages and see if the spec provided
     matches any.  If it does, check whether there is a module file
@@ -92,56 +138,12 @@ def module_find(mtype, specs, args):
         raise MultipleMatches()
 
     spec = specs.pop()
-    if not args.recurse_dependencies:
-        mod = module_types[mtype](spec)
-        if not os.path.isfile(mod.file_name):
-            tty.die("No %s module is installed for %s" % (mtype, spec))
+    mod = module_types[mtype](spec)
+    if not os.path.isfile(mod.file_name):
+        tty.die("No %s module is installed for %s" % (mtype, spec))
+    print(mod.use_name)
 
-        print(mod.use_name)
-    else:
-
-        def _find_modules(spec, modules_list):
-            """Finds all modules and sub-modules for a spec"""
-            if str(spec.version) == 'system':
-                # No Spack module for system-installed packages
-                return
-
-            if args.recurse_dependencies:
-                for dep in spec.dependencies.values():
-                    _find_modules(dep, modules_list)
-
-            mod = module_types[mtype](spec)
-            if not os.path.isfile(mod.file_name):
-                tty.die("No %s module is installed for %s" % (mtype, spec))
-            modules_list.append((spec, mod))
-        # --------------------------------------
-
-        modules = set()    # Modules we will load
-        seen = set()
-
-        # ----------- Chase down modules for it and all its dependencies
-        modules_dups = list()
-        _find_modules(spec, modules_dups)
-
-        # Remove duplicates while keeping order
-        modules_unique = list()
-        for spec, mod in modules_dups:
-            if mod.use_name not in seen:
-                modules_unique.append((spec,mod))
-                seen.add(mod.use_name)
-
-        # Output...
-        if args.shell:
-            module_cmd = {'tcl': 'module load', 'dotkit': 'dotkit use'}[mtype]
-        for spec, mod in modules_unique:
-            if args.shell:
-                print('# %s' % spec.format())
-                print('%s %s%s' % (module_cmd, args.prefix, mod.use_name))
-            else:
-                print(mod.use_name)
-
-
-def module_refresh(name, specs, args):
+def refresh(name, specs, args):
     """
     Regenerate all module files for installed packages known to
     spack (some packages may no longer exist).
@@ -191,13 +193,16 @@ constraint_qualifiers = {
         'known': True
     },
     'find': {
+    },
+    'load-list':{
     }
 }
 
 # Dictionary of callbacks based on the value of module_command
 callbacks = {
-    'refresh': module_refresh,
-    'find': module_find
+    'refresh': refresh,
+    'find': find,
+    'load-list': load_list
 }
 
 
