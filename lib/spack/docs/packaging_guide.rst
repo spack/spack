@@ -1625,21 +1625,21 @@ the user runs ``spack install`` and the time the ``install()`` method
 is called.  The concretized version of the spec above might look like
 this::
 
-   mpileaks@2.3%gcc@4.7.3 arch=linux-ppc64
-       ^callpath@1.0%gcc@4.7.3+debug arch=linux-ppc64
-           ^dyninst@8.1.2%gcc@4.7.3 arch=linux-ppc64
-               ^libdwarf@20130729%gcc@4.7.3 arch=linux-ppc64
-                   ^libelf@0.8.11%gcc@4.7.3 arch=linux-ppc64
-           ^mpich@3.0.4%gcc@4.7.3 arch=linux-ppc64
+   mpileaks@2.3%gcc@4.7.3 arch=linux-debian7-x86_64
+       ^callpath@1.0%gcc@4.7.3+debug arch=linux-debian7-x86_64
+           ^dyninst@8.1.2%gcc@4.7.3 arch=linux-debian7-x86_64
+               ^libdwarf@20130729%gcc@4.7.3 arch=linux-debian7-x86_64
+                   ^libelf@0.8.11%gcc@4.7.3 arch=linux-debian7-x86_64
+           ^mpich@3.0.4%gcc@4.7.3 arch=linux-debian7-x86_64
 
 .. graphviz::
 
    digraph {
-       "mpileaks@2.3\n%gcc@4.7.3\n arch=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n arch=linux-ppc64"
-       "mpileaks@2.3\n%gcc@4.7.3\n arch=linux-ppc64" -> "callpath@1.0\n%gcc@4.7.3+debug\n arch=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n arch=linux-ppc64"
-       "callpath@1.0\n%gcc@4.7.3+debug\n arch=linux-ppc64" -> "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64"
-       "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64" -> "libdwarf@20130729\n%gcc@4.7.3\n arch=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n arch=linux-ppc64"
-       "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n arch=linux-ppc64"
+       "mpileaks@2.3\n%gcc@4.7.3\n arch=linux-debian7-x86_64" -> "mpich@3.0.4\n%gcc@4.7.3\n arch=linux-debian7-x86_64"
+       "mpileaks@2.3\n%gcc@4.7.3\n arch=linux-debian7-x86_64" -> "callpath@1.0\n%gcc@4.7.3+debug\n arch=linux-debian7-x86_64" -> "mpich@3.0.4\n%gcc@4.7.3\n arch=linux-debian7-x86_64"
+       "callpath@1.0\n%gcc@4.7.3+debug\n arch=linux-debian7-x86_64" -> "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-debian7-x86_64"
+       "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-debian7-x86_64" -> "libdwarf@20130729\n%gcc@4.7.3\n arch=linux-debian7-x86_64" -> "libelf@0.8.11\n%gcc@4.7.3\n arch=linux-debian7-x86_64"
+       "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-debian7-x86_64" -> "libelf@0.8.11\n%gcc@4.7.3\n arch=linux-debian7-x86_64"
    }
 
 Here, all versions, compilers, and platforms are filled in, and there
@@ -1668,9 +1668,9 @@ running ``spack spec``.  For example:
        ^libdwarf
            ^libelf
 
-   dyninst@8.0.1%gcc@4.7.3 arch=linux-ppc64
-       ^libdwarf@20130729%gcc@4.7.3 arch=linux-ppc64
-           ^libelf@0.8.13%gcc@4.7.3 arch=linux-ppc64
+   dyninst@8.0.1%gcc@4.7.3 arch=linux-debian7-x86_64
+       ^libdwarf@20130729%gcc@4.7.3 arch=linux-debian7-x86_64
+           ^libelf@0.8.13%gcc@4.7.3 arch=linux-debian7-x86_64
 
 This is useful when you want to know exactly what Spack will do when
 you ask for a particular spec.
@@ -2175,12 +2175,12 @@ example:
        def install(self, prefix):
            # Do default install
 
-       @when('arch=chaos_5_x86_64_ib')
+       @when('arch=linux-debian7-x86_64')
        def install(self, prefix):
            # This will be executed instead of the default install if
            # the package's sys_type() is chaos_5_x86_64_ib.
 
-       @when('arch=bgqos_0")
+       @when('arch=linux-debian7-x86_64")
        def install(self, prefix):
            # This will be executed if the package's sys_type is bgqos_0
 
@@ -2308,7 +2308,7 @@ build system.
 
 .. _sanity-checks:
 
-Sanity checking an intallation
+Sanity checking an installation
 --------------------------------
 
 By default, Spack assumes that a build has failed if nothing is
@@ -2770,11 +2770,11 @@ build it:
    $ spack stage libelf
    ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
    ######################################################################## 100.0%
-   ==> Staging archive: /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64/libelf-0.8.13.tar.gz
-   ==> Created stage in /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64.
+   ==> Staging archive: /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13.tar.gz
+   ==> Created stage in /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64.
    $ spack cd libelf
    $ pwd
-   /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64/libelf-0.8.13
+   /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13
 
 ``spack cd`` here changed he current working directory to the
 directory containing the expanded ``libelf`` source code.  There are a
