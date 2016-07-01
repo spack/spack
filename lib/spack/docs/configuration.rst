@@ -81,17 +81,6 @@ If Spack is asked to build a package that uses one of these MPIs as a
 dependency, it will use the the pre-installed OpenMPI in
 the given directory. Packages.yaml can also be used to specify modules
 
-Here's an example of an external configuration for cray modules:
-
-.. code-block:: yaml
-  packages:
-      mpich:
-        modules:
-            mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10: cray-mpich
-            mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10: cray-mpich
-
-
-
 Each ``packages.yaml`` begins with a ``packages:`` token, followed
 by a list of package names.  To specify externals, add a ``paths`` or ``modules``
 token under the package name, which lists externals in a
@@ -195,35 +184,6 @@ concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
 dependency.
 
-For Cray users, you can specify the default compiler that Spack will
-concretize too. If you want to use the Cray defaults, then set them
-under all: in packages.yaml. You can also specify concretization preferences
-to cray-mpich. Just set the cray-mpich external module as a preferred package,
-set buildable to False and set the preference of mpi to mpich.
-
-Here is an example of a full packages.yaml used at NERSC
-
-.. code-block:: sh
-   packages:
-    mpich:
-        modules:
-            mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-mpich
-            mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge: cray-mpich
-        buildable: False
-    netcdf:
-        modules:
-            netcdf@4.3.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-netcdf
-            netcdf@4.3.3.1%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-netcdf
-        buildable: False
-    hdf5:
-        paths:
-            hdf5@1.8.14%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-hdf5
-            hdf5@1.8.14%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-hdf5
-        buildable: False
-    all:
-        compiler: [gcc@5.2.0, intel@16.0.0.109]
-        providers:
-            mpi: [mpich, openmpi, intelmpi]ackages:
 
 Profiling
 ------------------
