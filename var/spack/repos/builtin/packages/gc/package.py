@@ -25,25 +25,28 @@
 from spack import *
 
 
-class PkgConfig(Package):
-    """pkg-config is a helper tool used when compiling applications
-    and libraries"""
+class Gc(Package):
+    """The Boehm-Demers-Weiser conservative garbage collector is a garbage
+    collecting replacement for C malloc or C++ new."""
 
-    homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
-    url      = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz"
+    homepage = "http://www.hboehm.info/gc/"
+    url      = "http://www.hboehm.info/gc/gc_source/gc-7.4.4.tar.gz"
 
-    version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
-    version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
+    version('7.4.4', '96d18b0448a841c88d56e4ab3d180297')
 
-    parallel = False
+    variant('libatomic-ops', default=True, description='Use external libatomic-ops')
+
+    depends_on('libatomic-ops', when='+libatomic-ops')
 
     def install(self, spec, prefix):
-        configure("--prefix={0}".format(prefix),
-                  "--enable-shared",
-                  # There's a bootstrapping problem here;
-                  # glib uses pkg-config as well, so break
-                  # the cycle by using the internal glib.
-                  "--with-internal-glib")
+        config_args = [
+            '--prefix={0}'.format(prefix),
+            '--with-libatomic-ops={0}'.format(
+                'yes' if '+libatomic-ops' in spec else 'no')
+        ]
+
+        configure(*config_args)
 
         make()
-        make("install")
+        make('check')
+        make('install')

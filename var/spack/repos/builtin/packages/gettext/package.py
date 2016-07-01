@@ -24,31 +24,93 @@
 ##############################################################################
 from spack import *
 
+
 class Gettext(Package):
     """GNU internationalization (i18n) and localization (l10n) library."""
     homepage = "https://www.gnu.org/software/gettext/"
     url      = "http://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
 
-    version('0.19.7', 'f81e50556da41b44c1d59ac93474dca5')
+    version('0.19.8.1', 'df3f5690eaa30fd228537b00cb7b7590')
+    version('0.19.7',   'f81e50556da41b44c1d59ac93474dca5')
+
+    # Recommended variants
+    variant('libiconv', default=True, description='Use libiconv')
+    variant('curses',   default=True, description='Use libncurses')
+    variant('libxml2',  default=True, description='Use libxml2')
+    variant('git',      default=True, description='Enable git support')
+    variant('tar',      default=True, description='Enable tar support')
+    variant('gzip',     default=True, description='Enable gzip support')
+    variant('bzip2',    default=True, description='Enable bzip2 support')
+    variant('xz',       default=True, description='Enable xz support')
+
+    # Optional variants
+    variant('libunistring', default=False, description='Use libunistring')
+
+    # Recommended dependencies
+    depends_on('libiconv', when='+libiconv')
+    depends_on('ncurses',  when='+curses')
+    depends_on('libxml2',  when='+libxml2')
+    # Java runtime and compiler (e.g. GNU gcj or kaffe)
+    # C# runtime and compiler (e.g. pnet or mono)
+    depends_on('git@1.6:', when='+git')
+    depends_on('tar',      when='+tar')
+    depends_on('gzip',     when='+gzip')
+    depends_on('bzip2',    when='+bzip2')
+    depends_on('xz',       when='+xz')
+
+    # Optional dependencies
+    # depends_on('glib')  # circular dependency?
+    # depends_on('libcroco@0.6.1:')
+    depends_on('libunistring', when='+libunistring')
+    # depends_on('cvs')
 
     def install(self, spec, prefix):
-        options = ['--disable-dependency-tracking',
-                   '--disable-silent-rules',
-                   '--disable-debug',
-                   '--prefix=%s' % prefix,
-                   '--with-included-gettext',
-                   '--with-included-glib',
-                   '--with-included-libcroco',
-                   '--with-included-libunistring',
-                   '--with-emacs',
-                   '--with-lispdir=%s/emacs/site-lisp/gettext' % prefix.share,
-                   '--disable-java',
-                   '--disable-csharp',
-                   '--without-git', # Don't use VCS systems to create these archives
-                   '--without-cvs',
-                   '--without-xz']
+        config_args = [
+            '--prefix={0}'.format(prefix),
+            '--disable-java',
+            '--disable-csharp',
+            '--with-included-glib',
+            '--with-included-gettext',
+            '--with-included-libcroco',
+            '--without-emacs',
+            '--with-lispdir=%s/emacs/site-lisp/gettext' % prefix.share,
+            '--without-cvs'
+        ]
 
-        configure(*options)
+        if '+libiconv' in spec:
+            config_args.append('--with-libiconv-prefix={0}'.format(
+                spec['libiconv'].prefix))
+        else:
+            config_args.append('--without-libiconv-prefix')
+
+        if '+curses' in spec:
+            config_args.append('--with-ncurses-prefix={0}'.format(
+                spec['ncurses'].prefix))
+        else:
+            config_args.append('--disable-curses')
+
+        if '+libxml2' in spec:
+            config_args.append('--with-libxml2-prefix={0}'.format(
+                spec['libxml2'].prefix))
+        else:
+            config_args.append('--with-included-libxml')
+
+        if '+git' not in spec:
+            config_args.append('--without-git')
+
+        if '+bzip2' not in spec:
+            config_args.append('--without-bzip2')
+
+        if '+xz' not in spec:
+            config_args.append('--without-xz')
+
+        if '+libunistring' in spec:
+            config_args.append('--with-libunistring-prefix={0}'.format(
+                spec['libunistring'].prefix))
+        else:
+            config_args.append('--with-included-libunistring')
+
+        configure(*config_args)
 
         make()
         make("install")

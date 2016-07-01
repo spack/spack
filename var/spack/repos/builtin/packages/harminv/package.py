@@ -25,25 +25,29 @@
 from spack import *
 
 
-class PkgConfig(Package):
-    """pkg-config is a helper tool used when compiling applications
-    and libraries"""
+class Harminv(Package):
+    """Harminv is a free program (and accompanying library) to solve the
+    problem of harmonic inversion - given a discrete-time, finite-length
+    signal that consists of a sum of finitely-many sinusoids (possibly
+    exponentially decaying) in a given bandwidth, it determines the
+    frequencies, decay constants, amplitudes, and phases of those sinusoids."""
 
-    homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
-    url      = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz"
+    homepage = "http://ab-initio.mit.edu/wiki/index.php/Harminv"
+    url      = "http://ab-initio.mit.edu/harminv/harminv-1.4.tar.gz"
 
-    version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
-    version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
+    version('1.4', 'b95e24a9bc7e07d3d2202d1605e9e86f')
 
-    parallel = False
+    depends_on('blas')
+    depends_on('lapack')
 
     def install(self, spec, prefix):
-        configure("--prefix={0}".format(prefix),
-                  "--enable-shared",
-                  # There's a bootstrapping problem here;
-                  # glib uses pkg-config as well, so break
-                  # the cycle by using the internal glib.
-                  "--with-internal-glib")
+        config_args = [
+            '--prefix={0}'.format(prefix),
+            '--with-blas={0}'.format(spec['blas'].prefix.lib),
+            '--with-lapack={0}'.format(spec['lapack'].prefix.lib)
+        ]
+
+        configure(*config_args)
 
         make()
-        make("install")
+        make('install')

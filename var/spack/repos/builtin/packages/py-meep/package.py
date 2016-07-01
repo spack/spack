@@ -25,25 +25,30 @@
 from spack import *
 
 
-class PkgConfig(Package):
-    """pkg-config is a helper tool used when compiling applications
-    and libraries"""
+class PyMeep(Package):
+    """Python-meep is a wrapper around libmeep. It allows the scripting of
+    Meep-simulations with Python"""
 
-    homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
-    url      = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz"
+    homepage = "https://launchpad.net/python-meep"
+    url      = "https://launchpad.net/python-meep/1.4/1.4/+download/python-meep-1.4.2.tar"
 
-    version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
-    version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
+    version('1.4.2', 'f8913542d18b0dda92ebc64f0a10ce56')
 
-    parallel = False
+    variant('mpi', default=True, description='Enable MPI support')
+
+    extends('python')
+    depends_on('meep@1.1.1')  # must be compiled with -fPIC
+    depends_on('swig@1.3.39:')
+    depends_on('py-numpy')
+    depends_on('py-scipy')
+    depends_on('py-matplotlib')
+    depends_on('mpi', when='+mpi')  # OpenMPI 1.3.3 is recommended
+    # depends_on('hdf5+mpi', when='+mpi')  # ???
 
     def install(self, spec, prefix):
-        configure("--prefix={0}".format(prefix),
-                  "--enable-shared",
-                  # There's a bootstrapping problem here;
-                  # glib uses pkg-config as well, so break
-                  # the cycle by using the internal glib.
-                  "--with-internal-glib")
+        setup = 'setup-mpi.py' if '+mpi' in spec else 'setup.py'
 
-        make()
-        make("install")
+        python(setup, 'clean', '--all')
+        python(setup, 'build_ext')
+        python(setup, 'install', '--prefix={0}'.format(prefix))
+        python(setup, 'bdist')

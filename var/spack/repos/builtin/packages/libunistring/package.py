@@ -25,25 +25,20 @@
 from spack import *
 
 
-class PkgConfig(Package):
-    """pkg-config is a helper tool used when compiling applications
-    and libraries"""
+class Libunistring(Package):
+    """This library provides functions for manipulating Unicode strings
+    and for manipulating C strings according to the Unicode standard."""
 
-    homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
-    url      = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz"
+    homepage = "https://www.gnu.org/software/libunistring/"
+    url      = "http://ftp.gnu.org/gnu/libunistring/libunistring-0.9.6.tar.xz"
 
-    version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
-    version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
+    version('0.9.6', 'cb09c398020c27edac10ca590e9e9ef3')
 
-    parallel = False
+    depends_on('libiconv')
 
     def install(self, spec, prefix):
-        configure("--prefix={0}".format(prefix),
-                  "--enable-shared",
-                  # There's a bootstrapping problem here;
-                  # glib uses pkg-config as well, so break
-                  # the cycle by using the internal glib.
-                  "--with-internal-glib")
+        configure('--prefix={0}'.format(prefix),
+                  '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix))
 
         make()
-        make("install")
+        make('install')

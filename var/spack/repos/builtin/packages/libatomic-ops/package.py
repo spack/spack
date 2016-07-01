@@ -25,25 +25,17 @@
 from spack import *
 
 
-class PkgConfig(Package):
-    """pkg-config is a helper tool used when compiling applications
-    and libraries"""
+class LibatomicOps(Package):
+    """This package provides semi-portable access to hardware-provided
+    atomic memory update operations on a number architectures."""
 
-    homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
-    url      = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz"
+    homepage = "https://github.com/ivmai/libatomic_ops"
+    url      = "http://www.hboehm.info/gc/gc_source/libatomic_ops-7.4.4.tar.gz"
 
-    version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
-    version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
-
-    parallel = False
+    version('7.4.4', '426d804baae12c372967a6d183e25af2')
 
     def install(self, spec, prefix):
-        configure("--prefix={0}".format(prefix),
-                  "--enable-shared",
-                  # There's a bootstrapping problem here;
-                  # glib uses pkg-config as well, so break
-                  # the cycle by using the internal glib.
-                  "--with-internal-glib")
+        configure('--prefix={0}'.format(prefix))
 
         make()
-        make("install")
+        make('install')

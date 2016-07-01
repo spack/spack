@@ -25,25 +25,30 @@
 from spack import *
 
 
-class PkgConfig(Package):
-    """pkg-config is a helper tool used when compiling applications
-    and libraries"""
+class Guile(Package):
+    """Guile is designed to help programmers create flexible applications
+    that can be extended by users or other programmers with plug-ins,
+    modules, or scripts."""
 
-    homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
-    url      = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz"
+    homepage = "https://www.gnu.org/software/guile/"
+    url      = "ftp://ftp.gnu.org/gnu/guile/guile-2.0.11.tar.gz"
 
-    version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
-    version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
+    version('2.0.11', 'e532c68c6f17822561e3001136635ddd')
 
-    parallel = False
+    variant('readline', default=True, description='Use the readline library')
+
+    depends_on('gmp@4.2:')
+    depends_on('libiconv')
+    depends_on('gettext')
+    depends_on('libtool@1.5.6:')
+    depends_on('libunistring@0.9.3:')
+    depends_on('gc@7.0:')
+    depends_on('libffi')
+    depends_on('readline', when='+readline')
+    depends_on('pkg-config')
 
     def install(self, spec, prefix):
-        configure("--prefix={0}".format(prefix),
-                  "--enable-shared",
-                  # There's a bootstrapping problem here;
-                  # glib uses pkg-config as well, so break
-                  # the cycle by using the internal glib.
-                  "--with-internal-glib")
+        configure('--prefix={0}'.format(prefix))
 
         make()
-        make("install")
+        make('install')
