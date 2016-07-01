@@ -27,11 +27,12 @@ import re
 import sys
 
 import llnl.util.tty as tty
-from llnl.util.lang import attr_setdefault
-
 import spack
-import spack.spec
 import spack.config
+import spack.spec
+from llnl.util.lang import *
+from llnl.util.tty.colify import *
+from llnl.util.tty.color import *
 
 #
 # Settings for commands that modify configuration
@@ -145,3 +146,97 @@ def disambiguate_spec(spec):
         tty.die(*args)
 
     return matching_specs[0]
+
+
+def ask_for_confirmation(message):
+    while True:
+        tty.msg(message + '[y/n]')
+        choice = raw_input().lower()
+        if choice == 'y':
+            break
+        elif choice == 'n':
+            raise SystemExit('Operation aborted')
+        tty.warn('Please reply either "y" or "n"')
+
+
+def gray_hash(spec, length):
+    return colorize('@K{%s}' % spec.dag_hash(length))
+
+
+def display_specs(specs, **kwargs):
+    mode = kwargs.get('mode', 'short')
+    hashes = kwargs.get('long', False)
+    namespace = kwargs.get('namespace', False)
+    flags = kwargs.get('show_flags', False)
+    variants = kwargs.get('variants', False)
+
+    hlen = 7
+    if kwargs.get('very_long', False):
+        hashes = True
+        hlen = None
+
+    nfmt = '.' if namespace else '_'
+    ffmt = '$%+' if flags else ''
+    vfmt = '$+' if variants else ''
+    format_string = '$%s$@%s%s' % (nfmt, ffmt, vfmt)
+
+    # Make a dict with specs keyed by architecture and compiler.
+    index = index_by(specs, ('architecture', 'compiler'))
+
+    # Traverse the index and print out each package
+    for i, (architecture, compiler) in enumerate(sorted(index)):
+        if i > 0:
+            print
+
+        header = "%s{%s} / %s{%s}" % (spack.spec.architecture_color,
+                                      architecture, spack.spec.compiler_color,
+                                      compiler)
+        tty.hline(colorize(header), char='-')
+
+        specs = index[(architecture, compiler)]
+        specs.sort()
+
+        abbreviated = [s.format(format_string, color=True) for s in specs]
+        if mode == 'paths':
+            # Print one spec per line along with prefix path
+            width = max(len(s) for s in abbreviated)
+            width += 2
+            format = "    %%-%ds%%s" % width
+
+            for abbrv, spec in zip(abbreviated, specs):
+                if hashes:
+                    print(gray_hash(spec, hlen), )
+                print(format % (abbrv, spec.prefix))
+
+        elif mode == 'deps':
+            for spec in specs:
+                print(spec.tree(
+                    format=format_string,
+                    color=True,
+                    indent=4,
+                    prefix=(lambda s: gray_hash(s, hlen)) if hashes else None))
+
+        elif mode == 'short':
+            # Print columns of output if not printing flags
+            if not flags:
+
+                def fmt(s):
+                    string = ""
+                    if hashes:
+                        string += gray_hash(s, hlen) + ' '
+                    string += s.format('$-%s$@%s' % (nfmt, vfmt), color=True)
+
+                    return string
+
+                colify(fmt(s) for s in specs)
+            # Print one entry per line if including flags
+            else:
+                for spec in specs:
+                    # Print the hash if necessary
+                    hsh = gray_hash(spec, hlen) + ' ' if hashes else ''
+                    print(hsh + spec.format(format_string, color=True) + '\n')
+
+        else:
+            raise ValueError(
+                "Invalid mode for display_specs: %s. Must be one of (paths,"
+                "deps, short)." % mode)  # NOQA: ignore=E501

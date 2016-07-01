@@ -114,3 +114,9 @@ def composite(interface=None, method_list=None, container=list):
         return wrapper_class
 
     return cls_decorator
+
+
+class Bunch(object):
+    """Carries a bunch of named attributes (from Alex Martelli bunch)"""
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)

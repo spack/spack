@@ -30,7 +30,6 @@ import llnl.util.tty as tty
 import spack
 import spack.cmd
 import spack.repository
-from spack.cmd.find import display_specs
 
 description = "Remove an installed package"
 
@@ -45,17 +44,6 @@ display_args = {
     'show_flags': True,
     'variants':True
 }
-
-
-def ask_for_confirmation(message):
-    while True:
-        tty.msg(message + '[y/n]')
-        choice = raw_input().lower()
-        if choice == 'y':
-            break
-        elif choice == 'n':
-            raise SystemExit('Operation aborted')
-        tty.warn('Please reply either "y" or "n"')
 
 
 def setup_parser(subparser):
@@ -99,7 +87,7 @@ def concretize_specs(specs, allow_multiple_matches=False, force=False):
         if not allow_multiple_matches and len(matching) > 1:
             tty.error("%s matches multiple packages:" % spec)
             print()
-            display_specs(matching, **display_args)
+            spack.cmd.display_specs(matching, **display_args)
             print()
             has_errors = True
 
@@ -179,7 +167,7 @@ def uninstall(parser, args):
                 tty.error("Will not uninstall %s" % spec.format("$_$@$%@$#", color=True))
                 print('')
                 print("The following packages depend on it:")
-                display_specs(lst, **display_args)
+                spack.cmd.display_specs(lst, **display_args)
                 print('')
                 has_error = True
         elif args.dependents:
@@ -193,9 +181,9 @@ def uninstall(parser, args):
         if not args.yes_to_all:
             tty.msg("The following packages will be uninstalled : ")
             print('')
-            display_specs(uninstall_list, **display_args)
+            spack.cmd.display_specs(uninstall_list, **display_args)
             print('')
-            ask_for_confirmation('Do you want to proceed ? ')
+            spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
 
         # Uninstall everything on the list
         do_uninstall(uninstall_list, args.force)

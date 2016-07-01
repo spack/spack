@@ -24,102 +24,59 @@
 ##############################################################################
 from __future__ import print_function
 
+import collections
 import os
 import shutil
 import sys
-import collections
-import argparse
 
 import llnl.util.tty as tty
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 from llnl.util.filesystem import mkdirp
 from spack.modules import module_types
-from spack.util.string import *
-
-from spack.cmd.uninstall import ask_for_confirmation
+#from spack.util.string import *
 
 description = "Manipulate module files"
 
-
-# Qualifiers to be used when querying the db for specs
-constraint_qualifiers = {
-    'refresh': {
-        'installed': True,
-        'known': True
-    },
-    'find': {
-    },
-    'load-list':{
-    },
-    'rm': {
-    }
-}
+callbacks = {}
 
 
-class ConstraintAction(argparse.Action):
-    qualifiers = {}
-
-    def __call__(self, parser, namespace, values, option_string=None):
-        # Query specs from command line
-        d = self.qualifiers.get(namespace.subparser_name, {})
-        specs = [s for s in spack.installed_db.query(**d)]
-        values = ' '.join(values)
-        if values:
-            specs = [x for x in specs if x.satisfies(values, strict=True)]
-        namespace.specs = specs
-
-# TODO : this needs better wrapping to be extracted
-ConstraintAction.qualifiers.update(constraint_qualifiers)
-
-
-def _add_common_arguments(subparser):
-    type_help = 'Type of module files'
-    subparser.add_argument('-m', '--module-type', help=type_help, default='tcl', choices=module_types)
-    constraint_help = 'Optional constraint to select a subset of installed packages'
-    subparser.add_argument('constraint', nargs='*', help=constraint_help, action=ConstraintAction)
+def subcommand(subparser_name):
+    """Registers a function in the callbacks dictionary"""
+    def decorator(callback):
+        callbacks[subparser_name] = callback
+        return callback
+    return decorator
 
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='subparser_name')
     # spack module refresh
-    refresh_parser = sp.add_parser('refresh', help='Regenerate all module files.')
+    refresh_parser = sp.add_parser('refresh', help='Regenerate module files')
     refresh_parser.add_argument('--delete-tree', help='Delete the module file tree before refresh', action='store_true')
-    _add_common_arguments(refresh_parser)
-    refresh_parser.add_argument(
-        '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
-        help='Assume "yes" is the answer to every confirmation asked to the user.'
-    )
+    arguments.add_common_arguments(refresh_parser, ['constraint', 'module_type', 'yes_to_all'])
 
     # spack module find
-    find_parser = sp.add_parser('find', help='Find module files for packages.')
-    _add_common_arguments(find_parser)
+    find_parser = sp.add_parser('find', help='Find module files for packages')
+    arguments.add_common_arguments(find_parser, ['constraint', 'module_type'])
 
     # spack module rm
-    rm_parser = sp.add_parser('rm', help='Find module files for packages.')
-    _add_common_arguments(rm_parser)
-    rm_parser.add_argument(
-        '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
-        help='Assume "yes" is the answer to every confirmation asked to the user.'
+    rm_parser = sp.add_parser('rm', help='Remove module files')
+    arguments.add_common_arguments(rm_parser, ['constraint', 'module_type', 'yes_to_all'])
+
+    # spack module loads
+    loads_parser = sp.add_parser(
+        'loads',
+        help='Prompt the list of modules associated with packages that satisfy a constraint'
     )
+    loads_parser.add_argument(
+        '--input-only', action='store_false', dest='shell',
+        help='Generate input for module command (instead of a shell script)')
 
-    # spack module load-list
-    loadlist_parser = sp.add_parser(
-        'load-list',
-        help='Prompt the list of modules associated with packages that satisfy a contraint'
-    )
-    loadlist_parser.add_argument(
-        '-d', '--dependencies', action='store_true',
-        dest='recurse_dependencies',
-        help='Recursively traverse spec dependencies')
-
-    loadlist_parser.add_argument(
-        '-s', '--shell', action='store_true', dest='shell',
-        help='Generate shell script (instead of input for module command)')
-
-    loadlist_parser.add_argument(
+    loads_parser.add_argument(
         '-p', '--prefix', dest='prefix', default='',
         help='Prepend to module names when issuing module load commands')
-    _add_common_arguments(loadlist_parser)
+    arguments.add_common_arguments(loads_parser, ['constraint', 'module_type', 'recurse_dependencies'])
 
 
 class MultipleMatches(Exception):
@@ -129,8 +86,8 @@ class MultipleMatches(Exception):
 class NoMatch(Exception):
     pass
 
-
-def load_list(mtype, specs, args):
+@subcommand('loads')
+def loads(mtype, specs, args):
     # Get a comprehensive list of specs
     if args.recurse_dependencies:
         specs_from_user_constraint = specs[:]
@@ -166,7 +123,7 @@ def load_list(mtype, specs, args):
         d['name'] = mod
         print(prompt_template.format(**d))
 
-
+@subcommand('find')
 def find(mtype, specs, args):
     """
     Look at all installed packages and see if the spec provided
@@ -187,9 +144,11 @@ def find(mtype, specs, args):
     print(mod.use_name)
 
 
+@subcommand('rm')
 def rm(mtype, specs, args):
     module_cls = module_types[mtype]
-    modules = [module_cls(spec) for spec in specs if os.path.exists(module_cls(spec).file_name)]
+    specs_with_modules = [spec for spec in specs if os.path.exists(module_cls(spec).file_name)]
+    modules = [module_cls(spec) for spec in specs_with_modules]
 
     if not modules:
         tty.msg('No module file matches your query')
@@ -197,21 +156,20 @@ def rm(mtype, specs, args):
 
     # Ask for confirmation
     if not args.yes_to_all:
-        tty.msg('You are about to remove the following module files:\n')
-        for s in modules:
-            print(s.file_name)
+        tty.msg('You are about to remove {0} module files the following specs:\n'.format(mtype))
+        spack.cmd.display_specs(specs_with_modules, long=True)
         print('')
-        ask_for_confirmation('Do you want to proceed ? ')
+        spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
 
     # Remove the module files
     for s in modules:
         s.remove()
 
 
+@subcommand('refresh')
 def refresh(mtype, specs, args):
-    """
-    Regenerate all module files for installed packages known to
-    spack (some packages may no longer exist).
+    """Regenerate module files for installed packages
+
     """
     # Prompt a message to the user about what is going to change
     if not specs:
@@ -219,11 +177,10 @@ def refresh(mtype, specs, args):
         return
 
     if not args.yes_to_all:
-        tty.msg('You are about to regenerate the {name} module files for the following specs:\n'.format(name=mtype))
-        for s in specs:
-            print(s.format(color=True))
+        tty.msg('You are about to regenerate {name} module files for the following specs:\n'.format(name=mtype))
+        spack.cmd.display_specs(specs, long=True)
         print('')
-        ask_for_confirmation('Do you want to proceed ? ')
+        spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
 
     cls = module_types[mtype]
 
@@ -252,16 +209,17 @@ def refresh(mtype, specs, args):
     for x in writers:
         x.write(overwrite=True)
 
-# Dictionary of callbacks based on the value of subparser_name
-callbacks = {
-    'refresh': refresh,
-    'find': find,
-    'load-list': load_list,
-    'rm': rm
-}
-
 
 def module(parser, args):
+    # Qualifiers to be used when querying the db for specs
+    constraint_qualifiers = {
+        'refresh': {
+            'installed': True,
+            'known': True
+        },
+    }
+    arguments.ConstraintAction.qualifiers.update(constraint_qualifiers)
+
     module_type = args.module_type
     constraint = args.constraint
     try:
