@@ -32,12 +32,16 @@ import sys
 import llnl.util.tty as tty
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-from llnl.util.filesystem import mkdirp
+import llnl.util.filesystem as filesystem
 from spack.modules import module_types
-#from spack.util.string import *
 
 description = "Manipulate module files"
 
+# Dictionary that will be populated with the list of sub-commands
+# Each sub-command must be callable and accept 3 arguments :
+# - mtype : the type of the module file
+# - specs : the list of specs to be processed
+# - args : namespace containing the parsed command line arguments
 callbacks = {}
 
 
@@ -51,6 +55,7 @@ def subcommand(subparser_name):
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='subparser_name')
+
     # spack module refresh
     refresh_parser = sp.add_parser('refresh', help='Regenerate module files')
     refresh_parser.add_argument('--delete-tree', help='Delete the module file tree before refresh', action='store_true')
@@ -71,11 +76,12 @@ def setup_parser(subparser):
     )
     loads_parser.add_argument(
         '--input-only', action='store_false', dest='shell',
-        help='Generate input for module command (instead of a shell script)')
-
+        help='Generate input for module command (instead of a shell script)'
+    )
     loads_parser.add_argument(
         '-p', '--prefix', dest='prefix', default='',
-        help='Prepend to module names when issuing module load commands')
+        help='Prepend to module names when issuing module load commands'
+    )
     arguments.add_common_arguments(loads_parser, ['constraint', 'module_type', 'recurse_dependencies'])
 
 
@@ -86,8 +92,10 @@ class MultipleMatches(Exception):
 class NoMatch(Exception):
     pass
 
+
 @subcommand('loads')
 def loads(mtype, specs, args):
+    """Prompt the list of modules associated with a list of specs"""
     # Get a comprehensive list of specs
     if args.recurse_dependencies:
         specs_from_user_constraint = specs[:]
@@ -123,6 +131,7 @@ def loads(mtype, specs, args):
         d['name'] = mod
         print(prompt_template.format(**d))
 
+
 @subcommand('find')
 def find(mtype, specs, args):
     """
@@ -146,13 +155,14 @@ def find(mtype, specs, args):
 
 @subcommand('rm')
 def rm(mtype, specs, args):
+    """Deletes module files associated with items in specs"""
     module_cls = module_types[mtype]
     specs_with_modules = [spec for spec in specs if os.path.exists(module_cls(spec).file_name)]
     modules = [module_cls(spec) for spec in specs_with_modules]
 
     if not modules:
         tty.msg('No module file matches your query')
-        return
+        raise SystemExit(1)
 
     # Ask for confirmation
     if not args.yes_to_all:
@@ -168,9 +178,7 @@ def rm(mtype, specs, args):
 
 @subcommand('refresh')
 def refresh(mtype, specs, args):
-    """Regenerate module files for installed packages
-
-    """
+    """Regenerate module files for item in specs"""
     # Prompt a message to the user about what is going to change
     if not specs:
         tty.msg('No package matches your query')
@@ -205,7 +213,7 @@ def refresh(mtype, specs, args):
     tty.msg('Regenerating {name} module files'.format(name=mtype))
     if os.path.isdir(cls.path) and args.delete_tree:
         shutil.rmtree(cls.path, ignore_errors=False)
-    mkdirp(cls.path)
+    filesystem.mkdirp(cls.path)
     for x in writers:
         x.write(overwrite=True)
 
