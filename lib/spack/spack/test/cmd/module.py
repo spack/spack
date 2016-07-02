@@ -31,9 +31,10 @@ import spack.test.mock_database
 
 
 class TestModule(spack.test.mock_database.MockDatabase):
+
     def _get_module_files(self, args):
         return [
-            modules.module_types[args.module_type](spec).file_name for spec in args.specs
+            modules.module_types[args.module_type](spec).file_name for spec in args.specs  # NOQA: ignore=E501
         ]
 
     def test_module_common_operations(self):

@@ -188,7 +188,8 @@ def parse_config_options(module_generator):
     #####
 
     # Automatic loading loads
-    module_file_actions['hash_length'] = module_configuration.get('hash_length', 7)
+    module_file_actions['hash_length'] = module_configuration.get(
+        'hash_length', 7)
     module_file_actions['autoload'] = dependencies(
         module_generator.spec, module_file_actions.get('autoload', 'none'))
     # Prerequisites
@@ -238,6 +239,7 @@ class EnvModule(object):
     formats = {}
 
     class __metaclass__(type):
+
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
             if cls.name != 'env_module' and cls.name in CONFIGURATION[

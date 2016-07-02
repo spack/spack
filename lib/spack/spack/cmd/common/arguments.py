@@ -35,7 +35,7 @@ _arguments = {}
 def add_common_arguments(parser, list_of_arguments):
     for argument in list_of_arguments:
         if argument not in _arguments:
-            message = 'Trying to add the non existing argument "{0}" to a command'
+            message = 'Trying to add the non existing argument "{0}" to a command'  # NOQA: ignore=E501
             raise KeyError(message.format(argument))
         x = _arguments[argument]
         parser.add_argument(*x.flags, **x.kwargs)
@@ -44,9 +44,9 @@ def add_common_arguments(parser, list_of_arguments):
 class ConstraintAction(argparse.Action):
     """Constructs a list of specs based on a constraint given on the command line
 
-    An instance of this class is supposed to be used as an argument action in a parser.
-
-    It will read a constraint and will attach a list of matching specs to the namespace
+    An instance of this class is supposed to be used as an argument action
+    in a parser. It will read a constraint and will attach a list of matching
+    specs to the namespace
     """
     qualifiers = {}
 
@@ -59,30 +59,38 @@ class ConstraintAction(argparse.Action):
             specs = [x for x in specs if x.satisfies(values, strict=True)]
         namespace.specs = specs
 
-_arguments['constraint'] = Bunch(flags=('constraint',),
-                                 kwargs={
-                                     'nargs': '*',
-                                     'help': 'Optional constraint to select a subset of installed packages',
-                                     'action': ConstraintAction
-                                 })
+parms = Bunch(
+    flags=('constraint',),
+    kwargs={
+        'nargs': '*',
+        'help': 'Constraint to select a subset of installed packages',
+        'action': ConstraintAction
+    })
+_arguments['constraint'] = parms
 
-_arguments['module_type'] = Bunch(flags=('-m', '--module-type'),
-                                  kwargs={
-                                      'help': 'Type of module files',
-                                      'default': 'tcl',
-                                      'choices': spack.modules.module_types
-                                  })
+parms = Bunch(
+    flags=('-m', '--module-type'),
+    kwargs={
+        'help': 'Type of module files',
+        'default': 'tcl',
+        'choices': spack.modules.module_types
+    })
+_arguments['module_type'] = parms
 
-_arguments['yes_to_all'] = Bunch(flags=('-y', '--yes-to-all'),
-                                 kwargs={
-                                     'action': 'store_true',
-                                     'dest': 'yes_to_all',
-                                     'help': 'Assume "yes" is the answer to every confirmation asked to the user.'
-                                 })
+parms = Bunch(
+    flags=('-y', '--yes-to-all'),
+    kwargs={
+        'action': 'store_true',
+        'dest': 'yes_to_all',
+        'help': 'Assume "yes" is the answer to every confirmation asked to the user.'  # NOQA: ignore=E501
+    })
+_arguments['yes_to_all'] = parms
 
-_arguments['recurse_dependencies'] = Bunch(flags=('-r', '--dependencies'),
-                                           kwargs={
-                                               'action': 'store_true',
-                                               'dest': 'recurse_dependencies',
-                                               'help': 'Recursively traverse spec dependencies'
-                                           })
+parms = Bunch(
+    flags=('-r', '--dependencies'),
+    kwargs={
+        'action': 'store_true',
+        'dest': 'recurse_dependencies',
+        'help': 'Recursively traverse spec dependencies'
+    })
+_arguments['recurse_dependencies'] = parms

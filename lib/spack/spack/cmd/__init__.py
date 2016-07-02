@@ -37,7 +37,8 @@ from llnl.util.tty.color import *
 #
 # Settings for commands that modify configuration
 #
-# Commands that modify confguration By default modify the *highest* priority scope.
+# Commands that modify confguration By default modify the *highest*
+# priority scope.
 default_modify_scope = spack.config.highest_precedence_scope().name
 # Commands that list confguration list *all* scopes by default.
 default_list_scope = None
@@ -49,7 +50,7 @@ python_list = list
 ignore_files = r'^\.|^__init__.py$|^#'
 
 SETUP_PARSER = "setup_parser"
-DESCRIPTION  = "description"
+DESCRIPTION = "description"
 
 command_path = os.path.join(spack.lib_path, "spack", "cmd")
 
@@ -72,7 +73,7 @@ def get_module(name):
         module_name, fromlist=[name, SETUP_PARSER, DESCRIPTION],
         level=0)
 
-    attr_setdefault(module, SETUP_PARSER, lambda *args: None) # null-op
+    attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
 
     fn_name = get_cmd_function_name(name)
@@ -102,17 +103,17 @@ def parse_specs(args, **kwargs):
         specs = spack.spec.parse(args)
         for spec in specs:
             if concretize:
-                spec.concretize() # implies normalize
+                spec.concretize()  # implies normalize
             elif normalize:
                 spec.normalize()
 
         return specs
 
-    except spack.parse.ParseError, e:
+    except spack.parse.ParseError as e:
         tty.error(e.message, e.string, e.pos * " " + "^")
         sys.exit(1)
 
-    except spack.spec.SpecError, e:
+    except spack.spec.SpecError as e:
         tty.error(e.message)
         sys.exit(1)
 
@@ -128,7 +129,7 @@ def elide_list(line_list, max_num=10):
            [1, 2, 3, '...', 6]
     """
     if len(line_list) > max_num:
-        return line_list[:max_num-1] + ['...'] + line_list[-1:]
+        return line_list[:max_num - 1] + ['...'] + line_list[-1:]
     else:
         return line_list
 
@@ -139,8 +140,8 @@ def disambiguate_spec(spec):
         tty.die("Spec '%s' matches no installed packages." % spec)
 
     elif len(matching_specs) > 1:
-        args =  ["%s matches multiple packages." % spec,
-                 "Matching packages:"]
+        args = ["%s matches multiple packages." % spec,
+                "Matching packages:"]
         args += ["  " + str(s) for s in matching_specs]
         args += ["Use a more specific spec."]
         tty.die(*args)

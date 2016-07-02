@@ -58,8 +58,14 @@ def setup_parser(subparser):
 
     # spack module refresh
     refresh_parser = sp.add_parser('refresh', help='Regenerate module files')
-    refresh_parser.add_argument('--delete-tree', help='Delete the module file tree before refresh', action='store_true')
-    arguments.add_common_arguments(refresh_parser, ['constraint', 'module_type', 'yes_to_all'])
+    refresh_parser.add_argument(
+        '--delete-tree',
+        help='Delete the module file tree before refresh',
+        action='store_true'
+    )
+    arguments.add_common_arguments(
+        refresh_parser, ['constraint', 'module_type', 'yes_to_all']
+    )
 
     # spack module find
     find_parser = sp.add_parser('find', help='Find module files for packages')
@@ -67,12 +73,14 @@ def setup_parser(subparser):
 
     # spack module rm
     rm_parser = sp.add_parser('rm', help='Remove module files')
-    arguments.add_common_arguments(rm_parser, ['constraint', 'module_type', 'yes_to_all'])
+    arguments.add_common_arguments(
+        rm_parser, ['constraint', 'module_type', 'yes_to_all']
+    )
 
     # spack module loads
     loads_parser = sp.add_parser(
         'loads',
-        help='Prompt the list of modules associated with packages that satisfy a constraint'
+        help='Prompt the list of modules associated with a constraint'
     )
     loads_parser.add_argument(
         '--input-only', action='store_false', dest='shell',
@@ -82,7 +90,9 @@ def setup_parser(subparser):
         '-p', '--prefix', dest='prefix', default='',
         help='Prepend to module names when issuing module load commands'
     )
-    arguments.add_common_arguments(loads_parser, ['constraint', 'module_type', 'recurse_dependencies'])
+    arguments.add_common_arguments(
+        loads_parser, ['constraint', 'module_type', 'recurse_dependencies']
+    )
 
 
 class MultipleMatches(Exception):
@@ -100,20 +110,20 @@ def loads(mtype, specs, args):
     if args.recurse_dependencies:
         specs_from_user_constraint = specs[:]
         specs = []
-        # FIXME : during module file creation nodes seem to be visited multiple
-        # FIXME : times even if cover='nodes' is given. This work around permits
-        # FIXME : to get a unique list of spec anyhow. Do we miss a merge
-        # FIXME : step among nodes that refer to the same package?
+        # FIXME : during module file creation nodes seem to be visited
+        # FIXME : multiple times even if cover='nodes' is given. This
+        # FIXME : work around permits to get a unique list of spec anyhow.
         # FIXME : (same problem as in spack/modules.py)
         seen = set()
         seen_add = seen.add
         for spec in specs_from_user_constraint:
             specs.extend(
-                [item for item in spec.traverse(order='post', cover='nodes') if not (item in seen or seen_add(item))]
+                [item for item in spec.traverse(order='post', cover='nodes') if not (item in seen or seen_add(item))]  # NOQA: ignore=E501
             )
 
     module_cls = module_types[mtype]
-    modules = [(spec, module_cls(spec).use_name) for spec in specs if os.path.exists(module_cls(spec).file_name)]
+    modules = [(spec, module_cls(spec).use_name)
+               for spec in specs if os.path.exists(module_cls(spec).file_name)]
 
     module_commands = {
         'tcl': 'module load ',
@@ -127,7 +137,8 @@ def loads(mtype, specs, args):
 
     prompt_template = '{comment}{command}{prefix}{name}'
     for spec, mod in modules:
-        d['comment'] = '' if not args.shell else '# {0}\n'.format(spec.format())
+        d['comment'] = '' if not args.shell else '# {0}\n'.format(
+            spec.format())
         d['name'] = mod
         print(prompt_template.format(**d))
 
@@ -157,7 +168,8 @@ def find(mtype, specs, args):
 def rm(mtype, specs, args):
     """Deletes module files associated with items in specs"""
     module_cls = module_types[mtype]
-    specs_with_modules = [spec for spec in specs if os.path.exists(module_cls(spec).file_name)]
+    specs_with_modules = [
+        spec for spec in specs if os.path.exists(module_cls(spec).file_name)]
     modules = [module_cls(spec) for spec in specs_with_modules]
 
     if not modules:
@@ -166,7 +178,7 @@ def rm(mtype, specs, args):
 
     # Ask for confirmation
     if not args.yes_to_all:
-        tty.msg('You are about to remove {0} module files the following specs:\n'.format(mtype))
+        tty.msg('You are about to remove {0} module files the following specs:\n'.format(mtype))  # NOQA: ignore=E501
         spack.cmd.display_specs(specs_with_modules, long=True)
         print('')
         spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
@@ -185,7 +197,7 @@ def refresh(mtype, specs, args):
         return
 
     if not args.yes_to_all:
-        tty.msg('You are about to regenerate {name} module files for the following specs:\n'.format(name=mtype))
+        tty.msg('You are about to regenerate {name} module files for the following specs:\n'.format(name=mtype))  # NOQA: ignore=E501
         spack.cmd.display_specs(specs, long=True)
         print('')
         spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
@@ -233,11 +245,11 @@ def module(parser, args):
     try:
         callbacks[args.subparser_name](module_type, args.specs, args)
     except MultipleMatches:
-        message = 'the constraint \'{query}\' matches multiple packages, and this is not allowed in this context'
+        message = 'the constraint \'{query}\' matches multiple packages, and this is not allowed in this context'  # NOQA: ignore=E501
         tty.error(message.format(query=constraint))
         for s in args.specs:
             sys.stderr.write(s.format(color=True) + '\n')
         raise SystemExit(1)
     except NoMatch:
-        message = 'the constraint \'{query}\' match no package, and this is not allowed in this context'
+        message = 'the constraint \'{query}\' match no package, and this is not allowed in this context'  # NOQA: ignore=E501
         tty.die(message.format(query=constraint))
