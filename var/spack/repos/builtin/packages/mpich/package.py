@@ -66,6 +66,7 @@ class Mpich(Package):
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
         self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+        self.spec.run = Executable(join_path(self.prefix.bin, 'mpirun'))
 
     def install(self, spec, prefix):
         config_args = ["--prefix=" + prefix,

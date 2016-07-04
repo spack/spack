@@ -124,6 +124,10 @@ class Openmpi(Package):
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
         self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+        if 'slurm' in self.spec:
+            self.spec.run = which('srun')
+        else:
+            self.spec.run = Executable(join_path(self.prefix.bin, 'mpirun'))
 
     def setup_environment(self, spack_env, run_env):
         # As of 06/2016 there is no mechanism to specify that packages which
