@@ -57,11 +57,11 @@ class Openssl(Package):
         # Same idea, but just to avoid issuing the same message multiple times
         warnings_given_to_user = getattr(Openssl, '_warnings_given', {})
         if openssl_url is None:
-            if self.spec.satisfies('@external'):
-                # The version @external is reserved to system openssl. In that case return a fake url and exit
-                openssl_url = '@external (reserved version for system openssl)'
+            if self.spec.satisfies('@system'):
+                # The version @system is reserved to system openssl. In that case return a fake url and exit
+                openssl_url = '@system (reserved version for system openssl)'
                 if not warnings_given_to_user.get(version, False):
-                    tty.msg('Using openssl@external : the version @external is reserved for system openssl')
+                    tty.msg('Using openssl@system : the version @system is reserved for system openssl')
                     warnings_given_to_user[version] = True
             else:
                 openssl_url = self.check_for_outdated_release(version, warnings_given_to_user)  # Store the computed URL
