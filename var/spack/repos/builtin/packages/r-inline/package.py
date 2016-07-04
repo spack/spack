@@ -27,7 +27,8 @@ from spack import *
 
 class RInline(Package):
     """Functionality to dynamically define R functions and S4 methods with
-    inlined C, C++ or Fortran code supporting .C and .Call calling conventions."""
+    inlined C, C++ or Fortran code supporting .C and .Call calling
+    conventions."""
 
     homepage = "https://cran.r-project.org/web/packages/inline/index.html"
     url      = "https://cran.r-project.org/src/contrib/inline_0.3.14.tar.gz"

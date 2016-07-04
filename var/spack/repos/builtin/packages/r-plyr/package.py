@@ -31,7 +31,8 @@ class RPlyr(Package):
     all the pieces back together. For example, you might want to fit a model to
     each spatial location or time point in your study, summarise data by panels
     or collapse high-dimensional arrays to simpler summary statistics. The
-    development of 'plyr' has been generously supported by 'Becton Dickinson'."""
+    development of 'plyr' has been generously supported by 'Becton
+    Dickinson'."""
 
     homepage = "http://had.co.nz/plyr"
     url      = "https://cran.r-project.org/src/contrib/plyr_1.8.4.tar.gz"
