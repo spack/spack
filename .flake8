@@ -8,6 +8,9 @@
 # - E221: multiple spaces before operator
 # - E241: multiple spaces after ‘,’
 #
+# Let people use terse Python features:
+# - E731 : lambda expressions
+#
 # Spack allows wildcard imports:
 # - F403: disable wildcard import
 #
@@ -16,5 +19,5 @@
 # - F999: name name be undefined or undefined from star imports.
 #
 [flake8]
-ignore = E221,E241,F403,F821,F999
+ignore = E221,E241,E731,F403,F821,F999,F405
 max-line-length = 79

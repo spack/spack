@@ -32,45 +32,75 @@ from ordereddict_backport import OrderedDict
 from spack.test.mock_packages_test import *
 
 # Some sample compiler config data
-a_comps =  {
-    "x86_64_E5v2_IntelIB": {
-        "gcc@4.7.3" : {
+a_comps =  [
+    {'compiler': {
+        'paths': {
             "cc" : "/gcc473",
             "cxx": "/g++473",
             "f77": None,
-            "fc" : None },
-        "gcc@4.5.0" : {
+            "fc" : None 
+            },
+        'modules': None,
+        'spec': 'gcc@4.7.3',
+        'operating_system': 'CNL10'
+        }},
+    {'compiler': {
+        'paths': {
             "cc" : "/gcc450",
             "cxx": "/g++450",
-            "f77": "/gfortran",
-            "fc" : "/gfortran" },
-        "clang@3.3"  : {
+            "f77": 'gfortran',
+            "fc" : 'gfortran'
+            },
+        'modules': None,
+        'spec': 'gcc@4.5.0',
+        'operating_system': 'CNL10'
+        }},
+    {'compiler': {
+        'paths': {
             "cc" : "<overwritten>",
             "cxx": "<overwritten>",
-            "f77": "<overwritten>",
-            "fc" : "<overwritten>" }
-    }
-}
+            "f77": '<overwritten>',
+            "fc" : '<overwritten>' },
+        'modules': None,
+        'spec': 'clang@3.3',
+        'operating_system': 'CNL10'
+        }}
+]
 
-b_comps = {
-    "x86_64_E5v3": {
-        "icc@10.0" : {
+b_comps = [
+    {'compiler': {
+        'paths': {
             "cc" : "/icc100",
-            "cxx": "/icc100",
+            "cxx": "/icp100",
             "f77": None,
-            "fc" : None },
-        "icc@11.1" : {
+            "fc" : None
+            },
+        'modules': None,
+        'spec': 'icc@10.0',
+        'operating_system': 'CNL10'
+        }},
+    {'compiler': {
+        'paths': {
             "cc" : "/icc111",
             "cxx": "/icp111",
-            "f77": "/ifort",
-            "fc" : "/ifort" },
-        "clang@3.3" : {
-            "cc" : "/clang",
-            "cxx": "/clang++",
-            "f77": None,
-            "fc" : None}
-    }
-}
+            "f77": 'ifort',
+            "fc" : 'ifort'
+            },
+        'modules': None,
+        'spec': 'icc@11.1',
+        'operating_system': 'CNL10'
+        }},
+    {'compiler': {
+        'paths': {
+            "cc" : "<overwritten>",
+            "cxx": "<overwritten>",
+            "f77": '<overwritten>',
+            "fc" : '<overwritten>' },
+        'modules': None,
+        'spec': 'clang@3.3',
+        'operating_system': 'CNL10'
+        }}
+]
 
 # Some Sample repo data
 repos_low = [ "/some/path" ]
@@ -89,15 +119,28 @@ class ConfigTest(MockPackagesTest):
         super(ConfigTest, self).tearDown()
         shutil.rmtree(self.tmp_dir, True)
 
-    def check_config(self, comps, arch, *compiler_names):
+
+    def check_config(self, comps, *compiler_names):
         """Check that named compilers in comps match Spack's config."""
         config = spack.config.get_config('compilers')
         compiler_list = ['cc', 'cxx', 'f77', 'fc']
-        for key in compiler_names:
-            for c in compiler_list:
-                expected = comps[arch][key][c]
-                actual = config[arch][key][c]
-                self.assertEqual(expected, actual)
+        param_list = ['modules', 'paths', 'spec', 'operating_system']
+        for compiler in config:
+            conf = compiler['compiler']
+            if conf['spec'] in compiler_names:
+                comp = None
+                for c in comps:
+                    if c['compiler']['spec'] == conf['spec']:
+                        comp = c['compiler']
+                        break
+                if not comp:
+                    self.fail('Bad config spec')
+                for p in param_list:
+                    self.assertEqual(conf[p], comp[p])
+                for c in compiler_list:
+                    expected = comp['paths'][c]
+                    actual = conf['paths'][c]
+                    self.assertEqual(expected, actual)
 
     def test_write_list_in_memory(self):
         spack.config.update_config('repos', repos_low, 'test_low_priority')
@@ -111,8 +154,9 @@ class ConfigTest(MockPackagesTest):
         spack.config.update_config('compilers', b_comps, 'test_high_priority')
 
         # Make sure the config looks how we expect.
-        self.check_config(a_comps, 'x86_64_E5v2_IntelIB', 'gcc@4.7.3', 'gcc@4.5.0')
-        self.check_config(b_comps, 'x86_64_E5v3', 'icc@10.0', 'icc@11.1', 'clang@3.3')
+        self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
+        self.check_config(b_comps, 'icc@10.0', 'icc@11.1', 'clang@3.3')
+
 
     def test_write_key_to_disk(self):
         # Write b_comps "on top of" a_comps.
@@ -123,8 +167,8 @@ class ConfigTest(MockPackagesTest):
         spack.config.clear_config_caches()
 
         # Same check again, to ensure consistency.
-        self.check_config(a_comps, 'x86_64_E5v2_IntelIB', 'gcc@4.7.3', 'gcc@4.5.0')
-        self.check_config(b_comps, 'x86_64_E5v3', 'icc@10.0', 'icc@11.1', 'clang@3.3')
+        self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
+        self.check_config(b_comps, 'icc@10.0', 'icc@11.1', 'clang@3.3')
 
     def test_write_to_same_priority_file(self):
         # Write b_comps in the same file as a_comps.
@@ -135,5 +179,5 @@ class ConfigTest(MockPackagesTest):
         spack.config.clear_config_caches()
 
         # Same check again, to ensure consistency.
-        self.check_config(a_comps, 'x86_64_E5v2_IntelIB', 'gcc@4.7.3', 'gcc@4.5.0')
-        self.check_config(b_comps, 'x86_64_E5v3', 'icc@10.0', 'icc@11.1', 'clang@3.3')
+        self.check_config(a_comps, 'gcc@4.7.3', 'gcc@4.5.0')
+        self.check_config(b_comps, 'icc@10.0', 'icc@11.1', 'clang@3.3')

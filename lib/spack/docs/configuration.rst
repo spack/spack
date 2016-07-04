@@ -1,6 +1,6 @@
-.. _site-configuration:
+.. _configuration:
 
-Site configuration
+Configuration
 ===================================
 
 .. _temp-space:
@@ -55,7 +55,7 @@ directory is.
 
 
 External Packages
-~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 Spack can be configured to use externally-installed
 packages rather than building its own packages. This may be desirable
 if machines ship with system packages, such as a customized MPI
@@ -70,15 +70,15 @@ directory. Here's an example of an external configuration:
    packages:
       openmpi:
          paths:
-            openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
-            openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
-            openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
+            openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
+            openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
+            openmpi@1.6.5%intel@10.1 arch=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
 
 This example lists three installations of OpenMPI, one built with gcc,
 one built with gcc and debug information, and another built with Intel.
 If Spack is asked to build a package that uses one of these MPIs as a
 dependency, it will use the the pre-installed OpenMPI in
-the given directory.  
+the given directory.
 
 Each ``packages.yaml`` begins with a ``packages:`` token, followed
 by a list of package names.  To specify externals, add a ``paths``
@@ -108,9 +108,9 @@ be:
   packages:
     openmpi:
       paths:
-        openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
-        openmpi@1.4.3%gcc@4.4.7=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
-        openmpi@1.6.5%intel@10.1=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel                
+        openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
+        openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
+        openmpi@1.6.5%intel@10.1 arch=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
       buildable: False
 
 The addition of the ``buildable`` flag tells Spack that it should never build
@@ -118,13 +118,72 @@ its own version of OpenMPI, and it will instead always rely on a pre-built
 OpenMPI.  Similar to ``paths``, ``buildable`` is specified as a property under
 a package name.
 
-The ``buildable`` does not need to be paired with external packages.  
-It could also be used alone to forbid packages that may be 
+The ``buildable`` does not need to be paired with external packages.
+It could also be used alone to forbid packages that may be
 buggy or otherwise undesirable.
 
 
+Concretization Preferences
+--------------------------------
+
+Spack can be configured to prefer certain compilers, package
+versions, depends_on, and variants during concretization.
+The preferred configuration can be controlled via the
+``~/.spack/packages.yaml`` file for user configuations, or the
+``etc/spack/packages.yaml`` site configuration.
+
+
+Here's an example packages.yaml file that sets preferred packages:
+
+.. code-block:: sh
+
+    packages:
+      dyninst:
+        compiler: [gcc@4.9]
+      gperftools:
+        version: [2.2, 2.4, 2.3]
+      all:
+        compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
+        providers:
+          mpi: [mvapich, mpich, openmpi]
+
+
+At a high level, this example is specifying how packages should be
+concretized.  The dyninst package should prefer using gcc 4.9.
+The gperftools package should prefer version
+2.2 over 2.4.  Every package on the system should prefer mvapich for
+its MPI and gcc 4.4.7 (except for Dyninst, which overrides this by preferring gcc 4.9).
+These options are used to fill in implicit defaults.  Any of them can be overwritten
+on the command line if explicitly requested.
+
+Each packages.yaml file begins with the string ``packages:`` and
+package names are specified on the next level. The special string ``all``
+applies settings to each package. Underneath each package name is
+one or more components: ``compiler``, ``version``,
+or ``providers``.  Each component has an ordered list of spec
+``constraints``, with earlier entries in the list being preferred over
+later entries.
+
+Sometimes a package installation may have constraints that forbid
+the first concretization rule, in which case Spack will use the first
+legal concretization rule.  Going back to the example, if a user
+requests gperftools 2.3 or later, then Spack will install version 2.4
+as the 2.4 version of gperftools is preferred over 2.3.
+
+An explicit concretization rule in the preferred section will always
+take preference over unlisted concretizations.  In the above example,
+xlc isn't listed in the compiler list.  Every listed compiler from
+gcc to pgi will thus be preferred over the xlc compiler.
+
+The syntax for the ``provider`` section differs slightly from other
+concretization rules.  A provider lists a value that packages may
+``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
+dependency.
+
+
+
 Profiling
-~~~~~~~~~~~~~~~~~~~~~
+------------------
 
 Spack has some limited built-in support for profiling, and can report
 statistics using standard Python timing tools.  To use this feature,
@@ -133,7 +192,7 @@ supply ``-p`` to Spack on the command line, before any subcommands.
 .. _spack-p:
 
 ``spack -p``
-^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~
 
 ``spack -p`` output looks like this:
 

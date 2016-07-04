@@ -377,6 +377,8 @@ add a line like this in the package class:
        version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
        ...
 
+Versions should be listed with the newest version first.
+
 Version URLs
 ~~~~~~~~~~~~~~~~~
 
@@ -385,8 +387,21 @@ in the package.  For example, Spack is smart enough to download
 version ``8.2.1.`` of the ``Foo`` package above from
 ``http://example.com/foo-8.2.1.tar.gz``.
 
-If spack *cannot* extrapolate the URL from the ``url`` field, or if
-the package doesn't have a ``url`` field, you can add a URL explicitly
+If spack *cannot* extrapolate the URL from the ``url`` field by
+default, you can write your own URL generation algorithm in place of
+the ``url`` declaration.  For example:
+
+.. code-block:: python
+   :linenos:
+
+   class Foo(Package):
+       def url_for_version(self, version):
+           return 'http://example.com/version_%s/foo-%s.tar.gz' \
+               % (version, version)
+       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
+       ...
+
+If a URL cannot be derived systematically, you can add an explicit URL
 for a particular version:
 
 .. code-block:: python
@@ -703,6 +718,13 @@ Fetching a revision
 Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the ``url``.
 
+Automatic caching of files fetched during installation
+------------------------------------------------------
+
+Spack maintains a cache (described :ref:`here <caching>`) which saves files
+retrieved during package installations to avoid re-downloading in the case that
+a package is installed with a different specification (but the same version) or
+reinstalled on account of a change in the hashing scheme.
 
 .. _license:
 
@@ -776,7 +798,7 @@ Spack will create a global license file located at
 file using the editor set in ``$EDITOR``, or vi if unset. It will look like
 this:
 
-.. code-block::
+.. code-block:: sh
 
     # A license is required to use pgi.
     #
@@ -807,7 +829,7 @@ You can add your license directly to this file, or tell FlexNet to use a
 license stored on a separate license server. Here is an example that
 points to a license server called licman1:
 
-.. code-block::
+.. code-block:: sh
 
     SERVER licman1.mcs.anl.gov 00163eb7fba5 27200
     USE_SERVER
@@ -1221,11 +1243,13 @@ just as easily provide a version range:
 
    depends_on("libelf@0.8.2:0.8.4:")
 
-Or a requirement for a particular variant:
+Or a requirement for a particular variant or compiler flags:
 
 .. code-block:: python
 
    depends_on("libelf@0.8+debug")
+   depends_on('libelf debug=True')
+   depends_on('libelf cppflags="-fPIC")
 
 Both users *and* package authors can use the same spec syntax to refer
 to different package configurations.  Users use the spec syntax on the
@@ -1336,6 +1360,19 @@ extendable package:
 Now, the ``py-numpy`` package can be used as an argument to ``spack
 activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
+
+Many packages produce Python extensions for *some* variants, but not
+others: they should extend ``python`` only if the apropriate
+variant(s) are selected.  This may be accomplished with conditional
+``extends()`` declarations:
+
+.. code-block:: python
+
+   class FooLib(Package):
+       variant('python', default=True, description= \
+           'Build the Python extension Module')
+       extends('python', when='+python')
+       ...
 
 Sometimes, certain files in one package will conflict with those in
 another, which means they cannot both be activated (symlinked) at the
@@ -1623,21 +1660,21 @@ the user runs ``spack install`` and the time the ``install()`` method
 is called.  The concretized version of the spec above might look like
 this::
 
-   mpileaks@2.3%gcc@4.7.3=linux-ppc64
-       ^callpath@1.0%gcc@4.7.3+debug=linux-ppc64
-           ^dyninst@8.1.2%gcc@4.7.3=linux-ppc64
-               ^libdwarf@20130729%gcc@4.7.3=linux-ppc64
-                   ^libelf@0.8.11%gcc@4.7.3=linux-ppc64
-           ^mpich@3.0.4%gcc@4.7.3=linux-ppc64
+   mpileaks@2.3%gcc@4.7.3 arch=linux-ppc64
+       ^callpath@1.0%gcc@4.7.3+debug arch=linux-ppc64
+           ^dyninst@8.1.2%gcc@4.7.3 arch=linux-ppc64
+               ^libdwarf@20130729%gcc@4.7.3 arch=linux-ppc64
+                   ^libelf@0.8.11%gcc@4.7.3 arch=linux-ppc64
+           ^mpich@3.0.4%gcc@4.7.3 arch=linux-ppc64
 
 .. graphviz::
 
    digraph {
-       "mpileaks@2.3\n%gcc@4.7.3\n=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n=linux-ppc64"
-       "mpileaks@2.3\n%gcc@4.7.3\n=linux-ppc64" -> "callpath@1.0\n%gcc@4.7.3+debug\n=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n=linux-ppc64"
-       "callpath@1.0\n%gcc@4.7.3+debug\n=linux-ppc64" -> "dyninst@8.1.2\n%gcc@4.7.3\n=linux-ppc64"
-       "dyninst@8.1.2\n%gcc@4.7.3\n=linux-ppc64" -> "libdwarf@20130729\n%gcc@4.7.3\n=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n=linux-ppc64"
-       "dyninst@8.1.2\n%gcc@4.7.3\n=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n=linux-ppc64"
+       "mpileaks@2.3\n%gcc@4.7.3\n arch=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n arch=linux-ppc64"
+       "mpileaks@2.3\n%gcc@4.7.3\n arch=linux-ppc64" -> "callpath@1.0\n%gcc@4.7.3+debug\n arch=linux-ppc64" -> "mpich@3.0.4\n%gcc@4.7.3\n arch=linux-ppc64"
+       "callpath@1.0\n%gcc@4.7.3+debug\n arch=linux-ppc64" -> "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64"
+       "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64" -> "libdwarf@20130729\n%gcc@4.7.3\n arch=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n arch=linux-ppc64"
+       "dyninst@8.1.2\n%gcc@4.7.3\n arch=linux-ppc64" -> "libelf@0.8.11\n%gcc@4.7.3\n arch=linux-ppc64"
    }
 
 Here, all versions, compilers, and platforms are filled in, and there
@@ -1648,8 +1685,8 @@ point will Spack call the ``install()`` method for your package.
 Concretization in Spack is based on certain selection policies that
 tell Spack how to select, e.g., a version, when one is not specified
 explicitly.  Concretization policies are discussed in more detail in
-:ref:`site-configuration`.  Sites using Spack can customize them to
-match the preferences of their own users.
+:ref:`configuration`.  Sites using Spack can customize them to match
+the preferences of their own users.
 
 .. _spack-spec:
 
@@ -1666,9 +1703,9 @@ running ``spack spec``.  For example:
        ^libdwarf
            ^libelf
 
-   dyninst@8.0.1%gcc@4.7.3=linux-ppc64
-       ^libdwarf@20130729%gcc@4.7.3=linux-ppc64
-           ^libelf@0.8.13%gcc@4.7.3=linux-ppc64
+   dyninst@8.0.1%gcc@4.7.3 arch=linux-ppc64
+       ^libdwarf@20130729%gcc@4.7.3 arch=linux-ppc64
+           ^libelf@0.8.13%gcc@4.7.3 arch=linux-ppc64
 
 This is useful when you want to know exactly what Spack will do when
 you ask for a particular spec.
@@ -1682,60 +1719,8 @@ be concretized on their system.  For example, one user may prefer packages
 built with OpenMPI and the Intel compiler.  Another user may prefer
 packages be built with MVAPICH and GCC.
 
-Spack can be configured to prefer certain compilers, package
-versions, depends_on, and variants during concretization.
-The preferred configuration can be controlled via the
-``~/.spack/packages.yaml`` file for user configuations, or the
-``etc/spack/packages.yaml`` site configuration.
-
-
-Here's an example packages.yaml file that sets preferred packages:
-
-.. code-block:: sh
-
-    packages:
-      dyninst:
-        compiler: [gcc@4.9]
-        variants: +debug
-      gperftools:
-        version: [2.2, 2.4, 2.3]
-      all:
-        compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
-        providers:
-          mpi: [mvapich, mpich, openmpi]
-
-
-At a high level, this example is specifying how packages should be
-concretized.  The dyninst package should prefer using gcc 4.9 and
-be built with debug options.  The gperftools package should prefer version
-2.2 over 2.4.  Every package on the system should prefer mvapich for
-its MPI and gcc 4.4.7 (except for Dyninst, which overrides this by preferring gcc 4.9).
-These options are used to fill in implicit defaults.  Any of them can be overwritten
-on the command line if explicitly requested.
-
-Each packages.yaml file begins with the string ``packages:`` and
-package names are specified on the next level. The special string ``all``
-applies settings to each package. Underneath each package name is
-one or more components: ``compiler``, ``variants``, ``version``,
-or ``providers``.  Each component has an ordered list of spec
-``constraints``, with earlier entries in the list being preferred over
-later entries.
-
-Sometimes a package installation may have constraints that forbid
-the first concretization rule, in which case Spack will use the first
-legal concretization rule.  Going back to the example, if a user
-requests gperftools 2.3 or later, then Spack will install version 2.4
-as the 2.4 version of gperftools is preferred over 2.3.
-
-An explicit concretization rule in the preferred section will always
-take preference over unlisted concretizations.  In the above example,
-xlc isn't listed in the compiler list.  Every listed compiler from
-gcc to pgi will thus be preferred over the xlc compiler.
-
-The syntax for the ``provider`` section differs slightly from other
-concretization rules.  A provider lists a value that packages may
-``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
-dependency.
+See the `documentation in the config section <concretization-preferences_>`_
+for more details.
 
 .. _install-method:
 
@@ -1894,7 +1879,7 @@ discover its dependencies.
 
 If you want to see the environment that a package will build with, or
 if you want to run commands in that environment to test them out, you
-can use the :ref:```spack env`` <spack-env>` command, documented
+can use the :ref:`spack env <spack-env>` command, documented
 below.
 
 .. _compiler-wrappers:
@@ -1960,6 +1945,12 @@ the command line.
     ``$rpath_flag`` can be overriden on a compiler specific basis in
     ``lib/spack/spack/compilers/$compiler.py``.
 
+The compiler wrappers also pass the compiler flags specified by the user from
+the command line (``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``,
+and/or ``ldlibs``). They do not override the canonical autotools flags with the
+same names (but in ALL-CAPS) that may be passed into the build by particularly
+challenging package scripts.
+
 Compiler flags
 ~~~~~~~~~~~~~~
 In rare circumstances such as compiling and running small unit tests, a package
@@ -1992,6 +1983,19 @@ to point to ``C``, ``C++``, ``Fortran 90`` and ``Fortran 77`` ``MPI`` wrappers.
 Package developers are advised to use these variables, for example ``self.spec['mpi'].mpicc``
 instead of hard-coding ``join_path(self.spec['mpi'].prefix.bin, 'mpicc')`` for
 the reasons outlined above.
+
+
+Blas and Lapack libraries
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Different packages provide implementation of ``Blas`` and ``Lapack`` routines.
+The names of the resulting static and/or shared libraries differ from package
+to package. In order to make ``install()`` method indifferent to the
+choice of ``Blas`` implementation, each package which provides it
+sets up ``self.spec.blas_shared_lib`` and ``self.spec.blas_static_lib `` to
+point to the shared and static ``Blas`` libraries, respectively. The same
+applies to packages which provide ``Lapack``. Package developers are advised to
+use these variables, for example ``spec['blas'].blas_shared_lib`` instead of
+hard-coding ``join_path(spec['blas'].prefix.lib, 'libopenblas.so')``.
 
 
 Forking ``install()``
@@ -2206,12 +2210,12 @@ example:
        def install(self, prefix):
            # Do default install
 
-       @when('=chaos_5_x86_64_ib')
+       @when('arch=chaos_5_x86_64_ib')
        def install(self, prefix):
            # This will be executed instead of the default install if
            # the package's sys_type() is chaos_5_x86_64_ib.
 
-       @when('=bgqos_0")
+       @when('arch=bgqos_0")
        def install(self, prefix):
            # This will be executed if the package's sys_type is bgqos_0
 
@@ -2555,6 +2559,59 @@ File functions
 
 .. _package-lifecycle:
 
+Coding Style Guidelines
+---------------------------
+
+The following guidelines are provided, in the interests of making
+Spack packages work in a consistent manner:
+
+
+Variant Names
+~~~~~~~~~~~~~~
+
+Spack packages with variants similar to already-existing Spack
+packages should use the same name for their variants.  Standard
+variant names are:
+
+======= ======== ========================
+Name    Default   Description
+------- -------- ------------------------
+shared   True     Build shared libraries
+static            Build static libraries
+mpi               Use MPI
+python            Build Python extension
+------- -------- ------------------------
+
+If specified in this table, the corresponding default should be used
+when declaring a variant.
+
+
+Version Lists
+~~~~~~~~~~~~~~
+
+Spack packges should list supported versions with the newest first.
+
+Special Versions
+~~~~~~~~~~~~~~~~~
+
+The following *special* version names may be used when building a package:
+
+* *@system*: Indicates a hook to the OS-installed version of the
+   package.  This is useful, for example, to tell Spack to use the
+   OS-installed version in ``packages.yaml``::
+
+        openssl:
+            paths:
+                openssl@system: /usr
+            buildable: False
+
+   Certain Spack internals look for the *@system* version and do
+   appropriate things in that case.
+
+* *@local*: Indicates the version was built manually from some source
+  tree of unknown provenance (see ``spack setup``).
+
+
 Packaging workflow commands
 ---------------------------------
 
@@ -2649,11 +2706,16 @@ build process will start from scratch.
 
 ``spack purge``
 ~~~~~~~~~~~~~~~~~
-Cleans up all of Spack's temporary files.  Use this to recover disk
-space if temporary files from interrupted or failed installs
-accumulate in the staging area.  This is equivalent to running ``spack
-clean`` for every package you have fetched or staged.
+Cleans up all of Spack's temporary and cached files.  This can be used to 
+recover disk space if temporary files from interrupted or failed installs 
+accumulate in the staging area.  
 
+When called with ``--stage`` or ``--all`` (or without arguments, in which case
+the default is ``--all``) this removes all staged files; this is equivalent to 
+running ``spack clean`` for every package you have fetched or staged.
+
+When called with ``--cache`` or ``--all`` this will clear all resources 
+:ref:`cached <caching>` during installs.
 
 Keeping the stage directory on success
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2801,11 +2863,11 @@ build it:
    $ spack stage libelf
    ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
    ######################################################################## 100.0%
-   ==> Staging archive: /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3=linux-ppc64/libelf-0.8.13.tar.gz
-   ==> Created stage in /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3=linux-ppc64.
+   ==> Staging archive: /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64/libelf-0.8.13.tar.gz
+   ==> Created stage in /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64.
    $ spack cd libelf
    $ pwd
-   /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3=linux-ppc64/libelf-0.8.13
+   /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-ppc64/libelf-0.8.13
 
 ``spack cd`` here changed he current working directory to the
 directory containing the expanded ``libelf`` source code.  There are a
@@ -2870,3 +2932,109 @@ might write:
    DWARF_PREFIX = $(spack location -i libdwarf)
    CXXFLAGS += -I$DWARF_PREFIX/include
    CXXFLAGS += -L$DWARF_PREFIX/lib
+
+Build System Configuration Support
+----------------------------------
+
+Imagine a developer creating a CMake-based (or Autotools) project in a local
+directory, which depends on libraries A-Z.  Once Spack has installed
+those dependencies, one would like to run ``cmake`` with appropriate
+command line and environment so CMake can find them.  The ``spack
+setup`` command does this conveniently, producing a CMake
+configuration that is essentially the same as how Spack *would have*
+configured the project.  This can be demonstrated with a usage
+example:
+
+.. code-block:: bash
+
+   cd myproject
+    spack setup myproject@local
+    mkdir build; cd build
+    ../spconfig.py ..
+    make
+    make install
+
+Notes:
+  * Spack must have ``myproject/package.py`` in its repository for
+    this to work.
+  * ``spack setup`` produces the executable script ``spconfig.py`` in
+    the local directory, and also creates the module file for the
+    package.  ``spconfig.py`` is normally run from the user's
+    out-of-source build directory.
+  * The version number given to ``spack setup`` is arbitrary, just
+    like ``spack diy``.  ``myproject/package.py`` does not need to
+    have any valid downloadable versions listed (typical when a
+    project is new).
+  * spconfig.py produces a CMake configuration that *does not* use the
+    Spack wrappers.  Any resulting binaries *will not* use RPATH,
+    unless the user has enabled it.  This is recommended for
+    development purposes, not production.
+  * ``spconfig.py`` is human readable, and can serve as a developer
+    reference of what dependencies are being used.
+  * ``make install`` installs the package into the Spack repository,
+    where it may be used by other Spack packages.
+  * CMake-generated makefiles re-run CMake in some circumstances.  Use
+    of ``spconfig.py`` breaks this behavior, requiring the developer
+    to manually re-run ``spconfig.py`` when a ``CMakeLists.txt`` file
+    has changed.
+
+CMakePackage
+~~~~~~~~~~~~
+
+In order ot enable ``spack setup`` functionality, the author of
+``myproject/package.py`` must subclass from ``CMakePackage`` instead
+of the standard ``Package`` superclass.  Because CMake is
+standardized, the packager does not need to tell Spack how to run
+``cmake; make; make install``.  Instead the packager only needs to
+create (optional) methods ``configure_args()`` and ``configure_env()``, which
+provide the arguments (as a list) and extra environment variables (as
+a dict) to provide to the ``cmake`` command.  Usually, these will
+translate variant flags into CMake definitions.  For example:
+
+.. code-block:: python
+
+    def configure_args(self):
+        spec = self.spec
+        return [
+            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
+            '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
+            '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
+            '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
+            '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')]
+
+If needed, a packager may also override methods defined in
+``StagedPackage`` (see below).
+
+
+StagedPackage
+~~~~~~~~~~~~~
+
+``CMakePackage`` is implemented by subclassing the ``StagedPackage``
+superclass, which breaks down the standard ``Package.install()``
+method into several sub-stages: ``setup``, ``configure``, ``build``
+and ``install``.  Details:
+
+* Instead of implementing the standard ``install()`` method, package
+  authors implement the methods for the sub-stages
+  ``install_setup()``, ``install_configure()``,
+  ``install_build()``, and ``install_install()``.
+
+* The ``spack install`` command runs the sub-stages ``configure``,
+  ``build`` and ``install`` in order.  (The ``setup`` stage is
+  not run by default; see below).
+* The ``spack setup`` command runs the sub-stages ``setup``
+  and a dummy install (to create the module file).
+* The sub-stage install methods take no arguments (other than
+  ``self``).  The arguments ``spec`` and ``prefix`` to the standard
+  ``install()`` method may be accessed via ``self.spec`` and
+  ``self.prefix``.
+
+GNU Autotools
+~~~~~~~~~~~~~
+
+The ``setup`` functionality is currently only available for
+CMake-based packages.  Extending this functionality to GNU
+Autotools-based packages would be easy (and should be done by a
+developer who actively uses Autotools).  Packages that use
+non-standard build systems can gain ``setup`` functionality by
+subclassing ``StagedPackage`` directly.

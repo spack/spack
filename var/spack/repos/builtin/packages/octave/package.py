@@ -23,6 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import sys
+
 
 class Octave(Package):
     """GNU Octave is a high-level language, primarily intended for numerical
@@ -34,7 +36,10 @@ class Octave(Package):
     homepage = "https://www.gnu.org/software/octave/"
     url      = "ftp://ftp.gnu.org/gnu/octave/octave-4.0.0.tar.gz"
 
-    version('4.0.0' , 'a69f8320a4f20a8480c1b278b1adb799')
+    extendable = True
+
+    version('4.0.2', 'c2a5cacc6e4c52f924739cdf22c2c687')
+    version('4.0.0', 'a69f8320a4f20a8480c1b278b1adb799')
 
     # Variants
     variant('readline',   default=True)
@@ -62,33 +67,35 @@ class Octave(Package):
     # Required dependencies
     depends_on('blas')
     depends_on('lapack')
+    # Octave does not configure with sed from darwin:
+    depends_on('sed', sys.platform == 'darwin')
     depends_on('pcre')
+    depends_on('pkg-config')
 
     # Strongly recommended dependencies
-    depends_on('readline',    when='+readline')
+    depends_on('readline',     when='+readline')
 
     # Optional dependencies
-    depends_on('arpack',      when='+arpack')
-    depends_on('curl',        when='+curl')
-    depends_on('fftw',      when='+fftw')
-    depends_on('fltk',        when='+fltk')
-    depends_on('fontconfig',  when='+fontconfig')
-    depends_on('freetype',    when='+freetype')
-    depends_on('glpk',        when='+glpk')
-    depends_on('gl2ps',       when='+gl2ps')
-    depends_on('gnuplot',     when='+gnuplot')
-    depends_on('ImageMagick', when='+magick')
-    depends_on('hdf5',        when='+hdf5')
-    depends_on('jdk',         when='+jdk')
-    depends_on('llvm',        when='+llvm')
-    #depends_on('opengl',      when='+opengl')    # TODO: add package
-    depends_on('qhull',       when='+qhull')
-    depends_on('qrupdate',    when='+qrupdate')
-    #depends_on('qscintilla',  when='+qscintilla) # TODO: add package
-    depends_on('qt',          when='+qt')
-    depends_on('suite-sparse',when='+suitesparse')
-    depends_on('zlib',        when='+zlib')
-
+    depends_on('arpack',       when='+arpack')
+    depends_on('curl',         when='+curl')
+    depends_on('fftw',         when='+fftw')
+    depends_on('fltk',         when='+fltk')
+    depends_on('fontconfig',   when='+fontconfig')
+    depends_on('freetype',     when='+freetype')
+    depends_on('glpk',         when='+glpk')
+    depends_on('gl2ps',        when='+gl2ps')
+    depends_on('gnuplot',      when='+gnuplot')
+    depends_on('ImageMagick',  when='+magick')
+    depends_on('hdf5',         when='+hdf5')
+    depends_on('jdk',          when='+jdk')
+    depends_on('llvm',         when='+llvm')
+    # depends_on('opengl',      when='+opengl')    # TODO: add package
+    depends_on('qhull',        when='+qhull')
+    depends_on('qrupdate',     when='+qrupdate')
+    # depends_on('qscintilla',  when='+qscintilla) # TODO: add package
+    depends_on('qt',           when='+qt')
+    depends_on('suite-sparse', when='+suitesparse')
+    depends_on('zlib',         when='+zlib')
 
     def install(self, spec, prefix):
         config_args = [
@@ -154,7 +161,8 @@ class Octave(Package):
             config_args.append("--without-glpk")
 
         if '+magick' in spec:
-            config_args.append("--with-magick=%s" % spec['ImageMagick'].prefix.lib)
+            config_args.append("--with-magick=%s"
+                               % spec['ImageMagick'].prefix.lib)
 
         if '+hdf5' in spec:
             config_args.extend([
@@ -187,7 +195,8 @@ class Octave(Package):
 
         if '+qrupdate' in spec:
             config_args.extend([
-                "--with-qrupdate-includedir=%s" % spec['qrupdate'].prefix.include,
+                "--with-qrupdate-includedir=%s"
+                % spec['qrupdate'].prefix.include,
                 "--with-qrupdate-libdir=%s"     % spec['qrupdate'].prefix.lib
             ])
         else:
@@ -205,3 +214,16 @@ class Octave(Package):
 
         make()
         make("install")
+
+    # ========================================================================
+    # Set up environment to make install easy for Octave extensions.
+    # ========================================================================
+
+    def setup_dependent_package(self, module, ext_spec):
+        """Called before Octave modules' install() methods.
+
+        In most cases, extensions will only need to have one line:
+            octave('--eval', 'pkg install %s' % self.stage.archive_file)
+        """
+        # Octave extension builds can have a global Octave executable function
+        module.octave = Executable(join_path(self.spec.prefix.bin, 'octave'))

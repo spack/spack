@@ -37,6 +37,8 @@ import os
 import re
 import textwrap
 import time
+import glob
+import string
 
 import llnl.util.tty as tty
 import spack
@@ -50,6 +52,8 @@ import spack.mirror
 import spack.repository
 import spack.url
 import spack.util.web
+
+from urlparse import urlparse
 from StringIO import StringIO
 from llnl.util.filesystem import *
 from llnl.util.lang import *
@@ -58,9 +62,11 @@ from llnl.util.tty.log import log_output
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
-from spack.util.executable import ProcessError
+from spack.util.executable import ProcessError, Executable, which
 from spack.version import *
+from spack import directory_layout
 from urlparse import urlparse
+
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
@@ -398,13 +404,25 @@ class Package(object):
             spack.repo.get(self.extendee_spec)._check_extendable()
 
     @property
+    def package_dir(self):
+        """Return the directory where the package.py file lives."""
+        return os.path.dirname(self.module.__file__)
+
+
+    @property
+    def global_license_dir(self):
+        """Returns the directory where global license files for all
+           packages are stored."""
+        spack_root = ancestor(__file__, 4)
+        return join_path(spack_root, 'etc', 'spack', 'licenses')
+
+    @property
     def global_license_file(self):
-        """Returns the path where a global license file should be stored."""
+        """Returns the path where a global license file for this
+           particular package should be stored."""
         if not self.license_files:
             return
-        spack_root = ancestor(__file__, 4)
-        global_license_dir = join_path(spack_root, 'etc', 'spack', 'licenses')
-        return join_path(global_license_dir, self.name,
+        return join_path(self.global_license_dir, self.name,
                          os.path.basename(self.license_files[0]))
 
     @property
@@ -676,11 +694,13 @@ class Package(object):
         return self.spec.prefix
 
     @property
+    #TODO: Change this to architecture
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
-        return spack.compilers.compiler_for_spec(self.spec.compiler)
+        return spack.compilers.compiler_for_spec(self.spec.compiler,
+                self.spec.architecture)
 
     def url_version(self, version):
         """
@@ -733,6 +753,9 @@ class Package(object):
 
         if spack.do_checksum and self.version in self.versions:
             self.stage.check()
+
+        self.stage.cache_local()
+        
 
     def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
@@ -850,6 +873,7 @@ class Package(object):
         resource_stage_folder = '-'.join(pieces)
         return resource_stage_folder
 
+    install_phases = set(['configure', 'build', 'install', 'provenance'])
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -857,7 +881,9 @@ class Package(object):
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
-                   fake=False):
+                   fake=False,
+                   explicit=False,
+                   install_phases = install_phases):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -885,8 +911,13 @@ class Package(object):
             return
 
         # Ensure package is not already installed
-        if spack.install_layout.check_installed(self.spec):
+        if 'install' in install_phases and spack.install_layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
+            rec = spack.installed_db.get_record(self.spec)
+            if (not rec.explicit) and explicit:
+                with spack.installed_db.write_transaction():
+                    rec = spack.installed_db.get_record(self.spec)
+                    rec.explicit = True
             return
 
         tty.msg("Installing %s" % self.name)
@@ -919,6 +950,10 @@ class Package(object):
             tty.msg("Building %s" % self.name)
 
             self.stage.keep = keep_stage
+            self.install_phases = install_phases
+            self.build_directory = join_path(self.stage.path, 'spack-build')
+            self.source_directory = self.stage.source_path
+
             with self.stage:
                 # Run the pre-install hook in the child process after
                 # the directory is created.
@@ -950,19 +985,29 @@ class Package(object):
                         raise e
 
                     # Ensure that something was actually installed.
-                    self.sanity_check_prefix()
+                    if 'install' in self.install_phases:
+                        self.sanity_check_prefix()
+
 
                     # Copy provenance into the install directory on success
-                    log_install_path = spack.install_layout.build_log_path(
-                        self.spec)
-                    env_install_path = spack.install_layout.build_env_path(
-                        self.spec)
-                    packages_dir = spack.install_layout.build_packages_path(
-                        self.spec)
+                    if 'provenance' in self.install_phases:
+                        log_install_path = spack.install_layout.build_log_path(
+                            self.spec)
+                        env_install_path = spack.install_layout.build_env_path(
+                            self.spec)
+                        packages_dir = spack.install_layout.build_packages_path(
+                            self.spec)
 
-                    install(log_path, log_install_path)
-                    install(env_path, env_install_path)
-                    dump_packages(self.spec, packages_dir)
+                        # Remove first if we're overwriting another build
+                        # (can happen with spack setup)
+                        try:
+                            shutil.rmtree(packages_dir)   # log_install_path and env_install_path are inside this
+                        except:
+                            pass
+
+                        install(log_path, log_install_path)
+                        install(env_path, env_install_path)
+                        dump_packages(self.spec, packages_dir)
 
                 # Run post install hooks before build stage is removed.
                 spack.hooks.post_install(self)
@@ -980,6 +1025,18 @@ class Package(object):
         try:
             # Create the install prefix and fork the build process.
             spack.install_layout.create_install_directory(self.spec)
+        except directory_layout.InstallDirectoryAlreadyExistsError:
+            if 'install' in install_phases:
+                # Abort install if install directory exists.
+                # But do NOT remove it (you'd be overwriting someon else's stuff)
+                tty.warn("Keeping existing install prefix in place.")
+                raise
+            else:
+                # We're not installing anyway, so don't worry if someone
+                # else has already written in the install directory
+                pass
+
+        try:
             spack.build_environment.fork(self, build_process)
         except:
             # remove the install prefix if anything went wrong during install.
@@ -990,12 +1047,12 @@ class Package(object):
                          "Spack will think this package is installed. " +
                          "Manually remove this directory to fix:",
                          self.prefix,
-                         wrap=True)
+                         wrap=False)
             raise
 
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
-        spack.installed_db.add(self.spec, self.prefix)
+        spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
 
     def sanity_check_prefix(self):
         """This function checks whether install succeeded."""
@@ -1461,6 +1518,152 @@ def _hms(seconds):
     if s:
         parts.append("%.2fs" % s)
     return ' '.join(parts)
+
+class StagedPackage(Package):
+    """A Package subclass where the install() is split up into stages."""
+
+    def install_setup(self):
+        """Creates an spack_setup.py script to configure the package later if we like."""
+        raise InstallError("Package %s provides no install_setup() method!" % self.name)
+
+    def install_configure(self):
+        """Runs the configure process."""   
+        raise InstallError("Package %s provides no install_configure() method!" % self.name)
+
+    def install_build(self):
+        """Runs the build process."""       
+        raise InstallError("Package %s provides no install_build() method!" % self.name)
+
+    def install_install(self):
+        """Runs the install process."""     
+        raise InstallError("Package %s provides no install_install() method!" % self.name)
+
+    def install(self, spec, prefix):
+        if 'setup' in self.install_phases:
+            self.install_setup()
+
+        if 'configure' in self.install_phases:
+            self.install_configure()
+
+        if 'build' in self.install_phases:
+            self.install_build()
+
+        if 'install' in self.install_phases:
+            self.install_install()
+        else:
+            # Create a dummy file so the build doesn't fail.
+            # That way, the module file will also be created.
+            with open(os.path.join(prefix, 'dummy'), 'w') as fout:
+                pass
+
+# stackoverflow.com/questions/12791997/how-do-you-do-a-simple-chmod-x-from-within-python
+def make_executable(path):
+    mode = os.stat(path).st_mode
+    mode |= (mode & 0o444) >> 2    # copy R bits to X
+    os.chmod(path, mode)
+
+
+
+class CMakePackage(StagedPackage):
+
+    def make_make(self):
+        import multiprocessing
+        # number of jobs spack will to build with.
+        jobs = multiprocessing.cpu_count()
+        if not self.parallel:
+            jobs = 1
+        elif self.make_jobs:
+            jobs = self.make_jobs
+
+        make  = spack.build_environment.MakeExecutable('make', jobs)
+        return make
+
+    def configure_args(self):
+        """Returns package-specific arguments to be provided to the configure command."""
+        return list()
+
+    def configure_env(self):
+        """Returns package-specific environment under which the configure command should be run."""
+        return dict()
+
+    def spack_transitive_include_path(self):
+        return ';'.join(
+            os.path.join(dep, 'include')
+            for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
+        )
+
+    def install_setup(self):
+        cmd = [str(which('cmake'))] + \
+            spack.build_environment.get_std_cmake_args(self) + \
+            ['-DCMAKE_INSTALL_PREFIX=%s' % os.environ['SPACK_PREFIX'],
+            '-DCMAKE_C_COMPILER=%s' % os.environ['SPACK_CC'],
+            '-DCMAKE_CXX_COMPILER=%s' % os.environ['SPACK_CXX'],
+            '-DCMAKE_Fortran_COMPILER=%s' % os.environ['SPACK_FC']] + \
+            self.configure_args()
+
+        env = dict()
+        env['PATH'] = os.environ['PATH']
+        env['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.spack_transitive_include_path()
+        env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
+
+        setup_fname = 'spconfig.py'
+        with open(setup_fname, 'w') as fout:
+            fout.write(\
+r"""#!%s
+#
+
+import sys
+import os
+import subprocess
+
+def cmdlist(str):
+	return list(x.strip().replace("'",'') for x in str.split('\n') if x)
+env = dict(os.environ)
+""" % sys.executable)
+
+            env_vars = sorted(list(env.keys()))
+            for name in env_vars:
+                val = env[name]
+                if string.find(name, 'PATH') < 0:
+                    fout.write('env[%s] = %s\n' % (repr(name),repr(val)))
+                else:
+                    if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
+                        sep = ';'
+                    else:
+                        sep = ':'
+
+                    fout.write('env[%s] = "%s".join(cmdlist("""\n' % (repr(name),sep))
+                    for part in string.split(val, sep):
+                        fout.write('    %s\n' % part)
+                    fout.write('"""))\n')
+
+            fout.write("env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = env['SPACK_TRANSITIVE_INCLUDE_PATH']   # Deprecated\n")
+            fout.write('\ncmd = cmdlist("""\n')
+            fout.write('%s\n' % cmd[0])
+            for arg in cmd[1:]:
+                fout.write('    %s\n' % arg)
+            fout.write('""") + sys.argv[1:]\n')
+            fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
+        make_executable(setup_fname)
+
+
+    def install_configure(self):
+        cmake = which('cmake')
+        with working_dir(self.build_directory, create=True):
+            os.environ.update(self.configure_env())
+            os.environ['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.spack_transitive_include_path()
+            options = self.configure_args() + spack.build_environment.get_std_cmake_args(self)
+            cmake(self.source_directory, *options)
+
+    def install_build(self):
+        make = self.make_make()
+        with working_dir(self.build_directory, create=False):
+            make()
+
+    def install_install(self):
+        make = self.make_make()
+        with working_dir(self.build_directory, create=False):
+            make('install')
 
 
 class FetchError(spack.error.SpackError):

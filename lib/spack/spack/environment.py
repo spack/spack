@@ -1,4 +1,4 @@
-##############################################################################
+#
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -21,14 +21,17 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+#
 import collections
 import inspect
+import json
 import os
 import os.path
+import subprocess
 
 
 class NameModifier(object):
+
     def __init__(self, name, **kwargs):
         self.name = name
         self.args = {'name': name}
@@ -36,57 +39,68 @@ class NameModifier(object):
 
 
 class NameValueModifier(object):
+
     def __init__(self, name, value, **kwargs):
         self.name = name
         self.value = value
-        self.args = {'name': name, 'value': value}
+        self.separator = kwargs.get('separator', ':')
+        self.args = {'name': name, 'value': value, 'delim': self.separator}
         self.args.update(kwargs)
 
 
 class SetEnv(NameValueModifier):
+
     def execute(self):
         os.environ[self.name] = str(self.value)
 
 
 class UnsetEnv(NameModifier):
+
     def execute(self):
         # Avoid throwing if the variable was not set
         os.environ.pop(self.name, None)
 
 
 class SetPath(NameValueModifier):
+
     def execute(self):
-        string_path = concatenate_paths(self.value)
+        string_path = concatenate_paths(self.value, separator=self.separator)
         os.environ[self.name] = string_path
 
 
 class AppendPath(NameValueModifier):
+
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(':') if environment_value else []
+        directories = environment_value.split(
+            self.separator) if environment_value else []
         directories.append(os.path.normpath(self.value))
-        os.environ[self.name] = ':'.join(directories)
+        os.environ[self.name] = self.separator.join(directories)
 
 
 class PrependPath(NameValueModifier):
+
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(':') if environment_value else []
+        directories = environment_value.split(
+            self.separator) if environment_value else []
         directories = [os.path.normpath(self.value)] + directories
-        os.environ[self.name] = ':'.join(directories)
+        os.environ[self.name] = self.separator.join(directories)
 
 
 class RemovePath(NameValueModifier):
+
     def execute(self):
         environment_value = os.environ.get(self.name, '')
-        directories = environment_value.split(':') if environment_value else []
-        directories = [os.path.normpath(x)
-                       for x in directories
+        directories = environment_value.split(
+            self.separator) if environment_value else []
+        directories = [os.path.normpath(x) for x in directories
                        if x != os.path.normpath(self.value)]
-        os.environ[self.name] = ':'.join(directories)
+        os.environ[self.name] = self.separator.join(directories)
 
 
 class EnvironmentModifications(object):
+
     """
     Keeps track of requests to modify the current environment.
 
@@ -237,18 +251,140 @@ class EnvironmentModifications(object):
             for x in actions:
                 x.execute()
 
+    @staticmethod
+    def from_sourcing_files(*args, **kwargs):
+        """
+        Creates an instance of EnvironmentModifications that, if executed,
+        has the same effect on the environment as sourcing the files passed as
+        parameters
 
-def concatenate_paths(paths):
+        Args:
+            *args: list of files to be sourced
+
+        Returns:
+            instance of EnvironmentModifications
+        """
+        env = EnvironmentModifications()
+        # Check if the files are actually there
+        if not all(os.path.isfile(file) for file in args):
+            raise RuntimeError('trying to source non-existing files')
+        # Relevant kwd parameters and formats
+        info = dict(kwargs)
+        info.setdefault('shell', '/bin/bash')
+        info.setdefault('shell_options', '-c')
+        info.setdefault('source_command', 'source')
+        info.setdefault('suppress_output', '&> /dev/null')
+        info.setdefault('concatenate_on_success', '&&')
+
+        shell = '{shell}'.format(**info)
+        shell_options = '{shell_options}'.format(**info)
+        source_file = '{source_command} {file} {concatenate_on_success}'
+        dump_environment = 'python -c "import os, json; print json.dumps(dict(os.environ))"'  # NOQA: ignore=E501
+        # Construct the command that will be executed
+        command = [source_file.format(file=file, **info) for file in args]
+        command.append(dump_environment)
+        command = ' '.join(command)
+        command = [
+            shell,
+            shell_options,
+            command
+        ]
+
+        # Try to source all the files,
+        proc = subprocess.Popen(
+            command, stdout=subprocess.PIPE, env=os.environ)
+        proc.wait()
+        if proc.returncode != 0:
+            raise RuntimeError('sourcing files returned a non-zero exit code')
+        output = ''.join([line for line in proc.stdout])
+        # Construct a dictionary with all the variables in the new environment
+        after_source_env = dict(json.loads(output))
+        this_environment = dict(os.environ)
+
+        # Filter variables that are not related to sourcing a file
+        to_be_filtered = 'SHLVL', '_', 'PWD', 'OLDPWD'
+        for d in after_source_env, this_environment:
+            for name in to_be_filtered:
+                d.pop(name, None)
+
+        # Fill the EnvironmentModifications instance
+
+        # New variables
+        new_variables = set(after_source_env) - set(this_environment)
+        for x in new_variables:
+            env.set(x, after_source_env[x])
+        # Variables that have been unset
+        unset_variables = set(this_environment) - set(after_source_env)
+        for x in unset_variables:
+            env.unset(x)
+        # Variables that have been modified
+        common_variables = set(this_environment).intersection(set(after_source_env))  # NOQA: ignore=E501
+        modified_variables = [x for x in common_variables if this_environment[x] != after_source_env[x]]  # NOQA: ignore=E501
+
+        def return_separator_if_any(first_value, second_value):
+            separators = ':', ';'
+            for separator in separators:
+                if separator in first_value and separator in second_value:
+                    return separator
+            return None
+
+        for x in modified_variables:
+            current = this_environment[x]
+            modified = after_source_env[x]
+            sep = return_separator_if_any(current, modified)
+            if sep is None:
+                # We just need to set the variable to the new value
+                env.set(x, after_source_env[x])
+            else:
+                current_list = current.split(sep)
+                modified_list = modified.split(sep)
+                # Paths that have been removed
+                remove_list = [
+                    ii for ii in current_list if ii not in modified_list]
+                # Check that nothing has been added in the middle of vurrent
+                # list
+                remaining_list = [
+                    ii for ii in current_list if ii in modified_list]
+                start = modified_list.index(remaining_list[0])
+                end = modified_list.index(remaining_list[-1])
+                search = sep.join(modified_list[start:end + 1])
+                if search not in current:
+                    # We just need to set the variable to the new value
+                    env.set(x, after_source_env[x])
+                    break
+                else:
+                    try:
+                        prepend_list = modified_list[:start]
+                    except KeyError:
+                        prepend_list = []
+                    try:
+                        append_list = modified_list[end + 1:]
+                    except KeyError:
+                        append_list = []
+
+                    for item in remove_list:
+                        env.remove_path(x, item)
+                    for item in append_list:
+                        env.append_path(x, item)
+                    for item in prepend_list:
+                        env.prepend_path(x, item)
+
+        return env
+
+
+def concatenate_paths(paths, separator=':'):
     """
-    Concatenates an iterable of paths into a  string of column separated paths
+    Concatenates an iterable of paths into a string of paths separated by
+    separator, defaulting to colon
 
     Args:
         paths: iterable of paths
+        separator: the separator to use, default ':'
 
     Returns:
         string
     """
-    return ':'.join(str(item) for item in paths)
+    return separator.join(str(item) for item in paths)
 
 
 def set_or_unset_not_first(variable, changes, errstream):
@@ -256,16 +392,13 @@ def set_or_unset_not_first(variable, changes, errstream):
     Check if we are going to set or unset something after other modifications
     have already been requested
     """
-    indexes = [ii
-               for ii, item in enumerate(changes)
+    indexes = [ii for ii, item in enumerate(changes)
                if ii != 0 and type(item) in [SetEnv, UnsetEnv]]
     if indexes:
         good = '\t    \t{context} at {filename}:{lineno}'
         nogood = '\t--->\t{context} at {filename}:{lineno}'
         message = 'Suspicious requests to set or unset the variable \'{var}\' found'  # NOQA: ignore=E501
-        errstream(
-            message.format(
-                var=variable))
+        errstream(message.format(var=variable))
         for ii, item in enumerate(changes):
             print_format = nogood if ii in indexes else good
             errstream(print_format.format(**item.args))

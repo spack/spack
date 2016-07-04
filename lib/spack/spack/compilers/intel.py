@@ -45,6 +45,9 @@ class Intel(Compiler):
                    'f77' : 'intel/ifort',
                    'fc'  : 'intel/ifort' }
 
+    PrgEnv = 'PrgEnv-intel'
+    PrgEnv_compiler = 'intel'
+
     @property
     def openmp_flag(self):
         if self.version < ver('16.0'):

@@ -24,18 +24,36 @@
 ##############################################################################
 from spack import *
 
+
 class Autoconf(Package):
-    """Autoconf -- system configuration part of autotools"""
-    homepage = "https://www.gnu.org/software/autoconf/"
-    url      = "http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz"
+    """
+    Autoconf -- system configuration part of autotools
+    """
+    homepage = 'https://www.gnu.org/software/autoconf/'
+    url = 'http://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz'
 
     version('2.69', '82d05e03b93e45f5a39b828dc9c6c29b')
     version('2.62', '6c1f3b3734999035d77da5024aab4fbd')
 
-    depends_on("m4")
+    depends_on('m4')
+
+    def _make_executable(self, name):
+        return Executable(join_path(self.prefix.bin, name))
+
+    def setup_dependent_package(self, module, dependent_spec):
+        # Autoconf is very likely to be a build dependency,
+        # so we add the tools it provides to the dependent module
+        executables = ['autoconf',
+                       'autoheader',
+                       'autom4te',
+                       'autoreconf',
+                       'autoscan',
+                       'autoupdate',
+                       'ifnames']
+        for name in executables:
+            setattr(module, name, self._make_executable(name))
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
-
         make()
         make("install")

@@ -23,8 +23,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import re
 
-from llnl.util.filesystem import *
 import llnl.util.tty as tty
 
 import spack
@@ -33,6 +33,7 @@ import spack.modules
 # Character limit for shebang line.  Using Linux's 127 characters
 # here, as it is the shortest I could find on a modern OS.
 shebang_limit = 127
+
 
 def shebang_too_long(path):
     """Detects whether a file has a shebang line that is too long."""
@@ -57,17 +58,15 @@ def filter_shebang(path):
     if original.startswith(new_sbang_line):
         return
 
-    backup = path + ".shebang.bak"
-    os.rename(path, backup)
+    # Use --! instead of #! on second line for lua.
+    if re.search(r'^#!(/[^/]*)*lua\b', original):
+        original = re.sub(r'^#', '--', original)
 
     with open(path, 'w') as new_file:
         new_file.write(new_sbang_line)
         new_file.write(original)
 
-    copy_mode(backup, path)
-    unset_executable_mode(backup)
-
-    tty.warn("Patched overly long shebang in %s" % path)
+    tty.warn("Patched overlong shebang in %s" % path)
 
 
 def filter_shebangs_in_directory(directory):

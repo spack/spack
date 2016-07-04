@@ -77,7 +77,7 @@ import llnl.util.tty as tty
 from llnl.util.tty.color import *
 import spack
 from spack.error import SpackError
-from external import argparse
+import argparse
 
 # Command parsing
 parser = argparse.ArgumentParser(
@@ -137,6 +137,9 @@ def main():
     if spack.debug:
         import spack.util.debug as debug
         debug.register_interrupt_handler()
+
+    from spack.yaml_version_check import check_yaml_versions
+    check_yaml_versions()
 
     spack.spack_working_dir = working_dir
     if args.mock:

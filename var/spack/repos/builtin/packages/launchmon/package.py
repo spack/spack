@@ -24,28 +24,18 @@
 ##############################################################################
 from spack import *
 
+
 class Launchmon(Package):
     """Software infrastructure that enables HPC run-time tools to
        co-locate tool daemons with a parallel job."""
-    homepage = "http://sourceforge.net/projects/launchmon"
-    url      = "http://downloads.sourceforge.net/project/launchmon/launchmon/1.0.1%20release/launchmon-1.0.1.tar.gz"
+    homepage = "https://github.com/LLNL/LaunchMON"
+    url      = "https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz"  # NOQA: ignore=E501
 
-    version('1.0.1', '2f12465803409fd07f91174a4389eb2b')
-    version('1.0.1-2', git='https://github.com/llnl/launchmon.git', commit='ff7e22424b8f375318951eb1c9282fcbbfa8aadf')
+    version('1.0.2', '8d6ba77a0ec2eff2fde2c5cc8fa7ff7a')
 
     depends_on('autoconf')
     depends_on('automake')
     depends_on('libtool')
-
-
-    def patch(self):
-        # This patch makes libgcrypt compile correctly with newer gcc versions.
-        mf = FileFilter('tools/libgcrypt/tests/Makefile.in')
-        mf.filter(r'(basic_LDADD\s*=\s*.*)',     r'\1 -lgpg-error')
-        mf.filter(r'(tsexp_LDADD\s*=\s*.*)',     r'\1 -lgpg-error')
-        mf.filter(r'(keygen_LDADD\s*=\s*.*)',    r'\1 -lgpg-error')
-        mf.filter(r'(benchmark_LDADD\s*=\s*.*)', r'\1 -lgpg-error')
-
 
     def install(self, spec, prefix):
         configure(
