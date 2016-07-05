@@ -755,7 +755,7 @@ class Package(object):
             self.stage.check()
 
         self.stage.cache_local()
-        
+
 
     def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
@@ -883,6 +883,7 @@ class Package(object):
                    make_jobs=None,
                    fake=False,
                    explicit=False,
+                   dirty=False,
                    install_phases = install_phases):
         """Called by commands to install a package and its dependencies.
 
@@ -899,6 +900,7 @@ class Package(object):
         fake        -- Don't really build -- install fake stub files instead.
         skip_patch  -- Skip patch stage of build if True.
         verbose     -- Display verbose build output (by default, suppresses it)
+        dirty       -- Don't clean the build environment before installing.
         make_jobs   -- Number of make jobs to use for install. Default is ncpus
         """
         if not self.spec.concrete:
@@ -1037,7 +1039,7 @@ class Package(object):
                 pass
 
         try:
-            spack.build_environment.fork(self, build_process)
+            spack.build_environment.fork(self, build_process, dirty=dirty)
         except:
             # remove the install prefix if anything went wrong during install.
             if not keep_prefix:
@@ -1527,15 +1529,15 @@ class StagedPackage(Package):
         raise InstallError("Package %s provides no install_setup() method!" % self.name)
 
     def install_configure(self):
-        """Runs the configure process."""   
+        """Runs the configure process."""
         raise InstallError("Package %s provides no install_configure() method!" % self.name)
 
     def install_build(self):
-        """Runs the build process."""       
+        """Runs the build process."""
         raise InstallError("Package %s provides no install_build() method!" % self.name)
 
     def install_install(self):
-        """Runs the install process."""     
+        """Runs the install process."""
         raise InstallError("Package %s provides no install_install() method!" % self.name)
 
     def install(self, spec, prefix):

@@ -54,6 +54,9 @@ def setup_parser(subparser):
         '--fake', action='store_true', dest='fake',
         help="Fake install.  Just remove the prefix and touch a fake file in it.")
     subparser.add_argument(
+        '--dirty', action='store_true', dest='dirty',
+        help="Install a package *without* cleaning the environment.")
+    subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
 
 
@@ -79,4 +82,5 @@ def install(parser, args):
                 make_jobs=args.jobs,
                 verbose=args.verbose,
                 fake=args.fake,
+                dirty=args.dirty,
                 explicit=True)
