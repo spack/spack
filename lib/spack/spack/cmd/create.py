@@ -124,7 +124,7 @@ install_dict = {
         make()
         make('install')""",
 
-   'cmake': """\
+    'cmake': """\
         with working_dir('spack-build', create=True):
             # FIXME: Modify the cmake line to suit your build system here.
             cmake('..', *std_cmake_args)
