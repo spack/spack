@@ -59,7 +59,7 @@ def get_checksums(versions, urls, **kwargs):
             with Stage(url, keep=keep_stage) as stage:
                 stage.fetch()
                 if i == 0 and first_stage_function:
-                    first_stage_function(stage)
+                    first_stage_function(stage, url)
 
                 hashes.append((version,
                                spack.util.crypto.checksum(hashlib.md5, stage.archive_file)))
