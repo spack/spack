@@ -38,7 +38,7 @@ test_names = ['architecture', 'versions', 'url_parse', 'url_substitution', 'pack
               'directory_layout', 'pattern', 'python_version', 'git_fetch',
               'svn_fetch', 'hg_fetch', 'mirror', 'modules', 'url_extrapolate',
               'cc', 'link_tree', 'spec_yaml', 'optional_deps',
-              'make_executable', 'configure_guess', 'lock', 'database',
+              'make_executable', 'build_system_guess', 'lock', 'database',
               'namespace_trie', 'yaml', 'sbang', 'environment', 'cmd.find',
               'cmd.uninstall', 'cmd.test_install', 'cmd.test_compiler_cmd']
 
