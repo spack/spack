@@ -82,8 +82,10 @@ class SuiteSparse(Package):
         # BLAS arguments require path to libraries
         # FIXME : (blas / lapack always provide libblas and liblapack as aliases)
         if '@4.5.1' in spec:
+            # adding -lstdc++ is clearly an ugly way to do this, but it follows suit
+            # with the TCOV path of SparseSuite 4.5.1's Suitesparse_config.mk 
             make_args.extend([
-                'BLAS=-lblas',
+                'BLAS=-lblas -lstdc++',
                 'LAPACK=-llapack'
             ])
 
