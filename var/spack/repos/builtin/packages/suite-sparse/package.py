@@ -33,6 +33,7 @@ class SuiteSparse(Package):
     url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.1.tar.gz'
 
     version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
+    version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')
 
     # FIXME: (see below)
     # variant('tbb', default=True, description='Build with Intel TBB')
@@ -41,6 +42,7 @@ class SuiteSparse(Package):
     depends_on('lapack')
 
     depends_on('metis@5.1.0', when='@4.5.1')
+    depends_on('metis@5.1.0', when='@4.5.3')
     # FIXME:
     # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng flags
     # does not seem to be used, which leads to linking errors on Linux.
@@ -79,9 +81,10 @@ class SuiteSparse(Package):
 
         # BLAS arguments require path to libraries
         # FIXME : (blas / lapack always provide libblas and liblapack as aliases)
-        make_args.extend([
-            'BLAS=-lblas',
-            'LAPACK=-llapack'
-        ])
+        if '@4.5.1' in spec:
+            make_args.extend([
+                'BLAS=-lblas',
+                'LAPACK=-llapack'
+            ])
 
         make('install', *make_args)
