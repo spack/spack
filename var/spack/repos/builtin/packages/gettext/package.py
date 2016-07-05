@@ -39,7 +39,6 @@ class Gettext(Package):
     variant('libxml2',  default=True, description='Use libxml2')
     variant('git',      default=True, description='Enable git support')
     variant('tar',      default=True, description='Enable tar support')
-    variant('gzip',     default=True, description='Enable gzip support')
     variant('bzip2',    default=True, description='Enable bzip2 support')
     variant('xz',       default=True, description='Enable xz support')
 
@@ -54,7 +53,7 @@ class Gettext(Package):
     # C# runtime and compiler (e.g. pnet or mono)
     depends_on('git@1.6:', when='+git')
     depends_on('tar',      when='+tar')
-    depends_on('gzip',     when='+gzip')
+    # depends_on('gzip',     when='+gzip')
     depends_on('bzip2',    when='+bzip2')
     depends_on('xz',       when='+xz')
 
