@@ -108,7 +108,7 @@ def module_find(mtype, flags, spec_array):
             tty.die("No installed packages match spec %s" % raw_spec)
 
         if len(specs) > 1:
-            tty.error("Multiple matches for spec %s.  Choose one:" % spec)
+            tty.error("Multiple matches for spec %s.  Choose one:" % raw_spec)
             for s in specs:
                 sys.stderr.write(s.tree(color=True))
             sys.exit(1)
