@@ -277,6 +277,15 @@ def set_build_environment_variables(pkg, env, dirty=False):
         env.unset('LD_RUN_PATH')
         env.unset('DYLD_LIBRARY_PATH')
 
+        # Remove any macports installs from the PATH.  The macports ld can
+        # cause conflicts with the built-in linker on el capitan.  Solves
+        # assembler issues, e.g.:
+        #    suffix or operands invalid for `movq'"
+        path = get_path('PATH')
+        for p in path:
+            if '/macports/' in p:
+                env.remove_path('PATH', p)
+
     # Add bin directories from dependencies to the PATH for the build.
     bin_dirs = reversed(
         filter(os.path.isdir, ['%s/bin' % prefix for prefix in dep_prefixes]))

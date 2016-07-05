@@ -63,7 +63,8 @@ class Openssl(Package):
                 # case return a fake url and exit
                 openssl_url = '@system (reserved version for system openssl)'
                 if not warnings_given_to_user.get(version, False):
-                    tty.msg('Using openssl@system : the version @system is reserved for system openssl')  # NOQA: ignore=E501
+                    tty.msg('Using openssl@system: '
+                            'the version @system is reserved for system openssl')
                     warnings_given_to_user[version] = True
             else:
                 openssl_url = self.check_for_outdated_release(
@@ -87,37 +88,46 @@ class Openssl(Package):
             openssl_url = latest.format(version=version)
             urllib.urlopen(openssl_url)
         except IOError:
-            openssl_url = older.format(version_number=version_number, version_full=version)  # NOQA:ignore=E501
+            openssl_url = older.format(
+                version_number=version_number, version_full=version)
             # Checks if we already warned the user for this particular
             # version of OpenSSL. If not we display a warning message
             # and mark this version
             if not warnings_given_to_user.get(version, False):
-                tty.warn('This installation depends on an old version of OpenSSL, which may have known security issues. ')    # NOQA: ignore=E501
-                tty.warn('Consider updating to the latest version of this package.')  # NOQA: ignore=E501
-                tty.warn('More details at {homepage}'.format(homepage=Openssl.homepage))   # NOQA: ignore=E501
+                tty.warn(
+                    'This installation depends on an old version of OpenSSL, '
+                    'which may have known security issues. ')
+                tty.warn(
+                    'Consider updating to the latest version of this package.')
+                tty.warn('More details at {homepage}'.format(
+                    homepage=Openssl.homepage))
                 warnings_given_to_user[version] = True
 
         return openssl_url
+
 
     def install(self, spec, prefix):
         # OpenSSL uses a variable APPS in its Makefile. If it happens to be set
         # in the environment, then this will override what is set in the
         # Makefile, leading to build errors.
         env.pop('APPS', None)
-        if spec.satisfies("target=x86_64") or spec.satisfies("target=ppc64"):
+
+        if spec.satisfies('target=x86_64') or spec.satisfies('target=ppc64'):
             # This needs to be done for all 64-bit architectures (except Linux,
             # where it happens automatically?)
             env['KERNEL_BITS'] = '64'
-        config = Executable("./config")
-        config("--prefix=%s" % prefix,
-               "--openssldir=%s" % join_path(prefix, 'etc', 'openssl'),
-               "zlib",
-               "no-krb5",
-               "shared")
+
+        options = ['zlib', 'no-krb5', 'shared']
+
+        config = Executable('./config')
+        config('--prefix=%s' % prefix,
+               '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
+               *options)
+
         # Remove non-standard compiler options if present. These options are
         # present e.g. on Darwin. They are non-standard, i.e. most compilers
         # (e.g. gcc) will not accept them.
         filter_file(r'-arch x86_64', '', 'Makefile')
 
         make()
-        make("install")
+        make('install')
