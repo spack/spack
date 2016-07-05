@@ -44,11 +44,9 @@ class InstallTest(unittest.TestCase):
         os.chdir(self.tmpdir)
         self.stage = None
 
-
     def tearDown(self):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
         os.chdir(self.orig_dir)
-
 
     def check_archive(self, filename, system):
         mkdirp('archive')
@@ -64,26 +62,20 @@ class InstallTest(unittest.TestCase):
             guesser(stage, url)
             self.assertEqual(system, guesser.build_system)
 
-
     def test_autotools(self):
         self.check_archive('configure', 'autotools')
-
 
     def test_cmake(self):
         self.check_archive('CMakeLists.txt', 'cmake')
 
-
     def test_scons(self):
         self.check_archive('SConstruct', 'scons')
-
 
     def test_python(self):
         self.check_archive('setup.py', 'python')
 
-
     def test_R(self):
         self.check_archive('NAMESPACE', 'R')
-
 
     def test_unknown(self):
         self.check_archive('foobar', 'unknown')
