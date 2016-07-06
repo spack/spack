@@ -26,9 +26,8 @@ from spack import *
 
 
 class Guile(Package):
-    """Guile is designed to help programmers create flexible applications
-    that can be extended by users or other programmers with plug-ins,
-    modules, or scripts."""
+    """Guile is the GNU Ubiquitous Intelligent Language for Extensions,
+    the official extension language for the GNU operating system."""
 
     homepage = "https://www.gnu.org/software/guile/"
     url      = "ftp://ftp.gnu.org/gnu/guile/guile-2.0.11.tar.gz"
@@ -48,7 +47,25 @@ class Guile(Package):
     depends_on('pkg-config')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
+        config_args = [
+            '--prefix={0}'.format(prefix),
+            '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix),
+            '--with-libunistring-prefix={0}'.format(
+                spec['libunistring'].prefix),
+            '--with-libltdl-prefix={0}'.format(spec['libtool'].prefix),
+            '--with-libgmp-prefix={0}'.format(spec['gmp'].prefix),
+            '--with-libintl-prefix={0}'.format(spec['gettext'].prefix)
+        ]
+
+        if '+readline' in spec:
+            config_args.append('--with-libreadline-prefix={0}'.format(
+                spec['readline'].prefix))
+        else:
+            config_args.append('--without-libreadline-prefix')
+
+        configure(*config_args)
 
         make()
+        make('check')
         make('install')
+        make('installcheck')

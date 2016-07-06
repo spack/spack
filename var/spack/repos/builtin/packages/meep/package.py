@@ -34,13 +34,13 @@ class Meep(Package):
     version('1.3',   '18a5b9e18008627a0411087e0bb60db5')
     version('1.1.1', '415e0cd312b6caa22b5dd612490e1ccf')
 
-    variant('blas',    default=True, description='Enable BLAS support')
-    variant('lapack',  default=True, description='Enable LAPACK support')
-    variant('harminv', default=True, description='Enable Harminv support')
-    variant('guile',   default=True, description='Enable Guilde support')
-    variant('libctl',  default=True, description='Enable libctl support')
-    variant('mpi',     default=True, description='Enable MPI support')
-    variant('hdf5',    default=True, description='Enable HDF5 support')
+    variant('blas',    default=True,  description='Enable BLAS support')
+    variant('lapack',  default=True,  description='Enable LAPACK support')
+    variant('harminv', default=True,  description='Enable Harminv support')
+    variant('guile',   default=False, description='Enable Guilde support')
+    variant('libctl',  default=False, description='Enable libctl support')
+    variant('mpi',     default=True,  description='Enable MPI support')
+    variant('hdf5',    default=True,  description='Enable HDF5 support')
 
     # Recommended dependencies
     depends_on('blas',        when='+blas')
@@ -50,6 +50,7 @@ class Meep(Package):
     depends_on('libctl@3.2:', when='+libctl')
     depends_on('mpi',         when='+mpi')
     depends_on('hdf5',        when='+hdf5')
+    depends_on('hdf5+mpi',    when='+hdf5+mpi')
 
     def url_for_version(self, version):
         base_url = "http://ab-initio.mit.edu/meep"

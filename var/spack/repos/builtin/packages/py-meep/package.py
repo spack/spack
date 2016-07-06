@@ -37,13 +37,13 @@ class PyMeep(Package):
     variant('mpi', default=True, description='Enable MPI support')
 
     extends('python')
+    depends_on('mpi', when='+mpi')  # OpenMPI 1.3.3 is recommended
     depends_on('meep@1.1.1')  # must be compiled with -fPIC
+    depends_on('meep+mpi', when='+mpi')
     depends_on('swig@1.3.39:')
     depends_on('py-numpy')
     depends_on('py-scipy')
     depends_on('py-matplotlib')
-    depends_on('mpi', when='+mpi')  # OpenMPI 1.3.3 is recommended
-    # depends_on('hdf5+mpi', when='+mpi')  # ???
 
     def install(self, spec, prefix):
         setup = 'setup-mpi.py' if '+mpi' in spec else 'setup.py'
