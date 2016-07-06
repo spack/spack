@@ -464,9 +464,11 @@ class Dotkit(EnvModule):
 
     default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
 
+    path = join_path(spack.share_path, "dotkit")
+
     @property
     def file_name(self):
-        return join_path(spack.share_path, "dotkit", self.spec.architecture,
+        return join_path(self.path, self.spec.architecture,
                          '%s.dk' % self.use_name)
 
     @property
@@ -512,9 +514,11 @@ class TclModule(EnvModule):
 
     default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
 
+    path = join_path(spack.share_path, "modules")
+
     @property
     def file_name(self):
-        return join_path(spack.share_path, "modules", self.spec.architecture, self.use_name)
+        return join_path(self.path, self.spec.architecture, self.use_name)
 
     @property
     def header(self):
