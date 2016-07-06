@@ -84,6 +84,7 @@ class ArpackNg(Package):
 
         options = ['-DEXAMPLES=ON']
         options.extend(std_cmake_args)
+        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         # TODO:
         # Arpack calls directly find_package(BLAS REQUIRED) and
