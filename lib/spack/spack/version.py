@@ -202,9 +202,9 @@ class Version(object):
             # Currently len(self.separators) == len(self.version) - 1
             extendend_separators = self.separators + ('',)
             string_arg = []
-            for token, separator in zip(self.version, extendend_separators)[idx]:
+            for token, sep in zip(self.version, extendend_separators)[idx]:
                 string_arg.append(str(token))
-                string_arg.append(str(separator))
+                string_arg.append(str(sep))
             string_arg.pop()  # We don't need the last separator
             string_arg = ''.join(string_arg)
             return cls(string_arg)
