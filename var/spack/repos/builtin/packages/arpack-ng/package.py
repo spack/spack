@@ -113,7 +113,7 @@ class ArpackNg(Package):
         if '+mpi' in spec:
             options.extend([
                 '--enable-mpi',
-                'F77=mpif77' #FIXME: avoid hardcoding MPI wrapper names
+                'F77=%s' % spec['mpi'].mpif77
             ])
 
         if '~shared' in spec:
