@@ -84,15 +84,6 @@ compilers:
     modules: 'None'
 - compiler:
     spec: clang@3.3
-    operating_system: redhat6
-    paths:
-      cc: /path/to/clang
-      cxx: /path/to/clang++
-      f77: None
-      fc: None
-    modules: 'None'
-- compiler:
-    spec: clang@3.3
     operating_system: yosemite
     paths:
       cc: /path/to/clang
@@ -116,15 +107,6 @@ compilers:
       f77: /path/to/gfortran
       fc: /path/to/gfortran
     operating_system: SuSE11
-    spec: gcc@4.5.0
-    modules: 'None'
-- compiler:
-    paths:
-      cc: /path/to/gcc
-      cxx: /path/to/g++
-      f77: /path/to/gfortran
-      fc: /path/to/gfortran
-    operating_system: redhat6
     spec: gcc@4.5.0
     modules: 'None'
 - compiler:
