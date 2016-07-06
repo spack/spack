@@ -47,6 +47,8 @@ class Python(Package):
 
     extendable = True
 
+    variant('ucs4', default=False, description='Enable UCS4 unicode strings')
+
     depends_on("openssl")
     depends_on("bzip2")
     depends_on("readline")
@@ -81,6 +83,9 @@ class Python(Package):
             "CPPFLAGS=-I{0}".format(cppflags),
             "LDFLAGS=-L{0}".format(ldflags)
         ]
+
+        if '+ucs4' in spec:
+            config_args.append('--enable-unicode=ucs4')
 
         if spec.satisfies('@3:'):
             config_args.append('--without-ensurepip')
