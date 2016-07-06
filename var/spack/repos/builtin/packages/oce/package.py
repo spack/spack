@@ -33,6 +33,7 @@ class Oce(Package):
     homepage = "https://github.com/tpaviot/oce"
     url      = "https://github.com/tpaviot/oce/archive/OCE-0.17.tar.gz"
 
+    version('0.17.2', 'bf2226be4cd192606af677cf178088e5')
     version('0.17.1', '36c67b87093c675698b483454258af91')
     version('0.17'  , 'f1a89395c4b0d199bea3db62b85f818d')
     version('0.16.1', '4d591b240c9293e879f50d86a0cb2bb3')
@@ -77,15 +78,8 @@ class Oce(Package):
                 '-DOCE_OSX_USE_COCOA:BOOL=ON',
             ])
 
+        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
+
         cmake('.', *options)
-
         make("install/strip")
-
-        # OCE tests build is brocken at least on Darwin.
-        # Unit tests are linked against libTKernel.10.dylib isntead of /full/path/libTKernel.10.dylib
-        # see https://github.com/tpaviot/oce/issues/612
-        # make("test")
-
-        # The shared libraries are not installed correctly on Darwin; correct this
-        if (sys.platform == 'darwin'):
-            fix_darwin_install_name(prefix.lib)
+        make("test")
