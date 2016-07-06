@@ -71,6 +71,7 @@ class Swiftsim(Package):
         # Configure and install
         options = ['--prefix=%s' % prefix,
                    '--enable-mpi' if '+mpi' in spec else '--disable-mpi',
+                   '--with-metis={0}'.format(spec['metis'].prefix),
                    '--enable-optimization']
         configure(*options)
         make()
