@@ -78,6 +78,7 @@ will be responsible for compiler detection.
 import os
 import imp
 import inspect
+import types
 
 from llnl.util.lang import memoized, list_modules, key_ordering
 from llnl.util.filesystem import join_path
@@ -102,19 +103,25 @@ class Target(object):
     """ Target is the processor of the host machine.
         The host machine may have different front-end and back-end targets,
         especially if it is a Cray machine. The target will have a name and
-        also the module_name (e.g craype-compiler). Targets will also
+        also a module or list of modules (e.g craype-compiler). Targets will also
         recognize which platform they came from using the set_platform method.
         Targets will have compiler finding strategies
     """
 
-    def __init__(self, name, module_name=None):
+    def __init__(self, name, modules=None):
         self.name = name  # case of cray "ivybridge" but if it's x86_64
-        self.module_name = module_name  # craype-ivybridge
+
+        if modules is None:
+            self.modules = modules
+        elif isinstance(modules, types.StringTypes):
+            self.modules = set((modules, ))
+        else:
+            self.modules = set(modules)
 
     # Sets only the platform name to avoid recursiveness
 
     def _cmp_key(self):
-        return (self.name, self.module_name)
+        return (self.name, self.modules)
 
     def __repr__(self):
         return self.__str__()
@@ -144,16 +151,16 @@ class Platform(object):
         self.operating_sys = {}
         self.name = name
 
-    def add_target(self, name, target):
+    def add_target(self, target):
         """Used by the platform specific subclass to list available targets.
         Raises an error if the platform specifies a name
         that is reserved by spack as an alias.
         """
-        if name in ['frontend', 'fe', 'backend', 'be', 'default_target']:
+        if target.name in ['frontend', 'fe', 'backend', 'be', 'default_target']:
             raise ValueError(
                 "%s is a spack reserved alias "
                 "and cannot be the name of a target" % name)
-        self.targets[name] = target
+        self.targets[target.name] = target
 
     def target(self, name):
         """This is a getter method for the target dictionary

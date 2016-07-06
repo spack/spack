@@ -10,9 +10,10 @@ class Darwin(Platform):
 
     def __init__(self):
         super(Darwin, self).__init__('darwin')
-        self.add_target(self.default, Target(self.default))
-        mac_os = MacOs()
 
+        self.add_target(Target(self.default))
+        mac_os = MacOs()
+        
         self.default_os = str(mac_os)
         self.front_os   = str(mac_os)
         self.back_os    = str(mac_os)
