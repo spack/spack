@@ -1,16 +1,26 @@
 import subprocess
+import platform
 from spack.architecture import Platform, Target
 from spack.operating_systems.linux_distro import LinuxDistro
 
 class Linux(Platform):
     priority    = 90
-    front_end   = 'x86_64'
-    back_end    = 'x86_64'
-    default     = 'x86_64'
+#    front_end   = 'x86_64'
+#    back_end    = 'x86_64'
+#    default     = 'x86_64'
 
     def __init__(self):
         super(Linux, self).__init__('linux')
-        self.add_target(self.default, Target(self.default))
+        self.add_target('x86_64', Target('x86_64'))
+        self.add_target('ppc64le', Target('ppc64le'))
+
+        self.default = platform.machine()
+        self.front_end = platform.machine()
+        self.back_end = platform.machine()
+
+        if self.default not in self.targets:
+            self.add_target(self.default, Target(self.default))
+
         linux_dist = LinuxDistro()
         self.default_os = str(linux_dist)
         self.front_os = self.default_os
