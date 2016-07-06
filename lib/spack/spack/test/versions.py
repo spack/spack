@@ -389,3 +389,11 @@ class VersionsTest(unittest.TestCase):
             self.assertEqual(v.dotted, '1.2.3')
             self.assertEqual(v.dashed, '1-2-3')
             self.assertEqual(v.underscored, '1_2_3')
+
+    def test_repr_and_str(self):
+        a = Version('1.2.3')
+        self.assertEqual(repr(a), 'Version(\'1.2.3\')')
+        b = eval(repr(a))
+        self.assertEqual(a, b)
+        self.assertEqual(str(a), '1.2.3')
+        self.assertEqual(str(a), str(b))

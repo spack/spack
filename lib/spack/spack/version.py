@@ -197,7 +197,7 @@ class Version(object):
         return tuple(self.version[idx])
 
     def __repr__(self):
-        return self.string
+        return 'Version(' + repr(self.string) + ')'
 
     def __str__(self):
         return self.string
