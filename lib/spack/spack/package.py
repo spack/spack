@@ -311,6 +311,8 @@ class Package(object):
     parallel = True
     """# jobs to use for parallel make. If set, overrides default of ncpus."""
     make_jobs = None
+    """By default do not run tests within package's install()"""
+    run_tests = False
     """Most packages are NOT extendable. Set to True if you want extensions."""
     extendable = False
     """List of prefix-relative file paths (or a single path). If these do
@@ -755,7 +757,7 @@ class Package(object):
             self.stage.check()
 
         self.stage.cache_local()
-        
+
 
     def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
@@ -881,6 +883,7 @@ class Package(object):
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
+                   run_tests=False,
                    fake=False,
                    explicit=False,
                    install_phases = install_phases):
@@ -900,6 +903,7 @@ class Package(object):
         skip_patch  -- Skip patch stage of build if True.
         verbose     -- Display verbose build output (by default, suppresses it)
         make_jobs   -- Number of make jobs to use for install. Default is ncpus
+        run_tests   -- Runn tests within the package's install()
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -930,7 +934,11 @@ class Package(object):
                                          fake=fake,
                                          skip_patch=skip_patch,
                                          verbose=verbose,
-                                         make_jobs=make_jobs)
+                                         make_jobs=make_jobs,
+                                         run_tests=run_tests)
+
+        # Set run_tests flag before starting build.
+        self.run_tests = run_tests
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
@@ -1527,15 +1535,15 @@ class StagedPackage(Package):
         raise InstallError("Package %s provides no install_setup() method!" % self.name)
 
     def install_configure(self):
-        """Runs the configure process."""   
+        """Runs the configure process."""
         raise InstallError("Package %s provides no install_configure() method!" % self.name)
 
     def install_build(self):
-        """Runs the build process."""       
+        """Runs the build process."""
         raise InstallError("Package %s provides no install_build() method!" % self.name)
 
     def install_install(self):
-        """Runs the install process."""     
+        """Runs the install process."""
         raise InstallError("Package %s provides no install_install() method!" % self.name)
 
     def install(self, spec, prefix):

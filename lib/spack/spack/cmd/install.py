@@ -55,6 +55,10 @@ def setup_parser(subparser):
         help="Fake install.  Just remove the prefix and touch a fake file in it.")
     subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
+    subparser.add_argument(
+        '--run-tests', action='store_true', dest='run_tests',
+        help="Run tests during installation of a package.")
+
 
 
 def install(parser, args):
@@ -77,6 +81,7 @@ def install(parser, args):
                 keep_stage=args.keep_stage,
                 ignore_deps=args.ignore_deps,
                 make_jobs=args.jobs,
+                run_tests=args.run_tests,
                 verbose=args.verbose,
                 fake=args.fake,
                 explicit=True)
