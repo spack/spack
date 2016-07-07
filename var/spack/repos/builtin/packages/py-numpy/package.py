@@ -63,6 +63,7 @@ class PyNumpy(Package):
                 f.write('[DEFAULT]\n')
                 f.write('libraries=%s\n'    % ','.join(libraries))
                 f.write('library_dirs=%s\n' % ':'.join(library_dirs))
+                f.write('rpath=%s\n' % ':'.join(library_dirs))
 
         python('setup.py', 'install', '--prefix=%s' % prefix)
 
