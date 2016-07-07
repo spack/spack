@@ -53,7 +53,7 @@ class Python(Package):
 
     extendable = True
 
-    variant('ucs4', default=False, description='Enable UCS4 unicode strings')
+    variant('ucs4', default=False, description='Enable UCS4 (wide) unicode strings')
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -91,7 +91,10 @@ class Python(Package):
         ]
 
         if '+ucs4' in spec:
-            config_args.append('--enable-unicode=ucs4')
+            if spec.satisfies('@:3.0'):
+                config_args.append('--enable-unicode=ucs4')
+            elif spec.satisfies('@3.0:3.2'):
+              config_args.append('--with-wide-unicode')
 
         if spec.satisfies('@3:'):
             config_args.append('--without-ensurepip')
