@@ -45,14 +45,17 @@ class Gmsh(Package):
     variant('mpi', default=False, description='Builds MPI support for parser and solver')
     variant('fltk', default=False, description='Enables the build of the FLTK GUI')
     variant('hdf5', default=False, description='Enables HDF5 support')
+    variant('oce', default=False, description='Enables OpenCascade support')
     variant('compression', default=True, description='Enables IO compression through zlib')
 
+    depends_on('cmake')
     depends_on('blas')
     depends_on('lapack')
     depends_on('gmp')
     depends_on('mpi', when='+mpi')
     depends_on('fltk', when='+fltk')  # Assumes OpenGL with GLU is already provided by the system
     depends_on('hdf5', when='+hdf5')
+    depends_on('oce', when='+oce')
     depends_on('zlib', when='+compression')
 
     def install(self, spec, prefix):
@@ -82,6 +85,9 @@ class Gmsh(Package):
 
         if '+compression' in spec:
             options.append('-DENABLE_COMPRESSED_IO:BOOL=ON')
+            
+        if '+oce' in spec:
+            options.append('-DENABLE_OCC:BOOL=ON')
 
         with working_dir(build_directory, create=True):
             cmake(source_directory, *options)
