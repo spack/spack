@@ -236,6 +236,14 @@ class Version(object):
         if self.version == other.version:
             return False
 
+        # dev is __gt__ than anything but itself.
+        if other.string == 'develop':
+            return True
+
+        # If lhs is dev then it can't be < than anything
+        if self.string == 'develop':
+            return False
+
         for a, b in zip(self.version, other.version):
             if a == b:
                 continue

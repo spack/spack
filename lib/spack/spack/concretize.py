@@ -166,7 +166,11 @@ class DefaultConcretizer(object):
         valid_versions.sort(key=prefer_key, reverse=True)
 
         if valid_versions:
-            spec.versions = ver([valid_versions[0]])
+            # Disregard @develop and take the next valid version
+            if ver(valid_versions[0]) == ver('develop') and len(valid_versions) > 1:
+                spec.versions = ver([valid_versions[1]])
+            else:
+                spec.versions = ver([valid_versions[0]])
         else:
             # We don't know of any SAFE versions that match the given
             # spec.  Grab the spec's versions and grab the highest
