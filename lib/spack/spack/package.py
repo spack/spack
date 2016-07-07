@@ -875,7 +875,7 @@ class Package(object):
         resource_stage_folder = '-'.join(pieces)
         return resource_stage_folder
 
-    install_phases = set(['configure', 'build', 'install', 'provenance'])
+    _phases = ['install', 'create_spack_logs']
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -887,7 +887,7 @@ class Package(object):
                    fake=False,
                    explicit=False,
                    dirty=False,
-                   install_phases = install_phases):
+                   allowed_phases=None):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -907,6 +907,10 @@ class Package(object):
         make_jobs   -- Number of make jobs to use for install. Default is ncpus
         run_tests   -- Runn tests within the package's install()
         """
+        # FIXME : we need a better semantic
+        if allowed_phases is None:
+            allowed_phases = self._phases
+
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
 
@@ -917,7 +921,8 @@ class Package(object):
             return
 
         # Ensure package is not already installed
-        if 'install' in install_phases and spack.install_layout.check_installed(self.spec):
+        # FIXME : This should be a pre-requisite to a phase
+        if 'install' in self._phases and spack.install_layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
             rec = spack.installed_db.get_record(self.spec)
             if (not rec.explicit) and explicit:
@@ -960,7 +965,6 @@ class Package(object):
             tty.msg("Building %s" % self.name)
 
             self.stage.keep = keep_stage
-            self.install_phases = install_phases
             self.build_directory = join_path(self.stage.path, 'spack-build')
             self.source_directory = self.stage.source_path
 
@@ -983,11 +987,25 @@ class Package(object):
                         # the terminal)
                         log_path = join_path(os.getcwd(), 'spack-build.out')
                         log_file = open(log_path, 'w')
+                        # FIXME : refactor this assignment
+                        self.log_path = log_path
+                        self.env_path = env_path
                         with log_output(log_file, verbose, sys.stdout.isatty(),
                                         True):
                             dump_environment(env_path)
-                            self.install(self.spec, self.prefix)
+                            try:
+                                for phase in filter(lambda x: x in allowed_phases, self._phases):
+                                    # TODO : Log to screen the various phases
+                                    action = getattr(self, phase)
+                                    if getattr(action, 'preconditions', None):
+                                        action.preconditions()
+                                    action(self.spec, self.prefix)
+                                    if getattr(action, 'postconditions', None):
+                                        action.postconditions()
 
+                            except AttributeError as e:
+                                # FIXME : improve error messages
+                                raise ProcessError(e.message, long_message='')
                     except ProcessError as e:
                         # Annotate ProcessErrors with the location of
                         # the build log
@@ -995,29 +1013,9 @@ class Package(object):
                         raise e
 
                     # Ensure that something was actually installed.
-                    if 'install' in self.install_phases:
-                        self.sanity_check_prefix()
-
-
-                    # Copy provenance into the install directory on success
-                    if 'provenance' in self.install_phases:
-                        log_install_path = spack.install_layout.build_log_path(
-                            self.spec)
-                        env_install_path = spack.install_layout.build_env_path(
-                            self.spec)
-                        packages_dir = spack.install_layout.build_packages_path(
-                            self.spec)
-
-                        # Remove first if we're overwriting another build
-                        # (can happen with spack setup)
-                        try:
-                            shutil.rmtree(packages_dir)   # log_install_path and env_install_path are inside this
-                        except:
-                            pass
-
-                        install(log_path, log_install_path)
-                        install(env_path, env_install_path)
-                        dump_packages(self.spec, packages_dir)
+                    # FIXME : This should be executed after 'install' as a postcondition
+                    # if 'install' in self._phases:
+                    #    self.sanity_check_prefix()
 
                 # Run post install hooks before build stage is removed.
                 spack.hooks.post_install(self)
@@ -1036,7 +1034,7 @@ class Package(object):
             # Create the install prefix and fork the build process.
             spack.install_layout.create_install_directory(self.spec)
         except directory_layout.InstallDirectoryAlreadyExistsError:
-            if 'install' in install_phases:
+            if 'install' in self._phases:
                 # Abort install if install directory exists.
                 # But do NOT remove it (you'd be overwriting someon else's stuff)
                 tty.warn("Keeping existing install prefix in place.")
@@ -1063,6 +1061,27 @@ class Package(object):
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
         spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
+
+    def create_spack_logs(self, spec, prefix):
+        # Copy provenance into the install directory on success
+        log_install_path = spack.install_layout.build_log_path(
+            self.spec)
+        env_install_path = spack.install_layout.build_env_path(
+            self.spec)
+        packages_dir = spack.install_layout.build_packages_path(
+            self.spec)
+
+        # Remove first if we're overwriting another build
+        # (can happen with spack setup)
+        try:
+            shutil.rmtree(packages_dir)  # log_install_path and env_install_path are inside this
+        except Exception:
+            # FIXME : this potentially catches too many things...
+            pass
+
+        install(self.log_path, log_install_path)
+        install(self.env_path, env_install_path)
+        dump_packages(self.spec, packages_dir)
 
     def sanity_check_prefix(self):
         """This function checks whether install succeeded."""
@@ -1529,42 +1548,42 @@ def _hms(seconds):
         parts.append("%.2fs" % s)
     return ' '.join(parts)
 
-class StagedPackage(Package):
-    """A Package subclass where the install() is split up into stages."""
-
-    def install_setup(self):
-        """Creates an spack_setup.py script to configure the package later if we like."""
-        raise InstallError("Package %s provides no install_setup() method!" % self.name)
-
-    def install_configure(self):
-        """Runs the configure process."""
-        raise InstallError("Package %s provides no install_configure() method!" % self.name)
-
-    def install_build(self):
-        """Runs the build process."""
-        raise InstallError("Package %s provides no install_build() method!" % self.name)
-
-    def install_install(self):
-        """Runs the install process."""
-        raise InstallError("Package %s provides no install_install() method!" % self.name)
-
-    def install(self, spec, prefix):
-        if 'setup' in self.install_phases:
-            self.install_setup()
-
-        if 'configure' in self.install_phases:
-            self.install_configure()
-
-        if 'build' in self.install_phases:
-            self.install_build()
-
-        if 'install' in self.install_phases:
-            self.install_install()
-        else:
-            # Create a dummy file so the build doesn't fail.
-            # That way, the module file will also be created.
-            with open(os.path.join(prefix, 'dummy'), 'w') as fout:
-                pass
+#class StagedPackage(Package):
+#    """A Package subclass where the install() is split up into stages."""
+#    _phases = ['configure']
+#    def install_setup(self):
+#        """Creates an spack_setup.py script to configure the package later if we like."""
+#        raise InstallError("Package %s provides no install_setup() method!" % self.name)
+#
+#    def install_configure(self):
+#        """Runs the configure process."""
+#        raise InstallError("Package %s provides no install_configure() method!" % self.name)
+#
+#    def install_build(self):
+#        """Runs the build process."""
+#        raise InstallError("Package %s provides no install_build() method!" % self.name)
+#
+#    def install_install(self):
+#        """Runs the install process."""
+#        raise InstallError("Package %s provides no install_install() method!" % self.name)
+#
+#    def install(self, spec, prefix):
+#        if 'setup' in self._phases:
+#            self.install_setup()
+#
+#        if 'configure' in self._phases:
+#            self.install_configure()
+#
+#        if 'build' in self._phases:
+#            self.install_build()
+#
+#        if 'install' in self._phases:
+#            self.install_install()
+#        else:
+#            # Create a dummy file so the build doesn't fail.
+#            # That way, the module file will also be created.
+#            with open(os.path.join(prefix, 'dummy'), 'w') as fout:
+#                pass
 
 # stackoverflow.com/questions/12791997/how-do-you-do-a-simple-chmod-x-from-within-python
 def make_executable(path):
@@ -1574,7 +1593,8 @@ def make_executable(path):
 
 
 
-class CMakePackage(StagedPackage):
+class CMakePackage(Package):
+    _phases = ['configure', 'build', 'install', 'provenance']
 
     def make_make(self):
         import multiprocessing
@@ -1602,7 +1622,7 @@ class CMakePackage(StagedPackage):
             for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
         )
 
-    def install_setup(self):
+    def setup(self):
         cmd = [str(which('cmake'))] + \
             spack.build_environment.get_std_cmake_args(self) + \
             ['-DCMAKE_INSTALL_PREFIX=%s' % os.environ['SPACK_PREFIX'],
@@ -1657,7 +1677,7 @@ env = dict(os.environ)
         make_executable(setup_fname)
 
 
-    def install_configure(self):
+    def configure(self):
         cmake = which('cmake')
         with working_dir(self.build_directory, create=True):
             os.environ.update(self.configure_env())
@@ -1665,12 +1685,12 @@ env = dict(os.environ)
             options = self.configure_args() + spack.build_environment.get_std_cmake_args(self)
             cmake(self.source_directory, *options)
 
-    def install_build(self):
+    def build(self):
         make = self.make_make()
         with working_dir(self.build_directory, create=False):
             make()
 
-    def install_install(self):
+    def install(self):
         make = self.make_make()
         with working_dir(self.build_directory, create=False):
             make('install')
