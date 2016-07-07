@@ -12,7 +12,7 @@ class Everytrace(CMakePackage):
     url          = "https://github.com/citibeth/everytrace/tarball/0.2.0"
 
     version('0.2.0', '2af0e5b6255064d5191accebaa70d222')
-    version('develop', git='https://github.com/citibeth/everytrace.git', branch='develop')
+    version('develop', git='https://github.com/citibeth/everytrace.git', branch='develop', preferred=True)
 
     variant('mpi', default=True, description='Enables MPI parallelism')
     variant('fortran', default=True, description='Enable use with Fortran programs')
