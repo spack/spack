@@ -94,7 +94,7 @@ class Python(Package):
             if spec.satisfies('@:2.7'):
                 config_args.append('--enable-unicode=ucs4')
             elif spec.satisfies('@3.0:3.2'):
-              config_args.append('--with-wide-unicode')
+                config_args.append('--with-wide-unicode')
 
         if spec.satisfies('@3:'):
             config_args.append('--without-ensurepip')
