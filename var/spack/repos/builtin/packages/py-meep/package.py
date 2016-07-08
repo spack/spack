@@ -37,18 +37,34 @@ class PyMeep(Package):
     variant('mpi', default=True, description='Enable MPI support')
 
     extends('python')
-    depends_on('mpi', when='+mpi')  # OpenMPI 1.3.3 is recommended
-    depends_on('meep@1.1.1')  # must be compiled with -fPIC
-    depends_on('meep+mpi', when='+mpi')
-    depends_on('swig@1.3.39:')
     depends_on('py-numpy')
     depends_on('py-scipy')
     depends_on('py-matplotlib')
 
+    depends_on('mpi', when='+mpi')  # OpenMPI 1.3.3 is recommended
+    depends_on('meep')  # must be compiled with -fPIC
+    depends_on('meep+mpi', when='+mpi')
+
+    # As of SWIG 3.0.3, Python-style comments are now treated as
+    # pre-processor directives. Use older SWIG. But not too old,
+    # or else it can't handle newer C++ compilers and flags.
+    depends_on('swig@1.3.39:3.0.2')
+
     def install(self, spec, prefix):
         setup = 'setup-mpi.py' if '+mpi' in spec else 'setup.py'
 
+        include_dirs = [
+            spec['meep'].prefix.include,
+            spec['py-numpy'].include
+        ]
+
+        library_dirs = [
+            spec['meep'].prefix.lib
+        ]
+
         python(setup, 'clean', '--all')
-        python(setup, 'build_ext')
+        python(setup, 'build_ext',
+               '-I{0}'.format(','.join(include_dirs)),
+               '-L{0}'.format(','.join(library_dirs)))
         python(setup, 'install', '--prefix={0}'.format(prefix))
         python(setup, 'bdist')

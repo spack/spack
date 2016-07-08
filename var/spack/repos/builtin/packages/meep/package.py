@@ -61,6 +61,11 @@ class Meep(Package):
             return "{0}/old/meep-{1}.tar.gz".format(base_url, version)
 
     def install(self, spec, prefix):
+        # Must be compiled with -fPIC for py-meep
+        env['CFLAGS']   = '-fPIC'
+        env['CXXFLAGS'] = '-fPIC'
+        env['FFLAGS']   = '-fPIC'
+
         config_args = ['--prefix={0}'.format(prefix)]
 
         if '+blas' in spec:
