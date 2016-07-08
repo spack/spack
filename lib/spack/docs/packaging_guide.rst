@@ -36,10 +36,11 @@ Creating & editing packages
 ``spack create``
 ~~~~~~~~~~~~~~~~~~~~~
 
-The ``spack create`` command generates a boilerplate package template
-from a URL.  The URL should point to a tarball or other software
-archive.  In most cases, ``spack create`` plus a few modifications is
-all you need to get a package working.
+The ``spack create`` command creates a directory with the package name and
+generates a ``package.py`` file with a boilerplate package template from a URL.
+The URL should point to a tarball or other software archive.  In most cases,
+``spack create`` plus a few modifications is all you need to get a package
+working.
 
 Here's an example:
 
@@ -47,12 +48,16 @@ Here's an example:
 
    $ spack create http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
 
-Spack examines the tarball URL and tries to figure out the name of the
-package to be created. It also tries to determine what version strings
-look like for this package. Using this information, it will try to
-find *additional* versions by spidering the package's webpage.  If it
-finds multiple versions, Spack prompts you to tell it how many
-versions you want to download and checksum:
+Spack examines the tarball URL and tries to figure out the name of the package
+to be created. Once the name is determined a directory in the appropriate
+repository is created with that name. Spack prefers, but does not require, that
+names be lower case so the directory name will be lower case when ``spack
+create`` generates it. In cases where it is desired to have mixed case or upper
+case simply rename the directory. Spack also tries to determine what version
+strings look like for this package. Using this information, it will try to find
+*additional* versions by spidering the package's webpage.  If it finds multiple
+versions, Spack prompts you to tell it how many versions you want to download
+and checksum:
 
 .. code-block:: sh
 
@@ -297,9 +302,10 @@ directories or files (like patches) that it needs to build.
 Package Names
 ~~~~~~~~~~~~~~~~~~
 
-Packages are named after the directory containing ``package.py``.  So,
-``libelf``'s ``package.py`` lives in a directory called ``libelf``.
-The ``package.py`` file defines a class called ``Libelf``, which
+Packages are named after the directory containing ``package.py``. It is
+preferred, but not required, that the directory, and thus the package name, are
+lower case. So, ``libelf``'s ``package.py`` lives in a directory called
+``libelf``.  The ``package.py`` file defines a class called ``Libelf``, which
 extends Spack's ``Package`` class.  for example, here is
 ``$SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py``:
 

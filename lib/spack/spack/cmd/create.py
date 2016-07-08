@@ -325,7 +325,7 @@ def create(parser, args):
     # Figure out a name and repo for the package.
     name, version = guess_name_and_version(url, args)
     spec = Spec(name)
-    name = spec.name  # factors out namespace, if any
+    name = spec.name.lower()  # factors out namespace, if any
     repo = find_repository(spec, args)
 
     tty.msg("This looks like a URL for %s version %s" % (name, version))
