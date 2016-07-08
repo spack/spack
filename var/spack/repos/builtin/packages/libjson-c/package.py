@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class LibjsonC(Package):
     """ A JSON implementation in C """
     homepage = "https://github.com/json-c/json-c/wiki"
@@ -34,5 +35,5 @@ class LibjsonC(Package):
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)
 
-        make()
+        make(parallel=False)
         make("install")
