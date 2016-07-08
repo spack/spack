@@ -62,9 +62,10 @@ class PyMeep(Package):
             spec['meep'].prefix.lib
         ]
 
+        include_flags = '-I{0}'.format(','.join(include_dirs))
+        library_flags = '-L{0}'.format(','.join(library_dirs))
+
         python(setup, 'clean', '--all')
-        python(setup, 'build_ext',
-               '-I{0}'.format(','.join(include_dirs)),
-               '-L{0}'.format(','.join(library_dirs)))
+        python(setup, 'build_ext', include_flags, library_flags)
         python(setup, 'install', '--prefix={0}'.format(prefix))
-        python(setup, 'bdist')
+        python(setup, 'bdist', include_flags, library_flags)
