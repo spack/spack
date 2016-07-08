@@ -38,8 +38,8 @@ import re
 import string
 import textwrap
 import time
-import inspect
 import functools
+import inspect
 from StringIO import StringIO
 from urlparse import urlparse
 
@@ -74,7 +74,7 @@ class InstallPhase(object):
     """Manages a single phase of the installation
 
     This descriptor stores at creation time the name of the method it should search
-    for execution. The method is retrieved at get time, so that it can be overridden
+    for execution. The method is retrieved at __get__ time, so that it can be overridden
     by subclasses of whatever class declared the phases.
 
     It also provides hooks to execute prerequisite and sanity checks.
@@ -116,31 +116,63 @@ class PackageMeta(type):
     """
     phase_fmt = '_InstallPhase_{0}'
 
-    def __init__(cls, name, bases, attr_dict):
-        super(PackageMeta, cls).__init__(name, bases, attr_dict)
-        # Parse if phases is in attr dict, then set
+    _InstallPhase_sanity_checks = {}
+    _InstallPhase_preconditions = {}
+
+    def __new__(meta, name, bases, attr_dict):
+        # Check if phases is in attr dict, then set
         # install phases wrappers
         if 'phases' in attr_dict:
-            cls.phases = [PackageMeta.phase_fmt.format(name) for name in attr_dict['phases']]
-            for phase_name, callback_name in zip(cls.phases, attr_dict['phases']):
-                setattr(cls, phase_name, InstallPhase(callback_name))
+            phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict['phases']]
+            for phase_name, callback_name in zip(phases, attr_dict['phases']):
+                attr_dict[phase_name] = InstallPhase(callback_name)
+            attr_dict['phases'] = phases
 
-        def _transform_checks(check_name):
+        def _append_checks(check_name):
+            # Name of the attribute I am going to check it exists
             attr_name = PackageMeta.phase_fmt.format(check_name)
-            checks = getattr(cls, attr_name, None)
+            checks = getattr(meta, attr_name)
             if checks:
                 for phase_name, funcs in checks.items():
-                    phase = getattr(cls, PackageMeta.phase_fmt.format(phase_name))
+                    phase = attr_dict.get(PackageMeta.phase_fmt.format(phase_name))
                     getattr(phase, check_name).extend(funcs)
-                # TODO : this should delete the attribute, as it is just a placeholder
-                # TODO : to know what to do at class definition time. Clearing it is fine
-                # TODO : too, but it just leaves an empty dictionary in place
-                setattr(cls, attr_name, {})
+                # Clear the attribute for the next class
+                setattr(meta, attr_name, {})
+
+        @classmethod
+        def _register_checks(cls, check_type, *args):
+            def _register_sanity_checks(func):
+                attr_name = PackageMeta.phase_fmt.format(check_type)
+                sanity_checks = getattr(meta, attr_name)
+                for item in args:
+                    checks = sanity_checks.setdefault(item, [])
+                    checks.append(func)
+                setattr(meta, attr_name, sanity_checks)
+                return func
+            return _register_sanity_checks
+
+        @classmethod
+        def precondition(cls, *args):
+            return cls._register_checks('preconditions', *args)
+
+        @classmethod
+        def sanity_check(cls, *args):
+            return cls._register_checks('sanity_checks', *args)
+
+        if all([not hasattr(x, '_register_checks') for x in bases]):
+            attr_dict['_register_checks'] = _register_checks
+
+        if all([not hasattr(x, 'sanity_check') for x in bases]):
+            attr_dict['sanity_check'] = sanity_check
+
+        if all([not hasattr(x, 'precondition') for x in bases]):
+            attr_dict['precondition'] = precondition
 
         # Preconditions
-        _transform_checks('preconditions')
+        _append_checks('preconditions')
         # Sanity checks
-        _transform_checks('sanity_checks')
+        _append_checks('sanity_checks')
+        return super(PackageMeta, meta).__new__(meta, name, bases, attr_dict)
 
 
 class PackageBase(object):
@@ -993,7 +1025,7 @@ class PackageBase(object):
 
         # Ensure package is not already installed
         # FIXME : skip condition : if any is True skip the installation
-        if 'install' in self.phases and spack.install_layout.check_installed(self.spec):
+        if spack.install_layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
             rec = spack.installed_db.get_record(self.spec)
             if (not rec.explicit) and explicit:
@@ -1499,29 +1531,39 @@ class PackageBase(object):
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
-    @classmethod
-    def _register_checks(cls, check_type, *args):
-        def _register_sanity_checks(func):
-            attr_name = PackageMeta.phase_fmt.format(check_type)
-            sanity_checks = getattr(cls, attr_name, {})
-            for item in args:
-                checks = sanity_checks.setdefault(item, [])
-                checks.append(func)
-            setattr(cls, attr_name, sanity_checks)
-            return func
-        return _register_sanity_checks
-
-    @classmethod
-    def precondition(cls, *args):
-        return cls._register_checks('preconditions', *args)
-
-    @classmethod
-    def sanity_check(cls, *args):
-        return cls._register_checks('sanity_checks', *args)
-
 
 class Package(PackageBase):
     phases = ['install', 'log']
+    # This will be used as a registration decorator in user
+    # packages, if need be
+    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+
+
+class AutotoolsPackage(PackageBase):
+    phases = ['autoreconf', 'configure', 'build', 'install', 'log']
+
+    def autoreconf(self, spec, prefix):
+        """Not needed usually, configure should be already there"""
+        pass
+
+    @PackageBase.sanity_check('autoreconf')
+    def is_configure_or_die(self):
+        if not os.path.exists('configure'):
+            raise RuntimeError('configure script not found in {0}'.format(os.getcwd()))
+
+    def configure_args(self):
+        return list()
+
+    def configure(self, spec, prefix):
+        options = ['--prefix={0}'.format(prefix)] + self.configure_args()
+        inspect.getmodule(self).configure(*options)
+
+    def build(self, spec, prefix):
+        inspect.getmodule(self).make()
+
+    def install(self, spec, prefix):
+        inspect.getmodule(self).make('install')
+
     # This will be used as a registration decorator in user
     # packages, if need be
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
@@ -1637,7 +1679,7 @@ def _hms(seconds):
 
 
 class CMakePackage(PackageBase):
-    phases = ['setup', 'configure', 'build', 'install', 'provenance']
+    phases = ['configure', 'build', 'install', 'provenance']
 
     def make_make(self):
         import multiprocessing
@@ -1657,7 +1699,7 @@ class CMakePackage(PackageBase):
 
     def configure_env(self):
         """Returns package-specific environment under which the configure command should be run."""
-        # FIXME : Why not EnvironmentModules
+        # FIXME : Why not EnvironmentModules and the hooks that PackageBase already provides ?
         return dict()
 
     def spack_transitive_include_path(self):
@@ -1719,7 +1761,6 @@ env = dict(os.environ)
             fout.write('""") + sys.argv[1:]\n')
             fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
         set_executable(setup_fname)
-
 
     def configure(self, spec, prefix):
         cmake = which('cmake')

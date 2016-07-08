@@ -28,7 +28,7 @@ from spack import *
 import llnl.util.tty as tty
 
 
-class Swiftsim(Package):
+class Swiftsim(AutotoolsPackage):
     """
     SPH With Inter-dependent Fine-grained Tasking (SWIFT) provides
     astrophysicists with a state of the art framework to perform
@@ -59,19 +59,15 @@ class Swiftsim(Package):
         tty.warn('This is needed to clone SWIFT repository')
         spack_env.set('GIT_SSL_NO_VERIFY', 1)
 
-    def install(self, spec, prefix):
-        # Generate configure from configure.ac
-        # and Makefile.am
+    def autoreconf(self, spec, prefix):
         libtoolize()
         aclocal()
         autoconf()
         autogen = Executable('./autogen.sh')
         autogen()
 
-        # Configure and install
-        options = ['--prefix=%s' % prefix,
-                   '--enable-mpi' if '+mpi' in spec else '--disable-mpi',
-                   '--enable-optimization']
-        configure(*options)
-        make()
-        make("install")
+    def config_args(self):
+        return ['--prefix=%s' % prefix,
+                '--enable-mpi' if '+mpi' in spec else '--disable-mpi',
+                '--with-metis={0}'.format(self.spec['metis'].prefix),
+                '--enable-optimization']

@@ -176,10 +176,14 @@ sys_type = None
 # TODO: it's not clear where all the stuff that needs to be included in packages
 #       should live.  This file is overloaded for spack core vs. for packages.
 #
-__all__ = ['Package', 'CMakePackage', \
-    'Version', 'when', 'ver']
+__all__ = ['Package',
+           'CMakePackage',
+           'AutotoolsPackage',
+           'Version',
+           'when',
+           'ver']
 from spack.package import Package, ExtensionConflictError
-from spack.package import CMakePackage
+from spack.package import CMakePackage, AutotoolsPackage
 from spack.version import Version, ver
 from spack.multimethod import when
 
