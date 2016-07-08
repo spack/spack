@@ -41,8 +41,8 @@ class Meep(Package):
     variant('libctl',  default=False, description='Enable libctl support')
     variant('mpi',     default=True,  description='Enable MPI support')
     variant('hdf5',    default=True,  description='Enable HDF5 support')
+    variant('gsl',     default=False, description='Build with GSL (only necessary for testing)')
 
-    # Recommended dependencies
     depends_on('blas',        when='+blas')
     depends_on('lapack',      when='+lapack')
     depends_on('harminv',     when='+harminv')
@@ -51,6 +51,7 @@ class Meep(Package):
     depends_on('mpi',         when='+mpi')
     depends_on('hdf5',        when='+hdf5')
     depends_on('hdf5+mpi',    when='+hdf5+mpi')
+    depends_on('gsl',         when='+gsl')
 
     def url_for_version(self, version):
         base_url = "http://ab-initio.mit.edu/meep"
@@ -93,5 +94,12 @@ class Meep(Package):
         configure(*config_args)
 
         make()
-        make('check')
+
+        # aniso_disp test fails unless installed with harminv
+        # near2far test fails unless installed with gsl
+        if '+harminv' in spec and '+gsl' in spec:
+            # Most tests fail when run in parallel
+            # 2D_convergence tests still fails to converge for unknown reasons
+            make('check', parallel=False)
+
         make('install')
