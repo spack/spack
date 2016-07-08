@@ -54,6 +54,13 @@ class Python(Package):
     extendable = True
 
     variant('ucs4', default=False, description='Enable UCS4 (wide) unicode strings')
+    # From https://docs.python.org/2/c-api/unicode.html: Python's default
+    # builds use a 16-bit type for Py_UNICODE and store Unicode values
+    # internally as UCS2. It is also possible to build a UCS4 version of Python
+    # (most recent Linux distributions come with UCS4 builds of Python).  These
+    # builds then use a 32-bit type for Py_UNICODE and store Unicode data
+    # internally as UCS4. Note that UCS2 and UCS4 Python builds are not binary
+    # compatible.
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -95,6 +102,9 @@ class Python(Package):
                 config_args.append('--enable-unicode=ucs4')
             elif spec.satisfies('@3.0:3.2'):
                 config_args.append('--with-wide-unicode')
+            elif spec.satisfies('@3.3:'):
+                # https://docs.python.org/3.3/whatsnew/3.3.html
+                raise ValueError('+ucs4 variant not compatible with Python 3.3 and beyond')  # NOQA: ignore=E501
 
         if spec.satisfies('@3:'):
             config_args.append('--without-ensurepip')
