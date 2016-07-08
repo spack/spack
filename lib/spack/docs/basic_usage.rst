@@ -1154,7 +1154,7 @@ Modules may be loaded recursively with the command:
 
 More than one spec may be placed on the command line here.
 
-Module Comamnds for Shell Scripts
+Module Commands for Shell Scripts
 ``````````````````````````````````
 
 Although Spack is flexbile, the ``module`` command is much faster.
