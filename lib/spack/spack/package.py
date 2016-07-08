@@ -35,10 +35,13 @@ README.
 """
 import os
 import re
+import string
 import textwrap
 import time
-import glob
-import string
+import inspect
+import functools
+from StringIO import StringIO
+from urlparse import urlparse
 
 import llnl.util.tty as tty
 import spack
@@ -52,26 +55,95 @@ import spack.mirror
 import spack.repository
 import spack.url
 import spack.util.web
-
-from urlparse import urlparse
-from StringIO import StringIO
 from llnl.util.filesystem import *
 from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
+from spack import directory_layout
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
-from spack.util.executable import ProcessError, Executable, which
+from spack.util.executable import ProcessError, which
 from spack.version import *
-from spack import directory_layout
-from urlparse import urlparse
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 
 
-class Package(object):
+class InstallPhase(object):
+    """Manages a single phase of the installation
+
+    This descriptor stores at creation time the name of the method it should search
+    for execution. The method is retrieved at get time, so that it can be overridden
+    by subclasses of whatever class declared the phases.
+
+    It also provides hooks to execute prerequisite and sanity checks.
+    """
+    def __init__(self, name):
+        self.name = name
+        self.preconditions = []
+        self.sanity_checks = []
+
+    def __get__(self, instance, owner):
+        # The caller is a class that is trying to customize
+        # my behavior adding something
+        if instance is None:
+            return self
+        # If instance is there the caller wants to execute the
+        # install phase, thus return a properly set wrapper
+        phase = getattr(instance, self.name)
+        @functools.wraps(phase)
+        def phase_wrapper(spec, prefix):
+            # Execute phase pre-conditions,
+            # and give them the chance to fail
+            for check in self.preconditions:
+                check(instance)
+            # Do something sensible at some point
+            phase(spec, prefix)
+            # Execute phase sanity_checks,
+            # and give them the chance to fail
+            for check in self.sanity_checks:
+                check(instance)
+
+        return phase_wrapper
+
+
+class PackageMeta(type):
+    """Conveniently transforms attributes to permit extensible phases
+
+    Iterates over the attribute 'phase' and creates / updates private
+    InstallPhase attributes in the class that is being initialized
+    """
+    phase_fmt = '_InstallPhase_{0}'
+
+    def __init__(cls, name, bases, attr_dict):
+        super(PackageMeta, cls).__init__(name, bases, attr_dict)
+        # Parse if phases is in attr dict, then set
+        # install phases wrappers
+        if 'phases' in attr_dict:
+            cls.phases = [PackageMeta.phase_fmt.format(name) for name in attr_dict['phases']]
+            for phase_name, callback_name in zip(cls.phases, attr_dict['phases']):
+                setattr(cls, phase_name, InstallPhase(callback_name))
+
+        def _transform_checks(check_name):
+            attr_name = PackageMeta.phase_fmt.format(check_name)
+            checks = getattr(cls, attr_name, None)
+            if checks:
+                for phase_name, funcs in checks.items():
+                    phase = getattr(cls, PackageMeta.phase_fmt.format(phase_name))
+                    getattr(phase, check_name).extend(funcs)
+                # TODO : this should delete the attribute, as it is just a placeholder
+                # TODO : to know what to do at class definition time. Clearing it is fine
+                # TODO : too, but it just leaves an empty dictionary in place
+                setattr(cls, attr_name, {})
+
+        # Preconditions
+        _transform_checks('preconditions')
+        # Sanity checks
+        _transform_checks('sanity_checks')
+
+
+class PackageBase(object):
     """This is the superclass for all spack packages.
 
     ***The Package class***
@@ -304,6 +376,7 @@ class Package(object):
     clean() (some of them do this), and others to provide custom behavior.
 
     """
+    __metaclass__ = PackageMeta
     #
     # These are default values for instance variables.
     #
@@ -409,7 +482,6 @@ class Package(object):
     def package_dir(self):
         """Return the directory where the package.py file lives."""
         return os.path.dirname(self.module.__file__)
-
 
     @property
     def global_license_dir(self):
@@ -875,7 +947,6 @@ class Package(object):
         resource_stage_folder = '-'.join(pieces)
         return resource_stage_folder
 
-    _phases = ['install', 'create_spack_logs']
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -909,7 +980,7 @@ class Package(object):
         """
         # FIXME : we need a better semantic
         if allowed_phases is None:
-            allowed_phases = self._phases
+            allowed_phases = self.phases
 
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -921,8 +992,8 @@ class Package(object):
             return
 
         # Ensure package is not already installed
-        # FIXME : This should be a pre-requisite to a phase
-        if 'install' in self._phases and spack.install_layout.check_installed(self.spec):
+        # FIXME : skip condition : if any is True skip the installation
+        if 'install' in self.phases and spack.install_layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
             rec = spack.installed_db.get_record(self.spec)
             if (not rec.explicit) and explicit:
@@ -994,15 +1065,9 @@ class Package(object):
                                         True):
                             dump_environment(env_path)
                             try:
-                                for phase in filter(lambda x: x in allowed_phases, self._phases):
+                                for phase in filter(lambda x: x in allowed_phases, self.phases):
                                     # TODO : Log to screen the various phases
-                                    action = getattr(self, phase)
-                                    if getattr(action, 'preconditions', None):
-                                        action.preconditions()
-                                    action(self.spec, self.prefix)
-                                    if getattr(action, 'postconditions', None):
-                                        action.postconditions()
-
+                                    getattr(self, phase)(self.spec, self.prefix)
                             except AttributeError as e:
                                 # FIXME : improve error messages
                                 raise ProcessError(e.message, long_message='')
@@ -1011,11 +1076,6 @@ class Package(object):
                         # the build log
                         e.build_log = log_path
                         raise e
-
-                    # Ensure that something was actually installed.
-                    # FIXME : This should be executed after 'install' as a postcondition
-                    # if 'install' in self._phases:
-                    #    self.sanity_check_prefix()
 
                 # Run post install hooks before build stage is removed.
                 spack.hooks.post_install(self)
@@ -1034,7 +1094,7 @@ class Package(object):
             # Create the install prefix and fork the build process.
             spack.install_layout.create_install_directory(self.spec)
         except directory_layout.InstallDirectoryAlreadyExistsError:
-            if 'install' in self._phases:
+            if 'install' in self.phases:
                 # Abort install if install directory exists.
                 # But do NOT remove it (you'd be overwriting someon else's stuff)
                 tty.warn("Keeping existing install prefix in place.")
@@ -1062,7 +1122,7 @@ class Package(object):
         # the database, so that we don't need to re-read from file.
         spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
 
-    def create_spack_logs(self, spec, prefix):
+    def log(self, spec, prefix):
         # Copy provenance into the install directory on success
         log_install_path = spack.install_layout.build_log_path(
             self.spec)
@@ -1240,13 +1300,6 @@ class Package(object):
 
         """
         pass
-
-    def install(self, spec, prefix):
-        """
-        Package implementations override this with their own configuration
-        """
-        raise InstallError("Package %s provides no install method!" %
-                           self.name)
 
     def do_uninstall(self, force=False):
         if not self.installed:
@@ -1446,6 +1499,33 @@ class Package(object):
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
+    @classmethod
+    def _register_checks(cls, check_type, *args):
+        def _register_sanity_checks(func):
+            attr_name = PackageMeta.phase_fmt.format(check_type)
+            sanity_checks = getattr(cls, attr_name, {})
+            for item in args:
+                checks = sanity_checks.setdefault(item, [])
+                checks.append(func)
+            setattr(cls, attr_name, sanity_checks)
+            return func
+        return _register_sanity_checks
+
+    @classmethod
+    def precondition(cls, *args):
+        return cls._register_checks('preconditions', *args)
+
+    @classmethod
+    def sanity_check(cls, *args):
+        return cls._register_checks('sanity_checks', *args)
+
+
+class Package(PackageBase):
+    phases = ['install', 'log']
+    # This will be used as a registration decorator in user
+    # packages, if need be
+    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+
 
 def install_dependency_symlinks(pkg, spec, prefix):
     """Execute a dummy install and flatten dependencies"""
@@ -1548,53 +1628,16 @@ def _hms(seconds):
         parts.append("%.2fs" % s)
     return ' '.join(parts)
 
-#class StagedPackage(Package):
-#    """A Package subclass where the install() is split up into stages."""
-#    _phases = ['configure']
-#    def install_setup(self):
-#        """Creates an spack_setup.py script to configure the package later if we like."""
-#        raise InstallError("Package %s provides no install_setup() method!" % self.name)
-#
-#    def install_configure(self):
-#        """Runs the configure process."""
-#        raise InstallError("Package %s provides no install_configure() method!" % self.name)
-#
-#    def install_build(self):
-#        """Runs the build process."""
-#        raise InstallError("Package %s provides no install_build() method!" % self.name)
-#
-#    def install_install(self):
-#        """Runs the install process."""
-#        raise InstallError("Package %s provides no install_install() method!" % self.name)
-#
-#    def install(self, spec, prefix):
-#        if 'setup' in self._phases:
-#            self.install_setup()
-#
-#        if 'configure' in self._phases:
-#            self.install_configure()
-#
-#        if 'build' in self._phases:
-#            self.install_build()
-#
-#        if 'install' in self._phases:
-#            self.install_install()
-#        else:
-#            # Create a dummy file so the build doesn't fail.
-#            # That way, the module file will also be created.
-#            with open(os.path.join(prefix, 'dummy'), 'w') as fout:
-#                pass
-
+# FIXME : remove this after checking that set_executable works the same way
 # stackoverflow.com/questions/12791997/how-do-you-do-a-simple-chmod-x-from-within-python
-def make_executable(path):
-    mode = os.stat(path).st_mode
-    mode |= (mode & 0o444) >> 2    # copy R bits to X
-    os.chmod(path, mode)
+#def make_executable(path):
+#    mode = os.stat(path).st_mode
+#   mode |= (mode & 0o444) >> 2    # copy R bits to X
+#    os.chmod(path, mode)
 
 
-
-class CMakePackage(Package):
-    _phases = ['configure', 'build', 'install', 'provenance']
+class CMakePackage(PackageBase):
+    phases = ['setup', 'configure', 'build', 'install', 'provenance']
 
     def make_make(self):
         import multiprocessing
@@ -1614,6 +1657,7 @@ class CMakePackage(Package):
 
     def configure_env(self):
         """Returns package-specific environment under which the configure command should be run."""
+        # FIXME : Why not EnvironmentModules
         return dict()
 
     def spack_transitive_include_path(self):
@@ -1622,7 +1666,7 @@ class CMakePackage(Package):
             for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
         )
 
-    def setup(self):
+    def setup(self, spec, prefix):
         cmd = [str(which('cmake'))] + \
             spack.build_environment.get_std_cmake_args(self) + \
             ['-DCMAKE_INSTALL_PREFIX=%s' % os.environ['SPACK_PREFIX'],
@@ -1674,10 +1718,10 @@ env = dict(os.environ)
                 fout.write('    %s\n' % arg)
             fout.write('""") + sys.argv[1:]\n')
             fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
-        make_executable(setup_fname)
+        set_executable(setup_fname)
 
 
-    def configure(self):
+    def configure(self, spec, prefix):
         cmake = which('cmake')
         with working_dir(self.build_directory, create=True):
             os.environ.update(self.configure_env())
@@ -1685,12 +1729,12 @@ env = dict(os.environ)
             options = self.configure_args() + spack.build_environment.get_std_cmake_args(self)
             cmake(self.source_directory, *options)
 
-    def build(self):
+    def build(self, spec, prefix):
         make = self.make_make()
         with working_dir(self.build_directory, create=False):
             make()
 
-    def install(self):
+    def install(self, spec, prefix):
         make = self.make_make()
         with working_dir(self.build_directory, create=False):
             make('install')

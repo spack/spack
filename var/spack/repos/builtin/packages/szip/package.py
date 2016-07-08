@@ -34,6 +34,10 @@ class Szip(Package):
 
     version('2.1', '902f831bcefb69c6b635374424acbead')
 
+    @Package.sanity_check('install')
+    def always_raise(self):
+        raise RuntimeError('Precondition not respected')
+
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix,
                   '--enable-production',
