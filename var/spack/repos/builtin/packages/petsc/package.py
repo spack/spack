@@ -154,7 +154,7 @@ class Petsc(Package):
                 env['PETSC_DIR'] = self.prefix
                 cc = Executable(spec['mpi'].mpicc)
                 cc('ex50.c', '-I%s' % prefix.include, '-L%s' % prefix.lib,
-                   '-lpetsc', '-o', 'ex50')
+                   '-lpetsc', '-lm', '-o', 'ex50')
                 run = Executable(join_path(spec['mpi'].prefix.bin, 'mpirun'))
                 run('ex50', '-da_grid_x', '4', '-da_grid_y', '4')
                 if 'superlu-dist' in spec:
