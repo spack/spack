@@ -311,6 +311,8 @@ class Package(object):
     parallel = True
     """# jobs to use for parallel make. If set, overrides default of ncpus."""
     make_jobs = None
+    """By default do not run tests within package's install()"""
+    run_tests = False
     """Most packages are NOT extendable. Set to True if you want extensions."""
     extendable = False
     """List of prefix-relative file paths (or a single path). If these do
@@ -881,6 +883,7 @@ class Package(object):
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
+                   run_tests=False,
                    fake=False,
                    explicit=False,
                    dirty=False,
@@ -902,6 +905,7 @@ class Package(object):
         verbose     -- Display verbose build output (by default, suppresses it)
         dirty       -- Don't clean the build environment before installing.
         make_jobs   -- Number of make jobs to use for install. Default is ncpus
+        run_tests   -- Runn tests within the package's install()
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -932,7 +936,11 @@ class Package(object):
                                          fake=fake,
                                          skip_patch=skip_patch,
                                          verbose=verbose,
-                                         make_jobs=make_jobs)
+                                         make_jobs=make_jobs,
+                                         run_tests=run_tests)
+
+        # Set run_tests flag before starting build.
+        self.run_tests = run_tests
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
