@@ -118,8 +118,12 @@ class Mfem(Package):
         if '+suite-sparse' in spec:
             ssp = spec['suite-sparse'].prefix
             ss_lib = '-L%s' % ssp.lib
-            ss_lib += (' -lumfpack -lcholmod -lcolamd -lamd -lcamd' +
-                       ' -lccolamd -lsuitesparseconfig')
+
+            if '@3.2:' in spec:
+                ss_lib += ' -lklu -lbtf'
+
+            ss_lib += (' -lumfpack -lcholmod -lcolamd' +
+                       ' -lamd -lcamd -lccolamd -lsuitesparseconfig')
 
             no_librt_archs = ['darwin-i686', 'darwin-x86_64']
             no_rt = any(map(lambda a: spec.satisfies('=' + a),
