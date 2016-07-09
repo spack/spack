@@ -150,9 +150,12 @@ class Petsc(Package):
 
         # solve Poisson equation in 2D to make sure nothing is broken:
         with working_dir('src/ksp/ksp/examples/tutorials'):
-            cc = os.environ['CC'] if '~mpi' in self.spec else self.spec['mpi'].mpicc  # NOQA: ignore=E501
-            os.system('%s ex50.c -I%s -L%s -lpetsc -o ex50' % (
-                cc, prefix.include, prefix.lib))
+            if '+mpi' not in self.spec:
+                cc = which('cc')
+            else:
+                cc = which('mpicc')
+            cc('-I%s' % prefix.include, '-L%s' % prefix.lib, '-o', 'ex50',
+               'ex50.c', '-lpetsc', '-lm')
             ex50 = Executable('./ex50')
             ex50('-da_grid_x', '4', '-da_grid_y', '4')
             if 'superlu-dist' in spec:
