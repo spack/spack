@@ -46,6 +46,8 @@ class Mfem(Package):
     variant('suite-sparse', default=False,
             description='Activate support for SuiteSparse')
     variant('mpi', default=False, description='Activate support for MPI')
+    variant('superlu-dist', default=False,
+            description='Activate support for SuperLU_Dist')
     variant('lapack', default=False, description='Activate support for LAPACK')
     variant('debug', default=False, description='Build debug version')
 
@@ -66,6 +68,8 @@ class Mfem(Package):
     depends_on('metis@5:', when='+suite-sparse ^suite-sparse@4.5:')
     depends_on('cmake', when='^metis@5:', type='build')
 
+    depends_on('superlu-dist', when='@3.2: +superlu-dist')
+
     def check_variants(self, spec):
         if '+mpi' in spec and ('+hypre' not in spec or '+metis' not in spec):
             raise InstallError('mfem+mpi must be built with +hypre ' +
@@ -79,6 +83,9 @@ class Mfem(Package):
             raise InstallError('To work around CMake bug with clang, must ' +
                                'build mfem with mfem[+variants] %clang ' +
                                '^cmake %gcc to force CMake to build with gcc')
+        if '@:3.1' in spec and '+superlu-dist' in spec:
+            raise InstallError('MFEM does not support SuperLU_DIST for ' +
+                               'versions 3.1 and earlier')
         return
 
     def install(self, spec, prefix):
@@ -100,7 +107,14 @@ class Mfem(Package):
                 'HYPRE_LIB=-L%s' % spec['hypre'].prefix.lib +
                 ' -lHYPRE'])
 
-        if '+metis' in spec:
+        if 'parmetis' in spec:
+            metis_lib = '-L%s -lparmetis -lmetis' % spec['parmetis'].prefix.lib
+            metis_str = 'MFEM_USE_METIS_5=YES'
+            options.extend([metis_str,
+                            'METIS_DIR=%s' % spec['parmetis'].prefix,
+                            'METIS_OPT=-I%s' % spec['parmetis'].prefix.include,
+                            'METIS_LIB=%s' % metis_lib])
+        elif 'metis' in spec:
             metis_lib = '-L%s -lmetis' % spec['metis'].prefix.lib
             if spec['metis'].satisfies('@5:'):
                 metis_str = 'MFEM_USE_METIS_5=YES'
@@ -112,8 +126,17 @@ class Mfem(Package):
                 'METIS_OPT=-I%s' % spec['metis'].prefix.include,
                 'METIS_LIB=%s' % metis_lib])
 
-        if '+mpi' in spec:
+        if 'mpi' in spec:
             options.extend(['MFEM_USE_MPI=YES'])
+
+        if '+superlu-dist' in spec:
+            superlu_lib = '-L%s' % spec['superlu-dist'].prefix.lib
+            superlu_lib += ' -lsuperlu_dist'
+            sl_inc = 'SUPERLU_OPT=-I%s' % spec['superlu-dist'].prefix.include
+            options.extend(['MFEM_USE_SUPERLU=YES',
+                            'SUPERLU_DIR=%s' % spec['superlu-dist'].prefix,
+                            sl_inc,
+                            'SUPERLU_LIB=%s' % superlu_lib])
 
         if '+suite-sparse' in spec:
             ssp = spec['suite-sparse'].prefix
