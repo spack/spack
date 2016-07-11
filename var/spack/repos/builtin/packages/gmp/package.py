@@ -24,20 +24,16 @@
 ##############################################################################
 from spack import *
 
-class Gmp(Package):
+
+class Gmp(AutotoolsPackage):
     """GMP is a free library for arbitrary precision arithmetic,
        operating on signed integers, rational numbers, and
        floating-point numbers."""
     homepage = "https://gmplib.org"
-    url      = "https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2"
+    url = "https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2"
 
     version('6.1.0' , '86ee6e54ebfc4a90b643a65e402c4048')
     version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
     version('6.0.0' , '6ef5869ae735db9995619135bd856b84')
 
     depends_on("m4")
-
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")

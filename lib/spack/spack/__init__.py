@@ -179,11 +179,12 @@ sys_type = None
 __all__ = ['Package',
            'CMakePackage',
            'AutotoolsPackage',
+           'EditableMakefile',
            'Version',
            'when',
            'ver']
 from spack.package import Package, ExtensionConflictError
-from spack.package import CMakePackage, AutotoolsPackage
+from spack.package import CMakePackage, AutotoolsPackage, EditableMakefile
 from spack.version import Version, ver
 from spack.multimethod import when
 

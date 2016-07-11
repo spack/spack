@@ -104,6 +104,10 @@ class InstallPhase(object):
             # and give them the chance to fail
             for check in self.sanity_checks:
                 check(instance)
+            # Permit instance to drive the execution
+            if self.name == instance.last_phase:
+                raise StopIteration('Stopping at \'{0}\' phase'.format(self.name))
+
 
         return phase_wrapper
 
@@ -123,10 +127,10 @@ class PackageMeta(type):
         # Check if phases is in attr dict, then set
         # install phases wrappers
         if 'phases' in attr_dict:
-            phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict['phases']]
-            for phase_name, callback_name in zip(phases, attr_dict['phases']):
+            _InstallPhase_phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict['phases']]
+            for phase_name, callback_name in zip(_InstallPhase_phases, attr_dict['phases']):
                 attr_dict[phase_name] = InstallPhase(callback_name)
-            attr_dict['phases'] = phases
+            attr_dict['_InstallPhase_phases'] = _InstallPhase_phases
 
         def _append_checks(check_name):
             # Name of the attribute I am going to check it exists
@@ -956,7 +960,8 @@ class PackageBase(object):
         return namespace
 
     def do_fake_install(self):
-        """Make a fake install directory contaiing a 'fake' file in bin."""
+        """Make a fake install directory containing a 'fake' file in bin."""
+        # FIXME : Make this part of the 'install' behavior ?
         mkdirp(self.prefix.bin)
         touch(join_path(self.prefix.bin, 'fake'))
         mkdirp(self.prefix.lib)
@@ -990,7 +995,7 @@ class PackageBase(object):
                    fake=False,
                    explicit=False,
                    dirty=False,
-                   allowed_phases=None):
+                   **kwargs):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -1010,9 +1015,13 @@ class PackageBase(object):
         make_jobs   -- Number of make jobs to use for install. Default is ncpus
         run_tests   -- Runn tests within the package's install()
         """
-        # FIXME : we need a better semantic
-        if allowed_phases is None:
-            allowed_phases = self.phases
+        #if allowed_phases is None:
+        #    allowed_phases = self.phases
+        # FIXME : Refine the error message
+        last_phase = kwargs.get('stop_at', None)
+        if last_phase is not None and last_phase not in self.phases:
+            raise KeyError('phase {0} is not among the allowed phases for package {1}'.format(last_phase, self))
+        self.last_phase = last_phase
 
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -1097,9 +1106,10 @@ class PackageBase(object):
                                         True):
                             dump_environment(env_path)
                             try:
-                                for phase in filter(lambda x: x in allowed_phases, self.phases):
+                                for phase in self._InstallPhase_phases:
                                     # TODO : Log to screen the various phases
                                     getattr(self, phase)(self.spec, self.prefix)
+                                self.log()
                             except AttributeError as e:
                                 # FIXME : improve error messages
                                 raise ProcessError(e.message, long_message='')
@@ -1126,9 +1136,10 @@ class PackageBase(object):
             # Create the install prefix and fork the build process.
             spack.install_layout.create_install_directory(self.spec)
         except directory_layout.InstallDirectoryAlreadyExistsError:
+            # FIXME : refactor this as a prerequisites to configure
             if 'install' in self.phases:
                 # Abort install if install directory exists.
-                # But do NOT remove it (you'd be overwriting someon else's stuff)
+                # But do NOT remove it (you'd be overwriting someone else's stuff)
                 tty.warn("Keeping existing install prefix in place.")
                 raise
             else:
@@ -1154,7 +1165,7 @@ class PackageBase(object):
         # the database, so that we don't need to re-read from file.
         spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
 
-    def log(self, spec, prefix):
+    def log(self):
         # Copy provenance into the install directory on success
         log_install_path = spack.install_layout.build_log_path(
             self.spec)
@@ -1533,14 +1544,41 @@ class PackageBase(object):
 
 
 class Package(PackageBase):
-    phases = ['install', 'log']
+    phases = ['install']
     # This will be used as a registration decorator in user
     # packages, if need be
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
 
 
+class EditableMakefile(PackageBase):
+    phases = ['edit', 'build', 'install']
+
+    def wdir(self):
+        return self.stage.source_path
+
+    def build_args(self):
+        return list()
+
+    def install_args(self):
+        return list()
+
+    def edit(self, spec, prefix):
+        raise NotImplementedError('\'edit\' function not implemented')
+
+    def build(self, spec, prefix):
+        args = self.build_args()
+        with working_dir(self.wdir()):
+            inspect.getmodule(self).make(*args)
+
+    def install(self, spec, prefix):
+        args = self.install_args() + ['install']
+        with working_dir(self.wdir()):
+            inspect.getmodule(self).make(*args)
+
+    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+
 class AutotoolsPackage(PackageBase):
-    phases = ['autoreconf', 'configure', 'build', 'install', 'log']
+    phases = ['autoreconf', 'configure', 'build', 'install']
 
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""

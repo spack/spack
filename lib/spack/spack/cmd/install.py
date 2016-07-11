@@ -57,6 +57,9 @@ def setup_parser(subparser):
         '--dirty', action='store_true', dest='dirty',
         help="Install a package *without* cleaning the environment.")
     subparser.add_argument(
+        '--stop-at', help="Stop at a particular phase of installation"
+    )
+    subparser.add_argument(
         'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
     subparser.add_argument(
         '--run-tests', action='store_true', dest='run_tests',
@@ -88,4 +91,6 @@ def install(parser, args):
                 verbose=args.verbose,
                 fake=args.fake,
                 dirty=args.dirty,
-                explicit=True)
+                explicit=True,
+                stop_at=args.stop_at
+            )

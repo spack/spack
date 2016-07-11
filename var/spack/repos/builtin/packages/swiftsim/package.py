@@ -66,8 +66,8 @@ class Swiftsim(AutotoolsPackage):
         autogen = Executable('./autogen.sh')
         autogen()
 
-    def config_args(self):
-        return ['--prefix=%s' % prefix,
-                '--enable-mpi' if '+mpi' in spec else '--disable-mpi',
+    def configure_args(self):
+        return ['--prefix=%s' % self.prefix,
+                '--enable-mpi' if '+mpi' in self.spec else '--disable-mpi',
                 '--with-metis={0}'.format(self.spec['metis'].prefix),
                 '--enable-optimization']
