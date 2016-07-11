@@ -37,7 +37,7 @@ class Dealii(Package):
     version('8.3.0', 'fc6cdcb16309ef4bea338a4f014de6fa')
     version('8.2.1', '71c728dbec14f371297cd405776ccf08')
     version('8.1.0', 'aa8fadc2ce5eb674f44f997461bf668d')
-    version('dev', git='https://github.com/dealii/dealii.git')
+    version('develop', git='https://github.com/dealii/dealii.git')
 
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('arpack',   default=True,  description='Compile with Arpack and PArpack (only with MPI)')
@@ -73,20 +73,21 @@ class Dealii(Package):
     depends_on("doxygen+graphviz", when='+doc')
     depends_on("graphviz",         when='+doc')
     depends_on("gsl",              when='@8.5.0:+gsl')
-    depends_on("gsl",              when='@dev+gsl')
     depends_on("hdf5+mpi",         when='+hdf5+mpi')
     depends_on("metis@5:",         when='+metis')
     depends_on("netcdf+mpi",       when="+netcdf+mpi")
     depends_on("netcdf-cxx",       when='+netcdf+mpi')
     depends_on("oce",              when='+oce')
     depends_on("p4est",            when='+p4est+mpi')
-    depends_on("petsc@:3.6.4+mpi", when='+petsc+mpi')  # FIXME: update after 3.7 is supported upstream.  # NOQA: ignore=E501
-    depends_on("slepc@:3.6.3",     when='+slepc+petsc+mpi')
+    depends_on("petsc+mpi",        when='@8.5.0:+petsc+mpi')
+    depends_on("slepc",            when='@8.5.0:+slepc+petsc+mpi')
+    depends_on("petsc@:3.6.4+mpi", when='@:8.4.1+petsc+mpi')
+    depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
     depends_on("trilinos",         when='+trilinos+mpi')
 
     # developer dependnecies
-    depends_on("numdiff",     when='@dev')
-    depends_on("astyle@2.04", when='@dev')
+    depends_on("numdiff",     when='@develop')
+    depends_on("astyle@2.04", when='@develop')
 
     def install(self, spec, prefix):
         options = []
