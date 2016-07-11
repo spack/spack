@@ -73,7 +73,7 @@ CONTINUE_WITH_OPTIONAL_ERROR=yes
 COMPONENTS=%s
 """ % (self.intel_prefix, self.global_license_file, self.intel_components))
 
-        install_script = which("install.sh")
+        install_script = Executable("./install.sh")
         install_script('--silent', silent_config_filename)
 
 

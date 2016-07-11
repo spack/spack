@@ -1,0 +1,18 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 607d221..345b7fc 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -113,11 +113,12 @@ set_target_properties(arpack PROPERTIES OUTPUT_NAME arpack${LIBSUFFIX})
+ 
+ if (MPI)
+ #    add_library(parpack SHARED
+-    add_library(parpack 
++    add_library(parpack
+                         ${parpacksrc_STAT_SRCS}
+                         ${parpackutil_STAT_SRCS})
+ 
+     target_link_libraries(parpack ${MPI_Fortran_LIBRARIES})
++    target_link_libraries(parpack arpack)
+     set_target_properties(parpack PROPERTIES OUTPUT_NAME parpack${LIBSUFFIX})
+ endif ()
+ 

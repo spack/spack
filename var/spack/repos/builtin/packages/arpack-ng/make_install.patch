@@ -1,0 +1,24 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 607d221..50426c3 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -389,3 +389,19 @@ target_link_libraries(bug_1323 arpack ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
+ add_test(bug_1323 Tests/bug_1323)
+
+ add_dependencies(check dnsimp_test bug_1315_single bug_1315_double bug_1323)
++
++############################
++# install
++############################
++# 'make install' to the correct location
++install(TARGETS arpack
++    ARCHIVE  DESTINATION lib
++    LIBRARY  DESTINATION lib
++    RUNTIME  DESTINATION bin)
++
++if (MPI)
++  install(TARGETS parpack
++      ARCHIVE  DESTINATION lib
++      LIBRARY  DESTINATION lib
++      RUNTIME  DESTINATION bin)
++endif ()

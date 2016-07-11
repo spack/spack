@@ -140,11 +140,11 @@ class Lua(Package):
 
     @property
     def lua_lib_dir(self):
-        return os.path.join('lib', 'lua', '%d.%d' % self.version[:2])
+        return os.path.join('lib', 'lua', self.version.up_to(2))
 
     @property
     def lua_share_dir(self):
-        return os.path.join('share', 'lua', '%d.%d' % self.version[:2])
+        return os.path.join('share', 'lua', self.version.up_to(2))
 
     def setup_dependent_package(self, module, ext_spec):
         """

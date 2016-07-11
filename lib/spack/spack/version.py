@@ -44,6 +44,7 @@ be called on any of the types::
   concrete
 """
 import re
+import numbers
 from bisect import bisect_left
 from functools import wraps
 
@@ -194,10 +195,24 @@ class Version(object):
         return iter(self.version)
 
     def __getitem__(self, idx):
-        return tuple(self.version[idx])
+        cls = type(self)
+        if isinstance(idx, numbers.Integral):
+            return self.version[idx]
+        elif isinstance(idx, slice):
+            # Currently len(self.separators) == len(self.version) - 1
+            extendend_separators = self.separators + ('',)
+            string_arg = []
+            for token, sep in zip(self.version, extendend_separators)[idx]:
+                string_arg.append(str(token))
+                string_arg.append(str(sep))
+            string_arg.pop()  # We don't need the last separator
+            string_arg = ''.join(string_arg)
+            return cls(string_arg)
+        message = '{cls.__name__} indices must be integers'
+        raise TypeError(message.format(cls=cls))
 
     def __repr__(self):
-        return self.string
+        return 'Version(' + repr(self.string) + ')'
 
     def __str__(self):
         return self.string
@@ -219,6 +234,14 @@ class Version(object):
         # Coerce if other is not a Version
         # simple equality test first.
         if self.version == other.version:
+            return False
+
+        # dev is __gt__ than anything but itself.
+        if other.string == 'develop':
+            return True
+
+        # If lhs is dev then it can't be < than anything
+        if self.string == 'develop':
             return False
 
         for a, b in zip(self.version, other.version):

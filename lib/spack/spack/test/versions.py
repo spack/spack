@@ -92,6 +92,9 @@ class VersionsTest(unittest.TestCase):
         self.assert_ver_eq('1.0', '1.0')
         self.assert_ver_lt('1.0', '2.0')
         self.assert_ver_gt('2.0', '1.0')
+        self.assert_ver_eq('develop', 'develop')
+        self.assert_ver_lt('1.0', 'develop')
+        self.assert_ver_gt('develop', '1.0')
 
     def test_three_segments(self):
         self.assert_ver_eq('2.0.1', '2.0.1')
@@ -389,3 +392,39 @@ class VersionsTest(unittest.TestCase):
             self.assertEqual(v.dotted, '1.2.3')
             self.assertEqual(v.dashed, '1-2-3')
             self.assertEqual(v.underscored, '1_2_3')
+
+    def test_repr_and_str(self):
+
+        def check_repr_and_str(vrs):
+            a = Version(vrs)
+            self.assertEqual(repr(a), 'Version(\'' + vrs + '\')')
+            b = eval(repr(a))
+            self.assertEqual(a, b)
+            self.assertEqual(str(a), vrs)
+            self.assertEqual(str(a), str(b))
+
+        check_repr_and_str('1.2.3')
+        check_repr_and_str('R2016a')
+        check_repr_and_str('R2016a.2-3_4')
+
+    def test_get_item(self):
+        a = Version('0.1_2-3')
+        self.assertTrue(isinstance(a[1], int))
+        # Test slicing
+        b = a[0:2]
+        self.assertTrue(isinstance(b, Version))
+        self.assertEqual(b, Version('0.1'))
+        self.assertEqual(repr(b), 'Version(\'0.1\')')
+        self.assertEqual(str(b), '0.1')
+        b = a[0:3]
+        self.assertTrue(isinstance(b, Version))
+        self.assertEqual(b, Version('0.1_2'))
+        self.assertEqual(repr(b), 'Version(\'0.1_2\')')
+        self.assertEqual(str(b), '0.1_2')
+        b = a[1:]
+        self.assertTrue(isinstance(b, Version))
+        self.assertEqual(b, Version('1_2-3'))
+        self.assertEqual(repr(b), 'Version(\'1_2-3\')')
+        self.assertEqual(str(b), '1_2-3')
+        # Raise TypeError on tuples
+        self.assertRaises(TypeError, b.__getitem__, 1, 2)
