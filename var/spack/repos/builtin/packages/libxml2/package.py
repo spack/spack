@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class Libxml2(Package):
     """Libxml2 is the XML C parser and toolkit developed for the Gnome
        project (but usable outside of the Gnome platform), it is free
@@ -42,8 +43,11 @@ class Libxml2(Package):
 
     def install(self, spec, prefix):
         if '+python' in spec:
-            site_packages_dir = os.path.join(prefix, 'lib/python%s.%s/site-packages' %(spec['python'].version[:2]))
-            python_args = ["--with-python=%s" % spec['python'].prefix, "--with-python-install-dir=%s" % site_packages_dir]
+            site_packages_dir = os.path.join(prefix,
+                                             'lib/python%s/site-packages'
+                                             % (spec['python'].version.up_to(2)))
+            python_args = ["--with-python=%s" % spec['python'].prefix,
+                           "--with-python-install-dir=%s" % site_packages_dir]
         else:
             python_args = ["--without-python"]
 
