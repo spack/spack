@@ -32,6 +32,7 @@ class Meep(Package):
     homepage = "http://ab-initio.mit.edu/wiki/index.php/Meep"
 
     version('1.3',   '18a5b9e18008627a0411087e0bb60db5')
+    version('1.2.1', '9be2e743c3a832ae922de9d955d016c5')
     version('1.1.1', '415e0cd312b6caa22b5dd612490e1ccf')
 
     variant('blas',    default=True,  description='Enable BLAS support')
@@ -55,7 +56,7 @@ class Meep(Package):
 
     def url_for_version(self, version):
         base_url = "http://ab-initio.mit.edu/meep"
-        if version == Version('1.3'):
+        if version > Version('1.1.1'):
             return "{0}/meep-{1}.tar.gz".format(base_url, version)
         else:
             return "{0}/old/meep-{1}.tar.gz".format(base_url, version)
