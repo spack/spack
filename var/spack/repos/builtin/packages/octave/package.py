@@ -61,7 +61,7 @@ class Octave(Package):
     variant('qrupdate',   default=False)
     variant('qscintilla', default=False)
     variant('qt',         default=False)
-    variant('suiteparse', default=False)
+    variant('suitesparse', default=False)
     variant('zlib',       default=False)
 
     # Required dependencies
