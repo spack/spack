@@ -195,7 +195,8 @@ class Dealii(Package):
 
         cmake('.', *options)
         make()
-        if self.run_tests: make("test")
+        if self.run_tests:
+            make("test")
         make("install")
 
         # run some MPI examples with different solvers from PETSc and Trilinos
@@ -220,7 +221,8 @@ class Dealii(Package):
                 print('============= Step-18 ===============')
                 print('=====================================')
                 # list the number of cycles to speed up
-                filter_file(r'(end_time = 10;)',  ('end_time = 3;'), 'step-18.cc')
+                filter_file(r'(end_time = 10;)',  ('end_time = 3;'),
+                            'step-18.cc')
                 if '^petsc' in spec and '^metis' in spec:
                     cmake('.')
                     make('release')
