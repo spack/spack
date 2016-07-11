@@ -184,9 +184,9 @@ class IntelParallelStudio(IntelInstaller):
         run_env.prepend_path('MIC_LD_LIBRARY_PATH',
                              join_path(self.prefix, 'lib', 'mic'))
         run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb','lib', 'mic'))
+                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
         run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb','lib', 'mic'))
+                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
 
         if self.spec.satisfies('+all'):
             run_env.prepend_path('PATH',
@@ -218,11 +218,14 @@ class IntelParallelStudio(IntelInstaller):
         if (self.spec.satisfies('+all') or self.spec.satisfies('+mpi')) and \
            self.spec.satisfies('@cluster'):
             run_env.prepend_path('PATH',
-                                 join_path(self.prefix, 'mpi', 'intel64', 'bin'))
+                                 join_path(self.prefix, 'mpi', 'intel64',
+                                           'bin'))
             run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'mpi', 'intel64', 'lib'))
+                                 join_path(self.prefix, 'mpi', 'intel64',
+                                           'lib'))
             run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(self.prefix, 'mpi', 'intel64', 'lib'))
+                                 join_path(self.prefix, 'mpi', 'intel64',
+                                           'lib'))
             run_env.prepend_path('LD_LIBRARY_PATH',
                                  join_path(self.prefix, 'mpi', 'mic', 'lib'))
             run_env.prepend_path('MIC_LIBRARY_PATH',
@@ -233,13 +236,15 @@ class IntelParallelStudio(IntelInstaller):
 
         if self.spec.satisfies('+all') or self.spec.satisfies('+mkl'):
             run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'mkl', 'lib', 'intel64'))
+                                 join_path(self.prefix, 'mkl', 'lib',
+                                           'intel64'))
             run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(self.prefix, 'mkl', 'lib', 'intel64'))
+                                 join_path(self.prefix, 'mkl', 'lib',
+                                           'intel64'))
             run_env.prepend_path('CPATH',
                                  join_path(self.prefix, 'mkl', 'include'))
             run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'mkl','lib', 'mic'))
+                                 join_path(self.prefix, 'mkl', 'lib', 'mic'))
             run_env.set('MKLROOT', join_path(self.prefix, 'mkl'))
 
         if self.spec.satisfies('+all') or self.spec.satisfies('+daal'):
@@ -258,12 +263,13 @@ class IntelParallelStudio(IntelInstaller):
 
         if self.spec.satisfies('+all') or self.spec.satisfies('+ipp'):
             run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'ipp', 'lib', 'intel64'))
+                                 join_path(self.prefix, 'ipp', 'lib',
+                                           'intel64'))
             run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(self.prefix, 'ipp', 'lib', 'intel64'))
+                                 join_path(self.prefix, 'ipp', 'lib',
+                                           'intel64'))
             run_env.prepend_path('CPATH',
                                  join_path(self.prefix, 'ipp', 'include'))
             run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'ipp','lib', 'mic'))
+                                 join_path(self.prefix, 'ipp', 'lib', 'mic'))
             run_env.set('IPPROOT', join_path(self.prefix, 'ipp'))
-

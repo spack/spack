@@ -66,7 +66,7 @@ PHONEHOME_SEND_USAGE_DATA=no
 CONTINUE_WITH_OPTIONAL_ERROR=yes
 COMPONENTS=%s
 """ % (self.intel_prefix, self.intel_prefix, self.global_license_file,
-       self.intel_components))
+                self.intel_components))
 
         install_script = Executable("./install.sh")
         install_script('--silent', silent_config_filename)
@@ -106,8 +106,8 @@ class Intel(IntelInstaller):
             self.prefix.lib, "intel64", "libimf.a")))[0]
 
         # symlink or copy?
-        os.symlink(self.global_license_file, os.path.join(absbindir,
-                   "license.lic"))
+        os.symlink(self.global_license_file,
+                   os.path.join(absbindir, "license.lic"))
 
         if spec.satisfies('+rpath'):
             for compiler_command in ["icc", "icpc", "ifort"]:
@@ -147,7 +147,6 @@ class Intel(IntelInstaller):
         run_env.prepend_path('MIC_LD_LIBRARY_PATH',
                              join_path(self.prefix, 'lib', 'mic'))
         run_env.prepend_path('MIC_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb','lib', 'mic'))
+                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
         run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                             join_path(self.prefix, 'tbb','lib', 'mic'))
-
+                             join_path(self.prefix, 'tbb', 'lib', 'mic'))
