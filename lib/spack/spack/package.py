@@ -104,10 +104,6 @@ class InstallPhase(object):
             # and give them the chance to fail
             for check in self.sanity_checks:
                 check(instance)
-            # Permit instance to drive the execution
-            if self.name == instance.last_phase:
-                raise StopIteration('Stopping at \'{0}\' phase'.format(self.name))
-
 
         return phase_wrapper
 
@@ -1015,14 +1011,6 @@ class PackageBase(object):
         make_jobs   -- Number of make jobs to use for install. Default is ncpus
         run_tests   -- Runn tests within the package's install()
         """
-        #if allowed_phases is None:
-        #    allowed_phases = self.phases
-        # FIXME : Refine the error message
-        last_phase = kwargs.get('stop_at', None)
-        if last_phase is not None and last_phase not in self.phases:
-            raise KeyError('phase {0} is not among the allowed phases for package {1}'.format(last_phase, self))
-        self.last_phase = last_phase
-
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
 
@@ -1059,6 +1047,16 @@ class PackageBase(object):
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
 
+        last_phase = kwargs.get('stop_at', None)
+        phases_to_be_executed = self.phases
+        # We want to stop early
+        if last_phase is not None:
+            if last_phase not in self.phases:
+                raise KeyError('phase {0} is not among the allowed phases for package {1}'.format(last_phase, self))
+            idx = self.phases.index(last_phase)
+            phases_to_be_executed = self.phases[:idx + 1]
+            keep_stage = True
+
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
@@ -1074,70 +1072,65 @@ class PackageBase(object):
                 else:
                     self.do_stage()
 
-            tty.msg("Building %s" % self.name)
+            tty.msg("Building {0} [{1}]".format(self.name, type(self).__base__ ))
 
             self.stage.keep = keep_stage
             self.build_directory = join_path(self.stage.path, 'spack-build')
             self.source_directory = self.stage.source_path
 
-            with self.stage:
-                # Run the pre-install hook in the child process after
-                # the directory is created.
-                spack.hooks.pre_install(self)
-
-                if fake:
-                    self.do_fake_install()
-                else:
-                    # Do the real install in the source directory.
-                    self.stage.chdir_to_source()
-
-                    # Save the build environment in a file before building.
-                    env_path = join_path(os.getcwd(), 'spack-build.env')
-
-                    try:
+            try:
+                with self.stage:
+                    # Run the pre-install hook in the child process after
+                    # the directory is created.
+                    spack.hooks.pre_install(self)
+                    if fake:
+                        self.do_fake_install()
+                    else:
+                        # Do the real install in the source directory.
+                        self.stage.chdir_to_source()
+                        # Save the build environment in a file before building.
+                        env_path = join_path(os.getcwd(), 'spack-build.env')
                         # Redirect I/O to a build log (and optionally to
                         # the terminal)
                         log_path = join_path(os.getcwd(), 'spack-build.out')
-                        log_file = open(log_path, 'w')
                         # FIXME : refactor this assignment
                         self.log_path = log_path
                         self.env_path = env_path
-                        with log_output(log_file, verbose, sys.stdout.isatty(),
-                                        True):
-                            dump_environment(env_path)
-                            try:
-                                for phase in self._InstallPhase_phases:
-                                    # TODO : Log to screen the various phases
-                                    getattr(self, phase)(self.spec, self.prefix)
-                                self.log()
-                            except AttributeError as e:
-                                # FIXME : improve error messages
-                                raise ProcessError(e.message, long_message='')
-                    except ProcessError as e:
-                        # Annotate ProcessErrors with the location of
-                        # the build log
-                        e.build_log = log_path
-                        raise e
+                        dump_environment(env_path)
+                        for phase_name, phase in zip(phases_to_be_executed, self._InstallPhase_phases):
+                            log_file = open(log_path, 'a')
+                            tty.msg('Executing phase : \'{0}\''.format(phase_name))
+                            with log_output(log_file, verbose, sys.stdout.isatty(), True):
+                                getattr(self, phase)(self.spec, self.prefix)
+                        if len(phases_to_be_executed) != len(self._InstallPhase_phases):
+                            return
+                        self.log()
+                    # Run post install hooks before build stage is removed.
+                    spack.hooks.post_install(self)
 
-                # Run post install hooks before build stage is removed.
-                spack.hooks.post_install(self)
+                # Stop timer.
+                self._total_time = time.time() - start_time
+                build_time = self._total_time - self._fetch_time
 
-            # Stop timer.
-            self._total_time = time.time() - start_time
-            build_time = self._total_time - self._fetch_time
+                tty.msg("Successfully installed %s" % self.name,
+                        "Fetch: %s.  Build: %s.  Total: %s." %
+                        (_hms(self._fetch_time), _hms(build_time),
+                         _hms(self._total_time)))
+                print_pkg(self.prefix)
 
-            tty.msg("Successfully installed %s" % self.name,
-                    "Fetch: %s.  Build: %s.  Total: %s." %
-                    (_hms(self._fetch_time), _hms(build_time),
-                     _hms(self._total_time)))
-            print_pkg(self.prefix)
+            except ProcessError as e:
+                # Annotate ProcessErrors with the location of
+                # the build log
+                e.build_log = log_path
+                raise e
 
         try:
-            # Create the install prefix and fork the build process.
-            spack.install_layout.create_install_directory(self.spec)
+            if len(phases_to_be_executed) == len(self.phases):
+                # Create the install prefix and fork the build process.
+                spack.install_layout.create_install_directory(self.spec)
         except directory_layout.InstallDirectoryAlreadyExistsError:
             # FIXME : refactor this as a prerequisites to configure
-            if 'install' in self.phases:
+            if 'install' in phases_to_be_executed:
                 # Abort install if install directory exists.
                 # But do NOT remove it (you'd be overwriting someone else's stuff)
                 tty.warn("Keeping existing install prefix in place.")
@@ -1163,7 +1156,8 @@ class PackageBase(object):
 
         # note: PARENT of the build process adds the new package to
         # the database, so that we don't need to re-read from file.
-        spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
+        if len(phases_to_be_executed) == len(self.phases):
+            spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
 
     def log(self):
         # Copy provenance into the install directory on success
