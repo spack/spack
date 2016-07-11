@@ -568,7 +568,7 @@ The package author is responsible for coming up with a sensible name
 for each version to be fetched from a repository.  For example, if
 you're fetching from a tag like ``v1.0``, you might call that ``1.0``.
 If you're fetching a nameless git commit or an older subversion
-revision, you might give the commit an intuitive name, like ``dev``
+revision, you might give the commit an intuitive name, like ``develop``
 for a development version, or ``some-fancy-new-feature`` if you want
 to be more specific.
 
@@ -577,6 +577,17 @@ commits/revisions, NOT branches or the repository mainline, as
 branches move forward over time and you aren't guaranteed to get the
 same thing every time you fetch a particular version.  Life isn't
 always simple, though, so this is not strictly enforced.
+
+When fetching from from the branch corresponding to the development version
+(often called ``master``,``trunk`` or ``dev``), it is recommended to
+call this version ``develop``. Spack has special treatment for this version so
+ that ``@develop`` will satisfy dependencies like
+``depends_on(abc, when="@x.y.z:")``. In other words, ``@develop`` is
+greater than any other version. The rationale is that certain features or
+options first appear in the development branch. Therefore if a package author
+wants to keep the package on the bleeding edge and provide support for new
+features, it is advised to use ``develop`` for such a version which will
+greatly simplify writing dependencies and version-related conditionals.
 
 In some future release, Spack may support extrapolating repository
 versions as it does for tarball URLs, but currently this is not
@@ -603,7 +614,7 @@ Default branch
 
      class Example(Package):
          ...
-         version('dev', git='https://github.com/example-project/example.git')
+         version('develop', git='https://github.com/example-project/example.git')
 
   This is not recommended, as the contents of the default branch
   change over time.
@@ -676,7 +687,7 @@ Default
 
   .. code-block:: python
 
-     version('hg-head', hg='https://jay.grs.rwth-aachen.de/hg/example')
+     version('develop', hg='https://jay.grs.rwth-aachen.de/hg/example')
 
   Note that this is not recommended; try to fetch a particular
   revision instead.
@@ -708,7 +719,7 @@ Fetching the head
 
   .. code-block:: python
 
-     version('svn-head', svn='https://outreach.scidac.gov/svn/libmonitor/trunk')
+     version('develop', svn='https://outreach.scidac.gov/svn/libmonitor/trunk')
 
   This is not recommended, as the head will move forward over time.
 
@@ -718,7 +729,7 @@ Fetching a revision
 
   .. code-block:: python
 
-     version('svn-head', svn='https://outreach.scidac.gov/svn/libmonitor/trunk',
+     version('develop', svn='https://outreach.scidac.gov/svn/libmonitor/trunk',
              revision=128)
 
 Subversion branches are handled as part of the directory structure, so
@@ -2712,15 +2723,15 @@ build process will start from scratch.
 
 ``spack purge``
 ~~~~~~~~~~~~~~~~~
-Cleans up all of Spack's temporary and cached files.  This can be used to 
-recover disk space if temporary files from interrupted or failed installs 
-accumulate in the staging area.  
+Cleans up all of Spack's temporary and cached files.  This can be used to
+recover disk space if temporary files from interrupted or failed installs
+accumulate in the staging area.
 
 When called with ``--stage`` or ``--all`` (or without arguments, in which case
-the default is ``--all``) this removes all staged files; this is equivalent to 
+the default is ``--all``) this removes all staged files; this is equivalent to
 running ``spack clean`` for every package you have fetched or staged.
 
-When called with ``--cache`` or ``--all`` this will clear all resources 
+When called with ``--cache`` or ``--all`` this will clear all resources
 :ref:`cached <caching>` during installs.
 
 Keeping the stage directory on success
