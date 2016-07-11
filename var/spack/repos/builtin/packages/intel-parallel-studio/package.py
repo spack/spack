@@ -42,15 +42,26 @@ class IntelParallelStudio(IntelInstaller):
     variant('daal',
             default=True, description="Install the Intel DAAL libraries")
     variant('ipp', default=True, description="Install the Intel IPP libraries")
-    variant('tools', default=True, description="""Install the Intel Advisor,\
-VTune Amplifier, and Inspector tools""")
+    variant('tools', default=True, description="Install the Intel Advisor, "
+            "VTune Amplifier, and Inspector tools")
 
     provides('mpi', when='@cluster:+mpi')
     provides('mkl', when='+mkl')
     provides('daal', when='+daal')
     provides('ipp', when='+ipp')
 
+    def check_variants(self, spec):
+        error_message = '\t{variant} can not be turned off if "+all" is set'
+
+        errors = [error_message.format(variant=x)
+                  for x in ('mpi', 'mkl', 'daal', 'ipp', 'tools')
+                  if ('~' + x) in self.spec]
+        if errors:
+            errors = ['incompatible variants given'] + errors
+            raise InstallError('\n'.join(errors))
+
     def install(self, spec, prefix):
+        self.check_variants(spec)
 
         base_components = "ALL"  # when in doubt, install everything
         mpi_components = ""
@@ -58,9 +69,7 @@ VTune Amplifier, and Inspector tools""")
         daal_components = ""
         ipp_components = ""
 
-        if spec.satisfies('+all'):
-            base_components = "ALL"
-        else:
+        if not spec.satisfies('+all'):
             all_components = get_all_components()
             regex = '(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)'
             base_components = \
@@ -77,8 +86,8 @@ VTune Amplifier, and Inspector tools""")
             regex = '(gdb|vtune|inspector|advisor)'
             tool_components = \
                 filter_pick(all_components, re.compile(regex).search)
+            components = base_components
 
-        components = base_components
         if not spec.satisfies('+all'):
             if spec.satisfies('+mpi') and 'cluster' in str(spec.version):
                 components += mpi_components
@@ -92,7 +101,10 @@ VTune Amplifier, and Inspector tools""")
                spec.satisfies('@professional')):
                 components += tool_components
 
-        self.intel_components = ';'.join(components)
+        if spec.satisfies('+all'):
+            self.intel_components = 'ALL'
+        else:
+            self.intel_components = ';'.join(components)
         IntelInstaller.install(self, spec, prefix)
 
         absbindir = os.path.dirname(os.path.realpath(os.path.join(
@@ -142,3 +154,116 @@ VTune Amplifier, and Inspector tools""")
 
         os.symlink(os.path.join(self.prefix.man, "common", "man1"),
                    os.path.join(self.prefix.man, "man1"))
+
+    def setup_environment(self, spack_env, run_env):
+        major_ver = self.version[1]
+
+        # Remove paths that were guessed but are incorrect for this package.
+        run_env.remove_path('LIBRARY_PATH',
+                            join_path(self.prefix, 'lib'))
+        run_env.remove_path('LD_LIBRARY_PATH',
+                            join_path(self.prefix, 'lib'))
+        run_env.remove_path('CPATH',
+                            join_path(self.prefix, 'include'))
+
+        # Add the default set of variables
+        run_env.prepend_path('LIBRARY_PATH',
+                             join_path(self.prefix, 'lib', 'intel64'))
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'lib', 'intel64'))
+        run_env.prepend_path('LIBRARY_PATH',
+                             join_path(self.prefix, 'tbb', 'lib',
+                                       'intel64', 'gcc4.4'))
+        run_env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'tbb', 'lib',
+                                       'intel64', 'gcc4.4'))
+        run_env.prepend_path('CPATH',
+                             join_path(self.prefix, 'tbb', 'include'))
+        run_env.prepend_path('MIC_LIBRARY_PATH',
+                             join_path(self.prefix, 'lib', 'mic'))
+        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'lib', 'mic'))
+        run_env.prepend_path('MIC_LIBRARY_PATH',
+                             join_path(self.prefix, 'tbb','lib', 'mic'))
+        run_env.prepend_path('MIC_LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'tbb','lib', 'mic'))
+
+        if self.spec.satisfies('+all'):
+            run_env.prepend_path('PATH',
+                                 join_path(self.prefix,
+                                           'debugger_{0}'.format(major_ver),
+                                           'gdb', 'intel64_mic', 'bin'))
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(self.prefix,
+                                           'debugger_{0}'.format(major_ver),
+                                           'libipt', 'intel64', 'lib'))
+            run_env.set('GDBSERVER_MIC',
+                        join_path(self.prefix,
+                                  'debugger_{0}'.format(major_ver), 'gdb',
+                                  'targets', 'mic', 'bin', 'gdbserver'))
+            run_env.set('GDB_CROSS',
+                        join_path(self.prefix,
+                                  'debugger_{0}'.format(major_ver),
+                                  'gdb', 'intel64_mic', 'bin', 'gdb-mic'))
+            run_env.set('MPM_LAUNCHER',
+                        join_path(self.prefix,
+                                  'debugger_{0}'.format(major_ver), 'mpm',
+                                  'mic',
+                                  'bin', 'start_mpm.sh'))
+            run_env.set('INTEL_PYTHONHOME',
+                        join_path(self.prefix,
+                                  'debugger_{0}'.format(major_ver), 'python',
+                                  'intel64'))
+
+        if (self.spec.satisfies('+all') or self.spec.satisfies('+mpi')) and \
+           self.spec.satisfies('@cluster'):
+            run_env.prepend_path('PATH',
+                                 join_path(self.prefix, 'mpi', 'intel64', 'bin'))
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(self.prefix, 'mpi', 'intel64', 'lib'))
+            run_env.prepend_path('LIBRARY_PATH',
+                                 join_path(self.prefix, 'mpi', 'intel64', 'lib'))
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(self.prefix, 'mpi', 'mic', 'lib'))
+            run_env.prepend_path('MIC_LIBRARY_PATH',
+                                 join_path(self.prefix, 'mpi', 'mic', 'lib'))
+            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
+                                 join_path(self.prefix, 'mpi', 'mic', 'lib'))
+            run_env.set('I_MPI_ROOT', join_path(self.prefix, 'mpi'))
+
+        if self.spec.satisfies('+all') or self.spec.satisfies('+mkl'):
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(self.prefix, 'mkl', 'lib', 'intel64'))
+            run_env.prepend_path('LIBRARY_PATH',
+                                 join_path(self.prefix, 'mkl', 'lib', 'intel64'))
+            run_env.prepend_path('CPATH',
+                                 join_path(self.prefix, 'mkl', 'include'))
+            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
+                                 join_path(self.prefix, 'mkl','lib', 'mic'))
+            run_env.set('MKLROOT', join_path(self.prefix, 'mkl'))
+
+        if self.spec.satisfies('+all') or self.spec.satisfies('+daal'):
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(self.prefix, 'daal', 'lib',
+                                           'intel64_lin'))
+            run_env.prepend_path('LIBRARY_PATH',
+                                 join_path(self.prefix, 'daal', 'lib',
+                                           'intel64_lin'))
+            run_env.prepend_path('CPATH',
+                                 join_path(self.prefix, 'daal', 'include'))
+            run_env.prepend_path('CLASSPATH',
+                                 join_path(self.prefix, 'daal', 'lib',
+                                           'daal.jar'))
+            run_env.set('DAALROOT', join_path(self.prefix, 'daal'))
+
+        if self.spec.satisfies('+all') or self.spec.satisfies('+ipp'):
+            run_env.prepend_path('LD_LIBRARY_PATH',
+                                 join_path(self.prefix, 'ipp', 'lib', 'intel64'))
+            run_env.prepend_path('LIBRARY_PATH',
+                                 join_path(self.prefix, 'ipp', 'lib', 'intel64'))
+            run_env.prepend_path('CPATH',
+                                 join_path(self.prefix, 'ipp', 'include'))
+            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
+                                 join_path(self.prefix, 'ipp','lib', 'mic'))
+            run_env.set('IPPROOT', join_path(self.prefix, 'ipp'))
+
