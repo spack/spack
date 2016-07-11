@@ -40,6 +40,7 @@ class R(Package):
 
     extendable = True
 
+    version('3.3.1', 'f50a659738b73036e2f5635adbd229c5')
     version('3.3.0', '5a7506c8813432d1621c9725e86baf7a')
     version('3.2.3', '1ba3dac113efab69e706902810cc2970')
     version('3.2.2', '57cef5c2e210a5454da1979562a10e5b')
@@ -86,6 +87,29 @@ class R(Package):
         configure(*configure_args)
         make()
         make('install')
+
+        self.filter_compilers(spec, prefix)
+
+    def filter_compilers(self, spec, prefix):
+        """Run after install to tell the configuration files and Makefiles
+        to use the compilers that Spack built the package with.
+
+        If this isn't done, they'll have CC and CXX set to Spack's generic
+        cc and c++. We want them to be bound to whatever compiler
+        they were built with."""
+
+        etcdir = join_path(prefix, 'rlib', 'R', 'etc')
+
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
+
+        filter_file(env['CC'],  self.compiler.cc,
+                    join_path(etcdir, 'Makeconf'), **kwargs)
+        filter_file(env['CXX'], self.compiler.cxx,
+                    join_path(etcdir, 'Makeconf'), **kwargs)
+        filter_file(env['F77'], self.compiler.f77,
+                    join_path(etcdir, 'Makeconf'), **kwargs)
+        filter_file(env['FC'], self.compiler.fc,
+                    join_path(etcdir, 'Makeconf'), **kwargs)
 
     # ========================================================================
     # Set up environment to make install easy for R extensions.
