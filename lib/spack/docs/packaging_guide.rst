@@ -604,6 +604,7 @@ Git fetching is enabled with the following parameters to ``version``:
   * ``tag``: name of a tag to fetch.
   * ``branch``: name of a branch to fetch.
   * ``commit``: SHA hash (or prefix) of a commit to fetch.
+  * ``submodules``: Also fetch submodules when checking out this repository.
 
 Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
 
@@ -659,6 +660,17 @@ Commits
   e.g. you might use the date as the version, as done above.  Or you
   could just use the abbreviated commit hash.  It's up to the package
   author to decide what makes the most sense.
+
+Submodules
+
+  You can supply ``submodules=True`` to cause Spack to fetch submodules
+  along with the repository at fetch time.
+
+  .. code-block:: python
+
+     version('1.0.1', git='https://github.com/example-project/example.git',
+             tag='v1.0.1', submdoules=True)
+
 
 Installing
 ^^^^^^^^^^^^^^
