@@ -50,7 +50,7 @@ def setup_parser(subparser):
         help="Do not display verbose build output while installing.")
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help="specs to use for install.  Must contain package AND verison.")
+        help="specs to use for install.  Must contain package AND version.")
 
 
 def diy(self, args):
