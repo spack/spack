@@ -1,0 +1,32 @@
+From 7489a3f3d569e2fbf5513ac9dcd769017d9f7eb7 Mon Sep 17 00:00:00 2001
+From: Lisandro Dalcin <dalcinl@gmail.com>
+Date: Thu, 2 Jun 2016 21:57:38 +0300
+Subject: [PATCH] OS X: Fix library path in invocation of install_name_tool
+
+---
+ config/install.py | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/config/install.py b/config/install.py
+index 09acd03..6ce98ae 100755
+--- a/config/install.py
++++ b/config/install.py
+@@ -25,6 +25,7 @@ class Installer:
+ 
+   def setupDirectories(self):
+     self.installDir        = self.destDir
++    self.archDir           = os.path.join(self.rootDir, self.arch)
+     self.rootIncludeDir    = os.path.join(self.rootDir, 'include')
+     self.archIncludeDir    = os.path.join(self.rootDir, self.arch, 'include')
+     self.rootConfDir       = os.path.join(self.rootDir, 'lib','slepc','conf')
+@@ -220,7 +221,7 @@ for dir in dirs:
+     if os.path.splitext(dst)[1] == '.dylib' and os.path.isfile('/usr/bin/install_name_tool'):
+       (result, output) = commands.getstatusoutput('otool -D '+src)
+       oldname = output[output.find("\n")+1:]
+-      installName = oldname.replace(self.destDir, self.installDir)
++      installName = oldname.replace(self.archDir, self.installDir)
+       (result, output) = commands.getstatusoutput('/usr/bin/install_name_tool -id ' + installName + ' ' + dst)
+     # preserve the original timestamps - so that the .a vs .so time order is preserved
+     shutil.copystat(src,dst)
+-- 
+2.7.4.1.g5468f9e
