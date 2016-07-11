@@ -37,7 +37,7 @@ class Dealii(Package):
     version('8.3.0', 'fc6cdcb16309ef4bea338a4f014de6fa')
     version('8.2.1', '71c728dbec14f371297cd405776ccf08')
     version('8.1.0', 'aa8fadc2ce5eb674f44f997461bf668d')
-    version('dev', git='https://github.com/dealii/dealii.git')
+    version('develop', git='https://github.com/dealii/dealii.git')
 
     variant('mpi',      default=True,  description='Compile with MPI')
     variant('arpack',   default=True,  description='Compile with Arpack and PArpack (only with MPI)')
@@ -73,20 +73,21 @@ class Dealii(Package):
     depends_on("doxygen+graphviz", when='+doc')
     depends_on("graphviz",         when='+doc')
     depends_on("gsl",              when='@8.5.0:+gsl')
-    depends_on("gsl",              when='@dev+gsl')
     depends_on("hdf5+mpi",         when='+hdf5+mpi')
     depends_on("metis@5:",         when='+metis')
     depends_on("netcdf+mpi",       when="+netcdf+mpi")
     depends_on("netcdf-cxx",       when='+netcdf+mpi')
     depends_on("oce",              when='+oce')
     depends_on("p4est",            when='+p4est+mpi')
-    depends_on("petsc@:3.6.4+mpi", when='+petsc+mpi')  # FIXME: update after 3.7 is supported upstream.  # NOQA: ignore=E501
-    depends_on("slepc@:3.6.3",     when='+slepc+petsc+mpi')
+    depends_on("petsc+mpi",        when='@8.5.0:+petsc+mpi')
+    depends_on("slepc",            when='@8.5.0:+slepc+petsc+mpi')
+    depends_on("petsc@:3.6.4+mpi", when='@:8.4.1+petsc+mpi')
+    depends_on("slepc@:3.6.3",     when='@:8.4.1+slepc+petsc+mpi')
     depends_on("trilinos",         when='+trilinos+mpi')
 
     # developer dependnecies
-    depends_on("numdiff",     when='@dev')
-    depends_on("astyle@2.04", when='@dev')
+    depends_on("numdiff",     when='@develop')
+    depends_on("astyle@2.04", when='@develop')
 
     def install(self, spec, prefix):
         options = []
@@ -118,6 +119,16 @@ class Dealii(Package):
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix
         ])
+
+        # Set directory structure:
+        if spec.satisfies('@:8.2.1'):
+            options.extend(['-DDEAL_II_COMPONENT_COMPAT_FILES=OFF'])
+        else:
+            options.extend([
+                '-DDEAL_II_EXAMPLES_RELDIR=share/deal.II/examples',
+                '-DDEAL_II_DOCREADME_RELDIR=share/deal.II/',
+                '-DDEAL_II_DOCHTML_RELDIR=share/deal.II/doc'
+            ])
 
         # MPI
         if '+mpi' in spec:
@@ -193,115 +204,118 @@ class Dealii(Package):
             ])
 
         cmake('.', *options)
-
         make()
-        make("test")
+        if self.run_tests:
+            make("test")
         make("install")
 
         # run some MPI examples with different solvers from PETSc and Trilinos
-        env['DEAL_II_DIR'] = prefix
-        print('=====================================')
-        print('============ EXAMPLES ===============')
-        print('=====================================')
-        # take bare-bones step-3
-        print('=====================================')
-        print('============ Step-3 =================')
-        print('=====================================')
-        with working_dir('examples/step-3'):
-            cmake('.')
-            make('release')
-            make('run', parallel=False)
-
-        # An example which uses Metis + PETSc
-        # FIXME: switch step-18 to MPI
-        with working_dir('examples/step-18'):
+        if self.run_tests:
+            env['DEAL_II_DIR'] = prefix
             print('=====================================')
-            print('============= Step-18 ===============')
+            print('============ EXAMPLES ===============')
             print('=====================================')
-            # list the number of cycles to speed up
-            filter_file(r'(end_time = 10;)',  ('end_time = 3;'), 'step-18.cc')
-            if '^petsc' in spec and '^metis' in spec:
+            # take bare-bones step-3
+            print('=====================================')
+            print('============ Step-3 =================')
+            print('=====================================')
+            with working_dir('examples/step-3'):
                 cmake('.')
                 make('release')
                 make('run', parallel=False)
 
-        # take step-40 which can use both PETSc and Trilinos
-        # FIXME: switch step-40 to MPI run
-        with working_dir('examples/step-40'):
-            print('=====================================')
-            print('========== Step-40 PETSc ============')
-            print('=====================================')
-            # list the number of cycles to speed up
-            filter_file(r'(const unsigned int n_cycles = 8;)',
-                        ('const unsigned int n_cycles = 2;'), 'step-40.cc')
-            cmake('.')
-            if '^petsc' in spec:
-                make('release')
-                make('run', parallel=False)
-
-            print('=====================================')
-            print('========= Step-40 Trilinos ==========')
-            print('=====================================')
-            # change Linear Algebra to Trilinos
-            # The below filter_file should be different for versions
-            # before and after 8.4.0
-            if spec.satisfies('@8.4.0:') or spec.satisfies('@dev'):
-                filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',
-                            ('#define FORCE_USE_OF_TRILINOS'), 'step-40.cc')
-            else:
-                filter_file(r'(#define USE_PETSC_LA.*)',
-                            ('// #define USE_PETSC_LA'), 'step-40.cc')
-            if '^trilinos+hypre' in spec:
-                make('release')
-                make('run', parallel=False)
-
-            # the rest of the tests on step 40 only works for
-            # dealii version 8.4.0 and after
-            if spec.satisfies('@8.4.0:') or spec.satisfies('@dev'):
+            # An example which uses Metis + PETSc
+            # FIXME: switch step-18 to MPI
+            with working_dir('examples/step-18'):
                 print('=====================================')
-                print('=== Step-40 Trilinos SuperluDist ====')
+                print('============= Step-18 ===============')
                 print('=====================================')
-                # change to direct solvers
-                filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')  # NOQA: ignore=E501
-                filter_file(r'(LA::MPI::PreconditionAMG preconditioner;)',
-                            (''), 'step-40.cc')
-                filter_file(r'(LA::MPI::PreconditionAMG::AdditionalData data;)',  # NOQA: ignore=E501
-                            (''), 'step-40.cc')
-                filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',  # NOQA: ignore=E501
-                            (''), 'step-40.cc')
-                filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')  # NOQA: ignore=E501
-                filter_file(r'(preconditioner\);)',  (''), 'step-40.cc')
-                if '^trilinos+superlu-dist' in spec:
-                    make('release')
-                    make('run', paralle=False)
-
-                print('=====================================')
-                print('====== Step-40 Trilinos MUMPS =======')
-                print('=====================================')
-                # switch to Mumps
-                filter_file(r'(Amesos_Superludist)',
-                            ('Amesos_Mumps'), 'step-40.cc')
-                if '^trilinos+mumps' in spec:
+                # list the number of cycles to speed up
+                filter_file(r'(end_time = 10;)',  ('end_time = 3;'),
+                            'step-18.cc')
+                if '^petsc' in spec and '^metis' in spec:
+                    cmake('.')
                     make('release')
                     make('run', parallel=False)
 
-        print('=====================================')
-        print('============ Step-36 ================')
-        print('=====================================')
-        with working_dir('examples/step-36'):
-            if 'slepc' in spec:
+            # take step-40 which can use both PETSc and Trilinos
+            # FIXME: switch step-40 to MPI run
+            with working_dir('examples/step-40'):
+                print('=====================================')
+                print('========== Step-40 PETSc ============')
+                print('=====================================')
+                # list the number of cycles to speed up
+                filter_file(r'(const unsigned int n_cycles = 8;)',
+                            ('const unsigned int n_cycles = 2;'), 'step-40.cc')
                 cmake('.')
-                make('release')
-                make('run', parallel=False)
+                if '^petsc' in spec:
+                    make('release')
+                    make('run', parallel=False)
 
-        print('=====================================')
-        print('============ Step-54 ================')
-        print('=====================================')
-        with working_dir('examples/step-54'):
-            if 'oce' in spec:
-                cmake('.')
-                make('release')
-                make('run', parallel=False)
+                print('=====================================')
+                print('========= Step-40 Trilinos ==========')
+                print('=====================================')
+                # change Linear Algebra to Trilinos
+                # The below filter_file should be different for versions
+                # before and after 8.4.0
+                if spec.satisfies('@8.4.0:'):
+                    filter_file(r'(\/\/ #define FORCE_USE_OF_TRILINOS.*)',
+                                ('#define FORCE_USE_OF_TRILINOS'),
+                                'step-40.cc')
+                else:
+                    filter_file(r'(#define USE_PETSC_LA.*)',
+                                ('// #define USE_PETSC_LA'), 'step-40.cc')
+                if '^trilinos+hypre' in spec:
+                    make('release')
+                    make('run', parallel=False)
+
+                # the rest of the tests on step 40 only works for
+                # dealii version 8.4.0 and after
+                if spec.satisfies('@8.4.0:'):
+                    print('=====================================')
+                    print('=== Step-40 Trilinos SuperluDist ====')
+                    print('=====================================')
+                    # change to direct solvers
+                    filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')  # NOQA: ignore=E501
+                    filter_file(r'(LA::MPI::PreconditionAMG preconditioner;)',
+                                (''), 'step-40.cc')
+                    filter_file(r'(LA::MPI::PreconditionAMG::AdditionalData data;)',  # NOQA: ignore=E501
+                                (''), 'step-40.cc')
+                    filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',  # NOQA: ignore=E501
+                                (''), 'step-40.cc')
+                    filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')  # NOQA: ignore=E501
+                    filter_file(r'(preconditioner\);)',  (''), 'step-40.cc')
+                    if '^trilinos+superlu-dist' in spec:
+                        make('release')
+                        make('run', paralle=False)
+
+                    print('=====================================')
+                    print('====== Step-40 Trilinos MUMPS =======')
+                    print('=====================================')
+                    # switch to Mumps
+                    filter_file(r'(Amesos_Superludist)',
+                                ('Amesos_Mumps'), 'step-40.cc')
+                    if '^trilinos+mumps' in spec:
+                        make('release')
+                        make('run', parallel=False)
+
+            print('=====================================')
+            print('============ Step-36 ================')
+            print('=====================================')
+            with working_dir('examples/step-36'):
+                if 'slepc' in spec:
+                    cmake('.')
+                    make('release')
+                    make('run', parallel=False)
+
+            print('=====================================')
+            print('============ Step-54 ================')
+            print('=====================================')
+            with working_dir('examples/step-54'):
+                if 'oce' in spec:
+                    cmake('.')
+                    make('release')
+                    make('run', parallel=False)
 
     def setup_environment(self, spack_env, env):
         env.set('DEAL_II_DIR', self.prefix)
