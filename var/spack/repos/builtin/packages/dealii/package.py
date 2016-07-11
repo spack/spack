@@ -120,6 +120,16 @@ class Dealii(Package):
             '-DZLIB_DIR=%s' % spec['zlib'].prefix
         ])
 
+        # Set directory structure:
+        if spec.satisfies('@:8.2.1'):
+            options.extend(['-DDEAL_II_COMPONENT_COMPAT_FILES=OFF'])
+        else:
+            options.extend([
+                '-DDEAL_II_EXAMPLES_RELDIR=share/deal.II/examples',
+                '-DDEAL_II_DOCREADME_RELDIR=share/deal.II/',
+                '-DDEAL_II_DOCHTML_RELDIR=share/deal.II/doc'
+            ])
+
         # MPI
         if '+mpi' in spec:
             options.extend([
