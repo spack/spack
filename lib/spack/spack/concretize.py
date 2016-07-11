@@ -254,13 +254,18 @@ class DefaultConcretizer(object):
 
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return.  Otherwise, add
-           the default variants from the package specification.
+           the user preferences from packages.yaml or the default variants from
+           the package specification.
         """
         changed = False
+        preferred_variants = spack.pkgsort.spec_preferred_variants(spec.package_class.name)
         for name, variant in spec.package_class.variants.items():
             if name not in spec.variants:
-                spec.variants[name] = spack.spec.VariantSpec(name, variant.default)
                 changed = True
+                if name in preferred_variants:
+                    spec.variants[name] = preferred_variants.get(name)
+                else:
+                    spec.variants[name] = spack.spec.VariantSpec(name, variant.default)
         return changed
 
 

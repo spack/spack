@@ -158,6 +158,13 @@ class PreferredPackages(object):
         return bool(self._order_for_package(pkgname, 'providers',
                     provider_str, False))
 
+    def spec_preferred_variants(self, pkgname):
+        """Return a VariantMap of preferred variants and their values"""
+        variants = self.preferred.get(pkgname, {}).get('variants', '')
+        if not isinstance(variants, basestring):
+            variants = "".join(variants)
+        return spack.spec.Spec(pkgname + variants).variants
+
     def version_compare(self, pkgname, a, b):
         """Return less-than-0, 0, or greater than 0 if version a of pkgname is
            respectively less-than, equal-to, or greater-than version b of

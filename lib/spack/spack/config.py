@@ -257,7 +257,13 @@ section_schemas = {
                             'paths': {
                                 'type' : 'object',
                                 'default' : {},
-                            }
+                             },
+                            'variants': {
+                                'oneOf' : [
+                                    { 'type' : 'string' },
+                                    { 'type' : 'array',
+                                      'items' : { 'type' : 'string' } },
+                                    ], },
                         },},},},},},
 
     'modules': {
