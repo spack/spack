@@ -44,8 +44,8 @@ class Libxml2(Package):
     def install(self, spec, prefix):
         if '+python' in spec:
             site_packages_dir = os.path.join(prefix,
-                                             'lib/python%s/site-packages'
-                                             % (spec['python'].version.up_to(2)))
+                                             'lib/python%s/site-packages' %
+                                             (spec['python'].version.up_to(2)))
             python_args = ["--with-python=%s" % spec['python'].prefix,
                            "--with-python-install-dir=%s" % site_packages_dir]
         else:
