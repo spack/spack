@@ -50,6 +50,7 @@ parameters=(
     SPACK_CXX_RPATH_ARG
     SPACK_F77_RPATH_ARG
     SPACK_FC_RPATH_ARG
+    SPACK_CC_DYNAMIC_LINKER_ARG
     SPACK_SHORT_SPEC
 )
 
@@ -161,6 +162,9 @@ fi
 
 # Set up rpath variable according to language.
 eval rpath=\$SPACK_${comp}_RPATH_ARG
+
+# Set up dynamic linker variable according to language.
+eval dynamic_linker=\$SPACK_${comp}_DYNAMIC_LINKER_ARG
 
 # Dump the version and exit if we're in testing mode.
 if [[ $SPACK_TEST_COMMAND == dump-mode ]]; then
@@ -284,6 +288,7 @@ for dep in "${deps[@]}"; do
             args=("-L$dep/lib64" "${args[@]}")
         fi
     fi
+
 done
 
 # Include all -L's and prefix/whatever dirs in rpath
@@ -300,6 +305,18 @@ case "$mode" in
     ld|ccld)
         args=("${args[@]}" ${SPACK_LDLIBS[@]}) ;;
 esac
+
+# Prepend SPACK_DYNAMIC_LINKER & add it's directory to rpath
+if [[ -n "$SPACK_DYNAMIC_LINKER" && -e "$SPACK_DYNAMIC_LINKER" ]]; then
+    dynamic_linker_dir="$(dirname $SPACK_DYNAMIC_LINKER)"
+    if [[ $mode == ccld ]]; then
+        $add_rpaths && args=("$dynamic_linker$SPACK_DYNAMIC_LINKER" "${args[@]}")
+        $add_rpaths && args=("$rpath$dynamic_linker_dir" "${args[@]}")
+    elif [[ $mode == ld ]]; then
+        $add_rpaths && args=("--dynamic-linker" "$SPACK_DYNAMIC_LINKER" "${args[@]}")
+        $add_rpaths && args=("-rpath" "$dynamic_linker_dir" "${args[@]}")
+    fi
+fi
 
 #
 # Unset pesky environment variables that could affect build sanity.
