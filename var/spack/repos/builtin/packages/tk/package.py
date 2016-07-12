@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Tk(Package):
     """Tk is a graphical user interface toolkit that takes developing
        desktop applications to a higher level than conventional
@@ -33,12 +34,14 @@ class Tk(Package):
        and more."""
     homepage = "http://www.tcl.tk"
 
-    def url_for_version(self, version):
-        return "http://prdownloads.sourceforge.net/tcl/tk%s-src.tar.gz" % version
-
+    version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
     version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
 
     depends_on("tcl")
+
+    def url_for_version(self, version):
+        base_url = "http://prdownloads.sourceforge.net/tcl"
+        return "{0}/tk{1}-src.tar.gz".format(base_url, version)
 
     def setup_environment(self, spack_env, env):
         # When using Tkinter from within spack provided python+tk, python
@@ -48,7 +51,7 @@ class Tk(Package):
 
     def install(self, spec, prefix):
         with working_dir('unix'):
-            configure("--prefix=%s" % prefix,
-                      "--with-tcl=%s" % spec['tcl'].prefix.lib)
+            configure("--prefix={0}".format(prefix),
+                      "--with-tcl={0}".format(spec['tcl'].prefix.lib))
             make()
             make("install")
