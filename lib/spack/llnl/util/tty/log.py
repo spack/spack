@@ -203,8 +203,13 @@ class log_output(object):
         # Flush the log to disk.
         sys.stdout.flush()
         sys.stderr.flush()
-        os.dup2(self._stdout, sys.stdout.fileno())
-        os.dup2(self._stderr, sys.stderr.fileno())
+        if self.directAssignment:
+            # We seem to need this only to pass test/install.py
+            sys.stdout = self._stdout
+            sys.stderr = self._stderr
+        else:
+            os.dup2(self._stdout, sys.stdout.fileno())
+            os.dup2(self._stderr, sys.stderr.fileno())
 
         # restore output options.
         color._force_color = self._force_color

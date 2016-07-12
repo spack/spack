@@ -982,8 +982,7 @@ class Package(object):
                         # Redirect I/O to a build log (and optionally to
                         # the terminal)
                         log_path = join_path(os.getcwd(), 'spack-build.out')
-                        log_file = open(log_path, 'w')
-                        with log_output(log_file, verbose, sys.stdout.isatty(),
+                        with log_output(log_path, verbose, sys.stdout.isatty(),
                                         True):
                             dump_environment(env_path)
                             self.install(self.spec, self.prefix)
