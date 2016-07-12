@@ -41,7 +41,7 @@ class PreferredPackages(object):
             pkglist.append('all')
         for pkg in pkglist:
             order = self.preferred.get(pkg, {}).get(component, {})
-            if type(order) is dict:
+            if isinstance(order, dict) and second_key:
                 order = order.get(second_key, {})
             if not order:
                 continue
@@ -89,9 +89,9 @@ class PreferredPackages(object):
     # a and b are considered to match entries in the sorting list if they
     # satisfy the list component.
     def _spec_compare(self, pkgname, component, a, b, reverse_natural_compare, second_key):
-        if not a or not a.concrete:
+        if not a or (not a.concrete and not second_key):
             return -1
-        if not b or not b.concrete:
+        if not b or (not b.concrete and not second_key):
             return 1
         specs = self._spec_for_pkgname(pkgname, component, second_key)
         a_index = None
