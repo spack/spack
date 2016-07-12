@@ -511,7 +511,10 @@ def fork(pkg, function, dirty=False):
             child_connection.close()
 
     parent_connection, child_connection = multiprocessing.Pipe()
-    p = multiprocessing.Process(target=child_execution, args=(child_connection,))
+    p = multiprocessing.Process(
+        target=child_execution,
+        args=(child_connection,)
+    )
     p.start()
     exc_type, exception, traceback = parent_connection.recv()
     p.join()

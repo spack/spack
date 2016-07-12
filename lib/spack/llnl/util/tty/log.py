@@ -24,18 +24,18 @@
 ##############################################################################
 """Utility classes for logging the output of blocks of code.
 """
-import sys
+import multiprocessing
 import os
 import re
 import select
-import inspect
-import multiprocessing
+import sys
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 
 # Use this to strip escape sequences
 _escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
+
 
 def _strip(line):
     """Strip color and control characters from a line."""
@@ -59,9 +59,9 @@ class keyboard_input(object):
     When the with block completes, this will restore settings before
     canonical and echo were disabled.
     """
+
     def __init__(self, stream):
         self.stream = stream
-
 
     def __enter__(self):
         self.old_cfg = None
@@ -87,9 +87,8 @@ class keyboard_input(object):
             # Apply new settings for terminal
             termios.tcsetattr(fd, termios.TCSADRAIN, self.new_cfg)
 
-        except Exception, e:
+        except Exception:
             pass  # Some OS's do not support termios, so ignore.
-
 
     def __exit__(self, exc_type, exception, traceback):
         # If termios was avaialble, restore old settings after the
@@ -116,6 +115,7 @@ class log_output(object):
     it at instance deletion
     If echo is True, also prints the output to stdout.
     """
+
     def __init__(self, filename, echo=False, force_color=False, debug=False):
         self.filename = filename
         # Various output options
@@ -129,7 +129,11 @@ class log_output(object):
         self.read, self.write = os.pipe()
 
         # Spawn a daemon that writes what it reads from a pipe
-        self.p = multiprocessing.Process(target=self._forward_redirected_pipe, args=(self.read,), name='logger_daemon')
+        self.p = multiprocessing.Process(
+            target=self._forward_redirected_pipe,
+            args=(self.read,),
+            name='logger_daemon'
+        )
         self.p.daemon = True
         self.p.start()
 
