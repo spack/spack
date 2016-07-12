@@ -39,14 +39,17 @@ class Bzip2(Package):
 
 
     def patch(self):
-        mf = FileFilter('Makefile-libbz2_so')
-        mf.filter(r'^CC=gcc', 'CC=cc')
+        # bzip2 comes with two separate Makefiles for static and dynamic builds
+        # Tell both to use Spack's compiler wrapper instead of GCC
+        filter_file(r'^CC=gcc', 'CC=cc', 'Makefile')
+        filter_file(r'^CC=gcc', 'CC=cc', 'Makefile-libbz2_so')
 
         # Below stuff patches the link line to use RPATHs on Mac OS X.
         if 'darwin' in self.spec.architecture:
             v = self.spec.version
             v1, v2, v3 = (v.up_to(i) for i in (1,2,3))
 
+            mf = FileFilter('Makefile-libbz2_so')
             mf.filter('$(CC) -shared -Wl,-soname -Wl,libbz2.so.{0} -o libbz2.so.{1} $(OBJS)'.format(v2, v3),
                       '$(CC) -dynamiclib -Wl,-install_name -Wl,@rpath/libbz2.{0}.dylib -current_version {1} -compatibility_version {2} -o libbz2.{3}.dylib $(OBJS)'.format(v1, v2, v3, v3), string=True)
 
@@ -59,8 +62,10 @@ class Bzip2(Package):
 
 
     def install(self, spec, prefix):
+        # Build the dynamic library first
         make('-f', 'Makefile-libbz2_so')
-        make('clean')
+        # Build the static library and everything else
+        make()
         make("install", "PREFIX=%s" % prefix)
 
         install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
