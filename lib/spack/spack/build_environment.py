@@ -499,41 +499,24 @@ def fork(pkg, function, dirty=False):
     well. If things go well, the child exits and the parent
     carries on.
     """
-    try:
-        pid = os.fork()
-    except OSError as e:
-        raise InstallError("Unable to fork build process: %s" % e)
 
-    if pid == 0:
-        # Give the child process the package's build environment.
-        setup_package(pkg, dirty=dirty)
-
+    def child_execution(child_connection):
         try:
-            # call the forked function.
+            setup_package(pkg, dirty=dirty)
             function()
+            child_connection.send([None, None, None])
+        except Exception as e:
+            child_connection.send([type(e), e, None])
+        finally:
+            child_connection.close()
 
-            # Use os._exit here to avoid raising a SystemExit exception,
-            # which interferes with unit tests.
-            os._exit(0)
-
-        except spack.error.SpackError as e:
-            e.die()
-
-        except:
-            # Child doesn't raise or return to main spack code.
-            # Just runs default exception handler and exits.
-            sys.excepthook(*sys.exc_info())
-            os._exit(1)
-
-    else:
-        # Parent process just waits for the child to complete.  If the
-        # child exited badly, assume it already printed an appropriate
-        # message.  Just make the parent exit with an error code.
-        pid, returncode = os.waitpid(pid, 0)
-        if returncode != 0:
-            message = "Installation process had nonzero exit code : {code}"
-            strcode = str(returncode)
-            raise InstallError(message.format(code=strcode))
+    parent_connection, child_connection = multiprocessing.Pipe()
+    p = multiprocessing.Process(target=child_execution, args=(child_connection,))
+    p.start()
+    exc_type, exception, traceback = parent_connection.recv()
+    p.join()
+    if exception is not None:
+        raise exception
 
 
 class InstallError(spack.error.SpackError):
