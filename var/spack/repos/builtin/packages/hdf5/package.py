@@ -27,7 +27,7 @@ from spack import *
 import shutil
 
 
-class Hdf5(Package):
+class Hdf5(AutotoolsPackage):
     """HDF5 is a data model, library, and file format for storing and managing
        data. It supports an unlimited variety of datatypes, and is designed for
        flexible and efficient I/O and for high volume and complex data.
@@ -58,13 +58,15 @@ class Hdf5(Package):
     depends_on("szip", when='+szip')
     depends_on("zlib")
 
-    def validate(self, spec):
+    @AutotoolsPackage.precondition('configure')
+    def validate(self):
         """
         Checks if incompatible variants have been activated at the same time
 
         :param spec: spec of the package
         :raises RuntimeError: in case of inconsistencies
         """
+        spec = self.spec
         if '+fortran' in spec and not self.compiler.fc:
             msg = 'cannot build a fortran variant without a fortran compiler'
             raise RuntimeError(msg)
@@ -73,8 +75,8 @@ class Hdf5(Package):
             msg = 'cannot use variant +threadsafe with either +cxx or +fortran'
             raise RuntimeError(msg)
 
-    def install(self, spec, prefix):
-        self.validate(spec)
+    def configure_args(self):
+        spec = self.spec
         # Handle compilation after spec validation
         extra_args = []
 
@@ -137,16 +139,19 @@ class Hdf5(Package):
                 '--disable-hl',
             ])
 
-        configure(
-            "--prefix=%s" % prefix,
-            "--with-zlib=%s" % spec['zlib'].prefix,
-            *extra_args)
-        make()
-        make("install")
-        self.check_install(spec)
+        return ["--with-zlib=%s" % spec['zlib'].prefix] + extra_args
+        #configure(
+        #    "--prefix=%s" % prefix,
+        #    "--with-zlib=%s" % spec['zlib'].prefix,
+        #    *extra_args)
+        #make()
+        #make("install")
+        #self.check_install(spec)
 
-    def check_install(self, spec):
+    @AutotoolsPackage.sanity_check('install')
+    def check_install(self):
         "Build and run a small program to test the installed HDF5 library"
+        spec = self.spec
         print "Checking HDF5 installation..."
         checkdir = "spack-check"
         with working_dir(checkdir, create=True):

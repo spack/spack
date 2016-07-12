@@ -40,6 +40,8 @@ import textwrap
 import time
 import functools
 import inspect
+import copy
+
 from StringIO import StringIO
 from urlparse import urlparse
 
@@ -135,7 +137,17 @@ class PackageMeta(type):
             checks = getattr(meta, attr_name)
             if checks:
                 for phase_name, funcs in checks.items():
-                    phase = attr_dict.get(PackageMeta.phase_fmt.format(phase_name))
+                    try:
+                        # Search for the phase in the attribute dictionary
+                        phase = attr_dict[PackageMeta.phase_fmt.format(phase_name)]
+                    except KeyError:
+                        # If it is not there it's in the bases
+                        # and we added a check. We need to copy
+                        # and extend
+                        for base in bases:
+                            phase = getattr(base, PackageMeta.phase_fmt.format(phase_name), None)
+                        attr_dict[PackageMeta.phase_fmt.format(phase_name)] = copy.deepcopy(phase)
+                        phase = attr_dict[PackageMeta.phase_fmt.format(phase_name)]
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
                 setattr(meta, attr_name, {})
@@ -510,6 +522,8 @@ class PackageBase(object):
 
         if self.is_extension:
             spack.repo.get(self.extendee_spec)._check_extendable()
+
+        self.extra_args = {}
 
     @property
     def package_dir(self):
