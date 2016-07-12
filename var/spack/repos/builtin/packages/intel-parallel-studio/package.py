@@ -189,10 +189,6 @@ class IntelParallelStudio(IntelInstaller):
                              join_path(self.prefix, 'tbb', 'lib', 'mic'))
 
         if self.spec.satisfies('+all'):
-            run_env.prepend_path('PATH',
-                                 join_path(self.prefix,
-                                           'debugger_{0}'.format(major_ver),
-                                           'gdb', 'intel64_mic', 'bin'))
             run_env.prepend_path('LD_LIBRARY_PATH',
                                  join_path(self.prefix,
                                            'debugger_{0}'.format(major_ver),
@@ -218,21 +214,21 @@ class IntelParallelStudio(IntelInstaller):
         if (self.spec.satisfies('+all') or self.spec.satisfies('+mpi')) and \
            self.spec.satisfies('@cluster'):
             run_env.prepend_path('PATH',
-                                 join_path(self.prefix, 'mpi', 'intel64',
+                                 join_path(self.prefix, 'impi', 'intel64',
                                            'bin'))
             run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'mpi', 'intel64',
+                                 join_path(self.prefix, 'impi', 'intel64',
                                            'lib'))
             run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(self.prefix, 'mpi', 'intel64',
+                                 join_path(self.prefix, 'impi', 'intel64',
                                            'lib'))
             run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'mpi', 'mic', 'lib'))
+                                 join_path(self.prefix, 'impi', 'mic', 'lib'))
             run_env.prepend_path('MIC_LIBRARY_PATH',
-                                 join_path(self.prefix, 'mpi', 'mic', 'lib'))
+                                 join_path(self.prefix, 'impi', 'mic', 'lib'))
             run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'mpi', 'mic', 'lib'))
-            run_env.set('I_MPI_ROOT', join_path(self.prefix, 'mpi'))
+                                 join_path(self.prefix, 'impi', 'mic', 'lib'))
+            run_env.set('I_MPI_ROOT', join_path(self.prefix, 'impi'))
 
         if self.spec.satisfies('+all') or self.spec.satisfies('+mkl'):
             run_env.prepend_path('LD_LIBRARY_PATH',
