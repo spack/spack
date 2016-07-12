@@ -104,7 +104,8 @@ class InstallPhase(object):
             # and give them the chance to fail
             for check in self.sanity_checks:
                 check(instance)
-
+            if getattr(instance, 'last_phase', None) == self.name:
+                raise StopIteration('Stopping at \'{0}\' phase'.format(self.name))
         return phase_wrapper
 
 
@@ -1047,15 +1048,9 @@ class PackageBase(object):
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
 
-        last_phase = kwargs.get('stop_at', None)
-        phases_to_be_executed = self.phases
-        # We want to stop early
-        if last_phase is not None:
-            if last_phase not in self.phases:
-                raise KeyError('phase {0} is not among the allowed phases for package {1}'.format(last_phase, self))
-            idx = self.phases.index(last_phase)
-            phases_to_be_executed = self.phases[:idx + 1]
-            keep_stage = True
+        self.last_phase = kwargs.get('stop_at', None)
+        if self.last_phase is not None and self.last_phase not in self.phases:
+            tty.die('\'{0.last_phase}\' is not among the allowed phases for package {0.name}'.format(self))
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
@@ -1097,13 +1092,11 @@ class PackageBase(object):
                         self.log_path = log_path
                         self.env_path = env_path
                         dump_environment(env_path)
-                        for phase_name, phase in zip(phases_to_be_executed, self._InstallPhase_phases):
-                            log_file = open(log_path, 'a')
+                        log_redirection = log_output(log_path, verbose, sys.stdout.isatty(), True)
+                        for phase_name, phase in zip(self.phases, self._InstallPhase_phases):
                             tty.msg('Executing phase : \'{0}\''.format(phase_name))
-                            with log_output(log_file, verbose, sys.stdout.isatty(), True):
+                            with log_redirection:
                                 getattr(self, phase)(self.spec, self.prefix)
-                        if len(phases_to_be_executed) != len(self._InstallPhase_phases):
-                            return
                         self.log()
                     # Run post install hooks before build stage is removed.
                     spack.hooks.post_install(self)
@@ -1125,9 +1118,8 @@ class PackageBase(object):
                 raise e
 
         try:
-            if len(phases_to_be_executed) == len(self.phases):
-                # Create the install prefix and fork the build process.
-                spack.install_layout.create_install_directory(self.spec)
+            # Create the install prefix and fork the build process.
+            spack.install_layout.create_install_directory(self.spec)
         except directory_layout.InstallDirectoryAlreadyExistsError:
             # FIXME : refactor this as a prerequisites to configure
             if 'install' in phases_to_be_executed:
@@ -1142,6 +1134,13 @@ class PackageBase(object):
 
         try:
             spack.build_environment.fork(self, build_process, dirty=dirty)
+            # note: PARENT of the build process adds the new package to
+            # the database, so that we don't need to re-read from file.
+            spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
+        except StopIteration as e:
+            tty.msg(e.message)
+            if not keep_prefix:
+                self.remove_prefix()
         except:
             # remove the install prefix if anything went wrong during install.
             if not keep_prefix:
@@ -1153,11 +1152,6 @@ class PackageBase(object):
                          self.prefix,
                          wrap=False)
             raise
-
-        # note: PARENT of the build process adds the new package to
-        # the database, so that we don't need to re-read from file.
-        if len(phases_to_be_executed) == len(self.phases):
-            spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
 
     def log(self):
         # Copy provenance into the install directory on success
@@ -1570,6 +1564,7 @@ class EditableMakefile(PackageBase):
             inspect.getmodule(self).make(*args)
 
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+
 
 class AutotoolsPackage(PackageBase):
     phases = ['autoreconf', 'configure', 'build', 'install']
