@@ -95,10 +95,8 @@ def module_find(mtype, flags, spec_array):
             tty.die("No %s module is installed for %s" % (mtype, spec))
         modules_list.append((spec, mod))
 
-
     # --------------------------------------
     raw_specs = spack.cmd.parse_specs(spec_array)
-    modules = set()    # Modules we will load
     seen = set()
     for raw_spec in raw_specs:
 
@@ -120,20 +118,24 @@ def module_find(mtype, flags, spec_array):
 
         # Remove duplicates while keeping order
         modules_unique = list()
-        for spec,mod in modules_dups:
+        for spec, mod in modules_dups:
             if mod.use_name not in seen:
-                modules_unique.append((spec,mod))
+                modules_unique.append((spec, mod))
                 seen.add(mod.use_name)
 
         # Output...
         if flags.shell:
             module_cmd = {'tcl': 'module load', 'dotkit': 'dotkit use'}[mtype]
-        for spec,mod in modules_unique:
+        for spec, mod in modules_unique:
             if flags.shell:
                 print('# %s' % spec.format())
-                print('%s %s%s' % (module_cmd, flags.prefix if flags.prefix else '', mod.use_name))
+                print('%s %s%s' % (
+                    module_cmd,
+                    flags.prefix if flags.prefix else '',
+                    mod.use_name))
             else:
                 print(mod.use_name)
+
 
 def module_refresh():
     """Regenerate all module files for installed packages known to
