@@ -66,9 +66,24 @@ class Atlas(Package):
 
         options = []
         if '+shared' in spec:
-            options.append('--shared')
+            options.extend([
+                '--shared'
+            ])
+            # TODO: for non GNU add '-Fa', 'alg', '-fPIC' ?
 
-        # Lapack resource
+        # configure for 64-bit build
+        options.extend([
+            '-b', '64'
+        ])
+
+        # set compilers:
+        options.extend([
+            '-C', 'ic', spack_cc,
+            '-C', 'if', spack_f77
+        ])
+
+        # Lapack resource to provide full lapack build. Note that
+        # ATLAS only provides a few LAPACK routines natively.
         lapack_stage = self.stage[1]
         lapack_tarfile = os.path.basename(lapack_stage.fetcher.url)
         lapack_tarfile_path = join_path(lapack_stage.path, lapack_tarfile)
@@ -81,4 +96,8 @@ class Atlas(Package):
             make('check')
             make('ptcheck')
             make('time')
+            if '+shared' in spec:
+                with working_dir('lib'):
+                    make('shared_all')
+
             make("install")
