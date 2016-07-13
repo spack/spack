@@ -37,7 +37,6 @@ class Guile(Package):
     variant('readline', default=True, description='Use the readline library')
 
     depends_on('gmp@4.2:')
-    depends_on('libiconv')
     depends_on('gettext')
     depends_on('libtool@1.5.6:')
     depends_on('libunistring@0.9.3:')
@@ -49,7 +48,6 @@ class Guile(Package):
     def install(self, spec, prefix):
         config_args = [
             '--prefix={0}'.format(prefix),
-            '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix),
             '--with-libunistring-prefix={0}'.format(
                 spec['libunistring'].prefix),
             '--with-libltdl-prefix={0}'.format(spec['libtool'].prefix),
@@ -68,4 +66,3 @@ class Guile(Package):
         make()
         make('check')
         make('install')
-        make('installcheck')

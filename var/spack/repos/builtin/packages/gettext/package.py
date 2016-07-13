@@ -34,7 +34,6 @@ class Gettext(Package):
     version('0.19.7',   'f81e50556da41b44c1d59ac93474dca5')
 
     # Recommended variants
-    variant('libiconv', default=True, description='Use libiconv')
     variant('curses',   default=True, description='Use libncurses')
     variant('libxml2',  default=True, description='Use libxml2')
     variant('git',      default=True, description='Enable git support')
@@ -46,7 +45,6 @@ class Gettext(Package):
     variant('libunistring', default=False, description='Use libunistring')
 
     # Recommended dependencies
-    depends_on('libiconv', when='+libiconv')
     depends_on('ncurses',  when='+curses')
     depends_on('libxml2',  when='+libxml2')
     # Java runtime and compiler (e.g. GNU gcj or kaffe)
@@ -75,12 +73,6 @@ class Gettext(Package):
             '--with-lispdir=%s/emacs/site-lisp/gettext' % prefix.share,
             '--without-cvs'
         ]
-
-        if '+libiconv' in spec:
-            config_args.append('--with-libiconv-prefix={0}'.format(
-                spec['libiconv'].prefix))
-        else:
-            config_args.append('--without-libiconv-prefix')
 
         if '+curses' in spec:
             config_args.append('--with-ncurses-prefix={0}'.format(
