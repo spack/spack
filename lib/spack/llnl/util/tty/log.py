@@ -218,5 +218,5 @@ class log_output(object):
     def __del__(self):
         """Closes the pipes and joins the daemon"""
         os.close(self.write)
-        self.p.join()
+        self.p.join(60.0)  # 1 minute to join the daemonic child
         os.close(self.read)
