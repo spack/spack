@@ -45,6 +45,7 @@ class Opencv(Package):
 
     variant('eigen', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
+    variant('cuda', default=False, description='Activates support for CUDA')
 
     depends_on('zlib')
     depends_on('libpng')
@@ -55,9 +56,9 @@ class Opencv(Package):
     depends_on('py-numpy')
 
     depends_on('eigen', when='+eigen')
+    depends_on('cuda', when='+cuda')
 
     # FIXME : GUI extensions missing
-    # FIXME : CUDA extensions still missing
 
     def install(self, spec, prefix):
         cmake_options = []
@@ -66,7 +67,8 @@ class Opencv(Package):
         cmake_options.extend(['-DCMAKE_BUILD_TYPE:STRING=%s' % ('Debug' if '+debug' in spec else 'Release'),
                               '-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if '+shared' in spec else 'OFF'),
                               '-DENABLE_PRECOMPILED_HEADERS:BOOL=OFF',
-                              '-DWITH_IPP:BOOL=%s' % ('ON' if '+ipp' in spec else 'OFF')])
+                              '-DWITH_IPP:BOOL=%s' % ('ON' if '+ipp' in spec else 'OFF'),
+                              '-DWITH_CUDA:BOOL=%s' % ('ON' if '+cuda' in spec else 'OFF')])
 
         with working_dir('spack_build', create=True):
             cmake('..', *cmake_options)
