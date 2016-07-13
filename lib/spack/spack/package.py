@@ -33,15 +33,14 @@ Homebrew makes it very easy to create packages.  For a complete
 rundown on spack and how it differs from homebrew, look at the
 README.
 """
-import os
-import re
-import string
-import textwrap
-import time
+import copy
 import functools
 import inspect
-import copy
-
+import os
+import platform
+import re
+import textwrap
+import time
 from StringIO import StringIO
 from urlparse import urlparse
 
@@ -65,7 +64,7 @@ from spack import directory_layout
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
-from spack.util.executable import ProcessError, which
+from spack.util.executable import ProcessError
 from spack.version import *
 
 """Allowed URL schemes for spack packages."""
@@ -1644,6 +1643,49 @@ class AutotoolsPackage(PackageBase):
     PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
 
 
+class CMakePackage(PackageBase):
+    phases = ['cmake', 'build', 'install']
+
+    def build_type(self):
+        return 'RelWithDebInfo'
+
+    @property
+    def std_cmake_args(self):
+        # standard CMake arguments
+        args = ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(self.prefix),
+                '-DCMAKE_BUILD_TYPE:STRING={0}'.format(self.build_type())]
+        if platform.mac_ver()[0]:
+            args.append('-DCMAKE_FIND_FRAMEWORK:STRING=LAST')
+
+        # Set up CMake rpath
+        args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE')
+        rpaths = ':'.join(spack.build_environment.get_rpaths(self))
+        args.append('-DCMAKE_INSTALL_RPATH:STRING={0}'.format(rpaths))
+        return args
+
+    def wdir(self):
+        return join_path(self.stage.source_path, 'spack-build')
+
+    def cmake_args(self):
+        return list()
+
+    def cmake(self, spec, prefix):
+        options = [self.source_directory] + self.std_cmake_args + self.cmake_args()
+        create = not os.path.exists(self.wdir())
+        with working_dir(self.wdir(), create=create):
+            inspect.getmodule(self).cmake(*options)
+
+    def build(self, spec, prefix):
+        with working_dir(self.wdir()):
+            inspect.getmodule(self).make()
+
+    def install(self, spec, prefix):
+        with working_dir(self.wdir()):
+            inspect.getmodule(self).make('install')
+
+    PackageBase.sanity_check('install')(PackageBase.sanity_check_prefix)
+
+
 def install_dependency_symlinks(pkg, spec, prefix):
     """Execute a dummy install and flatten dependencies"""
     flatten_dependencies(spec, prefix)
@@ -1753,107 +1795,107 @@ def _hms(seconds):
 #    os.chmod(path, mode)
 
 
-class CMakePackage(PackageBase):
-    phases = ['configure', 'build', 'install', 'provenance']
-
-    def make_make(self):
-        import multiprocessing
-        # number of jobs spack will to build with.
-        jobs = multiprocessing.cpu_count()
-        if not self.parallel:
-            jobs = 1
-        elif self.make_jobs:
-            jobs = self.make_jobs
-
-        make  = spack.build_environment.MakeExecutable('make', jobs)
-        return make
-
-    def configure_args(self):
-        """Returns package-specific arguments to be provided to the configure command."""
-        return list()
-
-    def configure_env(self):
-        """Returns package-specific environment under which the configure command should be run."""
-        # FIXME : Why not EnvironmentModules and the hooks that PackageBase already provides ?
-        return dict()
-
-    def spack_transitive_include_path(self):
-        return ';'.join(
-            os.path.join(dep, 'include')
-            for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
-        )
-
-    def setup(self, spec, prefix):
-        cmd = [str(which('cmake'))] + \
-            spack.build_environment.get_std_cmake_args(self) + \
-            ['-DCMAKE_INSTALL_PREFIX=%s' % os.environ['SPACK_PREFIX'],
-            '-DCMAKE_C_COMPILER=%s' % os.environ['SPACK_CC'],
-            '-DCMAKE_CXX_COMPILER=%s' % os.environ['SPACK_CXX'],
-            '-DCMAKE_Fortran_COMPILER=%s' % os.environ['SPACK_FC']] + \
-            self.configure_args()
-
-        env = dict()
-        env['PATH'] = os.environ['PATH']
-        env['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.spack_transitive_include_path()
-        env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
-
-        setup_fname = 'spconfig.py'
-        with open(setup_fname, 'w') as fout:
-            fout.write(\
-r"""#!%s
+# class CMakePackage(PackageBase):
+#     phases = ['configure', 'build', 'install', 'provenance']
 #
-
-import sys
-import os
-import subprocess
-
-def cmdlist(str):
-	return list(x.strip().replace("'",'') for x in str.split('\n') if x)
-env = dict(os.environ)
-""" % sys.executable)
-
-            env_vars = sorted(list(env.keys()))
-            for name in env_vars:
-                val = env[name]
-                if string.find(name, 'PATH') < 0:
-                    fout.write('env[%s] = %s\n' % (repr(name),repr(val)))
-                else:
-                    if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
-                        sep = ';'
-                    else:
-                        sep = ':'
-
-                    fout.write('env[%s] = "%s".join(cmdlist("""\n' % (repr(name),sep))
-                    for part in string.split(val, sep):
-                        fout.write('    %s\n' % part)
-                    fout.write('"""))\n')
-
-            fout.write("env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = env['SPACK_TRANSITIVE_INCLUDE_PATH']   # Deprecated\n")
-            fout.write('\ncmd = cmdlist("""\n')
-            fout.write('%s\n' % cmd[0])
-            for arg in cmd[1:]:
-                fout.write('    %s\n' % arg)
-            fout.write('""") + sys.argv[1:]\n')
-            fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
-        set_executable(setup_fname)
-
-    def configure(self, spec, prefix):
-        cmake = which('cmake')
-        with working_dir(self.build_directory, create=True):
-            os.environ.update(self.configure_env())
-            os.environ['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.spack_transitive_include_path()
-            options = self.configure_args() + spack.build_environment.get_std_cmake_args(self)
-            cmake(self.source_directory, *options)
-
-    def build(self, spec, prefix):
-        make = self.make_make()
-        with working_dir(self.build_directory, create=False):
-            make()
-
-    def install(self, spec, prefix):
-        make = self.make_make()
-        with working_dir(self.build_directory, create=False):
-            make('install')
+#     def make_make(self):
+#         import multiprocessing
+#         # number of jobs spack will to build with.
+#         jobs = multiprocessing.cpu_count()
+#         if not self.parallel:
+#             jobs = 1
+#         elif self.make_jobs:
+#             jobs = self.make_jobs
+#
+#         make  = spack.build_environment.MakeExecutable('make', jobs)
+#         return make
+#
+#     def configure_args(self):
+#         """Returns package-specific arguments to be provided to the configure command."""
+#         return list()
+#
+#     def configure_env(self):
+#         """Returns package-specific environment under which the configure command should be run."""
+#         # FIXME : Why not EnvironmentModules and the hooks that PackageBase already provides ?
+#         return dict()
+#
+#     def spack_transitive_include_path(self):
+#         return ';'.join(
+#             os.path.join(dep, 'include')
+#             for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
+#         )
+#
+#     def setup(self, spec, prefix):
+#         cmd = [str(which('cmake'))] + \
+#             spack.build_environment.get_std_cmake_args(self) + \
+#             ['-DCMAKE_INSTALL_PREFIX=%s' % os.environ['SPACK_PREFIX'],
+#             '-DCMAKE_C_COMPILER=%s' % os.environ['SPACK_CC'],
+#             '-DCMAKE_CXX_COMPILER=%s' % os.environ['SPACK_CXX'],
+#             '-DCMAKE_Fortran_COMPILER=%s' % os.environ['SPACK_FC']] + \
+#             self.configure_args()
+#
+#         env = dict()
+#         env['PATH'] = os.environ['PATH']
+#         env['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.spack_transitive_include_path()
+#         env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
+#
+#         setup_fname = 'spconfig.py'
+#         with open(setup_fname, 'w') as fout:
+#             fout.write(\
+# r"""#!%s
+# #
+#
+# import sys
+# import os
+# import subprocess
+#
+# def cmdlist(str):
+# 	return list(x.strip().replace("'",'') for x in str.split('\n') if x)
+# env = dict(os.environ)
+# """ % sys.executable)
+#
+#             env_vars = sorted(list(env.keys()))
+#             for name in env_vars:
+#                 val = env[name]
+#                 if string.find(name, 'PATH') < 0:
+#                     fout.write('env[%s] = %s\n' % (repr(name),repr(val)))
+#                 else:
+#                     if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
+#                         sep = ';'
+#                     else:
+#                         sep = ':'
+#
+#                     fout.write('env[%s] = "%s".join(cmdlist("""\n' % (repr(name),sep))
+#                     for part in string.split(val, sep):
+#                         fout.write('    %s\n' % part)
+#                     fout.write('"""))\n')
+#
+#             fout.write("env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = env['SPACK_TRANSITIVE_INCLUDE_PATH']   # Deprecated\n")
+#             fout.write('\ncmd = cmdlist("""\n')
+#             fout.write('%s\n' % cmd[0])
+#             for arg in cmd[1:]:
+#                 fout.write('    %s\n' % arg)
+#             fout.write('""") + sys.argv[1:]\n')
+#             fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
+#         set_executable(setup_fname)
+#
+#     def configure(self, spec, prefix):
+#         cmake = which('cmake')
+#         with working_dir(self.build_directory, create=True):
+#             os.environ.update(self.configure_env())
+#             os.environ['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.spack_transitive_include_path()
+#             options = self.configure_args() + spack.build_environment.get_std_cmake_args(self)
+#             cmake(self.source_directory, *options)
+#
+#     def build(self, spec, prefix):
+#         make = self.make_make()
+#         with working_dir(self.build_directory, create=False):
+#             make()
+#
+#     def install(self, spec, prefix):
+#         make = self.make_make()
+#         with working_dir(self.build_directory, create=False):
+#             make('install')
 
 
 class FetchError(spack.error.SpackError):

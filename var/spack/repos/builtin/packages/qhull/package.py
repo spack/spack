@@ -24,7 +24,8 @@
 ##############################################################################
 from spack import *
 
-class Qhull(Package):
+
+class Qhull(CMakePackage):
     """Qhull computes the convex hull, Delaunay triangulation, Voronoi
        diagram, halfspace intersection about a point, furt hest-site
        Delaunay triangulation, and furthest-site Voronoi diagram. The
@@ -47,8 +48,7 @@ class Qhull(Package):
     
     depends_on('cmake')
 
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('..', *std_cmake_args)
-            make()
-            make("install")
+    @CMakePackage.sanity_check('build')
+    @CMakePackage.on_package_attributes(run_tests=True)
+    def check(self):
+        make('test')
