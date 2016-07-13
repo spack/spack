@@ -44,17 +44,18 @@ class P4est(Package):
     depends_on('zlib')
 
     def install(self, spec, prefix):
-        options = ['--enable-mpi',
-                   '--enable-shared',
-                   '--disable-vtk-binary',
-                   '--without-blas',
-                   'CPPFLAGS=-DSC_LOG_PRIORITY=SC_LP_ESSENTIAL',
-                   'CFLAGS=-O2',
-                   'CC=%s'  % self.spec['mpi'].mpicc,
-                   'CXX=%s' % self.spec['mpi'].mpicxx,
-                   'FC=%s'  % self.spec['mpi'].mpifc,
-                   'F77=%s' % self.spec['mpi'].mpif77
-                  ]
+        options = [
+            '--enable-mpi',
+            '--enable-shared',
+            '--disable-vtk-binary',
+            '--without-blas',
+            'CPPFLAGS=-DSC_LOG_PRIORITY=SC_LP_ESSENTIAL',
+            'CFLAGS=-O2',
+            'CC=%s'  % self.spec['mpi'].mpicc,
+            'CXX=%s' % self.spec['mpi'].mpicxx,
+            'FC=%s'  % self.spec['mpi'].mpifc,
+            'F77=%s' % self.spec['mpi'].mpif77
+        ]
 
         configure('--prefix=%s' % prefix, *options)
 
