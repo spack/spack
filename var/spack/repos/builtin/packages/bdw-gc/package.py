@@ -25,7 +25,7 @@
 from spack import *
 
 
-class Gc(Package):
+class BdwGc(Package):
     """The Boehm-Demers-Weiser conservative garbage collector is a garbage
     collecting replacement for C malloc or C++ new."""
 

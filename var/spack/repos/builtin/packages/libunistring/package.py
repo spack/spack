@@ -34,11 +34,9 @@ class Libunistring(Package):
 
     version('0.9.6', 'cb09c398020c27edac10ca590e9e9ef3')
 
-    depends_on('libiconv')
-
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix),
-                  '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix))
+        configure('--prefix={0}'.format(prefix))
 
         make()
+        # make('check')  # test-verify fails for me, contacted developers
         make('install')

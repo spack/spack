@@ -41,7 +41,7 @@ class Guile(Package):
     depends_on('gettext')
     depends_on('libtool@1.5.6:')
     depends_on('libunistring@0.9.3:')
-    depends_on('gc@7.0:')
+    depends_on('bdw-gc@7.0:')
     depends_on('libffi')
     depends_on('readline', when='+readline')
     depends_on('pkg-config')
