@@ -24,54 +24,59 @@
 ##############################################################################
 from spack import *
 
+
 class Bzip2(Package):
     """bzip2 is a freely available, patent free high-quality data
-       compressor. It typically compresses files to within 10% to 15%
-       of the best available techniques (the PPM family of statistical
-       compressors), whilst being around twice as fast at compression
-       and six times faster at decompression.
+    compressor. It typically compresses files to within 10% to 15%
+    of the best available techniques (the PPM family of statistical
+    compressors), whilst being around twice as fast at compression
+    and six times faster at decompression."""
 
-    """
     homepage = "http://www.bzip.org"
     url      = "http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz"
 
     version('1.0.6', '00b516f4704d4a7cb50a1d97e6e8e15b')
 
-
     def patch(self):
-        mf = FileFilter('Makefile-libbz2_so')
-        mf.filter(r'^CC=gcc', 'CC=cc')
+        # bzip2 comes with two separate Makefiles for static and dynamic builds
+        # Tell both to use Spack's compiler wrapper instead of GCC
+        filter_file(r'^CC=gcc', 'CC=cc', 'Makefile')
+        filter_file(r'^CC=gcc', 'CC=cc', 'Makefile-libbz2_so')
 
-        # Below stuff patches the link line to use RPATHs on Mac OS X.
+        # Patch the link line to use RPATHs on macOS
         if 'darwin' in self.spec.architecture:
             v = self.spec.version
-            v1, v2, v3 = (v.up_to(i) for i in (1,2,3))
+            v1, v2, v3 = (v.up_to(i) for i in (1, 2, 3))
 
-            mf.filter('$(CC) -shared -Wl,-soname -Wl,libbz2.so.{0} -o libbz2.so.{1} $(OBJS)'.format(v2, v3),
-                      '$(CC) -dynamiclib -Wl,-install_name -Wl,@rpath/libbz2.{0}.dylib -current_version {1} -compatibility_version {2} -o libbz2.{3}.dylib $(OBJS)'.format(v1, v2, v3, v3), string=True)
+            kwargs = {'ignore_absent': False, 'backup': False, 'string': True}
 
-            mf.filter('$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.so.{0}'.format(v3),
-                      '$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.{0}.dylib'.format(v3), string=True)
+            mf = FileFilter('Makefile-libbz2_so')
+            mf.filter('$(CC) -shared -Wl,-soname -Wl,libbz2.so.{0} -o libbz2.so.{1} $(OBJS)'.format(v2, v3),  # NOQA ignore=E501
+                      '$(CC) -dynamiclib -Wl,-install_name -Wl,@rpath/libbz2.{0}.dylib -current_version {1} -compatibility_version {2} -o libbz2.{3}.dylib $(OBJS)'.format(v1, v2, v3, v3), **kwargs)  # NOQA ignore=E501
+
+            mf.filter('$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.so.{0}'.format(v3),  # NOQA ignore=E501
+                      '$(CC) $(CFLAGS) -o bzip2-shared bzip2.c libbz2.{0}.dylib'.format(v3), **kwargs)  # NOQA ignore=E501
             mf.filter('rm -f libbz2.so.{0}'.format(v2),
-                      'rm -f libbz2.{0}.dylib'.format(v2), string=True)
+                      'rm -f libbz2.{0}.dylib'.format(v2), **kwargs)
             mf.filter('ln -s libbz2.so.{0} libbz2.so.{1}'.format(v3, v2),
-                      'ln -s libbz2.{0}.dylib libbz2.{1}.dylib'.format(v3, v2), string=True)
-
+                      'ln -s libbz2.{0}.dylib libbz2.{1}.dylib'.format(v3, v2), **kwargs)  # NOQA ignore=E501
 
     def install(self, spec, prefix):
+        # Build the dynamic library first
         make('-f', 'Makefile-libbz2_so')
-        make('clean')
-        make("install", "PREFIX=%s" % prefix)
+        # Build the static library and everything else
+        make()
+        make('install', 'PREFIX={0}'.format(prefix))
 
         install('bzip2-shared', join_path(prefix.bin, 'bzip2'))
 
-        v1, v2, v3 = (self.spec.version.up_to(i) for i in (1,2,3))
+        v1, v2, v3 = (self.spec.version.up_to(i) for i in (1, 2, 3))
         if 'darwin' in self.spec.architecture:
             lib = 'libbz2.dylib'
-            lib1, lib2, lib3 = ('libbz2.{0}.dylib'.format(v) for v in (v1, v2, v3))
+            lib1, lib2, lib3 = ('libbz2.{0}.dylib'.format(v) for v in (v1, v2, v3))  # NOQA ignore=E501
         else:
             lib = 'libbz2.so'
-            lib1, lib2, lib3 = ('libbz2.so.{0}'.format(v) for v in (v1, v2, v3))
+            lib1, lib2, lib3 = ('libbz2.so.{0}'.format(v) for v in (v1, v2, v3))  # NOQA ignore=E501
 
         install(lib3, join_path(prefix.lib, lib3))
         with working_dir(prefix.lib):
