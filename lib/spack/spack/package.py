@@ -120,6 +120,17 @@ class InstallPhase(object):
         if getattr(instance, 'last_phase', None) == self.name:
             raise StopIteration('Stopping at \'{0}\' phase'.format(self.name))
 
+    def copy(self):
+        try:
+            return copy.deepcopy(self)
+        except TypeError:
+            # This bug-fix was not back-ported in Python 2.6
+            # http://bugs.python.org/issue1515
+            other = InstallPhase(self.name)
+            other.preconditions.extend(self.preconditions)
+            other.sanity_checks.extend(self.sanity_checks)
+            return other
+
 
 class PackageMeta(type):
     """Conveniently transforms attributes to permit extensible phases
@@ -156,7 +167,7 @@ class PackageMeta(type):
                         # and extend
                         for base in bases:
                             phase = getattr(base, PackageMeta.phase_fmt.format(phase_name), None)
-                        attr_dict[PackageMeta.phase_fmt.format(phase_name)] = copy.deepcopy(phase)
+                        attr_dict[PackageMeta.phase_fmt.format(phase_name)] = phase.copy()
                         phase = attr_dict[PackageMeta.phase_fmt.format(phase_name)]
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
@@ -900,7 +911,6 @@ class PackageBase(object):
             self.stage.check()
 
         self.stage.cache_local()
-
 
     def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
