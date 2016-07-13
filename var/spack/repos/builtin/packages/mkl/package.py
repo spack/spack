@@ -49,3 +49,10 @@ class Mkl(IntelInstaller):
 
         self.spec.blas_shared_lib   = join_path(libdir, name)
         self.spec.lapack_shared_lib = self.spec.blas_shared_lib
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        # set up MKLROOT for everyone using MKL package
+        spack_env.set('MKLROOT', self.prefix)
+
+    def setup_environment(self, spack_env, env):
+        env.set('MKLROOT', self.prefix)
