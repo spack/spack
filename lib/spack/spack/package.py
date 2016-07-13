@@ -1140,10 +1140,12 @@ class PackageBase(object):
                         self.env_path = env_path
                         dump_environment(env_path)
                         log_redirection = log_output(log_path, verbose, sys.stdout.isatty(), True)
+                        log_redirection.acquire()
                         for phase_name, phase in zip(self.phases, self._InstallPhase_phases):
                             tty.msg('Executing phase : \'{0}\''.format(phase_name))
                             with log_redirection:
                                 getattr(self, phase)(self.spec, self.prefix)
+                        log_redirection.release()
                         self.log()
                     # Run post install hooks before build stage is removed.
                     spack.hooks.post_install(self)
