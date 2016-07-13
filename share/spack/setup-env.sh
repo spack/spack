@@ -57,6 +57,11 @@
 ########################################################################
 
 function spack {
+    # Zsh does not do word splitting by default, this enables it for this function only
+    if [ -n "$ZSH_VERSION" ]; then
+        emulate -L sh
+    fi
+
     # save raw arguments into an array before butchering them
     args=( "$@" )
 
@@ -93,11 +98,18 @@ function spack {
             ;;
         "use"|"unuse"|"load"|"unload")
             # Shift any other args for use off before parsing spec.
+            _sp_subcommand_args=""
             _sp_module_args=""
-            if [[ "$1" =~ ^- ]]; then
-                _sp_module_args="$1"; shift
-                _sp_spec="$@"
-            fi
+            while [[ "$1" =~ ^- ]]; do
+                if [ "$1" = "-r" ]; then
+                    _sp_subcommand_args="$_sp_subcommand_args $1"
+                else
+                    _sp_module_args="$_sp_module_args $1"
+                fi
+                shift
+            done
+
+            _sp_spec="$@"
 
             # Here the user has run use or unuse with a spec.  Find a matching
             # spec using 'spack module find', then use the appropriate module
@@ -105,19 +117,19 @@ function spack {
             # If spack module command comes back with an error, do nothing.
             case $_sp_subcommand in
                 "use")
-                    if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module find $_sp_subcommand_args dotkit $_sp_spec); then
                         use $_sp_module_args $_sp_full_spec
                     fi ;;
                 "unuse")
-                    if _sp_full_spec=$(command spack $_sp_flags module find dotkit $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module find $_sp_subcommand_args dotkit $_sp_spec); then
                         unuse $_sp_module_args $_sp_full_spec
                     fi ;;
                 "load")
-                    if _sp_full_spec=$(command spack $_sp_flags module find tcl $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module find $_sp_subcommand_args tcl $_sp_spec); then
                         module load $_sp_module_args $_sp_full_spec
                     fi ;;
                 "unload")
-                    if _sp_full_spec=$(command spack $_sp_flags module find tcl $_sp_spec); then
+                    if _sp_full_spec=$(command spack $_sp_flags module find $_sp_subcommand_args tcl $_sp_spec); then
                         module unload $_sp_module_args $_sp_full_spec
                     fi ;;
             esac
