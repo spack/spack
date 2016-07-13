@@ -29,8 +29,8 @@ import shutil
 
 class Hdf5(AutotoolsPackage):
     """HDF5 is a data model, library, and file format for storing and managing
-       data. It supports an unlimited variety of datatypes, and is designed for
-       flexible and efficient I/O and for high volume and complex data.
+    data. It supports an unlimited variety of datatypes, and is designed for
+    flexible and efficient I/O and for high volume and complex data.
     """
 
     homepage = "http://www.hdfgroup.org/HDF5/"
@@ -54,9 +54,9 @@ class Hdf5(AutotoolsPackage):
     variant('szip', default=False, description='Enable szip support')
     variant('threadsafe', default=False, description='Enable thread-safe capabilities')
 
-    depends_on("mpi", when='+mpi')
-    depends_on("szip", when='+szip')
-    depends_on("zlib")
+    depends_on('mpi', when='+mpi')
+    depends_on('szip', when='+szip')
+    depends_on('zlib')
 
     @AutotoolsPackage.precondition('configure')
     def validate(self):
@@ -140,15 +140,9 @@ class Hdf5(AutotoolsPackage):
             ])
 
         return ["--with-zlib=%s" % spec['zlib'].prefix] + extra_args
-        #configure(
-        #    "--prefix=%s" % prefix,
-        #    "--with-zlib=%s" % spec['zlib'].prefix,
-        #    *extra_args)
-        #make()
-        #make("install")
-        #self.check_install(spec)
 
     @AutotoolsPackage.sanity_check('install')
+    @AutotoolsPackage.on_package_attributes(run_tests=True)
     def check_install(self):
         "Build and run a small program to test the installed HDF5 library"
         spec = self.spec

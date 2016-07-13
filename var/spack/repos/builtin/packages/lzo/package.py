@@ -44,6 +44,7 @@ class Lzo(AutotoolsPackage):
         ]
 
     @AutotoolsPackage.sanity_check('build')
+    @AutotoolsPackage.on_package_attributes(run_tests=True)
     def check(self):
-        if self.extra_args.get('build-tests', False):
-            make('check')
+        make('check')
+        make('test')

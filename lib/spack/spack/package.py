@@ -96,25 +96,35 @@ class InstallPhase(object):
         phase = getattr(instance, self.name)
         @functools.wraps(phase)
         def phase_wrapper(spec, prefix):
+            # Check instance attributes at the beginning of a phase
+            self._on_phase_start(instance)
             # Execute phase pre-conditions,
             # and give them the chance to fail
             for check in self.preconditions:
-                check(instance)
-            # Do something sensible at some point
+                check(instance)            # Do something sensible at some point
             phase(spec, prefix)
             # Execute phase sanity_checks,
             # and give them the chance to fail
             for check in self.sanity_checks:
                 check(instance)
-            if getattr(instance, 'last_phase', None) == self.name:
-                raise StopIteration('Stopping at \'{0}\' phase'.format(self.name))
+            # Check instance attributes at the end of a phase
+            self._on_phase_exit(instance)
         return phase_wrapper
+
+    def _on_phase_start(self, instance):
+        pass
+
+    def _on_phase_exit(self, instance):
+        # If a phase has a matching last_phase attribute,
+        # stop the installation process raising a StopIteration
+        if getattr(instance, 'last_phase', None) == self.name:
+            raise StopIteration('Stopping at \'{0}\' phase'.format(self.name))
 
 
 class PackageMeta(type):
     """Conveniently transforms attributes to permit extensible phases
 
-    Iterates over the attribute 'phase' and creates / updates private
+    Iterates over the attribute 'phases' and creates / updates private
     InstallPhase attributes in the class that is being initialized
     """
     phase_fmt = '_InstallPhase_{0}'
@@ -156,13 +166,24 @@ class PackageMeta(type):
         def _register_checks(cls, check_type, *args):
             def _register_sanity_checks(func):
                 attr_name = PackageMeta.phase_fmt.format(check_type)
-                sanity_checks = getattr(meta, attr_name)
+                check_list = getattr(meta, attr_name)
                 for item in args:
-                    checks = sanity_checks.setdefault(item, [])
+                    checks = check_list.setdefault(item, [])
                     checks.append(func)
-                setattr(meta, attr_name, sanity_checks)
+                setattr(meta, attr_name, check_list)
                 return func
             return _register_sanity_checks
+
+        @staticmethod
+        def on_package_attributes(**attrs):
+            def _execute_under_condition(func):
+                @functools.wraps(func)
+                def _wrapper(instance):
+                    # If all the attributes have the value we require, then execute
+                    if all([getattr(instance, key, None) == value for key, value in attrs.items()]):
+                        func(instance)
+                return _wrapper
+            return _execute_under_condition
 
         @classmethod
         def precondition(cls, *args):
@@ -180,6 +201,9 @@ class PackageMeta(type):
 
         if all([not hasattr(x, 'precondition') for x in bases]):
             attr_dict['precondition'] = precondition
+
+        if all([not hasattr(x, 'on_package_attributes') for x in bases]):
+            attr_dict['on_package_attributes'] = on_package_attributes
 
         # Preconditions
         _append_checks('preconditions')
