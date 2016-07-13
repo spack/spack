@@ -23,8 +23,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.package_test import *
 from spack.util.executable import Executable
 import os.path
+
 
 class Atlas(Package):
     """
@@ -101,6 +103,7 @@ class Atlas(Package):
                     make('shared_all')
 
             make("install")
+            self.install_test()
 
     def setup_dependent_package(self, module, dspec):
         # libsatlas.[so,dylib,dll ] contains all serial APIs (serial lapack,
@@ -114,3 +117,16 @@ class Atlas(Package):
         if '+shared' in self.spec:
             self.spec.blas_shared_lib   = join_path(libdir, name)
             self.spec.lapack_shared_lib = self.spec.blas_shared_lib
+
+    def install_test(self):
+        source_file = join_path(os.path.dirname(self.module.__file__),
+                                'test_cblas_dgemm.c')
+        blessed_file = join_path(os.path.dirname(self.module.__file__),
+                                 'test_cblas_dgemm.output')
+
+        include_flags = ["-I%s" % join_path(self.spec.prefix, "include")]
+        link_flags = ["-L%s" % join_path(self.spec.prefix, "lib"),
+                      "-lsatlas"]
+
+        output = compile_c_and_execute(source_file, include_flags, link_flags)
+        compare_output_file(output, blessed_file)
