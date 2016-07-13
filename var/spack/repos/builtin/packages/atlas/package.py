@@ -101,3 +101,16 @@ class Atlas(Package):
                     make('shared_all')
 
             make("install")
+
+    def setup_dependent_package(self, module, dspec):
+        # libsatlas.[so,dylib,dll ] contains all serial APIs (serial lapack,
+        # serial BLAS), and all ATLAS symbols needed to support them. Whereas
+        # libtatlas.[so,dylib,dll ] is parallel (multithreaded) version.
+        name = 'libsatlas.%s' % dso_suffix
+        libdir = find_library_path(name,
+                                   self.prefix.lib64,
+                                   self.prefix.lib)
+
+        if '+shared' in self.spec:
+            self.spec.blas_shared_lib   = join_path(libdir, name)
+            self.spec.lapack_shared_lib = self.spec.blas_shared_lib
