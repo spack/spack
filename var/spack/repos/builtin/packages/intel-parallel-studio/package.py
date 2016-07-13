@@ -53,12 +53,13 @@ class IntelParallelStudio(IntelInstaller):
     def check_variants(self, spec):
         error_message = '\t{variant} can not be turned off if "+all" is set'
 
-        errors = [error_message.format(variant=x)
-                  for x in ('mpi', 'mkl', 'daal', 'ipp', 'tools')
-                  if ('~' + x) in self.spec]
-        if errors:
-            errors = ['incompatible variants given'] + errors
-            raise InstallError('\n'.join(errors))
+        if self.spec.satisfies('+all'):
+            errors = [error_message.format(variant=x)
+                      for x in ('mpi', 'mkl', 'daal', 'ipp', 'tools')
+                      if ('~' + x) in self.spec]
+            if errors:
+                errors = ['incompatible variants given'] + errors
+                raise InstallError('\n'.join(errors))
 
     def install(self, spec, prefix):
         self.check_variants(spec)
@@ -89,7 +90,7 @@ class IntelParallelStudio(IntelInstaller):
             components = base_components
 
         if not spec.satisfies('+all'):
-            if spec.satisfies('+mpi') and 'cluster' in str(spec.version):
+            if spec.satisfies('+mpi'):
                 components += mpi_components
             if spec.satisfies('+mkl'):
                 components += mkl_components
@@ -128,8 +129,11 @@ class IntelParallelStudio(IntelInstaller):
 
         if (spec.satisfies('+all') or spec.satisfies('+mpi')) and \
                 spec.satisfies('@cluster'):
-                os.symlink(self.global_license_file, os.path.join(
-                           self.prefix, "itac_latest", "license.lic"))
+                for ifile in os.listdir(os.path.join(self.prefix, "itac")):
+                    if os.path.isdir(os.path.join(self.prefix, "itac", ifile)):
+                        os.symlink(self.global_license_file,
+                                   os.path.join(self.prefix, "itac", ifile,
+                                                "license.lic"))
                 if spec.satisfies('~newdtags'):
                     wrappers = ["mpif77", "mpif77", "mpif90", "mpif90",
                                 "mpigcc", "mpigcc", "mpigxx", "mpigxx",
@@ -156,6 +160,8 @@ class IntelParallelStudio(IntelInstaller):
                    os.path.join(self.prefix.man, "man1"))
 
     def setup_environment(self, spack_env, run_env):
+        # TODO: Determine variables needed for the professional edition.
+
         major_ver = self.version[1]
 
         # Remove paths that were guessed but are incorrect for this package.
@@ -211,23 +217,13 @@ class IntelParallelStudio(IntelInstaller):
                                   'debugger_{0}'.format(major_ver), 'python',
                                   'intel64'))
 
-        if (self.spec.satisfies('+all') or self.spec.satisfies('+mpi')) and \
-           self.spec.satisfies('@cluster'):
-            run_env.prepend_path('PATH',
-                                 join_path(self.prefix, 'impi', 'intel64',
-                                           'bin'))
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'impi', 'intel64',
-                                           'lib'))
-            run_env.prepend_path('LIBRARY_PATH',
-                                 join_path(self.prefix, 'impi', 'intel64',
-                                           'lib'))
-            run_env.prepend_path('LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'impi', 'mic', 'lib'))
-            run_env.prepend_path('MIC_LIBRARY_PATH',
-                                 join_path(self.prefix, 'impi', 'mic', 'lib'))
-            run_env.prepend_path('MIC_LD_LIBRARY_PATH',
-                                 join_path(self.prefix, 'impi', 'mic', 'lib'))
+        if (self.spec.satisfies('+all') or self.spec.satisfies('+mpi')):
+            # Only I_MPI_ROOT is set here because setting the various PATH
+            # variables will potentially be in conflict with other MPI
+            # environment modules. The I_MPI_ROOT environment variable can be
+            # used as a base to set necessary PATH variables for using Intel
+            # MPI. It is also possible to set the variables in the modules.yaml
+            # file if Intel MPI is the dominant, or only, MPI on a system.
             run_env.set('I_MPI_ROOT', join_path(self.prefix, 'impi'))
 
         if self.spec.satisfies('+all') or self.spec.satisfies('+mkl'):
