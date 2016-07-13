@@ -131,7 +131,15 @@ class log_output(object):
         # Spawn a daemon that writes what it reads from a pipe
         self.p = multiprocessing.Process(target=self._forward_redirected_pipe, args=(self.read,), name='logger_daemon')
         self.p.daemon = True
+        # I just need this to communicate to un-summon the daemon
+        self.parent_pipe, self.child_pipe = multiprocessing.Pipe()
+
+    def acquire(self):
         self.p.start()
+
+    def release(self):
+        self.parent_pipe.send(True)
+        self.p.join(60.0)  # 1 minute to join the child
 
     def __enter__(self):
         """Redirect output from the with block to a file.
@@ -165,6 +173,7 @@ class log_output(object):
                     if read_file in rlist:
                         line = read_file.readline()
                         if not line:
+                            # For some reason we never reach this point...
                             break
 
                         # Echo to stdout if requested.
@@ -174,6 +183,9 @@ class log_output(object):
                         # Stripped output to log file.
                         log_file.write(_strip(line))
                         log_file.flush()
+
+                    if self.child_pipe.poll():
+                        break
 
     def _redirect_to_pipe(self, write):
         try:
@@ -216,7 +228,6 @@ class log_output(object):
         tty._debug = self._debug
 
     def __del__(self):
-        """Closes the pipes and joins the daemon"""
+        """Closes the pipes"""
         os.close(self.write)
-        self.p.join(60.0)  # 1 minute to join the daemonic child
         os.close(self.read)
