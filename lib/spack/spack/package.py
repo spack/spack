@@ -978,8 +978,8 @@ class Package(object):
                         # Redirect I/O to a build log (and optionally to
                         # the terminal)
                         log_path = join_path(os.getcwd(), 'spack-build.out')
-                        log_redirection = log_output(log_path, verbose, sys.stdout.isatty(), True)
-                        # TODO : rework acquire and release into a double context ?
+                        log_redirection = log_output(log_path, verbose, sys.stdout.isatty(), True)  # NOQA: ignore=E501
+                        # TODO : rework into a double context ?
                         log_redirection.acquire()
                         with log_redirection:
                             dump_environment(env_path)
