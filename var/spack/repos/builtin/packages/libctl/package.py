@@ -38,9 +38,10 @@ class Libctl(Package):
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix),
-                  'GUILE={0}'.format(spec['guile'].prefix))
+                  'GUILE={0}'.format(join_path(
+                      spec['guile'].prefix.bin, 'guile')),
+                  'GUILE_CONFIG={0}'.format(join_path(
+                      spec['guile'].prefix.bin, 'guile-config')))
 
         make()
-        make('check')
         make('install')
-        make('installcheck')
