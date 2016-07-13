@@ -131,7 +131,7 @@ def module_find(mtype, flags, spec_array):
         for spec,mod in modules_unique:
             if flags.shell:
                 print('# %s' % spec.format())
-                print('%s %s%s' % (module_cmd, flags.prefix, mod.use_name))
+                print('%s %s%s' % (module_cmd, flags.prefix if flags.prefix else '', mod.use_name))
             else:
                 print(mod.use_name)
 
