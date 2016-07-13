@@ -24,14 +24,14 @@
 ##############################################################################
 from spack import *
 
+
 class P4est(Package):
-    """Dynamic management of a collection (a forest) of adaptive octrees in parallel"""
+    """Dynamic management of a collection (a forest) of adaptive octrees in
+    parallel"""
     homepage = "http://www.p4est.org"
     url      = "http://p4est.github.io/release/p4est-1.1.tar.gz"
 
     version('1.1', '37ba7f4410958cfb38a2140339dbf64f')
-
-    variant('tests', default=True, description='Run small tests')
 
     # build dependencies
     depends_on('automake')
@@ -39,7 +39,7 @@ class P4est(Package):
     depends_on('libtool@2.4.2:')
 
     # other dependencies
-    depends_on('lua') # Needed for the submodule sc
+    depends_on('lua')  # Needed for the submodule sc
     depends_on('mpi')
     depends_on('zlib')
 
@@ -59,11 +59,6 @@ class P4est(Package):
         configure('--prefix=%s' % prefix, *options)
 
         make()
-        # Make tests optional as sometimes mpiexec can't be run with an error:
-        # mpiexec has detected an attempt to run as root.
-        # Running at root is *strongly* discouraged as any mistake (e.g., in
-        # defining TMPDIR) or bug can result in catastrophic damage to the OS
-        # file system, leaving your system in an unusable state.
-        if '+tests' in self.spec:
-          make("check")
+        if self.run_tests:
+            make("check")
         make("install")
