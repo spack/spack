@@ -36,15 +36,15 @@ class Atlas(Package):
     homepage = "http://math-atlas.sourceforge.net/"
 
     version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da',
-            url='http://downloads.sourceforge.net/project/math-atlas/Stable/3.10.2/atlas3.10.2.tar.bz2', preferred=True)
+            url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.2/atlas3.10.2.tar.bz2', preferred=True)
     resource(name='lapack',
-             url='http://www.netlib.org/lapack/lapack-3.5.0.tgz',
-             md5='b1d3e3e425b2e44a06760ff173104bdf',
+             url='http://www.netlib.org/lapack/lapack-3.6.0.tgz',
+             md5='f2f6c67134e851fe189bb3ca1fbb5101',
              destination='spack-resource-lapack',
              when='@3:')
 
     version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825',
-            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2/download')
+            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
 
     variant('shared', default=True, description='Builds shared library')
 
