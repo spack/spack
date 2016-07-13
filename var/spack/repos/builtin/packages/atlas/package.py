@@ -29,11 +29,11 @@ import os.path
 
 
 class Atlas(Package):
-    """
-    Automatically Tuned Linear Algebra Software, generic shared ATLAS is an approach for the automatic generation and
-    optimization of numerical software. Currently ATLAS supplies optimized versions for the complete set of linear
-    algebra kernels known as the Basic Linear Algebra Subroutines (BLAS), and a subset of the linear algebra routines
-    in the LAPACK library.
+    """Automatically Tuned Linear Algebra Software, generic shared ATLAS is an
+    approach for the automatic generation and optimization of numerical
+    software. Currently ATLAS supplies optimized versions for the complete set
+    of linear algebra kernels known as the Basic Linear Algebra Subroutines
+    (BLAS), and a subset of the linear algebra routines in the LAPACK library.
     """
     homepage = "http://math-atlas.sourceforge.net/"
 
