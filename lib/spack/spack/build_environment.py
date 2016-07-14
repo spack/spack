@@ -413,7 +413,7 @@ def get_rpaths(pkg):
 def get_std_cmake_args(cmake_pkg):
     # standard CMake arguments
     ret = ['-DCMAKE_INSTALL_PREFIX=%s' % cmake_pkg.prefix,
-        '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
+           '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
     if platform.mac_ver()[0]:
         ret.append('-DCMAKE_FIND_FRAMEWORK=LAST')
 
@@ -422,6 +422,7 @@ def get_std_cmake_args(cmake_pkg):
     ret.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(cmake_pkg)))
 
     return ret
+
 
 def parent_class_modules(cls):
     """
