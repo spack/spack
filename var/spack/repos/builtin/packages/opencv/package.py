@@ -76,20 +76,16 @@ class Opencv(Package):
         cmake_options = []
         cmake_options.extend(std_cmake_args)
 
-        cmake_options.extend(
-            ['-DCMAKE_BUILD_TYPE:STRING=%s' % (
+        cmake_options.extend([
+            '-DCMAKE_BUILD_TYPE:STRING=%s' % (
                 'Debug' if '+debug' in spec else 'Release'),
-             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
+            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
-             '-DENABLE_PRECOMPILED_HEADERS:BOOL=OFF',
-             '-DWITH_IPP:BOOL=%s' % (
-                'ON' if '+ipp' in spec else 'OFF'),
-             '-DWITH_CUDA:BOOL=%s' % (
-                'ON' if '+cuda' in spec else 'OFF'),
-             '-DWITH_QT:BOOL=%s' % (
-                'ON' if '+qt' in spec else 'OFF'),
-             '-DWITH_VTK:BOOL=%s' % (
-                'ON' if '+vtk' in spec else 'OFF')])
+            '-DENABLE_PRECOMPILED_HEADERS:BOOL=OFF',
+            '-DWITH_IPP:BOOL=%s' % ('ON' if '+ipp' in spec else 'OFF'),
+            '-DWITH_CUDA:BOOL=%s' % ('ON' if '+cuda' in spec else 'OFF'),
+            '-DWITH_QT:BOOL=%s' % ('ON' if '+qt' in spec else 'OFF'),
+            '-DWITH_VTK:BOOL=%s' % ('ON' if '+vtk' in spec else 'OFF')])
 
         if '^gtkplus@3:' in spec:
             cmake_options.extend(['-DWITH_GTK:BOOL=ON',
@@ -103,13 +99,13 @@ class Opencv(Package):
         if spec.satisfies('^python@3:'):
             python = join_path(python_prefix.bin, 'python3')
             cmake_options.extend(['-DBUILD_opencv_python3=ON',
-                                  '-DPYTHON_EXECUTABLE=%s' % (python),
-                                  '-DPYTHON_LIBRARIES=%s' % (python_lib)])
+                                  '-DPYTHON_EXECUTABLE=%s' % python,
+                                  '-DPYTHON_LIBRARIES=%s' % python_lib])
         elif spec.satisfies('^python@2:3'):
             python = join_path(python_prefix.bin, 'python2')
             cmake_options.extend(['-DBUILD_opencv_python2=ON',
-                                  '-DPYTHON_EXECUTABLE=%s' % (python),
-                                  '-DPYTHON_LIBRARIES=%s' % (python_lib)])
+                                  '-DPYTHON_EXECUTABLE=%s' % python,
+                                  '-DPYTHON_LIBRARIES=%s' % python_lib])
 
         with working_dir('spack_build', create=True):
             cmake('..', *cmake_options)
