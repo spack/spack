@@ -1057,7 +1057,7 @@ class PackageBase(object):
         verbose     -- Display verbose build output (by default, suppresses it)
         dirty       -- Don't clean the build environment before installing.
         make_jobs   -- Number of make jobs to use for install. Default is ncpus
-        run_tests   -- Runn tests within the package's install()
+        run_tests   -- Run tests within the package's install()
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages.")
@@ -1069,7 +1069,6 @@ class PackageBase(object):
             return
 
         # Ensure package is not already installed
-        # FIXME : skip condition : if any is True skip the installation
         if spack.install_layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
             rec = spack.installed_db.get_record(self.spec)
@@ -1078,6 +1077,8 @@ class PackageBase(object):
                     rec = spack.installed_db.get_record(self.spec)
                     rec.explicit = True
             return
+
+        self._do_install_pop_kwargs(kwargs)
 
         tty.msg("Installing %s" % self.name)
 
@@ -1094,10 +1095,6 @@ class PackageBase(object):
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
-
-        self.last_phase = kwargs.get('stop_at', None)
-        if self.last_phase is not None and self.last_phase not in self.phases:
-            tty.die('\'{0.last_phase}\' is not among the allowed phases for package {0.name}'.format(self))
 
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
@@ -1169,38 +1166,45 @@ class PackageBase(object):
         try:
             # Create the install prefix and fork the build process.
             spack.install_layout.create_install_directory(self.spec)
-        except directory_layout.InstallDirectoryAlreadyExistsError:
-            # FIXME : refactor this as a prerequisites to configure
-            if 'install' in phases_to_be_executed:
-                # Abort install if install directory exists.
-                # But do NOT remove it (you'd be overwriting someone else's stuff)
-                tty.warn("Keeping existing install prefix in place.")
-                raise
-            else:
-                # We're not installing anyway, so don't worry if someone
-                # else has already written in the install directory
-                pass
-
-        try:
+            # Fork a child to do the actual installation
             spack.build_environment.fork(self, build_process, dirty=dirty)
+            # If we installed then we should keep the prefix
+            keep_prefix = True if self.last_phase is None else keep_prefix
             # note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
             spack.installed_db.add(self.spec, self.prefix, explicit=explicit)
-        except StopIteration as e:
-            tty.msg(e.message)
-            if not keep_prefix:
-                self.remove_prefix()
-        except:
-            # remove the install prefix if anything went wrong during install.
-            if not keep_prefix:
-                self.remove_prefix()
-            else:
-                tty.warn("Keeping install prefix in place despite error.",
-                         "Spack will think this package is installed. " +
-                         "Manually remove this directory to fix:",
-                         self.prefix,
-                         wrap=False)
+        except directory_layout.InstallDirectoryAlreadyExistsError:
+            # Abort install if install directory exists.
+            # But do NOT remove it (you'd be overwriting someone else's stuff)
+            tty.warn("Keeping existing install prefix in place.")
             raise
+        except StopIteration as e:
+            # A StopIteration exception means that do_install
+            # was asked to stop early from clients
+            tty.msg(e.message)
+        except Exception:
+            tty.warn("Keeping install prefix in place despite error.",
+                     "Spack will think this package is installed. " +
+                     "Manually remove this directory to fix:",
+                     self.prefix,
+                     wrap=False)
+            raise
+        finally:
+            # Remove the install prefix if anything went wrong during install.
+            if not keep_prefix:
+                self.remove_prefix()
+
+    def _do_install_pop_kwargs(self, kwargs):
+        """Pops kwargs from do_install before starting the installation
+
+        Args:
+            kwargs:
+              'stop_at': last installation phase to be executed (or None)
+
+        """
+        self.last_phase = kwargs.pop('stop_at', None)
+        if self.last_phase is not None and self.last_phase not in self.phases:
+            tty.die('\'{0.last_phase}\' is not among the allowed phases for package {0.name}'.format(self))
 
     def log(self):
         # Copy provenance into the install directory on success
