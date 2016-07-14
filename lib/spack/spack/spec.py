@@ -1223,7 +1223,7 @@ class Spec(object):
             changed = any(changes)
             force = True
 
-        for s in self.traverse():
+        for s in self.traverse(deptype_query=alldeps):
             # After concretizing, assign namespaces to anything left.
             # Note that this doesn't count as a "change".  The repository
             # configuration is constant throughout a spack run, and
