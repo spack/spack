@@ -1136,13 +1136,13 @@ class PackageBase(object):
                         self.log_path = log_path
                         self.env_path = env_path
                         dump_environment(env_path)
-                        log_redirection = log_output(log_path, verbose, sys.stdout.isatty(), True)
-                        log_redirection.acquire()
-                        for phase_name, phase in zip(self.phases, self._InstallPhase_phases):
-                            tty.msg('Executing phase : \'{0}\''.format(phase_name))
-                            with log_redirection:
-                                getattr(self, phase)(self.spec, self.prefix)
-                        log_redirection.release()
+                        # Spawn a daemon that reads from a pipe and redirects everything to log_path
+                        with log_output(log_path, verbose, sys.stdout.isatty(), True) as log_redirection:
+                            for phase_name, phase in zip(self.phases, self._InstallPhase_phases):
+                                tty.msg('Executing phase : \'{0}\''.format(phase_name))
+                                # Redirect stdout and stderr to daemon pipe
+                                with log_redirection:
+                                    getattr(self, phase)(self.spec, self.prefix)
                         self.log()
                     # Run post install hooks before build stage is removed.
                     spack.hooks.post_install(self)

@@ -101,19 +101,23 @@ class keyboard_input(object):
 
 
 class log_output(object):
-    """Redirects output and error of enclosed block to a file.
+    """Spawns a daemon that reads from a pipe and writes to a file
 
     Usage:
-        with log_output('logfile.txt', 'w'):
-           # do things ... output will be logged.
+        # Spawns the daemon
+        with log_output('logfile.txt', 'w') as log_redirection:
+           # do things ... output is not redirected
+           with log_redirection:
+                # do things ... output will be logged
 
     or:
-        with log_output('logfile.txt', echo=True):
-           # do things ... output will be logged
-           # and also printed to stdout.
+        with log_output('logfile.txt', echo=True) as log_redirection:
+           # do things ... output is not redirected
+           with log_redirection:
+               # do things ... output will be logged
+               # and also printed to stdout.
 
-    Opens a stream in 'w' mode at instance creation and closes
-    it at instance deletion
+    Opens a stream in 'w' mode at daemon spawning and closes it at daemon joining.
     If echo is True, also prints the output to stdout.
     """
     def __init__(self, filename, echo=False, force_color=False, debug=False):
@@ -128,32 +132,21 @@ class log_output(object):
         self.directAssignment = False
         self.read, self.write = os.pipe()
 
-        # Spawn a daemon that writes what it reads from a pipe
-        self.p = multiprocessing.Process(target=self._forward_redirected_pipe, args=(self.read,), name='logger_daemon')
+        # Sets a daemon that writes to file what it reads from a pipe
+        self.p = multiprocessing.Process(target=self._spawn_writing_daemon, args=(self.read,), name='logger_daemon')
         self.p.daemon = True
-        # I just need this to communicate to un-summon the daemon
+        # Needed to un-summon the daemon
         self.parent_pipe, self.child_pipe = multiprocessing.Pipe()
 
-    def acquire(self):
+    def __enter__(self):
         self.p.start()
+        return log_output.OutputRedirection(self)
 
-    def release(self):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.parent_pipe.send(True)
         self.p.join(60.0)  # 1 minute to join the child
 
-    def __enter__(self):
-        """Redirect output from the with block to a file.
-
-        Hijacks stdout / stderr and writes to the pipe
-        connected to the logger daemon
-        """
-        # remember these values for later.
-        self._force_color = color._force_color
-        self._debug = tty._debug
-        # Redirect this output to a pipe
-        self._redirect_to_pipe(self.write)
-
-    def _forward_redirected_pipe(self, read):
+    def _spawn_writing_daemon(self, read):
         # Parent: read from child, skip the with block.
         read_file = os.fdopen(read, 'r', 0)
         with open(self.filename, 'w') as log_file:
@@ -187,47 +180,61 @@ class log_output(object):
                     if self.child_pipe.poll():
                         break
 
-    def _redirect_to_pipe(self, write):
-        try:
-            # Save old stdout and stderr
-            self._stdout = os.dup(sys.stdout.fileno())
-            self._stderr = os.dup(sys.stderr.fileno())
-
-            # redirect to the pipe.
-            os.dup2(write, sys.stdout.fileno())
-            os.dup2(write, sys.stderr.fileno())
-        except AttributeError:
-            self.directAssignment = True
-            self._stdout = sys.stdout
-            self._stderr = sys.stderr
-            output_redirect = os.fdopen(write, 'w')
-            sys.stdout = output_redirect
-            sys.stderr = output_redirect
-        if self.force_color:
-            color._force_color = True
-        if self.debug:
-            tty._debug = True
-
-    def __exit__(self, exc_type, exception, traceback):
-        """Plugs back the original file descriptors
-        for stdout and stderr
-        """
-        # Flush the log to disk.
-        sys.stdout.flush()
-        sys.stderr.flush()
-        if self.directAssignment:
-            # We seem to need this only to pass test/install.py
-            sys.stdout = self._stdout
-            sys.stderr = self._stderr
-        else:
-            os.dup2(self._stdout, sys.stdout.fileno())
-            os.dup2(self._stderr, sys.stderr.fileno())
-
-        # restore output options.
-        color._force_color = self._force_color
-        tty._debug = self._debug
-
     def __del__(self):
         """Closes the pipes"""
         os.close(self.write)
         os.close(self.read)
+
+    class OutputRedirection(object):
+        def __init__(self, other):
+            self.__dict__.update(other.__dict__)
+
+        def __enter__(self):
+            """Redirect output from the with block to a file.
+
+            Hijacks stdout / stderr and writes to the pipe
+            connected to the logger daemon
+            """
+            # remember these values for later.
+            self._force_color = color._force_color
+            self._debug = tty._debug
+            # Redirect this output to a pipe
+            write = self.write
+            try:
+                # Save old stdout and stderr
+                self._stdout = os.dup(sys.stdout.fileno())
+                self._stderr = os.dup(sys.stderr.fileno())
+
+                # redirect to the pipe.
+                os.dup2(write, sys.stdout.fileno())
+                os.dup2(write, sys.stderr.fileno())
+            except AttributeError:
+                self.directAssignment = True
+                self._stdout = sys.stdout
+                self._stderr = sys.stderr
+                output_redirect = os.fdopen(write, 'w')
+                sys.stdout = output_redirect
+                sys.stderr = output_redirect
+            if self.force_color:
+                color._force_color = True
+            if self.debug:
+                tty._debug = True
+
+        def __exit__(self, exc_type, exception, traceback):
+            """Plugs back the original file descriptors
+            for stdout and stderr
+            """
+            # Flush the log to disk.
+            sys.stdout.flush()
+            sys.stderr.flush()
+            if self.directAssignment:
+                # We seem to need this only to pass test/install.py
+                sys.stdout = self._stdout
+                sys.stderr = self._stderr
+            else:
+                os.dup2(self._stdout, sys.stdout.fileno())
+                os.dup2(self._stderr, sys.stderr.fileno())
+
+            # restore output options.
+            color._force_color = self._force_color
+            tty._debug = self._debug
