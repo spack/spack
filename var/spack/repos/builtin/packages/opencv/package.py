@@ -96,12 +96,12 @@ class Opencv(Package):
 
         python_prefix = spec['python'].prefix
         python_lib = python_prefix.lib
-        if spec.satisfies('^python@3:'):
+        if '^python@3:' in spec:
             python = join_path(python_prefix.bin, 'python3')
             cmake_options.extend(['-DBUILD_opencv_python3=ON',
                                   '-DPYTHON_EXECUTABLE=%s' % python,
                                   '-DPYTHON_LIBRARIES=%s' % python_lib])
-        elif spec.satisfies('^python@2:3'):
+        elif '^python@2:3' in spec:
             python = join_path(python_prefix.bin, 'python2')
             cmake_options.extend(['-DBUILD_opencv_python2=ON',
                                   '-DPYTHON_EXECUTABLE=%s' % python,
