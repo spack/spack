@@ -911,7 +911,7 @@ class Package(object):
         run_tests   -- Runn tests within the package's install()
         """
         if not self.spec.concrete:
-            raise ValueError("Can only install concrete packages.")
+            raise ValueError("Can only install concrete packages: %s." % self.spec.name)
 
         # No installation needed if package is external
         if self.spec.external:
