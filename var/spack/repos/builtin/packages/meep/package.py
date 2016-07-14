@@ -83,7 +83,7 @@ class Meep(Package):
 
         if '+libctl' in spec:
             config_args.append('--with-libctl={0}'.format(
-                spec['libctl'].prefix))
+                join_path(spec['libctl'].prefix.share, 'libctl')))
         else:
             config_args.append('--without-libctl')
 
