@@ -2,7 +2,7 @@
 
 Basic usage
 =====================
-p
+
 The ``spack`` command has many *subcommands*.  You'll only need a
 small subset of them for typical usage.
 
