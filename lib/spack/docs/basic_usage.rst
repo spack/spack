@@ -2,7 +2,7 @@
 
 Basic usage
 =====================
-
+p
 The ``spack`` command has many *subcommands*.  You'll only need a
 small subset of them for typical usage.
 
@@ -183,7 +183,7 @@ To uninstall a package and every package that depends on it, you may give the
 
    spack uninstall --dependents mpich
 
-will display a list of all the packages that depends on `mpich` and, upon confirmation,
+will display a list of all the packages that depend on `mpich` and, upon confirmation,
 will uninstall them in the right order.
 
 A line like
