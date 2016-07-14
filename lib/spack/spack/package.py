@@ -1655,17 +1655,29 @@ class CMakePackage(PackageBase):
     def build_type(self):
         return 'RelWithDebInfo'
 
+    def root_cmakelists_dir(self):
+        return self.source_directory
+
     @property
     def std_cmake_args(self):
         # standard CMake arguments
-        args = ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(self.prefix),
-                '-DCMAKE_BUILD_TYPE:STRING={0}'.format(self.build_type())]
+        return CMakePackage._std_args(self)
+
+    @staticmethod
+    def _std_args(pkg):
+        try:
+            build_type = pkg.build_type()
+        except AttributeError:
+            build_type = 'RelWithDebInfo'
+
+        args = ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
+                '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type)]
         if platform.mac_ver()[0]:
             args.append('-DCMAKE_FIND_FRAMEWORK:STRING=LAST')
 
         # Set up CMake rpath
         args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE')
-        rpaths = ':'.join(spack.build_environment.get_rpaths(self))
+        rpaths = ':'.join(spack.build_environment.get_rpaths(pkg))
         args.append('-DCMAKE_INSTALL_RPATH:STRING={0}'.format(rpaths))
         return args
 
@@ -1676,7 +1688,7 @@ class CMakePackage(PackageBase):
         return list()
 
     def cmake(self, spec, prefix):
-        options = [self.source_directory] + self.std_cmake_args + self.cmake_args()
+        options = [self.root_cmakelists_dir()] + self.std_cmake_args + self.cmake_args()
         create = not os.path.exists(self.wdir())
         with working_dir(self.wdir(), create=create):
             inspect.getmodule(self).cmake(*options)

@@ -344,16 +344,8 @@ def set_module_variables_for_package(pkg, module):
     m.cmake = Executable('cmake')
     m.ctest = Executable('ctest')
 
-    # standard CMake arguments
-    m.std_cmake_args = ['-DCMAKE_INSTALL_PREFIX=%s' % pkg.prefix,
-                        '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
-    if platform.mac_ver()[0]:
-        m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
-
-    # Set up CMake rpath
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s' %
-                            ":".join(get_rpaths(pkg)))
+    # Standard CMake arguments
+    m.std_cmake_args = spack.CMakePackage._std_args(pkg)
 
     # Put spack compiler paths in module scope.
     link_dir = spack.build_env_path
