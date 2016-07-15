@@ -38,16 +38,29 @@ class Python(Package):
     homepage = "http://www.python.org"
     url      = "http://www.python.org/ftp/python/2.7.8/Python-2.7.8.tgz"
 
+    version('3.5.2', '3fe8434643a78630c61c6464fe2e7e72')
     version('3.5.1', 'be78e48cdfc1a7ad90efff146dce6cfe')
     version('3.5.0', 'a56c0c0b45d75a0ec9c6dee933c41c36')
-    version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b', preferred=True)
+    version('3.4.3', '4281ff86778db65892c05151d5de738d')
+    version('3.3.6', 'cdb3cd08f96f074b3f3994ccb51063e9')
+    version('3.2.6', '23815d82ae706e9b781ca65865353d39')
+    version('3.1.5', '02196d3fc7bc76bdda68aa36b0dd16ab')
+    version('2.7.12', '88d61f82e3616a4be952828b3694109d', preferred=True)
+    version('2.7.11', '6b6076ec9e93f05dd63e47eb9c15728b')
     version('2.7.10', 'd7547558fd673bd9d38e2108c6b42521')
     version('2.7.9', '5eebcaa0030dc4061156d3429657fb83')
     version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
 
     extendable = True
 
-    variant('ucs4', default=False, description='Enable UCS4 unicode strings')
+    variant('ucs4', default=False, description='Enable UCS4 (wide) unicode strings')
+    # From https://docs.python.org/2/c-api/unicode.html: Python's default
+    # builds use a 16-bit type for Py_UNICODE and store Unicode values
+    # internally as UCS2. It is also possible to build a UCS4 version of Python
+    # (most recent Linux distributions come with UCS4 builds of Python).  These
+    # builds then use a 32-bit type for Py_UNICODE and store Unicode data
+    # internally as UCS4. Note that UCS2 and UCS4 Python builds are not binary
+    # compatible.
 
     depends_on("openssl")
     depends_on("bzip2")
@@ -85,7 +98,13 @@ class Python(Package):
         ]
 
         if '+ucs4' in spec:
-            config_args.append('--enable-unicode=ucs4')
+            if spec.satisfies('@:2.7'):
+                config_args.append('--enable-unicode=ucs4')
+            elif spec.satisfies('@3.0:3.2'):
+                config_args.append('--with-wide-unicode')
+            elif spec.satisfies('@3.3:'):
+                # https://docs.python.org/3.3/whatsnew/3.3.html
+                raise ValueError('+ucs4 variant not compatible with Python 3.3 and beyond')  # NOQA: ignore=E501
 
         if spec.satisfies('@3:'):
             config_args.append('--without-ensurepip')
