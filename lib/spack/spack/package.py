@@ -565,6 +565,13 @@ class Package(object):
     def fetcher(self, f):
         self._fetcher = f
 
+
+    def dependencies_of_type(self, *deptypes):
+        """Get subset of the dependencies with certain types."""
+        return dict((name, conds) for name, conds in self.dependencies.items()
+                    if any(d in self._deptypes[name] for d in deptypes))
+
+
     @property
     def extendee_spec(self):
         """
