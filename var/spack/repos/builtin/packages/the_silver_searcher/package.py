@@ -33,7 +33,7 @@ class TheSilverSearcher(Package):
 
     depends_on('pcre')
     depends_on('xz')
-    depends_on('pkg-config')
+    depends_on('pkg-config', type='build')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

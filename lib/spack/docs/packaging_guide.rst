@@ -604,6 +604,7 @@ Git fetching is enabled with the following parameters to ``version``:
   * ``tag``: name of a tag to fetch.
   * ``branch``: name of a branch to fetch.
   * ``commit``: SHA hash (or prefix) of a commit to fetch.
+  * ``submodules``: Also fetch submodules when checking out this repository.
 
 Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
 
@@ -659,6 +660,17 @@ Commits
   e.g. you might use the date as the version, as done above.  Or you
   could just use the abbreviated commit hash.  It's up to the package
   author to decide what makes the most sense.
+
+Submodules
+
+  You can supply ``submodules=True`` to cause Spack to fetch submodules
+  along with the repository at fetch time.
+
+  .. code-block:: python
+
+     version('1.0.1', git='https://github.com/example-project/example.git',
+             tag='v1.0.1', submdoules=True)
+
 
 Installing
 ^^^^^^^^^^^^^^
@@ -1273,6 +1285,31 @@ to different package configurations.  Users use the spec syntax on the
 command line to find installed packages or to install packages with
 particular constraints, and package authors can use specs to describe
 relationships between packages.
+
+Additionally, dependencies may be specified for specific use cases:
+
+.. code-block:: python
+
+    depends_on("cmake", type="build")
+    depends_on("libelf", type=("build", "link"))
+    depends_on("python", type="run")
+
+The dependency types are:
+
+  * **"build"**: made available during the project's build. The package will
+    be added to ``PATH``, the compiler include paths, and ``PYTHONPATH``.
+    Other projects which depend on this one will not have these modified
+    (building project X doesn't need project Y's build dependencies).
+  * **"link"**: the project is linked to by the project. The package will be
+    added to the current package's ``rpath``.
+  * **"run"**: the project is used by the project at runtime. The package will
+    be added to ``PATH`` and ``PYTHONPATH``.
+
+If not specified, ``type`` is assumed to be ``("build", "link")``. This is the
+common case for compiled language usage. Also available are the aliases
+``alldeps`` for all dependency types and ``nolink`` (``("build", "run")``) for
+use by dependencies which are not expressed via a linker (e.g., Python or Lua
+module loading).
 
 .. _setup-dependent-environment:
 

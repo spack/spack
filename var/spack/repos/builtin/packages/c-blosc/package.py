@@ -38,7 +38,7 @@ class CBlosc(Package):
     version('1.8.1', 'd73d5be01359cf271e9386c90dcf5b05')
     version('1.8.0', '5b92ecb287695ba20cc33d30bf221c4f')
 
-    depends_on("cmake")
+    depends_on("cmake", type='build')
     depends_on("snappy")
     depends_on("zlib")
 

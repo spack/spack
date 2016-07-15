@@ -29,6 +29,7 @@ class FoamExtend(Package):
     depends_on('python')
     depends_on('flex@:2.5.99')
     depends_on('zlib')
+    depends_on('cmake', type='build')
 
     depends_on('scotch ~ metis', when='~ptscotch+scotch')
     depends_on('scotch ~ metis + mpi', when='+ptscotch')

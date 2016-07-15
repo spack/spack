@@ -38,7 +38,7 @@ class PyPy2neo(Package):
     version('2.0.5', '143b1f9c0aa22faf170c1b9f84c7343b')
     version('2.0.4', 'b3f7efd3344dc3f66db4eda11e5899f7')
 
-    depends_on("py-setuptools")
+    depends_on("py-setuptools", type='build')
     extends("python")
 
     def install(self, spec, prefix):

@@ -103,7 +103,7 @@ class DefaultConcretizer(object):
         usable.sort(cmp=cmp_externals)
         return usable
 
-
+    # XXX(deptypes): Look here.
     def choose_virtual_or_external(self, spec):
         """Given a list of candidate virtual and external packages, try to
            find one that is most ABI compatible.
@@ -394,8 +394,10 @@ def find_spec(spec, condition):
     """Searches the dag from spec in an intelligent order and looks
        for a spec that matches a condition"""
     # First search parents, then search children
-    dagiter = chain(spec.traverse(direction='parents',  root=False),
-                    spec.traverse(direction='children', root=False))
+    deptype = ('build', 'link')
+    dagiter = chain(
+            spec.traverse(direction='parents',  deptype=deptype, root=False),
+            spec.traverse(direction='children', deptype=deptype, root=False))
     visited = set()
     for relative in dagiter:
         if condition(relative):
@@ -403,7 +405,7 @@ def find_spec(spec, condition):
         visited.add(id(relative))
 
     # Then search all other relatives in the DAG *except* spec
-    for relative in spec.root.traverse():
+    for relative in spec.root.traverse(deptypes=spack.alldeps):
         if relative is spec: continue
         if id(relative) in visited: continue
         if condition(relative):

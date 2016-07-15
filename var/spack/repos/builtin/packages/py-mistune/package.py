@@ -40,7 +40,7 @@ class PyMistune(Package):
     version('0.5', '997736554f1f95eea78c66ae339b5722')
 
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

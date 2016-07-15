@@ -37,8 +37,8 @@ class Bertini(Package):
 
     variant('mpi', default=True, description='Compile in parallel')
 
-    depends_on('flex')
-    depends_on('bison')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
     depends_on('gmp')
     depends_on('mpfr')
     depends_on('mpi', when='+mpi')

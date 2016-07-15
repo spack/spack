@@ -13,6 +13,8 @@ modules:
       - PATH
     man:
       - MANPATH
+    share/man:
+      - MANPATH
     lib:
       - LIBRARY_PATH
       - LD_LIBRARY_PATH

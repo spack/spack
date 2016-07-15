@@ -44,6 +44,7 @@ class Automaded(Package):
     depends_on('mpi')
     depends_on('boost')
     depends_on('callpath')
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         cmake("-DSTATE_TRACKER_WITH_CALLPATH=ON", *std_cmake_args)

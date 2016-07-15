@@ -285,7 +285,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             return path
 
         if spec.dag_hash() == installed_spec.dag_hash():
-            raise SpecHashCollisionError(installed_hash, spec_hash)
+            raise SpecHashCollisionError(spec, installed_spec)
         else:
             raise InconsistentInstallDirectoryError(
                 'Spec file in %s does not match hash!' % spec_file_path)
@@ -431,7 +431,7 @@ class SpecHashCollisionError(DirectoryLayoutError):
     def __init__(self, installed_spec, new_spec):
         super(SpecHashCollisionError, self).__init__(
             'Specs %s and %s have the same SHA-1 prefix!'
-            % installed_spec, new_spec)
+            % (installed_spec, new_spec))
 
 
 class RemoveFailedError(DirectoryLayoutError):

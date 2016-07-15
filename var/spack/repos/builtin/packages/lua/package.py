@@ -86,7 +86,7 @@ class Lua(Package):
 
     def setup_dependent_environment(self, spack_env, run_env, extension_spec):
         lua_paths = []
-        for d in extension_spec.traverse():
+        for d in extension_spec.traverse(deptypes=nolink, deptype_query='run'):
             if d.package.extends(self.spec):
                 lua_paths.append(os.path.join(d.prefix, self.lua_lib_dir))
                 lua_paths.append(os.path.join(d.prefix, self.lua_share_dir))

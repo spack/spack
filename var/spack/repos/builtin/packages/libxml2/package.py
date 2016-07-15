@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
+
 
 class Libxml2(Package):
     """Libxml2 is the XML C parser and toolkit developed for the Gnome
@@ -42,8 +42,8 @@ class Libxml2(Package):
 
     def install(self, spec, prefix):
         if '+python' in spec:
-            site_packages_dir = os.path.join(prefix, 'lib/python%s.%s/site-packages' %(spec['python'].version[:2]))
-            python_args = ["--with-python=%s" % spec['python'].prefix, "--with-python-install-dir=%s" % site_packages_dir]
+            python_args = ["--with-python=%s" % spec['python'].prefix,
+                           "--with-python-install-dir=%s" % site_packages_dir]
         else:
             python_args = ["--without-python"]
 

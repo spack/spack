@@ -577,7 +577,7 @@ class Package(object):
         name = next(iter(self.extendees))
 
         # If the extendee is in the spec's deps already, return that.
-        for dep in self.spec.traverse():
+        for dep in self.spec.traverse(deptypes=('link', 'run')):
             if name == dep.name:
                 return dep
 
@@ -642,12 +642,13 @@ class Package(object):
             yield self
 
         for name in sorted(self.dependencies.keys()):
-            spec = self.dependencies[name]
+            dep_spec = self.get_dependency(name)
+            spec = dep_spec.spec
 
-            # currently, we do not descend into virtual dependencies, as this
+            # Currently, we do not descend into virtual dependencies, as this
             # makes doing a sensible traversal much harder.  We just assume
             # that ANY of the virtual deps will work, which might not be true
-            # (due to conflicts or unsatisfiable specs).  For now this is ok
+            # (due to conflicts or unsatisfiable specs).  For now this is ok,
             # but we might want to reinvestigate if we start using a lot of
             # complicated virtual dependencies
             # TODO: reinvestigate this.
@@ -685,7 +686,9 @@ class Package(object):
         for spec in spack.installed_db.query():
             if self.name == spec.name:
                 continue
-            for dep in spec.traverse():
+            # XXX(deptype): Should build dependencies not count here?
+            #for dep in spec.traverse(deptype=('run')):
+            for dep in spec.traverse(deptype=spack.alldeps):
                 if self.spec == dep:
                     dependents.append(spec)
         return dependents
@@ -908,7 +911,7 @@ class Package(object):
         run_tests   -- Runn tests within the package's install()
         """
         if not self.spec.concrete:
-            raise ValueError("Can only install concrete packages.")
+            raise ValueError("Can only install concrete packages: %s." % self.spec.name)
 
         # No installation needed if package is external
         if self.spec.external:
@@ -1089,7 +1092,7 @@ class Package(object):
 
     def do_install_dependencies(self, **kwargs):
         # Pass along paths of dependencies here
-        for dep in self.spec.dependencies.values():
+        for dep in self.spec.dependencies():
             dep.package.do_install(**kwargs)
 
     @property
@@ -1270,7 +1273,7 @@ class Package(object):
                                   (self.name, self.extendee.name))
 
     def do_activate(self, force=False):
-        """Called on an etension to invoke the extendee's activate method.
+        """Called on an extension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
         activate() directly.
@@ -1282,7 +1285,7 @@ class Package(object):
 
         # Activate any package dependencies that are also extensions.
         if not force:
-            for spec in self.spec.traverse(root=False):
+            for spec in self.spec.traverse(root=False, deptype='run'):
                 if spec.package.extends(self.extendee_spec):
                     if not spec.package.activated:
                         spec.package.do_activate(force=force)
@@ -1328,7 +1331,7 @@ class Package(object):
             for name, aspec in activated.items():
                 if aspec == self.spec:
                     continue
-                for dep in aspec.traverse():
+                for dep in aspec.traverse(deptype='run'):
                     if self.spec == dep:
                         raise ActivationError(
                             "Cannot deactivate %s because %s is activated and depends on it."  # NOQA: ignore=E501
@@ -1414,9 +1417,10 @@ class Package(object):
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
         rpaths = [self.prefix.lib, self.prefix.lib64]
-        rpaths.extend(d.prefix.lib for d in self.spec.traverse(root=False)
+        deps = self.spec.dependencies(deptype='link')
+        rpaths.extend(d.prefix.lib for d in deps
                       if os.path.isdir(d.prefix.lib))
-        rpaths.extend(d.prefix.lib64 for d in self.spec.traverse(root=False)
+        rpaths.extend(d.prefix.lib64 for d in deps
                       if os.path.isdir(d.prefix.lib64))
         return rpaths
 

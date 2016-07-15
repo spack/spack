@@ -60,7 +60,7 @@ class Vim(Package):
     depends_on('ruby', when='+ruby')
 
     variant('cscope', default=False, description="build with cscope support")
-    depends_on('cscope', when='+cscope')
+    depends_on('cscope', when='+cscope', type='run')
 
     variant('gui', default=False, description="build with gui (gvim)")
     # virtual dependency?

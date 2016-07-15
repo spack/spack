@@ -366,8 +366,8 @@ class CacheURLFetchStrategy(URLFetchStrategy):
             try:
                 self.check()
             except ChecksumError:
-                # Future fetchers will assume they don't need to download if the
-                # file remains
+                # Future fetchers will assume they don't need to
+                # download if the file remains
                 os.remove(self.archive_file)
                 raise
 
@@ -517,6 +517,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         super(GitFetchStrategy, self).__init__(
             'git', 'tag', 'branch', 'commit', **forwarded_args)
         self._git = None
+        self.submodules = kwargs.get('submodules', False)
 
     @property
     def git_version(self):
@@ -594,6 +595,10 @@ class GitFetchStrategy(VCSFetchStrategy):
                 # see: https://github.com/git/git/commit/19d122b
                 self.git('pull', '--tags', ignore_errors=1)
                 self.git('checkout', self.tag)
+
+        # Init submodules if the user asked for them.
+        if self.submodules:
+            self.git('submodule', 'update', '--init')
 
     def archive(self, destination):
         super(GitFetchStrategy, self).archive(destination, exclude='.git')

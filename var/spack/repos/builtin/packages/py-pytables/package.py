@@ -34,9 +34,9 @@ class PyPytables(Package):
 
     extends('python')
     depends_on('hdf5')
-    depends_on('py-numpy')
-    depends_on('py-numexpr')
-    depends_on('py-cython')
+    depends_on('py-numpy', type=nolink)
+    depends_on('py-numexpr', type=nolink)
+    depends_on('py-cython', type=nolink)
 
     def install(self, spec, prefix):
         env["HDF5_DIR"] = spec['hdf5'].prefix

@@ -39,7 +39,7 @@ class Netcdf(Package):
     variant('mpi',  default=True,  description='Enables MPI parallelism')
     variant('hdf4', default=False, description='Enable HDF4 support')
 
-    depends_on("m4")
+    depends_on("m4", type='build')
     depends_on("hdf", when='+hdf4')
 
     # Required for DAP support

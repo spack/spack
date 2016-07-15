@@ -51,7 +51,7 @@ def fetch(parser, args):
     for spec in specs:
         if args.missing or args.dependencies:
             to_fetch = set()
-            for s in spec.traverse():
+            for s in spec.traverse(deptype_query=spack.alldeps):
                 package = spack.repo.get(s)
                 if args.missing and package.installed:
                     continue

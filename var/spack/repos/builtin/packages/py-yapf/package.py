@@ -33,7 +33,7 @@ class PyYapf(Package):
     version('0.2.1', '348ccf86cf2057872e4451b204fb914c')
 
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

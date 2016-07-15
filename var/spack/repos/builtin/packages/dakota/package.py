@@ -55,6 +55,7 @@ class Dakota(Package):
 
     depends_on('python')
     depends_on('boost')
+    depends_on('cmake', type='build')
 
     def url_for_version(self, version):
         return Dakota._url_str.format(version=version)
