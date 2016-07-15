@@ -32,21 +32,20 @@ class SuiteSparse(Package):
     homepage = 'http://faculty.cse.tamu.edu/davis/suitesparse.html'
     url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.1.tar.gz'
 
-    version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
     version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')
+    version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
 
-    # FIXME: (see below)
-    # variant('tbb', default=True, description='Build with Intel TBB')
+    variant('tbb', default=True, description='Build with Intel TBB')
 
     depends_on('blas')
     depends_on('lapack')
 
     depends_on('metis@5.1.0', when='@4.5.1:')
-    # FIXME:
     # in @4.5.1. TBB support in SPQR seems to be broken as TBB-related linkng
     # flags does not seem to be used, which leads to linking errors on Linux.
-    # Try re-enabling in future versions.
-    # depends_on('tbb', when='+tbb')
+    depends_on('tbb', when='@4.5.3:+tbb')
+
+    patch('tbb_453.patch', when='@4.5.3')
 
     def install(self, spec, prefix):
         # The build system of SuiteSparse is quite old-fashioned.
@@ -73,20 +72,24 @@ class SuiteSparse(Package):
         ])
 
         # Intel TBB in SuiteSparseQR
-        if '+tbb' in spec:
+        if 'tbb' in spec:
             make_args.extend([
                 'SPQR_CONFIG=-DHAVE_TBB',
                 'TBB=-L%s -ltbb' % spec['tbb'].prefix.lib,
             ])
 
-        # BLAS arguments require path to libraries
-        # FIXME: (blas/lapack always provide libblas and liblapack as aliases)
+        # Make sure Spack's Blas/Lapack is used. Otherwise System's
+        # Blas/Lapack might be picked up.
+        blas = to_link_flags(spec['blas'].blas_shared_lib)
+        lapack = to_link_flags(spec['lapack'].lapack_shared_lib)
         if '@4.5.1' in spec:
             # adding -lstdc++ is clearly an ugly way to do this, but it follows
             # with the TCOV path of SparseSuite 4.5.1's Suitesparse_config.mk
-            make_args.extend([
-                'BLAS=-lblas -lstdc++',
-                'LAPACK=-llapack'
-            ])
+            blas += ' -lstdc++'
+
+        make_args.extend([
+            'BLAS=%s' % blas,
+            'LAPACK=%s' % lapack
+        ])
 
         make('install', *make_args)
