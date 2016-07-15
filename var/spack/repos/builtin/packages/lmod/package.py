@@ -44,7 +44,7 @@ class Lmod(Package):
     depends_on('lua@5.2:')
     depends_on('lua-luaposix', type=nolink)
     depends_on('lua-luafilesystem', type=nolink)
-    depends_on('tcl')
+    depends_on('tcl', type=nolink)
 
     parallel = False
 
