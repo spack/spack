@@ -63,6 +63,7 @@ class Openmpi(Package):
     list_url = "http://www.open-mpi.org/software/ompi/"
     list_depth = 3
 
+    version('2.0.0', 'cdacc800cb4ce690c1f1273cb6366674')
     version('1.10.3', 'e2fe4513200e2aaa1500b762342c674b')
     version('1.10.2', 'b2f43d9635d2d52826e5ef9feb97fd4c')
     version('1.10.1', 'f0fcd77ed345b7eafb431968124ba16e')
@@ -101,6 +102,7 @@ class Openmpi(Package):
 
     provides('mpi@:2.2', when='@1.6.5')
     provides('mpi@:3.0', when='@1.7.5:')
+    provides('mpi@:3.1', when='@2.0.0:')
 
     depends_on('hwloc')
     depends_on('sqlite', when='+sqlite3')
@@ -169,7 +171,8 @@ class Openmpi(Package):
             '--with-psm2' if '+psm2' in spec else '--without-psm2',
             '--with-mxm' if '+mxm' in spec else '--without-mxm',
             # Other options
-            '--enable-mpi-thread-multiple' if '+thread_multiple' in spec else '--disable-mpi-thread-multiple',  # NOQA: ignore=E501
+            ('--enable-mpi-thread-multiple' if '+thread_multiple' in spec
+                 else '--disable-mpi-thread-multiple'),
             '--with-pmi' if '+pmi' in spec else '--without-pmi',
             '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
             '--enable-vt' if '+vt' in spec else '--disable-vt'
