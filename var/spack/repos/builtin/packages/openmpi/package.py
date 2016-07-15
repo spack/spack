@@ -172,7 +172,7 @@ class Openmpi(Package):
             '--with-mxm' if '+mxm' in spec else '--without-mxm',
             # Other options
             ('--enable-mpi-thread-multiple' if '+thread_multiple' in spec
-                 else '--disable-mpi-thread-multiple'),
+                else '--disable-mpi-thread-multiple'),
             '--with-pmi' if '+pmi' in spec else '--without-pmi',
             '--with-sqlite3' if '+sqlite3' in spec else '--without-sqlite3',
             '--enable-vt' if '+vt' in spec else '--disable-vt'
