@@ -184,7 +184,7 @@ __all__ = ['Package',
            'when',
            'ver',
            'alldeps',
-           'nolinks']
+           'nolink']
 from spack.package import Package, ExtensionConflictError
 from spack.package import CMakePackage, AutotoolsPackage, EditableMakefile
 from spack.version import Version, ver
