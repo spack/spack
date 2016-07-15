@@ -39,7 +39,7 @@ class Stat(Package):
     depends_on('libdwarf')
     depends_on('dyninst')
     depends_on('graphlib')
-    depends_on('graphviz')
+    depends_on('graphviz', type=alldeps)
     depends_on('launchmon')
     depends_on('mrnet')
 

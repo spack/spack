@@ -254,7 +254,8 @@ def set_build_environment_variables(pkg, env, dirty=False):
     env.set_path(SPACK_ENV_PATH, env_paths)
 
     # Prefixes of all of the package's dependencies go in SPACK_DEPENDENCIES
-    dep_prefixes = [d.prefix for d in pkg.spec.traverse(root=False)]
+    dep_prefixes = [d.prefix
+                    for d in pkg.spec.traverse(root=False, deptype='build')]
     env.set_path(SPACK_DEPENDENCIES, dep_prefixes)
     # Add dependencies to CMAKE_PREFIX_PATH
     env.set_path('CMAKE_PREFIX_PATH', dep_prefixes)
@@ -337,10 +338,6 @@ def set_module_variables_for_package(pkg, module):
     # Don't use which for this; we want to find it in the current dir.
     m.configure = Executable('./configure')
 
-    # TODO: shouldn't really use "which" here.  Consider adding notion
-    # TODO: of build dependencies, as opposed to link dependencies.
-    # TODO: Currently, everything is a link dependency, but tools like
-    # TODO: this shouldn't be.
     m.cmake = Executable('cmake')
     m.ctest = Executable('ctest')
 
@@ -380,9 +377,10 @@ def set_module_variables_for_package(pkg, module):
 def get_rpaths(pkg):
     """Get a list of all the rpaths for a package."""
     rpaths = [pkg.prefix.lib, pkg.prefix.lib64]
-    rpaths.extend(d.prefix.lib for d in pkg.spec.dependencies.values()
+    deps = pkg.spec.dependencies(deptype='link')
+    rpaths.extend(d.prefix.lib for d in deps
                   if os.path.isdir(d.prefix.lib))
-    rpaths.extend(d.prefix.lib64 for d in pkg.spec.dependencies.values()
+    rpaths.extend(d.prefix.lib64 for d in deps
                   if os.path.isdir(d.prefix.lib64))
     # Second module is our compiler mod name. We use that to get rpaths from
     # module show output.
@@ -441,7 +439,7 @@ def setup_package(pkg, dirty=False):
     load_external_modules(pkg)
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
-    for dspec in pkg.spec.traverse(order='post', root=False):
+    for dspec in pkg.spec.traverse(order='post', root=False, deptype='build'):
         # If a user makes their own package repo, e.g.
         # spack.repos.mystuff.libelf.Libelf, and they inherit from
         # an existing class like spack.repos.original.libelf.Libelf,

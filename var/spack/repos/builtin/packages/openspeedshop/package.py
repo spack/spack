@@ -80,7 +80,7 @@ class Openspeedshop(Package):
     variant('mpich2', default=False, description="Build mpi experiment collector for mpich2 MPI when this variant is enabled.")
     variant('mpich', default=False, description="Build mpi experiment collector for mpich MPI when this variant is enabled.")
 
-    depends_on("cmake@3.0.2")
+    depends_on("cmake@3.0.2", type='build')
     # Dependencies for openspeedshop that are common to all the variants of the OpenSpeedShop build
     depends_on("bison")
     depends_on("flex")

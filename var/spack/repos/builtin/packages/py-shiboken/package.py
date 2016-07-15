@@ -32,11 +32,10 @@ class PyShiboken(Package):
 
     version('1.2.2', '345cfebda221f525842e079a6141e555')
 
-    # TODO: make build dependency
-    # depends_on("cmake")
+    depends_on('cmake', type='build')
 
     extends('python')
-    depends_on("py-setuptools")
+    depends_on("py-setuptools", type='build')
     depends_on("libxml2")
     depends_on("qt@:4.8")
 

@@ -42,6 +42,7 @@ class Sundials(Package):
     variant('openmp',  default=False, description='Enable OpenMP support')
     variant('pthread', default=True,  description='Enable POSIX threads support')
 
+    depends_on('cmake', type='build')
     depends_on('mpi',                when='+mpi')
     depends_on('blas',               when='+lapack')
     depends_on('lapack',             when='+lapack')

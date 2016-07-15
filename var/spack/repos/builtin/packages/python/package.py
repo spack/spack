@@ -146,7 +146,7 @@ class Python(Package):
         extension and any other python extensions it depends on."""
 
         python_paths = []
-        for d in extension_spec.traverse():
+        for d in extension_spec.traverse(deptype=nolink, deptype_query='run'):
             if d.package.extends(self.spec):
                 python_paths.append(join_path(d.prefix,
                                               self.site_packages_dir))

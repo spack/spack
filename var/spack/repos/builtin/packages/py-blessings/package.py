@@ -31,7 +31,7 @@ class PyBlessings(Package):
 
     version('1.6', '4f552a8ebcd4982693c92571beb99394')
 
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     extends("python")
 

@@ -31,7 +31,7 @@ class Bear(Package):
 
     version('2.0.4', 'fd8afb5e8e18f8737ba06f90bd77d011')
 
-    depends_on("cmake")
+    depends_on('cmake', type='build')
     depends_on("python")
 
     def install(self, spec, prefix):

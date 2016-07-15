@@ -49,7 +49,7 @@ class Git(Package):
 
 
     depends_on("openssl")
-    depends_on("autoconf")
+    depends_on("autoconf", type='build')
     depends_on("curl")
     depends_on("expat")
 

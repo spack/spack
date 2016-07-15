@@ -33,7 +33,7 @@ class Apex(Package):
 
     depends_on("binutils+libiberty")
     depends_on("boost@1.54:")
-    depends_on("cmake@2.8.12:")
+    depends_on('cmake@2.8.12:', type='build')
     depends_on("activeharmony@4.5:")
     depends_on("ompt-openmp")
 

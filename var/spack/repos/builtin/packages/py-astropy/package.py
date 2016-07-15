@@ -38,18 +38,18 @@ class PyAstropy(Package):
 
     # Required dependencies
     extends('python')
-    depends_on('py-numpy')
+    depends_on('py-numpy', type=nolink)
 
     # Optional dependencies
-    depends_on('py-h5py')
-    depends_on('py-beautifulsoup4')
-    depends_on('py-pyyaml')
-    depends_on('py-scipy')
+    depends_on('py-h5py', type=nolink)
+    depends_on('py-beautifulsoup4', type=nolink)
+    depends_on('py-pyyaml', type=nolink)
+    depends_on('py-scipy', type=nolink)
     depends_on('libxml2')
-    depends_on('py-matplotlib')
-    depends_on('py-pytz')
-    depends_on('py-scikit-image')
-    depends_on('py-pandas')
+    depends_on('py-matplotlib', type=nolink)
+    depends_on('py-pytz', type=nolink)
+    depends_on('py-scikit-image', type=nolink)
+    depends_on('py-pandas', type=nolink)
 
     # System dependencies
     depends_on('cfitsio')

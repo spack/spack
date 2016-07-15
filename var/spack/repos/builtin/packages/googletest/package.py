@@ -31,7 +31,7 @@ class Googletest(Package):
 
     version('1.7.0', '5eaf03ed925a47b37c8e1d559eb19bc4')
 
-    depends_on("cmake")
+    depends_on("cmake", type='build')
 
     def install(self, spec, prefix):
         which('cmake')('.', *std_cmake_args)

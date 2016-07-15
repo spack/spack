@@ -123,7 +123,7 @@ class R(Package):
         # Set R_LIBS to include the library dir for the
         # extension and any other R extensions it depends on.
         r_libs_path = []
-        for d in extension_spec.traverse():
+        for d in extension_spec.traverse(deptype=nolink, deptype_query='run'):
             if d.package.extends(self.spec):
                 r_libs_path.append(os.path.join(d.prefix, self.r_lib_dir))
 

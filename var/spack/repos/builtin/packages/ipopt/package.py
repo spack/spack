@@ -38,7 +38,7 @@ class Ipopt(Package):
 
     depends_on("blas")
     depends_on("lapack")
-    depends_on("pkg-config")
+    depends_on("pkg-config", type='build')
     depends_on("mumps+double~mpi") 
     
     def install(self, spec, prefix):

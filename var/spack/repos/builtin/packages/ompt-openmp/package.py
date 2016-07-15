@@ -31,7 +31,7 @@ class OmptOpenmp(Package):
 
     version('0.1', '2334e6a84b52da41b27afd9831ed5370')
 
-    # depends_on("foo")
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         with working_dir("runtime/build", create=True):

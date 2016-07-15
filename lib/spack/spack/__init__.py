@@ -182,10 +182,13 @@ __all__ = ['Package',
            'EditableMakefile',
            'Version',
            'when',
-           'ver']
+           'ver',
+           'alldeps',
+           'nolinks']
 from spack.package import Package, ExtensionConflictError
 from spack.package import CMakePackage, AutotoolsPackage, EditableMakefile
 from spack.version import Version, ver
+from spack.spec import DependencySpec, alldeps, nolink
 from spack.multimethod import when
 
 import llnl.util.filesystem

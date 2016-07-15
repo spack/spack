@@ -87,7 +87,7 @@ def module_find(mtype, flags, spec_array):
             return
 
         if flags.recurse_dependencies:
-            for dep in spec.dependencies.values():
+            for dep in spec.dependencies():
                 _find_modules(dep, modules_list)
 
         mod = module_types[mtype](spec)

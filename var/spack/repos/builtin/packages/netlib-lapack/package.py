@@ -52,7 +52,7 @@ class NetlibLapack(Package):
     provides('blas', when='~external-blas')
     provides('lapack')
 
-    depends_on('cmake')
+    depends_on('cmake', type='build')
     depends_on('blas', when='+external-blas')
 
 

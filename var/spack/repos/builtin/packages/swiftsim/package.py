@@ -43,10 +43,10 @@ class Swiftsim(AutotoolsPackage):
     variant('mpi', default=True, description='Enable distributed memory parallelism')
 
     # Build dependencies
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
-    depends_on('m4')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
     # link-time / run-time dependencies
     depends_on('mpi', when='+mpi')
     depends_on('metis')

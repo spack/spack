@@ -34,8 +34,8 @@ class PyScipy(Package):
     version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
 
     extends('python')
-    depends_on('py-nose')
-    depends_on('py-numpy+blas+lapack')
+    depends_on('py-nose', type='build')
+    depends_on('py-numpy+blas+lapack', type=nolink)
 
     def install(self, spec, prefix):
         if 'atlas' in spec:

@@ -35,6 +35,7 @@ class AdeptUtils(Package):
 
     depends_on("boost")
     depends_on("mpi")
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         cmake(*std_cmake_args)

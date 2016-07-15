@@ -191,8 +191,7 @@ class MockPackagesTest(unittest.TestCase):
         # restore later.
         self.saved_deps = {}
 
-
-    def set_pkg_dep(self, pkg_name, spec):
+    def set_pkg_dep(self, pkg_name, spec, deptypes=spack.alldeps):
         """Alters dependence information for a package.
 
         Adds a dependency on <spec> to pkg.
@@ -206,7 +205,9 @@ class MockPackagesTest(unittest.TestCase):
             self.saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
 
         # Change dep spec
-        pkg.dependencies[spec.name] = { Spec(pkg_name) : spec }
+        # XXX(deptype): handle deptypes.
+        pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
+        pkg._deptypes[spec.name] = set(deptypes)
 
 
     def cleanmock(self):
@@ -216,6 +217,7 @@ class MockPackagesTest(unittest.TestCase):
         shutil.rmtree(self.temp_config, ignore_errors=True)
         spack.config.clear_config_caches()
 
+        # XXX(deptype): handle deptypes.
         # Restore dependency changes that happened during the test
         for pkg_name, (pkg, deps) in self.saved_deps.items():
             pkg.dependencies.clear()

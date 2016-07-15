@@ -43,7 +43,7 @@ class PyNumpy(Package):
     variant('lapack', default=True)
 
     extends('python')
-    depends_on('py-nose')
+    depends_on('py-nose', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
