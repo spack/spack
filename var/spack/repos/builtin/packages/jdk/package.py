@@ -22,21 +22,20 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#------------------------------------------------------------------------------
+#
 # Author: Justin Too <too1@llnl.gov>
-#------------------------------------------------------------------------------
+#
 import distutils
-from distutils import dir_util
-from subprocess import call
 
 import spack
 from spack import *
 import llnl.util.tty as tty
 
+
 class Jdk(Package):
     """The Java Development Kit (JDK) released by Oracle Corporation
        in the form of a binary product aimed at Java developers."""
-    homepage = "http://www.oracle.com/technetwork/java/javase/downloads/index.html"
+    homepage = "http://www.oracle.com/technetwork/java/javase/downloads/index.html"  # noqa: E501
 
     version('8u66-linux-x64', '88f31f3d642c3287134297b8c10e61bf',
         url="http://download.oracle.com/otn-pub/java/jdk/8u66-b17/jdk-8u66-linux-x64.tar.gz")
@@ -48,10 +47,10 @@ class Jdk(Package):
     # automate this process, we need to utilize these additional curl
     # commandline options.
     #
-    # See http://stackoverflow.com/questions/10268583/how-to-automate-download-and-installation-of-java-jdk-on-linux
-    curl_options=[
-        '-j', # junk cookies
-        '-H', # specify required License Agreement cookie
+    # See http://stackoverflow.com/questions/10268583/how-to-automate-download-and-installation-of-java-jdk-on-linux  # noqa: E501
+    curl_options = [
+        '-j',  # junk cookies
+        '-H',  # specify required License Agreement cookie
         'Cookie: oraclelicense=accept-securebackup-cookie']
 
     def do_fetch(self, mirror_only=False):
@@ -66,7 +65,6 @@ class Jdk(Package):
 
         # Now perform the actual fetch
         super(Jdk, self).do_fetch(mirror_only)
-
 
     def install(self, spec, prefix):
         distutils.dir_util.copy_tree(".", prefix)
