@@ -34,7 +34,7 @@ class NetcdfCxx4(Package):
     version('4.2.1', 'd019853802092cf686254aaba165fc81')
 
     depends_on('netcdf')
-    depends_on("autoconf")
+    depends_on("autoconf", type='build')
 
     def install(self, spec, prefix):
         # Rebuild to prevent problems of inconsistency in git repo

@@ -215,9 +215,14 @@ class Database(object):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         if 'dependencies' in spec_dict[spec.name]:
-            for dep_hash in spec_dict[spec.name]['dependencies'].values():
+            for dep in spec_dict[spec.name]['dependencies'].values():
+                if type(dep) == tuple:
+                    dep_hash, deptypes = dep
+                else:
+                    dep_hash = dep
+                    deptypes = spack.alldeps
                 child = self._read_spec_from_yaml(dep_hash, installs, hash_key)
-                spec._add_dependency(child)
+                spec._add_dependency(child, deptypes)
 
         # Specs from the database need to be marked concrete because
         # they represent actual installations.
@@ -334,7 +339,10 @@ class Database(object):
         counts = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
-            for dep in rec.spec.dependencies.values():
+            # XXX(deptype): This checks all dependencies, but build
+            #               dependencies might be able to be dropped in the
+            #               future.
+            for dep in rec.spec.dependencies():
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
@@ -406,7 +414,7 @@ class Database(object):
         else:
             self._data[key] = InstallRecord(spec, path, True,
                                             explicit=explicit)
-            for dep in spec.dependencies.values():
+            for dep in spec.dependencies(('link', 'run')):
                 self._increment_ref_count(dep, directory_layout)
 
     def _increment_ref_count(self, spec, directory_layout=None):
@@ -421,7 +429,7 @@ class Database(object):
 
             self._data[key] = InstallRecord(spec.copy(), path, installed)
 
-            for dep in spec.dependencies.values():
+            for dep in spec.dependencies('link'):
                 self._increment_ref_count(dep)
 
         self._data[key].ref_count += 1
@@ -466,7 +474,7 @@ class Database(object):
 
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
-            for dep in spec.dependencies.values():
+            for dep in spec.dependencies('link'):
                 self._decrement_ref_count(dep)
 
     def _remove(self, spec):
@@ -480,7 +488,7 @@ class Database(object):
             return rec.spec
 
         del self._data[key]
-        for dep in rec.spec.dependencies.values():
+        for dep in rec.spec.dependencies('link'):
             self._decrement_ref_count(dep)
 
         # Returns the concrete spec so we know it in the case where a

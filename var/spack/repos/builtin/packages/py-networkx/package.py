@@ -33,7 +33,7 @@ class PyNetworkx(Package):
 
     extends('python')
 
-    depends_on('py-decorator')
+    depends_on('py-decorator', type=nolink)
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

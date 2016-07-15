@@ -43,6 +43,7 @@ class Dyninst(Package):
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("boost@1.42:")
+    depends_on('cmake', type='build')
 
     # new version uses cmake
     def install(self, spec, prefix):

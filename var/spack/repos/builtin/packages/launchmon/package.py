@@ -33,9 +33,9 @@ class Launchmon(Package):
 
     version('1.0.2', '8d6ba77a0ec2eff2fde2c5cc8fa7ff7a')
 
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
 
     def install(self, spec, prefix):
         configure(

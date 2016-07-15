@@ -197,32 +197,36 @@ class ConcretizeTest(MockPackagesTest):
     def test_virtual_is_fully_expanded_for_callpath(self):
         # force dependence on fake "zmpi" by asking for MPI 10.0
         spec = Spec('callpath ^mpi@10.0')
-        self.assertTrue('mpi' in spec.dependencies)
+        self.assertTrue('mpi' in spec._dependencies)
         self.assertFalse('fake' in spec)
 
         spec.concretize()
 
-        self.assertTrue('zmpi' in spec.dependencies)
-        self.assertTrue(all(not 'mpi' in d.dependencies for d in spec.traverse()))
+        self.assertTrue('zmpi' in spec._dependencies)
+        self.assertTrue(all('mpi' not in d._dependencies
+                            for d in spec.traverse()))
         self.assertTrue('zmpi' in spec)
         self.assertTrue('mpi' in spec)
 
-        self.assertTrue('fake' in spec.dependencies['zmpi'])
+        self.assertTrue('fake' in spec._dependencies['zmpi'].spec)
 
 
     def test_virtual_is_fully_expanded_for_mpileaks(self):
         spec = Spec('mpileaks ^mpi@10.0')
-        self.assertTrue('mpi' in spec.dependencies)
+        self.assertTrue('mpi' in spec._dependencies)
         self.assertFalse('fake' in spec)
 
         spec.concretize()
 
-        self.assertTrue('zmpi' in spec.dependencies)
-        self.assertTrue('callpath' in spec.dependencies)
-        self.assertTrue('zmpi' in spec.dependencies['callpath'].dependencies)
-        self.assertTrue('fake' in spec.dependencies['callpath'].dependencies['zmpi'].dependencies)
+        self.assertTrue('zmpi' in spec._dependencies)
+        self.assertTrue('callpath' in spec._dependencies)
+        self.assertTrue('zmpi' in spec._dependencies['callpath'].
+                                  spec._dependencies)
+        self.assertTrue('fake' in spec._dependencies['callpath'].
+                                  spec._dependencies['zmpi'].
+                                  spec._dependencies)
 
-        self.assertTrue(all(not 'mpi' in d.dependencies for d in spec.traverse()))
+        self.assertTrue(all(not 'mpi' in d._dependencies for d in spec.traverse()))
         self.assertTrue('zmpi' in spec)
         self.assertTrue('mpi' in spec)
 

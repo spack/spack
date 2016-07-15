@@ -53,7 +53,7 @@ class Hdf5Blosc(Package):
 
     depends_on("c-blosc")
     depends_on("hdf5")
-    depends_on("libtool")
+    depends_on("libtool", type='build')
 
     parallel = False
 

@@ -179,7 +179,7 @@ def mirror_create(args):
         new_specs = set()
         for spec in specs:
             spec.concretize()
-            for s in spec.traverse():
+            for s in spec.traverse(deptype_query=spack.alldeps):
                 new_specs.add(s)
         specs = list(new_specs)
 

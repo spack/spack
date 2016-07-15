@@ -34,8 +34,8 @@ class PyDateutil(Package):
     version('2.5.2', 'eafe168e8f404bf384514f5116eedbb6')
 
     extends('python')
-    depends_on('py-setuptools')
-    depends_on('py-six')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-six', type=nolink)
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

@@ -34,7 +34,7 @@ class PyFlake8(Package):
     version('2.5.4', 'a4585b3569b95c3f66acb8294a7f06ef')
 
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

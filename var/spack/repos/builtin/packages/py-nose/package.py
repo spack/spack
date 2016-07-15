@@ -37,7 +37,7 @@ class PyNose(Package):
     version('1.3.7', '4d3ad0ff07b61373d2cefc89c5d0b20b')
 
     extends('python', ignore=r'bin/nosetests.*$')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

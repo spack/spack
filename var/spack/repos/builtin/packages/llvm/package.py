@@ -51,7 +51,7 @@ class Llvm(Package):
     variant('all_targets', default=True, description="Build all supported targets, default targets <current arch>,NVPTX,AMDGPU,CppBackend")
 
     # Build dependency
-    depends_on('cmake @2.8.12.2:')
+    depends_on('cmake@2.8.12.2:', type='build')
 
     # Universal dependency
     depends_on('python@2.7:2.8')  # Seems not to support python 3.X.Y

@@ -1286,6 +1286,31 @@ command line to find installed packages or to install packages with
 particular constraints, and package authors can use specs to describe
 relationships between packages.
 
+Additionally, dependencies may be specified for specific use cases:
+
+.. code-block:: python
+
+    depends_on("cmake", type="build")
+    depends_on("libelf", type=("build", "link"))
+    depends_on("python", type="run")
+
+The dependency types are:
+
+  * **"build"**: made available during the project's build. The package will
+    be added to ``PATH``, the compiler include paths, and ``PYTHONPATH``.
+    Other projects which depend on this one will not have these modified
+    (building project X doesn't need project Y's build dependencies).
+  * **"link"**: the project is linked to by the project. The package will be
+    added to the current package's ``rpath``.
+  * **"run"**: the project is used by the project at runtime. The package will
+    be added to ``PATH`` and ``PYTHONPATH``.
+
+If not specified, ``type`` is assumed to be ``("build", "link")``. This is the
+common case for compiled language usage. Also available are the aliases
+``alldeps`` for all dependency types and ``nolink`` (``("build", "run")``) for
+use by dependencies which are not expressed via a linker (e.g., Python or Lua
+module loading).
+
 .. _setup-dependent-environment:
 
 ``setup_dependent_environment()``

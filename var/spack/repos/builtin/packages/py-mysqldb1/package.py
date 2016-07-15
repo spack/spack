@@ -32,7 +32,7 @@ class PyMysqldb1(Package):
     version('1.2.5', '332c8f4955b6bc0c79ea15170bf7321b')
 
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

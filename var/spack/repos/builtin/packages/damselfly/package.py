@@ -31,6 +31,8 @@ class Damselfly(Package):
 
     version('1.0', '05cf7e2d8ece4408c0f2abb7ab63fd74c0d62895', git='https://github.com/llnl/damselfly.git', tag='v1.0')
 
+    depends_on('cmake', type='build')
+
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
 	    cmake('-DCMAKE_BUILD_TYPE=release', '..', *std_cmake_args)

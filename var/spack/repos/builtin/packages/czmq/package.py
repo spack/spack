@@ -32,10 +32,10 @@ class Czmq(Package):
 
     version('3.0.2', '23e9885f7ee3ce88d99d0425f52e9be1', url='https://github.com/zeromq/czmq/archive/v3.0.2.tar.gz')
 
-    depends_on('libtool')
-    depends_on('automake')
-    depends_on('autoconf')
-    depends_on('pkg-config')
+    depends_on('libtool', type='build')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('pkg-config', type='build')
     depends_on('zeromq')
 
     def install(self, spec, prefix):

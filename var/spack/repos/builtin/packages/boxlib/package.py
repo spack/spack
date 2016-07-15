@@ -35,6 +35,7 @@ class Boxlib(Package):
     version('master', git='https://ccse.lbl.gov/pub/Downloads/BoxLib.git')
 
     depends_on('mpi')
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         args = std_cmake_args

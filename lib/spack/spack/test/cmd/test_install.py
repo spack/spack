@@ -58,16 +58,39 @@ test_install = __import__("spack.cmd.test-install", fromlist=['test_install'])
 
 class MockSpec(object):
     def __init__(self, name, version, hashStr=None):
-        self.dependencies = {}
+        self._dependencies = {}
         self.name = name
         self.version = version
         self.hash = hashStr if hashStr else hash((name, version))
 
+    def _deptype_norm(self, deptype):
+        if deptype is None:
+            return spack.alldeps
+        # Force deptype to be a tuple so that we can do set intersections.
+        if isinstance(deptype, str):
+            return (deptype,)
+        return deptype
+
+    def _find_deps(self, where, deptype):
+        deptype = self._deptype_norm(deptype)
+
+        return [dep.spec
+                for dep in where.values()
+                if deptype and any(d in deptype for d in dep.deptypes)]
+
+    def dependencies(self, deptype=None):
+        return self._find_deps(self._dependencies, deptype)
+
+    def dependents(self, deptype=None):
+        return self._find_deps(self._dependents, deptype)
+
     def traverse(self, order=None):
-        for _, spec in self.dependencies.items():
-            yield spec
+        for _, spec in self._dependencies.items():
+            yield spec.spec
         yield self
-        #allDeps = itertools.chain.from_iterable(i.traverse() for i in self.dependencies.itervalues())
+        #from_iterable = itertools.chain.from_iterable
+        #allDeps = from_iterable(i.traverse()
+        #                        for i in self.dependencies())
         #return set(itertools.chain([self], allDeps))
 
     def dag_hash(self):
@@ -104,7 +127,7 @@ def mock_fetch_log(path):
 
 specX = MockSpec('X', "1.2.0")
 specY = MockSpec('Y', "2.3.8")
-specX.dependencies['Y'] = specY
+specX._dependencies['Y'] = spack.DependencySpec(specY, spack.alldeps)
 pkgX = MockPackage(specX, 'logX')
 pkgY = MockPackage(specY, 'logY')
 

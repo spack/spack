@@ -60,7 +60,7 @@ class Dealii(Package):
     depends_on("boost@1.59.0:+thread+system+serialization+iostreams",     when='~mpi')  # NOQA: ignore=E501
     depends_on("boost@1.59.0:+mpi+thread+system+serialization+iostreams", when='+mpi')  # NOQA: ignore=E501
     depends_on("bzip2")
-    depends_on("cmake")
+    depends_on("cmake", type='build')
     depends_on("lapack")
     depends_on("muparser")
     depends_on("suite-sparse")

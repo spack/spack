@@ -171,7 +171,7 @@ def version(pkg, ver, checksum=None, **kwargs):
     pkg.versions[Version(ver)] = kwargs
 
 
-def _depends_on(pkg, spec, when=None):
+def _depends_on(pkg, spec, when=None, type=None):
     # If when is False do nothing
     if when is False:
         return
@@ -180,9 +180,28 @@ def _depends_on(pkg, spec, when=None):
         when = pkg.name
     when_spec = parse_anonymous_spec(when, pkg.name)
 
+    if type is None:
+        # The default deptype is build and link because the common case is to
+        # build against a library which then turns into a runtime dependency
+        # due to the linker.
+        # XXX(deptype): Add 'run' to this? It's an uncommon dependency type,
+        #               but is most backwards-compatible.
+        type = ('build', 'link')
+
+    if isinstance(type, str):
+        type = (type,)
+
+    for deptype in type:
+        if deptype not in spack.spec.alldeps:
+            raise UnknownDependencyTypeError('depends_on', pkg.name, deptype)
+
     dep_spec = Spec(spec)
     if pkg.name == dep_spec.name:
         raise CircularReferenceError('depends_on', pkg.name)
+
+    pkg_deptypes = pkg._deptypes.setdefault(dep_spec.name, set())
+    for deptype in type:
+        pkg_deptypes.add(deptype)
 
     conditions = pkg.dependencies.setdefault(dep_spec.name, {})
     if when_spec in conditions:
@@ -191,13 +210,13 @@ def _depends_on(pkg, spec, when=None):
         conditions[when_spec] = dep_spec
 
 
-@directive('dependencies')
-def depends_on(pkg, spec, when=None):
+@directive(('dependencies', '_deptypes'))
+def depends_on(pkg, spec, when=None, type=None):
     """Creates a dict of deps with specs defining when they apply."""
-    _depends_on(pkg, spec, when=when)
+    _depends_on(pkg, spec, when=when, type=type)
 
 
-@directive(('extendees', 'dependencies'))
+@directive(('extendees', 'dependencies', '_deptypes'))
 def extends(pkg, spec, **kwargs):
     """Same as depends_on, but dependency is symlinked into parent prefix.
 
@@ -325,4 +344,14 @@ class CircularReferenceError(DirectiveError):
         super(CircularReferenceError, self).__init__(
             directive,
             "Package '%s' cannot pass itself to %s" % (package, directive))
+        self.package = package
+
+
+class UnknownDependencyTypeError(DirectiveError):
+    """This is raised when a dependency is of an unknown type."""
+    def __init__(self, directive, package, deptype):
+        super(UnknownDependencyTypeError, self).__init__(
+            directive,
+            "Package '%s' cannot depend on a package via %s." %
+                (package, deptype))
         self.package = package

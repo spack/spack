@@ -47,8 +47,8 @@ class Cmake(Package):
     depends_on('ncurses', when='+ncurses')
     depends_on('openssl', when='+openssl')
     depends_on('qt', when='+qt')
-    depends_on('python@2.7.11:', when='+doc')
-    depends_on('py-sphinx', when='+doc')
+    depends_on('python@2.7.11:', when='+doc', type='build')
+    depends_on('py-sphinx', when='+doc', type='build')
 
     def url_for_version(self, version):
         """Handle CMake's version-based custom URLs."""

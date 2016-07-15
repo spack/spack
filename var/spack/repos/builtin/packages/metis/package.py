@@ -50,7 +50,7 @@ class Metis(Package):
     variant('idx64', default=False, description='Use int64_t as default index type')
     variant('real64', default=False, description='Use double precision floating point types')
 
-    depends_on('cmake@2.8:', when='@5:')  # build-time dependency
+    depends_on('cmake@2.8:', when='@5:', type='build')
 
     patch('install_gklib_defs_rename.patch', when='@5:')
 

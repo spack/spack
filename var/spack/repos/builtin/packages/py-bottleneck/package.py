@@ -32,7 +32,7 @@ class PyBottleneck(Package):
     version('1.0.0', '380fa6f275bd24f27e7cf0e0d752f5d2')
 
     extends('python')
-    depends_on('py-numpy')
+    depends_on('py-numpy', type=nolink)
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

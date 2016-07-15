@@ -51,7 +51,7 @@ class Imagemagick(Package):
         url="http://sourceforge.net/projects/imagemagick/files/old-sources/6.x/6.8/ImageMagick-6.8.9-10.tar.gz/download")
 
     depends_on('jpeg')
-    depends_on('libtool')
+    depends_on('libtool', type='build')
     depends_on('libpng')
     depends_on('freetype')
     depends_on('fontconfig')

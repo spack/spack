@@ -44,7 +44,7 @@ class Graphviz(Package):
     depends_on("swig")
     depends_on("python")
     depends_on("ghostscript")
-    depends_on("pkg-config")
+    depends_on("pkg-config", type='build')
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
