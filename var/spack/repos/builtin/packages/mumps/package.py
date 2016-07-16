@@ -50,7 +50,6 @@ class Mumps(Package):
     depends_on('metis@5:', when='+metis')
     depends_on('parmetis', when="+parmetis")
     depends_on('blas')
-    depends_on('lapack')
     depends_on('scalapack', when='+mpi')
     depends_on('mpi', when='+mpi')
 
@@ -63,7 +62,9 @@ class Mumps(Package):
         if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and '+mpi' not in self.spec:
             raise RuntimeError('You cannot use the variants parmetis or ptscotch without mpi')
 
-        makefile_conf = ["LIBBLAS = -L%s -lblas" % self.spec['blas'].prefix.lib]
+        makefile_conf = ["LIBBLAS = %s" % to_link_flags(
+            self.spec['blas'].blas_shared_lib)
+        ]
 
         orderings = ['-Dpord']
 
@@ -189,7 +190,7 @@ class Mumps(Package):
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
 
-        if '~mpi' in spec:            
+        if '~mpi' in spec:
             lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
             lib_suffix = lib_dsuffix if '+shared' in spec else '.a'
             install('libseq/libmpiseq%s' % lib_suffix, prefix.lib)
