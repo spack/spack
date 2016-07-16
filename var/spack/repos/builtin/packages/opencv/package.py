@@ -55,14 +55,13 @@ class Opencv(Package):
     variant('gtk', default=False, description='Activates support for GTK')
     variant('vtk', default=False, description='Activates support for VTK')
     variant('qt', default=False, description='Activates support for QT')
+    variant('python', default=False,
+            description='Enables the build of Python extensions')
 
     depends_on('zlib')
     depends_on('libpng')
     depends_on('libjpeg-turbo')
     depends_on('libtiff')
-
-    depends_on('python')
-    depends_on('py-numpy')
 
     depends_on('eigen', when='+eigen')
     depends_on('cuda', when='+cuda')
@@ -70,7 +69,9 @@ class Opencv(Package):
     depends_on('vtk', when='+vtk')
     depends_on('qt', when='+qt')
 
-    extends('python')
+    depends_on('py-numpy', when='+python')
+
+    extends('python', when='+python')
 
     def install(self, spec, prefix):
         cmake_options = []
@@ -97,30 +98,36 @@ class Opencv(Package):
             cmake_options.extend(['-DWITH_GTK:BOOL=OFF',
                                   '-DWITH_GTK_2_X:BOOL=ON'])
 
-        python = spec['python']
-        if '^python@3:' in spec:
-            python_exe = join_path(python.prefix.bin, 'python3')
+        if '+python' in spec:
+            python = spec['python']
+            if '^python@3:' in spec:
+                python_exe = join_path(python.prefix.bin, 'python3')
+                cmake_options.extend([
+                    '-DBUILD_opencv_python3=ON',
+                    '-DPYTHON3_EXECUTABLE=%s' % python_exe,
+                    '-DPYTHON3_LIBRARIES=%s' % python.prefix.lib,
+                    '-DPYTHON3_INCLUDE_DIR=%s' % python.prefix.include,
+                    '-DBUILD_opencv_python2=OFF',
+                    '-DPYTHON2_EXECUTABLE=',
+                    '-DPYTHON2_LIBRARIES=',
+                    '-DPYTHON2_INCLUDE_DIR=',
+                ])
+            elif '^python@2:3' in spec:
+                python_exe = join_path(python.prefix.bin, 'python2')
+                cmake_options.extend([
+                    '-DBUILD_opencv_python2=ON',
+                    '-DPYTHON2_EXECUTABLE=%s' % python_exe,
+                    '-DPYTHON2_LIBRARIES=%s' % python.prefix.lib,
+                    '-DPYTHON2_INCLUDE_DIR=%s' % python.prefix.include,
+                    '-DBUILD_opencv_python3=OFF',
+                    '-DPYTHON3_EXECUTABLE=',
+                    '-DPYTHON3_LIBRARIES=',
+                    '-DPYTHON3_INCLUDE_DIR=',
+                ])
+        else:
             cmake_options.extend([
-                '-DBUILD_opencv_python3=ON',
-                '-DPYTHON3_EXECUTABLE=%s' % python_exe,
-                '-DPYTHON3_LIBRARIES=%s' % python.prefix.lib,
-                '-DPYTHON3_INCLUDE_DIR=%s' % python.prefix.include,
                 '-DBUILD_opencv_python2=OFF',
-                '-DPYTHON2_EXECUTABLE=',
-                '-DPYTHON2_LIBRARIES=',
-                '-DPYTHON2_INCLUDE_DIR=',
-            ])
-        elif '^python@2:3' in spec:
-            python_exe = join_path(python.prefix.bin, 'python2')
-            cmake_options.extend([
-                '-DBUILD_opencv_python2=ON',
-                '-DPYTHON2_EXECUTABLE=%s' % python_exe,
-                '-DPYTHON2_LIBRARIES=%s' % python.prefix.lib,
-                '-DPYTHON2_INCLUDE_DIR=%s' % python.prefix.include,
-                '-DBUILD_opencv_python3=OFF',
-                '-DPYTHON3_EXECUTABLE=',
-                '-DPYTHON3_LIBRARIES=',
-                '-DPYTHON3_INCLUDE_DIR=',
+                '-DBUILD_opencv_python3=OFF'
             ])
 
         with working_dir('spack_build', create=True):
