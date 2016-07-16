@@ -53,6 +53,15 @@ class NetlibScalapack(Package):
             "-DUSE_OPTIMIZED_LAPACK_BLAS:BOOL=ON", # forces scalapack to use find_package(LAPACK)
             ]
 
+        # Make sure we use Spack's Lapack:
+        options.extend([
+            '-DLAPACK_FOUND=true',
+            '-DLAPACK_INCLUDE_DIRS=%s' % spec['lapack'].prefix.include,
+            '-DLAPACK_LIBRARIES=%s' % (
+                spec['lapack'].lapack_shared_lib if '+shared' in spec else
+                spec['lapack'].lapack_static_lib),
+        ])
+
         if '+fpic' in spec:
             options.extend([
                 "-DCMAKE_C_FLAGS=-fPIC",
