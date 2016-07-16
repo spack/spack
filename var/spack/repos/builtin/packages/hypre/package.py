@@ -23,7 +23,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os, sys
+import os
+import sys
+
 
 class Hypre(Package):
     """Hypre is a library of high performance preconditioners that
@@ -37,7 +39,7 @@ class Hypre(Package):
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
 
     # hypre does not know how to build shared libraries on Darwin
-    variant('shared', default=sys.platform!='darwin', description="Build shared library version (disables static library)")
+    variant('shared', default=(sys.platform != 'darwin'), description="Build shared library version (disables static library)")
     # SuperluDist have conflicting headers with those in Hypre
     variant('internal-superlu', default=True, description="Use internal Superlu routines")
 

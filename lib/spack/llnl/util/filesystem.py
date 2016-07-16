@@ -430,11 +430,13 @@ def fix_darwin_install_name(path):
                     subprocess.Popen(["install_name_tool", "-change", dep, loc, lib], stdout=subprocess.PIPE).communicate()[0]  # NOQA: ignore=E501
                     break
 
+
 def to_lib_name(library):
     """Transforms a path to the library /path/to/lib<name>.xyz into <name>
     """
     # Assume libXYZ.suffix
     return os.path.basename(library)[3:].split(".")[0]
+
 
 def to_link_flags(library):
     """Transforms a path to a <library> into linking flags -L<dir> -l<name>.
