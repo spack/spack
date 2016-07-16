@@ -87,7 +87,10 @@ class Opencv(Package):
             '-DWITH_QT:BOOL=%s' % ('ON' if '+qt' in spec else 'OFF'),
             '-DWITH_VTK:BOOL=%s' % ('ON' if '+vtk' in spec else 'OFF')])
 
-        if '^gtkplus@3:' in spec:
+        if '+gtk' not in spec:
+            cmake_options.extend(['-DWITH_GTK:BOOL=OFF',
+                                  '-DWITH_GTK_2_X:BOOL=OFF'])
+        elif '^gtkplus@3:' in spec:
             cmake_options.extend(['-DWITH_GTK:BOOL=ON',
                                   '-DWITH_GTK_2_X:BOOL=OFF'])
         elif '^gtkplus@2:3' in spec:
