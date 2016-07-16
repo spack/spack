@@ -39,9 +39,11 @@ class Atlas(Package):
 
     version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da',
             url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.2/atlas3.10.2.tar.bz2', preferred=True)
+    # not all packages (e.g. Trilinos@12.6.3) stopped using deprecated in 3.6.0
+    # Lapack routines. Stick with 3.5.0 until this is fixed.
     resource(name='lapack',
-             url='http://www.netlib.org/lapack/lapack-3.6.0.tgz',
-             md5='f2f6c67134e851fe189bb3ca1fbb5101',
+             url='http://www.netlib.org/lapack/lapack-3.5.0.tgz',
+             md5='b1d3e3e425b2e44a06760ff173104bdf',
              destination='spack-resource-lapack',
              when='@3:')
 
