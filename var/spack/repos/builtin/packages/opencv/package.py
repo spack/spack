@@ -97,18 +97,31 @@ class Opencv(Package):
             cmake_options.extend(['-DWITH_GTK:BOOL=OFF',
                                   '-DWITH_GTK_2_X:BOOL=ON'])
 
-        python_prefix = spec['python'].prefix
-        python_lib = python_prefix.lib
+        python = spec['python']
         if '^python@3:' in spec:
-            python = join_path(python_prefix.bin, 'python3')
-            cmake_options.extend(['-DBUILD_opencv_python3=ON',
-                                  '-DPYTHON_EXECUTABLE=%s' % python,
-                                  '-DPYTHON_LIBRARIES=%s' % python_lib])
+            python_exe = join_path(python.prefix.bin, 'python3')
+            cmake_options.extend([
+                '-DBUILD_opencv_python3=ON',
+                '-DPYTHON3_EXECUTABLE=%s' % python_exe,
+                '-DPYTHON3_LIBRARIES=%s' % python.prefix.lib,
+                '-DPYTHON3_INCLUDE_DIR=%s' % python.prefix.include,
+                '-DBUILD_opencv_python2=OFF',
+                '-DPYTHON2_EXECUTABLE=',
+                '-DPYTHON2_LIBRARIES=',
+                '-DPYTHON2_INCLUDE_DIR=',
+            ])
         elif '^python@2:3' in spec:
-            python = join_path(python_prefix.bin, 'python2')
-            cmake_options.extend(['-DBUILD_opencv_python2=ON',
-                                  '-DPYTHON_EXECUTABLE=%s' % python,
-                                  '-DPYTHON_LIBRARIES=%s' % python_lib])
+            python_exe = join_path(python.prefix.bin, 'python2')
+            cmake_options.extend([
+                '-DBUILD_opencv_python2=ON',
+                '-DPYTHON2_EXECUTABLE=%s' % python_exe,
+                '-DPYTHON2_LIBRARIES=%s' % python.prefix.lib,
+                '-DPYTHON2_INCLUDE_DIR=%s' % python.prefix.include,
+                '-DBUILD_opencv_python3=OFF',
+                '-DPYTHON3_EXECUTABLE=',
+                '-DPYTHON3_LIBRARIES=',
+                '-DPYTHON3_INCLUDE_DIR=',
+            ])
 
         with working_dir('spack_build', create=True):
             cmake('..', *cmake_options)
