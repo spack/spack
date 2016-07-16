@@ -116,6 +116,7 @@ class Trilinos(Package):
         options.extend(std_cmake_args)
 
         mpi_bin = spec['mpi'].prefix.bin
+        # Note: -DXYZ_LIBRARY_NAMES= needs semicolon separated list of names
         options.extend([
             '-DTrilinos_ENABLE_ALL_PACKAGES:BOOL=ON',
             '-DTrilinos_ENABLE_ALL_OPTIONAL_PACKAGES:BOOL=ON',
@@ -129,10 +130,12 @@ class Trilinos(Package):
             '-DTPL_ENABLE_MPI:BOOL=ON',
             '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
             '-DTPL_ENABLE_BLAS=ON',
-            '-DBLAS_LIBRARY_NAMES=blas',  # FIXME: don't hardcode names
+            '-DBLAS_LIBRARY_NAMES=%s' % to_lib_name(
+                spec['blas'].blas_shared_lib),
             '-DBLAS_LIBRARY_DIRS=%s' % spec['blas'].prefix.lib,
             '-DTPL_ENABLE_LAPACK=ON',
-            '-DLAPACK_LIBRARY_NAMES=lapack',
+            '-DLAPACK_LIBRARY_NAMES=%s' % to_lib_name(
+                spec['lapack'].lapack_shared_lib),
             '-DLAPACK_LIBRARY_DIRS=%s' % spec['lapack'].prefix,
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
