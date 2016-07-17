@@ -2606,9 +2606,9 @@ variant names are:
   Name    Default   Description
   ======= ======== ========================
   shared   True     Build shared libraries
-  static   None     Build static libraries
-  mpi      None     Use MPI
-  python   None     Build Python extension
+  static            Build static libraries
+  mpi               Use MPI
+  python            Build Python extension
   ======= ======== ========================
 
 If specified in this table, the corresponding default should be used
