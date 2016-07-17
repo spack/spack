@@ -155,6 +155,7 @@ _separators = '[%s]' % ''.join(color_formats.keys())
    every time we call str()"""
 _any_version = VersionList([':'])
 
+# Special types of dependencies.
 alldeps = ('build', 'link', 'run')
 nolink = ('build', 'run')
 
@@ -296,10 +297,15 @@ class CompilerSpec(object):
 
 @key_ordering
 class DependencySpec(object):
-    """
-    Dependencies have conditions in which they apply.
+    """Dependencies can be one (or more) of several types:
 
-    This stores both what is depended on and why it is a dependency.
+    - build: needs to be in the PATH at build time.
+    - link: is linked to and added to compiler flags.
+    - run: needs to be in the PATH for the package to run.
+
+    Fields:
+    - spec: the spack.spec.Spec description of a dependency.
+    - deptypes: strings representing the type of dependency this is.
     """
     def __init__(self, spec, deptypes):
         self.spec = spec
@@ -558,15 +564,15 @@ class Spec(object):
     def _find_deps_dict(self, where, deptype):
         deptype = self._deptype_norm(deptype)
 
-        return [(dep.spec.name, dep)
-                for dep in where.values()
-                if deptype and any(d in deptype for d in dep.deptypes)]
+        return dict((dep.spec.name, dep)
+                    for dep in where.values()
+                    if deptype and any(d in deptype for d in dep.deptypes))
 
     def dependencies_dict(self, deptype=None):
-        return dict(self._find_deps_dict(self._dependencies, deptype))
+        return self._find_deps_dict(self._dependencies, deptype)
 
     def dependents_dict(self, deptype=None):
-        return dict(self._find_deps_dict(self._dependents, deptype))
+        return self._find_deps_dict(self._dependents, deptype)
 
     #
     # Private routines here are called by the parser when building a spec.
@@ -914,9 +920,11 @@ class Spec(object):
         d = {
             'parameters': params,
             'arch': self.architecture,
-            'dependencies': dict((d, (deps[d].spec.dag_hash(),
-                                      deps[d].deptypes))
-                                 for d in sorted(deps.keys()))
+            'dependencies': dict(
+                (name, {
+                    'hash': dspec.spec.dag_hash(),
+                    'type': [str(s) for s in dspec.deptypes]})
+                for name, dspec in deps.items())
         }
 
         # Older concrete specs do not have a namespace.  Omit for
@@ -982,12 +990,34 @@ class Spec(object):
             raise SpackRecordError(
                 "Did not find a valid format for variants in YAML file")
 
-        # XXX(deptypes): why are dependencies not meant to be read here?
-        #for name, dep_info in node['dependencies'].items():
-        #    (dag_hash, deptypes) = dep_info
-        #    spec._dependencies[name] = DependencySpec(dag_hash, deptypes)
+        # Don't read dependencies here; from_node_dict() is used by
+        # from_yaml() to read the root *and* each dependency spec.
 
         return spec
+
+
+    @staticmethod
+    def read_yaml_dep_specs(dependency_dict):
+        """Read the DependencySpec portion of a YAML-formatted Spec.
+
+        This needs to be backward-compatible with older spack spec
+        formats so that reindex will work on old specs/databases.
+        """
+        for dep_name, elt in dependency_dict.items():
+            if isinstance(elt, basestring):
+                # original format, elt is just the dependency hash.
+                dag_hash, deptypes = elt, ['build', 'link']
+            elif isinstance(elt, tuple):
+                # original deptypes format: (used tuples, not future-proof)
+                dag_hash, deptypes = elt
+            elif isinstance(elt, dict):
+                # new format: elements of dependency spec are keyed.
+                dag_hash, deptypes = elt['hash'], elt['type']
+            else:
+                raise SpecError("Couldn't parse dependency types in spec.")
+
+            yield dep_name, dag_hash, list(deptypes)
+
 
     @staticmethod
     def from_yaml(stream):
@@ -1000,27 +1030,30 @@ class Spec(object):
         represent more than the DAG does.
 
         """
-        deps = {}
-        spec = None
-
         try:
             yfile = yaml.load(stream)
         except MarkedYAMLError, e:
             raise SpackYAMLError("error parsing YAML spec:", str(e))
 
-        for node in yfile['spec']:
-            name = next(iter(node))
-            dep = Spec.from_node_dict(node)
-            if not spec:
-                spec = dep
-            deps[dep.name] = dep
+        nodes = yfile['spec']
 
-        for node in yfile['spec']:
+        # Read nodes out of list.  Root spec is the first element;
+        # dependencies are the following elements.
+        dep_list = [Spec.from_node_dict(node) for node in nodes]
+        if not dep_list:
+            raise SpecError("YAML spec contains no nodes.")
+        deps = dict((spec.name, spec) for spec in dep_list)
+        spec = dep_list[0]
+
+        for node in nodes:
+            # get dependency dict from the node.
             name = next(iter(node))
-            for dep_name, (dep, deptypes) in \
-                    node[name]['dependencies'].items():
-                deps[name]._dependencies[dep_name] = \
-                        DependencySpec(deps[dep_name], deptypes)
+            yaml_deps = node[name]['dependencies']
+            for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
+                # Fill in dependencies by looking them up by name in deps dict
+                deps[name]._dependencies[dname] = DependencySpec(
+                    deps[dname], set(dtypes))
+
         return spec
 
     def _concretize_helper(self, presets=None, visited=None):
@@ -1505,13 +1538,13 @@ class Spec(object):
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_names()
         # Get all the dependencies into one DependencyMap
-        spec_deps = self.flat_dependencies_with_deptype(copy=False,
-                                                        deptype_query=alldeps)
+        spec_deps = self.flat_dependencies_with_deptype(
+            copy=False, deptype_query=alldeps)
 
         # Initialize index of virtual dependency providers if
         # concretize didn't pass us one already
-        provider_index = ProviderIndex([s.spec for s in spec_deps.values()],
-                                       restrict=True)
+        provider_index = ProviderIndex(
+            [s.spec for s in spec_deps.values()], restrict=True)
 
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
@@ -2244,12 +2277,14 @@ class Spec(object):
         indent = kwargs.pop('indent', 0)
         fmt = kwargs.pop('format', '$_$@$%@+$+$=')
         prefix = kwargs.pop('prefix', None)
+        deptypes = kwargs.pop('deptypes', ('build', 'link'))
         check_kwargs(kwargs, self.tree)
 
         out = ""
         cur_id = 0
         ids = {}
-        for d, node in self.traverse(order='pre', cover=cover, depth=True):
+        for d, node in self.traverse(
+                order='pre', cover=cover, depth=True, deptypes=deptypes):
             if prefix is not None:
                 out += prefix(node)
             out += " " * indent
