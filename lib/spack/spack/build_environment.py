@@ -351,14 +351,7 @@ def set_module_variables_for_package(pkg, module):
 
     # standard CMake arguments
     m.std_cmake_args = get_std_cmake_args(pkg)
-    if platform.mac_ver()[0]:
-        m.std_cmake_args.append('-DCMAKE_FIND_FRAMEWORK=LAST')
-
-    # Set up CMake rpath
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
-    m.std_cmake_args.append('-DCMAKE_INSTALL_RPATH=%s' %
-                            ":".join(get_rpaths(pkg)))
-
+    
     # Put spack compiler paths in module scope.
     link_dir = spack.build_env_path
     m.spack_cc = join_path(link_dir, pkg.compiler.link_paths['cc'])
