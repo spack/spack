@@ -155,6 +155,10 @@ _any_version = VersionList([':'])
 # Special types of dependencies.
 alldeps = ('build', 'link', 'run')
 nolink = ('build', 'run')
+special_types = {
+    'alldeps': alldeps,
+    'nolink': nolink,
+}
 
 
 def index_specs(specs):
@@ -542,7 +546,8 @@ class Spec(object):
             return alldeps
         # Force deptype to be a set object so that we can do set intersections.
         if isinstance(deptype, str):
-            return (deptype,)
+            # Support special deptypes.
+            return special_types.get(deptype, (deptype,))
         return deptype
 
     def _find_deps(self, where, deptype):
