@@ -100,6 +100,15 @@ class Opencv(Package):
                 'ON' if '+java' in spec else 'OFF')),
         ])
 
+        zlib = spec['zlib']
+        cmake_options.extend([
+            '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
+                'DEBUG' if '+debug' in spec else 'RELEASE'),
+                join_path(zlib.prefix.lib,
+                          'libz.{0}'.format(dso_suffix))),
+            '-DZLIB_INCLUDE_DIR:PATH={0}'.format(zlib.prefix.include)
+        ])
+
         libpng = spec['libpng']
         cmake_options.extend([
             '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
