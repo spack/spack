@@ -40,7 +40,7 @@ class Cereal(Package):
 
     patch("Werror.patch")
 
-    depends_on("cmake @2.6.2:")
+    depends_on('cmake@2.6.2:', type='build')
 
     def install(self, spec, prefix):
         # Don't use -Werror

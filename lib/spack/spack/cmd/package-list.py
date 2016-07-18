@@ -80,11 +80,15 @@ def print_rst_package_list():
         if pkg.versions:
             print "Versions:"
             print "  " + ", ".join(str(v) for v in reversed(sorted(pkg.versions)))
-        if pkg.dependencies:
-            print "Dependencies"
-            print "  " + ", ".join("`%s`_" % d if d != "mpi" else d
-                                   for d in pkg.dependencies)
-            print
+
+        for deptype in ('build', 'link', 'run'):
+            deps = pkg.dependencies(deptype)
+            if deps:
+                print "%s Dependencies" % deptype.capitalize()
+                print "  " + ", ".join("`%s`_" % d if d != "mpi" else d
+                                       for d in build_deps)
+                print
+
         print "Description:"
         print pkg.format_doc(indent=2)
         print

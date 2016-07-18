@@ -32,6 +32,7 @@ class Taskd(Package):
 
     version('1.1.0', 'ac855828c16f199bdbc45fbc227388d0')
 
+    depends_on('cmake', type='build')
     depends_on("libuuid")
     depends_on("gnutls")
 

@@ -41,6 +41,7 @@ class Caliper(Package):
     depends_on('libunwind')
     depends_on('papi')
     depends_on('mpi', when='+mpi')
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
       with working_dir('build', create=True):

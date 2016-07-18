@@ -31,7 +31,7 @@ class PyUrwid(Package):
 
     version('1.3.0', 'a989acd54f4ff1a554add464803a9175')
 
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     extends("python")
 

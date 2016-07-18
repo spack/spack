@@ -22,7 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-from spack import depends_on, extends, version
+from spack import depends_on, extends, version, nolink
 from spack import Package
 
 
@@ -43,8 +43,8 @@ class PyJinja2(Package):
     version('2.7', 'ec70433f325051dcedacbb2465028a35')
 
     extends("python")
-    depends_on("py-setuptools")
-    depends_on("py-markupsafe")
+    depends_on("py-setuptools", type='build')
+    depends_on("py-markupsafe", type=nolink)
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

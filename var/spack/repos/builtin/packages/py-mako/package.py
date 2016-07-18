@@ -33,7 +33,7 @@ class PyMako(Package):
 
     version('1.0.1', '9f0aafd177b039ef67b90ea350497a54')
 
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
     extends('python')
 
     def install(self, spec, prefix):

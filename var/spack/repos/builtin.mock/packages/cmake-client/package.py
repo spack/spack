@@ -38,7 +38,7 @@ class CmakeClient(Package):
 
     version('1.0', '4cb3ff35b2472aae70f542116d616e63')
 
-    depends_on('cmake')
+    depends_on('cmake', type='build')
 
 
     def setup_environment(self, spack_env, run_env):

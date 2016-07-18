@@ -35,8 +35,8 @@ from llnl.util.filesystem import *
 from spack.stage import Stage
 from spack.util.executable import which
 
-test_files_dir = join_path(spack.stage_path, '.test')
-test_tmp_path  = join_path(test_files_dir, 'tmp')
+test_files_dir = os.path.realpath(join_path(spack.stage_path, '.test'))
+test_tmp_path  = os.path.realpath(join_path(test_files_dir, 'tmp'))
 
 archive_dir      = 'test-files'
 archive_name     = archive_dir + '.tar.gz'

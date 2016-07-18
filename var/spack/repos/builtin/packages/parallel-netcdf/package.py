@@ -39,7 +39,7 @@ class ParallelNetcdf(Package):
     variant('fortran', default=True, description='Build the Fortran Interface')
     variant('fpic', default=True, description='Produce position-independent code (for use with shared libraries)')
 
-    depends_on("m4")
+    depends_on("m4", type='build')
     depends_on("mpi")
 
     # See: https://trac.mcs.anl.gov/projects/parallel-netcdf/browser/trunk/INSTALL

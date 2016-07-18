@@ -42,7 +42,7 @@ class Oce(Package):
 
     variant('tbb', default=True, description='Build with Intel Threading Building Blocks')
 
-    depends_on('cmake@2.8:')
+    depends_on('cmake@2.8:', type='build')
     depends_on('tbb', when='+tbb')
 
     # There is a bug in OCE which appears with Clang (version?) or GCC 6.0

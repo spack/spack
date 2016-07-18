@@ -39,6 +39,7 @@ class Callpath(Package):
     depends_on("dyninst")
     depends_on("adept-utils")
     depends_on("mpi")
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         # TODO: offer options for the walker used.

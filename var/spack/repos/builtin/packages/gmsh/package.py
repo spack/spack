@@ -53,7 +53,7 @@ class Gmsh(Package):
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('cmake@2.8:')
+    depends_on('cmake@2.8:', type='build')
     depends_on('gmp')
     depends_on('mpi',  when='+mpi')
     # Assumes OpenGL with GLU is already provided by the system:

@@ -33,7 +33,7 @@ class PySix(Package):
     version('1.10.0', '34eed507548117b2ab523ab14b2f8b55')
 
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

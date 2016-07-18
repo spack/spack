@@ -33,8 +33,8 @@ class PyIpython(Package):
     version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
 
     extends('python')
-    depends_on('py-pygments')
-    depends_on('py-setuptools')
+    depends_on('py-pygments', type=nolink)
+    depends_on('py-setuptools', type=nolink)
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

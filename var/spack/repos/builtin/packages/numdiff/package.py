@@ -35,7 +35,7 @@ class Numdiff(Package):
 
     version('5.8.1',    'a295eb391f6cb1578209fc6b4f9d994e')
 
-    depends_on('gettext', sys.platform=='darwin')
+    depends_on('gettext', when=sys.platform=='darwin', type='build')
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]
