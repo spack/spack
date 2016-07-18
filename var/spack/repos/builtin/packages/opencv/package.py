@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from glob import glob
 
 
 class Opencv(Package):
@@ -78,20 +79,26 @@ class Opencv(Package):
         cmake_options.extend(std_cmake_args)
 
         cmake_options.extend([
-            '-DCMAKE_BUILD_TYPE:STRING=%s' % (
-                'Debug' if '+debug' in spec else 'Release'),
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
+            '-DCMAKE_BUILD_TYPE:STRING={0}'.format((
+                'Debug' if '+debug' in spec else 'Release')),
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format((
+                'ON' if '+shared' in spec else 'OFF')),
             '-DENABLE_PRECOMPILED_HEADERS:BOOL=OFF',
-            '-DWITH_IPP:BOOL=%s' % ('ON' if '+ipp' in spec else 'OFF'),
-            '-DWITH_CUDA:BOOL=%s' % ('ON' if '+cuda' in spec else 'OFF'),
-            '-DWITH_QT:BOOL=%s' % ('ON' if '+qt' in spec else 'OFF'),
-            '-DWITH_VTK:BOOL=%s' % ('ON' if '+vtk' in spec else 'OFF')
+            '-DWITH_IPP:BOOL={0}'.format((
+                'ON' if '+ipp' in spec else 'OFF')),
+            '-DWITH_CUDA:BOOL={0}'.format((
+                'ON' if '+cuda' in spec else 'OFF')),
+            '-DWITH_QT:BOOL={0}'.format((
+                'ON' if '+qt' in spec else 'OFF')),
+            '-DWITH_VTK:BOOL={0}'.format((
+                'ON' if '+vtk' in spec else 'OFF'))
         ])
 
         if '+gtk' not in spec:
-            cmake_options.extend(['-DWITH_GTK:BOOL=OFF',
-                                  '-DWITH_GTK_2_X:BOOL=OFF'])
+            cmake_options.extend([
+                '-DWITH_GTK:BOOL=OFF',
+                '-DWITH_GTK_2_X:BOOL=OFF'
+            ])
         elif '^gtkplus@3:' in spec:
             cmake_options.extend([
                 '-DWITH_GTK:BOOL=ON',
@@ -109,9 +116,9 @@ class Opencv(Package):
                 python_exe = join_path(python.prefix.bin, 'python3')
                 cmake_options.extend([
                     '-DBUILD_opencv_python3=ON',
-                    '-DPYTHON3_EXECUTABLE=%s' % python_exe,
-                    '-DPYTHON3_LIBRARIES=%s' % python.prefix.lib,
-                    '-DPYTHON3_INCLUDE_DIR=%s' % python.prefix.include,
+                    '-DPYTHON3_EXECUTABLE={0}'.format(python_exe),
+                    '-DPYTHON3_LIBRARIES={0}'.format(python.prefix.lib),
+                    '-DPYTHON3_INCLUDE_DIR={0}'.format(python.prefix.include),
                     '-DBUILD_opencv_python2=OFF',
                     '-DPYTHON2_EXECUTABLE=',
                     '-DPYTHON2_LIBRARIES=',
@@ -121,9 +128,9 @@ class Opencv(Package):
                 python_exe = join_path(python.prefix.bin, 'python2')
                 cmake_options.extend([
                     '-DBUILD_opencv_python2=ON',
-                    '-DPYTHON2_EXECUTABLE=%s' % python_exe,
-                    '-DPYTHON2_LIBRARIES=%s' % python.prefix.lib,
-                    '-DPYTHON2_INCLUDE_DIR=%s' % python.prefix.include,
+                    '-DPYTHON2_EXECUTABLE={0}'.format(python_exe),
+                    '-DPYTHON2_LIBRARIES={0}'.format(python.prefix.lib),
+                    '-DPYTHON2_INCLUDE_DIR={0}'.format(python.prefix.include),
                     '-DBUILD_opencv_python3=OFF',
                     '-DPYTHON3_EXECUTABLE=',
                     '-DPYTHON3_LIBRARIES=',
