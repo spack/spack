@@ -99,6 +99,14 @@ class Opencv(Package):
                 'ON' if '+java' in spec else 'OFF')),
         ])
 
+        libtiff = spec['libtiff']
+        cmake_options.extend([
+            '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
+                'DEBUG' if '+debug' in spec else 'RELEASE'),
+                join_path(libtiff.prefix.lib, 'libtiff.so')),
+            '-DTIFF_INCLUDE_DIR:PATH={0}'.format(libtiff.prefix.include)
+        ])
+
         if '+gtk' not in spec:
             cmake_options.extend([
                 '-DWITH_GTK:BOOL=OFF',
