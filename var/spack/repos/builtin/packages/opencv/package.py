@@ -126,6 +126,15 @@ class Opencv(Package):
             '-DTIFF_INCLUDE_DIR:PATH={0}'.format(libtiff.prefix.include)
         ])
 
+        jasper = spec['jasper']
+        cmake_options.extend([
+            '-DJASPER_LIBRARY_{0}:FILEPATH={1}'.format((
+                'DEBUG' if '+debug' in spec else 'RELEASE'),
+                join_path(jasper.prefix.lib,
+                          'libjasper.{0}'.format(dso_suffix))),
+            '-DJASPER_INCLUDE_DIR:PATH={0}'.format(jasper.prefix.include)
+        ])
+
         if '+gtk' not in spec:
             cmake_options.extend([
                 '-DWITH_GTK:BOOL=OFF',
