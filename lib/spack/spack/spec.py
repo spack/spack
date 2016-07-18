@@ -96,7 +96,6 @@ specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
 import sys
-import itertools
 import hashlib
 import base64
 import imp
@@ -116,8 +115,6 @@ import spack.parse
 import spack.error
 import spack.compilers as compilers
 
-# TODO: move display_specs to some other location.
-from spack.cmd.find import display_specs
 from spack.version import *
 from spack.util.string import *
 from spack.util.prefix import Prefix
@@ -650,7 +647,8 @@ class Spec(object):
                 mod = imp.load_source(mod_name, path)
                 class_name = mod_to_class(value)
                 if not hasattr(mod, class_name):
-                    tty.die('No class %s defined in %s' % (class_name, mod_name))
+                    tty.die(
+                        'No class %s defined in %s' % (class_name, mod_name))
                 cls = getattr(mod, class_name)
                 if not inspect.isclass(cls):
                     tty.die('%s.%s is not a class' % (mod_name, class_name))
@@ -673,13 +671,15 @@ class Spec(object):
 
     def _set_os(self, value):
         """Called by the parser to set the architecture operating system"""
-        if self.architecture.platform:
-            self.architecture.platform_os = self.architecture.platform.operating_system(value)
+        arch = self.architecture
+        if arch.platform:
+            arch.platform_os = arch.platform.operating_system(value)
 
     def _set_target(self, value):
         """Called by the parser to set the architecture target"""
-        if self.architecture.platform:
-            self.architecture.target = self.architecture.platform.target(value)
+        arch = self.architecture
+        if arch.platform:
+            arch.target = arch.platform.target(value)
 
     def _add_dependency(self, spec, deptypes):
         """Called by the parser to add another spec as a dependency."""
@@ -694,8 +694,9 @@ class Spec(object):
     #
     @property
     def fullname(self):
-        return (('%s.%s' % (self.namespace, self.name)) if self.namespace else
-                           (self.name if self.name else ''))
+        return (
+            ('%s.%s' % (self.namespace, self.name)) if self.namespace else
+            (self.name if self.name else ''))
 
     @property
     def root(self):
@@ -751,15 +752,15 @@ class Spec(object):
         if self._concrete:
             return True
 
-        self._concrete = bool(not self.virtual
-                              and self.namespace is not None
-                              and self.versions.concrete
-                              and self.variants.concrete
-                              and self.architecture
-                              and self.architecture.concrete
-                              and self.compiler and self.compiler.concrete
-                              and self.compiler_flags.concrete
-                              and self._dependencies.concrete)
+        self._concrete = bool(not self.virtual and
+                              self.namespace is not None and
+                              self.versions.concrete and
+                              self.variants.concrete and
+                              self.architecture and
+                              self.architecture.concrete and
+                              self.compiler and self.compiler.concrete and
+                              self.compiler_flags.concrete and
+                              self._dependencies.concrete)
         return self._concrete
 
     def traverse(self, visited=None, deptype=None, **kwargs):
@@ -870,9 +871,9 @@ class Spec(object):
             for name in sorted(successors):
                 child = successors[name]
                 children = child.spec.traverse_with_deptype(
-                        visited, d=d + 1, deptype=deptype_query,
-                        deptype_query=deptype_query,
-                        _self_deptype=child.deptypes, **kwargs)
+                    visited, d=d + 1, deptype=deptype_query,
+                    deptype_query=deptype_query,
+                    _self_deptype=child.deptypes, **kwargs)
                 for elt in children:
                     yield elt
 
@@ -995,7 +996,6 @@ class Spec(object):
 
         return spec
 
-
     @staticmethod
     def read_yaml_dep_specs(dependency_dict):
         """Read the DependencySpec portion of a YAML-formatted Spec.
@@ -1017,7 +1017,6 @@ class Spec(object):
                 raise SpecError("Couldn't parse dependency types in spec.")
 
             yield dep_name, dag_hash, list(deptypes)
-
 
     @staticmethod
     def from_yaml(stream):
@@ -1204,14 +1203,16 @@ class Spec(object):
                 def feq(cfield, sfield):
                     return (not cfield) or (cfield == sfield)
 
-                if replacement is spec or (feq(replacement.name, spec.name) and
-                    feq(replacement.versions, spec.versions) and
-                    feq(replacement.compiler, spec.compiler) and
-                    feq(replacement.architecture, spec.architecture) and
-                    feq(replacement._dependencies, spec._dependencies) and
-                    feq(replacement.variants, spec.variants) and
-                    feq(replacement.external, spec.external) and
-                    feq(replacement.external_module, spec.external_module)):
+                if replacement is spec or (
+                        feq(replacement.name, spec.name) and
+                        feq(replacement.versions, spec.versions) and
+                        feq(replacement.compiler, spec.compiler) and
+                        feq(replacement.architecture, spec.architecture) and
+                        feq(replacement._dependencies, spec._dependencies) and
+                        feq(replacement.variants, spec.variants) and
+                        feq(replacement.external, spec.external) and
+                        feq(replacement.external_module,
+                            spec.external_module)):
                     continue
                 # Refine this spec to the candidate. This uses
                 # replace_with AND dup so that it can work in
@@ -1268,10 +1269,10 @@ class Spec(object):
             if s.namespace is None:
                 s.namespace = spack.repo.repo_for_pkg(s.name).namespace
 
-
         for s in self.traverse(root=False):
             if s.external_module:
-                compiler = spack.compilers.compiler_for_spec(s.compiler, s.architecture)
+                compiler = spack.compilers.compiler_for_spec(
+                    s.compiler, s.architecture)
                 for mod in compiler.modules:
                     load_module(mod)
 
@@ -1617,20 +1618,17 @@ class Spec(object):
                                                     other.variants[v])
 
         # TODO: Check out the logic here
-        if self.architecture is not None and other.architecture is not None:
-            if self.architecture.platform is not None and other.architecture.platform is not None:
-                if self.architecture.platform != other.architecture.platform:
-                    raise UnsatisfiableArchitectureSpecError(self.architecture,
-                                                             other.architecture)
-            if self.architecture.platform_os is not None and other.architecture.platform_os is not None:
-                if self.architecture.platform_os != other.architecture.platform_os:
-                    raise UnsatisfiableArchitectureSpecError(self.architecture,
-                                                             other.architecture)
-            if self.architecture.target is not None and other.architecture.target is not None:
-                if self.architecture.target != other.architecture.target:
-                    raise UnsatisfiableArchitectureSpecError(self.architecture,
-                                                             other.architecture)
-
+        sarch, oarch = self.architecture, other.architecture
+        if sarch is not None and oarch is not None:
+            if sarch.platform is not None and oarch.platform is not None:
+                if sarch.platform != oarch.platform:
+                    raise UnsatisfiableArchitectureSpecError(sarch, oarch)
+            if sarch.platform_os is not None and oarch.platform_os is not None:
+                if sarch.platform_os != oarch.platform_os:
+                    raise UnsatisfiableArchitectureSpecError(sarch, oarch)
+            if sarch.target is not None and oarch.target is not None:
+                if sarch.target != oarch.target:
+                    raise UnsatisfiableArchitectureSpecError(sarch, oarch)
 
         changed = False
         if self.compiler is not None and other.compiler is not None:
@@ -1645,15 +1643,16 @@ class Spec(object):
         changed |= self.compiler_flags.constrain(other.compiler_flags)
 
         old = str(self.architecture)
-        if self.architecture is None or other.architecture is None:
-            self.architecture = self.architecture or other.architecture
+        sarch, oarch = self.architecture, other.architecture
+        if sarch is None or other.architecture is None:
+            self.architecture = sarch or oarch
         else:
-            if self.architecture.platform is None or other.architecture.platform is None:
-                self.architecture.platform = self.architecture.platform or other.architecture.platform
-            if self.architecture.platform_os is None or other.architecture.platform_os is None:
-                self.architecture.platform_os = self.architecture.platform_os or other.architecture.platform_os
-            if self.architecture.target is None or other.architecture.target is None:
-                self.architecture.target = self.architecture.target or other.architecture.target
+            if sarch.platform is None or oarch.platform is None:
+                self.architecture.platform = sarch.platform or oarch.platform
+            if sarch.platform_os is None or oarch.platform_os is None:
+                sarch.platform_os = sarch.platform_os or oarch.platform_os
+            if sarch.target is None or oarch.target is None:
+                sarch.target = sarch.target or oarch.target
         changed |= (str(self.architecture) != old)
 
         if deps:
@@ -1784,15 +1783,25 @@ class Spec(object):
 
         # Architecture satisfaction is currently just string equality.
         # If not strict, None means unconstrained.
-        if self.architecture and other.architecture:
-            if ((self.architecture.platform and other.architecture.platform and self.architecture.platform != other.architecture.platform) or
-                (self.architecture.platform_os and other.architecture.platform_os and self.architecture.platform_os != other.architecture.platform_os) or
-                (self.architecture.target and other.architecture.target and self.architecture.target != other.architecture.target)):
+        sarch, oarch = self.architecture, other.architecture
+        if sarch and oarch:
+            if ((sarch.platform and
+                 oarch.platform and
+                 sarch.platform != oarch.platform) or
+
+                (sarch.platform_os and
+                 oarch.platform_os and
+                 sarch.platform_os != oarch.platform_os) or
+
+                (sarch.target and
+                 oarch.target and
+                 sarch.target != oarch.target)):
                 return False
-        elif strict and ((other.architecture and not self.architecture) or
-                         (other.architecture.platform and not self.architecture.platform) or
-                         (other.architecture.platform_os and not self.architecture.platform_os) or
-                         (other.architecture.target and not self.architecture.target)):
+
+        elif strict and ((oarch and not sarch) or
+                         (oarch.platform and not sarch.platform) or
+                         (oarch.platform_os and not sarch.platform_os) or
+                         (oarch.target and not sarch.target)):
             return False
 
         if not self.compiler_flags.satisfies(
@@ -1874,11 +1883,16 @@ class Spec(object):
         # We don't count dependencies as changes here
         changed = True
         if hasattr(self, 'name'):
-            changed = (self.name != other.name and self.versions != other.versions and \
-                       self.architecture != other.architecture and self.compiler != other.compiler and \
-                       self.variants != other.variants and self._normal != other._normal and \
-                       self.concrete != other.concrete and self.external != other.external and \
-                       self.external_module != other.external_module and self.compiler_flags != other.compiler_flags)
+            changed = (self.name != other.name and
+                       self.versions != other.versions and
+                       self.architecture != other.architecture and
+                       self.compiler != other.compiler and
+                       self.variants != other.variants and
+                       self._normal != other._normal and
+                       self.concrete != other.concrete and
+                       self.external != other.external and
+                       self.external_module != other.external_module and
+                       self.compiler_flags != other.compiler_flags)
 
         # Local node attributes get copied first.
         self.name = other.name
@@ -1922,7 +1936,7 @@ class Spec(object):
                     #               here.
                     if depspec.spec.name not in new_spec._dependencies:
                         new_spec._add_dependency(
-                                new_nodes[depspec.spec.name], depspec.deptypes)
+                            new_nodes[depspec.spec.name], depspec.deptypes)
 
         # Since we preserved structure, we can copy _normal safely.
         self._normal = other._normal
@@ -2032,7 +2046,6 @@ class Spec(object):
                 self.architecture,
                 self.compiler,
                 self.compiler_flags)
-
 
     def eq_node(self, other):
         """Equality with another spec, not including dependencies."""
@@ -2229,40 +2242,38 @@ class Spec(object):
     def dep_string(self):
         return ''.join("^" + dep.format() for dep in self.sorted_deps())
 
-
     def __cmp__(self, other):
-        #Package name sort order is not configurable, always goes alphabetical
+        # Package name sort order is not configurable, always goes alphabetical
         if self.name != other.name:
             return cmp(self.name, other.name)
 
-        #Package version is second in compare order
+        # Package version is second in compare order
         pkgname = self.name
         if self.versions != other.versions:
-            return spack.pkgsort.version_compare(pkgname,
-                         self.versions, other.versions)
+            return spack.pkgsort.version_compare(
+                pkgname, self.versions, other.versions)
 
-        #Compiler is third
+        # Compiler is third
         if self.compiler != other.compiler:
-            return spack.pkgsort.compiler_compare(pkgname,
-                         self.compiler, other.compiler)
+            return spack.pkgsort.compiler_compare(
+                pkgname, self.compiler, other.compiler)
 
-        #Variants
+        # Variants
         if self.variants != other.variants:
-            return spack.pkgsort.variant_compare(pkgname,
-                         self.variants, other.variants)
+            return spack.pkgsort.variant_compare(
+                pkgname, self.variants, other.variants)
 
-        #Target
+        # Target
         if self.architecture != other.architecture:
-            return spack.pkgsort.architecture_compare(pkgname,
-                         self.architecture, other.architecture)
+            return spack.pkgsort.architecture_compare(
+                pkgname, self.architecture, other.architecture)
 
-        #Dependency is not configurable
+        # Dependency is not configurable
         if self._dependencies != other._dependencies:
             return -1 if self._dependencies < other._dependencies else 1
 
-        #Equal specs
+        # Equal specs
         return 0
-
 
     def __str__(self):
         return self.format() + self.dep_string()
@@ -2338,8 +2349,8 @@ class SpecLexer(spack.parse.Lexer):
 # Lexer is always the same for every parser.
 _lexer = SpecLexer()
 
-class SpecParser(spack.parse.Parser):
 
+class SpecParser(spack.parse.Parser):
     def __init__(self):
         super(SpecParser, self).__init__(_lexer)
         self.previous = None
@@ -2392,8 +2403,8 @@ class SpecParser(spack.parse.Parser):
         except spack.parse.ParseError, e:
             raise SpecParseError(e)
 
-
-        # If the spec has an os or a target and no platform, give it the default platform
+        # If the spec has an os or a target and no platform, give it
+        # the default platform
         for spec in specs:
             for s in spec.traverse():
                 if s.architecture.os_string or s.architecture.target_string:

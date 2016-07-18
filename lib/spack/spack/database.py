@@ -635,8 +635,8 @@ class WriteTransaction(_Transaction):
 class CorruptDatabaseError(SpackError):
     def __init__(self, path, msg=''):
         super(CorruptDatabaseError, self).__init__(
-            "Spack database is corrupt: %s.  %s." + \
-            "Try running `spack reindex` to fix." % (path, msg))
+            "Spack database is corrupt: %s.  %s." % (path, msg),
+            "Try running `spack reindex` to fix.")
 
 
 class InvalidDatabaseVersionError(SpackError):

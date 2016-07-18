@@ -29,9 +29,11 @@ import spack.fetch_strategy as fs
 
 description = "Get detailed information on a particular package"
 
+
 def padder(str_list, extra=0):
     """Return a function to pad elements of a list."""
     length = max(len(str(s)) for s in str_list) + extra
+
     def pad(string):
         string = str(string)
         padding = max(0, length - len(string))
@@ -40,7 +42,8 @@ def padder(str_list, extra=0):
 
 
 def setup_parser(subparser):
-    subparser.add_argument('name', metavar="PACKAGE", help="Name of package to get info for.")
+    subparser.add_argument(
+        'name', metavar="PACKAGE", help="Name of package to get info for.")
 
 
 def print_text_info(pkg):
