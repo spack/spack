@@ -142,9 +142,9 @@ class ConfigureGuesser(object):
         # Build dependencies and extensions
         dependenciesDict = {
             'autotools': "# depends_on('foo')",
-            'cmake':     "depends_on('cmake')",
-            'scons':     "depends_on('scons')",
-            'python':    "extends('python')",
+            'cmake':     "depends_on('cmake', type='build')",
+            'scons':     "depends_on('scons', type='build')",
+            'python':    "extends('python', type=nolink)",
             'R':         "extends('R')",
             'unknown':   "# depends_on('foo')"
         }
