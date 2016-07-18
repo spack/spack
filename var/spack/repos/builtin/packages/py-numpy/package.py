@@ -44,7 +44,7 @@ class PyNumpy(Package):
 
     extends('python')
     depends_on('py-nose', type='build')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
