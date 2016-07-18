@@ -48,7 +48,8 @@ def rst_table(elts):
 
 def print_rst_package_list():
     """Print out information on all packages in restructured text."""
-    pkgs = sorted(spack.repo.all_packages(), key=lambda s:s.name.lower())
+    pkgs = sorted(spack.repo.all_packages(), key=lambda s: s.name.lower())
+    pkg_names = [p.name for p in pkgs]
 
     print ".. _package-list:"
     print
@@ -62,7 +63,7 @@ def print_rst_package_list():
 
     print "Spack currently has %d mainline packages:" % len(pkgs)
     print
-    print rst_table("`%s`_" % p.name for p in pkgs)
+    print rst_table("`%s`_" % p for p in pkg_names)
     print
     print "-----"
 
@@ -79,14 +80,15 @@ def print_rst_package_list():
         print
         if pkg.versions:
             print "Versions:"
-            print "  " + ", ".join(str(v) for v in reversed(sorted(pkg.versions)))
+            print "  " + ", ".join(str(v) for v in
+                                   reversed(sorted(pkg.versions)))
 
-        for deptype in ('build', 'link', 'run'):
-            deps = pkg.dependencies(deptype)
+        for deptype in spack.alldeps:
+            deps = pkg.dependencies_of_type(deptype)
             if deps:
                 print "%s Dependencies" % deptype.capitalize()
-                print "  " + ", ".join("`%s`_" % d if d != "mpi" else d
-                                       for d in build_deps)
+                print "  " + ", ".join("%s_" % d if d in pkg_names
+                                       else d for d in deps)
                 print
 
         print "Description:"
