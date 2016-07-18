@@ -34,6 +34,7 @@ import yaml
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
 
+import spack
 from spack.spec import Spec
 from spack.error import SpackError
 
@@ -223,8 +224,14 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
-        with open(path) as f:
-            spec = Spec.from_yaml(f)
+        try:
+            with open(path) as f:
+                spec = Spec.from_yaml(f)
+        except Exception as e:
+            if spack.debug:
+                raise
+            raise SpecReadError(
+                'Unable to read file: %s' % path, 'Cause: ' + str(e))
 
         # Specs read from actual installations are always concrete
         spec._mark_concrete()
@@ -456,10 +463,12 @@ class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
             "Install path %s already exists!")
 
 
+class SpecReadError(DirectoryLayoutError):
+    """Raised when directory layout can't read a spec."""
+
+
 class InvalidExtensionSpecError(DirectoryLayoutError):
     """Raised when an extension file has a bad spec in it."""
-    def __init__(self, message):
-        super(InvalidExtensionSpecError, self).__init__(message)
 
 
 class ExtensionAlreadyInstalledError(DirectoryLayoutError):

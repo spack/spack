@@ -646,6 +646,7 @@ class CorruptDatabaseError(SpackError):
 class InvalidDatabaseVersionError(SpackError):
     def __init__(self, expected, found):
         super(InvalidDatabaseVersionError, self).__init__(
-            "Expected database version %s but found version %s." + \
-            "Try running `spack reindex` to fix." %
-            (expected, found))
+            "Expected database version %s but found version %s."
+            % (expected, found),
+            "`spack reindex` may fix this, or you may need a newer "
+            "Spack version.")
