@@ -34,15 +34,15 @@ description = "Print a list of all packages in reStructuredText."
 
 def github_url(pkg):
     """Link to a package file on github."""
-    return ("https://github.com/llnl/spack/blob/master/var/spack/packages/%s/package.py" %
-            pkg.name)
+    url = "https://github.com/llnl/spack/blob/master/var/spack/packages/%s/package.py"  # NOQA: ignore=E501
+    return (url % pkg.name)
 
 
 def rst_table(elts):
     """Print out a RST-style table."""
     cols = StringIO()
     ncol, widths = colify(elts, output=cols, tty=True)
-    header = " ".join("=" * (w-1) for w in widths)
+    header = " ".join("=" * (w - 1) for w in widths)
     return "%s\n%s%s" % (header, cols.getvalue(), header)
 
 
