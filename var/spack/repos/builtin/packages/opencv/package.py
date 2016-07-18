@@ -99,6 +99,13 @@ class Opencv(Package):
                 'ON' if '+java' in spec else 'OFF')),
         ])
 
+        libjpeg = spec['libjpeg-turbo']
+        cmake_options.extend([
+            '-DJPEG_LIBRARY:FILEPATH={0}'.format(
+                join_path(libjpeg.prefix.lib, 'libjpeg.so'),
+            '-DJPEG_INCLUDE_DIR:PATH={0}'.format(libjpeg.prefix.include)
+        ])
+
         libtiff = spec['libtiff']
         cmake_options.extend([
             '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
