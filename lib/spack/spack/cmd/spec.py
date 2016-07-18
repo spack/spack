@@ -55,16 +55,36 @@ def setup_parser(subparser):
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
     subparser.add_argument(
+        '-T', '--query-types', type=str, default='full',
+        help="What to show in the graph. Valid values are 'runtime-env', "
+             "'build-env', and 'full' (the default).")
+    subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
 
 def spec(parser, args):
+    types_values = {
+        'runtime-env': 'link,run:link,run',
+        'build-env': 'build,link,run:link,run',
+        'full': 'build,link,run:build,link,run',
+    }
+    types = types_values.get(args.query_types, args.query_types)
+
+    if ':' in types:
+        deptypes, deptypes_query = types.split(':')
+    else:
+        deptypes, deptypes_query = types, 'build,link,run'
+    deptypes = tuple(deptypes.split(','))
+    deptypes_query = tuple(deptypes_query.split(','))
+
     name_fmt = '$.' if args.namespaces else '$_'
     kwargs = {'cover': args.cover,
               'format': name_fmt + '$@$%@+$+$=',
               'hashlen': None if args.very_long else 7,
               'show_types': args.types,
-              'install_status': args.install_status}
+              'install_status': args.install_status,
+              'deptypes': deptypes,
+              'deptypes_query': deptypes_query}
 
     for spec in spack.cmd.parse_specs(args.specs):
         # With -y, just print YAML to output.

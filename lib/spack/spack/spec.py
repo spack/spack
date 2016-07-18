@@ -3128,11 +3128,13 @@ class Spec(object):
         prefix = kwargs.pop('prefix', None)
         show_types = kwargs.pop('show_types', False)
         deptypes = kwargs.pop('deptypes', ('build', 'link'))
+        deptypes_query = kwargs.pop('deptypes_query', ('link', 'run'))
         check_kwargs(kwargs, self.tree)
 
         out = ""
         for d, dep_spec in self.traverse_edges(
-                order='pre', cover=cover, depth=True, deptypes=deptypes):
+                order='pre', cover=cover, depth=True, deptypes=deptypes,
+                deptypes_query=deptypes_query):
             node = dep_spec.spec
 
             if prefix is not None:
