@@ -1439,6 +1439,13 @@ def install_dependency_symlinks(pkg, spec, prefix):
     flatten_dependencies(spec, prefix)
 
 
+def use_cray_compiler_names():
+    """Compiler names for builds that rely on cray compiler names."""
+    os.environ['CC'] = 'cc'
+    os.environ['CXX'] = 'CC'
+    os.environ['FC'] = 'ftn'
+    os.environ['F77'] = 'ftn'
+
 def flatten_dependencies(spec, flat_dir):
     """Make each dependency of spec present in dir via symlink."""
     for dep in spec.traverse(root=False):
