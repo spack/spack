@@ -20,9 +20,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import *
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA ############################################################################## from spack import *
 from glob import glob
 
 
@@ -52,6 +50,7 @@ class Opencv(Package):
 
     variant('eigen', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
+    variant('jasper', default=True, description='Activates support for JasPer')
     variant('cuda', default=False, description='Activates support for CUDA')
     variant('gtk', default=False, description='Activates support for GTK')
     variant('vtk', default=False, description='Activates support for VTK')
@@ -66,7 +65,9 @@ class Opencv(Package):
     depends_on('libjpeg-turbo')
     depends_on('libtiff')
 
-    depends_on('eigen', when='+eigen')
+    depends_on('jasper', when='+jasper')
+    depends_on('cmake', type='build')
+    depends_on('eigen', when='+eigen', type='build')
     depends_on('cuda', when='+cuda')
     depends_on('gtkplus', when='+gtk')
     depends_on('vtk', when='+vtk')
@@ -103,14 +104,16 @@ class Opencv(Package):
         cmake_options.extend([
             '-DPNG_LIBRARY_{0}:FILEPATH={1}'.format((
                 'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(libpng.prefix.lib, 'libpng.so')),
+                join_path(libpng.prefix.lib,
+                          'libpng.{0}'.format(dso_suffix))),
             '-DPNG_INCLUDE_DIR:PATH={0}'.format(libpng.prefix.include)
         ])
 
         libjpeg = spec['libjpeg-turbo']
         cmake_options.extend([
             '-DJPEG_LIBRARY:FILEPATH={0}'.format(
-                join_path(libjpeg.prefix.lib, 'libjpeg.so'),
+                join_path(libjpeg.prefix.lib,
+                          'libjpeg.{0}'.format(dso_suffix))),
             '-DJPEG_INCLUDE_DIR:PATH={0}'.format(libjpeg.prefix.include)
         ])
 
@@ -118,7 +121,8 @@ class Opencv(Package):
         cmake_options.extend([
             '-DTIFF_LIBRARY_{0}:FILEPATH={1}'.format((
                 'DEBUG' if '+debug' in spec else 'RELEASE'),
-                join_path(libtiff.prefix.lib, 'libtiff.so')),
+                join_path(libtiff.prefix.lib,
+                          'libtiff.{0}'.format(dso_suffix))),
             '-DTIFF_INCLUDE_DIR:PATH={0}'.format(libtiff.prefix.include)
         ])
 
