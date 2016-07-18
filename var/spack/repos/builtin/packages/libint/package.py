@@ -59,11 +59,34 @@ class Libint(Package):
         aclocal('-I', 'lib/autoconf')
         autoconf()
 
-        configure('--prefix={0}'.format(prefix))
+        # Optimizations for the Intel compiler, suggested by CP2K
+        optflags = '-O2'
+        if self.compiler.name == 'intel':
+            optflags += ' -xAVX -axCORE-AVX2 -ipo'
+            if which('xiar'):
+                env['AR'] = 'xiar'
+
+        env['CFLAGS']   = optflags
+        env['CXXFLAGS'] = optflags
+
+        config_args = [
+            '--prefix={0}'.format(prefix),
+            '--with-cc-optflags={0}'.format(optflags),
+            '--with-cxx-optflags={0}'.format(optflags)
+        ]
+
+        # Options required by CP2K, removed in libint 2
+        if self.version < Version('2.0.0'):
+            config_args.extend([
+                '--with-libint-max-am=5',
+                '--with-libderiv-max-am1=4'
+            ])
+
+        configure(*config_args)
         make()
 
         # Testing suite was added in libint 2
-        if self.version > Version('2.0.0'):
+        if self.version >= Version('2.0.0'):
             make('check')
 
         make('install')
