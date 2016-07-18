@@ -34,6 +34,7 @@ class Libint(Package):
 
     version('2.1.0', 'd0dcb985fe32ddebc78fe571ce37e2d6')
     version('1.1.6', '990f67b55f49ecc18f32c58da9240684')
+    version('1.1.5', '379b7d0718ff398715d6898807adf628')
 
     # Build dependencies
     depends_on('autoconf@2.52:', type='build')
