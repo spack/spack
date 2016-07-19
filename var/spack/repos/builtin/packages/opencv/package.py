@@ -162,17 +162,26 @@ class Opencv(Package):
 
         if '+python' in spec:
             python = spec['python']
+
             try:
-                python_lib = glob(join_path(python.prefix.lib, 'libpython*.so'))[0]
+                python_lib = glob(join_path(python.prefix.lib,
+                                            'libpython*.so'))[0]
             except KeyError:
                 raise InstallError('Cannot find libpython')
+
+            try:
+                python_include_dir = glob(join_path(python.prefix.include,
+                                                    'python*'))[0]
+            except KeyError:
+                raise InstallError('Cannot find python include directory')
+
             if '^python@3:' in spec:
                 python_exe = join_path(python.prefix.bin, 'python3')
                 cmake_options.extend([
                     '-DBUILD_opencv_python3=ON',
                     '-DPYTHON3_EXECUTABLE={0}'.format(python_exe),
                     '-DPYTHON3_LIBRARY={0}'.format(python_lib),
-                    '-DPYTHON3_INCLUDE_DIR={0}'.format(python.prefix.include),
+                    '-DPYTHON3_INCLUDE_DIR={0}'.format(python_include_dir),
                     '-DBUILD_opencv_python2=OFF',
                 ])
             elif '^python@2:3' in spec:
@@ -182,7 +191,7 @@ class Opencv(Package):
                     '-DBUILD_opencv_python2=ON',
                     '-DPYTHON2_EXECUTABLE={0}'.format(python_exe),
                     '-DPYTHON2_LIBRARY={0}'.format(python_lib),
-                    '-DPYTHON2_INCLUDE_DIR={0}'.format(python.prefix.include),
+                    '-DPYTHON2_INCLUDE_DIR={0}'.format(python_include_dir),
                     '-DBUILD_opencv_python3=OFF',
                 ])
         else:
