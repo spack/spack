@@ -164,8 +164,8 @@ class Opencv(Package):
             python = spec['python']
 
             try:
-                python_lib = glob(join_path(python.prefix.lib,
-                                            'libpython*.so'))[0]
+                python_lib = glob(join_path(
+                    python.prefix.lib, 'libpython*.{0}'.format(dso_suffix)))[0]
             except KeyError:
                 raise InstallError('Cannot find libpython')
 
@@ -186,7 +186,6 @@ class Opencv(Package):
                 ])
             elif '^python@2:3' in spec:
                 python_exe = join_path(python.prefix.bin, 'python2')
-                python_lib = glob(join_path(python.prefix.lib, '*.so'))
                 cmake_options.extend([
                     '-DBUILD_opencv_python2=ON',
                     '-DPYTHON2_EXECUTABLE={0}'.format(python_exe),
