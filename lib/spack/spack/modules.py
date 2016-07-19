@@ -294,9 +294,9 @@ class EnvModule(object):
         for constraint, suffix in configuration.get('suffixes', {}).items():
             if constraint in self.spec:
                 suffixes.append(suffix)
+        name = ''.join(suffixes)
         # Always append the hash to make the module file unique
-        suffixes.append(self.spec.dag_hash())
-        name = '-'.join(suffixes)
+        name += '-' + self.spec.dag_hash()
         return name
 
     @property
