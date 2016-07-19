@@ -47,8 +47,8 @@ class Netcdf(Package):
 
     # Required for NetCDF-4 support
     depends_on("zlib")
-    depends_on("hdf5+mpi", when='+mpi')
-    depends_on("hdf5~mpi", when='~mpi')
+    depends_on("hdf5@:1.8+mpi", when='+mpi')
+    depends_on("hdf5@:1.8~mpi", when='~mpi')
 
     def install(self, spec, prefix):
         # Environment variables
