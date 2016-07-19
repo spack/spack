@@ -33,6 +33,7 @@ class Netcdf(Package):
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.tar.gz"
 
+    version('4.4.1', '7843e35b661c99e1d49e60791d5072d8')
     version('4.4.0', 'cffda0cbd97fdb3a06e9274f7aef438e')
     version('4.3.3', '5fbd0e108a54bd82cb5702a73f56d2ae')
 
