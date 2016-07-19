@@ -22,10 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import re
 import cgi
 from StringIO import StringIO
-import llnl.util.tty as tty
 from llnl.util.tty.colify import *
 import spack
 
@@ -34,21 +32,22 @@ description = "Print a list of all packages in reStructuredText."
 
 def github_url(pkg):
     """Link to a package file on github."""
-    return ("https://github.com/llnl/spack/blob/master/var/spack/packages/%s/package.py" %
-            pkg.name)
+    url = "https://github.com/llnl/spack/blob/master/var/spack/packages/%s/package.py"  # NOQA: ignore=E501
+    return (url % pkg.name)
 
 
 def rst_table(elts):
     """Print out a RST-style table."""
     cols = StringIO()
     ncol, widths = colify(elts, output=cols, tty=True)
-    header = " ".join("=" * (w-1) for w in widths)
+    header = " ".join("=" * (w - 1) for w in widths)
     return "%s\n%s%s" % (header, cols.getvalue(), header)
 
 
 def print_rst_package_list():
     """Print out information on all packages in restructured text."""
-    pkgs = sorted(spack.repo.all_packages(), key=lambda s:s.name.lower())
+    pkgs = sorted(spack.repo.all_packages(), key=lambda s: s.name.lower())
+    pkg_names = [p.name for p in pkgs]
 
     print ".. _package-list:"
     print
@@ -62,7 +61,7 @@ def print_rst_package_list():
 
     print "Spack currently has %d mainline packages:" % len(pkgs)
     print
-    print rst_table("`%s`_" % p.name for p in pkgs)
+    print rst_table("`%s`_" % p for p in pkg_names)
     print
     print "-----"
 
@@ -79,14 +78,15 @@ def print_rst_package_list():
         print
         if pkg.versions:
             print "Versions:"
-            print "  " + ", ".join(str(v) for v in reversed(sorted(pkg.versions)))
+            print "  " + ", ".join(str(v) for v in
+                                   reversed(sorted(pkg.versions)))
 
-        for deptype in ('build', 'link', 'run'):
-            deps = pkg.dependencies(deptype)
+        for deptype in spack.alldeps:
+            deps = pkg.dependencies_of_type(deptype)
             if deps:
                 print "%s Dependencies" % deptype.capitalize()
-                print "  " + ", ".join("`%s`_" % d if d != "mpi" else d
-                                       for d in build_deps)
+                print "  " + ", ".join("%s_" % d if d in pkg_names
+                                       else d for d in deps)
                 print
 
         print "Description:"

@@ -27,7 +27,6 @@ from contextlib import contextmanager
 
 import StringIO
 import spack.modules
-import unittest
 from spack.test.mock_packages_test import MockPackagesTest
 
 FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
@@ -266,7 +265,7 @@ class TclTests(MockPackagesTest):
 
     def test_blacklist(self):
         spack.modules.CONFIGURATION = configuration_blacklist
-        spec = spack.spec.Spec('mpileaks')
+        spec = spack.spec.Spec('mpileaks ^zmpi')
         content = self.get_modulefile_content(spec)
         self.assertEqual(len([x for x in content if 'is-loaded' in x]), 1)
         self.assertEqual(len([x for x in content if 'module load ' in x]), 1)
