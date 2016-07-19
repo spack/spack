@@ -48,8 +48,8 @@ class Armadillo(Package):
     def install(self, spec, prefix):
         cmake_args = [
             # ARPACK support
-            '-DARPACK_LIBRARY={0}/libarpack.so'.format(
-                spec['arpack-ng'].prefix.lib),
+            '-DARPACK_LIBRARY={0}/libarpack.{1}'.format(
+                spec['arpack-ng'].prefix.lib, dso_suffix),
             # BLAS support
             '-DBLAS_LIBRARY={0}'.format(spec['blas'].blas_shared_lib),
             # LAPACK support
