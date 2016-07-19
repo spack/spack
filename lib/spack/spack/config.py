@@ -328,6 +328,11 @@ section_schemas = {
                 'anyOf': [
                     {
                         'properties': {
+                            'hash_length': {
+                                'type': 'integer',
+                                'minimum': 0,
+                                'default': 7
+                            },
                             'whitelist': {'$ref': '#/definitions/array_of_strings'},
                             'blacklist': {'$ref': '#/definitions/array_of_strings'},
                             'naming_scheme': {
