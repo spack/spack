@@ -1307,9 +1307,9 @@ The dependency types are:
 
 If not specified, ``type`` is assumed to be ``("build", "link")``. This is the
 common case for compiled language usage. Also available are the aliases
-``alldeps`` for all dependency types and ``nolink`` (``("build", "run")``) for
-use by dependencies which are not expressed via a linker (e.g., Python or Lua
-module loading).
+``"alldeps"`` for all dependency types and ``"nolink"`` (``("build", "run")``)
+for use by dependencies which are not expressed via a linker (e.g., Python or
+Lua module loading).
 
 .. _setup-dependent-environment:
 
