@@ -45,6 +45,13 @@ class CrayXc(Platform):
         self.add_operating_system('CNL10', Cnl())
 
     @classmethod
+    def setup_platform_environment(self, env):
+        """ Change the linker to default dynamic to be more
+            similar to linux/standard linker behavior
+        """
+        env.set('CRAYPE_LINK_TYPE', 'dynamic')
+
+    @classmethod
     def detect(self):
         try:
             cc_verbose = which('ftn')

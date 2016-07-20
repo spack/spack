@@ -248,6 +248,11 @@ def set_build_environment_variables(pkg, env, dirty=False):
         ci = join_path(item, 'case-insensitive')
         if os.path.isdir(ci):
             env_paths.append(ci)
+    
+#    for item in pkg.spec.platform.env_paths:
+#        env_paths.append(item)
+        # TODO: move platform-specific knowledge to platform.
+        # (join_path(spack.build_env_path, 'cray'))
 
     for item in reversed(env_paths):
         env.prepend_path('PATH', item)
@@ -444,6 +449,7 @@ def setup_package(pkg, dirty=False):
 
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
+    pkg.spec.architecture.platform.setup_platform_environment(spack_env)
     load_external_modules(pkg)
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec
