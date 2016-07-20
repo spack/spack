@@ -48,8 +48,8 @@ class CrayXc(Platform):
     def detect(self):
         try:
             cc_verbose = which('ftn')
-            text = cc_verbose('-craype-verbose', 
-                              output=str, error=str, 
+            text = cc_verbose('-craype-verbose',
+                              output=str, error=str,
                               ignore_errors=True).split()
             if '-D__CRAYXC' in text:
                 return True
