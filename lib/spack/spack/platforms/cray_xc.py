@@ -4,6 +4,7 @@ from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
 from spack.util.executable import which
 
+
 class CrayXc(Platform):
     priority    = 20
     front_end   = 'sandybridge'
@@ -35,7 +36,7 @@ class CrayXc(Platform):
         self.add_target('ivybridge',
                         Target('ivybridge', 'craype-ivybridge'))
         self.add_target('haswell',
-                        Target('haswell','craype-haswell'))
+                        Target('haswell', 'craype-haswell'))
 
         # Front end of the cray platform is a linux distro.
         linux_dist = LinuxDistro()
@@ -47,7 +48,9 @@ class CrayXc(Platform):
     def detect(self):
         try:
             cc_verbose = which('ftn')
-            text = cc_verbose('-craype-verbose', output=str, error=str, ignore_errors=True).split()
+            text = cc_verbose('-craype-verbose', 
+                              output=str, error=str, 
+                              ignore_errors=True).split()
             if '-D__CRAYXC' in text:
                 return True
             else:
