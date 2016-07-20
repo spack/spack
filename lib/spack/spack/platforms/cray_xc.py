@@ -45,6 +45,16 @@ class CrayXc(Platform):
         self.add_operating_system('CNL10', Cnl())
 
     @classmethod
+    def setup_platform_environment(self, pkg, env):
+        """ Change the linker to default dynamic to be more
+            similar to linux/standard linker behavior
+        """
+        env.set('CRAYPE_LINK_TYPE', 'dynamic')
+        cray_wrapper_names = join_path(spack.build_env_path, 'cray')
+        if os.path.isdir(cray_wrapper_names):
+            env.prepend_path('PATH', cray_wrapper_names)
+
+    @classmethod
     def detect(self):
         try:
             cc_verbose = which('ftn')

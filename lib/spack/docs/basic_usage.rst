@@ -1866,6 +1866,10 @@ to call the Cray compiler wrappers during build time.
 
 For more on compiler configuration, check out :ref:`compiler-config`.
 
+Spack sets the default Cray link type to dynamic, to better match other
+other platforms. Individual packages can enable static linking (which is the
+default outside of Spack on cray systems) using the -static flag.
+
 Setting defaults and using Cray modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

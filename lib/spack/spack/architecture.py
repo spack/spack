@@ -76,7 +76,6 @@ attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
 import os
-import imp
 import inspect
 
 from llnl.util.lang import memoized, list_modules, key_ordering
@@ -190,6 +189,12 @@ class Platform(object):
 
         return self.operating_sys.get(name, None)
 
+    @classmethod
+    def setup_platform_environment(self, pkg, env):
+        """ Subclass can override this method if it requires any
+            platform-specific build environment modifications.
+        """
+        pass
 
     @classmethod
     def detect(self):
@@ -200,14 +205,11 @@ class Platform(object):
         """
         raise NotImplementedError()
 
-
     def __repr__(self):
         return self.__str__()
 
-
     def __str__(self):
         return self.name
-
 
     def _cmp_key(self):
         t_keys = ''.join(str(t._cmp_key()) for t in
@@ -279,7 +281,7 @@ class OperatingSystem(object):
 
         # ensure all the version calls we made are cached in the parent
         # process, as well.  This speeds up Spack a lot.
-        clist = reduce(lambda x, y: x+y, compiler_lists)
+        clist = reduce(lambda x, y: x + y, compiler_lists)
         return clist
 
     def find_compiler(self, cmp_cls, *path):
@@ -320,7 +322,7 @@ class OperatingSystem(object):
 
                 # prefer the one with more compilers.
                 prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
-                newcount = len([p for p in paths       if p is not None])
+                newcount = len([p for p in paths if p is not None])
                 prevcount = len([p for p in prev_paths if p is not None])
 
                 # Don't add if it's not an improvement over prev compiler.
@@ -336,6 +338,7 @@ class OperatingSystem(object):
         d['name'] = self.name
         d['version'] = self.version
         return d
+
 
 @key_ordering
 class Arch(object):
@@ -377,10 +380,8 @@ class Arch(object):
         else:
             return ''
 
-
     def __contains__(self, string):
         return string in str(self)
-
 
     def _cmp_key(self):
         if isinstance(self.platform, Platform):
@@ -424,7 +425,7 @@ def _operating_system_from_dict(os_name, plat=None):
     if isinstance(os_name, dict):
         name = os_name['name']
         version = os_name['version']
-        return plat.operating_system(name+version)
+        return plat.operating_system(name + version)
     else:
         return plat.operating_system(os_name)
 
