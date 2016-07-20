@@ -5,6 +5,7 @@
 *~
 .DS_Store
 .idea
+/etc/spack/licenses
 /etc/spack/*.yaml
 /etc/spackconfig
 /share/spack/dotkit
