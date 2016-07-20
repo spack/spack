@@ -138,11 +138,11 @@ class R(Package):
 
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('LIBRARY_PATH',
-                          join_path(self.prefix, 'rlib', 'R', 'lib'))
+                             join_path(self.prefix, 'rlib', 'R', 'lib'))
         run_env.prepend_path('LD_LIBRARY_PATH',
-                          join_path(self.prefix, 'rlib', 'R', 'lib'))
+                             join_path(self.prefix, 'rlib', 'R', 'lib'))
         run_env.prepend_path('CPATH',
-                          join_path(self.prefix, 'rlib', 'R', 'include'))
+                             join_path(self.prefix, 'rlib', 'R', 'include'))
 
     def setup_dependent_package(self, module, ext_spec):
         """Called before R modules' install() methods. In most cases,
