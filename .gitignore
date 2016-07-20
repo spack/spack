@@ -5,7 +5,7 @@
 *~
 .DS_Store
 .idea
-/etc/spack/*
+/etc/spack/*.yaml
 /etc/spackconfig
 /share/spack/dotkit
 /share/spack/modules
