@@ -2,6 +2,8 @@ import os
 from spack.architecture import Platform, Target
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
+from spack.util.executable import which
+
 
 class CrayXc(Platform):
     priority    = 20
@@ -9,9 +11,8 @@ class CrayXc(Platform):
     back_end    = 'ivybridge'
     default     = 'ivybridge'
 
-    front_os    = "SuSE11"
     back_os     = "CNL10"
-    default_os  = "CNL10" 
+    default_os  = "CNL10"
 
     def __init__(self):
         ''' Since cori doesn't have ivybridge as a front end it's better
@@ -32,15 +33,27 @@ class CrayXc(Platform):
         # Could switch to use modules and fe targets for front end
         # Currently using compilers by path for front end.
         self.add_target('sandybridge', Target('sandybridge'))
-        self.add_target('ivybridge', 
+        self.add_target('ivybridge',
                         Target('ivybridge', 'craype-ivybridge'))
-        self.add_target('haswell', 
-                        Target('haswell','craype-haswell'))         
+        self.add_target('haswell',
+                        Target('haswell', 'craype-haswell'))
 
-        self.add_operating_system('SuSE11', LinuxDistro())
+        # Front end of the cray platform is a linux distro.
+        linux_dist = LinuxDistro()
+        self.front_os = str(linux_dist)
+        self.add_operating_system(str(linux_dist), linux_dist)
         self.add_operating_system('CNL10', Cnl())
 
     @classmethod
     def detect(self):
-        return os.path.exists('/opt/cray/craype')
-
+        try:
+            cc_verbose = which('ftn')
+            text = cc_verbose('-craype-verbose',
+                              output=str, error=str,
+                              ignore_errors=True).split()
+            if '-D__CRAYXC' in text:
+                return True
+            else:
+                return False
+        except:
+            return False

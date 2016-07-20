@@ -53,6 +53,7 @@ class Python(Package):
 
     extendable = True
 
+    variant('tk',   default=False, description='Provide support for Tkinter')
     variant('ucs4', default=False, description='Enable UCS4 (wide) unicode strings')
     # From https://docs.python.org/2/c-api/unicode.html: Python's default
     # builds use a 16-bit type for Py_UNICODE and store Unicode values
@@ -68,6 +69,8 @@ class Python(Package):
     depends_on("ncurses")
     depends_on("sqlite")
     depends_on("zlib")
+    depends_on("tk",  when="+tk")
+    depends_on("tcl", when="+tk")
 
     def install(self, spec, prefix):
         # Need this to allow python build to find the Python installation.
@@ -77,24 +80,32 @@ class Python(Package):
         # Rest of install is pretty standard except setup.py needs to
         # be able to read the CPPFLAGS and LDFLAGS as it scans for the
         # library and headers to build
-        cppflags = ' -I'.join([
+        include_dirs = [
             spec['openssl'].prefix.include,  spec['bzip2'].prefix.include,
             spec['readline'].prefix.include, spec['ncurses'].prefix.include,
             spec['sqlite'].prefix.include,   spec['zlib'].prefix.include
-        ])
+        ]
 
-        ldflags = ' -L'.join([
+        library_dirs = [
             spec['openssl'].prefix.lib,  spec['bzip2'].prefix.lib,
             spec['readline'].prefix.lib, spec['ncurses'].prefix.lib,
             spec['sqlite'].prefix.lib,   spec['zlib'].prefix.lib
-        ])
+        ]
+
+        if '+tk' in spec:
+            include_dirs.extend([
+                spec['tk'].prefix.include, spec['tcl'].prefix.include
+            ])
+            library_dirs.extend([
+                spec['tk'].prefix.lib, spec['tcl'].prefix.lib
+            ])
 
         config_args = [
             "--prefix={0}".format(prefix),
             "--with-threads",
             "--enable-shared",
-            "CPPFLAGS=-I{0}".format(cppflags),
-            "LDFLAGS=-L{0}".format(ldflags)
+            "CPPFLAGS=-I{0}".format(" -I".join(include_dirs)),
+            "LDFLAGS=-L{0}".format(" -L".join(library_dirs))
         ]
 
         if '+ucs4' in spec:
@@ -115,6 +126,25 @@ class Python(Package):
         make("install")
 
         self.filter_compilers(spec, prefix)
+
+    # TODO: Once better testing support is integrated, add the following tests
+    # https://wiki.python.org/moin/TkInter
+    #
+    #    if '+tk' in spec:
+    #        env['TK_LIBRARY']  = join_path(spec['tk'].prefix.lib,
+    #            'tk{0}'.format(spec['tk'].version.up_to(2)))
+    #        env['TCL_LIBRARY'] = join_path(spec['tcl'].prefix.lib,
+    #            'tcl{0}'.format(spec['tcl'].version.up_to(2)))
+    #
+    #        $ python
+    #        >>> import _tkinter
+    #
+    #        if spec.satisfies('@3:')
+    #            >>> import tkinter
+    #            >>> tkinter._test()
+    #        else:
+    #            >>> import Tkinter
+    #            >>> Tkinter._test()
 
     def filter_compilers(self, spec, prefix):
         """Run after install to tell the configuration files and Makefiles

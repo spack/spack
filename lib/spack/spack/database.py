@@ -60,7 +60,7 @@ from spack.repository import UnknownPackageError
 _db_dirname = '.spack-db'
 
 # DB version.  This is stuck in the DB file to track changes in format.
-_db_version = Version('0.9.1')
+_db_version = Version('0.9.2')
 
 # Default timeout for spack database locks is 5 min.
 _db_lock_timeout = 60
@@ -215,14 +215,10 @@ class Database(object):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         if 'dependencies' in spec_dict[spec.name]:
-            for dep in spec_dict[spec.name]['dependencies'].values():
-                if type(dep) == tuple:
-                    dep_hash, deptypes = dep
-                else:
-                    dep_hash = dep
-                    deptypes = spack.alldeps
-                child = self._read_spec_from_yaml(dep_hash, installs, hash_key)
-                spec._add_dependency(child, deptypes)
+            yaml_deps = spec_dict[spec.name]['dependencies']
+            for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
+                child = self._read_spec_from_yaml(dhash, installs, hash_key)
+                spec._add_dependency(child, dtypes)
 
         # Specs from the database need to be marked concrete because
         # they represent actual installations.
@@ -639,13 +635,14 @@ class WriteTransaction(_Transaction):
 class CorruptDatabaseError(SpackError):
     def __init__(self, path, msg=''):
         super(CorruptDatabaseError, self).__init__(
-            "Spack database is corrupt: %s.  %s." + \
-            "Try running `spack reindex` to fix." % (path, msg))
+            "Spack database is corrupt: %s.  %s." % (path, msg),
+            "Try running `spack reindex` to fix.")
 
 
 class InvalidDatabaseVersionError(SpackError):
     def __init__(self, expected, found):
         super(InvalidDatabaseVersionError, self).__init__(
-            "Expected database version %s but found version %s." + \
-            "Try running `spack reindex` to fix." %
-            (expected, found))
+            "Expected database version %s but found version %s."
+            % (expected, found),
+            "`spack reindex` may fix this, or you may need a newer "
+            "Spack version.")

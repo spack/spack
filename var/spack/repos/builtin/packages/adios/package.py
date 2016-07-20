@@ -12,9 +12,9 @@ class Adios(Package):
     """
 
     homepage = "http://www.olcf.ornl.gov/center-projects/adios/"
-    url = "http://users.nccs.gov/~pnorbert/adios-1.9.0.tar.gz"
+    url = "https://github.com/ornladios/ADIOS/archive/v1.9.0.tar.gz"
 
-    version('1.9.0', 'dbf5cb10e32add2f04c9b4052b7ffa76')
+    version('1.9.0', '310ff02388bbaa2b1c1710ee970b5678')
 
     # Lots of setting up here for this package
     # module swap PrgEnv-intel PrgEnv-$COMP

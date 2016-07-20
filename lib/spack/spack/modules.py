@@ -188,6 +188,8 @@ def parse_config_options(module_generator):
     #####
 
     # Automatic loading loads
+    module_file_actions['hash_length'] = module_configuration.get(
+        'hash_length', 7)
     module_file_actions['autoload'] = dependencies(
         module_generator.spec, module_file_actions.get('autoload', 'none'))
     # Prerequisites
@@ -237,6 +239,7 @@ class EnvModule(object):
     formats = {}
 
     class __metaclass__(type):
+
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
             if cls.name != 'env_module' and cls.name in CONFIGURATION[
@@ -295,7 +298,9 @@ class EnvModule(object):
             if constraint in self.spec:
                 suffixes.append(suffix)
         # Always append the hash to make the module file unique
-        suffixes.append(self.spec.dag_hash())
+        hash_length = configuration.pop('hash_length', 7)
+        if hash_length != 0:
+            suffixes.append(self.spec.dag_hash(length=hash_length))
         name = '-'.join(suffixes)
         return name
 
@@ -338,7 +343,7 @@ class EnvModule(object):
 
         return False
 
-    def write(self):
+    def write(self, overwrite=False):
         """
         Writes out a module file for this object.
 
@@ -399,6 +404,15 @@ class EnvModule(object):
         for line in self.module_specific_content(module_configuration):
             module_file_content += line
 
+        # Print a warning in case I am accidentally overwriting
+        # a module file that is already there (name clash)
+        if not overwrite and os.path.exists(self.file_name):
+            message = 'Module file already exists : skipping creation\n'
+            message += 'file : {0.file_name}\n'
+            message += 'spec : {0.spec}'
+            tty.warn(message.format(self))
+            return
+
         # Dump to file
         with open(self.file_name, 'w') as f:
             f.write(module_file_content)
@@ -454,7 +468,7 @@ class EnvModule(object):
 
 class Dotkit(EnvModule):
     name = 'dotkit'
-
+    path = join_path(spack.share_path, 'dotkit')
     environment_modifications_formats = {
         PrependPath: 'dk_alter {name} {value}\n',
         SetEnv: 'dk_setenv {name} {value}\n'
@@ -466,7 +480,7 @@ class Dotkit(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(spack.share_path, "dotkit", self.spec.architecture,
+        return join_path(self.path, self.spec.architecture,
                          '%s.dk' % self.use_name)
 
     @property
@@ -494,7 +508,7 @@ class Dotkit(EnvModule):
 
 class TclModule(EnvModule):
     name = 'tcl'
-
+    path = join_path(spack.share_path, "modules")
     environment_modifications_formats = {
         PrependPath: 'prepend-path --delim "{delim}" {name} \"{value}\"\n',
         AppendPath: 'append-path   --delim "{delim}" {name} \"{value}\"\n',
@@ -514,7 +528,7 @@ class TclModule(EnvModule):
 
     @property
     def file_name(self):
-        return join_path(spack.share_path, "modules", self.spec.architecture, self.use_name)
+        return join_path(self.path, self.spec.architecture, self.use_name)
 
     @property
     def header(self):

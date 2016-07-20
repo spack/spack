@@ -25,33 +25,18 @@
 from spack import *
 
 
-class Tk(Package):
-    """Tk is a graphical user interface toolkit that takes developing
-       desktop applications to a higher level than conventional
-       approaches. Tk is the standard GUI not only for Tcl, but for
-       many other dynamic languages, and can produce rich, native
-       applications that run unchanged across Windows, Mac OS X, Linux
-       and more."""
-    homepage = "http://www.tcl.tk"
+class Cdo(Package):
+    """CDO is a collection of command line Operators to manipulate and analyse
+    Climate and NWP model Data. """
 
-    version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
-    version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
+    homepage = "https://code.zmaw.de/projects/cdo"
+    url      = "https://code.zmaw.de/attachments/download/10198/cdo-1.6.9.tar.gz"
 
-    depends_on("tcl")
+    version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2')
 
-    def url_for_version(self, version):
-        base_url = "http://prdownloads.sourceforge.net/tcl"
-        return "{0}/tk{1}-src.tar.gz".format(base_url, version)
-
-    def setup_environment(self, spack_env, env):
-        # When using Tkinter from within spack provided python+tk, python
-        # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
-                self.spec.version.up_to(2))))
+    depends_on('netcdf')
 
     def install(self, spec, prefix):
-        with working_dir('unix'):
-            configure("--prefix={0}".format(prefix),
-                      "--with-tcl={0}".format(spec['tcl'].prefix.lib))
-            make()
-            make("install")
+        configure('--prefix={0}'.format(prefix))
+        make()
+        make('install')

@@ -25,33 +25,39 @@
 from spack import *
 
 
-class Tk(Package):
-    """Tk is a graphical user interface toolkit that takes developing
-       desktop applications to a higher level than conventional
-       approaches. Tk is the standard GUI not only for Tcl, but for
-       many other dynamic languages, and can produce rich, native
-       applications that run unchanged across Windows, Mac OS X, Linux
-       and more."""
-    homepage = "http://www.tcl.tk"
+class Jasper(Package):
+    """Library for manipulating JPEG-2000 images"""
 
-    version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
-    version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
+    homepage = "https://www.ece.uvic.ca/~frodo/jasper/"
+    url = "https://www.ece.uvic.ca/~frodo/jasper/software/jasper-1.900.1.zip"
 
-    depends_on("tcl")
+    version('1.900.1', 'a342b2b4495b3e1394e161eb5d85d754')
 
-    def url_for_version(self, version):
-        base_url = "http://prdownloads.sourceforge.net/tcl"
-        return "{0}/tk{1}-src.tar.gz".format(base_url, version)
+    variant('shared', default=True,
+            description='Builds shared versions of the libraries')
+    variant('debug', default=False,
+            description='Builds debug versions of the libraries')
 
-    def setup_environment(self, spack_env, env):
-        # When using Tkinter from within spack provided python+tk, python
-        # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
-                self.spec.version.up_to(2))))
+    depends_on('libjpeg-turbo')
+
+    # Fixes a bug (still in upstream as of v.1.900.1) where an assertion fails
+    # when certain JPEG-2000 files with an alpha channel are processed
+    # see: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=469786
+    patch('fix_alpha_channel_assert_fail.patch')
 
     def install(self, spec, prefix):
-        with working_dir('unix'):
-            configure("--prefix={0}".format(prefix),
-                      "--with-tcl={0}".format(spec['tcl'].prefix.lib))
-            make()
-            make("install")
+        configure_options = [
+            '--prefix={0}'.format(prefix),
+            '--mandir={0}'.format(spec.prefix.man),
+        ]
+
+        if '+shared' in spec:
+            configure_options.append('--enable-shared')
+
+        if '+debug' not in spec:
+            configure_options.append('--disable-debug')
+
+        configure(*configure_options)
+
+        make()
+        make('install')

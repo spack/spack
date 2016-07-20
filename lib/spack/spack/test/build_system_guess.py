@@ -28,14 +28,14 @@ import tempfile
 import unittest
 
 from llnl.util.filesystem import *
-from spack.cmd.create import ConfigureGuesser
+from spack.cmd.create import BuildSystemGuesser
 from spack.stage import Stage
 from spack.test.mock_packages_test import *
 from spack.util.executable import which
 
 
 class InstallTest(unittest.TestCase):
-    """Tests the configure guesser in spack create"""
+    """Tests the build system guesser in spack create"""
 
     def setUp(self):
         self.tar = which('tar')
@@ -44,11 +44,9 @@ class InstallTest(unittest.TestCase):
         os.chdir(self.tmpdir)
         self.stage = None
 
-
     def tearDown(self):
         shutil.rmtree(self.tmpdir, ignore_errors=True)
         os.chdir(self.orig_dir)
-
 
     def check_archive(self, filename, system):
         mkdirp('archive')
@@ -60,24 +58,24 @@ class InstallTest(unittest.TestCase):
         with Stage(url) as stage:
             stage.fetch()
 
-            guesser = ConfigureGuesser()
-            guesser(stage)
+            guesser = BuildSystemGuesser()
+            guesser(stage, url)
             self.assertEqual(system, guesser.build_system)
-
-
-    def test_python(self):
-        self.check_archive('setup.py', 'python')
-
 
     def test_autotools(self):
         self.check_archive('configure', 'autotools')
 
-
     def test_cmake(self):
         self.check_archive('CMakeLists.txt', 'cmake')
 
+    def test_scons(self):
+        self.check_archive('SConstruct', 'scons')
+
+    def test_python(self):
+        self.check_archive('setup.py', 'python')
+
+    def test_R(self):
+        self.check_archive('NAMESPACE', 'R')
 
     def test_unknown(self):
         self.check_archive('foobar', 'unknown')
-
-

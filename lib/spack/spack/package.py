@@ -64,7 +64,7 @@ from spack import directory_layout
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
-from spack.util.executable import ProcessError
+from spack.util.executable import ProcessError, which
 from spack.version import *
 
 """Allowed URL schemes for spack packages."""
@@ -718,6 +718,11 @@ class PackageBase(object):
     def fetcher(self, f):
         self._fetcher = f
 
+    def dependencies_of_type(self, *deptypes):
+        """Get subset of the dependencies with certain types."""
+        return dict((name, conds) for name, conds in self.dependencies.items()
+                    if any(d in self._deptypes[name] for d in deptypes))
+
     @property
     def extendee_spec(self):
         """
@@ -840,7 +845,7 @@ class PackageBase(object):
             if self.name == spec.name:
                 continue
             # XXX(deptype): Should build dependencies not count here?
-            #for dep in spec.traverse(deptype=('run')):
+            # for dep in spec.traverse(deptype=('run')):
             for dep in spec.traverse(deptype=spack.alldeps):
                 if self.spec == dep:
                     dependents.append(spec)
@@ -852,13 +857,13 @@ class PackageBase(object):
         return self.spec.prefix
 
     @property
-    #TODO: Change this to architecture
+    # TODO: Change this to architecture
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
         return spack.compilers.compiler_for_spec(self.spec.compiler,
-                self.spec.architecture)
+                                                 self.spec.architecture)
 
     def url_version(self, version):
         """
@@ -1063,7 +1068,8 @@ class PackageBase(object):
         run_tests   -- Run tests within the package's install()
         """
         if not self.spec.concrete:
-            raise ValueError("Can only install concrete packages: %s." % self.spec.name)
+            raise ValueError("Can only install concrete packages: %s."
+                             % self.spec.name)
 
         # No installation needed if package is external
         if self.spec.external:
@@ -1712,6 +1718,13 @@ def install_dependency_symlinks(pkg, spec, prefix):
     """Execute a dummy install and flatten dependencies"""
     flatten_dependencies(spec, prefix)
 
+
+def use_cray_compiler_names():
+    """Compiler names for builds that rely on cray compiler names."""
+    os.environ['CC'] = 'cc'
+    os.environ['CXX'] = 'CC'
+    os.environ['FC'] = 'ftn'
+    os.environ['F77'] = 'ftn'
 
 def flatten_dependencies(spec, flat_dir):
     """Make each dependency of spec present in dir via symlink."""
