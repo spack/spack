@@ -22,18 +22,21 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
-import os
 import argparse
+import os
+import string
+import sys
 
 import llnl.util.tty as tty
-
 import spack
 import spack.cmd
+from spack import which
 from spack.cmd.edit import edit_package
 from spack.stage import DIYStage
+from llnl.util.filesystem import set_executable
 
 description = "Create a configuration script and module, but don't build."
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -45,6 +48,75 @@ def setup_parser(subparser):
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
         help="specs to use for install.  Must contain package AND version.")
+
+
+def spack_transitive_include_path():
+    return ';'.join(
+        os.path.join(dep, 'include')
+        for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
+    )
+
+
+def write_spconfig(package):
+    spec = package.spec
+    prefix = spec.prefix
+    # Set-up the environment
+    spack.build_environment.setup_package(package)
+
+    cmd = [str(which('cmake'))] + package.std_cmake_args + package.cmake_args()
+
+    env = dict()
+
+    paths = os.environ['PATH'].split(':')
+    paths = [item for item in paths if 'spack/env' not in item]
+    env['PATH'] = ':'.join(paths)
+    env['SPACK_TRANSITIVE_INCLUDE_PATH'] = spack_transitive_include_path()
+    env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
+    env['CC'] = os.environ['SPACK_CC']
+    env['CXX'] = os.environ['SPACK_CXX']
+    env['FC'] = os.environ['SPACK_FC']
+
+    setup_fname = 'spconfig.py'
+    with open(setup_fname, 'w') as fout:
+        fout.write(
+r"""#!%s
+#
+
+import sys
+import os
+import subprocess
+
+def cmdlist(str):
+    return list(x.strip().replace("'",'') for x in str.split('\n') if x)
+env = dict(os.environ)
+""" % sys.executable)
+
+        env_vars = sorted(list(env.keys()))
+        for name in env_vars:
+            val = env[name]
+            if string.find(name, 'PATH') < 0:
+                fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
+            else:
+                if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
+                    sep = ';'
+                else:
+                    sep = ':'
+
+                fout.write(
+                    'env[%s] = "%s".join(cmdlist("""\n' % (repr(name), sep))
+                for part in string.split(val, sep):
+                    fout.write('    %s\n' % part)
+                fout.write('"""))\n')
+
+        fout.write(
+            "env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = env['SPACK_TRANSITIVE_INCLUDE_PATH']   # Deprecated\n")
+        fout.write('\ncmd = cmdlist("""\n')
+        fout.write('%s\n' % cmd[0])
+        for arg in cmd[1:]:
+            fout.write('    %s\n' % arg)
+        fout.write('""") + sys.argv[1:]\n')
+        fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
+        set_executable(setup_fname)
 
 
 def setup(self, args):
@@ -70,7 +142,8 @@ def setup(self, args):
                 return
 
         if not spec.versions.concrete:
-            tty.die("spack setup spec must have a single, concrete version.  Did you forget a package version number?")
+            tty.die(
+                "spack setup spec must have a single, concrete version.  Did you forget a package version number?")
 
         spec.concretize()
         package = spack.repo.get(spec)
@@ -83,9 +156,8 @@ def setup(self, args):
         # TODO: make this an argument, not a global.
         spack.do_checksum = False
 
-        package.do_install(
-            keep_prefix=True,        # Don't remove install directory, even if you think you should
-            ignore_deps=args.ignore_deps,
-            verbose=args.verbose,
-            keep_stage=True,   # don't remove source dir for SETUP.
-            install_phases = set(['setup', 'provenance']))
+        if not isinstance(package, spack.CMakePackage):
+            raise RuntimeError(
+                'Support for {0} not yet implemented'.format(type(package)))
+
+        write_spconfig(package)
