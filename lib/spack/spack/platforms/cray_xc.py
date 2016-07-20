@@ -45,10 +45,10 @@ class CrayXc(Platform):
 
     @classmethod
     def detect(self):
-        if os.path.exists('/cray_home'):
-            cc_verbose = which('cc')
-            cc_verbose.add_default_arg('-craype-verbose')
-            text = cc_verbose(output=str, error=str, ignore_errors=True).split()
+        try:
+            cc_verbose = which('ftn')
+            text = cc_verbose('-craype-verbose', output=str, error=str, ignore_errors=True).split()
             if '-D__CRAYXC' in text:
                 return True
-        return False
+        finally:
+            return False
