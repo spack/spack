@@ -44,7 +44,8 @@ class Harminv(Package):
         config_args = [
             '--prefix={0}'.format(prefix),
             '--with-blas={0}'.format(spec['blas'].prefix.lib),
-            '--with-lapack={0}'.format(spec['lapack'].prefix.lib)
+            '--with-lapack={0}'.format(spec['lapack'].prefix.lib),
+            '--enable-shared'
         ]
 
         configure(*config_args)

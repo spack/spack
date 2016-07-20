@@ -41,8 +41,8 @@ class PyMeep(Package):
     depends_on('py-scipy')
     depends_on('py-matplotlib')
 
-    depends_on('mpi', when='+mpi')  # OpenMPI 1.3.3 is recommended
-    depends_on('meep')  # must be compiled with -fPIC
+    depends_on('mpi', when='+mpi')
+    depends_on('meep~mpi', when='~mpi')
     depends_on('meep+mpi', when='+mpi')
 
     # As of SWIG 3.0.3, Python-style comments are now treated as

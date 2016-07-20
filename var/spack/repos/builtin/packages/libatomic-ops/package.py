@@ -35,7 +35,8 @@ class LibatomicOps(Package):
     version('7.4.4', '426d804baae12c372967a6d183e25af2')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
+        configure('--prefix={0}'.format(prefix),
+                  '--enable-shared')
 
         make()
         make('install')

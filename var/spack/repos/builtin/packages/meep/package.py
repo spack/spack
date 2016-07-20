@@ -35,14 +35,14 @@ class Meep(Package):
     version('1.2.1', '9be2e743c3a832ae922de9d955d016c5')
     version('1.1.1', '415e0cd312b6caa22b5dd612490e1ccf')
 
-    variant('blas',    default=True,  description='Enable BLAS support')
-    variant('lapack',  default=True,  description='Enable LAPACK support')
-    variant('harminv', default=True,  description='Enable Harminv support')
-    variant('guile',   default=True,  description='Enable Guilde support')
-    variant('libctl',  default=True,  description='Enable libctl support')
-    variant('mpi',     default=True,  description='Enable MPI support')
-    variant('hdf5',    default=True,  description='Enable HDF5 support')
-    variant('gsl',     default=False, description='Build with GSL (only necessary for testing)')
+    variant('blas',    default=True, description='Enable BLAS support')
+    variant('lapack',  default=True, description='Enable LAPACK support')
+    variant('harminv', default=True, description='Enable Harminv support')
+    variant('guile',   default=True, description='Enable Guilde support')
+    variant('libctl',  default=True, description='Enable libctl support')
+    variant('mpi',     default=True, description='Enable MPI support')
+    variant('hdf5',    default=True, description='Enable HDF5 support')
+    variant('gsl',     default=True, description='Enable GSL support')
 
     depends_on('blas',        when='+blas')
     depends_on('lapack',      when='+lapack')
@@ -50,7 +50,7 @@ class Meep(Package):
     depends_on('guile',       when='+guile')
     depends_on('libctl@3.2:', when='+libctl')
     depends_on('mpi',         when='+mpi')
-    depends_on('hdf5',        when='+hdf5')
+    depends_on('hdf5~mpi',    when='+hdf5~mpi')
     depends_on('hdf5+mpi',    when='+hdf5+mpi')
     depends_on('gsl',         when='+gsl')
 
@@ -62,12 +62,10 @@ class Meep(Package):
             return "{0}/old/meep-{1}.tar.gz".format(base_url, version)
 
     def install(self, spec, prefix):
-        # Must be compiled with -fPIC for py-meep
-        env['CFLAGS']   = '-fPIC'
-        env['CXXFLAGS'] = '-fPIC'
-        env['FFLAGS']   = '-fPIC'
-
-        config_args = ['--prefix={0}'.format(prefix)]
+        config_args = [
+            '--prefix={0}'.format(prefix),
+            '--enable-shared'
+        ]
 
         if '+blas' in spec:
             config_args.append('--with-blas={0}'.format(
@@ -103,7 +101,7 @@ class Meep(Package):
 
         # aniso_disp test fails unless installed with harminv
         # near2far test fails unless installed with gsl
-        if '+harminv' in spec and '+gsl' in spec:
+        if self.run_tests and '+harminv' in spec and '+gsl' in spec:
             # Most tests fail when run in parallel
             # 2D_convergence tests still fails to converge for unknown reasons
             make('check', parallel=False)
