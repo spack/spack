@@ -29,13 +29,11 @@ class Cdo(Package):
     """CDO is a collection of command line Operators to manipulate and analyse
     Climate and NWP model Data. """
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://code.zmaw.de/projects/cdo"
     url      = "https://code.zmaw.de/attachments/download/10198/cdo-1.6.9.tar.gz"
 
     version('1.6.9', 'bf0997bf20e812f35e10188a930e24e2')
 
-    # FIXME: Add additional dependencies if required.
     depends_on('netcdf')
 
     def install(self, spec, prefix):
