@@ -50,5 +50,7 @@ class CrayXc(Platform):
             text = cc_verbose('-craype-verbose', output=str, error=str, ignore_errors=True).split()
             if '-D__CRAYXC' in text:
                 return True
-        finally:
+            else:
+                return False
+        except:
             return False
