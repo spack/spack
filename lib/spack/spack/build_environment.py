@@ -248,7 +248,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
         ci = join_path(item, 'case-insensitive')
         if os.path.isdir(ci):
             env_paths.append(ci)
-    
+
     for item in reversed(env_paths):
         env.prepend_path('PATH', item)
     env.set_path(SPACK_ENV_PATH, env_paths)
