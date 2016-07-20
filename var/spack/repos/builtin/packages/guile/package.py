@@ -43,7 +43,7 @@ class Guile(Package):
     depends_on('bdw-gc@7.0:')
     depends_on('libffi')
     depends_on('readline', when='+readline')
-    depends_on('pkg-config')
+    depends_on('pkg-config', type='build')
 
     def install(self, spec, prefix):
         config_args = [

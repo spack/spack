@@ -62,6 +62,10 @@ class PyMeep(Package):
             spec['meep'].prefix.lib
         ]
 
+        if '+mpi' in spec:
+            include_dirs.append(spec['mpi'].prefix.include)
+            library_dirs.append(spec['mpi'].prefix.lib)
+
         include_flags = '-I{0}'.format(','.join(include_dirs))
         library_flags = '-L{0}'.format(','.join(library_dirs))
 
