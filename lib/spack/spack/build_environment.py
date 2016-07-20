@@ -249,11 +249,6 @@ def set_build_environment_variables(pkg, env, dirty=False):
         if os.path.isdir(ci):
             env_paths.append(ci)
     
-#    for item in pkg.spec.platform.env_paths:
-#        env_paths.append(item)
-        # TODO: move platform-specific knowledge to platform.
-        # (join_path(spack.build_env_path, 'cray'))
-
     for item in reversed(env_paths):
         env.prepend_path('PATH', item)
     env.set_path(SPACK_ENV_PATH, env_paths)
