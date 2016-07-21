@@ -1,9 +1,10 @@
 import os
+import spack
 from spack.architecture import Platform, Target
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
 from spack.util.executable import which
-from spack.util.file_system import join_path
+from llnl.util.filesystem import join_path
 
 class CrayXc(Platform):
     priority    = 20
@@ -50,9 +51,9 @@ class CrayXc(Platform):
             similar to linux/standard linker behavior
         """
         env.set('CRAYPE_LINK_TYPE', 'dynamic')
-        cray_wrapper_names = join_path(spack.build_env_path, 'cray')
-        if os.path.isdir(cray_wrapper_names):
-            env.prepend_path('PATH', cray_wrapper_names)
+#        cray_wrapper_names = join_path(spack.build_env_path, 'cray')
+#        if os.path.isdir(cray_wrapper_names):
+#            env.prepend_path('PATH', cray_wrapper_names)
 
     @classmethod
     def detect(self):
