@@ -1,10 +1,11 @@
 import os
-import spack
+#import spack
 from spack.architecture import Platform, Target
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
 from spack.util.executable import which
-from llnl.util.filesystem import join_path
+#from llnl.util.filesystem import join_path
+
 
 class CrayXc(Platform):
     priority    = 20
