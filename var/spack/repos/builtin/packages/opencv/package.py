@@ -20,7 +20,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA ############################################################################## from spack import *
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
+from spack import *
 from glob import glob
 
 
@@ -60,20 +62,20 @@ class Opencv(Package):
     variant('java', default=False,
             description='Activates support for Java')
 
+    depends_on('cmake', type='build')
+    depends_on('eigen', when='+eigen', type='build')
+
     depends_on('zlib')
     depends_on('libpng')
     depends_on('libjpeg-turbo')
     depends_on('libtiff')
 
     depends_on('jasper', when='+jasper')
-    depends_on('cmake', type='build')
-    depends_on('eigen', when='+eigen', type='build')
     depends_on('cuda', when='+cuda')
     depends_on('gtkplus', when='+gtk')
     depends_on('vtk', when='+vtk')
     depends_on('qt', when='+qt')
     depends_on('jdk', when='+java')
-
     depends_on('py-numpy', when='+python')
 
     extends('python', when='+python')
