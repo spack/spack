@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-
+from glob import glob
 
 class Lmod(Package):
     """
@@ -53,6 +53,15 @@ class Lmod(Package):
             self.stage.path, 'Lmod-{version}', 'src', '?.lua')
         spack_env.append_path('LUA_PATH', stage_lua_path.format(
             version=self.version), separator=';')
+
+    patch('fix_tclsh_paths.patch')
+    def patch(self):
+        """The tcl scripts should use the tclsh that was discovered
+           by the configure script.  Touch up their #! lines so that the
+           sed in the Makefile's install step has something to work on.
+           Requires the change in the associated patch file.fg"""
+        for tclscript in glob('src/*.tcl'):
+            filter_file(r'^#!.*tclsh', '#!@path_to_tclsh@', tclscript)
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)
