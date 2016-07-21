@@ -30,24 +30,37 @@ class Libxsmm(Package):
     multiplications targeting Intel Architecture (x86).'''
 
     homepage = 'https://github.com/hfp/libxsmm'
-    url      = 'https://github.com/xianyi/libxsmm/archive/1.4.3.tar.gz'
+    url      = 'https://github.com/hfp/libxsmm/archive/1.4.3.tar.gz'
 
     version('1.4.3', '9839bf0fb8be7badf1e97ce4c817149b')
     version('1.4.2', 'ea025761437f3b5c936821b9ca21ec31')
     version('1.4.1', '71648500ea4510529845d329091917df')
     version('1.4',   'b42f91bf5285e7ad0463446e55ebdc2b')
 
+    def patch(self):
+        kwargs = {'ignore_absent': False, 'backup': False, 'string': True}
+        makefile = FileFilter('Makefile.inc')
+
+        # Spack sets CC, CXX, and FC to point to the compiler wrappers
+        # Don't let Makefile.inc overwrite these
+        makefile.filter('CC = icc',         'CC ?= icc', **kwargs)
+        makefile.filter('CC = gcc',         'CC ?= gcc', **kwargs)
+        makefile.filter('CXX = icpc',       'CXX ?= icpc', **kwargs)
+        makefile.filter('CXX = g.*',        'CXX ?= g++', **kwargs)
+        makefile.filter('FC = ifort',       'FC ?= ifort', **kwargs)
+        makefile.filter('FC = gfortran',    'FC ?= gfortran', **kwargs)
+
     def manual_install(self, prefix):
         install_tree('include', prefix.include)
         install_tree('lib', prefix.lib)
-        install_tree('documentation', prefix.share + '/libxsmm')
+        install_tree('documentation', prefix.share + '/libxsmm/doc')
 
     def install(self, spec, prefix):
         make_args = [
             'ROW_MAJOR=0',
-            'INDICES_M=$(echo $(seq 1 24))',
-            'INDICES_N=$(echo $(seq 1 24))',
-            'INDICES_K=$(echo $(seq 1 24))'
+            'INDICES_M={0}'.format(' '.join(str(i) for i in range(1, 25))),
+            'INDICES_N={0}'.format(' '.join(str(i) for i in range(1, 25))),
+            'INDICES_K={0}'.format(' '.join(str(i) for i in range(1, 25)))
         ]
         make(*make_args)
         self.manual_install(prefix)
