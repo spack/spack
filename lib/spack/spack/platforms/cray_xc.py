@@ -1,8 +1,10 @@
 import os
+import spack
 from spack.architecture import Platform, Target
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
 from spack.util.executable import which
+from llnl.util.filesystem import join_path
 
 
 class CrayXc(Platform):
@@ -53,6 +55,7 @@ class CrayXc(Platform):
         cray_wrapper_names = join_path(spack.build_env_path, 'cray')
         if os.path.isdir(cray_wrapper_names):
             env.prepend_path('PATH', cray_wrapper_names)
+            env.prepend_path('SPACK_ENV_PATHS', cray_wrapper_names)
 
     @classmethod
     def detect(self):
