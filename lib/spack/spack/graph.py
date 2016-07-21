@@ -94,6 +94,7 @@ def topological_sort(spec, **kwargs):
     nodes = spec.index()
 
     topo_order = []
+    par = {name: parents(nodes[name]) for name in nodes.keys()}
     remaining = [name for name in nodes.keys() if not parents(nodes[name])]
     heapify(remaining)
 
@@ -102,12 +103,12 @@ def topological_sort(spec, **kwargs):
         topo_order.append(name)
 
         node = nodes[name]
-        for dep in children(node).values():
-            del parents(dep)[node.name]
-            if not parents(dep):
+        for dep in children(node):
+            par[dep.name].remove(node)
+            if not par[dep.name]:
                 heappush(remaining, dep.name)
 
-    if any(parents(s) for s in spec.traverse()):
+    if any(par.get(s.name, []) for s in spec.traverse()):
         raise ValueError("Spec has cycles!")
     else:
         return topo_order
@@ -477,8 +478,8 @@ class AsciiGraph(object):
 
                 # Replace node with its dependencies
                 self._frontier.pop(i)
-                if node.dependencies:
-                    deps = sorted((d for d in node.dependencies), reverse=True)
+                if node.dependencies():
+                    deps = sorted((d.name for d in node.dependencies()), reverse=True)
                     self._connect_deps(i, deps, "new-deps") # anywhere.
 
                 elif self._frontier:

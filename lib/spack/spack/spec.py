@@ -460,7 +460,7 @@ class DependencyMap(HashableMap):
 
     def __str__(self):
         return ''.join(
-            ["^" + str(self[name].spec) for name in sorted(self.keys())])
+            ["^" + self[name].format() for name in sorted(self.keys())])
 
 
 @key_ordering
@@ -861,7 +861,7 @@ class Spec(object):
             for name in sorted(successors):
                 child = successors[name]
                 children = child.spec.traverse_with_deptype(
-                    visited, d=d + 1, deptype=deptype_query,
+                    visited, d=d + 1, deptype=deptype,
                     deptype_query=deptype_query,
                     _self_deptype=child.deptypes, **kwargs)
                 for elt in children:
