@@ -94,7 +94,7 @@ def topological_sort(spec, **kwargs):
     nodes = spec.index()
 
     topo_order = []
-    par = {name: parents(nodes[name]) for name in nodes.keys()}
+    par = dict((name, parents(nodes[name])) for name in nodes.keys())
     remaining = [name for name in nodes.keys() if not parents(nodes[name])]
     heapify(remaining)
 

@@ -476,20 +476,20 @@ class SpecDagTest(MockPackagesTest):
         dag = Spec('dtuse')
         dag.normalize()
 
-        names = ['dtuse', 'dttop', 'dtlink1', 'dtlink3', 'dtlink4',
-                 'dtrun1', 'dtlink5', 'dtrun3']
+        names = ['dtuse', 'dttop', 'dtbuild1', 'dtbuild2', 'dtlink2',
+                 'dtlink1', 'dtlink3', 'dtlink4']
 
-        traversal = dag.traverse()
+        traversal = dag.traverse(deptype=('build', 'link'))
         self.assertEqual([x.name for x in traversal], names)
 
     def test_deptype_traversal_with_builddeps(self):
         dag = Spec('dttop')
         dag.normalize()
 
-        names = ['dttop', 'dtbuild1', 'dtlink2', 'dtrun2', 'dtlink1',
-                 'dtlink3', 'dtlink4', 'dtrun1', 'dtlink5', 'dtrun3']
+        names = ['dttop', 'dtbuild1', 'dtbuild2', 'dtlink2',
+                 'dtlink1', 'dtlink3', 'dtlink4']
 
-        traversal = dag.traverse()
+        traversal = dag.traverse(deptype=('build', 'link'))
         self.assertEqual([x.name for x in traversal], names)
 
     def test_deptype_traversal_full(self):
@@ -500,15 +500,14 @@ class SpecDagTest(MockPackagesTest):
                  'dtlink1', 'dtlink3', 'dtlink4', 'dtrun1', 'dtlink5',
                  'dtrun3', 'dtbuild3']
 
-        traversal = dag.traverse(deptype_query=spack.alldeps)
+        traversal = dag.traverse(deptype=spack.alldeps)
         self.assertEqual([x.name for x in traversal], names)
 
-    def test_deptype_traversal_pythonpath(self):
+    def test_deptype_traversal_run(self):
         dag = Spec('dttop')
         dag.normalize()
 
-        names = ['dttop', 'dtbuild1', 'dtrun2', 'dtlink1', 'dtrun1',
-                 'dtrun3']
+        names = ['dttop', 'dtrun1', 'dtrun3']
 
-        traversal = dag.traverse(deptype=spack.nolink, deptype_query='run')
+        traversal = dag.traverse(deptype='run')
         self.assertEqual([x.name for x in traversal], names)
