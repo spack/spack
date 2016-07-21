@@ -546,7 +546,7 @@ More formally, a spec consists of the following pieces:
   boolean variants
 * ``name=<value>`` Optional compiler flag specifiers. Valid flag names are
   ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
-* ``target=<value> os=<value>`` Optional architecture specifier 
+* ``target=<value> os=<value>`` Optional architecture specifier
   (``target=haswell os=CNL10``)
 * ``^`` Dependency specs (``^callpath@1.1``)
 
@@ -764,12 +764,12 @@ words ``target`` and/or ``os`` (``target=x86-64 os=debian7``). You can also
 use the triplet form of platform, operating system and processor.
 
 .. code-block:: sh
-    
+
     spack install libelf arch=cray_xc-CNL10-haswell
 
 Users on non-Cray systems won't have to worry about specifying the architecture.
 Spack will autodetect what kind of operating system is on your machine as well
-as the processor. For more information on how the architecture can be 
+as the processor. For more information on how the architecture can be
 used on Cray machines, check here :ref:`spack-cray`
 
 
@@ -1147,11 +1147,12 @@ packages use RPATH to find their dependencies: this can be true in
 particular for Python extensions, which are currently *not* built with
 RPATH.
 
-Modules may be loaded recursively with the command:
+Modules may be loaded recursively with the ``load`` command's
+``--dependencies`` or ``-r`` argument:
 
 .. code-block:: sh
 
-    $ module load `spack module tcl --dependencies <spec>...
+    $ spack load --dependencies <spec> ...
 
 More than one spec may be placed on the command line here.
 
@@ -1793,36 +1794,36 @@ A nicer error message is TBD in future versions of Spack.
 Spack on Cray
 -----------------------------
 
-Spack differs slightly when used on a Cray system. The architecture spec 
+Spack differs slightly when used on a Cray system. The architecture spec
 can differentiate between the front-end and back-end processor and operating system.
-For example, on Edison at NERSC, the back-end target processor 
+For example, on Edison at NERSC, the back-end target processor
 is \"Ivy Bridge\", so you can specify to use the back-end this way:
 
 .. code-block:: sh
-    
+
     spack install zlib target=ivybridge
 
 You can also use the operating system to build against the back-end:
 
 .. code-block:: sh
-    
+
     spack install zlib os=CNL10
 
-Notice that the name includes both the operating system name and the major 
+Notice that the name includes both the operating system name and the major
 version number concatenated together.
 
-Alternatively, if you want to build something for the front-end, 
-you can specify the front-end target processor. The processor for a login node 
+Alternatively, if you want to build something for the front-end,
+you can specify the front-end target processor. The processor for a login node
 on Edison is \"Sandy bridge\" so we specify on the command line like so:
 
 .. code-block:: sh
-    
+
     spack install zlib target=sandybridge
 
 And the front-end operating system is:
 
 .. code-block:: sh
-    
+
     spack install zlib os=SuSE11
 
 
@@ -1830,13 +1831,13 @@ And the front-end operating system is:
 Cray compiler detection
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Spack can detect compilers using two methods. For the front-end, we treat 
-everything the same. The difference lies in back-end compiler detection. 
-Back-end compiler detection is made via the Tcl module avail command. 
-Once it detects the compiler it writes the appropriate PrgEnv and compiler 
-module name to compilers.yaml and sets the paths to each compiler with Cray\'s 
-compiler wrapper names (i.e. cc, CC, ftn). During build time, Spack will load 
-the correct PrgEnv and compiler module and will call appropriate wrapper. 
+Spack can detect compilers using two methods. For the front-end, we treat
+everything the same. The difference lies in back-end compiler detection.
+Back-end compiler detection is made via the Tcl module avail command.
+Once it detects the compiler it writes the appropriate PrgEnv and compiler
+module name to compilers.yaml and sets the paths to each compiler with Cray\'s
+compiler wrapper names (i.e. cc, CC, ftn). During build time, Spack will load
+the correct PrgEnv and compiler module and will call appropriate wrapper.
 
 The compilers.yaml config file will also differ. There is a
 modules section that is filled with the compiler\'s Programming Environment
@@ -1849,8 +1850,8 @@ and module name. On other systems, this field is empty []::
           - intel/15.0.109
     ...
 
-As mentioned earlier, the compiler paths will look different on a Cray system. 
-Since most compilers are invoked using cc, CC and ftn, the paths for each 
+As mentioned earlier, the compiler paths will look different on a Cray system.
+Since most compilers are invoked using cc, CC and ftn, the paths for each
 compiler are replaced with their respective Cray compiler wrapper names::
 
     ...
@@ -1862,7 +1863,7 @@ compiler are replaced with their respective Cray compiler wrapper names::
     ...
 
 As opposed to an explicit path to the compiler executable. This allows Spack
-to call the Cray compiler wrappers during build time. 
+to call the Cray compiler wrappers during build time.
 
 For more on compiler configuration, check out :ref:`compiler-config`.
 
@@ -1889,11 +1890,11 @@ Here\'s an example of an external configuration for cray modules:
 This tells Spack that for whatever package that depends on mpi, load the
 cray-mpich module into the environment. You can then be able to use whatever
 environment variables, libraries, etc, that are brought into the environment
-via module load. 
+via module load.
 
-You can set the default compiler that Spack can use for each compiler type. 
-If you want to use the Cray defaults, then set them under *all:* in packages.yaml. 
-In the compiler field, set the compiler specs in your order of preference. 
+You can set the default compiler that Spack can use for each compiler type.
+If you want to use the Cray defaults, then set them under *all:* in packages.yaml.
+In the compiler field, set the compiler specs in your order of preference.
 Whenever you build with that compiler type, Spack will concretize to that version.
 
 Here is an example of a full packages.yaml used at NERSC
@@ -1921,11 +1922,11 @@ Here is an example of a full packages.yaml used at NERSC
 
 Here we tell spack that whenever we want to build with gcc use version 5.2.0 or
 if we want to build with intel compilers, use version 16.0.0.109. We add a spec
-for each compiler type for each cray modules. This ensures that for each 
+for each compiler type for each cray modules. This ensures that for each
 compiler on our system we can use that external module.
 
 
-For more on external packages check out the section :ref:`sec-external_packages`. 
+For more on external packages check out the section :ref:`sec-external_packages`.
 
 Getting Help
 -----------------------
