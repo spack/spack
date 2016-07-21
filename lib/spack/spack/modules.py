@@ -471,6 +471,7 @@ class Dotkit(EnvModule):
     path = join_path(spack.share_path, 'dotkit')
     environment_modifications_formats = {
         PrependPath: 'dk_alter {name} {value}\n',
+        RemovePath: 'dk_unalter {name} {value}\n',
         SetEnv: 'dk_setenv {name} {value}\n'
     }
 
