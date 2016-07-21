@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import urllib
 import llnl.util.tty as tty
 
 from spack import *
@@ -50,61 +49,15 @@ class Openssl(Package):
     parallel = False
 
     def url_for_version(self, version):
-        # This URL is computed pinging the place where the latest version is
-        # stored. To avoid slowdown due to repeated pinging, we store the URL
-        # in a private class attribute to do the job only once per version
-        openssl_urls = getattr(Openssl, '_openssl_url', {})
-        openssl_url = openssl_urls.get(version, None)
-        # Same idea, but just to avoid issuing the same message multiple times
-        warnings_given_to_user = getattr(Openssl, '_warnings_given', {})
-        if openssl_url is None:
-            if self.spec.satisfies('@system'):
-                # The version @system is reserved to system openssl. In that
-                # case return a fake url and exit
-                openssl_url = '@system (reserved version for system openssl)'
-                if not warnings_given_to_user.get(version, False):
-                    tty.msg('Using openssl@system: '
-                            'the version @system is reserved for system openssl')
-                    warnings_given_to_user[version] = True
-            else:
-                openssl_url = self.check_for_outdated_release(
-                    version, warnings_given_to_user)  # Store the computed URL
-            openssl_urls[version] = openssl_url
-            # Store the updated dictionary of URLS
-            Openssl._openssl_url = openssl_urls
-            # Store the updated dictionary of warnings
-            Openssl._warnings_given = warnings_given_to_user
+        if '@system' in self.spec:
+            return '@system (reserved version for system openssl)'
+        else:
+            return super(Openssl, self).url_for_version(self.spec)
 
-        return openssl_url
-
-    def check_for_outdated_release(self, version, warnings_given_to_user):
-        latest = 'ftp://ftp.openssl.org/source/openssl-{version}.tar.gz'
-        older = 'http://www.openssl.org/source/old/{version_number}/openssl-{version_full}.tar.gz'  # NOQA: ignore=E501
-        # Try to use the url where the latest tarballs are stored.
-        # If the url does not exist (404), then return the url for
-        # older format
-        version_number = '.'.join([str(x) for x in version[:-1]])
-        try:
-            openssl_url = latest.format(version=version)
-            urllib.urlopen(openssl_url)
-        except IOError:
-            openssl_url = older.format(
-                version_number=version_number, version_full=version)
-            # Checks if we already warned the user for this particular
-            # version of OpenSSL. If not we display a warning message
-            # and mark this version
-            if not warnings_given_to_user.get(version, False):
-                tty.warn(
-                    'This installation depends on an old version of OpenSSL, '
-                    'which may have known security issues. ')
-                tty.warn(
-                    'Consider updating to the latest version of this package.')
-                tty.warn('More details at {homepage}'.format(
-                    homepage=Openssl.homepage))
-                warnings_given_to_user[version] = True
-
-        return openssl_url
-
+    def handle_fetch_error(self, error):
+        tty.warn("Fetching OpenSSL failed. This may indicate that OpenSSL has "
+                 "been updated, and the version in your instance of Spack is "
+                 "insecure. Consider updating to the latest OpenSSL version.")
 
     def install(self, spec, prefix):
         # OpenSSL uses a variable APPS in its Makefile. If it happens to be set
