@@ -36,6 +36,7 @@ class Pidx(Package):
     version('1.0', git='https://github.com/sci-visus/PIDX.git',
             commit='6afa1cf71d1c41263296dc049c8fabaf73c296da')
 
+    depends_on('cmake', type='build')
     depends_on("mpi")
 
     def install(self, spec, prefix):

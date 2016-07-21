@@ -60,8 +60,8 @@ class Qt(Package):
 
     # Webkit
     # depends_on("gperf")
-    # depends_on("flex")
-    # depends_on("bison")
+    # depends_on("flex", type='build')
+    # depends_on("bison", type='build')
     # depends_on("ruby")
     # depends_on("icu4c")
 

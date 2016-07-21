@@ -42,7 +42,7 @@ __all__ = ['set_install_permissions', 'install', 'install_tree',
            'FileFilter', 'change_sed_delimiter', 'is_exe', 'force_symlink',
            'set_executable', 'copy_mode', 'unset_executable_mode',
            'remove_dead_links', 'remove_linked_tree', 'find_library_path',
-           'fix_darwin_install_name', 'to_link_flags']
+           'fix_darwin_install_name', 'to_link_flags', 'to_lib_name']
 
 
 def filter_file(regex, repl, *filenames, **kwargs):
@@ -431,6 +431,13 @@ def fix_darwin_install_name(path):
                     break
 
 
+def to_lib_name(library):
+    """Transforms a path to the library /path/to/lib<name>.xyz into <name>
+    """
+    # Assume libXYZ.suffix
+    return os.path.basename(library)[3:].split(".")[0]
+
+
 def to_link_flags(library):
     """Transforms a path to a <library> into linking flags -L<dir> -l<name>.
 
@@ -438,8 +445,7 @@ def to_link_flags(library):
       A string of linking flags.
     """
     dir  = os.path.dirname(library)
-    # Assume libXYZ.suffix
-    name = os.path.basename(library)[3:].split(".")[0]
+    name = to_lib_name(library)
     res = '-L%s -l%s' % (dir, name)
     return res
 

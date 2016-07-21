@@ -177,10 +177,11 @@ sys_type = None
 #       should live.  This file is overloaded for spack core vs. for packages.
 #
 __all__ = ['Package', 'StagedPackage', 'CMakePackage', \
-    'Version', 'when', 'ver']
+    'Version', 'when', 'ver', 'alldeps', 'nolink']
 from spack.package import Package, ExtensionConflictError
 from spack.package import StagedPackage, CMakePackage
 from spack.version import Version, ver
+from spack.spec import DependencySpec, alldeps, nolink
 from spack.multimethod import when
 
 import llnl.util.filesystem

@@ -33,7 +33,7 @@ class PyWheel(Package):
     version('0.26.0', '4cfc6e7e3dc7377d0164914623922a10')
 
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

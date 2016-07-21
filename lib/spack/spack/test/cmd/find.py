@@ -27,11 +27,7 @@
 import spack.cmd.find
 import unittest
 
-
-class Bunch(object):
-
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
+from spack.util.pattern import Bunch
 
 
 class FindTest(unittest.TestCase):

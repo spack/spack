@@ -36,7 +36,7 @@ class Mpibash(Package):
     patch('mpibash-4.3.patch', level=1, when='@4.3')
 
     # above patch modifies configure.ac
-    depends_on('autoconf')
+    depends_on('autoconf', type='build')
 
     # uses MPI_Exscan which is in MPI-1.2 and later
     depends_on('mpi@1.2:')

@@ -40,6 +40,7 @@ class Libgd(Package):
     version('2.1.1', 'e91a1a99903e460e7ba00a794e72cc1e')
 
     depends_on('libpng')
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
 

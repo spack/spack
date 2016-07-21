@@ -42,8 +42,8 @@ class Lmod(Package):
     version('6.0.1', '91abf52fe5033bd419ffe2842ebe7af9')
 
     depends_on('lua@5.2:')
-    depends_on('lua-luaposix')
-    depends_on('lua-luafilesystem')
+    depends_on('lua-luaposix', type=nolink)
+    depends_on('lua-luafilesystem', type=nolink)
 
     parallel = False
 

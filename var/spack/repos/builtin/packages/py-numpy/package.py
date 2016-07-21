@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyNumpy(Package):
     """NumPy is the fundamental package for scientific computing with Python.
     It contains among other things: a powerful N-dimensional array object,
@@ -38,12 +39,12 @@ class PyNumpy(Package):
     version('1.9.2',  'a1ed53432dbcd256398898d35bc8e645')
     version('1.9.1',  '78842b73560ec378142665e712ae4ad9')
 
-
     variant('blas',   default=True)
     variant('lapack', default=True)
 
     extends('python')
-    depends_on('py-nose')
+    depends_on('py-nose', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
@@ -63,6 +64,6 @@ class PyNumpy(Package):
                 f.write('[DEFAULT]\n')
                 f.write('libraries=%s\n'    % ','.join(libraries))
                 f.write('library_dirs=%s\n' % ':'.join(library_dirs))
+                f.write('rpath=%s\n' % ':'.join(library_dirs))
 
         python('setup.py', 'install', '--prefix=%s' % prefix)
-

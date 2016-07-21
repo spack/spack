@@ -183,7 +183,7 @@ To uninstall a package and every package that depends on it, you may give the
 
    spack uninstall --dependents mpich
 
-will display a list of all the packages that depends on `mpich` and, upon confirmation,
+will display a list of all the packages that depend on `mpich` and, upon confirmation,
 will uninstall them in the right order.
 
 A line like
@@ -543,11 +543,12 @@ More formally, a spec consists of the following pieces:
 * ``+`` or ``-`` or ``~`` Optional variant specifiers (``+debug``,
   ``-qt``, or ``~qt``) for boolean variants
 * ``name=<value>`` Optional variant specifiers that are not restricted to
-boolean variants
+  boolean variants
 * ``name=<value>`` Optional compiler flag specifiers. Valid flag names are
-``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
+  ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
 * ``target=<value> os=<value>`` Optional architecture specifier 
-(``target=haswell os=CNL10``) * ``^`` Dependency specs (``^callpath@1.1``)
+  (``target=haswell os=CNL10``)
+* ``^`` Dependency specs (``^callpath@1.1``)
 
 There are two things to notice here.  The first is that specs are
 recursively defined.  That is, each dependency after ``^`` is a spec
@@ -1864,6 +1865,10 @@ As opposed to an explicit path to the compiler executable. This allows Spack
 to call the Cray compiler wrappers during build time. 
 
 For more on compiler configuration, check out :ref:`compiler-config`.
+
+Spack sets the default Cray link type to dynamic, to better match other
+other platforms. Individual packages can enable static linking (which is the
+default outside of Spack on cray systems) using the -static flag.
 
 Setting defaults and using Cray modules
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

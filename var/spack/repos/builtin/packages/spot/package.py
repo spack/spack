@@ -32,7 +32,7 @@ class Spot(Package):
 
     version('1.99.3', 'd53adcb2d0fe7c69f45d4e595a58254e')
 
-    #depends_on("gcc@4.8:")
+    #depends_on("gcc@4.8:", type='build')
     depends_on("python@3.2:")
 
     def install(self, spec, prefix):

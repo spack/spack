@@ -34,6 +34,8 @@ class LlvmLld(Package):
 
     version('3.4', '3b6a17e58c8416c869c14dd37682f78e')
 
+    depends_on('cmake', type='build')
+
     def install(self, spec, prefix):
         env['CXXFLAGS'] = self.compier.cxx11_flag
 

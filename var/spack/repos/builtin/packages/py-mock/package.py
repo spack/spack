@@ -35,8 +35,8 @@ class PyMock(Package):
     version('1.3.0', '73ee8a4afb3ff4da1b4afa287f39fdeb')
 
     extends('python')
-    depends_on('py-pbr')
-    depends_on('py-setuptools@17.1:')
+    depends_on('py-pbr', type=nolink)
+    depends_on('py-setuptools@17.1:', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

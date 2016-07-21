@@ -18,7 +18,7 @@ if [[ ! $flake8 ]]; then
 fi
 
 # Check if changed files are flake8 conformant [framework]
-changed=$(git diff --name-only develop... | grep '.py$')
+changed=$(git diff --name-only --find-renames develop... | grep '.py$')
 
 # Add approved style exemptions to the changed packages.
 for file in $changed; do
@@ -26,6 +26,7 @@ for file in $changed; do
         cp "$file" "$file~"
 
         # Exempt lines with urls and descriptions from overlong line errors.
+        perl -i -pe 's/^(\s*homepage\s*=.*)$/\1  # NOQA: ignore=E501/' $file
         perl -i -pe 's/^(\s*url\s*=.*)$/\1  # NOQA: ignore=E501/' $file
         perl -i -pe 's/^(\s*version\(.*\).*)$/\1  # NOQA: ignore=E501/' $file
         perl -i -pe 's/^(\s*variant\(.*\).*)$/\1  # NOQA: ignore=E501/' $file

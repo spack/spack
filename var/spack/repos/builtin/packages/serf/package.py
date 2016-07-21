@@ -36,7 +36,7 @@ class Serf(Package):
 
     depends_on('apr')
     depends_on('apr-util')
-    depends_on('scons')
+    depends_on('scons', type='build')
     depends_on('expat')
     depends_on('openssl')
     depends_on('zlib')

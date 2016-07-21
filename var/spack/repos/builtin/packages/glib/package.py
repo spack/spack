@@ -38,8 +38,8 @@ class Glib(Package):
 
     depends_on("libffi")
     depends_on("zlib")
-    depends_on("pkg-config")
-    depends_on('gettext', sys.platform == 'darwin')
+    depends_on("pkg-config", type='build')
+    depends_on('gettext', when=sys.platform == 'darwin')
 
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch')

@@ -37,7 +37,6 @@ import os
 import re
 import textwrap
 import time
-import glob
 import string
 
 import llnl.util.tty as tty
@@ -62,10 +61,10 @@ from llnl.util.tty.log import log_output
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
-from spack.util.executable import ProcessError, Executable, which
+from spack.util.executable import ProcessError, which
 from spack.version import *
 from spack import directory_layout
-from urlparse import urlparse
+
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -410,7 +409,6 @@ class Package(object):
         """Return the directory where the package.py file lives."""
         return os.path.dirname(self.module.__file__)
 
-
     @property
     def global_license_dir(self):
         """Returns the directory where global license files for all
@@ -565,6 +563,11 @@ class Package(object):
     def fetcher(self, f):
         self._fetcher = f
 
+    def dependencies_of_type(self, *deptypes):
+        """Get subset of the dependencies with certain types."""
+        return dict((name, conds) for name, conds in self.dependencies.items()
+                    if any(d in self._deptypes[name] for d in deptypes))
+
     @property
     def extendee_spec(self):
         """
@@ -577,7 +580,7 @@ class Package(object):
         name = next(iter(self.extendees))
 
         # If the extendee is in the spec's deps already, return that.
-        for dep in self.spec.traverse():
+        for dep in self.spec.traverse(deptypes=('link', 'run')):
             if name == dep.name:
                 return dep
 
@@ -642,12 +645,13 @@ class Package(object):
             yield self
 
         for name in sorted(self.dependencies.keys()):
-            spec = self.dependencies[name]
+            dep_spec = self.get_dependency(name)
+            spec = dep_spec.spec
 
-            # currently, we do not descend into virtual dependencies, as this
+            # Currently, we do not descend into virtual dependencies, as this
             # makes doing a sensible traversal much harder.  We just assume
             # that ANY of the virtual deps will work, which might not be true
-            # (due to conflicts or unsatisfiable specs).  For now this is ok
+            # (due to conflicts or unsatisfiable specs).  For now this is ok,
             # but we might want to reinvestigate if we start using a lot of
             # complicated virtual dependencies
             # TODO: reinvestigate this.
@@ -685,7 +689,9 @@ class Package(object):
         for spec in spack.installed_db.query():
             if self.name == spec.name:
                 continue
-            for dep in spec.traverse():
+            # XXX(deptype): Should build dependencies not count here?
+            # for dep in spec.traverse(deptype=('run')):
+            for dep in spec.traverse(deptype=spack.alldeps):
                 if self.spec == dep:
                     dependents.append(spec)
         return dependents
@@ -696,13 +702,13 @@ class Package(object):
         return self.spec.prefix
 
     @property
-    #TODO: Change this to architecture
+    # TODO: Change this to architecture
     def compiler(self):
         """Get the spack.compiler.Compiler object used to build this package"""
         if not self.spec.concrete:
             raise ValueError("Can only get a compiler for a concrete package.")
         return spack.compilers.compiler_for_spec(self.spec.compiler,
-                self.spec.architecture)
+                                                 self.spec.architecture)
 
     def url_version(self, version):
         """
@@ -757,7 +763,6 @@ class Package(object):
             self.stage.check()
 
         self.stage.cache_local()
-
 
     def do_stage(self, mirror_only=False):
         """Unpacks the fetched tarball, then changes into the expanded tarball
@@ -876,6 +881,7 @@ class Package(object):
         return resource_stage_folder
 
     install_phases = set(['configure', 'build', 'install', 'provenance'])
+
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
@@ -887,7 +893,7 @@ class Package(object):
                    fake=False,
                    explicit=False,
                    dirty=False,
-                   install_phases = install_phases):
+                   install_phases=install_phases):
         """Called by commands to install a package and its dependencies.
 
         Package implementations should override install() to describe
@@ -908,7 +914,8 @@ class Package(object):
         run_tests   -- Runn tests within the package's install()
         """
         if not self.spec.concrete:
-            raise ValueError("Can only install concrete packages.")
+            raise ValueError("Can only install concrete packages: %s."
+                             % self.spec.name)
 
         # No installation needed if package is external
         if self.spec.external:
@@ -917,7 +924,8 @@ class Package(object):
             return
 
         # Ensure package is not already installed
-        if 'install' in install_phases and spack.install_layout.check_installed(self.spec):
+        layout = spack.install_layout
+        if 'install' in install_phases and layout.check_installed(self.spec):
             tty.msg("%s is already installed in %s" % (self.name, self.prefix))
             rec = spack.installed_db.get_record(self.spec)
             if (not rec.explicit) and explicit:
@@ -998,20 +1006,17 @@ class Package(object):
                     if 'install' in self.install_phases:
                         self.sanity_check_prefix()
 
-
                     # Copy provenance into the install directory on success
                     if 'provenance' in self.install_phases:
-                        log_install_path = spack.install_layout.build_log_path(
-                            self.spec)
-                        env_install_path = spack.install_layout.build_env_path(
-                            self.spec)
-                        packages_dir = spack.install_layout.build_packages_path(
-                            self.spec)
+                        log_install_path = layout.build_log_path(self.spec)
+                        env_install_path = layout.build_env_path(self.spec)
+                        packages_dir = layout.build_packages_path(self.spec)
 
                         # Remove first if we're overwriting another build
                         # (can happen with spack setup)
                         try:
-                            shutil.rmtree(packages_dir)   # log_install_path and env_install_path are inside this
+                            # log_install_path and env_install_path are here
+                            shutil.rmtree(packages_dir)
                         except:
                             pass
 
@@ -1038,7 +1043,7 @@ class Package(object):
         except directory_layout.InstallDirectoryAlreadyExistsError:
             if 'install' in install_phases:
                 # Abort install if install directory exists.
-                # But do NOT remove it (you'd be overwriting someon else's stuff)
+                # But do NOT remove it (you'd be overwriting someone's data)
                 tty.warn("Keeping existing install prefix in place.")
                 raise
             else:
@@ -1089,7 +1094,7 @@ class Package(object):
 
     def do_install_dependencies(self, **kwargs):
         # Pass along paths of dependencies here
-        for dep in self.spec.dependencies.values():
+        for dep in self.spec.dependencies():
             dep.package.do_install(**kwargs)
 
     @property
@@ -1270,7 +1275,7 @@ class Package(object):
                                   (self.name, self.extendee.name))
 
     def do_activate(self, force=False):
-        """Called on an etension to invoke the extendee's activate method.
+        """Called on an extension to invoke the extendee's activate method.
 
         Commands should call this routine, and should not call
         activate() directly.
@@ -1282,7 +1287,7 @@ class Package(object):
 
         # Activate any package dependencies that are also extensions.
         if not force:
-            for spec in self.spec.traverse(root=False):
+            for spec in self.spec.traverse(root=False, deptype='run'):
                 if spec.package.extends(self.extendee_spec):
                     if not spec.package.activated:
                         spec.package.do_activate(force=force)
@@ -1328,7 +1333,7 @@ class Package(object):
             for name, aspec in activated.items():
                 if aspec == self.spec:
                     continue
-                for dep in aspec.traverse():
+                for dep in aspec.traverse(deptype='run'):
                     if self.spec == dep:
                         raise ActivationError(
                             "Cannot deactivate %s because %s is activated and depends on it."  # NOQA: ignore=E501
@@ -1414,9 +1419,10 @@ class Package(object):
     def rpath(self):
         """Get the rpath this package links with, as a list of paths."""
         rpaths = [self.prefix.lib, self.prefix.lib64]
-        rpaths.extend(d.prefix.lib for d in self.spec.traverse(root=False)
+        deps = self.spec.dependencies(deptype='link')
+        rpaths.extend(d.prefix.lib for d in deps
                       if os.path.isdir(d.prefix.lib))
-        rpaths.extend(d.prefix.lib64 for d in self.spec.traverse(root=False)
+        rpaths.extend(d.prefix.lib64 for d in deps
                       if os.path.isdir(d.prefix.lib64))
         return rpaths
 
@@ -1432,6 +1438,13 @@ def install_dependency_symlinks(pkg, spec, prefix):
     """Execute a dummy install and flatten dependencies"""
     flatten_dependencies(spec, prefix)
 
+
+def use_cray_compiler_names():
+    """Compiler names for builds that rely on cray compiler names."""
+    os.environ['CC'] = 'cc'
+    os.environ['CXX'] = 'CC'
+    os.environ['FC'] = 'ftn'
+    os.environ['F77'] = 'ftn'
 
 def flatten_dependencies(spec, flat_dir):
     """Make each dependency of spec present in dir via symlink."""
@@ -1529,24 +1542,29 @@ def _hms(seconds):
         parts.append("%.2fs" % s)
     return ' '.join(parts)
 
+
 class StagedPackage(Package):
     """A Package subclass where the install() is split up into stages."""
 
     def install_setup(self):
-        """Creates an spack_setup.py script to configure the package later if we like."""
-        raise InstallError("Package %s provides no install_setup() method!" % self.name)
+        """Creates a spack_setup.py script to configure the package later."""
+        raise InstallError(
+            "Package %s provides no install_setup() method!" % self.name)
 
     def install_configure(self):
         """Runs the configure process."""
-        raise InstallError("Package %s provides no install_configure() method!" % self.name)
+        raise InstallError(
+            "Package %s provides no install_configure() method!" % self.name)
 
     def install_build(self):
         """Runs the build process."""
-        raise InstallError("Package %s provides no install_build() method!" % self.name)
+        raise InstallError(
+            "Package %s provides no install_build() method!" % self.name)
 
     def install_install(self):
         """Runs the install process."""
-        raise InstallError("Package %s provides no install_install() method!" % self.name)
+        raise InstallError(
+            "Package %s provides no install_install() method!" % self.name)
 
     def install(self, spec, prefix):
         if 'setup' in self.install_phases:
@@ -1563,8 +1581,9 @@ class StagedPackage(Package):
         else:
             # Create a dummy file so the build doesn't fail.
             # That way, the module file will also be created.
-            with open(os.path.join(prefix, 'dummy'), 'w') as fout:
+            with open(os.path.join(prefix, 'dummy'), 'w'):
                 pass
+
 
 # stackoverflow.com/questions/12791997/how-do-you-do-a-simple-chmod-x-from-within-python
 def make_executable(path):
@@ -1573,9 +1592,7 @@ def make_executable(path):
     os.chmod(path, mode)
 
 
-
 class CMakePackage(StagedPackage):
-
     def make_make(self):
         import multiprocessing
         # number of jobs spack will to build with.
@@ -1589,37 +1606,41 @@ class CMakePackage(StagedPackage):
         return make
 
     def configure_args(self):
-        """Returns package-specific arguments to be provided to the configure command."""
+        """Returns package-specific arguments to be provided to
+           the configure command.
+        """
         return list()
 
     def configure_env(self):
-        """Returns package-specific environment under which the configure command should be run."""
+        """Returns package-specific environment under which the
+           configure command should be run.
+        """
         return dict()
 
-    def spack_transitive_include_path(self):
+    def transitive_inc_path(self):
         return ';'.join(
             os.path.join(dep, 'include')
             for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
         )
 
     def install_setup(self):
-        cmd = [str(which('cmake'))] + \
-            spack.build_environment.get_std_cmake_args(self) + \
-            ['-DCMAKE_INSTALL_PREFIX=%s' % os.environ['SPACK_PREFIX'],
-            '-DCMAKE_C_COMPILER=%s' % os.environ['SPACK_CC'],
-            '-DCMAKE_CXX_COMPILER=%s' % os.environ['SPACK_CXX'],
-            '-DCMAKE_Fortran_COMPILER=%s' % os.environ['SPACK_FC']] + \
-            self.configure_args()
+        cmd = [str(which('cmake'))]
+        cmd += spack.build_environment.get_std_cmake_args(self)
+        cmd += ['-DCMAKE_INSTALL_PREFIX=%s' % os.environ['SPACK_PREFIX'],
+                '-DCMAKE_C_COMPILER=%s' % os.environ['SPACK_CC'],
+                '-DCMAKE_CXX_COMPILER=%s' % os.environ['SPACK_CXX'],
+                '-DCMAKE_Fortran_COMPILER=%s' % os.environ['SPACK_FC']]
+        cmd += self.configure_args()
 
-        env = dict()
-        env['PATH'] = os.environ['PATH']
-        env['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.spack_transitive_include_path()
-        env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
+        env = {
+            'PATH': os.environ['PATH'],
+            'SPACK_TRANSITIVE_INCLUDE_PATH': self.transitive_inc_path(),
+            'CMAKE_PREFIX_PATH': os.environ['CMAKE_PREFIX_PATH']
+        }
 
         setup_fname = 'spconfig.py'
         with open(setup_fname, 'w') as fout:
-            fout.write(\
-r"""#!%s
+            fout.write(r"""#!%s
 #
 
 import sys
@@ -1627,7 +1648,7 @@ import os
 import subprocess
 
 def cmdlist(str):
-	return list(x.strip().replace("'",'') for x in str.split('\n') if x)
+    return list(x.strip().replace("'",'') for x in str.split('\n') if x)
 env = dict(os.environ)
 """ % sys.executable)
 
@@ -1635,34 +1656,39 @@ env = dict(os.environ)
             for name in env_vars:
                 val = env[name]
                 if string.find(name, 'PATH') < 0:
-                    fout.write('env[%s] = %s\n' % (repr(name),repr(val)))
+                    fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
                 else:
                     if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
                         sep = ';'
                     else:
                         sep = ':'
 
-                    fout.write('env[%s] = "%s".join(cmdlist("""\n' % (repr(name),sep))
+                    fout.write('env[%s] = "%s".join(cmdlist("""\n'
+                               % (repr(name), sep))
                     for part in string.split(val, sep):
                         fout.write('    %s\n' % part)
                     fout.write('"""))\n')
 
-            fout.write("env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = env['SPACK_TRANSITIVE_INCLUDE_PATH']   # Deprecated\n")
+            fout.write("env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = "
+                       "env['SPACK_TRANSITIVE_INCLUDE_PATH']   # Deprecated\n")
             fout.write('\ncmd = cmdlist("""\n')
             fout.write('%s\n' % cmd[0])
             for arg in cmd[1:]:
                 fout.write('    %s\n' % arg)
             fout.write('""") + sys.argv[1:]\n')
-            fout.write('\nproc = subprocess.Popen(cmd, env=env)\nproc.wait()\n')
+            fout.write('\nproc = subprocess.Popen(cmd, env=env)\n')
+            fout.write('proc.wait()\n')
         make_executable(setup_fname)
-
 
     def install_configure(self):
         cmake = which('cmake')
         with working_dir(self.build_directory, create=True):
-            os.environ.update(self.configure_env())
-            os.environ['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.spack_transitive_include_path()
-            options = self.configure_args() + spack.build_environment.get_std_cmake_args(self)
+            env = os.environ
+            env.update(self.configure_env())
+            env['SPACK_TRANSITIVE_INCLUDE_PATH'] = self.transitive_inc_path()
+
+            options = self.configure_args()
+            options += spack.build_environment.get_std_cmake_args(self)
             cmake(self.source_directory, *options)
 
     def install_build(self):

@@ -44,8 +44,8 @@ class Mesa(Package):
 
     # mesa 10.x
     # depends_on("py-mako")
-    # depends_on("flex")
-    # depends_on("bison")
+    # depends_on("flex", type='build')
+    # depends_on("bison", type='build')
     # depends_on("dri2proto")
     # depends_on("libxcb")
     # depends_on("libxshmfence")
