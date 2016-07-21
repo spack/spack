@@ -76,6 +76,7 @@ class Mvapich2(Package):
     ##########
 
     # FIXME : CUDA support is missing
+    depends_on('libpciaccess')
 
     def url_for_version(self, version):
         base_url = "http://mvapich.cse.ohio-state.edu/download"
