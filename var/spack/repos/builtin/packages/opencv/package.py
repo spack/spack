@@ -102,6 +102,7 @@ class Opencv(Package):
                 'ON' if '+java' in spec else 'OFF')),
         ])
 
+        # Media I/O
         zlib = spec['zlib']
         cmake_options.extend([
             '-DZLIB_LIBRARY_{0}:FILEPATH={1}'.format((
@@ -146,6 +147,7 @@ class Opencv(Package):
             '-DJASPER_INCLUDE_DIR:PATH={0}'.format(jasper.prefix.include)
         ])
 
+        # GUI
         if '+gtk' not in spec:
             cmake_options.extend([
                 '-DWITH_GTK:BOOL=OFF',
@@ -162,6 +164,7 @@ class Opencv(Package):
                 '-DWITH_GTK_2_X:BOOL=ON'
             ])
 
+        # Python
         if '+python' in spec:
             python = spec['python']
 
