@@ -25,6 +25,7 @@
 from spack import *
 from glob import glob
 
+
 class Lmod(Package):
     """
     Lmod is a Lua based module system that easily handles the MODULEPATH
@@ -55,6 +56,7 @@ class Lmod(Package):
             version=self.version), separator=';')
 
     patch('fix_tclsh_paths.patch')
+
     def patch(self):
         """The tcl scripts should use the tclsh that was discovered
            by the configure script.  Touch up their #! lines so that the
