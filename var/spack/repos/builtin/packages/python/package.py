@@ -101,32 +101,13 @@ class Python(Package):
         # Rest of install is pretty standard except setup.py needs to
         # be able to read the CPPFLAGS and LDFLAGS as it scans for the
         # library and headers to build
-        include_dirs = [
-            spec['openssl'].prefix.include,  spec['bzip2'].prefix.include,
-            spec['readline'].prefix.include, spec['ncurses'].prefix.include,
-            spec['sqlite'].prefix.include,   spec['zlib'].prefix.include
-        ]
-
-        library_dirs = [
-            spec['openssl'].prefix.lib,  spec['bzip2'].prefix.lib,
-            spec['readline'].prefix.lib, spec['ncurses'].prefix.lib,
-            spec['sqlite'].prefix.lib,   spec['zlib'].prefix.lib
-        ]
-
-        if '+tk' in spec:
-            include_dirs.extend([
-                spec['tk'].prefix.include, spec['tcl'].prefix.include
-            ])
-            library_dirs.extend([
-                spec['tk'].prefix.lib, spec['tcl'].prefix.lib
-            ])
-
+        dep_pfxs = [dspec.prefix for dspec in spec.dependencies('link')]
         config_args = [
-            "--prefix={0}".format(prefix),
-            "--with-threads",
-            "--enable-shared",
-            "CPPFLAGS=-I{0}".format(" -I".join(include_dirs)),
-            "LDFLAGS=-L{0}".format(" -L".join(library_dirs))
+            '--prefix={0}'.format(prefix),
+            '--with-threads',
+            '--enable-shared',
+            'CPPFLAGS=-I{0}'.format(' -I'.join(dp.include for dp in dep_pfxs)),
+            'LDFLAGS=-L{0}'.format(' -L'.join(dp.lib for dp in dep_pfxs)),
         ]
 
         if '+ucs4' in spec:
@@ -142,9 +123,8 @@ class Python(Package):
             config_args.append('--without-ensurepip')
 
         configure(*config_args)
-
         make()
-        make("install")
+        make('install')
 
         self.filter_compilers(spec, prefix)
 
