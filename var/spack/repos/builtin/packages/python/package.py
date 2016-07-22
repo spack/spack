@@ -27,6 +27,7 @@ import re
 from contextlib import closing
 
 import spack
+import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
 from spack import *
 from spack.util.environment import *
@@ -72,9 +73,29 @@ class Python(Package):
     depends_on("tk",  when="+tk")
     depends_on("tcl", when="+tk")
 
+    @when('@2.7,3.4:')
+    def patch(self):
+        # NOTE: Python's default installation procedure makes it possible for a
+        # user's local configurations to change the Spack installation.  In
+        # order to prevent this behavior for a full installation, we must
+        # modify the installation script so that it ignores user files.
+        ff = FileFilter('Makefile.pre.in')
+        ff.filter(
+            r'^(.*)setup\.py(.*)((build)|(install))(.*)$',
+            r'\1setup.py\2 --no-user-cfg \3\6'
+        )
+
     def install(self, spec, prefix):
+        # TODO: The '--no-user-cfg' option for Python installation is only in
+        # Python v2.7 and v3.4+ (see https://bugs.python.org/issue1180) and
+        # adding support for ignoring user configuration will require
+        # significant changes to this package for other Python versions.
+        if not spec.satisfies('@2.7,3.4:'):
+            tty.warn(('Python v{0} may not install properly if Python '
+                      'user configurations are present.').format(self.version))
+
         # Need this to allow python build to find the Python installation.
-        env['PYTHONHOME'] = prefix
+        env['PYTHONHOME'], env['PYTHONPATH'] = prefix, prefix
         env['MACOSX_DEPLOYMENT_TARGET'] = '10.6'
 
         # Rest of install is pretty standard except setup.py needs to
@@ -193,6 +214,8 @@ class Python(Package):
     def setup_dependent_environment(self, spack_env, run_env, extension_spec):
         """Set PYTHONPATH to include site-packages dir for the
         extension and any other python extensions it depends on."""
+        pythonhome = self.prefix
+        spack_env.set('PYTHONHOME', pythonhome)
 
         python_paths = []
         for d in extension_spec.traverse(deptype=nolink, deptype_query='run'):
@@ -214,15 +237,14 @@ class Python(Package):
 
         In most cases, extensions will only need to have one line::
 
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))"""
+        setup_py('install', '--prefix={0}'.format(prefix))"""
+        python_path = join_path(
+            self.spec.prefix.bin,
+            'python{0}'.format('3' if self.spec.satisfies('@3') else '')
+        )
 
-        # Python extension builds can have a global python executable function
-        if Version("3.0.0") <= self.version < Version("4.0.0"):
-            module.python = Executable(join_path(self.spec.prefix.bin,
-                                                 'python3'))
-        else:
-            module.python = Executable(join_path(self.spec.prefix.bin,
-                                                 'python'))
+        module.python = Executable(python_path)
+        module.setup_py = Executable(python_path + ' setup.py --no-user-cfg')
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
         module.python_lib_dir     = join_path(ext_spec.prefix,
