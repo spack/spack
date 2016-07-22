@@ -96,8 +96,7 @@ class ${class_name}(Package):
 
 ${versions}
 
-    # FIXME: Add additional dependencies if required.
-    ${dependencies}
+${dependencies}
 
     def install(self, spec, prefix):
 ${install}
@@ -105,13 +104,39 @@ ${install}
 
 # Build dependencies and extensions
 dependencies_dict = {
-    'autotools': "# depends_on('foo')",
-    'cmake':     "depends_on('cmake')",
-    'scons':     "depends_on('scons')",
-    'python':    "extends('python')",
-    'R':         "extends('R')",
-    'octave':    "extends('octave')",
-    'unknown':   "# depends_on('foo')"
+    'autotools': """\
+    # FIXME: Add dependencies if required.
+    # depends_on('foo')""",
+
+    'cmake': """\
+    # FIXME: Add additional dependencies if required.
+    depends_on('cmake', type='build')""",
+
+    'scons': """\
+    # FIXME: Add additional dependencies if required.
+    depends_on('scons', type='build')""",
+
+    'python': """\
+    extends('python')
+
+    # FIXME: Add additional dependencies if required.
+    # depends_on('py-foo', type=nolink)""",
+
+    'R': """\
+    extends('R')
+
+    # FIXME: Add additional dependencies if required.
+    # depends_on('r-foo', type=nolink)""",
+
+    'octave': """\
+    extends('octave')
+
+    # FIXME: Add additional dependencies if required.
+    # depends_on('octave-foo', type=nolink)""",
+
+    'unknown': """\
+    # FIXME: Add dependencies if required.
+    # depends_on('foo')"""
 }
 
 # Default installation instructions
