@@ -44,7 +44,7 @@ class RRpostgresql(Package):
 
     extends('R')
 
-    depends_on('r-DBI')
+    depends_on('r-dbi')
     depends_on('postgresql')
 
     def install(self, spec, prefix):

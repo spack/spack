@@ -37,7 +37,7 @@ class RXlsx(Package):
 
     extends('R')
 
-    depends_on('r-rJava')
+    depends_on('r-rjava')
     depends_on('r-xlsxjars')
 
     def install(self, spec, prefix):

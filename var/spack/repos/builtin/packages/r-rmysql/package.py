@@ -36,7 +36,7 @@ class RRmysql(Package):
 
     extends('R')
 
-    depends_on('r-DBI')
+    depends_on('r-dbi')
     depends_on('mariadb')
 
     def install(self, spec, prefix):
