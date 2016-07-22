@@ -32,11 +32,12 @@ class RXlconnectjars(Package):
     url      = "https://cran.r-project.org/src/contrib/XLConnectJars_0.2-9.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/XLConnectJars"
 
-    version('0.2-9', 'e6d6b1acfede26acaa616ee421bd30fb')
+    version('0.2-9', 'e6d6b1acfede26acaa616ee421bd30fb',
+            url='https://cran.r-project.org/src/contrib/Archive/XLConnectJars/XLConnectJars_0.2-9.tar.gz')
 
     extends('R')
 
-    depends_on('r-rJava')
+    depends_on('r-rjava')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
