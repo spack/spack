@@ -26,6 +26,8 @@ class Perl(Package):
     # things cleanly.
     variant('cpanm', default=True,
             description='Having cpanm in core simplifies adding modules.')
+    variant('cpanm_version', default='1.7042',
+            description='Version of cpanm to install into core if +cpanm.')
 
     def install(self, spec, prefix):
         configure = Executable('./Configure')
@@ -35,8 +37,9 @@ class Perl(Package):
         make("install")
 
         if '+cpanm' in spec:
-            perl_exe = join_path(prefix, 'bin', 'perl')
+            perl_exe = join_path(prefix.bin, 'perl')
             perl = Executable(perl_exe)
             cpanm_installer = join_path(self.package_dir, 'cpanm-installer.pl')
-            cpanm_package_spec = 'App::cpanminus' + '@' + '1.7042'
+            cpanm_version = spec.variants['cpanm_version'].value
+            cpanm_package_spec = 'App::cpanminus' + '@' + cpanm_version
             perl(cpanm_installer, cpanm_package_spec)
