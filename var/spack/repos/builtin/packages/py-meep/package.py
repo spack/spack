@@ -37,9 +37,9 @@ class PyMeep(Package):
     variant('mpi', default=True, description='Enable MPI support')
 
     extends('python')
-    depends_on('py-numpy')
-    depends_on('py-scipy')
-    depends_on('py-matplotlib')
+    depends_on('py-numpy', type=nolink)
+    depends_on('py-scipy', type=nolink)
+    depends_on('py-matplotlib', type=nolink)
 
     depends_on('mpi', when='+mpi')
     depends_on('meep~mpi', when='~mpi')
