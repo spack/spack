@@ -22,10 +22,9 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import StringIO
 import collections
 from contextlib import contextmanager
-
-import StringIO
 
 FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
 
@@ -45,7 +44,6 @@ def mock_open(filename, mode):
         handle.close()
 
 import os
-import itertools
 import unittest
 
 import spack
@@ -88,10 +86,6 @@ class MockSpec(object):
         for _, spec in self._dependencies.items():
             yield spec.spec
         yield self
-        #from_iterable = itertools.chain.from_iterable
-        #allDeps = from_iterable(i.traverse()
-        #                        for i in self.dependencies())
-        #return set(itertools.chain([self], allDeps))
 
     def dag_hash(self):
         return self.hash
