@@ -55,7 +55,7 @@ class Git(Package):
     depends_on("zlib")
 
     # Use system perl for now.
-    # depends_on("perl")
+    depends_on("perl")
     # depends_on("pcre")
 
     def install(self, spec, prefix):
@@ -64,8 +64,8 @@ class Git(Package):
             "--without-pcre",
             "--with-openssl=%s" % spec['openssl'].prefix,
             "--with-zlib=%s" % spec['zlib'].prefix,
-            "--with-curl=%s" % spec['curl'].prefix,
-            "--with-expat=%s" % spec['expat'].prefix
+            "--with-expat=%s" % spec['expat'].prefix,
+            "--with-perl=%s" % join_path(spec['perl'].prefix.bin, 'perl'),
         ]
 
         which('autoreconf')('-i')
