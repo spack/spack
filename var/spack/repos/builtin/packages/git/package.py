@@ -53,10 +53,8 @@ class Git(Package):
     depends_on("expat")
     depends_on("gettext")
     depends_on("zlib")
-
-    # Use system perl for now.
+    depends_on("pcre")
     depends_on("perl")
-    # depends_on("pcre")
 
     def install(self, spec, prefix):
         configure_args = [
