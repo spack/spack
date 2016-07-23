@@ -37,6 +37,7 @@ import spack
 import spack.config
 import spack.fetch_strategy as fs
 import spack.error
+from spack.version import Version
 
 STAGE_PREFIX = 'spack-stage-'
 
@@ -305,6 +306,18 @@ class Stage(object):
             for url in urls:
                 fetchers.insert(0, fs.URLFetchStrategy(url, digest))
             fetchers.insert(0, spack.cache.fetcher(self.mirror_path, digest))
+
+            # Look for the archive in list_url
+            archive_version = spack.url.parse_version(self.default_fetcher.url)
+            package_name = os.path.dirname(self.mirror_path)
+            pkg = spack.repo.get(package_name)
+            versions = pkg.fetch_remote_versions()
+            try:
+                url_from_list = versions[Version(archive_version)]
+                fetchers.append(fs.URLFetchStrategy(url_from_list, digest))
+            except KeyError:
+                tty.msg("Can not find version %s in url_list" %
+                        archive_version)
 
         for fetcher in fetchers:
             try:
