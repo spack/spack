@@ -144,7 +144,6 @@ class Stage(object):
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep
 
-
     def __enter__(self):
         """
         Entering a stage context will create the stage directory
@@ -154,7 +153,6 @@ class Stage(object):
         """
         self.create()
         return self
-
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
@@ -173,7 +171,6 @@ class Stage(object):
         # Delete when there are no exceptions, unless asked to keep.
         if exc_type is None and not self.keep:
             self.destroy()
-
 
     def _need_to_create_path(self):
         """Makes sure nothing weird has happened since the last time we
@@ -334,7 +331,6 @@ class Stage(object):
             self.fetcher = self.default_fetcher
             raise fs.FetchError(errMessage, None)
 
-
     def check(self):
         """Check the downloaded archive against a checksum digest.
            No-op if this stage checks code out of a repository."""
@@ -348,10 +344,8 @@ class Stage(object):
         else:
             self.fetcher.check()
 
-
     def cache_local(self):
         spack.cache.store(self.fetcher, self.mirror_path)
-
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -509,8 +503,11 @@ class DIYStage(object):
             raise ChdirError("Setup failed: no such directory: " + self.path)
 
     # DIY stages do nothing as context managers.
-    def __enter__(self): pass
-    def __exit__(self, exc_type, exc_val, exc_tb): pass
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
 
     def chdir_to_source(self):
         self.chdir()
