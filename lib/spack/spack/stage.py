@@ -308,7 +308,7 @@ class Stage(object):
             archive_version = spack.url.parse_version(self.default_fetcher.url)
             package_name = os.path.dirname(self.mirror_path)
             pkg = spack.repo.get(package_name)
-            if pkg.list_url is not None:
+            if pkg.list_url is not None and pkg.url is not None:
                 versions = pkg.fetch_remote_versions()
                 try:
                     url_from_list = versions[Version(archive_version)]
