@@ -40,7 +40,8 @@ class RLubridate(Package):
     version('1.5.6', 'a5dc44817548ee219d26a10bae92e611')
 
     extends('R')
-    depends_on('r-stringr')
+
+    depends_on('r-stringr', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

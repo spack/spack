@@ -48,8 +48,8 @@ class RRcppeigen(Package):
 
     extends('R')
 
-    depends_on('r-matrix')
-    depends_on('r-rcpp')
+    depends_on('r-matrix', type=nolink)
+    depends_on('r-rcpp', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

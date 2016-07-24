@@ -40,8 +40,8 @@ class RStringr(Package):
 
     extends('R')
 
-    depends_on('r-stringi')
-    depends_on('r-magrittr')
+    depends_on('r-stringi', type=nolink)
+    depends_on('r-magrittr', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

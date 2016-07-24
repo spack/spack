@@ -38,13 +38,13 @@ class RGgvis(Package):
 
     extends('R')
 
-    depends_on('r-assertthat')
-    depends_on('r-jsonlite')
-    depends_on('r-shiny')
-    depends_on('r-magrittr')
-    depends_on('r-dplyr')
-    depends_on('r-lazyeval')
-    depends_on('r-htmltools')
+    depends_on('r-assertthat', type=nolink)
+    depends_on('r-jsonlite', type=nolink)
+    depends_on('r-shiny', type=nolink)
+    depends_on('r-magrittr', type=nolink)
+    depends_on('r-dplyr', type=nolink)
+    depends_on('r-lazyeval', type=nolink)
+    depends_on('r-htmltools', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
