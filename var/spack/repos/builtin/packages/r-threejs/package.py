@@ -25,18 +25,22 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RThreejs(Package):
+    """Create interactive 3D scatter plots, network plots, and globes using the
+    'three.js' visualization library ("http://threejs.org")."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "http://bwlewis.github.io/rthreejs"
+    url      = "https://cran.r-project.org/src/contrib/threejs_0.2.2.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/threejs"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.2.2', '35c179b10813c5e4bd3e7827fae6627b')
 
     extends('R')
+
+    depends_on('r-htmlwidgets', type=nolink)
+    depends_on('r-base64enc', type=nolink)
+    depends_on('r-matrix', type=nolink)
+    depends_on('r-jsonlite', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

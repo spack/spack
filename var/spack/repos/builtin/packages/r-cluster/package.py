@@ -25,16 +25,16 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RCluster(Package):
+    """Methods for Cluster analysis. Much extended the original from Peter
+    Rousseeuw, Anja Struyf and Mia Hubert, based on Kaufman and Rousseeuw
+    (1990) "Finding Groups in Data"."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://cran.r-project.org/web/packages/cluster/index.html"
+    url      = "https://cran.r-project.org/src/contrib/cluster_2.0.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/cluster"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('2.0.4', 'bb4deceaafb1c42bb1278d5d0dc11e59')
 
     extends('R')
 

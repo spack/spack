@@ -25,16 +25,15 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RYaml(Package):
+    """This package implements the libyaml YAML 1.1 parser and emitter
+    (http://pyyaml.org/wiki/LibYAML) for R."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://cran.r-project.org/web/packages/yaml/index.html"
+    url      = "https://cran.r-project.org/src/contrib/yaml_2.1.13.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/yaml"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('2.1.13', 'f2203ea395adaff6bd09134666191d9a')
 
     extends('R')
 

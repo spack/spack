@@ -25,18 +25,25 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RInfluencer(Package):
+    """Provides functionality to compute various node centrality measures on
+    networks. Included are functions to compute betweenness centrality (by
+    utilizing Madduri and Bader's SNAP library), implementations of Burt's
+    constraint and effective network size (ENS) metrics, Borgatti's algorithm
+    to identify key players, and Valente's bridging metric. On Unix systems,
+    the betweenness, Key Players, and bridging implementations are parallelized
+    with OpenMP, which may run faster on systems which have OpenMP
+    configured."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://github.com/rcc-uchicago/influenceR"
+    url      = "https://cran.r-project.org/src/contrib/influenceR_0.1.0.tar.gz"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.1.0', '6c8b6decd78c341364b5811fb3050ba5')
 
     extends('R')
+
+    depends_on('r-igraph', type=nolink)
+    depends_on('r-matrix', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

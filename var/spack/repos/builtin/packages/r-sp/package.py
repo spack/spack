@@ -25,18 +25,21 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RSp(Package):
+    """Classes and methods for spatial data; the classes document where the
+    spatial location information resides, for 2D or 3D data. Utility functions
+    are provided, e.g. for plotting data as maps, spatial selection, as well as
+    methods for retrieving coordinates, for subsetting, print, summary, etc."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://github.com/edzer/sp/"
+    url      = "https://cran.r-project.org/src/contrib/sp_1.2-3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/sp"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('1.2-3', 'f0e24d993dec128642ee66b6b47b10c1')
 
     extends('R')
+
+    depends_on('r-lattice', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

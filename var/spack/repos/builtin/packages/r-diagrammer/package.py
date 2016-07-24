@@ -25,18 +25,24 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RDiagrammer(Package):
+    """Create graph diagrams and flowcharts using R."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://github.com/rich-iannone/DiagrammeR"
+    url      = "https://cran.r-project.org/src/contrib/DiagrammeR_0.8.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/DiagrammeR"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.8.4', '9ee295c744f5d4ba9a84289ca7bdaf1a')
 
     extends('R')
+
+    depends_on('r-htmlwidgets', type=nolink)
+    depends_on('r-igraph', type=nolink)
+    depends_on('r-influencer', type=nolink)
+    depends_on('r-rstudioapi@0.6:', type=nolink)
+    depends_on('r-stringr', type=nolink)
+    depends_on('r-visnetwork', type=nolink)
+    depends_on('r-scales', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

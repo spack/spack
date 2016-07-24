@@ -25,16 +25,14 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RRegistry(Package):
+    """Provides a generic infrastructure for creating and using registries."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://cran.r-project.org/web/packages/registry/index.html"
+    url      = "https://cran.r-project.org/src/contrib/registry_0.3.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/registry"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.3', '85345b334ec81eb3da6edcbb27c5f421')
 
     extends('R')
 

@@ -25,16 +25,15 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RIterators(Package):
+    """Support for iterators, which allow a programmer to traverse through all
+    the elements of a vector, list, or other collection of data."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://cran.r-project.org/web/packages/iterators/index.html"
+    url      = "https://cran.r-project.org/src/contrib/iterators_1.0.8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/iterators"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('1.0.8', '2ded7f82cddd8174f1ec98607946c6ee')
 
     extends('R')
 

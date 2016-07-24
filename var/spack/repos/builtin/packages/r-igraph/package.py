@@ -25,18 +25,25 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RIgraph(Package):
+    """Routines for simple graphs and network analysis. It can handle large
+    graphs very well and provides functions for generating random and regular
+    graphs, graph visualization, centrality methods and much more."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "http://igraph.org/"
+    url      = "https://cran.r-project.org/src/contrib/igraph_1.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/igraph"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('1.0.1', 'ea33495e49adf4a331e4ba60ba559065')
 
     extends('R')
+
+    depends_on('r-matrix', type=nolink)
+    depends_on('r-magrittr', type=nolink)
+    depends_on('r-nmf', type=nolink)
+    depends_on('r-irlba', type=nolink)
+    depends_on('gmp')
+    depends_on('libxml2')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

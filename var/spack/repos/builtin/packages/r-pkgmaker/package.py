@@ -25,18 +25,28 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RPkgmaker(Package):
+    """This package provides some low-level utilities to use for package
+    development. It currently provides managers for multiple package specific
+    options and registries, vignette, unit test and bibtex related utilities.
+    It serves as a base package for packages like NMF, RcppOctave, doRNG, and
+    as an incubator package for other general purposes utilities, that will
+    eventually be packaged separately. It is still under heavy development and
+    changes in the interface(s) are more than likely to happen."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://renozao.github.io/pkgmaker"
+    url      = "https://cran.r-project.org/src/contrib/pkgmaker_0.22.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/pkgmaker"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.22', '73a0c6d3e84c6dadf3de7582ef7e88a4')
 
     extends('R')
+
+    depends_on('r-registry', type=nolink)
+    depends_on('r-codetools', type=nolink)
+    depends_on('r-digest', type=nolink)
+    depends_on('r-stringr', type=nolink)
+    depends_on('r-xtable', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

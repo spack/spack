@@ -25,18 +25,21 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RXts(Package):
+    """Provide for uniform handling of R's different time-based data classes by
+    extending zoo, maximizing native format information preservation and
+    allowing for user level customization and extension, while simplifying
+    cross-class interoperability."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "http://r-forge.r-project.org/projects/xts/"
+    url      = "https://cran.r-project.org/src/contrib/xts_0.9-7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/xts"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.9-7', 'a232e94aebfa654653a7d88a0503537b')
 
     extends('R')
+
+    depends_on('r-zoo', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
