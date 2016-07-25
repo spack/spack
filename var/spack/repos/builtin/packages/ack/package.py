@@ -48,10 +48,6 @@ class Ack(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        # find the file named like ack-2.14-single-file in a version
-        # independent manner (there should be only one )and install it
-        # as `ack`.
-        for f in os.listdir('.'):
-            if re.match('ack-\d*\.\d*-single-file', f):
-                install(f, join_path(prefix.bin, "ack"))
-                set_executable(join_path(prefix.bin, "ack"))
+        ack = 'ack-{0}-single-file'.format(self.version)
+        install(ack, join_path(prefix.bin, "ack"))
+        set_executable(join_path(prefix.bin, "ack"))
