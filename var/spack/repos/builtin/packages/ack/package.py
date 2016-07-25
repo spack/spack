@@ -37,12 +37,15 @@ class Ack(Package):
 
     version('2.14', 'e74150a1609d28a70b450ef9cc2ed56b', expand=False)
 
-    # trust that there's a system perl for now, but perhaps someday we
-    # should:
-    # depends_on('perl')
+    depends_on('perl')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         ack = 'ack-{0}-single-file'.format(self.version)
+
+        # rewrite the script's #! line to call the perl dependency
+        shbang = '#!' + join_path(spec['perl'].prefix.bin, 'perl')
+        filter_file(r'^#!/usr/bin/env perl', shbang, ack)
+
         install(ack, join_path(prefix.bin, "ack"))
         set_executable(join_path(prefix.bin, "ack"))
