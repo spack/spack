@@ -95,32 +95,30 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
-import sys
-import hashlib
 import base64
+import hashlib
 import imp
+import sys
 from StringIO import StringIO
 from operator import attrgetter
-import yaml
-from yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
-from llnl.util.lang import *
-from llnl.util.tty.color import *
-from llnl.util.filesystem import join_path
-
 import spack
 import spack.architecture
-import spack.parse
-import spack.error
 import spack.compilers as compilers
-
-from spack.version import *
-from spack.util.string import *
-from spack.util.prefix import Prefix
-from spack.util.naming import mod_to_class
-from spack.virtual import ProviderIndex
+import spack.error
+import spack.parse
+import yaml
+from llnl.util.filesystem import join_path
+from llnl.util.lang import *
+from llnl.util.tty.color import *
 from spack.build_environment import get_path_from_module, load_module
+from spack.util.naming import mod_to_class
+from spack.util.prefix import Prefix
+from spack.util.string import *
+from spack.version import *
+from spack.virtual import ProviderIndex
+from yaml.error import MarkedYAMLError
 
 # Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
@@ -159,20 +157,6 @@ special_types = {
     'alldeps': alldeps,
     'nolink': nolink,
 }
-
-
-def index_specs(specs):
-    """Take a list of specs and return a dict of lists.  Dict is
-       keyed by spec name and lists include all specs with the
-       same name.
-    """
-    spec_dict = {}
-    for spec in specs:
-        if spec.name not in spec_dict:
-            spec_dict[spec.name] = []
-        spec_dict[spec.name].append(spec)
-    return spec_dict
-
 
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
