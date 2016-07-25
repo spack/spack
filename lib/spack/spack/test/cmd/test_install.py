@@ -24,15 +24,22 @@
 ##############################################################################
 import StringIO
 import collections
-from contextlib import contextmanager
+import os
+import unittest
+import contextlib
+
+import spack
+import spack.cmd
 
 FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
 
+
 # Monkey-patch open to write module files to a StringIO instance
-@contextmanager
+@contextlib.contextmanager
 def mock_open(filename, mode):
     if not mode == 'wb':
-        raise RuntimeError('test.test_install : unexpected opening mode for monkey-patched open')
+        message = 'test.test_install : unexpected opening mode for mock_open'
+        raise RuntimeError(message)
 
     FILE_REGISTRY[filename] = StringIO.StringIO()
 
@@ -43,18 +50,14 @@ def mock_open(filename, mode):
         FILE_REGISTRY[filename] = handle.getvalue()
         handle.close()
 
-import os
-import unittest
 
-import spack
-import spack.cmd
-
-
-# The use of __import__ is necessary to maintain a name with hyphen (which cannot be an identifier in python)
+# The use of __import__ is necessary to maintain a name with hyphen (which
+# cannot be an identifier in python)
 test_install = __import__("spack.cmd.test-install", fromlist=['test_install'])
 
 
 class MockSpec(object):
+
     def __init__(self, name, version, hashStr=None):
         self._dependencies = {}
         self.name = name
@@ -96,6 +99,7 @@ class MockSpec(object):
 
 
 class MockPackage(object):
+
     def __init__(self, spec, buildLogPath):
         self.name = spec.name
         self.spec = spec
@@ -107,6 +111,7 @@ class MockPackage(object):
 
 
 class MockPackageDb(object):
+
     def __init__(self, init=None):
         self.specToPkg = {}
         if init:
@@ -127,6 +132,7 @@ pkgY = MockPackage(specY, 'logY')
 
 
 class MockArgs(object):
+
     def __init__(self, package):
         self.package = package
         self.jobs = None
@@ -162,7 +168,7 @@ class TestInstallTest(unittest.TestCase):
         test_install.open = mock_open
 
         # Clean FILE_REGISTRY
-        FILE_REGISTRY = collections.defaultdict(StringIO.StringIO)
+        FILE_REGISTRY.clear()
 
         pkgX.installed = False
         pkgY.installed = False
@@ -188,7 +194,7 @@ class TestInstallTest(unittest.TestCase):
         spack.repo = self.saved_db
 
     def test_installing_both(self):
-        test_install.test_install(None, MockArgs('X') )
+        test_install.test_install(None, MockArgs('X'))
         self.assertEqual(len(FILE_REGISTRY), 1)
         for _, content in FILE_REGISTRY.items():
             self.assertTrue('tests="2"' in content)
@@ -204,4 +210,5 @@ class TestInstallTest(unittest.TestCase):
             self.assertTrue('tests="2"' in content)
             self.assertTrue('failures="0"' in content)
             self.assertTrue('errors="0"' in content)
-            self.assertEqual(sum('skipped' in line for line in content.split('\n')), 2)
+            self.assertEqual(
+                sum('skipped' in line for line in content.split('\n')), 2)

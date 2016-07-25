@@ -158,6 +158,7 @@ special_types = {
     'nolink': nolink,
 }
 
+
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
        color_formats."""
@@ -1020,7 +1021,7 @@ class Spec(object):
         """
         try:
             yfile = yaml.load(stream)
-        except MarkedYAMLError, e:
+        except MarkedYAMLError as e:
             raise SpackYAMLError("error parsing YAML spec:", str(e))
 
         nodes = yfile['spec']
@@ -1334,7 +1335,7 @@ class Spec(object):
 
             return flat_deps
 
-        except UnsatisfiableSpecError, e:
+        except UnsatisfiableSpecError as e:
             # Here, the DAG contains two instances of the same package
             # with inconsistent constraints.  Users cannot produce
             # inconsistent specs like this on the command line: the
@@ -1369,7 +1370,7 @@ class Spec(object):
                     dep = Spec(name)
                 try:
                     dep.constrain(dep_spec)
-                except UnsatisfiableSpecError, e:
+                except UnsatisfiableSpecError as e:
                     e.message = ("Conflicting conditional dependencies on"
                                  "package %s for spec %s" % (self.name, self))
                     raise e
@@ -1455,7 +1456,7 @@ class Spec(object):
         try:
             changed |= spec_deps[dep.name].spec.constrain(dep)
 
-        except UnsatisfiableSpecError, e:
+        except UnsatisfiableSpecError as e:
             e.message = "Invalid spec: '%s'. "
             e.message += "Package %s requires %s %s, but spec asked for %s"
             e.message %= (spec_deps[dep.name].spec, dep.name,
@@ -2389,7 +2390,7 @@ class SpecParser(spack.parse.Parser):
                     # errors now?
                     specs.append(self.spec(None, True))
 
-        except spack.parse.ParseError, e:
+        except spack.parse.ParseError as e:
             raise SpecParseError(e)
 
         # If the spec has an os or a target and no platform, give it
@@ -2834,4 +2835,4 @@ class AmbiguousHashError(SpecError):
     def __init__(self, msg, *specs):
         super(AmbiguousHashError, self).__init__(msg)
         for spec in specs:
-            print '    ', spec.format('$.$@$%@+$+$=$#')
+            print('    ', spec.format('$.$@$%@+$+$=$#'))
