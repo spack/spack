@@ -41,6 +41,7 @@ class NameModifier(object):
         self.__dict__.update(kwargs)
         self.args.update(kwargs)
 
+
 class NameValueModifier(object):
 
     def __init__(self, name, value, **kwargs):

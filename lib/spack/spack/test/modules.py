@@ -251,7 +251,8 @@ class TclTests(MockPackagesTest):
         self.assertEqual(
             len([x for x in content if 'setenv FOO "foo"' in x]), 1)
         self.assertEqual(len([x for x in content if 'unsetenv BAR' in x]), 1)
-        self.assertEqual(len([x for x in content if 'setenv MPILEAKS_ROOT' in x]), 1)
+        self.assertEqual(
+            len([x for x in content if 'setenv MPILEAKS_ROOT' in x]), 1)
 
         spec = spack.spec.Spec('libdwarf %clang platform=test target=x86_32')
         content = self.get_modulefile_content(spec)
@@ -266,7 +267,8 @@ class TclTests(MockPackagesTest):
             len([x for x in content if 'is-loaded foo/bar' in x]), 1)
         self.assertEqual(
             len([x for x in content if 'module load foo/bar' in x]), 1)
-        self.assertEqual(len([x for x in content if 'setenv LIBDWARF_ROOT' in x]), 1)
+        self.assertEqual(
+            len([x for x in content if 'setenv LIBDWARF_ROOT' in x]), 1)
 
     def test_blacklist(self):
         spack.modules.CONFIGURATION = configuration_blacklist
