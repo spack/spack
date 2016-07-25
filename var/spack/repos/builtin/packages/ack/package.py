@@ -43,9 +43,6 @@ class Ack(Package):
     # should:
     # depends_on('perl')
 
-    def unpack(self):
-        pass
-
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         ack = 'ack-{0}-single-file'.format(self.version)
