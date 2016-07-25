@@ -37,6 +37,9 @@ class NameModifier(object):
         self.args = {'name': name}
         self.args.update(kwargs)
 
+    def update_args(self, **kwargs):
+        self.__dict__.update(kwargs)
+        self.args.update(kwargs)
 
 class NameValueModifier(object):
 
@@ -44,7 +47,11 @@ class NameValueModifier(object):
         self.name = name
         self.value = value
         self.separator = kwargs.get('separator', ':')
-        self.args = {'name': name, 'value': value, 'delim': self.separator}
+        self.args = {'name': name, 'value': value, 'separator': self.separator}
+        self.args.update(kwargs)
+
+    def update_args(self, **kwargs):
+        self.__dict__.update(kwargs)
         self.args.update(kwargs)
 
 
