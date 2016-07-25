@@ -42,4 +42,4 @@ class Nextflow(Package):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("nextflow", join_path(prefix.bin, "nextflow"))
-        set_executable( join_path(prefix.bin, "nextflow"))
+        set_executable(join_path(prefix.bin, "nextflow"))
