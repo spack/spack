@@ -33,13 +33,13 @@ class RXlconnect(Package):
     url      = "https://cran.r-project.org/src/contrib/XLConnect_0.2-11.tar.gz"
     list_url = "https://cran.r-project.org/src/contrib/Archive/XLConnect"
 
-    version('0.2-11', '9d1769a103cda05665df399cc335017d',
-            url='https://cran.r-project.org/src/contrib/Archive/XLConnect/XLConnect_0.2-11.tar.gz')
+    version('0.2-12', '3340d05d259f0a41262eab4ed32617ad')
+    version('0.2-11', '9d1769a103cda05665df399cc335017d')
 
     extends('R')
 
-    depends_on('r-xlconnectjars')
-    depends_on('r-rjava')
+    depends_on('r-xlconnectjars', type=nolink)
+    depends_on('r-rjava', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

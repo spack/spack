@@ -38,7 +38,7 @@ class RRsqlite(Package):
 
     extends('R')
 
-    depends_on('r-dbi')
+    depends_on('r-dbi', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

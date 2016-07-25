@@ -38,11 +38,11 @@ class RHttr(Package):
 
     extends('R')
 
-    depends_on('r-jsonlite')
-    depends_on('r-mime')
-    depends_on('r-curl')
-    depends_on('r-openssl')
-    depends_on('r-R6')
+    depends_on('r-jsonlite', type=nolink)
+    depends_on('r-mime', type=nolink)
+    depends_on('r-curl', type=nolink)
+    depends_on('r-openssl', type=nolink)
+    depends_on('r-R6', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
