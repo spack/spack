@@ -24,8 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class PyNetworkx(Package):
-    """NetworkX is a Python package for the creation, manipulation, and study of the structure, dynamics, and functions of complex networks."""
+    """NetworkX is a Python package for the creation, manipulation, and study
+    of the structure, dynamics, and functions of complex networks."""
     homepage = "http://networkx.github.io/"
     url      = "https://pypi.python.org/packages/source/n/networkx/networkx-1.11.tar.gz"
 
