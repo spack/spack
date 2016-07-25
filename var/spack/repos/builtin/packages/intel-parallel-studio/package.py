@@ -80,7 +80,7 @@ class IntelParallelStudio(IntelInstaller):
             regex = '(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)'
             base_components = \
                 filter_pick(all_components, re.compile(regex).search)
-            regex = '(icsxe|imb|mpi|itac|intel-tc|clck)'
+            regex = '(icsxe|imb|mpi|itac|intel-ta|intel-tc|clck)'
             mpi_components = \
                 filter_pick(all_components, re.compile(regex).search)
             mkl_components = \
@@ -138,6 +138,12 @@ class IntelParallelStudio(IntelInstaller):
                     if os.path.isdir(os.path.join(self.prefix, "itac", ifile)):
                         os.symlink(self.global_license_file,
                                    os.path.join(self.prefix, "itac", ifile,
+                                                "license.lic"))
+                    if os.path.isdir(os.path.join(self.prefix, "itac",
+                                     ifile, "intel64")):
+                        os.symlink(self.global_license_file,
+                                   os.path.join(self.prefix, "itac",
+                                                ifile, "intel64",
                                                 "license.lic"))
                 if spec.satisfies('~newdtags'):
                     wrappers = ["mpif77", "mpif77", "mpif90", "mpif90",
