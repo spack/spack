@@ -25,18 +25,20 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RIrlba(Package):
+    """Fast and memory efficient methods for truncated singular and eigenvalue
+    decompositions and principal component analysis of large sparse or dense
+    matrices."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://cran.r-project.org/web/packages/irlba/index.html"
+    url      = "https://cran.r-project.org/src/contrib/irlba_2.0.0.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/irlba"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('2.0.0', '557674cf8b68fea5b9f231058c324d26')
 
     extends('R')
+
+    depends_on('r-matrix', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

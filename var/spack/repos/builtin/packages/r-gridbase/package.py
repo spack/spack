@@ -25,16 +25,14 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RGridbase(Package):
+    """Integration of base and grid graphics."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://cran.r-project.org/web/packages/gridBase/index.html"
+    url      = "https://cran.r-project.org/src/contrib/gridBase_0.4-7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/gridBase"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.4-7', '6d5064a85f5c966a92ee468ae44c5f1f')
 
     extends('R')
 

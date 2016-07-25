@@ -25,18 +25,21 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RNetworkd3(Package):
+    """Creates 'D3' 'JavaScript' network, tree, dendrogram, and Sankey graphs
+    from 'R'."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "http://cran.r-project.org/package=networkD3"
+    url      = "https://cran.r-project.org/src/contrib/networkD3_0.2.12.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/networkD3"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.2.12', '356fe4be59698e6fb052644bd9659d84')
 
     extends('R')
+
+    depends_on('r-htmlwidgets', type=nolink)
+    depends_on('r-igraph', type=nolink)
+    depends_on('r-magrittr', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

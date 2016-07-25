@@ -25,18 +25,21 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RRaster(Package):
+    """Reading, writing, manipulating, analyzing and modeling of gridded
+    spatial data. The package implements basic and high-level functions.
+    Processing of very large files is supported."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "http://cran.r-project.org/package=raster"
+    url      = "https://cran.r-project.org/src/contrib/raster_2.5-8.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/raster"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('2.5-8', '2a7db931c74d50516e82d04687c0a577')
 
     extends('R')
+
+    depends_on('r-sp', type=nolink)
+    depends_on('r-rcpp', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

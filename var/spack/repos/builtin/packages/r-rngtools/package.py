@@ -25,18 +25,24 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RRngtools(Package):
+    """This package contains a set of functions for working with Random Number
+    Generators (RNGs). In particular, it defines a generic S4 framework for
+    getting/setting the current RNG, or RNG data that are embedded into objects
+    for reproducibility. Notably, convenient default methods greatly facilitate
+    the way current RNG settings can be changed."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://renozao.github.io/rngtools"
+    url      = "https://cran.r-project.org/src/contrib/rngtools_1.2.4.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/rngtools"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('1.2.4', '715967f8b3af2848a76593a7c718c1cd')
 
     extends('R')
+
+    depends_on('r-pkgmaker', type=nolink)
+    depends_on('r-stringr', type=nolink)
+    depends_on('r-digest', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -25,18 +25,20 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RPng(Package):
+    """This package provides an easy and simple way to read, write and display
+    bitmap images stored in the PNG format. It can read and write both files
+    and in-memory raw vectors."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "http://www.rforge.net/png/"
+    url      = "https://cran.r-project.org/src/contrib/png_0.1-7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/png"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.1-7', '1ebc8b8aa5979b12c5ec2384b30d649f')
 
     extends('R')
+
+    depends_on('libpng')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

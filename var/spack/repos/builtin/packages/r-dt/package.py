@@ -25,18 +25,22 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RDt(Package):
+    """Data objects in R can be rendered as HTML tables using the JavaScript
+    library 'DataTables' (typically via R Markdown or Shiny). The 'DataTables'
+    library has been included in this R package. The package name 'DT' is an
+    abbreviation of 'DataTables'."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "http://rstudio.github.io/DT"
+    url      = "https://cran.r-project.org/src/contrib/DT_0.1.tar.gz"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.1', '5c8df984921fa484784ec4b8a4fb6f3c')
 
     extends('R')
+
+    depends_on('r-htmltools', type=nolink)
+    depends_on('r-htmlwidgets', type=nolink)
+    depends_on('r-magrittr', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

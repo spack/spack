@@ -25,16 +25,14 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RCodetools(Package):
+    """Code analysis tools for R."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://cran.r-project.org/web/packages/codetools/index.html"
+    url      = "https://cran.r-project.org/src/contrib/codetools_0.2-14.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/codetools"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.2-14', '7ec41d4f8bd6ba85facc8c5e6adc1f4d')
 
     extends('R')
 

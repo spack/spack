@@ -25,18 +25,22 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RMarkdown(Package):
+    """Provides R bindings to the 'Sundown' 'Markdown' rendering library
+    (https://github.com/vmg/sundown). 'Markdown' is a plain-text formatting
+    syntax that can be converted to 'XHTML' or other formats. See
+    http://en.wikipedia.org/wiki/Markdown for more information about
+    'Markdown'."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://github.com/rstudio/markdown"
+    url      = "https://cran.r-project.org/src/contrib/markdown_0.7.7.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/markdown"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.7.7', '72deca9c675c7cc9343048edbc29f7ff')
 
     extends('R')
+
+    depends_on('r-mime', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

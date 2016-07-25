@@ -25,18 +25,22 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RZoo(Package):
+    """An S3 class with methods for totally ordered indexed observations. It is
+    particularly aimed at irregular time series of numeric vectors/matrices and
+    factors. zoo's key design goals are independence of a particular
+    index/date/time class and consistency with ts and base R by providing
+    methods to extend standard generics."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "http://zoo.r-forge.r-project.org/"
+    url      = "https://cran.r-project.org/src/contrib/zoo_1.7-13.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/zoo"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('1.7-13', '99521dfa4c668e692720cefcc5a1bf30')
 
     extends('R')
+
+    depends_on('r-lattice', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

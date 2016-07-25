@@ -25,18 +25,35 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RNmf(Package):
+    """Provides a framework to perform Non-negative Matrix Factorization (NMF).
+    The package implements a set of already published algorithms and seeding
+    methods, and provides a framework to test, develop and plug new/custom
+    algorithms. Most of the built-in algorithms have been optimized in C++, and
+    the main interface function provides an easy way of performing parallel
+    computations on multicore machines.."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "http://renozao.github.io/NMF"
+    url      = "https://cran.r-project.org/src/contrib/NMF_0.20.6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/NMF"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.20.6', '81df07b3bf710a611db5af24730ff3d0')
 
     extends('R')
+
+    depends_on('r-pkgmaker', type=nolink)
+    depends_on('r-registry', type=nolink)
+    depends_on('r-rngtools', type=nolink)
+    depends_on('r-cluster', type=nolink)
+    depends_on('r-stringr', type=nolink)
+    depends_on('r-digest', type=nolink)
+    depends_on('r-gridbase', type=nolink)
+    depends_on('r-colorspace', type=nolink)
+    depends_on('r-rcolorbrewer', type=nolink)
+    depends_on('r-foreach', type=nolink)
+    depends_on('r-doparallel', type=nolink)
+    depends_on('r-ggplot2', type=nolink)
+    depends_on('r-reshape2', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

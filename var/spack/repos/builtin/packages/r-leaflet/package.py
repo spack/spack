@@ -25,18 +25,29 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RLeaflet(Package):
+    """Create and customize interactive maps using the 'Leaflet' JavaScript
+    library and the 'htmlwidgets' package. These maps can be used directly from
+    the R console, from 'RStudio', in Shiny apps and R Markdown documents."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "http://rstudio.github.io/leaflet/"
+    url      = "https://cran.r-project.org/src/contrib/leaflet_1.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/leaflet"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('1.0.1', '7f3d8b17092604d87d4eeb579f73d5df')
 
     extends('R')
+
+    depends_on('r-base64enc', type=nolink)
+    depends_on('r-htmlwidgets', type=nolink)
+    depends_on('r-htmltools', type=nolink)
+    depends_on('r-magrittr', type=nolink)
+    depends_on('r-markdown', type=nolink)
+    depends_on('r-png', type=nolink)
+    depends_on('r-rcolorbrewer', type=nolink)
+    depends_on('r-raster', type=nolink)
+    depends_on('r-scales', type=nolink)
+    depends_on('r-sp', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

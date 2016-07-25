@@ -25,18 +25,22 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RHtmlwidgets(Package):
+    """A framework for creating HTML widgets that render in various contexts
+    including the R console, 'R Markdown' documents, and 'Shiny' web
+    applications."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://github.com/ramnathv/htmlwidgets"
+    url      = "https://cran.r-project.org/src/contrib/htmlwidgets_0.6.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/htmlwidgets"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.6', '7fa522d2eda97593978021bda9670c0e')
 
     extends('R')
+
+    depends_on('r-htmltools', type=nolink)
+    depends_on('r-jsonlite', type=nolink)
+    depends_on('r-yaml', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

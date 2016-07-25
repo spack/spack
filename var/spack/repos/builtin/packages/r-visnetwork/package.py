@@ -25,18 +25,22 @@
 from spack import *
 
 
-class RRstudioapi(Package):
-    """Access the RStudio API (if available) and provide informative error
-    messages when it's not."""
+class RVisnetwork(Package):
+    """Provides an R interface to the 'vis.js' JavaScript charting library. It
+    allows an interactive visualization of networks."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://github.com/datastorm-open/visNetwork"
+    url      = "https://cran.r-project.org/src/contrib/visNetwork_1.0.1.tar.gz"
+    list_url = "https://cran.r-project.org/src/contrib/Archive/visNetwork"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('1.0.1', 'dfc9664a5165134d8dbdcd949ad73cf7')
 
     extends('R')
+
+    depends_on('r-htmlwidgets', type=nolink)
+    depends_on('r-htmltools', type=nolink)
+    depends_on('r-jsonlite', type=nolink)
+    depends_on('r-magrittr', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
