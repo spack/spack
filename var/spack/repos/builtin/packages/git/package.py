@@ -55,6 +55,7 @@ class Git(Package):
     depends_on("zlib")
     depends_on("pcre")
     depends_on("perl")
+    depends_on("zlib")
 
     def install(self, spec, prefix):
         configure_args = [
