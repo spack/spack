@@ -19,6 +19,8 @@ class Cnl(OperatingSystem):
         version = '10'
         super(Cnl, self).__init__(name, version)
 
+    def __str__(self):
+        return self.name
 
     def find_compilers(self, *paths):
         types = spack.compilers.all_compiler_types()
