@@ -59,7 +59,7 @@ class Git(Package):
     def install(self, spec, prefix):
         configure_args = [
             "--prefix=%s" % prefix,
-            "--without-pcre",
+            "--with-libpcre=%s" % spec['pcre'].prefix,
             "--with-openssl=%s" % spec['openssl'].prefix,
             "--with-zlib=%s" % spec['zlib'].prefix,
             "--with-expat=%s" % spec['expat'].prefix,
