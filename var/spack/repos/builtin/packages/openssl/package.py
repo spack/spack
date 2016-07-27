@@ -52,7 +52,7 @@ class Openssl(Package):
         if '@system' in self.spec:
             return '@system (reserved version for system openssl)'
         else:
-            return super(Openssl, self).url_for_version(self.spec)
+            return super(Openssl, self).url_for_version(self.version)
 
     def handle_fetch_error(self, error):
         tty.warn("Fetching OpenSSL failed. This may indicate that OpenSSL has "
