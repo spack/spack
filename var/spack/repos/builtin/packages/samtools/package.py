@@ -25,18 +25,25 @@
 from spack import *
 
 class Samtools(Package):
-    """SAM Tools provide various utilities for manipulating alignments in the SAM format, 
-       including sorting, merging, indexing and generating
+    """SAM Tools provide various utilities for manipulating alignments in
+       the SAM format, including sorting, merging, indexing and generating
        alignments in a per-position format"""
 
     homepage = "www.htslib.org"
-    version('1.2','988ec4c3058a6ceda36503eebecd4122',url = "https://github.com/samtools/samtools/releases/download/1.2/samtools-1.2.tar.bz2")
+    url = "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
 
-    depends_on("zlib")
-    depends_on("mpc")
-    parallel=False
-    patch("samtools1.2.patch",level=0)
+    version('1.3.1','a7471aa5a1eb7fc9cc4c6491d73c2d88')
+    version('1.2','988ec4c3058a6ceda36503eebecd4122')
+
+    depends_on("ncurses")
+    depends_on("htslib", when='@1.3.1') # htslib became standalone
+    depends_on('zlib', when='@1.2')     # needed for builtin htslib
 
     def install(self, spec, prefix):
-        make("prefix=%s" % prefix, "install")
-
+        if self.spec.version >= Version('1.3.1'):
+            configure('--prefix={0}'.format(prefix), '--with-ncurses')
+            make()
+            make('install')
+        else:
+            make("prefix=%s" % prefix)
+            make("prefix=%s" % prefix, "install")
