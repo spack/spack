@@ -7,11 +7,12 @@ import spack.spec
 from spack.util.multiproc import parmap
 import spack.compilers
 
+
 class Cnl(OperatingSystem):
     """ Compute Node Linux (CNL) is the operating system used for the Cray XC
     series super computers. It is a very stripped down version of GNU/Linux.
     Any compilers found through this operating system will be used with
-    modules. If updated, user must make sure that version and name are 
+    modules. If updated, user must make sure that version and name are
     updated to indicate that OS has been upgraded (or downgraded)
     """
     def __init__(self):
@@ -24,13 +25,13 @@ class Cnl(OperatingSystem):
 
     def find_compilers(self, *paths):
         types = spack.compilers.all_compiler_types()
-        compiler_lists = parmap(lambda cmp_cls: self.find_compiler(cmp_cls, *paths), types)
+        compiler_lists = parmap(
+            lambda cmp_cls: self.find_compiler(cmp_cls, *paths), types)
 
         # ensure all the version calls we made are cached in the parent
         # process, as well.  This speeds up Spack a lot.
-        clist = reduce(lambda x,y: x+y, compiler_lists)
+        clist = reduce(lambda x, y: x + y, compiler_lists)
         return clist
-
 
     def find_compiler(self, cmp_cls, *paths):
         compilers = []
@@ -47,13 +48,16 @@ class Cnl(OperatingSystem):
             if paths:
                 module_paths = ':' + ':'.join(p for p in paths)
                 os.environ['MODULEPATH'] = module_paths
-        
-            output = modulecmd('avail', cmp_cls.PrgEnv_compiler, output=str, error=str)
-            matches = re.findall(r'(%s)/([\d\.]+[\d])' % cmp_cls.PrgEnv_compiler, output)
+
+            output = modulecmd(
+                'avail', cmp_cls.PrgEnv_compiler, output=str, error=str)
+            matches = re.findall(
+                r'(%s)/([\d\.]+[\d])' % cmp_cls.PrgEnv_compiler, output)
             for name, version in matches:
                 v = version
-                comp = cmp_cls(spack.spec.CompilerSpec(name + '@' + v), self,
-                           ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name +'/' + v])
+                comp = cmp_cls(
+                    spack.spec.CompilerSpec(name + '@' + v), self,
+                    ['cc', 'CC', 'ftn'], [cmp_cls.PrgEnv, name + '/' + v])
 
                 compilers.append(comp)
 
