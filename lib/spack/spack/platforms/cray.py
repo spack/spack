@@ -1,9 +1,6 @@
 import os
 import re
-import platform as py_platform
-#from subprocess import check_output
 import spack.config
-from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
@@ -20,7 +17,7 @@ def _target_from_init(name):
         with open('/etc/bash.bashrc.local', 'r') as conf:
             for line in conf:
                 if re.search('^[^\#]*module[\s]*(?:add|load)', line):
-                     matches.extend(re.findall(pattern, line))
+                    matches.extend(re.findall(pattern, line))
     return matches[0] if matches else None
 
 
@@ -29,7 +26,7 @@ class Cray(Platform):
 
     def __init__(self):
         ''' Create a Cray system platform.
-        
+
         Target names should use craype target names but not include the
         'craype-' prefix. Uses first viable target from:
           self
@@ -50,14 +47,15 @@ class Cray(Platform):
             if _target is None:
                 _target = _target_from_init(name)
             setattr(self, name, _target)
-            
+
             if _target is not None:
                 self.add_target(name, Target(_target, 'craype-' + _target))
                 self.add_target(_target, Target(_target, 'craype-' + _target))
 
         if self.back_end is not None:
             self.default = self.back_end
-            self.add_target('default', Target(self.default, 'craype-' + self.default))
+            self.add_target(
+                'default', Target(self.default, 'craype-' + self.default))
         else:
             raise NoPlatformError()
 
