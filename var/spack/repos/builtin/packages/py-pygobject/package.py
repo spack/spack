@@ -23,35 +23,25 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import re
 
 
-class Glib(Package):
-    """The GLib package contains a low-level libraries useful for
-       providing data structure handling for C, portability wrappers
-       and interfaces for such runtime functionality as an event loop,
-       threads, dynamic loading and an object system."""
+class PyPygobject(Package):
+    """bindings for the GLib, and GObject,
+       to be used in Python."""
 
-    homepage = "https://developer.gnome.org/glib/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/glib/2.42/glib-2.42.1.tar.xz"
+    homepage = "https://pypi.python.org/pypi/pygobject"
+    url      = "https://pypi.python.org/packages/6d/15/97c8b5ccca2be14cf59a2f79e15e3a82a1c3408a6b76b4107689a8b94846/pygobject-2.28.3.tar.bz2"
 
-    version('2.49.4', 'e2c87c03017b0cd02c4c73274b92b148')
-    version('2.42.1', '89c4119e50e767d3532158605ee9121a')
-    version('2.48.1', '67bd3b75c9f6d5587b457dc01cdcd5bb',
-            url='http://ftp.gnome.org/pub/GNOME/sources/glib/2.48/glib-2.48.1.tar.xz')
+    version('2.28.3', 'aa64900b274c4661a5c32e52922977f9')
 
-    depends_on('libffi')
-    depends_on('zlib')
-    depends_on('pkg-config', type='build')
-    depends_on('gettext')
-    depends_on('pcre+utf', when='@2.49:')
+    extends('python')
+    depends_on("libffi")
+    depends_on('glib')
+    depends_on('py-py2cairo')
+    depends_on('gobject-introspection')
 
-    # The following patch is needed for gcc-6.1
-    patch('g_date_strftime.patch', when='@2.42.1')
-
-    def url_for_version(self, version):
-        """Handle glib's version-based custom URLs."""
-        url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
-        return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
+    patch('pygobject-2.28.6-introspection-1.patch')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

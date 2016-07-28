@@ -25,35 +25,24 @@
 from spack import *
 
 
-class Glib(Package):
-    """The GLib package contains a low-level libraries useful for
-       providing data structure handling for C, portability wrappers
-       and interfaces for such runtime functionality as an event loop,
-       threads, dynamic loading and an object system."""
+class GobjectIntrospection(Package):
+    """The GObject Introspection is used to describe the program APIs and
+    collect them in a uniform, machine readable format.Cairo is a 2D graphics
+    library with support for multiple output"""
 
-    homepage = "https://developer.gnome.org/glib/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/glib/2.42/glib-2.42.1.tar.xz"
+    homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
+    url      = "http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.48/gobject-introspection-1.48.0.tar.xz"
 
-    version('2.49.4', 'e2c87c03017b0cd02c4c73274b92b148')
-    version('2.42.1', '89c4119e50e767d3532158605ee9121a')
-    version('2.48.1', '67bd3b75c9f6d5587b457dc01cdcd5bb',
-            url='http://ftp.gnome.org/pub/GNOME/sources/glib/2.48/glib-2.48.1.tar.xz')
+    version('1.48.0', '01301fa9019667d48e927353e08bc218')
 
-    depends_on('libffi')
-    depends_on('zlib')
-    depends_on('pkg-config', type='build')
-    depends_on('gettext')
-    depends_on('pcre+utf', when='@2.49:')
-
-    # The following patch is needed for gcc-6.1
-    patch('g_date_strftime.patch', when='@2.42.1')
-
-    def url_for_version(self, version):
-        """Handle glib's version-based custom URLs."""
-        url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
-        return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
+    depends_on("glib")
+    depends_on("python")
+    depends_on("cairo")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
+        # we need to filter this file to avoid an overly long hashbang line
+        filter_file('@PYTHON@', 'python',
+                    'tools/g-ir-tool-template.in')
         make()
-        make("install", parallel=False)
+        make("install")

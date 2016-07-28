@@ -23,37 +23,24 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import re
 
 
-class Glib(Package):
-    """The GLib package contains a low-level libraries useful for
-       providing data structure handling for C, portability wrappers
-       and interfaces for such runtime functionality as an event loop,
-       threads, dynamic loading and an object system."""
+class PyPy2cairo(Package):
+    """bindings for the Cairo for Python 2,
+       to be used in Python."""
 
-    homepage = "https://developer.gnome.org/glib/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/glib/2.42/glib-2.42.1.tar.xz"
+    homepage = "https://pypi.python.org/pypi/pycairo"
+    url      = "https://cairographics.org/releases/py2cairo-1.10.0.tar.bz2"
 
-    version('2.49.4', 'e2c87c03017b0cd02c4c73274b92b148')
-    version('2.42.1', '89c4119e50e767d3532158605ee9121a')
-    version('2.48.1', '67bd3b75c9f6d5587b457dc01cdcd5bb',
-            url='http://ftp.gnome.org/pub/GNOME/sources/glib/2.48/glib-2.48.1.tar.xz')
+    version('1.10.0', '20337132c4ab06c1146ad384d55372c5')
 
-    depends_on('libffi')
-    depends_on('zlib')
-    depends_on('pkg-config', type='build')
-    depends_on('gettext')
-    depends_on('pcre+utf', when='@2.49:')
-
-    # The following patch is needed for gcc-6.1
-    patch('g_date_strftime.patch', when='@2.42.1')
-
-    def url_for_version(self, version):
-        """Handle glib's version-based custom URLs."""
-        url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
-        return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
+    extends('python')
+    depends_on("cairo")
+    depends_on("pixman")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install", parallel=False)
+        python('waf', 'configure', '--prefix=%s' % prefix)
+        python('waf', 'build')
+        python('waf', 'install')
+
