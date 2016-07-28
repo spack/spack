@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import re
 
 
 class PyPy2cairo(Package):
@@ -43,4 +42,3 @@ class PyPy2cairo(Package):
         python('waf', 'configure', '--prefix=%s' % prefix)
         python('waf', 'build')
         python('waf', 'install')
-
