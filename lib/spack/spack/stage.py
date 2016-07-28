@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
 import errno
@@ -211,6 +211,18 @@ class Stage(object):
         return False
 
     @property
+    def expected_archive_files(self):
+        """Possible archive file paths."""
+        paths = []
+        if isinstance(self.fetcher, fs.URLFetchStrategy):
+            paths.append(os.path.join(self.path, os.path.basename(self.fetcher.url)))
+
+        if self.mirror_path:
+            paths.append(os.path.join(self.path, os.path.basename(self.mirror_path)))
+
+        return paths
+
+    @property
     def archive_file(self):
         """Path to the source archive within this stage directory."""
         paths = []
@@ -292,6 +304,7 @@ class Stage(object):
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
                 fetchers.insert(0, fs.URLFetchStrategy(url, digest))
+            fetchers.insert(0, spack.cache.fetcher(self.mirror_path, digest))
 
         for fetcher in fetchers:
             try:
@@ -308,6 +321,7 @@ class Stage(object):
             self.fetcher = self.default_fetcher
             raise fs.FetchError(errMessage, None)
 
+
     def check(self):
         """Check the downloaded archive against a checksum digest.
            No-op if this stage checks code out of a repository."""
@@ -320,6 +334,11 @@ class Stage(object):
                      "this mirror is secure!.")
         else:
             self.fetcher.check()
+
+
+    def cache_local(self):
+        spack.cache.store(self.fetcher, self.mirror_path)
+
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -424,7 +443,7 @@ class ResourceStage(Stage):
                 shutil.move(source_path, destination_path)
 
 
-@pattern.composite(method_list=['fetch', 'create', 'check', 'expand_archive',  'restage', 'destroy'])
+@pattern.composite(method_list=['fetch', 'create', 'check', 'expand_archive',  'restage', 'destroy', 'cache_local'])
 class StageComposite:
     """
     Composite for Stage type objects. The first item in this composite is considered to be the root package, and
@@ -498,6 +517,9 @@ class DIYStage(object):
     def destroy(self):
         # No need to destroy DIY stage.
         pass
+
+    def cache_local(self):
+        tty.msg("Sources for DIY stages are not cached")
 
 
 def _get_mirrors():

@@ -1,33 +1,37 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
 Test for multi_method dispatch.
 """
+import unittest
 
 import spack
 from spack.multimethod import *
+from spack.version import *
+from spack.spec import Spec
+from spack.multimethod import when
 from spack.test.mock_packages_test import *
 from spack.version import *
 
@@ -88,21 +92,18 @@ class MultiMethodTest(MockPackagesTest):
         self.assertEqual(pkg.has_a_default(), 'default')
 
 
-    def test_architecture_match(self):
-        pkg = spack.repo.get('multimethod=x86_64')
-        self.assertEqual(pkg.different_by_architecture(), 'x86_64')
+    def test_target_match(self):
+        platform = spack.architecture.platform()
+        targets = platform.targets.values()
+        for target in targets[:-1]:
+            pkg = spack.repo.get('multimethod target='+target.name)
+            self.assertEqual(pkg.different_by_target(), target.name)
 
-        pkg = spack.repo.get('multimethod=ppc64')
-        self.assertEqual(pkg.different_by_architecture(), 'ppc64')
-
-        pkg = spack.repo.get('multimethod=ppc32')
-        self.assertEqual(pkg.different_by_architecture(), 'ppc32')
-
-        pkg = spack.repo.get('multimethod=arm64')
-        self.assertEqual(pkg.different_by_architecture(), 'arm64')
-
-        pkg = spack.repo.get('multimethod=macos')
-        self.assertRaises(NoSuchMethodError, pkg.different_by_architecture)
+        pkg = spack.repo.get('multimethod target='+targets[-1].name)
+        if len(targets) == 1:
+            self.assertEqual(pkg.different_by_target(), targets[-1].name)
+        else:
+            self.assertRaises(NoSuchMethodError, pkg.different_by_target)
 
 
     def test_dependency_match(self):

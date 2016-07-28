@@ -1,0 +1,13 @@
+diff --git a/ADOL-C/examples/additional_examples/openmp_exam/liborpar.cpp b/ADOL-C/examples/additional_examples/openmp_exam/liborpar.cpp
+index fc6fc28..14103d2 100644
+--- a/ADOL-C/examples/additional_examples/openmp_exam/liborpar.cpp
++++ b/ADOL-C/examples/additional_examples/openmp_exam/liborpar.cpp
+@@ -27,7 +27,7 @@ using namespace std;
+ #include <ctime>
+ #include <cmath>
+ 
+-#include "adolc.h"
++#include <adolc/adolc.h>
+ 
+ #ifdef _OPENMP
+ #include <omp.h>

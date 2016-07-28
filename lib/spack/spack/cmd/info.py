@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import textwrap
 from llnl.util.tty.colify import *
@@ -29,9 +29,11 @@ import spack.fetch_strategy as fs
 
 description = "Get detailed information on a particular package"
 
+
 def padder(str_list, extra=0):
     """Return a function to pad elements of a list."""
     length = max(len(str(s)) for s in str_list) + extra
+
     def pad(string):
         string = str(string)
         padding = max(0, length - len(string))
@@ -40,7 +42,8 @@ def padder(str_list, extra=0):
 
 
 def setup_parser(subparser):
-    subparser.add_argument('name', metavar="PACKAGE", help="Name of package to get info for.")
+    subparser.add_argument(
+        'name', metavar="PACKAGE", help="Name of package to get info for.")
 
 
 def print_text_info(pkg):
@@ -81,12 +84,14 @@ def print_text_info(pkg):
 
             print "    " + fmt % (name, default, desc)
 
-    print
-    print "Dependencies:"
-    if pkg.dependencies:
-        colify(pkg.dependencies, indent=4)
-    else:
-        print "    None"
+    for deptype in ('build', 'link', 'run'):
+        print
+        print "%s Dependencies:" % deptype.capitalize()
+        deps = pkg.dependencies_of_type(deptype)
+        if deps:
+            colify(deps, indent=4)
+        else:
+            print "    None"
 
     print
     print "Virtual packages: "

@@ -214,3 +214,21 @@ Adding a mirror really adds a line in ``~/.spack/mirrors.yaml``::
 If you want to change the order in which mirrors are searched for
 packages, you can edit this file and reorder the sections.  Spack will
 search the topmost mirror first and the bottom-most mirror last.
+
+.. _caching:
+
+Local Default Cache
+----------------------------
+
+Spack caches resources that are downloaded as part of installs. The cache is
+a valid spack mirror: it uses the same directory structure and naming scheme
+as other Spack mirrors (so it can be copied anywhere and referenced with a URL
+like other mirrors). The mirror is maintained locally (within the Spack 
+installation directory) at :file:`var/spack/cache/`. It is always enabled (and 
+is always searched first when attempting to retrieve files for an installation) 
+but can be cleared with :ref:`purge <spack-purge>`; the cache directory can also
+be deleted manually without issue. 
+
+Caching includes retrieved tarball archives and source control repositories, but
+only resources with an associated digest or commit ID (e.g. a revision number 
+for SVN) will be cached.

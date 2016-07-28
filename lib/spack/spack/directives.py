@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """This package contains directives that can be used within a package.
 
@@ -45,11 +45,8 @@ The available directives are:
   * ``resource``
 
 """
-__all__ = ['depends_on', 'extends', 'provides', 'patch', 'version',
-           'variant', 'resource']
 
 import re
-import inspect
 import os.path
 import functools
 
@@ -66,6 +63,9 @@ from spack.variant import Variant
 from spack.spec import Spec, parse_anonymous_spec
 from spack.resource import Resource
 from spack.fetch_strategy import from_kwargs
+
+__all__ = ['depends_on', 'extends', 'provides', 'patch', 'version', 'variant',
+           'resource']
 
 #
 # This is a list of all directives, built up as they are defined in
@@ -122,14 +122,13 @@ class directive(object):
 
     def __init__(self, dicts=None):
         if isinstance(dicts, basestring):
-            dicts = (dicts,)
+            dicts = (dicts, )
         elif type(dicts) not in (list, tuple):
             raise TypeError(
-                "dicts arg must be list, tuple, or string. Found %s"
-                % type(dicts))
+                "dicts arg must be list, tuple, or string. Found %s" %
+                type(dicts))
 
         self.dicts = dicts
-
 
     def ensure_dicts(self, pkg):
         """Ensure that a package has the dicts required by this directive."""
@@ -141,7 +140,6 @@ class directive(object):
             if not isinstance(attr, dict):
                 raise spack.error.SpackError(
                     "Package %s has non-dict %s attribute!" % (pkg, d))
-
 
     def __call__(self, directive_function):
         directives[directive_function.__name__] = self
@@ -173,7 +171,7 @@ def version(pkg, ver, checksum=None, **kwargs):
     pkg.versions[Version(ver)] = kwargs
 
 
-def _depends_on(pkg, spec, when=None):
+def _depends_on(pkg, spec, when=None, type=None):
     # If when is False do nothing
     if when is False:
         return
@@ -182,9 +180,28 @@ def _depends_on(pkg, spec, when=None):
         when = pkg.name
     when_spec = parse_anonymous_spec(when, pkg.name)
 
+    if type is None:
+        # The default deptype is build and link because the common case is to
+        # build against a library which then turns into a runtime dependency
+        # due to the linker.
+        # XXX(deptype): Add 'run' to this? It's an uncommon dependency type,
+        #               but is most backwards-compatible.
+        type = ('build', 'link')
+
+    if isinstance(type, str):
+        type = spack.spec.special_types.get(type, (type,))
+
+    for deptype in type:
+        if deptype not in spack.spec.alldeps:
+            raise UnknownDependencyTypeError('depends_on', pkg.name, deptype)
+
     dep_spec = Spec(spec)
     if pkg.name == dep_spec.name:
         raise CircularReferenceError('depends_on', pkg.name)
+
+    pkg_deptypes = pkg._deptypes.setdefault(dep_spec.name, set())
+    for deptype in type:
+        pkg_deptypes.add(deptype)
 
     conditions = pkg.dependencies.setdefault(dep_spec.name, {})
     if when_spec in conditions:
@@ -193,13 +210,13 @@ def _depends_on(pkg, spec, when=None):
         conditions[when_spec] = dep_spec
 
 
-@directive('dependencies')
-def depends_on(pkg, spec, when=None):
+@directive(('dependencies', '_deptypes'))
+def depends_on(pkg, spec, when=None, type=None):
     """Creates a dict of deps with specs defining when they apply."""
-    _depends_on(pkg, spec, when=when)
+    _depends_on(pkg, spec, when=when, type=type)
 
 
-@directive(('extendees', 'dependencies'))
+@directive(('extendees', 'dependencies', '_deptypes'))
 def extends(pkg, spec, **kwargs):
     """Same as depends_on, but dependency is symlinked into parent prefix.
 
@@ -259,11 +276,12 @@ def variant(pkg, name, default=False, description=""):
     """Define a variant for the package. Packager can specify a default
     value (on or off) as well as a text description."""
 
-    default     = bool(default)
+    default     = default
     description = str(description).strip()
 
     if not re.match(spack.spec.identifier_re, name):
-        raise DirectiveError("Invalid variant name in %s: '%s'" % (pkg.name, name))
+        raise DirectiveError("Invalid variant name in %s: '%s'" %
+                             (pkg.name, name))
 
     pkg.variants[name] = Variant(default, description)
 
@@ -271,31 +289,37 @@ def variant(pkg, name, default=False, description=""):
 @directive('resources')
 def resource(pkg, **kwargs):
     """
-    Define an external resource to be fetched and staged when building the package. Based on the keywords present in the
-    dictionary the appropriate FetchStrategy will be used for the resource. Resources are fetched and staged in their
-    own folder inside spack stage area, and then linked into the stage area of the package that needs them.
+    Define an external resource to be fetched and staged when building the
+    package. Based on the keywords present in the dictionary the appropriate
+    FetchStrategy will be used for the resource. Resources are fetched and
+    staged in their own folder inside spack stage area, and then linked into
+    the stage area of the package that needs them.
 
     List of recognized keywords:
 
-    * 'when' : (optional) represents the condition upon which the resource is needed
-    * 'destination' : (optional) path where to link the resource. This path must be relative to the main package stage
-    area.
-    * 'placement' : (optional) gives the possibility to fine tune how the resource is linked into the main package stage
-    area.
+    * 'when' : (optional) represents the condition upon which the resource is
+    needed
+    * 'destination' : (optional) path where to link the resource. This path
+    must be relative to the main package stage area.
+    * 'placement' : (optional) gives the possibility to fine tune how the
+    resource is linked into the main package stage area.
     """
     when = kwargs.get('when', pkg.name)
     destination = kwargs.get('destination', "")
     placement = kwargs.get('placement', None)
     # Check if the path is relative
     if os.path.isabs(destination):
-        message = "The destination keyword of a resource directive can't be an absolute path.\n"
+        message = "The destination keyword of a resource directive can't be"
+        " an absolute path.\n"
         message += "\tdestination : '{dest}\n'".format(dest=destination)
         raise RuntimeError(message)
     # Check if the path falls within the main package stage area
-    test_path = 'stage_folder_root/'
-    normalized_destination = os.path.normpath(join_path(test_path, destination))  # Normalized absolute path
+    test_path = 'stage_folder_root'
+    normalized_destination = os.path.normpath(join_path(test_path, destination)
+                                              )  # Normalized absolute path
     if test_path not in normalized_destination:
-        message = "The destination folder of a resource must fall within the main package stage directory.\n"
+        message = "The destination folder of a resource must fall within the"
+        " main package stage directory.\n"
         message += "\tdestination : '{dest}'\n".format(dest=destination)
         raise RuntimeError(message)
     when_spec = parse_anonymous_spec(when, pkg.name)
@@ -307,6 +331,7 @@ def resource(pkg, **kwargs):
 
 class DirectiveError(spack.error.SpackError):
     """This is raised when something is wrong with a package directive."""
+
     def __init__(self, directive, message):
         super(DirectiveError, self).__init__(message)
         self.directive = directive
@@ -314,8 +339,19 @@ class DirectiveError(spack.error.SpackError):
 
 class CircularReferenceError(DirectiveError):
     """This is raised when something depends on itself."""
+
     def __init__(self, directive, package):
         super(CircularReferenceError, self).__init__(
             directive,
             "Package '%s' cannot pass itself to %s" % (package, directive))
+        self.package = package
+
+
+class UnknownDependencyTypeError(DirectiveError):
+    """This is raised when a dependency is of an unknown type."""
+    def __init__(self, directive, package, deptype):
+        super(UnknownDependencyTypeError, self).__init__(
+            directive,
+            "Package '%s' cannot depend on a package via %s." %
+                (package, deptype))
         self.package = package

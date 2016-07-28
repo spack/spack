@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import re
 import os
@@ -34,6 +34,7 @@ import yaml
 import llnl.util.tty as tty
 from llnl.util.filesystem import join_path, mkdirp
 
+import spack
 from spack.spec import Spec
 from spack.error import SpackError
 
@@ -165,7 +166,7 @@ class DirectoryLayout(object):
 class YamlDirectoryLayout(DirectoryLayout):
     """Lays out installation directories like this::
            <install root>/
-               <architecture>/
+               <platform-os-target>/
                    <compiler>-<compiler version>/
                        <name>-<version>-<variants>-<hash>
 
@@ -207,8 +208,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             spec.version,
             spec.dag_hash(self.hash_len))
 
-        path = join_path(
-            spec.architecture,
+        path = join_path(spec.architecture,
             "%s-%s" % (spec.compiler.name, spec.compiler.version),
             dir_name)
 
@@ -224,8 +224,14 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
-        with open(path) as f:
-            spec = Spec.from_yaml(f)
+        try:
+            with open(path) as f:
+                spec = Spec.from_yaml(f)
+        except Exception as e:
+            if spack.debug:
+                raise
+            raise SpecReadError(
+                'Unable to read file: %s' % path, 'Cause: ' + str(e))
 
         # Specs read from actual installations are always concrete
         spec._mark_concrete()
@@ -286,7 +292,7 @@ class YamlDirectoryLayout(DirectoryLayout):
             return path
 
         if spec.dag_hash() == installed_spec.dag_hash():
-            raise SpecHashCollisionError(installed_hash, spec_hash)
+            raise SpecHashCollisionError(spec, installed_spec)
         else:
             raise InconsistentInstallDirectoryError(
                 'Spec file in %s does not match hash!' % spec_file_path)
@@ -432,7 +438,7 @@ class SpecHashCollisionError(DirectoryLayoutError):
     def __init__(self, installed_spec, new_spec):
         super(SpecHashCollisionError, self).__init__(
             'Specs %s and %s have the same SHA-1 prefix!'
-            % installed_spec, new_spec)
+            % (installed_spec, new_spec))
 
 
 class RemoveFailedError(DirectoryLayoutError):
@@ -457,10 +463,12 @@ class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
             "Install path %s already exists!")
 
 
+class SpecReadError(DirectoryLayoutError):
+    """Raised when directory layout can't read a spec."""
+
+
 class InvalidExtensionSpecError(DirectoryLayoutError):
     """Raised when an extension file has a bad spec in it."""
-    def __init__(self, message):
-        super(InvalidExtensionSpecError, self).__init__(message)
 
 
 class ExtensionAlreadyInstalledError(DirectoryLayoutError):

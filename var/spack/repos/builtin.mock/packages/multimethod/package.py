@@ -1,29 +1,32 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import imp
+from llnl.util.filesystem import join_path
+from spack.util.naming import mod_to_class
 from spack import *
-
+import spack.architecture
 
 class Multimethod(Package):
     """This package is designed for use with Spack's multimethod test.
@@ -101,25 +104,20 @@ class Multimethod(Package):
 
 
     #
-    # Make sure we can switch methods on different architectures
+    # Make sure we can switch methods on different target
     #
-    @when('=x86_64')
-    def different_by_architecture(self):
-        return 'x86_64'
+    platform = spack.architecture.platform()
+    targets = platform.targets.values()
+    if len(targets) > 1:
+        targets = targets[:-1]
 
-    @when('=ppc64')
-    def different_by_architecture(self):
-        return 'ppc64'
-
-    @when('=ppc32')
-    def different_by_architecture(self):
-        return 'ppc32'
-
-    @when('=arm64')
-    def different_by_architecture(self):
-        return 'arm64'
-
-
+    for target in targets:
+        @when('target='+target.name)
+        def different_by_target(self):
+            if isinstance(self.spec.architecture.target,basestring):
+                return self.spec.architecture.target
+            else:
+                return self.spec.architecture.target.name
     #
     # Make sure we can switch methods on different dependencies
     #

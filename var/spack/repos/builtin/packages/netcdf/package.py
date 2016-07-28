@@ -1,3 +1,27 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
 from spack import *
 
 
@@ -9,18 +33,25 @@ class Netcdf(Package):
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.tar.gz"
 
+    version('4.4.1', '7843e35b661c99e1d49e60791d5072d8')
     version('4.4.0', 'cffda0cbd97fdb3a06e9274f7aef438e')
     version('4.3.3', '5fbd0e108a54bd82cb5702a73f56d2ae')
 
-    variant('mpi', default=True, description='Enables MPI parallelism')
-    variant('hdf4',    default=False, description="Enable HDF4 support")
+    variant('mpi',  default=True,  description='Enables MPI parallelism')
+    variant('hdf4', default=False, description='Enable HDF4 support')
 
-    # Dependencies:
-    depends_on("curl")  # required for DAP support
+    depends_on("m4", type='build')
     depends_on("hdf", when='+hdf4')
-    depends_on("hdf5+mpi~cxx", when='+mpi')  # required for NetCDF-4 support
-    depends_on("hdf5~mpi", when='~mpi')  # required for NetCDF-4 support
-    depends_on("zlib")  # required for NetCDF-4 support
+
+    # Required for DAP support
+    depends_on("curl")
+
+    # Required for NetCDF-4 support
+    depends_on("zlib")
+    depends_on('hdf5@:1.8+mpi', when='@:4.4.0+mpi')
+    depends_on('hdf5+mpi', when='@4.4.1:+mpi')
+    depends_on('hdf5@:1.8~mpi', when='@:4.4.0~mpi')
+    depends_on('hdf5~mpi', when='@4.4.1:~mpi')
 
     def install(self, spec, prefix):
         # Environment variables
@@ -48,7 +79,7 @@ class Netcdf(Package):
         # /usr/lib/x86_64-linux-gnu/libcurl.so: undefined reference to `SSL_CTX_use_certificate_chain_file@OPENSSL_1.0.0'
         LIBS.append("-lcurl")
         CPPFLAGS.append("-I%s" % spec['curl'].prefix.include)
-        LDFLAGS.append ("-L%s" % spec['curl'].prefix.lib)
+        LDFLAGS.append( "-L%s" % spec['curl'].prefix.lib)
 
         if '+mpi' in spec:
             config_args.append('--enable-parallel4')

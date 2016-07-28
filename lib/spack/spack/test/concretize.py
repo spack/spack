@@ -1,28 +1,29 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import spack
+import spack.architecture
 from spack.spec import Spec, CompilerSpec
 from spack.version import ver
 from spack.concretize import find_spec
@@ -38,10 +39,19 @@ class ConcretizeTest(MockPackagesTest):
             for name in abstract.variants:
                 avariant = abstract.variants[name]
                 cvariant = concrete.variants[name]
-                self.assertEqual(avariant.enabled, cvariant.enabled)
+                self.assertEqual(avariant.value, cvariant.value)
+
+        if abstract.compiler_flags:
+            for flag in abstract.compiler_flags:
+                aflag = abstract.compiler_flags[flag]
+                cflag = concrete.compiler_flags[flag]
+                self.assertTrue(set(aflag) <= set(cflag))
 
         for name in abstract.package.variants:
             self.assertTrue(name in concrete.variants)
+
+        for flag in concrete.compiler_flags.valid_compiler_flags():
+            self.assertTrue(flag in concrete.compiler_flags)
 
         if abstract.compiler and abstract.compiler.concrete:
             self.assertEqual(abstract.compiler, concrete.compiler)
@@ -75,7 +85,12 @@ class ConcretizeTest(MockPackagesTest):
     def test_concretize_variant(self):
         self.check_concretize('mpich+debug')
         self.check_concretize('mpich~debug')
+        self.check_concretize('mpich debug=2')
         self.check_concretize('mpich')
+
+
+    def test_conretize_compiler_flags(self):
+        self.check_concretize('mpich cppflags="-O3"')
 
 
     def test_concretize_preferred_version(self):
@@ -182,32 +197,36 @@ class ConcretizeTest(MockPackagesTest):
     def test_virtual_is_fully_expanded_for_callpath(self):
         # force dependence on fake "zmpi" by asking for MPI 10.0
         spec = Spec('callpath ^mpi@10.0')
-        self.assertTrue('mpi' in spec.dependencies)
+        self.assertTrue('mpi' in spec._dependencies)
         self.assertFalse('fake' in spec)
 
         spec.concretize()
 
-        self.assertTrue('zmpi' in spec.dependencies)
-        self.assertTrue(all(not 'mpi' in d.dependencies for d in spec.traverse()))
+        self.assertTrue('zmpi' in spec._dependencies)
+        self.assertTrue(all('mpi' not in d._dependencies
+                            for d in spec.traverse()))
         self.assertTrue('zmpi' in spec)
         self.assertTrue('mpi' in spec)
 
-        self.assertTrue('fake' in spec.dependencies['zmpi'])
+        self.assertTrue('fake' in spec._dependencies['zmpi'].spec)
 
 
     def test_virtual_is_fully_expanded_for_mpileaks(self):
         spec = Spec('mpileaks ^mpi@10.0')
-        self.assertTrue('mpi' in spec.dependencies)
+        self.assertTrue('mpi' in spec._dependencies)
         self.assertFalse('fake' in spec)
 
         spec.concretize()
 
-        self.assertTrue('zmpi' in spec.dependencies)
-        self.assertTrue('callpath' in spec.dependencies)
-        self.assertTrue('zmpi' in spec.dependencies['callpath'].dependencies)
-        self.assertTrue('fake' in spec.dependencies['callpath'].dependencies['zmpi'].dependencies)
+        self.assertTrue('zmpi' in spec._dependencies)
+        self.assertTrue('callpath' in spec._dependencies)
+        self.assertTrue('zmpi' in spec._dependencies['callpath'].
+                                  spec._dependencies)
+        self.assertTrue('fake' in spec._dependencies['callpath'].
+                                  spec._dependencies['zmpi'].
+                                  spec._dependencies)
 
-        self.assertTrue(all(not 'mpi' in d.dependencies for d in spec.traverse()))
+        self.assertTrue(all(not 'mpi' in d._dependencies for d in spec.traverse()))
         self.assertTrue('zmpi' in spec)
         self.assertTrue('mpi' in spec)
 
@@ -231,13 +250,26 @@ class ConcretizeTest(MockPackagesTest):
 
 
     def test_external_package(self):
-        spec = Spec('externaltool')
+        spec = Spec('externaltool%gcc')
         spec.concretize()
 
         self.assertEqual(spec['externaltool'].external, '/path/to/external_tool')
         self.assertFalse('externalprereq' in spec)
         self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
 
+
+    def test_external_package_module(self):
+        # No tcl modules on darwin/linux machines
+        # TODO: improved way to check for this.
+        if (spack.architecture.platform().name == 'darwin' or
+            spack.architecture.platform().name == 'linux'):
+            return
+
+        spec = Spec('externalmodule')
+        spec.concretize()
+        self.assertEqual(spec['externalmodule'].external_module, 'external-module')
+        self.assertFalse('externalprereq' in spec)
+        self.assertTrue(spec['externalmodule'].compiler.satisfies('gcc'))
 
     def test_nobuild_package(self):
         got_error = False

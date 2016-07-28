@@ -1,0 +1,13 @@
+diff --git a/cmake/Config.cmake b/cmake/Config.cmake
+index 02593ba..d198ca9 100644
+--- a/cmake/Config.cmake
++++ b/cmake/Config.cmake
+@@ -6,7 +6,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+ 
+     # detect OS X version. (use '/usr/bin/sw_vers -productVersion' to extract V from '10.V.x'.)
+     execute_process (COMMAND /usr/bin/sw_vers -productVersion OUTPUT_VARIABLE MACOSX_VERSION_RAW)
+-    string(REGEX REPLACE "10\\.([0-9]).*" "\\1" MACOSX_VERSION "${MACOSX_VERSION_RAW}")
++    string(REGEX REPLACE "10\\.([0-9]+).*" "\\1" MACOSX_VERSION "${MACOSX_VERSION_RAW}")
+     if(${MACOSX_VERSION} LESS 5)
+         message(FATAL_ERROR "Unsupported version of OS X : ${MACOSX_VERSION_RAW}")
+         return()

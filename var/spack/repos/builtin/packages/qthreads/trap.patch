@@ -1,0 +1,11 @@
+--- a/include/qthread/qthread.hpp
++++ b/include/qthread/qthread.hpp
+@@ -236,7 +236,7 @@
+             return qthread_incr64((uint64_t *)operand, incr);
+ 
+         default:
+-            *(int *)(0) = 0;
++            __builtin_trap();
+     }
+     return T(0);                       // never hit - keep compiler happy
+ }

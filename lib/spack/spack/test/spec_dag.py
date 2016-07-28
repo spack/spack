@@ -1,26 +1,26 @@
 ##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
+# conditions of the GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 """
 These tests check Spec DAG operations using dummy packages.
@@ -29,7 +29,10 @@ You can find the dummy packages here::
     spack/lib/spack/spack/test/mock_packages
 """
 import spack
+import spack.architecture
 import spack.package
+
+from llnl.util.lang import list_modules
 
 from spack.spec import Spec
 from spack.test.mock_packages_test import *
@@ -145,10 +148,12 @@ class SpecDagTest(MockPackagesTest):
         # Normalize then add conflicting constraints to the DAG (this is an
         # extremely unlikely scenario, but we test for it anyway)
         mpileaks.normalize()
-        mpileaks.dependencies['mpich'] = Spec('mpich@1.0')
-        mpileaks.dependencies['callpath'].dependencies['mpich'] = Spec('mpich@2.0')
+        mpileaks._dependencies['mpich'].spec = Spec('mpich@1.0')
+        mpileaks._dependencies['callpath']. \
+            spec._dependencies['mpich'].spec = Spec('mpich@2.0')
 
-        self.assertRaises(spack.spec.InconsistentSpecError, mpileaks.flatten)
+        self.assertRaises(spack.spec.InconsistentSpecError,
+                lambda: mpileaks.flat_dependencies(copy=False))
 
 
     def test_normalize_twice(self):
@@ -194,15 +199,17 @@ class SpecDagTest(MockPackagesTest):
 
     def check_links(self, spec_to_check):
         for spec in spec_to_check.traverse():
-            for dependent in spec.dependents.values():
+            for dependent in spec.dependents():
                 self.assertTrue(
-                    spec.name in dependent.dependencies,
-                    "%s not in dependencies of %s" % (spec.name, dependent.name))
+                    spec.name in dependent.dependencies_dict(),
+                    "%s not in dependencies of %s" %
+                        (spec.name, dependent.name))
 
-            for dependency in spec.dependencies.values():
+            for dependency in spec.dependencies():
                 self.assertTrue(
-                    spec.name in dependency.dependents,
-                    "%s not in dependents of %s" % (spec.name, dependency.name))
+                    spec.name in dependency.dependents_dict(),
+                    "%s not in dependents of %s" %
+                        (spec.name, dependency.name))
 
 
     def test_dependents_and_dependencies_are_correct(self):
@@ -239,8 +246,10 @@ class SpecDagTest(MockPackagesTest):
 
 
     def test_unsatisfiable_architecture(self):
-        self.set_pkg_dep('mpileaks', 'mpich=bgqos_0')
-        spec = Spec('mpileaks ^mpich=sles_10_ppc64 ^callpath ^dyninst ^libelf ^libdwarf')
+        platform = spack.architecture.platform()
+
+        self.set_pkg_dep('mpileaks', 'mpich platform=test target=be')
+        spec = Spec('mpileaks ^mpich platform=test target=fe ^callpath ^dyninst ^libelf ^libdwarf')
         self.assertRaises(spack.spec.UnsatisfiableArchitectureSpecError, spec.normalize)
 
 
@@ -437,3 +446,69 @@ class SpecDagTest(MockPackagesTest):
         orig_ids = set(id(s) for s in orig.traverse())
         copy_ids = set(id(s) for s in copy.traverse())
         self.assertFalse(orig_ids.intersection(copy_ids))
+
+    """
+    Here is the graph with deptypes labeled (assume all packages have a 'dt'
+    prefix). Arrows are marked with the deptypes ('b' for 'build', 'l' for
+    'link', 'r' for 'run').
+
+        use -bl-> top
+
+        top -b->  build1
+        top -bl-> link1
+        top -r->  run1
+
+        build1 -b->  build2
+        build1 -bl-> link2
+        build1 -r->  run2
+
+        link1 -bl-> link3
+
+        run1 -bl-> link5
+        run1 -r->  run3
+
+        link3 -b->  build2
+        link3 -bl-> link4
+
+        run3 -b-> build3
+    """
+    def test_deptype_traversal(self):
+        dag = Spec('dtuse')
+        dag.normalize()
+
+        names = ['dtuse', 'dttop', 'dtlink1', 'dtlink3', 'dtlink4',
+                 'dtrun1', 'dtlink5', 'dtrun3']
+
+        traversal = dag.traverse()
+        self.assertEqual([x.name for x in traversal], names)
+
+    def test_deptype_traversal_with_builddeps(self):
+        dag = Spec('dttop')
+        dag.normalize()
+
+        names = ['dttop', 'dtbuild1', 'dtlink2', 'dtrun2', 'dtlink1',
+                 'dtlink3', 'dtlink4', 'dtrun1', 'dtlink5', 'dtrun3']
+
+        traversal = dag.traverse()
+        self.assertEqual([x.name for x in traversal], names)
+
+    def test_deptype_traversal_full(self):
+        dag = Spec('dttop')
+        dag.normalize()
+
+        names = ['dttop', 'dtbuild1', 'dtbuild2', 'dtlink2', 'dtrun2',
+                 'dtlink1', 'dtlink3', 'dtlink4', 'dtrun1', 'dtlink5',
+                 'dtrun3', 'dtbuild3']
+
+        traversal = dag.traverse(deptype_query=spack.alldeps)
+        self.assertEqual([x.name for x in traversal], names)
+
+    def test_deptype_traversal_pythonpath(self):
+        dag = Spec('dttop')
+        dag.normalize()
+
+        names = ['dttop', 'dtbuild1', 'dtrun2', 'dtlink1', 'dtrun1',
+                 'dtrun3']
+
+        traversal = dag.traverse(deptype=spack.nolink, deptype_query='run')
+        self.assertEqual([x.name for x in traversal], names)
