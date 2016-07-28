@@ -35,7 +35,7 @@ class Prank(Package):
 
     depends_on('mafft')
     depends_on('exonerate')
-    depends_on('bppsuite')      # for bppancestor
+    depends_on('bpp-suite')      # for bppancestor
 
     def install(self, spec, prefix):
         with working_dir('src'):
