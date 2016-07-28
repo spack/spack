@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
@@ -46,15 +47,25 @@ class Cmake(Package):
 
     depends_on('ncurses', when='+ncurses')
     depends_on('openssl', when='+openssl')
-    depends_on('qt', when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
     depends_on('py-sphinx', when='+doc', type='build')
 
     def url_for_version(self, version):
         """Handle CMake's version-based custom URLs."""
-        return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (version.up_to(2), version)
+        return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (
+            version.up_to(2), version)
+
+    def validate(self, spec):
+        """
+        Checks if incompatible versions of qt were specified
+
+        :param spec: spec of the package
+        :raises RuntimeError: in case of inconsistencies
+        """
 
     def install(self, spec, prefix):
+        # Consistency check
+        self.validate(spec)
 
         # configure, build, install:
         options = ['--prefix=%s' % prefix]

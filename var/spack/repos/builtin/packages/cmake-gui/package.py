@@ -24,12 +24,16 @@
 ##############################################################################
 from spack import *
 
+
 class CmakeGui(Package):
-    """A cross-platform, open-source build system. CMake is a family of
-       tools designed to build, test and package software."""
+    """A cross-platform, open-source build system. CMake is a family of tools
+       designed to build, test and package software.  This package is separate
+       from the cmake package in order to break a build build dependency:
+       cmake-gui->qt->cmake"""
     homepage  = 'https://www.cmake.org'
     url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
 
+    version('3.6.0',    'aa40fbecf49d99c083415c2411d12db9')
     version('3.5.2',    '701386a1b5ec95f8d1075ecf96383e02')
     version('3.5.1',    'ca051f4a66375c89d1a524e726da0296')
     version('3.5.0',    '33c5d09d4c33d4ffcc63578a6ba8777e')
@@ -46,12 +50,13 @@ class CmakeGui(Package):
     depends_on('ncurses', when='+ncurses')
     depends_on('openssl', when='+openssl')
     depends_on('qt')
-    depends_on('python@2.7.11:', when='+doc')
-    depends_on('py-sphinx', when='+doc')
+    depends_on('python@2.7.11:', when='+doc', type='build')
+    depends_on('py-sphinx', when='+doc', type='build')
 
     def url_for_version(self, version):
         """Handle CMake's version-based custom URLs."""
-        return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (version.up_to(2), version)
+        return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (
+            version.up_to(2), version)
 
     def validate(self, spec):
         """
