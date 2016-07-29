@@ -138,7 +138,7 @@ class Trilinos(Package):
             '-DTPL_ENABLE_LAPACK=ON',
             '-DLAPACK_LIBRARY_NAMES=%s' % to_lib_name(
                 spec['lapack'].lapack_shared_lib),
-            '-DLAPACK_LIBRARY_DIRS=%s' % spec['lapack'].prefix,
+            '-DLAPACK_LIBRARY_DIRS=%s' % spec['lapack'].prefix.lib,
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
             '-DTPL_ENABLE_Netcdf:BOOL=ON',
