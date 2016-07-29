@@ -56,7 +56,7 @@ class Dyninst(Package):
             make()
             make("install")
             return
-            
+
         libelf = spec['libelf'].prefix
         libdwarf = spec['libdwarf'].prefix
 
