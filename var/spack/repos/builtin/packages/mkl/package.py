@@ -38,6 +38,13 @@ class Mkl(IntelInstaller):
         for f in os.listdir(mkl_dir):
             os.symlink(os.path.join(mkl_dir, f), os.path.join(self.prefix, f))
 
+        # Unfortunately MKL libs are natively distrubted in prefix/lib/intel64.
+        # To make MKL play nice with Spack, symlink all files to prefix/lib:
+        mkl_lib_dir = os.path.join(prefix, "lib","intel64")
+        for f in os.listdir(mkl_lib_dir):
+            os.symlink(os.path.join(mkl_lib_dir, f), os.path.join(self.prefix, "lib", f))
+
+
     def setup_dependent_package(self, module, dspec):
         # For now use Single Dynamic Library:
         # To set the threading layer at run time, use the
@@ -53,6 +60,7 @@ class Mkl(IntelInstaller):
         name = 'libmkl_rt.%s' % dso_suffix
         libdir = find_library_path(name, self.prefix.lib64, self.prefix.lib)
 
+        # Now set blas/lapack libs:
         self.spec.blas_shared_lib   = join_path(libdir, name)
         self.spec.lapack_shared_lib = self.spec.blas_shared_lib
 
