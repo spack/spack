@@ -12,9 +12,9 @@ class Mkl(IntelInstaller):
     mirror, see http://software.llnl.gov/spack/mirrors.html.
 
     To set the threading layer at run time set MKL_THREADING_LAYER
-    variable to one of the following values: INTEL, SEQUENTIAL, PGI.
+    variable to one of the following values: INTEL (default), SEQUENTIAL, PGI.
     To set interface layer at run time, use set the MKL_INTERFACE_LAYER
-    variable to LP64 or ILP64.
+    variable to LP64 (default) or ILP64.
     """
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
@@ -40,10 +40,10 @@ class Mkl(IntelInstaller):
 
         # Unfortunately MKL libs are natively distrubted in prefix/lib/intel64.
         # To make MKL play nice with Spack, symlink all files to prefix/lib:
-        mkl_lib_dir = os.path.join(prefix, "lib","intel64")
+        mkl_lib_dir = os.path.join(prefix, "lib", "intel64")
         for f in os.listdir(mkl_lib_dir):
-            os.symlink(os.path.join(mkl_lib_dir, f), os.path.join(self.prefix, "lib", f))
-
+            os.symlink(os.path.join(mkl_lib_dir, f),
+                       os.path.join(self.prefix, "lib", f))
 
     def setup_dependent_package(self, module, dspec):
         # For now use Single Dynamic Library:
