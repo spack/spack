@@ -62,10 +62,10 @@ class Hypre(Package):
             '--prefix=%s' % prefix,
             '--with-lapack-libs=%s' % to_lib_name(
                 spec['lapack'].lapack_shared_lib),
-            '--with-lapack-lib-dirs=%s/lib' % spec['lapack'].prefix,
+            '--with-lapack-lib-dirs=%s' % spec['lapack'].prefix.lib,
             '--with-blas-libs=%s' % to_lib_name(
                 spec['blas'].blas_shared_lib),
-            '--with-blas-lib-dirs=%s/lib' % spec['blas'].prefix
+            '--with-blas-lib-dirs=%s' % spec['blas'].prefix.lib
         ]
 
         if '+shared' in self.spec:
