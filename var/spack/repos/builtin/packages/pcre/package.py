@@ -29,7 +29,6 @@ class Pcre(Package):
     """The PCRE package contains Perl Compatible Regular Expression
        libraries. These are useful for implementing regular expression
        pattern matching using the same syntax and semantics as Perl 5."""
-
     homepage = "http://www.pcre.org"""
     url      = "ftp://ftp.csx.cam.ac.uk/pub/software/programming/pcre/pcre-8.36.tar.bz2"
 
@@ -46,6 +45,7 @@ class Pcre(Package):
         configure_args = ['--prefix=%s' % prefix]
         if '+utf' in spec:
             configure_args.append('--enable-utf')
+            configure_args.append('--enable-unicode-properties')
 
         configure(*configure_args)
         make()

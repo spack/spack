@@ -32,6 +32,7 @@ class Atk(Package):
     homepage = "https://developer.gnome.org/atk/"
     url      = "http://ftp.gnome.org/pub/gnome/sources/atk/2.14/atk-2.14.0.tar.xz"
 
+    version('2.20.0', '5187b0972f4d3905f285540b31395e20')
     version('2.14.0', 'ecb7ca8469a5650581b1227d78051b8b')
 
     depends_on("glib")
