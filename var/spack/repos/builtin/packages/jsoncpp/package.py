@@ -25,34 +25,26 @@
 from spack import *
 
 
-class Libxml2(Package):
-    """Libxml2 is the XML C parser and toolkit developed for the Gnome
-       project (but usable outside of the Gnome platform), it is free
-       software available under the MIT License."""
-    homepage = "http://xmlsoft.org"
-    url      = "http://xmlsoft.org/sources/libxml2-2.9.2.tar.gz"
+class Jsoncpp(Package):
+    """JsonCpp is a C++ library that allows manipulating JSON values,
+    including serialization and deserialization to and from strings.
+    It can also preserve existing comment in unserialization/serialization
+    steps, making it a convenient format to store user input files."""
 
-    version('2.9.4', 'ae249165c173b1ff386ee8ad676815f5')
-    version('2.9.2', '9e6a9aca9d155737868b3dc5fd82f788')
+    homepage = "https://github.com/open-source-parsers/jsoncpp"
+    url      = "https://github.com/open-source-parsers/jsoncpp/archive/1.7.3.tar.gz"
 
-    variant('python', default=False, description='Enable Python support')
+    version('1.7.3', 'aff6bfb5b81d9a28785429faa45839c5')
 
-    extends('python', when='+python',
-            ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|'
-            '(lib/xml2.*$)|(lib/cmake.*$)')
-    depends_on('zlib')
-    depends_on('xz')
+    # Avoid circular dependency
+    #depends_on('cmake~jsoncpp', type='build')
+    depends_on('cmake', type='build')
+    # depends_on('python', type='test')
 
     def install(self, spec, prefix):
-        if '+python' in spec:
-            python_args = ["--with-python=%s" % spec['python'].prefix,
-                           "--with-python-install-dir=%s" % site_packages_dir]
-        else:
-            python_args = ["--without-python"]
+        with working_dir('spack-build', create=True):
+            cmake('..', '-DBUILD_SHARED_LIBS=ON', *std_cmake_args)
 
-        configure("--prefix=%s" % prefix,
-                  *python_args)
-
-        make()
-        make("check")
-        make("install")
+            make()
+            # make('test')  # Python needed to run tests
+            make('install')

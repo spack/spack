@@ -38,4 +38,5 @@ class Zlib(Package):
         configure("--prefix=%s" % prefix)
 
         make()
+        make("test")
         make("install")

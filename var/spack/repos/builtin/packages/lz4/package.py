@@ -25,34 +25,20 @@
 from spack import *
 
 
-class Libxml2(Package):
-    """Libxml2 is the XML C parser and toolkit developed for the Gnome
-       project (but usable outside of the Gnome platform), it is free
-       software available under the MIT License."""
-    homepage = "http://xmlsoft.org"
-    url      = "http://xmlsoft.org/sources/libxml2-2.9.2.tar.gz"
+class Lz4(Package):
+    """LZ4 is lossless compression algorithm, providing compression speed
+    at 400 MB/s per core, scalable with multi-cores CPU. It also features
+    an extremely fast decoder, with speed in multiple GB/s per core,
+    typically reaching RAM speed limits on multi-core systems."""
 
-    version('2.9.4', 'ae249165c173b1ff386ee8ad676815f5')
-    version('2.9.2', '9e6a9aca9d155737868b3dc5fd82f788')
+    homepage = "http://cyan4973.github.io/lz4/"
+    url      = "https://github.com/Cyan4973/lz4/archive/r131.tar.gz"
 
-    variant('python', default=False, description='Enable Python support')
+    version('131', '42b09fab42331da9d3fb33bd5c560de9')
 
-    extends('python', when='+python',
-            ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|'
-            '(lib/xml2.*$)|(lib/cmake.*$)')
-    depends_on('zlib')
-    depends_on('xz')
+    # depends_on('valgrind', type='test')
 
     def install(self, spec, prefix):
-        if '+python' in spec:
-            python_args = ["--with-python=%s" % spec['python'].prefix,
-                           "--with-python-install-dir=%s" % site_packages_dir]
-        else:
-            python_args = ["--without-python"]
-
-        configure("--prefix=%s" % prefix,
-                  *python_args)
-
         make()
-        make("check")
-        make("install")
+        # make('test')  # requires valgrind to be installed
+        make('install', 'PREFIX={0}'.format(prefix))

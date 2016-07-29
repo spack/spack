@@ -39,4 +39,5 @@ class Xz(Package):
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
+        make("check")
         make("install")
