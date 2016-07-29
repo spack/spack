@@ -62,7 +62,7 @@ class Fenics(Package):
     # variant('slepc4py',     default=True,  description='Uses SLEPc4py')
     # variant('pastix',       default=True,  description='Compile with Pastix')
 
-    patch('petsc-3.7.patch', when='^petsc@3.7:')
+    patch('petsc-3.7.patch', when='@1.6.1^petsc@3.7:')
     patch('petsc-version-detection.patch', when='@:1.6.1')
 
     extends('python')
@@ -91,6 +91,16 @@ class Fenics(Package):
     depends_on('swig@3.0.3:')
 
     releases = [
+        {
+            'version': '2016.1.0',
+            'md5': '92e8d00f6487a575987201f0b0d19173',
+            'resources': {
+                'ffc': '35457ae164e481ba5c9189ebae060a47',
+                'fiat': 'ac0c49942831ee434301228842bcc280',
+                'instant': '0e3dbb464c4d90d691f31f0fdd63d4f6',
+                'ufl': '37433336e5c9b58d1d5ab4acca9104a7',
+            }
+        },
         {
             'version': '1.6.0',
             'md5': '35cb4baf7ab4152a40fb7310b34d5800',
@@ -175,6 +185,9 @@ class Fenics(Package):
             '-DDOLFIN_ENABLE_ZLIB:BOOL={0}'.format(
                 self.cmake_is_on('zlib')),
         ]
+
+        if '+hdf5' in spec and 'hdf5~cxx' in spec:
+            cmake_args.append('-DHDF5_hdf5_cpp_LIBRARY:PATH=""')
 
         cmake_args.extend(std_cmake_args)
 
