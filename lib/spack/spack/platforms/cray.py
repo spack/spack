@@ -1,6 +1,7 @@
 import os
 import re
 import spack.config
+from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
@@ -10,15 +11,35 @@ from spack.operating_systems.cnl import Cnl
 NON_TARGETS = ('hugepages', 'network', 'target', 'accel', 'xtpe')
 
 
-def _target_from_init(name):
-    matches = []
+def _target_from_clean_env(name):
+    '''Return the default back_end target as loaded in a clean login session.
+
+    A bash subshell is launched with a wiped environment and the list of loaded
+    modules is parsed for the first acceptable CrayPE target.
+    '''
+    # Based on the incantation:
+    # echo "$(env - USER=$USER /bin/bash -l -c 'module list -lt')"
+    default_modules = []
+    targets = []
     if name != 'front_end':
+        env = which('env')
+        env.add_default_arg('-')
+        # CAUTION - $USER is generally needed to initialize the environment.
+        # There may be other variables needed for general success.
+        output = env('USER=%s' % os.environ['USER'],
+                    '/bin/bash', '-l', '-c', 'module list -lt',
+                    output=str, error=str)
         pattern = 'craype-(?!{0})(\S*)'.format('|'.join(NON_TARGETS))
-        with open('/etc/bash.bashrc.local', 'r') as conf:
-            for line in conf:
-                if re.search('^[^\#]*module[\s]*(?:add|load)', line):
-                    matches.extend(re.findall(pattern, line))
-    return matches[0] if matches else None
+        for line in output.splitlines():
+            if 'craype-' in line:
+                targets.extend(re.findall(pattern, line))
+            if len(line.split()) == 1:
+                default_modules.append(line)
+        # if default_modules:
+        #     print 'Found default modules:'
+        #     for defmod in default_modules:
+        #         print '    ', defmod
+    return targets[0] if targets else None
 
 
 class Cray(Platform):
@@ -45,7 +66,7 @@ class Cray(Platform):
             if _target is None:
                 _target = conf.get(name)
             if _target is None:
-                _target = _target_from_init(name)
+                _target = _target_from_clean_env(name)
             setattr(self, name, _target)
 
             if _target is not None:
