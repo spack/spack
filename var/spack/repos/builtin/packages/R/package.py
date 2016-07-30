@@ -139,6 +139,10 @@ class R(Package):
         spack_env.set('R_MAKEVARS_SITE',
                       join_path(self.etcdir, 'Makeconf.spack'))
 
+        # Use the number of make_jobs set in spack. The make program will
+        # determine how many jobs can actually be started.
+        spack_env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
+
         # For run time environment set only the path for extension_spec and
         # prepend it to R_LIBS
         if extension_spec.package.extends(self.spec):
