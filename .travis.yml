@@ -1,7 +1,17 @@
 language: python
+
 python:
   - "2.6"
   - "2.7"
+env:
+  - TEST_TYPE=unit
+  - TEST_TYPE=flake8
+
+# Exclude flake8 from python 2.6
+matrix:
+  exclude:
+  - python: "2.6"
+    env: TEST_TYPE=flake8
 
 # Use new Travis infrastructure (Docker can't sudo yet)
 sudo: false
@@ -20,20 +30,13 @@ before_install:
   - git fetch origin develop:develop
 
 script:
-  # Regular spack setup and tests
-  - . share/spack/setup-env.sh
-  - spack compilers
-  - spack config get compilers
-  - spack install -v libdwarf
-
-  # Run unit tests with code coverage
-  - coverage run bin/spack test
-
+  # Run unit tests with code coverage plus install libdwarf
+  - 'if [ "$TEST_TYPE" = "unit" ]; then share/spack/qa/run-unit-tests; fi'
   # Run flake8 code style checks.
-  - share/spack/qa/run-flake8
+  - 'if [ "$TEST_TYPE" = "flake8" ]; then share/spack/qa/run-flake8; fi'
 
 after_success:
-  - coveralls
+  - 'if [ "$TEST_TYPE" = "unit" ] && [ "$TRAVIS_PYTHON_VERSION" = "2.7" ]; then coveralls; fi'
 
 notifications:
   email:
