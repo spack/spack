@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class Ghc(Package):
     """The Glasgow Haskell Compiler is a state-of-the-art, open source
        compiler and interactive environment for the functional language
@@ -52,7 +53,7 @@ class Ghc(Package):
     pd = '/home/throgg/spack/var/spack/repos/builtin/packages/ghc'
     resource(
         name='bootstrap-shared-libs',
-        url = 'file://' + join_path(pd, 'centos-libgmp.3.tar.gz'),
+        url='file://' + join_path(pd, 'centos-libgmp.3.tar.gz'),
         md5='b37e0e5f499a199e349e3d44495fda6f',
         destination='spack-bootstrap',
     )
@@ -63,7 +64,8 @@ class Ghc(Package):
         bootstrap_ghc_dir = join_path(bootstrap_dir, 'dist', 'ghc-8.0.1')
         bootstrap_lib_dir = join_path(bootstrap_dir, 'lib64')
         with working_dir(bootstrap_ghc_dir):
-            os.environ['LD_LIBRARY_PATH'] = bootstrap_lib_dir # 'cuz libgmp.3.so
+            # set LD_LIBRARY_PATH to make libgmp.3.so available
+            os.environ['LD_LIBRARY_PATH'] = bootstrap_lib_dir
             configure("--prefix=%s" % bootstrap_dir)
             make("install")
 
