@@ -31,7 +31,7 @@ import platform as py_platform
 import spack
 import spack.architecture
 from spack.spec import *
-from spack.platforms.cray_xc import CrayXc
+from spack.platforms.cray import Cray
 from spack.platforms.linux import Linux
 from spack.platforms.bgq import Bgq
 from spack.platforms.darwin import Darwin
@@ -76,7 +76,7 @@ class ArchitectureTest(MockPackagesTest):
     def test_platform(self):
         output_platform_class = spack.architecture.platform()
         if os.path.exists('/opt/cray/craype'):
-            my_platform_class = CrayXc()
+            my_platform_class = Cray()
         elif os.path.exists('/bgsys'):
             my_platform_class = Bgq()
         elif 'Linux' in py_platform.system():
