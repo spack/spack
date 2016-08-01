@@ -27,7 +27,7 @@ def _target_from_clean_env(name):
         # CAUTION - $USER is generally needed to initialize the environment.
         # There may be other variables needed for general success.
         output = env('USER=%s' % os.environ['USER'],
-                    '/bin/sh', '--noprofile', '-c',
+                    '/bin/bash', '--noprofile', '--norc', '-c',
                     '. /etc/profile; module list -lt',
                     output=str, error=str)
         default_modules = [i for i in output.splitlines()
