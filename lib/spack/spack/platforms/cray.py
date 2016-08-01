@@ -28,7 +28,7 @@ def _target_from_clean_env(name):
         # There may be other variables needed for general success.
         output = env('USER=%s' % os.environ['USER'],
                     '/bin/sh', '--noprofile', '-c',
-                    'source /etc/profile; module list -lt',
+                    '. /etc/profile; module list -lt',
                     output=str, error=str)
         default_modules = [i for i in output.splitlines()
                            if len(i.split()) == 1]
