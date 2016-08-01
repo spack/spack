@@ -78,5 +78,5 @@ class Libarchive(Package):
 
         configure(*config_args)
         make()
-        make("check")
+        # make("check")  # cannot build test suite with Intel compilers
         make("install")

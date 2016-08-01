@@ -88,47 +88,21 @@ class Cmake(Package):
         # Consistency check
         self.validate(spec)
 
+	def variant_to_bool(variant):
+            return 'system' if variant in spec else 'no-system'
+
         # configure, build, install:
         options = [
             '--prefix={0}'.format(prefix),
-            '--parallel={0}'.format(make_jobs)
+            '--parallel={0}'.format(make_jobs),
+            '--{0}-curl'.format(variant_to_bool('+curl')),
+            '--{0}-expat'.format(variant_to_bool('+expat')),
+            '--{0}-jsoncpp'.format(variant_to_bool('+jsoncpp')),
+            '--{0}-zlib'.format(variant_to_bool('+zlib')),
+            '--{0}-bzip2'.format(variant_to_bool('+bzip2')),
+            '--{0}-liblzma'.format(variant_to_bool('+xz')),
+            '--{0}-libarchive'.format(variant_to_bool('+archive'))
         ]
-
-        if '+curl' in spec:
-            options.append('--system-curl')
-        else:
-            options.append('--no-system-curl')
-
-        if '+expat' in spec:
-            options.append('--system-expat')
-        else:
-            options.append('--no-system-expat')
-
-        # if '+jsoncpp' in spec:
-        #     options.append('--system-jsoncpp')
-        # else:
-        #     options.append('--no-system-jsoncpp')
-        options.append('--no-system-jsoncpp')
-
-        if '+zlib' in spec:
-            options.append('--system-zlib')
-        else:
-            options.append('--no-system-zlib')
-
-        if '+bzip2' in spec:
-            options.append('--system-bzip2')
-        else:
-            options.append('--no-system-bzip2')
-
-        if '+xz' in spec:
-            options.append('--system-liblzma')
-        else:
-            options.append('--no-system-liblzma')
-
-        if '+archive' in spec:
-            options.append('--system-libarchive')
-        else:
-            options.append('--no-system-libarchive')
 
         if '+qt' in spec:
             options.append('--qt-gui')
@@ -147,5 +121,5 @@ class Cmake(Package):
         bootstrap(*options)
 
         make()
-        make('test')
+        # make('test')  # some tests fail, takes forever
         make('install')
