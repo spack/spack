@@ -35,8 +35,8 @@ class Zlib(Package):
     version('1.2.8', '44d667c142d7cda120332623eab69f40')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix))
 
         make()
-        make("test")
-        make("install")
+        make('test')
+        make('install')

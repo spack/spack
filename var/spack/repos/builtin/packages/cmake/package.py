@@ -44,7 +44,7 @@ class Cmake(Package):
 
     variant('curl',    default=True,  description='Build external curl library')
     variant('expat',   default=True,  description='Build external expat library')
-    # variant('jsoncpp', default=True,  description='Build external jsoncpp library')
+    # variant('jsoncpp', default=True, description='Build external jsoncpp library')  # NOQA: ignore=E501
     variant('zlib',    default=True,  description='Build external zlib library')
     variant('bzip2',   default=True,  description='Build external bzip2 library')
     variant('xz',      default=True,  description='Build external lzma library')
@@ -88,7 +88,7 @@ class Cmake(Package):
         # Consistency check
         self.validate(spec)
 
-	def variant_to_bool(variant):
+        def variant_to_bool(variant):
             return 'system' if variant in spec else 'no-system'
 
         # configure, build, install:

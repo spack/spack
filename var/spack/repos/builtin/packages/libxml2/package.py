@@ -45,14 +45,15 @@ class Libxml2(Package):
 
     def install(self, spec, prefix):
         if '+python' in spec:
-            python_args = ["--with-python=%s" % spec['python'].prefix,
-                           "--with-python-install-dir=%s" % site_packages_dir]
+            python_args = [
+                '--with-python={0}'.format(spec['python'].prefix),
+                '--with-python-install-dir={0}'.format(site_packages_dir)
+            ]
         else:
-            python_args = ["--without-python"]
+            python_args = ['--without-python']
 
-        configure("--prefix=%s" % prefix,
-                  *python_args)
+        configure('--prefix={0}'.format(prefix), *python_args)
 
         make()
-        make("check")
-        make("install")
+        make('check')
+        make('install')

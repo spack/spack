@@ -38,7 +38,8 @@ class Nettle(Package):
     depends_on('gmp')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("check")
-        make("install")
+        make('check')
+        make('install')
