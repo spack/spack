@@ -46,7 +46,7 @@ class Libxsmm(Package):
         makefile.filter('CC = icc',         'CC ?= icc', **kwargs)
         makefile.filter('CC = gcc',         'CC ?= gcc', **kwargs)
         makefile.filter('CXX = icpc',       'CXX ?= icpc', **kwargs)
-        makefile.filter('CXX = g.*',        'CXX ?= g++', **kwargs)
+        makefile.filter('CXX = g++',        'CXX ?= g++', **kwargs)
         makefile.filter('FC = ifort',       'FC ?= ifort', **kwargs)
         makefile.filter('FC = gfortran',    'FC ?= gfortran', **kwargs)
 
