@@ -29,8 +29,9 @@ import shutil
 import stat
 import errno
 import getpass
-from contextlib import contextmanager, closing
+from contextlib import contextmanager
 import subprocess
+import fileinput
 
 import llnl.util.tty as tty
 
@@ -85,13 +86,14 @@ def filter_file(regex, repl, *filenames, **kwargs):
         if ignore_absent and not os.path.exists(filename):
             continue
 
-        shutil.copy(filename, backup_filename)
+        # Create backup file. Don't overwrite an existing backup
+        # file in case this file is being filtered multiple times.
+        if not os.path.exists(backup_filename):
+            shutil.copy(filename, backup_filename)
+
         try:
-            with closing(open(backup_filename)) as infile:
-                with closing(open(filename, 'w')) as outfile:
-                    for line in infile:
-                        foo = re.sub(regex, repl, line)
-                        outfile.write(foo)
+            for line in fileinput.input(filename, inplace=True):
+                print(re.sub(regex, repl, line.rstrip()))
         except:
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)
