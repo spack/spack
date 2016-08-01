@@ -189,7 +189,7 @@ def install(src, dest):
 
 
 def install_tree(src, dest, **kwargs):
-    """Manually install a file to a particular location."""
+    """Manually install a directory tree to a particular location."""
     tty.debug("Installing %s to %s" % (src, dest))
     shutil.copytree(src, dest, **kwargs)
 
