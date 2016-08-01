@@ -74,7 +74,6 @@ class Ghc(Package):
             "--with-gmp-libraries=%s" % spec['gmp'].prefix.lib,
             "--with-curses-includes=%s" % spec['ncurses'].prefix.include,
             "--with-curses-libraries=%s" % spec['ncurses'].prefix.lib,
-            "--with-system-libffi",
             "--with-ffi-includes=%s" % spec['libffi'].prefix.include,
             "--with-ffi-libraries=%s" % spec['libffi'].prefix.lib,
         ]
