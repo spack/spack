@@ -1,6 +1,7 @@
 import os
 import re
 import spack.config
+import llnl.util.tty as tty
 from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.linux_distro import LinuxDistro
@@ -19,7 +20,6 @@ def _target_from_clean_env(name):
     '''
     # Based on the incantation:
     # echo "$(env - USER=$USER /bin/bash -l -c 'module list -lt')"
-    default_modules = []
     targets = []
     if name != 'front_end':
         env = which('env')
@@ -30,16 +30,14 @@ def _target_from_clean_env(name):
                     '/bin/sh', '--noprofile', '-c',
                     'source /etc/profile; module list -lt',
                     output=str, error=str)
+        default_modules = [i for i in output.splitlines()
+                           if len(i.split()) == 1]
+        tty.debug("Found default modules:",
+                  *["      " + mod for mod in default_modules])
         pattern = 'craype-(?!{0})(\S*)'.format('|'.join(NON_TARGETS))
-        for line in output.splitlines():
-            if 'craype-' in line:
-                targets.extend(re.findall(pattern, line))
-            if len(line.split()) == 1:
-                default_modules.append(line)
-        # if default_modules:
-        #     print 'Found default modules:'
-        #     for defmod in default_modules:
-        #         print '    ', defmod
+        for mod in default_modules:
+            if 'craype-' in mod:
+                targets.extend(re.findall(pattern, mod))
     return targets[0] if targets else None
 
 
