@@ -6,7 +6,7 @@ from spack.util.executable import which
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.linux_distro import LinuxDistro
 from spack.operating_systems.cnl import Cnl
-
+from llnl.util.filesystem import join_path
 
 # Craype- module prefixes that are not valid CPU targets.
 NON_TARGETS = ('hugepages', 'network', 'target', 'accel', 'xtpe')
