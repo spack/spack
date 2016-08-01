@@ -31,6 +31,7 @@ import spack.cmd
 
 description = "Build and install packages"
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
@@ -61,7 +62,11 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--run-tests', action='store_true', dest='run_tests',
         help="Run tests during installation of a package.")
-
+    subparser.add_argument(
+        '-p', '--install-policy', action='store', dest="install_policy",
+        default="build", choices=["build", "download", "lazy"],
+        help="Build from source, download binaries, " +
+             "or build if binary not available.")
 
 
 def install(parser, args):
@@ -88,4 +93,5 @@ def install(parser, args):
                 verbose=args.verbose,
                 fake=args.fake,
                 dirty=args.dirty,
+                install_policy=args.install_policy,
                 explicit=True)

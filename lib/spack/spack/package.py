@@ -44,6 +44,8 @@ import spack
 import spack.build_environment
 import spack.compilers
 import spack.directives
+import spack.binary_distribution
+import spack.relocate
 import spack.error
 import spack.fetch_strategy as fs
 import spack.hooks
@@ -891,6 +893,7 @@ class Package(object):
                    make_jobs=None,
                    run_tests=False,
                    fake=False,
+                   install_policy="build",
                    explicit=False,
                    dirty=False,
                    install_phases=install_phases):
@@ -912,6 +915,8 @@ class Package(object):
         dirty       -- Don't clean the build environment before installing.
         make_jobs   -- Number of make jobs to use for install. Default is ncpus
         run_tests   -- Runn tests within the package's install()
+        install_policy -- Whether to download a pre-compiled package
+                          or build from scratch
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
@@ -944,12 +949,31 @@ class Package(object):
                                          fake=fake,
                                          skip_patch=skip_patch,
                                          verbose=verbose,
+                                         install_policy=install_policy,
                                          make_jobs=make_jobs,
                                          run_tests=run_tests)
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
 
+        # check and prepare binary install option
+        install_binary = False
+        binary_distribution = spack.binary_distribution
+        if install_policy in ("download", "lazy"):
+            tarball_available = binary_distribution.download_tarball(self)
+            if tarball_available:
+                install_binary = True
+                binary_distribution.prepare()
+            elif install_policy == "download":
+                tty.die("Download of binary package for %s failed."
+                        % self.name)
+            else:
+                tty.warn("No binary package for %s found."
+                         % self.name)
+
+        # create the install directory.  The install layout
+        # handles this in case so that it can use whatever
+        # package naming scheme it likes.
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
@@ -959,7 +983,7 @@ class Package(object):
                module space set up by build_environment.fork()."""
 
             start_time = time.time()
-            if not fake:
+            if not fake and not install_binary:
                 if not skip_patch:
                     self.do_patch()
                 else:
@@ -976,8 +1000,11 @@ class Package(object):
                 # Run the pre-install hook in the child process after
                 # the directory is created.
                 spack.hooks.pre_install(self)
-
-                if fake:
+                # Set up process's build environment before running install.
+                if install_binary is True:
+                    spack.binary_distribution.extract_tarball(self)
+                    spack.binary_distribution.relocate_package(self)
+                elif fake:
                     self.do_fake_install()
                 else:
                     # Do the real install in the source directory.
