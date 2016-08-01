@@ -31,6 +31,7 @@ class Cmake(Package):
     homepage  = 'https://www.cmake.org'
     url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
 
+    version('3.6.1',    'd6dd661380adacdb12f41b926ec99545')
     version('3.6.0',    'aa40fbecf49d99c083415c2411d12db9')
     version('3.5.2',    '701386a1b5ec95f8d1075ecf96383e02')
     version('3.5.1',    'ca051f4a66375c89d1a524e726da0296')
@@ -41,19 +42,30 @@ class Cmake(Package):
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
-    variant('ncurses', default=True,
-            description='Enables the build of the ncurses gui')
-    variant('openssl', default=True,
-            description="Enables CMake's OpenSSL features")
-    variant('qt', default=False, description='Enables the build of cmake-gui')
-    variant('doc', default=False,
-            description='Enables the generation of html and man page docs')
+    variant('curl',    default=True,  description='Build external curl library')
+    variant('expat',   default=True,  description='Build external expat library')
+    # variant('jsoncpp', default=True,  description='Build external jsoncpp library')
+    variant('zlib',    default=True,  description='Build external zlib library')
+    variant('bzip2',   default=True,  description='Build external bzip2 library')
+    variant('xz',      default=True,  description='Build external lzma library')
+    variant('archive', default=True,  description='Build external archive library')
+    variant('qt',      default=False, description='Enables the build of cmake-gui')
+    variant('doc',     default=False, description='Enables the generation of html and man page documentation')
+    variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
+    variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
-    depends_on('ncurses', when='+ncurses')
-    depends_on('openssl', when='+openssl')
-    depends_on('qt', when='+qt')
+    depends_on('curl',           when='+curl')
+    depends_on('expat',          when='+expat')
+    # depends_on('jsoncpp',        when='+jsoncpp')  # circular dependency
+    depends_on('zlib',           when='+zlib')
+    depends_on('bzip2',          when='+bzip2')
+    depends_on('xz',             when='+xz')
+    depends_on('libarchive',     when='+archive')
+    depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
-    depends_on('py-sphinx', when='+doc', type='build')
+    depends_on('py-sphinx',      when='+doc', type='build')
+    depends_on('openssl',        when='+openssl')
+    depends_on('ncurses',        when='+ncurses')
 
     def url_for_version(self, version):
         """Handle CMake's version-based custom URLs."""
@@ -77,11 +89,51 @@ class Cmake(Package):
         self.validate(spec)
 
         # configure, build, install:
-        options = ['--prefix=%s' % prefix]
-        options.append('--parallel=%s' % str(make_jobs))
+        options = [
+            '--prefix={0}'.format(prefix),
+            '--parallel={0}'.format(make_jobs)
+        ]
+
+        if '+curl' in spec:
+            options.append('--system-curl')
+        else:
+            options.append('--no-system-curl')
+
+        if '+expat' in spec:
+            options.append('--system-expat')
+        else:
+            options.append('--no-system-expat')
+
+        # if '+jsoncpp' in spec:
+        #     options.append('--system-jsoncpp')
+        # else:
+        #     options.append('--no-system-jsoncpp')
+        options.append('--no-system-jsoncpp')
+
+        if '+zlib' in spec:
+            options.append('--system-zlib')
+        else:
+            options.append('--no-system-zlib')
+
+        if '+bzip2' in spec:
+            options.append('--system-bzip2')
+        else:
+            options.append('--no-system-bzip2')
+
+        if '+xz' in spec:
+            options.append('--system-liblzma')
+        else:
+            options.append('--no-system-liblzma')
+
+        if '+archive' in spec:
+            options.append('--system-libarchive')
+        else:
+            options.append('--no-system-libarchive')
 
         if '+qt' in spec:
             options.append('--qt-gui')
+        else:
+            options.append('--no-qt-gui')
 
         if '+doc' in spec:
             options.append('--sphinx-html')
@@ -91,6 +143,9 @@ class Cmake(Package):
             options.append('--')
             options.append('-DCMAKE_USE_OPENSSL=ON')
 
-        configure(*options)
+        bootstrap = Executable('./bootstrap')
+        bootstrap(*options)
+
         make()
+        make('test')
         make('install')

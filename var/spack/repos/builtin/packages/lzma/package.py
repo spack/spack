@@ -25,24 +25,24 @@
 from spack import *
 
 
-class Jsoncpp(Package):
-    """JsonCpp is a C++ library that allows manipulating JSON values,
-    including serialization and deserialization to and from strings.
-    It can also preserve existing comment in unserialization/serialization
-    steps, making it a convenient format to store user input files."""
+class Lzma(Package):
+    """LZMA Utils are legacy data compression software with high compression
+    ratio. LZMA Utils are no longer developed, although critical bugs may be
+    fixed as long as fixing them doesn't require huge changes to the code.
 
-    homepage = "https://github.com/open-source-parsers/jsoncpp"
-    url      = "https://github.com/open-source-parsers/jsoncpp/archive/1.7.3.tar.gz"
+    Users of LZMA Utils should move to XZ Utils. XZ Utils support the legacy
+    .lzma format used by LZMA Utils, and can also emulate the command line
+    tools of LZMA Utils. This should make transition from LZMA Utils to XZ
+    Utils relatively easy."""
 
-    version('1.7.3', 'aff6bfb5b81d9a28785429faa45839c5')
+    homepage = "http://tukaani.org/lzma/"
+    url      = "http://tukaani.org/lzma/lzma-4.32.7.tar.gz"
 
-    depends_on('cmake', type='build')
-    # depends_on('python', type='test')
+    version('4.32.7', '2a748b77a2f8c3cbc322dbd0b4c9d06a')
 
     def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('..', '-DBUILD_SHARED_LIBS=ON', *std_cmake_args)
+        configure('--prefix={0}'.format(prefix))
 
-            make()
-            # make('test')  # Python needed to run tests
-            make('install')
+        make()
+        make('check')
+        make('install')
