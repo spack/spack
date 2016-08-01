@@ -266,6 +266,19 @@ section_schemas = {
                                     ], },
                         },},},},},},
 
+    'targets': {
+        '$schema': 'http://json-schema.org/schema#',
+        'title': 'Spack target configuration file schema',
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            r'targets:?': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'patternProperties': {
+                    r'\w[\w-]*': { # target name
+                        'type': 'string' ,},},},},},
     'modules': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack module file configuration file schema',
