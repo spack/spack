@@ -343,7 +343,7 @@ class DefaultConcretizer(object):
         while not _proper_compiler_style(matches[index], spec.architecture):
             index += 1
             if index == len(matches) - 1:
-                raise NoValidVersionError(spec)
+                raise UnavailableCompilerVersionError(spec)
         spec.compiler = matches[index].copy()
         assert(spec.compiler.concrete)
         return True  # things changed.
