@@ -50,8 +50,14 @@ class Perl(Package):
     # things cleanly.
     variant('cpanm', default=True,
             description='Having cpanm in core simplifies adding modules.')
-    variant('cpanm_version', default='1.7042',
-            description='Version of cpanm to install into core if +cpanm.')
+
+    resource(
+        name="cpanm",
+        url="http://search.cpan.org/CPAN/authors/id/M/MI/MIYAGAWA/App-cpanminus-1.7042.tar.gz",
+        md5="e87f55fbcb3c13a4754500c18e89219f",
+        destination="cpanm",
+        placement="cpanm"
+    )
 
     def install(self, spec, prefix):
         configure = Executable('./Configure')
@@ -62,9 +68,8 @@ class Perl(Package):
         make("install")
 
         if '+cpanm' in spec:
-            perl_exe = join_path(prefix.bin, 'perl')
-            perl = Executable(perl_exe)
-            cpanm_installer = join_path(self.package_dir, 'cpanm-installer.pl')
-            cpanm_version = spec.variants['cpanm_version'].value
-            cpanm_package_spec = 'App::cpanminus' + '@' + cpanm_version
-            perl(cpanm_installer, cpanm_package_spec)
+            with working_dir(join_path('cpanm', 'cpanm')):
+                perl = Executable(join_path(prefix.bin, 'perl'))
+                perl('Makefile.PL')
+                make()
+                make('install')
