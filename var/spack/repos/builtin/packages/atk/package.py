@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Atk(Package):
     """ATK provides the set of accessibility interfaces that are
        implemented by other toolkits and applications. Using the ATK
@@ -35,7 +36,12 @@ class Atk(Package):
     version('2.20.0', '5187b0972f4d3905f285540b31395e20')
     version('2.14.0', 'ecb7ca8469a5650581b1227d78051b8b')
 
-    depends_on("glib")
+    depends_on('glib')
+    depends_on('pkg-config', type='build')
+
+    def url_for_version(self, version):
+        """Handle atk's version-based custom URLs."""
+        return 'http://ftp.gnome.org/pub/gnome/sources/atk/%s/atk-%s.tar.xz' % (version.up_to(2), version)
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
