@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
 
 
@@ -80,12 +81,12 @@ class PyMatplotlib(Package):
         if str(self.version) in ['1.4.2', '1.4.3']:
             # hack to fix configuration file
             config_file = None
-            for p,d,f in os.walk(prefix.lib):
+            for p, d, f in os.walk(prefix.lib):
                 for file in f:
                     if file.find('matplotlibrc') != -1:
                         config_file = join_path(p, 'matplotlibrc')
                         print config_file
-            if config_file == None:
+            if not config_file:
                 raise InstallError('could not find config file')
             filter_file(r'backend      : pyside',
                         'backend      : Qt4Agg',
