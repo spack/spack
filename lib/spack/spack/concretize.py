@@ -336,16 +336,18 @@ class DefaultConcretizer(object):
             spack.pkgsort.compiler_compare, other_spec.name)
         matches = sorted(compiler_list, cmp=cmp_compilers)
         if not matches:
+            arch = spec.architecture
             raise UnavailableCompilerVersionError(other_compiler,
-                                     spec.architecture.operating_system)
+                                                  arch.platform_os)
 
         # copy concrete version into other_compiler
         index = 0
         while not _proper_compiler_style(matches[index], spec.architecture):
             index += 1
             if index == len(matches) - 1:
+                arch = spec.architecture
                 raise UnavailableCompilerVersionError(spec.compiler,
-                                         spec.architecture.operating_system)
+                                                      arch.platform_os)
         spec.compiler = matches[index].copy()
         assert(spec.compiler.concrete)
         return True  # things changed.
