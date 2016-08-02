@@ -1,0 +1,161 @@
+##############################################################################
+# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Produced at the Lawrence Livermore National Laboratory.
+#
+# This file is part of Spack.
+# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# LLNL-CODE-647188
+#
+# For details, see https://github.com/llnl/spack
+# Please also see the LICENSE file for our notice and the LGPL.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License (as
+# published by the Free Software Foundation) version 2.1, February 1999.
+#
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+# conditions of the GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+##############################################################################
+import os
+import shutil
+import copy
+
+from spack import *
+
+
+class Cp2k(Package):
+    """CP2K is a quantum chemistry and solid state physics software package
+    that can perform atomistic simulations of solid state, liquid, molecular,
+    periodic, material, crystal, and biological systems
+    """
+    homepage = 'https://www.cp2k.org'
+    url = 'https://sourceforge.net/projects/cp2k/files/cp2k-3.0.tar.bz2'
+
+    version('3.0', 'c05bc47335f68597a310b1ed75601d35')
+
+    variant('mpi', default=True, description='Enable MPI support')
+
+    depends_on('python')  # Build dependency
+
+    depends_on('lapack')
+    depends_on('blas')
+    depends_on('fftw')
+
+    depends_on('mpi', when='+mpi')
+    depends_on('scalapack', when='+mpi')
+
+    # TODO : add dependency on libint
+    # TODO : add dependency on libsmm, libxsmm
+    # TODO : add dependency on elpa
+    # TODO : add dependency on CUDA
+    # TODO : add dependency on PEXSI
+    # TODO : add dependency on QUIP
+    # TODO : add dependency on plumed
+    # TODO : add dependency on libwannier90
+
+    parallel = False
+
+    def install(self, spec, prefix):
+        # Construct a proper filename for the architecture file
+        cp2k_architecture = '{0.architecture}-{0.compiler.name}'.format(spec)
+        cp2k_version = 'sopt' if '~mpi' in spec else 'popt'
+        makefile_basename = '.'.join([cp2k_architecture, cp2k_version])
+        makefile = join_path('arch', makefile_basename)
+
+        # Write the custom makefile
+        with open(makefile, 'w') as mkf:
+            mkf.write('CC = {0.compiler.cc}\n'.format(self))
+            if '%intel' in self.spec:
+                # CPP is a commented command in Intel arch of CP2K
+                # This is the hack through which cp2k developers avoid doing :
+                #
+                # ${CPP} <file>.F > <file>.f90
+                #
+                # and use `-fpp` instead
+                mkf.write('CPP = # {0.compiler.cc} -P\n'.format(self))
+                mkf.write('AR = xiar -r\n')
+            else:
+                mkf.write('CPP = {0.compiler.cc} -E\n'.format(self))
+                mkf.write('AR = ar -r\n')
+            fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
+            mkf.write('FC = {0}\n'.format(fc))
+            mkf.write('LD = {0}\n'.format(fc))
+            # Optimization flags
+            optflags = {
+                'gcc': ['-O2',
+                        '-ffast-math',
+                        '-ffree-form',
+                        '-ffree-line-length-none',
+                        '-ftree-vectorize',
+                        '-funroll-loops',
+                        '-mtune=native'],
+                'intel': ['-O2',
+                          '-pc64',
+                          '-unroll',
+                          '-heap-arrays 64']
+            }
+            cppflags = [
+                '-D__FFTW3',
+                '-I' + spec['fftw'].prefix.include
+            ]
+            fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
+            fcflags.extend([
+                '-I' + spec['fftw'].prefix.include
+            ])
+            ldflags = ['-L' + spec['fftw'].prefix.lib]
+            libs = []
+            # Intel
+            if '%intel' in self.spec:
+                cppflags.extend([
+                    '-D__INTEL_COMPILER',
+                    '-D__MKL'
+                ])
+                fcflags.extend([
+                    '-diag-disable 8290,8291,10010,10212,11060',
+                    '-free',
+                    '-fpp'
+                ])
+            # MPI
+            if '+mpi' in self.spec:
+                cppflags.extend([
+                    '-D__parallel',
+                    '-D__SCALAPACK'
+                ])
+                ldflags.extend([
+                    '-L' + spec['scalapack'].prefix.lib
+                ])
+                libs.extend(spec['scalapack'].scalapack_shared_libs)
+
+            # LAPACK / BLAS
+            ldflags.extend([
+                '-L' + spec['lapack'].prefix.lib,
+                '-L' + spec['blas'].prefix.lib
+            ])
+            libs.extend([
+                join_path(spec['fftw'].prefix.lib, 'libfftw3.so'),
+                spec['lapack'].lapack_shared_lib,
+                spec['blas'].blas_shared_lib
+            ])
+
+            # Write compiler flags to file
+            mkf.write('CPPFLAGS = {0}\n'.format(' '.join(cppflags)))
+            mkf.write('FCFLAGS = {0}\n'.format(' '.join(fcflags)))
+            mkf.write('LDFLAGS = {0}\n'.format(' '.join(ldflags)))
+            mkf.write('LIBS = {0}\n'.format(' '.join(libs)))
+
+        with working_dir('makefiles'):
+            # Apparently the Makefile bases its paths on PWD
+            # so we need to set PWD = os.getcwd()
+            pwd_backup = env['PWD']
+            env['PWD'] = os.getcwd()
+            make('ARCH={0}'.format(cp2k_architecture),
+                 'VERSION={0}'.format(cp2k_version))
+            env['PWD'] = pwd_backup
+        exe_dir = join_path('exe', cp2k_architecture)
+        shutil.copytree(exe_dir, self.prefix.bin)

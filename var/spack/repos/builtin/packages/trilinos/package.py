@@ -138,15 +138,22 @@ class Trilinos(Package):
             '-DTPL_ENABLE_LAPACK=ON',
             '-DLAPACK_LIBRARY_NAMES=%s' % to_lib_name(
                 spec['lapack'].lapack_shared_lib),
-            '-DLAPACK_LIBRARY_DIRS=%s' % spec['lapack'].prefix,
+            '-DLAPACK_LIBRARY_DIRS=%s' % spec['lapack'].prefix.lib,
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
             '-DTPL_ENABLE_Netcdf:BOOL=ON',
             '-DTPL_ENABLE_HYPRE:BOOL=%s' % (
-                'ON' if '+hypre' in spec else 'OFF'),
-            '-DTPL_ENABLE_HDF5:BOOL=%s' % (
-                'ON' if '+hdf5' in spec else 'OFF'),
+                'ON' if '+hypre' in spec else 'OFF')
         ])
+
+        if '+hdf5' in spec:
+            options.extend([
+                '-DTPL_ENABLE_HDF5:BOOL=ON',
+                '-DHDF5_INCLUDE_DIRS:PATH=%s' % spec['hdf5'].prefix.include,
+                '-DHDF5_LIBRARY_DIRS:PATH=%s' % spec['hdf5'].prefix.lib
+            ])
+        else:
+            options.extend(['-DTPL_ENABLE_HDF5:BOOL=OFF'])
 
         if '+boost' in spec:
             options.extend([
