@@ -165,7 +165,7 @@ install_dict = {
 
     'python': """\
         # FIXME: Add logic to build and install here.
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))""",
+        setup_py('install', '--prefix={0}'.format(prefix))""",
 
     'R': """\
         # FIXME: Add logic to build and install here.
