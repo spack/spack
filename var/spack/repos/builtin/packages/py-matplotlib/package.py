@@ -35,50 +35,61 @@ class PyMatplotlib(Package):
     url      = "https://pypi.python.org/packages/source/m/matplotlib/matplotlib-1.4.2.tar.gz"
 
     version('1.5.1', 'f51847d8692cb63df64cd0bd0304fd20')
-    version('1.4.2', '7d22efb6cce475025733c50487bd8898')
     version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
+    version('1.4.2', '7d22efb6cce475025733c50487bd8898')
 
     variant('gui', default=False, description='Enable GUI')
+    variant('ipython', default=False, description='Enable ipython support')
+
+    # Python 2.7, 3.4, or 3.5
+    extends('python', ignore=r'bin/nosetests.*$|bin/pbr$')
 
     # Required dependencies
-    extends('python@2.7:2.8,3.4:3.5', ignore=r'bin/nosetests.*$|bin/pbr$')
-    depends_on('py-numpy@1.6:')
-    depends_on('py-setuptools')
-    depends_on('py-dateutil@1.1:')
-    depends_on('py-pyparsing')
+    depends_on('py-numpy@1.6:',    type=nolink)
+    depends_on('py-setuptools',    type='build')
+    depends_on('py-dateutil@1.1:', type=nolink)
+    depends_on('py-pyparsing',     type=nolink)
     depends_on('libpng@1.2:')
-    depends_on('py-pytz')
+    depends_on('py-pytz',          type=nolink)
     depends_on('freetype@2.3:')
-    depends_on('py-cycler@0.9:')
-    # depends_on('py-tornado')
+    depends_on('py-cycler@0.9:',   type=nolink)
 
     # Optional GUI framework
-    depends_on('tk@8.3:',       when='+gui')
-    depends_on('py-pyqt@4.0:',  when='+gui')
-    depends_on('pygtk@2.4:',    when='+gui')
-    depends_on('wxPython@2.8:', when='+gui')
+    depends_on('tk@8.3:',       when='+gui')  # not 8.6.0 or 8.6.1
+    depends_on('qt',            when='+gui')
+    depends_on('py-pyside',     when='+gui', type=nolink)
+    # TODO: Add more GUI dependencies
 
     # Optional external programs
+    # ffmpeg/avconv or mencoder
     depends_on('ImageMagick')
 
     # Optional dependencies
-    depends_on('py-pillow')
-    depends_on('pkg-config')
+    depends_on('py-pillow',  type=nolink)
+    depends_on('pkg-config', type='build')
 
     # Required libraries that ship with matplotlib
     # depends_on('agg@2.4:')
-    depends_on('qhull@2012.1')
+    depends_on('qhull@2012.1:')
     # depends_on('ttconv')
-    depends_on('py-six@1.9.0:')
+    depends_on('py-six@1.9.0:', type=nolink)
 
     def install(self, spec, prefix):
-        site_packages = '{0}/lib/python{1}/site-packages'.format(
-            prefix, spec['python'].version.up_to(2))
-
-        # site-packages directory must already exist
-        mkdirp(site_packages)
-
-        # PYTHONPATH must include site-packages directory
-        env['PYTHONPATH'] += ':{0}'.format(site_packages)
-
         python('setup.py', 'install', '--prefix=%s' % prefix)
+
+        if str(self.version) in ['1.4.2', '1.4.3']:
+            # hack to fix configuration file
+            config_file = None
+            for p,d,f in os.walk(prefix.lib):
+                for file in f:
+                    if file.find('matplotlibrc') != -1:
+                        config_file = join_path(p, 'matplotlibrc')
+                        print config_file
+            if config_file == None:
+                raise InstallError('could not find config file')
+            filter_file(r'backend      : pyside',
+                        'backend      : Qt4Agg',
+                        config_file)
+            filter_file(r'#backend.qt4 : PyQt4',
+                        'backend.qt4 : PySide',
+                        config_file)
