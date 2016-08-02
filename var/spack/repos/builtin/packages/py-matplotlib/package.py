@@ -39,7 +39,7 @@ class PyMatplotlib(Package):
     version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
     version('1.4.2', '7d22efb6cce475025733c50487bd8898')
 
-    variant('gui', default=False, description='Enable GUI')
+    variant('gui',     default=False, description='Enable GUI')
     variant('ipython', default=False, description='Enable ipython support')
 
     # Python 2.7, 3.4, or 3.5
@@ -76,7 +76,8 @@ class PyMatplotlib(Package):
     depends_on('py-six@1.9.0:', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('build')
+        setup_py('install', '--prefix={0}'.format(prefix))
 
         if str(self.version) in ['1.4.2', '1.4.3']:
             # hack to fix configuration file

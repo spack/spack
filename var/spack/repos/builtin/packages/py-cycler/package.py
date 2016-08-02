@@ -35,5 +35,8 @@ class PyCycler(Package):
 
     extends('python')
 
+    depends_on('py-setuptools', type='build')
+    depends_on('py-six',        type=nolink)
+
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))
