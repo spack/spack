@@ -56,9 +56,9 @@ class PyMatplotlib(Package):
     depends_on('py-cycler@0.9:',   type=nolink)
 
     # Optional GUI framework
-    depends_on('tk@8.3:',       when='+gui')  # not 8.6.0 or 8.6.1
-    depends_on('qt',            when='+gui')
-    depends_on('py-pyside',     when='+gui', type=nolink)
+    depends_on('tk@8.3:',   when='+gui')  # not 8.6.0 or 8.6.1
+    depends_on('qt',        when='+gui')
+    depends_on('py-pyside', when='+gui', type=nolink)
     # TODO: Add more GUI dependencies
 
     # Optional external programs
@@ -68,6 +68,7 @@ class PyMatplotlib(Package):
     # Optional dependencies
     depends_on('py-pillow',  type=nolink)
     depends_on('pkg-config', type='build')
+    depends_on('py-ipython', when='+ipython')
 
     # Required libraries that ship with matplotlib
     # depends_on('agg@2.4:')
