@@ -25,20 +25,20 @@
 from spack import *
 
 
-class Libxau(Package):
-    """The libXau package contains a library implementing the X11
-       Authorization Protocol. This is useful for restricting client
-       access to the display."""
-    homepage = "http://xcb.freedesktop.org/"
-    url      = "http://ftp.x.org/pub/individual/lib/libXau-1.0.8.tar.bz2"
+class Kdiff3(Package):
+    """Compare and merge 2 or 3 files or directories."""
+    homepage = "http://kdiff3.sourceforge.net/"
+    url      = "https://downloads.sourceforge.net/project/kdiff3/kdiff3/0.9.98/kdiff3-0.9.98.tar.gz"
 
-    version('1.0.8', '685f8abbffa6d145c0f930f00703b21b')
+    version('0.9.98', 'b52f99f2cf2ea75ed5719315cbf77446')
 
-    depends_on('xproto')
-    depends_on('pkg-config', type='build')
+    depends_on("qt@5.2.0:")
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+        # make is done inside
+        configure('qt4')
 
-        make()
-        make("install")
+        # there is no make install, bummer...
+        mkdirp(self.prefix.bin)
+        install(join_path(self.stage.source_path, 'releaseQt', 'kdiff3'),
+                self.prefix.bin)
