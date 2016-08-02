@@ -23,29 +23,22 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import os
 
+class GhcBootstrap(Package):
+    """FIXME: Put a proper description of your package here."""
 
-class Gmp(AutotoolsPackage):
-    """GMP is a free library for arbitrary precision arithmetic, operating
-    on signed integers, rational numbers, and floating-point numbers."""
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "http://www.example.com"
+    url      = "http://downloads.haskell.org/~ghc/8.0.1/ghc-8.0.1-x86_64-centos67-linux.tar.xz"
 
-    homepage = "https://gmplib.org"
-    url = "https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2"
+    version('8.0.1', '56b68669e0f7186f7624d2f7bd2c3c39')
 
-    version('6.1.2',  '8ddbb26dc3bd4e2302984debba1406a5')
-    version('6.1.1',  '4c175f86e11eb32d8bf9872ca3a8e11d')
-    version('6.1.0',  '86ee6e54ebfc4a90b643a65e402c4048')
-    version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
-    version('6.0.0', '6ef5869ae735db9995619135bd856b84')
-    version('4.3.2', 'f3ef2901b603ab09a5d0f46fe1b83479',
-            url="https://gmplib.org/download/gmp/archive/gmp-4.3.2.tar.xz")
+    # FIXME: Add dependencies if required.
+    depends_on('gmp@4.3.2')
 
-    depends_on('m4', type='build')
-
-    def configure_args(self):
-        args = ['--enable-cxx']
-        # This flag is necessary for the Intel build to pass `make check`
-        if self.spec.compiler.name == 'intel':
-            args.append('CXXFLAGS=-no-ftz')
-
-        return args
+    def install(self, spec, prefix):
+        # set LD_LIBRARY_PATH to make libgmp.3.so available
+        os.environ['LD_LIBRARY_PATH'] = spec['gmp'].prefix.lib
+        configure("--prefix=%s" % prefix)
+        make("install")
