@@ -34,6 +34,7 @@ class RMime(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/mime"
 
     version('0.5', '87e00b6d57b581465c19ae869a723c4d')
+    version('0.4', '789cb33e41db2206c6fc7c3e9fbc2c02')
 
     extends('R')
 

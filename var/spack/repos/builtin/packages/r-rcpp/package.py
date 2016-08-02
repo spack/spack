@@ -41,6 +41,7 @@ class RRcpp(Package):
     list_url = "https://cran.r-project.org/src/contrib/Archive/Rcpp"
 
     version('0.12.6', 'db4280fb0a79cd19be73a662c33b0a8b')
+    version('0.12.5', 'f03ec05b4e391cc46e7ce330e82ff5e2')
 
     extends('R')
 
