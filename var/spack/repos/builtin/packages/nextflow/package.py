@@ -36,9 +36,6 @@ class Nextflow(Package):
 
     depends_on('jdk')
 
-    def unpack(self):
-        pass
-
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install("nextflow", join_path(prefix.bin, "nextflow"))
