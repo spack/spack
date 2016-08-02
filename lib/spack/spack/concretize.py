@@ -336,14 +336,16 @@ class DefaultConcretizer(object):
             spack.pkgsort.compiler_compare, other_spec.name)
         matches = sorted(compiler_list, cmp=cmp_compilers)
         if not matches:
-            raise UnavailableCompilerVersionError(other_compiler)
+            raise UnavailableCompilerVersionError(other_compiler,
+                                     spec.architecture.operating_system)
 
         # copy concrete version into other_compiler
         index = 0
         while not _proper_compiler_style(matches[index], spec.architecture):
             index += 1
             if index == len(matches) - 1:
-                raise UnavailableCompilerVersionError(spec)
+                raise UnavailableCompilerVersionError(spec.compiler,
+                                         spec.architecture.operating_system)
         spec.compiler = matches[index].copy()
         assert(spec.compiler.concrete)
         return True  # things changed.
@@ -489,9 +491,9 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
     """Raised when there is no available compiler that satisfies a
        compiler spec."""
 
-    def __init__(self, compiler_spec):
+    def __init__(self, compiler_spec, operating_system):
         super(UnavailableCompilerVersionError, self).__init__(
-            "No available compiler version matches '%s'" % compiler_spec,
+            "No available compiler version matches '%s' on operating_system %s" % compiler_spec, operating_system,  # NOQA: ignore=E501
             "Run 'spack compilers' to see available compiler Options.")
 
 
