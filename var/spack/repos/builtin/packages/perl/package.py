@@ -49,7 +49,7 @@ class Perl(Package):
     # having it in core increases the "energy of activation" for doing
     # things cleanly.
     variant('cpanm', default=True,
-            description='Having cpanm in core simplifies adding modules.')
+            description='Optionally install cpanm with the core packages.')
 
     resource(
         name="cpanm",
