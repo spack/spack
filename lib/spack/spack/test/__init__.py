@@ -39,9 +39,9 @@ test_names = [
     'pattern', 'python_version', 'git_fetch', 'svn_fetch', 'hg_fetch',
     'mirror', 'modules', 'url_extrapolate', 'cc', 'link_tree', 'spec_yaml',
     'optional_deps', 'make_executable', 'build_system_guess', 'lock',
-    'database', 'namespace_trie', 'yaml', 'sbang', 'environment', 'cmd.find',
-    'cmd.uninstall', 'cmd.test_install', 'cmd.test_compiler_cmd',
-    'cmd.module'
+    'database', 'namespace_trie', 'yaml', 'sbang', 'environment',
+    'concretize_preferences', 'cmd.find', 'cmd.uninstall', 'cmd.test_install',
+    'cmd.test_compiler_cmd', 'cmd.module'
 ]
 
 
