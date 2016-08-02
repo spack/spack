@@ -35,7 +35,7 @@ class Libxau(Package):
     version('1.0.8', '685f8abbffa6d145c0f930f00703b21b')
 
     depends_on('xproto')
-    depends_on('pkg-config')
+    depends_on('pkg-config', type='build')
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)
