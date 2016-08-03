@@ -25,28 +25,19 @@
 from spack import *
 
 
-class PkgConfig(Package):
-    """pkg-config is a helper tool used when compiling applications
-    and libraries"""
+class Libiconv(Package):
+    """GNU libiconv provides an implementation of the iconv() function
+    and the iconv program for character set conversion."""
 
-    homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
-    url      = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz"
+    homepage = "https://www.gnu.org/software/libiconv/"
+    url      = "http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz"
 
-    version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
-    version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
-
-    parallel = False
-
-    # The following patch is needed for gcc-6.1
-    patch('g_date_strftime.patch')
+    version('1.14', 'e34509b1623cec449dfeb73d7ce9c6c6')
 
     def install(self, spec, prefix):
-        configure("--prefix={0}".format(prefix),
-                  "--enable-shared",
-                  # There's a bootstrapping problem here;
-                  # glib uses pkg-config as well, so break
-                  # the cycle by using the internal glib.
-                  "--with-internal-glib")
+        configure('--prefix={0}'.format(prefix),
+                  '--enable-extra-encodings')
 
         make()
-        make("install")
+        make('check')
+        make('install')

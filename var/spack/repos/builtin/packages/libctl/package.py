@@ -25,28 +25,24 @@
 from spack import *
 
 
-class PkgConfig(Package):
-    """pkg-config is a helper tool used when compiling applications
-    and libraries"""
+class Libctl(Package):
+    """libctl is a free Guile-based library implementing flexible
+    control files for scientific simulations."""
 
-    homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
-    url      = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.28.tar.gz"
+    homepage = "http://ab-initio.mit.edu/wiki/index.php/Libctl"
+    url      = "http://ab-initio.mit.edu/libctl/libctl-3.2.2.tar.gz"
 
-    version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
-    version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
+    version('3.2.2', '5fd7634dc9ae8e7fa70a68473b9cbb68')
 
-    parallel = False
-
-    # The following patch is needed for gcc-6.1
-    patch('g_date_strftime.patch')
+    depends_on('guile')
 
     def install(self, spec, prefix):
-        configure("--prefix={0}".format(prefix),
-                  "--enable-shared",
-                  # There's a bootstrapping problem here;
-                  # glib uses pkg-config as well, so break
-                  # the cycle by using the internal glib.
-                  "--with-internal-glib")
+        configure('--prefix={0}'.format(prefix),
+                  '--enable-shared',
+                  'GUILE={0}'.format(join_path(
+                      spec['guile'].prefix.bin, 'guile')),
+                  'GUILE_CONFIG={0}'.format(join_path(
+                      spec['guile'].prefix.bin, 'guile-config')))
 
         make()
-        make("install")
+        make('install')
