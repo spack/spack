@@ -25,32 +25,15 @@
 from spack import *
 
 
-class Glib(Package):
-    """The GLib package contains a low-level libraries useful for
-       providing data structure handling for C, portability wrappers
-       and interfaces for such runtime functionality as an event loop,
-       threads, dynamic loading and an object system."""
-    homepage = "https://developer.gnome.org/glib/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/glib/2.42/glib-2.42.1.tar.xz"
+class Libepoxy(Package):
+    """Epoxy is a library for handling OpenGL function pointer management for
+    you."""
+    homepage = "https://github.com/anholt/libepoxy"
+    url      = "https://github.com/anholt/libepoxy/releases/download/v1.3.1/libepoxy-1.3.1.tar.bz2"
 
-    version('2.49.4', 'e2c87c03017b0cd02c4c73274b92b148')
-    version('2.42.1', '89c4119e50e767d3532158605ee9121a')
-
-    depends_on('libffi')
-    depends_on('zlib')
-    depends_on('pkg-config', type='build')
-    depends_on('gettext')
-    depends_on('pcre+utf', when='@2.49:')
-
-    # The following patch is needed for gcc-6.1
-    patch('g_date_strftime.patch', when='@2.42.1')
-
-    def url_for_version(self, version):
-        """Handle glib's version-based custom URLs."""
-        url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
-        return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
+    version('1.3.1', '96f6620a9b005a503e7b44b0b528287d')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix))
         make()
-        make("install", parallel=False)
+        make('install')
