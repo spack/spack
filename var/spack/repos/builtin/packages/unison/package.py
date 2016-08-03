@@ -41,6 +41,7 @@ class Unison(Package):
     depends_on('ocaml', type='build')
 
     parallel = False
+
     def install(self, spec, prefix):
         make('./mkProjectInfo')
         make('UISTYLE=text')
