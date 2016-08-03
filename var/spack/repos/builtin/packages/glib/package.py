@@ -23,7 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
 
 
 class Glib(Package):
@@ -40,12 +39,11 @@ class Glib(Package):
     depends_on('libffi')
     depends_on('zlib')
     depends_on('pkg-config', type='build')
-    depends_on('gettext', when=sys.platform == 'darwin')
+    depends_on('gettext')
     depends_on('pcre+utf', when='@2.49:')
-    depends_on('gettext', when='@2.49:')
 
     # The following patch is needed for gcc-6.1
-    patch('g_date_strftime.patch')
+    patch('g_date_strftime.patch', when='@2.42.1')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
