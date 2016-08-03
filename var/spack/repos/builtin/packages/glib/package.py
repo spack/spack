@@ -50,7 +50,7 @@ class Glib(Package):
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
-        return url+'/%s/glib-%s.tar.xz' % (version.up_to(2), version)
+        return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
