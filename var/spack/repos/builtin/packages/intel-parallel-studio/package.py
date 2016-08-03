@@ -50,6 +50,11 @@ class IntelParallelStudio(IntelInstaller):
     provides('daal', when='+daal')
     provides('ipp', when='+ipp')
 
+    # virtual dependency
+    provides('blas', when='+mkl')
+    provides('lapack', when='+mkl')
+    # TODO: MKL also provides implementation of Scalapack.
+
     def check_variants(self, spec):
         error_message = '\t{variant} can not be turned off if "+all" is set'
 
@@ -75,7 +80,7 @@ class IntelParallelStudio(IntelInstaller):
             regex = '(comp|openmp|intel-tbb|icc|ifort|psxe|icsxe-pset)'
             base_components = \
                 filter_pick(all_components, re.compile(regex).search)
-            regex = '(icsxe|imb|mpi|itac|intel-tc|clck)'
+            regex = '(icsxe|imb|mpi|itac|intel-ta|intel-tc|clck)'
             mpi_components = \
                 filter_pick(all_components, re.compile(regex).search)
             mkl_components = \
@@ -134,6 +139,12 @@ class IntelParallelStudio(IntelInstaller):
                         os.symlink(self.global_license_file,
                                    os.path.join(self.prefix, "itac", ifile,
                                                 "license.lic"))
+                    if os.path.isdir(os.path.join(self.prefix, "itac",
+                                     ifile, "intel64")):
+                        os.symlink(self.global_license_file,
+                                   os.path.join(self.prefix, "itac",
+                                                ifile, "intel64",
+                                                "license.lic"))
                 if spec.satisfies('~newdtags'):
                     wrappers = ["mpif77", "mpif77", "mpif90", "mpif90",
                                 "mpigcc", "mpigcc", "mpigxx", "mpigxx",
@@ -158,6 +169,24 @@ class IntelParallelStudio(IntelInstaller):
 
         os.symlink(os.path.join(self.prefix.man, "common", "man1"),
                    os.path.join(self.prefix.man, "man1"))
+
+    def setup_dependent_package(self, module, dspec):
+        # For now use Single Dynamic Library:
+        # To set the threading layer at run time, use the
+        # mkl_set_threading_layer function or set MKL_THREADING_LAYER
+        # variable to one of the following values: INTEL, SEQUENTIAL, PGI.
+        # To set interface layer at run time, use the mkl_set_interface_layer
+        # function or set the MKL_INTERFACE_LAYER variable to LP64 or ILP64.
+
+        # Otherwise one would need to specify several libraries
+        # (e.g. mkl_intel_lp64;mkl_sequential;mkl_core), which reflect
+        # different interface and threading layers.
+
+        name = 'libmkl_rt.%s' % dso_suffix
+        libdir = find_library_path(name, self.prefix.lib64, self.prefix.lib)
+
+        self.spec.blas_shared_lib   = join_path(libdir, name)
+        self.spec.lapack_shared_lib = self.spec.blas_shared_lib
 
     def setup_environment(self, spack_env, run_env):
         # TODO: Determine variables needed for the professional edition.
@@ -227,6 +256,8 @@ class IntelParallelStudio(IntelInstaller):
             run_env.set('I_MPI_ROOT', join_path(self.prefix, 'impi'))
 
         if self.spec.satisfies('+all') or self.spec.satisfies('+mkl'):
+            spack_env.set('MKLROOT', self.prefix)
+
             run_env.prepend_path('LD_LIBRARY_PATH',
                                  join_path(self.prefix, 'mkl', 'lib',
                                            'intel64'))
