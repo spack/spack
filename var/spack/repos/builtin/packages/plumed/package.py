@@ -44,7 +44,6 @@ class Plumed(Package):
 
     version('2.2.3', 'a6e3863e40aac07eb8cf739cbd14ecf8')
 
-
     variant('shared', default=True, description='Builds shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('gsl', default=True, description='Activates GSL support')
@@ -65,14 +64,17 @@ class Plumed(Package):
         # Also consider that this is different with respect to what some other
         # configure script does in that variables such as MPICXX are
         # completely ignored here. In case you work on a machine where CXX is
-        # set to a serial compiler and MPICXX to a MPI compiler, to compile with
-        # MPI you should use:
+        # set to a serial compiler and MPICXX to a MPI compiler, to compile
+        # with MPI you should use:
         #
         # > ./configure CXX="$MPICXX"
-        configure_opts = ['CXX={0}'.format(spec['mpi'].mpicxx)] if '+mpi' in self.spec else []
+        configure_opts = [
+            'CXX={0}'.format(spec['mpi'].mpicxx)
+        ] if '+mpi' in self.spec else []
+
         configure_opts.extend([
             '--prefix={0}'.format(prefix),
-            '--enable-shared={0}'.format('yes' if '+shared' in spec else 'no'),
+            '--enable-shared={0}'.format('yes' if '+shared' in spec else 'no'),  # NOQA: ignore=E501
             '--enable-mpi={0}'.format('yes' if '+mpi' in spec else 'no'),
             '--enable-gsl={0}'.format('yes' if '+gsl' in spec else 'no')
         ])
