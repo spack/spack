@@ -495,7 +495,7 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
 
     def __init__(self, compiler_spec, operating_system):
         super(UnavailableCompilerVersionError, self).__init__(
-            "No available compiler version matches '%s' on operating_system %s" % compiler_spec, operating_system,  # NOQA: ignore=E501
+            "No available compiler version matches '%s' on operating_system %s" % (compiler_spec, operating_system),  # NOQA: ignore=E501
             "Run 'spack compilers' to see available compiler Options.")
 
 
