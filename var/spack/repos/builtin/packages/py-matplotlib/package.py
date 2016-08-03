@@ -80,19 +80,17 @@ class PyMatplotlib(Package):
         setup_py('build')
         setup_py('install', '--prefix={0}'.format(prefix))
 
-        if str(self.version) in ['1.4.2', '1.4.3']:
-            # hack to fix configuration file
+        if '+gui' in spec:
+            # Set backend in matplotlib configuration file
             config_file = None
             for p, d, f in os.walk(prefix.lib):
                 for file in f:
                     if file.find('matplotlibrc') != -1:
                         config_file = join_path(p, 'matplotlibrc')
-                        print config_file
             if not config_file:
-                raise InstallError('could not find config file')
-            filter_file(r'backend      : pyside',
-                        'backend      : Qt4Agg',
-                        config_file)
-            filter_file(r'#backend.qt4 : PyQt4',
-                        'backend.qt4 : PySide',
-                        config_file)
+                raise InstallError('Could not find matplotlibrc')
+
+            kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+            rc = FileFilter(config_file)
+            rc.filter('^backend.*',      'backend     : Qt4Agg', **kwargs)
+            rc.filter('^#backend.qt4.*', 'backend.qt4 : PySide', **kwargs)
