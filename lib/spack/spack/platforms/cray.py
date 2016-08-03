@@ -98,7 +98,7 @@ class Cray(Platform):
         cray_wrapper_names = join_path(spack.build_env_path, 'cray')
         if os.path.isdir(cray_wrapper_names):
             env.prepend_path('PATH', cray_wrapper_names)
-            env.prepend_path('SPACK_ENV_PATHS', cray_wrapper_names)
+            env.prepend_path('SPACK_ENV_PATH', cray_wrapper_names)
 
     @classmethod
     def detect(self):
