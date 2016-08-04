@@ -57,6 +57,7 @@ class Git(Package):
     depends_on("perl")
 
     def install(self, spec, prefix):
+        env['LDFLAGS'] = "-L%s" % spec['gettext'].prefix.lib + " -lintl"
         configure_args = [
             "--prefix=%s" % prefix,
             "--with-libpcre=%s" % spec['pcre'].prefix,
