@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Samtools(Package):
     """SAM Tools provide various utilities for manipulating alignments in
        the SAM format, including sorting, merging, indexing and generating
@@ -32,12 +33,12 @@ class Samtools(Package):
     homepage = "www.htslib.org"
     url = "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
 
-    version('1.3.1','a7471aa5a1eb7fc9cc4c6491d73c2d88')
-    version('1.2','988ec4c3058a6ceda36503eebecd4122')
+    version('1.3.1', 'a7471aa5a1eb7fc9cc4c6491d73c2d88')
+    version('1.2', '988ec4c3058a6ceda36503eebecd4122')
 
     depends_on("ncurses")
-    depends_on("htslib", when='@1.3.1') # htslib became standalone
-    depends_on('zlib', when='@1.2')     # needed for builtin htslib
+    depends_on("htslib", when='@1.3.1')  # htslib became standalone
+    depends_on('zlib', when='@1.2')      # needed for builtin htslib
 
     def install(self, spec, prefix):
         if self.spec.version >= Version('1.3.1'):
