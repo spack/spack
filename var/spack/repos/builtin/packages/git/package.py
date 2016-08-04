@@ -55,7 +55,6 @@ class Git(Package):
     depends_on("zlib")
     depends_on("pcre")
     depends_on("perl")
-    depends_on("zlib")
 
     def install(self, spec, prefix):
         configure_args = [
@@ -63,6 +62,7 @@ class Git(Package):
             "--with-libpcre=%s" % spec['pcre'].prefix,
             "--with-openssl=%s" % spec['openssl'].prefix,
             "--with-zlib=%s" % spec['zlib'].prefix,
+            "--with-curl=%s" % spec['curl'].prefix,
             "--with-expat=%s" % spec['expat'].prefix,
             "--with-perl=%s" % join_path(spec['perl'].prefix.bin, 'perl'),
         ]
