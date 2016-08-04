@@ -38,4 +38,4 @@ class PyVcversioner(Package):
     depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))

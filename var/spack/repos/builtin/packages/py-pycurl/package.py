@@ -39,4 +39,4 @@ class PyPycurl(Package):
     depends_on('curl')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))

@@ -40,4 +40,4 @@ class PyJsonschema(Package):
     depends_on('py-functools32')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))
