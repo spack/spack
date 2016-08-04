@@ -22,6 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import subprocess
+
 from spack import *
 
 
@@ -46,13 +48,19 @@ class Gromacs(Package):
     variant('shared', default=True, description='Enables the build of shared libraries')
     variant('debug', default=False, description='Enables debug mode')
     variant('double', default=False, description='Produces a double precision version of the executables')
+    variant('plumed', default=False, description='Enable PLUMED support')
 
     depends_on('mpi', when='+mpi')
-
+    depends_on('plumed+mpi', when='+plumed+mpi')
+    depends_on('plumed~mpi', when='+plumed~mpi')
     depends_on('fftw')
     depends_on('cmake', type='build')
 
     # TODO : add GPU support
+
+    def patch(self):
+        if '+plumed' in self.spec:
+            self.spec['plumed'].package.apply_patch(self)
 
     def install(self, spec, prefix):
 

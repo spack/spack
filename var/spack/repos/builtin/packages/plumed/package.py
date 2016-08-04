@@ -22,6 +22,7 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import subprocess
 
 from spack import *
 
@@ -54,6 +55,33 @@ class Plumed(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('gsl', when='+gsl')
+
+    # Dictionary mapping PLUMED versions to the patches it provides
+    # interactively
+    patches = {
+        '2.2.3': {
+            'amber-14': '1',
+            'gromacs-4.5.7': '2',
+            'gromacs-4.6.7': '3',
+            'gromacs-5.0.7': '4',
+            'gromacs-5.1.2': '5',
+            'lammps-6Apr13': '6',
+            'namd-2.8': '7',
+            'namd-2.9': '8',
+            'espresso-5.0.2': '9'
+        }
+    }
+
+    def apply_patch(self, other):
+        plumed = subprocess.Popen(
+            [join_path(self.spec.prefix.bin, 'plumed'), 'patch', '-p'],
+            stdin=subprocess.PIPE
+        )
+        opts = Plumed.patches[str(self.version)]
+        search = '{0.name}-{0.version}'.format(other)
+        choice = opts[search] + '\n'
+        plumed.stdin.write(choice)
+        plumed.wait()
 
     def setup_dependent_package(self, module, ext_spec):
         # Make plumed visible from dependent packages
