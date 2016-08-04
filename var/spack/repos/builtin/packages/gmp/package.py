@@ -36,8 +36,10 @@ class Gmp(AutotoolsPackage):
     version('6.1.1',  '4c175f86e11eb32d8bf9872ca3a8e11d')
     version('6.1.0',  '86ee6e54ebfc4a90b643a65e402c4048')
     version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
-    version('6.0.0', '6ef5869ae735db9995619135bd856b84')
-    version('4.3.2', 'f3ef2901b603ab09a5d0f46fe1b83479',
+    version('6.0.0',  '6ef5869ae735db9995619135bd856b84')
+    # This old version is needed to support a binary package in
+    # ghc-bootstrap.
+    version('4.3.2',  'f3ef2901b603ab09a5d0f46fe1b83479',
             url="https://gmplib.org/download/gmp/archive/gmp-4.3.2.tar.xz")
 
     depends_on('m4', type='build')
