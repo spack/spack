@@ -87,4 +87,4 @@ class JupyterNotebook(Package):
     # invoked from within the setup script. But as a fall-back npm is installed
     # and will be called if Bower is not present on the system...
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))

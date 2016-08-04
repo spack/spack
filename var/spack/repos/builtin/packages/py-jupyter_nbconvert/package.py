@@ -40,4 +40,4 @@ class PyJupyterNbconvert(Package):
     depends_on('py-jupyter_core')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix={0}'.format(prefix))
+        setup_py('install', '--prefix={0}'.format(prefix))
