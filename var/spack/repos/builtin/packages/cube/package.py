@@ -28,8 +28,8 @@ from spack import *
 
 class Cube(Package):
     """
-    Cube the profile viewer for Score-P and Scalasca profiles. It displays a multi-dimensional performance space
-    consisting of the dimensions:
+    Cube the profile viewer for Score-P and Scalasca profiles. It displays a
+    multi-dimensional performance space consisting of the dimensions:
     - performance metric
     - call path
     - system resource

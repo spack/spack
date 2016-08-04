@@ -28,8 +28,9 @@ from spack import *
 
 class Scorep(Package):
     """
-    The Score-P measurement infrastructure is a highly scalable and easy-to-use tool suite for profiling, event
-    tracing, and online analysis of HPC applications.
+    The Score-P measurement infrastructure is a highly scalable and easy-to-use
+    tool suite for profiling, event tracing, and online analysis of HPC
+    applications.
     """
 
     homepage = "http://www.vi-hps.org/projects/score-p"
@@ -43,7 +44,8 @@ class Scorep(Package):
             url='http://www.vi-hps.org/upload/packages/scorep/scorep-1.3.tar.gz')
 
     ##########
-    # Dependencies for SCORE-P are quite tight. See the homepage for more information.
+    # Dependencies for SCORE-P are quite tight. See the homepage for more
+    # information.
     # SCOREP 2.0.2
     depends_on('otf2@2.0', when='@2.0.2')
     depends_on('opari2@2.0', when='@2.0.2')
@@ -62,17 +64,18 @@ class Scorep(Package):
     depends_on("papi")
 
     def install(self, spec, prefix):
-        configure = Executable( join_path(self.stage.source_path, 'configure') )
+        configure = Executable(join_path(self.stage.source_path, 'configure'))
         with working_dir('spack-build', create=True):
-            configure_args = ["--prefix=%s" % prefix,
-                              "--with-otf2=%s" % spec['otf2'].prefix.bin,
-                              "--with-opari2=%s" % spec['opari2'].prefix.bin,
-                              "--with-cube=%s" % spec['cube'].prefix.bin,
-                              "--with-papi-header=%s" % spec['papi'].prefix.include,
-                              "--with-papi-lib=%s" % spec['papi'].prefix.lib,
-                              "--enable-shared",
-                              "CFLAGS=-fPIC",
-                              "CXXFLAGS=-fPIC"]
+            configure_args = [
+                "--prefix=%s" % prefix,
+                "--with-otf2=%s" % spec['otf2'].prefix.bin,
+                "--with-opari2=%s" % spec['opari2'].prefix.bin,
+                "--with-cube=%s" % spec['cube'].prefix.bin,
+                "--with-papi-header=%s" % spec['papi'].prefix.include,
+                "--with-papi-lib=%s" % spec['papi'].prefix.lib,
+                "--enable-shared",
+                "CFLAGS=-fPIC",
+                "CXXFLAGS=-fPIC"]
             configure(*configure_args)
             make()
             make("install")
