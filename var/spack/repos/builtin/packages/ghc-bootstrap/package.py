@@ -26,19 +26,20 @@ from spack import *
 import os
 
 class GhcBootstrap(Package):
-    """FIXME: Put a proper description of your package here."""
+    """Install a binary package of the Glasgow Haskell Compiler
+       that can be used to bootstrap a source package."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://www.haskell.org/ghc/"
     url      = "http://downloads.haskell.org/~ghc/8.0.1/ghc-8.0.1-x86_64-centos67-linux.tar.xz"
 
     version('8.0.1', '56b68669e0f7186f7624d2f7bd2c3c39')
 
-    # FIXME: Add dependencies if required.
+    provides('haskell')
+    # The CentOS 6-based package above needs this to run on CentOS 7.
     depends_on('gmp@4.3.2')
 
     def install(self, spec, prefix):
-        # set LD_LIBRARY_PATH to make libgmp.3.so available
+        # set LD_LIBRARY_PATH to use spack's libgmp.3.so
         os.environ['LD_LIBRARY_PATH'] = spec['gmp'].prefix.lib
         configure("--prefix=%s" % prefix)
         make("install")
