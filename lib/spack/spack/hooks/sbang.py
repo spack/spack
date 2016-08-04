@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import os
+import stat
 import re
 
 import llnl.util.tty as tty
@@ -62,9 +63,20 @@ def filter_shebang(path):
     if re.search(r'^#!(/[^/]*)*lua\b', original):
         original = re.sub(r'^#', '--', original)
 
+    # Change non-writable files to be writable if needed.
+    saved_mode = None
+    if not os.access(path, os.W_OK):
+        st = os.stat(path)
+        saved_mode = st.st_mode
+        os.chmod(path, saved_mode | stat.S_IWRITE)
+
     with open(path, 'w') as new_file:
         new_file.write(new_sbang_line)
         new_file.write(original)
+
+    # Restore original permissions.
+    if saved_mode is not None:
+        os.chmod(path, saved_mode)
 
     tty.warn("Patched overlong shebang in %s" % path)
 
