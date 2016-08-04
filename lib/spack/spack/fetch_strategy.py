@@ -50,6 +50,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import *
 import spack
 import spack.error
+import spack.config
 import spack.util.crypto as crypto
 from spack.util.executable import *
 from spack.util.string import *
@@ -170,6 +171,8 @@ class URLFetchStrategy(FetchStrategy):
             tty.msg("Already downloaded %s" % self.archive_file)
             return
 
+        fetch_config = spack.config.get_config('fetchers')
+
         possible_files = self.stage.expected_archive_files
         save_file = None
         partial_file = None
@@ -195,10 +198,10 @@ class URLFetchStrategy(FetchStrategy):
             self.url,
         ]
 
-        if sys.stdout.isatty():
+        if sys.stdout.isatty() and fetch_config.get('show_status', True):
             curl_args.append('-#')  # status bar when using a tty
         else:
-            curl_args.append('-sS')  # just errors when not.
+            curl_args.append('-sS')  # just errors when not
 
         # Run curl but grab the mime type from the http headers
         headers = spack.curl(*curl_args, output=str, fail_on_error=False)
