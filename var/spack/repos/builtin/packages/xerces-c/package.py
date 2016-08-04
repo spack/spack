@@ -24,11 +24,13 @@
 ##############################################################################
 from spack import *
 
+
 class XercesC(Package):
     """ Xerces-C++ is a validating XML parser written in a portable subset of C++.
     Xerces-C++ makes it easy to give your application the ability to read and
     write XML data. A shared library is provided for parsing, generating,
-    manipulating, and validating XML documents using the DOM, SAX, and SAX2 APIs.
+    manipulating, and validating XML documents using the DOM, SAX, and SAX2
+    APIs.
     """
 
     homepage = "https://xerces.apache.org/xerces-c"
@@ -41,4 +43,3 @@ class XercesC(Package):
         make("clean")
         make()
         make("install")
-
