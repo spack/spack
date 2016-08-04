@@ -29,7 +29,11 @@ import os
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
     homepage = 'http://qt.io'
+    url      = 'http://download.qt.io/archive/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz'
+    list_url = 'http://download.qt.io/archive/qt/'
+    list_depth = 4
 
+    version('5.7.0',  '9a46cce61fc64c20c3ac0a0e0fa41b42')
     version('5.5.1',  '59f0216819152b77536cf660b015d784')
     version('5.4.2',  'fa1c4d819b401b267eb246a543a63ea5')
     version('5.4.0',  'e8654e4b37dd98039ba20da7a53877e6')
@@ -127,7 +131,7 @@ class Qt(Package):
 
     @property
     def common_config_args(self):
-        config_args = [
+        return [
             '-prefix', self.prefix,
             '-v',
             '-opensource',
@@ -144,20 +148,13 @@ class Qt(Package):
             '-no-nis'
         ]
 
-        if '+gtk' in self.spec:
-            config_args.append('-gtkstyle')
-        else:
-            config_args.append('-no-gtkstyle')
-
-        return config_args
-
     # Don't disable all the database drivers, but should
     # really get them into spack at some point.
 
     @when('@3')
     def configure(self):
-        # An user report that this was necessary to link Qt3 on ubuntu
-        os.environ['LD_LIBRARY_PATH'] = os.getcwd() + '/lib'
+        # A user reported that this was necessary to link Qt3 on ubuntu
+        os.environ['LD_LIBRARY_PATH'] = os.getcwd()+'/lib'
         configure('-prefix', self.prefix,
                   '-v',
                   '-thread',
@@ -169,16 +166,25 @@ class Qt(Package):
     def configure(self):
         configure('-fast',
                   '-no-webkit',
+                  '{0}-gtkstyle'.format('' if '+gtk' in self.spec else '-no'),
                   *self.common_config_args)
 
-    @when('@5')
+    @when('@5.0:5.6')
     def configure(self):
         configure('-no-eglfs',
                   '-no-directfb',
                   '-qt-xcb',
-                  # If someone wants to get a webkit build working, be my
-                  # guest!
+                  '{0}-gtkstyle'.format('' if '+gtk' in self.spec else '-no'),
+                  # If someone wants to get a webkit build working, be my guest!
                   '-skip', 'qtwebkit',
+                  *self.common_config_args)
+
+    @when('@5.7:')
+    def configure(self):
+        configure('-no-eglfs',
+                  '-no-directfb',
+                  '-qt-xcb',
+                  '{0}-gtk'.format('' if '+gtk' in self.spec else '-no'),
                   *self.common_config_args)
 
     def install(self, spec, prefix):
