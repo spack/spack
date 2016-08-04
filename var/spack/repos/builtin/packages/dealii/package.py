@@ -51,14 +51,21 @@ class Dealii(Package):
     variant('petsc',    default=True,  description='Compile with Petsc (only with MPI)')
     variant('slepc',    default=True,  description='Compile with Slepc (only with Petsc and MPI)')
     variant('trilinos', default=True,  description='Compile with Trilinos (only with MPI)')
+    variant('python',   default=True,  description='Compile with Python bindings')
 
     # required dependencies, light version
     depends_on("blas")
     # Boost 1.58 is blacklisted, see
     # https://github.com/dealii/dealii/issues/1591
     # Require at least 1.59
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",     when='~mpi')  # NOQA: ignore=E501
-    depends_on("boost@1.59.0:+mpi+thread+system+serialization+iostreams", when='+mpi')  # NOQA: ignore=E501
+    # +python won't affect @:8.4.1
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",            when='@:8.4.1~mpi')
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",        when='@:8.4.1+mpi')
+    # since @8.5.0: (and @develop) python bindings are introduced:
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",            when='@8.5.0:~mpi~python')
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",        when='@8.5.0:+mpi~python')
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+python",     when='@8.5.0:~mpi+python')
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi+python", when='@8.5.0:+mpi+python')
     depends_on("bzip2")
     depends_on("cmake", type='build')
     depends_on("lapack")
@@ -119,6 +126,12 @@ class Dealii(Package):
             '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix
         ])
+
+        if spec.satisfies('@8.5.0:'):
+            options.extend([
+                '-DDEAL_II_COMPONENT_PYTHON_BINDINGS=%s' %
+                ('ON' if '+python' in spec else 'OFF')
+            ])
 
         # Set directory structure:
         if spec.satisfies('@:8.2.1'):
