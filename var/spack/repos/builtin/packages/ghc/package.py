@@ -35,6 +35,7 @@ class Ghc(Package):
 
     version('8.0.1', 'c185b8a1f3e67e43533ec590b751c2ff')
 
+    depends_on('haskell')
     depends_on('gmp')
     depends_on('ncurses')
     depends_on('libffi')
@@ -43,35 +44,12 @@ class Ghc(Package):
     depends_on('python')
     depends_on('py-sphinx')
 
-    resource(
-        name='bootstrap',
-        url="http://downloads.haskell.org/~ghc/8.0.1/ghc-8.0.1-x86_64-centos67-linux.tar.xz",
-        md5='56b68669e0f7186f7624d2f7bd2c3c39',
-        destination='spack-bootstrap/dist',
-    )
-    # I should be able to figure this out from package_dir() or ...
-    pd = '/home/throgg/spack/var/spack/repos/builtin/packages/ghc'
-    resource(
-        name='bootstrap-shared-libs',
-        url='file://' + join_path(pd, 'centos-libgmp.3.tar.gz'),
-        md5='b37e0e5f499a199e349e3d44495fda6f',
-        destination='spack-bootstrap',
-    )
+    # provides('haskell')
 
     def install(self, spec, prefix):
-        # set up the ghc we'll use to bootstrap
-        bootstrap_dir = join_path(self.stage.source_path, 'spack-bootstrap')
-        bootstrap_ghc_dir = join_path(bootstrap_dir, 'dist', 'ghc-8.0.1')
-        bootstrap_lib_dir = join_path(bootstrap_dir, 'lib64')
-        with working_dir(bootstrap_ghc_dir):
-            # set LD_LIBRARY_PATH to make libgmp.3.so available
-            os.environ['LD_LIBRARY_PATH'] = bootstrap_lib_dir
-            configure("--prefix=%s" % bootstrap_dir)
-            make("install")
-
         configure_args = [
             "--prefix=%s" % prefix,
-            "--with-ghc=%s" % join_path(bootstrap_dir, 'bin', 'ghc'),
+            "--with-ghc=%s" % join_path(spec['haskell'].prefix.bin, 'ghc'),
             "--with-gmp-includes=%s" % spec['gmp'].prefix.include,
             "--with-gmp-libraries=%s" % spec['gmp'].prefix.lib,
             "--with-curses-includes=%s" % spec['ncurses'].prefix.include,
