@@ -32,8 +32,8 @@ class XercesC(Package):
     """
 
     homepage = "https://xerces.apache.org/xerces-c"
-    url      = "https://www.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.3.tar.bz2"
-    version('3.1.3', '5e333b55cb43e6b025ddf0e5d0f0fb0d')
+    url      = "https://www.apache.org/dist/xerces/c/3/sources/xerces-c-3.1.4.tar.bz2"
+    version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix,
