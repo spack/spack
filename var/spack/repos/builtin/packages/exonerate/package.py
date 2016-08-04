@@ -39,6 +39,7 @@ class Exonerate(Package):
     parallel = False
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix), '--disable-debug', '--disable-dependency-tracking')
+        configure('--prefix={0}'.format(prefix), '--disable-debug',
+                  '--disable-dependency-tracking')
         make()
         make('install')

@@ -37,6 +37,7 @@ class BppSeq(Package):
     depends_on('bpp-core')
 
     def install(self, spec, prefix):
-        cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix, '-DBUILD_TESTING=FALSE', '.')
+        cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix,
+              '-DBUILD_TESTING=FALSE', '.')
         make()
         make('install')
