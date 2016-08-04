@@ -125,11 +125,11 @@ def _spider(args):
             if abs_link in visited:
                 continue
 
-        # If we're not at max depth, follow links.
-        if depth < max_depth:
-            subcalls.append((abs_link, visited, root, None,
-                             depth+1, max_depth, raise_on_error))
-            visited.add(abs_link)
+            # If we're not at max depth, follow links.
+            if depth < max_depth:
+                subcalls.append((abs_link, visited, root, None,
+                                 depth+1, max_depth, raise_on_error))
+                visited.add(abs_link)
 
         if subcalls:
             try:
