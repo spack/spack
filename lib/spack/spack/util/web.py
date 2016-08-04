@@ -25,8 +25,7 @@
 import re
 import os
 import sys
-import subprocess
-import urllib2, cookielib
+import urllib2
 import urlparse
 from multiprocessing import Pool
 from HTMLParser import HTMLParser, HTMLParseError
@@ -84,7 +83,7 @@ def _spider(args):
         req.get_method = lambda: "HEAD"
         resp = urllib2.urlopen(req, timeout=TIMEOUT)
 
-        if not "Content-type" in resp.headers:
+        if "Content-type" not in resp.headers:
             tty.debug("ignoring page " + url)
             return pages, links
 
@@ -128,7 +127,7 @@ def _spider(args):
             # If we're not at max depth, follow links.
             if depth < max_depth:
                 subcalls.append((abs_link, visited, root, None,
-                                 depth+1, max_depth, raise_on_error))
+                                 depth + 1, max_depth, raise_on_error))
                 visited.add(abs_link)
 
         if subcalls:
@@ -142,22 +141,22 @@ def _spider(args):
                 pool.terminate()
                 pool.join()
 
-    except urllib2.URLError, e:
+    except urllib2.URLError as e:
         tty.debug(e)
         if raise_on_error:
             raise spack.error.NoNetworkConnectionError(str(e), url)
 
-    except HTMLParseError, e:
+    except HTMLParseError as e:
         # This error indicates that Python's HTML parser sucks.
         msg = "Got an error parsing HTML."
 
         # Pre-2.7.3 Pythons in particular have rather prickly HTML parsing.
-        if sys.version_info[:3] < (2,7,3):
+        if sys.version_info[:3] < (2, 7, 3):
             msg += " Use Python 2.7.3 or newer for better HTML parsing."
 
         tty.warn(msg, url, "HTMLParseError: " + str(e))
 
-    except Exception, e:
+    except Exception as e:
         # Other types of errors are completely ignored, except in debug mode.
         tty.debug("Error in _spider: %s" % e)
 
@@ -173,7 +172,8 @@ def spider(root_url, **kwargs):
        performance over a sequential fetch.
     """
     max_depth = kwargs.setdefault('depth', 1)
-    pages, links = _spider((root_url, set(), root_url, None, 1, max_depth, False))
+    pages, links = _spider((root_url, set(), root_url, None,
+                            1, max_depth, False))
     return pages, links
 
 
@@ -235,7 +235,7 @@ def find_versions_of_archive(*archive_urls, **kwargs):
             try:
                 ver = spack.url.parse_version(url)
                 versions[ver] = url
-            except spack.url.UndetectableVersionError as e:
+            except spack.url.UndetectableVersionError:
                 continue
 
     return versions
