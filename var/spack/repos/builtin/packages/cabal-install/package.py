@@ -41,7 +41,7 @@ class CabalInstall(Package):
     # @mvkorpel's fix from:
     # https://github.com/haskell/cabal/issues/3440
     # It works around problem deciding whether to use collect2 or ld.
-    # The symptom is complaint about "Setup: Unrecognized flags:..."
+    # The symptom is a complaint about "Setup: Unrecognized flags:..."
     patch('bootstrap.patch')
 
     def install(self, spec, prefix):
