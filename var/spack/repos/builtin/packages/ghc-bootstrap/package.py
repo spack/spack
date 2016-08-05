@@ -25,6 +25,15 @@
 from spack import *
 import os
 
+# This package installs GCH's binary distributions.  It is intended as
+# a bootstrapping step towards a build based on the src.
+#
+# At the moment, this is CentOS specific.  It works [for me(tm)] on
+# CentOS 7 and should work on CentOS 6.
+#
+# Going forward, we want to integrate the binary builds for other
+# platforms
+
 class GhcBootstrap(Package):
     """Install a binary package of the Glasgow Haskell Compiler
        that can be used to bootstrap a source package."""
@@ -34,12 +43,25 @@ class GhcBootstrap(Package):
 
     version('8.0.1', '56b68669e0f7186f7624d2f7bd2c3c39')
 
-    provides('haskell')
-    # The CentOS 6-based package above needs this to run on CentOS 7.
+    # The CentOS 6-based package above needs a libgmp.3.so to run on
+    # CentOS 7, this provides one.
     depends_on('gmp@4.3.2')
 
     def install(self, spec, prefix):
-        # set LD_LIBRARY_PATH to use spack's libgmp.3.so
+        # set LD_LIBRARY_PATH to use spack's `libgmp.3.so` when
+        # the configure and install steps run
         os.environ['LD_LIBRARY_PATH'] = spec['gmp'].prefix.lib
         configure("--prefix=%s" % prefix)
         make("install")
+
+        # Patch the top level shell scripts (add a line that prepends
+        # gmp's library dir to LD_LIBRARY_PATH) so that they use
+        # spack's gmp library.
+        ld_lib_path = ("export LD_LIBRARY_PATH=%s:$LD_LIBRARY_PATH"
+                       % spec['gmp'].prefix.lib)
+        new_shbang = "#!/bin/sh" + "\n" + ld_lib_path
+        script_names = ['ghc-8.0.1', 'ghc-pkg-8.0.1',
+                        'haddock-ghc-8.0.1', 'runghc-8.0.1']
+        scripts = (join_path(prefix.bin, s) for s in script_names)
+        for script in scripts:
+            filter_file(r'^#!/bin/sh', new_shbang, script)
