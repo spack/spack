@@ -37,8 +37,8 @@ class Samtools(Package):
     version('1.2', '988ec4c3058a6ceda36503eebecd4122')
 
     depends_on("ncurses")
-    depends_on("htslib", when='@1.3.1')  # htslib became standalone
-    depends_on('zlib', when='@1.2')      # needed for builtin htslib
+    depends_on("htslib", when='@1.3.1:')  # htslib became standalone
+    depends_on('zlib', when='@1.2')       # needed for builtin htslib
 
     def install(self, spec, prefix):
         if self.spec.version >= Version('1.3.1'):
