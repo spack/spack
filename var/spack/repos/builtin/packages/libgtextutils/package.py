@@ -33,9 +33,6 @@ class Libgtextutils(Package):
 
     version('0.7', '593c7c62e3c76ec49f5736eed4f96806')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
-
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
