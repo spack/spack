@@ -36,7 +36,6 @@ class BppCore(Package):
     depends_on('cmake')
 
     def install(self, spec, prefix):
-        cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-              '-DBUILD_TESTING=FALSE', '.')
+        cmake('-DBUILD_TESTING=FALSE', '.', *std_cmake_args)
         make()
         make('install')

@@ -42,6 +42,6 @@ class BppSuite(Package):
     depends_on('bpp-phyl')
 
     def install(self, spec, prefix):
-        cmake('-DCMAKE_INSTALL_PREFIX=%s' % prefix, '.')
+        cmake('.', *std_cmake_args)
         make()
         make('install')
