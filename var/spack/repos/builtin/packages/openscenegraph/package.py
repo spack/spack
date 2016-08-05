@@ -51,6 +51,7 @@ class Openscenegraph(Package):
 
     version('3.4.0', 'a5e762c64373a46932e444f6f7332496')
     version('3.2.3', '02ffdad7744c747d8fad0d7babb58427')
+    version('3.1.5', '1c90b851b109849c985006486ef59822')
 
     variant('debug', default=False, description='Builds a debug version of the library')
     variant('shared', default=True, description='Builds a shared version of the library')
@@ -73,16 +74,17 @@ class Openscenegraph(Package):
             cmake(
                 source_directory,
                 '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-                '-DCMAKE_C_COMPILER=%s' % self.compilers.cc,
-                '-DCMAKE_CXX_COMPILER=%s' % self.compilers.cxx,
+                '-DCMAKE_C_COMPILER=%s' % self.compiler.cc,
+                '-DCMAKE_CXX_COMPILER=%s' % self.compiler.cxx,
                 '-DZLIB_INCLUDE_DIR=%s' % spec['zlib'].prefix.include,
                 '-DZLIB_LIBRARY=%s/libz.so' % spec['zlib'].prefix.lib,
                 '-DBUILD_OSG_APPLICATIONS=OFF',
-                '-DFFMPEG_LIBAVCODEC_INCLUDE_DIRS=""',
-                '-DFFMPEG_LIBAVFORMAT_INCLUDE_DIRS=""',
-                '-DFFMPEG_LIBAVUTIL_INCLUDE_DIRS=""',
                 '-DOSG_NOTIFY_DISABLED=ON',
-                '-DLIB_POSTFIX=""',
+                '-DLIB_POSTFIX=',
+                '-DFFMPEG_LIBAVCODEC_INCLUDE_DIRS=',
+                '-DFFMPEG_LIBAVFORMAT_INCLUDE_DIRS=',
+                '-DFFMPEG_LIBAVUTIL_INCLUDE_DIRS=',
+                '-DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE', # TODO(JRC): Remove
                 *cmake_args
             )
             make()
