@@ -58,7 +58,7 @@ class Plumed(Package):
 
     # Dictionary mapping PLUMED versions to the patches it provides
     # interactively
-    patches = {
+    plumed_patches = {
         '2.2.3': {
             'amber-14': '1',
             'gromacs-4.5.7': '2',
@@ -77,7 +77,7 @@ class Plumed(Package):
             [join_path(self.spec.prefix.bin, 'plumed'), 'patch', '-p'],
             stdin=subprocess.PIPE
         )
-        opts = Plumed.patches[str(self.version)]
+        opts = Plumed.plumed_patches[str(self.version)]
         search = '{0.name}-{0.version}'.format(other)
         choice = opts[search] + '\n'
         plumed.stdin.write(choice)
