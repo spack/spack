@@ -27,7 +27,8 @@ from spack import *
 
 
 class Openscenegraph(Package):
-    """TODO(JRC)"""
+    """OpenSceneGraph is an open source, high performance 3D graphics toolkit
+       that's used in a variety of visual simulation applications."""
 
     homepage = "http://www.openscenegraph.org"
     url      = "http://trac.openscenegraph.org/downloads/developer_releases/OpenSceneGraph-3.2.3.zip"
