@@ -321,15 +321,19 @@ class Stage(object):
             package_name = os.path.dirname(self.mirror_path)
             pkg = spack.repo.get(package_name)
             if pkg.list_url is not None and pkg.url is not None:
-                archive_version = spack.url.parse_version(
-                    self.default_fetcher.url)
-                versions = pkg.fetch_remote_versions()
                 try:
-                    url_from_list = versions[Version(archive_version)]
-                    fetchers.append(fs.URLFetchStrategy(url_from_list, digest))
-                except KeyError:
-                    tty.msg("Can not find version %s in url_list" %
-                            archive_version)
+                    archive_version = spack.url.parse_version(
+                        self.default_fetcher.url)
+                    versions = pkg.fetch_remote_versions()
+                    try:
+                        url_from_list = versions[Version(archive_version)]
+                        fetchers.append(fs.URLFetchStrategy(
+                            url_from_list, digest))
+                    except KeyError:
+                        tty.msg("Can not find version %s in url_list" %
+                                archive_version)
+                except:
+                    tty.msg("Could not determine url from list_url.")
 
         for fetcher in fetchers:
             try:
