@@ -31,6 +31,7 @@ class Gmp(Package):
 
     homepage = "https://gmplib.org"
     url      = "https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2"
+    list_url = "https://gmplib.org/download/gmp/archive/"
 
     version('6.1.1',  '4c175f86e11eb32d8bf9872ca3a8e11d')
     version('6.1.0',  '86ee6e54ebfc4a90b643a65e402c4048')
@@ -38,8 +39,7 @@ class Gmp(Package):
     version('6.0.0',  '6ef5869ae735db9995619135bd856b84')
     # This old version is needed to support a binary package in
     # ghc-bootstrap.
-    version('4.3.2',  'f3ef2901b603ab09a5d0f46fe1b83479',
-            url="https://gmplib.org/download/gmp/archive/gmp-4.3.2.tar.xz")
+    version('4.3.2',  'dd60683d7057917e34630b4a787932e8')
 
     depends_on("m4", type='build')
 
