@@ -25,26 +25,19 @@
 from spack import *
 
 
-class Samtools(Package):
-    """SAM Tools provide various utilities for manipulating alignments in
-       the SAM format, including sorting, merging, indexing and generating
-       alignments in a per-position format"""
+class Bcftools(Package):
+    """BCFtools is a set of utilities that manipulate variant calls in the
+       Variant Call Format (VCF) and its binary counterpart BCF. All
+       commands work transparently with both VCFs and BCFs, both
+       uncompressed and BGZF-compressed."""
 
-    homepage = "www.htslib.org"
-    url = "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
+    homepage = "http://samtools.github.io/bcftools/"
+    url      = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
 
-    version('1.3.1', 'a7471aa5a1eb7fc9cc4c6491d73c2d88')
-    version('1.2', '988ec4c3058a6ceda36503eebecd4122')
+    version('1.3.1', '575001e9fca37cab0c7a7287ad4b1cdb')
 
-    depends_on("ncurses")
-    depends_on("htslib", when='@1.3.1:')  # htslib became standalone
-    depends_on('zlib', when='@1.2')       # needed for builtin htslib
+    depends_on('zlib')
 
     def install(self, spec, prefix):
-        if self.spec.version >= Version('1.3.1'):
-            configure('--prefix={0}'.format(prefix), '--with-ncurses')
-            make()
-            make('install')
-        else:
-            make("prefix=%s" % prefix)
-            make("prefix=%s" % prefix, "install")
+        make("prefix=%s" % prefix, "all")
+        make("prefix=%s" % prefix, "install")
