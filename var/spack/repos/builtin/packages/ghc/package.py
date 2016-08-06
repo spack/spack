@@ -35,7 +35,6 @@ class Ghc(Package):
 
     version('8.0.1', 'c185b8a1f3e67e43533ec590b751c2ff')
 
-    depends_on('haskell')
     depends_on('gmp')
     depends_on('ncurses')
     depends_on('libffi')
@@ -44,12 +43,11 @@ class Ghc(Package):
     depends_on('python')
     depends_on('py-sphinx')
 
-    # provides('haskell')
-
     def install(self, spec, prefix):
+        bootstrap_ghc = which('ghc')
         configure_args = [
             "--prefix=%s" % prefix,
-            "--with-ghc=%s" % join_path(spec['haskell'].prefix.bin, 'ghc'),
+            "--with-ghc=%s" % bootstrap_ghc,
             "--with-gmp-includes=%s" % spec['gmp'].prefix.include,
             "--with-gmp-libraries=%s" % spec['gmp'].prefix.lib,
             "--with-curses-includes=%s" % spec['ncurses'].prefix.include,
