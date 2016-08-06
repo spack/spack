@@ -34,10 +34,12 @@ class Pdt(Package):
     class library supporting common PDB operations.
     """
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
-    url      = "https://www.cs.uoregon.edu/research/tau/pdt_releases/pdt-3.21.tar.gz"
 
-    version('3.21', '8df94298b71703decf680709a4ddf68f')
-    version('3.19', 'ba5591994998771fdab216699e362228')
+    version('3.21', '3092ca0d8833b69992c17e63ae66c263')
+    version('3.19', '5c5e1e6607086aa13bf4b1b9befc5864')
+
+    def url_for_version(self, version):
+        return 'https://www.cs.uoregon.edu/research/tau/pdt_releases/pdtoolkit-%s.tar.gz' % (version)
 
     def install(self, spec, prefix):
         configure('-prefix=%s' % prefix)
