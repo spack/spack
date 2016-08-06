@@ -34,6 +34,7 @@ import os
 # Going forward, we want to integrate the binary builds for other
 # platforms
 
+
 class GhcBootstrap(Package):
     """Install a binary package of the Glasgow Haskell Compiler
        that can be used to bootstrap a source package."""
