@@ -32,6 +32,8 @@ class Pango(Package):
        far has been done in the context of the GTK+ widget toolkit."""
     homepage = "http://www.pango.org"
     url      = "http://ftp.gnome.org/pub/gnome/sources/pango/1.36/pango-1.36.8.tar.xz"
+    list_url = "http://ftp.gnome.org/pub/gnome/sources/pango/"
+    list_depth = 2
 
     version('1.36.8', '217a9a753006275215fa9fa127760ece')
     version('1.40.1', '6fc88c6529890d6c8e03074d57a3eceb')
