@@ -33,6 +33,8 @@ import imp
 import re
 import traceback
 from bisect import bisect_left
+from types import ModuleType
+
 import yaml
 
 import llnl.util.tty as tty
@@ -73,12 +75,21 @@ def _autospec(function):
     return converter
 
 
-def _make_namespace_module(ns):
-    module = imp.new_module(ns)
-    module.__file__ = "(spack namespace)"
-    module.__path__ = []
-    module.__package__ = ns
-    return module
+class SpackNamespace(ModuleType):
+    """ Allow lazy loading of modules."""
+    def __init__(self, namespace):
+        super(ModuleType, self).__init__(self, namespace)
+        self.__file__ = "(spack namespace)"
+        self.__path__ = []
+        self.__name__ = namespace
+        self.__package__ = namespace
+        self.__modules = {}
+
+    def __getattr__(self, name):
+        """Getattr lazily loads modules if they're not already loaded."""
+        submodule = self.__package__ + '.' + name
+        setattr(self, name, __import__(submodule))
+        return getattr(self, name)
 
 
 def substitute_spack_prefix(path):
@@ -287,13 +298,10 @@ class RepoPath(object):
         if fullname in sys.modules:
             return sys.modules[fullname]
 
-        # partition fullname into prefix and module name.
-        namespace, dot, module_name = fullname.rpartition('.')
-
         if not self.by_namespace.is_prefix(fullname):
             raise ImportError("No such Spack repo: %s" % fullname)
 
-        module = _make_namespace_module(namespace)
+        module = SpackNamespace(fullname)
         module.__loader__ = self
         sys.modules[fullname] = module
         return module
@@ -464,8 +472,9 @@ class Repo(object):
         parent = None
         for l in range(1, len(self._names)+1):
             ns = '.'.join(self._names[:l])
+
             if not ns in sys.modules:
-                module = _make_namespace_module(ns)
+                module = SpackNamespace(ns)
                 module.__loader__ = self
                 sys.modules[ns] = module
 
@@ -476,11 +485,12 @@ class Repo(object):
                 #    import spack.pkg.builtin.mpich as mpich
                 if parent:
                     modname = self._names[l-1]
-                    if not hasattr(parent, modname):
-                        setattr(parent, modname, module)
+                    setattr(parent, modname, module)
             else:
-                # no need to set up a module, but keep track of the parent.
+                # no need to set up a module
                 module = sys.modules[ns]
+
+            # but keep track of the parent in this loop
             parent = module
 
 
@@ -543,7 +553,7 @@ class Repo(object):
         namespace, dot, module_name = fullname.rpartition('.')
 
         if self.is_prefix(fullname):
-            module = _make_namespace_module(fullname)
+            module = SpackNamespace(fullname)
 
         elif namespace == self.full_namespace:
             real_name = self.real_name(module_name)
@@ -556,6 +566,11 @@ class Repo(object):
 
         module.__loader__ = self
         sys.modules[fullname] = module
+        if namespace != fullname:
+            parent = sys.modules[namespace]
+            if not hasattr(parent, module_name):
+                setattr(parent, module_name, module)
+
         return module
 
 
