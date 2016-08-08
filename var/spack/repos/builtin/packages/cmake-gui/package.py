@@ -1,33 +1,35 @@
 ##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
 # This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
+# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
 # LLNL-CODE-647188
 #
 # For details, see https://github.com/llnl/spack
 # Please also see the LICENSE file for our notice and the LGPL.
 #
 # This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
+# it under the terms of the GNU General Public License (as published by
+# the Free Software Foundation) version 2.1 dated February 1999.
 #
 # This program is distributed in the hope that it will be useful, but
 # WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
+# conditions of the GNU General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program; if not, write to the Free Software Foundation,
+# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
 
 
-class Cmake(Package):
-    """A cross-platform, open-source build system. CMake is a family of
-       tools designed to build, test and package software."""
+class CmakeGui(Package):
+    """A cross-platform, open-source build system. CMake is a family of tools
+       designed to build, test and package software.  This package is separate
+       from the cmake package in order to break a build build dependency:
+       cmake-gui->qt->cmake"""
     homepage  = 'https://www.cmake.org'
     url       = 'https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz'
 
@@ -47,6 +49,7 @@ class Cmake(Package):
 
     depends_on('ncurses', when='+ncurses')
     depends_on('openssl', when='+openssl')
+    depends_on('qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
     depends_on('py-sphinx', when='+doc', type='build')
 
@@ -63,6 +66,10 @@ class Cmake(Package):
         :raises RuntimeError: in case of inconsistencies
         """
 
+        if spec.satisfies('^qt@5.4.0'):
+            msg = 'qt-5.4.0 has broken CMake modules.'
+            raise RuntimeError(msg)
+
     def install(self, spec, prefix):
         # Consistency check
         self.validate(spec)
@@ -70,6 +77,11 @@ class Cmake(Package):
         # configure, build, install:
         options = ['--prefix=%s' % prefix]
         options.append('--parallel=%s' % str(make_jobs))
+        options.append('--qt-gui')
+
+        # Use the same libraries that qt depends on.
+        if spec.satisfies('^xz'):
+            options.append('--system-liblzma')
 
         if '+doc' in spec:
             options.append('--sphinx-html')
