@@ -44,10 +44,16 @@ class Dyninst(Package):
     version('8.1.1', 'd1a04e995b7aa70960cd1d1fac8bd6ac',
             url="http://www.paradyn.org/release8.1/DyninstAPI-8.1.1.tgz")
 
+    variant('stat_dysect', default=False,
+            description="patch for STAT's DySectAPI")
+
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("boost@1.42:")
     depends_on('cmake', type='build')
+
+    patch('stat_dysect.patch', when='+stat_dysect')
+    patch('stackanalysis_h.patch', when='@9.2.0')
 
     # new version uses cmake
     def install(self, spec, prefix):

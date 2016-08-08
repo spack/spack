@@ -34,8 +34,8 @@ class Stat(Package):
     version('2.2.0', '26bd69dd57a15afdd5d0ebdb0b7fb6fc')
     version('2.1.0', 'ece26beaf057aa9134d62adcdda1ba91')
     version('2.0.0', 'c7494210b0ba26b577171b92838e1a9b')
-    version('3.0.0b', '31df1c2e56ce6ab2a0fe963cd47b769a',
-            url='https://github.com/LLNL/STAT/files/382650/STAT-3.0.0b.tar.gz')
+    version('3.0.0b', '4977afd3de2d444a5e1b1fc3b26a38c6',
+            url='https://github.com/LLNL/STAT/files/397809/STAT-3.0.0b.tar.gz')
 
     # TODO: dysect requires Dyninst patch for version 3.0.0b
     variant('dysect', default=False, description="enable DySectAPI")
@@ -46,7 +46,8 @@ class Stat(Package):
     depends_on('libtool', type='build')
     depends_on('libelf')
     depends_on('libdwarf')
-    depends_on('dyninst')
+    depends_on('dyninst', when='~dysect')
+    depends_on('dyninst@8.2.1+stat_dysect', when='+dysect')
     depends_on('graphlib@2.0.0', when='@2.0.0:2.2.0')
     depends_on('graphlib@3.0.0', when='@3:')
     depends_on('graphviz', type=alldeps)
