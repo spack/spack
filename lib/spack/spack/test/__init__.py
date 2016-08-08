@@ -89,6 +89,10 @@ def list_tests():
 def run(names, outputDir, verbose=False):
     """Run tests with the supplied names.  Names should be a list.  If
        it's empty, run ALL of Spack's tests."""
+    # Print output to stdout if verbose is 1.
+    if verbose:
+        os.environ['NOSE_NOCAPTURE'] = '1'
+
     if not names:
         names = test_names
     else:
