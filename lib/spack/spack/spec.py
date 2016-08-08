@@ -915,10 +915,7 @@ class Spec(object):
         if params:
             d['parameters'] = params
 
-        if self.architecture is not None:
-            d['arch'] = self.architecture
-
-        if self.dependencies:
+        if self.dependencies():
             deps = self.dependencies_dict(deptype=('link', 'run'))
             d['dependencies'] = dict(
                 (name, {
@@ -926,17 +923,13 @@ class Spec(object):
                     'type': [str(s) for s in dspec.deptypes]})
                 for name, dspec in deps.items())
 
-        # Older concrete specs do not have a namespace.  Omit for
-        # consistent hashing.
-        if not self.concrete or self.namespace:
+        if self.namespace:
             d['namespace'] = self.namespace
 
         if self.architecture:
             # TODO: Fix the target.to_dict to account for the tuple
             # Want it to be a dict of dicts
             d['arch'] = self.architecture.to_dict()
-        else:
-            d['arch'] = None
 
         if self.compiler:
             d.update(self.compiler.to_dict())
@@ -967,7 +960,8 @@ class Spec(object):
         if 'version' in node or 'versions' in node:
             spec.versions = VersionList.from_dict(node)
 
-        spec.architecture = spack.architecture.arch_from_dict(node['arch'])
+        if 'arch' in node:
+            spec.architecture = spack.architecture.arch_from_dict(node['arch'])
 
         if 'compiler' in node:
             spec.compiler = CompilerSpec.from_dict(node)
