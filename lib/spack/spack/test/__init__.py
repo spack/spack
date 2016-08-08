@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
+import os
 
 import llnl.util.tty as tty
 import nose
@@ -40,13 +41,11 @@ test_names = [
     'cc',
     'cmd.find',
     'cmd.module',
-    'cmd.test_compiler_cmd',
     'cmd.test_install',
     'cmd.uninstall',
     'concretize',
     'concretize_preferences',
     'config',
-    'configure_guess',
     'database',
     'directory_layout',
     'environment',
@@ -78,6 +77,8 @@ test_names = [
     'versions',
     'provider_index',
     'yaml',
+    # This test needs to be last until global compiler cache is fixed.
+    'cmd.test_compiler_cmd',
 ]
 
 def list_tests():
