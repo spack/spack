@@ -50,6 +50,9 @@ class Qt(Package):
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
+    # https://github.com/xboxdrv/xboxdrv/issues/188
+    patch('btn_trigger_happy.patch', when='@5.7.0:')
+
     # Use system openssl for security.
     # depends_on("openssl")
 
