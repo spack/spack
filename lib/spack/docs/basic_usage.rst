@@ -1159,7 +1159,7 @@ More than one spec may be placed on the command line here.
 Module Commands for Shell Scripts
 ``````````````````````````````````
 
-Although Spack is flexbile, the ``module`` command is much faster.
+Although Spack is flexible, the ``module`` command is much faster.
 This could become an issue when emitting a series of ``spack load``
 commands inside a shell script.  By adding the ``--shell`` flag,
 ``spack module find`` may also be used to generate code that can be
