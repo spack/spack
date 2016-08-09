@@ -42,6 +42,7 @@ class PyScikitImage(Package):
     depends_on('py-six', type=nolink)
     depends_on('py-scipy', type=nolink)
     depends_on('py-matplotlib', type=nolink)
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

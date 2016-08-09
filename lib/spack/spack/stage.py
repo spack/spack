@@ -315,20 +315,26 @@ class Stage(object):
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
                 fetchers.insert(0, fs.URLFetchStrategy(url, digest))
-            fetchers.insert(0, spack.cache.fetcher(self.mirror_path, digest))
+            fetchers.insert(0, spack.fetch_cache.fetcher(self.mirror_path,
+                                                         digest))
 
             # Look for the archive in list_url
-            archive_version = spack.url.parse_version(self.default_fetcher.url)
             package_name = os.path.dirname(self.mirror_path)
             pkg = spack.repo.get(package_name)
             if pkg.list_url is not None and pkg.url is not None:
-                versions = pkg.fetch_remote_versions()
                 try:
-                    url_from_list = versions[Version(archive_version)]
-                    fetchers.append(fs.URLFetchStrategy(url_from_list, digest))
-                except KeyError:
-                    tty.msg("Can not find version %s in url_list" %
-                            archive_version)
+                    archive_version = spack.url.parse_version(
+                        self.default_fetcher.url)
+                    versions = pkg.fetch_remote_versions()
+                    try:
+                        url_from_list = versions[Version(archive_version)]
+                        fetchers.append(fs.URLFetchStrategy(
+                            url_from_list, digest))
+                    except KeyError:
+                        tty.msg("Can not find version %s in url_list" %
+                                archive_version)
+                except:
+                    tty.msg("Could not determine url from list_url.")
 
         for fetcher in fetchers:
             try:
@@ -360,7 +366,7 @@ class Stage(object):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.cache.store(self.fetcher, self.mirror_path)
+        spack.fetch_cache.store(self.fetcher, self.mirror_path)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded

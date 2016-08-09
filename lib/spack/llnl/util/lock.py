@@ -28,6 +28,9 @@ import errno
 import time
 import socket
 
+__all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
+           'LockError']
+
 # Default timeout in seconds, after which locks will raise exceptions.
 _default_timeout = 60
 
@@ -36,12 +39,19 @@ _sleep_time = 1e-5
 
 
 class Lock(object):
-    def __init__(self,file_path):
+    """This is an implementation of a filesystem lock using Python's lockf.
+
+    In Python, `lockf` actually calls `fcntl`, so this should work with any
+    filesystem implementation that supports locking through the fcntl calls.
+    This includes distributed filesystems like Lustre (when flock is enabled)
+    and recent NFS versions.
+
+    """
+    def __init__(self, file_path):
         self._file_path = file_path
         self._fd = None
         self._reads = 0
         self._writes = 0
-
 
     def _lock(self, op, timeout):
         """This takes a lock using POSIX locks (``fnctl.lockf``).
@@ -63,7 +73,9 @@ class Lock(object):
 
                 fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
                 if op == fcntl.LOCK_EX:
-                    os.write(self._fd, "pid=%s,host=%s" % (os.getpid(), socket.getfqdn()))
+                    os.write(
+                        self._fd,
+                        "pid=%s,host=%s" % (os.getpid(), socket.getfqdn()))
                 return
 
             except IOError as error:
@@ -75,7 +87,6 @@ class Lock(object):
 
         raise LockError("Timed out waiting for lock.")
 
-
     def _unlock(self):
         """Releases a lock using POSIX locks (``fcntl.lockf``)
 
@@ -83,10 +94,9 @@ class Lock(object):
         be masquerading as write locks, but this removes either.
 
         """
-        fcntl.lockf(self._fd,fcntl.LOCK_UN)
+        fcntl.lockf(self._fd, fcntl.LOCK_UN)
         os.close(self._fd)
         self._fd = None
-
 
     def acquire_read(self, timeout=_default_timeout):
         """Acquires a recursive, shared lock for reading.
@@ -107,7 +117,6 @@ class Lock(object):
             self._reads += 1
             return False
 
-
     def acquire_write(self, timeout=_default_timeout):
         """Acquires a recursive, exclusive lock for writing.
 
@@ -126,7 +135,6 @@ class Lock(object):
         else:
             self._writes += 1
             return False
-
 
     def release_read(self):
         """Releases a read lock.
@@ -147,7 +155,6 @@ class Lock(object):
         else:
             self._reads -= 1
             return False
-
 
     def release_write(self):
         """Releases a write lock.
@@ -170,6 +177,68 @@ class Lock(object):
             return False
 
 
+class LockTransaction(object):
+    """Simple nested transaction context manager that uses a file lock.
+
+    This class can trigger actions when the lock is acquired for the
+    first time and released for the last.
+
+    If the acquire_fn returns a value, it is used as the return value for
+    __enter__, allowing it to be passed as the `as` argument of a `with`
+    statement.
+
+    If acquire_fn returns a context manager, *its* `__enter__` function will be
+    called in `__enter__` after acquire_fn, and its `__exit__` funciton will be
+    called before `release_fn` in `__exit__`, allowing you to nest a context
+    manager to be used along with the lock.
+
+    Timeout for lock is customizable.
+
+    """
+
+    def __init__(self, lock, acquire_fn=None, release_fn=None,
+                 timeout=_default_timeout):
+        self._lock = lock
+        self._timeout = timeout
+        self._acquire_fn = acquire_fn
+        self._release_fn = release_fn
+        self._as = None
+
+    def __enter__(self):
+        if self._enter() and self._acquire_fn:
+            self._as = self._acquire_fn()
+            if hasattr(self._as, '__enter__'):
+                return self._as.__enter__()
+            else:
+                return self._as
+
+    def __exit__(self, type, value, traceback):
+        suppress = False
+        if self._exit():
+            if self._as and hasattr(self._as, '__exit__'):
+                if self._as.__exit__(type, value, traceback):
+                    suppress = True
+            if self._release_fn:
+                if self._release_fn(type, value, traceback):
+                    suppress = True
+        return suppress
+
+
+class ReadTransaction(LockTransaction):
+    def _enter(self):
+        return self._lock.acquire_read(self._timeout)
+
+    def _exit(self):
+        return self._lock.release_read()
+
+
+class WriteTransaction(LockTransaction):
+    def _enter(self):
+        return self._lock.acquire_write(self._timeout)
+
+    def _exit(self):
+        return self._lock.release_write()
+
+
 class LockError(Exception):
     """Raised when an attempt to acquire a lock times out."""
-    pass

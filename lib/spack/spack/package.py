@@ -632,49 +632,11 @@ class Package(object):
         exts = spack.install_layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
 
-    def preorder_traversal(self, visited=None, **kwargs):
-        """This does a preorder traversal of the package's dependence DAG."""
-        virtual = kwargs.get("virtual", False)
-
-        if visited is None:
-            visited = set()
-
-        if self.name in visited:
-            return
-        visited.add(self.name)
-
-        if not virtual:
-            yield self
-
-        for name in sorted(self.dependencies.keys()):
-            dep_spec = self.get_dependency(name)
-            spec = dep_spec.spec
-
-            # Currently, we do not descend into virtual dependencies, as this
-            # makes doing a sensible traversal much harder.  We just assume
-            # that ANY of the virtual deps will work, which might not be true
-            # (due to conflicts or unsatisfiable specs).  For now this is ok,
-            # but we might want to reinvestigate if we start using a lot of
-            # complicated virtual dependencies
-            # TODO: reinvestigate this.
-            if spec.virtual:
-                if virtual:
-                    yield spec
-                continue
-
-            for pkg in spack.repo.get(name).preorder_traversal(visited,
-                                                               **kwargs):
-                yield pkg
-
     def provides(self, vpkg_name):
         """
         True if this package provides a virtual package with the specified name
         """
         return any(s.name == vpkg_name for s in self.provided)
-
-    def virtual_dependencies(self, visited=None):
-        for spec in sorted(set(self.preorder_traversal(virtual=True))):
-            yield spec
 
     @property
     def installed(self):
@@ -1263,7 +1225,15 @@ class Package(object):
 
     def do_uninstall(self, force=False):
         if not self.installed:
-            raise InstallError(str(self.spec) + " is not installed.")
+            # prefix may not exist, but DB may be inconsistent. Try to fix by
+            # removing, but omit hooks.
+            specs = spack.installed_db.query(self.spec, installed=True)
+            if specs:
+                spack.installed_db.remove(specs[0])
+                tty.msg("Removed stale DB entry for %s" % self.spec.short_spec)
+                return
+            else:
+                raise InstallError(str(self.spec) + " is not installed.")
 
         if not force:
             dependents = self.installed_dependents
@@ -1472,6 +1442,7 @@ def use_cray_compiler_names():
     os.environ['CXX'] = 'CC'
     os.environ['FC'] = 'ftn'
     os.environ['F77'] = 'ftn'
+
 
 def flatten_dependencies(spec, flat_dir):
     """Make each dependency of spec present in dir via symlink."""

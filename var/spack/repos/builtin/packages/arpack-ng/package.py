@@ -86,10 +86,19 @@ class ArpackNg(Package):
         options.extend(std_cmake_args)
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
-        # TODO:
-        # Arpack calls directly find_package(BLAS REQUIRED) and
-        # find_package(LAPACK REQUIRED). Make sure correct Blas/Lapack are
-        # picked up.
+        # Make sure we use Spack's blas/lapack:
+        options.extend([
+            '-DLAPACK_FOUND=true',
+            '-DLAPACK_INCLUDE_DIRS=%s' % spec['lapack'].prefix.include,
+            '-DLAPACK_LIBRARIES=%s' % (
+                spec['lapack'].lapack_shared_lib if '+shared' in spec else
+                spec['lapack'].lapack_static_lib),
+            '-DBLAS_FOUND=true',
+            '-DBLAS_INCLUDE_DIRS=%s' % spec['blas'].prefix.include,
+            '-DBLAS_LIBRARIES=%s' % (
+                spec['blas'].blas_shared_lib if '+shared' in spec else
+                spec['blas'].blas_static_lib)
+        ])
 
         if '+mpi' in spec:
             options.append('-DMPI=ON')
@@ -101,9 +110,8 @@ class ArpackNg(Package):
 
         cmake('.', *options)
         make()
-        # TODO: make test does not work
-        # make('test')
-
+        if self.run_tests:
+            make('test')
         make('install')
 
     @when('@3.3.0')
@@ -120,10 +128,23 @@ class ArpackNg(Package):
                 'F77=%s' % spec['mpi'].mpif77
             ])
 
-        if '~shared' in spec:
-            options.append('--enable-shared=no')
+        if '+shared' in spec:
+            options.extend([
+                '--with-blas=%s' % to_link_flags(
+                    spec['blas'].blas_shared_lib),
+                '--with-lapack=%s' % to_link_flags(
+                    spec['lapack'].lapack_shared_lib)
+            ])
+        else:
+            options.extend([
+                '--with-blas=%s' % spec['blas'].blas_static_lib,
+                '--with-lapack=%s' % spec['lapack'].lapack_static_lib,
+                '--enable-shared=no'
+            ])
 
         bootstrap()
         configure(*options)
         make()
+        if self.run_tests:
+            make('check')
         make('install')

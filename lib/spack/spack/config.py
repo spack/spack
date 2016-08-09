@@ -266,6 +266,19 @@ section_schemas = {
                                     ], },
                         },},},},},},
 
+    'targets': {
+        '$schema': 'http://json-schema.org/schema#',
+        'title': 'Spack target configuration file schema',
+        'type': 'object',
+        'additionalProperties': False,
+        'patternProperties': {
+            r'targets:?': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'patternProperties': {
+                    r'\w[\w-]*': { # target name
+                        'type': 'string' ,},},},},},
     'modules': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack module file configuration file schema',
@@ -512,7 +525,7 @@ ConfigScope('defaults', os.path.join(spack.etc_path, 'spack', 'defaults'))
 ConfigScope('site', os.path.join(spack.etc_path, 'spack'))
 
 """User configuration can override both spack defaults and site config."""
-ConfigScope('user', os.path.expanduser('~/.spack'))
+ConfigScope('user', spack.user_config_path)
 
 
 def highest_precedence_scope():

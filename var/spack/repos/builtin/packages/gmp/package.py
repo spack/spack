@@ -24,16 +24,18 @@
 ##############################################################################
 from spack import *
 
+
 class Gmp(Package):
-    """GMP is a free library for arbitrary precision arithmetic,
-       operating on signed integers, rational numbers, and
-       floating-point numbers."""
+    """GMP is a free library for arbitrary precision arithmetic, operating
+    on signed integers, rational numbers, and floating-point numbers."""
+
     homepage = "https://gmplib.org"
     url      = "https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2"
 
-    version('6.1.0' , '86ee6e54ebfc4a90b643a65e402c4048')
+    version('6.1.1',  '4c175f86e11eb32d8bf9872ca3a8e11d')
+    version('6.1.0',  '86ee6e54ebfc4a90b643a65e402c4048')
     version('6.0.0a', 'b7ff2d88cae7f8085bd5006096eed470')
-    version('6.0.0' , '6ef5869ae735db9995619135bd856b84')
+    version('6.0.0',  '6ef5869ae735db9995619135bd856b84')
 
     depends_on("m4", type='build')
 

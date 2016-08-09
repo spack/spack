@@ -272,12 +272,24 @@ class EnvModule(object):
 
     @property
     def tokens(self):
+        """Tokens that can be substituted in environment variable values
+        and naming schemes
+        """
         tokens = {
             'name': self.spec.name,
             'version': self.spec.version,
-            'compiler': self.spec.compiler
+            'compiler': self.spec.compiler,
+            'prefix': self.spec.package.prefix
         }
         return tokens
+
+    @property
+    def upper_tokens(self):
+        """Tokens that can be substituted in environment variable names"""
+        upper_tokens = {
+            'name': self.spec.name.replace('-', '_').upper()
+        }
+        return upper_tokens
 
     @property
     def use_name(self):
@@ -438,6 +450,11 @@ class EnvModule(object):
 
     def process_environment_command(self, env):
         for command in env:
+            # Token expansion from configuration file
+            name = command.args.get('name', '').format(**self.upper_tokens)
+            value = str(command.args.get('value', '')).format(**self.tokens)
+            command.update_args(name=name, value=value)
+            # Format the line int the module file
             try:
                 yield self.environment_modifications_formats[type(
                     command)].format(**command.args)
@@ -503,7 +520,8 @@ class Dotkit(EnvModule):
 
     def prerequisite(self, spec):
         tty.warn('prerequisites:  not supported by dotkit module files')
-        tty.warn('\tYou may want to check  ~/.spack/modules.yaml')
+        tty.warn('\tYou may want to check %s/modules.yaml'
+                 % spack.user_config_path)
         return ''
 
 
@@ -511,9 +529,9 @@ class TclModule(EnvModule):
     name = 'tcl'
     path = join_path(spack.share_path, "modules")
     environment_modifications_formats = {
-        PrependPath: 'prepend-path --delim "{delim}" {name} \"{value}\"\n',
-        AppendPath: 'append-path   --delim "{delim}" {name} \"{value}\"\n',
-        RemovePath: 'remove-path   --delim "{delim}" {name} \"{value}\"\n',
+        PrependPath: 'prepend-path --delim "{separator}" {name} \"{value}\"\n',
+        AppendPath: 'append-path   --delim "{separator}" {name} \"{value}\"\n',
+        RemovePath: 'remove-path   --delim "{separator}" {name} \"{value}\"\n',
         SetEnv: 'setenv {name} \"{value}\"\n',
         UnsetEnv: 'unsetenv {name}\n'
     }
