@@ -25,6 +25,18 @@ changed+=($(git diff --name-only --find-renames -- '*.py'))
 # Ensure that each file in the array is unique
 changed=($(printf '%s\n' "${changed[@]}" | sort -u))
 
+function cleanup {
+    # Restore original package files after modifying them.
+    for file in "${changed[@]}"; do
+        if [[ -e "${file}.sbak~" ]]; then
+            mv "${file}.sbak~" "${file}"
+        fi
+    done
+}
+
+# Cleanup temporary files upon exit or when script is killed
+trap cleanup EXIT SIGINT SIGTERM
+
 # Add approved style exemptions to the changed packages.
 for file in "${changed[@]}"; do
     # Make a backup to restore later
@@ -52,7 +64,6 @@ for file in "${changed[@]}"; do
     perl -i -pe 's/^(.*(https?|file)\:.*)$/\1  # NOQA: ignore=E501/' $file
 done
 
-return_code=0
 if [[ "${changed[@]}" ]]; then
     echo =======================================================
     echo  flake8: running flake8 code checks on spack.
@@ -64,17 +75,10 @@ if [[ "${changed[@]}" ]]; then
         echo "Flake8 checks were clean."
     else
         echo "Flake8 found errors."
-        return_code=1
+        exit 1
     fi
 else
     echo No core framework files modified.
 fi
 
-# Restore original package files after modifying them.
-for file in "${changed[@]}"; do
-    if [[ -e "${file}.sbak~" ]]; then
-        mv "${file}.sbak~" "${file}"
-    fi
-done
-
-exit $return_code
+exit 0
