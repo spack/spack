@@ -315,7 +315,8 @@ class Stage(object):
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
                 fetchers.insert(0, fs.URLFetchStrategy(url, digest))
-            fetchers.insert(0, spack.cache.fetcher(self.mirror_path, digest))
+            fetchers.insert(0, spack.fetch_cache.fetcher(self.mirror_path,
+                                                         digest))
 
             # Look for the archive in list_url
             package_name = os.path.dirname(self.mirror_path)
@@ -365,7 +366,7 @@ class Stage(object):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.cache.store(self.fetcher, self.mirror_path)
+        spack.fetch_cache.store(self.fetcher, self.mirror_path)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded

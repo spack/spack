@@ -383,6 +383,13 @@ class Arch(object):
     def __contains__(self, string):
         return string in str(self)
 
+    # TODO: make this unnecessary: don't include an empty arch on *every* spec.
+    def __nonzero__(self):
+        return (self.platform is not None or
+                self.platform_os is not None or
+                self.target is not None)
+    __bool__ = __nonzero__
+
     def _cmp_key(self):
         if isinstance(self.platform, Platform):
             platform = self.platform.name

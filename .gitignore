@@ -1,5 +1,7 @@
 /var/spack/stage
 /var/spack/cache
+/var/spack/repos/*/index.yaml
+/var/spack/repos/*/lock
 *.pyc
 /opt
 *~

@@ -86,6 +86,29 @@ class ArchitectureTest(MockPackagesTest):
 
         self.assertEqual(str(output_platform_class), str(my_platform_class))
 
+    def test_boolness(self):
+        # Make sure architecture reports that it's False when nothing's set.
+        arch = spack.architecture.Arch()
+        self.assertFalse(arch)
+
+        # Dummy architecture parts
+        plat = spack.architecture.platform()
+        plat_os = plat.operating_system('default_os')
+        plat_target = plat.target('default_target')
+
+        # Make sure architecture reports that it's True when anything is set.
+        arch = spack.architecture.Arch()
+        arch.platform = plat
+        self.assertTrue(arch)
+
+        arch = spack.architecture.Arch()
+        arch.platform_os = plat_os
+        self.assertTrue(arch)
+
+        arch = spack.architecture.Arch()
+        arch.target = plat_target
+        self.assertTrue(arch)
+
     def test_user_front_end_input(self):
         """Test when user inputs just frontend that both the frontend target
             and frontend operating system match

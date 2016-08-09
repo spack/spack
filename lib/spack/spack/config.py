@@ -525,7 +525,7 @@ ConfigScope('defaults', os.path.join(spack.etc_path, 'spack', 'defaults'))
 ConfigScope('site', os.path.join(spack.etc_path, 'spack'))
 
 """User configuration can override both spack defaults and site config."""
-ConfigScope('user', os.path.expanduser('~/.spack'))
+ConfigScope('user', spack.user_config_path)
 
 
 def highest_precedence_scope():
