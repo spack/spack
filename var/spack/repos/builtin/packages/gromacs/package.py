@@ -22,21 +22,21 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import subprocess
 
 from spack import *
 
 
 class Gromacs(Package):
-    """
-    GROMACS (GROningen MAchine for Chemical Simulations) is a molecular dynamics package primarily designed for
-    simulations of proteins, lipids and nucleic acids. It was originally developed in the Biophysical Chemistry
-    department of University of Groningen, and is now maintained by contributors in universities and research centers
-    across the world.
+    """GROMACS (GROningen MAchine for Chemical Simulations) is a molecular
+    dynamics package primarily designed for simulations of proteins, lipids
+    and nucleic acids. It was originally developed in the Biophysical
+    Chemistry department of University of Groningen, and is now maintained
+    by contributors in universities and research centers across the world.
 
-    GROMACS is one of the fastest and most popular software packages available and can run on CPUs as well as GPUs.
-    It is free, open source released under the GNU General Public License. Starting from version 4.6, GROMACS is
-    released under the GNU Lesser General Public License.
+    GROMACS is one of the fastest and most popular software packages
+    available and can run on CPUs as well as GPUs. It is free, open source
+    released under the GNU General Public License. Starting from version 4.6,
+    GROMACS is released under the GNU Lesser General Public License.
     """
 
     homepage = 'http://www.gromacs.org'
@@ -45,9 +45,10 @@ class Gromacs(Package):
     version('5.1.2', '614d0be372f1a6f1f36382b7a6fcab98')
 
     variant('mpi', default=True, description='Activate MPI support')
-    variant('shared', default=True, description='Enables the build of shared libraries')
+    variant('shared', default=True,
+            description='Enables the build of shared libraries')
     variant('debug', default=False, description='Enables debug mode')
-    variant('double', default=False, description='Produces a double precision version of the executables')
+    variant('double', default=False, description='Produces a double precision version of the executables')  # NOQA: ignore=E501
     variant('plumed', default=False, description='Enable PLUMED support')
 
     depends_on('mpi', when='+mpi')
