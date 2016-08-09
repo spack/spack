@@ -30,7 +30,6 @@ import shutil
 import tempfile
 import unittest
 
-import spack
 from spack.file_cache import FileCache
 
 

@@ -82,6 +82,7 @@ test_names = [
     'cmd.test_compiler_cmd',
 ]
 
+
 def list_tests():
     """Return names of all tests that can be run for Spack."""
     return test_names

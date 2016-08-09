@@ -25,7 +25,7 @@
 """
 The ``virtual`` module contains utility classes for virtual dependencies.
 """
-import itertools
+from itertools import product as iproduct
 from pprint import pformat
 
 import yaml
@@ -52,8 +52,6 @@ class ProviderIndex(object):
        matching implementation of MPI.
 
     """
-
-
     def __init__(self, specs=None, restrict=False):
         """Create a new ProviderIndex.
 
@@ -71,7 +69,8 @@ class ProviderIndex(object):
             as possible without overly restricting results, so it is
             not the best name.
         """
-        if specs is None: specs = []
+        if specs is None:
+            specs = []
 
         self.restrict = restrict
         self.providers = {}
@@ -84,7 +83,6 @@ class ProviderIndex(object):
                 continue
 
             self.update(spec)
-
 
     def update(self, spec):
         if not isinstance(spec, spack.spec.Spec):
@@ -104,7 +102,7 @@ class ProviderIndex(object):
                 provided_name = provided_spec.name
 
                 provider_map = self.providers.setdefault(provided_name, {})
-                if not provided_spec in provider_map:
+                if provided_spec not in provider_map:
                     provider_map[provided_spec] = set()
 
                 if self.restrict:
@@ -126,7 +124,6 @@ class ProviderIndex(object):
                     constrained.constrain(provider_spec)
                     provider_map[provided_spec].add(constrained)
 
-
     def providers_for(self, *vpkg_specs):
         """Gives specs of all packages that provide virtual packages
            with the supplied specs."""
@@ -138,26 +135,25 @@ class ProviderIndex(object):
 
             # Add all the providers that satisfy the vpkg spec.
             if vspec.name in self.providers:
-                for provider_spec, spec_set in self.providers[vspec.name].items():
-                    if provider_spec.satisfies(vspec, deps=False):
+                for p_spec, spec_set in self.providers[vspec.name].items():
+                    if p_spec.satisfies(vspec, deps=False):
                         providers.update(spec_set)
 
         # Return providers in order
         return sorted(providers)
 
-
     # TODO: this is pretty darned nasty, and inefficient, but there
     # are not that many vdeps in most specs.
     def _cross_provider_maps(self, lmap, rmap):
         result = {}
-        for lspec, rspec in itertools.product(lmap, rmap):
+        for lspec, rspec in iproduct(lmap, rmap):
             try:
                 constrained = lspec.constrained(rspec)
             except spack.spec.UnsatisfiableSpecError:
                 continue
 
             # lp and rp are left and right provider specs.
-            for lp_spec, rp_spec in itertools.product(lmap[lspec], rmap[rspec]):
+            for lp_spec, rp_spec in iproduct(lmap[lspec], rmap[rspec]):
                 if lp_spec.name == rp_spec.name:
                     try:
                         const = lp_spec.constrained(rp_spec, deps=False)
@@ -166,11 +162,9 @@ class ProviderIndex(object):
                         continue
         return result
 
-
     def __contains__(self, name):
         """Whether a particular vpkg name is in the index."""
         return name in self.providers
-
 
     def satisfies(self, other):
         """Check that providers of virtual specs are compatible."""
@@ -189,7 +183,6 @@ class ProviderIndex(object):
 
         return all(c in result for c in common)
 
-
     def to_yaml(self, stream=None):
         provider_list = self._transform(
             lambda vpkg, pset: [
@@ -197,7 +190,6 @@ class ProviderIndex(object):
 
         yaml.dump({'provider_index': {'providers': provider_list}},
                   stream=stream)
-
 
     @staticmethod
     def from_yaml(stream):
@@ -211,7 +203,7 @@ class ProviderIndex(object):
             raise spack.spec.SpackYAMLError(
                 "YAML ProviderIndex was not a dict.")
 
-        if not 'provider_index' in yfile:
+        if 'provider_index' not in yfile:
             raise spack.spec.SpackYAMLError(
                 "YAML ProviderIndex does not start with 'provider_index'")
 
@@ -223,7 +215,6 @@ class ProviderIndex(object):
                 spack.spec.Spec.from_node_dict(vpkg),
                 set(spack.spec.Spec.from_node_dict(p) for p in plist)))
         return index
-
 
     def merge(self, other):
         """Merge `other` ProviderIndex into this one."""
@@ -241,7 +232,6 @@ class ProviderIndex(object):
                     continue
 
                 spdict[provided_spec] += opdict[provided_spec]
-
 
     def remove_provider(self, pkg_name):
         """Remove a provider from the ProviderIndex."""
@@ -264,7 +254,6 @@ class ProviderIndex(object):
         for pkg in empty_pkg_dict:
             del self.providers[pkg]
 
-
     def copy(self):
         """Deep copy of this ProviderIndex."""
         clone = ProviderIndex()
@@ -272,14 +261,11 @@ class ProviderIndex(object):
             lambda vpkg, pset: (vpkg, set((p.copy() for p in pset))))
         return clone
 
-
     def __eq__(self, other):
         return self.providers == other.providers
 
-
     def _transform(self, transform_fun, out_mapping_type=dict):
         return _transform(self.providers, transform_fun, out_mapping_type)
-
 
     def __str__(self):
         return pformat(

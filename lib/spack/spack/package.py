@@ -1416,6 +1416,7 @@ def use_cray_compiler_names():
     os.environ['FC'] = 'ftn'
     os.environ['F77'] = 'ftn'
 
+
 def flatten_dependencies(spec, flat_dir):
     """Make each dependency of spec present in dir via symlink."""
     for dep in spec.traverse(root=False):

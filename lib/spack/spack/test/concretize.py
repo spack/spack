@@ -29,6 +29,7 @@ from spack.version import ver
 from spack.concretize import find_spec
 from spack.test.mock_packages_test import *
 
+
 class ConcretizeTest(MockPackagesTest):
 
     def check_spec(self, abstract, concrete):
@@ -59,7 +60,6 @@ class ConcretizeTest(MockPackagesTest):
         if abstract.architecture and abstract.architecture.concrete:
             self.assertEqual(abstract.architecture, concrete.architecture)
 
-
     def check_concretize(self, abstract_spec):
         abstract = Spec(abstract_spec)
         concrete = abstract.concretized()
@@ -70,17 +70,14 @@ class ConcretizeTest(MockPackagesTest):
 
         return concrete
 
-
     def test_concretize_no_deps(self):
         self.check_concretize('libelf')
         self.check_concretize('libelf@0.8.13')
-
 
     def test_concretize_dag(self):
         self.check_concretize('callpath')
         self.check_concretize('mpileaks')
         self.check_concretize('libelf')
-
 
     def test_concretize_variant(self):
         self.check_concretize('mpich+debug')
@@ -88,10 +85,8 @@ class ConcretizeTest(MockPackagesTest):
         self.check_concretize('mpich debug=2')
         self.check_concretize('mpich')
 
-
     def test_conretize_compiler_flags(self):
         self.check_concretize('mpich cppflags="-O3"')
-
 
     def test_concretize_preferred_version(self):
         spec = self.check_concretize('python')
@@ -99,7 +94,6 @@ class ConcretizeTest(MockPackagesTest):
 
         spec = self.check_concretize('python@3.5.1')
         self.assertEqual(spec.versions, ver('3.5.1'))
-
 
     def test_concretize_with_virtual(self):
         self.check_concretize('mpileaks ^mpi')
@@ -110,7 +104,6 @@ class ConcretizeTest(MockPackagesTest):
         self.check_concretize('mpileaks ^mpi@2.2')
         self.check_concretize('mpileaks ^mpi@:1')
         self.check_concretize('mpileaks ^mpi@1.2:2')
-
 
     def test_concretize_with_restricted_virtual(self):
         self.check_concretize('mpileaks ^mpich2')
@@ -142,54 +135,54 @@ class ConcretizeTest(MockPackagesTest):
         concrete = self.check_concretize('mpileaks   ^mpich2@1.3.1:1.4')
         self.assertTrue(concrete['mpich2'].satisfies('mpich2@1.3.1:1.4'))
 
-
     def test_concretize_with_provides_when(self):
         """Make sure insufficient versions of MPI are not in providers list when
            we ask for some advanced version.
         """
-        self.assertTrue(not any(spec.satisfies('mpich2@:1.0')
-                                for spec in spack.repo.providers_for('mpi@2.1')))
+        self.assertTrue(
+            not any(spec.satisfies('mpich2@:1.0')
+                    for spec in spack.repo.providers_for('mpi@2.1')))
 
-        self.assertTrue(not any(spec.satisfies('mpich2@:1.1')
-                                for spec in spack.repo.providers_for('mpi@2.2')))
+        self.assertTrue(
+            not any(spec.satisfies('mpich2@:1.1')
+                    for spec in spack.repo.providers_for('mpi@2.2')))
 
-        self.assertTrue(not any(spec.satisfies('mpich@:1')
-                                for spec in spack.repo.providers_for('mpi@2')))
+        self.assertTrue(
+            not any(spec.satisfies('mpich@:1')
+                    for spec in spack.repo.providers_for('mpi@2')))
 
-        self.assertTrue(not any(spec.satisfies('mpich@:1')
-                                for spec in spack.repo.providers_for('mpi@3')))
+        self.assertTrue(
+            not any(spec.satisfies('mpich@:1')
+                    for spec in spack.repo.providers_for('mpi@3')))
 
-        self.assertTrue(not any(spec.satisfies('mpich2')
-                                for spec in spack.repo.providers_for('mpi@3')))
-
+        self.assertTrue(
+            not any(spec.satisfies('mpich2')
+                    for spec in spack.repo.providers_for('mpi@3')))
 
     def test_concretize_two_virtuals(self):
         """Test a package with multiple virtual dependencies."""
-        s = Spec('hypre').concretize()
-
+        Spec('hypre').concretize()
 
     def test_concretize_two_virtuals_with_one_bound(self):
         """Test a package with multiple virtual dependencies and one preset."""
-        s = Spec('hypre ^openblas').concretize()
-
+        Spec('hypre ^openblas').concretize()
 
     def test_concretize_two_virtuals_with_two_bound(self):
-        """Test a package with multiple virtual dependencies and two of them preset."""
-        s = Spec('hypre ^openblas ^netlib-lapack').concretize()
-
+        """Test a package with multiple virtual deps and two of them preset."""
+        Spec('hypre ^openblas ^netlib-lapack').concretize()
 
     def test_concretize_two_virtuals_with_dual_provider(self):
         """Test a package with multiple virtual dependencies and force a provider
            that provides both."""
-        s = Spec('hypre ^openblas-with-lapack').concretize()
-
+        Spec('hypre ^openblas-with-lapack').concretize()
 
     def test_concretize_two_virtuals_with_dual_provider_and_a_conflict(self):
-        """Test a package with multiple virtual dependencies and force a provider
-           that provides both, and another conflicting package that provides one."""
+        """Test a package with multiple virtual dependencies and force a
+           provider that provides both, and another conflicting package that
+           provides one.
+        """
         s = Spec('hypre ^openblas-with-lapack ^netlib-lapack')
         self.assertRaises(spack.spec.MultipleProviderError, s.concretize)
-
 
     def test_virtual_is_fully_expanded_for_callpath(self):
         # force dependence on fake "zmpi" by asking for MPI 10.0
@@ -207,7 +200,6 @@ class ConcretizeTest(MockPackagesTest):
 
         self.assertTrue('fake' in spec._dependencies['zmpi'].spec)
 
-
     def test_virtual_is_fully_expanded_for_mpileaks(self):
         spec = Spec('mpileaks ^mpi@10.0')
         self.assertTrue('mpi' in spec._dependencies)
@@ -217,22 +209,23 @@ class ConcretizeTest(MockPackagesTest):
 
         self.assertTrue('zmpi' in spec._dependencies)
         self.assertTrue('callpath' in spec._dependencies)
-        self.assertTrue('zmpi' in spec._dependencies['callpath'].
-                                  spec._dependencies)
-        self.assertTrue('fake' in spec._dependencies['callpath'].
-                                  spec._dependencies['zmpi'].
-                                  spec._dependencies)
+        self.assertTrue(
+            'zmpi' in spec._dependencies['callpath']
+            .spec._dependencies)
+        self.assertTrue(
+            'fake' in spec._dependencies['callpath']
+            .spec._dependencies['zmpi']
+            .spec._dependencies)
 
-        self.assertTrue(all(not 'mpi' in d._dependencies for d in spec.traverse()))
+        self.assertTrue(
+            all('mpi' not in d._dependencies for d in spec.traverse()))
         self.assertTrue('zmpi' in spec)
         self.assertTrue('mpi' in spec)
-
 
     def test_my_dep_depends_on_provider_of_my_virtual_dep(self):
         spec = Spec('indirect_mpich')
         spec.normalize()
         spec.concretize()
-
 
     def test_compiler_inheritance(self):
         spec = Spec('mpileaks')
@@ -245,26 +238,26 @@ class ConcretizeTest(MockPackagesTest):
         self.assertTrue(spec['libdwarf'].compiler.satisfies('clang'))
         self.assertTrue(spec['libelf'].compiler.satisfies('clang'))
 
-
     def test_external_package(self):
         spec = Spec('externaltool%gcc')
         spec.concretize()
 
-        self.assertEqual(spec['externaltool'].external, '/path/to/external_tool')
+        self.assertEqual(
+            spec['externaltool'].external, '/path/to/external_tool')
         self.assertFalse('externalprereq' in spec)
         self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
-
 
     def test_external_package_module(self):
         # No tcl modules on darwin/linux machines
         # TODO: improved way to check for this.
-        if (spack.architecture.platform().name == 'darwin' or
-            spack.architecture.platform().name == 'linux'):
+        platform = spack.architecture.platform().name
+        if (platform == 'darwin' or platform == 'linux'):
             return
 
         spec = Spec('externalmodule')
         spec.concretize()
-        self.assertEqual(spec['externalmodule'].external_module, 'external-module')
+        self.assertEqual(
+            spec['externalmodule'].external_module, 'external-module')
         self.assertFalse('externalprereq' in spec)
         self.assertTrue(spec['externalmodule'].compiler.satisfies('gcc'))
 
@@ -277,15 +270,15 @@ class ConcretizeTest(MockPackagesTest):
             got_error = True
         self.assertTrue(got_error)
 
-
     def test_external_and_virtual(self):
         spec = Spec('externaltest')
         spec.concretize()
-        self.assertEqual(spec['externaltool'].external, '/path/to/external_tool')
-        self.assertEqual(spec['stuff'].external, '/path/to/external_virtual_gcc')
+        self.assertEqual(
+            spec['externaltool'].external, '/path/to/external_tool')
+        self.assertEqual(
+            spec['stuff'].external, '/path/to/external_virtual_gcc')
         self.assertTrue(spec['externaltool'].compiler.satisfies('gcc'))
         self.assertTrue(spec['stuff'].compiler.satisfies('gcc'))
-
 
     def test_find_spec_parents(self):
         """Tests the spec finding logic used by concretization. """
@@ -296,7 +289,6 @@ class ConcretizeTest(MockPackagesTest):
                  Spec('e +foo'))
 
         self.assertEqual('a', find_spec(s['b'], lambda s: '+foo' in s).name)
-
 
     def test_find_spec_children(self):
         s = Spec('a',
@@ -311,7 +303,6 @@ class ConcretizeTest(MockPackagesTest):
                       Spec('d')),
                  Spec('e +foo'))
         self.assertEqual('c', find_spec(s['b'], lambda s: '+foo' in s).name)
-
 
     def test_find_spec_sibling(self):
         s = Spec('a',
@@ -330,7 +321,6 @@ class ConcretizeTest(MockPackagesTest):
                       Spec('f +foo')))
         self.assertEqual('f', find_spec(s['b'], lambda s: '+foo' in s).name)
 
-
     def test_find_spec_self(self):
         s = Spec('a',
                  Spec('b +foo',
@@ -339,7 +329,6 @@ class ConcretizeTest(MockPackagesTest):
                  Spec('e'))
         self.assertEqual('b', find_spec(s['b'], lambda s: '+foo' in s).name)
 
-
     def test_find_spec_none(self):
         s = Spec('a',
                  Spec('b',
@@ -347,7 +336,6 @@ class ConcretizeTest(MockPackagesTest):
                       Spec('d')),
                  Spec('e'))
         self.assertEqual(None, find_spec(s['b'], lambda s: '+foo' in s))
-
 
     def test_compiler_child(self):
         s = Spec('mpileaks%clang ^dyninst%gcc')

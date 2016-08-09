@@ -357,9 +357,9 @@ class Database(object):
 
         This is a helper function called by the WriteTransaction context
         manager. If there is an exception while the write lock is active,
-        nothing will be written to the database file, but the in-memory database
-        *may* be left in an inconsistent state.  It will be consistent after the
-        start of the next transaction, when it read from disk again.
+        nothing will be written to the database file, but the in-memory
+        database *may* be left in an inconsistent state.  It will be consistent
+        after the start of the next transaction, when it read from disk again.
 
         This routine does no locking.
 

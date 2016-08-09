@@ -45,14 +45,14 @@ def setup_parser(subparser):
 
 def purge(parser, args):
     # Special case: no flags.
-    if not any((args.stage, args.cache, args.all)):
+    if not any((args.stage, args.downloads, args.user_cache, args.all)):
         stage.purge()
         return
 
     # handle other flags with fall through.
     if args.stage or args.all:
         stage.purge()
-    if args.cache or args.all:
+    if args.downloads or args.all:
         spack.fetch_cache.destroy()
     if args.user_cache or args.all:
         spack.user_cache.destroy()

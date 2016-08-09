@@ -28,7 +28,6 @@ import shutil
 from llnl.util.filesystem import *
 from llnl.util.lock import *
 
-import spack
 from spack.error import SpackError
 
 
@@ -54,11 +53,14 @@ class FileCache(object):
 
         self._locks = {}
 
-    def purge(self):
+    def destroy(self):
         """Remove all files under the cache root."""
         for f in os.listdir(self.root):
             path = join_path(self.root, f)
-            shutil.rmtree(f)
+            if os.path.isdir(path):
+                shutil.rmtree(path, True)
+            else:
+                os.remove(path)
 
     def cache_path(self, key):
         """Path to the file in the cache for a particular key."""
@@ -92,7 +94,7 @@ class FileCache(object):
             if not os.path.isfile(cache_path):
                 raise CacheError("Cache file is not a file: %s" % cache_path)
 
-            if not os.access(cache_path, os.R_OK|os.W_OK):
+            if not os.access(cache_path, os.R_OK | os.W_OK):
                 raise CacheError("Cannot access cache file: %s" % cache_path)
         else:
             # if the file is hierarchical, make parent directories
@@ -100,7 +102,7 @@ class FileCache(object):
             if parent.rstrip(os.path.sep) != self.root:
                 mkdirp(parent)
 
-            if not os.access(parent, os.R_OK|os.W_OK):
+            if not os.access(parent, os.R_OK | os.W_OK):
                 raise CacheError("Cannot access cache directory: %s" % parent)
 
             # ensure lock is created for this key
@@ -154,7 +156,6 @@ class FileCache(object):
 
         return WriteTransaction(self._get_lock(key), WriteContextManager)
 
-
     def mtime(self, key):
         """Return modification time of cache file, or 0 if it does not exist.
 
@@ -168,7 +169,6 @@ class FileCache(object):
             sinfo = os.stat(self.cache_path(key))
             return sinfo.st_mtime
 
-
     def remove(self, key):
         lock = self._get_lock(key)
         try:
@@ -178,4 +178,6 @@ class FileCache(object):
             lock.release_write()
         os.unlink(self._lock_path(key))
 
-class CacheError(SpackError): pass
+
+class CacheError(SpackError):
+    pass

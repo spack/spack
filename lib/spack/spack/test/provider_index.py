@@ -22,27 +22,28 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+"""Tests for provider index cache files.
+
+Tests assume that mock packages provide this:
+
+  {'blas':   {
+       blas: set([netlib-blas, openblas, openblas-with-lapack])},
+   'lapack': {lapack: set([netlib-lapack, openblas-with-lapack])},
+   'mpi': {mpi@:1: set([mpich@:1]),
+                    mpi@:2.0: set([mpich2]),
+                    mpi@:2.1: set([mpich2@1.1:]),
+                    mpi@:2.2: set([mpich2@1.2:]),
+                    mpi@:3: set([mpich@3:]),
+                    mpi@:10.0: set([zmpi])},
+    'stuff': {stuff: set([externalvirtual])}}
+"""
 from StringIO import StringIO
-import unittest
 
 import spack
 from spack.spec import Spec
 from spack.provider_index import ProviderIndex
 from spack.test.mock_packages_test import *
 
-# Test assume that mock packages provide this:
-#
-# {'blas':   {
-#      blas: set([netlib-blas, openblas, openblas-with-lapack])},
-#  'lapack': {lapack: set([netlib-lapack, openblas-with-lapack])},
-#  'mpi': {mpi@:1: set([mpich@:1]),
-#                   mpi@:2.0: set([mpich2]),
-#                   mpi@:2.1: set([mpich2@1.1:]),
-#                   mpi@:2.2: set([mpich2@1.2:]),
-#                   mpi@:3: set([mpich@3:]),
-#                   mpi@:10.0: set([zmpi])},
-#   'stuff': {stuff: set([externalvirtual])}}
-#
 
 class ProviderIndexTest(MockPackagesTest):
 
@@ -57,7 +58,6 @@ class ProviderIndexTest(MockPackagesTest):
 
         self.assertEqual(p, q)
 
-
     def test_providers_for_simple(self):
         p = ProviderIndex(spack.repo.all_package_names())
 
@@ -69,7 +69,6 @@ class ProviderIndexTest(MockPackagesTest):
         lapack_providers = p.providers_for('lapack')
         self.assertTrue(Spec('netlib-lapack') in lapack_providers)
         self.assertTrue(Spec('openblas-with-lapack') in lapack_providers)
-
 
     def test_mpi_providers(self):
         p = ProviderIndex(spack.repo.all_package_names())
@@ -83,12 +82,10 @@ class ProviderIndexTest(MockPackagesTest):
         self.assertTrue(Spec('mpich@3:') in mpi_3_providers)
         self.assertTrue(Spec('zmpi') in mpi_3_providers)
 
-
     def test_equal(self):
         p = ProviderIndex(spack.repo.all_package_names())
         q = ProviderIndex(spack.repo.all_package_names())
         self.assertEqual(p, q)
-
 
     def test_copy(self):
         p = ProviderIndex(spack.repo.all_package_names())

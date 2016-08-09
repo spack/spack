@@ -39,12 +39,19 @@ _sleep_time = 1e-5
 
 
 class Lock(object):
-    def __init__(self,file_path):
+    """This is an implementation of a filesystem lock using Python's lockf.
+
+    In Python, `lockf` actually calls `fcntl`, so this should work with any
+    filesystem implementation that supports locking through the fcntl calls.
+    This includes distributed filesystems like Lustre (when flock is enabled)
+    and recent NFS versions.
+
+    """
+    def __init__(self, file_path):
         self._file_path = file_path
         self._fd = None
         self._reads = 0
         self._writes = 0
-
 
     def _lock(self, op, timeout):
         """This takes a lock using POSIX locks (``fnctl.lockf``).
@@ -80,7 +87,6 @@ class Lock(object):
 
         raise LockError("Timed out waiting for lock.")
 
-
     def _unlock(self):
         """Releases a lock using POSIX locks (``fcntl.lockf``)
 
@@ -88,10 +94,9 @@ class Lock(object):
         be masquerading as write locks, but this removes either.
 
         """
-        fcntl.lockf(self._fd,fcntl.LOCK_UN)
+        fcntl.lockf(self._fd, fcntl.LOCK_UN)
         os.close(self._fd)
         self._fd = None
-
 
     def acquire_read(self, timeout=_default_timeout):
         """Acquires a recursive, shared lock for reading.
@@ -112,7 +117,6 @@ class Lock(object):
             self._reads += 1
             return False
 
-
     def acquire_write(self, timeout=_default_timeout):
         """Acquires a recursive, exclusive lock for writing.
 
@@ -131,7 +135,6 @@ class Lock(object):
         else:
             self._writes += 1
             return False
-
 
     def release_read(self):
         """Releases a read lock.
@@ -152,7 +155,6 @@ class Lock(object):
         else:
             self._reads -= 1
             return False
-
 
     def release_write(self):
         """Releases a write lock.
