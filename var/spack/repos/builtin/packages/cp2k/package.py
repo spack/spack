@@ -40,6 +40,7 @@ class Cp2k(Package):
     version('3.0', 'c05bc47335f68597a310b1ed75601d35')
 
     variant('mpi', default=True, description='Enable MPI support')
+    variant('plumed', default=False, description='Enable PLUMED support')
 
     depends_on('python')  # Build dependency
 
@@ -49,6 +50,8 @@ class Cp2k(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('scalapack', when='+mpi')
+    depends_on('plumed+shared+mpi', when='+plumed+mpi')
+    depends_on('plumed+shared~mpi', when='+plumed~mpi')
 
     # TODO : add dependency on libint
     # TODO : add dependency on libsmm, libxsmm
@@ -56,7 +59,6 @@ class Cp2k(Package):
     # TODO : add dependency on CUDA
     # TODO : add dependency on PEXSI
     # TODO : add dependency on QUIP
-    # TODO : add dependency on plumed
     # TODO : add dependency on libwannier90
 
     parallel = False
@@ -70,22 +72,6 @@ class Cp2k(Package):
 
         # Write the custom makefile
         with open(makefile, 'w') as mkf:
-            mkf.write('CC = {0.compiler.cc}\n'.format(self))
-            if '%intel' in self.spec:
-                # CPP is a commented command in Intel arch of CP2K
-                # This is the hack through which cp2k developers avoid doing :
-                #
-                # ${CPP} <file>.F > <file>.f90
-                #
-                # and use `-fpp` instead
-                mkf.write('CPP = # {0.compiler.cc} -P\n'.format(self))
-                mkf.write('AR = xiar -r\n')
-            else:
-                mkf.write('CPP = {0.compiler.cc} -E\n'.format(self))
-                mkf.write('AR = ar -r\n')
-            fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
-            mkf.write('FC = {0}\n'.format(fc))
-            mkf.write('LD = {0}\n'.format(fc))
             # Optimization flags
             optflags = {
                 'gcc': ['-O2',
@@ -110,6 +96,37 @@ class Cp2k(Package):
             ])
             ldflags = ['-L' + spec['fftw'].prefix.lib]
             libs = []
+            if '+plumed' in self.spec:
+                # Include Plumed.inc in the Makefile
+                mkf.write('include {0}\n'.format(
+                    join_path(self.spec['plumed'].prefix.lib,
+                              'plumed',
+                              'src',
+                              'lib',
+                              'Plumed.inc')
+                ))
+                # Add required macro
+                cppflags.extend(['-D__PLUMED2'])
+                libs.extend([
+                    join_path(self.spec['plumed'].prefix.lib, 'libplumed.so')
+                ])
+
+            mkf.write('CC = {0.compiler.cc}\n'.format(self))
+            if '%intel' in self.spec:
+                # CPP is a commented command in Intel arch of CP2K
+                # This is the hack through which cp2k developers avoid doing :
+                #
+                # ${CPP} <file>.F > <file>.f90
+                #
+                # and use `-fpp` instead
+                mkf.write('CPP = # {0.compiler.cc} -P\n'.format(self))
+                mkf.write('AR = xiar -r\n')
+            else:
+                mkf.write('CPP = {0.compiler.cc} -E\n'.format(self))
+                mkf.write('AR = ar -r\n')
+            fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
+            mkf.write('FC = {0}\n'.format(fc))
+            mkf.write('LD = {0}\n'.format(fc))
             # Intel
             if '%intel' in self.spec:
                 cppflags.extend([
