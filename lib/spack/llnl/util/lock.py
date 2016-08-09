@@ -213,13 +213,15 @@ class LockTransaction(object):
                 return self._as
 
     def __exit__(self, type, value, traceback):
+        suppress = False
         if self._exit():
             if self._as and hasattr(self._as, '__exit__'):
-                self._as.__exit__(type, value, traceback)
+                if self._as.__exit__(type, value, traceback):
+                    suppress = True
             if self._release_fn:
-                self._release_fn(type, value, traceback)
-        if value:
-            raise value
+                if self._release_fn(type, value, traceback):
+                    suppress = True
+        return suppress
 
 
 class ReadTransaction(LockTransaction):
