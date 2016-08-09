@@ -59,10 +59,12 @@ class PyPyside(Package):
 
         # PySide tries to patch ELF files to remove RPATHs
         # Disable this and go with the one we set.
-        filter_file(
-            r'^\s*rpath_cmd\(pyside_path, srcpath\)',
-            r'#rpath_cmd(pyside_path, srcpath)',
-            'pyside_postinstall.py')
+        if self.spec.satisfies('@1.2.4:'):
+            rpath_file = 'setup.py'
+        else:
+            rpath_file = 'pyside_postinstall.py'
+
+        filter_file(r'(^\s*)(rpath_cmd\(.*\))', r'\1#\2', rpath_file)
 
     def install(self, spec, prefix):
         python('setup.py', 'install',
