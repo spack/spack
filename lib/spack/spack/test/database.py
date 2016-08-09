@@ -273,3 +273,37 @@ class DatabaseTest(MockDatabase):
         # mpich ref count updated properly.
         mpich_rec = self.installed_db.get_record('mpich')
         self.assertEqual(mpich_rec.ref_count, 0)
+
+    def test_100_no_write_with_exception_on_remove(self):
+        def fail_while_writing():
+            with self.installed_db.write_transaction():
+                self._mock_remove('mpileaks ^zmpi')
+                raise Exception()
+
+        with self.installed_db.read_transaction():
+            self.assertEqual(
+                len(self.installed_db.query('mpileaks ^zmpi', installed=any)), 1)
+
+        self.assertRaises(Exception, fail_while_writing)
+
+        # reload DB and make sure zmpi is still there.
+        with self.installed_db.read_transaction():
+            self.assertEqual(
+                len(self.installed_db.query('mpileaks ^zmpi', installed=any)), 1)
+
+    def test_110_no_write_with_exception_on_install(self):
+        def fail_while_writing():
+            with self.installed_db.write_transaction():
+                self._mock_install('cmake')
+                raise Exception()
+
+        with self.installed_db.read_transaction():
+            self.assertEqual(
+                self.installed_db.query('cmake', installed=any), [])
+
+        self.assertRaises(Exception, fail_while_writing)
+
+        # reload DB and make sure cmake was not written.
+        with self.installed_db.read_transaction():
+            self.assertEqual(
+                self.installed_db.query('cmake', installed=any), [])

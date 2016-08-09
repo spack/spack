@@ -165,11 +165,11 @@ class Database(object):
 
     def write_transaction(self, timeout=_db_lock_timeout):
         """Get a write lock context manager for use in a `with` block."""
-        return WriteTransaction(self, self._read, self._write, timeout)
+        return WriteTransaction(self.lock, self._read, self._write, timeout)
 
     def read_transaction(self, timeout=_db_lock_timeout):
         """Get a read lock context manager for use in a `with` block."""
-        return ReadTransaction(self, self._read, None, timeout)
+        return ReadTransaction(self.lock, self._read, timeout=timeout)
 
     def _write_to_yaml(self, stream):
         """Write out the databsae to a YAML file.
@@ -352,12 +352,22 @@ class Database(object):
                     "Invalid ref_count: %s: %d (expected %d), in DB %s" %
                     (key, found, expected, self._index_path))
 
-    def _write(self):
+    def _write(self, type, value, traceback):
         """Write the in-memory database index to its file path.
 
-        Does no locking.
+        This is a helper function called by the WriteTransaction context
+        manager. If there is an exception while the write lock is active,
+        nothing will be written to the database file, but the in-memory database
+        *may* be left in an inconsistent state.  It will be consistent after the
+        start of the next transaction, when it read from disk again.
+
+        This routine does no locking.
 
         """
+        # Do not write if exceptions were raised
+        if type is not None:
+            return
+
         temp_file = self._index_path + (
             '.%s.%s.temp' % (socket.getfqdn(), os.getpid()))
 
@@ -587,49 +597,6 @@ class Database(object):
         with self.read_transaction():
             key = spec.dag_hash()
             return key in self._data and not self._data[key].installed
-
-
-class _Transaction(object):
-    """Simple nested transaction context manager that uses a file lock.
-
-    This class can trigger actions when the lock is acquired for the
-    first time and released for the last.
-
-    Timeout for lock is customizable.
-    """
-
-    def __init__(self, db,
-                 acquire_fn=None,
-                 release_fn=None,
-                 timeout=_db_lock_timeout):
-        self._db = db
-        self._timeout = timeout
-        self._acquire_fn = acquire_fn
-        self._release_fn = release_fn
-
-    def __enter__(self):
-        if self._enter() and self._acquire_fn:
-            self._acquire_fn()
-
-    def __exit__(self, type, value, traceback):
-        if self._exit() and self._release_fn:
-            self._release_fn()
-
-
-class ReadTransaction(_Transaction):
-    def _enter(self):
-        return self._db.lock.acquire_read(self._timeout)
-
-    def _exit(self):
-        return self._db.lock.release_read()
-
-
-class WriteTransaction(_Transaction):
-    def _enter(self):
-        return self._db.lock.acquire_write(self._timeout)
-
-    def _exit(self):
-        return self._db.lock.release_write()
 
 
 class CorruptDatabaseError(SpackError):

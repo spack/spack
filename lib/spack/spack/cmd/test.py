@@ -41,10 +41,10 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-l', '--list', action='store_true', dest='list', help="Show available tests")
     subparser.add_argument(
-        '--createXmlOutput', action='store_true', dest='createXmlOutput', 
+        '--createXmlOutput', action='store_true', dest='createXmlOutput',
         help="Create JUnit XML from test results")
     subparser.add_argument(
-        '--xmlOutputDir', dest='xmlOutputDir', 
+        '--xmlOutputDir', dest='xmlOutputDir',
         help="Nose creates XML files in this directory")
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
@@ -62,7 +62,7 @@ class MockCache(object):
 class MockCacheFetcher(object):
     def set_stage(self, stage):
         pass
-    
+
     def fetch(self):
         raise FetchError("Mock cache always fails for tests")
 
@@ -82,8 +82,8 @@ def test(parser, args):
                 outputDir = join_path(os.getcwd(), "test-output")
             else:
                 outputDir = os.path.abspath(args.xmlOutputDir)
-            
+
             if not os.path.exists(outputDir):
                 mkdirp(outputDir)
-        spack.cache = MockCache()
+        spack.fetch_cache = MockCache()
         spack.test.run(args.names, outputDir, args.verbose)

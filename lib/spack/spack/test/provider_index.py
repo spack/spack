@@ -94,7 +94,3 @@ class ProviderIndexTest(MockPackagesTest):
         p = ProviderIndex(spack.repo.all_package_names())
         q = p.copy()
         self.assertEqual(p, q)
-
-
-    def test_copy(self):
-        pass

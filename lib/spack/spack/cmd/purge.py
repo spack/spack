@@ -33,7 +33,11 @@ def setup_parser(subparser):
         '-s', '--stage', action='store_true', default=True,
         help="Remove all temporary build stages (default).")
     subparser.add_argument(
-        '-c', '--cache', action='store_true', help="Remove cached downloads.")
+        '-d', '--downloads', action='store_true',
+        help="Remove cached downloads.")
+    subparser.add_argument(
+        '-u', '--user-cache', action='store_true',
+        help="Remove caches in user home directory. Includes virtual indices.")
     subparser.add_argument(
         '-a', '--all', action='store_true',
         help="Remove all of the above.")
@@ -49,4 +53,6 @@ def purge(parser, args):
     if args.stage or args.all:
         stage.purge()
     if args.cache or args.all:
-        spack.cache.destroy()
+        spack.fetch_cache.destroy()
+    if args.user_cache or args.all:
+        spack.user_cache.destroy()

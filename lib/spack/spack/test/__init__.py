@@ -49,6 +49,7 @@ test_names = [
     'database',
     'directory_layout',
     'environment',
+    'file_cache',
     'git_fetch',
     'hg_fetch',
     'install',

@@ -520,7 +520,8 @@ class Dotkit(EnvModule):
 
     def prerequisite(self, spec):
         tty.warn('prerequisites:  not supported by dotkit module files')
-        tty.warn('\tYou may want to check  ~/.spack/modules.yaml')
+        tty.warn('\tYou may want to check %s/modules.yaml'
+                 % spack.user_config_path)
         return ''
 
 

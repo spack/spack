@@ -41,6 +41,7 @@ import llnl.util.tty as tty
 from llnl.util.lock import Lock
 from llnl.util.filesystem import *
 
+import spack
 import spack.error
 import spack.config
 import spack.spec
@@ -414,17 +415,6 @@ class Repo(object):
         check(os.path.isdir(self.packages_path),
               "No directory '%s' found in '%s'" % (repo_config_name, root))
 
-        self.index_file = join_path(self.root, repo_index_name)
-        check(not os.path.exists(self.index_file) or
-              (os.path.isfile(self.index_file) and os.access(self.index_file, os.R_OK|os.W_OK)),
-              "Cannot access repository index file in %s" % root)
-
-        # lock file for reading/writing the index
-        self._lock_path = join_path(self.root, 'lock')
-        if not os.path.exists(self._lock_path):
-            touch(self._lock_path)
-        self._lock = Lock(self._lock_path)
-
         # Read configuration and validate namespace
         config = self._read_config()
         check('namespace' in config, '%s must define a namespace.'
@@ -461,6 +451,8 @@ class Repo(object):
         # make sure the namespace for packages in this repo exists.
         self._create_namespace()
 
+        # Unique filename for cache of virtual dependency providers
+        self._cache_file = 'providers/%s-index.yaml' % self.namespace
 
     def _create_namespace(self):
         """Create this repo's namespace module and insert it into sys.modules.
@@ -658,21 +650,15 @@ class Repo(object):
                 self._provider_index = ProviderIndex.from_yaml(f)
 
         # Read the old ProviderIndex, or make a new one.
-        index_existed = os.path.isfile(self.index_file)
+        key = self._cache_file
+        index_existed = spack.user_cache.init_entry(key)
         if index_existed and not self._needs_update:
-            self._lock.acquire_read()
-            try:
-                read()
-            finally:
-                self._lock.release_read()
-
+            with spack.user_cache.read_transaction(key) as f:
+                self._provider_index = ProviderIndex.from_yaml(f)
         else:
-            tmp = self.index_file + '.tmp'
-            self._lock.acquire_write()
-            try:
-                if index_existed:
-                    with open(self.index_file) as f:
-                        self._provider_index = ProviderIndex.from_yaml(f)
+            with spack.user_cache.write_transaction(key) as (old, new):
+                if old:
+                    self._provider_index = ProviderIndex.from_yaml(old)
                 else:
                     self._provider_index = ProviderIndex()
 
@@ -681,17 +667,7 @@ class Repo(object):
                     self._provider_index.remove_provider(namespaced_name)
                     self._provider_index.update(namespaced_name)
 
-
-                with open(tmp, 'w') as f:
-                    self._provider_index.to_yaml(f)
-                os.rename(tmp, self.index_file)
-
-            except:
-                shutil.rmtree(tmp, ignore_errors=True)
-                raise
-
-            finally:
-                self._lock.release_write()
+                self._provider_index.to_yaml(new)
 
 
     @property
@@ -745,7 +721,7 @@ class Repo(object):
 
 
     def _fast_package_check(self):
-        """List packages in the repo and cehck whether index is up to date.
+        """List packages in the repo and check whether index is up to date.
 
         Both of these opreations require checking all `package.py`
         files so we do them at the same time.  We list the repo
@@ -763,10 +739,7 @@ class Repo(object):
             self._all_package_names = []
 
             # Get index modification time.
-            index_mtime = 0
-            if os.path.exists(self.index_file):
-                sinfo = os.stat(self.index_file)
-                index_mtime = sinfo.st_mtime
+            index_mtime = spack.user_cache.mtime(self._cache_file)
 
             for pkg_name in os.listdir(self.packages_path):
                 # Skip non-directories in the package root.
@@ -774,8 +747,9 @@ class Repo(object):
 
                 # Warn about invalid names that look like packages.
                 if not valid_module_name(pkg_name):
-                    tty.warn("Skipping package at %s. '%s' is not a valid Spack module name."
-                             % (pkg_dir, pkg_name))
+                    msg = ("Skipping package at %s. "
+                           "'%s' is not a valid Spack module name.")
+                    tty.warn(msg % (pkg_dir, pkg_name))
                     continue
 
                 # construct the file name from the directory

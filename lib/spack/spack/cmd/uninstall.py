@@ -184,7 +184,8 @@ def uninstall(parser, args):
             uninstall_list = list(set(uninstall_list))
 
         if has_error:
-            tty.die('You can use spack uninstall --dependents to uninstall these dependencies as well')  # NOQA: ignore=E501
+            tty.die('You can use spack uninstall --dependents '
+                    'to uninstall these dependencies as well')
 
         if not args.yes_to_all:
             tty.msg("The following packages will be uninstalled : ")

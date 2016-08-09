@@ -187,7 +187,6 @@ class LockTest(unittest.TestCase):
             barrier.wait() # ---------------------------------------- 13
             lock.release_read()
 
-
         def p2(barrier):
             lock = Lock(self.lock_path)
 
@@ -223,7 +222,6 @@ class LockTest(unittest.TestCase):
             lock.acquire_read()
             barrier.wait() # ---------------------------------------- 13
             lock.release_read()
-
 
         def p3(barrier):
             lock = Lock(self.lock_path)
@@ -262,3 +260,164 @@ class LockTest(unittest.TestCase):
             lock.release_read()
 
         self.multiproc_test(p1, p2, p3)
+
+    def test_transaction(self):
+        def enter_fn():
+            vals['entered'] = True
+
+        def exit_fn(t, v, tb):
+            vals['exited'] = True
+            vals['exception'] = (t or v or tb)
+
+        lock = Lock(self.lock_path)
+        vals = {'entered': False, 'exited': False, 'exception': False }
+        with ReadTransaction(lock, enter_fn, exit_fn): pass
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertFalse(vals['exception'])
+
+        vals = {'entered': False, 'exited': False, 'exception': False }
+        with WriteTransaction(lock, enter_fn, exit_fn): pass
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertFalse(vals['exception'])
+
+    def test_transaction_with_exception(self):
+        def enter_fn():
+            vals['entered'] = True
+
+        def exit_fn(t, v, tb):
+            vals['exited'] = True
+            vals['exception'] = (t or v or tb)
+
+        lock = Lock(self.lock_path)
+
+        def do_read_with_exception():
+            with ReadTransaction(lock, enter_fn, exit_fn):
+                raise Exception()
+
+        def do_write_with_exception():
+            with WriteTransaction(lock, enter_fn, exit_fn):
+                raise Exception()
+
+        vals = {'entered': False, 'exited': False, 'exception': False }
+        self.assertRaises(Exception, do_read_with_exception)
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertTrue(vals['exception'])
+
+        vals = {'entered': False, 'exited': False, 'exception': False }
+        self.assertRaises(Exception, do_write_with_exception)
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertTrue(vals['exception'])
+
+    def test_transaction_with_context_manager(self):
+        class TestContextManager(object):
+            def __enter__(self):
+                vals['entered'] = True
+
+            def __exit__(self, t, v, tb):
+                vals['exited'] = True
+                vals['exception'] = (t or v or tb)
+
+        def exit_fn(t, v, tb):
+            vals['exited_fn'] = True
+            vals['exception_fn'] = (t or v or tb)
+
+        lock = Lock(self.lock_path)
+
+        vals = {'entered': False, 'exited': False, 'exited_fn': False,
+                'exception': False, 'exception_fn': False }
+        with ReadTransaction(lock, TestContextManager, exit_fn): pass
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertFalse(vals['exception'])
+        self.assertTrue(vals['exited_fn'])
+        self.assertFalse(vals['exception_fn'])
+
+        vals = {'entered': False, 'exited': False, 'exited_fn': False,
+                'exception': False, 'exception_fn': False }
+        with ReadTransaction(lock, TestContextManager): pass
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertFalse(vals['exception'])
+        self.assertFalse(vals['exited_fn'])
+        self.assertFalse(vals['exception_fn'])
+
+        vals = {'entered': False, 'exited': False, 'exited_fn': False,
+                'exception': False, 'exception_fn': False }
+        with WriteTransaction(lock, TestContextManager, exit_fn): pass
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertFalse(vals['exception'])
+        self.assertTrue(vals['exited_fn'])
+        self.assertFalse(vals['exception_fn'])
+
+        vals = {'entered': False, 'exited': False, 'exited_fn': False,
+                'exception': False, 'exception_fn': False }
+        with WriteTransaction(lock, TestContextManager): pass
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertFalse(vals['exception'])
+        self.assertFalse(vals['exited_fn'])
+        self.assertFalse(vals['exception_fn'])
+
+    def test_transaction_with_context_manager_and_exception(self):
+        class TestContextManager(object):
+            def __enter__(self):
+                vals['entered'] = True
+
+            def __exit__(self, t, v, tb):
+                vals['exited'] = True
+                vals['exception'] = (t or v or tb)
+
+        def exit_fn(t, v, tb):
+            vals['exited_fn'] = True
+            vals['exception_fn'] = (t or v or tb)
+
+        lock = Lock(self.lock_path)
+
+        def do_read_with_exception(exit_fn):
+            with ReadTransaction(lock, TestContextManager, exit_fn):
+                raise Exception()
+
+        def do_write_with_exception(exit_fn):
+            with WriteTransaction(lock, TestContextManager, exit_fn):
+                raise Exception()
+
+        vals = {'entered': False, 'exited': False, 'exited_fn': False,
+                'exception': False, 'exception_fn': False }
+        self.assertRaises(Exception, do_read_with_exception, exit_fn)
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertTrue(vals['exception'])
+        self.assertTrue(vals['exited_fn'])
+        self.assertTrue(vals['exception_fn'])
+
+        vals = {'entered': False, 'exited': False, 'exited_fn': False,
+                'exception': False, 'exception_fn': False }
+        self.assertRaises(Exception, do_read_with_exception, None)
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertTrue(vals['exception'])
+        self.assertFalse(vals['exited_fn'])
+        self.assertFalse(vals['exception_fn'])
+
+        vals = {'entered': False, 'exited': False, 'exited_fn': False,
+                'exception': False, 'exception_fn': False }
+        self.assertRaises(Exception, do_write_with_exception, exit_fn)
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertTrue(vals['exception'])
+        self.assertTrue(vals['exited_fn'])
+        self.assertTrue(vals['exception_fn'])
+
+        vals = {'entered': False, 'exited': False, 'exited_fn': False,
+                'exception': False, 'exception_fn': False }
+        self.assertRaises(Exception, do_write_with_exception, None)
+        self.assertTrue(vals['entered'])
+        self.assertTrue(vals['exited'])
+        self.assertTrue(vals['exception'])
+        self.assertFalse(vals['exited_fn'])
+        self.assertFalse(vals['exception_fn'])
