@@ -17,11 +17,18 @@ if [[ ! $flake8 ]]; then
     exit 1
 fi
 
-# Check if changed files are flake8 conformant [framework]
-changed=$(git diff --name-only --find-renames develop... | grep '.py$')
+# Add changed files that have been committed since branching off of develop
+changed=($(git diff --name-only --find-renames develop... -- '*.py'))
+# Add changed files that have been staged but not yet committed
+changed+=($(git diff --name-only --find-renames --cached -- '*.py'))
+# Add changed files that are unstaged
+changed+=($(git diff --name-only --find-renames -- '*.py'))
+
+# Ensure that each file in the array is unique
+changed=($(printf '%s\n' "${changed[@]}" | sort -u))
 
 # Add approved style exemptions to the changed packages.
-for file in $changed; do
+for file in "${changed[@]}"; do
     # Make a backup to restore later
     cp "$file" "$file.sbak~"
 
@@ -48,14 +55,14 @@ for file in $changed; do
 done
 
 return_code=0
-if [[ $changed ]]; then
+if [[ "${changed[@]}" ]]; then
     echo =======================================================
     echo  flake8: running flake8 code checks on spack.
     echo
     echo  Modified files:
-    echo  $changed | perl -pe 's/^/  /;s/ +/\n  /g'
+    echo  "${changed[@]}" | perl -pe 's/^/  /;s/ +/\n  /g'
     echo =======================================================
-    if flake8 --format pylint $changed; then
+    if flake8 --format pylint "${changed[@]}"; then
         echo "Flake8 checks were clean."
     else
         echo "Flake8 found errors."
@@ -66,7 +73,7 @@ else
 fi
 
 # Restore original package files after modifying them.
-for file in $changed; do
+for file in "${changed[@]}"; do
     if [[ -e "${file}.sbak~" ]]; then
         mv "${file}.sbak~" "${file}"
     fi
