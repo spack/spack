@@ -70,6 +70,10 @@ class PyMatplotlib(Package):
     depends_on('pkg-config', type='build')
     depends_on('py-ipython', when='+ipython')
 
+    # Testing dependencies
+    depends_on('py-nose')  # type='test'
+    depends_on('py-mock')  # type='test'
+
     # Required libraries that ship with matplotlib
     # depends_on('agg@2.4:')
     depends_on('qhull@2012.1:')
