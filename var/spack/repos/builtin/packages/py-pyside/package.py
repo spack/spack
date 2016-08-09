@@ -31,13 +31,14 @@ class PyPyside(Package):
     homepage = "https://pypi.python.org/pypi/pyside"
     url      = "https://pypi.python.org/packages/source/P/PySide/PySide-1.2.2.tar.gz"
 
+    version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')
     version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d')
 
     depends_on('cmake', type='build')
 
     extends('python')
     depends_on('py-setuptools', type='build')
-    depends_on('qt@:4')
+    depends_on('qt@4.6:4.999')
 
     def patch(self):
         """Undo PySide RPATH handling and add Spack RPATH."""
