@@ -52,6 +52,7 @@ class ProviderIndex(object):
        matching implementation of MPI.
 
     """
+
     def __init__(self, specs=None, restrict=False):
         """Create a new ProviderIndex.
 

@@ -29,8 +29,10 @@ currently variants are just flags.
 
 """
 
+
 class Variant(object):
     """Represents a variant on a build.  Can be either on or off."""
+
     def __init__(self, default, description):
         self.default     = default
         self.description = str(description)

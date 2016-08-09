@@ -43,6 +43,7 @@ TIMEOUT = 10
 class LinkParser(HTMLParser):
     """This parser just takes an HTML page and strips out the hrefs on the
        links.  Good enough for a really simple spider. """
+
     def __init__(self):
         HTMLParser.__init__(self)
         self.links = []

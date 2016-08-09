@@ -68,7 +68,7 @@ def edit_package(name, repo_path, namespace, force=False):
     if os.path.exists(path):
         if not os.path.isfile(path):
             tty.die("Something's wrong.  '%s' is not a file!" % path)
-        if not os.access(path, os.R_OK|os.W_OK):
+        if not os.access(path, os.R_OK | os.W_OK):
             tty.die("Insufficient permissions on '%s'!" % path)
     elif not force:
         tty.die("No package '%s'.  Use spack create, or supply -f/--force "
@@ -93,19 +93,23 @@ def setup_parser(subparser):
     # Various filetypes you can edit directly from the cmd line.
     excl_args.add_argument(
         '-c', '--command', dest='path', action='store_const',
-        const=spack.cmd.command_path, help="Edit the command with the supplied name.")
+        const=spack.cmd.command_path,
+        help="Edit the command with the supplied name.")
     excl_args.add_argument(
         '-t', '--test', dest='path', action='store_const',
         const=spack.test_path, help="Edit the test with the supplied name.")
     excl_args.add_argument(
         '-m', '--module', dest='path', action='store_const',
-        const=spack.module_path, help="Edit the main spack module with the supplied name.")
+        const=spack.module_path,
+        help="Edit the main spack module with the supplied name.")
 
     # Options for editing packages
     excl_args.add_argument(
-        '-r', '--repo', default=None, help="Path to repo to edit package in.")
+        '-r', '--repo', default=None,
+        help="Path to repo to edit package in.")
     excl_args.add_argument(
-        '-N', '--namespace', default=None, help="Namespace of package to edit.")
+        '-N', '--namespace', default=None,
+        help="Namespace of package to edit.")
 
     subparser.add_argument(
         'name', nargs='?', default=None, help="name of package to edit")

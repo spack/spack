@@ -455,6 +455,7 @@ class SpecDagTest(MockPackagesTest):
 
         run3 -b-> build3
     """
+
     def test_deptype_traversal(self):
         dag = Spec('dtuse')
         dag.normalize()

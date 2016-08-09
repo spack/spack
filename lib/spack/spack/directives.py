@@ -349,9 +349,10 @@ class CircularReferenceError(DirectiveError):
 
 class UnknownDependencyTypeError(DirectiveError):
     """This is raised when a dependency is of an unknown type."""
+
     def __init__(self, directive, package, deptype):
         super(UnknownDependencyTypeError, self).__init__(
             directive,
-            "Package '%s' cannot depend on a package via %s." %
-                (package, deptype))
+            "Package '%s' cannot depend on a package via %s."
+            % (package, deptype))
         self.package = package

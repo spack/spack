@@ -22,18 +22,16 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
-from llnl.util.lang import index_by
-
 import spack
 from spack.cmd.compiler import compiler_list
 
 description = "List available compilers. Same as 'spack compiler list'."
 
+
 def setup_parser(subparser):
     subparser.add_argument('--scope', choices=spack.config.config_scopes,
                            help="Configuration scope to read/modify.")
+
 
 def compilers(parser, args):
     compiler_list(args)

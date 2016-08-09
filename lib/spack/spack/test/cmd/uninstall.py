@@ -28,6 +28,7 @@ from spack.cmd.uninstall import uninstall
 
 
 class MockArgs(object):
+
     def __init__(self, packages, all=False, force=False, dependents=False):
         self.packages = packages
         self.all = all
@@ -37,6 +38,7 @@ class MockArgs(object):
 
 
 class TestUninstall(spack.test.mock_database.MockDatabase):
+
     def test_uninstall(self):
         parser = None
         # Multiple matches

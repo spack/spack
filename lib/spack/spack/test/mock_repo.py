@@ -40,6 +40,7 @@ tar      = which('tar',      required=True)
 
 
 class MockRepo(object):
+
     def __init__(self, stage_name, repo_name):
         """This creates a stage where some archive/repo files can be staged
            for testing spack's fetch strategies."""
@@ -49,7 +50,6 @@ class MockRepo(object):
         # Full path to the repo within the stage.
         self.path = join_path(self.stage.path, repo_name)
         mkdirp(self.path)
-
 
     def destroy(self):
         """Destroy resources associated with this mock repo."""
@@ -90,6 +90,7 @@ class MockArchive(MockRepo):
 
 
 class MockVCSRepo(MockRepo):
+
     def __init__(self, stage_name, repo_name):
         """This creates a stage and a repo directory within the stage."""
         super(MockVCSRepo, self).__init__(stage_name, repo_name)
@@ -100,6 +101,7 @@ class MockVCSRepo(MockRepo):
 
 
 class MockGitRepo(MockVCSRepo):
+
     def __init__(self):
         super(MockGitRepo, self).__init__('mock-git-stage', 'mock-git-repo')
 
@@ -147,6 +149,7 @@ class MockGitRepo(MockVCSRepo):
 
 
 class MockSvnRepo(MockVCSRepo):
+
     def __init__(self):
         super(MockSvnRepo, self).__init__('mock-svn-stage', 'mock-svn-repo')
 
@@ -176,6 +179,7 @@ class MockSvnRepo(MockVCSRepo):
 
 
 class MockHgRepo(MockVCSRepo):
+
     def __init__(self):
         super(MockHgRepo, self).__init__('mock-hg-stage', 'mock-hg-repo')
         self.url = 'file://' + self.path

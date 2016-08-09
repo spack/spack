@@ -35,6 +35,7 @@ exclude = ['.hg', '.git', '.svn']
 
 
 class MirrorTest(MockPackagesTest):
+
     def setUp(self):
         """Sets up a mock package and a mock repo for each fetch strategy, to
            ensure that the mirror can create archives for each of them.
@@ -42,14 +43,12 @@ class MirrorTest(MockPackagesTest):
         super(MirrorTest, self).setUp()
         self.repos = {}
 
-
     def tearDown(self):
         """Destroy all the stages created by the repos in setup."""
         super(MirrorTest, self).tearDown()
         for repo in self.repos.values():
             repo.destroy()
         self.repos.clear()
-
 
     def set_up_package(self, name, MockRepoClass, url_attr):
         """Set up a mock package to be mirrored.
@@ -71,15 +70,13 @@ class MirrorTest(MockPackagesTest):
         v = next(iter(pkg.versions))
         pkg.versions[v][url_attr] = repo.url
 
-
     def check_mirror(self):
         with Stage('spack-mirror-test') as stage:
             mirror_root = join_path(stage.path, 'test-mirror')
 
             # register mirror with spack config
-            mirrors = { 'spack-mirror-test' : 'file://' + mirror_root }
+            mirrors = {'spack-mirror-test': 'file://' + mirror_root}
             spack.config.update_config('mirrors', mirrors)
-
 
             os.chdir(stage.path)
             spack.mirror.create(
@@ -110,15 +107,17 @@ class MirrorTest(MockPackagesTest):
                         original_path = mock_repo.path
                         if 'svn' in name:
                             # have to check out the svn repo to compare.
-                            original_path = join_path(mock_repo.path, 'checked_out')
+                            original_path = join_path(
+                                mock_repo.path, 'checked_out')
                             svn('checkout', mock_repo.url, original_path)
                         dcmp = dircmp(original_path, pkg.stage.source_path)
-                        # make sure there are no new files in the expanded tarball
+                        # make sure there are no new files in the expanded
+                        # tarball
                         self.assertFalse(dcmp.right_only)
                         # and that all original files are present.
-                        self.assertTrue(all(l in exclude for l in dcmp.left_only))
+                        self.assertTrue(
+                            all(l in exclude for l in dcmp.left_only))
                         spack.do_checksum = saved_checksum_setting
-
 
     def test_git_mirror(self):
         self.set_up_package('git-test', MockGitRepo, 'git')

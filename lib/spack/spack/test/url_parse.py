@@ -32,10 +32,10 @@ import spack.url as url
 
 
 class UrlParseTest(unittest.TestCase):
+
     def assert_not_detected(self, string):
         self.assertRaises(
             url.UndetectableVersionError, url.parse_name_and_version, string)
-
 
     def check(self, name, v, string, **kwargs):
         # Make sure correct name and version are extracted.
@@ -51,7 +51,6 @@ class UrlParseTest(unittest.TestCase):
         # Make sure Spack formulates the right URL when we try to
         # build one with a specific version.
         self.assertEqual(string, url.substitute_version(string, v))
-
 
     def test_wwwoffle_version(self):
         self.check(
@@ -72,7 +71,7 @@ class UrlParseTest(unittest.TestCase):
 
     def test_version_all_dots(self):
         self.check(
-            'foo.bar.la', '1.14','http://example.com/foo.bar.la.1.14.zip')
+            'foo.bar.la', '1.14', 'http://example.com/foo.bar.la.1.14.zip')
 
     def test_version_underscore_separator(self):
         self.check(
@@ -286,7 +285,7 @@ class UrlParseTest(unittest.TestCase):
             'mvapich2', '1.9',
             'http://mvapich.cse.ohio-state.edu/download/mvapich2/mv2/mvapich2-1.9.tgz')
 
-    def test_mvapich2_19_version(self):
+    def test_mvapich2_20_version(self):
         self.check(
             'mvapich2', '2.0',
             'http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.0.tar.gz')

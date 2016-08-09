@@ -32,14 +32,12 @@ class NamespaceTrieTest(unittest.TestCase):
     def setUp(self):
         self.trie = NamespaceTrie()
 
-
     def test_add_single(self):
         self.trie['foo'] = 'bar'
 
         self.assertTrue(self.trie.is_prefix('foo'))
         self.assertTrue(self.trie.has_value('foo'))
         self.assertEqual(self.trie['foo'], 'bar')
-
 
     def test_add_multiple(self):
         self.trie['foo.bar'] = 'baz'
@@ -53,7 +51,6 @@ class NamespaceTrieTest(unittest.TestCase):
 
         self.assertFalse(self.trie.is_prefix('foo.bar.baz'))
         self.assertFalse(self.trie.has_value('foo.bar.baz'))
-
 
     def test_add_three(self):
         # add a three-level namespace
@@ -89,7 +86,6 @@ class NamespaceTrieTest(unittest.TestCase):
         self.assertFalse(self.trie.is_prefix('foo.bar.baz.quux'))
         self.assertFalse(self.trie.has_value('foo.bar.baz.quux'))
 
-
     def test_add_none_single(self):
         self.trie['foo'] = None
         self.assertTrue(self.trie.is_prefix('foo'))
@@ -98,8 +94,6 @@ class NamespaceTrieTest(unittest.TestCase):
 
         self.assertFalse(self.trie.is_prefix('foo.bar'))
         self.assertFalse(self.trie.has_value('foo.bar'))
-
-
 
     def test_add_none_multiple(self):
         self.trie['foo.bar'] = None

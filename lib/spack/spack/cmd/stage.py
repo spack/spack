@@ -22,14 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 import argparse
 
 import llnl.util.tty as tty
 import spack
 import spack.cmd
 
-description="Expand downloaded archive in preparation for install"
+description = "Expand downloaded archive in preparation for install"
+
 
 def setup_parser(subparser):
     subparser.add_argument(

@@ -158,35 +158,35 @@ section_schemas = {
                                 'required': ['cc', 'cxx', 'f77', 'fc'],
                                 'additionalProperties': False,
                                 'properties': {
-                                    'cc':  { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'cxx': { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'f77': { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'fc':  { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'cflags': { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'cxxflags': { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'fflags': { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'cppflags': { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'ldflags': { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'ldlibs': { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]}}},
-                            'spec': { 'type': 'string'},
-                            'operating_system': { 'type': 'string'},
-                            'alias': { 'anyOf': [ {'type' : 'string'},
-                                                    {'type' : 'null' }]},
-                            'modules': { 'anyOf': [ {'type' : 'string'},
-                                                    {'type' : 'null' },
-                                                    {'type': 'array'},
-                                                    ]}
-                            },},},},},},
+                                    'cc':  {'anyOf': [{'type': 'string'},
+                                                      {'type': 'null'}]},
+                                    'cxx': {'anyOf': [{'type': 'string'},
+                                                      {'type': 'null'}]},
+                                    'f77': {'anyOf': [{'type': 'string'},
+                                                      {'type': 'null'}]},
+                                    'fc':  {'anyOf': [{'type': 'string'},
+                                                      {'type': 'null'}]},
+                                    'cflags': {'anyOf': [{'type': 'string'},
+                                                         {'type': 'null'}]},
+                                    'cxxflags': {'anyOf': [{'type': 'string'},
+                                                           {'type': 'null'}]},
+                                    'fflags': {'anyOf': [{'type': 'string'},
+                                                         {'type': 'null'}]},
+                                    'cppflags': {'anyOf': [{'type': 'string'},
+                                                           {'type': 'null'}]},
+                                    'ldflags': {'anyOf': [{'type': 'string'},
+                                                          {'type': 'null'}]},
+                                    'ldlibs': {'anyOf': [{'type': 'string'},
+                                                         {'type': 'null'}]}}},
+                            'spec': {'type': 'string'},
+                            'operating_system': {'type': 'string'},
+                            'alias': {'anyOf': [{'type': 'string'},
+                                                {'type': 'null'}]},
+                            'modules': {'anyOf': [{'type': 'string'},
+                                                  {'type': 'null'},
+                                                  {'type': 'array'},
+                                                  ]}
+                        }, }, }, }, }, },
     'mirrors': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack mirror configuration file schema',
@@ -199,7 +199,7 @@ section_schemas = {
                 'additionalProperties': False,
                 'patternProperties': {
                     r'\w[\w-]*': {
-                        'type': 'string'},},},},},
+                        'type': 'string'}, }, }, }, },
 
     'repos': {
         '$schema': 'http://json-schema.org/schema#',
@@ -211,7 +211,7 @@ section_schemas = {
                 'type': 'array',
                 'default': [],
                 'items': {
-                    'type': 'string'},},},},
+                    'type': 'string'}, }, }, },
     'packages': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack package configuration file schema',
@@ -223,48 +223,48 @@ section_schemas = {
                 'default': {},
                 'additionalProperties': False,
                 'patternProperties': {
-                    r'\w[\w-]*': { # package name
+                    r'\w[\w-]*': {  # package name
                         'type': 'object',
                         'default': {},
                         'additionalProperties': False,
                         'properties': {
                             'version': {
-                                'type' : 'array',
-                                'default' : [],
-                                'items' : { 'anyOf' : [ { 'type' : 'string' },
-                                                        { 'type' : 'number'}]}}, #version strings
+                                'type': 'array',
+                                'default': [],
+                                'items': {'anyOf': [{'type': 'string'},
+                                                    {'type': 'number'}]}},  # version strings
                             'compiler': {
-                                'type' : 'array',
-                                'default' : [],
-                                'items' : { 'type' : 'string' } }, #compiler specs
+                                'type': 'array',
+                                'default': [],
+                                'items': {'type': 'string'}},  # compiler specs
                             'buildable': {
                                 'type':  'boolean',
                                 'default': True,
-                             },
+                            },
                             'modules': {
-                                'type' : 'object',
-                                'default' : {},
-                             },
+                                'type': 'object',
+                                'default': {},
+                            },
                             'providers': {
                                 'type':  'object',
                                 'default': {},
                                 'additionalProperties': False,
                                 'patternProperties': {
                                     r'\w[\w-]*': {
-                                        'type' : 'array',
-                                        'default' : [],
-                                        'items' : { 'type' : 'string' },},},},
+                                        'type': 'array',
+                                        'default': [],
+                                        'items': {'type': 'string'}, }, }, },
                             'paths': {
-                                'type' : 'object',
-                                'default' : {},
-                             },
+                                'type': 'object',
+                                'default': {},
+                            },
                             'variants': {
-                                'oneOf' : [
-                                    { 'type' : 'string' },
-                                    { 'type' : 'array',
-                                      'items' : { 'type' : 'string' } },
-                                    ], },
-                        },},},},},},
+                                'oneOf': [
+                                    {'type': 'string'},
+                                    {'type': 'array',
+                                     'items': {'type': 'string'}},
+                                ], },
+                        }, }, }, }, }, },
 
     'targets': {
         '$schema': 'http://json-schema.org/schema#',
@@ -277,8 +277,8 @@ section_schemas = {
                 'default': {},
                 'additionalProperties': False,
                 'patternProperties': {
-                    r'\w[\w-]*': { # target name
-                        'type': 'string' ,},},},},},
+                    r'\w[\w-]*': {  # target name
+                        'type': 'string', }, }, }, }, },
     'modules': {
         '$schema': 'http://json-schema.org/schema#',
         'title': 'Spack module file configuration file schema',
@@ -389,13 +389,15 @@ section_schemas = {
                     },
                     'tcl': {
                         'allOf': [
-                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
+                            # Base configuration
+                            {'$ref': '#/definitions/module_type_configuration'},
                             {}  # Specific tcl extensions
                         ]
                     },
                     'dotkit': {
                         'allOf': [
-                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
+                            # Base configuration
+                            {'$ref': '#/definitions/module_type_configuration'},
                             {}  # Specific dotkit extensions
                         ]
                     },
@@ -428,7 +430,8 @@ def extend_with_default(validator_class):
 
     """
     validate_properties = validator_class.VALIDATORS["properties"]
-    validate_pattern_properties = validator_class.VALIDATORS["patternProperties"]
+    validate_pattern_properties = validator_class.VALIDATORS[
+        "patternProperties"]
 
     def set_defaults(validator, properties, instance, schema):
         for property, subschema in properties.iteritems():
@@ -510,7 +513,8 @@ class ConfigScope(object):
         except jsonschema.ValidationError as e:
             raise ConfigSanityError(e, data)
         except (yaml.YAMLError, IOError) as e:
-            raise ConfigFileError("Error writing to config file: '%s'" % str(e))
+            raise ConfigFileError(
+                "Error writing to config file: '%s'" % str(e))
 
     def clear(self):
         """Empty cached config information."""
@@ -739,7 +743,8 @@ def spec_externals(spec):
 
         path = get_path_from_module(module)
 
-        external_spec = spack.spec.Spec(external_spec, external=path, external_module=module)
+        external_spec = spack.spec.Spec(
+            external_spec, external=path, external_module=module)
         if external_spec.satisfies(spec):
             external_specs.append(external_spec)
 
@@ -773,6 +778,7 @@ def get_path(path, data):
 
 class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
+
     def __init__(self, validation_error, data):
         # Try to get line number from erroneous instance and its parent
         instance_mark = getattr(validation_error.instance, '_start_mark', None)

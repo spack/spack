@@ -240,4 +240,4 @@ def display_specs(specs, **kwargs):
         else:
             raise ValueError(
                 "Invalid mode for display_specs: %s. Must be one of (paths,"
-                "deps, short)." % mode)  # NOQA: ignore=E501
+                "deps, short)." % mode)

@@ -15,6 +15,7 @@ class Cnl(OperatingSystem):
     modules. If updated, user must make sure that version and name are
     updated to indicate that OS has been upgraded (or downgraded)
     """
+
     def __init__(self):
         name = 'CNL'
         version = '10'

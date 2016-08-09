@@ -217,6 +217,7 @@ def setup_parser(subparser):
 
 
 class BuildSystemGuesser(object):
+
     def __call__(self, stage, url):
         """Try to guess the type of build system used by a project based on
         the contents of its archive or the URL it was downloaded from."""
