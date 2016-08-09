@@ -2,11 +2,6 @@
 #
 # This script runs source code style checks on Spack.
 #
-# It should be executed from the top-level directory of the repo,
-# e.g.:
-#
-#    share/spack/qa/run-flake8
-#
 # To run it, you'll need to have the Python flake8 installed locally.
 #
 PYTHONPATH=./lib/spack:$PYTHONPATH
@@ -16,6 +11,9 @@ if [[ ! $flake8 ]]; then
     echo "ERROR: flake8 is required to run this script."
     exit 1
 fi
+
+# Move to Spack root; allows script to be run from anywhere
+cd "$(dirname "$0")/../../.."
 
 # Add changed files that have been committed since branching off of develop
 changed=($(git diff --name-only --find-renames develop... -- '*.py'))
