@@ -328,11 +328,10 @@ class VariantSpec(object):
         return VariantSpec(self.name, self.value)
 
     def __str__(self):
-        if self.value in [True, False]:
-            out = '+' if self.value else '~'
-            return out + self.name
+        if type(self.value) == bool:
+            return '{0}{1}'.format('+' if self.value else '~', self.name)
         else:
-            return ' ' + self.name + "=" + self.value
+            return ' {0}={1}'.format(self.name, self.value)
 
 
 class VariantMap(HashableMap):
