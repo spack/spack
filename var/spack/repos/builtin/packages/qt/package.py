@@ -196,6 +196,7 @@ class Qt(Package):
                   '-no-directfb',
                   '-qt-xcb',
                   '{0}-gtk'.format('' if '+gtk' in self.spec else '-no'),
+                  '-skip', 'webengine',
                   *self.common_config_args)
 
     def install(self, spec, prefix):
