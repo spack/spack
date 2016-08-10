@@ -25,29 +25,18 @@
 from spack import *
 
 
-class PyScipy(Package):
-    """Scientific Library for Python."""
-    homepage = "http://www.scipy.org/"
-    url      = "https://pypi.python.org/packages/source/s/scipy/scipy-0.15.0.tar.gz"
+class PyZmq(Package):
+    """PyZMQ: Python bindings for zeromq."""
+    homepage = "https://github.com/zeromq/pyzmq"
+    # base https://pypi.python.org/pypi/pyzmq/
+    url      = "https://github.com/zeromq/pyzmq/archive/v14.7.0.tar.gz"
 
-    version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
-    version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
-    version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
+    version('14.7.0', 'bf304fb73d72aee314ff82d3554328c179938ecf')
 
     extends('python')
-    depends_on('py-nose', type='build')
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('py-numpy+blas+lapack', type=nolink)
+    depends_on('py-setuptools', type='build')
+    depends_on('py-cython')
+    depends_on('zeromq')
 
     def install(self, spec, prefix):
-        if 'atlas' in spec:
-            # libatlas.so actually isn't always installed, but this
-            # seems to make the build autodetect things correctly.
-            env['ATLAS'] = join_path(spec['atlas'].prefix.lib,
-                                     'libatlas.' + dso_suffix)
-        else:
-            env['BLAS']   = spec['blas'].blas_shared_lib
-            env['LAPACK'] = spec['lapack'].lapack_shared_lib
-
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

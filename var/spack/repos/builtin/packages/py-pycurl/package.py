@@ -25,29 +25,18 @@
 from spack import *
 
 
-class PyScipy(Package):
-    """Scientific Library for Python."""
-    homepage = "http://www.scipy.org/"
-    url      = "https://pypi.python.org/packages/source/s/scipy/scipy-0.15.0.tar.gz"
+class PyPycurl(Package):
+    """PycURL is a Python interface to libcurl. PycURL can be used to fetch
+    objects identified by a URL from a Python program."""
 
-    version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
-    version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
-    version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
+    homepage = "http://pycurl.io/"
+    url      = "https://pypi.python.org/packages/source/p/pycurl/pycurl-7.43.0.tar.gz"
+
+    version('7.43.0', 'c94bdba01da6004fa38325e9bd6b9760')
 
     extends('python')
-    depends_on('py-nose', type='build')
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('py-numpy+blas+lapack', type=nolink)
+    depends_on('py-setuptools', type='build')
+    depends_on('curl')
 
     def install(self, spec, prefix):
-        if 'atlas' in spec:
-            # libatlas.so actually isn't always installed, but this
-            # seems to make the build autodetect things correctly.
-            env['ATLAS'] = join_path(spec['atlas'].prefix.lib,
-                                     'libatlas.' + dso_suffix)
-        else:
-            env['BLAS']   = spec['blas'].blas_shared_lib
-            env['LAPACK'] = spec['lapack'].lapack_shared_lib
-
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

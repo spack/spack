@@ -25,29 +25,17 @@
 from spack import *
 
 
-class PyScipy(Package):
-    """Scientific Library for Python."""
-    homepage = "http://www.scipy.org/"
-    url      = "https://pypi.python.org/packages/source/s/scipy/scipy-0.15.0.tar.gz"
+class PyFunctools32(Package):
+    """Backport of the functools module from Python 3.2.3 for use on 2.7 and
+    PyPy."""
 
-    version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
-    version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
-    version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
+    homepage = "https://github.com/MiCHiLU/python-functools32"
+    # base https://pypi.python.org/pypi/functools32
+    url      = "https://pypi.python.org/packages/source/f/functools32/functools32-3.2.3-2.tar.gz"
 
-    extends('python')
-    depends_on('py-nose', type='build')
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('py-numpy+blas+lapack', type=nolink)
+    version('3.2.3-2', '09f24ffd9af9f6cd0f63cb9f4e23d4b2')
+
+    extends('python', type=nolink)
 
     def install(self, spec, prefix):
-        if 'atlas' in spec:
-            # libatlas.so actually isn't always installed, but this
-            # seems to make the build autodetect things correctly.
-            env['ATLAS'] = join_path(spec['atlas'].prefix.lib,
-                                     'libatlas.' + dso_suffix)
-        else:
-            env['BLAS']   = spec['blas'].blas_shared_lib
-            env['LAPACK'] = spec['lapack'].lapack_shared_lib
-
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

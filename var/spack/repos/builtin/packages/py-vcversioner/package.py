@@ -25,29 +25,17 @@
 from spack import *
 
 
-class PyScipy(Package):
-    """Scientific Library for Python."""
-    homepage = "http://www.scipy.org/"
-    url      = "https://pypi.python.org/packages/source/s/scipy/scipy-0.15.0.tar.gz"
+class PyVcversioner(Package):
+    """Vcversioner: Take version numbers from version control."""
 
-    version('0.17.0', '5ff2971e1ce90e762c59d2cd84837224')
-    version('0.15.1', 'be56cd8e60591d6332aac792a5880110')
-    version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
+    homepage = "https://github.com/habnabit/vcversioner"
+    # base https://pypi.python.org/pypi/vcversioner/
+    url      = "https://pypi.python.org/packages/source/v/vcversioner/vcversioner-2.16.0.0.tar.gz"
+
+    version('2.16.0.0', 'aab6ef5e0cf8614a1b1140ed5b7f107d')
 
     extends('python')
-    depends_on('py-nose', type='build')
-    depends_on('blas')
-    depends_on('lapack')
-    depends_on('py-numpy+blas+lapack', type=nolink)
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
-        if 'atlas' in spec:
-            # libatlas.so actually isn't always installed, but this
-            # seems to make the build autodetect things correctly.
-            env['ATLAS'] = join_path(spec['atlas'].prefix.lib,
-                                     'libatlas.' + dso_suffix)
-        else:
-            env['BLAS']   = spec['blas'].blas_shared_lib
-            env['LAPACK'] = spec['lapack'].lapack_shared_lib
-
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))
