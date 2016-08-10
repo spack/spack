@@ -35,7 +35,8 @@ class GobjectIntrospection(Package):
 
     version('1.48.0', '01301fa9019667d48e927353e08bc218')
 
-    depends_on("glib")
+    # version 1.48.0 build fails with glib 2.49.4
+    depends_on("glib@2.48.1")
     depends_on("python")
     depends_on("cairo")
 
