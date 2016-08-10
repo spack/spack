@@ -78,7 +78,7 @@ def _autospec(function):
 class SpackNamespace(ModuleType):
     """ Allow lazy loading of modules."""
     def __init__(self, namespace):
-        super(ModuleType, self).__init__(self, namespace)
+        super(SpackNamespace, self).__init__(namespace)
         self.__file__ = "(spack namespace)"
         self.__path__ = []
         self.__name__ = namespace
