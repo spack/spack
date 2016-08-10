@@ -58,8 +58,10 @@ class PyPillow(Package):
 
     # Spack does not (yet) support these modes of building
     # variant('webp', default=False, description='Provide the WebP format')
-    # variant('webpmux', default=False, description='WebP metadata, relies on WebP support')  # NOQA: ignore=E501
-    # variant('imagequant', default=False, description='Provide improved color quantization') # NOQA: ignore=E501
+    # variant('webpmux', default=False,
+    #         description='WebP metadata, relies on WebP support')
+    # variant('imagequant', default=False,
+    #         description='Provide improved color quantization')
 
     # Required dependencies
     extends('python')

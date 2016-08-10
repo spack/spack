@@ -118,7 +118,8 @@ class Python(Package):
                 config_args.append('--with-wide-unicode')
             elif spec.satisfies('@3.3:'):
                 # https://docs.python.org/3.3/whatsnew/3.3.html
-                raise ValueError('+ucs4 variant not compatible with Python 3.3 and beyond')  # NOQA: ignore=E501
+                raise ValueError(
+                    '+ucs4 variant not compatible with Python 3.3 and beyond')
 
         if spec.satisfies('@3:'):
             config_args.append('--without-ensurepip')

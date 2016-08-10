@@ -81,7 +81,7 @@ class Petsc(Package):
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
-    # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py  # NOQA: ignore=E501
+    # https://bitbucket.org/petsc/petsc/src/90564b43f6b05485163c147b464b5d6d28cde3ef/config/BuildSystem/config/packages/hypre.py
     depends_on('hypre~internal-superlu', when='+hypre+mpi~complex')
     depends_on('superlu-dist@:4.3', when='@:3.6.4+superlu-dist+mpi')
     depends_on('superlu-dist@5.0.0:', when='@3.7:+superlu-dist+mpi')
@@ -92,17 +92,21 @@ class Petsc(Package):
         if '~mpi' in self.spec:
             compiler_opts = [
                 '--with-cc=%s' % os.environ['CC'],
-                '--with-cxx=%s' % (os.environ['CXX'] if self.compiler.cxx is not None else '0'),  # NOQA: ignore=E501
-                '--with-fc=%s' % (os.environ['FC'] if self.compiler.fc is not None else '0'),  # NOQA: ignore=E501
+                '--with-cxx=%s' % (os.environ['CXX']
+                                   if self.compiler.cxx is not None else '0'),
+                '--with-fc=%s' % (os.environ['FC']
+                                  if self.compiler.fc is not None else '0'),
                 '--with-mpi=0'
             ]
-            error_message_fmt = '\t{library} support requires "+mpi" to be activated'  # NOQA: ignore=E501
+            error_message_fmt = \
+                '\t{library} support requires "+mpi" to be activated'
 
             # If mpi is disabled (~mpi), it's an error to have any of these
             # enabled. This generates a list of any such errors.
-            errors = [error_message_fmt.format(library=x)
-                      for x in ('hdf5', 'hypre', 'parmetis', 'mumps', 'superlu-dist')  # NOQA: ignore=E501
-                      if ('+' + x) in self.spec]
+            errors = [
+                error_message_fmt.format(library=x)
+                for x in ('hdf5', 'hypre', 'parmetis', 'mumps', 'superlu-dist')
+                if ('+' + x) in self.spec]
             if errors:
                 errors = ['incompatible variants given'] + errors
                 raise RuntimeError('\n'.join(errors))
@@ -117,8 +121,10 @@ class Petsc(Package):
         options = ['--with-ssl=0']
         options.extend(self.mpi_dependent_options())
         options.extend([
-            '--with-precision=%s' % ('double' if '+double' in spec else 'single'),  # NOQA: ignore=E501
-            '--with-scalar-type=%s' % ('complex' if '+complex' in spec else 'real'),  # NOQA: ignore=E501
+            '--with-precision=%s' % (
+                'double' if '+double' in spec else 'single'),
+            '--with-scalar-type=%s' % (
+                'complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
             '--with-blas-lapack-dir=%s' % spec['lapack'].prefix
@@ -127,11 +133,13 @@ class Petsc(Package):
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
                         'mumps', 'scalapack'):
             options.append(
-                '--with-{library}={value}'.format(library=library, value=('1' if library in spec else '0'))  # NOQA: ignore=E501
+                '--with-{library}={value}'.format(
+                    library=library, value=('1' if library in spec else '0'))
             )
             if library in spec:
                 options.append(
-                    '--with-{library}-dir={path}'.format(library=library, path=spec[library].prefix)  # NOQA: ignore=E501
+                    '--with-{library}-dir={path}'.format(
+                        library=library, path=spec[library].prefix)
                 )
         # PETSc does not pick up SuperluDist from the dir as they look for
         # superlu_dist_4.1.a
@@ -165,13 +173,25 @@ class Petsc(Package):
                 run = Executable(join_path(spec['mpi'].prefix.bin, 'mpirun'))
                 run('ex50', '-da_grid_x', '4', '-da_grid_y', '4')
                 if 'superlu-dist' in spec:
-                    run('ex50', '-da_grid_x', '4', '-da_grid_y', '4', '-pc_type', 'lu', '-pc_factor_mat_solver_package', 'superlu_dist')  # NOQA: ignore=E501
+                    run('ex50',
+                        '-da_grid_x', '4',
+                        '-da_grid_y', '4',
+                        '-pc_type', 'lu',
+                        '-pc_factor_mat_solver_package', 'superlu_dist')
 
                 if 'mumps' in spec:
-                    run('ex50', '-da_grid_x', '4', '-da_grid_y', '4', '-pc_type', 'lu', '-pc_factor_mat_solver_package', 'mumps')  # NOQA: ignore=E501
+                    run('ex50',
+                        '-da_grid_x', '4',
+                        '-da_grid_y', '4',
+                        '-pc_type', 'lu',
+                        '-pc_factor_mat_solver_package', 'mumps')
 
                 if 'hypre' in spec:
-                    run('ex50', '-da_grid_x', '4', '-da_grid_y', '4', '-pc_type', 'hypre', '-pc_hypre_type', 'boomeramg')  # NOQA: ignore=E501
+                    run('ex50',
+                        '-da_grid_x', '4',
+                        '-da_grid_y', '4',
+                        '-pc_type', 'hypre',
+                        '-pc_hypre_type', 'boomeramg')
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         # set up PETSC_DIR for everyone using PETSc package

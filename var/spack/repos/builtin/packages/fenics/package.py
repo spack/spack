@@ -36,7 +36,7 @@ class Fenics(Package):
     homepage = "http://fenicsproject.org/"
     url      = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-1.6.0.tar.gz"
 
-    base_url = "https://bitbucket.org/fenics-project/{pkg}/downloads/{pkg}-{version}.tar.gz"  # NOQA: ignore E501
+    base_url = "https://bitbucket.org/fenics-project/{pkg}/downloads/{pkg}-{version}.tar.gz"
 
     variant('hdf5',         default=True,  description='Compile with HDF5')
     variant('parmetis',     default=True,  description='Compile with ParMETIS')

@@ -174,7 +174,8 @@ class Dealii(Package):
 
         # Optional dependencies for which librariy names are the same as CMake
         # variables:
-        for library in ('gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis'):  # NOQA: ignore=E501
+        for library in (
+                'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis'):
             if library in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),
@@ -305,15 +306,20 @@ class Dealii(Package):
                     print('=== Step-40 Trilinos SuperluDist ====')
                     print('=====================================')
                     # change to direct solvers
-                    filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')  # NOQA: ignore=E501
-                    filter_file(r'(LA::MPI::PreconditionAMG preconditioner;)',
-                                (''), 'step-40.cc')
-                    filter_file(r'(LA::MPI::PreconditionAMG::AdditionalData data;)',  # NOQA: ignore=E501
-                                (''), 'step-40.cc')
-                    filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',  # NOQA: ignore=E501
-                                (''), 'step-40.cc')
-                    filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')  # NOQA: ignore=E501
-                    filter_file(r'(preconditioner\);)',  (''), 'step-40.cc')
+                    filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')  # noqa
+                    filter_file(
+                        r'(LA::MPI::PreconditionAMG preconditioner;)',
+                        (''), 'step-40.cc')
+                    filter_file(
+                        r'(LA::MPI::PreconditionAMG::AdditionalData data;)',
+                        (''), 'step-40.cc')
+                    filter_file(
+                        r'(preconditioner.initialize\(system_matrix, data\);)',
+                        (''), 'step-40.cc')
+                    filter_file(
+                        r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')  # noqa
+                    filter_file(
+                        r'(preconditioner\);)',  (''), 'step-40.cc')
                     if '^trilinos+superlu-dist' in spec:
                         make('release')
                         make('run', paralle=False)

@@ -35,8 +35,10 @@ class Tbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # Only version-specific URL's work for TBB
-    version('4.4.4', 'd4cee5e4ca75cab5181834877738619c56afeb71', url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160413oss_src.tgz')    # NOQA: ignore=E501
-    version('4.4.3', '80707e277f69d9b20eeebdd7a5f5331137868ce1', url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160128oss_src_0.tgz')  # NOQA: ignore=E501
+    version('4.4.4', 'd4cee5e4ca75cab5181834877738619c56afeb71',
+            url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160413oss_src.tgz')
+    version('4.4.3', '80707e277f69d9b20eeebdd7a5f5331137868ce1',
+            url='https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160128oss_src_0.tgz')
 
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:

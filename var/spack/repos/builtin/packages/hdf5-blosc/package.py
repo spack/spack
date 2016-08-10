@@ -72,10 +72,10 @@ class Hdf5Blosc(Package):
 
         # TODO: these vars are not used.
         # if "+mpi" in spec["hdf5"]:
-        #     cc = "mpicc"  # noqa
+        #     cc = "mpicc"
         # else:
-        #     cc = "cc"     # noqa
-        # shlibext = "so" if sys.platform != "darwin" else "dylib"  # noqa
+        #     cc = "cc"
+        # shlibext = "so" if sys.platform != "darwin" else "dylib"
 
         mkdirp(prefix.include)
         mkdirp(prefix.lib)

@@ -57,7 +57,7 @@ class SuperluDist(Package):
             'METISLIB     = -L%s -lmetis' % spec['metis'].prefix.lib,
             'PARMETISLIB  = -L%s -lparmetis' % spec['parmetis'].prefix.lib,
             'FLIBS        =',
-            'LIBS         = $(DSUPERLULIB) $(BLASLIB) $(PARMETISLIB) $(METISLIB)',  # NOQA: ignore=E501
+            'LIBS         = $(DSUPERLULIB) $(BLASLIB) $(PARMETISLIB) $(METISLIB)',  # noqa
             'ARCH         = ar',
             'ARCHFLAGS    = cr',
             'RANLIB       = true',

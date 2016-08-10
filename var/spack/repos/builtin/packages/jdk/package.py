@@ -35,7 +35,7 @@ import llnl.util.tty as tty
 class Jdk(Package):
     """The Java Development Kit (JDK) released by Oracle Corporation
        in the form of a binary product aimed at Java developers."""
-    homepage = "http://www.oracle.com/technetwork/java/javase/downloads/index.html"  # noqa: E501
+    homepage = "http://www.oracle.com/technetwork/java/javase/downloads/index.html"
 
     version('8u66-linux-x64', '88f31f3d642c3287134297b8c10e61bf',
             url="http://download.oracle.com/otn-pub/java/jdk/8u66-b17/jdk-8u66-linux-x64.tar.gz")
@@ -47,7 +47,7 @@ class Jdk(Package):
     # automate this process, we need to utilize these additional curl
     # commandline options.
     #
-    # See http://stackoverflow.com/questions/10268583/how-to-automate-download-and-installation-of-java-jdk-on-linux  # noqa: E501
+    # See http://stackoverflow.com/questions/10268583/how-to-automate-download-and-installation-of-java-jdk-on-linux
     curl_options = [
         '-j',  # junk cookies
         '-H',  # specify required License Agreement cookie
