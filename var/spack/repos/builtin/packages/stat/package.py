@@ -34,8 +34,8 @@ class Stat(Package):
     version('2.2.0', '26bd69dd57a15afdd5d0ebdb0b7fb6fc')
     version('2.1.0', 'ece26beaf057aa9134d62adcdda1ba91')
     version('2.0.0', 'c7494210b0ba26b577171b92838e1a9b')
-    version('3.0.0b', '4977afd3de2d444a5e1b1fc3b26a38c6',
-            url='https://github.com/LLNL/STAT/files/397809/STAT-3.0.0b.tar.gz')
+    version('3.0.0b', '653f961192e84f4611cabbe31c4dcd89',
+            url='https://github.com/LLNL/STAT/files/410276/STAT-3.0.0b.tar.gz')
 
     # TODO: dysect requires Dyninst patch for version 3.0.0b
     variant('dysect', default=False, description="enable DySectAPI")

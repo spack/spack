@@ -35,15 +35,14 @@ class Glib(Package):
     url      = "http://ftp.gnome.org/pub/gnome/sources/glib/2.42/glib-2.42.1.tar.xz"
 
     version('2.49.4', 'e2c87c03017b0cd02c4c73274b92b148')
+    version('2.48.1', '67bd3b75c9f6d5587b457dc01cdcd5bb')
     version('2.42.1', '89c4119e50e767d3532158605ee9121a')
-    version('2.48.1', '67bd3b75c9f6d5587b457dc01cdcd5bb',
-            url='http://ftp.gnome.org/pub/GNOME/sources/glib/2.48/glib-2.48.1.tar.xz')
 
     depends_on('libffi')
     depends_on('zlib')
     depends_on('pkg-config', type='build')
     depends_on('gettext')
-    depends_on('pcre+utf', when='@2.49:')
+    depends_on('pcre+utf', when='@2.48:')
 
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch', when='@2.42.1')
