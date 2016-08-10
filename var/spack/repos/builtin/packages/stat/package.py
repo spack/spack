@@ -76,5 +76,4 @@ class Stat(Package):
             configure_args.append('--disable-examples')
         configure(*configure_args)
 
-        make(parallel=False)
         make("install")
