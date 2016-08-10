@@ -134,6 +134,15 @@ class Fenics(Package):
                      when='@{version}'.format(**release),
                      placement=name)
 
+    def patch(self):
+        pass
+
+    @when('+hdf5~cxx')
+    def patch(self):
+        filter_file(r'find_package(HDF5)',
+                    r'find_package(HDF5 COMPONENTS C)',
+                    'CMakeLists.txt')
+
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'
 
