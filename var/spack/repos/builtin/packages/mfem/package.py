@@ -50,6 +50,7 @@ class Mfem(Package):
             description='Activate support for SuperLU_Dist')
     variant('lapack', default=False, description='Activate support for LAPACK')
     variant('debug', default=False, description='Build debug version')
+    variant('netcdf', default=False, description='Activate NetCDF support')
 
     depends_on('blas', when='+lapack')
     depends_on('lapack', when='+lapack')
@@ -70,6 +71,10 @@ class Mfem(Package):
 
     depends_on('superlu-dist', when='@3.2: +superlu-dist')
 
+    depends_on('netcdf', when='@3.2: +netcdf')
+    depends_on('zlib', when='@3.2: +netcdf')
+    depends_on('hdf5', when='@3.2: +netcdf')
+
     def check_variants(self, spec):
         if '+mpi' in spec and ('+hypre' not in spec or '+metis' not in spec):
             raise InstallError('mfem+mpi must be built with +hypre ' +
@@ -86,6 +91,9 @@ class Mfem(Package):
         if '@:3.1' in spec and '+superlu-dist' in spec:
             raise InstallError('MFEM does not support SuperLU_DIST for ' +
                                'versions 3.1 and earlier')
+        if '@:3.1' in spec and '+netcdf' in spec:
+            raise InstallError('MFEM does not support NetCDF for versions' +
+                               '3.1 and earlier')
         return
 
     def install(self, spec, prefix):
@@ -159,6 +167,20 @@ class Mfem(Package):
                             'SUITESPARSE_DIR=%s' % ssp,
                             'SUITESPARSE_OPT=-I%s' % ssp.include,
                             'SUITESPARSE_LIB=%s' % ss_lib])
+
+        if '+netcdf' in spec:
+            np = spec['netcdf'].prefix
+            zp = spec['zlib'].prefix
+            h5p = spec['hdf5'].prefix
+            nlib = '-L%s -lnetcdf ' % np.lib
+            nlib += '-L%s -lhdf5_hl -lhdf5 ' % h5p.lib
+            nlib += '-L%s -lz' % zp.lib
+            options.extend(['MFEM_USE_NETCDF=YES',
+                            'NETCDF_DIR=%s' % np,
+                            'HDF5_DIR=%s' % h5p,
+                            'ZLIB_DIR=%s' % zp,
+                            'NETCDF_OPT=-I%s' % np.include,
+                            'NETCDF_LIB=%s' % nlib])
 
         if '+debug' in spec:
             options.extend(['MFEM_DEBUG=YES'])
