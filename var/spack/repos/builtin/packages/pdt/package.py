@@ -27,11 +27,13 @@ from spack import *
 
 
 class Pdt(Package):
-    """
-    Program Database Toolkit (PDT) is a framework for analyzing source code written in several programming languages
-    and for making rich program knowledge accessible to developers of static and dynamic analysis tools. PDT implements
-    a standard program representation, the program database (PDB), that can be accessed in a uniform way through a
-    class library supporting common PDB operations.
+    """Program Database Toolkit (PDT) is a framework for analyzing source
+       code written in several programming languages and for making rich
+       program knowledge accessible to developers of static and dynamic
+       analysis tools. PDT implements a standard program representation,
+       the program database (PDB), that can be accessed in a uniform way
+       through a class library supporting common PDB operations.
+
     """
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
 

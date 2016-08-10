@@ -39,7 +39,15 @@ class Psi4(Package):
     # Required dependencies
     depends_on('blas')
     depends_on('lapack')
-    depends_on('boost+chrono+filesystem+python+regex+serialization+system+timer+thread')
+    depends_on('boost'
+               '+chrono'
+               '+filesystem'
+               '+python'
+               '+regex'
+               '+serialization'
+               '+system'
+               '+timer'
+               '+thread')
     depends_on('python')
     depends_on('cmake', type='build')
     depends_on('py-numpy', type=nolink)

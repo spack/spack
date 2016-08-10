@@ -36,11 +36,15 @@ class Sundials(Package):
     version('2.6.2', '3deeb0ede9f514184c6bd83ecab77d95')
 
     variant('mpi',     default=True,  description='Enable MPI support')
-    variant('lapack',  default=True,  description='Build with external BLAS/LAPACK libraries')
-    variant('klu',     default=False, description='Build with SuiteSparse KLU libraries')
-    variant('superlu', default=False, description='Build with SuperLU_MT libraries')
+    variant('lapack',  default=True,
+            description='Build with external BLAS/LAPACK libraries')
+    variant('klu',     default=False,
+            description='Build with SuiteSparse KLU libraries')
+    variant('superlu', default=False,
+            description='Build with SuperLU_MT libraries')
     variant('openmp',  default=False, description='Enable OpenMP support')
-    variant('pthread', default=True,  description='Enable POSIX threads support')
+    variant('pthread', default=True,
+            description='Enable POSIX threads support')
 
     depends_on('cmake', type='build')
     depends_on('mpi',                when='+mpi')

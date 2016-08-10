@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Bash(Package):
     """The GNU Project's Bourne Again SHell."""
 

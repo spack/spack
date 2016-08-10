@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class PyMatplotlib(Package):
     """Python plotting package."""
     homepage = "https://pypi.python.org/pypi/matplotlib"
@@ -65,12 +66,12 @@ class PyMatplotlib(Package):
         if str(self.version) in ['1.4.2', '1.4.3']:
             # hack to fix configuration file
             config_file = None
-            for p,d,f in os.walk(prefix.lib):
+            for p, d, f in os.walk(prefix.lib):
                 for file in f:
                     if file.find('matplotlibrc') != -1:
                         config_file = join_path(p, 'matplotlibrc')
                         print config_file
-            if config_file == None:
+            if config_file is None:
                 raise InstallError('could not find config file')
             filter_file(r'backend      : pyside',
                         'backend      : Qt4Agg',

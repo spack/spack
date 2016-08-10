@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PySqlalchemy(Package):
     """The Python SQL Toolkit and Object Relational Mapper"""
 

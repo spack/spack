@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Mpc(Package):
     """Gnu Mpc is a C library for the arithmetic of complex numbers
        with arbitrarily high precision and correct rounding of the

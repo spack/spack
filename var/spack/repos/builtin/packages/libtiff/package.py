@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libtiff(Package):
     """libtiff graphics format library"""
     homepage = "http://www.remotesensing.org/libtiff/"

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Dbus(Package):
     """D-Bus is a message bus system, a simple way for applications to
        talk to one another. D-Bus supplies both a system daemon (for

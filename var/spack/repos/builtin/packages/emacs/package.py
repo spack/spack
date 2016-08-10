@@ -35,7 +35,8 @@ class Emacs(Package):
     version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
 
     variant('X', default=True, description="Enable a X toolkit (GTK+)")
-    variant('gtkplus', default=False, description="Enable a GTK+ as X toolkit (this variant is ignored if ~X)")
+    variant('gtkplus', default=False,
+            description="Enable a GTK+ as X toolkit (ignored if ~X)")
 
     depends_on('ncurses')
     depends_on('libtiff', when='+X')

@@ -38,8 +38,10 @@ class Parmetis(Package):
     version('4.0.3', 'f69c479586bf6bb7aff6a9bc0c739628')
     version('4.0.2', '0912a953da5bb9b5e5e10542298ffdce')
 
-    variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('debug', default=False, description='Builds the library in debug mode')
+    variant('shared', default=True,
+            description='Enables the build of shared libraries')
+    variant('debug', default=False,
+            description='Builds the library in debug mode')
     variant('gdb', default=False, description='Enables gdb support')
 
     depends_on('cmake@2.8:', type='build')  # build dependency

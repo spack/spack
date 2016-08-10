@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Atop(Package):
     """Atop is an ASCII full-screen performance monitor for Linux"""
     homepage = "http://www.atoptool.nl/index.php"
@@ -37,4 +38,4 @@ class Atop(Package):
         install("atop", join_path(prefix.bin, "atop"))
         mkdirp(join_path(prefix.man, "man1"))
         install(join_path("man", "atop.1"),
-        join_path(prefix.man, "man1", "atop.1"))
+                join_path(prefix.man, "man1", "atop.1"))

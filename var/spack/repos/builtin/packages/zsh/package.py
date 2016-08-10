@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Zsh(Package):
     """
     Zsh is a shell designed for interactive use, although it is also a powerful

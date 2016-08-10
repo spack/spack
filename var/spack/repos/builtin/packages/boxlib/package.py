@@ -24,12 +24,13 @@
 ##############################################################################
 from spack import *
 
+
 class Boxlib(Package):
     """BoxLib, a software framework for massively parallel
        block-structured adaptive mesh refinement (AMR) codes."""
 
     homepage = "https://ccse.lbl.gov/BoxLib/"
-    url = "https://ccse.lbl.gov/pub/Downloads/BoxLib.git";
+    url = "https://ccse.lbl.gov/pub/Downloads/BoxLib.git"
 
     # TODO: figure out how best to version this.  No tags in the repo!
     version('master', git='https://ccse.lbl.gov/pub/Downloads/BoxLib.git')
@@ -47,4 +48,3 @@ class Boxlib(Package):
         cmake('.', *args)
         make()
         make("install")
-

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyNetcdf(Package):
     """Python interface to the netCDF Library."""
     homepage = "http://unidata.github.io/netcdf4-python"

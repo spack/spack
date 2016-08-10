@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPhonopy(Package):
     """Phonopy is an open source package for phonon
     calculations at harmonic and quasi-harmonic levels."""

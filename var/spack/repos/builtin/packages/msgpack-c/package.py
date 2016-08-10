@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class MsgpackC(Package):
     """A small, fast binary interchange format convertible to/from JSON"""
     homepage = "http://www.msgpack.org"

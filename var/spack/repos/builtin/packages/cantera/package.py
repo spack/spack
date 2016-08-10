@@ -35,11 +35,16 @@ class Cantera(Package):
 
     version('2.2.1', '9d1919bdef39ddec54485fc8a741a3aa')
 
-    variant('lapack',     default=True,  description='Build with external BLAS/LAPACK libraries')
-    variant('threadsafe', default=True,  description='Build threadsafe, requires Boost')
-    variant('sundials',   default=True,  description='Build with external Sundials')
-    variant('python',     default=False, description='Build the Cantera Python module')
-    variant('matlab',     default=False, description='Build the Cantera Matlab toolbox')
+    variant('lapack',     default=True,
+            description='Build with external BLAS/LAPACK libraries')
+    variant('threadsafe', default=True,
+            description='Build threadsafe, requires Boost')
+    variant('sundials',   default=True,
+            description='Build with external Sundials')
+    variant('python',     default=False,
+            description='Build the Cantera Python module')
+    variant('matlab',     default=False,
+            description='Build the Cantera Matlab toolbox')
 
     # Required dependencies
     depends_on('scons', type='build')

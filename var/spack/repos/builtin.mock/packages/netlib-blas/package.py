@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class NetlibBlas(Package):
     homepage = "http://www.netlib.org/lapack/"
     url      = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Ncview(Package):
     """Simple viewer for NetCDF files."""
     homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"

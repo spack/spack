@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libarchive(Package):
     """libarchive: C library and command-line tools for reading and
        writing tar, cpio, zip, ISO, and other archive formats."""

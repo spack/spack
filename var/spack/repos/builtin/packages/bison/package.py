@@ -24,9 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class Bison(Package):
-    """Bison is a general-purpose parser generator that converts 
-    an annotated context-free grammar into a deterministic LR or 
+    """Bison is a general-purpose parser generator that converts
+    an annotated context-free grammar into a deterministic LR or
     generalized LR (GLR) parser employing LALR(1) parser tables."""
 
     homepage = "http://www.gnu.org/software/bison/"

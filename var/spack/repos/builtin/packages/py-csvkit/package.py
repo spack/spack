@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyCsvkit(Package):
     """A library of utilities for working with CSV, the king of tabular file
     formats"""

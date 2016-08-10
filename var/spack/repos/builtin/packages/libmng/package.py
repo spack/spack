@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libmng(Package):
     """libmng -THE reference library for reading, displaying, writing
        and examining Multiple-Image Network Graphics.  MNG is the animation
@@ -39,7 +40,8 @@ class Libmng(Package):
 
     def patch(self):
         # jpeg requires stdio to beincluded before its headrs.
-        filter_file(r'^(\#include \<jpeglib\.h\>)', '#include<stdio.h>\n\\1', 'libmng_types.h')
+        filter_file(r'^(\#include \<jpeglib\.h\>)',
+                    '#include<stdio.h>\n\\1', 'libmng_types.h')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)

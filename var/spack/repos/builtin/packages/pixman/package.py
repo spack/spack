@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Pixman(Package):
     """The Pixman package contains a library that provides low-level
        pixel manipulation features such as image compositing and

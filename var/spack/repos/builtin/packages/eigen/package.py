@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -36,15 +35,19 @@ class Eigen(Package):
     homepage = 'http://eigen.tuxfamily.org/'
     url = 'http://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2'
 
-    version('3.2.7', 'cc1bacbad97558b97da6b77c9644f184', url='http://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2')
+    version('3.2.7', 'cc1bacbad97558b97da6b77c9644f184',
+            url='http://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2')
 
-    variant('debug', default=False, description='Builds the library in debug mode')
+    variant('debug', default=False,
+            description='Builds the library in debug mode')
 
     variant('metis', default=True, description='Enables metis backend')
     variant('scotch', default=True, description='Enables scotch backend')
     variant('fftw', default=True, description='Enables FFTW backend')
-    variant('suitesparse', default=True, description='Enables SuiteSparse support')
-    variant('mpfr', default=True, description='Enables support for multi-precisions floating points via mpfr')
+    variant('suitesparse', default=True,
+            description='Enables SuiteSparse support')
+    variant('mpfr', default=True,
+            description='Enables support for multi-precisions FP via mpfr')
 
     # TODO : dependency on googlehash, superlu, adolc missing
     depends_on('cmake', type='build')

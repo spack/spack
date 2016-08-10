@@ -29,6 +29,7 @@ import sys
 
 from spack import *
 
+
 def _install_shlib(name, src, dst):
     """Install a shared library from directory src to directory dst"""
     if sys.platform == "darwin":
@@ -43,6 +44,7 @@ def _install_shlib(name, src, dst):
         shutil.copyfile(join_path(src, shlib000), join_path(dst, shlib000))
         os.symlink(shlib000, join_path(dst, shlib0))
         os.symlink(shlib0, join_path(dst, shlib))
+
 
 class Hdf5Blosc(Package):
     """Blosc filter for HDF5"""
@@ -60,18 +62,21 @@ class Hdf5Blosc(Package):
     def install(self, spec, prefix):
         # The included cmake recipe doesn"t work for Darwin
         # cmake(".", *std_cmake_args)
-        # 
+        #
         # make()
         # make("install")
         # if sys.platform == "darwin":
         #     fix_darwin_install_name(prefix.lib)
 
         libtool = Executable(join_path(spec["libtool"].prefix.bin, "libtool"))
-        if "+mpi" in spec["hdf5"]:
-            cc = "mpicc"
-        else:
-            cc = "cc"
-        shlibext = "so" if sys.platform!="darwin" else "dylib"
+
+        # TODO: these vars are not used.
+        # if "+mpi" in spec["hdf5"]:
+        #     cc = "mpicc"  # noqa
+        # else:
+        #     cc = "cc"     # noqa
+        # shlibext = "so" if sys.platform != "darwin" else "dylib"  # noqa
+
         mkdirp(prefix.include)
         mkdirp(prefix.lib)
 
@@ -118,7 +123,7 @@ class Hdf5Blosc(Package):
 #include <stdio.h>
 #include <stdlib.h>
 
-#define FILTER_BLOSC 32001   /* Blosc filter ID registered with the HDF group */
+#define FILTER_BLOSC 32001 /* Blosc filter ID registered with the HDF group */
 
 int main(int argc, char **argv) {
   herr_t herr;
@@ -184,13 +189,13 @@ Done.
             if not success:
                 print "Produced output does not match expected output."
                 print "Expected output:"
-                print "-"*80
+                print "-" * 80
                 print expected
-                print "-"*80
+                print "-" * 80
                 print "Produced output:"
-                print "-"*80
+                print "-" * 80
                 print output
-                print "-"*80
+                print "-" * 80
                 print "Environment:"
                 env = which("env")
                 env()

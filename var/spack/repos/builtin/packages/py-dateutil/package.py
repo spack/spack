@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyDateutil(Package):
     """Extensions to the standard Python datetime module."""
     homepage = "https://pypi.python.org/pypi/dateutil"

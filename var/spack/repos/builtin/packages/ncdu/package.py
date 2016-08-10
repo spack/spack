@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Ncdu(Package):
     """
     Ncdu is a disk usage analyzer with an ncurses interface. It is designed
@@ -38,15 +39,15 @@ class Ncdu(Package):
 
     version('1.11', '9e44240a5356b029f05f0e70a63c4d12')
     version('1.10', '7535decc8d54eca811493e82d4bfab2d')
-    version('1.9' , '93258079db897d28bb8890e2db89b1fb')
-    version('1.8' , '94d7a821f8a0d7ba8ef3dd926226f7d5')
-    version('1.7' , '172047c29d232724cc62e773e82e592a')
+    version('1.9', '93258079db897d28bb8890e2db89b1fb')
+    version('1.8', '94d7a821f8a0d7ba8ef3dd926226f7d5')
+    version('1.7', '172047c29d232724cc62e773e82e592a')
 
     depends_on("ncurses")
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix,
-            '--with-ncurses=%s' % spec['ncurses'])
+                  '--with-ncurses=%s' % spec['ncurses'])
 
         make()
         make("install")

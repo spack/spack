@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class M4(Package):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
     homepage = "https://www.gnu.org/software/m4/m4.html"
@@ -33,14 +34,16 @@ class M4(Package):
 
     patch('pgi.patch', when='@1.4.17')
 
-    variant('sigsegv', default=True, description="Build the libsigsegv dependency")
+    variant('sigsegv', default=True,
+            description="Build the libsigsegv dependency")
 
     depends_on('libsigsegv', when='+sigsegv')
 
     def install(self, spec, prefix):
         configure_args = []
         if 'libsigsegv' in spec:
-            configure_args.append('--with-libsigsegv-prefix=%s' % spec['libsigsegv'].prefix)
+            configure_args.append('--with-libsigsegv-prefix=%s' %
+                                  spec['libsigsegv'].prefix)
         else:
             configure_args.append('--without-libsigsegv-prefix')
 

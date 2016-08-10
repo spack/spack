@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libnbc(Package):
     """LibNBC is a prototypic implementation of a nonblocking
     interface for MPI collective operations. Based on ANSI C and

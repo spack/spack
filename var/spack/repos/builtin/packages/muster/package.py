@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Muster(Package):
     """The Muster library provides implementations of sequential and
        parallel K-Medoids clustering algorithms. It is intended as a

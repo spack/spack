@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libgcrypt(Package):
     """Libgcrypt is a general purpose cryptographic library based on
        the code from GnuPG. It provides functions for all cryptographic

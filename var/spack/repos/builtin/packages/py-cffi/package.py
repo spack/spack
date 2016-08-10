@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyCffi(Package):
     """Foreign Function Interface for Python calling C code"""
     homepage = "http://cffi.readthedocs.org/en/latest/"

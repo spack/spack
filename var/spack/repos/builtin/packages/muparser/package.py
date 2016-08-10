@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Muparser(Package):
     """C++ math expression parser library."""
     homepage = "http://muparser.beltoforion.de/"

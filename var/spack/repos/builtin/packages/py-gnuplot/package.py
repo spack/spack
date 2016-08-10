@@ -24,8 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class PyGnuplot(Package):
-    """Gnuplot.py is a Python package that allows you to create graphs from within Python using the gnuplot plotting program."""
+    """Gnuplot.py is a Python package that allows you to create graphs from
+       within Python using the gnuplot plotting program."""
     homepage = "http://gnuplot-py.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/gnuplot-py/Gnuplot-py/1.8/gnuplot-py-1.8.tar.gz"
 

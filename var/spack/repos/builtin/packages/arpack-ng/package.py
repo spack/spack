@@ -59,7 +59,8 @@ class ArpackNg(Package):
     version('3.4.0', 'ae9ca13f2143a7ea280cb0e2fd4bfae4')
     version('3.3.0', 'ed3648a23f0a868a43ef44c97a21bad5')
 
-    variant('shared', default=True, description='Enables the build of shared libraries')
+    variant('shared', default=True,
+            description='Enables the build of shared libraries')
     variant('mpi', default=False, description='Activates MPI support')
 
     # The function pdlamch10 does not set the return variable.

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Cram(Package):
     """Cram runs many small MPI jobs inside one large MPI job."""
     homepage = "https://github.com/llnl/cram"

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyWheel(Package):
     """A built-package format for Python."""
 

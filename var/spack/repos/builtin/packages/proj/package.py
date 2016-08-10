@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Proj(Package):
     """Cartographic Projections"""
     homepage = "https://github.com/OSGeo/proj.4/wiki"

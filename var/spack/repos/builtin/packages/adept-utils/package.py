@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class AdeptUtils(Package):
     """Utility libraries for LLNL performance tools."""
 

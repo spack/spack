@@ -44,18 +44,25 @@ class Petsc(Package):
     version('3.5.1', 'a557e029711ebf425544e117ffa44d8f')
     version('3.4.4', '7edbc68aa6d8d6a3295dd5f6c2f6979d')
 
-    variant('shared',  default=True,  description='Enables the build of shared libraries')
+    variant('shared',  default=True,
+            description='Enables the build of shared libraries')
     variant('mpi',     default=True,  description='Activates MPI support')
-    variant('double',  default=True,  description='Switches between single and double precision')
+    variant('double',  default=True,
+            description='Switches between single and double precision')
     variant('complex', default=False, description='Build with complex numbers')
     variant('debug',   default=False, description='Compile in debug mode')
 
-    variant('metis',   default=True,  description='Activates support for metis and parmetis')
-    variant('hdf5',    default=True,  description='Activates support for HDF5 (only parallel)')
+    variant('metis',   default=True,
+            description='Activates support for metis and parmetis')
+    variant('hdf5',    default=True,
+            description='Activates support for HDF5 (only parallel)')
     variant('boost',   default=True,  description='Activates support for Boost')
-    variant('hypre',   default=True,  description='Activates support for Hypre (only parallel)')
-    variant('mumps',   default=True,  description='Activates support for MUMPS (only parallel)')
-    variant('superlu-dist', default=True, description='Activates support for SuperluDist (only parallel)')
+    variant('hypre',   default=True,
+            description='Activates support for Hypre (only parallel)')
+    variant('mumps',   default=True,
+            description='Activates support for MUMPS (only parallel)')
+    variant('superlu-dist', default=True,
+            description='Activates support for SuperluDist (only parallel)')
 
     # Virtual dependencies
     depends_on('blas')

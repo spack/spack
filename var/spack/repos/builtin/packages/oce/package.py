@@ -40,7 +40,8 @@ class Oce(Package):
     version('0.16.1', '4d591b240c9293e879f50d86a0cb2bb3')
     version('0.16',   '7a4b4df5a104d75a537e25e7dd387eca')
 
-    variant('tbb', default=True, description='Build with Intel Threading Building Blocks')
+    variant('tbb', default=True,
+            description='Build with Intel Threading Building Blocks')
 
     depends_on('cmake@2.8:', type='build')
     depends_on('tbb', when='+tbb')

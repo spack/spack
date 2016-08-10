@@ -17,19 +17,19 @@ class IntelParallelStudio(IntelInstaller):
 
     # TODO: can also try the online installer (will download files on demand)
     version('composer.2016.2', '1133fb831312eb519f7da897fec223fa',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update2.tgz"
         % os.getcwd())
     version('professional.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
-        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())
     version('cluster.2016.2', '70be832f2d34c9bf596a5e99d5f2d832',
-        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_update2.tgz" % os.getcwd())
     version('composer.2016.3', '3208eeabee951fc27579177b593cefe9',
-        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_composer_edition_update3.tgz"
         % os.getcwd())
     version('professional.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
-        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())
     version('cluster.2016.3', 'eda19bb0d0d19709197ede58f13443f3',
-        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())  # NOQA: ignore=E501
+        url="file://%s/parallel_studio_xe_2016_update3.tgz" % os.getcwd())
 
     variant('rpath', default=True, description="Add rpath to .cfg files")
     variant('newdtags', default=False,
@@ -104,7 +104,7 @@ class IntelParallelStudio(IntelInstaller):
             if spec.satisfies('+ipp'):
                 components += ipp_components
             if spec.satisfies('+tools') and (spec.satisfies('@cluster') or
-               spec.satisfies('@professional')):
+                                             spec.satisfies('@professional')):
                 components += tool_components
 
         if spec.satisfies('+all'):
@@ -113,10 +113,11 @@ class IntelParallelStudio(IntelInstaller):
             self.intel_components = ';'.join(components)
         IntelInstaller.install(self, spec, prefix)
 
-        absbindir = os.path.dirname(os.path.realpath(os.path.join(
-            self.prefix.bin, "icc")))
-        abslibdir = os.path.dirname(os.path.realpath(os.path.join
-                                    (self.prefix.lib, "intel64", "libimf.a")))
+        absbindir = os.path.dirname(
+            os.path.realpath(os.path.join(self.prefix.bin, "icc")))
+        abslibdir = os.path.dirname(
+            os.path.realpath(os.path.join(
+                self.prefix.lib, "intel64", "libimf.a")))
 
         os.symlink(self.global_license_file, os.path.join(absbindir,
                                                           "license.lic"))
@@ -134,31 +135,31 @@ class IntelParallelStudio(IntelInstaller):
 
         if (spec.satisfies('+all') or spec.satisfies('+mpi')) and \
                 spec.satisfies('@cluster'):
-                for ifile in os.listdir(os.path.join(self.prefix, "itac")):
-                    if os.path.isdir(os.path.join(self.prefix, "itac", ifile)):
-                        os.symlink(self.global_license_file,
-                                   os.path.join(self.prefix, "itac", ifile,
-                                                "license.lic"))
-                    if os.path.isdir(os.path.join(self.prefix, "itac",
-                                     ifile, "intel64")):
-                        os.symlink(self.global_license_file,
-                                   os.path.join(self.prefix, "itac",
-                                                ifile, "intel64",
-                                                "license.lic"))
-                if spec.satisfies('~newdtags'):
-                    wrappers = ["mpif77", "mpif77", "mpif90", "mpif90",
-                                "mpigcc", "mpigcc", "mpigxx", "mpigxx",
-                                "mpiicc", "mpiicc", "mpiicpc", "mpiicpc",
-                                "mpiifort", "mpiifort"]
-                    wrapper_paths = []
-                    for root, dirs, files in os.walk(spec.prefix):
-                        for name in files:
-                            if name in wrappers:
-                                wrapper_paths.append(os.path.join(spec.prefix,
-                                                                  root, name))
-                    for wrapper in wrapper_paths:
-                        filter_file(r'-Xlinker --enable-new-dtags', r' ',
-                                    wrapper)
+            for ifile in os.listdir(os.path.join(self.prefix, "itac")):
+                if os.path.isdir(os.path.join(self.prefix, "itac", ifile)):
+                    os.symlink(self.global_license_file,
+                               os.path.join(self.prefix, "itac", ifile,
+                                            "license.lic"))
+                if os.path.isdir(os.path.join(self.prefix, "itac",
+                                              ifile, "intel64")):
+                    os.symlink(self.global_license_file,
+                               os.path.join(self.prefix, "itac",
+                                            ifile, "intel64",
+                                            "license.lic"))
+            if spec.satisfies('~newdtags'):
+                wrappers = ["mpif77", "mpif77", "mpif90", "mpif90",
+                            "mpigcc", "mpigcc", "mpigxx", "mpigxx",
+                            "mpiicc", "mpiicc", "mpiicpc", "mpiicpc",
+                            "mpiifort", "mpiifort"]
+                wrapper_paths = []
+                for root, dirs, files in os.walk(spec.prefix):
+                    for name in files:
+                        if name in wrappers:
+                            wrapper_paths.append(os.path.join(spec.prefix,
+                                                              root, name))
+                for wrapper in wrapper_paths:
+                    filter_file(r'-Xlinker --enable-new-dtags', r' ',
+                                wrapper)
 
         if spec.satisfies('+rpath'):
             for compiler_command in ["icc", "icpc", "ifort"]:

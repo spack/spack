@@ -56,17 +56,24 @@ class Trilinos(Package):
     version('11.14.2', 'a43590cf896c677890d75bfe75bc6254')
     version('11.14.1', '40febc57f76668be8b6a77b7607bb67f')
 
-    variant('metis',        default=True,  description='Compile with METIS and ParMETIS')
-    variant('mumps',        default=True,  description='Compile with support for MUMPS solvers')
-    variant('superlu-dist', default=True,  description='Compile with SuperluDist solvers')
-    variant('hypre',        default=True,  description='Compile with Hypre preconditioner')
+    variant('metis',        default=True,
+            description='Compile with METIS and ParMETIS')
+    variant('mumps',        default=True,
+            description='Compile with support for MUMPS solvers')
+    variant('superlu-dist', default=True,
+            description='Compile with SuperluDist solvers')
+    variant('hypre',        default=True,
+            description='Compile with Hypre preconditioner')
     variant('hdf5',         default=True,  description='Compile with HDF5')
-    variant('suite-sparse', default=True,  description='Compile with SuiteSparse solvers')
+    variant('suite-sparse', default=True,
+            description='Compile with SuiteSparse solvers')
     # not everyone has py-numpy activated, keep it disabled by default to avoid
     # configure errors
     variant('python',       default=False, description='Build python wrappers')
-    variant('shared',       default=True,  description='Enables the build of shared libraries')
-    variant('debug',        default=False, description='Builds a debug version of the libraries')
+    variant('shared',       default=True,
+            description='Enables the build of shared libraries')
+    variant('debug',        default=False,
+            description='Builds a debug version of the libraries')
     variant('boost',        default=True, description='Compile with Boost')
 
     depends_on('cmake', type='build')

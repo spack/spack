@@ -102,13 +102,18 @@ class Boost(Package):
 
     for lib in all_libs:
         variant(lib, default=(lib not in default_noinstall_libs),
-            description="Compile with {0} library".format(lib))
+                description="Compile with {0} library".format(lib))
 
-    variant('debug', default=False, description='Switch to the debug version of Boost')
-    variant('shared', default=True, description="Additionally build shared libraries")
-    variant('multithreaded', default=True, description="Build multi-threaded versions of libraries")
-    variant('singlethreaded', default=True, description="Build single-threaded versions of libraries")
-    variant('icu_support', default=False, description="Include ICU support (for regex/locale libraries)")
+    variant('debug', default=False,
+            description='Switch to the debug version of Boost')
+    variant('shared', default=True,
+            description="Additionally build shared libraries")
+    variant('multithreaded', default=True,
+            description="Build multi-threaded versions of libraries")
+    variant('singlethreaded', default=True,
+            description="Build single-threaded versions of libraries")
+    variant('icu_support', default=False,
+            description="Include ICU support (for regex/locale libraries)")
     variant('graph', default=False, description="Build the Boost Graph library")
 
     depends_on('icu', when='+icu_support')
@@ -128,8 +133,7 @@ class Boost(Package):
         parts = [str(p) for p in Version(version)]
         dots = ".".join(parts)
         underscores = "_".join(parts)
-        return "http://downloads.sourceforge.net/project/boost" \
-               "/boost/%s/boost_%s.tar.bz2" % (dots, underscores)
+        return "http://downloads.sourceforge.net/project/boost/boost/%s/boost_%s.tar.bz2" % (dots, underscores)
 
     def determine_toolset(self, spec):
         if spec.satisfies("platform=darwin"):
@@ -158,7 +162,7 @@ class Boost(Package):
         with open('user-config.jam', 'w') as f:
             compiler_wrapper = join_path(spack.build_env_path, 'c++')
             f.write("using {0} : : {1} ;\n".format(boostToolsetId,
-                    compiler_wrapper))
+                                                   compiler_wrapper))
 
             if '+mpi' in spec:
                 f.write('using mpi : %s ;\n' %
