@@ -31,14 +31,16 @@ class PyPyside(Package):
     homepage = "https://pypi.python.org/pypi/pyside"
     url      = "https://pypi.python.org/packages/source/P/PySide/PySide-1.2.2.tar.gz"
 
-    version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')
+    # version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')  # rpath problems
     version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d')
 
     depends_on('cmake', type='build')
 
     extends('python')
     depends_on('py-setuptools', type='build')
-    depends_on('qt@4.6:4.999')
+    depends_on('qt@4.5:4.9')
+    depends_on('libxml2@2.6.32:')
+    depends_on('libxslt@1.1.19:')
 
     def patch(self):
         """Undo PySide RPATH handling and add Spack RPATH."""
@@ -65,6 +67,10 @@ class PyPyside(Package):
             rpath_file = 'pyside_postinstall.py'
 
         filter_file(r'(^\s*)(rpath_cmd\(.*\))', r'\1#\2', rpath_file)
+
+        # TODO: rpath handling for PySide 1.2.4 still doesn't work.
+        # PySide can't find the Shiboken library, even though it comes
+        # bundled with it and is installed in the same directory.
 
     def install(self, spec, prefix):
         python('setup.py', 'install',
