@@ -35,9 +35,11 @@ README.
 """
 import os
 import re
+import string
 import textwrap
 import time
-import string
+from StringIO import StringIO
+from urlparse import urlparse
 
 import llnl.util.tty as tty
 import spack
@@ -51,20 +53,16 @@ import spack.mirror
 import spack.repository
 import spack.url
 import spack.util.web
-
-from urlparse import urlparse
-from StringIO import StringIO
 from llnl.util.filesystem import *
 from llnl.util.lang import *
 from llnl.util.link_tree import LinkTree
 from llnl.util.tty.log import log_output
+from spack import directory_layout
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
 from spack.util.executable import ProcessError, which
 from spack.version import *
-from spack import directory_layout
-
 
 """Allowed URL schemes for spack packages."""
 _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
@@ -952,12 +950,13 @@ class Package(object):
                         # Redirect I/O to a build log (and optionally to
                         # the terminal)
                         log_path = join_path(os.getcwd(), 'spack-build.out')
-                        log_file = open(log_path, 'w')
-                        with log_output(log_file, verbose, sys.stdout.isatty(),
-                                        True):
+                        log_redirection = log_output(log_path, verbose, sys.stdout.isatty(), True)  # NOQA: ignore=E501
+                        # TODO : rework into a double context ?
+                        log_redirection.acquire()
+                        with log_redirection:
                             dump_environment(env_path)
                             self.install(self.spec, self.prefix)
-
+                        log_redirection.release()
                     except ProcessError as e:
                         # Annotate ProcessErrors with the location of
                         # the build log
@@ -1557,6 +1556,8 @@ class StagedPackage(Package):
 
 
 # stackoverflow.com/questions/12791997/how-do-you-do-a-simple-chmod-x-from-within-python
+
+
 def make_executable(path):
     mode = os.stat(path).st_mode
     mode |= (mode & 0o444) >> 2    # copy R bits to X
@@ -1573,19 +1574,17 @@ class CMakePackage(StagedPackage):
         elif self.make_jobs:
             jobs = self.make_jobs
 
-        make  = spack.build_environment.MakeExecutable('make', jobs)
+        make = spack.build_environment.MakeExecutable('make', jobs)
         return make
 
     def configure_args(self):
-        """Returns package-specific arguments to be provided to
-           the configure command.
-        """
+        """Returns package-specific arguments to be provided to the
+        configure command."""
         return list()
 
     def configure_env(self):
         """Returns package-specific environment under which the
-           configure command should be run.
-        """
+        configure command should be run."""
         return dict()
 
     def transitive_inc_path(self):
@@ -1740,12 +1739,14 @@ class ExtensionError(PackageError):
 
 
 class ExtensionConflictError(ExtensionError):
+
     def __init__(self, path):
         super(ExtensionConflictError, self).__init__(
             "Extension blocked by file: %s" % path)
 
 
 class ActivationError(ExtensionError):
+
     def __init__(self, msg, long_msg=None):
         super(ActivationError, self).__init__(msg, long_msg)
 
