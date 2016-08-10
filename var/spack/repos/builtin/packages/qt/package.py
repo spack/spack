@@ -114,34 +114,32 @@ class Qt(Package):
     def setup_dependent_environment(self, spack_env, run_env, dspec):
         spack_env.set('QTDIR', self.prefix)
 
-    @when('@4')
     def patch(self):
-        # Fix qmake compilers in the default mkspec
-        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
-                    'mkspecs/common/g++-base.conf')
-        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
-                    'mkspecs/common/g++-base.conf')
+        if self.spec.satisfies('@4'):
+            # Fix qmake compilers in the default mkspec
+            filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
+                        'mkspecs/common/g++-base.conf')
+            filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
+                        'mkspecs/common/g++-base.conf')
 
-        # Necessary to build with GCC 6 and other modern compilers
-        # http://stackoverflow.com/questions/10354371/
-        filter_file('(^QMAKE_CXXFLAGS .*)', r'\1 -std=gnu++98',
-                    'mkspecs/common/gcc-base.conf')
+            # Necessary to build with GCC 6 and other modern compilers
+            # http://stackoverflow.com/questions/10354371/
+            filter_file('(^QMAKE_CXXFLAGS .*)', r'\1 -std=gnu++98',
+                        'mkspecs/common/gcc-base.conf')
 
-        filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
-                    'mkspecs/common/g++-unix.conf')
+            filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
+                        'mkspecs/common/g++-unix.conf')
+        elif self.spec.satisfies('@5:'):
+            # Fix qmake compilers in the default mkspec
+            filter_file('^QMAKE_COMPILER .*', 'QMAKE_COMPILER = cc',
+                        'qtbase/mkspecs/common/g++-base.conf')
+            filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
+                        'qtbase/mkspecs/common/g++-base.conf')
+            filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
+                        'qtbase/mkspecs/common/g++-base.conf')
 
-    @when('@5:')
-    def patch(self):
-        # Fix qmake compilers in the default mkspec
-        filter_file('^QMAKE_COMPILER .*', 'QMAKE_COMPILER = cc',
-                    'qtbase/mkspecs/common/g++-base.conf')
-        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
-                    'qtbase/mkspecs/common/g++-base.conf')
-        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
-                    'qtbase/mkspecs/common/g++-base.conf')
-
-        filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
-                    'qtbase/mkspecs/common/g++-unix.conf')
+            filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
+                        'qtbase/mkspecs/common/g++-unix.conf')
 
     @property
     def common_config_args(self):
