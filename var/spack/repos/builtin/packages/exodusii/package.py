@@ -46,34 +46,43 @@ class Exodusii(Package):
     homepage = "https://github.com/gsjaardema/seacas"
     url      = "https://github.com/gsjaardema/seacas/archive/master.zip"
 
-    version('2016-02-08',
-            git='https://github.com/gsjaardema/seacas.git', commit='dcf3529')
+    version('2016-08-09',
+            git='https://github.com/gsjaardema/seacas.git', commit='2ffeb1b')
+
+    variant('mpi', default=False, description='Enables MPI parallelism.')
 
     depends_on('cmake@2.8.7:', type='build')
-    depends_on('hdf5~shared~mpi')
-    depends_on('netcdf~mpi')
+    depends_on('mpi', when='+mpi')
+    # https://github.com/gsjaardema/seacas/blob/master/NetCDF-Mapping.md
+    depends_on('netcdf~mpi maxdims=65536 maxvars=524288')
+    depends_on('hdf5+shared~mpi')
 
-    patch('exodus-cmake.patch')
-
-    def patch(self):
-        ff = FileFilter('cmake-exodus')
-
-        ff.filter('CMAKE_INSTALL_PREFIX:PATH=${ACCESS}',
-                  'CMAKE_INSTALL_PREFIX:PATH=%s' % self.spec.prefix,
-                  string=True)
-        ff.filter('NetCDF_DIR:PATH=${TPL}',
-                  'NetCDF_DIR:PATH=%s' % self.spec['netcdf'].prefix,
-                  string=True)
-        ff.filter('HDF5_ROOT:PATH=${TPL}',
-                  'HDF5_ROOT:PATH=%s' % self.spec['hdf5'].prefix,
-                  string=True)
+    patch('cmake-exodus.patch')
 
     def install(self, spec, prefix):
-        mkdirp('build')
-        cd('build')
+        cc_path = spec['mpi'].mpicc if '+mpi' in spec else self.compiler.cc
+        cxx_path = spec['mpi'].mpicxx if '+mpi' in spec else self.compiler.cxx
 
-        cmake_exodus = Executable('../cmake-exodus')
-        cmake_exodus()
+        config_args = std_cmake_args[:]
+        config_args.extend([
+            # General Flags #
+            '-DSEACASProj_ENABLE_CXX11:BOOL=OFF',
+            '-DSEACASProj_ENABLE_Zoltan:BOOL=OFF',
+            '-DHDF5_ROOT:PATH={0}'.format(spec['hdf5'].prefix),
+            '-DNetCDF_DIR:PATH={0}'.format(spec['netcdf'].prefix),
 
-        make()
-        make('install')
+            # MPI Flags #
+            '-DTPL_ENABLE_MPI={0}'.format('ON' if '+mpi' in spec else 'OFF'),
+            '-DCMAKE_C_COMPILER={0}'.format(cc_path),
+            '-DCMAKE_CXX_COMPILER={0}'.format(cxx_path),
+        ])
+
+        build_directory = join_path(self.stage.source_path, 'spack-build')
+        source_directory = self.stage.source_path
+
+        with working_dir(build_directory, create=True):
+            mcmake = Executable(join_path(source_directory, 'cmake-exodus'))
+            mcmake(*config_args)
+
+            make()
+            make('install')
