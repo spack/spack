@@ -30,9 +30,10 @@ class Imagemagick(Package):
     or convert bitmap images."""
 
     homepage = "http://www.imagemagick.org"
-    url      = "http://www.imagemagick.org/download/ImageMagick-7.0.2-6.tar.gz"
+    url = "https://github.com/ImageMagick/ImageMagick/archive/7.0.2-7.tar.gz"
 
-    version('7.0.2-6', 'c29c98d2496fbc66adb05a28d8fad21a')
+    version('7.0.2-7', 'c59cdc8df50e481b2bd1afe09ac24c08')
+    version('7.0.2-6', 'aa5689129c39a5146a3212bf5f26d478')
 
     depends_on('jpeg')
     depends_on('libtool', type='build')
@@ -41,6 +42,9 @@ class Imagemagick(Package):
     depends_on('fontconfig')
     depends_on('libtiff')
     depends_on('ghostscript')
+
+    def url_for_version(self, version):
+        return "https://github.com/ImageMagick/ImageMagick/archive/{0}.tar.gz".format(version)
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
