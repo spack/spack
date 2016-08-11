@@ -64,13 +64,18 @@ class Netcdf(Package):
     depends_on('hdf5@:1.8', when='@:4.4.0')
 
     def patch(self):
+        try:
+            max_dims = int(self.spec.variants['maxdims'].value)
+            max_vars = int(self.spec.variants['maxvars'].value)
+        except (ValueError, TypeError):
+            raise TypeError('NetCDF variant values max[dims|vars] must be '
+                            'integer values.')
+
         ff = FileFilter(join_path('include', 'netcdf.h'))
-        ff.filter(
-            r'^(#define\s+NC_MAX_DIMS\s+)\d+(.*)$',
-            r'\1{0}\2'.format(self.spec.variants['maxdims'].value))
-        ff.filter(
-            r'^(#define\s+NC_MAX_VARS\s+)\d+(.*)$',
-            r'\1{0}\2'.format(self.spec.variants['maxvars'].value))
+        ff.filter(r'^(#define\s+NC_MAX_DIMS\s+)\d+(.*)$',
+                  r'\1{0}\2'.format(max_dims))
+        ff.filter(r'^(#define\s+NC_MAX_VARS\s+)\d+(.*)$',
+                  r'\1{0}\2'.format(max_vars))
 
     def install(self, spec, prefix):
         # Workaround until variant forwarding works properly
