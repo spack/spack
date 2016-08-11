@@ -1,4 +1,3 @@
-import subprocess
 import platform
 from spack.architecture import Platform, Target
 from spack.operating_systems.linux_distro import LinuxDistro
