@@ -855,7 +855,7 @@ class Package(object):
                    make_jobs=None,
                    run_tests=False,
                    fake=False,
-                   install_policy="build",
+                   fetch_binary="never",
                    explicit=False,
                    dirty=False,
                    install_phases=install_phases):
@@ -877,7 +877,7 @@ class Package(object):
         dirty       -- Don't clean the build environment before installing.
         make_jobs   -- Number of make jobs to use for install. Default is ncpus
         run_tests   -- Runn tests within the package's install()
-        install_policy -- Whether to download a pre-compiled package
+        fetch_binary -- Whether to download a pre-compiled package
                           or build from scratch
         """
         if not self.spec.concrete:
@@ -911,7 +911,7 @@ class Package(object):
                                          fake=fake,
                                          skip_patch=skip_patch,
                                          verbose=verbose,
-                                         install_policy=install_policy,
+                                         fetch_binary=fetch_binary,
                                          make_jobs=make_jobs,
                                          run_tests=run_tests)
 
@@ -921,12 +921,12 @@ class Package(object):
         # check and prepare binary install option
         install_binary = False
         binary_distribution = spack.binary_distribution
-        if install_policy in ("download", "lazy"):
+        if fetch_binary in ("always", "lazy"):
             tarball_available = binary_distribution.download_tarball(self)
             if tarball_available:
                 install_binary = True
                 binary_distribution.prepare()
-            elif install_policy == "download":
+            elif fetch_binary == "always":
                 tty.die("Download of binary package for %s failed."
                         % self.name)
             else:

@@ -50,17 +50,17 @@ via:
 
 .. code-block:: sh
 
-   $ spack install --policy download bison
+   $ spack install --fetch-binary always bison
    
-With the download policy ``download`` the package bison and all its dependencies
+With the fetch-binary keyword ``always`` the package bison and all its dependencies
 will be downloaded from the specified mirror(s). It fails if a package cannot be
 downloaded.
 
-Chosing the install policy
+Chosing the fetch-binary keyword ``lazy``
 
 .. code-block:: sh
 
-   $ spack install --policy lazy bison
+   $ spack install --fetch-binary lazy bison
    
 spack will first attempt to download a pre-built package. If it does not exist,
 it will continue with building locally.
