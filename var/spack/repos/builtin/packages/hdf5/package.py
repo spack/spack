@@ -149,7 +149,7 @@ class Hdf5(AutotoolsPackage):
     def check_install(self):
         "Build and run a small program to test the installed HDF5 library"
         spec = self.spec
-        print "Checking HDF5 installation..."
+        print("Checking HDF5 installation...")
         checkdir = "spack-check"
         with working_dir(checkdir, create=True):
             source = r"""
@@ -186,15 +186,15 @@ HDF5 version {version} {version}
                 output = ""
             success = output == expected
             if not success:
-                print "Produced output does not match expected output."
-                print "Expected output:"
-                print '-' * 80
-                print expected
-                print '-' * 80
-                print "Produced output:"
-                print '-' * 80
-                print output
-                print '-' * 80
+                print("Produced output does not match expected output.")
+                print("Expected output:")
+                print('-' * 80)
+                print(expected)
+                print('-' * 80)
+                print("Produced output:")
+                print('-' * 80)
+                print(output)
+                print('-' * 80)
                 raise RuntimeError("HDF5 install check failed")
         shutil.rmtree(checkdir)
 

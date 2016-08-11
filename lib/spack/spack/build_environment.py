@@ -51,16 +51,14 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
-import os
-import sys
-import shutil
 import multiprocessing
-import platform
+import os
+import shutil
+import sys
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import *
-
 import spack
+from llnl.util.filesystem import *
 from spack.environment import EnvironmentModifications, validate
 from spack.util.environment import *
 from spack.util.executable import Executable, which
@@ -502,7 +500,10 @@ def fork(pkg, function, dirty=False):
             child_connection.close()
 
     parent_connection, child_connection = multiprocessing.Pipe()
-    p = multiprocessing.Process(target=child_execution, args=(child_connection,))
+    p = multiprocessing.Process(
+        target=child_execution,
+        args=(child_connection,)
+    )
     p.start()
     exc_type, exception, traceback = parent_connection.recv()
     p.join()

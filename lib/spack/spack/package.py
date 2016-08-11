@@ -75,12 +75,13 @@ _ALLOWED_URL_SCHEMES = ["http", "https", "ftp", "file", "git"]
 class InstallPhase(object):
     """Manages a single phase of the installation
 
-    This descriptor stores at creation time the name of the method it should search
-    for execution. The method is retrieved at __get__ time, so that it can be overridden
-    by subclasses of whatever class declared the phases.
+    This descriptor stores at creation time the name of the method it should
+    search for execution. The method is retrieved at __get__ time, so that
+    it can be overridden by subclasses of whatever class declared the phases.
 
     It also provides hooks to execute prerequisite and sanity checks.
     """
+
     def __init__(self, name):
         self.name = name
         self.preconditions = []
@@ -94,6 +95,7 @@ class InstallPhase(object):
         # If instance is there the caller wants to execute the
         # install phase, thus return a properly set wrapper
         phase = getattr(instance, self.name)
+
         @functools.wraps(phase)
         def phase_wrapper(spec, prefix):
             # Check instance attributes at the beginning of a phase
@@ -101,7 +103,8 @@ class InstallPhase(object):
             # Execute phase pre-conditions,
             # and give them the chance to fail
             for check in self.preconditions:
-                check(instance)            # Do something sensible at some point
+                # Do something sensible at some point
+                check(instance)
             phase(spec, prefix)
             # Execute phase sanity_checks,
             # and give them the chance to fail
@@ -147,8 +150,8 @@ class PackageMeta(type):
         # Check if phases is in attr dict, then set
         # install phases wrappers
         if 'phases' in attr_dict:
-            _InstallPhase_phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict['phases']]
-            for phase_name, callback_name in zip(_InstallPhase_phases, attr_dict['phases']):
+            _InstallPhase_phases = [PackageMeta.phase_fmt.format(x) for x in attr_dict['phases']]  # NOQA: ignore=E501
+            for phase_name, callback_name in zip(_InstallPhase_phases, attr_dict['phases']):  # NOQA: ignore=E501
                 attr_dict[phase_name] = InstallPhase(callback_name)
             attr_dict['_InstallPhase_phases'] = _InstallPhase_phases
 
@@ -160,15 +163,22 @@ class PackageMeta(type):
                 for phase_name, funcs in checks.items():
                     try:
                         # Search for the phase in the attribute dictionary
-                        phase = attr_dict[PackageMeta.phase_fmt.format(phase_name)]
+                        phase = attr_dict[
+                            PackageMeta.phase_fmt.format(phase_name)]
                     except KeyError:
                         # If it is not there it's in the bases
                         # and we added a check. We need to copy
                         # and extend
                         for base in bases:
-                            phase = getattr(base, PackageMeta.phase_fmt.format(phase_name), None)
-                        attr_dict[PackageMeta.phase_fmt.format(phase_name)] = phase.copy()
-                        phase = attr_dict[PackageMeta.phase_fmt.format(phase_name)]
+                            phase = getattr(
+                                base,
+                                PackageMeta.phase_fmt.format(phase_name),
+                                None
+                            )
+                        attr_dict[PackageMeta.phase_fmt.format(
+                            phase_name)] = phase.copy()
+                        phase = attr_dict[
+                            PackageMeta.phase_fmt.format(phase_name)]
                     getattr(phase, check_name).extend(funcs)
                 # Clear the attribute for the next class
                 setattr(meta, attr_name, {})
@@ -190,8 +200,9 @@ class PackageMeta(type):
             def _execute_under_condition(func):
                 @functools.wraps(func)
                 def _wrapper(instance):
-                    # If all the attributes have the value we require, then execute
-                    if all([getattr(instance, key, None) == value for key, value in attrs.items()]):
+                    # If all the attributes have the value we require, then
+                    # execute
+                    if all([getattr(instance, key, None) == value for key, value in attrs.items()]):  # NOQA: ignore=E501
                         func(instance)
                 return _wrapper
             return _execute_under_condition
@@ -1081,7 +1092,8 @@ class PackageBase(object):
                 else:
                     self.do_stage()
 
-            tty.msg("Building {0} [{1}]".format(self.name, type(self).__base__ ))
+            tty.msg("Building {0} [{1}]".format(
+                self.name, type(self).__base__))
 
             self.stage.keep = keep_stage
             self.build_directory = join_path(self.stage.path, 'spack-build')
@@ -1106,13 +1118,22 @@ class PackageBase(object):
                         self.log_path = log_path
                         self.env_path = env_path
                         dump_environment(env_path)
-                        # Spawn a daemon that reads from a pipe and redirects everything to log_path
-                        with log_output(log_path, verbose, sys.stdout.isatty(), True) as log_redirection:
-                            for phase_name, phase in zip(self.phases, self._InstallPhase_phases):
-                                tty.msg('Executing phase : \'{0}\''.format(phase_name))
+                        # Spawn a daemon that reads from a pipe and redirects
+                        # everything to log_path
+                        redirection_context = log_output(
+                            log_path, verbose,
+                            sys.stdout.isatty(),
+                            True
+                        )
+                        with redirection_context as log_redirection:
+                            for phase_name, phase in zip(self.phases, self._InstallPhase_phases):  # NOQA: ignore=E501
+                                tty.msg(
+                                    'Executing phase : \'{0}\''.format(phase_name)  # NOQA: ignore=E501
+                                )
                                 # Redirect stdout and stderr to daemon pipe
                                 with log_redirection:
-                                    getattr(self, phase)(self.spec, self.prefix)
+                                    getattr(self, phase)(
+                                        self.spec, self.prefix)
                         self.log()
                     # Run post install hooks before build stage is removed.
                     spack.hooks.post_install(self)
@@ -1174,7 +1195,7 @@ class PackageBase(object):
         """
         self.last_phase = kwargs.pop('stop_at', None)
         if self.last_phase is not None and self.last_phase not in self.phases:
-            tty.die('\'{0.last_phase}\' is not among the allowed phases for package {0.name}'.format(self))
+            tty.die('\'{0.last_phase}\' is not among the allowed phases for package {0.name}'.format(self))  # NOQA: ignore=E501
 
     def log(self):
         # Copy provenance into the install directory on success
@@ -1188,7 +1209,8 @@ class PackageBase(object):
         # Remove first if we're overwriting another build
         # (can happen with spack setup)
         try:
-            shutil.rmtree(packages_dir)  # log_install_path and env_install_path are inside this
+            # log_install_path and env_install_path are inside this
+            shutil.rmtree(packages_dir)
         except Exception:
             # FIXME : this potentially catches too many things...
             pass
@@ -1609,7 +1631,8 @@ class AutotoolsPackage(PackageBase):
     @PackageBase.sanity_check('autoreconf')
     def is_configure_or_die(self):
         if not os.path.exists('configure'):
-            raise RuntimeError('configure script not found in {0}'.format(os.getcwd()))
+            raise RuntimeError(
+                'configure script not found in {0}'.format(os.getcwd()))
 
     def configure_args(self):
         return list()
@@ -1668,7 +1691,8 @@ class CMakePackage(PackageBase):
         return list()
 
     def cmake(self, spec, prefix):
-        options = [self.root_cmakelists_dir()] + self.std_cmake_args + self.cmake_args()
+        options = [self.root_cmakelists_dir()] + self.std_cmake_args + \
+            self.cmake_args()
         create = not os.path.exists(self.wdir())
         with working_dir(self.wdir(), create=create):
             inspect.getmodule(self).cmake(*options)

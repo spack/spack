@@ -58,8 +58,6 @@ def spack_transitive_include_path():
 
 
 def write_spconfig(package):
-    spec = package.spec
-    prefix = spec.prefix
     # Set-up the environment
     spack.build_environment.setup_package(package)
 
@@ -79,7 +77,7 @@ def write_spconfig(package):
     setup_fname = 'spconfig.py'
     with open(setup_fname, 'w') as fout:
         fout.write(
-r"""#!%s
+            r"""#!%s
 #
 
 import sys
@@ -108,8 +106,7 @@ env = dict(os.environ)
                     fout.write('    %s\n' % part)
                 fout.write('"""))\n')
 
-        fout.write(
-            "env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = env['SPACK_TRANSITIVE_INCLUDE_PATH']   # Deprecated\n")
+        fout.write("env['CMAKE_TRANSITIVE_INCLUDE_PATH'] = env['SPACK_TRANSITIVE_INCLUDE_PATH']   # Deprecated\n")  # NOQA: ignore=E501
         fout.write('\ncmd = cmdlist("""\n')
         fout.write('%s\n' % cmd[0])
         for arg in cmd[1:]:

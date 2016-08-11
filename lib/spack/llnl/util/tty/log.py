@@ -24,12 +24,11 @@
 ##############################################################################
 """Utility classes for logging the output of blocks of code.
 """
-import sys
+import multiprocessing
 import os
 import re
 import select
-import inspect
-import multiprocessing
+import sys
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
@@ -117,9 +116,10 @@ class log_output(object):
                # do things ... output will be logged
                # and also printed to stdout.
 
-    Opens a stream in 'w' mode at daemon spawning and closes it at daemon joining.
-    If echo is True, also prints the output to stdout.
+    Opens a stream in 'w' mode at daemon spawning and closes it at
+    daemon joining. If echo is True, also prints the output to stdout.
     """
+
     def __init__(self, filename, echo=False, force_color=False, debug=False):
         self.filename = filename
         # Various output options
@@ -133,7 +133,11 @@ class log_output(object):
         self.read, self.write = os.pipe()
 
         # Sets a daemon that writes to file what it reads from a pipe
-        self.p = multiprocessing.Process(target=self._spawn_writing_daemon, args=(self.read,), name='logger_daemon')
+        self.p = multiprocessing.Process(
+            target=self._spawn_writing_daemon,
+            args=(self.read,),
+            name='logger_daemon'
+        )
         self.p.daemon = True
         # Needed to un-summon the daemon
         self.parent_pipe, self.child_pipe = multiprocessing.Pipe()
@@ -186,6 +190,7 @@ class log_output(object):
         os.close(self.read)
 
     class OutputRedirection(object):
+
         def __init__(self, other):
             self.__dict__.update(other.__dict__)
 
