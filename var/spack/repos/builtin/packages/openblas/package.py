@@ -37,9 +37,12 @@ class Openblas(Package):
     version('0.2.16', 'fef46ab92463bdbb1479dcec594ef6dc')
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
-    variant('shared', default=True,  description="Build shared libraries as well as static libs.")  # NOQA: ignore=E501
-    variant('openmp', default=False, description="Enable OpenMP support.")
-    variant('fpic',   default=True,  description="Build position independent code")  # NOQA: ignore=E501
+    variant('shared', default=True,
+            description="Build shared libraries as well as static libs.")
+    variant('openmp', default=False,
+            description="Enable OpenMP support.")
+    variant('fpic',   default=True,
+            description="Build position independent code")
 
     # virtual dependency
     provides('blas')

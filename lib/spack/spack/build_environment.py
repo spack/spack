@@ -436,6 +436,7 @@ def setup_package(pkg, dirty=False):
 
     set_compiler_environment_variables(pkg, spack_env)
     set_build_environment_variables(pkg, spack_env, dirty)
+    pkg.spec.architecture.platform.setup_platform_environment(pkg, spack_env)
     load_external_modules(pkg)
     # traverse in postorder so package can use vars from its dependencies
     spec = pkg.spec

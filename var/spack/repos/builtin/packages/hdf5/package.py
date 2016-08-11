@@ -40,19 +40,22 @@ class Hdf5(AutotoolsPackage):
 
     version('1.10.0-patch1', '9180ff0ef8dc2ef3f61bd37a7404f295')
     version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
-    version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618', preferred=True)
+    version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618')
     version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
     version('1.8.13', 'c03426e9e77d7766944654280b467289')
 
-    variant('debug', default=False, description='Builds a debug version of the library')
-    variant('shared', default=True, description='Builds a shared version of the library')
+    variant('debug', default=False,
+            description='Builds a debug version of the library')
+    variant('shared', default=True,
+            description='Builds a shared version of the library')
 
     variant('cxx', default=True, description='Enable C++ support')
     variant('fortran', default=True, description='Enable Fortran support')
 
     variant('mpi', default=False, description='Enable MPI support')
     variant('szip', default=False, description='Enable szip support')
-    variant('threadsafe', default=False, description='Enable thread-safe capabilities')
+    variant('threadsafe', default=False,
+            description='Enable thread-safe capabilities')
 
     depends_on('mpi', when='+mpi')
     depends_on('szip', when='+szip')

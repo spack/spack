@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Sqlite(Package):
     """SQLite3 is an SQL database engine in a C library. Programs that
        link the SQLite3 library can have SQL database access without

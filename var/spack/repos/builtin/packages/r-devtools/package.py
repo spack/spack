@@ -36,14 +36,14 @@ class RDevtools(Package):
 
     extends('R')
 
-    depends_on('r-httr')
-    depends_on('r-memoise')
-    depends_on('r-whisker')
-    depends_on('r-digest')
-    depends_on('r-rstudioapi')
-    depends_on('r-jsonlite')
-    depends_on('r-git2r')
-    depends_on('r-withr')
+    depends_on('r-httr', type=nolink)
+    depends_on('r-memoise', type=nolink)
+    depends_on('r-whisker', type=nolink)
+    depends_on('r-digest', type=nolink)
+    depends_on('r-rstudioapi', type=nolink)
+    depends_on('r-jsonlite', type=nolink)
+    depends_on('r-git2r', type=nolink)
+    depends_on('r-withr', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

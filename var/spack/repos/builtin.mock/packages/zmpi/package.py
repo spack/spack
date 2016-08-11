@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Zmpi(Package):
     """This is a fake MPI package used to demonstrate virtual package providers
        with dependencies."""

@@ -29,7 +29,7 @@ class Launchmon(Package):
     """Software infrastructure that enables HPC run-time tools to
        co-locate tool daemons with a parallel job."""
     homepage = "https://github.com/LLNL/LaunchMON"
-    url      = "https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz"  # NOQA: ignore=E501
+    url = "https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz"
 
     version('1.0.2', '8d6ba77a0ec2eff2fde2c5cc8fa7ff7a')
 

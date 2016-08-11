@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyTwisted(Package):
     """An asynchronous networking framework written in Python"""
     homepage = "https://twistedmatrix.com/"

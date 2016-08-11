@@ -40,7 +40,8 @@ class Mvapich2(Package):
     provides('mpi@:2.2', when='@1.9')  # MVAPICH2-1.9 supports MPI 2.2
     provides('mpi@:3.0', when='@2.0:')  # MVAPICH2-2.0 supports MPI 3.0
 
-    variant('debug', default=False, description='Enables debug information and error messages at run-time')
+    variant('debug', default=False,
+            description='Enable debug info and error messages at run-time')
 
     ##########
     # TODO : Process managers should be grouped into the same variant,
@@ -51,10 +52,14 @@ class Mvapich2(Package):
     GFORKER = 'gforker'
     REMSHELL = 'remshell'
     SLURM_INCOMPATIBLE_PMS = (HYDRA, GFORKER, REMSHELL)
-    variant(SLURM, default=False, description='Sets slurm as the only process manager')
-    variant(HYDRA, default=False, description='Sets hydra as one of the process managers')
-    variant(GFORKER, default=False, description='Sets gforker as one of the process managers')
-    variant(REMSHELL, default=False, description='Sets remshell as one of the process managers')
+    variant(SLURM, default=False,
+            description='Set slurm as the only process manager')
+    variant(HYDRA, default=False,
+            description='Set hydra as one of the process managers')
+    variant(GFORKER, default=False,
+            description='Set gforker as one of the process managers')
+    variant(REMSHELL, default=False,
+            description='Set remshell as one of the process managers')
     ##########
 
     ##########
@@ -67,15 +72,28 @@ class Mvapich2(Package):
     NEMESIS = 'nemesis'
     MRAIL = 'mrail'
     SUPPORTED_NETWORKS = (PSM, SOCK, NEMESIS, NEMESISIB, NEMESISIBTCP)
-    variant(PSM, default=False, description='Configures a build for QLogic PSM-CH3')
-    variant(SOCK, default=False, description='Configures a build for TCP/IP-CH3')
-    variant(NEMESISIBTCP, default=False, description='Configures a build for both OFA-IB-Nemesis and TCP/IP-Nemesis')
-    variant(NEMESISIB, default=False, description='Configures a build for OFA-IB-Nemesis')
-    variant(NEMESIS, default=False, description='Configures a build for TCP/IP-Nemesis')
-    variant(MRAIL, default=False, description='Configures a build for OFA-IB-CH3')
+    variant(
+        PSM, default=False,
+        description='Configure for QLogic PSM-CH3')
+    variant(
+        SOCK, default=False,
+        description='Configure for TCP/IP-CH3')
+    variant(
+        NEMESISIBTCP, default=False,
+        description='Configure for both OFA-IB-Nemesis and TCP/IP-Nemesis')
+    variant(
+        NEMESISIB, default=False,
+        description='Configure for OFA-IB-Nemesis')
+    variant(
+        NEMESIS, default=False,
+        description='Configure for TCP/IP-Nemesis')
+    variant(
+        MRAIL, default=False,
+        description='Configure for OFA-IB-CH3')
     ##########
 
     # FIXME : CUDA support is missing
+    depends_on('libpciaccess')
 
     def url_for_version(self, version):
         base_url = "http://mvapich.cse.ohio-state.edu/download"

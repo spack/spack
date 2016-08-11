@@ -23,20 +23,24 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+from spack.package_test import *
 from spack.util.executable import Executable
 import os.path
 
+
 class Atlas(Package):
-    """
-    Automatically Tuned Linear Algebra Software, generic shared ATLAS is an approach for the automatic generation and
-    optimization of numerical software. Currently ATLAS supplies optimized versions for the complete set of linear
-    algebra kernels known as the Basic Linear Algebra Subroutines (BLAS), and a subset of the linear algebra routines
-    in the LAPACK library.
+    """Automatically Tuned Linear Algebra Software, generic shared ATLAS is an
+    approach for the automatic generation and optimization of numerical
+    software. Currently ATLAS supplies optimized versions for the complete set
+    of linear algebra kernels known as the Basic Linear Algebra Subroutines
+    (BLAS), and a subset of the linear algebra routines in the LAPACK library.
     """
     homepage = "http://math-atlas.sourceforge.net/"
 
     version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da',
-            url='http://downloads.sourceforge.net/project/math-atlas/Stable/3.10.2/atlas3.10.2.tar.bz2', preferred=True)
+            url='https://sourceforge.net/projects/math-atlas/files/Stable/3.10.2/atlas3.10.2.tar.bz2', preferred=True)
+    # not all packages (e.g. Trilinos@12.6.3) stopped using deprecated in 3.6.0
+    # Lapack routines. Stick with 3.5.0 until this is fixed.
     resource(name='lapack',
              url='http://www.netlib.org/lapack/lapack-3.5.0.tgz',
              md5='b1d3e3e425b2e44a06760ff173104bdf',
@@ -44,7 +48,7 @@ class Atlas(Package):
              when='@3:')
 
     version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825',
-            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2/download')
+            url='http://sourceforge.net/projects/math-atlas/files/Developer%20%28unstable%29/3.11.34/atlas3.11.34.tar.bz2')
 
     variant('shared', default=True, description='Builds shared library')
 
@@ -66,9 +70,24 @@ class Atlas(Package):
 
         options = []
         if '+shared' in spec:
-            options.append('--shared')
+            options.extend([
+                '--shared'
+            ])
+            # TODO: for non GNU add '-Fa', 'alg', '-fPIC' ?
 
-        # Lapack resource
+        # configure for 64-bit build
+        options.extend([
+            '-b', '64'
+        ])
+
+        # set compilers:
+        options.extend([
+            '-C', 'ic', spack_cc,
+            '-C', 'if', spack_f77
+        ])
+
+        # Lapack resource to provide full lapack build. Note that
+        # ATLAS only provides a few LAPACK routines natively.
         lapack_stage = self.stage[1]
         lapack_tarfile = os.path.basename(lapack_stage.fetcher.url)
         lapack_tarfile_path = join_path(lapack_stage.path, lapack_tarfile)
@@ -81,4 +100,35 @@ class Atlas(Package):
             make('check')
             make('ptcheck')
             make('time')
+            if '+shared' in spec:
+                with working_dir('lib'):
+                    make('shared_all')
+
             make("install")
+            self.install_test()
+
+    def setup_dependent_package(self, module, dspec):
+        # libsatlas.[so,dylib,dll ] contains all serial APIs (serial lapack,
+        # serial BLAS), and all ATLAS symbols needed to support them. Whereas
+        # libtatlas.[so,dylib,dll ] is parallel (multithreaded) version.
+        name = 'libsatlas.%s' % dso_suffix
+        libdir = find_library_path(name,
+                                   self.prefix.lib64,
+                                   self.prefix.lib)
+
+        if '+shared' in self.spec:
+            self.spec.blas_shared_lib   = join_path(libdir, name)
+            self.spec.lapack_shared_lib = self.spec.blas_shared_lib
+
+    def install_test(self):
+        source_file = join_path(os.path.dirname(self.module.__file__),
+                                'test_cblas_dgemm.c')
+        blessed_file = join_path(os.path.dirname(self.module.__file__),
+                                 'test_cblas_dgemm.output')
+
+        include_flags = ["-I%s" % join_path(self.spec.prefix, "include")]
+        link_flags = ["-L%s" % join_path(self.spec.prefix, "lib"),
+                      "-lsatlas"]
+
+        output = compile_c_and_execute(source_file, include_flags, link_flags)
+        compare_output_file(output, blessed_file)

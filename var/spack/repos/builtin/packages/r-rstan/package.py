@@ -44,13 +44,13 @@ class RRstan(Package):
 
     extends('R')
 
-    depends_on('r-ggplot2')
-    depends_on('r-stanheaders')
-    depends_on('r-inline')
-    depends_on('r-gridextra')
-    depends_on('r-rcpp')
-    depends_on('r-rcppeigen')
-    depends_on('r-bh')
+    depends_on('r-ggplot2', type=nolink)
+    depends_on('r-stanheaders', type=nolink)
+    depends_on('r-inline', type=nolink)
+    depends_on('r-gridextra', type=nolink)
+    depends_on('r-rcpp', type=nolink)
+    depends_on('r-rcppeigen', type=nolink)
+    depends_on('r-bh', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 def check(condition, msg):
     """Raise an install error if condition is False."""
     if not condition:
@@ -39,7 +40,6 @@ class Cmake(Package):
     version('3.4.3',    '4cb3ff35b2472aae70f542116d616e63',
             url='https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz')
 
-
     def setup_environment(self, spack_env, run_env):
         spack_cc    # Ensure spack module-scope variable is avaiable
         spack_env.set('for_install', 'for_install')
@@ -48,7 +48,6 @@ class Cmake(Package):
         spack_cc    # Ensure spack module-scope variable is avaiable
         spack_env.set('from_cmake', 'from_cmake')
 
-
     def setup_dependent_package(self, module, dspec):
         spack_cc    # Ensure spack module-scope variable is avaiable
 
@@ -56,7 +55,6 @@ class Cmake(Package):
         module.from_cmake = "from_cmake"
 
         self.spec.link_arg = "test link arg"
-
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

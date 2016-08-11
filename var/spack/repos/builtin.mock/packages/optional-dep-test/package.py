@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class OptionalDepTest(Package):
     """Description"""
 

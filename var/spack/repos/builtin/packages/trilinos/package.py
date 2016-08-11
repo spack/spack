@@ -45,6 +45,7 @@ class Trilinos(Package):
     homepage = "https://trilinos.org/"
     url = "http://trilinos.csbsju.edu/download/files/trilinos-12.2.1-Source.tar.gz"
 
+    version('12.6.4', 'db25056617c688f6f25092376a03200f')
     version('12.6.3', '960f5f4d3f7c3da818e5a5fb4684559eff7e0c25f959ef576561b8a52f0e4d1e')
     version('12.6.2', '0c076090508170ddee5efeed317745027f9418319720dc40a072e478775279f9')
     version('12.6.1', 'adcf2d3aab74cdda98f88fee19cd1442604199b0515ee3da4d80cbe8f37d00e4')
@@ -55,17 +56,24 @@ class Trilinos(Package):
     version('11.14.2', 'a43590cf896c677890d75bfe75bc6254')
     version('11.14.1', '40febc57f76668be8b6a77b7607bb67f')
 
-    variant('metis',        default=True,  description='Compile with METIS and ParMETIS')
-    variant('mumps',        default=True,  description='Compile with support for MUMPS solvers')
-    variant('superlu-dist', default=True,  description='Compile with SuperluDist solvers')
-    variant('hypre',        default=True,  description='Compile with Hypre preconditioner')
+    variant('metis',        default=True,
+            description='Compile with METIS and ParMETIS')
+    variant('mumps',        default=True,
+            description='Compile with support for MUMPS solvers')
+    variant('superlu-dist', default=True,
+            description='Compile with SuperluDist solvers')
+    variant('hypre',        default=True,
+            description='Compile with Hypre preconditioner')
     variant('hdf5',         default=True,  description='Compile with HDF5')
-    variant('suite-sparse', default=True,  description='Compile with SuiteSparse solvers')
+    variant('suite-sparse', default=True,
+            description='Compile with SuiteSparse solvers')
     # not everyone has py-numpy activated, keep it disabled by default to avoid
     # configure errors
     variant('python',       default=False, description='Build python wrappers')
-    variant('shared',       default=True,  description='Enables the build of shared libraries')
-    variant('debug',        default=False, description='Builds a debug version of the libraries')
+    variant('shared',       default=True,
+            description='Enables the build of shared libraries')
+    variant('debug',        default=False,
+            description='Builds a debug version of the libraries')
     variant('boost',        default=True, description='Compile with Boost')
 
     depends_on('cmake', type='build')
@@ -138,15 +146,22 @@ class Trilinos(Package):
             '-DTPL_ENABLE_LAPACK=ON',
             '-DLAPACK_LIBRARY_NAMES=%s' % to_lib_name(
                 spec['lapack'].lapack_shared_lib),
-            '-DLAPACK_LIBRARY_DIRS=%s' % spec['lapack'].prefix,
+            '-DLAPACK_LIBRARY_DIRS=%s' % spec['lapack'].prefix.lib,
             '-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON',
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
             '-DTPL_ENABLE_Netcdf:BOOL=ON',
             '-DTPL_ENABLE_HYPRE:BOOL=%s' % (
-                'ON' if '+hypre' in spec else 'OFF'),
-            '-DTPL_ENABLE_HDF5:BOOL=%s' % (
-                'ON' if '+hdf5' in spec else 'OFF'),
+                'ON' if '+hypre' in spec else 'OFF')
         ])
+
+        if '+hdf5' in spec:
+            options.extend([
+                '-DTPL_ENABLE_HDF5:BOOL=ON',
+                '-DHDF5_INCLUDE_DIRS:PATH=%s' % spec['hdf5'].prefix.include,
+                '-DHDF5_LIBRARY_DIRS:PATH=%s' % spec['hdf5'].prefix.lib
+            ])
+        else:
+            options.extend(['-DTPL_ENABLE_HDF5:BOOL=OFF'])
 
         if '+boost' in spec:
             options.extend([

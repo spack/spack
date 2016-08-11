@@ -37,7 +37,7 @@ class RGridextra(Package):
 
     extends('R')
 
-    depends_on('r-gtable')
+    depends_on('r-gtable', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

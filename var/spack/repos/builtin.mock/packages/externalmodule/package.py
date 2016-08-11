@@ -25,6 +25,7 @@
 ##############################################################################
 from spack import *
 
+
 class Externalmodule(Package):
     homepage = "http://somewhere.com"
     url      = "http://somewhere.com/module-1.0.tar.gz"

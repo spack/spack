@@ -25,15 +25,10 @@
 """
 Test for multi_method dispatch.
 """
-import unittest
-
 import spack
 from spack.multimethod import *
 from spack.version import *
-from spack.spec import Spec
-from spack.multimethod import when
 from spack.test.mock_packages_test import *
-from spack.version import *
 
 
 class MultiMethodTest(MockPackagesTest):
@@ -41,7 +36,6 @@ class MultiMethodTest(MockPackagesTest):
     def test_no_version_match(self):
         pkg = spack.repo.get('multimethod@2.0')
         self.assertRaises(NoSuchMethodError, pkg.no_version_2)
-
 
     def test_one_version_match(self):
         pkg = spack.repo.get('multimethod@1.0')
@@ -53,14 +47,12 @@ class MultiMethodTest(MockPackagesTest):
         pkg = spack.repo.get('multimethod@4.0')
         self.assertEqual(pkg.no_version_2(), 4)
 
-
     def test_version_overlap(self):
         pkg = spack.repo.get('multimethod@2.0')
         self.assertEqual(pkg.version_overlap(), 1)
 
         pkg = spack.repo.get('multimethod@5.0')
         self.assertEqual(pkg.version_overlap(), 2)
-
 
     def test_mpi_version(self):
         pkg = spack.repo.get('multimethod^mpich@3.0.4')
@@ -72,14 +64,12 @@ class MultiMethodTest(MockPackagesTest):
         pkg = spack.repo.get('multimethod^mpich@1.0')
         self.assertEqual(pkg.mpi_version(), 1)
 
-
     def test_undefined_mpi_version(self):
         pkg = spack.repo.get('multimethod^mpich@0.4')
         self.assertEqual(pkg.mpi_version(), 1)
 
         pkg = spack.repo.get('multimethod^mpich@1.4')
         self.assertEqual(pkg.mpi_version(), 1)
-
 
     def test_default_works(self):
         pkg = spack.repo.get('multimethod%gcc')
@@ -91,20 +81,18 @@ class MultiMethodTest(MockPackagesTest):
         pkg = spack.repo.get('multimethod%pgi')
         self.assertEqual(pkg.has_a_default(), 'default')
 
-
     def test_target_match(self):
         platform = spack.architecture.platform()
         targets = platform.targets.values()
         for target in targets[:-1]:
-            pkg = spack.repo.get('multimethod target='+target.name)
+            pkg = spack.repo.get('multimethod target=' + target.name)
             self.assertEqual(pkg.different_by_target(), target.name)
 
-        pkg = spack.repo.get('multimethod target='+targets[-1].name)
+        pkg = spack.repo.get('multimethod target=' + targets[-1].name)
         if len(targets) == 1:
             self.assertEqual(pkg.different_by_target(), targets[-1].name)
         else:
             self.assertRaises(NoSuchMethodError, pkg.different_by_target)
-
 
     def test_dependency_match(self):
         pkg = spack.repo.get('multimethod^zmpi')
@@ -117,7 +105,6 @@ class MultiMethodTest(MockPackagesTest):
         # but should take the first option
         pkg = spack.repo.get('multimethod^foobar')
         self.assertEqual(pkg.different_by_dep(), 'mpich')
-
 
     def test_virtual_dep_match(self):
         pkg = spack.repo.get('multimethod^mpich2')

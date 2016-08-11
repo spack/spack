@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPychecker(Package):
     """"""
     homepage = "http://pychecker.sourceforge.net/"

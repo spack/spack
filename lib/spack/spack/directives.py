@@ -189,7 +189,7 @@ def _depends_on(pkg, spec, when=None, type=None):
         type = ('build', 'link')
 
     if isinstance(type, str):
-        type = (type,)
+        type = spack.spec.special_types.get(type, (type,))
 
     for deptype in type:
         if deptype not in spack.spec.alldeps:
@@ -349,9 +349,10 @@ class CircularReferenceError(DirectiveError):
 
 class UnknownDependencyTypeError(DirectiveError):
     """This is raised when a dependency is of an unknown type."""
+
     def __init__(self, directive, package, deptype):
         super(UnknownDependencyTypeError, self).__init__(
             directive,
-            "Package '%s' cannot depend on a package via %s." %
-                (package, deptype))
+            "Package '%s' cannot depend on a package via %s."
+            % (package, deptype))
         self.package = package

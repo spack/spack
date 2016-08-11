@@ -37,9 +37,9 @@ class RTibble(Package):
 
     extends('R')
 
-    depends_on('r-assertthat')
-    depends_on('r-lazyeval')
-    depends_on('r-rcpp')
+    depends_on('r-assertthat', type=nolink)
+    depends_on('r-lazyeval', type=nolink)
+    depends_on('r-rcpp', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

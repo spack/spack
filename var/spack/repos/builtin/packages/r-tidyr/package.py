@@ -37,12 +37,12 @@ class RTidyr(Package):
     version('0.5.1', '3cadc869510c054ed93d374ab44120bd')
 
     extends('R')
-    depends_on('r-tibble')
-    depends_on('r-dplyr')
-    depends_on('r-stringi')
-    depends_on('r-lazyeval')
-    depends_on('r-magrittr')
-    depends_on('r-rcpp')
+    depends_on('r-tibble', type=nolink)
+    depends_on('r-dplyr', type=nolink)
+    depends_on('r-stringi', type=nolink)
+    depends_on('r-lazyeval', type=nolink)
+    depends_on('r-magrittr', type=nolink)
+    depends_on('r-rcpp', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

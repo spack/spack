@@ -39,6 +39,7 @@ import inspect
 import os
 import platform
 import re
+import sys
 import textwrap
 import time
 from StringIO import StringIO
@@ -64,7 +65,7 @@ from spack import directory_layout
 from spack.stage import Stage, ResourceStage, StageComposite
 from spack.util.compression import allowed_archive
 from spack.util.environment import dump_environment
-from spack.util.executable import ProcessError, which
+from spack.util.executable import ProcessError
 from spack.version import *
 
 """Allowed URL schemes for spack packages."""
@@ -330,12 +331,10 @@ class PackageBase(object):
 
     Most software comes in nicely packaged tarballs, like this one:
         http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
-
     Taking a page from homebrew, spack deduces pretty much everything it
     needs to know from the URL above.  If you simply type this:
 
         spack create http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
-
     Spack will download the tarball, generate an md5 hash, figure out the
     version and the name of the package from the URL, and create a new
     package file for you with all the names and attributes set correctly.
@@ -785,49 +784,11 @@ class PackageBase(object):
         exts = spack.install_layout.extension_map(self.extendee_spec)
         return (self.name in exts) and (exts[self.name] == self.spec)
 
-    def preorder_traversal(self, visited=None, **kwargs):
-        """This does a preorder traversal of the package's dependence DAG."""
-        virtual = kwargs.get("virtual", False)
-
-        if visited is None:
-            visited = set()
-
-        if self.name in visited:
-            return
-        visited.add(self.name)
-
-        if not virtual:
-            yield self
-
-        for name in sorted(self.dependencies.keys()):
-            dep_spec = self.get_dependency(name)
-            spec = dep_spec.spec
-
-            # Currently, we do not descend into virtual dependencies, as this
-            # makes doing a sensible traversal much harder.  We just assume
-            # that ANY of the virtual deps will work, which might not be true
-            # (due to conflicts or unsatisfiable specs).  For now this is ok,
-            # but we might want to reinvestigate if we start using a lot of
-            # complicated virtual dependencies
-            # TODO: reinvestigate this.
-            if spec.virtual:
-                if virtual:
-                    yield spec
-                continue
-
-            for pkg in spack.repo.get(name).preorder_traversal(visited,
-                                                               **kwargs):
-                yield pkg
-
     def provides(self, vpkg_name):
         """
         True if this package provides a virtual package with the specified name
         """
         return any(s.name == vpkg_name for s in self.provided)
-
-    def virtual_dependencies(self, visited=None):
-        for spec in sorted(set(self.preorder_traversal(virtual=True))):
-            yield spec
 
     @property
     def installed(self):
@@ -898,13 +859,13 @@ class PackageBase(object):
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
-            checksum_msg = "Add a checksum or use --no-checksum to skip this check."  # NOQA: ignore=E501
+            ck_msg = "Add a checksum or use --no-checksum to skip this check."
             ignore_checksum = False
             if sys.stdout.isatty():
                 ignore_checksum = tty.get_yes_or_no("  Fetch anyway?",
                                                     default=False)
                 if ignore_checksum:
-                    tty.msg("Fetching with no checksum.", checksum_msg)
+                    tty.msg("Fetching with no checksum.", ck_msg)
 
             if not ignore_checksum:
                 raise FetchError("Will not fetch %s" %
@@ -1396,7 +1357,15 @@ class PackageBase(object):
 
     def do_uninstall(self, force=False):
         if not self.installed:
-            raise InstallError(str(self.spec) + " is not installed.")
+            # prefix may not exist, but DB may be inconsistent. Try to fix by
+            # removing, but omit hooks.
+            specs = spack.installed_db.query(self.spec, installed=True)
+            if specs:
+                spack.installed_db.remove(specs[0])
+                tty.msg("Removed stale DB entry for %s" % self.spec.short_spec)
+                return
+            else:
+                raise InstallError(str(self.spec) + " is not installed.")
 
         if not force:
             dependents = self.installed_dependents
@@ -1495,9 +1464,10 @@ class PackageBase(object):
                     continue
                 for dep in aspec.traverse(deptype='run'):
                     if self.spec == dep:
+                        msg = ("Cannot deactivate %s because %s is activated "
+                               "and depends on it.")
                         raise ActivationError(
-                            "Cannot deactivate %s because %s is activated and depends on it."  # NOQA: ignore=E501
-                            % (self.spec.short_spec, aspec.short_spec))
+                            msg % (self.spec.short_spec, aspec.short_spec))
 
         self.extendee_spec.package.deactivate(self, **self.extendee_args)
 
@@ -1726,6 +1696,7 @@ def use_cray_compiler_names():
     os.environ['FC'] = 'ftn'
     os.environ['F77'] = 'ftn'
 
+
 def flatten_dependencies(spec, flat_dir):
     """Make each dependency of spec present in dir via symlink."""
     for dep in spec.traverse(root=False):
@@ -1890,12 +1861,14 @@ class ExtensionError(PackageError):
 
 
 class ExtensionConflictError(ExtensionError):
+
     def __init__(self, path):
         super(ExtensionConflictError, self).__init__(
             "Extension blocked by file: %s" % path)
 
 
 class ActivationError(ExtensionError):
+
     def __init__(self, msg, long_msg=None):
         super(ActivationError, self).__init__(msg, long_msg)
 

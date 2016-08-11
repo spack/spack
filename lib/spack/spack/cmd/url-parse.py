@@ -22,28 +22,28 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
-
 import llnl.util.tty as tty
 
 import spack
 import spack.url
 from spack.util.web import find_versions_of_archive
 
-description = "Show parsing of a URL, optionally spider web for other versions."
+description = "Show parsing of a URL, optionally spider web for versions."
+
 
 def setup_parser(subparser):
     subparser.add_argument('url', help="url of a package archive")
     subparser.add_argument(
-        '-s', '--spider', action='store_true', help="Spider the source page for versions.")
+        '-s', '--spider', action='store_true',
+        help="Spider the source page for versions.")
 
 
 def print_name_and_version(url):
     name, ns, nl, ntup, ver, vs, vl, vtup = spack.url.substitution_offsets(url)
-    underlines = [" "] * max(ns+nl, vs+vl)
-    for i in range(ns, ns+nl):
+    underlines = [" "] * max(ns + nl, vs + vl)
+    for i in range(ns, ns + nl):
         underlines[i] = '-'
-    for i in range(vs, vs+vl):
+    for i in range(vs, vs + vl):
         underlines[i] = '~'
 
     print "    %s" % url

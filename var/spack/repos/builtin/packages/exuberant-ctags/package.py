@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class ExuberantCtags(Package):
     """The canonical ctags generator"""
     homepage = "ctags.sourceforge.net"

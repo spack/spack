@@ -143,7 +143,8 @@ def setup(self, args):
 
         if not spec.versions.concrete:
             tty.die(
-                "spack setup spec must have a single, concrete version.  Did you forget a package version number?")
+                "spack setup spec must have a single, concrete version. "
+                "Did you forget a package version number?")
 
         spec.concretize()
         package = spack.repo.get(spec)

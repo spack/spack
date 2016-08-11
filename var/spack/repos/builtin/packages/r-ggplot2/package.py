@@ -42,12 +42,12 @@ class RGgplot2(Package):
 
     extends('R')
 
-    depends_on('r-digest')
-    depends_on('r-gtable')
-    depends_on('r-mass')
-    depends_on('r-plyr')
-    depends_on('r-reshape2')
-    depends_on('r-scales')
+    depends_on('r-digest', type=nolink)
+    depends_on('r-gtable', type=nolink)
+    depends_on('r-mass', type=nolink)
+    depends_on('r-plyr', type=nolink)
+    depends_on('r-reshape2', type=nolink)
+    depends_on('r-scales', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

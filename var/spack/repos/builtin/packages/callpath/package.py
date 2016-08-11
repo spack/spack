@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Callpath(Package):
     """Library for representing callpaths consistently in
        distributed-memory performance tools."""

@@ -36,14 +36,15 @@ class RDplyr(Package):
     version('0.5.0', '1fcafcacca70806eea2e6d465cdb94ef')
 
     extends('R')
-    depends_on('r-assertthat')
-    depends_on('r-R6')
-    depends_on('r-rcpp')
-    depends_on('r-tibble')
-    depends_on('r-magrittr')
-    depends_on('r-lazyeval')
-    depends_on('r-dbi')
-    depends_on('r-bh')
+
+    depends_on('r-assertthat', type=nolink)
+    depends_on('r-R6', type=nolink)
+    depends_on('r-rcpp', type=nolink)
+    depends_on('r-tibble', type=nolink)
+    depends_on('r-magrittr', type=nolink)
+    depends_on('r-lazyeval', type=nolink)
+    depends_on('r-dbi', type=nolink)
+    depends_on('r-bh', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

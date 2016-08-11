@@ -6,6 +6,7 @@ def get_submodules():
     git = which('git')
     git('submodule', 'update', '--init', '--recursive')
 
+
 class Rust(Package):
     """The rust programming language toolchain"""
     homepage = "http://www.rust-lang.org"

@@ -37,6 +37,7 @@ import llnl.util.tty.color as color
 # Use this to strip escape sequences
 _escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
 
+
 def _strip(line):
     """Strip color and control characters from a line."""
     return _escape.sub('', line)
@@ -59,9 +60,9 @@ class keyboard_input(object):
     When the with block completes, this will restore settings before
     canonical and echo were disabled.
     """
+
     def __init__(self, stream):
         self.stream = stream
-
 
     def __enter__(self):
         self.old_cfg = None
@@ -87,9 +88,8 @@ class keyboard_input(object):
             # Apply new settings for terminal
             termios.tcsetattr(fd, termios.TCSADRAIN, self.new_cfg)
 
-        except Exception, e:
+        except Exception:
             pass  # Some OS's do not support termios, so ignore.
-
 
     def __exit__(self, exc_type, exception, traceback):
         # If termios was avaialble, restore old settings after the

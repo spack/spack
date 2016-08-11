@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPythonDaemon(Package):
     """Library to implement a well-behaved Unix daemon process.
 
@@ -47,4 +48,3 @@ class PyPythonDaemon(Package):
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
-

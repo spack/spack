@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 import sys
+import os
 
 import llnl.util.tty as tty
 import nose
@@ -32,16 +33,53 @@ from llnl.util.tty.colify import colify
 from spack.test.tally_plugin import Tally
 """Names of tests to be included in Spack's test suite"""
 
+# All the tests Spack knows about.
+# Keep these one per line so that it's easy to see changes in diffs.
 test_names = [
-    'architecture', 'versions', 'url_parse', 'url_substitution', 'packages',
-    'stage', 'spec_syntax', 'spec_semantics', 'spec_dag', 'concretize',
-    'multimethod', 'install', 'package_sanity', 'config', 'directory_layout',
-    'pattern', 'python_version', 'git_fetch', 'svn_fetch', 'hg_fetch',
-    'mirror', 'modules', 'url_extrapolate', 'cc', 'link_tree', 'spec_yaml',
-    'optional_deps', 'make_executable', 'build_system_guess', 'lock',
-    'database', 'namespace_trie', 'yaml', 'sbang', 'environment', 'cmd.find',
-    'cmd.uninstall', 'cmd.test_install', 'cmd.test_compiler_cmd',
-    'cmd.module'
+    'architecture',
+    'build_system_guess',
+    'cc',
+    'cmd.find',
+    'cmd.module',
+    'cmd.test_install',
+    'cmd.uninstall',
+    'concretize',
+    'concretize_preferences',
+    'config',
+    'database',
+    'directory_layout',
+    'environment',
+    'file_cache',
+    'git_fetch',
+    'hg_fetch',
+    'install',
+    'link_tree',
+    'lock',
+    'make_executable',
+    'mirror',
+    'modules',
+    'multimethod',
+    'namespace_trie',
+    'optional_deps',
+    'package_sanity',
+    'packages',
+    'pattern',
+    'python_version',
+    'sbang',
+    'spec_dag',
+    'spec_semantics',
+    'spec_syntax',
+    'spec_yaml',
+    'stage',
+    'svn_fetch',
+    'url_extrapolate',
+    'url_parse',
+    'url_substitution',
+    'versions',
+    'provider_index',
+    'yaml',
+    # This test needs to be last until global compiler cache is fixed.
+    'cmd.test_compiler_cmd',
 ]
 
 
@@ -53,6 +91,10 @@ def list_tests():
 def run(names, outputDir, verbose=False):
     """Run tests with the supplied names.  Names should be a list.  If
        it's empty, run ALL of Spack's tests."""
+    # Print output to stdout if verbose is 1.
+    if verbose:
+        os.environ['NOSE_NOCAPTURE'] = '1'
+
     if not names:
         names = test_names
     else:

@@ -55,7 +55,6 @@ class InstallTest(MockPackagesTest):
         spack.install_layout = YamlDirectoryLayout(self.tmpdir)
         spack.installed_db   = Database(self.tmpdir)
 
-
     def tearDown(self):
         super(InstallTest, self).tearDown()
         self.repo.destroy()
@@ -68,13 +67,11 @@ class InstallTest(MockPackagesTest):
         spack.installed_db   = self.orig_db
         shutil.rmtree(self.tmpdir, ignore_errors=True)
 
-
     def fake_fetchify(self, pkg):
         """Fake the URL for a package so it downloads from a file."""
         fetcher = FetchStrategyComposite()
         fetcher.append(URLFetchStrategy(self.repo.url))
         pkg.fetcher = fetcher
-
 
     def test_install_and_uninstall(self):
         # Get a basic concrete spec for the trivial install package.
@@ -90,10 +87,9 @@ class InstallTest(MockPackagesTest):
         try:
             pkg.do_install()
             pkg.do_uninstall()
-        except Exception, e:
+        except Exception:
             pkg.remove_prefix()
             raise
-
 
     def test_install_environment(self):
         spec = Spec('cmake-client').concretized()
@@ -104,6 +100,6 @@ class InstallTest(MockPackagesTest):
         pkg = spec.package
         try:
             pkg.do_install()
-        except Exception, e:
+        except Exception:
             pkg.remove_prefix()
             raise

@@ -25,8 +25,14 @@
 """
 The ``virtual`` module contains utility classes for virtual dependencies.
 """
-import spack.spec
-import itertools
+from itertools import product as iproduct
+from pprint import pformat
+
+import yaml
+from yaml.error import MarkedYAMLError
+
+import spack
+
 
 class ProviderIndex(object):
     """This is a dict of dicts used for finding providers of particular
@@ -44,13 +50,30 @@ class ProviderIndex(object):
 
        Calling providers_for(spec) will find specs that provide a
        matching implementation of MPI.
-    """
-    def __init__(self, specs, **kwargs):
-        # TODO: come up with another name for this.  This "restricts" values to
-        # the verbatim impu specs (i.e., it doesn't pre-apply package's constraints, and
-        # keeps things as broad as possible, so it's really the wrong name)
-        self.restrict = kwargs.setdefault('restrict', False)
 
+    """
+
+    def __init__(self, specs=None, restrict=False):
+        """Create a new ProviderIndex.
+
+        Optional arguments:
+
+        specs
+            List (or sequence) of specs.  If provided, will call
+            `update` on this ProviderIndex with each spec in the list.
+
+        restrict
+            "restricts" values to the verbatim input specs; do not
+            pre-apply package's constraints.
+
+            TODO: rename this.  It is intended to keep things as broad
+            as possible without overly restricting results, so it is
+            not the best name.
+        """
+        if specs is None:
+            specs = []
+
+        self.restrict = restrict
         self.providers = {}
 
         for spec in specs:
@@ -62,9 +85,8 @@ class ProviderIndex(object):
 
             self.update(spec)
 
-
     def update(self, spec):
-        if type(spec) != spack.spec.Spec:
+        if not isinstance(spec, spack.spec.Spec):
             spec = spack.spec.Spec(spec)
 
         if not spec.name:
@@ -75,12 +97,13 @@ class ProviderIndex(object):
 
         pkg = spec.package
         for provided_spec, provider_spec in pkg.provided.iteritems():
-            provider_spec.compiler_flags = spec.compiler_flags.copy()#We want satisfaction other than flags
+            # We want satisfaction other than flags
+            provider_spec.compiler_flags = spec.compiler_flags.copy()
             if provider_spec.satisfies(spec, deps=False):
                 provided_name = provided_spec.name
 
                 provider_map = self.providers.setdefault(provided_name, {})
-                if not provided_spec in provider_map:
+                if provided_spec not in provider_map:
                     provider_map[provided_spec] = set()
 
                 if self.restrict:
@@ -102,7 +125,6 @@ class ProviderIndex(object):
                     constrained.constrain(provider_spec)
                     provider_map[provided_spec].add(constrained)
 
-
     def providers_for(self, *vpkg_specs):
         """Gives specs of all packages that provide virtual packages
            with the supplied specs."""
@@ -114,26 +136,25 @@ class ProviderIndex(object):
 
             # Add all the providers that satisfy the vpkg spec.
             if vspec.name in self.providers:
-                for provider_spec, spec_set in self.providers[vspec.name].items():
-                    if provider_spec.satisfies(vspec, deps=False):
+                for p_spec, spec_set in self.providers[vspec.name].items():
+                    if p_spec.satisfies(vspec, deps=False):
                         providers.update(spec_set)
 
         # Return providers in order
         return sorted(providers)
 
-
     # TODO: this is pretty darned nasty, and inefficient, but there
     # are not that many vdeps in most specs.
     def _cross_provider_maps(self, lmap, rmap):
         result = {}
-        for lspec, rspec in itertools.product(lmap, rmap):
+        for lspec, rspec in iproduct(lmap, rmap):
             try:
                 constrained = lspec.constrained(rspec)
             except spack.spec.UnsatisfiableSpecError:
                 continue
 
             # lp and rp are left and right provider specs.
-            for lp_spec, rp_spec in itertools.product(lmap[lspec], rmap[rspec]):
+            for lp_spec, rp_spec in iproduct(lmap[lspec], rmap[rspec]):
                 if lp_spec.name == rp_spec.name:
                     try:
                         const = lp_spec.constrained(rp_spec, deps=False)
@@ -142,11 +163,9 @@ class ProviderIndex(object):
                         continue
         return result
 
-
     def __contains__(self, name):
         """Whether a particular vpkg name is in the index."""
         return name in self.providers
-
 
     def satisfies(self, other):
         """Check that providers of virtual specs are compatible."""
@@ -164,3 +183,111 @@ class ProviderIndex(object):
                 result[name] = crossed
 
         return all(c in result for c in common)
+
+    def to_yaml(self, stream=None):
+        provider_list = self._transform(
+            lambda vpkg, pset: [
+                vpkg.to_node_dict(), [p.to_node_dict() for p in pset]], list)
+
+        yaml.dump({'provider_index': {'providers': provider_list}},
+                  stream=stream)
+
+    @staticmethod
+    def from_yaml(stream):
+        try:
+            yfile = yaml.load(stream)
+        except MarkedYAMLError, e:
+            raise spack.spec.SpackYAMLError(
+                "error parsing YAML ProviderIndex cache:", str(e))
+
+        if not isinstance(yfile, dict):
+            raise spack.spec.SpackYAMLError(
+                "YAML ProviderIndex was not a dict.")
+
+        if 'provider_index' not in yfile:
+            raise spack.spec.SpackYAMLError(
+                "YAML ProviderIndex does not start with 'provider_index'")
+
+        index = ProviderIndex()
+        providers = yfile['provider_index']['providers']
+        index.providers = _transform(
+            providers,
+            lambda vpkg, plist: (
+                spack.spec.Spec.from_node_dict(vpkg),
+                set(spack.spec.Spec.from_node_dict(p) for p in plist)))
+        return index
+
+    def merge(self, other):
+        """Merge `other` ProviderIndex into this one."""
+        other = other.copy()   # defensive copy.
+
+        for pkg in other.providers:
+            if pkg not in self.providers:
+                self.providers[pkg] = other.providers[pkg]
+                continue
+
+            spdict, opdict = self.providers[pkg], other.providers[pkg]
+            for provided_spec in opdict:
+                if provided_spec not in spdict:
+                    spdict[provided_spec] = opdict[provided_spec]
+                    continue
+
+                spdict[provided_spec] += opdict[provided_spec]
+
+    def remove_provider(self, pkg_name):
+        """Remove a provider from the ProviderIndex."""
+        empty_pkg_dict = []
+        for pkg, pkg_dict in self.providers.items():
+            empty_pset = []
+            for provided, pset in pkg_dict.items():
+                same_name = set(p for p in pset if p.fullname == pkg_name)
+                pset.difference_update(same_name)
+
+                if not pset:
+                    empty_pset.append(provided)
+
+            for provided in empty_pset:
+                del pkg_dict[provided]
+
+            if not pkg_dict:
+                empty_pkg_dict.append(pkg)
+
+        for pkg in empty_pkg_dict:
+            del self.providers[pkg]
+
+    def copy(self):
+        """Deep copy of this ProviderIndex."""
+        clone = ProviderIndex()
+        clone.providers = self._transform(
+            lambda vpkg, pset: (vpkg, set((p.copy() for p in pset))))
+        return clone
+
+    def __eq__(self, other):
+        return self.providers == other.providers
+
+    def _transform(self, transform_fun, out_mapping_type=dict):
+        return _transform(self.providers, transform_fun, out_mapping_type)
+
+    def __str__(self):
+        return pformat(
+            _transform(self.providers,
+                       lambda k, v: (k, list(v))))
+
+
+def _transform(providers, transform_fun, out_mapping_type=dict):
+    """Syntactic sugar for transforming a providers dict.
+
+    transform_fun takes a (vpkg, pset) mapping and runs it on each
+    pair in nested dicts.
+
+    """
+    def mapiter(mappings):
+        if isinstance(mappings, dict):
+            return mappings.iteritems()
+        else:
+            return iter(mappings)
+
+    return dict(
+        (name, out_mapping_type([
+            transform_fun(vpkg, pset) for vpkg, pset in mapiter(mappings)]))
+        for name, mappings in providers.items())

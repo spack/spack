@@ -25,8 +25,9 @@
 from spack import *
 import os
 
+
 class PyShiboken(Package):
-    """Shiboken generates bindings for C++ libraries using CPython source code."""
+    """Shiboken generates bindings for C++ libraries using CPython."""
     homepage = "https://shiboken.readthedocs.org/"
     url      = "https://pypi.python.org/packages/source/S/Shiboken/Shiboken-1.2.2.tar.gz"
 
@@ -45,7 +46,8 @@ class PyShiboken(Package):
         # They're called BY setup.py so we have to patch it.
         pypkg = self.spec['python'].package
         rpath = self.rpath
-        rpath.append(os.path.join(self.prefix, pypkg.site_packages_dir, 'Shiboken'))
+        rpath.append(os.path.join(
+            self.prefix, pypkg.site_packages_dir, 'Shiboken'))
 
         filter_file(
             r'OPTION_CMAKE,',
@@ -60,7 +62,6 @@ class PyShiboken(Package):
             r'^\s*rpath_cmd\(shiboken_path, srcpath\)',
             r'#rpath_cmd(shiboken_path, srcpath)',
             'shiboken_postinstall.py')
-
 
     def install(self, spec, prefix):
         python('setup.py', 'install',

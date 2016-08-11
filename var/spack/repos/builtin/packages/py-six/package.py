@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PySix(Package):
     """Python 2 and 3 compatibility utilities."""
     homepage = "https://pypi.python.org/pypi/six"

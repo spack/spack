@@ -27,9 +27,10 @@ from spack import *
 
 
 class Libcerf(Package):
-    """
-    A self-contained C library providing complex error functions, based on Faddeeva's plasma dispersion function
-    w(z). Also provides Dawson's integral and Voigt's convolution of a Gaussian and a Lorentzian
+    """A self-contained C library providing complex error functions, based
+       on Faddeeva's plasma dispersion function w(z). Also provides Dawson's
+       integral and Voigt's convolution of a Gaussian and a Lorentzian
+
     """
     homepage = "http://sourceforge.net/projects/libcerf"
     url      = "http://downloads.sourceforge.net/project/libcerf/libcerf-1.3.tgz"

@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class PyPyside(Package):
     """Python bindings for Qt."""
     homepage = "https://pypi.python.org/pypi/pyside"
@@ -43,7 +44,8 @@ class PyPyside(Package):
         # Figure out the special RPATH
         pypkg = self.spec['python'].package
         rpath = self.rpath
-        rpath.append(os.path.join(self.prefix, pypkg.site_packages_dir, 'PySide'))
+        rpath.append(os.path.join(
+            self.prefix, pypkg.site_packages_dir, 'PySide'))
 
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.
@@ -60,7 +62,6 @@ class PyPyside(Package):
             r'^\s*rpath_cmd\(pyside_path, srcpath\)',
             r'#rpath_cmd(pyside_path, srcpath)',
             'pyside_postinstall.py')
-
 
     def install(self, spec, prefix):
         python('setup.py', 'install',

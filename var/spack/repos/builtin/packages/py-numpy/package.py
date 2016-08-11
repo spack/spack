@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
+import platform
 
 
 class PyNumpy(Package):
@@ -47,6 +48,18 @@ class PyNumpy(Package):
     depends_on('py-setuptools', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
+
+    def setup_dependent_package(self, module, dep_spec):
+        python_version = self.spec['python'].version.up_to(2)
+        arch = '{0}-{1}'.format(platform.system().lower(), platform.machine())
+
+        self.spec.include = join_path(
+            self.prefix.lib,
+            'python{0}'.format(python_version),
+            'site-packages',
+            'numpy-{0}-py{1}-{2}.egg'.format(
+                self.spec.version, python_version, arch),
+            'numpy/core/include')
 
     def install(self, spec, prefix):
         libraries    = []

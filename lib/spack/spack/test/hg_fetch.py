@@ -83,17 +83,15 @@ class HgFetchTest(MockPackagesTest):
 
             self.assertEqual(self.repo.get_rev(), rev)
 
-
     def test_fetch_default(self):
         """Test a default hg checkout with no commit or tag specified."""
         self.try_fetch(self.repo.r1, self.repo.r1_file, {
-            'hg' : self.repo.path
+            'hg': self.repo.path
         })
-
 
     def test_fetch_rev0(self):
         """Test fetching a branch."""
         self.try_fetch(self.repo.r0, self.repo.r0_file, {
-            'hg'       : self.repo.path,
-            'revision' : self.repo.r0
+            'hg': self.repo.path,
+            'revision': self.repo.r0
         })

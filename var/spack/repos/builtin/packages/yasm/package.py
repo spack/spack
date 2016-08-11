@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Yasm(Package):
     """Yasm is a complete rewrite of the NASM-2.11.06 assembler. It
        supports the x86 and AMD64 instruction sets, accepts NASM and

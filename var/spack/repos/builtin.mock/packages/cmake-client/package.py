@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 def check(condition, msg):
     """Raise an install error if condition is False."""
     if not condition:
@@ -40,15 +41,14 @@ class CmakeClient(Package):
 
     depends_on('cmake', type='build')
 
-
     def setup_environment(self, spack_env, run_env):
         spack_cc    # Ensure spack module-scope variable is avaiabl
         check(from_cmake == "from_cmake",
               "setup_environment couldn't read global set by cmake.")
 
         check(self.spec['cmake'].link_arg == "test link arg",
-              "link arg on dependency spec not readable from setup_environment.")
-
+              "link arg on dependency spec not readable from "
+              "setup_environment.")
 
     def setup_dependent_environment(self, spack_env, run_env, dspec):
         spack_cc    # Ensure spack module-scope variable is avaiable
@@ -56,8 +56,8 @@ class CmakeClient(Package):
               "setup_dependent_environment couldn't read global set by cmake.")
 
         check(self.spec['cmake'].link_arg == "test link arg",
-              "link arg on dependency spec not readable from setup_dependent_environment.")
-
+              "link arg on dependency spec not readable from "
+              "setup_dependent_environment.")
 
     def setup_dependent_package(self, module, dspec):
         spack_cc    # Ensure spack module-scope variable is avaiable
@@ -65,9 +65,8 @@ class CmakeClient(Package):
               "setup_dependent_package couldn't read global set by cmake.")
 
         check(self.spec['cmake'].link_arg == "test link arg",
-              "link arg on dependency spec not readable from setup_dependent_package.")
-
-
+              "link arg on dependency spec not readable from "
+              "setup_dependent_package.")
 
     def install(self, spec, prefix):
         # check that cmake is in the global scope.

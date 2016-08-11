@@ -40,25 +40,48 @@ class Dealii(Package):
     version('develop', git='https://github.com/dealii/dealii.git')
 
     variant('mpi',      default=True,  description='Compile with MPI')
-    variant('arpack',   default=True,  description='Compile with Arpack and PArpack (only with MPI)')
-    variant('doc',      default=False, description='Compile with documentation')
+    variant('arpack',   default=True,
+            description='Compile with Arpack and PArpack (only with MPI)')
+    variant('doc',      default=False,
+            description='Compile with documentation')
     variant('gsl',      default=True,  description='Compile with GSL')
-    variant('hdf5',     default=True,  description='Compile with HDF5 (only with MPI)')
+    variant('hdf5',     default=True,
+            description='Compile with HDF5 (only with MPI)')
     variant('metis',    default=True,  description='Compile with Metis')
-    variant('netcdf',   default=True,  description='Compile with Netcdf (only with MPI)')
+    variant('netcdf',   default=True,
+            description='Compile with Netcdf (only with MPI)')
     variant('oce',      default=True,  description='Compile with OCE')
-    variant('p4est',    default=True,  description='Compile with P4est (only with MPI)')
-    variant('petsc',    default=True,  description='Compile with Petsc (only with MPI)')
-    variant('slepc',    default=True,  description='Compile with Slepc (only with Petsc and MPI)')
-    variant('trilinos', default=True,  description='Compile with Trilinos (only with MPI)')
+    variant('p4est',    default=True,
+            description='Compile with P4est (only with MPI)')
+    variant('petsc',    default=True,
+            description='Compile with Petsc (only with MPI)')
+    variant('slepc',    default=True,
+            description='Compile with Slepc (only with Petsc and MPI)')
+    variant('trilinos', default=True,
+            description='Compile with Trilinos (only with MPI)')
+    variant('python',   default=True,
+            description='Compile with Python bindings')
 
     # required dependencies, light version
     depends_on("blas")
     # Boost 1.58 is blacklisted, see
     # https://github.com/dealii/dealii/issues/1591
     # Require at least 1.59
-    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",     when='~mpi')  # NOQA: ignore=E501
-    depends_on("boost@1.59.0:+mpi+thread+system+serialization+iostreams", when='+mpi')  # NOQA: ignore=E501
+    # +python won't affect @:8.4.1
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
+               when='@:8.4.1~mpi')
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
+               when='@:8.4.1+mpi')
+    # since @8.5.0: (and @develop) python bindings are introduced:
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams",
+               when='@8.5.0:~mpi~python')
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+mpi",
+               when='@8.5.0:+mpi~python')
+    depends_on("boost@1.59.0:+thread+system+serialization+iostreams+python",
+               when='@8.5.0:~mpi+python')
+    depends_on(
+        "boost@1.59.0:+thread+system+serialization+iostreams+mpi+python",
+        when='@8.5.0:+mpi+python')
     depends_on("bzip2")
     depends_on("cmake", type='build')
     depends_on("lapack")
@@ -120,6 +143,12 @@ class Dealii(Package):
             '-DZLIB_DIR=%s' % spec['zlib'].prefix
         ])
 
+        if spec.satisfies('@8.5.0:'):
+            options.extend([
+                '-DDEAL_II_COMPONENT_PYTHON_BINDINGS=%s' %
+                ('ON' if '+python' in spec else 'OFF')
+            ])
+
         # Set directory structure:
         if spec.satisfies('@:8.2.1'):
             options.extend(['-DDEAL_II_COMPONENT_COMPAT_FILES=OFF'])
@@ -145,7 +174,8 @@ class Dealii(Package):
 
         # Optional dependencies for which librariy names are the same as CMake
         # variables:
-        for library in ('gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis'):  # NOQA: ignore=E501
+        for library in (
+                'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis'):
             if library in spec:
                 options.extend([
                     '-D%s_DIR=%s' % (library.upper(), spec[library].prefix),
@@ -276,15 +306,20 @@ class Dealii(Package):
                     print('=== Step-40 Trilinos SuperluDist ====')
                     print('=====================================')
                     # change to direct solvers
-                    filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')  # NOQA: ignore=E501
-                    filter_file(r'(LA::MPI::PreconditionAMG preconditioner;)',
-                                (''), 'step-40.cc')
-                    filter_file(r'(LA::MPI::PreconditionAMG::AdditionalData data;)',  # NOQA: ignore=E501
-                                (''), 'step-40.cc')
-                    filter_file(r'(preconditioner.initialize\(system_matrix, data\);)',  # NOQA: ignore=E501
-                                (''), 'step-40.cc')
-                    filter_file(r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')  # NOQA: ignore=E501
-                    filter_file(r'(preconditioner\);)',  (''), 'step-40.cc')
+                    filter_file(r'(LA::SolverCG solver\(solver_control\);)',  ('TrilinosWrappers::SolverDirect::AdditionalData data(false,"Amesos_Superludist"); TrilinosWrappers::SolverDirect solver(solver_control,data);'), 'step-40.cc')  # noqa
+                    filter_file(
+                        r'(LA::MPI::PreconditionAMG preconditioner;)',
+                        (''), 'step-40.cc')
+                    filter_file(
+                        r'(LA::MPI::PreconditionAMG::AdditionalData data;)',
+                        (''), 'step-40.cc')
+                    filter_file(
+                        r'(preconditioner.initialize\(system_matrix, data\);)',
+                        (''), 'step-40.cc')
+                    filter_file(
+                        r'(solver\.solve \(system_matrix, completely_distributed_solution, system_rhs,)',  ('solver.solve (system_matrix, completely_distributed_solution, system_rhs);'), 'step-40.cc')  # noqa
+                    filter_file(
+                        r'(preconditioner\);)',  (''), 'step-40.cc')
                     if '^trilinos+superlu-dist' in spec:
                         make('release')
                         make('run', paralle=False)

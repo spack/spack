@@ -45,7 +45,7 @@ class Qhull(CMakePackage):
 
     # https://github.com/qhull/qhull/pull/5
     patch('qhull-iterator.patch', when='@1.0')
-    
+
     depends_on('cmake', type='build')
 
     @CMakePackage.sanity_check('build')

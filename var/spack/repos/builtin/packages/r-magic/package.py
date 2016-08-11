@@ -39,7 +39,7 @@ class RMagic(Package):
 
     extends('R')
 
-    depends_on('r-abind')
+    depends_on('r-abind', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

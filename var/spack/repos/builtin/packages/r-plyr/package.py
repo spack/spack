@@ -42,7 +42,7 @@ class RPlyr(Package):
 
     extends('R')
 
-    depends_on('r-rcpp')
+    depends_on('r-rcpp', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

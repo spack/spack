@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Stat(Package):
     """Library to create, manipulate, and export graphs Graphlib."""
     homepage = "http://paradyn.org/STAT/STAT.html"
@@ -49,13 +50,14 @@ class Stat(Package):
         configure_args = [
             "--enable-gui",
             "--prefix=%s" % prefix,
-            "--disable-examples", # Examples require MPI: avoid this dependency.
+            # Examples require MPI: avoid this dependency.
+            "--disable-examples",
             "--with-launchmon=%s"   % spec['launchmon'].prefix,
             "--with-mrnet=%s"       % spec['mrnet'].prefix,
             "--with-graphlib=%s"    % spec['graphlib'].prefix,
             "--with-stackwalker=%s" % spec['dyninst'].prefix,
             "--with-libdwarf=%s"    % spec['libdwarf'].prefix
-            ]
+        ]
         if '+dysect' in spec:
             configure_args.append('--enable-dysectapi')
         configure(*configure_args)

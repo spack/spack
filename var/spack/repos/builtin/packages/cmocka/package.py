@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Cmocka(Package):
     """Unit-testing framework in pure C"""
     homepage = "https://cmocka.org/"
@@ -36,7 +37,7 @@ class Cmocka(Package):
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
-	    cmake('..', *std_cmake_args)
+            cmake('..', *std_cmake_args)
 
-	    make()
-	    make("install")
+            make()
+            make("install")

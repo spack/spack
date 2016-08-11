@@ -22,8 +22,8 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
+
 
 class Swig(Package):
     """SWIG is an interface compiler that connects programs written in
@@ -38,6 +38,7 @@ class Swig(Package):
     homepage = "http://www.swig.org"
     url      = "http://prdownloads.sourceforge.net/swig/swig-3.0.8.tar.gz"
 
+    version('3.0.10', 'bb4ab8047159469add7d00910e203124')
     version('3.0.8', 'c96a1d5ecb13d38604d7e92148c73c97')
     version('3.0.2', '62f9b0d010cef36a13a010dc530d0d41')
     version('2.0.12', 'c3fb0b2d710cc82ed0154b91e43085a4')

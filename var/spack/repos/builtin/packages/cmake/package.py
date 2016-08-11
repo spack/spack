@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
@@ -40,10 +41,13 @@ class Cmake(Package):
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
-    variant('ncurses', default=True, description='Enables the build of the ncurses gui')
-    variant('openssl', default=True, description="Enables CMake's OpenSSL features")
+    variant('ncurses', default=True,
+            description='Enables the build of the ncurses gui')
+    variant('openssl', default=True,
+            description="Enables CMake's OpenSSL features")
     variant('qt', default=False, description='Enables the build of cmake-gui')
-    variant('doc', default=False, description='Enables the generation of html and man page documentation')
+    variant('doc', default=False,
+            description='Enables the generation of html and man page docs')
 
     depends_on('ncurses', when='+ncurses')
     depends_on('openssl', when='+openssl')
@@ -53,7 +57,8 @@ class Cmake(Package):
 
     def url_for_version(self, version):
         """Handle CMake's version-based custom URLs."""
-        return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (version.up_to(2), version)
+        return 'https://cmake.org/files/v%s/cmake-%s.tar.gz' % (
+            version.up_to(2), version)
 
     def validate(self, spec):
         """

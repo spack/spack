@@ -1,5 +1,6 @@
 from spack import *
 
+
 class PyPep8(Package):
     """python pep8 format checker"""
     homepage = "https://github.com/PyCQA/pycodestyle"
@@ -12,4 +13,3 @@ class PyPep8(Package):
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
-

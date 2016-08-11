@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyScikitLearn(Package):
     """"""
     homepage = "https://pypi.python.org/pypi/scikit-learn"

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Asciidoc(Package):
     """ A presentable text document format for writing articles, UNIX man
     pages and other small to medium sized documents."""

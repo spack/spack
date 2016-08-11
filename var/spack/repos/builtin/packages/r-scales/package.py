@@ -37,12 +37,12 @@ class RScales(Package):
 
     extends('R')
 
-    depends_on('r-rcolorbrewer')
-    depends_on('r-dichromat')
-    depends_on('r-plyr')
-    depends_on('r-munsell')
-    depends_on('r-labeling')
-    depends_on('r-rcpp')
+    depends_on('r-rcolorbrewer', type=nolink)
+    depends_on('r-dichromat', type=nolink)
+    depends_on('r-plyr', type=nolink)
+    depends_on('r-munsell', type=nolink)
+    depends_on('r-labeling', type=nolink)
+    depends_on('r-rcpp', type=nolink)
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

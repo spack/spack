@@ -36,7 +36,9 @@ class Libxml2(Package):
 
     variant('python', default=False, description='Enable Python support')
 
-    extends('python', when='+python', ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|(lib/xml2.*$)|(lib/cmake.*$)')
+    extends('python', when='+python',
+            ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|'
+            '(lib/xml2.*$)|(lib/cmake.*$)')
     depends_on('zlib')
     depends_on('xz')
 

@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class Ior(Package):
     """The IOR software is used for benchmarking parallel file systems
     using POSIX, MPI-IO, or HDF5 interfaces."""
@@ -40,7 +41,6 @@ class Ior(Package):
     depends_on('mpi')
     depends_on('hdf5+mpi',   when='+hdf5')
     depends_on('netcdf+mpi', when='+ncmpi')
-
 
     def install(self, spec, prefix):
         os.system('./bootstrap')

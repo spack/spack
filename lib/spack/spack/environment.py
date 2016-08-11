@@ -1,4 +1,4 @@
-#
+##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
 #
@@ -21,7 +21,7 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-#
+##############################################################################
 import collections
 import inspect
 import json
@@ -37,6 +37,10 @@ class NameModifier(object):
         self.args = {'name': name}
         self.args.update(kwargs)
 
+    def update_args(self, **kwargs):
+        self.__dict__.update(kwargs)
+        self.args.update(kwargs)
+
 
 class NameValueModifier(object):
 
@@ -44,7 +48,11 @@ class NameValueModifier(object):
         self.name = name
         self.value = value
         self.separator = kwargs.get('separator', ':')
-        self.args = {'name': name, 'value': value, 'delim': self.separator}
+        self.args = {'name': name, 'value': value, 'separator': self.separator}
+        self.args.update(kwargs)
+
+    def update_args(self, **kwargs):
+        self.__dict__.update(kwargs)
         self.args.update(kwargs)
 
 
@@ -279,7 +287,10 @@ class EnvironmentModifications(object):
         shell = '{shell}'.format(**info)
         shell_options = '{shell_options}'.format(**info)
         source_file = '{source_command} {file} {concatenate_on_success}'
-        dump_environment = 'python -c "import os, json; print json.dumps(dict(os.environ))"'  # NOQA: ignore=E501
+
+        dump_cmd = "import os, json; print json.dumps(dict(os.environ))"
+        dump_environment = 'python -c "%s"' % dump_cmd
+
         # Construct the command that will be executed
         command = [source_file.format(file=file, **info) for file in args]
         command.append(dump_environment)
@@ -318,8 +329,10 @@ class EnvironmentModifications(object):
         for x in unset_variables:
             env.unset(x)
         # Variables that have been modified
-        common_variables = set(this_environment).intersection(set(after_source_env))  # NOQA: ignore=E501
-        modified_variables = [x for x in common_variables if this_environment[x] != after_source_env[x]]  # NOQA: ignore=E501
+        common_variables = set(
+            this_environment).intersection(set(after_source_env))
+        modified_variables = [x for x in common_variables
+                              if this_environment[x] != after_source_env[x]]
 
         def return_separator_if_any(first_value, second_value):
             separators = ':', ';'
@@ -397,7 +410,7 @@ def set_or_unset_not_first(variable, changes, errstream):
     if indexes:
         good = '\t    \t{context} at {filename}:{lineno}'
         nogood = '\t--->\t{context} at {filename}:{lineno}'
-        message = 'Suspicious requests to set or unset the variable \'{var}\' found'  # NOQA: ignore=E501
+        message = "Suspicious requests to set or unset '{var}' found"
         errstream(message.format(var=variable))
         for ii, item in enumerate(changes):
             print_format = nogood if ii in indexes else good

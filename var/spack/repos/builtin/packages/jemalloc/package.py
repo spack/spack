@@ -24,8 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class Jemalloc(Package):
-    """jemalloc is a general purpose malloc(3) implementation that emphasizes fragmentation avoidance and scalable concurrency support."""
+    """jemalloc is a general purpose malloc(3) implementation that emphasizes
+       fragmentation avoidance and scalable concurrency support."""
     homepage = "http://www.canonware.com/jemalloc/"
     url      = "https://github.com/jemalloc/jemalloc/releases/download/4.0.4/jemalloc-4.0.4.tar.bz2"
 
@@ -36,7 +38,7 @@ class Jemalloc(Package):
     variant('prof', default=False, description='Enable heap profiling')
 
     def install(self, spec, prefix):
-        configure_args = ['--prefix=%s' % prefix,]
+        configure_args = ['--prefix=%s' % prefix, ]
 
         if '+stats' in spec:
             configure_args.append('--enable-stats')

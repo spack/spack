@@ -95,32 +95,33 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
-import sys
-import hashlib
 import base64
+import hashlib
 import imp
+import sys
 from StringIO import StringIO
 from operator import attrgetter
+
 import yaml
 from yaml.error import MarkedYAMLError
 
 import llnl.util.tty as tty
+from llnl.util.filesystem import join_path
 from llnl.util.lang import *
 from llnl.util.tty.color import *
-from llnl.util.filesystem import join_path
 
 import spack
 import spack.architecture
-import spack.parse
-import spack.error
 import spack.compilers as compilers
-
-from spack.version import *
-from spack.util.string import *
-from spack.util.prefix import Prefix
-from spack.util.naming import mod_to_class
-from spack.virtual import ProviderIndex
+import spack.error
+import spack.parse
 from spack.build_environment import get_path_from_module, load_module
+from spack.util.naming import mod_to_class
+from spack.util.prefix import Prefix
+from spack.util.string import *
+from spack.version import *
+from spack.provider_index import ProviderIndex
+
 
 # Valid pattern for an identifier in Spack
 identifier_re = r'\w[\w-]*'
@@ -155,25 +156,17 @@ _any_version = VersionList([':'])
 # Special types of dependencies.
 alldeps = ('build', 'link', 'run')
 nolink = ('build', 'run')
-
-
-def index_specs(specs):
-    """Take a list of specs and return a dict of lists.  Dict is
-       keyed by spec name and lists include all specs with the
-       same name.
-    """
-    spec_dict = {}
-    for spec in specs:
-        if spec.name not in spec_dict:
-            spec_dict[spec.name] = []
-        spec_dict[spec.name].append(spec)
-    return spec_dict
+special_types = {
+    'alldeps': alldeps,
+    'nolink': nolink,
+}
 
 
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
        color_formats."""
     class insert_color:
+
         def __init__(self):
             self.last = None
 
@@ -194,6 +187,7 @@ class CompilerSpec(object):
     """The CompilerSpec field represents the compiler or range of compiler
        versions that a package should be built with.  CompilerSpecs have a
        name and a version list. """
+
     def __init__(self, *args):
         nargs = len(args)
         if nargs == 1:
@@ -304,6 +298,7 @@ class DependencySpec(object):
     - spec: the spack.spec.Spec description of a dependency.
     - deptypes: strings representing the type of dependency this is.
     """
+
     def __init__(self, spec, deptypes):
         self.spec = spec
         self.deptypes = deptypes
@@ -325,6 +320,7 @@ class VariantSpec(object):
        on the particular package being built, and each named variant can
        be enabled or disabled.
     """
+
     def __init__(self, name, value):
         self.name = name
         self.value = value
@@ -449,16 +445,15 @@ class FlagMap(HashableMap):
         return clone
 
     def _cmp_key(self):
-        return ''.join(str(key) + ' '.join(str(v) for v in value)
-                       for key, value in sorted(self.items()))
+        return tuple((k, tuple(v)) for k, v in sorted(self.iteritems()))
 
     def __str__(self):
         sorted_keys = filter(
             lambda flag: self[flag] != [], sorted(self.keys()))
         cond_symbol = ' ' if len(sorted_keys) > 0 else ''
-        return cond_symbol + ' '.join(str(key) + '=\"' + ' '.join(str(f)
-                                      for f in self[key]) + '\"'
-                                      for key in sorted_keys)
+        return cond_symbol + ' '.join(
+            str(key) + '=\"' + ' '.join(
+                str(f) for f in self[key]) + '\"' for key in sorted_keys)
 
 
 class DependencyMap(HashableMap):
@@ -471,7 +466,7 @@ class DependencyMap(HashableMap):
 
     def __str__(self):
         return ''.join(
-            ["^" + str(self[name].spec) for name in sorted(self.keys())])
+            ["^" + self[name].format() for name in sorted(self.keys())])
 
 
 @key_ordering
@@ -542,7 +537,8 @@ class Spec(object):
             return alldeps
         # Force deptype to be a set object so that we can do set intersections.
         if isinstance(deptype, str):
-            return (deptype,)
+            # Support special deptypes.
+            return special_types.get(deptype, (deptype,))
         return deptype
 
     def _find_deps(self, where, deptype):
@@ -725,7 +721,7 @@ class Spec(object):
         """Internal package call gets only the class object for a package.
            Use this to just get package metadata.
         """
-        return spack.repo.get_pkg_class(self.name)
+        return spack.repo.get_pkg_class(self.fullname)
 
     @property
     def virtual(self):
@@ -871,7 +867,7 @@ class Spec(object):
             for name in sorted(successors):
                 child = successors[name]
                 children = child.spec.traverse_with_deptype(
-                    visited, d=d + 1, deptype=deptype_query,
+                    visited, d=d + 1, deptype=deptype,
                     deptype_query=deptype_query,
                     _self_deptype=child.deptypes, **kwargs)
                 for elt in children:
@@ -914,37 +910,36 @@ class Spec(object):
             return b32_hash
 
     def to_node_dict(self):
+        d = {}
+
         params = dict((name, v.value) for name, v in self.variants.items())
         params.update(dict((name, value)
-                      for name, value in self.compiler_flags.items()))
-        deps = self.dependencies_dict(deptype=('link', 'run'))
-        d = {
-            'parameters': params,
-            'arch': self.architecture,
-            'dependencies': dict(
+                           for name, value in self.compiler_flags.items()))
+
+        if params:
+            d['parameters'] = params
+
+        if self.dependencies():
+            deps = self.dependencies_dict(deptype=('link', 'run'))
+            d['dependencies'] = dict(
                 (name, {
                     'hash': dspec.spec.dag_hash(),
                     'type': [str(s) for s in dspec.deptypes]})
                 for name, dspec in deps.items())
-        }
 
-        # Older concrete specs do not have a namespace.  Omit for
-        # consistent hashing.
-        if not self.concrete or self.namespace:
+        if self.namespace:
             d['namespace'] = self.namespace
 
         if self.architecture:
             # TODO: Fix the target.to_dict to account for the tuple
             # Want it to be a dict of dicts
             d['arch'] = self.architecture.to_dict()
-        else:
-            d['arch'] = None
 
         if self.compiler:
             d.update(self.compiler.to_dict())
-        else:
-            d['compiler'] = None
-        d.update(self.versions.to_dict())
+
+        if self.versions:
+            d.update(self.versions.to_dict())
 
         return {self.name: d}
 
@@ -964,17 +959,18 @@ class Spec(object):
 
         spec = Spec(name)
         spec.namespace = node.get('namespace', None)
-        spec.versions = VersionList.from_dict(node)
+        spec._hash = node.get('hash', None)
 
-        if 'hash' in node:
-            spec._hash = node['hash']
+        if 'version' in node or 'versions' in node:
+            spec.versions = VersionList.from_dict(node)
 
-        spec.architecture = spack.architecture.arch_from_dict(node['arch'])
+        if 'arch' in node:
+            spec.architecture = spack.architecture.arch_from_dict(node['arch'])
 
-        if node['compiler'] is None:
-            spec.compiler = None
-        else:
+        if 'compiler' in node:
             spec.compiler = CompilerSpec.from_dict(node)
+        else:
+            spec.compiler = None
 
         if 'parameters' in node:
             for name, value in node['parameters'].items():
@@ -982,14 +978,12 @@ class Spec(object):
                     spec.compiler_flags[name] = value
                 else:
                     spec.variants[name] = VariantSpec(name, value)
+
         elif 'variants' in node:
             for name, value in node['variants'].items():
                 spec.variants[name] = VariantSpec(name, value)
             for name in FlagMap.valid_compiler_flags():
                 spec.compiler_flags[name] = []
-        else:
-            raise SpackRecordError(
-                "Did not find a valid format for variants in YAML file")
 
         # Don't read dependencies here; from_node_dict() is used by
         # from_yaml() to read the root *and* each dependency spec.
@@ -1031,7 +1025,7 @@ class Spec(object):
         """
         try:
             yfile = yaml.load(stream)
-        except MarkedYAMLError, e:
+        except MarkedYAMLError as e:
             raise SpackYAMLError("error parsing YAML spec:", str(e))
 
         nodes = yfile['spec']
@@ -1047,6 +1041,10 @@ class Spec(object):
         for node in nodes:
             # get dependency dict from the node.
             name = next(iter(node))
+
+            if 'dependencies' not in node[name]:
+                continue
+
             yaml_deps = node[name]['dependencies']
             for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
                 # Fill in dependencies by looking them up by name in deps dict
@@ -1345,7 +1343,7 @@ class Spec(object):
 
             return flat_deps
 
-        except UnsatisfiableSpecError, e:
+        except UnsatisfiableSpecError as e:
             # Here, the DAG contains two instances of the same package
             # with inconsistent constraints.  Users cannot produce
             # inconsistent specs like this on the command line: the
@@ -1380,7 +1378,7 @@ class Spec(object):
                     dep = Spec(name)
                 try:
                     dep.constrain(dep_spec)
-                except UnsatisfiableSpecError, e:
+                except UnsatisfiableSpecError as e:
                     e.message = ("Conflicting conditional dependencies on"
                                  "package %s for spec %s" % (self.name, self))
                     raise e
@@ -1466,7 +1464,7 @@ class Spec(object):
         try:
             changed |= spec_deps[dep.name].spec.constrain(dep)
 
-        except UnsatisfiableSpecError, e:
+        except UnsatisfiableSpecError as e:
             e.message = "Invalid spec: '%s'. "
             e.message += "Package %s requires %s %s, but spec asked for %s"
             e.message %= (spec_deps[dep.name].spec, dep.name,
@@ -1577,7 +1575,7 @@ class Spec(object):
            UnsupportedCompilerError.
         """
         for spec in self.traverse():
-            # Don't get a package for a virtual name.
+            # raise an UnknownPackageError if the spec's package isn't real.
             if (not spec.virtual) and spec.name:
                 spack.repo.get(spec.fullname)
 
@@ -1604,8 +1602,8 @@ class Spec(object):
             raise UnsatisfiableSpecNameError(self.name, other.name)
 
         if (other.namespace is not None and
-           self.namespace is not None and
-           other.namespace != self.namespace):
+                self.namespace is not None and
+                other.namespace != self.namespace):
             raise UnsatisfiableSpecNameError(self.fullname, other.fullname)
 
         if not self.versions.overlaps(other.versions):
@@ -1759,8 +1757,8 @@ class Spec(object):
 
         # namespaces either match, or other doesn't require one.
         if (other.namespace is not None and
-            self.namespace is not None and
-           self.namespace != other.namespace):
+                self.namespace is not None and
+                self.namespace != other.namespace):
             return False
         if self.versions and other.versions:
             if not self.versions.satisfies(other.versions, strict=strict):
@@ -1855,7 +1853,7 @@ class Spec(object):
         # compatible with mpich2)
         for spec in self.virtual_dependencies():
             if (spec.name in other_index and
-               not other_index.providers_for(spec)):
+                    not other_index.providers_for(spec)):
                 return False
 
         for spec in other.virtual_dependencies():
@@ -2351,6 +2349,7 @@ _lexer = SpecLexer()
 
 
 class SpecParser(spack.parse.Parser):
+
     def __init__(self):
         super(SpecParser, self).__init__(_lexer)
         self.previous = None
@@ -2400,7 +2399,7 @@ class SpecParser(spack.parse.Parser):
                     # errors now?
                     specs.append(self.spec(None, True))
 
-        except spack.parse.ParseError, e:
+        except spack.parse.ParseError as e:
             raise SpecParseError(e)
 
         # If the spec has an os or a target and no platform, give it
@@ -2834,15 +2833,9 @@ class SpackYAMLError(spack.error.SpackError):
         super(SpackYAMLError, self).__init__(msg, str(yaml_error))
 
 
-class SpackRecordError(spack.error.SpackError):
-
-    def __init__(self, msg):
-        super(SpackRecordError, self).__init__(msg)
-
-
 class AmbiguousHashError(SpecError):
 
     def __init__(self, msg, *specs):
         super(AmbiguousHashError, self).__init__(msg)
         for spec in specs:
-            print '    ', spec.format('$.$@$%@+$+$=$#')
+            print('    ', spec.format('$.$@$%@+$+$=$#'))

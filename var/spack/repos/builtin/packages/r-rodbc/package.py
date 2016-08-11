@@ -36,7 +36,7 @@ class RRodbc(Package):
 
     extends('R')
 
-    depends_on('unixODBC')
+    depends_on('unixodbc')
 
     def install(self, spec, prefix):
         R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),

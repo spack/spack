@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPytz(Package):
     """World timezone definitions, modern and historical."""
     homepage = "https://pypi.python.org/pypi/pytz"

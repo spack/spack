@@ -45,6 +45,7 @@ from llnl.util.lang import memoized, list_modules
 from llnl.util.filesystem import join_path
 import spack
 
+
 @memoized
 def all_hook_modules():
     modules = []
@@ -58,6 +59,7 @@ def all_hook_modules():
 
 
 class HookRunner(object):
+
     def __init__(self, hook_name):
         self.hook_name = hook_name
 

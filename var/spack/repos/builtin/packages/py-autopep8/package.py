@@ -1,5 +1,6 @@
 from spack import *
 
+
 class PyAutopep8(Package):
     """Automatic pep8 formatter"""
     homepage = "https://github.com/hhatto/autopep8"
@@ -13,4 +14,3 @@ class PyAutopep8(Package):
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
-

@@ -50,6 +50,8 @@ from functools import wraps
 
 from functools_backport import total_ordering
 
+__all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
+
 # Valid version characters
 VALID_VERSION = r'[A-Za-z0-9_.-]'
 
@@ -346,8 +348,8 @@ class VersionRange(object):
 
         s, o = self, other
         if s.start != o.start:
-            return s.start is None or (o.start is not None and s.start < o.start)  # NOQA: ignore=E501
-
+            return s.start is None or (
+                o.start is not None and s.start < o.start)
         return (s.end != o.end and
                 o.end is None or (s.end is not None and s.end < o.end))
 

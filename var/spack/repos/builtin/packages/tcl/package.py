@@ -57,3 +57,5 @@ class Tcl(Package):
             configure("--prefix={0}".format(prefix))
             make()
             make("install")
+        with working_dir(prefix.bin):
+            symlink('tclsh{0}'.format(self.version.up_to(2)), 'tclsh')

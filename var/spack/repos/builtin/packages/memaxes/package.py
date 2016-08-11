@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Memaxes(Package):
     """MemAxes is a visualizer for sampled memory trace data."""
 

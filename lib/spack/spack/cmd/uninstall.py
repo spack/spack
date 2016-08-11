@@ -50,25 +50,27 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-f', '--force', action='store_true', dest='force',
         help="Remove regardless of whether other packages depend on this one.")
+
     subparser.add_argument(
         '-a', '--all', action='store_true', dest='all',
-        help="USE CAREFULLY. Remove ALL installed packages that match each " +
-             "supplied spec. i.e., if you say uninstall libelf, ALL versions of " +  # NOQA: ignore=E501
-             "libelf are uninstalled. This is both useful and dangerous, like rm -r.")  # NOQA: ignore=E501
+        help="USE CAREFULLY. Remove ALL installed packages that match each "
+             "supplied spec. i.e., if you say uninstall libelf, ALL versions "
+             "of libelf are uninstalled. This is both useful and dangerous, "
+             "like rm -r.")
+
     subparser.add_argument(
         '-d', '--dependents', action='store_true', dest='dependents',
-        help='Also uninstall any packages that depend on the ones given via command line.'  # NOQA: ignore=E501
-    )
+        help='Also uninstall any packages that depend on the ones given '
+             'via command line.')
+
     subparser.add_argument(
         '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
-        help='Assume "yes" is the answer to every confirmation asked to the user.'  # NOQA: ignore=E501
+        help='Assume "yes" is the answer to every confirmation requested')
 
-    )
     subparser.add_argument(
         'packages',
         nargs=argparse.REMAINDER,
-        help="specs of packages to uninstall"
-    )
+        help="specs of packages to uninstall")
 
 
 def concretize_specs(specs, allow_multiple_matches=False, force=False):
@@ -184,7 +186,8 @@ def uninstall(parser, args):
             uninstall_list = list(set(uninstall_list))
 
         if has_error:
-            tty.die('You can use spack uninstall --dependents to uninstall these dependencies as well')  # NOQA: ignore=E501
+            tty.die('You can use spack uninstall --dependents '
+                    'to uninstall these dependencies as well')
 
         if not args.yes_to_all:
             tty.msg("The following packages will be uninstalled : ")

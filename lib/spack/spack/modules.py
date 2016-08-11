@@ -272,12 +272,24 @@ class EnvModule(object):
 
     @property
     def tokens(self):
+        """Tokens that can be substituted in environment variable values
+        and naming schemes
+        """
         tokens = {
             'name': self.spec.name,
             'version': self.spec.version,
-            'compiler': self.spec.compiler
+            'compiler': self.spec.compiler,
+            'prefix': self.spec.package.prefix
         }
         return tokens
+
+    @property
+    def upper_tokens(self):
+        """Tokens that can be substituted in environment variable names"""
+        upper_tokens = {
+            'name': self.spec.name.replace('-', '_').upper()
+        }
+        return upper_tokens
 
     @property
     def use_name(self):
@@ -438,11 +450,17 @@ class EnvModule(object):
 
     def process_environment_command(self, env):
         for command in env:
+            # Token expansion from configuration file
+            name = command.args.get('name', '').format(**self.upper_tokens)
+            value = str(command.args.get('value', '')).format(**self.tokens)
+            command.update_args(name=name, value=value)
+            # Format the line int the module file
             try:
                 yield self.environment_modifications_formats[type(
                     command)].format(**command.args)
             except KeyError:
-                message = 'Cannot handle command of type {command} : skipping request'  # NOQA: ignore=E501
+                message = ('Cannot handle command of type {command}: '
+                           'skipping request')
                 details = '{context} at {filename}:{lineno}'
                 tty.warn(message.format(command=type(command)))
                 tty.warn(details.format(**command.args))
@@ -471,12 +489,14 @@ class Dotkit(EnvModule):
     path = join_path(spack.share_path, 'dotkit')
     environment_modifications_formats = {
         PrependPath: 'dk_alter {name} {value}\n',
+        RemovePath: 'dk_unalter {name} {value}\n',
         SetEnv: 'dk_setenv {name} {value}\n'
     }
 
     autoload_format = 'dk_op {module_file}\n'
 
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
+    default_naming_format = \
+        '{name}-{version}-{compiler.name}-{compiler.version}'
 
     @property
     def file_name(self):
@@ -502,7 +522,8 @@ class Dotkit(EnvModule):
 
     def prerequisite(self, spec):
         tty.warn('prerequisites:  not supported by dotkit module files')
-        tty.warn('\tYou may want to check  ~/.spack/modules.yaml')
+        tty.warn('\tYou may want to check %s/modules.yaml'
+                 % spack.user_config_path)
         return ''
 
 
@@ -510,9 +531,9 @@ class TclModule(EnvModule):
     name = 'tcl'
     path = join_path(spack.share_path, "modules")
     environment_modifications_formats = {
-        PrependPath: 'prepend-path --delim "{delim}" {name} \"{value}\"\n',
-        AppendPath: 'append-path   --delim "{delim}" {name} \"{value}\"\n',
-        RemovePath: 'remove-path   --delim "{delim}" {name} \"{value}\"\n',
+        PrependPath: 'prepend-path --delim "{separator}" {name} \"{value}\"\n',
+        AppendPath: 'append-path   --delim "{separator}" {name} \"{value}\"\n',
+        RemovePath: 'remove-path   --delim "{separator}" {name} \"{value}\"\n',
         SetEnv: 'setenv {name} \"{value}\"\n',
         UnsetEnv: 'unsetenv {name}\n'
     }
@@ -524,7 +545,8 @@ class TclModule(EnvModule):
 
     prerequisite_format = 'prereq {module_file}\n'
 
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
+    default_naming_format = \
+        '{name}-{version}-{compiler.name}-{compiler.version}'
 
     @property
     def file_name(self):
@@ -535,7 +557,7 @@ class TclModule(EnvModule):
         timestamp = datetime.datetime.now()
         # TCL Modulefile header
         header = '#%Module1.0\n'
-        header += '## Module file created by spack (https://github.com/LLNL/spack) on %s\n' % timestamp  # NOQA: ignore=E501
+        header += '## Module file created by spack (https://github.com/LLNL/spack) on %s\n' % timestamp
         header += '##\n'
         header += '## %s\n' % self.spec.short_spec
         header += '##\n'
@@ -565,10 +587,12 @@ class TclModule(EnvModule):
                 for naming_dir, conflict_dir in zip(
                         self.naming_scheme.split('/'), item.split('/')):
                     if naming_dir != conflict_dir:
-                        message = 'conflict scheme does not match naming scheme [{spec}]\n\n'  # NOQA: ignore=E501
+                        message = 'conflict scheme does not match naming '
+                        message += 'scheme [{spec}]\n\n'
                         message += 'naming scheme   : "{nformat}"\n'
                         message += 'conflict scheme : "{cformat}"\n\n'
-                        message += '** You may want to check your `modules.yaml` configuration file **\n'  # NOQA: ignore=E501
+                        message += '** You may want to check your '
+                        message += '`modules.yaml` configuration file **\n'
                         tty.error(message.format(spec=self.spec,
                                                  nformat=self.naming_scheme,
                                                  cformat=item))

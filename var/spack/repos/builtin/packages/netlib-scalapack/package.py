@@ -39,7 +39,8 @@ class NetlibScalapack(Package):
     # versions before 2.0.0 are not using cmake and requires blacs as
     # a separated package
 
-    variant('shared', default=True, description='Build the shared library version')
+    variant('shared', default=True,
+            description='Build the shared library version')
     variant('fpic', default=False, description="Build with -fpic compiler option")
 
     provides('scalapack')

@@ -24,12 +24,15 @@
 ##############################################################################
 from spack import *
 
+
 class Zfp(Package):
-    """zfp is an open source C library for compressed floating-point arrays that supports
-       very high throughput read and write random acces, target error bounds or bit rates.
-       Although bit-for-bit lossless compression is not always possible, zfp is usually
-       accurate to within machine epsilon in near-lossless mode, and is often orders of
-       magnitude more accurate than other lossy compressors.
+    """zfp is an open source C library for compressed floating-point arrays
+       that supports very high throughput read and write random acces,
+       target error bounds or bit rates.  Although bit-for-bit lossless
+       compression is not always possible, zfp is usually accurate to
+       within machine epsilon in near-lossless mode, and is often orders
+       of magnitude more accurate than other lossy compressors.
+
     """
 
     homepage = "http://computation.llnl.gov/projects/floating-point-compression"

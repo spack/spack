@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyLockfile(Package):
     """The lockfile package exports a LockFile class which provides a
        simple API for locking files. Unlike the Windows msvcrt.locking

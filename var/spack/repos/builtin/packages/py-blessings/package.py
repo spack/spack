@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyBlessings(Package):
     """A nicer, kinder way to write to the terminal """
     homepage = "https://github.com/erikrose/blessings"

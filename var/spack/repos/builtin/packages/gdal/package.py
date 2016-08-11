@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Gdal(Package):
     """
     GDAL is a translator library for raster and vector geospatial

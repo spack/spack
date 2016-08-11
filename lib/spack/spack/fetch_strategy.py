@@ -356,6 +356,7 @@ class URLFetchStrategy(FetchStrategy):
 
 class CacheURLFetchStrategy(URLFetchStrategy):
     """The resource associated with a cache URL may be out of date."""
+
     def __init__(self, *args, **kwargs):
         super(CacheURLFetchStrategy, self).__init__(*args, **kwargs)
 
@@ -836,6 +837,7 @@ def for_package_version(pkg, version):
 
 
 class FsCache(object):
+
     def __init__(self, root):
         self.root = os.path.abspath(root)
 

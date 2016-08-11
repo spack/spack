@@ -29,8 +29,9 @@ import shutil
 import stat
 import errno
 import getpass
-from contextlib import contextmanager, closing
+from contextlib import contextmanager
 import subprocess
+import fileinput
 
 import llnl.util.tty as tty
 
@@ -85,13 +86,14 @@ def filter_file(regex, repl, *filenames, **kwargs):
         if ignore_absent and not os.path.exists(filename):
             continue
 
-        shutil.copy(filename, backup_filename)
+        # Create backup file. Don't overwrite an existing backup
+        # file in case this file is being filtered multiple times.
+        if not os.path.exists(backup_filename):
+            shutil.copy(filename, backup_filename)
+
         try:
-            with closing(open(backup_filename)) as infile:
-                with closing(open(filename, 'w')) as outfile:
-                    for line in infile:
-                        foo = re.sub(regex, repl, line)
-                        outfile.write(foo)
+            for line in fileinput.input(filename, inplace=True):
+                print(re.sub(regex, repl, line.rstrip('\n')))
         except:
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)
@@ -104,6 +106,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
 
 class FileFilter(object):
     """Convenience class for calling filter_file a lot."""
+
     def __init__(self, *filenames):
         self.filenames = filenames
 
@@ -189,7 +192,7 @@ def install(src, dest):
 
 
 def install_tree(src, dest, **kwargs):
-    """Manually install a file to a particular location."""
+    """Manually install a directory tree to a particular location."""
     tty.debug("Installing %s to %s" % (src, dest))
     shutil.copytree(src, dest, **kwargs)
 
@@ -353,7 +356,8 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
-                tuples = traverse_tree(source_root, dest_root, rel_child, **kwargs)  # NOQA: ignore=E501
+                tuples = traverse_tree(
+                    source_root, dest_root, rel_child, **kwargs)
                 for t in tuples:
                     yield t
 
@@ -420,14 +424,20 @@ def fix_darwin_install_name(path):
     libs = glob.glob(join_path(path, "*.dylib"))
     for lib in libs:
         # fix install name first:
-        subprocess.Popen(["install_name_tool", "-id", lib, lib], stdout=subprocess.PIPE).communicate()[0]  # NOQA: ignore=E501
-        long_deps = subprocess.Popen(["otool", "-L", lib], stdout=subprocess.PIPE).communicate()[0].split('\n')  # NOQA: ignore=E501
+        subprocess.Popen(
+            ["install_name_tool", "-id", lib, lib],
+            stdout=subprocess.PIPE).communicate()[0]
+        long_deps = subprocess.Popen(
+            ["otool", "-L", lib],
+            stdout=subprocess.PIPE).communicate()[0].split('\n')
         deps = [dep.partition(' ')[0][1::] for dep in long_deps[2:-1]]
         # fix all dependencies:
         for dep in deps:
             for loc in libs:
                 if dep == os.path.basename(loc):
-                    subprocess.Popen(["install_name_tool", "-change", dep, loc, lib], stdout=subprocess.PIPE).communicate()[0]  # NOQA: ignore=E501
+                    subprocess.Popen(
+                        ["install_name_tool", "-change", dep, loc, lib],
+                        stdout=subprocess.PIPE).communicate()[0]
                     break
 
 
