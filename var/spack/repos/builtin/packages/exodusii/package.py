@@ -51,7 +51,7 @@ class Exodusii(Package):
 
     variant('mpi', default=False, description='Enables MPI parallelism.')
 
-    depends_on('cmake@2.8.7:', type='build')
+    depends_on('cmake@2.8.11:', type='build')
     depends_on('mpi', when='+mpi')
     # https://github.com/gsjaardema/seacas/blob/master/NetCDF-Mapping.md
     depends_on('netcdf~mpi maxdims=65536 maxvars=524288')
