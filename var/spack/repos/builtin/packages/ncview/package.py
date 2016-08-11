@@ -34,6 +34,7 @@ class Ncview(Package):
 
     depends_on("netcdf")
     depends_on("udunits2")
+    depends_on("libpng")
 
     # OS Dependencies
     # Ubuntu: apt-get install libxaw7-dev
