@@ -27,6 +27,4 @@ class Linux(Platform):
 
     @classmethod
     def detect(self):
-        platform = subprocess.Popen(['uname', '-a'], stdout=subprocess.PIPE)
-        platform, _ = platform.communicate()
-        return 'linux' in platform.strip().lower()
+        return 'linux' in platform.system().lower()

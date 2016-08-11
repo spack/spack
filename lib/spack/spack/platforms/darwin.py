@@ -22,6 +22,4 @@ class Darwin(Platform):
 
     @classmethod
     def detect(self):
-        platform = subprocess.Popen(['uname', '-a'], stdout=subprocess.PIPE)
-        platform, _ = platform.communicate()
-        return 'darwin' in platform.strip().lower()
+        return 'darwin' in platform.system().lower()
