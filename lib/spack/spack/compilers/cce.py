@@ -25,9 +25,8 @@
 from spack.compiler import *
 
 
-class Craype(Compiler):
-    """Cray programming environment compiler."""
-
+class Cce(Compiler):
+    """Cray compiler environment compiler."""
     # Subclasses use possible names of C compiler
     cc_names = ['cc']
 
@@ -44,7 +43,7 @@ class Craype(Compiler):
     suffixes = [r'-mp-\d\.\d']
 
     PrgEnv = 'PrgEnv-cray'
-    PrgEnv_compiler = 'craype'
+    PrgEnv_compiler = 'cce'
 
     link_paths = {'cc': 'cc',
                   'cxx': 'c++',
@@ -53,4 +52,4 @@ class Craype(Compiler):
 
     @classmethod
     def default_version(cls, comp):
-        return get_compiler_version(comp, r'([Vv]ersion).*(\d+(\.\d+)+)')
+        return get_compiler_version(comp, '-V', r'[Vv]ersion.*(\d+(\.\d+)+)')
