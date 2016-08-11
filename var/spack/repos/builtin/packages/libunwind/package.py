@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libunwind(Package):
     """A portable and efficient C programming interface (API) to determine
        the call-chain of a program."""

@@ -28,11 +28,13 @@ import llnl.util.tty as tty
 import spack.cmd
 import spack.build_environment as build_env
 
-description = "Run a command with the environment for a particular spec's install."
+description = "Run a command with the install environment for a spec."
+
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="specs of package environment to emulate.")
+        'spec', nargs=argparse.REMAINDER,
+        help="specs of package environment to emulate.")
 
 
 def env(parser, args):
@@ -47,7 +49,7 @@ def env(parser, args):
     if sep in args.spec:
         s = args.spec.index(sep)
         spec = args.spec[:s]
-        cmd  = args.spec[s+1:]
+        cmd  = args.spec[s + 1:]
     else:
         spec = args.spec[0]
         cmd  = args.spec[1:]

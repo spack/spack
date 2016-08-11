@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class HoomdBlue(Package):
     """HOOMD-blue is a general-purpose particle simulation toolkit. It scales
     from a single CPU core to thousands of GPUs.
@@ -56,7 +57,7 @@ class HoomdBlue(Package):
 
         cmake_args = [
             '-DPYTHON_EXECUTABLE=%s/python' % spec['python'].prefix.bin,
-            '-DBOOST_ROOT=%s'               % spec['boost' ].prefix
+            '-DBOOST_ROOT=%s'               % spec['boost'].prefix
         ]
 
         # MPI support
@@ -73,9 +74,9 @@ class HoomdBlue(Package):
             cmake_args.append('-DENABLE_CUDA=OFF')
 
         # CUDA-aware MPI library support
-        #if '+cuda' in spec and '+mpi' in spec:
+        # if '+cuda' in spec and '+mpi' in spec:
         #    cmake_args.append('-DENABLE_MPI_CUDA=ON')
-        #else:
+        # else:
         #    cmake_args.append('-DENABLE_MPI_CUDA=OFF')
 
         # There may be a bug in the MPI-CUDA code. See:

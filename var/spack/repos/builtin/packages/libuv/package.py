@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libuv(Package):
     """Multi-platform library with a focus on asynchronous IO"""
     homepage = "http://libuv.org"

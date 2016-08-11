@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Task(Package):
     """Feature-rich console based todo list manager"""
     homepage = "http://www.taskwarrior.org"

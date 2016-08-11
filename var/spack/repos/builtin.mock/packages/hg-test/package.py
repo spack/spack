@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class HgTest(Package):
     """Test package that does fetching with mercurial."""
     homepage = "http://www.hg-fetch-example.com"

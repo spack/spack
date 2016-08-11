@@ -35,7 +35,7 @@ class Lmod(Package):
     variable. Modulefiles for Library packages provide environment variables
     that specify where the library and header files can be found.
     """
-    homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'  # NOQA: ignore=E501
+    homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
     url = 'https://github.com/TACC/Lmod/archive/6.4.1.tar.gz'
 
     version('6.4.5', '14f6c58dbc0a5a75574d795eac2c1e3c')

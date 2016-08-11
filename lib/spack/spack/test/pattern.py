@@ -41,6 +41,7 @@ class CompositeTest(unittest.TestCase):
                 raise NotImplemented('subtract not implemented')
 
         class One(Base):
+
             def add(self):
                 Base.counter += 1
 
@@ -48,6 +49,7 @@ class CompositeTest(unittest.TestCase):
                 Base.counter -= 1
 
         class Two(Base):
+
             def add(self):
                 Base.counter += 2
 

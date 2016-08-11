@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Wxpropgrid(Package):
     """wxPropertyGrid is a property sheet control for wxWidgets. In
        other words, it is a specialized two-column grid for editing
@@ -37,8 +38,8 @@ class Wxpropgrid(Package):
     depends_on("wx")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--with-wxdir=%s" % spec['wx'].prefix.bin, "--enable-unicode")
+        configure("--prefix=%s" % prefix, "--with-wxdir=%s" %
+                  spec['wx'].prefix.bin, "--enable-unicode")
 
         make()
         make("install")
-

@@ -41,15 +41,21 @@ class Gmsh(Package):
     version('2.12.0', '7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
     version('2.11.0', 'f15b6e7ac9ca649c9a74440e1259d0db')
 
-    variant('shared',      default=True,  description='Enables the build of shared libraries')
-    variant('debug',       default=False, description='Builds the library in debug mode')
-    variant('mpi',         default=False, description='Builds MPI support for parser and solver')
-    variant('fltk',        default=False, description='Enables the build of the FLTK GUI')
+    variant('shared',      default=True,
+            description='Enables the build of shared libraries')
+    variant('debug',       default=False,
+            description='Builds the library in debug mode')
+    variant('mpi',         default=False,
+            description='Builds MPI support for parser and solver')
+    variant('fltk',        default=False,
+            description='Enables the build of the FLTK GUI')
     variant('hdf5',        default=False, description='Enables HDF5 support')
-    variant('compression', default=True,  description='Enables IO compression through zlib')
+    variant('compression', default=True,
+            description='Enables IO compression through zlib')
     variant('oce',         default=False, description='Build with OCE')
     variant('petsc',       default=False, description='Build with PETSc')
-    variant('slepc',       default=False, description='Build with SLEPc (only when PETSc is enabled)')
+    variant('slepc',       default=False,
+            description='Build with SLEPc (only when PETSc is enabled)')
 
     depends_on('blas')
     depends_on('lapack')

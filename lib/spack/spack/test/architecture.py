@@ -40,6 +40,7 @@ from spack.test.mock_packages_test import *
 
 
 class ArchitectureTest(MockPackagesTest):
+
     def setUp(self):
         super(ArchitectureTest, self).setUp()
         self.platform = spack.architecture.platform()

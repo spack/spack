@@ -44,6 +44,7 @@ last_line        = "last!\n"
 
 
 class SbangTest(unittest.TestCase):
+
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
 

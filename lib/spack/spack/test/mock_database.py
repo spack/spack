@@ -33,6 +33,7 @@ from spack.test.mock_packages_test import MockPackagesTest
 
 
 class MockDatabase(MockPackagesTest):
+
     def _mock_install(self, spec):
         s = Spec(spec)
         s.concretize()

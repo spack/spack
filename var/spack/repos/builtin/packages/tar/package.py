@@ -23,8 +23,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import sys
-import os
 
 
 class Tar(Package):
@@ -37,7 +35,7 @@ class Tar(Package):
     version('1.28', '6ea3dbea1f2b0409b234048e021a9fd7')
 
     # see http://lists.gnu.org/archive/html/bug-tar/2014-08/msg00001.html and
-    # https://github.com/Homebrew/homebrew-core/commit/aef9a1792de4648d0322b4b04d32287532f046bb  # NOQA: ignore=E501
+    # https://github.com/Homebrew/homebrew-core/commit/aef9a1792de4648d0322b4b04d32287532f046bb
     # TODO: when=sys.platform=='darwin' ?
     patch('gnutar-configure-xattrs.patch', when='@1.28')
 

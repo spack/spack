@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Ravel(Package):
     """Ravel is a parallel communication trace visualization tool that
        orders events according to logical time."""

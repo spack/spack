@@ -27,15 +27,14 @@ Routines for printing columnar output.  See colify() for more information.
 """
 import os
 import sys
-import fcntl
-import termios
-import struct
 from StringIO import StringIO
 
 from llnl.util.tty import terminal_size
 from llnl.util.tty.color import clen, cextra
 
+
 class ColumnConfig:
+
     def __init__(self, cols):
         self.cols = cols
         self.line_length = 0
@@ -43,7 +42,8 @@ class ColumnConfig:
         self.widths = [0] * cols   # does not include ansi colors
 
     def __repr__(self):
-        attrs = [(a,getattr(self, a)) for a in dir(self) if not a.startswith("__")]
+        attrs = [(a, getattr(self, a))
+                 for a in dir(self) if not a.startswith("__")]
         return "<Config: %s>" % ", ".join("%s: %r" % a for a in attrs)
 
 
@@ -68,7 +68,7 @@ def config_variable_cols(elts, console_width, padding, cols=0):
     max_cols = min(len(elts), max_cols)
 
     # Range of column counts to try.  If forced, use the supplied value.
-    col_range = [cols] if cols else xrange(1, max_cols+1)
+    col_range = [cols] if cols else xrange(1, max_cols + 1)
 
     # Determine the most columns possible for the console width.
     configs = [ColumnConfig(c) for c in col_range]
@@ -106,7 +106,6 @@ def config_uniform_cols(elts, console_width, padding, cols=0):
 
     # 'clen' ignores length of ansi color sequences.
     max_len = max(clen(e) for e in elts) + padding
-    max_clen = max(len(e) for e in elts) + padding
     if cols == 0:
         cols = max(1, console_width / max_len)
         cols = min(len(elts), cols)
@@ -130,17 +129,19 @@ def colify(elts, **options):
     output=<stream>   A file object to write to.  Default is sys.stdout.
     indent=<int>      Optionally indent all columns by some number of spaces.
     padding=<int>     Spaces between columns.  Default is 2.
-    width=<int>       Width of the output.  Default is 80 if tty is not detected.
+    width=<int>       Width of the output.  Default is 80 if tty not detected.
 
     cols=<int>        Force number of columns. Default is to size to terminal,
                       or single-column if no tty
 
     tty=<bool>        Whether to attempt to write to a tty.  Default is to
-                      autodetect a tty. Set to False to force single-column output.
+                      autodetect a tty. Set to False to force
+                      single-column output.
 
-    method=<string>   Method to use to fit columns.  Options are variable or uniform.
-                      Variable-width columns are tighter, uniform columns are all the
-                      same width and fit less data on the screen.
+    method=<string>   Method to use to fit columns.  Options are variable or
+                      uniform. Variable-width columns are tighter, uniform
+                      columns are all the same width and fit less data on
+                      the screen.
     """
     # Get keyword arguments or set defaults
     cols         = options.pop("cols", 0)
@@ -152,8 +153,9 @@ def colify(elts, **options):
     console_cols = options.pop("width", None)
 
     if options:
-        raise TypeError("'%s' is an invalid keyword argument for this function."
-                        % next(options.iterkeys()))
+        raise TypeError(
+            "'%s' is an invalid keyword argument for this function."
+            % next(options.iterkeys()))
 
     # elts needs to be an array of strings so we can count the elements
     elts = [str(elt) for elt in elts]
@@ -167,7 +169,8 @@ def colify(elts, **options):
             r, c = env_size.split('x')
             console_rows, console_cols = int(r), int(c)
             tty = True
-        except: pass
+        except:
+            pass
 
     # Use only one column if not a tty.
     if not tty:
@@ -228,6 +231,7 @@ def colify_table(table, **options):
         raise ValueError("Table is empty in colify_table!")
 
     columns = len(table[0])
+
     def transpose():
         for i in xrange(columns):
             for row in table:

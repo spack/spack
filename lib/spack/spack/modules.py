@@ -459,7 +459,8 @@ class EnvModule(object):
                 yield self.environment_modifications_formats[type(
                     command)].format(**command.args)
             except KeyError:
-                message = 'Cannot handle command of type {command} : skipping request'  # NOQA: ignore=E501
+                message = ('Cannot handle command of type {command}: '
+                           'skipping request')
                 details = '{context} at {filename}:{lineno}'
                 tty.warn(message.format(command=type(command)))
                 tty.warn(details.format(**command.args))
@@ -494,7 +495,8 @@ class Dotkit(EnvModule):
 
     autoload_format = 'dk_op {module_file}\n'
 
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
+    default_naming_format = \
+        '{name}-{version}-{compiler.name}-{compiler.version}'
 
     @property
     def file_name(self):
@@ -543,7 +545,8 @@ class TclModule(EnvModule):
 
     prerequisite_format = 'prereq {module_file}\n'
 
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
+    default_naming_format = \
+        '{name}-{version}-{compiler.name}-{compiler.version}'
 
     @property
     def file_name(self):
@@ -554,7 +557,7 @@ class TclModule(EnvModule):
         timestamp = datetime.datetime.now()
         # TCL Modulefile header
         header = '#%Module1.0\n'
-        header += '## Module file created by spack (https://github.com/LLNL/spack) on %s\n' % timestamp  # NOQA: ignore=E501
+        header += '## Module file created by spack (https://github.com/LLNL/spack) on %s\n' % timestamp
         header += '##\n'
         header += '## %s\n' % self.spec.short_spec
         header += '##\n'
@@ -584,10 +587,12 @@ class TclModule(EnvModule):
                 for naming_dir, conflict_dir in zip(
                         self.naming_scheme.split('/'), item.split('/')):
                     if naming_dir != conflict_dir:
-                        message = 'conflict scheme does not match naming scheme [{spec}]\n\n'  # NOQA: ignore=E501
+                        message = 'conflict scheme does not match naming '
+                        message += 'scheme [{spec}]\n\n'
                         message += 'naming scheme   : "{nformat}"\n'
                         message += 'conflict scheme : "{cformat}"\n\n'
-                        message += '** You may want to check your `modules.yaml` configuration file **\n'  # NOQA: ignore=E501
+                        message += '** You may want to check your '
+                        message += '`modules.yaml` configuration file **\n'
                         tty.error(message.format(spec=self.spec,
                                                  nformat=self.naming_scheme,
                                                  cformat=item))

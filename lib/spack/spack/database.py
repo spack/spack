@@ -119,6 +119,7 @@ class InstallRecord(object):
 
 
 class Database(object):
+
     def __init__(self, root, db_dir=None):
         """Create a Database for Spack installations under ``root``.
 
@@ -600,6 +601,7 @@ class Database(object):
 
 
 class CorruptDatabaseError(SpackError):
+
     def __init__(self, path, msg=''):
         super(CorruptDatabaseError, self).__init__(
             "Spack database is corrupt: %s.  %s." % (path, msg),
@@ -607,6 +609,7 @@ class CorruptDatabaseError(SpackError):
 
 
 class InvalidDatabaseVersionError(SpackError):
+
     def __init__(self, expected, found):
         super(InvalidDatabaseVersionError, self).__init__(
             "Expected database version %s but found version %s."

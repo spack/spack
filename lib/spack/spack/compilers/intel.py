@@ -26,6 +26,7 @@ from spack.compiler import *
 import llnl.util.tty as tty
 from spack.version import ver
 
+
 class Intel(Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['icc']
@@ -40,10 +41,10 @@ class Intel(Compiler):
     fc_names = ['ifort']
 
     # Named wrapper links within spack.build_env_path
-    link_paths = { 'cc'  : 'intel/icc',
-                   'cxx' : 'intel/icpc',
-                   'f77' : 'intel/ifort',
-                   'fc'  : 'intel/ifort' }
+    link_paths = {'cc': 'intel/icc',
+                  'cxx': 'intel/icpc',
+                  'f77': 'intel/ifort',
+                  'fc': 'intel/ifort'}
 
     PrgEnv = 'PrgEnv-intel'
     PrgEnv_compiler = 'intel'
@@ -63,7 +64,6 @@ class Intel(Compiler):
             return "-std=c++0x"
         else:
             return "-std=c++11"
-
 
     @classmethod
     def default_version(cls, comp):

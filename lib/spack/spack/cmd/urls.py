@@ -22,11 +22,11 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
 import spack
 import spack.url
 
 description = "Inspect urls used by packages in spack."
+
 
 def setup_parser(subparser):
     subparser.add_argument(
@@ -53,6 +53,7 @@ def urls(parser, args):
 
     for url in sorted(urls):
         if args.color or args.extrapolation:
-            print spack.url.color_url(url, subs=args.extrapolation, errors=True)
+            print spack.url.color_url(
+                url, subs=args.extrapolation, errors=True)
         else:
             print url

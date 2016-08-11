@@ -24,8 +24,9 @@
 ##############################################################################
 from spack import *
 
+
 class PyBottleneck(Package):
-    """Bottleneck is a collection of fast NumPy array functions written in Cython."""
+    """A collection of fast NumPy array functions written in Cython."""
     homepage = "https://pypi.python.org/pypi/Bottleneck/1.0.0"
     url      = "https://pypi.python.org/packages/source/B/Bottleneck/Bottleneck-1.0.0.tar.gz"
 

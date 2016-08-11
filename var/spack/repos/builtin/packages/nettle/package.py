@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Nettle(Package):
     """The Nettle package contains the low-level cryptographic library
     that is designed to fit easily in many contexts."""

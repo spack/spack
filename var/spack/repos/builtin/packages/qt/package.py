@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class Qt(Package):
     """Qt is a comprehensive cross-platform C++ application framework."""
     homepage = 'http://qt.io'
@@ -37,15 +38,17 @@ class Qt(Package):
     version('4.8.6',  '2edbe4d6c2eff33ef91732602f3518eb')
     version('3.3.8b', '9f05b4125cfe477cc52c9742c3c09009')
 
-    # Add patch for compile issues with qt3 found with use in the OpenSpeedShop project
-    variant('krellpatch', default=False, description="Build with openspeedshop based patch.")
+    # Add patch for compile issues with qt3 found with use in the
+    # OpenSpeedShop project
+    variant('krellpatch', default=False,
+            description="Build with openspeedshop based patch.")
     variant('mesa',       default=False, description="Depend on mesa.")
     variant('gtk',        default=False, description="Build with gtkplus.")
 
     patch('qt3krell.patch', when='@3.3.8b+krellpatch')
 
     # Use system openssl for security.
-    #depends_on("openssl")
+    # depends_on("openssl")
 
     depends_on("glib")
     depends_on("gtkplus", when='+gtk')
@@ -69,42 +72,38 @@ class Qt(Package):
     depends_on("mesa", when='@4:+mesa')
     depends_on("libxcb")
 
-
     def url_for_version(self, version):
         url = "http://download.qt.io/archive/qt/"
 
         if version >= Version('5'):
             url += "%s/%s/single/qt-everywhere-opensource-src-%s.tar.gz" % \
-                    (version.up_to(2), version, version)
+                (version.up_to(2), version, version)
         elif version >= Version('4.8'):
             url += "%s/%s/qt-everywhere-opensource-src-%s.tar.gz" % \
-                    (version.up_to(2), version, version)
+                (version.up_to(2), version, version)
         elif version >= Version('4.6'):
             url += "%s/qt-everywhere-opensource-src-%s.tar.gz" % \
-                    (version.up_to(2), version)
+                (version.up_to(2), version)
         elif version >= Version('4.0'):
             url += "%s/qt-x11-opensource-src-%s.tar.gz" % \
-                    (version.up_to(2), version)
+                (version.up_to(2), version)
         elif version >= Version('3'):
             url += "%s/qt-x11-free-%s.tar.gz" % \
-                    (version.up_to(1), version)
+                (version.up_to(1), version)
         elif version >= Version('2.1'):
             url += "%s/qt-x11-%s.tar.gz" % \
-                    (version.up_to(1), version)
+                (version.up_to(1), version)
         else:
             url += "%s/qt-%s.tar.gz" % \
-                    (version.up_to(1), version)
+                (version.up_to(1), version)
 
         return url
-
 
     def setup_environment(self, spack_env, env):
         env.set('QTDIR', self.prefix)
 
-
     def setup_dependent_environment(self, spack_env, run_env, dspec):
         spack_env.set('QTDIR', self.prefix)
-
 
     def patch(self):
         if self.spec.satisfies('@4'):
@@ -117,11 +116,14 @@ class Qt(Package):
             return
 
         # Fix qmake compilers in the default mkspec
-        filter_file(r'^QMAKE_COMPILER *=.*$',  'QMAKE_COMPILER = cc', qmake_conf)
-        filter_file(r'^QMAKE_CC *=.*$',        'QMAKE_CC = cc',       qmake_conf)
-        filter_file(r'^QMAKE_CXX *=.*$',       'QMAKE_CXX = c++',     qmake_conf)
-        filter_file(r'^QMAKE_LFLAGS_NOUNDEF *\+?=.*$',  'QMAKE_LFLAGS_NOUNDEF =', qmake_unix_conf)
-
+        filter_file(r'^QMAKE_COMPILER *=.*$',
+                    'QMAKE_COMPILER = cc', qmake_conf)
+        filter_file(r'^QMAKE_CC *=.*$',
+                    'QMAKE_CC = cc',       qmake_conf)
+        filter_file(r'^QMAKE_CXX *=.*$',
+                    'QMAKE_CXX = c++',     qmake_conf)
+        filter_file(r'^QMAKE_LFLAGS_NOUNDEF *\+?=.*$',
+                    'QMAKE_LFLAGS_NOUNDEF =', qmake_unix_conf)
 
     @property
     def common_config_args(self):
@@ -155,7 +157,7 @@ class Qt(Package):
     @when('@3')
     def configure(self):
         # An user report that this was necessary to link Qt3 on ubuntu
-        os.environ['LD_LIBRARY_PATH'] = os.getcwd()+'/lib' 
+        os.environ['LD_LIBRARY_PATH'] = os.getcwd() + '/lib'
         configure('-prefix', self.prefix,
                   '-v',
                   '-thread',
@@ -169,16 +171,15 @@ class Qt(Package):
                   '-no-webkit',
                   *self.common_config_args)
 
-
     @when('@5')
     def configure(self):
         configure('-no-eglfs',
                   '-no-directfb',
                   '-qt-xcb',
-                  # If someone wants to get a webkit build working, be my guest!
+                  # If someone wants to get a webkit build working, be my
+                  # guest!
                   '-skip', 'qtwebkit',
                   *self.common_config_args)
-
 
     def install(self, spec, prefix):
         self.configure()

@@ -22,13 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
-
 description = "Get help on spack and its commands"
+
 
 def setup_parser(subparser):
     subparser.add_argument('help_command', nargs='?', default=None,
                            help='command to get help on')
+
 
 def help(parser, args):
     if args.help_command:

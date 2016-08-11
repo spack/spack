@@ -26,8 +26,16 @@ from spack import *
 import os
 import shutil
 
+
 class Cereal(Package):
-    """cereal is a header-only C++11 serialization library. cereal takes arbitrary data types and reversibly turns them into different representations, such as compact binary encodings, XML, or JSON. cereal was designed to be fast, light-weight, and easy to extend - it has no external dependencies and can be easily bundled with other code or used standalone."""
+    """cereal is a header-only C++11 serialization library. cereal takes
+       arbitrary data types and reversibly turns them into different
+       representations, such as compact binary encodings, XML, or
+       JSON. cereal was designed to be fast, light-weight, and easy to
+       extend - it has no external dependencies and can be easily bundled
+       with other code or used standalone.
+
+    """
     homepage = "http://uscilab.github.io/cereal/"
     url      = "https://github.com/USCiLab/cereal/archive/v1.1.2.tar.gz"
 

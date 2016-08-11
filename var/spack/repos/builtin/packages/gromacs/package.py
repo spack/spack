@@ -48,7 +48,9 @@ class Gromacs(Package):
     variant('shared', default=True,
             description='Enables the build of shared libraries')
     variant('debug', default=False, description='Enables debug mode')
-    variant('double', default=False, description='Produces a double precision version of the executables')  # NOQA: ignore=E501
+    variant(
+        'double', default=False,
+        description='Produces a double precision version of the executables')
     variant('plumed', default=False, description='Enable PLUMED support')
 
     depends_on('mpi', when='+mpi')

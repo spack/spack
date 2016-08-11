@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPygments(Package):
     """Pygments is a syntax highlighting package written in Python."""
     homepage = "https://pypi.python.org/pypi/pygments"

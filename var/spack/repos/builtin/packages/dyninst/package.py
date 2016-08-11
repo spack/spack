@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Dyninst(Package):
     """API for dynamic binary instrumentation.  Modify programs while they
     are executing without recompiling, re-linking, or re-executing."""
@@ -55,15 +56,17 @@ class Dyninst(Package):
                   '-DBoost_INCLUDE_DIR=%s'    % spec['boost'].prefix.include,
                   '-DBoost_LIBRARY_DIR=%s'    % spec['boost'].prefix.lib,
                   '-DBoost_NO_SYSTEM_PATHS=TRUE',
-                  '-DLIBELF_INCLUDE_DIR=%s'   % join_path(libelf.include, 'libelf'),
-                  '-DLIBELF_LIBRARIES=%s'     % join_path(libelf.lib, 'libelf.so'),
+                  '-DLIBELF_INCLUDE_DIR=%s'   % join_path(
+                      libelf.include, 'libelf'),
+                  '-DLIBELF_LIBRARIES=%s'     % join_path(
+                      libelf.lib, 'libelf.so'),
                   '-DLIBDWARF_INCLUDE_DIR=%s' % libdwarf.include,
-                  '-DLIBDWARF_LIBRARIES=%s'   % join_path(libdwarf.lib, 'libdwarf.so'),
+                  '-DLIBDWARF_LIBRARIES=%s'   % join_path(
+                      libdwarf.lib, 'libdwarf.so'),
                   *std_cmake_args)
 
             make()
             make("install")
-
 
     @when('@:8.1')
     def install(self, spec, prefix):

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Cloog(Package):
     """CLooG is a free software and library to generate code for
     scanning Z-polyhedra. That is, it finds a code (e.g. in C,

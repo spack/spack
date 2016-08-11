@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class LibpthreadStubs(Package):
     """The libpthread-stubs package provides weak aliases for pthread
        functions not provided in libc or otherwise available by

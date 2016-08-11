@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyCoverage(Package):
     """ Testing coverage checker for python """
     # FIXME: add a proper url for your package's homepage here.

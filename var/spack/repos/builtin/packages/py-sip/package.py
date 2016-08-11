@@ -25,8 +25,10 @@
 from spack import *
 import os
 
+
 class PySip(Package):
-    """SIP is a tool that makes it very easy to create Python bindings for C and C++ libraries."""
+    """SIP is a tool that makes it very easy to create Python bindings for C
+       and C++ libraries."""
     homepage = "http://www.riverbankcomputing.com/software/sip/intro"
     url      = "http://sourceforge.net/projects/pyqt/files/sip/sip-4.16.5/sip-4.16.5.tar.gz"
 

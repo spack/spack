@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPyyaml(Package):
     """PyYAML is a YAML parser and emitter for Python."""
     homepage = "http://pyyaml.org/wiki/PyYAML"

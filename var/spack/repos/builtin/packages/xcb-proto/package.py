@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class XcbProto(Package):
     """Protocol for libxcb"""
 

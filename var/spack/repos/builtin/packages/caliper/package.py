@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Caliper(Package):
     """
     Caliper is a generic context annotation system. It gives programmers the
@@ -44,7 +45,7 @@ class Caliper(Package):
     depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
-      with working_dir('build', create=True):
-        cmake('..', *std_cmake_args)
-        make()
-        make("install")
+        with working_dir('build', create=True):
+            cmake('..', *std_cmake_args)
+            make()
+            make("install")

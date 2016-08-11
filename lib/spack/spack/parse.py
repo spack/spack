@@ -29,6 +29,7 @@ import spack.error
 
 class Token:
     """Represents tokens; generated from input by lexer and fed to parse()."""
+
     def __init__(self, type, value='', start=0, end=0):
         self.type = type
         self.value = value
@@ -51,11 +52,13 @@ class Token:
 
 class Lexer(object):
     """Base class for Lexers that keep track of line numbers."""
+
     def __init__(self, lexicon):
         self.scanner = re.Scanner(lexicon)
 
     def token(self, type, value=''):
-        return Token(type, value, self.scanner.match.start(0), self.scanner.match.end(0))
+        return Token(type, value,
+                     self.scanner.match.start(0), self.scanner.match.end(0))
 
     def lex(self, text):
         tokens, remainder = self.scanner.scan(text)
@@ -66,10 +69,11 @@ class Lexer(object):
 
 class Parser(object):
     """Base class for simple recursive descent parsers."""
+
     def __init__(self, lexer):
-        self.tokens = iter([])   # iterators over tokens, handled in order.  Starts empty.
-        self.token = Token(None) # last accepted token starts at beginning of file
-        self.next = None         # next token
+        self.tokens = iter([])    # iterators over tokens, handled in order.
+        self.token = Token(None)  # last accepted token
+        self.next = None          # next token
         self.lexer = lexer
         self.text = None
 
@@ -82,11 +86,12 @@ class Parser(object):
 
     def push_tokens(self, iterable):
         """Adds all tokens in some iterable to the token stream."""
-        self.tokens = itertools.chain(iter(iterable), iter([self.next]), self.tokens)
+        self.tokens = itertools.chain(
+            iter(iterable), iter([self.next]), self.tokens)
         self.gettok()
 
     def accept(self, id):
-        """Puts the next symbol in self.token if we like it.  Then calls gettok()"""
+        """Put the next symbol in self.token if accepted, then call gettok()"""
         if self.next and self.next.is_a(id):
             self.token = self.next
             self.gettok()
@@ -124,9 +129,9 @@ class Parser(object):
         return self.do_parse()
 
 
-
 class ParseError(spack.error.SpackError):
     """Raised when we don't hit an error while parsing."""
+
     def __init__(self, message, string, pos):
         super(ParseError, self).__init__(message)
         self.string = string
@@ -135,5 +140,6 @@ class ParseError(spack.error.SpackError):
 
 class LexError(ParseError):
     """Raised when we don't know how to lex something."""
+
     def __init__(self, message, string, pos):
         super(LexError, self).__init__(message, string, pos)

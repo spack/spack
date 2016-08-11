@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class GnuProlog(Package):
     """A free Prolog compiler with constraint solving over finite domains."""
     homepage = "http://www.gprolog.org/"

@@ -22,14 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import sys
-import argparse
-
-import llnl.util.tty as tty
-
 import spack.config
 
 description = "Get and set configuration options."
+
 
 def setup_parser(subparser):
     # User can only choose one
@@ -64,6 +60,6 @@ def config_edit(args):
 
 
 def config(parser, args):
-    action = { 'get' : config_get,
-               'edit' : config_edit }
+    action = {'get': config_get,
+              'edit': config_edit}
     action[args.config_command](args)

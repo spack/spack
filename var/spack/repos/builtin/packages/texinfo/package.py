@@ -27,10 +27,13 @@ from spack import *
 
 
 class Texinfo(Package):
-    """
-    Texinfo is the official documentation format of the GNU project. It was invented by Richard Stallman and Bob
-    Chassell many years ago, loosely based on Brian Reid's Scribe and other formatting languages of the time. It is
-    used by many non-GNU projects as well.FIXME: put a proper description of your package here.
+    """Texinfo is the official documentation format of the GNU project.
+
+    It was invented by Richard Stallman and Bob Chassell many years ago,
+    loosely based on Brian Reid's Scribe and other formatting languages
+    of the time. It is used by many non-GNU projects as well.FIXME: put a
+    proper description of your package here.
+
     """
     homepage = "https://www.gnu.org/software/texinfo/"
     url      = "http://ftp.gnu.org/gnu/texinfo/texinfo-6.0.tar.gz"

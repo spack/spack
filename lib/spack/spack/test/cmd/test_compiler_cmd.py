@@ -12,7 +12,9 @@ from spack.test.mock_packages_test import *
 
 test_version = '4.5-spacktest'
 
+
 class MockArgs(object):
+
     def __init__(self, add_paths=[], scope=None, compiler_spec=None, all=None):
         self.add_paths = add_paths
         self.scope = scope
@@ -52,13 +54,11 @@ done
 class CompilerCmdTest(MockPackagesTest):
     """ Test compiler commands for add and remove """
 
-
     def test_compiler_remove(self):
         args = MockArgs(all=True, compiler_spec='gcc@4.5.0')
         spack.cmd.compiler.compiler_remove(args)
         compilers = spack.compilers.all_compilers()
         self.assertTrue(spack.spec.CompilerSpec("gcc@4.5.0") not in compilers)
-
 
     def test_compiler_add(self):
         # compilers available by default.
@@ -75,7 +75,8 @@ class CompilerCmdTest(MockPackagesTest):
             new_compilers = set(spack.compilers.all_compilers())
             new_compiler = new_compilers - old_compilers
             self.assertTrue(new_compiler)
-            self.assertTrue(new_compiler.pop().version == Version(test_version))
+            self.assertTrue(new_compiler.pop().version ==
+                            Version(test_version))
 
         finally:
             shutil.rmtree(compiler_dir, ignore_errors=True)

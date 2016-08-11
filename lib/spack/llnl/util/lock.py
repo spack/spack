@@ -47,6 +47,7 @@ class Lock(object):
     and recent NFS versions.
 
     """
+
     def __init__(self, file_path):
         self._file_path = file_path
         self._fd = None
@@ -225,6 +226,7 @@ class LockTransaction(object):
 
 
 class ReadTransaction(LockTransaction):
+
     def _enter(self):
         return self._lock.acquire_read(self._timeout)
 
@@ -233,6 +235,7 @@ class ReadTransaction(LockTransaction):
 
 
 class WriteTransaction(LockTransaction):
+
     def _enter(self):
         return self._lock.acquire_write(self._timeout)
 

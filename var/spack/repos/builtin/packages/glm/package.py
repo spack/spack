@@ -26,9 +26,10 @@ from spack import *
 
 
 class Glm(Package):
-    """
-    OpenGL Mathematics (GLM) is a header only C++ mathematics library for graphics software based on
-    the OpenGL Shading Language (GLSL) specification.
+    """OpenGL Mathematics (GLM) is a header only C++ mathematics library for
+       graphics software based on the OpenGL Shading Language (GLSL)
+       specification.
+
     """
 
     homepage = "https://github.com/g-truc/glm"

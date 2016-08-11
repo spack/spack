@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Pidx(Package):
     """PIDX Parallel I/O Library.
 

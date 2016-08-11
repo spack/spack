@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 import spack
 from llnl.util.filesystem import join_path
 from spack.repository import Repo
@@ -33,33 +32,26 @@ from spack.util.naming import mod_to_class
 class PackagesTest(MockPackagesTest):
 
     def test_load_package(self):
-        pkg = spack.repo.get('mpich')
-
+        spack.repo.get('mpich')
 
     def test_package_name(self):
         pkg = spack.repo.get('mpich')
         self.assertEqual(pkg.name, 'mpich')
-
 
     def test_package_filename(self):
         repo = Repo(spack.mock_packages_path)
         filename = repo.filename_for_package_name('mpich')
         self.assertEqual(filename,
-                         join_path(spack.mock_packages_path, 'packages', 'mpich', 'package.py'))
-
-
-    def test_package_name(self):
-        pkg = spack.repo.get('mpich')
-        self.assertEqual(pkg.name, 'mpich')
-
+                         join_path(spack.mock_packages_path,
+                                   'packages', 'mpich', 'package.py'))
 
     def test_nonexisting_package_filename(self):
         repo = Repo(spack.mock_packages_path)
         filename = repo.filename_for_package_name('some-nonexisting-package')
         self.assertEqual(
             filename,
-            join_path(spack.mock_packages_path, 'packages', 'some-nonexisting-package', 'package.py'))
-
+            join_path(spack.mock_packages_path,
+                      'packages', 'some-nonexisting-package', 'package.py'))
 
     def test_package_class_names(self):
         self.assertEqual('Mpich',          mod_to_class('mpich'))
@@ -68,37 +60,32 @@ class PackagesTest(MockPackagesTest):
         self.assertEqual('Pmgrcollective', mod_to_class('PmgrCollective'))
         self.assertEqual('_3db',        mod_to_class('3db'))
 
-
     #
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
     #
 
     def test_import_package(self):
-        import spack.pkg.builtin.mock.mpich
-
+        import spack.pkg.builtin.mock.mpich             # noqa
 
     def test_import_package_as(self):
-        import spack.pkg.builtin.mock.mpich as mp
-
+        import spack.pkg.builtin.mock.mpich as mp       # noqa
 
     def test_import_class_from_package(self):
-        from spack.pkg.builtin.mock.mpich import Mpich
-
+        from spack.pkg.builtin.mock.mpich import Mpich  # noqa
 
     def test_import_module_from_package(self):
-        from spack.pkg.builtin.mock import mpich
-
+        from spack.pkg.builtin.mock import mpich        # noqa
 
     def test_import_namespace_container_modules(self):
-        import spack.pkg
-        import spack.pkg as p
-        from spack import pkg
+        import spack.pkg                                # noqa
+        import spack.pkg as p                           # noqa
+        from spack import pkg                           # noqa
 
-        import spack.pkg.builtin
-        import spack.pkg.builtin as b
-        from spack.pkg import builtin
+        import spack.pkg.builtin                        # noqa
+        import spack.pkg.builtin as b                   # noqa
+        from spack.pkg import builtin                   # noqa
 
-        import spack.pkg.builtin.mock
-        import spack.pkg.builtin.mock as m
-        from spack.pkg.builtin import mock
+        import spack.pkg.builtin.mock                   # noqa
+        import spack.pkg.builtin.mock as m              # noqa
+        from spack.pkg.builtin import mock              # noqa

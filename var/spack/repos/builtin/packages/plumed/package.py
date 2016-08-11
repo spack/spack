@@ -102,7 +102,7 @@ class Plumed(Package):
 
         configure_opts.extend([
             '--prefix={0}'.format(prefix),
-            '--enable-shared={0}'.format('yes' if '+shared' in spec else 'no'),  # NOQA: ignore=E501
+            '--enable-shared={0}'.format('yes' if '+shared' in spec else 'no'),
             '--enable-mpi={0}'.format('yes' if '+mpi' in spec else 'no'),
             '--enable-gsl={0}'.format('yes' if '+gsl' in spec else 'no')
         ])

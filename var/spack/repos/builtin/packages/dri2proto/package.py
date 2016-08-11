@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Dri2proto(Package):
     """DRI2 Protocol Headers."""
     homepage = "http://http://cgit.freedesktop.org/xorg/proto/dri2proto/"

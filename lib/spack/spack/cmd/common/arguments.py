@@ -35,7 +35,7 @@ _arguments = {}
 def add_common_arguments(parser, list_of_arguments):
     for argument in list_of_arguments:
         if argument not in _arguments:
-            message = 'Trying to add the non existing argument "{0}" to a command'  # NOQA: ignore=E501
+            message = 'Trying to add non existing argument "{0}" to a command'
             raise KeyError(message.format(argument))
         x = _arguments[argument]
         parser.add_argument(*x.flags, **x.kwargs)
@@ -82,7 +82,7 @@ parms = Bunch(
     kwargs={
         'action': 'store_true',
         'dest': 'yes_to_all',
-        'help': 'Assume "yes" is the answer to every confirmation asked to the user.'  # NOQA: ignore=E501
+        'help': 'Assume "yes" is the answer to every confirmation request.'
     })
 _arguments['yes_to_all'] = parms
 

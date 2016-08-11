@@ -26,6 +26,7 @@ import llnl.util.tty as tty
 from spack.compiler import *
 from spack.version import ver
 
+
 class Gcc(Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['gcc']
@@ -44,10 +45,10 @@ class Gcc(Compiler):
     suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d']
 
     # Named wrapper links within spack.build_env_path
-    link_paths = {'cc'  : 'gcc/gcc',
-                  'cxx' : 'gcc/g++',
-                  'f77' : 'gcc/gfortran',
-                  'fc'  : 'gcc/gfortran' }
+    link_paths = {'cc': 'gcc/gcc',
+                  'cxx': 'gcc/g++',
+                  'f77': 'gcc/gfortran',
+                  'fc': 'gcc/gfortran'}
 
     PrgEnv = 'PrgEnv-gnu'
     PrgEnv_compiler = 'gcc'
@@ -78,7 +79,6 @@ class Gcc(Compiler):
             fc, '-dumpversion',
             # older gfortran versions don't have simple dumpversion output.
             r'(?:GNU Fortran \(GCC\))?(\d+\.\d+(?:\.\d+)?)')
-
 
     @classmethod
     def f77_version(cls, f77):
