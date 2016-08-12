@@ -31,8 +31,8 @@ class PyPyside(Package):
     homepage = "https://pypi.python.org/pypi/pyside"
     url      = "https://pypi.python.org/packages/source/P/PySide/PySide-1.2.2.tar.gz"
 
-    # version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')  # rpath problems
-    version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d')
+    version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')  # rpath problems
+    version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d', preferred=True)
 
     depends_on('cmake', type='build')
 
@@ -71,6 +71,13 @@ class PyPyside(Package):
         # TODO: rpath handling for PySide 1.2.4 still doesn't work.
         # PySide can't find the Shiboken library, even though it comes
         # bundled with it and is installed in the same directory.
+
+        # PySide does not provide official support for
+        # Python 3.5, but it should work fine
+        filter_file("'Programming Language :: Python :: 3.4'",
+                    "'Programming Language :: Python :: 3.4',\r\n        "
+                    "'Programming Language :: Python :: 3.5'",
+                    "setup.py")
 
     def install(self, spec, prefix):
         python('setup.py', 'install',
