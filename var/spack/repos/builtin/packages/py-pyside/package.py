@@ -80,6 +80,4 @@ class PyPyside(Package):
                     "setup.py")
 
     def install(self, spec, prefix):
-        python('setup.py', 'install',
-               '--prefix=%s' % prefix,
-               '--jobs=%s' % make_jobs)
+        setup_py('install', '--prefix=%s' % prefix, '--jobs=%s' % make_jobs)
