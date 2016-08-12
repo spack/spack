@@ -467,14 +467,25 @@ to use based on the hash length.
 ``spack md5``
 ^^^^^^^^^^^^^^^^^^^^^^
 
-If you have a single file to checksum, you can use the ``spack md5``
-command to do it.  Here's how you might download an archive and get a
-checksum for it:
+If you have one or more files to checksum, you can use the ``spack md5``
+command to do it:
 
 .. code-block:: sh
 
-   $ curl -O http://exmaple.com/foo-8.2.1.tar.gz'
-   $ spack md5 foo-8.2.1.tar.gz
+   $ spack md5 foo-8.2.1.tar.gz foo-8.2.2.tar.gz
+   ==> 2 MD5 checksums:
+   4136d7b4c04df68b686570afa26988ac  foo-8.2.1.tar.gz
+   1586b70a49dfe05da5fcc29ef239dce0  foo-8.2.2.tar.gz
+
+``spack md5`` also accepts one or more URLs and automatically downloads
+the files for you:
+
+.. code-block:: sh
+
+   $ spack md5 http://example.com/foo-8.2.1.tar.gz
+   ==> Trying to fetch from http://example.com/foo-8.2.1.tar.gz
+   ######################################################################## 100.0%
+   ==> 1 MD5 checksum:
    4136d7b4c04df68b686570afa26988ac  foo-8.2.1.tar.gz
 
 Doing this for lots of files, or whenever a new package version is
