@@ -120,8 +120,12 @@ class Mpich(Package):
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
         filter_file(env['CC'], self.compiler.cc,  mpicc,  **kwargs)
         filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
-        filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
-        filter_file(env['FC'], self.compiler.fc,  mpif90, **kwargs)
+
+        if self.compiler.f77:
+            filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
+
+        if self.compiler.fc:
+            filter_file(env['FC'], self.compiler.fc,  mpif90, **kwargs)
 
         # Remove this linking flag if present
         # (it turns RPATH into RUNPATH)
