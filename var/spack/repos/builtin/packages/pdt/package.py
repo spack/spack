@@ -37,6 +37,7 @@ class Pdt(Package):
     """
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
 
+    version('3.22.1', '29d9b3177468eed61c555ec095439a88')
     version('3.21', '3092ca0d8833b69992c17e63ae66c263')
     version('3.19', '5c5e1e6607086aa13bf4b1b9befc5864')
 
