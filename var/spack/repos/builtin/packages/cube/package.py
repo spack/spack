@@ -44,13 +44,18 @@ class Cube(Package):
             url="http://apps.fz-juelich.de/scalasca/releases/cube/4.2/dist/cube-4.2.3.tar.gz")
 
     # TODO : add variant that builds GUI on top of Qt
+    variant('gui', default=False, description='Build CUBE GUI')
 
     depends_on('zlib')
+    depends_on('qt@4.6:', when='+gui')
 
     def install(self, spec, prefix):
         configure_args = ["--prefix=%s" % prefix,
-                          "--without-paraver",
-                          "--without-gui"]
+                          "--without-paraver"]
+
+        if not '+gui' in spec:
+            configure_args.append('--without-gui')
+
         configure(*configure_args)
         make(parallel=False)
         make("install", parallel=False)
