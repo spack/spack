@@ -188,6 +188,7 @@ class Qt(Package):
                   '-qt-xcb',
                   '{0}-gtkstyle'.format('' if '+gtk' in self.spec else '-no'),
                   '-skip', 'qtwebkit',
+                  '-skip', 'qtscript',
                   *self.common_config_args)
 
     @when('@5.7:')
