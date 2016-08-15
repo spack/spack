@@ -406,6 +406,8 @@ class VCSFetchStrategy(FetchStrategy):
 
     @_needs_stage
     def archive(self, destination, **kwargs):
+        return
+        print destination
         assert (extension(destination) == 'tar.gz')
         assert (self.stage.source_path.startswith(self.stage.path))
 

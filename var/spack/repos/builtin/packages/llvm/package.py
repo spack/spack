@@ -136,8 +136,33 @@ class Llvm(Package):
             'destination': 'projects',
             'placement': 'libunwind',
         },
+        'cling': {
+            'url':  '', #must specify
+            'destination': 'tools',
+            'placement': 'cling',
+        },
     }
     releases = [
+        {
+            'version': 'cling',
+            'tag' : 'cling-patches-r274612',
+            'revision' : '274612',
+            'repo': 'http://root.cern.ch/git/llvm.git',
+                    'resources': {
+                        'compiler-rt': 'http://llvm.org/svn/llvm-project/compiler-rt/trunk',
+                        'openmp': 'http://llvm.org/svn/llvm-project/openmp/trunk',
+                        # 'polly':
+                        # 'http://llvm.org/svn/llvm-project/polly/trunk', #
+                        # currently an unsupported combination
+                        'libcxx': 'http://llvm.org/svn/llvm-project/libcxx/trunk',
+                        'libcxxabi': 'http://llvm.org/svn/llvm-project/libcxxabi/trunk',
+                        'clang': 'http://root.cern.ch/git/clang.git',
+                        'cling': 'http://root.cern.ch/git/cling.git',
+                        'clang-tools-extra': 'http://llvm.org/svn/llvm-project/clang-tools-extra/trunk',
+                        'lldb': 'http://llvm.org/svn/llvm-project/lldb/trunk',
+                        'llvm-libunwind': 'http://llvm.org/svn/llvm-project/libunwind/trunk',
+                    }
+        },
         {
             'version': 'trunk',
             'repo': 'http://llvm.org/svn/llvm-project/llvm/trunk',
@@ -236,6 +261,31 @@ class Llvm(Package):
                          destination=resources[name]['destination'],
                          when='@%(version)s' % release,
                          placement=resources[name].get('placement', None))
+        elif release['version'] == 'cling':
+            version(release['version'], git=release['repo'], tag=release['tag'])
+
+            for name, repo in release['resources'].items():
+                if name == "clang":
+                    resource(name=name,
+                             git=repo,
+                             tag=release['tag'],
+                             destination=resources[name]['destination'],
+                             when='@%(version)s' % release,
+                             placement=resources[name].get('placement', None))
+                    continue
+                if 'git' in repo:
+                    resource(name=name,
+                             git=repo,
+                             destination=resources[name]['destination'],
+                             when='@%(version)s' % release,
+                             placement=resources[name].get('placement', None))
+                else:
+                    resource(name=name,
+                             svn=repo,
+                             revision=release['revision'],
+                             destination=resources[name]['destination'],
+                             when='@%(version)s' % release,
+                             placement=resources[name].get('placement', None))
         else:
             version(release['version'], release['md5'], url=llvm_url % release)
 
@@ -301,6 +351,7 @@ class Llvm(Package):
 
             cmake_args.append(
                 '-DLLVM_TARGETS_TO_BUILD:Bool=' + ';'.join(targets))
+        cmake_args.append('-DLLVM_ENABLE_LIBCXX=ON')
 
         if '+clang' not in spec:
             if '+clang_extra' in spec:
