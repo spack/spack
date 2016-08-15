@@ -65,7 +65,7 @@ class Qt(Package):
     # depends_on("gperf")
     # depends_on("flex", type='build')
     # depends_on("bison", type='build')
-    # depends_on("ruby")
+    # depends_on("ruby", type='build')
     # depends_on("icu4c")
 
     # OpenGL hardware acceleration

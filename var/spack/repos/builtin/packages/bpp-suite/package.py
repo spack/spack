@@ -36,7 +36,7 @@ class BppSuite(Package):
 
     # FIXME: Add dependencies if required.
     depends_on('cmake', type='build')
-    depends_on('texinfo')
+    depends_on('texinfo', type='build')
     depends_on('bpp-core')
     depends_on('bpp-seq')
     depends_on('bpp-phyl')
