@@ -43,7 +43,6 @@ class Cube(Package):
     version('4.2.3', '8f95b9531f5a8f8134f279c2767c9b20',
             url="http://apps.fz-juelich.de/scalasca/releases/cube/4.2/dist/cube-4.2.3.tar.gz")
 
-    # TODO : add variant that builds GUI on top of Qt
     variant('gui', default=False, description='Build CUBE GUI')
 
     depends_on('zlib')
@@ -53,6 +52,7 @@ class Cube(Package):
         configure_args = ["--prefix=%s" % prefix,
                           "--without-paraver"]
 
+        # TODO : need to handle cross compiling build
         if not '+gui' in spec:
             configure_args.append('--without-gui')
 
