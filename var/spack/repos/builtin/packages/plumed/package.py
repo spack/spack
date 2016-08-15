@@ -22,91 +22,39 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import subprocess
-
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install plumed
+#
+# You can edit this file again by typing:
+#
+#     spack edit plumed
+#
+# See the Spack documentation for more information on packaging.
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
 from spack import *
 
 
 class Plumed(Package):
     """PLUMED is an open source library for free energy calculations in
-    molecular systems which works together with some of the most popular
-    molecular dynamics engines.
+       molecular systems which works together with some of the most popular
+       molecular dynamics engines."""
 
-    Free energy calculations can be performed as a function of many order
-    parameters with a particular focus on biological problems, using state
-    of the art methods such as metadynamics, umbrella sampling and
-    Jarzynski-equation based steered MD.
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "http://www.plumed.org/home"
+    url      = "https://github.com/plumed/plumed2"
 
-    The software, written in C++, can be easily interfaced with both fortran
-    and C/C++ codes.
-    """
-    homepage = 'http://www.plumed.org/'
-    url = 'https://github.com/plumed/plumed2/archive/v2.2.3.tar.gz'
+    version('2.2.3', git="https://github.com/plumed/plumed2.git", tag='v2.2.3')
 
-    version('2.2.3', 'a6e3863e40aac07eb8cf739cbd14ecf8')
-
-    variant('shared', default=True, description='Builds shared libraries')
-    variant('mpi', default=True, description='Activates MPI support')
-    variant('gsl', default=True, description='Activates GSL support')
-
-    depends_on('zlib')
-    depends_on('blas')
-    depends_on('lapack')
-
-    depends_on('mpi', when='+mpi')
-    depends_on('gsl', when='+gsl')
-
-    # Dictionary mapping PLUMED versions to the patches it provides
-    # interactively
-    plumed_patches = {
-        '2.2.3': {
-            'amber-14': '1',
-            'gromacs-4.5.7': '2',
-            'gromacs-4.6.7': '3',
-            'gromacs-5.0.7': '4',
-            'gromacs-5.1.2': '5',
-            'lammps-6Apr13': '6',
-            'namd-2.8': '7',
-            'namd-2.9': '8',
-            'espresso-5.0.2': '9'
-        }
-    }
-
-    def apply_patch(self, other):
-        plumed = subprocess.Popen(
-            [join_path(self.spec.prefix.bin, 'plumed'), 'patch', '-p'],
-            stdin=subprocess.PIPE
-        )
-        opts = Plumed.plumed_patches[str(self.version)]
-        search = '{0.name}-{0.version}'.format(other)
-        choice = opts[search] + '\n'
-        plumed.stdin.write(choice)
-        plumed.wait()
-
-    def setup_dependent_package(self, module, ext_spec):
-        # Make plumed visible from dependent packages
-        module.plumed = Executable(join_path(self.spec.prefix.bin, 'plumed'))
+    # FIXME: Add additional dependencies if required.
+    depends_on('intelmpi')
 
     def install(self, spec, prefix):
-        # From plumed docs :
-        # Also consider that this is different with respect to what some other
-        # configure script does in that variables such as MPICXX are
-        # completely ignored here. In case you work on a machine where CXX is
-        # set to a serial compiler and MPICXX to a MPI compiler, to compile
-        # with MPI you should use:
-        #
-        # > ./configure CXX="$MPICXX"
-        configure_opts = [
-            'CXX={0}'.format(spec['mpi'].mpicxx)
-        ] if '+mpi' in self.spec else []
-
-        configure_opts.extend([
-            '--prefix={0}'.format(prefix),
-            '--enable-shared={0}'.format('yes' if '+shared' in spec else 'no'),
-            '--enable-mpi={0}'.format('yes' if '+mpi' in spec else 'no'),
-            '--enable-gsl={0}'.format('yes' if '+gsl' in spec else 'no')
-        ])
-
-        configure(*configure_opts)
+        # FIXME: Unknown build system
         make()
         make('install')

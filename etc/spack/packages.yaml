@@ -1,0 +1,5 @@
+packages:
+  intelmpi:
+    paths:
+      intelmpi@4.1.0%gcc@4.4.7 arch=linux-x86_64: /software/compilers/intel/13.0/impi/4.1.0.024
+    buildable: False
