@@ -84,6 +84,7 @@ class Extrae(Package):
                   "--with-dyninst-headers=%s" % spec[
                       'dyninst'].prefix.include,
                   "--with-elf=%s" % spec['libelf'].prefix,
+                  "--with-xml-prefix=%s" % spec['libxml2'].prefix,
                   "--with-binutils=%s" % spec['binutils'].prefix,
                   "--with-dyninst-libs=%s" % spec['dyninst'].prefix.lib)
 
