@@ -52,9 +52,10 @@ class Plumed(Package):
     version('2.2.3', git="https://github.com/plumed/plumed2.git", tag='v2.2.3')
 
     # FIXME: Add additional dependencies if required.
-    depends_on('intelmpi')
+    depends_on('mpi')
 
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
+        configure("--prefix=" + prefix,
+                  "--enable-mpi",
+                  "-enable-modules=crystallization")
         make()
-        make('install')
