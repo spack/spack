@@ -109,7 +109,7 @@ def _spider(args):
 
         while link_parser.links:
             raw_link = link_parser.links.pop()
-            abs_link = urlparse.urljoin(response_url, raw_link)
+            abs_link = urlparse.urljoin(response_url, raw_link.strip())
 
             links.add(abs_link)
 
