@@ -49,6 +49,7 @@ class Mrnet(Package):
     parallel = False
 
     depends_on("boost")
+    depends_on("bison")
 
     def install(self, spec, prefix):
         # Build the MRNet LW thread safe libraries when the krelloptions
