@@ -53,7 +53,7 @@ class Cube(Package):
                           "--without-paraver"]
 
         # TODO : need to handle cross compiling build
-        if not '+gui' in spec:
+        if '+gui' not in spec:
             configure_args.append('--without-gui')
 
         configure(*configure_args)
