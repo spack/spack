@@ -70,7 +70,7 @@ class Fenics(Package):
 
     depends_on('eigen@3.2.0:', type='build')
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
-    
+
     depends_on('mpi', when='+mpi')
     depends_on('hdf5', when='+hdf5')
     depends_on('parmetis@4.0.2:^metis+real64', when='+parmetis')
@@ -89,7 +89,7 @@ class Fenics(Package):
     depends_on('py-sympy', type=nolink)
     depends_on('swig@3.0.3:', type=nolink)
     depends_on('cmake@2.8.12:', type=nolink)
-    
+
     depends_on('py-setuptools', type='build')
     depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
 

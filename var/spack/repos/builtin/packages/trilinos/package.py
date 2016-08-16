@@ -176,8 +176,8 @@ class Trilinos(Package):
             options.extend([
                 '-DTPL_ENABLE_HDF5:BOOL=ON',
                 '-DHDF5_INCLUDE_DIRS:PATH=%s' % spec['hdf5'].prefix.include,
-                '-DHDF5_LIBRARY_DIRS:PATH=%s' % spec['hdf5'].prefix.lib              
-                ])
+                '-DHDF5_LIBRARY_DIRS:PATH=%s' % spec['hdf5'].prefix.lib
+            ])
         else:
             options.extend(['-DTPL_ENABLE_HDF5:BOOL=OFF'])
 
