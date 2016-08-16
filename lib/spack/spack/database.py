@@ -198,7 +198,7 @@ class Database(object):
         except YAMLError as e:
             raise SpackYAMLError("error writing YAML database:", str(e))
 
-    def _read_spec_from_yaml(self, hash_key, installs, parent_key=None):
+    def _read_spec_from_yaml(self, hash_key, installs):
         """Recursively construct a spec from a hash in a YAML database.
 
         Does not do any locking.
@@ -212,19 +212,27 @@ class Database(object):
 
         # Build spec from dict first.
         spec = Spec.from_node_dict(spec_dict)
+        return spec
 
+    def _assign_dependencies(self, hash_key, installs, data):
         # Add dependencies from other records in the install DB to
         # form a full spec.
+        spec = data[hash_key].spec
+        spec_dict = installs[hash_key]['spec']
+
         if 'dependencies' in spec_dict[spec.name]:
             yaml_deps = spec_dict[spec.name]['dependencies']
             for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
-                child = self._read_spec_from_yaml(dhash, installs, hash_key)
-                spec._add_dependency(child, dtypes)
+                if dhash not in data:
+                    tty.warn("Missing dependency not in database: ",
+                             "%s needs %s-%s" % (
+                                 spec.format('$_$#'), dname, dhash[:7]))
+                    continue
 
-        # Specs from the database need to be marked concrete because
-        # they represent actual installations.
-        spec._mark_concrete()
-        return spec
+                # defensive copy (not sure everything handles extra
+                # parent links yet)
+                child = data[dhash].spec
+                spec._add_dependency(child, dtypes)
 
     def _read_from_yaml(self, stream):
         """
@@ -267,21 +275,21 @@ class Database(object):
             self.reindex(spack.install_layout)
             installs = dict((k, v.to_dict()) for k, v in self._data.items())
 
-        # Iterate through database and check each record.
+        # Build up the database in three passes:
+        #
+        #   1. Read in all specs without dependencies.
+        #   2. Hook dependencies up among specs.
+        #   3. Mark all specs concrete.
+        #
+        # The database is built up so that ALL specs in it share nodes
+        # (i.e., its specs are a true Merkle DAG, unlike most specs.)
+
+        # Pass 1: Iterate through database and build specs w/o dependencies
         data = {}
         for hash_key, rec in installs.items():
             try:
                 # This constructs a spec DAG from the list of all installs
                 spec = self._read_spec_from_yaml(hash_key, installs)
-
-                # Validate the spec by ensuring the stored and actual
-                # hashes are the same.
-                spec_hash = spec.dag_hash()
-                if not spec_hash == hash_key:
-                    tty.warn(
-                        "Hash mismatch in database: %s -> spec with hash %s" %
-                        (hash_key, spec_hash))
-                    continue  # TODO: is skipping the right thing to do?
 
                 # Insert the brand new spec in the database.  Each
                 # spec has its own copies of its dependency specs.
@@ -295,6 +303,18 @@ class Database(object):
                          "hash:  %s" % hash_key,
                          "cause: %s: %s" % (type(e).__name__, str(e)))
                 raise
+
+        # Pass 2: Assign dependencies once all specs are created.
+        for hash_key in data:
+            self._assign_dependencies(hash_key, installs, data)
+
+        # Pass 3: Mark all specs concrete.  Specs representing real
+        # installations must be explicitly marked.
+        # We do this *after* all dependencies are connected because if we
+        # do it *while* we're constructing specs,it causes hashes to be
+        # cached prematurely.
+        for hash_key, rec in data.items():
+            rec.spec._mark_concrete()
 
         self._data = data
 
