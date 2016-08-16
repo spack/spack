@@ -74,7 +74,7 @@ class CbtfKrell(Package):
             description="Build mpi experiment collector for mpich MPI.")
 
     # Dependencies for cbtf-krell
-    depends_on("cmake@3.0.2", type='build')
+    depends_on("cmake@3.0.2:", type='build')
 
     # For binutils service
     depends_on("binutils@2.24+krellpatch")

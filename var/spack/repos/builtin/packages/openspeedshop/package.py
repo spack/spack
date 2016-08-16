@@ -101,7 +101,7 @@ class Openspeedshop(Package):
     variant('mpich', default=False,
             description="Build mpi experiment collector for mpich MPI.")
 
-    depends_on("cmake@3.0.2", type='build')
+    depends_on("cmake@3.3.1:", type='build')
     # Dependencies for openspeedshop that are common to all the variants of
     # the OpenSpeedShop build
     depends_on("bison", type='build')
@@ -249,7 +249,7 @@ class Openspeedshop(Package):
                     # '-DBOOST_ROOT=%s'             % spec['boost'].prefix,
                     # '-DOPENMPI_DIR=%s'            % spec['openmpi'].prefix,
 
-                    python_vers = '%d.%d' % spec['python'].version[:2]
+                    python_vers = '%s' % spec['python'].version[:2]
 
                     cmakeOptions = []
                     cmakeOptions.extend([
