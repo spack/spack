@@ -206,7 +206,7 @@ class CbtfKrell(Package):
             # Invoke cmake
             cmake('..', *cmakeOptions)
 
-            make("clean")
+            #make("clean")
             make()
             make("install")
 
