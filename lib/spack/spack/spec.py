@@ -504,6 +504,7 @@ class Spec(object):
         self.variants.spec = self
         self.namespace = other.namespace
         self._hash = other._hash
+        self._cmp_key_cache = other._cmp_key_cache
 
         # Specs are by default not assumed to be normal, but in some
         # cases we've read them from a file want to assume normal.
@@ -858,9 +859,10 @@ class Spec(object):
         # Edge traversal yields but skips children of visited nodes
         if not (key in visited and cover == 'edges'):
             # This code determines direction and yields the children/parents
+
             successors = deps
             if direction == 'parents':
-                successors = self.dependents_dict()
+                successors = self.dependents_dict()  # TODO: deptype?
 
             visited.add(key)
             for name in sorted(successors):
@@ -1278,15 +1280,15 @@ class Spec(object):
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
 
-    def _mark_concrete(self):
+    def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
 
         Only for internal use -- client code should use "concretize"
         unless there is a need to force a spec to be concrete.
         """
         for s in self.traverse(deptype_query=alldeps):
-            s._normal = True
-            s._concrete = True
+            s._normal = value
+            s._concrete = value
 
     def concretized(self):
         """This is a non-destructive version of concretize().  First clones,
@@ -1532,6 +1534,10 @@ class Spec(object):
 
         if self._normal and not force:
             return False
+
+        # avoid any assumptions about concreteness when forced
+        if force:
+            self._mark_concrete(False)
 
         # Ensure first that all packages & compilers in the DAG exist.
         self.validate_names()
@@ -2059,10 +2065,17 @@ class Spec(object):
           1. A tuple describing this node in the DAG.
           2. The hash of each of this node's dependencies' cmp_keys.
         """
-        dep_dict = self.dependencies_dict(deptype=('link', 'run'))
-        return self._cmp_node() + (
-            tuple(hash(dep_dict[name])
-                  for name in sorted(dep_dict)),)
+        if self._cmp_key_cache:
+            return self._cmp_key_cache
+
+        dep_tuple = tuple(
+            (d.spec.name, hash(d.spec), tuple(sorted(d.deptypes)))
+            for name, d in sorted(self._dependencies.items()))
+
+        key = (self._cmp_node(), dep_tuple)
+        if self._concrete:
+            self._cmp_key_cache = key
+        return key
 
     def colorized(self):
         return colorize_spec(self)
@@ -2457,6 +2470,7 @@ class SpecParser(spack.parse.Parser):
         spec._dependencies = DependencyMap()
         spec.namespace = spec_namespace
         spec._hash = None
+        spec._cmp_key_cache = None
 
         spec._normal = False
         spec._concrete = False
