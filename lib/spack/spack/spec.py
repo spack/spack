@@ -1871,7 +1871,7 @@ class Spec(object):
         """Return list of any virtual deps in this spec."""
         return [spec for spec in self.traverse() if spec.virtual]
 
-    def _dup(self, other, **kwargs):
+    def _dup(self, other, deps=True, cleardeps=True):
         """Copy the spec other into self.  This is an overwriting
            copy.  It does not copy any dependents (parents), but by default
            copies dependencies.
@@ -1902,7 +1902,7 @@ class Spec(object):
         self.versions = other.versions.copy()
         self.architecture = other.architecture
         self.compiler = other.compiler.copy() if other.compiler else None
-        if kwargs.get('cleardeps', True):
+        if cleardeps:
             self._dependents = DependencyMap()
             self._dependencies = DependencyMap()
         self.compiler_flags = other.compiler_flags.copy()
@@ -1912,19 +1912,15 @@ class Spec(object):
         self.external_module = other.external_module
         self.namespace = other.namespace
         self._hash = other._hash
+        self._cmp_key_cache = other._cmp_key_cache
 
         # If we copy dependencies, preserve DAG structure in the new spec
-        if kwargs.get('deps', True):
+        if deps:
             # This copies the deps from other using _dup(deps=False)
-            # XXX(deptype): We can keep different instances of specs here iff
-            #               it is only a 'build' dependency (from its parent).
-            #               All other instances must be shared (due to symbol
-            #               and PATH contention). These should probably search
-            #               for any existing installation which can satisfy the
-            #               build and latch onto that because if 3 things need
-            #               the same build dependency and it is *not*
-            #               available, we only want to build it once.
-            new_nodes = other.flat_dependencies(deptype_query=alldeps)
+            deptypes = alldeps
+            if isinstance(deps, (tuple, list)):
+                deptypes = deps
+            new_nodes = other.flat_dependencies(deptypes=deptypes)
             new_nodes[self.name] = self
 
             stack = [other]
@@ -1933,6 +1929,9 @@ class Spec(object):
                 new_spec = new_nodes[cur_spec.name]
 
                 for depspec in cur_spec._dependencies.values():
+                    if not any(d in deptypes for d in depspec.deptypes):
+                        continue
+
                     stack.append(depspec.spec)
 
                     # XXX(deptype): add any new deptypes that may have appeared
@@ -1948,13 +1947,22 @@ class Spec(object):
         self.external_module = other.external_module
         return changed
 
-    def copy(self, **kwargs):
+    def copy(self, deps=True):
         """Return a copy of this spec.
-           By default, returns a deep copy.  Supply dependencies=False
-           to get a shallow copy.
+
+        By default, returns a deep copy. To control how dependencies are
+        copied, supply:
+
+        deps=True:  deep copy
+
+        deps=False: shallow copy (no dependencies)
+
+        deps=('link', 'build'):
+            only build and link dependencies.  Similar for other deptypes.
+
         """
         clone = Spec.__new__(Spec)
-        clone._dup(self, **kwargs)
+        clone._dup(self, deps=deps)
         return clone
 
     @property
