@@ -213,7 +213,7 @@ def supported(compiler_spec):
 @_auto_compiler_spec
 def find(compiler_spec, scope=None):
     """Return specs of available compilers that match the supplied
-       compiler spec.  Return an list if nothing found."""
+       compiler spec.  Return an empty list if nothing found."""
     return [c for c in all_compilers(scope) if c.satisfies(compiler_spec)]
 
 
