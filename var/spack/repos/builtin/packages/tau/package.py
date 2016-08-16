@@ -64,7 +64,7 @@ class Tau(Package):
     depends_on('binutils', when='~download')
     depends_on('mpi', when='+mpi')
 
-    def set_compiler_options(self):
+    def set_compiler_options(self, spec):
 
         useropt = ["-O2", self.rpath_args]
 
@@ -85,8 +85,13 @@ class Tau(Package):
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
         compiler_options = ['-c++=%s' % self.compiler.cxx_names[0],
                             '-cc=%s' % self.compiler.cc_names[0]]
+
+        # TODO : Handle other compilers (tau except vendor name for fortran)
         if self.compiler.fc:
-            compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
+            if spec.satisfies('%intel'):
+                compiler_options.append('-fortran=intel')
+            else:
+                compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
         ##########
 
         # Construct the string of custom compiler flags and append it to
@@ -138,7 +143,7 @@ class Tau(Package):
             else:
                 raise InstallError('OMPT supported only with Intel compiler!')
 
-        compiler_specific_options = self.set_compiler_options()
+        compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)
         configure(*options)
         make("install")
