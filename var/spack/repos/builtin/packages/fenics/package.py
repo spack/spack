@@ -189,9 +189,6 @@ class Fenics(Package):
                 self.cmake_is_on('zlib')),
         ]
 
-        if '+hdf5' in spec and 'hdf5~cxx' in spec:
-            cmake_args.append('-DHDF5_hdf5_cpp_LIBRARY:PATH=""')
-
         cmake_args.extend(std_cmake_args)
 
         with working_dir('build', create=True):
