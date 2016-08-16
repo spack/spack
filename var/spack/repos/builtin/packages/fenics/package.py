@@ -64,15 +64,13 @@ class Fenics(Package):
 
     patch('petsc-3.7.patch', when='@1.6.1^petsc@3.7:')
     patch('petsc-version-detection.patch', when='@:1.6.1')
+    patch('hdf5~cxx-detection.patch')
 
     extends('python')
 
-    depends_on('py-numpy')
-    depends_on('py-ply')
-    depends_on('py-six')
-    depends_on('py-sphinx@1.0.1:', when='+doc')
-    depends_on('eigen@3.2.0:')
-    depends_on('boost')
+    depends_on('eigen@3.2.0:', type='build')
+    depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
+    
     depends_on('mpi', when='+mpi')
     depends_on('hdf5', when='+hdf5')
     depends_on('parmetis@4.0.2:^metis+real64', when='+parmetis')
@@ -85,10 +83,15 @@ class Fenics(Package):
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('qt', when='+qt')
 
-    # This are the build dependencies
-    depends_on('py-setuptools')
-    depends_on('cmake@2.8.12:')
-    depends_on('swig@3.0.3:')
+    depends_on('py-ply', type=nolink)
+    depends_on('py-six', type=nolink)
+    depends_on('py-numpy', type=nolink)
+    depends_on('py-sympy', type=nolink)
+    depends_on('swig@3.0.3:', type=nolink)
+    depends_on('cmake@2.8.12:', type=nolink)
+    
+    depends_on('py-setuptools', type='build')
+    depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
 
     releases = [
         {
@@ -133,15 +136,6 @@ class Fenics(Package):
                      destination='depends',
                      when='@{version}'.format(**release),
                      placement=name)
-
-    def patch(self):
-        pass
-
-    @when('+hdf5~cxx')
-    def patch(self):
-        filter_file(r'find_package(HDF5)',
-                    r'find_package(HDF5 COMPONENTS C)',
-                    'CMakeLists.txt')
 
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'
