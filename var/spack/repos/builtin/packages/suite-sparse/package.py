@@ -36,6 +36,7 @@ class SuiteSparse(Package):
     version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
 
     variant('tbb', default=True, description='Build with Intel TBB')
+    variant('fpic', default=True, description='Build position independent code (required to link with shared libraries)')
 
     depends_on('blas')
     depends_on('lapack')
@@ -63,6 +64,8 @@ class SuiteSparse(Package):
             'CXX=c++',
             'F77=f77',
         ])
+        if '+fpic' in spec:
+            make_args.extend(['CFLAGS=-fPIC', 'FFLAGS=-fPIC'])
 
         # use Spack's metis in CHOLMOD/Partition module,
         # otherwise internal Metis will be compiled
