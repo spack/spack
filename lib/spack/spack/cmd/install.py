@@ -31,6 +31,7 @@ import spack.cmd
 
 description = "Build and install packages"
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
@@ -52,9 +53,16 @@ def setup_parser(subparser):
         help="Display verbose build output while installing.")
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
-        help="Fake install.  Just remove the prefix and touch a fake file in it.")
+        help="Fake install. Just remove prefix and create a fake file.")
     subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
+        '--dirty', action='store_true', dest='dirty',
+        help="Install a package *without* cleaning the environment.")
+    subparser.add_argument(
+        'packages', nargs=argparse.REMAINDER,
+        help="specs of packages to install")
+    subparser.add_argument(
+        '--run-tests', action='store_true', dest='run_tests',
+        help="Run tests during installation of a package.")
 
 
 def install(parser, args):
@@ -77,6 +85,8 @@ def install(parser, args):
                 keep_stage=args.keep_stage,
                 ignore_deps=args.ignore_deps,
                 make_jobs=args.jobs,
+                run_tests=args.run_tests,
                 verbose=args.verbose,
                 fake=args.fake,
+                dirty=args.dirty,
                 explicit=True)

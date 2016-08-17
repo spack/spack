@@ -41,6 +41,7 @@ class Pgi(Package):
     homepage = "http://www.pgroup.com/"
     url = "file://%s/pgi-16.3.tar.gz" % os.getcwd()
 
+    version('16.5', 'a40e8852071b5d600cb42f31631b3de1')
     version('16.3', '618cb7ddbc57d4e4ed1f21a0ab25f427')
 
     variant('network', default=True,

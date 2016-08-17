@@ -39,14 +39,19 @@ class Scotch(Package):
     version('6.0.0', 'c50d6187462ba801f9a82133ee666e8e')
     version('5.1.10b', 'f587201d6cf5cf63527182fbfba70753')
 
-    variant('mpi', default=False, description='Activate the compilation of parallel libraries')
-    variant('compression', default=True, description='Activate the posibility to use compressed files')
-    variant('esmumps', default=False, description='Activate the compilation of esmumps needed by mumps')
-    variant('shared', default=True, description='Build a shared version of the library')
-    variant('metis', default=True, description='Build metis and parmetis wrapper libraries')
+    variant('mpi', default=False,
+            description='Activate the compilation of parallel libraries')
+    variant('compression', default=True,
+            description='Activate the posibility to use compressed files')
+    variant('esmumps', default=False,
+            description='Activate the compilation of esmumps needed by mumps')
+    variant('shared', default=True,
+            description='Build a shared version of the library')
+    variant('metis', default=True,
+            description='Build metis and parmetis wrapper libraries')
 
-    depends_on('flex')
-    depends_on('bison')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('zlib', when='+compression')
 
@@ -171,15 +176,13 @@ class Scotch(Package):
                           target == 'ptscotch'))
                 make(target, parallel=can_make_parallel)
 
-        # todo change this to take into account darwin systems
-        lib_ext = '.so' if '+shared' in self.spec else '.a'
+        lib_ext = dso_suffix if '+shared' in self.spec else 'a'
         # It seams easier to remove metis wrappers from the folder that will be
         # installed than to tweak the Makefiles
         if '+metis' not in self.spec:
             with working_dir('lib'):
-                lib_ext = '.so' if '+shared' in self.spec else '.a'
-                force_remove('libscotchmetis{0}'.format(lib_ext))
-                force_remove('libptscotchparmetis{0}'.format(lib_ext))
+                force_remove('libscotchmetis.{0}'.format(lib_ext))
+                force_remove('libptscotchparmetis.{0}'.format(lib_ext))
 
             with working_dir('include'):
                 force_remove('metis.h')
@@ -187,8 +190,8 @@ class Scotch(Package):
 
         if '~esmumps' in self.spec and self.spec.version < Version('6.0.0'):
             with working_dir('lib'):
-                force_remove('libesmumps{0}'.format(lib_ext))
-                force_remove('libptesmumps{0}'.format(lib_ext))
+                force_remove('libesmumps.{0}'.format(lib_ext))
+                force_remove('libptesmumps.{0}'.format(lib_ext))
 
             with working_dir('include'):
                 force_remove('esmumps.h')

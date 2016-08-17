@@ -28,6 +28,7 @@ import tempfile
 import spack
 from llnl.util.filesystem import *
 from spack.directory_layout import YamlDirectoryLayout
+from spack.database import Database
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.test.mock_packages_test import *
 from spack.test.mock_repo import MockArchive
@@ -49,8 +50,10 @@ class InstallTest(MockPackagesTest):
         # installed pkgs and mock packages.
         self.tmpdir = tempfile.mkdtemp()
         self.orig_layout = spack.install_layout
-        spack.install_layout = YamlDirectoryLayout(self.tmpdir)
+        self.orig_db = spack.installed_db
 
+        spack.install_layout = YamlDirectoryLayout(self.tmpdir)
+        spack.installed_db   = Database(self.tmpdir)
 
     def tearDown(self):
         super(InstallTest, self).tearDown()
@@ -61,8 +64,8 @@ class InstallTest(MockPackagesTest):
 
         # restore spack's layout.
         spack.install_layout = self.orig_layout
+        spack.installed_db   = self.orig_db
         shutil.rmtree(self.tmpdir, ignore_errors=True)
-
 
     def fake_fetchify(self, pkg):
         """Fake the URL for a package so it downloads from a file."""
@@ -70,8 +73,7 @@ class InstallTest(MockPackagesTest):
         fetcher.append(URLFetchStrategy(self.repo.url))
         pkg.fetcher = fetcher
 
-
-    def ztest_install_and_uninstall(self):
+    def test_install_and_uninstall(self):
         # Get a basic concrete spec for the trivial install package.
         spec = Spec('trivial_install_test_package')
         spec.concretize()
@@ -85,10 +87,9 @@ class InstallTest(MockPackagesTest):
         try:
             pkg.do_install()
             pkg.do_uninstall()
-        except Exception, e:
+        except Exception:
             pkg.remove_prefix()
             raise
-
 
     def test_install_environment(self):
         spec = Spec('cmake-client').concretized()
@@ -99,6 +100,6 @@ class InstallTest(MockPackagesTest):
         pkg = spec.package
         try:
             pkg.do_install()
-        except Exception, e:
+        except Exception:
             pkg.remove_prefix()
             raise

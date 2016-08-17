@@ -24,15 +24,33 @@
 ##############################################################################
 from spack import *
 
+
 class RBiocgenerics(Package):
     """S4 generic functions needed by many Bioconductor packages."""
 
-    homepage = 'https://www.bioconductor.org/packages/release/bioc/html/BiocGenerics.html'
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/BiocGenerics_0.16.1.tar.gz"
-
-    version('0.16.1', 'c2148ffd86fc6f1f819c7f68eb2c744f', expand=False)
+    homepage = 'https://bioconductor.org/packages/BiocGenerics/'
+    version('bioc-3.3',
+            git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
+            branch='release-3.3')
+    version('bioc-3.2',
+            git='https://github.com/Bioconductor-mirror/BiocGenerics.git',
+            branch='release-3.2')
 
     extends('R')
 
+    def validate(self, spec):
+        """
+        Checks that the version of R is appropriate for the Bioconductor
+        version.
+        """
+        if spec.satisfies('@bioc-3.3'):
+            if not spec.satisfies('^R@3.3.0:3.3.9'):
+                raise InstallError('Must use R-3.3 for Bioconductor-3.3')
+        elif spec.satisfies('@bioc-3.2'):
+            if not spec.satisfies('^R@3.2.0:3.2.9'):
+                raise InstallError('Must use R-3.2 for Bioconductor-3.2')
+
     def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library=%s' % self.module.r_lib_dir, '%s' % self.stage.archive_file)
+        self.validate(spec)
+        R('CMD', 'INSTALL', '--library=%s' %
+          self.module.r_lib_dir, '%s' % self.stage.source_path)

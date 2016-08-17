@@ -1,0 +1,12 @@
+diff -up pcre-8.38/pcrecpp.cc.intel pcre-8.38/pcrecpp.cc
+--- pcre-8.38/pcrecpp.cc.intel	2014-09-15 07:48:59.000000000 -0600
++++ pcre-8.38/pcrecpp.cc	2016-06-08 16:16:56.702721214 -0600
+@@ -66,7 +66,7 @@ Arg RE::no_arg((void*)NULL);
+ // inclusive test if we ever needed it.  (Note that not only the
+ // __attribute__ syntax, but also __USER_LABEL_PREFIX__, are
+ // gnu-specific.)
+-#if defined(__GNUC__) && __GNUC__ >= 3 && defined(__ELF__)
++#if defined(__GNUC__) && __GNUC__ >= 3 && defined(__ELF__) && !defined(__INTEL_COMPILER)
+ # define ULP_AS_STRING(x)            ULP_AS_STRING_INTERNAL(x)
+ # define ULP_AS_STRING_INTERNAL(x)   #x
+ # define USER_LABEL_PREFIX_STR       ULP_AS_STRING(__USER_LABEL_PREFIX__)

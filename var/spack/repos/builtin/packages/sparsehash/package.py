@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Sparsehash(Package):
     """Sparse and dense hash-tables for C++ by Google"""
     homepage = "https://github.com/sparsehash/sparsehash"

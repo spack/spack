@@ -26,7 +26,8 @@ from spack import *
 
 
 class Patchelf(Package):
-    """PatchELF is a small utility to modify the dynamic linker and RPATH of ELF executables."""
+    """PatchELF is a small utility to modify the dynamic linker and RPATH of
+       ELF executables."""
 
     homepage = "https://nixos.org/patchelf.html"
     def url_for_version(self, version):

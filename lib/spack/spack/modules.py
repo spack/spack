@@ -120,7 +120,7 @@ def dependencies(spec, request='all'):
         return []
 
     if request == 'direct':
-        return [xx for _, xx in spec.dependencies.items()]
+        return spec.dependencies()
 
     # FIXME : during module file creation nodes seem to be visited multiple
     # FIXME : times even if cover='nodes' is given. This work around permits
@@ -188,6 +188,8 @@ def parse_config_options(module_generator):
     #####
 
     # Automatic loading loads
+    module_file_actions['hash_length'] = module_configuration.get(
+        'hash_length', 7)
     module_file_actions['autoload'] = dependencies(
         module_generator.spec, module_file_actions.get('autoload', 'none'))
     # Prerequisites
@@ -237,6 +239,7 @@ class EnvModule(object):
     formats = {}
 
     class __metaclass__(type):
+
         def __init__(cls, name, bases, dict):
             type.__init__(cls, name, bases, dict)
             if cls.name != 'env_module' and cls.name in CONFIGURATION[
@@ -269,12 +272,24 @@ class EnvModule(object):
 
     @property
     def tokens(self):
+        """Tokens that can be substituted in environment variable values
+        and naming schemes
+        """
         tokens = {
             'name': self.spec.name,
             'version': self.spec.version,
-            'compiler': self.spec.compiler
+            'compiler': self.spec.compiler,
+            'prefix': self.spec.package.prefix
         }
         return tokens
+
+    @property
+    def upper_tokens(self):
+        """Tokens that can be substituted in environment variable names"""
+        upper_tokens = {
+            'name': self.spec.name.replace('-', '_').upper()
+        }
+        return upper_tokens
 
     @property
     def use_name(self):
@@ -285,11 +300,20 @@ class EnvModule(object):
         naming_tokens = self.tokens
         naming_scheme = self.naming_scheme
         name = naming_scheme.format(**naming_tokens)
-        name += '-' + self.spec.dag_hash(
-        )  # Always append the hash to make the module file unique
         # Not everybody is working on linux...
         parts = name.split('/')
         name = join_path(*parts)
+        # Add optional suffixes based on constraints
+        configuration, _ = parse_config_options(self)
+        suffixes = [name]
+        for constraint, suffix in configuration.get('suffixes', {}).items():
+            if constraint in self.spec:
+                suffixes.append(suffix)
+        # Always append the hash to make the module file unique
+        hash_length = configuration.pop('hash_length', 7)
+        if hash_length != 0:
+            suffixes.append(self.spec.dag_hash(length=hash_length))
+        name = '-'.join(suffixes)
         return name
 
     @property
@@ -331,7 +355,7 @@ class EnvModule(object):
 
         return False
 
-    def write(self):
+    def write(self, overwrite=False):
         """
         Writes out a module file for this object.
 
@@ -381,6 +405,8 @@ class EnvModule(object):
         for x in filter_blacklisted(
                 module_configuration.pop('autoload', []), self.name):
             module_file_content += self.autoload(x)
+        for x in module_configuration.pop('load', []):
+            module_file_content += self.autoload(x)
         for x in filter_blacklisted(
                 module_configuration.pop('prerequisites', []), self.name):
             module_file_content += self.prerequisite(x)
@@ -389,6 +415,15 @@ class EnvModule(object):
             module_file_content += line
         for line in self.module_specific_content(module_configuration):
             module_file_content += line
+
+        # Print a warning in case I am accidentally overwriting
+        # a module file that is already there (name clash)
+        if not overwrite and os.path.exists(self.file_name):
+            message = 'Module file already exists : skipping creation\n'
+            message += 'file : {0.file_name}\n'
+            message += 'spec : {0.spec}'
+            tty.warn(message.format(self))
+            return
 
         # Dump to file
         with open(self.file_name, 'w') as f:
@@ -402,8 +437,12 @@ class EnvModule(object):
         return tuple()
 
     def autoload(self, spec):
-        m = type(self)(spec)
-        return self.autoload_format.format(module_file=m.use_name)
+        if not isinstance(spec, str):
+            m = type(self)(spec)
+            module_file = m.use_name
+        else:
+            module_file = spec
+        return self.autoload_format.format(module_file=module_file)
 
     def prerequisite(self, spec):
         m = type(self)(spec)
@@ -411,11 +450,17 @@ class EnvModule(object):
 
     def process_environment_command(self, env):
         for command in env:
+            # Token expansion from configuration file
+            name = command.args.get('name', '').format(**self.upper_tokens)
+            value = str(command.args.get('value', '')).format(**self.tokens)
+            command.update_args(name=name, value=value)
+            # Format the line int the module file
             try:
                 yield self.environment_modifications_formats[type(
                     command)].format(**command.args)
             except KeyError:
-                message = 'Cannot handle command of type {command} : skipping request'  # NOQA: ignore=E501
+                message = ('Cannot handle command of type {command}: '
+                           'skipping request')
                 details = '{context} at {filename}:{lineno}'
                 tty.warn(message.format(command=type(command)))
                 tty.warn(details.format(**command.args))
@@ -441,20 +486,21 @@ class EnvModule(object):
 
 class Dotkit(EnvModule):
     name = 'dotkit'
-    path = join_path(spack.share_path, "dotkit")
-
+    path = join_path(spack.share_path, 'dotkit')
     environment_modifications_formats = {
         PrependPath: 'dk_alter {name} {value}\n',
+        RemovePath: 'dk_unalter {name} {value}\n',
         SetEnv: 'dk_setenv {name} {value}\n'
     }
 
     autoload_format = 'dk_op {module_file}\n'
 
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
+    default_naming_format = \
+        '{name}-{version}-{compiler.name}-{compiler.version}'
 
     @property
     def file_name(self):
-        return join_path(Dotkit.path, self.spec.architecture,
+        return join_path(self.path, self.spec.architecture,
                          '%s.dk' % self.use_name)
 
     @property
@@ -476,18 +522,18 @@ class Dotkit(EnvModule):
 
     def prerequisite(self, spec):
         tty.warn('prerequisites:  not supported by dotkit module files')
-        tty.warn('\tYou may want to check  ~/.spack/modules.yaml')
+        tty.warn('\tYou may want to check %s/modules.yaml'
+                 % spack.user_config_path)
         return ''
 
 
 class TclModule(EnvModule):
     name = 'tcl'
     path = join_path(spack.share_path, "modules")
-
     environment_modifications_formats = {
-        PrependPath: 'prepend-path --delim "{delim}" {name} \"{value}\"\n',
-        AppendPath: 'append-path   --delim "{delim}" {name} \"{value}\"\n',
-        RemovePath: 'remove-path   --delim "{delim}" {name} \"{value}\"\n',
+        PrependPath: 'prepend-path --delim "{separator}" {name} \"{value}\"\n',
+        AppendPath: 'append-path   --delim "{separator}" {name} \"{value}\"\n',
+        RemovePath: 'remove-path   --delim "{separator}" {name} \"{value}\"\n',
         SetEnv: 'setenv {name} \"{value}\"\n',
         UnsetEnv: 'unsetenv {name}\n'
     }
@@ -499,18 +545,19 @@ class TclModule(EnvModule):
 
     prerequisite_format = 'prereq {module_file}\n'
 
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
+    default_naming_format = \
+        '{name}-{version}-{compiler.name}-{compiler.version}'
 
     @property
     def file_name(self):
-        return join_path(TclModule.path, self.spec.architecture, self.use_name)
+        return join_path(self.path, self.spec.architecture, self.use_name)
 
     @property
     def header(self):
         timestamp = datetime.datetime.now()
         # TCL Modulefile header
         header = '#%Module1.0\n'
-        header += '## Module file created by spack (https://github.com/LLNL/spack) on %s\n' % timestamp  # NOQA: ignore=E501
+        header += '## Module file created by spack (https://github.com/LLNL/spack) on %s\n' % timestamp
         header += '##\n'
         header += '## %s\n' % self.spec.short_spec
         header += '##\n'
@@ -540,10 +587,12 @@ class TclModule(EnvModule):
                 for naming_dir, conflict_dir in zip(
                         self.naming_scheme.split('/'), item.split('/')):
                     if naming_dir != conflict_dir:
-                        message = 'conflict scheme does not match naming scheme [{spec}]\n\n'  # NOQA: ignore=E501
+                        message = 'conflict scheme does not match naming '
+                        message += 'scheme [{spec}]\n\n'
                         message += 'naming scheme   : "{nformat}"\n'
                         message += 'conflict scheme : "{cformat}"\n\n'
-                        message += '** You may want to check your `modules.yaml` configuration file **\n'  # NOQA: ignore=E501
+                        message += '** You may want to check your '
+                        message += '`modules.yaml` configuration file **\n'
                         tty.error(message.format(spec=self.spec,
                                                  nformat=self.naming_scheme,
                                                  cformat=item))

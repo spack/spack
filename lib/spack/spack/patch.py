@@ -24,7 +24,6 @@
 ##############################################################################
 import os
 
-import llnl.util.tty as tty
 from llnl.util.filesystem import join_path
 
 import spack
@@ -59,7 +58,6 @@ class Patch(object):
             if not os.path.isfile(self.path):
                 raise NoSuchPatchFileError(pkg_name, self.path)
 
-
     def apply(self, stage):
         """Fetch this patch, if necessary, and apply it to the source
            code in the supplied stage.
@@ -84,9 +82,9 @@ class Patch(object):
                 patch_stage.destroy()
 
 
-
 class NoSuchPatchFileError(spack.error.SpackError):
     """Raised when user specifies a patch file that doesn't exist."""
+
     def __init__(self, package, path):
         super(NoSuchPatchFileError, self).__init__(
             "No such patch file for package %s: %s" % (package, path))

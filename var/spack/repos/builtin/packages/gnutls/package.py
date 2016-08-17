@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Gnutls(Package):
     """GnuTLS is a secure communications library implementing the SSL,
        TLS and DTLS protocols and technologies around them. It

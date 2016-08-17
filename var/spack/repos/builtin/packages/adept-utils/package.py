@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class AdeptUtils(Package):
     """Utility libraries for LLNL performance tools."""
 
@@ -35,6 +36,7 @@ class AdeptUtils(Package):
 
     depends_on("boost")
     depends_on("mpi")
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         cmake(*std_cmake_args)

@@ -29,6 +29,7 @@ from spack.util.executable import *
 import llnl.util.tty as tty
 from spack.version import ver
 
+
 class Clang(Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['clang']
@@ -43,11 +44,12 @@ class Clang(Compiler):
     fc_names = []
 
     # Named wrapper links within spack.build_env_path
-    link_paths = { 'cc'  : 'clang/clang',
-                   'cxx' : 'clang/clang++',
-                   # Use default wrappers for fortran, in case provided in compilers.yaml
-                   'f77' : 'f77',
-                   'fc'  : 'f90' }
+    link_paths = {'cc': 'clang/clang',
+                  'cxx': 'clang/clang++',
+                  # Use default wrappers for fortran, in case provided in
+                  # compilers.yaml
+                  'f77': 'f77',
+                  'fc': 'f90'}
 
     @property
     def is_apple(self):
@@ -73,7 +75,7 @@ class Clang(Compiler):
                 return "-std=c++11"
 
     @classmethod
-    def default_version(self, comp):
+    def default_version(cls, comp):
         """The '--version' option works for clang compilers.
            On most platforms, output looks like this::
 

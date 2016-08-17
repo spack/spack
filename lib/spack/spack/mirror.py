@@ -40,9 +40,8 @@ import spack.error
 import spack.url as url
 import spack.fetch_strategy as fs
 from spack.spec import Spec
-from spack.stage import Stage
 from spack.version import *
-from spack.util.compression import extension, allowed_archive
+from spack.util.compression import allowed_archive
 
 
 def mirror_archive_filename(spec, fetcher):
@@ -52,10 +51,10 @@ def mirror_archive_filename(spec, fetcher):
 
     if isinstance(fetcher, fs.URLFetchStrategy):
         if fetcher.expand_archive:
-            # If we fetch this version with a URLFetchStrategy, use URL's archive type
+            # If we fetch with a URLFetchStrategy, use URL's archive type
             ext = url.downloaded_file_extension(fetcher.url)
         else:
-            # If the archive shouldn't be expanded, don't check for its extension.
+            # If the archive shouldn't be expanded, don't check extension.
             ext = None
     else:
         # Otherwise we'll make a .tar.gz ourselves
@@ -106,7 +105,9 @@ def get_matching_versions(specs, **kwargs):
 
 def suggest_archive_basename(resource):
     """
-    Return a tentative basename for an archive. Raise an exception if the name is among the allowed archive types.
+    Return a tentative basename for an archive.
+
+    Raises an exception if the name is not an allowed archive type.
 
     :param fetcher:
     :return:
@@ -170,7 +171,7 @@ def create(path, specs, **kwargs):
         'error': []
     }
 
-    # Iterate through packages and download all the safe tarballs for each of them
+    # Iterate through packages and download all safe tarballs for each
     for spec in version_specs:
         add_single_spec(spec, mirror_root, categories, **kwargs)
 
@@ -190,12 +191,15 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
                 fetcher = stage.fetcher
                 if ii == 0:
                     # create a subdirectory for the current package@version
-                    archive_path = os.path.abspath(join_path(mirror_root, mirror_archive_path(spec, fetcher)))
+                    archive_path = os.path.abspath(join_path(
+                        mirror_root, mirror_archive_path(spec, fetcher)))
                     name = spec.format("$_$@")
                 else:
                     resource = stage.resource
-                    archive_path = join_path(subdir, suggest_archive_basename(resource))
-                    name = "{resource} ({pkg}).".format(resource=resource.name, pkg=spec.format("$_$@"))
+                    archive_path = join_path(
+                        subdir, suggest_archive_basename(resource))
+                    name = "{resource} ({pkg}).".format(
+                        resource=resource.name, pkg=spec.format("$_$@"))
                 subdir = os.path.dirname(archive_path)
                 mkdirp(subdir)
 
@@ -217,15 +221,18 @@ def add_single_spec(spec, mirror_root, categories, **kwargs):
             categories['present'].append(spec)
         else:
             categories['mirrored'].append(spec)
+
     except Exception as e:
         if spack.debug:
             sys.excepthook(*sys.exc_info())
         else:
-            tty.warn("Error while fetching %s" % spec.format('$_$@'), e.message)
+            tty.warn("Error while fetching %s"
+                     % spec.format('$_$@'), e.message)
         categories['error'].append(spec)
 
 
 class MirrorError(spack.error.SpackError):
     """Superclass of all mirror-creation related errors."""
+
     def __init__(self, msg, long_msg=None):
         super(MirrorError, self).__init__(msg, long_msg)

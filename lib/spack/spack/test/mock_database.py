@@ -33,6 +33,7 @@ from spack.test.mock_packages_test import MockPackagesTest
 
 
 class MockDatabase(MockPackagesTest):
+
     def _mock_install(self, spec):
         s = Spec(spec)
         s.concretize()
@@ -95,8 +96,10 @@ class MockDatabase(MockPackagesTest):
             self._mock_install('mpileaks ^zmpi')
 
     def tearDown(self):
-        for spec in spack.installed_db.query():
-            spec.package.do_uninstall(spec)
+        with spack.installed_db.write_transaction():
+            for spec in spack.installed_db.query():
+                spec.package.do_uninstall(spec)
+
         super(MockDatabase, self).tearDown()
         shutil.rmtree(self.install_path)
         spack.install_path = self.spack_install_path

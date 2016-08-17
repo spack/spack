@@ -30,6 +30,7 @@ YAML format preserves DAG informatoin in the spec.
 from spack.spec import Spec
 from spack.test.mock_packages_test import *
 
+
 class SpecYamlTest(MockPackagesTest):
 
     def check_yaml_round_trip(self, spec):
@@ -37,29 +38,24 @@ class SpecYamlTest(MockPackagesTest):
         spec_from_yaml = Spec.from_yaml(yaml_text)
         self.assertTrue(spec.eq_dag(spec_from_yaml))
 
-
     def test_simple_spec(self):
         spec = Spec('mpileaks')
         self.check_yaml_round_trip(spec)
-
 
     def test_normal_spec(self):
         spec = Spec('mpileaks+debug~opt')
         spec.normalize()
         self.check_yaml_round_trip(spec)
 
-
     def test_ambiguous_version_spec(self):
         spec = Spec('mpileaks@1.0:5.0,6.1,7.3+debug~opt')
         spec.normalize()
         self.check_yaml_round_trip(spec)
 
-
     def test_concrete_spec(self):
         spec = Spec('mpileaks+debug~opt')
         spec.concretize()
         self.check_yaml_round_trip(spec)
-
 
     def test_yaml_subdag(self):
         spec = Spec('mpileaks^mpich+debug')

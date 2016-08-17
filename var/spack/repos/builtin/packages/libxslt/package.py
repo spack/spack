@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libxslt(Package):
     """Libxslt is the XSLT C library developed for the GNOME
        project. XSLT itself is a an XML language to define

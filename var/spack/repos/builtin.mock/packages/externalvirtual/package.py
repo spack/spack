@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Externalvirtual(Package):
     homepage = "http://somewhere.com"
     url      = "http://somewhere.com/stuff-1.0.tar.gz"

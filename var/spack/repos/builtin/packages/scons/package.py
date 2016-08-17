@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Scons(Package):
     """SCons is a software construction tool"""
     homepage = "http://scons.org"

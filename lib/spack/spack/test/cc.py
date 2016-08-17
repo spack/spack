@@ -45,7 +45,8 @@ test_command = [
     '-llib1', '-llib2',
     'arg4',
     '-Wl,--end-group',
-    '-Xlinker', '-rpath', '-Xlinker', '/third/rpath', '-Xlinker', '-rpath', '-Xlinker', '/fourth/rpath',
+    '-Xlinker', '-rpath', '-Xlinker', '/third/rpath', '-Xlinker',
+    '-rpath', '-Xlinker', '/fourth/rpath',
     '-llib3', '-llib4',
     'arg5', 'arg6']
 
@@ -67,7 +68,7 @@ class CompilerTest(unittest.TestCase):
         os.environ['SPACK_FC'] = self.realcc
 
         os.environ['SPACK_PREFIX'] = self.prefix
-        os.environ['SPACK_ENV_PATH']="test"
+        os.environ['SPACK_ENV_PATH'] = "test"
         os.environ['SPACK_DEBUG_LOG_DIR'] = "."
         os.environ['SPACK_COMPILER_SPEC'] = "gcc@4.4.7"
         os.environ['SPACK_SHORT_SPEC'] = "foo@1.2"
@@ -97,15 +98,12 @@ class CompilerTest(unittest.TestCase):
         if 'SPACK_DEPENDENCIES' in os.environ:
             del os.environ['SPACK_DEPENDENCIES']
 
-
     def tearDown(self):
         shutil.rmtree(self.tmp_deps, True)
-
 
     def check_cc(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
         self.assertEqual(self.cc(*args, output=str).strip(), expected)
-
 
     def check_cxx(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
@@ -115,16 +113,13 @@ class CompilerTest(unittest.TestCase):
         os.environ['SPACK_TEST_COMMAND'] = command
         self.assertEqual(self.fc(*args, output=str).strip(), expected)
 
-
     def check_ld(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
         self.assertEqual(self.ld(*args, output=str).strip(), expected)
 
-
     def check_cpp(self, command, args, expected):
         os.environ['SPACK_TEST_COMMAND'] = command
         self.assertEqual(self.cpp(*args, output=str).strip(), expected)
-
 
     def test_vcheck_mode(self):
         self.check_cc('dump-mode', ['-I/include', '--version'], "vcheck")
@@ -132,29 +127,32 @@ class CompilerTest(unittest.TestCase):
         self.check_cc('dump-mode', ['-I/include', '-v'], "vcheck")
         self.check_cc('dump-mode', ['-I/include', '-dumpversion'], "vcheck")
         self.check_cc('dump-mode', ['-I/include', '--version', '-c'], "vcheck")
-        self.check_cc('dump-mode', ['-I/include', '-V', '-o', 'output'], "vcheck")
-
+        self.check_cc('dump-mode', ['-I/include',
+                                    '-V', '-o', 'output'], "vcheck")
 
     def test_cpp_mode(self):
         self.check_cc('dump-mode', ['-E'], "cpp")
         self.check_cpp('dump-mode', [], "cpp")
 
-
     def test_as_mode(self):
         self.check_cc('dump-mode', ['-S'], "as")
-
 
     def test_ccld_mode(self):
         self.check_cc('dump-mode', [], "ccld")
         self.check_cc('dump-mode', ['foo.c', '-o', 'foo'], "ccld")
-        self.check_cc('dump-mode', ['foo.c', '-o', 'foo', '-Wl,-rpath,foo'], "ccld")
-        self.check_cc('dump-mode', ['foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo'], "ccld")
-
+        self.check_cc('dump-mode', ['foo.c', '-o',
+                                    'foo', '-Wl,-rpath,foo'], "ccld")
+        self.check_cc(
+            'dump-mode',
+            ['foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo'],
+            "ccld")
 
     def test_ld_mode(self):
         self.check_ld('dump-mode', [], "ld")
-        self.check_ld('dump-mode', ['foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo'], "ld")
-
+        self.check_ld(
+            'dump-mode',
+            ['foo.o', 'bar.o', 'baz.o', '-o', 'foo', '-Wl,-rpath,foo'],
+            "ld")
 
     def test_flags(self):
         os.environ['SPACK_LDFLAGS'] = '-L foo'
@@ -176,10 +174,11 @@ class CompilerTest(unittest.TestCase):
         # Test cppflags added properly in cpp mode
         self.check_cpp('dump-args', test_command,
                        "cpp " +
-                      '-g -O1 ' +
-                      ' '.join(test_command))
+                       '-g -O1 ' +
+                       ' '.join(test_command))
 
-        # Test ldflags, cppflags, and language specific flags are added in proper order
+        # Test ldflags, cppflags, and language specific flags are added in
+        # proper order
         self.check_cc('dump-args', test_command,
                       self.realcc + ' ' +
                       '-Wl,-rpath,' + self.prefix + '/lib ' +
@@ -191,14 +190,14 @@ class CompilerTest(unittest.TestCase):
                       '-lfoo')
 
         self.check_cxx('dump-args', test_command,
-                      self.realcc + ' ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib ' +
-                      '-Wl,-rpath,' + self.prefix + '/lib64 ' +
-                      '-g -O1 ' +
-                      '-Werror ' +
-                      '-L foo ' +
-                      ' '.join(test_command) + ' ' +
-                      '-lfoo')
+                       self.realcc + ' ' +
+                       '-Wl,-rpath,' + self.prefix + '/lib ' +
+                       '-Wl,-rpath,' + self.prefix + '/lib64 ' +
+                       '-g -O1 ' +
+                       '-Werror ' +
+                       '-L foo ' +
+                       ' '.join(test_command) + ' ' +
+                       '-lfoo')
 
         self.check_fc('dump-args', test_command,
                       self.realcc + ' ' +
@@ -210,9 +209,8 @@ class CompilerTest(unittest.TestCase):
                       ' '.join(test_command) + ' ' +
                       '-lfoo')
 
-        os.environ['SPACK_LDFLAGS']=''
-        os.environ['SPACK_LDLIBS']=''
-
+        os.environ['SPACK_LDFLAGS'] = ''
+        os.environ['SPACK_LDLIBS'] = ''
 
     def test_dep_rpath(self):
         """Ensure RPATHs for root package are added."""
@@ -221,7 +219,6 @@ class CompilerTest(unittest.TestCase):
                       '-Wl,-rpath,' + self.prefix + '/lib ' +
                       '-Wl,-rpath,' + self.prefix + '/lib64 ' +
                       ' '.join(test_command))
-
 
     def test_dep_include(self):
         """Ensure a single dependency include directory is added."""
@@ -233,7 +230,6 @@ class CompilerTest(unittest.TestCase):
                       '-I' + self.dep4 + '/include ' +
                       ' '.join(test_command))
 
-
     def test_dep_lib(self):
         """Ensure a single dependency RPATH is added."""
         os.environ['SPACK_DEPENDENCIES'] = self.dep2
@@ -244,7 +240,6 @@ class CompilerTest(unittest.TestCase):
                       '-L' + self.dep2 + '/lib64 ' +
                       '-Wl,-rpath,' + self.dep2 + '/lib64 ' +
                       ' '.join(test_command))
-
 
     def test_all_deps(self):
         """Ensure includes and RPATHs for all deps are added. """
@@ -273,7 +268,6 @@ class CompilerTest(unittest.TestCase):
                       '-I' + self.dep1 + '/include ' +
 
                       ' '.join(test_command))
-
 
     def test_ld_deps(self):
         """Ensure no (extra) -I args or -Wl, are passed in ld mode."""

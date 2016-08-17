@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libsigsegv(Package):
     """GNU libsigsegv is a library for handling page faults in user mode."""
     homepage = "https://www.gnu.org/software/libsigsegv/"

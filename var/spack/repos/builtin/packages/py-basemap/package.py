@@ -23,20 +23,22 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
+
 
 class PyBasemap(Package):
-    """The matplotlib basemap toolkit is a library for plotting 2D data on maps in Python."""
+    """The matplotlib basemap toolkit is a library for plotting
+    2D data on maps in Python."""
+
     homepage = "http://matplotlib.org/basemap/"
     url      = "https://downloads.sourceforge.net/project/matplotlib/matplotlib-toolkits/basemap-1.0.7/basemap-1.0.7.tar.gz"
 
     version('1.0.7', '48c0557ced9e2c6e440b28b3caff2de8')
 
     extends('python')
-    depends_on('py-setuptools')
-    depends_on('py-numpy')
-    depends_on('py-matplotlib+gui')
-    depends_on('py-pillow')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-numpy', type=nolink)
+    depends_on('py-matplotlib+gui', type=nolink)
+    depends_on('pil', type=nolink)
     depends_on("geos")
 
     def install(self, spec, prefix):

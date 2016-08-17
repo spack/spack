@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import os
 import argparse
 
 from llnl.util.tty.colify import colify
@@ -30,11 +29,13 @@ from llnl.util.tty.colify import colify
 import spack
 import spack.cmd
 
-description ="List packages that provide a particular virtual package"
+description = "List packages that provide a particular virtual package"
+
 
 def setup_parser(subparser):
-    subparser.add_argument('vpkg_spec', metavar='VPACKAGE_SPEC', nargs=argparse.REMAINDER,
-                           help='Find packages that provide this virtual package')
+    subparser.add_argument(
+        'vpkg_spec', metavar='VPACKAGE_SPEC', nargs=argparse.REMAINDER,
+        help='Find packages that provide this virtual package')
 
 
 def providers(parser, args):

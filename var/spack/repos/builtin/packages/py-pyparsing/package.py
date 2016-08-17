@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPyparsing(Package):
     """A Python Parsing Module."""
     homepage = "https://pypi.python.org/pypi/pyparsing"

@@ -55,27 +55,32 @@ complex_lex = [Token(ID, 'mvapich_foo'),
 
 
 class SpecSyntaxTest(unittest.TestCase):
-    # ================================================================================
+    # ========================================================================
     # Parse checks
-    # ================================================================================
-    def check_parse(self, expected, spec=None):
-        """Assert that the provided spec is able to be parsed.
-           If this is called with one argument, it assumes that the string is
-           canonical (i.e., no spaces and ~ instead of - for variants) and that it
-           will convert back to the string it came from.
+    # ========================================================================
 
-           If this is called with two arguments, the first argument is the expected
-           canonical form and the second is a non-canonical input to be parsed.
+    def check_parse(self, expected, spec=None, remove_arch=True):
+        """Assert that the provided spec is able to be parsed.
+
+           If this is called with one argument, it assumes that the
+           string is canonical (i.e., no spaces and ~ instead of - for
+           variants) and that it will convert back to the string it came
+           from.
+
+           If this is called with two arguments, the first argument is
+           the expected canonical form and the second is a non-canonical
+           input to be parsed.
+
         """
         if spec is None:
             spec = expected
         output = spack.spec.parse(spec)
+
         parsed = (" ".join(str(spec) for spec in output))
         self.assertEqual(expected, parsed)
 
-
     def check_lex(self, tokens, spec):
-        """Check that the provided spec parses to the provided list of tokens."""
+        """Check that the provided spec parses to the provided token list."""
         lex_output = SpecLexer().lex(spec)
         for tok, spec_tok in zip(tokens, lex_output):
             if tok.type == ID:
@@ -84,9 +89,9 @@ class SpecSyntaxTest(unittest.TestCase):
                 # Only check the type for non-identifiers.
                 self.assertEqual(tok.type, spec_tok.type)
 
-    # ================================================================================
+    # ========================================================================
     # Parse checks
-    # ===============================================================================
+    # ========================================================================
     def test_package_names(self):
         self.check_parse("mvapich")
         self.check_parse("mvapich_foo")
@@ -103,18 +108,37 @@ class SpecSyntaxTest(unittest.TestCase):
         self.check_parse("openmpi^hwloc@1.2e6:1.4b7-rc3")
 
     def test_full_specs(self):
-        self.check_parse("mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4^stackwalker@8.1_1e")
-        self.check_parse("mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2~qt_4^stackwalker@8.1_1e")
-        self.check_parse('mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3"+debug~qt_4^stackwalker@8.1_1e')
+        self.check_parse(
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4"
+            "^stackwalker@8.1_1e")
+        self.check_parse(
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2~qt_4"
+            "^stackwalker@8.1_1e")
+        self.check_parse(
+            'mvapich_foo'
+            '^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags="-O3"+debug~qt_4'
+            '^stackwalker@8.1_1e')
 
     def test_canonicalize(self):
         self.check_parse(
-            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4^stackwalker@8.1_1e",
-            "mvapich_foo ^_openmpi@1.6,1.2:1.4%intel@12.1:12.6+debug~qt_4 ^stackwalker@8.1_1e")
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
+            "^stackwalker@8.1_1e",
+
+            "mvapich_foo "
+            "^_openmpi@1.6,1.2:1.4%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker@8.1_1e")
 
         self.check_parse(
-            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4^stackwalker@8.1_1e",
-            "mvapich_foo ^stackwalker@8.1_1e ^_openmpi@1.6,1.2:1.4%intel@12.1:12.6~qt_4+debug")
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
+            "^stackwalker@8.1_1e",
+
+            "mvapich_foo "
+            "^stackwalker@8.1_1e "
+            "^_openmpi@1.6,1.2:1.4%intel@12.1:12.6~qt_4+debug")
 
         self.check_parse(
             "x^y@1,2:3,4%intel@1,2,3,4+a~b+c~d+e~f",
@@ -129,58 +153,81 @@ class SpecSyntaxTest(unittest.TestCase):
         self.assertRaises(SpecParseError, self.check_parse, "x::")
 
     def test_duplicate_variant(self):
-        self.assertRaises(DuplicateVariantError, self.check_parse, "x@1.2+debug+debug")
-        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2+debug debug=true")
-        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2 debug=false debug=true")
-        self.assertRaises(DuplicateVariantError, self.check_parse, "x ^y@1.2 debug=false~debug")
-
+        self.assertRaises(DuplicateVariantError,
+                          self.check_parse, "x@1.2+debug+debug")
+        self.assertRaises(DuplicateVariantError,
+                          self.check_parse, "x ^y@1.2+debug debug=true")
+        self.assertRaises(DuplicateVariantError, self.check_parse,
+                          "x ^y@1.2 debug=false debug=true")
+        self.assertRaises(DuplicateVariantError,
+                          self.check_parse, "x ^y@1.2 debug=false~debug")
 
     def test_duplicate_depdendence(self):
-        self.assertRaises(DuplicateDependencyError, self.check_parse, "x ^y ^y")
+        self.assertRaises(DuplicateDependencyError,
+                          self.check_parse, "x ^y ^y")
 
     def test_duplicate_compiler(self):
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x%intel%intel")
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x%intel%gcc")
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x%gcc%intel")
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x ^y%intel%intel")
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x ^y%intel%gcc")
-        self.assertRaises(DuplicateCompilerSpecError, self.check_parse, "x ^y%gcc%intel")
+        self.assertRaises(DuplicateCompilerSpecError,
+                          self.check_parse, "x%intel%intel")
+        self.assertRaises(DuplicateCompilerSpecError,
+                          self.check_parse, "x%intel%gcc")
+        self.assertRaises(DuplicateCompilerSpecError,
+                          self.check_parse, "x%gcc%intel")
+        self.assertRaises(DuplicateCompilerSpecError,
+                          self.check_parse, "x ^y%intel%intel")
+        self.assertRaises(DuplicateCompilerSpecError,
+                          self.check_parse, "x ^y%intel%gcc")
+        self.assertRaises(DuplicateCompilerSpecError,
+                          self.check_parse, "x ^y%gcc%intel")
 
-
-    # ================================================================================
+    # ========================================================================
     # Lex checks
-    # ================================================================================
+    # ========================================================================
     def test_ambiguous(self):
         # This first one is ambiguous because - can be in an identifier AND
         # indicate disabling an option.
         self.assertRaises(
             AssertionError, self.check_lex, complex_lex,
-            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug-qt_4^stackwalker@8.1_1e")
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug-qt_4"
+            "^stackwalker@8.1_1e")
 
-    # The following lexes are non-ambiguous (add a space before -qt_4) and should all
-    # result in the tokens in complex_lex
+    # The following lexes are non-ambiguous (add a space before -qt_4)
+    # and should all result in the tokens in complex_lex
     def test_minimal_spaces(self):
         self.check_lex(
             complex_lex,
-            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4^stackwalker@8.1_1e")
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4"
+            "^stackwalker@8.1_1e")
         self.check_lex(
             complex_lex,
-            "mvapich_foo^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4^stackwalker@8.1_1e")
+            "mvapich_foo"
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4"
+            "^stackwalker@8.1_1e")
 
     def test_spaces_between_dependences(self):
         self.check_lex(
             complex_lex,
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4 ^stackwalker @ 8.1_1e")
+            "mvapich_foo "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug -qt_4 "
+            "^stackwalker @ 8.1_1e")
         self.check_lex(
             complex_lex,
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 ^stackwalker @ 8.1_1e")
+            "mvapich_foo "
+            "^_openmpi@1.2:1.4,1.6%intel@12.1:12.6+debug~qt_4 "
+            "^stackwalker @ 8.1_1e")
 
     def test_spaces_between_options(self):
         self.check_lex(
             complex_lex,
-            "mvapich_foo ^_openmpi @1.2:1.4,1.6 %intel @12.1:12.6 +debug -qt_4 ^stackwalker @8.1_1e")
+            "mvapich_foo "
+            "^_openmpi @1.2:1.4,1.6 %intel @12.1:12.6 +debug -qt_4 "
+            "^stackwalker @8.1_1e")
 
     def test_way_too_many_spaces(self):
         self.check_lex(
             complex_lex,
-            "mvapich_foo ^ _openmpi @ 1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 ^ stackwalker @ 8.1_1e")
+            "mvapich_foo "
+            "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
+            "^ stackwalker @ 8.1_1e")

@@ -24,7 +24,7 @@ class Go(Package):
 
     # to-do, make non-c self-hosting compilers feasible without backflips
     # should be a dep on external go compiler
-    depends_on('go-bootstrap')
+    depends_on('go-bootstrap', type='build')
     depends_on('git')
 
     def install(self, spec, prefix):

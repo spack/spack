@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Callpath(Package):
     homepage = "https://github.com/tgamblin/callpath"
     url      = "http://github.com/tgamblin/callpath-1.0.tar.gz"

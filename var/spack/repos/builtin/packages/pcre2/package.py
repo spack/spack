@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Pcre2(Package):
     """The PCRE2 package contains Perl Compatible Regular Expression
        libraries. These are useful for implementing regular expression

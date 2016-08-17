@@ -53,6 +53,7 @@ in the first directory it finds to which it has write access.  Add
 more elements to the list to indicate where your own site's temporary
 directory is.
 
+.. _sec-external_packages:
 
 External Packages
 ----------------------------
@@ -70,20 +71,20 @@ directory. Here's an example of an external configuration:
    packages:
       openmpi:
          paths:
-            openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
-            openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
-            openmpi@1.6.5%intel@10.1 arch=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
+            openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7: /opt/openmpi-1.4.3
+            openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7+debug: /opt/openmpi-1.4.3-debug
+            openmpi@1.6.5%intel@10.1 arch=linux-x86_64-debian7: /opt/openmpi-1.6.5-intel
 
 This example lists three installations of OpenMPI, one built with gcc,
 one built with gcc and debug information, and another built with Intel.
 If Spack is asked to build a package that uses one of these MPIs as a
 dependency, it will use the the pre-installed OpenMPI in
-the given directory.
+the given directory. Packages.yaml can also be used to specify modules
 
 Each ``packages.yaml`` begins with a ``packages:`` token, followed
-by a list of package names.  To specify externals, add a ``paths``
+by a list of package names.  To specify externals, add a ``paths`` or ``modules``
 token under the package name, which lists externals in a
-``spec : /path`` format.  Each spec should be as
+``spec: /path`` or ``spec: module-name`` format.  Each spec should be as
 well-defined as reasonably possible.  If a
 package lacks a spec component, such as missing a compiler or
 package version, then Spack will guess the missing component based
@@ -108,15 +109,18 @@ be:
   packages:
     openmpi:
       paths:
-        openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib: /opt/openmpi-1.4.3
-        openmpi@1.4.3%gcc@4.4.7 arch=chaos_5_x86_64_ib+debug: /opt/openmpi-1.4.3-debug
-        openmpi@1.6.5%intel@10.1 arch=chaos_5_x86_64_ib: /opt/openmpi-1.6.5-intel
+        openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7: /opt/openmpi-1.4.3
+        openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7+debug: /opt/openmpi-1.4.3-debug
+        openmpi@1.6.5%intel@10.1 arch=linux-x86_64-debian7: /opt/openmpi-1.6.5-intel
       buildable: False
 
 The addition of the ``buildable`` flag tells Spack that it should never build
 its own version of OpenMPI, and it will instead always rely on a pre-built
 OpenMPI.  Similar to ``paths``, ``buildable`` is specified as a property under
 a package name.
+
+If an external module is specified as not buildable, then Spack will load the
+external module into the build environment which can be used for linking.
 
 The ``buildable`` does not need to be paired with external packages.
 It could also be used alone to forbid packages that may be
@@ -138,7 +142,7 @@ Here's an example packages.yaml file that sets preferred packages:
 .. code-block:: sh
 
     packages:
-      dyninst:
+      opencv:
         compiler: [gcc@4.9]
         variants: +debug
       gperftools:
@@ -150,10 +154,10 @@ Here's an example packages.yaml file that sets preferred packages:
 
 
 At a high level, this example is specifying how packages should be
-concretized.  The dyninst package should prefer using gcc 4.9 and
+concretized.  The opencv package should prefer using gcc 4.9 and
 be built with debug options.  The gperftools package should prefer version
 2.2 over 2.4.  Every package on the system should prefer mvapich for
-its MPI and gcc 4.4.7 (except for Dyninst, which overrides this by preferring gcc 4.9).
+its MPI and gcc 4.4.7 (except for opencv, which overrides this by preferring gcc 4.9).
 These options are used to fill in implicit defaults.  Any of them can be overwritten
 on the command line if explicitly requested.
 
@@ -180,7 +184,6 @@ The syntax for the ``provider`` section differs slightly from other
 concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
 dependency.
-
 
 
 Profiling

@@ -34,20 +34,109 @@ from ordereddict_backport import OrderedDict
 from spack.repository import RepoPath
 from spack.spec import Spec
 
+platform = spack.architecture.platform()
+
+linux_os_name = 'debian'
+linux_os_version = '6'
+
+if platform.name == 'linux':
+    linux_os = platform.operating_system("default_os")
+    linux_os_name = linux_os.name
+    linux_os_version = linux_os.version
+
 mock_compiler_config = """\
 compilers:
-  all:
-    clang@3.3:
+- compiler:
+    spec: clang@3.3
+    operating_system: {0}{1}
+    paths:
       cc: /path/to/clang
       cxx: /path/to/clang++
       f77: None
       fc: None
-    gcc@4.5.0:
+    modules: 'None'
+- compiler:
+    spec: gcc@4.5.0
+    operating_system: {0}{1}
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: CNL10
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: SuSE11
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: yosemite
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    paths:
       cc: /path/to/gcc
       cxx: /path/to/g++
       f77: /path/to/gfortran
       fc: /path/to/gfortran
-"""
+    operating_system: CNL10
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: SuSE11
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: yosemite
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: elcapitan
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: elcapitan
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+""".format(linux_os_name, linux_os_version)
 
 mock_packages_config = """\
 packages:
@@ -60,9 +149,15 @@ packages:
     paths:
       externalvirtual@2.0%clang@3.3: /path/to/external_virtual_clang
       externalvirtual@1.0%gcc@4.5.0: /path/to/external_virtual_gcc
+  externalmodule:
+    buildable: False
+    modules:
+      externalmodule@1.0%gcc@4.5.0: external-module
 """
 
+
 class MockPackagesTest(unittest.TestCase):
+
     def initmock(self):
         # Use the mock packages database for these tests.  This allows
         # us to set up contrived packages that don't interfere with
@@ -79,7 +174,8 @@ class MockPackagesTest(unittest.TestCase):
         self.mock_user_config = os.path.join(self.temp_config, 'user')
         mkdirp(self.mock_site_config)
         mkdirp(self.mock_user_config)
-        for confs in [('compilers.yaml', mock_compiler_config), ('packages.yaml', mock_packages_config)]:
+        for confs in [('compilers.yaml', mock_compiler_config),
+                      ('packages.yaml', mock_packages_config)]:
             conf_yaml = os.path.join(self.mock_site_config, confs[0])
             with open(conf_yaml, 'w') as f:
                 f.write(confs[1])
@@ -90,12 +186,15 @@ class MockPackagesTest(unittest.TestCase):
         spack.config.ConfigScope('site', self.mock_site_config)
         spack.config.ConfigScope('user', self.mock_user_config)
 
+        # Keep tests from interfering with the actual module path.
+        self.real_share_path = spack.share_path
+        spack.share_path = tempfile.mkdtemp()
+
         # Store changes to the package's dependencies so we can
         # restore later.
         self.saved_deps = {}
 
-
-    def set_pkg_dep(self, pkg_name, spec):
+    def set_pkg_dep(self, pkg_name, spec, deptypes=spack.alldeps):
         """Alters dependence information for a package.
 
         Adds a dependency on <spec> to pkg.
@@ -109,8 +208,9 @@ class MockPackagesTest(unittest.TestCase):
             self.saved_deps[pkg_name] = (pkg, pkg.dependencies.copy())
 
         # Change dep spec
-        pkg.dependencies[spec.name] = { Spec(pkg_name) : spec }
-
+        # XXX(deptype): handle deptypes.
+        pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
+        pkg._deptypes[spec.name] = set(deptypes)
 
     def cleanmock(self):
         """Restore the real packages path after any test."""
@@ -119,15 +219,17 @@ class MockPackagesTest(unittest.TestCase):
         shutil.rmtree(self.temp_config, ignore_errors=True)
         spack.config.clear_config_caches()
 
+        # XXX(deptype): handle deptypes.
         # Restore dependency changes that happened during the test
         for pkg_name, (pkg, deps) in self.saved_deps.items():
             pkg.dependencies.clear()
             pkg.dependencies.update(deps)
 
+        shutil.rmtree(spack.share_path, ignore_errors=True)
+        spack.share_path = self.real_share_path
 
     def setUp(self):
         self.initmock()
-
 
     def tearDown(self):
         self.cleanmock()

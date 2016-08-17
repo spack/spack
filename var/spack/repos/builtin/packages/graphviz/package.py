@@ -31,7 +31,9 @@ class Graphviz(Package):
     homepage = "http://www.graphviz.org"
     url      = "http://www.graphviz.org/pub/graphviz/stable/SOURCES/graphviz-2.38.0.tar.gz"
 
-    version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae', url="http://pkgs.fedoraproject.org/repo/pkgs/graphviz/graphviz-2.38.0.tar.gz/5b6a829b2ac94efcd5fa3c223ed6d3ae/graphviz-2.38.0.tar.gz")
+    # Alternate location when graphviz server was down.
+    # version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae', url="http://pkgs.fedoraproject.org/repo/pkgs/graphviz/graphviz-2.38.0.tar.gz/5b6a829b2ac94efcd5fa3c223ed6d3ae/graphviz-2.38.0.tar.gz")
+    version('2.38.0', '5b6a829b2ac94efcd5fa3c223ed6d3ae')
 
     # We try to leave language bindings enabled if they don't cause build issues
     # or add dependencies.
@@ -70,7 +72,7 @@ class Graphviz(Package):
     # Graphviz does not work with Python3
     depends_on("python@2:2.8", when='+python')
     depends_on("ghostscript")
-    depends_on("pkg-config")
+    depends_on("pkg-config", type='build')
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]

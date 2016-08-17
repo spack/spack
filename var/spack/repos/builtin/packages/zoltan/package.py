@@ -22,16 +22,22 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import re, os, glob
+import re
+import os
+import glob
 from spack import *
 
+
 class Zoltan(Package):
-    """The Zoltan library is a toolkit of parallel combinatorial algorithms for
-       parallel, unstructured, and/or adaptive scientific applications.  Zoltan's
-       largest component is a suite of dynamic load-balancing and paritioning
-       algorithms that increase applications' parallel performance by reducing
-       idle time.  Zoltan also has graph coloring and graph ordering algorithms,
-       which are useful in task schedulers and parallel preconditioners."""
+    """The Zoltan library is a toolkit of parallel combinatorial algorithms
+       for parallel, unstructured, and/or adaptive scientific
+       applications.  Zoltan's largest component is a suite of dynamic
+       load-balancing and paritioning algorithms that increase
+       applications' parallel performance by reducing idle time.  Zoltan
+       also has graph coloring and graph ordering algorithms, which are
+       useful in task schedulers and parallel preconditioners.
+
+    """
 
     homepage = "http://www.cs.sandia.gov/zoltan"
     base_url = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions"
@@ -41,8 +47,10 @@ class Zoltan(Package):
     version('3.6', '9cce794f7241ecd8dbea36c3d7a880f9')
     version('3.3', '5eb8f00bda634b25ceefa0122bd18d65')
 
-    variant('debug', default=False, description='Builds a debug version of the library')
-    variant('shared', default=True, description='Builds a shared version of the library')
+    variant('debug', default=False,
+            description='Builds a debug version of the library')
+    variant('shared', default=True,
+            description='Builds a shared version of the library')
 
     variant('fortran', default=True, description='Enable Fortran support')
     variant('mpi', default=False, description='Enable MPI support')
@@ -51,8 +59,11 @@ class Zoltan(Package):
 
     def install(self, spec, prefix):
         config_args = [
-            '--enable-f90interface' if '+fortan' in spec else '--disable-f90interface',
-            '--enable-mpi' if '+mpi' in spec else '--disable-mpi',
+            '--enable-f90interface'
+            if '+fortan' in spec else '--disable-f90interface',
+
+            '--enable-mpi'
+            if '+mpi' in spec else '--disable-mpi',
         ]
         config_cflags = [
             '-O0' if '+debug' in spec else '-O3',
@@ -68,7 +79,8 @@ class Zoltan(Package):
             config_args.append('CC=%s/mpicc' % spec['mpi'].prefix.bin)
             config_args.append('CXX=%s/mpicxx' % spec['mpi'].prefix.bin)
             config_args.append('--with-mpi=%s' % spec['mpi'].prefix)
-            config_args.append('--with-mpi-compilers=%s' % spec['mpi'].prefix.bin)
+            config_args.append('--with-mpi-compilers=%s' %
+                               spec['mpi'].prefix.bin)
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
@@ -89,13 +101,15 @@ class Zoltan(Package):
         make()
         make('install')
 
-        # NOTE: Unfortunately, Zoltan doesn't provide any configuration options for
-        # the extension of the output library files, so this script must change these
-        # extensions as a post-processing step.
+        # NOTE: Unfortunately, Zoltan doesn't provide any configuration
+        # options for the extension of the output library files, so this
+        # script must change these extensions as a post-processing step.
         if '+shared' in spec:
             for libpath in glob.glob('lib/*.a'):
-                libdir, libname = (os.path.dirname(libpath), os.path.basename(libpath))
-                move(libpath, os.path.join(libdir, re.sub(r'\.a$', '.so', libname)))
+                libdir, libname = (os.path.dirname(libpath),
+                                   os.path.basename(libpath))
+                move(libpath, os.path.join(
+                    libdir, re.sub(r'\.a$', '.so', libname)))
 
         mkdirp(prefix)
         move('include', prefix)

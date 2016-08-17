@@ -22,14 +22,10 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-import spack
 import spack.architecture as architecture
 
 description = "Print the architecture for this machine"
 
+
 def arch(parser, args):
-    configured_sys_type = architecture.get_sys_type_from_spack_globals()
-    if not configured_sys_type:
-        configured_sys_type = "autodetect"
-    print "Configured sys_type:             %s" % configured_sys_type
-    print "Autodetected default sys_type:   %s" % architecture.sys_type()
+    print architecture.sys_type()

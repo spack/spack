@@ -34,7 +34,8 @@ class Elpa(Package):
     homepage = 'http://elpa.mpcdf.mpg.de/'
     url = 'http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
 
-    version('2015.11.001', 'de0f35b7ee7c971fd0dca35c900b87e6', url='http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz')
+    version('2015.11.001', 'de0f35b7ee7c971fd0dca35c900b87e6',
+            url='http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz')
 
     variant('openmp', default=False, description='Activates OpenMP support')
 

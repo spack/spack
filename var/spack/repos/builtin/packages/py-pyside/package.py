@@ -25,14 +25,11 @@
 from spack import *
 import os
 
+
 class PyPyside(Package):
     """Python bindings for Qt."""
     homepage = "https://pypi.python.org/pypi/pyside"
     url      = "https://pypi.python.org/packages/source/P/PySide/PySide-1.2.2.tar.gz"
-
-    # This doesn't work, GitHub download isn't the same as the full tarfile.
-    # The tarfile for 1.2.3 was removed from PyPI.
-    # url = "https://github.com/PySide/pyside-setup/tarball/1.2.3"
 
     # Version 1.2.4 claims to not work with Python 3.5, mostly
     # because it hasn't been tested.  Otherwise, it's the same as v1.2.3
@@ -44,14 +41,13 @@ class PyPyside(Package):
     # This is not available from pypi
     # version('1.2.3', 'fa5d5438b045ede36104bba25a6ccc10')
 
-# v1.2.2 does not work with Python3
-#    version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d')
+    # v1.2.2 does not work with Python3
+    version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d', preferred=True)
 
-    # TODO: make build dependency
-    depends_on("cmake")
+    depends_on('cmake', type='build')
 
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
     depends_on('qt@:4')
 
     def patch(self):
@@ -59,7 +55,8 @@ class PyPyside(Package):
         # Figure out the special RPATH
         pypkg = self.spec['python'].package
         rpath = self.rpath
-        rpath.append(os.path.join(self.prefix, pypkg.site_packages_dir, 'PySide'))
+        rpath.append(os.path.join(
+            self.prefix, pypkg.site_packages_dir, 'PySide'))
 
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.
@@ -77,14 +74,14 @@ class PyPyside(Package):
             "'Programming Language :: Python :: 3.4',\n        'Programming Language :: Python :: 3.5',",
             'setup.py')
 
-# As of version 1.2.3, PySide removed the post-install script.
-#        # PySide tries to patch ELF files to remove RPATHs
-#        # Disable this and go with the one we set.
-#        filter_file(
-#            r'^\s*rpath_cmd\(pyside_path, srcpath\)',
-#            r'#rpath_cmd(pyside_path, srcpath)',
-#            'pyside_postinstall.py')
-
+        # As of version 1.2.3, PySide removed the post-install script.
+        if self.spec.version <= Version('1.2.2'):
+            # PySide@:1.2.2 tries to patch ELF files to remove RPATHs
+            # Disable this and go with the one we set.
+            filter_file(
+                r'^\s*rpath_cmd\(pyside_path, srcpath\)',
+                r'#rpath_cmd(pyside_path, srcpath)',
+                'pyside_postinstall.py')
 
     def install(self, spec, prefix):
         python('setup.py', 'install',

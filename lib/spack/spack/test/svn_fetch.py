@@ -94,17 +94,15 @@ class SvnFetchTest(MockPackagesTest):
 
             self.assert_rev(rev)
 
-
     def test_fetch_default(self):
         """Test a default checkout and make sure it's on rev 1"""
         self.try_fetch(self.repo.r1, self.repo.r1_file, {
-            'svn' : self.repo.url
+            'svn': self.repo.url
         })
-
 
     def test_fetch_r1(self):
         """Test fetching an older revision (0)."""
         self.try_fetch(self.repo.r0, self.repo.r0_file, {
-            'svn'      : self.repo.url,
-            'revision' : self.repo.r0
+            'svn': self.repo.url,
+            'revision': self.repo.r0
         })

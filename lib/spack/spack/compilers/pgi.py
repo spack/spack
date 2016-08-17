@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack.compiler import *
-import llnl.util.tty as tty
+
 
 class Pgi(Compiler):
     # Subclasses use possible names of C compiler
@@ -39,10 +39,13 @@ class Pgi(Compiler):
     fc_names = ['pgfortran', 'pgf95', 'pgf90']
 
     # Named wrapper links within spack.build_env_path
-    link_paths = { 'cc'  : 'pgi/pgcc',
-                   'cxx' : 'pgi/pgc++',
-                   'f77' : 'pgi/pgfortran',
-                   'fc'  : 'pgi/pgfortran' }
+    link_paths = {'cc': 'pgi/pgcc',
+                  'cxx': 'pgi/pgc++',
+                  'f77': 'pgi/pgfortran',
+                  'fc': 'pgi/pgfortran'}
+
+    PrgEnv = 'PrgEnv-pgi'
+    PrgEnv_compiler = 'pgi'
 
     @property
     def openmp_flag(self):
@@ -51,7 +54,6 @@ class Pgi(Compiler):
     @property
     def cxx11_flag(self):
         return "-std=c++11"
-
 
     @classmethod
     def default_version(cls, comp):

@@ -45,25 +45,24 @@ config_file:
 """
 
 test_data = {
-    'config_file' : syaml.syaml_dict([
+    'config_file': syaml.syaml_dict([
         ('x86_64', syaml.syaml_dict([
             ('foo', '/path/to/foo'),
             ('bar', '/path/to/bar'),
-            ('baz', '/path/to/baz' )])),
-        ('some_list', [ 'item 1', 'item 2', 'item 3' ]),
-        ('another_list', [ 1, 2, 3 ]),
+            ('baz', '/path/to/baz')])),
+        ('some_list', ['item 1', 'item 2', 'item 3']),
+        ('another_list', [1, 2, 3]),
         ('some_key', 'some_string')
     ])}
+
 
 class YamlTest(unittest.TestCase):
 
     def setUp(self):
         self.data = syaml.load(test_file)
 
-
     def test_parse(self):
         self.assertEqual(test_data, self.data)
-
 
     def test_dict_order(self):
         self.assertEqual(
@@ -73,7 +72,6 @@ class YamlTest(unittest.TestCase):
         self.assertEqual(
             ['foo', 'bar', 'baz'],
             self.data['config_file']['x86_64'].keys())
-
 
     def test_line_numbers(self):
         def check(obj, start_line, end_line):

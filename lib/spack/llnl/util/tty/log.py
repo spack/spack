@@ -36,6 +36,7 @@ import llnl.util.tty.color as color
 # Use this to strip escape sequences
 _escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
 
+
 def _strip(line):
     """Strip color and control characters from a line."""
     return _escape.sub('', line)
@@ -58,9 +59,9 @@ class keyboard_input(object):
     When the with block completes, this will restore settings before
     canonical and echo were disabled.
     """
+
     def __init__(self, stream):
         self.stream = stream
-
 
     def __enter__(self):
         self.old_cfg = None
@@ -86,9 +87,8 @@ class keyboard_input(object):
             # Apply new settings for terminal
             termios.tcsetattr(fd, termios.TCSADRAIN, self.new_cfg)
 
-        except Exception, e:
+        except Exception:
             pass  # Some OS's do not support termios, so ignore.
-
 
     def __exit__(self, exc_type, exception, traceback):
         # If termios was avaialble, restore old settings after the
@@ -114,6 +114,7 @@ class log_output(object):
     Closes the provided stream when done with the block.
     If echo is True, also prints the output to stdout.
     """
+
     def __init__(self, stream, echo=False, force_color=False, debug=False):
         self.stream = stream
 
@@ -122,14 +123,13 @@ class log_output(object):
         self.force_color = force_color
         self.debug = debug
 
-        # Default is to try file-descriptor reassignment unless the system 
+        # Default is to try file-descriptor reassignment unless the system
         # out/err streams do not have an associated file descriptor
         self.directAssignment = False
 
     def trace(self, frame, event, arg):
         """Jumps to __exit__ on the child process."""
         raise _SkipWithBlock()
-
 
     def __enter__(self):
         """Redirect output from the with block to a file.
@@ -154,7 +154,8 @@ class log_output(object):
             with self.stream as log_file:
                 with keyboard_input(sys.stdin):
                     while True:
-                        rlist, w, x = select.select([read_file, sys.stdin], [], [])
+                        rlist, w, x = select.select(
+                            [read_file, sys.stdin], [], [])
                         if not rlist:
                             break
 
@@ -211,7 +212,6 @@ class log_output(object):
             if self.debug:
                 tty._debug = True
 
-
     def __exit__(self, exc_type, exception, traceback):
         """Exits on child, handles skipping the with block on parent."""
         # Child should just exit here.
@@ -235,7 +235,7 @@ class log_output(object):
                     sys.stderr = self._stderr
                 else:
                     os.dup2(self._stdout, sys.stdout.fileno())
-                    os.dup2(self._stderr, sys.stderr.fileno())                    
+                    os.dup2(self._stderr, sys.stderr.fileno())
 
                 return False
 

@@ -22,22 +22,23 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
 class Glpk(Package):
-    """
-    The GLPK (GNU Linear Programming Kit) package is intended for solving large-scale linear programming (LP), mixed
-    integer programming (MIP), and other related problems. It is a set of routines written in ANSI C and organized in
-    the form of a callable library
+    """The GLPK (GNU Linear Programming Kit) package is intended for solving
+       large-scale linear programming (LP), mixed integer programming
+       (MIP), and other related problems. It is a set of routines written
+       in ANSI C and organized in the form of a callable library
+
     """
     homepage = "https://www.gnu.org/software/glpk"
     url = "http://ftp.gnu.org/gnu/glpk/glpk-4.57.tar.gz"
 
     version('4.57', '237531a54f73155842f8defe51aedb0f')
 
-    variant('gmp', default=False, description='Activates support for GMP library')
+    variant('gmp', default=False,
+            description='Activates support for GMP library')
 
     depends_on('gmp', when='+gmp')
 

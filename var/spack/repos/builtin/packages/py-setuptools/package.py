@@ -24,8 +24,11 @@
 ##############################################################################
 from spack import *
 
+
 class PySetuptools(Package):
-    """Easily download, build, install, upgrade, and uninstall Python packages."""
+    """A Python utility that aids in the process of downloading, building,
+       upgrading, installing, and uninstalling Python packages."""
+
     homepage = "https://pypi.python.org/pypi/setuptools"
     url      = "https://pypi.python.org/packages/source/s/setuptools/setuptools-11.3.tar.gz"
 
@@ -40,4 +43,4 @@ class PySetuptools(Package):
     extends('python')
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix=%s' % prefix)

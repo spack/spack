@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Muster(Package):
     """The Muster library provides implementations of sequential and
        parallel K-Medoids clustering algorithms. It is intended as a
@@ -39,6 +40,7 @@ class Muster(Package):
 
     depends_on("boost")
     depends_on("mpi")
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         cmake(".", *std_cmake_args)

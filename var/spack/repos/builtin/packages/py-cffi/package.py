@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyCffi(Package):
     """Foreign Function Interface for Python calling C code"""
     homepage = "http://cffi.readthedocs.org/en/latest/"
@@ -33,8 +34,8 @@ class PyCffi(Package):
     version('1.1.2', 'ca6e6c45b45caa87aee9adc7c796eaea')
 
     extends('python')
-    depends_on('py-setuptools')
-    depends_on('py-pycparser')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-pycparser', type=nolink)
     depends_on('libffi')
 
     def install(self, spec, prefix):

@@ -28,6 +28,7 @@ import os
 import sys
 from llnl.util.filesystem import fix_darwin_install_name
 
+
 class Papi(Package):
     """PAPI provides the tool designer and application engineer with a
        consistent interface and methodology for use of the performance
@@ -47,7 +48,7 @@ class Papi(Package):
     def install(self, spec, prefix):
         with working_dir("src"):
 
-            configure_args=["--prefix=%s" % prefix]
+            configure_args = ["--prefix=%s" % prefix]
 
             # PAPI uses MPI if MPI is present; since we don't require
             # an MPI package, we ensure that all attempts to use MPI

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Automaded(Package):
     """AutomaDeD (Automata-based Debugging for Dissimilar parallel
        tasks) is a tool for automatic diagnosis of performance and
@@ -44,6 +45,7 @@ class Automaded(Package):
     depends_on('mpi')
     depends_on('boost')
     depends_on('callpath')
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         cmake("-DSTATE_TRACKER_WITH_CALLPATH=ON", *std_cmake_args)

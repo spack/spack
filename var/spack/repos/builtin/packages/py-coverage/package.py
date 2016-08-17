@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyCoverage(Package):
     """ Testing coverage checker for python """
     # FIXME: add a proper url for your package's homepage here.
@@ -32,7 +33,7 @@ class PyCoverage(Package):
 
     version('4.0a6', '1bb4058062646148965bef0796b61efc')
 
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     extends('python')
 

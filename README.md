@@ -58,17 +58,24 @@ can join it here:
 
 ### Contributions
 
-At the moment, contributing to Spack is relatively simple.  Just send us
-a [pull request](https://help.github.com/articles/using-pull-requests/).
+Contributing to Spack is relatively.  Just send us a
+[pull request](https://help.github.com/articles/using-pull-requests/).
 When you send your request, make ``develop`` the destination branch on the
 [Spack repository](https://github.com/LLNL/spack).
 
-Your contribution will need to pass all the tests run by the `spack test`
-command, as well as the formatting checks in `share/spack/qa/run-flake8`.
-You should run both of these before submitting your pull request, to
-ensure that the online checks succeed.
+Before you send a PR, your code should pass the following checks:
 
-Spack is using a rough approximation of the [Git
+* Your contribution will need to pass the `spack test` command.
+  Run this before submitting your PR.
+
+* Also run the `share/spack/qa/run-flake8` script to check for PEP8 compliance.
+  To encourage contributions and readability by a broad audience,
+  Spack uses the [PEP8](https://www.python.org/dev/peps/pep-0008/) coding
+  standard with [a few exceptions](https://github.com/LLNL/spack/blob/develop/.flake8).
+
+We enforce these guidelines with [Travis CI](https://travis-ci.org/LLNL/spack).
+
+Spack uses a rough approximation of the [Git
 Flow](http://nvie.com/posts/a-successful-git-branching-model/)
 branching model.  The ``develop`` branch contains the latest
 contributions, and ``master`` is always tagged and points to the

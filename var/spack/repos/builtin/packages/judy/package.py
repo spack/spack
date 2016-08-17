@@ -24,8 +24,9 @@
 ##############################################################################
 from spack import *
 
+
 class Judy(Package):
-    """A general-purpose dynamic array, associative array and hash-trie - Judy"""
+    """Judy: General-purpose dynamic array, associative array and hash-trie."""
     homepage = "http://judy.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/judy/judy/Judy-1.0.5/Judy-1.0.5.tar.gz"
 

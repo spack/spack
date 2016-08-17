@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Lcms(Package):
     """Little cms is a color management library. Implements fast
        transforms between ICC profiles. It is focused on speed, and is

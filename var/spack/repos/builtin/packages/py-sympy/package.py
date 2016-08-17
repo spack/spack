@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PySympy(Package):
     """SymPy is a Python library for symbolic mathematics."""
     homepage = "https://pypi.python.org/pypi/sympy"

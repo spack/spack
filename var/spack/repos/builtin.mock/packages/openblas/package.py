@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Openblas(Package):
     """OpenBLAS: An optimized BLAS library"""
     homepage = "http://www.openblas.net"

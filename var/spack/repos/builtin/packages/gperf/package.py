@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Gperf(Package):
     """GNU gperf is a perfect hash function generator. For a given
     list of strings, it produces a hash function and hash table, in

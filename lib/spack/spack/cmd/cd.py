@@ -25,7 +25,8 @@
 import spack.cmd.location
 import spack.modules
 
-description="cd to spack directories in the shell."
+description = "cd to spack directories in the shell."
+
 
 def setup_parser(subparser):
     """This is for decoration -- spack cd is used through spack's

@@ -23,6 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 
+
 def comma_list(sequence, article=''):
     if type(sequence) != list:
         sequence = list(sequence)
@@ -32,7 +33,7 @@ def comma_list(sequence, article=''):
     elif len(sequence) == 1:
         return sequence[0]
     else:
-        out =  ', '.join(str(s) for s in sequence[:-1])
+        out = ', '.join(str(s) for s in sequence[:-1])
         if len(sequence) != 2:
             out += ','   # oxford comma
         out += ' '
@@ -40,6 +41,7 @@ def comma_list(sequence, article=''):
             out += article + ' '
         out += str(sequence[-1])
         return out
+
 
 def comma_or(sequence):
     return comma_list(sequence, 'or')

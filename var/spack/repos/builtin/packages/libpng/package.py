@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libpng(Package):
     """libpng graphics file format"""
     homepage = "http://www.libpng.org/pub/png/libpng.html"

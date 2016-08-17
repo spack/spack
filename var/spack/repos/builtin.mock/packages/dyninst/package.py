@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Dyninst(Package):
     homepage = "https://paradyn.org"
     url      = "http://www.paradyn.org/release8.1/DyninstAPI-8.1.1.tgz"
