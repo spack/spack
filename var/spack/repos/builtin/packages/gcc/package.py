@@ -33,6 +33,9 @@ class Gcc(Package):
     variant('gold',
             default=sys.platform != 'darwin',
             description="Build the gold linker plugin for ld-based LTO")
+    variant('piclibs',
+            default=False,
+            description="Build PIC versions of libgfortran.a and libstdc++.a")
 
     depends_on("mpfr")
     depends_on("gmp")
@@ -49,6 +52,8 @@ class Gcc(Package):
         patch('darwin/gcc-4.9.patch2', when='@4.9.3')
     else:
         provides('golang', when='@4.7.1:')
+
+    patch('piclibs.patch', when='+piclibs')
 
     def install(self, spec, prefix):
         # libjava/configure needs a minor fix to install into spack paths.
