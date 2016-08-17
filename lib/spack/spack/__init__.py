@@ -114,7 +114,6 @@ abi = ABI()
 # Replace it with a subclass if you want different
 # policies.
 
-choose_hints = {'mpi' : 'openmpi'}
 from spack.concretize import DefaultConcretizer
 concretizer = DefaultConcretizer()
 
