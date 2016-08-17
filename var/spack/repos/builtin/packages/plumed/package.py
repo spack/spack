@@ -22,21 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install plumed
-#
-# You can edit this file again by typing:
-#
-#     spack edit plumed
-#
-# See the Spack documentation for more information on packaging.
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
 from spack import *
 
 
@@ -51,11 +36,47 @@ class Plumed(Package):
 
     version('2.2.3', git="https://github.com/plumed/plumed2.git", tag='v2.2.3')
 
-    # FIXME: Add additional dependencies if required.
-    depends_on('mpi')
+    # Variants
+    variant('crystallization', default=False,
+            description='Build support for optional crystallization module.')
+    variant('imd', default=False,
+            description='Build support for optional imd module.')
+    variant('manyrestraints', default=False,
+            description='Build support for optional manyrestraints module.')
+    variant('mpi', default=False,
+            description='Enable MPI support.')
+
+    # Dependencies
+    depends_on("mpi", when="+mpi")
+    depends_on("netlib-lapack")
+    depends_on("openblas")
 
     def install(self, spec, prefix):
-        configure("--prefix=" + prefix,
-                  "--enable-mpi",
-                  "-enable-modules=crystallization")
+        configure("--prefix=" + prefix)
+#                  "--enable-mpi",
+#                  "-enable-modules=crystallization")
+
+        # Construct list of optional modules
+        module_opts=[]
+        module_opts.extend([
+            '+crystallization' if '+crystallization' in spec else '-crystallization',
+            '+imd' if '+imd' in spec else '-imd',
+            '+manyrestraints' if '+manyrestraints' in spec else '-manyrestraints'
+        ])
+
+        # Add optional arguments based on specs and variants
+#        config_args.extend([
+            # Modules
+#            "--enable-modules=%s" % "".join(module_opts) if module_opts is not None,
+#            "--enable-mpi" if '+mpi' in spec
+#        ])
+
+        if modules_opts:
+            config_args.extend(["--enable-modules=%s" % "".join(module_opts)])
+
+        config_args.extend([
+            "--enable-mpi" if '+mpi' in spec else "--disable-mpi"
+        ])
+
         make()
+        make("install")
