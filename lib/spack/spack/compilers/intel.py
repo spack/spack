@@ -80,3 +80,7 @@ class Intel(Compiler):
         """
         return get_compiler_version(
             comp, '--version', r'\((?:IFORT|ICC)\) ([^ ]+)')
+
+    @property
+    def stdcxx_libs(self):
+        return ('-cxxlib', )

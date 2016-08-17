@@ -127,6 +127,10 @@ class Openmpi(Package):
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
         self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+        self.spec.mpicxx_shared_libs = [
+            join_path(self.prefix.lib, 'libmpi_cxx.{0}'.format(dso_suffix)),
+            join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
+        ]
 
     def setup_environment(self, spack_env, run_env):
         # As of 06/2016 there is no mechanism to specify that packages which

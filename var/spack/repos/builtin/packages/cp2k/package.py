@@ -52,12 +52,12 @@ class Cp2k(Package):
     depends_on('scalapack', when='+mpi')
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
+    depends_on('pexsi', when='+mpi')
 
     # TODO : add dependency on libint
     # TODO : add dependency on libsmm, libxsmm
     # TODO : add dependency on elpa
     # TODO : add dependency on CUDA
-    # TODO : add dependency on PEXSI
     # TODO : add dependency on QUIP
     # TODO : add dependency on libwannier90
 
@@ -88,6 +88,7 @@ class Cp2k(Package):
             }
             cppflags = [
                 '-D__FFTW3',
+                '-D__LIBPEXSI',
                 '-I' + spec['fftw'].prefix.include
             ]
             fcflags = copy.deepcopy(optflags[self.spec.compiler.name])
@@ -144,11 +145,28 @@ class Cp2k(Package):
                     '-D__parallel',
                     '-D__SCALAPACK'
                 ])
+                fcflags.extend([
+                    '-I' + join_path(spec['pexsi'].prefix, 'fortran')
+                ])
                 ldflags.extend([
                     '-L' + spec['scalapack'].prefix.lib
                 ])
+                libs.extend([
+                    join_path(spec['pexsi'].prefix.lib, 'libpexsi.a'),
+                    join_path(spec['superlu-dist'].prefix.lib,
+                              'libsuperlu_dist.a'),
+                    join_path(
+                        spec['parmetis'].prefix.lib,
+                        'libparmetis.{0}'.format(dso_suffix)
+                    ),
+                    join_path(
+                        spec['metis'].prefix.lib,
+                        'libmetis.{0}'.format(dso_suffix)
+                    ),
+                ])
                 libs.extend(spec['scalapack'].scalapack_shared_libs)
-
+                libs.extend(self.spec['mpi'].mpicxx_shared_libs)
+                libs.extend(self.compiler.stdcxx_libs)
             # LAPACK / BLAS
             ldflags.extend([
                 '-L' + spec['lapack'].prefix.lib,
