@@ -52,7 +52,7 @@ class Hdf5(Package):
     variant('cxx', default=True, description='Enable C++ support')
     variant('fortran', default=True, description='Enable Fortran support')
 
-    variant('mpi', default=False, description='Enable MPI support')
+    variant('mpi', default=True, description='Enable MPI support')
     variant('szip', default=False, description='Enable szip support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
