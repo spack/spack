@@ -53,13 +53,13 @@ class Cp2k(Package):
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
     depends_on('pexsi', when='+mpi')
+    depends_on('wannier90', when='+mpi')
 
     # TODO : add dependency on libint
     # TODO : add dependency on libsmm, libxsmm
     # TODO : add dependency on elpa
     # TODO : add dependency on CUDA
     # TODO : add dependency on QUIP
-    # TODO : add dependency on libwannier90
 
     parallel = False
 
@@ -143,6 +143,7 @@ class Cp2k(Package):
             if '+mpi' in self.spec:
                 cppflags.extend([
                     '-D__parallel',
+                    '-D__WANNIER90',
                     '-D__SCALAPACK'
                 ])
                 fcflags.extend([
@@ -152,6 +153,7 @@ class Cp2k(Package):
                     '-L' + spec['scalapack'].prefix.lib
                 ])
                 libs.extend([
+                    join_path(spec['wannier90'].prefix.lib, 'libwannier.a'),
                     join_path(spec['pexsi'].prefix.lib, 'libpexsi.a'),
                     join_path(spec['superlu-dist'].prefix.lib,
                               'libsuperlu_dist.a'),
