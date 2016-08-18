@@ -37,16 +37,19 @@ class Intelmpi(Package):
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-        spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+        spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpicxx'))
         spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
         spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+        # NOTE: Need to find a better way of setting this compiler argument
+        # which is only required when building packages with intelmpi.
+        spack_env.set('CXXFLAGS', '-DMPICH_IGNORE_CXX_SEEK')
 
     def setup_dependent_package(self, module, dep_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
-        self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
+        self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
         self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
-        self.spec.cppflags = '-DMPICH_IGNORE_CXX_SEEK'
+#        self.spec.cxxflags = '-DMPICH_IGNORE_CXX_SEEK'
 
 #    def install(self, spec, prefix):
 #        configure("--prefix=%s" % prefix)

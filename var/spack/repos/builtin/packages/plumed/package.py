@@ -30,13 +30,15 @@ class Plumed(Package):
        molecular systems which works together with some of the most popular
        molecular dynamics engines."""
 
-    # FIXME: Add a proper url for your package's homepage here.
+    # PLUMED homepage. The source is available on github.
     homepage = "http://www.plumed.org/home"
     url      = "https://github.com/plumed/plumed2"
 
     version('2.2.3', git="https://github.com/plumed/plumed2.git", tag='v2.2.3')
 
-    # Variants
+    # Variants. PLUMED by default builds a number of optional modules.
+    # The ones listed here are not built by default for various reasons,
+    # such as stability, lack of testing, or lack of demand.
     variant('crystallization', default=False,
             description='Build support for optional crystallization module.')
     variant('imd', default=False,
@@ -46,15 +48,14 @@ class Plumed(Package):
     variant('mpi', default=False,
             description='Enable MPI support.')
 
-    # Dependencies
+    # Dependencies. LAPACK and BLAS are recommended but not essential.
     depends_on("mpi", when="+mpi")
     depends_on("netlib-lapack")
     depends_on("openblas")
 
     def install(self, spec, prefix):
-        configure("--prefix=" + prefix)
-#                  "--enable-mpi",
-#                  "-enable-modules=crystallization")
+        # Prefix is the only compulsory argument.
+        config_args = ["--prefix=" + prefix]
 
         # Construct list of optional modules
         module_opts=[]
@@ -64,19 +65,28 @@ class Plumed(Package):
             '+manyrestraints' if '+manyrestraints' in spec else '-manyrestraints'
         ])
 
-        # Add optional arguments based on specs and variants
-#        config_args.extend([
-            # Modules
-#            "--enable-modules=%s" % "".join(module_opts) if module_opts is not None,
-#            "--enable-mpi" if '+mpi' in spec
-#        ])
-
-        if modules_opts:
+        # If we have specified any optional modules then add the argument ro
+        # enable or disable them.
+        if module_opts:
             config_args.extend(["--enable-modules=%s" % "".join(module_opts)])
 
-        config_args.extend([
-            "--enable-mpi" if '+mpi' in spec else "--disable-mpi"
-        ])
+        # If using MPI then ensure the correct compiler wrapper is used.
+        if '+mpi' in spec:
+            config_args.extend([
+                "--enable-mpi",
+                "CC=%s" % self.spec['mpi'].mpicc,
+                "CXX=%s" % self.spec['mpi'].mpicxx,
+                "FC=%s" % self.spec['mpi'].mpifc,
+                "F77=%s" % self.spec['mpi'].mpif77
+            ])
+
+        # Add remaining variant flags.
+#        config_args.extend([
+#            "--enable-mpi" if '+mpi' in spec else "--disable-mpi"
+#        ])
+
+        # Configure
+        configure(*config_args)
 
         make()
         make("install")
