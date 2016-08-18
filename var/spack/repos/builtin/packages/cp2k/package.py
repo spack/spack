@@ -54,10 +54,10 @@ class Cp2k(Package):
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
     depends_on('pexsi', when='+mpi')
     depends_on('wannier90', when='+mpi')
+    depends_on('elpa', when='+mpi')
 
     # TODO : add dependency on libint
     # TODO : add dependency on libsmm, libxsmm
-    # TODO : add dependency on elpa
     # TODO : add dependency on CUDA
     # TODO : add dependency on QUIP
 
@@ -109,7 +109,8 @@ class Cp2k(Package):
                 # Add required macro
                 cppflags.extend(['-D__PLUMED2'])
                 libs.extend([
-                    join_path(self.spec['plumed'].prefix.lib, 'libplumed.so')
+                    join_path(self.spec['plumed'].prefix.lib,
+                              'libplumed.{0}'.format(dso_suffix))
                 ])
 
             mkf.write('CC = {0.compiler.cc}\n'.format(self))
@@ -144,15 +145,24 @@ class Cp2k(Package):
                 cppflags.extend([
                     '-D__parallel',
                     '-D__WANNIER90',
+                    '-D__ELPA3',
                     '-D__SCALAPACK'
                 ])
                 fcflags.extend([
+                    '-I' + join_path(
+                        spec['elpa'].prefix,
+                        'include',
+                        'elpa-{0}'.format(str(spec['elpa'].version)),
+                        'modules'
+                    ),
                     '-I' + join_path(spec['pexsi'].prefix, 'fortran')
                 ])
                 ldflags.extend([
                     '-L' + spec['scalapack'].prefix.lib
                 ])
                 libs.extend([
+                    join_path(spec['elpa'].prefix.lib,
+                              'libelpa.{0}'.format(dso_suffix)),
                     join_path(spec['wannier90'].prefix.lib, 'libwannier.a'),
                     join_path(spec['pexsi'].prefix.lib, 'libpexsi.a'),
                     join_path(spec['superlu-dist'].prefix.lib,
@@ -175,7 +185,8 @@ class Cp2k(Package):
                 '-L' + spec['blas'].prefix.lib
             ])
             libs.extend([
-                join_path(spec['fftw'].prefix.lib, 'libfftw3.so'),
+                join_path(spec['fftw'].prefix.lib,
+                          'libfftw3.{0}'.format(dso_suffix)),
                 spec['lapack'].lapack_shared_lib,
                 spec['blas'].blas_shared_lib
             ])
