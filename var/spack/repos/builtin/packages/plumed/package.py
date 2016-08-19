@@ -60,12 +60,14 @@ class Plumed(Package):
         # Construct list of optional modules
         module_opts=[]
         module_opts.extend([
-            '+crystallization' if '+crystallization' in spec else '-crystallization',
+            '+crystallization' if (
+                '+crystallization' in spec) else '-crystallization',
             '+imd' if '+imd' in spec else '-imd',
-            '+manyrestraints' if '+manyrestraints' in spec else '-manyrestraints'
+            '+manyrestraints' if (
+                '+manyrestraints' in spec) else '-manyrestraints'
         ])
 
-        # If we have specified any optional modules then add the argument ro
+        # If we have specified any optional modules then add the argument to
         # enable or disable them.
         if module_opts:
             config_args.extend(["--enable-modules=%s" % "".join(module_opts)])
@@ -80,10 +82,13 @@ class Plumed(Package):
                 "F77=%s" % self.spec['mpi'].mpif77
             ])
 
-        # Add remaining variant flags.
-#        config_args.extend([
-#            "--enable-mpi" if '+mpi' in spec else "--disable-mpi"
-#        ])
+            # If the MPI dependency is provided by the intelmpi package then
+            # the following additional argument is required to allow it to
+            # build.
+            if spec.satisfies('^intelmpi'):
+                config_args.extend([
+                    "STATIC_LIBS=-mt_mpi"
+                ])  
 
         # Configure
         configure(*config_args)
