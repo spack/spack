@@ -34,7 +34,7 @@ class PySphinx(Package):
             url='https://pypi.python.org/packages/8b/78/eeea2b837f911cdc301f5f05163f9729a2381cadd03ccf35b25afe816c90/Sphinx-1.4.5.tar.gz')
     version('1.3.1', '8786a194acf9673464c5455b11fd4332')
 
-    extends('python')
+    extends('python', ignore='bin/(pybabel|pygmentize)')
 
     depends_on('py-setuptools',              type='build')
     depends_on('py-six@1.4:',                type=nolink)
