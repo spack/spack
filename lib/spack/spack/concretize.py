@@ -42,6 +42,7 @@ from spack.version import *
 from functools import partial
 from itertools import chain
 from spack.config import *
+import spack.preferred_packages
 
 
 class DefaultConcretizer(object):
@@ -160,15 +161,28 @@ class DefaultConcretizer(object):
         # If there are known available versions, return the most recent
         # version that satisfies the spec
         pkg = spec.package
-        cmp_versions = partial(spack.pkgsort.version_compare, spec.name)
-        valid_versions = sorted(
-            [v for v in pkg.versions
-             if any(v.satisfies(sv) for sv in spec.versions)],
-            cmp=cmp_versions)
 
-        def prefer_key(v):
-            return pkg.versions.get(Version(v)).get('preferred', False)
-        valid_versions.sort(key=prefer_key, reverse=True)
+        # ---------- Produce prioritized list of versions
+        # Get list of preferences from packages.yaml
+        preferred = spack.pkgsort  # == spack.preferred_packages.PreferredPackages()
+        yaml_specs = [x[0] for x in preferred._spec_for_pkgname(spec.name, 'version', None)]
+        n = len(yaml_specs)
+        yaml_index = {spec : n-index for index,spec in enumerate(yaml_specs)}
+
+        # List of versions we could consider, in sorted order
+        unsorted_versions = [v for v in pkg.versions
+             if any(v.satisfies(sv) for sv in spec.versions)]
+
+        keys = [(
+            yaml_index.get(v,-1),
+            pkg.versions.get(Version(v)).get('preferred', False),
+            v) for v in unsorted_versions]
+        keys.sort(reverse=True)
+
+        # List of versions in complete sorted order
+        valid_versions = [x[2] for x in keys]
+        # --------------------------
+
 
         if valid_versions:
             # Disregard @develop and take the next valid version
