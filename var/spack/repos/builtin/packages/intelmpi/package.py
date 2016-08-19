@@ -49,9 +49,3 @@ class Intelmpi(Package):
         self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
         self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
         self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
-#        self.spec.cxxflags = '-DMPICH_IGNORE_CXX_SEEK'
-
-#    def install(self, spec, prefix):
-#        configure("--prefix=%s" % prefix)
-#        make()
-#        make("install")
