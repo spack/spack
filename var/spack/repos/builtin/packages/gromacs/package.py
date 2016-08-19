@@ -22,7 +22,6 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
@@ -57,7 +56,7 @@ class Gromacs(Package):
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
     depends_on('fftw')
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.8.8:', type='build')
 
     # TODO : add GPU support
 
