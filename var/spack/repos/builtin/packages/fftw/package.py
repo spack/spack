@@ -39,11 +39,14 @@ class Fftw(Package):
     version('3.3.5', '6cc08a3b9c7ee06fdd5b9eb02e06f569')
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
 
-    variant('float', default=True,
+    variant(
+        'float', default=True,
         description='Produces a single precision version of the library')
-    variant('long_double', default=True,
+    variant(
+        'long_double', default=True,
         description='Produces a long double precision version of the library')
-    variant('quad', default=False,
+    variant(
+        'quad', default=False,
         description='Produces a quad precision version of the library '
                     '(works only with GCC and libquadmath)')
     variant('openmp', default=False, description="Enable OpenMP support.")
