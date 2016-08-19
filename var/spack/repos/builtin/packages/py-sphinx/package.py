@@ -36,7 +36,10 @@ class PySphinx(Package):
 
     extends('python', ignore='bin/(pybabel|pygmentize)')
 
-    depends_on('py-setuptools',              type='build')
+    # Most Python packages only require py-setuptools as a build dependency.
+    # However, py-sphinx requires py-setuptools during runtime as well.
+    depends_on('py-setuptools',              type=nolink)
+
     depends_on('py-six@1.4:',                type=nolink)
     depends_on('py-jinja2@2.3:',             type=nolink)
     depends_on('py-pygments@2.0:',           type=nolink)
