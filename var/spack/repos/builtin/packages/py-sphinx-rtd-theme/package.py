@@ -25,19 +25,18 @@
 from spack import *
 
 
-class PyDocutils(Package):
-    """Docutils is an open-source text processing system for processing
-    plaintext documentation into useful formats, such as HTML, LaTeX,
-    man-pages, open-document or XML. It includes reStructuredText, the
-    easy to read, easy to use, what-you-see-is-what-you-get plaintext
-    markup language."""
+class PySphinxRtdTheme(Package):
+    """ReadTheDocs.org theme for Sphinx."""
 
-    homepage = "http://docutils.sourceforge.net/"
-    url      = "https://pypi.python.org/packages/source/d/docutils/docutils-0.12.tar.gz"
+    homepage = "https://pypi.python.org/pypi/sphinx_rtd_theme"
+    url      = "https://pypi.python.org/packages/source/s/sphinx_rtd_theme/sphinx_rtd_theme-0.1.10a0.tar.gz"
 
-    version('0.12', '4622263b62c5c771c03502afa3157768')
+    version('0.1.10a0', '83bd95cae55aa8b773a8cc3a41094282',
+            url="https://pypi.python.org/packages/da/6b/1b75f13d8aa3333f19c6cdf1f0bc9f52ea739cae464fbee050307c121857/sphinx_rtd_theme-0.1.10a0.tar.gz")
 
     extends('python')
+
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

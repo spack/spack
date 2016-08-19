@@ -25,19 +25,19 @@
 from spack import *
 
 
-class PyDocutils(Package):
-    """Docutils is an open-source text processing system for processing
-    plaintext documentation into useful formats, such as HTML, LaTeX,
-    man-pages, open-document or XML. It includes reStructuredText, the
-    easy to read, easy to use, what-you-see-is-what-you-get plaintext
-    markup language."""
+class PyImagesize(Package):
+    """Parses image file headers and returns image size. Supports PNG, JPEG,
+    JPEG2000, and GIF image file formats."""
 
-    homepage = "http://docutils.sourceforge.net/"
-    url      = "https://pypi.python.org/packages/source/d/docutils/docutils-0.12.tar.gz"
+    homepage = "https://pypi.python.org/pypi/imagesize"
+    url      = "https://pypi.python.org/packages/source/i/imagesize/imagesize-0.7.1.tar.gz"
 
-    version('0.12', '4622263b62c5c771c03502afa3157768')
+    version('0.7.1', '976148283286a6ba5f69b0f81aef8052',
+            url="https://pypi.python.org/packages/53/72/6c6f1e787d9cab2cc733cf042f125abec07209a58308831c9f292504e826/imagesize-0.7.1.tar.gz")
 
     extends('python')
+
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

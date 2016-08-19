@@ -25,19 +25,21 @@
 from spack import *
 
 
-class PyDocutils(Package):
-    """Docutils is an open-source text processing system for processing
-    plaintext documentation into useful formats, such as HTML, LaTeX,
-    man-pages, open-document or XML. It includes reStructuredText, the
-    easy to read, easy to use, what-you-see-is-what-you-get plaintext
-    markup language."""
+class PyBabel(Package):
+    """Babel is an integrated collection of utilities that assist in
+    internationalizing and localizing Python applications, with an
+    emphasis on web-based applications."""
 
-    homepage = "http://docutils.sourceforge.net/"
-    url      = "https://pypi.python.org/packages/source/d/docutils/docutils-0.12.tar.gz"
+    homepage = "http://babel.pocoo.org/en/latest/"
+    url      = "https://pypi.python.org/packages/source/b/babel/babel-2.3.4.tar.gz"
 
-    version('0.12', '4622263b62c5c771c03502afa3157768')
+    version('2.3.4', 'afa20bc55b0e991833030129ad498f35',
+            url="https://pypi.python.org/packages/6e/96/ba2a2462ed25ca0e651fb7b66e7080f5315f91425a07ea5b34d7c870c114/Babel-2.3.4.tar.gz")
 
     extends('python')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('py-pytz',       type=nolink)
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))

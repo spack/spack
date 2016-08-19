@@ -25,17 +25,14 @@
 from spack import *
 
 
-class PyDocutils(Package):
-    """Docutils is an open-source text processing system for processing
-    plaintext documentation into useful formats, such as HTML, LaTeX,
-    man-pages, open-document or XML. It includes reStructuredText, the
-    easy to read, easy to use, what-you-see-is-what-you-get plaintext
-    markup language."""
+class PySnowballstemmer(Package):
+    """This package provides 16 stemmer algorithms (15 + Poerter
+    English stemmer) generated from Snowball algorithms."""
 
-    homepage = "http://docutils.sourceforge.net/"
-    url      = "https://pypi.python.org/packages/source/d/docutils/docutils-0.12.tar.gz"
+    homepage = "https://pypi.python.org/pypi/snowballstemmer"
+    url      = "https://pypi.python.org/packages/source/s/snowballstemmer/snowballstemmer-1.2.1.tar.gz"
 
-    version('0.12', '4622263b62c5c771c03502afa3157768')
+    version('1.2.1', '643b019667a708a922172e33a99bf2fa')
 
     extends('python')
 
