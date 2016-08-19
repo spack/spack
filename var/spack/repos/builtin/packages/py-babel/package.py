@@ -31,7 +31,7 @@ class PyBabel(Package):
     emphasis on web-based applications."""
 
     homepage = "http://babel.pocoo.org/en/latest/"
-    url      = "https://pypi.python.org/packages/source/b/babel/babel-2.3.4.tar.gz"
+    url      = "https://pypi.python.org/packages/source/B/Babel/Babel-2.3.4.tar.gz"
 
     version('2.3.4', 'afa20bc55b0e991833030129ad498f35',
             url="https://pypi.python.org/packages/6e/96/ba2a2462ed25ca0e651fb7b66e7080f5315f91425a07ea5b34d7c870c114/Babel-2.3.4.tar.gz")
