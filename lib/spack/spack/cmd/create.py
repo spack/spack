@@ -120,7 +120,8 @@ dependencies_dict = {
     extends('python')
 
     # FIXME: Add additional dependencies if required.
-    # depends_on('py-foo', type=nolink)""",
+    # depends_on('py-setuptools', type='build')
+    # depends_on('py-foo',        type=nolink)""",
 
     'R': """\
     extends('R')
