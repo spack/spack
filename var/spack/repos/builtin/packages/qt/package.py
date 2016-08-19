@@ -128,6 +128,9 @@ class Qt(Package):
     def setup_dependent_environment(self, spack_env, run_env, dspec):
         spack_env.set('QTDIR', self.prefix)
 
+    def setup_dependent_package(self, module, ext_spec):
+        module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
+
     def patch(self):
         if self.spec.satisfies('@4'):
             # Fix qmake compilers in the default mkspec
