@@ -60,6 +60,10 @@ class Libint(Package):
         aclocal('-I', 'lib/autoconf')
         autoconf()
 
+        config_args = [
+            '--prefix={0}'.format(prefix)
+        ]
+
         # Optimizations for the Intel compiler, suggested by CP2K
         optflags = '-O2'
         if self.compiler.name == 'intel':
@@ -70,11 +74,17 @@ class Libint(Package):
         env['CFLAGS']   = optflags
         env['CXXFLAGS'] = optflags
 
-        config_args = [
-            '--prefix={0}'.format(prefix),
-            '--with-cc-optflags={0}'.format(optflags),
-            '--with-cxx-optflags={0}'.format(optflags)
-        ]
+        # Optimization flag names have changed in libint 2
+        if self.version < Version('2.0.0'):
+            config_args.extend([
+                '--with-cc-optflags={0}'.format(optflags),
+                '--with-cxx-optflags={0}'.format(optflags)
+            ])
+        else:
+            config_args.extend([
+                '--with-cxx-optflags={0}'.format(optflags),
+                '--with-cxxgen-optflags={0}'.format(optflags)
+            ])
 
         # Options required by CP2K, removed in libint 2
         if self.version < Version('2.0.0'):
