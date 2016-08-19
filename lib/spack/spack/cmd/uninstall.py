@@ -161,40 +161,38 @@ def uninstall(parser, args):
     if not args.packages:
         tty.die("uninstall requires at least one package argument.")
 
-    with spack.installed_db.write_transaction():
-        specs = spack.cmd.parse_specs(args.packages)
-        # Gets the list of installed specs that match the ones give via cli
-        # takes care of '-a' is given in the cli
-        uninstall_list = concretize_specs(specs, args.all, args.force)
-        dependent_list = installed_dependents(
-            uninstall_list)  # takes care of '-d'
+    specs = spack.cmd.parse_specs(args.packages)
+    # Gets the list of installed specs that match the ones give via cli
+    # takes care of '-a' is given in the cli
+    uninstall_list = concretize_specs(specs, args.all, args.force)
+    dependent_list = installed_dependents(uninstall_list)  # takes care of '-d'
 
-        # Process dependent_list and update uninstall_list
-        has_error = False
-        if dependent_list and not args.dependents and not args.force:
-            for spec, lst in dependent_list.items():
-                tty.error("Will not uninstall %s" %
-                          spec.format("$_$@$%@$#", color=True))
-                print('')
-                print("The following packages depend on it:")
-                spack.cmd.display_specs(lst, **display_args)
-                print('')
-                has_error = True
-        elif args.dependents:
-            for key, lst in dependent_list.items():
-                uninstall_list.extend(lst)
-            uninstall_list = list(set(uninstall_list))
-
-        if has_error:
-            tty.die('You can use spack uninstall --dependents '
-                    'to uninstall these dependencies as well')
-
-        if not args.yes_to_all:
-            tty.msg("The following packages will be uninstalled : ")
+    # Process dependent_list and update uninstall_list
+    has_error = False
+    if dependent_list and not args.dependents and not args.force:
+        for spec, lst in dependent_list.items():
+            tty.error("Will not uninstall %s"
+                      % spec.format("$_$@$%@$#", color=True))
             print('')
-            spack.cmd.display_specs(uninstall_list, **display_args)
+            print("The following packages depend on it:")
+            spack.cmd.display_specs(lst, **display_args)
             print('')
-            spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
+            has_error = True
+    elif args.dependents:
+        for key, lst in dependent_list.items():
+            uninstall_list.extend(lst)
+        uninstall_list = list(set(uninstall_list))
 
-        # Uninstall everything on the list
-        do_uninstall(uninstall_list, args.force)
+    if has_error:
+        tty.die('You can use spack uninstall --dependents '
+                'to uninstall these dependencies as well')
+
+    if not args.yes_to_all:
+        tty.msg("The following packages will be uninstalled : ")
+        print('')
+        spack.cmd.display_specs(uninstall_list, **display_args)
+        print('')
+        spack.cmd.ask_for_confirmation('Do you want to proceed ? ')
+
+    # Uninstall everything on the list
+    do_uninstall(uninstall_list, args.force)

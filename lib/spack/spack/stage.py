@@ -29,6 +29,7 @@ import tempfile
 from urlparse import urljoin
 
 import llnl.util.tty as tty
+import llnl.util.lock
 from llnl.util.filesystem import *
 
 import spack.util.pattern as pattern
@@ -92,8 +93,9 @@ class Stage(object):
     similar, and are intended to persist for only one run of spack.
     """
 
-    def __init__(self, url_or_fetch_strategy,
-                 name=None, mirror_path=None, keep=False, path=None):
+    def __init__(
+            self, url_or_fetch_strategy,
+            name=None, mirror_path=None, keep=False, path=None, lock=True):
         """Create a stage object.
            Parameters:
              url_or_fetch_strategy
@@ -151,6 +153,17 @@ class Stage(object):
         # Flag to decide whether to delete the stage folder on exit or not
         self.keep = keep
 
+        # File lock for the stage directory
+        self._lock_file = None
+        self._lock = None
+        if lock:
+            self._lock_file = join_path(spack.stage_path, self.name + '.lock')
+            if not os.path.exists(self._lock_file):
+                directory, _ = os.path.split(self._lock_file)
+                mkdirp(directory)
+                touch(self._lock_file)
+            self._lock = llnl.util.lock.Lock(self._lock_file)
+
     def __enter__(self):
         """
         Entering a stage context will create the stage directory
@@ -158,6 +171,8 @@ class Stage(object):
         Returns:
             self
         """
+        if self._lock is not None:
+            self._lock.acquire_write(timeout=60)
         self.create()
         return self
 
@@ -178,6 +193,9 @@ class Stage(object):
         # Delete when there are no exceptions, unless asked to keep.
         if exc_type is None and not self.keep:
             self.destroy()
+
+        if self._lock is not None:
+            self._lock.release_write()
 
     def _need_to_create_path(self):
         """Makes sure nothing weird has happened since the last time we
@@ -412,7 +430,8 @@ class Stage(object):
         """
         # Create the top-level stage directory
         mkdirp(spack.stage_path)
-        remove_dead_links(spack.stage_path)
+        remove_if_dead_link(self.path)
+
         # If a tmp_root exists then create a directory there and then link it
         # in the stage area, otherwise create the stage directory in self.path
         if self._need_to_create_path():
