@@ -52,11 +52,15 @@ class Lock(object):
 
     """
 
-    def __init__(self, file_path):
-        self._file_path = file_path
+    def __init__(self, path):
+        self.path = path
         self._file = None
         self._reads = 0
         self._writes = 0
+
+        # PID and host of lock holder
+        self.pid = self.old_pid = None
+        self.host = self.old_host = None
 
     def _lock(self, op, timeout):
         """This takes a lock using POSIX locks (``fnctl.lockf``).
@@ -83,15 +87,25 @@ class Lock(object):
                 # Open reader locks read-only if possible.
                 # lock doesn't exist, open RW + create if it doesn't exist.
                 if self._file is None:
-                    mode = 'r+' if op == fcntl.LOCK_EX else 'r'
-                    self._file = open(self._file_path, mode)
+                    self._ensure_parent_directory()
 
+                    os_mode, fd_mode = os.O_RDONLY, 'r'
+                    if op == fcntl.LOCK_EX or not os.path.exists(self.path):
+                        os_mode, fd_mode = (os.O_RDWR | os.O_CREAT), 'r+'
+
+                    fd = os.open(self.path, os_mode)
+                    self._file = os.fdopen(fd, fd_mode)
+
+                # Try to get the lock (will raise if not available.)
                 fcntl.lockf(self._file, op | fcntl.LOCK_NB)
+
+                # All locks read the owner PID and host
+                self._read_lock_data()
+
+                # Exclusive locks write their PID/host
                 if op == fcntl.LOCK_EX:
-                    self._file.write(
-                        "pid=%s,host=%s" % (os.getpid(), socket.getfqdn()))
-                    self._file.truncate()
-                    self._file.flush()
+                    self._write_lock_data()
+
                 return
 
             except IOError as error:
@@ -102,6 +116,40 @@ class Lock(object):
             time.sleep(_sleep_time)
 
         raise LockError("Timed out waiting for lock.")
+
+    def _ensure_parent_directory(self):
+        parent = os.path.dirname(self.path)
+        try:
+            os.makedirs(parent)
+            return True
+        except OSError as e:
+            # makedirs can fail when diretory already exists.
+            if not (e.errno == errno.EEXIST and os.path.isdir(parent) or
+                    e.errno == errno.EISDIR):
+                raise
+
+    def _read_lock_data(self):
+        """Read PID and host data out of the file if it is there."""
+        line = self._file.read()
+        if line:
+            pid, host = line.strip().split(',')
+            _, _, self.pid = pid.rpartition('=')
+            _, _, self.host = host.rpartition('=')
+
+    def _write_lock_data(self):
+        """Write PID and host data to the file, recording old values."""
+        self.old_pid = self.pid
+        self.old_host = self.host
+
+        self.pid = os.getpid()
+        self.host = socket.getfqdn()
+
+        # write pid, host to disk to sync over FS
+        self._file.seek(0)
+        self._file.write("pid=%s,host=%s" % (self.pid, self.host))
+        self._file.truncate()
+        self._file.flush()
+        os.fsync(self._file.fileno())
 
     def _unlock(self):
         """Releases a lock using POSIX locks (``fcntl.lockf``)
@@ -126,7 +174,7 @@ class Lock(object):
 
         """
         if self._reads == 0 and self._writes == 0:
-            tty.debug('READ LOCK : {0._file_path} [Acquiring]'.format(self))
+            tty.debug('READ LOCK : {0.path} [Acquiring]'.format(self))
             self._lock(fcntl.LOCK_SH, timeout)   # can raise LockError.
             self._reads += 1
             return True
@@ -146,7 +194,7 @@ class Lock(object):
 
         """
         if self._writes == 0:
-            tty.debug('WRITE LOCK : {0._file_path} [Acquiring]'.format(self))
+            tty.debug('WRITE LOCK : {0.path} [Acquiring]'.format(self))
             self._lock(fcntl.LOCK_EX, timeout)   # can raise LockError.
             self._writes += 1
             return True
@@ -167,7 +215,7 @@ class Lock(object):
         assert self._reads > 0
 
         if self._reads == 1 and self._writes == 0:
-            tty.debug('READ LOCK : {0._file_path} [Released]'.format(self))
+            tty.debug('READ LOCK : {0.path} [Released]'.format(self))
             self._unlock()      # can raise LockError.
             self._reads -= 1
             return True
@@ -188,7 +236,7 @@ class Lock(object):
         assert self._writes > 0
 
         if self._writes == 1 and self._reads == 0:
-            tty.debug('WRITE LOCK : {0._file_path} [Released]'.format(self))
+            tty.debug('WRITE LOCK : {0.path} [Released]'.format(self))
             self._unlock()      # can raise LockError.
             self._writes -= 1
             return True

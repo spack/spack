@@ -160,9 +160,6 @@ class Database(object):
         if not os.path.exists(self._db_dir):
             mkdirp(self._db_dir)
 
-        if not os.path.exists(self._lock_path):
-            touch(self._lock_path)
-
         # initialize rest of state.
         self.lock = Lock(self._lock_path)
         self._data = {}

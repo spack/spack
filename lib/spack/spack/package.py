@@ -703,17 +703,8 @@ class Package(object):
         if self._prefix_lock is None:
             dirname = join_path(os.path.dirname(self.spec.prefix), '.locks')
             basename = os.path.basename(self.spec.prefix)
-            lock_file = join_path(dirname, basename)
-
-            if not os.path.exists(lock_file):
-                tty.debug('TOUCH FILE : {0}'.format(lock_file))
-                try:
-                    os.makedirs(dirname)
-                except OSError:
-                    pass
-                touch(lock_file)
-
-            self._prefix_lock = llnl.util.lock.Lock(lock_file)
+            self._prefix_lock = llnl.util.lock.Lock(
+                join_path(dirname, basename))
 
         return self._prefix_lock
 

@@ -44,7 +44,6 @@ class LockTest(unittest.TestCase):
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
         self.lock_path = join_path(self.tempdir, 'lockfile')
-        touch(self.lock_path)
 
     def tearDown(self):
         shutil.rmtree(self.tempdir, ignore_errors=True)
@@ -172,14 +171,17 @@ class LockTest(unittest.TestCase):
         lock.acquire_read()
         self.assertTrue(lock._reads == 1)
         self.assertTrue(lock._writes == 0)
+        self.assertTrue(lock._file.mode == 'r')
 
         lock.acquire_write()
         self.assertTrue(lock._reads == 1)
         self.assertTrue(lock._writes == 1)
+        self.assertTrue(lock._file.mode == 'r+')
 
         lock.release_write()
         self.assertTrue(lock._reads == 1)
         self.assertTrue(lock._writes == 0)
+        self.assertTrue(lock._file.mode == 'r+')
 
         lock.release_read()
         self.assertTrue(lock._reads == 0)
