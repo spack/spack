@@ -170,9 +170,6 @@ class DefaultConcretizer(object):
         n = len(yaml_specs)
         yaml_index = {spec : n-index for index,spec in enumerate(yaml_specs)}
 
-        if True or 'develop' in yaml_index:
-            print('yaml_specs', yaml_specs)
-
         # List of versions we could consider, in sorted order
         unsorted_versions = [v for v in pkg.versions
              if any(v.satisfies(sv) for sv in spec.versions)]
@@ -183,9 +180,6 @@ class DefaultConcretizer(object):
             v.isnumeric(),        # Don't rely on Version.__lt__ to get this right
             v) for v in unsorted_versions]
         keys.sort(reverse=True)
-
-        if True or 'develop' in yaml_index:
-            print('keys', keys)
 
         # List of versions in complete sorted order
         valid_versions = [x[-1] for x in keys]
