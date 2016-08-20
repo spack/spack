@@ -54,7 +54,7 @@ class Lock(object):
 
     def __init__(self, file_path):
         self._file_path = file_path
-        self._fd = None
+        self._file = None
         self._reads = 0
         self._writes = 0
 
@@ -75,21 +75,23 @@ class Lock(object):
             try:
                 # If this is already open read-only and we want to
                 # upgrade to an exclusive write lock, close first.
-                if self._fd is not None:
-                    flags = fcntl.fcntl(self._fd, fcntl.F_GETFL)
-                    if op == fcntl.LOCK_EX and flags | os.O_RDONLY:
-                        os.close(self._fd)
-                        self._fd = None
+                if self._file is not None:
+                    if op == fcntl.LOCK_EX and self._file.mode == 'r':
+                        self._file.close()
+                        self._file = None
 
-                if self._fd is None:
-                    mode = os.O_RDWR if op == fcntl.LOCK_EX else os.O_RDONLY
-                    self._fd = os.open(self._file_path, mode)
+                # Open reader locks read-only if possible.
+                # lock doesn't exist, open RW + create if it doesn't exist.
+                if self._file is None:
+                    mode = 'r+' if op == fcntl.LOCK_EX else 'r'
+                    self._file = open(self._file_path, mode)
 
-                fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
+                fcntl.lockf(self._file, op | fcntl.LOCK_NB)
                 if op == fcntl.LOCK_EX:
-                    os.write(
-                        self._fd,
+                    self._file.write(
                         "pid=%s,host=%s" % (os.getpid(), socket.getfqdn()))
+                    self._file.truncate()
+                    self._file.flush()
                 return
 
             except IOError as error:
@@ -108,9 +110,9 @@ class Lock(object):
         be masquerading as write locks, but this removes either.
 
         """
-        fcntl.lockf(self._fd, fcntl.LOCK_UN)
-        os.close(self._fd)
-        self._fd = None
+        fcntl.lockf(self._file, fcntl.LOCK_UN)
+        self._file.close()
+        self._file = None
 
     def acquire_read(self, timeout=_default_timeout):
         """Acquires a recursive, shared lock for reading.

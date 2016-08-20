@@ -184,7 +184,7 @@ class LockTest(unittest.TestCase):
         lock.release_read()
         self.assertTrue(lock._reads == 0)
         self.assertTrue(lock._writes == 0)
-        self.assertTrue(lock._fd is None)
+        self.assertTrue(lock._file is None)
 
     #
     # Longer test case that ensures locks are reusable. Ordering is
