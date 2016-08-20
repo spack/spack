@@ -33,6 +33,7 @@ or user preferences.
 TODO: make this customizable and allow users to configure
       concretization  policies.
 """
+from __future__ import print_function
 import spack
 import spack.spec
 import spack.compilers
@@ -169,6 +170,9 @@ class DefaultConcretizer(object):
         n = len(yaml_specs)
         yaml_index = {spec : n-index for index,spec in enumerate(yaml_specs)}
 
+        if True or 'develop' in yaml_index:
+            print('yaml_specs', yaml_specs)
+
         # List of versions we could consider, in sorted order
         unsorted_versions = [v for v in pkg.versions
              if any(v.satisfies(sv) for sv in spec.versions)]
@@ -176,21 +180,20 @@ class DefaultConcretizer(object):
         keys = [(
             yaml_index.get(v,-1),
             pkg.versions.get(Version(v)).get('preferred', False),
+            v.isnumeric(),        # Don't rely on Version.__lt__ to get this right
             v) for v in unsorted_versions]
         keys.sort(reverse=True)
 
+        if True or 'develop' in yaml_index:
+            print('keys', keys)
+
         # List of versions in complete sorted order
-        valid_versions = [x[2] for x in keys]
+        valid_versions = [x[-1] for x in keys]
         # --------------------------
 
 
         if valid_versions:
-            # Disregard @develop and take the next valid version
-            if ver(valid_versions[0]) == ver('develop') and \
-                    len(valid_versions) > 1:
-                spec.versions = ver([valid_versions[1]])
-            else:
-                spec.versions = ver([valid_versions[0]])
+            spec.versions = ver([valid_versions[0]])
         else:
             # We don't know of any SAFE versions that match the given
             # spec.  Grab the spec's versions and grab the highest
