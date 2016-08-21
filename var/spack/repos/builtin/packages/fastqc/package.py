@@ -25,6 +25,7 @@
 from spack import *
 from distutils.dir_util import copy_tree
 
+
 class Fastqc(Package):
     """A quality control tool for high throughput sequence data."""
 
