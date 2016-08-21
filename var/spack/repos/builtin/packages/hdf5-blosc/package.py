@@ -51,7 +51,7 @@ class Hdf5Blosc(Package):
     homepage = "https://github.com/Blosc/hdf5-blosc"
     url      = "https://github.com/Blosc/hdf5-blosc/archive/master.zip"
 
-    version('master', '02c04acbf4bec66ec8a35bf157d1c9de')
+    version('master', branch='master')
 
     depends_on("c-blosc")
     depends_on("hdf5")
