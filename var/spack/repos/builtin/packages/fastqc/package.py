@@ -25,7 +25,6 @@
 from spack import *
 from distutils.dir_util import copy_tree
 
-# FIXME: make sure set_executable fix goes in first.
 class Fastqc(Package):
     """A quality control tool for high throughput sequence data."""
 
@@ -40,8 +39,9 @@ class Fastqc(Package):
     def install(self, spec, prefix):
         # ick...
         copy_tree('.', self.prefix)
-        # this assumes "set_executable" == "chmod +x..."
-        set_executable(join_path(prefix, 'fastqc'))
+        # ick, set_executable just makes it u+x, what about the others?
+        chmod = which('chmod')
+        chmod('+x', join_path(prefix, 'fastqc'))
 
     def setup_environment(self, spack_env, env):
         """Add <prefix> to the path; the package has a script at the
