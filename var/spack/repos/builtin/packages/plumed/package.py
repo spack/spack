@@ -121,7 +121,7 @@ class Plumed(Package):
             if spec.satisfies('^intelmpi'):
                 configure_opts.extend([
                     'STATIC_LIBS=-mt_mpi'
-                ]) 
+                ])
 
         # Additional arguments
         configure_opts.extend([
@@ -130,7 +130,7 @@ class Plumed(Package):
         ])
 
         # Construct list of optional modules
-        module_opts=[]
+        module_opts = []
         module_opts.extend([
             '+crystallization' if (
                 '+crystallization' in spec) else '-crystallization',
