@@ -1,31 +1,38 @@
 #!/usr/bin/env bash
 #
-# This script runs source code style checks on Spack.
+# Description:
+#     Runs source code style checks on Spack.
+#     See $SPACK_ROOT/.flake8 for a list of
+#     approved exceptions.
 #
-# To run it, you'll need to have the Python flake8 installed locally.
+# Usage:
+#     run-flake8-tests
 #
-PYTHONPATH=./lib/spack:$PYTHONPATH
+# Notes:
+#     Requires flake8. Can be installed by running:
+#         `spack install py-flake8`
+#     or:
+#         `pip install flake8`
+#     and adding the bin directory to your PATH.
+#
 
+# Check for dependencies
 flake8="$(which flake8)"
 if [[ ! $flake8 ]]; then
     echo "ERROR: flake8 is required to run this script."
     exit 1
 fi
 
-# Move to Spack root; allows script to be run from anywhere
-cd "$(dirname "$0")/../../.."
+QA_DIR="$(dirname "$0")"
+SPACK_ROOT="$QA_DIR/../../.."
 
-# Add changed files that have been committed since branching off of develop
-changed=($(git diff --name-only --find-renames develop... -- '*.py'))
-# Add changed files that have been staged but not yet committed
-changed+=($(git diff --name-only --find-renames --cached -- '*.py'))
-# Add changed files that are unstaged
-changed+=($(git diff --name-only --find-renames -- '*.py'))
-# Add new files that are untracked
-changed+=($(git ls-files --exclude-standard --other -- '*.py'))
+# Move to root directory of Spack
+# Allows script to be run from anywhere
+SPACK_ROOT="$(dirname "$0")/../../.."
+cd "$SPACK_ROOT"
 
-# Ensure that each file in the array is unique
-changed=($(printf '%s\n' "${changed[@]}" | sort -u))
+# Gather array of changed files
+changed=($("$QA_DIR/changed_files" "*.py"))
 
 function cleanup {
     # Restore original package files after modifying them.
@@ -80,7 +87,7 @@ if [[ "${changed[@]}" ]]; then
         exit 1
     fi
 else
-    echo No core framework files modified.
+    echo No Python files were modified.
 fi
 
 exit 0
