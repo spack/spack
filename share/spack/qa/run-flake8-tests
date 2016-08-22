@@ -28,7 +28,6 @@ SPACK_ROOT="$QA_DIR/../../.."
 
 # Move to root directory of Spack
 # Allows script to be run from anywhere
-SPACK_ROOT="$(dirname "$0")/../../.."
 cd "$SPACK_ROOT"
 
 # Gather array of changed files
