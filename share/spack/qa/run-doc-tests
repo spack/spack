@@ -9,32 +9,37 @@
 #     run-doc-tests
 #
 # Notes:
-#     Requires sphinx. Can be installed by running:
-#         `spack install py-sphinx`
-#     or:
-#         `pip install sphinx`
-#     and adding the bin directory to your PATH.
+#     Requires sphinx and mercurial.
 #
 
 QA_DIR="$(dirname "$0")"
 SPACK_ROOT="$QA_DIR/../../.."
 DOC_DIR="$SPACK_ROOT/lib/spack/docs"
 
-# Move to documentation directory
-# Allows script to be run from anywhere
-cd "$DOC_DIR"
+# Array of dependencies
+deps=(
+    sphinx-build
+    hg
+)
+
+# Check for dependencies
+"$QA_DIR/check_dependencies" "${deps[@]}" || exit 1
 
 # Gather array of changed files
 changed=($("$QA_DIR/changed_files" lib/spack/docs))
 
+# Move to documentation directory
+# Allows script to be run from anywhere
+cd "$DOC_DIR"
+
 # Cleanup temporary files upon exit or when script is killed
-trap 'make clean' EXIT SIGINT SIGTERM
+trap 'make clean --silent' EXIT SIGINT SIGTERM
 
 # Only run tests if documentation was updated
 if [[ "${changed[@]}" ]]; then
     # Treat warnings as fatal errors
     make SPHINXOPTS=-W
 else
-    echo No documentation was modified.
+    echo "No documentation was modified."
 fi
 

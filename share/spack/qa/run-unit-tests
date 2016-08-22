@@ -1,20 +1,60 @@
 #!/usr/bin/env bash
 #
-# This script runs Spack unit tests.
+# Description:
+#     Runs Spack unit tests.
 #
-# It should be executed from the top-level directory of the repo,
-# e.g.:
+# Usage:
+#     run-unit-tests [test ...]
 #
-#    share/spack/qa/run-unit-tests
+# Options:
+#     Optionally add one or more unit tests
+#     to only run these tests.
 #
-# To run it, you'll need to have the Python coverage installed locally.
+# Notes:
+#     Requires coverage.
 #
 
-# Regular spack setup and tests
-. ./share/spack/setup-env.sh
+QA_DIR="$(dirname "$0")"
+SPACK_ROOT="$QA_DIR/../../.."
+
+# Array of dependencies
+deps=(
+    coverage
+)
+
+# Check for dependencies
+"$QA_DIR/check_dependencies" "${deps[@]}" || exit 1
+
+# Add Spack to the PATH.
+export PATH="$SPACK_ROOT/bin:$PATH"
+
+# Array of directories containing core Spack framework
+core_dirs=(
+    bin
+    etc
+    # lib, but skip documentation
+    lib/spack/env
+    lib/spack/external
+    lib/spack/llnl
+    lib/spack/spack
+    share
+)
+
+# Gather array of changed files
+changed=($("$QA_DIR/changed_files" "${core_dirs[@]}"))
+
+# Exit if no core Spack framework files were modified
+if [[ ! "${changed[@]}" ]]; then
+    echo "No core Spack framework files were modified."
+    exit 0
+fi
+
+# Run integration tests
+# TODO: should these be separated into a different test suite?
+source "$SPACK_ROOT/share/spack/setup-env.sh"
 spack compilers
 spack config get compilers
 spack install -v libdwarf
 
 # Run unit tests with code coverage
-coverage run bin/spack test
+coverage run spack test "$@"

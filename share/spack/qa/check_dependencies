@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+#
+# Description:
+#     Check to see if dependencies are installed.
+#     If not, warn the user and tell them how to
+#     install these dependencies.
+#
+# Usage:
+#     check-deps <dep> ...
+#
+# Options:
+#     One or more dependencies. Must use name of binary.
+
+for dep in "$@"; do
+    if ! which $dep &> /dev/null; then
+        # sphinx-build comes from sphinx
+        package=$(echo $dep | cut -d - -f 1)
+
+        cat << EOF
+ERROR: $package is required to run this script.
+
+To install with Spack, run:
+    $ spack install py-$package
+or, to install with pip, run:
+    $ pip install $package
+Then add the bin directory to your PATH.
+EOF
+        exit 1
+    fi
+done
+
+echo "Dependencies found."
