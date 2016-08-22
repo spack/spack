@@ -58,7 +58,7 @@ class Plumed(Package):
     variant('mpi', default=True, description='Activates MPI support')
     variant('gsl', default=True, description='Activates GSL support')
 
-    # Dependencies. LAPACK and BLAS are recommended but not essentia
+    # Dependencies. LAPACK and BLAS are recommended but not essential.
     depends_on('zlib')
     depends_on('blas')
     depends_on('lapack')
@@ -106,7 +106,7 @@ class Plumed(Package):
         # with MPI you should use:
         #
         # > ./configure CXX="$MPICXX"
-        configure_opts = ["--prefix=" + prefix]
+        configure_opts = ['--prefix=' + prefix]
 
         # If using MPI then ensure the correct compiler wrapper is used.
         if '+mpi' in spec:
