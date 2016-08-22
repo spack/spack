@@ -22,17 +22,26 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
+import subprocess
+
 from spack import *
 
 
 class Plumed(Package):
     """PLUMED is an open source library for free energy calculations in
-       molecular systems which works together with some of the most popular
-       molecular dynamics engines."""
+    molecular systems which works together with some of the most popular
+    molecular dynamics engines.
 
-    # PLUMED homepage. The source is available on github.
-    homepage = "http://www.plumed.org/home"
-    url      = "https://github.com/plumed/plumed2"
+    Free energy calculations can be performed as a function of many order
+    parameters with a particular focus on biological problems, using state
+    of the art methods such as metadynamics, umbrella sampling and
+    Jarzynski-equation based steered MD.
+
+    The software, written in C++, can be easily interfaced with both fortran
+    and C/C++ codes.
+    """
+    homepage = 'http://www.plumed.org/'
+    url = 'https://github.com/plumed/plumed2'
 
     version('2.2.3', git="https://github.com/plumed/plumed2.git", tag='v2.2.3')
 
@@ -45,17 +54,80 @@ class Plumed(Package):
             description='Build support for optional imd module.')
     variant('manyrestraints', default=False,
             description='Build support for optional manyrestraints module.')
-    variant('mpi', default=False,
-            description='Enable MPI support.')
+    variant('shared', default=True, description='Builds shared libraries')
+    variant('mpi', default=True, description='Activates MPI support')
+    variant('gsl', default=True, description='Activates GSL support')
 
-    # Dependencies. LAPACK and BLAS are recommended but not essential.
-    depends_on("mpi", when="+mpi")
-    depends_on("netlib-lapack")
-    depends_on("openblas")
+    # Dependencies. LAPACK and BLAS are recommended but not essentia
+    depends_on('zlib')
+    depends_on('blas')
+    depends_on('lapack')
+
+    depends_on('mpi', when='+mpi')
+    depends_on('gsl', when='+gsl')
+
+    # Dictionary mapping PLUMED versions to the patches it provides
+    # interactively
+    plumed_patches = {
+        '2.2.3': {
+            'amber-14': '1',
+            'gromacs-4.5.7': '2',
+            'gromacs-4.6.7': '3',
+            'gromacs-5.0.7': '4',
+            'gromacs-5.1.2': '5',
+            'lammps-6Apr13': '6',
+            'namd-2.8': '7',
+            'namd-2.9': '8',
+            'espresso-5.0.2': '9'
+        }
+    }
+
+    def apply_patch(self, other):
+        plumed = subprocess.Popen(
+            [join_path(self.spec.prefix.bin, 'plumed'), 'patch', '-p'],
+            stdin=subprocess.PIPE
+        )
+        opts = Plumed.plumed_patches[str(self.version)]
+        search = '{0.name}-{0.version}'.format(other)
+        choice = opts[search] + '\n'
+        plumed.stdin.write(choice)
+        plumed.wait()
+
+    def setup_dependent_package(self, module, ext_spec):
+        # Make plumed visible from dependent packages
+        module.plumed = Executable(join_path(self.spec.prefix.bin, 'plumed'))
 
     def install(self, spec, prefix):
-        # Prefix is the only compulsory argument.
-        config_args = ["--prefix=" + prefix]
+        # From plumed docs :
+        # Also consider that this is different with respect to what some other
+        # configure script does in that variables such as MPICXX are
+        # completely ignored here. In case you work on a machine where CXX is
+        # set to a serial compiler and MPICXX to a MPI compiler, to compile
+        # with MPI you should use:
+        #
+        # > ./configure CXX="$MPICXX"
+        configure_opts = ["--prefix=" + prefix]
+
+        # If using MPI then ensure the correct compiler wrapper is used.
+        if '+mpi' in spec:
+            configure_opts.extend([
+                '--enable-mpi',
+                'CXX={0}'.format(spec['mpi'].mpicxx)
+            ])
+
+            # If the MPI dependency is provided by the intelmpi package then
+            # the following additional argument is required to allow it to
+            # build.
+            if spec.satisfies('^intelmpi'):
+                configure_opts.extend([
+                    'STATIC_LIBS=-mt_mpi'
+                ]) 
+
+        # Additional arguments
+        configure_opts.extend([
+            '--enable-shared={0}'.format('yes' if '+shared' in spec else 'no'),
+            '--enable-gsl={0}'.format('yes' if '+gsl' in spec else 'no')
+        ])
 
         # Construct list of optional modules
         module_opts=[]
@@ -70,28 +142,9 @@ class Plumed(Package):
         # If we have specified any optional modules then add the argument to
         # enable or disable them.
         if module_opts:
-            config_args.extend(["--enable-modules=%s" % "".join(module_opts)])
+            configure_opts.extend([
+                '--enable-modules={0}'.format("".join(module_opts))])
 
-        # If using MPI then ensure the correct compiler wrapper is used.
-        if '+mpi' in spec:
-            config_args.extend([
-                "--enable-mpi",
-                "CC=%s" % self.spec['mpi'].mpicc,
-                "CXX=%s" % self.spec['mpi'].mpicxx,
-                "FC=%s" % self.spec['mpi'].mpifc,
-                "F77=%s" % self.spec['mpi'].mpif77
-            ])
-
-            # If the MPI dependency is provided by the intelmpi package then
-            # the following additional argument is required to allow it to
-            # build.
-            if spec.satisfies('^intelmpi'):
-                config_args.extend([
-                    "STATIC_LIBS=-mt_mpi"
-                ])  
-
-        # Configure
-        configure(*config_args)
-
+        configure(*configure_opts)
         make()
-        make("install")
+        make('install')
