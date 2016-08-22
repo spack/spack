@@ -115,10 +115,10 @@ class Plumed(Package):
                 'CXX={0}'.format(spec['mpi'].mpicxx)
             ])
 
-            # If the MPI dependency is provided by the intelmpi package then
+            # If the MPI dependency is provided by the intel-mpi package then
             # the following additional argument is required to allow it to
             # build.
-            if spec.satisfies('^intelmpi'):
+            if spec.satisfies('^intel-mpi'):
                 configure_opts.extend([
                     'STATIC_LIBS=-mt_mpi'
                 ])
