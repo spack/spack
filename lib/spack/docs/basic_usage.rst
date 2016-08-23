@@ -906,7 +906,7 @@ Integration with module systems
    versions.
 
 Spack provides some integration with
-`Environment Modules <http://modules.sourceforge.net/>`_
+`Environment Modules <http://modules.sourceforge.net/>`__
 and `Dotkit <https://computing.llnl.gov/?set=jobs&page=dotkit>`_ to make
 it easier to use the packages it installed.
 
@@ -972,7 +972,7 @@ When you install a package with Spack, it automatically generates a module file
 that lets you add the package to your environment.
 
 Currently, Spack supports the generation of `Environment Modules
-<http://wiki.tcl.tk/12999>`_ and `Dotkit
+<http://wiki.tcl.tk/12999>`__ and `Dotkit
 <https://computing.llnl.gov/?set=jobs&page=dotkit>`_.  Generated
 module files for each of these systems can be found in these
 directories:
