@@ -62,6 +62,7 @@ class Nwchem(Package):
     patch('Util_getppn.patch', when='@6.6', level=0)
     patch('xccvs98.patch', when='@6.6', level=0)
     patch('zgesdv.patch', when='@6.6', level=0)
+    patch('Gcc6_macs_optfix.patch', when='@6.6', level=0)
 
     def install(self, spec, prefix):
         # see http://www.nwchem-sw.org/index.php/Compiling_NWChem
