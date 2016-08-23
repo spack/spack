@@ -846,7 +846,8 @@ class Package(object):
     def do_install(self,
                    keep_prefix=False,
                    keep_stage=False,
-                   ignore_deps=False,
+                   install_deps=True,
+                   install_self=True,
                    skip_patch=False,
                    verbose=False,
                    make_jobs=None,
@@ -861,18 +862,18 @@ class Package(object):
         their build process.
 
         Args:
-        keep_prefix -- Keep install prefix on failure. By default, destroys it.
-        keep_stage  -- By default, stage is destroyed only if there are no
-                       exceptions during build. Set to True to keep the stage
-                       even with exceptions.
-        ignore_deps -- Don't install dependencies before installing this
-                       package
-        fake        -- Don't really build -- install fake stub files instead.
-        skip_patch  -- Skip patch stage of build if True.
-        verbose     -- Display verbose build output (by default, suppresses it)
-        dirty       -- Don't clean the build environment before installing.
-        make_jobs   -- Number of make jobs to use for install. Default is ncpus
-        run_tests   -- Runn tests within the package's install()
+        keep_prefix  -- Keep install prefix on failure. By default, destroys it.
+        keep_stage   -- By default, stage is destroyed only if there are no
+                        exceptions during build. Set to True to keep the stage
+                        even with exceptions.
+        install_deps -- Install dependencies before installing this package
+        install_self -- Install this package once dependencies have been installed.
+        fake         -- Don't really build -- install fake stub files instead.
+        skip_patch   -- Skip patch stage of build if True.
+        verbose      -- Display verbose build output (by default, suppresses it)
+        dirty        -- Don't clean the build environment before installing.
+        make_jobs    -- Number of make jobs to use for install. Default is ncpus
+        run_tests    -- Run tests within the package's install()
         """
         if not self.spec.concrete:
             raise ValueError("Can only install concrete packages: %s."
@@ -898,15 +899,22 @@ class Package(object):
         tty.msg("Installing %s" % self.name)
 
         # First, install dependencies recursively.
-        if not ignore_deps:
-            self.do_install_dependencies(keep_prefix=keep_prefix,
-                                         keep_stage=keep_stage,
-                                         ignore_deps=ignore_deps,
-                                         fake=fake,
-                                         skip_patch=skip_patch,
-                                         verbose=verbose,
-                                         make_jobs=make_jobs,
-                                         run_tests=run_tests)
+        if install_deps:
+            for dep in self.spec.dependencies():
+                dep.package.do_install(
+                    keep_prefix=keep_prefix,
+                    keep_stage=keep_stage,
+                    install_deps=install_deps,
+                    install_self=True,
+                    fake=fake,
+                    skip_patch=skip_patch,
+                    verbose=verbose,
+                    make_jobs=make_jobs,
+                    run_tests=run_tests)
+
+        # The rest of this function is to install ourself, once deps have been installed.
+        if not install_self:
+            return
 
         # Set run_tests flag before starting build.
         self.run_tests = run_tests
@@ -914,6 +922,7 @@ class Package(object):
         # Set parallelism before starting build.
         self.make_jobs = make_jobs
 
+        # ------------------- BEGIN def build_process()
         # Then install the package itself.
         def build_process():
             """Forked for each build. Has its own process and python
@@ -997,6 +1006,7 @@ class Package(object):
                     (_hms(self._fetch_time), _hms(build_time),
                      _hms(self._total_time)))
             print_pkg(self.prefix)
+        # ------------------- END def build_process()
 
         try:
             # Create the install prefix and fork the build process.
@@ -1052,11 +1062,6 @@ class Package(object):
         if not installed:
             raise InstallError(
                 "Install failed for %s.  Nothing was installed!" % self.name)
-
-    def do_install_dependencies(self, **kwargs):
-        # Pass along paths of dependencies here
-        for dep in self.spec.dependencies():
-            dep.package.do_install(**kwargs)
 
     @property
     def build_log_path(self):

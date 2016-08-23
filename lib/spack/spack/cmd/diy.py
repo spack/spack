@@ -98,6 +98,6 @@ def diy(self, args):
 
         package.do_install(
             keep_prefix=args.keep_prefix,
-            ignore_deps=args.ignore_deps,
+            install_deps=not args.ignore_deps,
             verbose=not args.quiet,
             keep_stage=True)   # don't remove source dir for DIY.
