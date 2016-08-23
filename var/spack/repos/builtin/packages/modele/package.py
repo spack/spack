@@ -12,6 +12,11 @@ class Modele(CMakePackage):
         git='simplex.giss.nasa.gov:/giss/gitrepo/modelE.git',
         branch='landice')
 
+    version('master',
+        git='simplex.giss.nasa.gov:/giss/gitrepo/modelE.git',
+        branch='master',
+        preferred=True)
+
     # More variants will come from the rundeck
     variant('traps',
         default=False, description='Compile with traps, for debugging')
