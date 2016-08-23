@@ -18,6 +18,7 @@ DOC_DIR="$SPACK_ROOT/lib/spack/docs"
 
 # Array of dependencies
 deps=(
+    sphinx-apidoc
     sphinx-build
     hg
 )

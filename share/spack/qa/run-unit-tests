@@ -20,6 +20,7 @@ SPACK_ROOT="$QA_DIR/../../.."
 # Array of dependencies
 deps=(
     coverage
+    hg
 )
 
 # Check for dependencies
@@ -27,6 +28,10 @@ deps=(
 
 # Add Spack to the PATH.
 export PATH="$SPACK_ROOT/bin:$PATH"
+
+# Move to root directory of Spack
+# Allows script to be run from anywhere
+cd "$SPACK_ROOT"
 
 # Array of directories containing core Spack framework
 core_dirs=(
@@ -57,4 +62,4 @@ spack config get compilers
 spack install -v libdwarf
 
 # Run unit tests with code coverage
-coverage run spack test "$@"
+coverage run bin/spack test "$@"

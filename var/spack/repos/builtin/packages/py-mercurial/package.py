@@ -25,17 +25,20 @@
 from spack import *
 
 
-class PyCoverage(Package):
-    """ Testing coverage checker for python """
+class PyMercurial(Package):
+    """Mercurial is a free, distributed source control management tool.
+    It efficiently handles projects of any size and offers an easy and
+    intuitive interface."""
 
-    homepage = "http://nedbatchelder.com/code/coverage/"
-    url      = "https://pypi.python.org/packages/source/c/coverage/coverage-4.0a6.tar.gz"
+    homepage = "https://www.mercurial-scm.org/"
+    url = "https://pypi.python.org/packages/source/m/mercurial/mercurial-3.9.tar.gz"
 
-    version('4.0a6', '1bb4058062646148965bef0796b61efc')
-
-    depends_on('py-setuptools', type='build')
+    version('3.9', 'e2b355da744e94747daae3a5339d28a0',
+            url="https://pypi.python.org/packages/22/73/e8ef24d3cb13e4fa2695417e13fd22effa1c8e28465eea91a9f84aa922cd/mercurial-3.9.tar.gz")
 
     extends('python')
 
+    depends_on('py-setuptools', type='build')
+
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('install', '--prefix={0}'.format(prefix))

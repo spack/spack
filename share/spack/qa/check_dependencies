@@ -13,16 +13,37 @@
 
 for dep in "$@"; do
     if ! which $dep &> /dev/null; then
-        # sphinx-build comes from sphinx
-        package=$(echo $dep | cut -d - -f 1)
+        # Map binary name to package name
+        case $dep in
+            sphinx-apidoc|sphinx-build)
+                spack_package=py-sphinx
+                pip_package=sphinx
+                ;;
+            coverage)
+                spack_package=py-coverage
+                pip_package=coverage
+                ;;
+            flake8)
+                spack_package=py-flake8
+                pip_package=flake8
+                ;;
+            hg)
+                spack_package=py-mercurial
+                pip_package=mercurial
+                ;;
+            *)
+                spack_package=$dep
+                pip_package=$dep
+                ;;
+        esac
 
         cat << EOF
-ERROR: $package is required to run this script.
+ERROR: $dep is required to run this script.
 
 To install with Spack, run:
-    $ spack install py-$package
+    $ spack install $spack_package
 or, to install with pip, run:
-    $ pip install $package
+    $ pip install $pip_package
 Then add the bin directory to your PATH.
 EOF
         exit 1
