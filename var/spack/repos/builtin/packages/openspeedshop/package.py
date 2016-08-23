@@ -104,9 +104,9 @@ class Openspeedshop(Package):
     depends_on("cmake@3.0.2", type='build')
     # Dependencies for openspeedshop that are common to all the variants of
     # the OpenSpeedShop build
-    depends_on("bison")
-    depends_on("flex")
-    depends_on("binutils@2.24+krellpatch")
+    depends_on("bison", type='build')
+    depends_on("flex", type='build')
+    depends_on("binutils@2.24+krellpatch", type='build')
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("sqlite")

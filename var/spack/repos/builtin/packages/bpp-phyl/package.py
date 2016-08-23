@@ -33,7 +33,7 @@ class BppPhyl(Package):
 
     version('2.2.0', '5c40667ec0bf37e0ecaba321be932770')
 
-    depends_on('cmake')
+    depends_on('cmake', type='build')
     depends_on('bpp-core')
     depends_on('bpp-seq')
 
