@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Otf(Package):
     """To improve scalability for very large and massively parallel
        traces the Open Trace Format (OTF) is developed at ZIH as a

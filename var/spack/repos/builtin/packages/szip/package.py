@@ -24,10 +24,13 @@
 ##############################################################################
 from spack import *
 
+
 class Szip(Package):
-    """Szip is an implementation of the extended-Rice lossless compression algorithm.
-    It provides lossless compression of scientific data, and is provided with HDF
-    software products."""
+    """An implementation of the extended-Rice lossless compression algorithm.
+    It provides lossless compression of scientific data, and is provided
+    with HDF software products.
+
+    """
 
     homepage = "https://www.hdfgroup.org/doc_resource/SZIP/"
     url      = "http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz"

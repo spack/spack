@@ -60,7 +60,7 @@ from spack.repository import UnknownPackageError
 _db_dirname = '.spack-db'
 
 # DB version.  This is stuck in the DB file to track changes in format.
-_db_version = Version('0.9.1')
+_db_version = Version('0.9.2')
 
 # Default timeout for spack database locks is 5 min.
 _db_lock_timeout = 60
@@ -119,6 +119,7 @@ class InstallRecord(object):
 
 
 class Database(object):
+
     def __init__(self, root, db_dir=None):
         """Create a Database for Spack installations under ``root``.
 
@@ -165,11 +166,11 @@ class Database(object):
 
     def write_transaction(self, timeout=_db_lock_timeout):
         """Get a write lock context manager for use in a `with` block."""
-        return WriteTransaction(self, self._read, self._write, timeout)
+        return WriteTransaction(self.lock, self._read, self._write, timeout)
 
     def read_transaction(self, timeout=_db_lock_timeout):
         """Get a read lock context manager for use in a `with` block."""
-        return ReadTransaction(self, self._read, None, timeout)
+        return ReadTransaction(self.lock, self._read, timeout=timeout)
 
     def _write_to_yaml(self, stream):
         """Write out the databsae to a YAML file.
@@ -214,9 +215,11 @@ class Database(object):
 
         # Add dependencies from other records in the install DB to
         # form a full spec.
-        for dep_hash in spec_dict[spec.name]['dependencies'].values():
-            child = self._read_spec_from_yaml(dep_hash, installs, hash_key)
-            spec._add_dependency(child)
+        if 'dependencies' in spec_dict[spec.name]:
+            yaml_deps = spec_dict[spec.name]['dependencies']
+            for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
+                child = self._read_spec_from_yaml(dhash, installs, hash_key)
+                spec._add_dependency(child, dtypes)
 
         # Specs from the database need to be marked concrete because
         # they represent actual installations.
@@ -289,7 +292,8 @@ class Database(object):
             except Exception as e:
                 tty.warn("Invalid database reecord:",
                          "file:  %s" % self._index_path,
-                         "hash:  %s" % hash_key, "cause: %s" % str(e))
+                         "hash:  %s" % hash_key,
+                         "cause: %s: %s" % (type(e).__name__, str(e)))
                 raise
 
         self._data = data
@@ -309,7 +313,11 @@ class Database(object):
                 for spec in directory_layout.all_specs():
                     # Create a spec for each known package and add it.
                     path = directory_layout.path_for_spec(spec)
-                    self._add(spec, path, directory_layout)
+                    old_info = old_data.get(spec.dag_hash())
+                    explicit = False
+                    if old_info is not None:
+                        explicit = old_info.explicit
+                    self._add(spec, path, directory_layout, explicit=explicit)
 
                 self._check_ref_counts()
 
@@ -328,7 +336,10 @@ class Database(object):
         counts = {}
         for key, rec in self._data.items():
             counts.setdefault(key, 0)
-            for dep in rec.spec.dependencies.values():
+            # XXX(deptype): This checks all dependencies, but build
+            #               dependencies might be able to be dropped in the
+            #               future.
+            for dep in rec.spec.dependencies():
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
@@ -342,12 +353,22 @@ class Database(object):
                     "Invalid ref_count: %s: %d (expected %d), in DB %s" %
                     (key, found, expected, self._index_path))
 
-    def _write(self):
+    def _write(self, type, value, traceback):
         """Write the in-memory database index to its file path.
 
-        Does no locking.
+        This is a helper function called by the WriteTransaction context
+        manager. If there is an exception while the write lock is active,
+        nothing will be written to the database file, but the in-memory
+        database *may* be left in an inconsistent state.  It will be consistent
+        after the start of the next transaction, when it read from disk again.
+
+        This routine does no locking.
 
         """
+        # Do not write if exceptions were raised
+        if type is not None:
+            return
+
         temp_file = self._index_path + (
             '.%s.%s.temp' % (socket.getfqdn(), os.getpid()))
 
@@ -400,7 +421,7 @@ class Database(object):
         else:
             self._data[key] = InstallRecord(spec, path, True,
                                             explicit=explicit)
-            for dep in spec.dependencies.values():
+            for dep in spec.dependencies(('link', 'run')):
                 self._increment_ref_count(dep, directory_layout)
 
     def _increment_ref_count(self, spec, directory_layout=None):
@@ -415,7 +436,7 @@ class Database(object):
 
             self._data[key] = InstallRecord(spec.copy(), path, installed)
 
-            for dep in spec.dependencies.values():
+            for dep in spec.dependencies('link'):
                 self._increment_ref_count(dep)
 
         self._data[key].ref_count += 1
@@ -460,7 +481,7 @@ class Database(object):
 
         if rec.ref_count == 0 and not rec.installed:
             del self._data[key]
-            for dep in spec.dependencies.values():
+            for dep in spec.dependencies('link'):
                 self._decrement_ref_count(dep)
 
     def _remove(self, spec):
@@ -474,7 +495,7 @@ class Database(object):
             return rec.spec
 
         del self._data[key]
-        for dep in rec.spec.dependencies.values():
+        for dep in rec.spec.dependencies('link'):
             self._decrement_ref_count(dep)
 
         # Returns the concrete spec so we know it in the case where a
@@ -579,57 +600,19 @@ class Database(object):
             return key in self._data and not self._data[key].installed
 
 
-class _Transaction(object):
-    """Simple nested transaction context manager that uses a file lock.
-
-    This class can trigger actions when the lock is acquired for the
-    first time and released for the last.
-
-    Timeout for lock is customizable.
-    """
-
-    def __init__(self, db,
-                 acquire_fn=None,
-                 release_fn=None,
-                 timeout=_db_lock_timeout):
-        self._db = db
-        self._timeout = timeout
-        self._acquire_fn = acquire_fn
-        self._release_fn = release_fn
-
-    def __enter__(self):
-        if self._enter() and self._acquire_fn:
-            self._acquire_fn()
-
-    def __exit__(self, type, value, traceback):
-        if self._exit() and self._release_fn:
-            self._release_fn()
-
-
-class ReadTransaction(_Transaction):
-    def _enter(self):
-        return self._db.lock.acquire_read(self._timeout)
-
-    def _exit(self):
-        return self._db.lock.release_read()
-
-
-class WriteTransaction(_Transaction):
-    def _enter(self):
-        return self._db.lock.acquire_write(self._timeout)
-
-    def _exit(self):
-        return self._db.lock.release_write()
-
-
 class CorruptDatabaseError(SpackError):
+
     def __init__(self, path, msg=''):
         super(CorruptDatabaseError, self).__init__(
-            "Spack database is corrupt: %s.  %s" % (path, msg))
+            "Spack database is corrupt: %s.  %s." % (path, msg),
+            "Try running `spack reindex` to fix.")
 
 
 class InvalidDatabaseVersionError(SpackError):
+
     def __init__(self, expected, found):
         super(InvalidDatabaseVersionError, self).__init__(
-            "Expected database version %s but found version %s" %
-            (expected, found))
+            "Expected database version %s but found version %s."
+            % (expected, found),
+            "`spack reindex` may fix this, or you may need a newer "
+            "Spack version.")

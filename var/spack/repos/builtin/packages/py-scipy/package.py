@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyScipy(Package):
     """Scientific Library for Python."""
     homepage = "http://www.scipy.org/"
@@ -34,14 +35,15 @@ class PyScipy(Package):
     version('0.15.0', '639112f077f0aeb6d80718dc5019dc7a')
 
     extends('python')
-    depends_on('py-nose')
-    depends_on('py-numpy+blas+lapack')
+    depends_on('py-nose', type='build')
+    depends_on('py-numpy+blas+lapack', type=nolink)
 
     def install(self, spec, prefix):
         if 'atlas' in spec:
             # libatlas.so actually isn't always installed, but this
             # seems to make the build autodetect things correctly.
-            env['ATLAS'] = join_path(spec['atlas'].prefix.lib, 'libatlas.' + dso_suffix)
+            env['ATLAS'] = join_path(
+                spec['atlas'].prefix.lib, 'libatlas.' + dso_suffix)
         else:
             env['BLAS']   = spec['blas'].blas_shared_lib
             env['LAPACK'] = spec['lapack'].lapack_shared_lib

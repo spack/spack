@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Hydra(Package):
     """Hydra is a process management system for starting parallel jobs.
     Hydra is designed to natively work with existing launcher daemons
@@ -36,7 +37,6 @@ class Hydra(Package):
     list_depth = 2
 
     version('3.2', '4d670916695bf7e3a869cc336a881b39')
-
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Externaltest(Package):
     homepage = "http://somewhere.com"
     url      = "http://somewhere.com/test-1.0.tar.gz"

@@ -1,4 +1,3 @@
-# flake8: noqa
 ##############################################################################
 # Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory.
@@ -123,251 +122,31 @@ import os
 import re
 import sys
 
-import jsonschema
-import llnl.util.tty as tty
-import spack
 import yaml
-from jsonschema import Draft4Validator, validators
-from llnl.util.filesystem import mkdirp
-from ordereddict_backport import OrderedDict
-from spack.error import SpackError
+import jsonschema
 from yaml.error import MarkedYAMLError
+from jsonschema import Draft4Validator, validators
+from ordereddict_backport import OrderedDict
+
+import llnl.util.tty as tty
+from llnl.util.filesystem import mkdirp
+
+import spack
+from spack.error import SpackError
+import spack.schema
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
-
+from spack.build_environment import get_path_from_module
 
 """Dict from section names -> schema for that section."""
 section_schemas = {
-    'compilers': {
-        '$schema': 'http://json-schema.org/schema#',
-        'title': 'Spack compiler configuration file schema',
-        'type': 'object',
-        'additionalProperties': False,
-        'patternProperties': {
-            'compilers:?': {  # optional colon for overriding site config.
-                'type': 'object',
-                'default': {},
-                'additionalProperties': False,
-                'patternProperties': {
-                    r'\w[\w-]*': {           # architecture
-                        'type': 'object',
-                        'additionalProperties': False,
-                        'patternProperties': {
-                            r'\w[\w-]*@\w[\w-]*': {   # compiler spec
-                                'type': 'object',
-                                'additionalProperties': False,
-                                'required': ['cc', 'cxx', 'f77', 'fc'],
-                                'properties': {
-                                    'cc':  { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'cxx': { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'f77': { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'fc':  { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'fflags':  { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'cppflags':  { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'cflags':  { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'cxxflags':  { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'ldflags':  { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                    'ldlibs':  { 'anyOf': [ {'type' : 'string' },
-                                                        {'type' : 'null' }]},
-                                },},},},},},},},
-
-    'mirrors': {
-        '$schema': 'http://json-schema.org/schema#',
-        'title': 'Spack mirror configuration file schema',
-        'type': 'object',
-        'additionalProperties': False,
-        'patternProperties': {
-            r'mirrors:?': {
-                'type': 'object',
-                'default': {},
-                'additionalProperties': False,
-                'patternProperties': {
-                    r'\w[\w-]*': {
-                        'type': 'string'},},},},},
-
-    'repos': {
-        '$schema': 'http://json-schema.org/schema#',
-        'title': 'Spack repository configuration file schema',
-        'type': 'object',
-        'additionalProperties': False,
-        'patternProperties': {
-            r'repos:?': {
-                'type': 'array',
-                'default': [],
-                'items': {
-                    'type': 'string'},},},},
-
-    'packages': {
-        '$schema': 'http://json-schema.org/schema#',
-        'title': 'Spack package configuration file schema',
-        'type': 'object',
-        'additionalProperties': False,
-        'patternProperties': {
-            r'packages:?': {
-                'type': 'object',
-                'default': {},
-                'additionalProperties': False,
-                'patternProperties': {
-                    r'\w[\w-]*': { # package name
-                        'type': 'object',
-                        'default': {},
-                        'additionalProperties': False,
-                        'properties': {
-                            'version': {
-                                'type' : 'array',
-                                'default' : [],
-                                'items' : { 'anyOf' : [ { 'type' : 'string' },
-                                                        { 'type' : 'number'}]}}, #version strings
-                            'compiler': {
-                                'type' : 'array',
-                                'default' : [],
-                                'items' : { 'type' : 'string' } }, #compiler specs
-                            'buildable': {
-                                'type':  'boolean',
-                                'default': True,
-                             },
-                            'providers': {
-                                'type':  'object',
-                                'default': {},
-                                'additionalProperties': False,
-                                'patternProperties': {
-                                    r'\w[\w-]*': {
-                                        'type' : 'array',
-                                        'default' : [],
-                                        'items' : { 'type' : 'string' },},},},
-                            'paths': {
-                                'type' : 'object',
-                                'default' : {},
-                            }
-                        },},},},},},
-
-    'modules': {
-        '$schema': 'http://json-schema.org/schema#',
-        'title': 'Spack module file configuration file schema',
-        'type': 'object',
-        'additionalProperties': False,
-        'definitions': {
-            'array_of_strings': {
-                'type': 'array',
-                'default': [],
-                'items': {
-                    'type': 'string'
-                }
-            },
-            'dictionary_of_strings': {
-                'type': 'object',
-                'patternProperties': {
-                    r'\w[\w-]*': {  # key
-                        'type': 'string'
-                    }
-                }
-            },
-            'dependency_selection': {
-                'type': 'string',
-                'enum': ['none', 'direct', 'all']
-            },
-            'module_file_configuration': {
-                'type': 'object',
-                'default': {},
-                'additionalProperties': False,
-                'properties': {
-                    'filter': {
-                        'type': 'object',
-                        'default': {},
-                        'additionalProperties': False,
-                        'properties': {
-                            'environment_blacklist': {
-                                'type': 'array',
-                                'default': [],
-                                'items': {
-                                    'type': 'string'
-                                }
-                            }
-                        }
-                    },
-                    'autoload': {'$ref': '#/definitions/dependency_selection'},
-                    'prerequisites': {'$ref': '#/definitions/dependency_selection'},
-                    'conflict': {'$ref': '#/definitions/array_of_strings'},
-                    'environment': {
-                        'type': 'object',
-                        'default': {},
-                        'additionalProperties': False,
-                        'properties': {
-                            'set': {'$ref': '#/definitions/dictionary_of_strings'},
-                            'unset': {'$ref': '#/definitions/array_of_strings'},
-                            'prepend_path': {'$ref': '#/definitions/dictionary_of_strings'},
-                            'append_path': {'$ref': '#/definitions/dictionary_of_strings'}
-                        }
-                    }
-                }
-            },
-            'module_type_configuration': {
-                'type': 'object',
-                'default': {},
-                'anyOf': [
-                    {
-                        'properties': {
-                            'whitelist': {'$ref': '#/definitions/array_of_strings'},
-                            'blacklist': {'$ref': '#/definitions/array_of_strings'},
-                            'naming_scheme': {
-                                'type': 'string'  # Can we be more specific here?
-                            }
-                        }
-                    },
-                    {
-                        'patternProperties': {r'\w[\w-]*': {'$ref': '#/definitions/module_file_configuration'}}
-                    }
-                ]
-            }
-        },
-        'patternProperties': {
-            r'modules:?': {
-                'type': 'object',
-                'default': {},
-                'additionalProperties': False,
-                'properties': {
-                    'prefix_inspections': {
-                        'type': 'object',
-                        'patternProperties': {
-                            r'\w[\w-]*': {  # path to be inspected for existence (relative to prefix)
-                                '$ref': '#/definitions/array_of_strings'
-                            }
-                        }
-                    },
-                    'enable': {
-                        'type': 'array',
-                        'default': [],
-                        'items': {
-                            'type': 'string',
-                            'enum': ['tcl', 'dotkit']
-                        }
-                    },
-                    'tcl': {
-                        'allOf': [
-                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
-                            {}  # Specific tcl extensions
-                        ]
-                    },
-                    'dotkit': {
-                        'allOf': [
-                            {'$ref': '#/definitions/module_type_configuration'},  # Base configuration
-                            {}  # Specific dotkit extensions
-                        ]
-                    },
-                }
-            },
-        },
-    },
+    'compilers': spack.schema.compilers.schema,
+    'mirrors': spack.schema.mirrors.schema,
+    'repos': spack.schema.repos.schema,
+    'packages': spack.schema.packages.schema,
+    'targets': spack.schema.targets.schema,
+    'modules': spack.schema.modules.schema,
 }
 
 """OrderedDict of config scopes keyed by name.
@@ -384,7 +163,7 @@ def validate_section_name(section):
 
 
 def extend_with_default(validator_class):
-    """Add support for the 'default' attribute for properties and patternProperties.
+    """Add support for the 'default' attr for properties and patternProperties.
 
        jsonschema does not handle this out of the box -- it only
        validates.  This allows us to set default values for configs
@@ -393,13 +172,15 @@ def extend_with_default(validator_class):
 
     """
     validate_properties = validator_class.VALIDATORS["properties"]
-    validate_pattern_properties = validator_class.VALIDATORS["patternProperties"]
+    validate_pattern_properties = validator_class.VALIDATORS[
+        "patternProperties"]
 
     def set_defaults(validator, properties, instance, schema):
         for property, subschema in properties.iteritems():
             if "default" in subschema:
                 instance.setdefault(property, subschema["default"])
-        for err in validate_properties(validator, properties, instance, schema):
+        for err in validate_properties(
+                validator, properties, instance, schema):
             yield err
 
     def set_pp_defaults(validator, properties, instance, schema):
@@ -410,7 +191,8 @@ def extend_with_default(validator_class):
                         if re.match(property, key) and val is None:
                             instance[key] = subschema["default"]
 
-        for err in validate_pattern_properties(validator, properties, instance, schema):
+        for err in validate_pattern_properties(
+                validator, properties, instance, schema):
             yield err
 
     return validators.extend(validator_class, {
@@ -475,15 +257,23 @@ class ConfigScope(object):
         except jsonschema.ValidationError as e:
             raise ConfigSanityError(e, data)
         except (yaml.YAMLError, IOError) as e:
-            raise ConfigFileError("Error writing to config file: '%s'" % str(e))
+            raise ConfigFileError(
+                "Error writing to config file: '%s'" % str(e))
 
     def clear(self):
         """Empty cached config information."""
         self.sections = {}
 
+"""Default configuration scope is the lowest-level scope. These are
+   versioned with Spack and can be overridden by sites or users."""
+ConfigScope('defaults', os.path.join(spack.etc_path, 'spack', 'defaults'))
 
-ConfigScope('site', os.path.join(spack.etc_path, 'spack')),
-ConfigScope('user', os.path.expanduser('~/.spack'))
+"""Site configuration is per spack instance, for sites or projects.
+   No site-level configs should be checked into spack by default."""
+ConfigScope('site', os.path.join(spack.etc_path, 'spack'))
+
+"""User configuration can override both spack defaults and site config."""
+ConfigScope('user', spack.user_config_path)
 
 
 def highest_precedence_scope():
@@ -575,8 +365,7 @@ def _merge_yaml(dest, source):
 
     # Source list is prepended (for precedence)
     if they_are(list):
-        seen = set(source)
-        dest[:] = source + [x for x in dest if x not in seen]
+        dest[:] = source + [x for x in dest if x not in source]
         return dest
 
     # Source dict is merged into dest.
@@ -667,7 +456,7 @@ def print_section(section):
         data = syaml.syaml_dict()
         data[section] = get_config(section)
         syaml.dump(data, stream=sys.stdout, default_flow_style=False)
-    except (yaml.YAMLError, IOError) as e:
+    except (yaml.YAMLError, IOError):
         raise ConfigError("Error reading configuration: %s" % section)
 
 
@@ -679,7 +468,8 @@ def spec_externals(spec):
 
     external_specs = []
     pkg_paths = allpkgs.get(name, {}).get('paths', None)
-    if not pkg_paths:
+    pkg_modules = allpkgs.get(name, {}).get('modules', None)
+    if (not pkg_paths) and (not pkg_modules):
         return []
 
     for external_spec, path in pkg_paths.iteritems():
@@ -690,6 +480,18 @@ def spec_externals(spec):
         external_spec = spack.spec.Spec(external_spec, external=path)
         if external_spec.satisfies(spec):
             external_specs.append(external_spec)
+
+    for external_spec, module in pkg_modules.iteritems():
+        if not module:
+            continue
+
+        path = get_path_from_module(module)
+
+        external_spec = spack.spec.Spec(
+            external_spec, external=path, external_module=module)
+        if external_spec.satisfies(spec):
+            external_specs.append(external_spec)
+
     return external_specs
 
 
@@ -720,6 +522,7 @@ def get_path(path, data):
 
 class ConfigFormatError(ConfigError):
     """Raised when a configuration format does not match its schema."""
+
     def __init__(self, validation_error, data):
         # Try to get line number from erroneous instance and its parent
         instance_mark = getattr(validation_error.instance, '_start_mark', None)

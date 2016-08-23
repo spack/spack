@@ -27,20 +27,20 @@ import sys
 import llnl.util.tty as tty
 import spack
 
+
 class SpackError(Exception):
     """This is the superclass for all Spack errors.
        Subclasses can be found in the modules they have to do with.
     """
+
     def __init__(self, message, long_message=None):
         super(SpackError, self).__init__()
         self.message = message
         self._long_message = long_message
 
-
     @property
     def long_message(self):
         return self._long_message
-
 
     def die(self):
         if spack.debug:
@@ -52,21 +52,23 @@ class SpackError(Exception):
                 print self.long_message
             os._exit(1)
 
-
     def __str__(self):
         msg = self.message
         if self._long_message:
             msg += "\n    %s" % self._long_message
         return msg
 
+
 class UnsupportedPlatformError(SpackError):
     """Raised by packages when a platform is not supported"""
+
     def __init__(self, message):
         super(UnsupportedPlatformError, self).__init__(message)
 
 
 class NoNetworkConnectionError(SpackError):
     """Raised when an operation needs an internet connection."""
+
     def __init__(self, message, url):
         super(NoNetworkConnectionError, self).__init__(
             "No network connection: " + str(message),

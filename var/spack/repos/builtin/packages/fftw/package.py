@@ -28,26 +28,36 @@ from spack import *
 
 
 class Fftw(Package):
-    """
-    FFTW is a C subroutine library for computing the discrete Fourier transform (DFT) in one or more dimensions, of
-    arbitrary input size, and of both real and complex data (as well as of even/odd data, i.e. the discrete cosine/sine
-    transforms or DCT/DST). We believe that FFTW, which is free software, should become the FFT library of choice for
-    most applications.
+    """FFTW is a C subroutine library for computing the discrete Fourier
+       transform (DFT) in one or more dimensions, of arbitrary input
+       size, and of both real and complex data (as well as of even/odd
+       data, i.e. the discrete cosine/sine transforms or DCT/DST). We
+       believe that FFTW, which is free software, should become the FFT
+       library of choice for most applications.
+
     """
     homepage = "http://www.fftw.org"
     url      = "http://www.fftw.org/fftw-3.3.4.tar.gz"
 
     version('3.3.4', '2edab8c06b24feeb3b82bbb3ebf3e7b3')
 
-    variant('float', default=True, description='Produces a single precision version of the library')
-    variant('long_double', default=True, description='Produces a long double precision version of the library')
-    variant('quad', default=False, description='Produces a quad precision version of the library (works only with GCC and libquadmath)')
+    variant(
+        'float', default=True,
+        description='Produces a single precision version of the library')
+    variant(
+        'long_double', default=True,
+        description='Produces a long double precision version of the library')
+    variant(
+        'quad', default=False,
+        description='Produces a quad precision version of the library '
+                    '(works only with GCC and libquadmath)')
     variant('openmp', default=False, description="Enable OpenMP support.")
     variant('mpi', default=False, description='Activate MPI support')
 
     depends_on('mpi', when='+mpi')
 
-    # TODO : add support for architecture specific optimizations as soon as targets are supported
+    # TODO : add support for architecture specific optimizations as soon as
+    # targets are supported
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix,
@@ -57,9 +67,9 @@ class Fftw(Package):
         if '+openmp' in spec:
             # Note: Apple's Clang does not support OpenMP.
             if spec.satisfies('%clang'):
-              ver = str(self.compiler.version)
-              if ver.endswith('-apple'):
-                raise InstallError("Apple's clang does not support OpenMP")
+                ver = str(self.compiler.version)
+                if ver.endswith('-apple'):
+                    raise InstallError("Apple's clang does not support OpenMP")
             options.append('--enable-openmp')
         if not self.compiler.f77 or not self.compiler.fc:
             options.append("--disable-fortran")

@@ -36,6 +36,7 @@ _debug   = False
 _verbose = False
 indent  = "  "
 
+
 def is_verbose():
     return _verbose
 
@@ -64,12 +65,14 @@ def info(message, *args, **kwargs):
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
     wrap   = kwargs.get('wrap', False)
+    break_long_words = kwargs.get('break_long_words', False)
 
     cprint("@%s{==>} %s" % (format, cescape(str(message))), stream=stream)
     for arg in args:
         if wrap:
             lines = textwrap.wrap(
-                str(arg), initial_indent=indent, subsequent_indent=indent)
+                str(arg), initial_indent=indent, subsequent_indent=indent,
+                break_long_words=break_long_words)
             for line in lines:
                 stream.write(line + '\n')
         else:
@@ -146,7 +149,8 @@ def get_yes_or_no(prompt, **kwargs):
     elif default_value is False:
         prompt += ' [y/N] '
     else:
-        raise ValueError("default for get_yes_no() must be True, False, or None.")
+        raise ValueError(
+            "default for get_yes_no() must be True, False, or None.")
 
     result = None
     while result is None:
@@ -172,8 +176,9 @@ def hline(label=None, **kwargs):
     char      = kwargs.pop('char', '-')
     max_width = kwargs.pop('max_width', 64)
     if kwargs:
-        raise TypeError("'%s' is an invalid keyword argument for this function."
-                        % next(kwargs.iterkeys()))
+        raise TypeError(
+            "'%s' is an invalid keyword argument for this function."
+            % next(kwargs.iterkeys()))
 
     rows, cols = terminal_size()
     if not cols:
@@ -198,7 +203,8 @@ def terminal_size():
     """Gets the dimensions of the console: (rows, cols)."""
     def ioctl_GWINSZ(fd):
         try:
-            rc = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+            rc = struct.unpack('hh', fcntl.ioctl(
+                fd, termios.TIOCGWINSZ, '1234'))
         except:
             return
         return rc

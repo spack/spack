@@ -61,7 +61,6 @@ Note that ``graph_ascii`` assumes a single spec while ``graph_dot``
 can take a number of specs as input.
 
 """
-__all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
 
 from heapq import *
 
@@ -70,6 +69,8 @@ from llnl.util.tty.color import *
 
 import spack
 from spack.spec import Spec
+
+__all__ = ['topological_sort', 'graph_ascii', 'AsciiGraph', 'graph_dot']
 
 
 def topological_sort(spec, **kwargs):
@@ -80,18 +81,21 @@ def topological_sort(spec, **kwargs):
 
     """
     reverse = kwargs.get('reverse', False)
+    # XXX(deptype): iterate over a certain kind of dependency. Maybe color
+    #               edges based on the type of dependency?
     if not reverse:
-        parents  = lambda s: s.dependents
-        children = lambda s: s.dependencies
+        parents = lambda s: s.dependents()
+        children = lambda s: s.dependencies()
     else:
-        parents  = lambda s: s.dependencies
-        children = lambda s: s.dependents
+        parents = lambda s: s.dependencies()
+        children = lambda s: s.dependents()
 
     # Work on a copy so this is nondestructive.
     spec = spec.copy()
     nodes = spec.index()
 
     topo_order = []
+    par = dict((name, parents(nodes[name])) for name in nodes.keys())
     remaining = [name for name in nodes.keys() if not parents(nodes[name])]
     heapify(remaining)
 
@@ -100,12 +104,12 @@ def topological_sort(spec, **kwargs):
         topo_order.append(name)
 
         node = nodes[name]
-        for dep in children(node).values():
-            del parents(dep)[node.name]
-            if not parents(dep):
+        for dep in children(node):
+            par[dep.name].remove(node)
+            if not par[dep.name]:
                 heappush(remaining, dep.name)
 
-    if any(parents(s) for s in spec.traverse()):
+    if any(par.get(s.name, []) for s in spec.traverse()):
         raise ValueError("Spec has cycles!")
     else:
         return topo_order
@@ -130,7 +134,9 @@ def find(seq, predicate):
 states = ('node', 'collapse', 'merge-right', 'expand-right', 'back-edge')
 NODE, COLLAPSE, MERGE_RIGHT, EXPAND_RIGHT, BACK_EDGE = states
 
+
 class AsciiGraph(object):
+
     def __init__(self):
         # These can be set after initialization or after a call to
         # graph() to change behavior.
@@ -151,17 +157,14 @@ class AsciiGraph(object):
         self._prev_state = None       # State of previous line
         self._prev_index = None       # Index of expansion point of prev line
 
-
     def _indent(self):
         self._out.write(self.indent * ' ')
-
 
     def _write_edge(self, string, index, sub=0):
         """Write a colored edge to the output stream."""
         name = self._frontier[index][sub]
         edge = "@%s{%s}" % (self._name_to_color[name], string)
         self._out.write(edge)
-
 
     def _connect_deps(self, i, deps, label=None):
         """Connect dependencies to existing edges in the frontier.
@@ -197,7 +200,8 @@ class AsciiGraph(object):
             collapse = True
             if self._prev_state == EXPAND_RIGHT:
                 # Special case where previous line expanded and i is off by 1.
-                self._back_edge_line([], j, i+1, True, label + "-1.5 " + str((i+1,j)))
+                self._back_edge_line([], j, i + 1, True,
+                                     label + "-1.5 " + str((i + 1, j)))
                 collapse = False
 
             else:
@@ -205,18 +209,19 @@ class AsciiGraph(object):
                 if self._prev_state == NODE and self._prev_index < i:
                     i += 1
 
-                if i-j > 1:
+                if i - j > 1:
                     # We need two lines to connect if distance > 1
-                    self._back_edge_line([], j,  i, True, label + "-1 " + str((i,j)))
+                    self._back_edge_line([], j,  i, True,
+                                         label + "-1 " + str((i, j)))
                     collapse = False
 
-            self._back_edge_line([j], -1, -1, collapse, label + "-2 " + str((i,j)))
+            self._back_edge_line([j], -1, -1, collapse,
+                                 label + "-2 " + str((i, j)))
             return True
 
         elif deps:
             self._frontier.insert(i, deps)
             return False
-
 
     def _set_state(self, state, index, label=None):
         if state not in states:
@@ -230,7 +235,6 @@ class AsciiGraph(object):
                 str(self._prev_state) if self._prev_state else ''))
             self._out.write("%-20s" % (str(label) if label else ''))
             self._out.write("%s" % self._frontier)
-
 
     def _back_edge_line(self, prev_ends, end, start, collapse, label=None):
         """Write part of a backwards edge in the graph.
@@ -285,26 +289,25 @@ class AsciiGraph(object):
         self._indent()
 
         for p in prev_ends:
-            advance(p,         lambda: [("| ", self._pos)] )
-            advance(p+1,       lambda: [("|/", self._pos)] )
+            advance(p,         lambda: [("| ", self._pos)])
+            advance(p + 1,     lambda: [("|/", self._pos)])
 
         if end >= 0:
-            advance(end + 1,   lambda: [("| ", self._pos)] )
-            advance(start - 1, lambda: [("|",  self._pos), ("_", end)] )
+            advance(end + 1,   lambda: [("| ", self._pos)])
+            advance(start - 1, lambda: [("|",  self._pos), ("_", end)])
         else:
-            advance(start - 1, lambda: [("| ", self._pos)] )
+            advance(start - 1, lambda: [("| ", self._pos)])
 
         if start >= 0:
-            advance(start,     lambda: [("|",  self._pos), ("/", end)] )
+            advance(start,     lambda: [("|",  self._pos), ("/", end)])
 
         if collapse:
-            advance(flen,      lambda: [(" /", self._pos)] )
+            advance(flen,      lambda: [(" /", self._pos)])
         else:
-            advance(flen,      lambda: [("| ", self._pos)] )
+            advance(flen,      lambda: [("| ", self._pos)])
 
         self._set_state(BACK_EDGE, end, label)
         self._out.write("\n")
-
 
     def _node_line(self, index, name):
         """Writes a line with a node at index."""
@@ -314,13 +317,12 @@ class AsciiGraph(object):
 
         self._out.write("%s " % self.node_character)
 
-        for c in range(index+1, len(self._frontier)):
+        for c in range(index + 1, len(self._frontier)):
             self._write_edge("| ", c)
 
         self._out.write(" %s" % name)
         self._set_state(NODE, index)
         self._out.write("\n")
-
 
     def _collapse_line(self, index):
         """Write a collapsing line after a node was added at index."""
@@ -333,20 +335,18 @@ class AsciiGraph(object):
         self._set_state(COLLAPSE, index)
         self._out.write("\n")
 
-
     def _merge_right_line(self, index):
         """Edge at index is same as edge to right.  Merge directly with '\'"""
         self._indent()
         for c in range(index):
             self._write_edge("| ", c)
         self._write_edge("|", index)
-        self._write_edge("\\", index+1)
-        for c in range(index+1, len(self._frontier)):
-            self._write_edge("| ", c )
+        self._write_edge("\\", index + 1)
+        for c in range(index + 1, len(self._frontier)):
+            self._write_edge("| ", c)
 
         self._set_state(MERGE_RIGHT, index)
         self._out.write("\n")
-
 
     def _expand_right_line(self, index):
         self._indent()
@@ -354,14 +354,13 @@ class AsciiGraph(object):
             self._write_edge("| ", c)
 
         self._write_edge("|", index)
-        self._write_edge("\\", index+1)
+        self._write_edge("\\", index + 1)
 
-        for c in range(index+2, len(self._frontier)):
+        for c in range(index + 2, len(self._frontier)):
             self._write_edge(" \\", c)
 
         self._set_state(EXPAND_RIGHT, index)
         self._out.write("\n")
-
 
     def write(self, spec, **kwargs):
         """Write out an ascii graph of the provided spec.
@@ -396,7 +395,7 @@ class AsciiGraph(object):
         # Colors associated with each node in the DAG.
         # Edges are colored by the node they point to.
         self._name_to_color = dict((name, self.colors[i % len(self.colors)])
-                                  for i, name in enumerate(topo_order))
+                                   for i, name in enumerate(topo_order))
 
         # Frontier tracks open edges of the graph as it's written out.
         self._frontier = [[spec.name]]
@@ -405,7 +404,8 @@ class AsciiGraph(object):
             i = find(self._frontier, lambda f: len(f) > 1)
 
             if i >= 0:
-                # Expand frontier until there are enough columns for all children.
+                # Expand frontier until there are enough columns for all
+                # children.
 
                 # Figure out how many back connections there are and
                 # sort them so we do them in order
@@ -422,8 +422,9 @@ class AsciiGraph(object):
                     prev_ends = []
                     for j, (b, d) in enumerate(back):
                         self._frontier[i].remove(d)
-                        if i-b > 1:
-                            self._back_edge_line(prev_ends, b, i, False, 'left-1')
+                        if i - b > 1:
+                            self._back_edge_line(prev_ends, b, i, False,
+                                                 'left-1')
                             del prev_ends[:]
                         prev_ends.append(b)
 
@@ -437,12 +438,13 @@ class AsciiGraph(object):
                 elif len(self._frontier[i]) > 1:
                     # Expand forward after doing all back connections
 
-                    if (i+1 < len(self._frontier) and len(self._frontier[i+1]) == 1
-                        and self._frontier[i+1][0] in self._frontier[i]):
+                    if (i + 1 < len(self._frontier) and
+                            len(self._frontier[i + 1]) == 1 and
+                            self._frontier[i + 1][0] in self._frontier[i]):
                         # We need to connect to the element to the right.
                         # Keep lines straight by connecting directly and
                         # avoiding unnecessary expand/contract.
-                        name = self._frontier[i+1][0]
+                        name = self._frontier[i + 1][0]
                         self._frontier[i].remove(name)
                         self._merge_right_line(i)
 
@@ -456,9 +458,8 @@ class AsciiGraph(object):
                         self._frontier.pop(i)
                         self._connect_deps(i, deps, "post-expand")
 
-
                 # Handle any remaining back edges to the right
-                j = i+1
+                j = i + 1
                 while j < len(self._frontier):
                     deps = self._frontier.pop(j)
                     if not self._connect_deps(j, deps, "back-from-right"):
@@ -475,9 +476,10 @@ class AsciiGraph(object):
 
                 # Replace node with its dependencies
                 self._frontier.pop(i)
-                if node.dependencies:
-                    deps = sorted((d for d in node.dependencies), reverse=True)
-                    self._connect_deps(i, deps, "new-deps") # anywhere.
+                if node.dependencies():
+                    deps = sorted((d.name for d in node.dependencies()),
+                                  reverse=True)
+                    self._connect_deps(i, deps, "new-deps")  # anywhere.
 
                 elif self._frontier:
                     self._collapse_line(i)
@@ -497,7 +499,6 @@ def graph_ascii(spec, **kwargs):
     graph.node_character = node_character
 
     graph.write(spec, color=color, out=out)
-
 
 
 def graph_dot(*specs, **kwargs):

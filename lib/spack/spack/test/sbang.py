@@ -26,6 +26,7 @@
 Test that Spack's shebang filtering works correctly.
 """
 import os
+import stat
 import unittest
 import tempfile
 import shutil
@@ -34,12 +35,16 @@ from llnl.util.filesystem import *
 from spack.hooks.sbang import filter_shebangs_in_directory
 import spack
 
-short_line = "#!/this/is/short/bin/bash\n"
-long_line  = "#!/this/" + ('x' * 200) + "/is/long\n"
-sbang_line = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
-last_line = "last!\n"
+short_line       = "#!/this/is/short/bin/bash\n"
+long_line        = "#!/this/" + ('x' * 200) + "/is/long\n"
+lua_line         = "#!/this/" + ('x' * 200) + "/is/lua\n"
+lua_line_patched = "--!/this/" + ('x' * 200) + "/is/lua\n"
+sbang_line       = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
+last_line        = "last!\n"
+
 
 class SbangTest(unittest.TestCase):
+
     def setUp(self):
         self.tempdir = tempfile.mkdtemp()
 
@@ -59,6 +64,12 @@ class SbangTest(unittest.TestCase):
             f.write(long_line)
             f.write(last_line)
 
+        # Lua script with long shebang
+        self.lua_shebang = os.path.join(self.tempdir, 'lua')
+        with open(self.lua_shebang, 'w') as f:
+            f.write(lua_line)
+            f.write(last_line)
+
         # Script already using sbang.
         self.has_shebang = os.path.join(self.tempdir, 'shebang')
         with open(self.has_shebang, 'w') as f:
@@ -66,11 +77,8 @@ class SbangTest(unittest.TestCase):
             f.write(long_line)
             f.write(last_line)
 
-
     def tearDown(self):
-         shutil.rmtree(self.tempdir, ignore_errors=True)
-
-
+        shutil.rmtree(self.tempdir, ignore_errors=True)
 
     def test_shebang_handling(self):
         filter_shebangs_in_directory(self.tempdir)
@@ -86,8 +94,25 @@ class SbangTest(unittest.TestCase):
             self.assertEqual(f.readline(), long_line)
             self.assertEqual(f.readline(), last_line)
 
+        # Make sure this got patched.
+        with open(self.lua_shebang, 'r') as f:
+            self.assertEqual(f.readline(), sbang_line)
+            self.assertEqual(f.readline(), lua_line_patched)
+            self.assertEqual(f.readline(), last_line)
+
         # Make sure this is untouched
         with open(self.has_shebang, 'r') as f:
             self.assertEqual(f.readline(), sbang_line)
             self.assertEqual(f.readline(), long_line)
             self.assertEqual(f.readline(), last_line)
+
+    def test_shebang_handles_non_writable_files(self):
+        # make a file non-writable
+        st = os.stat(self.long_shebang)
+        not_writable_mode = st.st_mode & ~stat.S_IWRITE
+        os.chmod(self.long_shebang, not_writable_mode)
+
+        self.test_shebang_handling()
+
+        st = os.stat(self.long_shebang)
+        self.assertEqual(oct(not_writable_mode), oct(st.st_mode))

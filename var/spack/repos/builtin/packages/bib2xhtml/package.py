@@ -25,10 +25,11 @@
 from spack import *
 from glob import glob
 
+
 class Bib2xhtml(Package):
     """bib2xhtml is a program that converts BibTeX files into HTML."""
     homepage = "http://www.spinellis.gr/sw/textproc/bib2xhtml/"
-    url='http://www.spinellis.gr/sw/textproc/bib2xhtml/bib2xhtml-v3.0-15-gf506.tar.gz'
+    url = 'http://www.spinellis.gr/sw/textproc/bib2xhtml/bib2xhtml-v3.0-15-gf506.tar.gz'
 
     version('3.0-15-gf506', 'a26ba02fe0053bbbf2277bdf0acf8645')
 

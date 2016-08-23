@@ -24,11 +24,10 @@
 ##############################################################################
 from spack import *
 
+
 class Zlib(Package):
-    """zlib is designed to be a free, general-purpose, legally unencumbered --
-       that is, not covered by any patents -- lossless data-compression library for
-       use on virtually any computer hardware and operating system.
-    """
+    """A free, general-purpose, legally unencumbered lossless
+       data-compression library."""
 
     homepage = "http://zlib.net"
     url      = "http://zlib.net/zlib-1.2.8.tar.gz"

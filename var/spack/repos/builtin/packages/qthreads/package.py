@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Qthreads(Package):
     """The qthreads API is designed to make using large numbers of
        threads convenient and easy, and to allow portable access to

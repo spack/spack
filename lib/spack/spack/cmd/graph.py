@@ -30,6 +30,7 @@ from spack.graph import *
 
 description = "Generate graphs of package dependency relationships."
 
+
 def setup_parser(subparser):
     setup_parser.parser = subparser
 
@@ -42,10 +43,12 @@ def setup_parser(subparser):
         help="Generate graph in dot format and print to stdout.")
 
     subparser.add_argument(
-        '--concretize', action='store_true', help="Concretize specs before graphing.")
+        '--concretize', action='store_true',
+        help="Concretize specs before graphing.")
 
     subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="specs of packages to graph.")
+        'specs', nargs=argparse.REMAINDER,
+        help="specs of packages to graph.")
 
 
 def graph(parser, args):
@@ -56,11 +59,11 @@ def graph(parser, args):
         setup_parser.parser.print_help()
         return 1
 
-    if args.dot:    # Dot graph only if asked for.
+    if args.dot:  # Dot graph only if asked for.
         graph_dot(*specs)
 
-    elif specs:     # ascii is default: user doesn't need to provide it explicitly
+    elif specs:  # ascii is default: user doesn't need to provide it explicitly
         graph_ascii(specs[0], debug=spack.debug)
         for spec in specs[1:]:
-            print # extra line bt/w independent graphs
+            print  # extra line bt/w independent graphs
             graph_ascii(spec, debug=spack.debug)

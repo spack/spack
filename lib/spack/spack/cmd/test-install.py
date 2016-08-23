@@ -36,25 +36,25 @@ from llnl.util.filesystem import *
 from spack.build_environment import InstallError
 from spack.fetch_strategy import FetchError
 
-description = "Run package installation as a unit test, output formatted results."
+description = "Run package install as a unit test, output formatted results."
 
 
 def setup_parser(subparser):
-    subparser.add_argument('-j',
-                           '--jobs',
-                           action='store',
-                           type=int,
-                           help="Explicitly set number of make jobs.  Default is #cpus.")
+    subparser.add_argument(
+        '-j', '--jobs', action='store', type=int,
+        help="Explicitly set number of make jobs.  Default is #cpus.")
 
-    subparser.add_argument('-n',
-                           '--no-checksum',
-                           action='store_true',
-                           dest='no_checksum',
-                           help="Do not check packages against checksum")
+    subparser.add_argument(
+        '-n', '--no-checksum', action='store_true', dest='no_checksum',
+        help="Do not check packages against checksum")
 
-    subparser.add_argument('-o', '--output', action='store', help="test output goes in this file")
+    subparser.add_argument(
+        '-o', '--output', action='store',
+        help="test output goes in this file")
 
-    subparser.add_argument('package', nargs=argparse.REMAINDER, help="spec of package to install")
+    subparser.add_argument(
+        'package', nargs=argparse.REMAINDER,
+        help="spec of package to install")
 
 
 class TestResult(object):
@@ -65,6 +65,7 @@ class TestResult(object):
 
 
 class TestSuite(object):
+
     def __init__(self, filename):
         self.filename = filename
         self.root = ET.Element('testsuite')
@@ -75,14 +76,17 @@ class TestSuite(object):
 
     def append(self, item):
         if not isinstance(item, TestCase):
-            raise TypeError('only TestCase instances may be appended to a TestSuite instance')
+            raise TypeError(
+                'only TestCase instances may be appended to TestSuite')
         self.tests.append(item)  # Append the item to the list of tests
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Prepare the header for the entire test suite
-        number_of_errors = sum(x.result_type == TestResult.ERRORED for x in self.tests)
+        number_of_errors = sum(
+            x.result_type == TestResult.ERRORED for x in self.tests)
         self.root.set('errors', str(number_of_errors))
-        number_of_failures = sum(x.result_type == TestResult.FAILED for x in self.tests)
+        number_of_failures = sum(
+            x.result_type == TestResult.FAILED for x in self.tests)
         self.root.set('failures', str(number_of_failures))
         self.root.set('tests', str(len(self.tests)))
 
@@ -112,7 +116,8 @@ class TestCase(object):
             self.element.set('time', str(time))
         self.result_type = None
 
-    def set_result(self, result_type, message=None, error_type=None, text=None):
+    def set_result(self, result_type,
+                   message=None, error_type=None, text=None):
         self.result_type = result_type
         result = TestCase.results[self.result_type]
         if result is not None and result is not TestResult.PASSED:
@@ -133,7 +138,12 @@ def fetch_log(path):
 
 
 def failed_dependencies(spec):
-    return set(item for item in spec.dependencies.itervalues() if not spack.repo.get(item).installed)
+    def get_deps(deptype):
+        return set(item for item in spec.dependencies(deptype)
+                   if not spack.repo.get(item).installed)
+    link_deps = get_deps('link')
+    run_deps = get_deps('run')
+    return link_deps.union(run_deps)
 
 
 def get_top_spec_or_die(args):
@@ -150,13 +160,19 @@ def install_single_spec(spec, number_of_jobs):
     # If it is already installed, skip the test
     if spack.repo.get(spec).installed:
         testcase = TestCase(package.name, package.spec.short_spec, time=0.0)
-        testcase.set_result(TestResult.SKIPPED, message='Skipped [already installed]', error_type='already_installed')
+        testcase.set_result(
+            TestResult.SKIPPED,
+            message='Skipped [already installed]',
+            error_type='already_installed')
         return testcase
 
     # If it relies on dependencies that did not install, skip
     if failed_dependencies(spec):
         testcase = TestCase(package.name, package.spec.short_spec, time=0.0)
-        testcase.set_result(TestResult.SKIPPED, message='Skipped [failed dependencies]', error_type='dep_failed')
+        testcase.set_result(
+            TestResult.SKIPPED,
+            message='Skipped [failed dependencies]',
+            error_type='dep_failed')
         return testcase
 
     # Otherwise try to install the spec
@@ -172,26 +188,30 @@ def install_single_spec(spec, number_of_jobs):
         testcase = TestCase(package.name, package.spec.short_spec, duration)
         testcase.set_result(TestResult.PASSED)
     except InstallError:
-        # An InstallError is considered a failure (the recipe didn't work correctly)
+        # An InstallError is considered a failure (the recipe didn't work
+        # correctly)
         duration = time.time() - start_time
         # Try to get the log
         lines = fetch_log(package.build_log_path)
         text = '\n'.join(lines)
         testcase = TestCase(package.name, package.spec.short_spec, duration)
-        testcase.set_result(TestResult.FAILED, message='Installation failure', text=text)
+        testcase.set_result(TestResult.FAILED,
+                            message='Installation failure', text=text)
 
     except FetchError:
         # A FetchError is considered an error (we didn't even start building)
         duration = time.time() - start_time
         testcase = TestCase(package.name, package.spec.short_spec, duration)
-        testcase.set_result(TestResult.ERRORED, message='Unable to fetch package')
+        testcase.set_result(TestResult.ERRORED,
+                            message='Unable to fetch package')
 
     return testcase
 
 
 def get_filename(args, top_spec):
     if not args.output:
-        fname = 'test-{x.name}-{x.version}-{hash}.xml'.format(x=top_spec, hash=top_spec.dag_hash())
+        fname = 'test-{x.name}-{x.version}-{hash}.xml'.format(
+            x=top_spec, hash=top_spec.dag_hash())
         output_directory = join_path(os.getcwd(), 'test-output')
         if not os.path.exists(output_directory):
             os.mkdir(output_directory)

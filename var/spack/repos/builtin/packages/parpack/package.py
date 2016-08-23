@@ -26,6 +26,7 @@ from spack import *
 import os
 import shutil
 
+
 class Parpack(Package):
     """ARPACK is a collection of Fortran77 subroutines designed to solve large
        scale eigenvalue problems."""
@@ -52,12 +53,12 @@ class Parpack(Package):
         mf.filter('^PLAT.*',      'PLAT = ')
         mf.filter('^home.*',      'home = %s' % os.getcwd())
         mf.filter('^BLASdir.*',   'BLASdir = %s' % self.spec['blas'].prefix)
-        mf.filter('^LAPACKdir.*', 'LAPACKdir = %s' % self.spec['lapack'].prefix)
+        mf.filter('^LAPACKdir.*', 'LAPACKdir = %s' %
+                  self.spec['lapack'].prefix)
         mf.filter('^MAKE.*',      'MAKE = make')
 
         # build the library in our own prefix.
         mf.filter('^ARPACKLIB.*', 'PARPACKLIB = %s/libparpack.a' % os.getcwd())
-
 
     def install(self, spec, prefix):
         with working_dir('PARPACK/SRC/MPI'):

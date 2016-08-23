@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class PyMatplotlib(Package):
     """Python plotting package."""
     homepage = "https://pypi.python.org/pypi/matplotlib"
@@ -38,19 +39,20 @@ class PyMatplotlib(Package):
 
     extends('python', ignore=r'bin/nosetests.*$|bin/pbr$')
 
-    depends_on('py-pyside', when='+gui')
-    depends_on('py-ipython', when='+ipython')
-    depends_on('py-pyparsing')
-    depends_on('py-six')
-    depends_on('py-dateutil')
-    depends_on('py-pytz')
-    depends_on('py-nose')
-    depends_on('py-numpy')
-    depends_on('py-mock')
-    depends_on('py-pbr')
-    depends_on('py-funcsigs')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-pyside', when='+gui', type=nolink)
+    depends_on('py-ipython', when='+ipython', type=nolink)
+    depends_on('py-pyparsing', type=nolink)
+    depends_on('py-six', type=nolink)
+    depends_on('py-dateutil', type=nolink)
+    depends_on('py-pytz', type=nolink)
+    depends_on('py-nose', type=nolink)
+    depends_on('py-numpy', type=nolink)
+    depends_on('py-mock', type=nolink)
+    depends_on('py-pbr', type=nolink)
+    depends_on('py-funcsigs', type=nolink)
 
-    depends_on('pkg-config')
+    depends_on('pkg-config', type='build')
     depends_on('freetype')
     depends_on('qt', when='+gui')
     depends_on('bzip2')
@@ -64,12 +66,12 @@ class PyMatplotlib(Package):
         if str(self.version) in ['1.4.2', '1.4.3']:
             # hack to fix configuration file
             config_file = None
-            for p,d,f in os.walk(prefix.lib):
+            for p, d, f in os.walk(prefix.lib):
                 for file in f:
                     if file.find('matplotlibrc') != -1:
                         config_file = join_path(p, 'matplotlibrc')
                         print config_file
-            if config_file == None:
+            if config_file is None:
                 raise InstallError('could not find config file')
             filter_file(r'backend      : pyside',
                         'backend      : Qt4Agg',

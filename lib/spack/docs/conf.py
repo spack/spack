@@ -51,7 +51,8 @@ os.environ['SPACK_ROOT'] = spack_root
 os.environ['PATH'] += os.pathsep + '$SPACK_ROOT/bin'
 
 spack_version =  subprocess.Popen(
-    ['spack', '-V'], stderr=subprocess.PIPE).communicate()[1].strip().split('.')
+    [spack_root + '/bin/spack', '-V'],
+    stderr=subprocess.PIPE).communicate()[1].strip().split('.')
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.

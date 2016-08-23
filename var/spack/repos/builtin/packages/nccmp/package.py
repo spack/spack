@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Nccmp(Package):
     """Compare NetCDF Files"""
     homepage = "http://nccmp.sourceforge.net/"

@@ -35,8 +35,8 @@ from llnl.util.filesystem import *
 from spack.stage import Stage
 from spack.util.executable import which
 
-test_files_dir = join_path(spack.stage_path, '.test')
-test_tmp_path  = join_path(test_files_dir, 'tmp')
+test_files_dir = os.path.realpath(join_path(spack.stage_path, '.test'))
+test_tmp_path  = os.path.realpath(join_path(test_files_dir, 'tmp'))
 
 archive_dir      = 'test-files'
 archive_name     = archive_dir + '.tar.gz'
@@ -62,6 +62,7 @@ def use_tmp(use_tmp):
 
 
 class StageTest(unittest.TestCase):
+
     def setUp(self):
         """This sets up a mock archive to fetch, and a mock temp space for use
            by the Stage class.  It doesn't actually create the Stage -- that
@@ -89,7 +90,6 @@ class StageTest(unittest.TestCase):
         # be removed.
         self.working_dir = os.getcwd()
 
-
     def tearDown(self):
         """Blows away the test environment directory."""
         shutil.rmtree(test_files_dir)
@@ -99,7 +99,6 @@ class StageTest(unittest.TestCase):
 
         # restore spack's original tmp environment
         spack.tmp_dirs = self.old_tmp_dirs
-
 
     def get_stage_path(self, stage, stage_name):
         """Figure out where a stage should be living.  This depends on
@@ -113,7 +112,6 @@ class StageTest(unittest.TestCase):
             self.assertTrue(stage.path is not None)
             self.assertTrue(stage.path.startswith(spack.stage_path))
             return stage.path
-
 
     def check_setup(self, stage, stage_name):
         """Figure out whether a stage was set up correctly."""
@@ -139,13 +137,11 @@ class StageTest(unittest.TestCase):
             # Make sure the stage path is NOT a link for a non-tmp stage
             self.assertFalse(os.path.islink(stage_path))
 
-
     def check_fetch(self, stage, stage_name):
         stage_path = self.get_stage_path(stage, stage_name)
         self.assertTrue(archive_name in os.listdir(stage_path))
         self.assertEqual(join_path(stage_path, archive_name),
                          stage.fetcher.archive_file)
-
 
     def check_expand_archive(self, stage, stage_name):
         stage_path = self.get_stage_path(stage, stage_name)
@@ -162,18 +158,15 @@ class StageTest(unittest.TestCase):
         with open(readme) as file:
             self.assertEqual(readme_text, file.read())
 
-
     def check_chdir(self, stage, stage_name):
         stage_path = self.get_stage_path(stage, stage_name)
         self.assertEqual(os.path.realpath(stage_path), os.getcwd())
-
 
     def check_chdir_to_source(self, stage, stage_name):
         stage_path = self.get_stage_path(stage, stage_name)
         self.assertEqual(
             join_path(os.path.realpath(stage_path), archive_dir),
             os.getcwd())
-
 
     def check_destroy(self, stage, stage_name):
         """Figure out whether a stage was destroyed correctly."""
@@ -187,13 +180,11 @@ class StageTest(unittest.TestCase):
             target = os.path.realpath(stage_path)
             self.assertFalse(os.path.exists(target))
 
-
     def test_setup_and_destroy_name_with_tmp(self):
         with use_tmp(True):
             with Stage(archive_url, name=stage_name) as stage:
                 self.check_setup(stage, stage_name)
             self.check_destroy(stage, stage_name)
-
 
     def test_setup_and_destroy_name_without_tmp(self):
         with use_tmp(False):
@@ -201,13 +192,11 @@ class StageTest(unittest.TestCase):
                 self.check_setup(stage, stage_name)
             self.check_destroy(stage, stage_name)
 
-
     def test_setup_and_destroy_no_name_with_tmp(self):
         with use_tmp(True):
             with Stage(archive_url) as stage:
                 self.check_setup(stage, None)
             self.check_destroy(stage, None)
-
 
     def test_setup_and_destroy_no_name_without_tmp(self):
         with use_tmp(False):
@@ -215,14 +204,12 @@ class StageTest(unittest.TestCase):
                 self.check_setup(stage, None)
             self.check_destroy(stage, None)
 
-
     def test_chdir(self):
         with Stage(archive_url, name=stage_name) as stage:
             stage.chdir()
             self.check_setup(stage, stage_name)
             self.check_chdir(stage, stage_name)
         self.check_destroy(stage, stage_name)
-
 
     def test_fetch(self):
         with Stage(archive_url, name=stage_name) as stage:
@@ -232,7 +219,6 @@ class StageTest(unittest.TestCase):
             self.check_fetch(stage, stage_name)
         self.check_destroy(stage, stage_name)
 
-
     def test_expand_archive(self):
         with Stage(archive_url, name=stage_name) as stage:
             stage.fetch()
@@ -242,8 +228,7 @@ class StageTest(unittest.TestCase):
             self.check_expand_archive(stage, stage_name)
         self.check_destroy(stage, stage_name)
 
-
-    def test_expand_archive(self):
+    def test_expand_archive_with_chdir(self):
         with Stage(archive_url, name=stage_name) as stage:
             stage.fetch()
             self.check_setup(stage, stage_name)
@@ -253,7 +238,6 @@ class StageTest(unittest.TestCase):
             self.check_expand_archive(stage, stage_name)
             self.check_chdir_to_source(stage, stage_name)
         self.check_destroy(stage, stage_name)
-
 
     def test_restage(self):
         with Stage(archive_url, name=stage_name) as stage:
@@ -278,19 +262,16 @@ class StageTest(unittest.TestCase):
             self.assertFalse('foobar' in os.listdir(stage.source_path))
         self.check_destroy(stage, stage_name)
 
-
     def test_no_keep_without_exceptions(self):
         with Stage(archive_url, name=stage_name, keep=False) as stage:
             pass
         self.check_destroy(stage, stage_name)
-
 
     def test_keep_without_exceptions(self):
         with Stage(archive_url, name=stage_name, keep=True) as stage:
             pass
         path = self.get_stage_path(stage, stage_name)
         self.assertTrue(os.path.isdir(path))
-
 
     def test_no_keep_with_exceptions(self):
         try:
@@ -300,8 +281,7 @@ class StageTest(unittest.TestCase):
             path = self.get_stage_path(stage, stage_name)
             self.assertTrue(os.path.isdir(path))
         except:
-            pass # ignore here.
-
+            pass  # ignore here.
 
     def test_keep_exceptions(self):
         try:
@@ -311,4 +291,4 @@ class StageTest(unittest.TestCase):
             path = self.get_stage_path(stage, stage_name)
             self.assertTrue(os.path.isdir(path))
         except:
-            pass # ignore here.
+            pass  # ignore here.

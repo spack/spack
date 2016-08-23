@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os
+
 
 class PyFuncsigs(Package):
     """Python function signatures from PEP362 for Python 2.6, 2.7 and 3.2."""
@@ -34,10 +34,7 @@ class PyFuncsigs(Package):
 
     extends('python')
 
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
-
-
-

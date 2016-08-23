@@ -57,7 +57,7 @@ class Lua(Package):
         placement='luarocks')
 
     def install(self, spec, prefix):
-        if spec.satisfies("arch=darwin-i686") or spec.satisfies("arch=darwin-x86_64"):
+        if spec.satisfies("platform=darwin"):
             target = 'macosx'
         else:
             target = 'linux'
@@ -86,7 +86,7 @@ class Lua(Package):
 
     def setup_dependent_environment(self, spack_env, run_env, extension_spec):
         lua_paths = []
-        for d in extension_spec.traverse():
+        for d in extension_spec.traverse(deptypes=nolink, deptype_query='run'):
             if d.package.extends(self.spec):
                 lua_paths.append(os.path.join(d.prefix, self.lua_lib_dir))
                 lua_paths.append(os.path.join(d.prefix, self.lua_share_dir))
@@ -104,6 +104,9 @@ class Lua(Package):
 
         spack_env.set('LUA_PATH', ';'.join(lua_patterns), separator=';')
         spack_env.set('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
+
+        # Add LUA to PATH for dependent packages
+        spack_env.prepend_path('PATH', self.prefix.bin)
 
         # For run time environment set only the path for extension_spec and
         # prepend it to LUAPATH
@@ -137,11 +140,11 @@ class Lua(Package):
 
     @property
     def lua_lib_dir(self):
-        return os.path.join('lib', 'lua', '%d.%d' % self.version[:2])
+        return os.path.join('lib', 'lua', self.version.up_to(2))
 
     @property
     def lua_share_dir(self):
-        return os.path.join('share', 'lua', '%d.%d' % self.version[:2])
+        return os.path.join('share', 'lua', self.version.up_to(2))
 
     def setup_dependent_package(self, module, ext_spec):
         """
@@ -153,5 +156,5 @@ class Lua(Package):
         """
         # Lua extension builds can have lua and luarocks executable functions
         module.lua = Executable(join_path(self.spec.prefix.bin, 'lua'))
-        module.luarocks = Executable(join_path(self.spec.prefix.bin,
-                                               'luarocks'))
+        module.luarocks = Executable(
+            join_path(self.spec.prefix.bin, 'luarocks'))

@@ -36,7 +36,7 @@ description = "Calculate md5 checksums for files/urls."
 def setup_parser(subparser):
     setup_parser.parser = subparser
     subparser.add_argument('files', nargs=argparse.REMAINDER,
-                           help="Files to checksum.")
+                           help="Files/urls to checksum.")
 
 
 def compute_md5_checksum(url):
@@ -67,6 +67,7 @@ def md5(parser, args):
             tty.warn("%s" % e)
 
     # Dump the MD5s at last without interleaving them with downloads
-    tty.msg("%d MD5 checksums:" % len(results))
+    checksum = 'checksum' if len(results) == 1 else 'checksums'
+    tty.msg("%d MD5 %s:" % (len(results), checksum))
     for checksum, url in results:
         print "%s  %s" % (checksum, url)

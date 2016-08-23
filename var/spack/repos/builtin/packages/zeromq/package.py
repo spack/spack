@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Zeromq(Package):
     """ The ZMQ networking/concurrency library and core API """
     homepage = "http://zguide.zeromq.org/"
@@ -38,7 +39,7 @@ class Zeromq(Package):
     depends_on("libsodium")
 
     def install(self, spec, prefix):
-        configure("--with-libsodium","--prefix=%s" % prefix)
+        configure("--with-libsodium", "--prefix=%s" % prefix)
 
         make()
         make("install")

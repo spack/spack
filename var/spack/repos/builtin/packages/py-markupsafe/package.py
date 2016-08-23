@@ -44,8 +44,7 @@ class PyMarkupsafe(Package):
     version('0.19', '64b05361adb92c11839fc470e308c593')
 
     extends("python")
-    depends_on("py-setuptools")
+    depends_on("py-setuptools", type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)
-

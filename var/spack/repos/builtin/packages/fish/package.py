@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Fish(Package):
     """fish is a smart and user-friendly command line shell for OS X, Linux, and
     the rest of the family.

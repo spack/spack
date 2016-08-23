@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Xz(Package):
     """XZ Utils is free general-purpose data compression software with
        high compression ratio. XZ Utils were written for POSIX-like
@@ -39,4 +40,3 @@ class Xz(Package):
         configure("--prefix=%s" % prefix)
         make()
         make("install")
-

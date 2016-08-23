@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class GitTest(Package):
     """Mock package that uses git for fetching."""
     homepage = "http://www.git-fetch-example.com"

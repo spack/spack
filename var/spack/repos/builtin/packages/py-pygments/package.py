@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyPygments(Package):
     """Pygments is a syntax highlighting package written in Python."""
     homepage = "https://pypi.python.org/pypi/pygments"
@@ -33,7 +34,7 @@ class PyPygments(Package):
     version('2.0.2', '238587a1370d62405edabd0794b3ec4a')
 
     extends('python')
-    depends_on('py-setuptools')
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix=%s' % prefix)

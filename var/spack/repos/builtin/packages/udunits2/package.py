@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Udunits2(Package):
     """Automated units conversion"""
 

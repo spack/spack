@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyScientificpython(Package):
     """ScientificPython is a collection of Python modules for
        scientific computing. It contains support for geometry,

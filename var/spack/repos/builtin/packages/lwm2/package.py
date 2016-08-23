@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Lwm2(Package):
     """LWM2: Light Weight Measurement Module.  This is a PMPI module
        that can collect a number of time-sliced MPI and POSIX I/O

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Mpfr(Package):
     """The MPFR library is a C library for multiple-precision
        floating-point computations with correct rounding."""

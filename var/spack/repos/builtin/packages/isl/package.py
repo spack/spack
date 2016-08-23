@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Isl(Package):
     """isl is a thread-safe C library for manipulating sets and
     relations of integer points bounded by affine constraints."""

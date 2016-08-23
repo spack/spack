@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Spindle(Package):
     """Spindle improves the library-loading performance of dynamically
        linked HPC applications.  Without Spindle large MPI jobs can

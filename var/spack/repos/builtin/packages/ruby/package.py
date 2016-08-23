@@ -35,9 +35,20 @@ class Ruby(Package):
     extendable = True
 
     version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
+    depends_on('libffi')
+    depends_on('zlib')
+    variant('openssl', default=False, description="Enable OpenSSL support")
+    depends_on('openssl', when='+openssl')
+    variant('readline', default=False, description="Enable Readline support")
+    depends_on('readline', when='+readline')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        options = ["--prefix=%s" % prefix]
+        if '+openssl' in spec:
+            options.append("--with-openssl-dir=%s" % spec['openssl'].prefix)
+        if '+readline' in spec:
+            options.append("--with-readline-dir=%s" % spec['readline'].prefix)
+        configure(*options)
         make()
         make("install")
 

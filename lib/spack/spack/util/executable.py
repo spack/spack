@@ -226,6 +226,7 @@ def which(name, **kwargs):
 
 
 class ProcessError(spack.error.SpackError):
+
     def __init__(self, msg, long_message=None):
         # These are used for detailed debugging information for
         # package builds.  They're built up gradually as the exception

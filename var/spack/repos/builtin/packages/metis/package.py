@@ -43,14 +43,18 @@ class Metis(Package):
     version('5.0.2', 'acb521a4e8c2e6dd559a7f9abd0468c5')
     version('4.0.3', 'd3848b454532ef18dc83e4fb160d1e10')
 
-    variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('debug', default=False, description='Builds the library in debug mode')
+    variant('shared', default=True,
+            description='Enables the build of shared libraries')
+    variant('debug', default=False,
+            description='Builds the library in debug mode')
     variant('gdb', default=False, description='Enables gdb support')
 
-    variant('idx64', default=False, description='Use int64_t as default index type')
-    variant('real64', default=False, description='Use double precision floating point types')
+    variant('idx64', default=False,
+            description='Use int64_t as default index type')
+    variant('real64', default=False,
+            description='Use double precision floating point types')
 
-    depends_on('cmake@2.8:', when='@5:')  # build-time dependency
+    depends_on('cmake@2.8:', when='@5:', type='build')
 
     patch('install_gklib_defs_rename.patch', when='@5:')
 

@@ -32,18 +32,21 @@ from itertools import izip
 
 __all__ = ['spawn', 'parmap', 'Barrier']
 
+
 def spawn(f):
-    def fun(pipe,x):
+    def fun(pipe, x):
         pipe.send(f(x))
         pipe.close()
     return fun
 
-def parmap(f,X):
-    pipe=[Pipe() for x in X]
-    proc=[Process(target=spawn(f),args=(c,x)) for x,(p,c) in izip(X,pipe)]
+
+def parmap(f, X):
+    pipe = [Pipe() for x in X]
+    proc = [Process(target=spawn(f), args=(c, x))
+            for x, (p, c) in izip(X, pipe)]
     [p.start() for p in proc]
     [p.join() for p in proc]
-    return [p.recv() for (p,c) in pipe]
+    return [p.recv() for (p, c) in pipe]
 
 
 class Barrier:
@@ -53,6 +56,7 @@ class Barrier:
 
     See http://greenteapress.com/semaphores/downey08semaphores.pdf, p. 41.
     """
+
     def __init__(self, n, timeout=None):
         self.n = n
         self.to = timeout
@@ -60,7 +64,6 @@ class Barrier:
         self.mutex = Semaphore(1)
         self.turnstile1 = Semaphore(0)
         self.turnstile2 = Semaphore(1)
-
 
     def wait(self):
         if not self.mutex.acquire(timeout=self.to):
@@ -90,4 +93,5 @@ class Barrier:
         self.turnstile2.release()
 
 
-class BarrierTimeoutError: pass
+class BarrierTimeoutError:
+    pass

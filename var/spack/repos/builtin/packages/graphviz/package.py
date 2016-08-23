@@ -37,14 +37,16 @@ class Graphviz(Package):
     # related to missing Perl packages. If spack begins support for Perl in the
     # future, this package can be updated to depend_on('perl') and the
     # ncecessary devel packages.
-    variant('perl', default=False, description='Enable if you need the optional Perl language bindings.')  # NOQA: ignore=E501
+    variant(
+        'perl', default=False,
+        description='Enable if you need the optional Perl language bindings.')
 
     parallel = False
 
     depends_on("swig")
     depends_on("python")
     depends_on("ghostscript")
-    depends_on("pkg-config")
+    depends_on("pkg-config", type='build')
 
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix]

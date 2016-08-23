@@ -49,12 +49,10 @@ class DirectoryLayoutTest(MockPackagesTest):
         self.tmpdir = tempfile.mkdtemp()
         self.layout = YamlDirectoryLayout(self.tmpdir)
 
-
     def tearDown(self):
         super(DirectoryLayoutTest, self).tearDown()
         shutil.rmtree(self.tmpdir, ignore_errors=True)
         self.layout = None
-
 
     def test_read_and_write_spec(self):
         """This goes through each package in spack and creates a directory for
@@ -67,8 +65,8 @@ class DirectoryLayoutTest(MockPackagesTest):
 
         for pkg in packages:
             if pkg.name.startswith('external'):
-                #External package tests cannot be installed
-                continue            
+                # External package tests cannot be installed
+                continue
             spec = pkg.spec
 
             # If a spec fails to concretize, just skip it.  If it is a
@@ -114,7 +112,6 @@ class DirectoryLayoutTest(MockPackagesTest):
             self.layout.remove_install_directory(spec)
             self.assertFalse(os.path.isdir(install_dir))
             self.assertFalse(os.path.exists(install_dir))
-
 
     def test_handle_unknown_package(self):
         """This test ensures that spack can at least do *some*
@@ -166,7 +163,6 @@ class DirectoryLayoutTest(MockPackagesTest):
 
         spack.repo.swap(mock_db)
 
-
     def test_find(self):
         """Test that finding specs within an install layout works."""
         packages = list(spack.repo.all_packages())[:max_packages]
@@ -175,13 +171,14 @@ class DirectoryLayoutTest(MockPackagesTest):
         installed_specs = {}
         for pkg in packages:
             if pkg.name.startswith('external'):
-                #External package tests cannot be installed
+                # External package tests cannot be installed
                 continue
             spec = pkg.spec.concretized()
             installed_specs[spec.name] = spec
             self.layout.create_install_directory(spec)
 
-        # Make sure all the installed specs appear in DirectoryLayout.all_specs()
+        # Make sure all the installed specs appear in
+        # DirectoryLayout.all_specs()
         found_specs = dict((s.name, s) for s in self.layout.all_specs())
         for name, spec in found_specs.items():
             self.assertTrue(name in found_specs)

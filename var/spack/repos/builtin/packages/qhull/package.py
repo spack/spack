@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Qhull(Package):
     """Qhull computes the convex hull, Delaunay triangulation, Voronoi
        diagram, halfspace intersection about a point, furt hest-site
@@ -44,8 +45,8 @@ class Qhull(Package):
 
     # https://github.com/qhull/qhull/pull/5
     patch('qhull-iterator.patch', when='@1.0')
-    
-    depends_on('cmake')
+
+    depends_on('cmake', type='build')
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):

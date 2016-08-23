@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Libuuid(Package):
     """Portable uuid C library"""
     # FIXME: add a proper url for your package's homepage here.

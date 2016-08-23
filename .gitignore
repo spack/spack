@@ -1,10 +1,14 @@
 /var/spack/stage
+/var/spack/cache
+/var/spack/repos/*/index.yaml
+/var/spack/repos/*/lock
 *.pyc
-/opt/
+/opt
 *~
 .DS_Store
 .idea
-/etc/spack/*
+/etc/spack/licenses
+/etc/spack/*.yaml
 /etc/spackconfig
 /share/spack/dotkit
 /share/spack/modules

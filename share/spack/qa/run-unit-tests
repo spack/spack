@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+#
+# This script runs Spack unit tests.
+#
+# It should be executed from the top-level directory of the repo,
+# e.g.:
+#
+#    share/spack/qa/run-unit-tests
+#
+# To run it, you'll need to have the Python coverage installed locally.
+#
+
+# Regular spack setup and tests
+. ./share/spack/setup-env.sh
+spack compilers
+spack config get compilers
+spack install -v libdwarf
+
+# Run unit tests with code coverage
+coverage run bin/spack test

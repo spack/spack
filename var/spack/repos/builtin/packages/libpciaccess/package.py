@@ -23,7 +23,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-import os.path
+
 
 class Libpciaccess(Package):
     """Generic PCI access library."""
@@ -37,7 +37,7 @@ class Libpciaccess(Package):
 
     def install(self, spec, prefix):
         # libpciaccess does not support OS X
-        if spec.satisfies('arch=darwin-x86_64'):
+        if spec.satisfies('platform=darwin'):
             # create a dummy directory
             mkdir(prefix.lib)
             return

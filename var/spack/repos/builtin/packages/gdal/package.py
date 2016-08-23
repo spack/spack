@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Gdal(Package):
     """
     GDAL is a translator library for raster and vector geospatial
@@ -62,7 +63,7 @@ class Gdal(Package):
     depends_on("libpng")
     depends_on("zlib")
     depends_on("proj")
-    depends_on("py-numpy")
+    depends_on("py-numpy", type=nolink)
 
     parallel = False
 

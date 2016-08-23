@@ -25,12 +25,15 @@
 import glob
 from spack import *
 
+
 class Cryptopp(Package):
     """Crypto++ is an open-source C++ library of cryptographic schemes. The
-       library supports a number of different cryptography algorithms, including
-       authenticated encryption schemes (GCM, CCM), hash functions (SHA-1, SHA2),
-       public-key encryption (RSA, DSA), and a few obsolete/historical encryption
-       algorithms (MD5, Panama)."""
+       library supports a number of different cryptography algorithms,
+       including authenticated encryption schemes (GCM, CCM), hash
+       functions (SHA-1, SHA2), public-key encryption (RSA, DSA), and a
+       few obsolete/historical encryption algorithms (MD5, Panama).
+
+    """
 
     homepage = "http://www.cryptopp.com"
     base_url = "http://www.cryptopp.com"

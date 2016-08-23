@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PySphinx(Package):
     """Sphinx Documentation Generator."""
     homepage = "http://sphinx-doc.org"

@@ -26,17 +26,22 @@ from spack import *
 
 
 class Dakota(Package):
-    """
-    The Dakota toolkit provides a flexible, extensible interface between analysis codes and iterative systems
-    analysis methods. Dakota contains algorithms for:
+    """The Dakota toolkit provides a flexible, extensible interface between
+    analysis codes and iterative systems analysis methods. Dakota
+    contains algorithms for:
 
     - optimization with gradient and non gradient-based methods;
-    - uncertainty quantification with sampling, reliability, stochastic expansion, and epistemic methods;
+    - uncertainty quantification with sampling, reliability, stochastic
+    - expansion, and epistemic methods;
     - parameter estimation with nonlinear least squares methods;
-    - sensitivity/variance analysis with design of experiments and parameter study methods.
+    - sensitivity/variance analysis with design of experiments and
+    - parameter study methods.
 
-    These capabilities may be used on their own or as components within advanced strategies such as hybrid optimization,
-    surrogate-based optimization, mixed integer nonlinear programming, or optimization under uncertainty.
+    These capabilities may be used on their own or as components within
+    advanced strategies such as hybrid optimization, surrogate-based
+    optimization, mixed integer nonlinear programming, or optimization
+    under uncertainty.
+
     """
 
     homepage = 'https://dakota.sandia.gov/'
@@ -45,8 +50,10 @@ class Dakota(Package):
 
     version('6.3', '05a58d209fae604af234c894c3f73f6d')
 
-    variant('debug', default=False, description='Builds a debug version of the libraries')
-    variant('shared', default=True, description='Enables the build of shared libraries')
+    variant('debug', default=False,
+            description='Builds a debug version of the libraries')
+    variant('shared', default=True,
+            description='Enables the build of shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
 
     depends_on('blas')
@@ -55,6 +62,7 @@ class Dakota(Package):
 
     depends_on('python')
     depends_on('boost')
+    depends_on('cmake', type='build')
 
     def url_for_version(self, version):
         return Dakota._url_str.format(version=version)
@@ -63,12 +71,17 @@ class Dakota(Package):
         options = []
         options.extend(std_cmake_args)
 
-        options.extend(['-DCMAKE_BUILD_TYPE:STRING=%s' % ('Debug' if '+debug' in spec else 'Release'),
-                        '-DBUILD_SHARED_LIBS:BOOL=%s' % ('ON' if '+shared' in spec else 'OFF')])
+        options.extend([
+            '-DCMAKE_BUILD_TYPE:STRING=%s' % (
+                'Debug' if '+debug' in spec else 'Release'),
+            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
+                'ON' if '+shared' in spec else 'OFF')])
 
         if '+mpi' in spec:
-            options.extend(['-DDAKOTA_HAVE_MPI:BOOL=ON',
-                            '-DMPI_CXX_COMPILER:STRING=%s' % join_path(spec['mpi'].prefix.bin, 'mpicxx')])
+            options.extend([
+                '-DDAKOTA_HAVE_MPI:BOOL=ON',
+                '-DMPI_CXX_COMPILER:STRING=%s' % join_path(
+                    spec['mpi'].prefix.bin, 'mpicxx')])
 
         build_directory = join_path(self.stage.path, 'spack-build')
         source_directory = self.stage.source_path
