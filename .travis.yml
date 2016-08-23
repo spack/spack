@@ -14,13 +14,10 @@ matrix:
   exclude:
   - python: 2.6
     # Flake8 no longer supports Python 2.6
-    env: TEST_TYPE=flake8
+    env: TEST_SUITE=flake8
 
 # Use new Travis infrastructure (Docker can't sudo yet)
 sudo: false
-
-# Cache dependencies
-cache: pip
 
 # Install various dependencies
 install:
@@ -40,7 +37,7 @@ before_script:
 script: share/spack/qa/run-$TEST_SUITE-tests
 
 after_success:
-  - if [[ $TEST_SUITE == unit && $TRAVIS_PYTHON_VERSION -eq 2.7 ]]; then coveralls; fi
+  - if [[ $TEST_SUITE == unit && $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
 
 notifications:
   email:
