@@ -31,7 +31,8 @@ class Cddlib(Package):
     and extreme rays of a general convex polyhedron in R^d given by a system 
     of linear inequalities"""
     homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/"
-    url      = "ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cddlib-094h.tar.gz"
+    # url      = "ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cddlib-094h.tar.gz"
+    url      = "http://pkgs.fedoraproject.org/lookaside/pkgs/cddlib/cddlib-094h.tar.gz/1467d270860bbcb26d3ebae424690e7c/cddlib-094h.tar.gz"
 
     version('094h', '1467d270860bbcb26d3ebae424690e7c')
 
