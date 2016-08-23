@@ -38,15 +38,12 @@ class Nwchem(Package):
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi')
+    depends_on('scalapack')
 
     depends_on('python@2.7:2.8', type='build')
 
-    # TODO:
-    # depends_on('scalapack')
-
     def install(self, spec, prefix):
         # see http://www.nwchem-sw.org/index.php/Compiling_NWChem
-
         args = []
         args.extend([
             'NWCHEM_TOP=%s' % self.stage.source_path,
@@ -57,9 +54,28 @@ class Nwchem(Package):
             'BLASOPT=%s %s' % (
                 to_link_flags(spec['lapack'].lapack_shared_lib),
                 to_link_flags(spec['blas'].blas_shared_lib)),
+            'USE_SCALAPACK=y',
+            'SCALAPACK=%s' % spec['scalapack'].fc_link,
             'NWCHEM_MODULES=all',
             'NWCHEM_LONG_PATHS=Y'  # by default NWCHEM_TOP is 64 char max
         ])
+
+        # TODO: query if blas/lapack/scalapack uses 64bit Ints
+        # A flag to distinguish between 32bit and 64bit integers in linear
+        # algebra (Blas, Lapack, Scalapack)
+        use32bitLinAlg = True
+
+        if use32bitLinAlg:
+            args.extend([
+                'USE_64TO32=y',
+                'BLAS_SIZE=4',
+                'SCALAPACK_SIZE=4'
+            ])
+        else:
+            args.extend([
+                'BLAS_SIZE=8',
+                'SCALAPACK_SIZE=8'
+            ])
 
         if sys.platform == 'darwin':
             target = 'MACX64'
@@ -73,6 +89,8 @@ class Nwchem(Package):
 
         with working_dir('src'):
             make('nwchem_config', *args)
+            if use32bitLinAlg:
+                make('64_to_32', *args)
             make(*args)
 
             #  need to install by hand. Follow Ubuntu:
