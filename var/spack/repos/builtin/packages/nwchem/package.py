@@ -42,6 +42,27 @@ class Nwchem(Package):
 
     depends_on('python@2.7:2.8', type='build')
 
+    # patches for 6.6-27746:
+    # TODO: add support for achived patches, i.e.
+    # http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz
+    patch('Config_libs66.patch', when='@6.6', level=0)
+    patch('Gcc6_optfix.patch', when='@6.6', level=0)
+    patch('Util_gnumakefile.patch', when='@6.6', level=0)
+    patch('cosmo_dftprint.patch', when='@6.6', level=0)
+    patch('cosmo_meminit.patch', when='@6.6', level=0)
+    patch('dplot_tolrho.patch', when='@6.6', level=0)
+    patch('driver_smalleig.patch', when='@6.6', level=0)
+    patch('ga_argv.patch', when='@6.6', level=0)
+    patch('ga_defs.patch', when='@6.6', level=0)
+    patch('raman_displ.patch', when='@6.6', level=0)
+    patch('sym_abelian.patch', when='@6.6', level=0)
+    patch('tddft_mxvec20.patch', when='@6.6', level=0)
+    patch('tools_lib64.patch', when='@6.6', level=0)
+    patch('txs_gcc6.patch', when='@6.6', level=0)
+    # patch('util_getppn.patch', when='@6.6', level=0)   # FAILS
+    patch('xccvs98.patch', when='@6.6', level=0)
+    patch('zgesdv.patch', when='@6.6', level=0)
+
     def install(self, spec, prefix):
         # see http://www.nwchem-sw.org/index.php/Compiling_NWChem
         args = []
