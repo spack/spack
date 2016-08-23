@@ -25,11 +25,13 @@
 
 from spack import *
 
+
 class Polymake(Package):
     """polymake is open source software for research in polyhedral geometry"""
     homepage = "https://polymake.org/doku.php"
     url      = "https://polymake.org/lib/exe/fetch.php/download/polymake-3.0r1.tar.bz2"
 
+    version('3.0r2', '08584547589f052ea50e2148109202ab')
     version('3.0r1', '63ecbecf9697c6826724d8a041d2cac0')
 
     # Note: Could also be built with nauty instead of bliss

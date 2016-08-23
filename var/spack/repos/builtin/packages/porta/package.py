@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class Porta(Package):
     """PORTA is a collection of routines for analyzing polytopes and
     polyhedra"""
@@ -33,7 +34,7 @@ class Porta(Package):
 
     version('1.4.1', '585179bf19d214ed364663a5d17bd5fc')
 
-    depends_on("libtool")
+    depends_on("libtool", type="build")
 
     patch("Makefile.spack.patch")
 

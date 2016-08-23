@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class Cdd(Package):
     """The program cdd+ (cdd, respectively) is a C++ (ANSI C)
     implementation of the Double Description Method [MRTT53] for
@@ -34,9 +35,13 @@ class Cdd(Package):
     homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/cdd.html"
     url      = "ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cdd-061a.tar.gz"
 
-    version('061a', '22c24a7a9349dd7ec0e24531925a02d9')
+    def url_for_version(self, version):
+        return ("ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cdd-%s.tar.gz" %
+                str(version.dotted()).replace('.', ''))
 
-    depends_on("libtool")
+    version('0.61a', '22c24a7a9349dd7ec0e24531925a02d9')
+
+    depends_on("libtool", type="build")
 
     patch("Makefile.spack.patch")
 

@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class Bliss(Package):
     """bliss: A Tool for Computing Automorphism Groups and Canonical
     Labelings of Graphs"""
@@ -37,7 +38,7 @@ class Bliss(Package):
     # Note: Bliss can also be built without gmp, but we don't support this yet
 
     depends_on("gmp")
-    depends_on("libtool")
+    depends_on("libtool", type='build')
 
     patch("Makefile.spack.patch")
 

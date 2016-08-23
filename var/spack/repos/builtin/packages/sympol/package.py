@@ -25,6 +25,7 @@
 
 from spack import *
 
+
 class Sympol(Package):
     """SymPol is a C++ tool to work with symmetric polyhedra"""
     homepage = "http://www.math.uni-rostock.de/~rehn/software/sympol.html"
