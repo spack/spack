@@ -32,6 +32,7 @@ class Lrslib(Package):
     problems and comes with a choice of three arithmetic packages"""
     homepage = "http://cgm.cs.mcgill.ca/~avis/C/lrs.html"
     url      = "http://cgm.cs.mcgill.ca/~avis/C/lrslib/archive/lrslib-062.tar.gz"
+
     def url_for_version(self, version):
         return ("http://cgm.cs.mcgill.ca/~avis/C/lrslib/archive/lrslib-%s.tar.gz" %
                 ('0' + str(version).replace('.', '')))

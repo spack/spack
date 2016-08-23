@@ -27,15 +27,15 @@ from spack import *
 
 
 class Cddlib(Package):
-    """The C-library cddlib is a C implementation of the Double Description 
+    """The C-library cddlib is a C implementation of the Double Description
     Method of Motzkin et al. for generating all vertices (i.e. extreme points)
-    and extreme rays of a general convex polyhedron in R^d given by a system 
+    and extreme rays of a general convex polyhedron in R^d given by a system
     of linear inequalities"""
     homepage = "https://www.inf.ethz.ch/personal/fukudak/cdd_home/"
     # This is the original download url. It is currently down [2016-08-23],
     # but should be reinstated or updated once the issue is resolved.
-    # url      = "ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cddlib-094h.tar.gz"
-    url      = "http://pkgs.fedoraproject.org/lookaside/pkgs/cddlib/cddlib-094h.tar.gz/1467d270860bbcb26d3ebae424690e7c/cddlib-094h.tar.gz"
+    # url = "ftp://ftp.ifor.math.ethz.ch/pub/fukuda/cdd/cddlib-094h.tar.gz"
+    url = "http://pkgs.fedoraproject.org/lookaside/pkgs/cddlib/cddlib-094h.tar.gz/1467d270860bbcb26d3ebae424690e7c/cddlib-094h.tar.gz"
 
     def url_for_version(self, version):
         # Since the commit id is part of the version, we can't
