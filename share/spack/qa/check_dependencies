@@ -27,9 +27,15 @@ for dep in "$@"; do
                 spack_package=py-flake8
                 pip_package=flake8
                 ;;
+            git)
+                spack_package=git
+                ;;
             hg)
                 spack_package=py-mercurial
                 pip_package=mercurial
+                ;;
+            svn)
+                spack_package=subversion
                 ;;
             *)
                 spack_package=$dep
@@ -37,15 +43,23 @@ for dep in "$@"; do
                 ;;
         esac
 
-        cat << EOF
-ERROR: $dep is required to run this script.
+        echo "ERROR: $dep is required to run this script."
+        echo
 
-To install with Spack, run:
-    $ spack install $spack_package
-or, to install with pip, run:
-    $ pip install $pip_package
-Then add the bin directory to your PATH.
-EOF
+        if [[ $spack_package ]]; then
+            echo "To install with Spack, run:"
+            echo "    $ spack install $spack_package"
+        fi
+
+        if [[ $pip_package ]]; then
+            echo "To install with pip, run:"
+            echo "    $ pip install $pip_package"
+        fi
+
+        if [[ $spack_package || $pip_package ]]; then
+            echo "Then add the bin directory to your PATH."
+        fi
+
         exit 1
     fi
 done

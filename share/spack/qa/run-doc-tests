@@ -9,7 +9,7 @@
 #     run-doc-tests
 #
 # Notes:
-#     Requires sphinx and mercurial.
+#     Requires sphinx, git, mercurial, and subversion.
 #
 
 QA_DIR="$(dirname "$0")"
@@ -20,7 +20,9 @@ DOC_DIR="$SPACK_ROOT/lib/spack/docs"
 deps=(
     sphinx-apidoc
     sphinx-build
+    git
     hg
+    svn
 )
 
 # Check for dependencies
