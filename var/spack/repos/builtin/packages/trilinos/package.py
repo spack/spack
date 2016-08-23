@@ -58,7 +58,7 @@ class Trilinos(Package):
 
     def url_for_version(self, version):
         return '%s/trilinos-release-%s.tar.gz' % \
-            (Trilinos.base_url, str(version).replace('.', '-'))
+            (Trilinos.base_url, version.dashed)
 
     variant('metis',        default=True,
             description='Compile with METIS and ParMETIS')
