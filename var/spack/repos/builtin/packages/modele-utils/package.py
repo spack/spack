@@ -4,13 +4,12 @@ class ModeleUtils(CMakePackage):
     """Utities for GISS GCM"""
 
     homepage = "http://www.giss.nasa.gov/tools/modelE"
-    url = "http://none"
 
-    # ModelE has no valid versions.
-    # This must be built with "spack spconfig" in a local repo
+    # This must be built a user with access to simplex.
     version('cmake',
         git='simplex.giss.nasa.gov:/giss/gitrepo/modelE.git',
-        branch='cmake')
+        branch='cmake',
+        preferred=True)
 
     variant('ic', default=True,
         description='Build init_cond directory')
