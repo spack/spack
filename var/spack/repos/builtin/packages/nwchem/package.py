@@ -59,7 +59,7 @@ class Nwchem(Package):
     patch('tddft_mxvec20.patch', when='@6.6', level=0)
     patch('tools_lib64.patch', when='@6.6', level=0)
     patch('txs_gcc6.patch', when='@6.6', level=0)
-    # patch('util_getppn.patch', when='@6.6', level=0)   # FAILS
+    patch('Util_getppn.patch', when='@6.6', level=0)
     patch('xccvs98.patch', when='@6.6', level=0)
     patch('zgesdv.patch', when='@6.6', level=0)
 
