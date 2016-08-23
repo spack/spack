@@ -75,6 +75,8 @@ class Nwchem(Package):
             'BLASOPT=%s %s' % (
                 to_link_flags(spec['lapack'].lapack_shared_lib),
                 to_link_flags(spec['blas'].blas_shared_lib)),
+            'BLAS_LIB=%s' % to_link_flags(spec['blas'].blas_shared_lib),
+            'LAPACK_LIB=%s' % to_link_flags(spec['lapack'].lapack_shared_lib),
             'USE_SCALAPACK=y',
             'SCALAPACK=%s' % spec['scalapack'].fc_link,
             'NWCHEM_MODULES=all',
@@ -90,11 +92,13 @@ class Nwchem(Package):
             args.extend([
                 'USE_64TO32=y',
                 'BLAS_SIZE=4',
+                'LAPACK_SIZE=4',
                 'SCALAPACK_SIZE=4'
             ])
         else:
             args.extend([
                 'BLAS_SIZE=8',
+                'LAPACK_SIZE=8'
                 'SCALAPACK_SIZE=8'
             ])
 
