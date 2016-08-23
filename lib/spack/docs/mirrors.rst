@@ -1,7 +1,8 @@
 .. _mirrors:
 
+=======
 Mirrors
-============================
+=======
 
 Some sites may not have access to the internet for fetching packages.
 These sites will need a local repository of tarballs from which they
@@ -51,8 +52,9 @@ contains tarballs for each package, named after each package.
 
 .. _spack-mirror:
 
+----------------
 ``spack mirror``
-----------------------------
+----------------
 
 Mirrors are managed with the ``spack mirror`` command.  The help for
 ``spack mirror`` looks like this::
@@ -79,8 +81,9 @@ control the URL(s) from which Spack downloads its packages.
 
 .. _spack-mirror-create:
 
+-----------------------
 ``spack mirror create``
-----------------------------
+-----------------------
 
 You can create a mirror using the ``spack mirror create`` command, assuming
 you're on a machine where you can access the internet.
@@ -88,7 +91,6 @@ you're on a machine where you can access the internet.
 The command will iterate through all of Spack's packages and download
 the safe ones into a directory structure like the one above.  Here is
 what it looks like:
-
 
 .. code-block:: bash
 
@@ -124,8 +126,9 @@ what it looks like:
 Once this is done, you can tar up the ``spack-mirror-2014-06-24`` directory and
 copy it over to the machine you want it hosted on.
 
+^^^^^^^^^^^^^^^^^^^
 Custom package sets
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 Normally, ``spack mirror create`` downloads all the archives it has
 checksums for.  If you want to only create a mirror for a subset of
@@ -138,8 +141,9 @@ command::
 Will create a mirror for libelf versions greater than or equal to
 0.8.12 and boost versions greater than or equal to 1.44.
 
+^^^^^^^^^^^^
 Mirror files
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 If you have a *very* large number of packages you want to mirror, you
 can supply a file with specs in it, one per line::
@@ -158,8 +162,9 @@ your site.
 
 .. _spack-mirror-add:
 
+--------------------
 ``spack mirror add``
-----------------------------
+--------------------
 
 Once you have a mirror, you need to let spack know about it.  This is
 relatively simple.  First, figure out the URL for the mirror.  If it's
@@ -183,8 +188,9 @@ Each mirror has a name so that you can refer to it again later.
 
 .. _spack-mirror-list:
 
+---------------------
 ``spack mirror list``
-----------------------------
+---------------------
 
 To see all the mirrors Spack knows about, run ``spack mirror list``::
 
@@ -193,8 +199,9 @@ To see all the mirrors Spack knows about, run ``spack mirror list``::
 
 .. _spack-mirror-remove:
 
+-----------------------
 ``spack mirror remove``
-----------------------------
+-----------------------
 
 To remove a mirror by name::
 
@@ -202,8 +209,9 @@ To remove a mirror by name::
    $ spack mirror list
    ==> No mirrors configured.
 
+-----------------
 Mirror precedence
-----------------------------
+-----------------
 
 Adding a mirror really adds a line in ``~/.spack/mirrors.yaml``::
 
@@ -217,8 +225,9 @@ search the topmost mirror first and the bottom-most mirror last.
 
 .. _caching:
 
+-------------------
 Local Default Cache
-----------------------------
+-------------------
 
 Spack caches resources that are downloaded as part of installs. The cache is
 a valid spack mirror: it uses the same directory structure and naming scheme

@@ -1,7 +1,8 @@
 .. _developer_guide:
 
+===============
 Developer Guide
-=====================
+===============
 
 This guide is intended for people who want to work on Spack itself.
 If you just want to develop packages, see the :ref:`packaging-guide`.
@@ -11,8 +12,9 @@ It is assumed that you've read the :ref:`basic-usage` and
 concepts discussed there.  If you're not, we recommend reading those
 first.
 
+--------
 Overview
------------------------
+--------
 
 Spack is designed with three separate roles in mind:
 
@@ -63,9 +65,9 @@ building the software off to the package object.  The rest of this
 document describes all the pieces that come together to make that
 happen.
 
-
+-------------------
 Directory Structure
--------------------------
+-------------------
 
 So that you can familiarize yourself with the project, we'll start
 with a high level view of Spack's directory structure::
@@ -123,15 +125,16 @@ use the thing that's supposed to spare them from the details of big,
 complicated packages.  The end result is that Spack works out of the
 box: clone it and add ``bin`` to your PATH and you're ready to go.
 
-
+--------------
 Code Structure
--------------------------
+--------------
 
 This section gives an overview of the various Python modules in Spack,
 grouped by functionality.
 
+^^^^^^^^^^^^^^^^^^^^^^^
 Package-related modules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.package`
   Contains the :class:`Package <spack.package.Package>` class, which
@@ -158,9 +161,9 @@ Package-related modules
   decorator, which allows :ref:`multimethods <multimethods>` in
   packages.
 
-
+^^^^^^^^^^^^^^^^^^^^
 Spec-related modules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 :mod:`spack.spec`
   Contains :class:`Spec <spack.spec.Spec>` and :class:`SpecParser
@@ -208,9 +211,9 @@ Spec-related modules
      Not yet implemented.  Should eventually have architecture
      descriptions for cross-compiling.
 
-
+^^^^^^^^^^^^^^^^^
 Build environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 :mod:`spack.stage`
   Handles creating temporary directories for builds.
@@ -224,15 +227,17 @@ Build environment
   Create more implementations of this to change the hierarchy and
   naming scheme in ``$spack_prefix/opt``
 
+^^^^^^^^^^^^^^^^^
 Spack Subcommands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 :mod:`spack.cmd`
   Each module in this package implements a Spack subcommand.  See
   :ref:`writing commands <writing-commands>` for details.
 
+^^^^^^^^^^
 Unit tests
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^
 
 :mod:`spack.test`
   Implements Spack's test suite.  Add a module and put its name in
@@ -242,8 +247,9 @@ Unit tests
   This is a fake package hierarchy used to mock up packages for
   Spack's test suite.
 
+^^^^^^^^^^^^^
 Other Modules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 :mod:`spack.globals`
   Includes global settings for Spack.  the default policy classes for
@@ -269,13 +275,13 @@ Other Modules
   :class:`SpackError <spack.error.SpackError>`, the base class for
   Spack's exception hierarchy.
 
-
+------------
 Spec objects
--------------------------
+------------
 
+---------------
 Package objects
--------------------------
-
+---------------
 
 Most spack commands
 look something like this:
@@ -286,34 +292,37 @@ look something like this:
    #. Instantiate a package based on the spec, and
    #. Call methods (e.g., ``install()``) on the package object.
 
-
-
 The information in Package files is used at all stages in this
 process.
 
-
 Conceptually, packages are overloaded.  They contain
 
+-------------
 Stage objects
--------------------------
+-------------
 
 .. _writing-commands:
 
+----------------
 Writing commands
--------------------------
+----------------
 
+----------
 Unit tests
--------------------------
+----------
 
+------------
 Unit testing
--------------------------
+------------
 
-
+------------------
 Developer commands
--------------------------
+------------------
 
+^^^^^^^^^^^^^
 ``spack doc``
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
+^^^^^^^^^^^^^^
 ``spack test``
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^

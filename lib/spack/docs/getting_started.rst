@@ -1,8 +1,10 @@
+===============
 Getting Started
-====================
+===============
 
+--------
 Download
---------------------
+--------
 
 Getting spack is easy.  You can clone it from the `github repository
 <https://github.com/llnl/spack>`_ using this command:
@@ -35,8 +37,9 @@ For a richer experience, use Spack's `shell support
 
 This automatically adds Spack to your ``PATH``.
 
+------------
 Installation
---------------------
+------------
 
 You don't need to install Spack; it's ready to run as soon as you
 clone it from git.

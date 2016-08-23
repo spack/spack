@@ -1,12 +1,14 @@
 .. _configuration:
 
+=============
 Configuration
-===================================
+=============
 
 .. _temp-space:
 
+---------------
 Temporary space
-----------------------------
+---------------
 
 .. warning:: Temporary space configuration will eventually be moved to
    configuration files, but currently these settings are in
@@ -55,8 +57,10 @@ directory is.
 
 .. _sec-external_packages:
 
+-----------------
 External Packages
-----------------------------
+-----------------
+
 Spack can be configured to use externally-installed
 packages rather than building its own packages. This may be desirable
 if machines ship with system packages, such as a customized MPI
@@ -126,16 +130,15 @@ The ``buildable`` does not need to be paired with external packages.
 It could also be used alone to forbid packages that may be
 buggy or otherwise undesirable.
 
-
+--------------------------
 Concretization Preferences
---------------------------------
+--------------------------
 
 Spack can be configured to prefer certain compilers, package
 versions, depends_on, and variants during concretization.
 The preferred configuration can be controlled via the
 ``~/.spack/packages.yaml`` file for user configuations, or the
 ``etc/spack/packages.yaml`` site configuration.
-
 
 Here's an example packages.yaml file that sets preferred packages:
 
@@ -151,7 +154,6 @@ Here's an example packages.yaml file that sets preferred packages:
         compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
         providers:
           mpi: [mvapich, mpich, openmpi]
-
 
 At a high level, this example is specifying how packages should be
 concretized.  The opencv package should prefer using gcc 4.9 and
@@ -185,9 +187,9 @@ concretization rules.  A provider lists a value that packages may
 ``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
 dependency.
 
-
+---------
 Profiling
-------------------
+---------
 
 Spack has some limited built-in support for profiling, and can report
 statistics using standard Python timing tools.  To use this feature,
@@ -195,8 +197,9 @@ supply ``-p`` to Spack on the command line, before any subcommands.
 
 .. _spack-p:
 
+^^^^^^^^^^^^
 ``spack -p``
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 ``spack -p`` output looks like this:
 

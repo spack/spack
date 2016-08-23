@@ -3,8 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+===================
 Spack Documentation
-=================================
+===================
 
 Spack is a package management tool designed to support multiple
 versions and configurations of software on a wide variety of platforms
@@ -36,8 +37,9 @@ package:
 If you're new to spack and want to start using it, see :doc:`getting_started`,
 or refer to the full manual below.
 
+-----------------
 Table of Contents
----------------------
+-----------------
 
 .. toctree::
    :maxdepth: 2
@@ -54,6 +56,7 @@ Table of Contents
    package_list
    API Docs <spack>
 
+==================
 Indices and tables
 ==================
 
