@@ -40,7 +40,7 @@ class Nwchem(Package):
     depends_on('mpi')
     depends_on('scalapack')
 
-    depends_on('python@2.7:2.8', type='build')
+    depends_on('python@2.7:2.8', type=nolink)
 
     # patches for 6.6-27746:
     # TODO: add support for achived patches, i.e.
@@ -73,6 +73,7 @@ class Nwchem(Package):
             'MPI_LOC=%s' % spec['mpi'].prefix,
             'USE_PYTHONCONFIG=y',
             'PYTHONVERSION=%s' % spec['python'].version.up_to(2),
+            'PYTHONHOME=%s' % spec['python'].prefix,
             'BLASOPT=%s %s' % (
                 to_link_flags(spec['lapack'].lapack_shared_lib),
                 to_link_flags(spec['blas'].blas_shared_lib)),
@@ -80,7 +81,7 @@ class Nwchem(Package):
             'LAPACK_LIB=%s' % to_link_flags(spec['lapack'].lapack_shared_lib),
             'USE_SCALAPACK=y',
             'SCALAPACK=%s' % spec['scalapack'].fc_link,
-            'NWCHEM_MODULES=all',
+            'NWCHEM_MODULES=all python',
             'NWCHEM_LONG_PATHS=Y'  # by default NWCHEM_TOP is 64 char max
         ])
 
