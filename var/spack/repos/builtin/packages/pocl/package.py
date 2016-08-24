@@ -25,8 +25,13 @@
 
 from spack import *
 
+
 class Pocl(Package):
-    """Portable Computing Language"""
+    """Portable Computing Language (pocl) is an open source implementation
+    of the OpenCL standard which can be easily adapted for new targets
+    and devices, both for homogeneous CPU and heterogeneous
+    GPUs/accelerators."""
+
     homepage = "http://portablecl.org"
     url      = "http://portablecl.org/downloads/pocl-0.13.tar.gz"
 
@@ -36,11 +41,57 @@ class Pocl(Package):
     version('0.10', '0096be4f595c7b5cbfa42430c8b3af6a')
     version('0.9' , 'f95f4a9e7870854c60be2d2269c3ebec')
 
-    depends_on("llvm +clang")
-    depends_on("libtool")
+    depends_on("llvm +clang +shared_libs")
+    depends_on("libtool", type="build")
     depends_on("hwloc")
+    # pkg-config?
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix, "--disable-icd")
         make()
         make("install")
+        self.check_install(spec)
+
+    def check_install(self, spec):
+        "Build and run a small program to test the installed package"
+        print "Checking pocl installation..."
+        checkdir = "spack-check"
+        with working_dir(checkdir, create=True):
+            # Import source files from package
+            for src in ["scalarwave.c", "scalarwave.cl"]:
+                shutil.copyfile(join_path(self.package_dir(), src), src)
+            # Build driver
+            cc = which('cc')
+            cc('-c',
+               "-I%s" % join_path(spec.prefix, "include"),
+               "-I%s" % join_path(spec.prefix, "share", "pocl", "include"),
+               "scalarwave.c")
+            cc('-o', "scalarwave",
+               "scalarwave.o",
+               "-L%s" % join_path(spec.prefix, "lib"),
+               "-lpocl")
+            # Read expected output
+            with open(join_path(self.package_dir(),
+                                "expected-output.txt"), 'r') as f:
+                expected = f.read()
+            # Run driver, building and running the OpenCL code
+            try:
+                scalarwave = Executable('./scalarwave')
+                output = check(return_output=True)
+            except:
+                output = ""
+            # Check output
+            success = output == expected
+            if not success:
+                print "Produced output does not match expected output."
+                print "Expected output:"
+                print '-' * 80
+                print expected
+                print '-' * 80
+                print "Produced output:"
+                print '-' * 80
+                print output
+                print '-' * 80
+                raise RuntimeError("pocl install check failed")
+        # Clean up
+        shutil.rmtree(checkdir)
