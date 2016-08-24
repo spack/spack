@@ -401,10 +401,11 @@ the ``url`` declaration.  For example:
    :linenos:
 
    class Foo(Package):
+       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
+       ...
        def url_for_version(self, version):
            return 'http://example.com/version_%s/foo-%s.tar.gz' \
                % (version, version)
-       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
        ...
 
 If a URL cannot be derived systematically, you can add an explicit URL
