@@ -28,9 +28,6 @@ deps=(
 # Check for dependencies
 "$QA_DIR/check_dependencies" "${deps[@]}" || exit 1
 
-# Gather array of changed files
-changed=($("$QA_DIR/changed_files" lib/spack/docs))
-
 # Move to documentation directory
 # Allows script to be run from anywhere
 cd "$DOC_DIR"
@@ -38,11 +35,6 @@ cd "$DOC_DIR"
 # Cleanup temporary files upon exit or when script is killed
 trap 'make clean --silent' EXIT SIGINT SIGTERM
 
-# Only run tests if documentation was updated
-if [[ "${changed[@]}" ]]; then
-    # Treat warnings as fatal errors
-    make SPHINXOPTS=-W
-else
-    echo "No documentation was modified."
-fi
+# Treat warnings as fatal errors
+make SPHINXOPTS=-W
 
