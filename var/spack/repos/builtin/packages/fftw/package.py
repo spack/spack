@@ -79,21 +79,25 @@ class Fftw(Package):
 
         configure(*options)
         make()
-        make("check")
+        if self.run_tests:
+            make("check")
         make("install")
 
         if '+float' in spec:
             configure('--enable-float', *options)
             make()
-            make("check")
+            if self.run_tests:
+                make("check")
             make("install")
         if '+long_double' in spec:
             configure('--enable-long-double', *options)
             make()
-            make("check")
+            if self.run_tests:
+                make("check")
             make("install")
         if '+quad' in spec:
             configure('--enable-quad-precision', *options)
             make()
-            make("check")
+            if self.run_tests:
+                make("check")
             make("install")
