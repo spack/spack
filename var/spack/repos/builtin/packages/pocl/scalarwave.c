@@ -225,7 +225,7 @@ int main(void) {
     double z = grid.dz * k;
     int ind3d = i + grid.ai * (j + grid.aj * k);
 
-    printf("   phi[%-8g,%-8g,%-8g] = %g\n", x, y, z, phi[ind3d]);
+    printf("   phi[%-6g,%-6g,%-6g] = %g\n", x, y, z, phi[ind3d]);
   }
 
   printf("Done.\n");

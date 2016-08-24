@@ -24,6 +24,7 @@
 ##############################################################################
 
 from spack import *
+import shutil
 
 
 class Pocl(Package):
@@ -42,17 +43,15 @@ class Pocl(Package):
     version("0.9", "f95f4a9e7870854c60be2d2269c3ebec")
 
     # This is Github's pocl/pocl#373
-    patch("no-examples.patch")
     patch("uint.patch")
     patch("vecmathlib.patch")
 
     depends_on("hwloc")
-    depends_on("libtool", type="build")
+    depends_on("libtool")       # yes, this is a run-time dependency
     # We don't request LLVM's shared libraries because these fail to
     # build for us; see #1616
     depends_on("llvm +clang")
     depends_on("pkg-config", type="build")
-    # depends_on("zlib")
 
     def install(self, spec, prefix):
         llvm_config_path = join_path(spec["llvm"].prefix.bin, "llvm-config")
@@ -63,6 +62,9 @@ class Pocl(Package):
 
         configure = Executable(join_path(self.stage.source_path, "configure"))
 
+        # Disable building examples and tests
+        filter_file(r"examples tests", "", "Makefile.in")
+
         with working_dir("spack-build", create=True):
             # Could switch to cmake build
             configure(
@@ -71,8 +73,8 @@ class Pocl(Package):
                 # We use static linking againste the LLVM libraries
                 # because we didn't request LLVM's shared libraries
                 "--enable-static-llvm",
-                # "--enable-static",
-                # "--enable-shared=no",
+                "--enable-static",
+                "--enable-shared=no",
                 "CFLAGS=-std=gnu99",
                 "LIBS=%s %s" % (llvm_libs, llvm_system_libs),
                 "HWLOC_CFLAGS=-I%s" % spec["hwloc"].prefix.include,
@@ -86,24 +88,45 @@ class Pocl(Package):
     def check_install(self, spec):
         "Build and run a small program to test the installed package"
         print "Checking pocl installation..."
+
+        # TODO: Determine libs automatically
+        clang_libs = "-lclangAnalysis -lclangApplyReplacements -lclangARCMigrate -lclangAST -lclangASTMatchers -lclangBasic -lclangCodeGen -lclangDriver -lclangDynamicASTMatchers -lclangEdit -lclangFormat -lclangFrontend -lclangFrontendTool -lclangIndex -lclangLex -lclangParse -lclangQuery -lclangRename -lclangRewrite -lclangRewriteFrontend -lclangSema -lclangSerialization -lclangStaticAnalyzerCheckers -lclangStaticAnalyzerCore -lclangStaticAnalyzerFrontend -lclangTidy -lclangTidyCERTModule -lclangTidyCppCoreGuidelinesModule -lclangTidyGoogleModule -lclangTidyLLVMModule -lclangTidyMiscModule -lclangTidyModernizeModule -lclangTidyPerformanceModule -lclangTidyReadabilityModule -lclangTidyUtils -lclangTooling -lclangToolingCore"
+        # TODO: find the correct order
+        clang_libs = clang_libs + " " + clang_libs
+
+        llvm_config_path = join_path(spec["llvm"].prefix.bin, "llvm-config")
+        llvm_config = Executable(llvm_config_path)
+        llvm_libs = llvm_config("--libs", return_output=True).rstrip()
+        llvm_system_libs = (
+            llvm_config("--system-libs", return_output=True).rstrip())
+
         checkdir = "spack-check"
         with working_dir(checkdir, create=True):
             # Import source files from package
             for src in ["scalarwave.c", "scalarwave.cl"]:
-                shutil.copyfile(join_path(self.package_dir(), src), src)
+                shutil.copyfile(join_path(self.package_dir, src), src)
             # Build driver
             cc = which("cc")
             cc("-c",
-               "-I%s" % join_path(spec.prefix, "include"),
+               "-I%s" % spec.prefix.include,
                "-I%s" % join_path(spec.prefix, "share", "pocl", "include"),
                "scalarwave.c")
-            cc("-o", "scalarwave",
-               "scalarwave.o",
-               "-L%s" % join_path(spec.prefix, "lib"),
-               "-lpocl")
+            # Link with C++ compiler since LLVM uses C++
+            cxx = which("c++")
+            cxx(*(["-o", "scalarwave",
+                   "scalarwave.o",
+                   "-L%s" % spec.prefix.lib,
+                   "-lpocl",
+                   "-L%s" % spec["hwloc"].prefix.lib,
+                   "-lhwloc",
+                   "-L%s" % spec["libtool"].prefix.lib,
+                   "-lltdl"] +
+                  clang_libs.split() +
+                  llvm_libs.split() +
+                  llvm_system_libs.split()))
             # Read expected output
-            with open(join_path(self.package_dir(),
-                                "expected-output.txt"), "r") as f:
+            with open(join_path(self.package_dir, "expected-output.txt"),
+                      "r") as f:
                 expected = f.read()
             # Run driver, building and running the OpenCL code
             try:
@@ -117,12 +140,10 @@ class Pocl(Package):
                 print "Produced output does not match expected output."
                 print "Produced output:"
                 print "-" * 80
-                print output
+                print output,
                 print "-" * 80
                 print "Expected output:"
                 print "-" * 80
-                print expected
+                print expected,
                 print "-" * 80
                 raise InstallError("pocl install check failed")
-        # Clean up
-        shutil.rmtree(checkdir)
