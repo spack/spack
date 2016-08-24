@@ -1,0 +1,11 @@
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -113,7 +113,7 @@
+ build_triplet = @build@
+ host_triplet = @host@
+ target_triplet = @target@
+-@OCS_AVAILABLE_TRUE@@POCL_ANDROID_FALSE@am__append_1 = bin examples tests
++@OCS_AVAILABLE_TRUE@@POCL_ANDROID_FALSE@am__append_1 = bin
+ 
+ #TODO: this naming scheme is used on other platforms (primarly BSDs?) too
+ @BUILD_ICD_TRUE@@FREEBSD_HOST_OS_TRUE@am__append_2 = -e 's,so.VER,so.$(LIB_CURRENT_VERSION),g'

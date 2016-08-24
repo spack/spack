@@ -42,35 +42,43 @@ class Pocl(Package):
     version("0.9", "f95f4a9e7870854c60be2d2269c3ebec")
 
     # This is Github's pocl/pocl#373
+    patch("no-examples.patch")
     patch("uint.patch")
     patch("vecmathlib.patch")
 
     depends_on("hwloc")
     depends_on("libtool", type="build")
     # We don't request LLVM's shared libraries because these fail to
-    # build for us (Ubuntu 14.04)
+    # build for us; see #1616
     depends_on("llvm +clang")
     depends_on("pkg-config", type="build")
+    # depends_on("zlib")
 
     def install(self, spec, prefix):
+        llvm_config_path = join_path(spec["llvm"].prefix.bin, "llvm-config")
+        llvm_config = Executable(llvm_config_path)
+        llvm_libs = llvm_config("--libs", return_output=True).rstrip()
+        llvm_system_libs = (
+            llvm_config("--system-libs", return_output=True).rstrip())
+
+        configure = Executable(join_path(self.stage.source_path, "configure"))
+
         with working_dir("spack-build", create=True):
             # Could switch to cmake build
-            configure = Executable(join_path(self.stage.source_path,
-                                             "configure"))
-            configure("--prefix=%s" % prefix,
-                      "--disable-icd", "--enable-direct-linkage",
-                      # We use static linking againste the LLVM
-                      # libraries because we didn't request LLVM's
-                      # shared libraries
-                      "--enable-static-llvm",
-                      "--enable-static",
-                      "--disable-shared",
-                      "CFLAGS=-std=gnu99",
-                      "HWLOC_CFLAGS=-I%s" % spec["hwloc"].prefix.include,
-                      "HWLOC_LIBS=-L%s -lhwloc" % spec["hwloc"].prefix.lib,
-                      "LLVM_CONFIG=%s" % join_path(spec["llvm"].prefix.bin,
-                                                   "llvm-config"),
-                      "CLANGXX_FLAGS=-std=gnu++11")
+            configure(
+                "--prefix=%s" % prefix,
+                "--disable-icd", "--enable-direct-linkage",
+                # We use static linking againste the LLVM libraries
+                # because we didn't request LLVM's shared libraries
+                "--enable-static-llvm",
+                # "--enable-static",
+                # "--enable-shared=no",
+                "CFLAGS=-std=gnu99",
+                "LIBS=%s %s" % (llvm_libs, llvm_system_libs),
+                "HWLOC_CFLAGS=-I%s" % spec["hwloc"].prefix.include,
+                "HWLOC_LIBS=-L%s -lhwloc" % spec["hwloc"].prefix.lib,
+                "LLVM_CONFIG=%s" % llvm_config_path,
+                "CLANGXX_FLAGS=-std=gnu++11")
             make()
             make("install")
         self.check_install(spec)
@@ -100,7 +108,7 @@ class Pocl(Package):
             # Run driver, building and running the OpenCL code
             try:
                 scalarwave = Executable("./scalarwave")
-                output = check(return_output=True)
+                output = scalarwave(return_output=True)
             except:
                 output = ""
             # Check output
