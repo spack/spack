@@ -1278,8 +1278,8 @@ file can be placed either at *site* or *user* scope.
 
 The default site configuration reads:
 
- .. literalinclude:: ../../../etc/spack/modules.yaml
-    :language: yaml
+.. literalinclude:: ../../../etc/spack/defaults/modules.yaml
+   :language: yaml
 
 It basically inspects the installation prefixes for the
 existence of a few folders and, if they exist, it prepends a path to a given
