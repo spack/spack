@@ -32,7 +32,17 @@ int exec_scalarwave_kernel(const char *program_source, cl_double *phi,
   if (!initialised) {
     initialised = true;
 
-    context = poclu_create_any_context();
+    cl_uint num_platforms;
+    clGetPlatformIDs(0, NULL, num_platforms);
+    if (!num_platforms)
+      return -1;
+    cl_platform_id *platforms = malloc(num_platforms * sizeof(cl_platform_id));
+    clGetPlatformIDs(num_platforms, platforms, NULL);
+
+    cl_context_properties properties[] = {
+        CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[0], 0};
+    cl_context context = clCreateContextFromType(properties, CL_DEVICE_TYPE_ALL,
+                                                 NULL, NULL, NULL);
     if (!context)
       return -1;
 
@@ -61,6 +71,7 @@ int exec_scalarwave_kernel(const char *program_source, cl_double *phi,
     if (!kernel)
       return -1;
 
+    free(platforms);
     free(devices);
   }
 

@@ -33,29 +33,46 @@ class Pocl(Package):
     GPUs/accelerators."""
 
     homepage = "http://portablecl.org"
-    url      = "http://portablecl.org/downloads/pocl-0.13.tar.gz"
+    url = "http://portablecl.org/downloads/pocl-0.13.tar.gz"
 
-    version('0.13', '344480864d4269f2f63f1509395898bd')
-    version('0.12', 'e197ba3aa01a35f40581c48e053330dd')
-    version('0.11', '9be0640cde2983062c47393d9e8e8fe7')
-    version('0.10', '0096be4f595c7b5cbfa42430c8b3af6a')
-    version('0.9' , 'f95f4a9e7870854c60be2d2269c3ebec')
+    version("0.13", "344480864d4269f2f63f1509395898bd")
+    version("0.12", "e197ba3aa01a35f40581c48e053330dd")
+    version("0.11", "9be0640cde2983062c47393d9e8e8fe7")
+    version("0.10", "0096be4f595c7b5cbfa42430c8b3af6a")
+    version("0.9", "f95f4a9e7870854c60be2d2269c3ebec")
 
-    patch("pocl.patch")
+    # This is Github's pocl/pocl#373
+    patch("uint.patch")
+    patch("vecmathlib.patch")
 
     depends_on("hwloc")
     depends_on("libtool", type="build")
+    # We don't request LLVM's shared libraries because these fail to
+    # build for us (Ubuntu 14.04)
     depends_on("llvm +clang")
     depends_on("pkg-config", type="build")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix,
-                  "--disable-icd",
-                  "CFLAGS=-std=c99",
-                  "HWLOC_CFLAGS=-I%s" % spec["hwloc"].prefix.include,
-                  "HWLOC_LIBS=-L%s -lhwloc" % spec["hwloc"].prefix.lib)
-        make()
-        make("install")
+        with working_dir("spack-build", create=True):
+            # Could switch to cmake build
+            configure = Executable(join_path(self.stage.source_path,
+                                             "configure"))
+            configure("--prefix=%s" % prefix,
+                      "--disable-icd", "--enable-direct-linkage",
+                      # We use static linking againste the LLVM
+                      # libraries because we didn't request LLVM's
+                      # shared libraries
+                      "--enable-static-llvm",
+                      "--enable-static",
+                      "--disable-shared",
+                      "CFLAGS=-std=gnu99",
+                      "HWLOC_CFLAGS=-I%s" % spec["hwloc"].prefix.include,
+                      "HWLOC_LIBS=-L%s -lhwloc" % spec["hwloc"].prefix.lib,
+                      "LLVM_CONFIG=%s" % join_path(spec["llvm"].prefix.bin,
+                                                   "llvm-config"),
+                      "CLANGXX_FLAGS=-std=gnu++11")
+            make()
+            make("install")
         self.check_install(spec)
 
     def check_install(self, spec):
@@ -67,22 +84,22 @@ class Pocl(Package):
             for src in ["scalarwave.c", "scalarwave.cl"]:
                 shutil.copyfile(join_path(self.package_dir(), src), src)
             # Build driver
-            cc = which('cc')
-            cc('-c',
+            cc = which("cc")
+            cc("-c",
                "-I%s" % join_path(spec.prefix, "include"),
                "-I%s" % join_path(spec.prefix, "share", "pocl", "include"),
                "scalarwave.c")
-            cc('-o', "scalarwave",
+            cc("-o", "scalarwave",
                "scalarwave.o",
                "-L%s" % join_path(spec.prefix, "lib"),
                "-lpocl")
             # Read expected output
             with open(join_path(self.package_dir(),
-                                "expected-output.txt"), 'r') as f:
+                                "expected-output.txt"), "r") as f:
                 expected = f.read()
             # Run driver, building and running the OpenCL code
             try:
-                scalarwave = Executable('./scalarwave')
+                scalarwave = Executable("./scalarwave")
                 output = check(return_output=True)
             except:
                 output = ""
@@ -90,14 +107,14 @@ class Pocl(Package):
             success = output == expected
             if not success:
                 print "Produced output does not match expected output."
-                print "Expected output:"
-                print '-' * 80
-                print expected
-                print '-' * 80
                 print "Produced output:"
-                print '-' * 80
+                print "-" * 80
                 print output
-                print '-' * 80
-                raise RuntimeError("pocl install check failed")
+                print "-" * 80
+                print "Expected output:"
+                print "-" * 80
+                print expected
+                print "-" * 80
+                raise InstallError("pocl install check failed")
         # Clean up
         shutil.rmtree(checkdir)
