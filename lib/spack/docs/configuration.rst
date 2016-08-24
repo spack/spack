@@ -130,6 +130,8 @@ The ``buildable`` does not need to be paired with external packages.
 It could also be used alone to forbid packages that may be
 buggy or otherwise undesirable.
 
+.. _concretization-preferences:
+
 --------------------------
 Concretization Preferences
 --------------------------

@@ -1833,6 +1833,8 @@ running ``spack spec``.  For example:
 This is useful when you want to know exactly what Spack will do when
 you ask for a particular spec.
 
+.. _concretization-policies:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``Concretization Policies``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1842,8 +1844,7 @@ be concretized on their system.  For example, one user may prefer packages
 built with OpenMPI and the Intel compiler.  Another user may prefer
 packages be built with MVAPICH and GCC.
 
-See the `documentation in the config section <concretization-preferences_>`_
-for more details.
+See the :ref:`concretization-preferences` section for more details.
 
 .. _install-method:
 
@@ -2465,7 +2466,7 @@ Callable wrappers also allow spack to provide some special features.
 For example, in Spack, ``make`` is parallel by default, and Spack
 figures out the number of cores on your machine and passes an
 appropriate value for ``-j<numjobs>`` when it calls ``make`` (see the
-``parallel`` package attribute under :ref:`metadata <metadata>`).  In
+``parallel`` `package attribute <attribute_parallel>`).  In
 a package file, you can supply a keyword argument, ``parallel=False``,
 to the ``make`` wrapper to disable parallel make.  In the ``libelf``
 package, this allows us to avoid race conditions in the library's
