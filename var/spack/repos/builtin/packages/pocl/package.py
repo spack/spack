@@ -41,13 +41,19 @@ class Pocl(Package):
     version('0.10', '0096be4f595c7b5cbfa42430c8b3af6a')
     version('0.9' , 'f95f4a9e7870854c60be2d2269c3ebec')
 
-    depends_on("llvm +clang")
-    depends_on("libtool", type="build")
+    patch("pocl.patch")
+
     depends_on("hwloc")
-    # pkg-config?
+    depends_on("libtool", type="build")
+    depends_on("llvm +clang")
+    depends_on("pkg-config", type="build")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--disable-icd")
+        configure("--prefix=%s" % prefix,
+                  "--disable-icd",
+                  "CFLAGS=-std=c99",
+                  "HWLOC_CFLAGS=-I%s" % spec["hwloc"].prefix.include,
+                  "HWLOC_LIBS=-L%s -lhwloc" % spec["hwloc"].prefix.lib)
         make()
         make("install")
         self.check_install(spec)
