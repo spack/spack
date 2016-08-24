@@ -138,10 +138,15 @@ class Boost(Package):
     def determine_toolset(self, spec):
         if spec.satisfies("platform=darwin"):
             return 'darwin'
+        else :
+            platform = 'linux'
 
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang'}
+
+        if spec.satisfies('@1.47:'):
+            toolsets['icpc'] += '-' + platform
 
         for cc, toolset in toolsets.iteritems():
             if cc in self.compiler.cxx_names:
@@ -160,17 +165,18 @@ class Boost(Package):
                            join_path(spec['python'].prefix.bin, 'python'))
 
         with open('user-config.jam', 'w') as f:
-            compiler_wrapper = join_path(spack.build_env_path, 'c++')
-            f.write("using {0} : : {1} ;\n".format(boostToolsetId,
-                                                   compiler_wrapper))
+#already defined in bottstrap#
+#            compiler_wrapper = join_path(spack.build_env_path, 'c++')
+#            f.write("using {0} : : {1} ;\n".format(boostToolsetId,
+#                    compiler_wrapper))
 
             if '+mpi' in spec:
                 f.write('using mpi : %s ;\n' %
                         join_path(spec['mpi'].prefix.bin, 'mpicxx'))
             if '+python' in spec:
                 f.write('using python : %s : %s ;\n' %
-                        (spec['python'].version,
-                         join_path(spec['python'].prefix.bin, 'python')))
+                    (spec['python'].version.up_to(2),
+                    join_path(spec['python'].prefix.bin, 'python')))
 
     def determine_b2_options(self, spec, options):
         if '+debug' in spec:
@@ -202,7 +208,7 @@ class Boost(Package):
                                multithreaded} must be enabled""")
 
         options.extend([
-            'toolset=%s' % self.determine_toolset(spec),
+#already defined in bottstrap#            'toolset=%s' % self.determine_toolset(spec),
             'link=%s' % ','.join(linkTypes),
             '--layout=tagged'])
 
