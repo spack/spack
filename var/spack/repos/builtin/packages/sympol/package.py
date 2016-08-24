@@ -33,9 +33,10 @@ class Sympol(Package):
 
     version('0.1.8', '7cba1997f8532c754cb7259bf70caacb')
 
+    depends_on("cmake", type='build')
+
     depends_on("bliss")
     depends_on("boost")
-    depends_on("cmake")
     depends_on("gmp")
     depends_on("lrslib")
 
