@@ -41,7 +41,7 @@ class Pocl(Package):
     version('0.10', '0096be4f595c7b5cbfa42430c8b3af6a')
     version('0.9' , 'f95f4a9e7870854c60be2d2269c3ebec')
 
-    depends_on("llvm +clang +shared_libs")
+    depends_on("llvm +clang")
     depends_on("libtool", type="build")
     depends_on("hwloc")
     # pkg-config?
