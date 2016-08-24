@@ -32,6 +32,13 @@ class Git(Package):
     homepage = "http://git-scm.com"
     url      = "https://github.com/git/git/tarball/v2.7.1"
 
+    version('2.9.3', 'b0edfc0f3cb046aec7ed68a4b7282a75')
+    version('2.9.2', '3ff8a9b30fd5c99a02e6d6585ab543fc')
+    version('2.9.1', 'a5d806743a992300b45f734d1667ddd2')
+    version('2.9.0', 'bf33a13c2adc05bc9d654c415332bc65')
+    version('2.8.4', '86afb10254c3803894c9863fb5896bb6')
+    version('2.8.3', '0e19f31f96f9364fd247b8dc737dacfd')
+    version('2.8.2', '3d55550880af98f6e35c7f1d7c5aecfe')
     version('2.8.1', '1308448d95afa41a4135903f22262fc8')
     version('2.8.0', 'eca687e46e9750121638f258cff8317b')
     version('2.7.3', 'fa1c008b56618c355a32ba4a678305f6')
