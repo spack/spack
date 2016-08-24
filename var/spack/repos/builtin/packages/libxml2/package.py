@@ -55,5 +55,6 @@ class Libxml2(Package):
         configure('--prefix={0}'.format(prefix), *python_args)
 
         make()
-        make('check')
+        if self.run_tests:
+            make('check')
         make('install')

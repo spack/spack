@@ -40,5 +40,6 @@ class Lz4(Package):
 
     def install(self, spec, prefix):
         make()
-        # make('test')  # requires valgrind to be installed
+        if self.run_tests:
+            make('test')  # requires valgrind to be installed
         make('install', 'PREFIX={0}'.format(prefix))

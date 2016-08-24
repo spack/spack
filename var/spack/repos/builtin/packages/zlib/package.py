@@ -38,5 +38,6 @@ class Zlib(Package):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('test')
+        if self.run_tests:
+            make('test')
         make('install')

@@ -118,5 +118,6 @@ class Cmake(Package):
         bootstrap(*options)
 
         make()
-        # make('test')  # some tests fail, takes forever
+        if self.run_tests:
+            make('test')  # some tests fail, takes forever
         make('install')

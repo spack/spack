@@ -40,5 +40,6 @@ class Xz(Package):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        make('check')
+        if self.run_tests:
+            make('check')
         make('install')

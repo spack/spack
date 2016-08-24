@@ -52,5 +52,6 @@ class Libarchive(Package):
         configure('--prefix={0}'.format(prefix))
 
         make()
-        # make('check')  # cannot build test suite with Intel compilers
+        if self.run_tests:
+            make('check')  # cannot build test suite with Intel compilers
         make('install')

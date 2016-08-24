@@ -45,6 +45,7 @@ class Lzo(Package):
         ]
         configure(*configure_args)
         make()
-        make('check')
-        make('test')  # more exhaustive test
+        if self.run_tests:
+            make('check')
+            make('test')  # more exhaustive test
         make('install')

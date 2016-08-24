@@ -44,5 +44,6 @@ class Jsoncpp(Package):
             cmake('..', '-DBUILD_SHARED_LIBS=ON', *std_cmake_args)
 
             make()
-            # make('test')  # Python needed to run tests
+            if self.run_tests:
+                make('test')  # Python needed to run tests
             make('install')
