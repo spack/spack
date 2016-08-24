@@ -10,14 +10,17 @@ class Gcc(Package):
        Objective-C, Fortran, and Java."""
     homepage = "https://gcc.gnu.org"
 
-    url = "http://open-source-box.org/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2"
-    list_url = 'http://open-source-box.org/gcc/'
+    url = "http://ftp.gnu.org/gnu/gcc/gcc-4.9.2/gcc-4.9.2.tar.bz2"
+    list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 2
 
+    version('6.2.0', '9768625159663b300ae4de2f4745fcc4')
     version('6.1.0', '8fb6cb98b8459f5863328380fbf06bd1')
     version('5.4.0', '4c626ac2a83ef30dfb9260e6f59c2b30')
     version('5.3.0', 'c9616fd448f980259c31de613e575719')
     version('5.2.0', 'a51bcfeb3da7dd4c623e27207ed43467')
+    version('5.1.0', 'd5525b1127d07d215960e6051c5da35e')
+    version('4.9.4', '87c24a4090c1577ba817ec6882602491')
     version('4.9.3', '6f831b4d251872736e8e9cc09746f327')
     version('4.9.2', '4df8ee253b7f3863ad0b86359cd39c43')
     version('4.9.1', 'fddf71348546af523353bd43d34919c1')
