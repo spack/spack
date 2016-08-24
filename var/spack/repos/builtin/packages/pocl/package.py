@@ -24,7 +24,6 @@
 ##############################################################################
 
 from spack import *
-import shutil
 
 
 class Pocl(Package):
@@ -83,67 +82,3 @@ class Pocl(Package):
                 "CLANGXX_FLAGS=-std=gnu++11")
             make()
             make("install")
-        self.check_install(spec)
-
-    def check_install(self, spec):
-        "Build and run a small program to test the installed package"
-        print "Checking pocl installation..."
-
-        # TODO: Determine libs automatically
-        clang_libs = "-lclangAnalysis -lclangApplyReplacements -lclangARCMigrate -lclangAST -lclangASTMatchers -lclangBasic -lclangCodeGen -lclangDriver -lclangDynamicASTMatchers -lclangEdit -lclangFormat -lclangFrontend -lclangFrontendTool -lclangIndex -lclangLex -lclangParse -lclangQuery -lclangRename -lclangRewrite -lclangRewriteFrontend -lclangSema -lclangSerialization -lclangStaticAnalyzerCheckers -lclangStaticAnalyzerCore -lclangStaticAnalyzerFrontend -lclangTidy -lclangTidyCERTModule -lclangTidyCppCoreGuidelinesModule -lclangTidyGoogleModule -lclangTidyLLVMModule -lclangTidyMiscModule -lclangTidyModernizeModule -lclangTidyPerformanceModule -lclangTidyReadabilityModule -lclangTidyUtils -lclangTooling -lclangToolingCore"
-        # TODO: find the correct order
-        clang_libs = clang_libs + " " + clang_libs
-
-        llvm_config_path = join_path(spec["llvm"].prefix.bin, "llvm-config")
-        llvm_config = Executable(llvm_config_path)
-        llvm_libs = llvm_config("--libs", return_output=True).rstrip()
-        llvm_system_libs = (
-            llvm_config("--system-libs", return_output=True).rstrip())
-
-        checkdir = "spack-check"
-        with working_dir(checkdir, create=True):
-            # Import source files from package
-            for src in ["scalarwave.c", "scalarwave.cl"]:
-                shutil.copyfile(join_path(self.package_dir, src), src)
-            # Build driver
-            cc = which("cc")
-            cc("-c",
-               "-I%s" % spec.prefix.include,
-               "-I%s" % join_path(spec.prefix, "share", "pocl", "include"),
-               "scalarwave.c")
-            # Link with C++ compiler since LLVM uses C++
-            cxx = which("c++")
-            cxx(*(["-o", "scalarwave",
-                   "scalarwave.o",
-                   "-L%s" % spec.prefix.lib,
-                   "-lpocl",
-                   "-L%s" % spec["hwloc"].prefix.lib,
-                   "-lhwloc",
-                   "-L%s" % spec["libtool"].prefix.lib,
-                   "-lltdl"] +
-                  clang_libs.split() +
-                  llvm_libs.split() +
-                  llvm_system_libs.split()))
-            # Read expected output
-            with open(join_path(self.package_dir, "expected-output.txt"),
-                      "r") as f:
-                expected = f.read()
-            # Run driver, building and running the OpenCL code
-            try:
-                scalarwave = Executable("./scalarwave")
-                output = scalarwave(return_output=True)
-            except:
-                output = ""
-            # Check output
-            success = output == expected
-            if not success:
-                print "Produced output does not match expected output."
-                print "Produced output:"
-                print "-" * 80
-                print output,
-                print "-" * 80
-                print "Expected output:"
-                print "-" * 80
-                print expected,
-                print "-" * 80
-                raise InstallError("pocl install check failed")
