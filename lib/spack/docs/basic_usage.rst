@@ -1793,7 +1793,7 @@ Spack currently needs to be run from a filesystem that supports
 ``flock`` locking semantics.  Nearly all local filesystems and recent
 versions of NFS support this, but parallel filesystems may be mounted
 without ``flock`` support enabled.  You can determine how your
- filesystems are mounted with ``mount -p``.  The output for a Lustre
+filesystems are mounted with ``mount -p``.  The output for a Lustre
 filesystem might look like this:
 
 .. code-block:: sh

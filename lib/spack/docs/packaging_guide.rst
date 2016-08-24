@@ -607,7 +607,7 @@ always simple, though, so this is not strictly enforced.
 When fetching from from the branch corresponding to the development version
 (often called ``master``,``trunk`` or ``dev``), it is recommended to
 call this version ``develop``. Spack has special treatment for this version so
- that ``@develop`` will satisfy dependencies like
+that ``@develop`` will satisfy dependencies like
 ``depends_on(abc, when="@x.y.z:")``. In other words, ``@develop`` is
 greater than any other version. The rationale is that certain features or
 options first appear in the development branch. Therefore if a package author
