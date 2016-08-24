@@ -2085,7 +2085,7 @@ class Spec(object):
             $#   7-char prefix of DAG hash with '-' prefix
             $$   $
 
-            You can also use full-string versions, which elide the prefixes:
+        You can also use full-string versions, which elide the prefixes::
 
             ${PACKAGE}       Package name
             ${VERSION}       Version
@@ -2101,9 +2101,9 @@ class Spec(object):
             ${SPACK_INSTALL} The default spack install directory,
                              ${SPACK_PREFIX}/opt
 
-        Optionally you can provide a width, e.g. $20_ for a 20-wide name.
+        Optionally you can provide a width, e.g. ``$20_`` for a 20-wide name.
         Like printf, you can provide '-' for left justification, e.g.
-        $-20_ for a left-justified name.
+        ``$-20_`` for a left-justified name.
 
         Anything else is copied verbatim into the output stream.
 

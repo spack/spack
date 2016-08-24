@@ -49,16 +49,14 @@ class Stage(object):
     some source code is downloaded and built before being installed.
     It handles fetching the source code, either as an archive to be
     expanded or by checking it out of a repository.  A stage's
-    lifecycle looks like this:
+    lifecycle looks like this::
 
-    ```
-    with Stage() as stage:      # Context manager creates and destroys the
-                                # stage directory
-        stage.fetch()           # Fetch a source archive into the stage.
-        stage.expand_archive()  # Expand the source archive.
-        <install>               # Build and install the archive. (handled by
-                                # user of Stage)
-    ```
+        with Stage() as stage:      # Context manager creates and destroys the
+                                    # stage directory
+            stage.fetch()           # Fetch a source archive into the stage.
+            stage.expand_archive()  # Expand the source archive.
+            <install>               # Build and install the archive.
+                                    # (handled by user of Stage)
 
     When used as a context manager, the stage is automatically
     destroyed if no exception is raised by the context. If an
@@ -66,19 +64,17 @@ class Stage(object):
     destroyed, for potential reuse later.
 
     You can also use the stage's create/destroy functions manually,
-    like this:
+    like this::
 
-    ```
-    stage = Stage()
-    try:
-        stage.create()          # Explicitly create the stage directory.
-        stage.fetch()           # Fetch a source archive into the stage.
-        stage.expand_archive()  # Expand the source archive.
-        <install>               # Build and install the archive. (handled by
-                                # user of Stage)
-    finally:
-        stage.destroy()         # Explicitly destroy the stage directory.
-    ```
+        stage = Stage()
+        try:
+            stage.create()          # Explicitly create the stage directory.
+            stage.fetch()           # Fetch a source archive into the stage.
+            stage.expand_archive()  # Expand the source archive.
+            <install>               # Build and install the archive.
+                                    # (handled by user of Stage)
+        finally:
+            stage.destroy()         # Explicitly destroy the stage directory.
 
     If spack.use_tmp_stage is True, spack will attempt to create
     stages in a tmp directory.  Otherwise, stages are created directly
