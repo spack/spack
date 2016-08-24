@@ -42,25 +42,19 @@ class Cmake(Package):
     version('3.0.2',    'db4c687a31444a929d2fdc36c4dfb95f')
     version('2.8.10.2', '097278785da7182ec0aea8769d06860c')
 
-    variant('curl',    default=True,  description='Build external curl library')
-    variant('expat',   default=True,  description='Build external expat library')
-    # variant('jsoncpp', default=True, description='Build external jsoncpp library')  # NOQA: ignore=E501
-    variant('zlib',    default=True,  description='Build external zlib library')
-    variant('bzip2',   default=True,  description='Build external bzip2 library')
-    variant('xz',      default=True,  description='Build external lzma library')
-    variant('archive', default=True,  description='Build external archive library')
+    variant('ownlibs', default=False, description='Use CMake-provided third-party libraries')
     variant('qt',      default=False, description='Enables the build of cmake-gui')
     variant('doc',     default=False, description='Enables the generation of html and man page documentation')
     variant('openssl', default=True,  description="Enables CMake's OpenSSL features")
     variant('ncurses', default=True,  description='Enables the build of the ncurses gui')
 
-    depends_on('curl',           when='+curl')
-    depends_on('expat',          when='+expat')
-    # depends_on('jsoncpp',        when='+jsoncpp')  # circular dependency
-    depends_on('zlib',           when='+zlib')
-    depends_on('bzip2',          when='+bzip2')
-    depends_on('xz',             when='+xz')
-    depends_on('libarchive',     when='+archive')
+    depends_on('curl',           when='~ownlibs')
+    depends_on('expat',          when='~ownlibs')
+    # depends_on('jsoncpp',        when='~ownlibs')  # circular dependency
+    depends_on('zlib',           when='~ownlibs')
+    depends_on('bzip2',          when='~ownlibs')
+    depends_on('xz',             when='~ownlibs')
+    depends_on('libarchive',     when='~ownlibs')
     depends_on('qt',             when='+qt')
     depends_on('python@2.7.11:', when='+doc', type='build')
     depends_on('py-sphinx',      when='+doc', type='build')
@@ -92,21 +86,20 @@ class Cmake(Package):
         # Consistency check
         self.validate(spec)
 
-        def variant_to_bool(variant):
-            return 'system' if variant in spec else 'no-system'
-
-        # configure, build, install:
         options = [
             '--prefix={0}'.format(prefix),
             '--parallel={0}'.format(make_jobs),
-            '--{0}-curl'.format(variant_to_bool('+curl')),
-            '--{0}-expat'.format(variant_to_bool('+expat')),
-            '--{0}-jsoncpp'.format(variant_to_bool('+jsoncpp')),
-            '--{0}-zlib'.format(variant_to_bool('+zlib')),
-            '--{0}-bzip2'.format(variant_to_bool('+bzip2')),
-            '--{0}-liblzma'.format(variant_to_bool('+xz')),
-            '--{0}-libarchive'.format(variant_to_bool('+archive'))
+            # jsoncpp requires CMake to build
+            # use CMake-provided library to avoid circular dependency
+            '--no-system-jsoncpp'
         ]
+
+        if '+ownlibs' in spec:
+            # Build and link to the CMake-provided third-party libraries
+            options.append('--no-system-libs')
+        else:
+            # Build and link to the Spack-installed third-party libraries
+            options.append('--system-libs')
 
         if '+qt' in spec:
             options.append('--qt-gui')
