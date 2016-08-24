@@ -22,16 +22,14 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
 class Gdb(Package):
     """GDB, the GNU Project debugger, allows you to see what is going on
-       `inside' another program while it executes -- or what another
-       program was doing at the moment it crashed.
+    'inside' another program while it executes -- or what another
+    program was doing at the moment it crashed."""
 
-    """
     homepage = "https://www.gnu.org/software/gdb"
     url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"
 

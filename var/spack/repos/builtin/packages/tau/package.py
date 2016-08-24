@@ -22,21 +22,17 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
-
 import os
 import os.path
-
 from llnl.util.filesystem import join_path
 
 
 class Tau(Package):
-    """
-    A portable profiling and tracing toolkit for performance
+    """A portable profiling and tracing toolkit for performance
     analysis of parallel programs written in Fortran, C, C++, UPC,
-    Java, Python.
-    """
+    Java, Python."""
+
     homepage = "http://www.cs.uoregon.edu/research/tau"
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.25.tar.gz"
 

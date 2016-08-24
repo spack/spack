@@ -27,11 +27,9 @@ from spack import *
 
 
 class Petsc(Package):
-    """
-    PETSc is a suite of data structures and routines for the scalable
+    """PETSc is a suite of data structures and routines for the scalable
     (parallel) solution of scientific applications modeled by partial
-    differential equations.
-    """
+    differential equations."""
 
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
     url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"

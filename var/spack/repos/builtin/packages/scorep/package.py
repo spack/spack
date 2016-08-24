@@ -22,16 +22,13 @@
 # License along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
-
 from spack import *
 
 
 class Scorep(Package):
-    """
-    The Score-P measurement infrastructure is a highly scalable and easy-to-use
-    tool suite for profiling, event tracing, and online analysis of HPC
-    applications.
-    """
+    """The Score-P measurement infrastructure is a highly scalable and
+    easy-to-use tool suite for profiling, event tracing, and online analysis
+    of HPC applications."""
 
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/scorep/scorep-1.2.3.tar.gz"

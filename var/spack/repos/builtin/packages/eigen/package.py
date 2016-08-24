@@ -26,11 +26,8 @@ from spack import *
 
 
 class Eigen(Package):
-    """
-    Eigen is a C++ template library for linear algebra
-
-    Matrices, vectors, numerical solvers, and related algorithms
-    """
+    """Eigen is a C++ template library for linear algebra matrices,
+    vectors, numerical solvers, and related algorithms."""
 
     homepage = 'http://eigen.tuxfamily.org/'
     url = 'http://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2'
