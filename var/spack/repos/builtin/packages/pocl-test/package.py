@@ -87,12 +87,12 @@ class PoclTest(Package):
         success = output == expected
         if not success:
             print "Produced output does not match expected output."
-            print "Produced output:"
-            print "-" * 80
-            print output,
-            print "-" * 80
             print "Expected output:"
             print "-" * 80
             print expected,
+            print "-" * 80
+            print "Produced output:"
+            print "-" * 80
+            print output,
             print "-" * 80
             raise InstallError("pocl install check failed")

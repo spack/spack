@@ -20,56 +20,68 @@ typedef struct grid_t {
   cl_int ni, nj, nk;    // used size
 } grid_t;
 
-int exec_scalarwave_kernel(const char *program_source, cl_double *phi,
-                           const cl_double *phi_p, const cl_double *phi_p_p,
-                           const grid_t *grid) {
+void exec_scalarwave_kernel(const char *program_source, cl_double *phi,
+                            const cl_double *phi_p, const cl_double *phi_p_p,
+                            const grid_t *grid) {
   static bool initialised = false;
   static cl_context context;
   static cl_command_queue cmd_queue;
   static cl_program program;
   static cl_kernel kernel;
 
+  cl_int ierr;
+
   if (!initialised) {
     initialised = true;
 
+    fprintf(stderr, "clGetPlatformIDs\n");
     cl_uint num_platforms;
-    clGetPlatformIDs(0, NULL, num_platforms);
-    if (!num_platforms)
-      return -1;
+    ierr = clGetPlatformIDs(0, NULL, &num_platforms);
+    assert(!ierr);
+    fprintf(stderr, "   num_platforms=%u\n", (unsigned)num_platforms);
+    assert(num_platforms);
     cl_platform_id *platforms = malloc(num_platforms * sizeof(cl_platform_id));
-    clGetPlatformIDs(num_platforms, platforms, NULL);
+    assert(platforms);
+    ierr = clGetPlatformIDs(num_platforms, platforms, NULL);
+    assert(!ierr);
+    cl_platform_id platform = platforms[0];
 
+    fprintf(stderr, "clGetDeviceIDs\n");
+    cl_uint num_devices;
+    ierr = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, 0, NULL, &num_devices);
+    assert(!ierr);
+    fprintf(stderr, "   num_devices=%u\n", (unsigned)num_devices);
+    assert(num_devices);
+    cl_device_id *devices = malloc(num_devices * sizeof(cl_device_id));
+    assert(devices);
+    ierr = clGetDeviceIDs(platform, CL_DEVICE_TYPE_ALL, num_devices, devices,
+                          NULL);
+    assert(!ierr);
+    cl_device_id device = devices[0];
+
+    fprintf(stderr, "clCreateContext\n");
     cl_context_properties properties[] = {
-        CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[0], 0};
-    cl_context context = clCreateContextFromType(properties, CL_DEVICE_TYPE_ALL,
-                                                 NULL, NULL, NULL);
-    if (!context)
-      return -1;
+        CL_CONTEXT_PLATFORM, /*(cl_context_properties)*/ platforms, 0};
+    cl_context context =
+        clCreateContext(properties, num_devices, devices, NULL, NULL, NULL);
+    assert(context);
 
-    size_t ndevices;
-    clGetContextInfo(context, CL_CONTEXT_DEVICES, 0, NULL, &ndevices);
-    ndevices /= sizeof(cl_device_id);
-    cl_device_id *devices = malloc(ndevices * sizeof(cl_device_id));
-    clGetContextInfo(context, CL_CONTEXT_DEVICES,
-                     ndevices * sizeof(cl_device_id), devices, NULL);
+    fprintf(stderr, "clCreateCommandQueue\n");
+    cmd_queue = clCreateCommandQueue(context, device, 0, NULL);
+    assert(cmd_queue);
 
-    cmd_queue = clCreateCommandQueue(context, devices[0], 0, NULL);
-    if (!cmd_queue)
-      return -1;
-
+    fprintf(stderr, "clCreateProgramWithSource\n");
     program = clCreateProgramWithSource(
-        context, 1, (const char **)&program_source, NULL, NULL);
-    if (!program)
-      return -1;
+        context, 1, /*(const char **)*/ &program_source, NULL, NULL);
+    assert(program);
 
-    int ierr;
+    fprintf(stderr, "clBuildProgram\n");
     ierr = clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
-    if (ierr)
-      return -1;
+    assert(!ierr);
 
+    fprintf(stderr, "clCreateKernel\n");
     kernel = clCreateKernel(program, "scalarwave", NULL);
-    if (!kernel)
-      return -1;
+    assert(kernel);
 
     free(platforms);
     free(devices);
@@ -78,36 +90,28 @@ int exec_scalarwave_kernel(const char *program_source, cl_double *phi,
   size_t npoints = grid->ai * grid->aj * grid->ak;
   cl_mem mem_phi =
       clCreateBuffer(context, 0, npoints * sizeof(cl_double), NULL, NULL);
-  if (!mem_phi)
-    return -1;
+  assert(mem_phi);
   cl_mem mem_phi_p = clCreateBuffer(context, CL_MEM_COPY_HOST_PTR,
                                     npoints * sizeof(cl_double), phi_p, NULL);
-  if (!mem_phi_p)
-    return -1;
+  assert(mem_phi_p);
   cl_mem mem_phi_p_p =
       clCreateBuffer(context, CL_MEM_COPY_HOST_PTR, npoints * sizeof(cl_double),
                      phi_p_p, NULL);
-  if (!mem_phi_p_p)
-    return -1;
+  assert(mem_phi_p_p);
   cl_mem mem_grid =
       clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
                      sizeof(grid_t), grid, NULL);
-  if (!mem_grid)
-    return -1;
+  assert(mem_grid);
 
-  int ierr;
   ierr = clSetKernelArg(kernel, 0, sizeof(cl_mem), &mem_phi);
-  if (ierr)
-    return -1;
+  assert(!ierr);
   ierr = clSetKernelArg(kernel, 1, sizeof(cl_mem), &mem_phi_p);
-  if (ierr)
-    return -1;
+  assert(!ierr);
   ierr = clSetKernelArg(kernel, 2, sizeof(cl_mem), &mem_phi_p_p);
-  if (ierr)
-    return -1;
+  assert(!ierr);
+
   ierr = clSetKernelArg(kernel, 3, sizeof(cl_mem), &mem_grid);
-  if (ierr)
-    return -1;
+  assert(!ierr);
 
   size_t global_work_size[3] = {grid->ai, grid->aj, grid->ak};
   size_t local_work_size[3] = {GRID_GRANULARITY, GRID_GRANULARITY,
@@ -115,28 +119,23 @@ int exec_scalarwave_kernel(const char *program_source, cl_double *phi,
 
   ierr = clEnqueueNDRangeKernel(cmd_queue, kernel, 3, NULL, global_work_size,
                                 local_work_size, 0, NULL, NULL);
-  if (ierr)
-    return -1;
+  assert(!ierr);
 
   ierr = clFinish(cmd_queue);
-  if (ierr)
-    return -1;
+  assert(!ierr);
 
   ierr = clEnqueueReadBuffer(cmd_queue, mem_phi, CL_TRUE, 0,
                              npoints * sizeof(cl_double), phi, 0, NULL, NULL);
-  if (ierr)
-    return -1;
+  assert(!ierr);
 
-  clReleaseMemObject(mem_phi);
-  clReleaseMemObject(mem_phi_p);
-  clReleaseMemObject(mem_phi_p_p);
-  clReleaseMemObject(mem_grid);
-  /* clReleaseKernel(kernel); */
-  /* clReleaseProgram(program); */
-  /* clReleaseCommandQueue(cmd_queue); */
-  /* clReleaseContext(context); */
-
-  return 0;
+  ierr = clReleaseMemObject(mem_phi);
+  assert(!ierr);
+  ierr = clReleaseMemObject(mem_phi_p);
+  assert(!ierr);
+  ierr = clReleaseMemObject(mem_phi_p_p);
+  assert(!ierr);
+  ierr = clReleaseMemObject(mem_grid);
+  assert(!ierr);
 }
 
 #define ALPHA 0.5 // CFL factor
@@ -149,8 +148,10 @@ static int roundup(int nx) {
 }
 
 int main(void) {
+  fprintf(stderr, "scalarwave\n");
+
   FILE *source_file = fopen("scalarwave.cl", "r");
-  assert(source_file != NULL && "scalarwave.cl not found!");
+  assert(source_file);
 
   fseek(source_file, 0, SEEK_END);
   size_t source_size = ftell(source_file);
@@ -181,15 +182,15 @@ int main(void) {
   double ky = M_PI;
   double kz = M_PI;
   double omega = sqrt(pow(kx, 2) + pow(ky, 2) + pow(kz, 2));
-  for (int k = 0; k < NX; ++k) {
-    for (int j = 0; j < NX; ++j) {
-      for (int i = 0; i < NX; ++i) {
+  for (ptrdiff_t k = 0; k < NX; ++k) {
+    for (ptrdiff_t j = 0; j < NX; ++j) {
+      for (ptrdiff_t i = 0; i < NX; ++i) {
         double t0 = 0.0;
         double t1 = -grid.dt;
         double x = i * grid.dx;
         double y = j * grid.dy;
         double z = k * grid.dz;
-        int ind3d = i + grid.ai * (j + grid.aj * k);
+        ptrdiff_t ind3d = i + grid.ai * (j + grid.aj * k);
         phi[ind3d] = sin(kx * x) * sin(ky * y) * sin(kz * z) * cos(omega * t0);
         phi_p[ind3d] =
             sin(kx * x) * sin(ky * y) * sin(kz * z) * cos(omega * t1);
@@ -198,8 +199,8 @@ int main(void) {
   }
 
   // Take some time steps
-  for (int n = 0; n < NT; ++n) {
-    printf("Time step %d: t=%g\n", n + 1, (n + 1) * grid.dt);
+  for (ptrdiff_t n = 0; n < NT; ++n) {
+    printf("Time step %td: t=%g\n", n + 1, (n + 1) * grid.dt);
 
     // Cycle time levels
     {
@@ -211,19 +212,17 @@ int main(void) {
 
     // TODO: We allocate the buffers each time, which is slow. But
     // then, we only want to test correctness, not performance. (Yet?)
-    int ierr = exec_scalarwave_kernel(source, phi, phi_p, phi_p_p, &grid);
-    assert(!ierr);
-
+    exec_scalarwave_kernel(source, phi, phi_p, phi_p_p, &grid);
   } // for n
 
   printf("Result:\n");
-  for (int i = 0; i < NX; ++i) {
-    int j = i;
-    int k = i;
+  for (ptrdiff_t i = 0; i < NX; ++i) {
+    ptrdiff_t j = i;
+    ptrdiff_t k = i;
     double x = grid.dx * i;
     double y = grid.dy * j;
     double z = grid.dz * k;
-    int ind3d = i + grid.ai * (j + grid.aj * k);
+    ptrdiff_t ind3d = i + grid.ai * (j + grid.aj * k);
 
     printf("   phi[%-6g,%-6g,%-6g] = %g\n", x, y, z, phi[ind3d]);
   }
@@ -231,5 +230,9 @@ int main(void) {
   printf("Done.\n");
 
   free(source);
+  free(phi);
+  free(phi_p);
+  free(phi_p_p);
+
   return 0;
 }
