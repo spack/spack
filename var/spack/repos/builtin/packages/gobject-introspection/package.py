@@ -25,26 +25,25 @@
 from spack import *
 
 
-class Atk(Package):
-    """ATK provides the set of accessibility interfaces that are
-       implemented by other toolkits and applications. Using the ATK
-       interfaces, accessibility tools have full access to view and
-       control running applications."""
-    homepage = "https://developer.gnome.org/atk/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/atk/2.14/atk-2.14.0.tar.xz"
+class GobjectIntrospection(Package):
+    """The GObject Introspection is used to describe the program APIs and
+    collect them in a uniform, machine readable format.Cairo is a 2D graphics
+    library with support for multiple output"""
 
-    version('2.20.0', '5187b0972f4d3905f285540b31395e20')
-    version('2.14.0', 'ecb7ca8469a5650581b1227d78051b8b')
+    homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
+    url      = "http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.48/gobject-introspection-1.48.0.tar.xz"
 
-    depends_on('glib')
-    depends_on('pkg-config', type='build')
+    version('1.48.0', '01301fa9019667d48e927353e08bc218')
 
-    def url_for_version(self, version):
-        """Handle atk's version-based custom URLs."""
-        url = 'http://ftp.gnome.org/pub/gnome/sources/atk'
-        return url + '/%s/atk-%s.tar.xz' % (version.up_to(2), version)
+    # version 1.48.0 build fails with glib 2.49.4
+    depends_on("glib@2.48.1")
+    depends_on("python")
+    depends_on("cairo")
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
+        # we need to filter this file to avoid an overly long hashbang line
+        filter_file('@PYTHON@', 'python',
+                    'tools/g-ir-tool-template.in')
         make()
         make("install")

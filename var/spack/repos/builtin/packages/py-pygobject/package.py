@@ -25,26 +25,24 @@
 from spack import *
 
 
-class Atk(Package):
-    """ATK provides the set of accessibility interfaces that are
-       implemented by other toolkits and applications. Using the ATK
-       interfaces, accessibility tools have full access to view and
-       control running applications."""
-    homepage = "https://developer.gnome.org/atk/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/atk/2.14/atk-2.14.0.tar.xz"
+class PyPygobject(Package):
+    """bindings for the GLib, and GObject,
+       to be used in Python."""
 
-    version('2.20.0', '5187b0972f4d3905f285540b31395e20')
-    version('2.14.0', 'ecb7ca8469a5650581b1227d78051b8b')
+    homepage = "https://pypi.python.org/pypi/pygobject"
+    url      = "https://pypi.python.org/packages/6d/15/97c8b5ccca2be14cf59a2f79e15e3a82a1c3408a6b76b4107689a8b94846/pygobject-2.28.3.tar.bz2"
 
+    version('2.28.3', 'aa64900b274c4661a5c32e52922977f9')
+
+    extends('python')
+    depends_on("libffi")
     depends_on('glib')
-    depends_on('pkg-config', type='build')
+    depends_on('py-py2cairo')
+    depends_on('gobject-introspection')
 
-    def url_for_version(self, version):
-        """Handle atk's version-based custom URLs."""
-        url = 'http://ftp.gnome.org/pub/gnome/sources/atk'
-        return url + '/%s/atk-%s.tar.xz' % (version.up_to(2), version)
+    patch('pygobject-2.28.6-introspection-1.patch')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
-        make("install")
+        make("install", parallel=False)

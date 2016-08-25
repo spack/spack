@@ -25,26 +25,20 @@
 from spack import *
 
 
-class Atk(Package):
-    """ATK provides the set of accessibility interfaces that are
-       implemented by other toolkits and applications. Using the ATK
-       interfaces, accessibility tools have full access to view and
-       control running applications."""
-    homepage = "https://developer.gnome.org/atk/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/atk/2.14/atk-2.14.0.tar.xz"
+class PyPy2cairo(Package):
+    """bindings for the Cairo for Python 2,
+       to be used in Python."""
 
-    version('2.20.0', '5187b0972f4d3905f285540b31395e20')
-    version('2.14.0', 'ecb7ca8469a5650581b1227d78051b8b')
+    homepage = "https://pypi.python.org/pypi/pycairo"
+    url      = "https://cairographics.org/releases/py2cairo-1.10.0.tar.bz2"
 
-    depends_on('glib')
-    depends_on('pkg-config', type='build')
+    version('1.10.0', '20337132c4ab06c1146ad384d55372c5')
 
-    def url_for_version(self, version):
-        """Handle atk's version-based custom URLs."""
-        url = 'http://ftp.gnome.org/pub/gnome/sources/atk'
-        return url + '/%s/atk-%s.tar.xz' % (version.up_to(2), version)
+    extends('python')
+    depends_on("cairo")
+    depends_on("pixman")
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make("install")
+        python('waf', 'configure', '--prefix=%s' % prefix)
+        python('waf', 'build')
+        python('waf', 'install')

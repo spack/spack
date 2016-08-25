@@ -25,26 +25,22 @@
 from spack import *
 
 
-class Atk(Package):
-    """ATK provides the set of accessibility interfaces that are
-       implemented by other toolkits and applications. Using the ATK
-       interfaces, accessibility tools have full access to view and
-       control running applications."""
-    homepage = "https://developer.gnome.org/atk/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/atk/2.14/atk-2.14.0.tar.xz"
+class PyPygtk(Package):
+    """bindings for the Gtk in Python"""
+    homepage = "http://www.pygtk.org/"
+    url      = "http://ftp.gnome.org/pub/GNOME/sources/pygtk/2.24/pygtk-2.24.0.tar.gz"
 
-    version('2.20.0', '5187b0972f4d3905f285540b31395e20')
-    version('2.14.0', 'ecb7ca8469a5650581b1227d78051b8b')
+    version('2.24.0', 'd27c7f245a9e027f6b6cd9acb7468e36')
 
+    extends('python')
+    depends_on("libffi")
+    depends_on('cairo')
     depends_on('glib')
-    depends_on('pkg-config', type='build')
-
-    def url_for_version(self, version):
-        """Handle atk's version-based custom URLs."""
-        url = 'http://ftp.gnome.org/pub/gnome/sources/atk'
-        return url + '/%s/atk-%s.tar.xz' % (version.up_to(2), version)
+    depends_on('gtkplus')
+    depends_on('py-pygobject')
+    depends_on('py-py2cairo')
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
-        make("install")
+        make("install", parallel=False)
