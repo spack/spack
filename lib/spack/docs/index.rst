@@ -49,6 +49,7 @@ Table of Contents
    mirrors
    configuration
    developer_guide
+   case_studies
    command_index
    package_list
    API Docs <spack>
