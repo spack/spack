@@ -14,6 +14,7 @@ class LinuxDistro(OperatingSystem):
     def __init__(self):
         distname, version, _ = linux_distribution(
             full_distribution_name=False)
+        distname, version = str(distname), str(version)
 
         # Grabs major version from tuple on redhat; on other platforms
         # grab the first legal identifier in the version field.  On
