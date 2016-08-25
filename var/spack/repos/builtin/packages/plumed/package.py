@@ -41,9 +41,9 @@ class Plumed(Package):
     and C/C++ codes.
     """
     homepage = 'http://www.plumed.org/'
-    url = 'https://github.com/plumed/plumed2'
+    url = 'https://github.com/plumed/plumed2/archive/v2.2.3.tar.gz'
 
-    version('2.2.3', git="https://github.com/plumed/plumed2.git", tag='v2.2.3')
+    version('2.2.3', 'a6e3863e40aac07eb8cf739cbd14ecf8')
 
     # Variants. PLUMED by default builds a number of optional modules.
     # The ones listed here are not built by default for various reasons,
