@@ -75,7 +75,7 @@ class Qt(Package):
     # depends_on("flex", type='build')
     # depends_on("bison", type='build')
     # depends_on("ruby", type='build')
-    # depends_on("icu4c")
+    depends_on("icu4c")
 
     # OpenGL hardware acceleration
     depends_on("mesa", when='@4:+mesa')
