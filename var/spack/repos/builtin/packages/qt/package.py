@@ -171,7 +171,10 @@ class Qt(Package):
             config_args.append('-no-dbus')
 
         if sys.platform == 'darwin':
-            sdkpath = which('xcrun')('--show-sdk-path', output=str)
+            sdkpath = which('xcrun')('--show-sdk-path',
+                                     # XXX(macos): the 10.11 SDK fails to configure.
+                                     '--sdk', 'macosx10.9',
+                                     output=str)
             config_args.extend([
                     '-sdk', sdkpath.strip(),
                 ])
@@ -208,12 +211,8 @@ class Qt(Package):
     def configure(self):
         configure('-fast',
                   '-no-webkit',
-<<<<<<< HEAD
                   '{0}-gtkstyle'.format('' if '+gtk' in self.spec else '-no'),
-||||||| parent of e72b834... qt: setup the sdk and platform arguments
-=======
                   '-arch', str(self.spec.architecture.target),
->>>>>>> e72b834... qt: setup the sdk and platform arguments
                   *self.common_config_args)
 
     @when('@5.0:5.6')
