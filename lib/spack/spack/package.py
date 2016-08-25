@@ -910,7 +910,8 @@ class Package(object):
                     skip_patch=skip_patch,
                     verbose=verbose,
                     make_jobs=make_jobs,
-                    run_tests=run_tests)
+                    run_tests=run_tests,
+                    dirty=dirty)
 
         # The rest of this function is to install ourself, once deps have been installed.
         if not install_self:
