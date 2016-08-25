@@ -170,6 +170,24 @@ class Qt(Package):
         else:
             config_args.append('-no-dbus')
 
+        if sys.platform == 'darwin':
+            sdkpath = which('xcrun')('--show-sdk-path', output=str)
+            config_args.extend([
+                    '-sdk', sdkpath.strip(),
+                ])
+            use_clang_platform = False
+            if self.spec.compiler.name == 'clang' and \
+               str(self.spec.compiler.version).endwith('-apple'):
+                use_clang_platform = True
+            # No one uses gcc-4.2.1 anymore; this is clang.
+            if self.spec.compiler.name == 'gcc' and \
+               str(self.spec.compiler.version) == '4.2.1':
+                use_clang_platform = True
+            if use_clang_platform:
+                config_args.extend([
+                        '-platform', 'unsupported/macx-clang',
+                    ])
+
         return config_args
 
     # Don't disable all the database drivers, but should
@@ -190,7 +208,12 @@ class Qt(Package):
     def configure(self):
         configure('-fast',
                   '-no-webkit',
+<<<<<<< HEAD
                   '{0}-gtkstyle'.format('' if '+gtk' in self.spec else '-no'),
+||||||| parent of e72b834... qt: setup the sdk and platform arguments
+=======
+                  '-arch', str(self.spec.architecture.target),
+>>>>>>> e72b834... qt: setup the sdk and platform arguments
                   *self.common_config_args)
 
     @when('@5.0:5.6')
