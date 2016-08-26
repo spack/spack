@@ -434,7 +434,7 @@ executables and other custom archive types), you can add
 .. code-block:: python
 
    version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
-           url='http://example.com/foo-8.2.1-special-version.tar.gz', 'expand=False')
+           url='http://example.com/foo-8.2.1-special-version.tar.gz', expand=False)
 
 When ``expand`` is set to ``False``, Spack sets the current working
 directory to the directory containing the downloaded archive before it
