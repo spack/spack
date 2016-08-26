@@ -43,6 +43,7 @@ class Julia(Package):
     version('0.4.5', '69141ff5aa6cee7c0ec8c85a34aa49a6')
     version('0.4.3', '8a4a59fd335b05090dd1ebefbbe5aaac')
 
+    # TODO: Split these out into jl-hdf5, jl-mpi packages etc.
     variant("cxx", default=False, description="Prepare for Julia Cxx package")
     variant("hdf5", default=False, description="Install Julia HDF5 package")
     variant("mpi", default=False, description="Install Julia MPI package")
@@ -54,7 +55,7 @@ class Julia(Package):
     patch('gc.patch', when='@0.4:0.4.5')
     patch('openblas.patch', when='@0.4:0.4.5')
 
-    variant('binutils', default=sys.platform!='darwin',
+    variant('binutils', default = sys.platform != 'darwin',
             description="Build via binutils")
 
     # Build-time dependencies:
@@ -63,10 +64,11 @@ class Julia(Package):
     # depends_on("pkg-config")
 
     # Combined build-time and run-time dependencies:
+    # (Yes, these are run-time dependencies used by Julia's package manager.)
     depends_on("binutils", when='+binutils')
     depends_on("cmake @2.8:")
     depends_on("curl")
-    depends_on("git")
+    depends_on("git")           # I think Julia @0.5: doesn't use git any more
     depends_on("openssl")
     depends_on("python @2.7:2.999")
 
@@ -104,9 +106,9 @@ class Julia(Package):
     # USE_SYSTEM_LIBGIT2=0
 
     # Run-time dependencies for Julia packages:
-    depends_on("hdf5", when="+hdf5")
-    depends_on("mpi", when="+mpi")
-    depends_on("py-matplotlib", when="+plot")
+    depends_on("hdf5", when="+hdf5", type="run")
+    depends_on("mpi", when="+mpi", type="run")
+    depends_on("py-matplotlib", when="+plot", type="run")
 
     def install(self, spec, prefix):
         # Julia needs git tags
