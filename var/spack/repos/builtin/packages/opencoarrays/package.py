@@ -26,7 +26,13 @@ from spack import *
 
 
 class Opencoarrays(CMakePackage):
-    """OpenCoarrays is an open-source software project that produces an application binary interface (ABI) supporting coarray Fortran (CAF) compilers, an application programming interface (API) that supports users of non-CAF compilers, and an associated compiler wrapper and program launcher."""
+    """
+    OpenCoarrays is an open-source software project that produces an
+    application binary interface (ABI) supporting coarray Fortran (CAF)
+    compilers, an application programming interface (API) that supports users
+    of non-CAF compilers, and an associated compiler wrapper and program
+    launcher.
+    """
 
     homepage = "http://www.opencoarrays.org/"
     url      = "https://github.com/sourceryinstitute/opencoarrays/releases/download/1.6.2/OpenCoarrays-1.6.2.tar.gz"
@@ -40,10 +46,9 @@ class Opencoarrays(CMakePackage):
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
-            cmake_args = std_cmake_args + [
-                    "-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc,
-                    "-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc
-                    ]
-            cmake('..', *cmake_args)
+            args = std_cmake_args
+            args.append("-DCMAKE_C_COMPILER=%s" % self.spec['mpi'].mpicc)
+            args.append("-DCMAKE_Fortran_COMPILER=%s" % self.spec['mpi'].mpifc)
+            cmake('..', *args)
             make()
             make("install")
