@@ -55,7 +55,7 @@ class Julia(Package):
     patch('gc.patch', when='@0.4:0.4.5')
     patch('openblas.patch', when='@0.4:0.4.5')
 
-    variant('binutils', default = sys.platform != 'darwin',
+    variant('binutils', default=sys.platform != 'darwin',
             description="Build via binutils")
 
     # Build-time dependencies:
