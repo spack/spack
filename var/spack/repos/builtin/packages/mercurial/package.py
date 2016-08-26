@@ -42,4 +42,3 @@ class Mercurial(Package):
 
     def install(self, spec, prefix):
         make('PREFIX=%s' % prefix, 'install')
-        make('check')
