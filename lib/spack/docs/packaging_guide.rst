@@ -12,9 +12,9 @@ have at least some familiarity with Python, and that you've read the
 
 There are two key parts of Spack:
 
-   #. **Specs**: expressions for describing builds of software, and
-   #. **Packages**: Python modules that describe how to build
-      software according to a spec.
+#. **Specs**: expressions for describing builds of software, and
+#. **Packages**: Python modules that describe how to build
+   software according to a spec.
 
 Specs allow a user to describe a *particular* build in a way that a
 package author can understand.  Packages allow a the packager to
@@ -47,7 +47,7 @@ working.
 
 Here's an example:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack create http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
 
@@ -62,7 +62,7 @@ strings look like for this package. Using this information, it will try to find
 versions, Spack prompts you to tell it how many versions you want to download
 and checksum:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack create http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
    ==> This looks like a URL for cmake version 2.8.12.1.
@@ -86,7 +86,9 @@ always choose to download just one tarball initially, and run
 .. note::
 
    If ``spack create`` fails to detect the package name correctly,
-   you can try supplying it yourself, e.g.::
+   you can try supplying it yourself, e.g.:
+
+   .. code-block:: console
 
       $ spack create --name cmake  http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz
 
@@ -104,7 +106,7 @@ always choose to download just one tarball initially, and run
 
 Let's say you download 3 tarballs:
 
-.. code-block:: sh
+.. code-block:: none
 
    Include how many checksums in the package file? (default is 5, q to abort) 3
    ==> Downloading...
@@ -121,27 +123,28 @@ file in your favorite ``$EDITOR``:
 .. code-block:: python
    :linenos:
 
-   # FIXME:
-   # This is a template package file for Spack.  We've conveniently
-   # put "FIXME" labels next to all the things you'll want to change.
    #
-   # Once you've edited all the FIXME's, delete this whole message,
-   # save this file, and test out your package like this:
+   # This is a template package file for Spack.  We've put "FIXME"
+   # next to all the things you'll want to change. Once you've handled
+   # them, you can save this file and test your package like this:
    #
    #     spack install cmake
    #
-   # You can always get back here to change things with:
+   # You can edit this file again by typing:
    #
    #     spack edit cmake
    #
-   # See the spack documentation for more information on building
-   # packages.
+   # See the Spack documentation for more information on packaging.
+   # If you submit this package back to Spack as a pull request,
+   # please first remove this boilerplate and all FIXME comments.
    #
    from spack import *
 
+
    class Cmake(Package):
-       """FIXME: put a proper description of your package here."""
-       # FIXME: add a proper url for your package's homepage here.
+       """FIXME: Put a proper description of your package here."""
+
+       # FIXME: Add a proper url for your package's homepage here.
        homepage = "http://www.example.com"
        url      = "http://www.cmake.org/files/v2.8/cmake-2.8.12.1.tar.gz"
 
@@ -165,33 +168,33 @@ done for you.
 
 In the generated package, the download ``url`` attribute is already
 set.  All the things you still need to change are marked with
-``FIXME`` labels.  The first ``FIXME`` refers to the commented
-instructions at the top of the file.  You can delete these
-instructions after reading them.  The rest of them are as follows:
+``FIXME`` labels. You can delete the commented instructions between
+the license and the first import statement after reading them.
+The rest of the tasks you need to do are as follows:
 
-   #. Add a description.
+#. Add a description.
 
-      Immediately inside the package class is a *docstring* in
-      triple-quotes (``"""``).  It's used to generate the description
-      shown when users run ``spack info``.
+   Immediately inside the package class is a *docstring* in
+   triple-quotes (``"""``).  It's used to generate the description
+   shown when users run ``spack info``.
 
-   #. Change the ``homepage`` to a useful URL.
+#. Change the ``homepage`` to a useful URL.
 
-      The ``homepage`` is displayed when users run ``spack info`` so
-      that they can learn about packages.
+   The ``homepage`` is displayed when users run ``spack info`` so
+   that they can learn about packages.
 
-   #. Add ``depends_on()`` calls for the package's dependencies.
+#. Add ``depends_on()`` calls for the package's dependencies.
 
-      ``depends_on`` tells Spack that other packages need to be built
-      and installed before this one.  See `dependencies_`.
+   ``depends_on`` tells Spack that other packages need to be built
+   and installed before this one.  See :ref:`dependencies`.
 
-   #. Get the ``install()`` method working.
+#. Get the ``install()`` method working.
 
-      The ``install()`` method implements the logic to build a
-      package.  The code should look familiar; it is designed to look
-      like a shell script. Specifics will differ depending on the package,
-      and :ref:`implementing the install method <install-method>` is
-      covered in detail later.
+   The ``install()`` method implements the logic to build a
+   package.  The code should look familiar; it is designed to look
+   like a shell script. Specifics will differ depending on the package,
+   and :ref:`implementing the install method <install-method>` is
+   covered in detail later.
 
 Before going into details, we'll cover a few more basics.
 
@@ -205,41 +208,41 @@ One of the easiest ways to learn to write packages is to look at
 existing ones.  You can edit a package file by name with the ``spack
 edit`` command:
 
-.. code-block:: sh
+.. code-block:: console
 
-   spack edit cmake
+   $ spack edit cmake
 
 So, if you used ``spack create`` to create a package, then saved and
 closed the resulting file, you can get back to it with ``spack edit``.
 The ``cmake`` package actually lives in
-``$SPACK_ROOT/var/spack/repos/builtin/packages/cmake/package.py``, but this provides
-a much simpler shortcut and saves you the trouble of typing the full
-path.
+``$SPACK_ROOT/var/spack/repos/builtin/packages/cmake/package.py``,
+but this provides a much simpler shortcut and saves you the trouble
+of typing the full path.
 
 If you try to edit a package that doesn't exist, Spack will recommend
-using ``spack create`` or ``spack edit -f``:
+using ``spack create`` or ``spack edit --force``:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack edit foo
    ==> Error: No package 'foo'.  Use spack create, or supply -f/--force to edit a new file.
 
 .. _spack-edit-f:
 
-^^^^^^^^^^^^^^^^^
-``spack edit -f``
-^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+``spack edit --force``
+^^^^^^^^^^^^^^^^^^^^^^
 
-``spack edit -f`` can be used to create a new, minimal boilerplate
+``spack edit --force`` can be used to create a new, minimal boilerplate
 package:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack edit -f foo
 
 Unlike ``spack create``, which infers names and versions, and which
 actually downloads the tarball and checksums it for you, ``spack edit
--f`` has no such fanciness.  It will substitute dummy values for you
+--force`` has no such fanciness.  It will substitute dummy values for you
 to fill in yourself:
 
 .. code-block:: python
@@ -256,7 +259,7 @@ to fill in yourself:
        version('1.0', '0123456789abcdef0123456789abcdef')
 
        def install(self, spec, prefix):
-           configure("--prefix=" + prefix)
+           configure("--prefix=%s" % prefix)
            make()
            make("install")
 
@@ -267,16 +270,9 @@ version of your package from the archive URL.
 Naming & directory structure
 ----------------------------
 
-.. note::
-
-   Spack's default naming and directory structure will change in
-   version 0.9.  Specifically, 0.9 will stop using directory names
-   with special characters like ``@``, to avoid interfering with
-   certain packages that do not handle this well.
-
 This section describes how packages need to be named, and where they
-live in Spack's directory structure.  In general, `spack-create`_ and
-`spack-edit`_ handle creating package files for you, so you can skip
+live in Spack's directory structure.  In general, :ref:`spack-create` and
+:ref:`spack-edit` handle creating package files for you, so you can skip
 most of the details here.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -291,13 +287,15 @@ Packages themselves live in ``$SPACK_ROOT/var/spack/repos/builtin/packages``.
 If you ``cd`` to that directory, you will see directories for each
 package:
 
-.. command-output::  cd $SPACK_ROOT/var/spack/repos/builtin/packages;  ls -CF
+.. command-output:: cd $SPACK_ROOT/var/spack/repos/builtin/packages && ls
    :shell:
    :ellipsis: 10
 
 Each directory contains a file called ``package.py``, which is where
 all the python code for the package goes.  For example, the ``libelf``
-package lives in::
+package lives in:
+
+.. code-block:: none
 
    $SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py
 
@@ -312,7 +310,7 @@ Packages are named after the directory containing ``package.py``. It is
 preferred, but not required, that the directory, and thus the package name, are
 lower case. So, ``libelf``'s ``package.py`` lives in a directory called
 ``libelf``.  The ``package.py`` file defines a class called ``Libelf``, which
-extends Spack's ``Package`` class.  for example, here is
+extends Spack's ``Package`` class.  For example, here is
 ``$SPACK_ROOT/var/spack/repos/builtin/packages/libelf/package.py``:
 
 .. code-block:: python
@@ -334,7 +332,7 @@ The **directory name** (``libelf``) determines the package name that
 users should provide on the command line. e.g., if you type any of
 these:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack install libelf
    $ spack install libelf@0.8.13
@@ -373,7 +371,7 @@ some examples:
 =================  =================
 
 In general, you won't have to remember this naming convention because
-`spack-create`_ and `spack-edit`_ handle the details for you.
+:ref:`spack-create` and :ref:`spack-edit` handle the details for you.
 
 -------------------
 Adding new versions
@@ -482,7 +480,7 @@ to use based on the hash length.
 If you have one or more files to checksum, you can use the ``spack md5``
 command to do it:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack md5 foo-8.2.1.tar.gz foo-8.2.2.tar.gz
    ==> 2 MD5 checksums:
@@ -492,7 +490,7 @@ command to do it:
 ``spack md5`` also accepts one or more URLs and automatically downloads
 the files for you:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack md5 http://example.com/foo-8.2.1.tar.gz
    ==> Trying to fetch from http://example.com/foo-8.2.1.tar.gz
@@ -514,7 +512,7 @@ If you want to add new versions to a package you've already created,
 this is automated with the ``spack checksum`` command.  Here's an
 example for ``libelf``:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack checksum libelf
    ==> Found 16 versions of libelf.
@@ -538,7 +536,7 @@ they're released).  It fetches the tarballs you ask for and prints out
 a list of ``version`` commands ready to copy/paste into your package
 file:
 
-.. code-block:: sh
+.. code-block:: console
 
    ==> Checksummed new versions of libelf:
        version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
@@ -605,7 +603,7 @@ same thing every time you fetch a particular version.  Life isn't
 always simple, though, so this is not strictly enforced.
 
 When fetching from from the branch corresponding to the development version
-(often called ``master``,``trunk`` or ``dev``), it is recommended to
+(often called ``master``, ``trunk``, or ``dev``), it is recommended to
 call this version ``develop``. Spack has special treatment for this version so
 that ``@develop`` will satisfy dependencies like
 ``depends_on(abc, when="@x.y.z:")``. In other words, ``@develop`` is
@@ -627,11 +625,11 @@ Git
 
 Git fetching is enabled with the following parameters to ``version``:
 
-  * ``git``: URL of the git repository.
-  * ``tag``: name of a tag to fetch.
-  * ``branch``: name of a branch to fetch.
-  * ``commit``: SHA hash (or prefix) of a commit to fetch.
-  * ``submodules``: Also fetch submodules when checking out this repository.
+* ``git``: URL of the git repository.
+* ``tag``: name of a tag to fetch.
+* ``branch``: name of a branch to fetch.
+* ``commit``: SHA hash (or prefix) of a commit to fetch.
+* ``submodules``: Also fetch submodules when checking out this repository.
 
 Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
 
@@ -675,7 +673,7 @@ Commits
      version('2014-10-08', git='https://github.com/example-project/example.git',
              commit='9d38cd4e2c94c3cea97d0e2924814acc')
 
-  This doesn't have to be a full hash; You can abbreviate it as you'd
+  This doesn't have to be a full hash; you can abbreviate it as you'd
   expect with git:
 
   .. code-block:: python
@@ -705,13 +703,12 @@ Installing
 You can fetch and install any of the versions above as you'd expect,
 by using ``@<version>`` in a spec:
 
-.. code-block:: sh
+.. code-block:: console
 
-   spack install example@2014-10-08
+   $ spack install example@2014-10-08
 
 Git and other VCS versions will show up in the list of versions when
 a user runs ``spack info <package name>``.
-
 
 .. _hg-fetch:
 
@@ -858,12 +855,12 @@ For example, let's take a look at the package for the PGI compilers.
 
 .. code-block:: python
 
-    # Licensing
-    license_required = True
-    license_comment  = '#'
-    license_files    = ['license.dat']
-    license_vars     = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
-    license_url      = 'http://www.pgroup.com/doc/pgiinstall.pdf'
+   # Licensing
+   license_required = True
+   license_comment  = '#'
+   license_files    = ['license.dat']
+   license_vars     = ['PGROUPD_LICENSE_FILE', 'LM_LICENSE_FILE']
+   license_url      = 'http://www.pgroup.com/doc/pgiinstall.pdf'
 
 As you can see, PGI requires a license. Its license manager, FlexNet, uses
 the ``#`` symbol to denote a comment. It expects the license file to be
@@ -886,39 +883,39 @@ this:
 
 .. code-block:: sh
 
-    # A license is required to use pgi.
-    #
-    # The recommended solution is to store your license key in this global
-    # license file. After installation, the following symlink(s) will be
-    # added to point to this file (relative to the installation prefix):
-    #
-    #   license.dat
-    #
-    # Alternatively, use one of the following environment variable(s):
-    #
-    #   PGROUPD_LICENSE_FILE
-    #   LM_LICENSE_FILE
-    #
-    # If you choose to store your license in a non-standard location, you may
-    # set one of these variable(s) to the full pathname to the license file, or
-    # port@host if you store your license keys on a dedicated license server.
-    # You will likely want to set this variable in a module file so that it
-    # gets loaded every time someone tries to use pgi.
-    #
-    # For further information on how to acquire a license, please refer to:
-    #
-    #   http://www.pgroup.com/doc/pgiinstall.pdf
-    #
-    # You may enter your license below.
+   # A license is required to use pgi.
+   #
+   # The recommended solution is to store your license key in this global
+   # license file. After installation, the following symlink(s) will be
+   # added to point to this file (relative to the installation prefix):
+   #
+   #   license.dat
+   #
+   # Alternatively, use one of the following environment variable(s):
+   #
+   #   PGROUPD_LICENSE_FILE
+   #   LM_LICENSE_FILE
+   #
+   # If you choose to store your license in a non-standard location, you may
+   # set one of these variable(s) to the full pathname to the license file, or
+   # port@host if you store your license keys on a dedicated license server.
+   # You will likely want to set this variable in a module file so that it
+   # gets loaded every time someone tries to use pgi.
+   #
+   # For further information on how to acquire a license, please refer to:
+   #
+   #   http://www.pgroup.com/doc/pgiinstall.pdf
+   #
+   # You may enter your license below.
 
 You can add your license directly to this file, or tell FlexNet to use a
 license stored on a separate license server. Here is an example that
 points to a license server called licman1:
 
-.. code-block:: sh
+.. code-block:: none
 
-    SERVER licman1.mcs.anl.gov 00163eb7fba5 27200
-    USE_SERVER
+   SERVER licman1.mcs.anl.gov 00163eb7fba5 27200
+   USE_SERVER
 
 If your package requires the license to install, you can reference the
 location of this global license using ``self.global_license_file``.
@@ -949,7 +946,7 @@ after it's downloaded.
 ^^^^^^^^^
 
 You can specify patches in your package file with the ``patch()``
-function.  ``patch`` looks like this:
+directive.  ``patch`` looks like this:
 
 .. code-block:: python
 
@@ -961,7 +958,9 @@ The first argument can be either a URL or a filename.  It specifies a
 patch file that should be applied to your source.  If the patch you
 supply is a filename, then the patch needs to live within the spack
 source tree.  For example, the patch above lives in a directory
-structure like this::
+structure like this:
+
+.. code-block:: none
 
    $SPACK_ROOT/var/spack/repos/builtin/packages/
        mvapich2/
@@ -982,52 +981,58 @@ from the URL and then applied to your source code.
 
 ``patch`` can take two options keyword arguments.  They are:
 
+""""""""
 ``when``
-  If supplied, this is a spec that tells spack when to apply
-  the patch.  If the installed package spec matches this spec, the
-  patch will be applied.  In our example above, the patch is applied
-  when mvapich is at version ``1.9`` or higher.
+""""""""
 
+If supplied, this is a spec that tells spack when to apply
+the patch.  If the installed package spec matches this spec, the
+patch will be applied.  In our example above, the patch is applied
+when mvapich is at version ``1.9`` or higher.
+
+"""""""""
 ``level``
-  This tells spack how to run the ``patch`` command.  By default,
-  the level is 1 and spack runs ``patch -p1``.  If level is 2,
-  spack will run ``patch -p2``, and so on.
+"""""""""
 
-  A lot of people are confused by level, so here's a primer.  If you
-  look in your patch file, you may see something like this:
+This tells spack how to run the ``patch`` command.  By default,
+the level is 1 and spack runs ``patch -p 1``.  If level is 2,
+spack will run ``patch -p 2``, and so on.
 
-  .. code-block:: diff
-     :linenos:
+A lot of people are confused by level, so here's a primer.  If you
+look in your patch file, you may see something like this:
 
-     --- a/src/mpi/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 12:05:44.806417000 -0800
-     +++ b/src/mpi/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 11:53:03.295622000 -0800
-     @@ -8,7 +8,7 @@
-       *   Copyright (C) 2008 Sun Microsystems, Lustre group
-       */
+.. code-block:: diff
+   :linenos:
 
-     -#define _XOPEN_SOURCE 600
-     +//#define _XOPEN_SOURCE 600
-      #include <stdlib.h>
-      #include <malloc.h>
-      #include "ad_lustre.h"
+   --- a/src/mpi/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 12:05:44.806417000 -0800
+   +++ b/src/mpi/romio/adio/ad_lustre/ad_lustre_rwcontig.c 2013-12-10 11:53:03.295622000 -0800
+   @@ -8,7 +8,7 @@
+     *   Copyright (C) 2008 Sun Microsystems, Lustre group
+     \*/
 
-  Lines 1-2 show paths with synthetic ``a/`` and ``b/`` prefixes.  These
-  are placeholders for the two ``mvapich2`` source directories that
-  ``diff`` compared when it created the patch file.  This is git's
-  default behavior when creating patch files, but other programs may
-  behave differently.
+   -#define _XOPEN_SOURCE 600
+   +//#define _XOPEN_SOURCE 600
+    #include <stdlib.h>
+    #include <malloc.h>
+    #include "ad_lustre.h"
 
-  ``-p1`` strips off the first level of the prefix in both paths,
-  allowing the patch to be applied from the root of an expanded mvapich2
-  archive.  If you set level to ``2``, it would strip off ``src``, and
-  so on.
+Lines 1-2 show paths with synthetic ``a/`` and ``b/`` prefixes.  These
+are placeholders for the two ``mvapich2`` source directories that
+``diff`` compared when it created the patch file.  This is git's
+default behavior when creating patch files, but other programs may
+behave differently.
 
-  It's generally easier to just structure your patch file so that it
-  applies cleanly with ``-p1``, but if you're using a patch you didn't
-  create yourself, ``level`` can be handy.
+``-p1`` strips off the first level of the prefix in both paths,
+allowing the patch to be applied from the root of an expanded mvapich2
+archive.  If you set level to ``2``, it would strip off ``src``, and
+so on.
+
+It's generally easier to just structure your patch file so that it
+applies cleanly with ``-p1``, but if you're using a patch you didn't
+create yourself, ``level`` can be handy.
 
 ^^^^^^^^^^^^^^^^^^^^^
-``patch()`` functions
+Patch functions
 ^^^^^^^^^^^^^^^^^^^^^
 
 In addition to supplying patch files, you can write a custom function
@@ -1037,34 +1042,9 @@ handles ``RPATH``:
 
 .. _pyside-patch:
 
-.. code-block:: python
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/py-pyside/package.py
+   :pyobject: PyPyside.patch
    :linenos:
-
-   class PyPyside(Package):
-       ...
-
-       def patch(self):
-           """Undo PySide RPATH handling and add Spack RPATH."""
-           # Figure out the special RPATH
-           pypkg = self.spec['python'].package
-           rpath = self.rpath
-           rpath.append(os.path.join(self.prefix, pypkg.site_packages_dir, 'PySide'))
-
-           # Add Spack's standard CMake args to the sub-builds.
-           # They're called BY setup.py so we have to patch it.
-           filter_file(
-               r'OPTION_CMAKE,',
-               r'OPTION_CMAKE, ' + (
-                   '"-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE", '
-                   '"-DCMAKE_INSTALL_RPATH=%s",' % ':'.join(rpath)),
-               'setup.py')
-
-           # PySide tries to patch ELF files to remove RPATHs
-           # Disable this and go with the one we set.
-           filter_file(
-               r'^\s*rpath_cmd\(pyside_path, srcpath\)',
-               r'#rpath_cmd(pyside_path, srcpath)',
-               'pyside_postinstall.py')
 
 A ``patch`` function, if present, will be run after patch files are
 applied and before ``install()`` is run.
@@ -1085,9 +1065,9 @@ dependencies are found when it runs.  It does this using `RPATHs
 <http://en.wikipedia.org/wiki/Rpath>`_.  An RPATH is a search
 path, stored in a binary (an executable or library), that tells the
 dynamic loader where to find its dependencies at runtime. You may be
-familiar with ```LD_LIBRARY_PATH``
+familiar with `LD_LIBRARY_PATH
 <http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html>`_
-on Linux or ```DYLD_LIBRARY_PATH``
+on Linux or `DYLD_LIBRARY_PATH
 <https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/dyld.1.html>`
 on Mac OS X.  RPATH is similar to these paths, in that it tells
 the loader where to find libraries.  Unlike them, it is embedded in
@@ -1095,32 +1075,32 @@ the binary and not set in each user's environment.
 
 RPATHs in Spack are handled in one of three ways:
 
-  1. For most packages, RPATHs are handled automatically using Spack's
-     :ref:`compiler wrappers <compiler-wrappers>`.  These wrappers are
-     set in standard variables like ``CC``, ``CXX``, and ``FC``, so
-     most build systems (autotools and many gmake systems) pick them
-     up and use them.
-  2. CMake also respects Spack's compiler wrappers, but many CMake
-     builds have logic to overwrite RPATHs when binaries are
-     installed. Spack provides the ``std_cmake_args`` variable, which
-     includes parameters necessary for CMake build use the right
-     installation RPATH.  It can be used like this when ``cmake`` is
-     invoked:
+#. For most packages, RPATHs are handled automatically using Spack's
+   :ref:`compiler wrappers <compiler-wrappers>`.  These wrappers are
+   set in standard variables like ``CC``, ``CXX``, ``F77``, and ``FC``,
+   so most build systems (autotools and many gmake systems) pick them
+   up and use them.
+#. CMake also respects Spack's compiler wrappers, but many CMake
+   builds have logic to overwrite RPATHs when binaries are
+   installed. Spack provides the ``std_cmake_args`` variable, which
+   includes parameters necessary for CMake build use the right
+   installation RPATH.  It can be used like this when ``cmake`` is
+   invoked:
 
-     .. code-block:: python
+   .. code-block:: python
 
-        class MyPackage(Package):
-            ...
-            def install(self, spec, prefix):
-                cmake('..', *std_cmake_args)
-                make()
-                make('install')
+      class MyPackage(Package):
+          ...
+          def install(self, spec, prefix):
+              cmake('..', *std_cmake_args)
+              make()
+              make('install')
 
-  3. If you need to modify the build to add your own RPATHs, you can
-     use the ``self.rpath`` property of your package, which will
-     return a list of all the RPATHs that Spack will use when it
-     links.  You can see this how this is used in the :ref:`PySide
-     example <pyside-patch>` above.
+#. If you need to modify the build to add your own RPATHs, you can
+   use the ``self.rpath`` property of your package, which will
+   return a list of all the RPATHs that Spack will use when it
+   links.  You can see this how this is used in the :ref:`PySide
+   example <pyside-patch>` above.
 
 --------------------
 Finding new versions
@@ -1132,6 +1112,7 @@ You've already seen the ``homepage`` and ``url`` package attributes:
    :linenos:
 
    from spack import *
+
 
    class Mpich(Package):
       """MPICH is a high performance and widely portable implementation of
@@ -1194,7 +1175,9 @@ the ``list_url``, because that is where links to old versions are:
 versions on a single webpage, but not all do.  For example, ``mpich``
 has a tarball URL that looks like this:
 
-    url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
+.. code-block:: python
+
+   url = "http://www.mpich.org/static/downloads/3.0.4/mpich-3.0.4.tar.gz"
 
 But its downloads are in many different subdirectories of
 ``http://www.mpich.org/static/downloads/``.  So, we need to add a
@@ -1344,7 +1327,7 @@ Or a requirement for a particular variant or compiler flags:
 
    depends_on("libelf@0.8+debug")
    depends_on('libelf debug=True')
-   depends_on('libelf cppflags="-fPIC")
+   depends_on('libelf cppflags="-fPIC"')
 
 Both users *and* package authors can use the same spec syntax to refer
 to different package configurations.  Users use the spec syntax on the
@@ -1356,9 +1339,9 @@ Additionally, dependencies may be specified for specific use cases:
 
 .. code-block:: python
 
-    depends_on("cmake", type="build")
-    depends_on("libelf", type=("build", "link"))
-    depends_on("python", type="run")
+   depends_on("cmake", type="build")
+   depends_on("libelf", type=("build", "link"))
+   depends_on("python", type="run")
 
 The dependency types are:
 
@@ -1405,34 +1388,16 @@ packages that depend on a particular Qt installation will find it.
 
 The arguments to this function are:
 
-  * **module**: the module of the dependent package, where global
-    properties can be assigned.
-  * **spec**: the spec of the *dependency package* (the one the function is called on).
-  * **dep_spec**: the spec of the dependent package (i.e. dep_spec depends on spec).
+* **module**: the module of the dependent package, where global
+  properties can be assigned.
+* **spec**: the spec of the *dependency package* (the one the function is called on).
+* **dep_spec**: the spec of the dependent package (i.e. dep_spec depends on spec).
 
 A good example of using these is in the Python package:
 
-.. code-block:: python
-
-   def setup_dependent_environment(self, module, spec, dep_spec):
-       # Python extension builds can have a global python executable function
-       module.python = Executable(join_path(spec.prefix.bin, 'python'))
-
-       # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
-       module.python_lib_dir     = os.path.join(dep_spec.prefix, self.python_lib_dir)
-       module.python_include_dir = os.path.join(dep_spec.prefix, self.python_include_dir)
-       module.site_packages_dir  = os.path.join(dep_spec.prefix, self.site_packages_dir)
-
-       # Make the site packages directory if it does not exist already.
-       mkdirp(module.site_packages_dir)
-
-       # Set PYTHONPATH to include site-packages dir for the
-       # extension and any other python extensions it depends on.
-       python_paths = []
-       for d in dep_spec.traverse():
-           if d.package.extends(self.spec):
-               python_paths.append(os.path.join(d.prefix, self.site_packages_dir))
-       os.environ['PYTHONPATH'] = ':'.join(python_paths)
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/python/package.py
+   :pyobject: Python.setup_dependent_environment
+   :linenos:
 
 The first thing that happens here is that the ``python`` command is
 inserted into module scope of the dependent.  This allows most python
@@ -1441,7 +1406,7 @@ packages to have a very simple install method, like this:
 .. code-block:: python
 
    def install(self, spec, prefix):
-       python('setup.py', 'install', '--prefix=%s' % prefix)
+       python('setup.py', 'install', '--prefix={0}'.format(prefix))
 
 Python's ``setup_dependent_environment`` method also sets up some
 other variables, creates a directory, and sets up the ``PYTHONPATH``
@@ -1483,7 +1448,7 @@ activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
 
 Many packages produce Python extensions for *some* variants, but not
-others: they should extend ``python`` only if the apropriate
+others: they should extend ``python`` only if the appropriate
 variant(s) are selected.  This may be accomplished with conditional
 ``extends()`` declarations:
 
@@ -1502,13 +1467,15 @@ when it does the activation:
 
 .. code-block:: python
 
-   class PyNose(Package):
+   class PySncosmo(Package):
        ...
-       extends('python', ignore=r'bin/nosetests.*$')
+       # py-sncosmo binaries are duplicates of those from py-astropy
+       extends('python', ignore=r'bin/.*')
+       depends_on('py-astropy')
        ...
 
-The code above will prevent ``$prefix/bin/nosetests`` from being
-linked in at activation time.
+The code above will prevent everything in the ``$prefix/bin/`` directory
+from being linked in at activation time.
 
 .. note::
 
@@ -1537,15 +1504,9 @@ same way that Python does.
 
 Let's look at Python's activate function:
 
-.. code-block:: python
-
-   def activate(self, ext_pkg, **kwargs):
-       kwargs.update(ignore=self.python_ignore(ext_pkg, kwargs))
-       super(Python, self).activate(ext_pkg, **kwargs)
-
-       exts = spack.install_layout.extension_map(self.spec)
-       exts[ext_pkg.name] = ext_pkg.spec
-       self.write_easy_install_pth(exts)
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/python/package.py
+   :pyobject: Python.activate
+   :linenos:
 
 This function is called on the *extendee* (Python).  It first calls
 ``activate`` in the superclass, which handles symlinking the
@@ -1555,16 +1516,9 @@ Python's setuptools.
 
 Deactivate behaves similarly to activate, but it unlinks files:
 
-.. code-block:: python
-
-   def deactivate(self, ext_pkg, **kwargs):
-       kwargs.update(ignore=self.python_ignore(ext_pkg, kwargs))
-       super(Python, self).deactivate(ext_pkg, **kwargs)
-
-       exts = spack.install_layout.extension_map(self.spec)
-       if ext_pkg.name in exts:     # Make deactivate idempotent.
-           del exts[ext_pkg.name]
-           self.write_easy_install_pth(exts)
+.. literalinclude:: ../../../var/spack/repos/builtin/packages/python/package.py
+   :pyobject: Python.deactivate
+   :linenos:
 
 Both of these methods call some custom functions in the Python
 package.  See the source for Spack's Python package for details.
@@ -1708,7 +1662,7 @@ the package ``foo`` declares this:
 
 Suppose a user invokes ``spack install`` like this:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack install foo ^mpich@1.0
 
@@ -1726,9 +1680,9 @@ command line <sec-specs>` and within package definitions, we can talk
 about how Spack puts all of this information together.  When you run
 this:
 
-.. code-block:: sh
+.. code-block:: console
 
-   spack install mpileaks ^callpath@1.0+debug ^libelf@0.8.11
+   $ spack install mpileaks ^callpath@1.0+debug ^libelf@0.8.11
 
 Spack parses the command line and builds a spec from the description.
 The spec says that ``mpileaks`` should be built with the ``callpath``
@@ -1744,7 +1698,9 @@ abstract spec is partially specified.  In other words, it could
 describe more than one build of a package.  Spack does this to make
 things easier on the user: they should only have to specify as much of
 the package spec as they care about.  Here's an example partial spec
-DAG, based on the constraints above::
+DAG, based on the constraints above:
+
+.. code-block:: none
 
    mpileaks
        ^callpath@1.0+debug
@@ -1780,7 +1736,9 @@ remaining unspecified parts in order to install.  This process is
 called **concretization**.  Concretization happens in between the time
 the user runs ``spack install`` and the time the ``install()`` method
 is called.  The concretized version of the spec above might look like
-this::
+this:
+
+.. code-block:: none
 
    mpileaks@2.3%gcc@4.7.3 arch=linux-debian7-x86_64
        ^callpath@1.0%gcc@4.7.3+debug arch=linux-debian7-x86_64
@@ -1819,7 +1777,7 @@ the preferences of their own users.
 For an arbitrary spec, you can see the result of concretization by
 running ``spack spec``.  For example:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack spec dyninst@8.0.1
    dyninst@8.0.1
@@ -1857,7 +1815,7 @@ where the real work of installation happens, and it's the main part of
 the package you'll need to customize for each piece of software.
 
 .. literalinclude::  ../../../var/spack/repos/builtin/packages/libelf/package.py
-   :start-after: 0.8.12
+   :pyobject: Libelf.install
    :linenos:
 
 ``install`` takes a ``spec``: a description of how the package should
@@ -1945,8 +1903,8 @@ Environment variables
 Spack sets a number of standard environment variables that serve two
 purposes:
 
- #. Make build systems use Spack's compiler wrappers for their builds.
- #. Allow build systems to find dependencies more easily
+#. Make build systems use Spack's compiler wrappers for their builds.
+#. Allow build systems to find dependencies more easily
 
 The Compiler environment variables that Spack sets are:
 
@@ -1960,7 +1918,7 @@ The Compiler environment variables that Spack sets are:
   ============  ===============================
 
 All of these are standard variables respected by most build systems.
-If your project uses ``autotools`` or ``CMake``, then it should pick
+If your project uses ``Autotools`` or ``CMake``, then it should pick
 them up automatically when you run ``configure`` or ``cmake`` in the
 ``install()`` function.  Many traditional builds using GNU Make and
 BSD make also respect these variables, so they may work with these
@@ -1977,12 +1935,12 @@ In addition to the compiler variables, these variables are set before
 entering ``install()`` so that packages can locate dependencies
 easily:
 
-  =======================  =============================
-    ``PATH``                Set to point to ``/bin`` directories of dependencies
-    ``CMAKE_PREFIX_PATH``   Path to dependency prefixes for CMake
-    ``PKG_CONFIG_PATH``     Path to any pkgconfig directories for dependencies
-    ``PYTHONPATH``          Path to site-packages dir of any python dependencies
-  =======================  =============================
+=====================  ====================================================
+``PATH``               Set to point to ``/bin`` directories of dependencies
+``CMAKE_PREFIX_PATH``  Path to dependency prefixes for CMake
+``PKG_CONFIG_PATH``    Path to any pkgconfig directories for dependencies
+``PYTHONPATH``         Path to site-packages dir of any python dependencies
+=====================  ====================================================
 
 ``PATH`` is set up to point to dependencies ``/bin`` directories so
 that you can use tools installed by dependency packages at build time.
@@ -1993,7 +1951,7 @@ For example, ``$MPICH_ROOT/bin/mpicc`` is frequently used by dependencies of
 where ``cmake`` will search for dependency libraries and headers.
 This causes all standard CMake find commands to look in the paths of
 your dependencies, so you *do not* have to manually specify arguments
-like ``-D DEPENDENCY_DIR=/path/to/dependency`` to ``cmake``.  More on
+like ``-DDEPENDENCY_DIR=/path/to/dependency`` to ``cmake``.  More on
 this is `in the CMake documentation <http://www.cmake.org/cmake/help/v3.0/variable/CMAKE_PREFIX_PATH.html>`_.
 
 ``PKG_CONFIG_PATH`` is for packages that attempt to discover
@@ -2031,13 +1989,15 @@ flags to the compile line so that dependencies can be easily found.
 These flags are added for each dependency, if they exist:
 
 Compile-time library search paths
-  * ``-L$dep_prefix/lib``
-  * ``-L$dep_prefix/lib64``
+* ``-L$dep_prefix/lib``
+* ``-L$dep_prefix/lib64``
+
 Runtime library search paths (RPATHs)
-  * ``$rpath_flag$dep_prefix/lib``
-  * ``$rpath_flag$dep_prefix/lib64``
+* ``$rpath_flag$dep_prefix/lib``
+* ``$rpath_flag$dep_prefix/lib64``
+
 Include search paths
-  * ``-I$dep_prefix/include``
+* ``-I$dep_prefix/include``
 
 An example of this would be the ``libdwarf`` build, which has one
 dependency: ``libelf``.  Every call to ``cc`` in the ``libdwarf``
@@ -2083,7 +2043,7 @@ Compiler flags
 In rare circumstances such as compiling and running small unit tests, a package
 developer may need to know what are the appropriate compiler flags to enable
 features like ``OpenMP``, ``c++11``, ``c++14`` and alike. To that end the
-compiler classes in ``spack`` implement the following _properties_ :
+compiler classes in ``spack`` implement the following **properties**:
 ``openmp_flag``, ``cxx11_flag``, ``cxx14_flag``, which can be accessed in a
 package by ``self.compiler.cxx11_flag`` and alike. Note that the implementation
 is such that if a given compiler version does not support this feature, an
@@ -2102,7 +2062,7 @@ Message Parsing Interface (MPI)
 It is common for high performance computing software/packages to use ``MPI``.
 As a result of conretization, a given package can be built using different
 implementations of MPI such as ``Openmpi``, ``MPICH`` or ``IntelMPI``.
-In some scenarios to configure a package one have to provide it with appropriate MPI
+In some scenarios, to configure a package, one has to provide it with appropriate MPI
 compiler wrappers such as ``mpicc``, ``mpic++``.
 However different implementations of ``MPI`` may have different names for those
 wrappers.  In order to make package's ``install()`` method indifferent to the
@@ -2119,9 +2079,9 @@ Blas and Lapack libraries
 
 Different packages provide implementation of ``Blas`` and ``Lapack`` routines.
 The names of the resulting static and/or shared libraries differ from package
-to package. In order to make ``install()`` method indifferent to the
+to package. In order to make the ``install()`` method indifferent to the
 choice of ``Blas`` implementation, each package which provides it
-sets up ``self.spec.blas_shared_lib`` and ``self.spec.blas_static_lib `` to
+sets up ``self.spec.blas_shared_lib`` and ``self.spec.blas_static_lib`` to
 point to the shared and static ``Blas`` libraries, respectively. The same
 applies to packages which provide ``Lapack``. Package developers are advised to
 use these variables, for example ``spec['blas'].blas_shared_lib`` instead of
@@ -2241,9 +2201,14 @@ do that, e.g.:
 
 .. code-block:: python
 
+   configure_args = [
+       '--prefix={0}'.format(prefix)
+   ]
+
    if spec.satisfies('@1.2:1.4'):
        configure_args.append("CXXFLAGS='-DWITH_FEATURE'")
-   configure('--prefix=' + prefix, *configure_args)
+
+   configure(*configure_args)
 
 This works for compilers, too:
 
@@ -2306,18 +2271,18 @@ of your dependencies.  You can do that by sub-scripting the spec:
 
 .. code-block:: python
 
-   my_mpi = spec['mpich']
+   my_mpi = spec['mpi']
 
 The value in the brackets needs to be some package name, and spec
 needs to depend on that package, or the operation will fail.  For
 example, the above code will fail if the ``spec`` doesn't depend on
-``mpich``.  The value returned and assigned to ``my_mpi``, is itself
+``mpi``.  The value returned and assigned to ``my_mpi``, is itself
 just another ``Spec`` object, so you can do all the same things you
 would do with the package's own spec:
 
 .. code-block:: python
 
-   mpicc = new_path(my_mpi.prefix.bin, 'mpicc')
+   mpicc = join_path(my_mpi.prefix.bin, 'mpicc')
 
 .. _multimethods:
 
@@ -2330,7 +2295,7 @@ packages, based on whether the package's spec satisfies particular
 criteria.
 
 The ``@when`` annotation lets packages declare multiple versions of
-methods like install() that depend on the package's spec.  For
+methods like ``install()`` that depend on the package's spec.  For
 example:
 
 .. code-block:: python
@@ -2341,16 +2306,17 @@ example:
        def install(self, prefix):
            # Do default install
 
-       @when('arch=linux-debian7-x86_64')
+       @when('arch=chaos_5_x86_64_ib')
        def install(self, prefix):
            # This will be executed instead of the default install if
            # the package's sys_type() is chaos_5_x86_64_ib.
 
-       @when('arch=linux-debian7-x86_64")
+       @when('arch=linux-debian7-x86_64')
        def install(self, prefix):
-           # This will be executed if the package's sys_type is bgqos_0
+           # This will be executed if the package's sys_type() is
+           # linux-debian7-x86_64.
 
-In the above code there are three versions of install(), two of which
+In the above code there are three versions of ``install()``, two of which
 are specialized for particular platforms.  The version that is called
 depends on the architecture of the package spec.
 
@@ -2428,17 +2394,9 @@ Shell command functions
 
 Recall the install method from ``libelf``:
 
-.. code-block:: python
-
-   def install(self, spec, prefix):
-       configure("--prefix=" + prefix,
-                 "--enable-shared",
-                 "--disable-dependency-tracking",
-                 "--disable-debug")
-       make()
-
-       # The mkdir commands in libelf's install can fail in parallel
-       make("install", parallel=False)
+.. literalinclude::  ../../../var/spack/repos/builtin/packages/libelf/package.py
+   :pyobject: Libelf.install
+   :linenos:
 
 Normally in Python, you'd have to write something like this in order
 to execute shell commands:
@@ -2446,7 +2404,7 @@ to execute shell commands:
 .. code-block:: python
 
    import subprocess
-   subprocess.check_call('configure', '--prefix=' + prefix)
+   subprocess.check_call('configure', '--prefix={0}'.format(prefix))
 
 We've tried to make this a bit easier by providing callable wrapper
 objects for some shell commands.  By default, ``configure``,
@@ -2488,7 +2446,7 @@ Consider a simple autotools build like this:
 .. code-block:: python
 
    def install(self, spec, prefix):
-       configure("--prefix=" + prefix)
+       configure("--prefix={0}".format(prefix))
        make()
        make("install")
 
@@ -2525,7 +2483,7 @@ Now, after ``install()`` runs, Spack will check whether
 ``$prefix/include/libelf.h`` exists and is a file, and whether
 ``$prefix/lib`` exists and is a directory.  If the checks fail, then
 the build will fail and the install prefix will be removed.  If they
-succeed, Spack considers the build succeeful and keeps the prefix in
+succeed, Spack considers the build successful and keeps the prefix in
 place.
 
 .. _file-manipulation:
@@ -2633,8 +2591,8 @@ File functions
 
      install('my-header.h', join_path(prefix.include))
 
-:py:func:`join_path(prefix, *args) <spack.join_path>` Like
-  ``os.path.join``, this joins paths using the OS path separator.
+:py:func:`join_path(prefix, *args) <spack.join_path>`
+  Like ``os.path.join``, this joins paths using the OS path separator.
   However, this version allows an arbitrary number of arguments, so
   you can string together many path components.
 
@@ -2708,9 +2666,9 @@ variant names are:
   Name    Default   Description
   ======= ======== ========================
   shared   True     Build shared libraries
-  static            Build static libraries
-  mpi               Use MPI
-  python            Build Python extension
+  static   True     Build static libraries
+  mpi      True     Use MPI
+  python   False    Build Python extension
   ======= ======== ========================
 
 If specified in this table, the corresponding default should be used
@@ -2720,7 +2678,7 @@ when declaring a variant.
 Version Lists
 ^^^^^^^^^^^^^
 
-Spack packges should list supported versions with the newest first.
+Spack packages should list supported versions with the newest first.
 
 ^^^^^^^^^^^^^^^^
 Special Versions
@@ -2728,20 +2686,30 @@ Special Versions
 
 The following *special* version names may be used when building a package:
 
-* *@system*: Indicates a hook to the OS-installed version of the
-   package.  This is useful, for example, to tell Spack to use the
-   OS-installed version in ``packages.yaml``::
+"""""""""""
+``@system``
+"""""""""""
 
-        openssl:
-            paths:
-                openssl@system: /usr
-            buildable: False
+Indicates a hook to the OS-installed version of the
+package.  This is useful, for example, to tell Spack to use the
+OS-installed version in ``packages.yaml``:
 
-   Certain Spack internals look for the *@system* version and do
-   appropriate things in that case.
+.. code-block:: yaml
 
-* *@local*: Indicates the version was built manually from some source
-  tree of unknown provenance (see ``spack setup``).
+   openssl:
+     paths:
+       openssl@system: /usr
+     buildable: False
+
+Certain Spack internals look for the ``@system`` version and do
+appropriate things in that case.
+
+""""""""""
+``@local``
+""""""""""
+
+Indicates the version was built manually from some source
+tree of unknown provenance (see ``spack setup``).
 
 ---------------------------
 Packaging workflow commands
@@ -2760,7 +2728,7 @@ of the build.
 
 A typical package workflow might look like this:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack edit mypackage
    $ spack install mypackage
@@ -2823,11 +2791,11 @@ Restores the source code to pristine state, as it was before building.
 
 Does this in one of two ways:
 
-  1. If the source was fetched as a tarball, deletes the entire build
-     directory and re-expands the tarball.
+#. If the source was fetched as a tarball, deletes the entire build
+   directory and re-expands the tarball.
 
-  2. If the source was checked out from a repository, this deletes the
-     build directory and checks it out again.
+#. If the source was checked out from a repository, this deletes the
+   build directory and checks it out again.
 
 .. _spack-clean:
 
@@ -2865,9 +2833,9 @@ By default, ``spack install`` will delete the staging area once a
 package has been successfully built and installed.  Use
 ``--keep-stage`` to leave the build directory intact:
 
-.. code-block:: sh
+.. code-block:: console
 
-   spack install --keep-stage <spec>
+   $ spack install --keep-stage <spec>
 
 This allows you to inspect the build directory and potentially debug
 the build.  You can use ``purge`` or ``clean`` later to get rid of the
@@ -2882,17 +2850,17 @@ install prefix if anything fails during ``install()``.  If you want to
 keep the prefix anyway (e.g. to diagnose a bug), you can use
 ``--keep-prefix``:
 
-.. code-block:: sh
+.. code-block:: console
 
-   spack install --keep-prefix <spec>
+   $ spack install --keep-prefix <spec>
 
 Note that this may confuse Spack into thinking that the package has
-been installed properly, so you may need to use ``spack uninstall -f``
+been installed properly, so you may need to use ``spack uninstall --force``
 to get rid of the install prefix before you build again:
 
-.. code-block:: sh
+.. code-block:: console
 
-   spack uninstall -f <spec>
+   $ spack uninstall --force <spec>
 
 ---------------------
 Graphing dependencies
@@ -2906,31 +2874,9 @@ Graphing dependencies
 
 Spack provides the ``spack graph`` command for graphing dependencies.
 The command by default generates an ASCII rendering of a spec's
-dependency graph.  For example::
+dependency graph.  For example:
 
-   $ spack graph mpileaks
-   o  mpileaks
-   |\
-   | |\
-   | o |  callpath
-   |/| |
-   | |\|
-   | |\ \
-   | | |\ \
-   | | | | o  adept-utils
-   | |_|_|/|
-   |/| | | |
-   o | | | |  mpi
-    / / / /
-   | | o |  dyninst
-   | |/| |
-   |/|/| |
-   | | |/
-   | o |  libdwarf
-   |/ /
-   o |  libelf
-    /
-   o  boost
+.. command-output:: spack graph mpileaks
 
 At the top is the root package in the DAG, with dependency edges
 emerging from it.  On a color terminal, the edges are colored by which
@@ -2938,39 +2884,9 @@ dependency they lead to.
 
 You can also use ``spack graph`` to generate graphs in the widely used
 `Dot <http://www.graphviz.org/doc/info/lang.html>`_ format.  For
-example::
+example:
 
-   $ spack graph --dot mpileaks
-   digraph G {
-     label = "Spack Dependencies"
-     labelloc = "b"
-     rankdir = "LR"
-     ranksep = "5"
-
-     "boost"                        [label="boost"]
-     "callpath"                     [label="callpath"]
-     "libdwarf"                     [label="libdwarf"]
-     "mpileaks"                     [label="mpileaks"]
-     "mpi"                          [label="mpi"]
-     "adept-utils"                  [label="adept-utils"]
-     "dyninst"                      [label="dyninst"]
-     "libelf"                       [label="libelf"]
-
-     "callpath" -> "dyninst"
-     "callpath" -> "adept-utils"
-     "callpath" -> "mpi"
-     "callpath" -> "libelf"
-     "callpath" -> "libdwarf"
-     "libdwarf" -> "libelf"
-     "mpileaks" -> "adept-utils"
-     "mpileaks" -> "callpath"
-     "mpileaks" -> "mpi"
-     "adept-utils" -> "boost"
-     "adept-utils" -> "mpi"
-     "dyninst" -> "boost"
-     "dyninst" -> "libelf"
-     "dyninst" -> "libdwarf"
-   }
+.. command-output:: spack graph --dot mpileaks
 
 This graph can be provided as input to other graphing tools, such as
 those in `Graphviz <http://www.graphviz.org>`_.
@@ -2981,14 +2897,19 @@ Interactive shell support
 
 Spack provides some limited shell support to make life easier for
 packagers.  You can enable these commands by sourcing a setup file in
-the ``/share/spack`` directory.  For ``bash`` or ``ksh``, run::
+the ``share/spack`` directory.  For ``bash`` or ``ksh``, run:
 
-  . $SPACK_ROOT/share/spack/setup-env.sh
+.. code-block:: sh
+
+   export SPACK_ROOT=/path/to/spack
+   . $SPACK_ROOT/share/spack/setup-env.sh
 
 For ``csh`` and ``tcsh`` run:
 
-  setenv SPACK_ROOT /path/to/spack
-  source $SPACK_ROOT/share/spack/setup-env.csh
+.. code-block:: csh
+
+   setenv SPACK_ROOT /path/to/spack
+   source $SPACK_ROOT/share/spack/setup-env.csh
 
 ``spack cd`` will then be available.
 
@@ -3002,7 +2923,7 @@ For ``csh`` and ``tcsh`` run:
 Suppose you've staged a package but you want to modify it before you
 build it:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack stage libelf
    ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
@@ -3013,7 +2934,7 @@ build it:
    $ pwd
    /Users/gamblin2/src/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13
 
-``spack cd`` here changed he current working directory to the
+``spack cd`` here changed the current working directory to the
 directory containing the expanded ``libelf`` source code.  There are a
 number of other places you can cd to in the spack directory hierarchy:
 
@@ -3035,16 +2956,17 @@ but it takes a spec as an argument.  You can use it to see the
 environment variables that will be set when a particular build runs,
 for example:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack env mpileaks@1.1%intel
 
 This will display the entire environment that will be set when the
 ``mpileaks@1.1%intel`` build runs.
 
-To run commands in a package's build environment, you can simply provided them after the spec argument to ``spack env``:
+To run commands in a package's build environment, you can simply
+provide them after the spec argument to ``spack env``:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack cd mpileaks@1.1%intel
    $ spack env mpileaks@1.1%intel ./configure
@@ -3060,13 +2982,17 @@ package's build environment.
 
 ``spack location`` is the same as ``spack cd`` but it does not require
 shell support.  It simply prints out the path you ask for, rather than
-cd'ing to it.  In bash, this::
+cd'ing to it.  In bash, this:
 
-  cd $(spack location -b <spec>)
+.. code-block:: console
 
-is the same as::
+   $ cd $(spack location -b <spec>)
 
-  spack cd -b <spec>
+is the same as:
+
+.. code-block:: console
+
+   $ spack cd -b <spec>
 
 ``spack location`` is intended for use in scripts or makefiles that
 need to know where packages are installed.  e.g., in a makefile you
@@ -3082,7 +3008,7 @@ might write:
 Build System Configuration Support
 ----------------------------------
 
-Imagine a developer creating a CMake-based (or Autotools) project in a local
+Imagine a developer creating a CMake or Autotools-based project in a local
 directory, which depends on libraries A-Z.  Once Spack has installed
 those dependencies, one would like to run ``cmake`` with appropriate
 command line and environment so CMake can find them.  The ``spack
@@ -3091,44 +3017,45 @@ configuration that is essentially the same as how Spack *would have*
 configured the project.  This can be demonstrated with a usage
 example:
 
-.. code-block:: bash
+.. code-block:: console
 
-   cd myproject
-    spack setup myproject@local
-    mkdir build; cd build
-    ../spconfig.py ..
-    make
-    make install
+   $ cd myproject
+   $ spack setup myproject@local
+   $ mkdir build; cd build
+   $ ../spconfig.py ..
+   $ make
+   $ make install
 
 Notes:
-  * Spack must have ``myproject/package.py`` in its repository for
-    this to work.
-  * ``spack setup`` produces the executable script ``spconfig.py`` in
-    the local directory, and also creates the module file for the
-    package.  ``spconfig.py`` is normally run from the user's
-    out-of-source build directory.
-  * The version number given to ``spack setup`` is arbitrary, just
-    like ``spack diy``.  ``myproject/package.py`` does not need to
-    have any valid downloadable versions listed (typical when a
-    project is new).
-  * spconfig.py produces a CMake configuration that *does not* use the
-    Spack wrappers.  Any resulting binaries *will not* use RPATH,
-    unless the user has enabled it.  This is recommended for
-    development purposes, not production.
-  * ``spconfig.py`` is human readable, and can serve as a developer
-    reference of what dependencies are being used.
-  * ``make install`` installs the package into the Spack repository,
-    where it may be used by other Spack packages.
-  * CMake-generated makefiles re-run CMake in some circumstances.  Use
-    of ``spconfig.py`` breaks this behavior, requiring the developer
-    to manually re-run ``spconfig.py`` when a ``CMakeLists.txt`` file
-    has changed.
+
+* Spack must have ``myproject/package.py`` in its repository for
+  this to work.
+* ``spack setup`` produces the executable script ``spconfig.py`` in
+  the local directory, and also creates the module file for the
+  package.  ``spconfig.py`` is normally run from the user's
+  out-of-source build directory.
+* The version number given to ``spack setup`` is arbitrary, just
+  like ``spack diy``.  ``myproject/package.py`` does not need to
+  have any valid downloadable versions listed (typical when a
+  project is new).
+* spconfig.py produces a CMake configuration that *does not* use the
+  Spack wrappers.  Any resulting binaries *will not* use RPATH,
+  unless the user has enabled it.  This is recommended for
+  development purposes, not production.
+* ``spconfig.py`` is human readable, and can serve as a developer
+  reference of what dependencies are being used.
+* ``make install`` installs the package into the Spack repository,
+  where it may be used by other Spack packages.
+* CMake-generated makefiles re-run CMake in some circumstances.  Use
+  of ``spconfig.py`` breaks this behavior, requiring the developer
+  to manually re-run ``spconfig.py`` when a ``CMakeLists.txt`` file
+  has changed.
 
 ^^^^^^^^^^^^
 CMakePackage
 ^^^^^^^^^^^^
 
-In order ot enable ``spack setup`` functionality, the author of
+In order to enable ``spack setup`` functionality, the author of
 ``myproject/package.py`` must subclass from ``CMakePackage`` instead
 of the standard ``Package`` superclass.  Because CMake is
 standardized, the packager does not need to tell Spack how to run
@@ -3140,14 +3067,15 @@ translate variant flags into CMake definitions.  For example:
 
 .. code-block:: python
 
-    def configure_args(self):
-        spec = self.spec
-        return [
-            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
-            '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
-            '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
-            '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
-            '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')]
+   def configure_args(self):
+       spec = self.spec
+       return [
+           '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
+           '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
+           '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
+           '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
+           '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')
+       ]
 
 If needed, a packager may also override methods defined in
 ``StagedPackage`` (see below).

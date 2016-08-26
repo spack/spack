@@ -10,7 +10,9 @@ Configuration
 Temporary space
 ---------------
 
-.. warning:: Temporary space configuration will eventually be moved to
+.. warning::
+
+   Temporary space configuration will eventually be moved to
    configuration files, but currently these settings are in
    ``lib/spack/spack/__init__.py``
 
@@ -73,11 +75,11 @@ directory. Here's an example of an external configuration:
 .. code-block:: yaml
 
    packages:
-      openmpi:
-         paths:
-            openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7: /opt/openmpi-1.4.3
-            openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7+debug: /opt/openmpi-1.4.3-debug
-            openmpi@1.6.5%intel@10.1 arch=linux-x86_64-debian7: /opt/openmpi-1.6.5-intel
+     openmpi:
+       paths:
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7: /opt/openmpi-1.4.3
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7+debug: /opt/openmpi-1.4.3-debug
+         openmpi@1.6.5%intel@10.1 arch=linux-x86_64-debian7: /opt/openmpi-1.6.5-intel
 
 This example lists three installations of OpenMPI, one built with gcc,
 one built with gcc and debug information, and another built with Intel.
@@ -110,13 +112,13 @@ be:
 
 .. code-block:: yaml
 
-  packages:
-    openmpi:
-      paths:
-        openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7: /opt/openmpi-1.4.3
-        openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7+debug: /opt/openmpi-1.4.3-debug
-        openmpi@1.6.5%intel@10.1 arch=linux-x86_64-debian7: /opt/openmpi-1.6.5-intel
-      buildable: False
+   packages:
+     openmpi:
+       paths:
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7: /opt/openmpi-1.4.3
+         openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7+debug: /opt/openmpi-1.4.3-debug
+         openmpi@1.6.5%intel@10.1 arch=linux-x86_64-debian7: /opt/openmpi-1.6.5-intel
+       buildable: False
 
 The addition of the ``buildable`` flag tells Spack that it should never build
 its own version of OpenMPI, and it will instead always rely on a pre-built
@@ -144,18 +146,18 @@ The preferred configuration can be controlled via the
 
 Here's an example packages.yaml file that sets preferred packages:
 
-.. code-block:: sh
+.. code-block:: yaml
 
-    packages:
-      opencv:
-        compiler: [gcc@4.9]
-        variants: +debug
-      gperftools:
-        version: [2.2, 2.4, 2.3]
-      all:
-        compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
-        providers:
-          mpi: [mvapich, mpich, openmpi]
+   packages:
+     opencv:
+       compiler: [gcc@4.9]
+       variants: +debug
+     gperftools:
+       version: [2.2, 2.4, 2.3]
+     all:
+       compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
+       providers:
+         mpi: [mvapich, mpich, openmpi]
 
 At a high level, this example is specifying how packages should be
 concretized.  The opencv package should prefer using gcc 4.9 and
@@ -205,15 +207,15 @@ supply ``-p`` to Spack on the command line, before any subcommands.
 
 ``spack -p`` output looks like this:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack -p graph dyninst
    o  dyninst
-   |\
-   | |\
-   | o |  libdwarf
-   |/ /
-   o |  libelf
+   \|\
+   \| \|\
+   \| o \|  libdwarf
+   \|/ /
+   o \|  libelf
     /
    o  boost
 

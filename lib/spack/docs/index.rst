@@ -28,7 +28,7 @@ Get spack from the `github repository
 <https://github.com/llnl/spack>`_ and install your first
 package:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ git clone https://github.com/llnl/spack.git
    $ cd spack/bin

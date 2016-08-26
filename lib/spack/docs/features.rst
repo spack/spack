@@ -14,7 +14,7 @@ Simple package installation
 Installing the default version of a package is simple. This will install
 the latest version of the ``mpileaks`` package and all of its dependencies:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack install mpileaks
 
@@ -26,7 +26,7 @@ Spack allows installation to be customized.  Users can specify the
 version, build compiler, compile-time options, and cross-compile
 platform, all on the command line.
 
-.. code-block:: sh
+.. code-block:: console
 
    # Install a particular version by appending @
    $ spack install mpileaks@1.1.2
@@ -59,7 +59,7 @@ customized extensively.  Suppose that ``mpileaks`` depends indirectly
 on ``libelf`` and ``libdwarf``.  Using ``^``, users can add custom
 configurations for the dependencies:
 
-.. code-block:: sh
+.. code-block:: console
 
    # Install mpileaks and link it with specific versions of libelf and libdwarf
    $ spack install mpileaks@1.1.2 %gcc@4.7.3 +debug ^libelf@0.8.12 ^libdwarf@20130729+debug
@@ -91,7 +91,7 @@ in pure Python.
 
 For example, this command:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack create http://www.mr511.de/software/libelf-0.8.13.tar.gz
 
@@ -101,16 +101,26 @@ creates a simple python file:
 
    from spack import *
 
+
    class Libelf(Package):
-       homepage = "http://www.example.com/"
+       """FIXME: Put a proper description of your package here."""
+
+       # FIXME: Add a proper url for your package's homepage here.
+       homepage = "http://www.example.com"
        url      = "http://www.mr511.de/software/libelf-0.8.13.tar.gz"
 
        version('0.8.13', '4136d7b4c04df68b686570afa26988ac')
 
-       def install(self, prefix):
-           configure("--prefix=%s" % prefix)
+       # FIXME: Add dependencies if required.
+       # depends_on('foo')
+
+       def install(self, spec, prefix):
+           # FIXME: Modify the configure line to suit your build system here.
+           configure('--prefix={0}'.format(prefix))
+
+           # FIXME: Add logic to build and install here.
            make()
-           make("install")
+           make('install')
 
 It doesn't take much python coding to get from there to a working
 package:

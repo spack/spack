@@ -9,7 +9,7 @@ Download
 Getting spack is easy.  You can clone it from the `github repository
 <https://github.com/llnl/spack>`_ using this command:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ git clone https://github.com/llnl/spack.git
 
@@ -18,7 +18,7 @@ full path to this directory is in the ``SPACK_ROOT`` environment
 variable.  Add ``$SPACK_ROOT/bin`` to your path and you're ready to
 go:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ export PATH=$SPACK_ROOT/bin:$PATH
    $ spack install libelf
@@ -26,9 +26,10 @@ go:
 For a richer experience, use Spack's `shell support
 <http://software.llnl.gov/spack/basic_usage.html#environment-modules>`_:
 
-.. code-block:: sh
+.. code-block:: console
 
    # For bash users
+   $ export SPACK_ROOT=/path/to/spack
    $ . $SPACK_ROOT/share/spack/setup-env.sh
 
    # For tcsh or csh users (note you must set SPACK_ROOT)
@@ -48,9 +49,9 @@ You may want to run it out of a prefix other than the git repository
 you cloned.  The ``spack bootstrap`` command provides this
 functionality.  To install spack in a new directory, simply type:
 
-.. code-block:: sh
+.. code-block:: console
 
-    $ spack bootstrap /my/favorite/prefix
+   $ spack bootstrap /my/favorite/prefix
 
 This will install a new spack script in ``/my/favorite/prefix/bin``,
 which you can use just like you would the regular spack script.  Each
