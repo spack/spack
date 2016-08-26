@@ -46,5 +46,4 @@ class Opencoarrays(CMakePackage):
                     ]
             cmake('..', *cmake_args)
             make()
-            make("test", parallel=False)
             make("install")
