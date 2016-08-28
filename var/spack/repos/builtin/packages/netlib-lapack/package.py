@@ -88,7 +88,7 @@ class NetlibLapack(Package):
 
         build_dir = 'spack-build' + ('-shared' if shared else '-static')
         with working_dir(build_dir, create=True):
-            cmake('..', *cmake_args)
+            which('cmake')('..', *cmake_args)
             make()
             make("install")
 

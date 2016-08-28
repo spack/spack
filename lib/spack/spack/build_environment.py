@@ -272,6 +272,7 @@ def set_build_environment_variables(pkg, env, dirty=False):
         # Remove these vars from the environment during build because they
         # can affect how some packages find libraries.  We want to make
         # sure that builds never pull in unintended external dependencies.
+        # BUT: If things don't work, remove the env.unset() stuff here.
         env.unset('LD_LIBRARY_PATH')
         env.unset('LIBRARY_PATH')
         env.unset('CPATH')
@@ -396,6 +397,18 @@ def get_rpaths(pkg):
         rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
     return rpaths
 
+def get_std_cmake_args(cmake_pkg):
+    # standard CMake arguments
+    ret = ['-DCMAKE_INSTALL_PREFIX=%s' % cmake_pkg.prefix,
+        '-DCMAKE_BUILD_TYPE=RelWithDebInfo']
+    if platform.mac_ver()[0]:
+        ret.append('-DCMAKE_FIND_FRAMEWORK=LAST')
+
+    # Set up CMake rpath
+    ret.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=FALSE')
+    ret.append('-DCMAKE_INSTALL_RPATH=%s' % ":".join(get_rpaths(cmake_pkg)))
+
+    return ret
 
 def parent_class_modules(cls):
     """

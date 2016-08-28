@@ -187,7 +187,7 @@ class Metis(Package):
                         join_path(source_directory, 'GKlib', 'error.c'))
 
         with working_dir(build_directory, create=True):
-            cmake(source_directory, *options)
+            which('cmake')(source_directory, *options)
             make()
             make('install')
 

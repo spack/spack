@@ -113,7 +113,8 @@ abi = ABI()
 # This controls how things are concretized in spack.
 # Replace it with a subclass if you want different
 # policies.
-#
+
+choose_hints = {'mpi' : 'openmpi'}
 from spack.concretize import DefaultConcretizer
 concretizer = DefaultConcretizer()
 
@@ -141,7 +142,7 @@ use_tmp_stage = True
 # Use a %u to add a username to the stage paths here, in case this
 # is a shared filesystem.  Spack will use the first of these paths
 # that it can create.
-tmp_dirs = []
+tmp_dirs = ['/tmp/%u/spack-stage']
 _default_tmp = tempfile.gettempdir()
 _tmp_user = getpass.getuser()
 

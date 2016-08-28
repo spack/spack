@@ -44,19 +44,26 @@ class Petsc(Package):
     version('3.5.1', 'a557e029711ebf425544e117ffa44d8f')
     version('3.4.4', '7edbc68aa6d8d6a3295dd5f6c2f6979d')
 
+    # If this has trouble finding BLAS and LAPACK...
+    # Consider using the paths that BLAS and LAPACK now use to export
+    # their shared library.
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
-    variant('mpi',     default=True,  description='Activates MPI support')
+    variant('mpi',     default=True,
+            description='Activates MPI support')
     variant('double',  default=True,
             description='Switches between single and double precision')
-    variant('complex', default=False, description='Build with complex numbers')
-    variant('debug',   default=False, description='Compile in debug mode')
+    variant('complex', default=False,
+            description='Build with complex numbers')
+    variant('debug',   default=False,
+            description='Compile in debug mode')
 
     variant('metis',   default=True,
             description='Activates support for metis and parmetis')
     variant('hdf5',    default=True,
             description='Activates support for HDF5 (only parallel)')
-    variant('boost',   default=True,  description='Activates support for Boost')
+    variant('boost',   default=True,
+            description='Activates support for Boost')
     variant('hypre',   default=True,
             description='Activates support for Hypre (only parallel)')
     variant('mumps',   default=True,
@@ -70,7 +77,7 @@ class Petsc(Package):
     depends_on('mpi', when='+mpi')
 
     # Build dependencies
-    depends_on('python @2.6:2.7')
+    depends_on('python @2.6:2.7', type='build')
 
     # Other dependencies
     depends_on('boost', when='+boost')
@@ -127,7 +134,9 @@ class Petsc(Package):
                 'complex' if '+complex' in spec else 'real'),
             '--with-shared-libraries=%s' % ('1' if '+shared' in spec else '0'),
             '--with-debugging=%s' % ('1' if '+debug' in spec else '0'),
-            '--with-blas-lapack-dir=%s' % spec['lapack'].prefix
+            '--with-lapack-lib=%s' % spec['lapack'].lapack_static_lib,
+            '--with-blas-lib=%s' % spec['blas'].blas_static_lib
+#            '--with-blas-lapack-dir=%s' % spec['lapack'].prefix
         ])
         # Activates library support if needed
         for library in ('metis', 'boost', 'hdf5', 'hypre', 'parmetis',
