@@ -18,7 +18,7 @@ class Everytrace(CMakePackage):
     variant('fortran', default=True, description='Enable use with Fortran programs')
 
     depends_on('mpi', when='+mpi')
-    depends_on('cmake')
+    depends_on('cmake', type='build')
 
     def configure_args(self):
         spec = self.spec
