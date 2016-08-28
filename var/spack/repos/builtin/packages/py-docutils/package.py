@@ -39,5 +39,8 @@ class PyDocutils(Package):
 
     extends('python')
 
+    depends_on('py-pil')
+    depends_on('py-pygments')
+
     def install(self, spec, prefix):
         python('setup.py', 'install', '--prefix={0}'.format(prefix))
