@@ -58,7 +58,7 @@ can join it here:
 
 ### Contributions
 
-Contributing to Spack is relatively.  Just send us a
+Contributing to Spack is relatively easy.  Just send us a
 [pull request](https://help.github.com/articles/using-pull-requests/).
 When you send your request, make ``develop`` the destination branch on the
 [Spack repository](https://github.com/LLNL/spack).

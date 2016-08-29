@@ -176,7 +176,7 @@ def main():
 
 if args.profile:
     import cProfile
-    cProfile.run('main()', sort='tottime')
+    cProfile.run('main()', sort='time')
 elif args.pdb:
     import pdb
     pdb.run('main()')

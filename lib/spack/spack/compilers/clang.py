@@ -101,7 +101,7 @@ class Clang(Compiler):
                 ver = match.group(1) + '-apple'
             else:
                 # Normal clang compiler versions are left as-is
-                match = re.search(r'^clang version ([^ )]+)', output)
+                match = re.search(r'clang version ([^ )]+)', output)
                 if match:
                     ver = match.group(1)
 

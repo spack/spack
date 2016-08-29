@@ -47,7 +47,7 @@ class Texlive(Package):
     variant('scheme',  default="small",
             description='Package subset to install (e.g. full, small, basic)')
 
-    depends_on('perl')
+    depends_on('perl', type='build')
 
     def install(self, spec, prefix):
         env = os.environ

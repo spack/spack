@@ -36,7 +36,7 @@ class PyPyside(Package):
     # https://github.com/PySide/pyside-setup/issues/58
     # Meanwhile, developers have moved onto pyside2 (for Qt5),
     # and show little interest in certifying PySide 1.2.4 for Python.
-    version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')
+    version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')  # rpath problems
 
     # This is not available from pypi
     # version('1.2.3', 'fa5d5438b045ede36104bba25a6ccc10')
@@ -48,7 +48,9 @@ class PyPyside(Package):
 
     extends('python')
     depends_on('py-setuptools', type='build')
-    depends_on('qt@:4')
+    depends_on('qt@4.5:4.9')
+    depends_on('libxml2@2.6.32:')
+    depends_on('libxslt@1.1.19:')
 
     def patch(self):
         """Undo PySide RPATH handling and add Spack RPATH."""
@@ -67,23 +69,25 @@ class PyPyside(Package):
                 '"-DCMAKE_INSTALL_RPATH=%s",' % ':'.join(rpath)),
             'setup.py')
 
+        # PySide tries to patch ELF files to remove RPATHs
+        # Disable this and go with the one we set.
+        if self.spec.satisfies('@1.2.4:'):
+            rpath_file = 'setup.py'
+        else:
+            rpath_file = 'pyside_postinstall.py'
 
-        # Convince PySide that it really CAN work with Python 3.5
-        filter_file(
-            "'Programming Language :: Python :: 3.4',",
-            "'Programming Language :: Python :: 3.4',\n        'Programming Language :: Python :: 3.5',",
-            'setup.py')
+        filter_file(r'(^\s*)(rpath_cmd\(.*\))', r'\1#\2', rpath_file)
 
-        # As of version 1.2.3, PySide removed the post-install script.
-        if self.spec.version <= Version('1.2.2'):
-            # PySide@:1.2.2 tries to patch ELF files to remove RPATHs
-            # Disable this and go with the one we set.
-            filter_file(
-                r'^\s*rpath_cmd\(pyside_path, srcpath\)',
-                r'#rpath_cmd(pyside_path, srcpath)',
-                'pyside_postinstall.py')
+        # TODO: rpath handling for PySide 1.2.4 still doesn't work.
+        # PySide can't find the Shiboken library, even though it comes
+        # bundled with it and is installed in the same directory.
+
+        # PySide does not provide official support for
+        # Python 3.5, but it should work fine
+        filter_file("'Programming Language :: Python :: 3.4'",
+                    "'Programming Language :: Python :: 3.4',\r\n        "
+                    "'Programming Language :: Python :: 3.5'",
+                    "setup.py")
 
     def install(self, spec, prefix):
-        python('setup.py', 'install',
-               '--prefix=%s' % prefix,
-               '--jobs=%s' % make_jobs)
+        setup_py('install', '--prefix=%s' % prefix, '--jobs=%s' % make_jobs)

@@ -32,6 +32,7 @@ class Raja(Package):
     version('git', git='https://github.com/LLNL/RAJA.git', branch="master")
 
     def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
-        make()
-        make('install')
+        with working_dir('build', create=True):
+            cmake('..', *std_cmake_args)
+            make()
+            make('install')

@@ -33,7 +33,7 @@ class BppSeq(Package):
 
     version('2.2.0', '44adef0ff4d5ca4e69ccf258c9270633')
 
-    depends_on('cmake')
+    depends_on('cmake', type='build')
     depends_on('bpp-core')
 
     def install(self, spec, prefix):

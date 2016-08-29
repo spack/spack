@@ -28,10 +28,13 @@ from spack import *
 class Dyninst(Package):
     """API for dynamic binary instrumentation.  Modify programs while they
     are executing without recompiling, re-linking, or re-executing."""
+
     homepage = "https://paradyn.org"
-    url      = "http://www.dyninst.org/sites/default/files/downloads/dyninst/8.1.2/DyninstAPI-8.1.2.tgz"
+    url = "https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz"
     list_url = "http://www.dyninst.org/downloads/dyninst-8.x"
 
+    version('9.2.0', 'ad023f85e8e57837ed9de073b59d6bab',
+            url="https://github.com/dyninst/dyninst/archive/v9.2.0.tar.gz")
     version('9.1.0', '5c64b77521457199db44bec82e4988ac',
             url="http://www.paradyn.org/release9.1.0/DyninstAPI-9.1.0.tgz")
     version('8.2.1', 'abf60b7faabe7a2e4b54395757be39c7',
@@ -41,13 +44,25 @@ class Dyninst(Package):
     version('8.1.1', 'd1a04e995b7aa70960cd1d1fac8bd6ac',
             url="http://www.paradyn.org/release8.1/DyninstAPI-8.1.1.tgz")
 
+    variant('stat_dysect', default=False,
+            description="patch for STAT's DySectAPI")
+
     depends_on("libelf")
     depends_on("libdwarf")
     depends_on("boost@1.42:")
     depends_on('cmake', type='build')
 
+    patch('stat_dysect.patch', when='+stat_dysect')
+    patch('stackanalysis_h.patch', when='@9.2.0')
+
     # new version uses cmake
     def install(self, spec, prefix):
+        if spec.satisfies('@:8.1'):
+            configure("--prefix=" + prefix)
+            make()
+            make("install")
+            return
+
         libelf = spec['libelf'].prefix
         libdwarf = spec['libdwarf'].prefix
 

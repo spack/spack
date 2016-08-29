@@ -27,57 +27,73 @@ import os
 
 
 class PyMatplotlib(Package):
-    """Python plotting package."""
+    """matplotlib is a python 2D plotting library which produces publication
+    quality figures in a variety of hardcopy formats and interactive
+    environments across platforms."""
+
     homepage = "https://pypi.python.org/pypi/matplotlib"
     url      = "https://pypi.python.org/packages/source/m/matplotlib/matplotlib-1.4.2.tar.gz"
 
-    version('1.4.2', '7d22efb6cce475025733c50487bd8898')
+    version('1.5.1', 'f51847d8692cb63df64cd0bd0304fd20')
     version('1.4.3', '86af2e3e3c61849ac7576a6f5ca44267')
+    version('1.4.2', '7d22efb6cce475025733c50487bd8898')
 
-    variant('gui', default=False, description='Enable GUI')
+    variant('gui',     default=False, description='Enable GUI')
     variant('ipython', default=False, description='Enable ipython support')
 
+    # Python 2.7, 3.4, or 3.5
     extends('python', ignore=r'bin/nosetests.*$|bin/pbr$')
 
-    # depends_on('binutils', type='build')
+    # Required dependencies
+    depends_on('py-numpy@1.6:',    type=nolink)
+    depends_on('py-setuptools',    type='build')
+    depends_on('py-dateutil@1.1:', type=nolink)
+    depends_on('py-pyparsing',     type=nolink)
+    depends_on('libpng@1.2:')
+    depends_on('py-pytz',          type=nolink)
+    depends_on('freetype@2.3:')
+    depends_on('py-cycler@0.9:',   type=nolink)
 
-    depends_on('py-setuptools', type='build')
+    # Optional GUI framework
+    depends_on('tk@8.3:',   when='+gui')  # not 8.6.0 or 8.6.1
+    depends_on('qt',        when='+gui')
     depends_on('py-pyside', when='+gui', type=nolink)
-    depends_on('py-ipython', when='+ipython', type=nolink)
-    depends_on('py-pyparsing', type=nolink)
-    depends_on('py-six', type=nolink)
-    depends_on('py-dateutil', type=nolink)
-    depends_on('py-pytz', type=nolink)
-    depends_on('py-nose', type=nolink)
-    depends_on('py-numpy', type=nolink)
-    depends_on('py-mock', type=nolink)
-    depends_on('py-pbr', type=nolink)
-    depends_on('py-funcsigs', type=nolink)
+    # TODO: Add more GUI dependencies
 
+    # Optional external programs
+    # ffmpeg/avconv or mencoder
+    depends_on('ImageMagick')
+
+    # Optional dependencies
+    depends_on('py-pillow',  type=nolink)
     depends_on('pkg-config', type='build')
-    depends_on('freetype')
-    depends_on('qt', when='+gui')
-    depends_on('bzip2')
-    depends_on('tcl', when='+gui')
-    depends_on('tk', when='+gui')
-    depends_on('qhull')
+    depends_on('py-ipython', when='+ipython')
+
+    # Testing dependencies
+    depends_on('py-nose')  # type='test'
+    depends_on('py-mock')  # type='test'
+
+    # Required libraries that ship with matplotlib
+    # depends_on('agg@2.4:')
+    depends_on('qhull@2012.1:')
+    # depends_on('ttconv')
+    depends_on('py-six@1.9.0:', type=nolink)
 
     def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+        setup_py('build')
+        setup_py('install', '--prefix={0}'.format(prefix))
 
-        if str(self.version) in ['1.4.2', '1.4.3']:
-            # hack to fix configuration file
+        if '+gui' in spec:
+            # Set backend in matplotlib configuration file
             config_file = None
             for p, d, f in os.walk(prefix.lib):
                 for file in f:
                     if file.find('matplotlibrc') != -1:
                         config_file = join_path(p, 'matplotlibrc')
-                        print config_file
-            if config_file is None:
-                raise InstallError('could not find config file')
-            filter_file(r'backend      : pyside',
-                        'backend      : Qt4Agg',
-                        config_file)
-            filter_file(r'#backend.qt4 : PyQt4',
-                        'backend.qt4 : PySide',
-                        config_file)
+            if not config_file:
+                raise InstallError('Could not find matplotlibrc')
+
+            kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
+            rc = FileFilter(config_file)
+            rc.filter('^backend.*',      'backend     : Qt4Agg', **kwargs)
+            rc.filter('^#backend.qt4.*', 'backend.qt4 : PySide', **kwargs)

@@ -36,8 +36,11 @@ class Nco(Package):
 
     # See "Compilation Requirements" at:
     # http://nco.sourceforge.net/#bld
+    variant('mpi', default=True)
 
     depends_on('netcdf')
+    depends_on('netcdf+mpi', when='+mpi')
+    depends_on('netcdf~mpi', when='~mpi')
     depends_on('antlr@2.7.7+cxx')    # (required for ncap2)
     depends_on('gsl')  # (desirable for ncap2)
     depends_on('udunits2')       # (allows dimensional unit transformations)
