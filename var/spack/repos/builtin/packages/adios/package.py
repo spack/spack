@@ -64,6 +64,11 @@ class Adios(Package):
     # module load cray-hdf5/1.8.14
     # module load python/2.7.10
 
+    depends_on('autoconf')
+    depends_on('automake')
+    depends_on('libtool')
+    depends_on('python')
+
     depends_on('mpi', when='+mpi')
     # shipped within ADIOS 1.10.0+
     depends_on('mxml', when='@:1.9.0')
@@ -124,6 +129,9 @@ class Adios(Package):
             extra_args.extend(["CC=gcc", "CXX=g++"])
             if '+fortran' in spec:
                 extra_args.extend(["FC=gfortran"])
+
+        sh = which('sh')
+        sh('./autogen.sh')
 
         configure("--prefix=%s" % prefix,
                   *extra_args)
