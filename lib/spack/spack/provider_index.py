@@ -25,6 +25,8 @@
 """
 The ``virtual`` module contains utility classes for virtual dependencies.
 """
+from __future__ import print_function
+
 from itertools import product as iproduct
 from pprint import pformat
 
@@ -202,11 +204,11 @@ class ProviderIndex(object):
 
         if not isinstance(yfile, dict):
             raise spack.spec.SpackYAMLError(
-                "YAML ProviderIndex was not a dict.")
+                "YAML ProviderIndex was not a dict, but of type %s instead" % type(yfile), '')
 
         if 'provider_index' not in yfile:
             raise spack.spec.SpackYAMLError(
-                "YAML ProviderIndex does not start with 'provider_index'")
+                "YAML ProviderIndex does not start with 'provider_index'", '')
 
         index = ProviderIndex()
         providers = yfile['provider_index']['providers']
