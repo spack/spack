@@ -25,19 +25,19 @@
 from spack import *
 
 
-class PyDocutils(Package):
-    """Docutils is an open-source text processing system for processing
-    plaintext documentation into useful formats, such as HTML, LaTeX,
-    man-pages, open-document or XML. It includes reStructuredText, the
-    easy to read, easy to use, what-you-see-is-what-you-get plaintext
-    markup language."""
+class PyAlabaster(Package):
+    """Alabaster is a visually (c)lean, responsive, configurable theme
+    for the Sphinx documentation system."""
 
-    homepage = "http://docutils.sourceforge.net/"
-    url      = "https://pypi.python.org/packages/source/d/docutils/docutils-0.12.tar.gz"
+    homepage = "https://pypi.python.org/pypi/alabaster"
+    url      = "https://pypi.python.org/packages/source/a/alabaster/alabaster-0.7.9.tar.gz"
 
-    version('0.12', '4622263b62c5c771c03502afa3157768')
+    version('0.7.9', 'b29646a8bbe7aa52830375b7d17b5d7a',
+            url="https://pypi.python.org/packages/71/c3/70da7d8ac18a4f4c502887bd2549e05745fa403e2cd9d06a8a9910a762bc/alabaster-0.7.9.tar.gz")
 
     extends('python')
+
+    depends_on('py-setuptools', type='build')
 
     def install(self, spec, prefix):
         setup_py('install', '--prefix={0}'.format(prefix))
