@@ -28,6 +28,9 @@ deps=(
 # Check for dependencies
 "$QA_DIR/check_dependencies" "${deps[@]}" || exit 1
 
+# Add Spack to the PATH.
+export PATH="$SPACK_ROOT/bin:$PATH"
+
 # Move to documentation directory
 # Allows script to be run from anywhere
 cd "$DOC_DIR"
