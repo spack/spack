@@ -158,13 +158,15 @@ class Qt(Package):
             '-shared',
             '-confirm-license',
             '-openssl-linked',
-            '-no-phonon',
             '-optimized-qmake',
             '-no-openvg',
             '-no-pch',
             # NIS is deprecated in more recent glibc
             '-no-nis'
         ]
+
+        if '@4' in self.spec:
+            config_args.append('-no-phonon')
 
         if '+dbus' in self.spec:
             config_args.append('-dbus-linked')
