@@ -24,7 +24,6 @@
 ##############################################################################
 
 from spack import *
-import os
 
 
 class Adios(Package):
@@ -121,7 +120,7 @@ class Adios(Package):
         if '+hdf5' in spec:
             extra_args.append('--with-hdf5=%s' % spec['hdf5'].prefix)
         if '+netcdf' in spec:
-            extra_args.append('--with-netcdf=%s' % os.environ["NETCDF_DIR"])
+            extra_args.append('--with-netcdf=%s' % spec['netcdf'].prefix)
 
         sh = which('sh')
         sh('./autogen.sh')
