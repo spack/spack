@@ -47,10 +47,10 @@ class Adios(Package):
     variant('shared', default=True,
             description='Builds a shared version of the library')
 
-    variant('fortran', default=True,
+    variant('fortran', default=False,
             description='Enable Fortran bindings support')
 
-    variant('mpi', default=False, description='Enable MPI support')
+    variant('mpi', default=True, description='Enable MPI support')
     variant('infiniband', default=False, description='Enable infiniband support')
 
     variant('zlib', default=True, description='Enable szip transform support')
