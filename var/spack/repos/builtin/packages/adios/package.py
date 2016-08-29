@@ -67,14 +67,14 @@ class Adios(Package):
     # module load cray-hdf5/1.8.14
     # module load python/2.7.10
 
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
-    depends_on('python')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('python', type='build')
 
     depends_on('mpi', when='+mpi')
     # shipped within ADIOS 1.10.0+
-    depends_on('mxml', when='@:1.9.0')
+    depends_on('mxml@2.9:')
     # optional transformations
     depends_on('zlib', when='+zlib')
     depends_on('szip', when='+szip')
@@ -100,9 +100,8 @@ class Adios(Package):
         # required, otherwise building its python bindings on ADIOS will fail
         extra_args.append("CFLAGS=-fPIC")
 
-        # MXML is shipped within ADIOS in 1.10.0+
-        if spec.satisfies('@:1.9.0'):
-            extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
+        # always build external MXML, even in ADIOS 1.10.0+
+        extra_args.append('--with-mxml=%s' % spec['mxml'].prefix)
 
         if '+shared' in spec:
             extra_args.append('--enable-shared')
