@@ -133,6 +133,8 @@ class Python(Package):
     # TODO: Once better testing support is integrated, add the following tests
     # https://wiki.python.org/moin/TkInter
     #
+    # Note: Only works if ForwardX11Trusted is enabled, i.e. `ssh -Y`
+    #
     #    if '+tk' in spec:
     #        env['TK_LIBRARY']  = join_path(spec['tk'].prefix.lib,
     #            'tk{0}'.format(spec['tk'].version.up_to(2)))
