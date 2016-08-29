@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 import sys
+import os
 
 
 class Nwchem(Package):
@@ -69,6 +70,10 @@ class Nwchem(Package):
         args = []
         args.extend([
             'NWCHEM_TOP=%s' % self.stage.source_path,
+            # NWCHEM is picky about FC and CC. They should NOT be full path.
+            # see http://www.nwchem-sw.org/index.php/Special:AWCforum/sp/id7524
+            'CC=%s' % os.path.basename(spack_cc),
+            'FC=%s' % os.path.basename(spack_fc),
             'USE_MPI=y',
             'MPI_LOC=%s' % spec['mpi'].prefix,
             'USE_PYTHONCONFIG=y',
