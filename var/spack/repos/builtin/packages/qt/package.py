@@ -56,6 +56,7 @@ class Qt(Package):
     patch('btn_trigger_happy.patch', when='@5.7.0:')
 
     patch('qt4-corewlan-new-osx.patch', when='@4')
+    patch('qt4-pcre-include-conflict.patch', when='@4')
     patch('qt4-el-capitan.patch', when='@4')
 
     # Use system openssl for security.
