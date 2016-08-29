@@ -527,36 +527,13 @@ class Dotkit(EnvModule):
         return ''
 
 
-class SafeFormat(object):
-    def __init__(self, **kw):
-        self.__dict = kw
-
-    def __getitem__(self, name):
-        return self.__dict.get(name, '{%s}' % name)
-
-string.Formatter().vformat('{what} {man}', [], SafeFormat(man=2))
-
-
 class TclModule(EnvModule):
     name = 'tcl'
     path = join_path(spack.share_path, "modules")
-
-    default_delim_format = '--delim "{delim}"'
-    try:
-        delim_format = CONFIGURATION[name]['delim_format']
-    except KeyError:
-        delim_format = default_delim_format
-
     environment_modifications_formats = {
-        PrependPath: string.Formatter().vformat(
-            'prepend-path {delim_format} {name} \"{value}\"\n',
-            [], SafeFormat(delim_format=delim_format)),
-        AppendPath:  string.Formatter().vformat(
-            'append-path  {delim_format} {name} \"{value}\"\n',
-            [], SafeFormat(delim_format=delim_format)),
-        RemovePath:  string.Formatter().vformat(
-            'remove-path  {delim_format} {name} \"{value}\"\n',
-            [], SafeFormat(delim_format=delim_format)),
+        PrependPath: 'prepend-path --delim "{separator}" {name} \"{value}\"\n',
+        AppendPath: 'append-path   --delim "{separator}" {name} \"{value}\"\n',
+        RemovePath: 'remove-path   --delim "{separator}" {name} \"{value}\"\n',
         SetEnv: 'setenv {name} \"{value}\"\n',
         UnsetEnv: 'unsetenv {name}\n'
     }
