@@ -31,7 +31,7 @@ for dep in "$@"; do
                 spack_package=git
                 ;;
             hg)
-                spack_package=py-mercurial
+                spack_package=mercurial
                 pip_package=mercurial
                 ;;
             svn)
