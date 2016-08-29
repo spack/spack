@@ -46,7 +46,8 @@ class Modele(CMakePackage):
 #        description='Build unit tests')
 
     # Build dependencies
-    depends_on('m4')
+    depends_on('m4', type='build')
+    depends_on('cmake', type='build')
 
     # Link dependencies
     depends_on('mpi')
