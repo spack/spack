@@ -21,6 +21,8 @@ changed=($(git diff --name-only --find-renames develop... -- '*.py'))
 changed+=($(git diff --name-only --find-renames --cached -- '*.py'))
 # Add changed files that are unstaged
 changed+=($(git diff --name-only --find-renames -- '*.py'))
+# Add new files that are untracked
+changed+=($(git ls-files --exclude-standard --other -- '*.py'))
 
 # Ensure that each file in the array is unique
 changed=($(printf '%s\n' "${changed[@]}" | sort -u))
