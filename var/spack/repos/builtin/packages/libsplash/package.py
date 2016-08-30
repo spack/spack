@@ -46,8 +46,8 @@ class Libsplash(Package):
             description='Enable parallel I/O (one-file aggregation) support')
 
     depends_on('cmake', type='build')
-    depends_on('hdf5@1.8.6:', when='~mpi')
-    depends_on('hdf5@1.8.6:+mpi', when='+mpi')
+    depends_on('hdf5@1.8.6:')
+    depends_on('hdf5+mpi', when='+mpi')
     depends_on('mpi', when='+mpi')
 
     def install(self, spec, prefix):
