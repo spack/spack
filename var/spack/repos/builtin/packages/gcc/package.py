@@ -63,6 +63,10 @@ class Gcc(Package):
         filter_file(r"'@.*@'", "'@[[:alnum:]]*@'", 'libjava/configure',
                     string=True)
 
+        # Make libgcc_s relocatable
+        filter_file(r"@shlib_slibdir@", "@rpath/lib64", 
+            'libgcc/config/t-slibgcc-darwin',string=True)
+
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
 
         if spec.satisfies("@4.7.1:") and sys.platform != 'darwin':
