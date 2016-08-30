@@ -47,6 +47,7 @@ from glob import glob
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('exts'))
 sys.path.insert(0, os.path.abspath('../external'))
+sys.path.append(os.path.abspath('../spack'))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
 spack_root = '../../..'
@@ -82,6 +83,27 @@ with open('command_index.rst', 'a') as index:
     for cmd in command_names:
         index.write('   * :ref:`%s`\n' % cmd)
 
+#
+# Exclude everything in spack.__all__ from indexing.  All of these
+# symbols are imported from elsewhere in spack; their inclusion in
+# __all__ simply allows package authors to use `from spack import *`.
+# Excluding them ensures they're only documented in their "real" module.
+#
+# This also avoids issues where some of these symbols shadow core spack
+# modules.  Sphinx will complain about duplicate docs when this happens.
+#
+import fileinput, spack
+handling_spack = False
+for line in fileinput.input('spack.rst', inplace=1):
+    if handling_spack:
+        if not line.startswith('    :noindex:'):
+            print '    :noindex: %s' % ' '.join(spack.__all__)
+        handling_spack = False
+
+    if line.startswith('.. automodule::'):
+        handling_spack = (line == '.. automodule:: spack\n')
+
+    print line,
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
