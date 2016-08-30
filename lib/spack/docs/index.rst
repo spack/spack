@@ -46,6 +46,7 @@ Table of Contents
    getting_started
    basic_usage
    packaging_guide
+   application_developer_support
    mirrors
    configuration
    developer_guide
