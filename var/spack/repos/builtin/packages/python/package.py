@@ -24,6 +24,7 @@
 ##############################################################################
 import os
 import re
+import sys
 from contextlib import closing
 
 import spack
@@ -123,6 +124,8 @@ class Python(Package):
 
         if spec.satisfies('@3:'):
             config_args.append('--without-ensurepip')
+        if sys.platform == 'darwin':
+            config_args.append('--disable-toolbox-glue')
 
         configure(*config_args)
         make()
