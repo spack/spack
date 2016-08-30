@@ -33,7 +33,7 @@ class Libpciaccess(Package):
 
     version('0.13.4', 'ace78aec799b1cf6dfaea55d3879ed9f')
 
-    depends_on('libtool')
+    depends_on('libtool', type='build')
 
     def install(self, spec, prefix):
         # libpciaccess does not support OS X
