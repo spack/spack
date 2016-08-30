@@ -64,7 +64,7 @@ class Gcc(Package):
                     string=True)
 
         # Make libgcc_s relocatable
-        filter_file(r"@shlib_slibdir@", "@rpath/", 
+        filter_file(r"@shlib_slibdir@", "@rpath", 
             'libgcc/config/t-slibgcc-darwin',string=True)
 
         enabled_languages = set(('c', 'c++', 'fortran', 'java', 'objc'))
