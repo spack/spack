@@ -35,27 +35,6 @@ export PATH="$SPACK_ROOT/bin:$PATH"
 # Allows script to be run from anywhere
 cd "$SPACK_ROOT"
 
-# Array of directories containing core Spack framework
-core_dirs=(
-    bin
-    etc
-    # lib, but skip documentation
-    lib/spack/env
-    lib/spack/external
-    lib/spack/llnl
-    lib/spack/spack
-    share
-)
-
-# Gather array of changed files
-changed=($("$QA_DIR/changed_files" "${core_dirs[@]}"))
-
-# Exit if no core Spack framework files were modified
-if [[ ! "${changed[@]}" ]]; then
-    echo "No core Spack framework files were modified."
-    exit 0
-fi
-
 # Run integration tests
 # TODO: should these be separated into a different test suite?
 source "$SPACK_ROOT/share/spack/setup-env.sh"
