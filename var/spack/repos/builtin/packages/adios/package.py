@@ -37,11 +37,8 @@ class Adios(Package):
     homepage = "http://www.olcf.ornl.gov/center-projects/adios/"
     url      = "https://github.com/ornladios/ADIOS/archive/v1.10.0.tar.gz"
 
-    # make -j is currently broken
-    parallel = False
-
     version('1.10.0', 'eff450a4c0130479417cfd63186957f3')
-    version('1.9.0' , '310ff02388bbaa2b1c1710ee970b5678')
+    version('1.9.0', '310ff02388bbaa2b1c1710ee970b5678')
 
     variant('shared', default=True,
             description='Builds a shared version of the library')
