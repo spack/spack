@@ -158,7 +158,8 @@ class Version(object):
         """A Version 'satisfies' another if it is at least as specific and has
         a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
-        a suitable compiler."""
+        a suitable compiler.
+        """
 
         nself = len(self.version)
         nother = len(other.version)

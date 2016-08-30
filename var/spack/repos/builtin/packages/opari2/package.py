@@ -33,7 +33,8 @@ class Opari2(Package):
     as well as the usage of pre-instrumented libraries. Furthermore, an
     efficient way of tracking parent-child relationships was added.
     Additionally, we extended OPARI2 to support instrumentation of OpenMP 3.0
-    tied tasks."""
+    tied tasks.
+    """
 
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/opari2/opari2-1.1.2.tar.gz"

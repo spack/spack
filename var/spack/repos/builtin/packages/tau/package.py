@@ -31,7 +31,8 @@ from llnl.util.filesystem import join_path
 class Tau(Package):
     """A portable profiling and tracing toolkit for performance
     analysis of parallel programs written in Fortran, C, C++, UPC,
-    Java, Python."""
+    Java, Python.
+    """
 
     homepage = "http://www.cs.uoregon.edu/research/tau"
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.25.tar.gz"

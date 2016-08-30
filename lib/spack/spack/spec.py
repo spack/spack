@@ -2110,8 +2110,8 @@ class Spec(object):
         *Example:*  ``$_$@$+`` translates to the name, version, and options
         of the package, but no dependencies, arch, or compiler.
 
-        TODO: allow, e.g., $6# to customize short hash length
-        TODO: allow, e.g., $## for full hash.
+        TODO: allow, e.g., ``$6#`` to customize short hash length
+        TODO: allow, e.g., ``$##`` for full hash.
         """
         color = kwargs.get('color', False)
         length = len(format_string)

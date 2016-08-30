@@ -32,7 +32,8 @@ class Gmsh(Package):
     capabilities. Gmsh is built around four modules: geometry, mesh, solver and
     post-processing. The specification of any input to these modules is done
     either interactively using the graphical user interface or in ASCII text
-    files using Gmsh's own scripting language."""
+    files using Gmsh's own scripting language.
+    """
 
     homepage = 'http://gmsh.info'
     url = 'http://gmsh.info/src/gmsh-2.11.0-source.tgz'

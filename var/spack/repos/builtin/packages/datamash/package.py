@@ -27,7 +27,8 @@ from spack import *
 
 class Datamash(Package):
     """GNU datamash is a command-line program which performs basic numeric,
-    textual and statistical operations on input textual data files."""
+    textual and statistical operations on input textual data files.
+    """
 
     homepage = "https://www.gnu.org/software/datamash/"
     url      = "http://ftp.gnu.org/gnu/datamash/datamash-1.0.5.tar.gz"

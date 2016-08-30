@@ -30,7 +30,8 @@ class Cube(Package):
     multi-dimensional performance space consisting of the dimensions:
     - performance metric
     - call path
-    - system resource"""
+    - system resource
+    """
 
     homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
     url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.2/dist/cube-4.2.3.tar.gz"

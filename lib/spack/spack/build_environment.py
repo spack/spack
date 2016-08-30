@@ -494,7 +494,8 @@ def fork(pkg, function, dirty=False):
     If something goes wrong, the child process is expected to print
     the error and the parent process will exit with error as
     well. If things go well, the child exits and the parent
-    carries on."""
+    carries on.
+    """
 
     try:
         pid = os.fork()

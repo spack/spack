@@ -28,7 +28,8 @@ from spack import *
 class Scorep(Package):
     """The Score-P measurement infrastructure is a highly scalable and
     easy-to-use tool suite for profiling, event tracing, and online analysis
-    of HPC applications."""
+    of HPC applications.
+    """
 
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "http://www.vi-hps.org/upload/packages/scorep/scorep-1.2.3.tar.gz"

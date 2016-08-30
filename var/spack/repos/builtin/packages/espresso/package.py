@@ -30,7 +30,8 @@ class Espresso(Package):
     """QE is an integrated suite of Open-Source computer codes for
     electronic-structure calculations and materials modeling at
     the nanoscale. It is based on density-functional theory, plane
-    waves, and pseudopotentials."""
+    waves, and pseudopotentials.
+    """
 
     homepage = 'http://quantum-espresso.org'
     url = 'http://www.qe-forge.org/gf/download/frsrelease/204/912/espresso-5.3.0.tar.gz'

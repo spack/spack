@@ -29,7 +29,8 @@ import llnl.util.tty as tty
 class Swiftsim(Package):
     """SPH With Inter-dependent Fine-grained Tasking (SWIFT) provides
     astrophysicists with a state of the art framework to perform
-    particle based simulations."""
+    particle based simulations.
+    """
 
     homepage = 'http://icc.dur.ac.uk/swift/'
     url = 'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0'

@@ -28,7 +28,8 @@ from spack import *
 class Caliper(Package):
     """Caliper is a generic context annotation system. It gives programmers the
     ability to provide arbitrary program context information to (performance)
-    tools at runtime."""
+    tools at runtime.
+    """
 
     homepage = "https://github.com/LLNL/Caliper"
     url      = ""

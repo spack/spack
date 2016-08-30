@@ -27,7 +27,8 @@ from spack import *
 
 class Astyle(Package):
     """A Free, Fast, and Small Automatic Formatter for C, C++, C++/CLI,
-    Objective-C, C#, and Java Source Code."""
+    Objective-C, C#, and Java Source Code.
+    """
 
     homepage = "http://astyle.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"

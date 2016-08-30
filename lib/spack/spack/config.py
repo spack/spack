@@ -117,7 +117,8 @@ a key in a configuration file.  For example, this::
             ...
 
 Will make Spack take compilers *only* from the user configuration, and
-the site configuration will be ignored."""
+the site configuration will be ignored.
+"""
 
 import copy
 import os

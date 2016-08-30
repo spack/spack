@@ -27,7 +27,8 @@ from spack import *
 
 class Cfitsio(Package):
     """CFITSIO is a library of C and Fortran subroutines for reading and writing
-    data files in FITS (Flexible Image Transport System) data format."""
+    data files in FITS (Flexible Image Transport System) data format.
+    """
 
     homepage = 'http://heasarc.gsfc.nasa.gov/fitsio/'
 

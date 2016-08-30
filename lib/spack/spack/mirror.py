@@ -141,8 +141,8 @@ def create(path, specs, **kwargs):
 
     This routine iterates through all known package versions, and
     it creates specs for those versions.  If the version satisfies any spec
-    in the specs list, it is downloaded and added to the mirror."""
-
+    in the specs list, it is downloaded and added to the mirror.
+    """
     # Make sure nothing is in the way.
     if os.path.isfile(path):
         raise MirrorError("%s already exists and is a file." % path)

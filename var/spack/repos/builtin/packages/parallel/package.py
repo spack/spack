@@ -28,7 +28,8 @@ from spack import *
 class Parallel(Package):
     """GNU parallel is a shell tool for executing jobs in parallel using
     one or more computers. A job can be a single command or a small
-    script that has to be run for each of the lines in the input."""
+    script that has to be run for each of the lines in the input.
+    """
 
     homepage = "http://www.gnu.org/software/parallel/"
     url      = "http://ftp.gnu.org/gnu/parallel/parallel-20160422.tar.bz2"

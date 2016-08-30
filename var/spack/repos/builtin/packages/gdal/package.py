@@ -32,7 +32,8 @@ class Gdal(Package):
     it presents a single raster abstract data model and vector
     abstract data model to the calling application for all supported
     formats. It also comes with a variety of useful command line
-    utilities for data translation and processing"""
+    utilities for data translation and processing.
+    """
 
     homepage   = "http://www.gdal.org/"
     url        = "http://download.osgeo.org/gdal/2.0.2/gdal-2.0.2.tar.gz"

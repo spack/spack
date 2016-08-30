@@ -266,7 +266,8 @@ class EnvironmentModifications(object):
         parameters
 
         :param \*args: list of files to be sourced
-        :rtype: instance of EnvironmentModifications"""
+        :rtype: instance of EnvironmentModifications
+        """
 
         env = EnvironmentModifications()
         # Check if the files are actually there

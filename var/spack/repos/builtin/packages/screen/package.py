@@ -27,7 +27,8 @@ from spack import *
 
 class Screen(Package):
     """Screen is a full-screen window manager that multiplexes a physical
-    terminal between several processes, typically interactive shells."""
+    terminal between several processes, typically interactive shells.
+    """
 
     homepage = "https://www.gnu.org/software/screen/"
     url      = "http://ftp.gnu.org/gnu/screen/screen-4.3.1.tar.gz"
