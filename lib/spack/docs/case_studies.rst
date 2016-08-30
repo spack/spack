@@ -1,5 +1,6 @@
+=======================================
 Using Spack for CMake-based Development
-==========================================
+=======================================
 
 These are instructions on how to use Spack to aid in the development
 of a CMake-based project.  Spack is used to help find the dependencies
@@ -7,24 +8,26 @@ for the project, configure it at development time, and then package it
 it in a way that others can install.  Using Spack for CMake-based
 development consists of three parts:
 
-1. Setting up the CMake build in your software
-2. Writing the Spack Package
-3. Using it from Spack.
+#. Setting up the CMake build in your software
+#. Writing the Spack Package
+#. Using it from Spack.
 
-
+--------------------------
 Setting Up the CMake Build
----------------------------------------
+--------------------------
 
 You should follow standard CMake conventions in setting up your
 software, your CMake build should NOT depend on or require Spack to
 build.  See here for an example:
-   https://github.com/citibeth/icebin
+
+https://github.com/citibeth/icebin
 
 Note that there's one exception here to the rule I mentioned above.
-In ``CMakeLists.txt``, I have the following line::
+In ``CMakeLists.txt``, I have the following line:
 
-    include_directories($ENV{CMAKE_TRANSITIVE_INCLUDE_PATH})
+.. code-block:: none
 
+   include_directories($ENV{CMAKE_TRANSITIVE_INCLUDE_PATH})
 
 This is a hook into Spack, and it ensures that all transitive
 dependencies are included in the include path.  It's not needed if
@@ -48,40 +51,44 @@ correctly.  Not only is this a good idea and nice, but it also ensures
 that your package will build the same with or without ``spack
 install``.
 
+-------------------------
 Writing the Spack Package
----------------------------------------
+-------------------------
 
 Now that you have a CMake build, you want to tell Spack how to
 configure it.  This is done by writing a Spack package for your
 software.  See here for example:
-   https://github.com/citibeth/spack/blob/efischer/develop/var/spack/repos/builtin/packages/icebin/package.py
+
+https://github.com/citibeth/spack/blob/efischer/develop/var/spack/repos/builtin/packages/icebin/package.py
 
 You need to subclass ``CMakePackage``, as is done in this example.
 This enables advanced features of Spack for helping you in configuring
 your software (keep reading...).  Instead of an ``install()`` method
 used when subclassing ``Package``, you write ``configure_args()``.
 See here for more info on how this works:
-   https://github.com/LLNL/spack/pull/543/files
+
+https://github.com/LLNL/spack/pull/543/files
 
 NOTE: if your software is not publicly available, you do not need to
 set the URL or version.  Or you can set up bogus URLs and
 versions... whatever causes Spack to not crash.
 
-
+-------------------
 Using it from Spack
---------------------------------
+-------------------
 
 Now that you have a Spack package, you can get Spack to setup your
 CMake project for you.  Use the following to setup, configure and
-build your project::
+build your project:
 
-    cd myproject
-    spack spconfig myproject@local
-    mkdir build; cd build
-    ../spconfig.py ..
-    make
-    make install
+.. code-block:: console
 
+   $ cd myproject
+   $ spack spconfig myproject@local
+   $ mkdir build; cd build
+   $ ../spconfig.py ..
+   $ make
+   $ make install
 
 Everything here should look pretty familiar here from a CMake
 perspective, except that ``spack spconfig`` creates the file
@@ -94,68 +101,75 @@ If your project is publicly available (eg on GitHub), then you can
 ALSO use this setup to "just install" a release version without going
 through the manual configuration/build step.  Just do:
 
-1. Put tag(s) on the version(s) in your GitHub repo you want to be release versions.
+#. Put tag(s) on the version(s) in your GitHub repo you want to be release versions.
 
-2. Set the ``url`` in your ``package.py`` to download a tarball for
+#. Set the ``url`` in your ``package.py`` to download a tarball for
    the appropriate version.  (GitHub will give you a tarball for any
-   version in the repo, if you tickle it the right way).  For example::
+   version in the repo, if you tickle it the right way).  For example:
 
-    https://github.com/citibeth/icebin/tarball/v0.1.0
+   https://github.com/citibeth/icebin/tarball/v0.1.0
 
    Set up versions as appropriate in your ``package.py``.  (Manually
    download the tarball and run ``md5sum`` to determine the
    appropriate checksum for it).
 
-3. Now you should be able to say ``spack install myproject@version``
+#. Now you should be able to say ``spack install myproject@version``
    and things "just work."
 
 NOTE... in order to use the features outlined in this post, you
 currently need to use the following branch of Spack:
-   https://github.com/citibeth/spack/tree/efischer/develop
+
+https://github.com/citibeth/spack/tree/efischer/develop
 
 There is a pull request open on this branch (
 https://github.com/LLNL/spack/pull/543 ) and we are working to get it
 integrated into the main ``develop`` branch.
 
-
+------------------------
 Activating your Software
--------------------------------------
+------------------------
 
 Once you've built your software, you will want to load it up.  You can
 use ``spack load mypackage@local`` for that in your ``.bashrc``, but
 that is slow.  Try stuff like the following instead:
 
 The following command will load the Spack-installed packages needed
-for basic Python use of IceBin::
+for basic Python use of IceBin:
 
-    module load `spack module find tcl icebin netcdf cmake@3.5.1`
-    module load `spack module find --dependencies tcl py-basemap py-giss`
+.. code-block:: console
+
+   $ module load `spack module find tcl icebin netcdf cmake@3.5.1`
+   $ module load `spack module find --dependencies tcl py-basemap py-giss`
 
 
 You can speed up shell startup by turning these into ``module load`` commands.
 
-1. Cut-n-paste the script ``make_spackenv``::
+#. Cut-n-paste the script ``make_spackenv``:
 
-    #!/bin/sh
-    #
-    # Generate commands to load the Spack environment
+   .. code-block:: sh
 
-    SPACKENV=$HOME/spackenv.sh
+      #!/bin/sh
+      #
+      # Generate commands to load the Spack environment
 
-    spack module find --shell tcl git icebin@local ibmisc netcdf cmake@3.5.1 >$SPACKENV
-    spack module find --dependencies --shell tcl py-basemap py-giss >>$SPACKENV
+      SPACKENV=$HOME/spackenv.sh
 
-2. Add the following to your ``.bashrc`` file::
+      spack module find --shell tcl git icebin@local ibmisc netcdf cmake@3.5.1 > $SPACKENV
+      spack module find --dependencies --shell tcl py-basemap py-giss >> $SPACKENV
 
-    source $HOME/spackenv.sh
-    # Preferentially use your checked-out Python source
-    export PYTHONPATH=$HOME/icebin/pylib:$PYTHONPATH
+#. Add the following to your ``.bashrc`` file:
 
-3. Run ``sh make_spackenv`` whenever your Spack installation changes (including right now).
+   .. code-block:: sh
 
+      source $HOME/spackenv.sh
+      # Preferentially use your checked-out Python source
+      export PYTHONPATH=$HOME/icebin/pylib:$PYTHONPATH
 
+#. Run ``sh make_spackenv`` whenever your Spack installation changes (including right now).
+
+-----------
 Giving Back
--------------------
+-----------
 
 If your software is publicly available, you should submit the
 ``package.py`` for it as a pull request to the main Spack GitHub
@@ -164,4 +178,4 @@ project.  This will ensure that anyone can install your software
 for how that has turned into detailed instructions that have
 successfully enabled collaborators to install complex software:
 
-   https://github.com/citibeth/icebin/blob/develop/README.rst
+https://github.com/citibeth/icebin/blob/develop/README.rst
