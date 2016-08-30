@@ -70,6 +70,9 @@ os.environ['COLIFY_SIZE'] = '25x80'
 # Generate package list using spack command
 #
 with open('package_list.rst', 'w') as plist_file:
+    subprocess.check_output(
+        [spack_root + '/bin/spack', 'package-list'])
+
     subprocess.Popen(
         [spack_root + '/bin/spack', 'package-list'], stdout=plist_file)
 
