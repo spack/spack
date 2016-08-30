@@ -779,7 +779,7 @@ use the triplet form of platform, operating system and processor.
 Users on non-Cray systems won't have to worry about specifying the architecture.
 Spack will autodetect what kind of operating system is on your machine as well
 as the processor. For more information on how the architecture can be
-used on Cray machines, check here :ref:`spack-cray`
+used on Cray machines, check here :ref:`cray-support`
 
 
 .. _sec-virtual-dependencies:
@@ -1798,7 +1798,7 @@ This issue typically manifests with the error below:
 A nicer error message is TBD in future versions of Spack.
 
 
-.. _spack-cray:
+.. _cray-support:
 
 Spack on Cray
 -----------------------------

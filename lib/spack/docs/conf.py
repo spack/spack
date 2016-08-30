@@ -37,7 +37,10 @@
 
 import sys
 import os
+import re
+import shutil
 import subprocess
+from glob import glob
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -50,9 +53,35 @@ spack_root = '../../..'
 os.environ['SPACK_ROOT'] = spack_root
 os.environ['PATH'] += os.pathsep + '$SPACK_ROOT/bin'
 
+# Get the spack version for use in the docs
 spack_version =  subprocess.Popen(
     [spack_root + '/bin/spack', '-V'],
     stderr=subprocess.PIPE).communicate()[1].strip().split('.')
+
+#
+# Generate package list using spack command
+#
+with open('package_list.rst', 'w') as plist_file:
+    subprocess.Popen(
+        [spack_root + '/bin/spack', 'package-list'], stdout=plist_file)
+
+#
+# Find all the `spack-*` references and add them to a command index
+#
+command_names = []
+for filename in glob('*rst'):
+    with open(filename) as f:
+        for line in f:
+            match = re.match(r'.. _(spack-[^:]*)', line)
+            if match:
+                command_names.append(match.group(1).strip())
+
+shutil.copy('command_index.in', 'command_index.rst')
+with open('command_index.rst', 'a') as index:
+    index.write('\n')
+    for cmd in command_names:
+        index.write('   * :ref:`%s`\n' % cmd)
+
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
