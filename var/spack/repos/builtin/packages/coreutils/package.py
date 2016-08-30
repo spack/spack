@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Coreutils(Package):
     """The GNU Core Utilities are the basic file, shell and text
        manipulation utilities of the GNU operating system.  These are

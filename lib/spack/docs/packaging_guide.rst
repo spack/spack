@@ -401,10 +401,11 @@ the ``url`` declaration.  For example:
    :linenos:
 
    class Foo(Package):
+       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
+       ...
        def url_for_version(self, version):
            return 'http://example.com/version_%s/foo-%s.tar.gz' \
                % (version, version)
-       version('8.2.1', '4136d7b4c04df68b686570afa26988ac')
        ...
 
 If a URL cannot be derived systematically, you can add an explicit URL
@@ -433,7 +434,7 @@ executables and other custom archive types), you can add
 .. code-block:: python
 
    version('8.2.1', '4136d7b4c04df68b686570afa26988ac',
-           url='http://example.com/foo-8.2.1-special-version.tar.gz', 'expand=False')
+           url='http://example.com/foo-8.2.1-special-version.tar.gz', expand=False)
 
 When ``expand`` is set to ``False``, Spack sets the current working
 directory to the directory containing the downloaded archive before it
@@ -467,14 +468,25 @@ to use based on the hash length.
 ``spack md5``
 ^^^^^^^^^^^^^^^^^^^^^^
 
-If you have a single file to checksum, you can use the ``spack md5``
-command to do it.  Here's how you might download an archive and get a
-checksum for it:
+If you have one or more files to checksum, you can use the ``spack md5``
+command to do it:
 
 .. code-block:: sh
 
-   $ curl -O http://exmaple.com/foo-8.2.1.tar.gz'
-   $ spack md5 foo-8.2.1.tar.gz
+   $ spack md5 foo-8.2.1.tar.gz foo-8.2.2.tar.gz
+   ==> 2 MD5 checksums:
+   4136d7b4c04df68b686570afa26988ac  foo-8.2.1.tar.gz
+   1586b70a49dfe05da5fcc29ef239dce0  foo-8.2.2.tar.gz
+
+``spack md5`` also accepts one or more URLs and automatically downloads
+the files for you:
+
+.. code-block:: sh
+
+   $ spack md5 http://example.com/foo-8.2.1.tar.gz
+   ==> Trying to fetch from http://example.com/foo-8.2.1.tar.gz
+   ######################################################################## 100.0%
+   ==> 1 MD5 checksum:
    4136d7b4c04df68b686570afa26988ac  foo-8.2.1.tar.gz
 
 Doing this for lots of files, or whenever a new package version is
@@ -746,6 +758,26 @@ Fetching a revision
 
 Subversion branches are handled as part of the directory structure, so
 you can check out a branch or tag by changing the ``url``.
+
+Expanding additional resources in the source tree
+-------------------------------------------------
+
+Some packages (most notably compilers) provide optional features if additional
+resources are expanded within their source tree before building. In Spack it is
+possible to describe such a need with the ``resource`` directive :
+
+  .. code-block:: python
+
+     resource(
+        name='cargo',
+        git='https://github.com/rust-lang/cargo.git',
+        tag='0.10.0',
+        destination='cargo'
+     )
+
+Based on the keywords present among the arguments the appropriate ``FetchStrategy``
+will be used for the resource. The keyword ``destination`` is relative to the source
+root of the package and should point to where the resource is to be expanded.
 
 Automatic caching of files fetched during installation
 ------------------------------------------------------

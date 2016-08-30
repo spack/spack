@@ -34,6 +34,7 @@ import spack.config
 def check_yaml_versions():
     check_compiler_yaml_version()
 
+
 def check_compiler_yaml_version():
     config_scopes = spack.config.config_scopes
     for scope in config_scopes.values():
@@ -46,7 +47,8 @@ def check_compiler_yaml_version():
         if data:
             compilers = data['compilers']
             if len(compilers) > 0:
-                if (not isinstance(compilers, list)) or 'operating_system' not in compilers[0]['compiler']:
+                if (not isinstance(compilers, list) or
+                    'operating_system' not in compilers[0]['compiler']):
                     new_file = os.path.join(scope.path, '_old_compilers.yaml')
                     tty.warn('%s in out of date compilers format. '
                              'Moved to %s. Spack automatically generate '

@@ -52,6 +52,7 @@ def setup_parser(subparser):
 
 
 class MockCache(object):
+
     def store(self, copyCmd, relativeDst):
         pass
 
@@ -60,6 +61,7 @@ class MockCache(object):
 
 
 class MockCacheFetcher(object):
+
     def set_stage(self, stage):
         pass
 

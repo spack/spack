@@ -71,6 +71,7 @@ def _print_ref_counts():
 
 
 class DatabaseTest(MockDatabase):
+
     def test_005_db_exists(self):
         """Make sure db cache file exists after creating."""
         index_file = join_path(self.install_path, '.spack-db', 'index.yaml')

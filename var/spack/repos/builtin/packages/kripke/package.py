@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Kripke(Package):
     """Kripke is a simple, scalable, 3D Sn deterministic particle
        transport proxy/mini app.

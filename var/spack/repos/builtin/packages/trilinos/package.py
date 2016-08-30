@@ -43,30 +43,41 @@ class Trilinos(Package):
     A unique design feature of Trilinos is its focus on packages.
     """
     homepage = "https://trilinos.org/"
-    url = "http://trilinos.csbsju.edu/download/files/trilinos-12.2.1-Source.tar.gz"
+    base_url = "https://github.com/trilinos/Trilinos/archive"
 
-    version('12.6.4', 'db25056617c688f6f25092376a03200f')
-    version('12.6.3', '960f5f4d3f7c3da818e5a5fb4684559eff7e0c25f959ef576561b8a52f0e4d1e')
-    version('12.6.2', '0c076090508170ddee5efeed317745027f9418319720dc40a072e478775279f9')
-    version('12.6.1', 'adcf2d3aab74cdda98f88fee19cd1442604199b0515ee3da4d80cbe8f37d00e4')
-    version('12.4.2', '7c830f7f0f68b8ad324690603baf404e')
-    version('12.2.1', '6161926ea247863c690e927687f83be9')
-    version('12.0.1', 'bd99741d047471e127b8296b2ec08017')
-    version('11.14.3', '2f4f83f8333e4233c57d0f01c4b57426')
-    version('11.14.2', 'a43590cf896c677890d75bfe75bc6254')
-    version('11.14.1', '40febc57f76668be8b6a77b7607bb67f')
+    version('12.6.4', 'c2ea7b5aa0d10bcabdb9b9a6e3bac3ea')
+    version('12.6.3', '8de5cc00981a0ca0defea6199b2fe4c1')
+    version('12.6.2', 'dc7f9924872778798149ecadd81605a5')
+    version('12.6.1', '8aecea78546e7558f63ecc9a3b2949da')
+    version('12.4.2', '4c25a757d86bde3531090bd900a2cea8')
+    version('12.2.1', '85d011f7f99a776a9c6c2625e8cb721c')
+    version('12.0.1', 'bcb3fdefd14d05dd6aa65ba4c5b9aa0e')
+    version('11.14.3', 'dea62e57ebe51a886bee0b10a2176969')
+    version('11.14.2', 'e7c3cdbbfe3279a8a68838b873ad6d51')
+    version('11.14.1', 'b7760b142eef66c79ed13de7c9560f81')
 
-    variant('metis',        default=True,  description='Compile with METIS and ParMETIS')
-    variant('mumps',        default=True,  description='Compile with support for MUMPS solvers')
-    variant('superlu-dist', default=True,  description='Compile with SuperluDist solvers')
-    variant('hypre',        default=True,  description='Compile with Hypre preconditioner')
+    def url_for_version(self, version):
+        return '%s/trilinos-release-%s.tar.gz' % \
+            (Trilinos.base_url, version.dashed)
+
+    variant('metis',        default=True,
+            description='Compile with METIS and ParMETIS')
+    variant('mumps',        default=True,
+            description='Compile with support for MUMPS solvers')
+    variant('superlu-dist', default=True,
+            description='Compile with SuperluDist solvers')
+    variant('hypre',        default=True,
+            description='Compile with Hypre preconditioner')
     variant('hdf5',         default=True,  description='Compile with HDF5')
-    variant('suite-sparse', default=True,  description='Compile with SuiteSparse solvers')
+    variant('suite-sparse', default=True,
+            description='Compile with SuiteSparse solvers')
     # not everyone has py-numpy activated, keep it disabled by default to avoid
     # configure errors
     variant('python',       default=False, description='Build python wrappers')
-    variant('shared',       default=True,  description='Enables the build of shared libraries')
-    variant('debug',        default=False, description='Builds a debug version of the libraries')
+    variant('shared',       default=True,
+            description='Enables the build of shared libraries')
+    variant('debug',        default=False,
+            description='Builds a debug version of the libraries')
     variant('boost',        default=True, description='Compile with Boost')
 
     depends_on('cmake', type='build')
@@ -77,7 +88,6 @@ class Trilinos(Package):
     depends_on('boost', when='+boost')
     depends_on('matio')
     depends_on('glm')
-    depends_on('swig')
     depends_on('metis@5:', when='+metis')
     depends_on('suite-sparse', when='+suite-sparse')
 
@@ -99,6 +109,8 @@ class Trilinos(Package):
     depends_on('hypre~internal-superlu', when='+hypre')
     depends_on('hdf5+mpi', when='+hdf5')
     depends_on('python', when='+python')
+    depends_on('py-numpy', when='+python')
+    depends_on('swig', when='+python')
 
     patch('umfpack_from_suitesparse.patch')
 

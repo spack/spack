@@ -27,10 +27,12 @@ from spack import *
 
 
 class Cgal(Package):
-    """
-    CGAL is a software project that provides easy access to efficient and reliable geometric algorithms in the form of
-    a C++ library. CGAL is used in various areas needing geometric computation, such as geographic information systems,
-    computer aided design, molecular biology, medical imaging, computer graphics, and robotics.
+    """CGAL is a software project that provides easy access to efficient and
+       reliable geometric algorithms in the form of a C++ library. CGAL
+       is used in various areas needing geometric computation, such as
+       geographic information systems, computer aided design, molecular
+       biology, medical imaging, computer graphics, and robotics.
+
     """
     homepage = 'http://www.cgal.org/'
     url = 'https://github.com/CGAL/cgal/archive/releases/CGAL-4.7.tar.gz'
@@ -38,9 +40,12 @@ class Cgal(Package):
     version('4.7', '4826714810f3b4c65cac96b90fb03b67')
     version('4.6.3', 'e8ee2ecc8d2b09b94a121c09257b576d')
 
-    # Installation instructions : http://doc.cgal.org/latest/Manual/installation.html
-    variant('shared', default=True, description='Enables the build of shared libraries')
-    variant('debug', default=False, description='Builds a debug version of the libraries')
+    # Installation instructions :
+    # http://doc.cgal.org/latest/Manual/installation.html
+    variant('shared', default=True,
+            description='Enables the build of shared libraries')
+    variant('debug', default=False,
+            description='Builds a debug version of the libraries')
 
     depends_on('boost')
     depends_on('mpfr')
@@ -55,7 +60,8 @@ class Cgal(Package):
 
         options = []
         options.extend(std_cmake_args)
-        # CGAL supports only Release and Debug build type. Any other build type will raise an error at configure time
+        # CGAL supports only Release and Debug build type. Any other build type
+        # will raise an error at configure time
         if '+debug' in spec:
             options.append('-DCMAKE_BUILD_TYPE:STRING=Debug')
         else:

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class LibgpgError(Package):
     """Libgpg-error is a small library that defines common error
        values for all GnuPG components. Among these are GPG, GPGSM,

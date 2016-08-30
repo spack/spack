@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Nasm(Package):
     """NASM (Netwide Assembler) is an 80x86 assembler designed for
        portability and modularity. It includes a disassembler as well."""

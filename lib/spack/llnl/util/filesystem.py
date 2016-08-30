@@ -106,6 +106,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
 
 class FileFilter(object):
     """Convenience class for calling filter_file a lot."""
+
     def __init__(self, *filenames):
         self.filenames = filenames
 
@@ -355,7 +356,8 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
             # When follow_nonexisting isn't set, don't descend into dirs
             # in source that do not exist in dest
             if follow_nonexisting or os.path.exists(dest_child):
-                tuples = traverse_tree(source_root, dest_root, rel_child, **kwargs)  # NOQA: ignore=E501
+                tuples = traverse_tree(
+                    source_root, dest_root, rel_child, **kwargs)
                 for t in tuples:
                     yield t
 
@@ -422,14 +424,20 @@ def fix_darwin_install_name(path):
     libs = glob.glob(join_path(path, "*.dylib"))
     for lib in libs:
         # fix install name first:
-        subprocess.Popen(["install_name_tool", "-id", lib, lib], stdout=subprocess.PIPE).communicate()[0]  # NOQA: ignore=E501
-        long_deps = subprocess.Popen(["otool", "-L", lib], stdout=subprocess.PIPE).communicate()[0].split('\n')  # NOQA: ignore=E501
+        subprocess.Popen(
+            ["install_name_tool", "-id", lib, lib],
+            stdout=subprocess.PIPE).communicate()[0]
+        long_deps = subprocess.Popen(
+            ["otool", "-L", lib],
+            stdout=subprocess.PIPE).communicate()[0].split('\n')
         deps = [dep.partition(' ')[0][1::] for dep in long_deps[2:-1]]
         # fix all dependencies:
         for dep in deps:
             for loc in libs:
                 if dep == os.path.basename(loc):
-                    subprocess.Popen(["install_name_tool", "-change", dep, loc, lib], stdout=subprocess.PIPE).communicate()[0]  # NOQA: ignore=E501
+                    subprocess.Popen(
+                        ["install_name_tool", "-change", dep, loc, lib],
+                        stdout=subprocess.PIPE).communicate()[0]
                     break
 
 

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyJdcal(Package):
     """Julian dates from proleptic Gregorian and Julian calendars"""
 

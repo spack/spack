@@ -53,12 +53,15 @@ class PyPillow(Package):
     variant('tiff', default=False, description='Access to TIFF files')
     variant('freetype', default=False, description='Font related services')
     variant('lcms', default=False, description='Color management')
-    variant('jpeg2000', default=False, description='Provide JPEG 2000 functionality')
+    variant('jpeg2000', default=False,
+            description='Provide JPEG 2000 functionality')
 
     # Spack does not (yet) support these modes of building
     # variant('webp', default=False, description='Provide the WebP format')
-    # variant('webpmux', default=False, description='WebP metadata, relies on WebP support')  # NOQA: ignore=E501
-    # variant('imagequant', default=False, description='Provide improved color quantization') # NOQA: ignore=E501
+    # variant('webpmux', default=False,
+    #         description='WebP metadata, relies on WebP support')
+    # variant('imagequant', default=False,
+    #         description='Provide improved color quantization')
 
     # Required dependencies
     extends('python')

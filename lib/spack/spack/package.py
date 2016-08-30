@@ -34,6 +34,7 @@ rundown on spack and how it differs from homebrew, look at the
 README.
 """
 import os
+import sys
 import re
 import textwrap
 import time
@@ -144,8 +145,10 @@ class Package(object):
       informational URL, so that users know what they're
       installing.
 
-    url
-      URL of the source archive that spack will fetch.
+    url or url_for_version(self, version)
+      If url, then the URL of the source archive that spack will fetch.
+      If url_for_version(), then a method returning the URL required
+      to fetch a particular version.
 
     install()
       This function tells spack how to build and install the
@@ -180,12 +183,10 @@ class Package(object):
 
     Most software comes in nicely packaged tarballs, like this one:
         http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
-
     Taking a page from homebrew, spack deduces pretty much everything it
     needs to know from the URL above.  If you simply type this:
 
         spack create http://www.cmake.org/files/v2.8/cmake-2.8.10.2.tar.gz
-
     Spack will download the tarball, generate an md5 hash, figure out the
     version and the name of the package from the URL, and create a new
     package file for you with all the names and attributes set correctly.
@@ -707,13 +708,13 @@ class Package(object):
 
             # Ask the user whether to skip the checksum if we're
             # interactive, but just fail if non-interactive.
-            checksum_msg = "Add a checksum or use --no-checksum to skip this check."  # NOQA: ignore=E501
+            ck_msg = "Add a checksum or use --no-checksum to skip this check."
             ignore_checksum = False
             if sys.stdout.isatty():
                 ignore_checksum = tty.get_yes_or_no("  Fetch anyway?",
                                                     default=False)
                 if ignore_checksum:
-                    tty.msg("Fetching with no checksum.", checksum_msg)
+                    tty.msg("Fetching with no checksum.", ck_msg)
 
             if not ignore_checksum:
                 raise FetchError("Will not fetch %s" %
@@ -1332,9 +1333,10 @@ class Package(object):
                     continue
                 for dep in aspec.traverse(deptype='run'):
                     if self.spec == dep:
+                        msg = ("Cannot deactivate %s because %s is activated "
+                               "and depends on it.")
                         raise ActivationError(
-                            "Cannot deactivate %s because %s is activated and depends on it."  # NOQA: ignore=E501
-                            % (self.spec.short_spec, aspec.short_spec))
+                            msg % (self.spec.short_spec, aspec.short_spec))
 
         self.extendee_spec.package.deactivate(self, **self.extendee_args)
 
@@ -1591,6 +1593,7 @@ def make_executable(path):
 
 
 class CMakePackage(StagedPackage):
+
     def make_make(self):
         import multiprocessing
         # number of jobs spack will to build with.
@@ -1767,12 +1770,14 @@ class ExtensionError(PackageError):
 
 
 class ExtensionConflictError(ExtensionError):
+
     def __init__(self, path):
         super(ExtensionConflictError, self).__init__(
             "Extension blocked by file: %s" % path)
 
 
 class ActivationError(ExtensionError):
+
     def __init__(self, msg, long_msg=None):
         super(ActivationError, self).__init__(msg, long_msg)
 

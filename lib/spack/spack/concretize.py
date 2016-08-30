@@ -61,7 +61,9 @@ class DefaultConcretizer(object):
             if not providers:
                 raise UnsatisfiableProviderSpecError(providers[0], spec)
             spec_w_preferred_providers = find_spec(
-                spec, lambda x: spack.pkgsort.spec_has_preferred_provider(x.name, spec.name))  # NOQA: ignore=E501
+                spec,
+                lambda x: spack.pkgsort.spec_has_preferred_provider(
+                    x.name, spec.name))
             if not spec_w_preferred_providers:
                 spec_w_preferred_providers = spec
             provider_cmp = partial(spack.pkgsort.provider_compare,
@@ -495,7 +497,8 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
 
     def __init__(self, compiler_spec, operating_system):
         super(UnavailableCompilerVersionError, self).__init__(
-            "No available compiler version matches '%s' on operating_system %s" % (compiler_spec, operating_system),  # NOQA: ignore=E501
+            "No available compiler version matches '%s' on operating_system %s"
+            % (compiler_spec, operating_system),
             "Run 'spack compilers' to see available compiler Options.")
 
 
@@ -506,14 +509,15 @@ class NoValidVersionError(spack.error.SpackError):
 
     def __init__(self, spec):
         super(NoValidVersionError, self).__init__(
-            "There are no valid versions for %s that match '%s'" % (spec.name, spec.versions))  # NOQA: ignore=E501
+            "There are no valid versions for %s that match '%s'"
+            % (spec.name, spec.versions))
 
 
 class NoBuildError(spack.error.SpackError):
-
     """Raised when a package is configured with the buildable option False, but
        no satisfactory external versions can be found"""
 
     def __init__(self, spec):
-        super(NoBuildError, self).__init__(
-            "The spec '%s' is configured as not buildable,and no matching external installs were found" % spec.name)  # NOQA: ignore=E501
+        msg = ("The spec '%s' is configured as not buildable, "
+               "and no matching external installs were found")
+        super(NoBuildError, self).__init__(msg % spec.name)

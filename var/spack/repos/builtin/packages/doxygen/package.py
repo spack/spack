@@ -24,8 +24,6 @@
 ##############################################################################
 from spack import *
 
-import sys
-
 
 class Doxygen(Package):
     """Doxygen is the de facto standard tool for generating documentation
@@ -41,7 +39,8 @@ class Doxygen(Package):
     version('1.8.10', '79767ccd986f12a0f949015efb5f058f')
 
     # graphviz appears to be a run-time optional dependency
-    variant('graphviz', default=True, description='Build with dot command support from Graphviz.')  # NOQA: ignore=E501
+    variant('graphviz', default=True,
+            description='Build with dot command support from Graphviz.')
 
     depends_on("cmake@2.8.12:", type='build')
     depends_on("flex", type='build')

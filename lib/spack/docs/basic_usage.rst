@@ -6,6 +6,15 @@ Basic usage
 The ``spack`` command has many *subcommands*.  You'll only need a
 small subset of them for typical usage.
 
+Note that Spack colorizes output.  ``less -R`` should be used with
+Spack to maintian this colorization.  Eg::
+
+    spack find | less -R
+
+It is recommend that the following be put in your ``.bashrc`` file::
+
+    alias less='less -R'
+
 
 Listing available packages
 ------------------------------
@@ -770,7 +779,7 @@ use the triplet form of platform, operating system and processor.
 Users on non-Cray systems won't have to worry about specifying the architecture.
 Spack will autodetect what kind of operating system is on your machine as well
 as the processor. For more information on how the architecture can be
-used on Cray machines, check here :ref:`spack-cray`
+used on Cray machines, check here :ref:`cray-support`
 
 
 .. _sec-virtual-dependencies:
@@ -1159,7 +1168,7 @@ More than one spec may be placed on the command line here.
 Module Commands for Shell Scripts
 ``````````````````````````````````
 
-Although Spack is flexbile, the ``module`` command is much faster.
+Although Spack is flexible, the ``module`` command is much faster.
 This could become an issue when emitting a series of ``spack load``
 commands inside a shell script.  By adding the ``--shell`` flag,
 ``spack module find`` may also be used to generate code that can be
@@ -1789,7 +1798,7 @@ This issue typically manifests with the error below:
 A nicer error message is TBD in future versions of Spack.
 
 
-.. _spack-cray:
+.. _cray-support:
 
 Spack on Cray
 -----------------------------

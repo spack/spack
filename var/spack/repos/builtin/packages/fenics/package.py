@@ -36,7 +36,7 @@ class Fenics(Package):
     homepage = "http://fenicsproject.org/"
     url      = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-1.6.0.tar.gz"
 
-    base_url = "https://bitbucket.org/fenics-project/{pkg}/downloads/{pkg}-{version}.tar.gz"  # NOQA: ignore E501
+    base_url = "https://bitbucket.org/fenics-project/{pkg}/downloads/{pkg}-{version}.tar.gz"
 
     variant('hdf5',         default=True,  description='Compile with HDF5')
     variant('parmetis',     default=True,  description='Compile with ParMETIS')
@@ -44,13 +44,18 @@ class Fenics(Package):
     variant('petsc',        default=True,  description='Compile with PETSc')
     variant('slepc',        default=True,  description='Compile with SLEPc')
     variant('trilinos',     default=True,  description='Compile with Trilinos')
-    variant('suite-sparse', default=True,  description='Compile with SuiteSparse solvers')
+    variant('suite-sparse', default=True,
+            description='Compile with SuiteSparse solvers')
     variant('vtk',          default=False, description='Compile with VTK')
     variant('qt',           default=False, description='Compile with QT')
-    variant('mpi',          default=True,  description='Enables the distributed memory support')
-    variant('openmp',       default=True,  description='Enables the shared memory support')
-    variant('shared',       default=True,  description='Enables the build of shared libraries')
-    variant('debug',        default=False, description='Builds a debug version of the libraries')
+    variant('mpi',          default=True,
+            description='Enables the distributed memory support')
+    variant('openmp',       default=True,
+            description='Enables the shared memory support')
+    variant('shared',       default=True,
+            description='Enables the build of shared libraries')
+    variant('debug',        default=False,
+            description='Builds a debug version of the libraries')
 
     # not part of spack list for now
     # variant('petsc4py',     default=True,  description='Uses PETSc4py')
@@ -109,7 +114,8 @@ class Fenics(Package):
     ]
 
     for release in releases:
-        version(release['version'], release['md5'], url=base_url.format(pkg='dolfin', version=release['version']))
+        version(release['version'], release['md5'], url=base_url.format(
+            pkg='dolfin', version=release['version']))
         for name, md5 in release['resources'].items():
             resource(name=name,
                      url=base_url.format(pkg=name, **release),

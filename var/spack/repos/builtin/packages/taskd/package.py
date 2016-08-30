@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Taskd(Package):
     """TaskWarrior task synchronization daemon"""
     # FIXME: add a proper url for your package's homepage here.

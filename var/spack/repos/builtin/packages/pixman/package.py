@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Pixman(Package):
     """The Pixman package contains a library that provides low-level
        pixel manipulation features such as image compositing and
@@ -33,6 +34,7 @@ class Pixman(Package):
 
     version('0.32.6', '3a30859719a41bd0f5cccffbfefdd4c2')
 
+    depends_on("pkg-config", type="build")
     depends_on("libpng")
 
     def install(self, spec, prefix):

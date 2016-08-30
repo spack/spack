@@ -53,12 +53,13 @@ def setup_parser(subparser):
         help="Display verbose build output while installing.")
     subparser.add_argument(
         '--fake', action='store_true', dest='fake',
-        help="Fake install.  Just remove the prefix and touch a fake file in it.")
+        help="Fake install. Just remove prefix and create a fake file.")
     subparser.add_argument(
         '--dirty', action='store_true', dest='dirty',
         help="Install a package *without* cleaning the environment.")
     subparser.add_argument(
-        'packages', nargs=argparse.REMAINDER, help="specs of packages to install")
+        'packages', nargs=argparse.REMAINDER,
+        help="specs of packages to install")
     subparser.add_argument(
         '--run-tests', action='store_true', dest='run_tests',
         help="Run tests during installation of a package.")
@@ -67,7 +68,6 @@ def setup_parser(subparser):
         default="never", choices=["never", "always", "lazy"],
         help="Build from source, download binaries, " +
              "or build if binary not available.")
-
 
 def install(parser, args):
     if not args.packages:

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyXlrd(Package):
     """Library for developers to extract data from Microsoft Excel (tm)
     spreadsheet files"""

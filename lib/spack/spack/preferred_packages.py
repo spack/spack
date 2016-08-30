@@ -156,7 +156,7 @@ class PreferredPackages(object):
         """Return True iff the named package has a list of preferred
            providers"""
         return bool(self._order_for_package(pkgname, 'providers',
-                    provider_str, False))
+                                            provider_str, False))
 
     def spec_preferred_variants(self, pkgname):
         """Return a VariantMap of preferred variants and their values"""

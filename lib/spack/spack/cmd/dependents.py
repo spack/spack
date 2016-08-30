@@ -31,9 +31,11 @@ import spack.cmd
 
 description = "Show installed packages that depend on another."
 
+
 def setup_parser(subparser):
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="specs to list dependencies of.")
+        'spec', nargs=argparse.REMAINDER,
+        help="specs to list dependencies of.")
 
 
 def dependents(parser, args):
@@ -42,5 +44,6 @@ def dependents(parser, args):
         tty.die("spack dependents takes only one spec.")
 
     fmt = '$_$@$%@$+$=$#'
-    deps = [d.format(fmt, color=True) for d in specs[0].package.installed_dependents]
+    deps = [d.format(fmt, color=True)
+            for d in specs[0].package.installed_dependents]
     tty.msg("Dependents of %s" % specs[0].format(fmt, color=True), *deps)

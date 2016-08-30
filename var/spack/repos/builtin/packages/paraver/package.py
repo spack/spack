@@ -25,6 +25,7 @@
 from spack import *
 import os
 
+
 class Paraver(Package):
     """"A very powerful performance visualization and analysis tool
         based on traces that can be used to analyse any information that
@@ -36,7 +37,7 @@ class Paraver(Package):
     version('4.5.3', '625de9ec0d639acd18d1aaa644b38f72')
 
     depends_on("boost")
-    #depends_on("extrae")
+    # depends_on("extrae")
     depends_on("wx")
     depends_on("wxpropgrid")
 
@@ -47,8 +48,11 @@ class Paraver(Package):
         make("install")
 
         os.chdir("../paraver-kernel")
-		#"--with-extrae=%s" % spec['extrae'].prefix,
-        configure("--prefix=%s" % prefix, "--with-ptools-common-files=%s" % prefix, "--with-boost=%s" % spec['boost'].prefix, "--with-boost-serialization=boost_serialization")
+        # "--with-extrae=%s" % spec['extrae'].prefix,
+        configure("--prefix=%s" % prefix,
+                  "--with-ptools-common-files=%s" % prefix,
+                  "--with-boost=%s" % spec['boost'].prefix,
+                  "--with-boost-serialization=boost_serialization")
         make()
         make("install")
 
@@ -58,8 +62,11 @@ class Paraver(Package):
         make("install")
 
         os.chdir("../wxparaver")
-		#"--with-extrae=%s" % spec['extrae'].prefix,
-        configure("--prefix=%s" % prefix, "--with-paraver=%s" % prefix, "--with-boost=%s" % spec['boost'].prefix, "--with-boost-serialization=boost_serialization", "--with-wxdir=%s" % spec['wx'].prefix.bin)
+        # "--with-extrae=%s" % spec['extrae'].prefix,
+        configure("--prefix=%s" % prefix,
+                  "--with-paraver=%s" % prefix,
+                  "--with-boost=%s" % spec['boost'].prefix,
+                  "--with-boost-serialization=boost_serialization",
+                  "--with-wxdir=%s" % spec['wx'].prefix.bin)
         make()
         make("install")
-

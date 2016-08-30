@@ -136,6 +136,7 @@ NODE, COLLAPSE, MERGE_RIGHT, EXPAND_RIGHT, BACK_EDGE = states
 
 
 class AsciiGraph(object):
+
     def __init__(self):
         # These can be set after initialization or after a call to
         # graph() to change behavior.
@@ -288,22 +289,22 @@ class AsciiGraph(object):
         self._indent()
 
         for p in prev_ends:
-            advance(p,         lambda: [("| ", self._pos)])  # NOQA: ignore=E272
-            advance(p + 1,     lambda: [("|/", self._pos)])  # NOQA: ignore=E272
+            advance(p,         lambda: [("| ", self._pos)])
+            advance(p + 1,     lambda: [("|/", self._pos)])
 
         if end >= 0:
-            advance(end + 1,   lambda: [("| ", self._pos)])  # NOQA: ignore=E272
-            advance(start - 1, lambda: [("|",  self._pos), ("_", end)])  # NOQA: ignore=E272
+            advance(end + 1,   lambda: [("| ", self._pos)])
+            advance(start - 1, lambda: [("|",  self._pos), ("_", end)])
         else:
-            advance(start - 1, lambda: [("| ", self._pos)])  # NOQA: ignore=E272
+            advance(start - 1, lambda: [("| ", self._pos)])
 
         if start >= 0:
-            advance(start,     lambda: [("|",  self._pos), ("/", end)])  # NOQA: ignore=E272
+            advance(start,     lambda: [("|",  self._pos), ("/", end)])
 
         if collapse:
-            advance(flen,      lambda: [(" /", self._pos)])  # NOQA: ignore=E272
+            advance(flen,      lambda: [(" /", self._pos)])
         else:
-            advance(flen,      lambda: [("| ", self._pos)])  # NOQA: ignore=E272
+            advance(flen,      lambda: [("| ", self._pos)])
 
         self._set_state(BACK_EDGE, end, label)
         self._out.write("\n")
@@ -438,8 +439,8 @@ class AsciiGraph(object):
                     # Expand forward after doing all back connections
 
                     if (i + 1 < len(self._frontier) and
-                       len(self._frontier[i + 1]) == 1 and
-                       self._frontier[i + 1][0] in self._frontier[i]):
+                            len(self._frontier[i + 1]) == 1 and
+                            self._frontier[i + 1][0] in self._frontier[i]):
                         # We need to connect to the element to the right.
                         # Keep lines straight by connecting directly and
                         # avoiding unnecessary expand/contract.

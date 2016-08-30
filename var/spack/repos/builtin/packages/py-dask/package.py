@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyDask(Package):
     """Minimal task scheduling abstraction"""
     homepage = "https://github.com/dask/dask/"

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyTuiview(Package):
     """
        TuiView is a lightweight raster GIS with powerful raster attribute

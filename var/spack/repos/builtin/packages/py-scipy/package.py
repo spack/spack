@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class PyScipy(Package):
     """Scientific Library for Python."""
     homepage = "http://www.scipy.org/"
@@ -41,7 +42,8 @@ class PyScipy(Package):
         if 'atlas' in spec:
             # libatlas.so actually isn't always installed, but this
             # seems to make the build autodetect things correctly.
-            env['ATLAS'] = join_path(spec['atlas'].prefix.lib, 'libatlas.' + dso_suffix)
+            env['ATLAS'] = join_path(
+                spec['atlas'].prefix.lib, 'libatlas.' + dso_suffix)
         else:
             env['BLAS']   = spec['blas'].blas_shared_lib
             env['LAPACK'] = spec['lapack'].lapack_shared_lib

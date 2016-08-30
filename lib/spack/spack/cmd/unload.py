@@ -25,13 +25,15 @@
 import argparse
 import spack.modules
 
-description ="Remove package from environment using module."
+description = "Remove package from environment using module."
+
 
 def setup_parser(subparser):
     """Parser is only constructed so that this prints a nice help
        message with -h. """
     subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help='Spec of package to unload with modules.')
+        'spec', nargs=argparse.REMAINDER,
+        help='Spec of package to unload with modules.')
 
 
 def unload(parser, args):

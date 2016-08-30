@@ -27,8 +27,8 @@ from spack import *
 
 
 class Otf2(Package):
-    """
-    The Open Trace Format 2 is a highly scalable, memory efficient event trace data format plus support library.
+    """The Open Trace Format 2 is a highly scalable, memory efficient event
+       trace data format plus support library.
     """
 
     homepage = "http://www.vi-hps.org/score-p"
@@ -46,10 +46,10 @@ class Otf2(Package):
             url="http://www.vi-hps.org/upload/packages/otf2/otf2-1.2.1.tar.gz")
 
     def install(self, spec, prefix):
-        configure_args=["--prefix=%s" % prefix,
-                        "--enable-shared",
-                        "CFLAGS=-fPIC",
-                        "CXXFLAGS=-fPIC"]
+        configure_args = ["--prefix=%s" % prefix,
+                          "--enable-shared",
+                          "CFLAGS=-fPIC",
+                          "CXXFLAGS=-fPIC"]
         configure(*configure_args)
         make()
         make("install")

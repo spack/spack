@@ -87,7 +87,7 @@ def print_text_info(pkg):
     for deptype in ('build', 'link', 'run'):
         print
         print "%s Dependencies:" % deptype.capitalize()
-        deps = pkg.dependencies_of_type(deptype)
+        deps = sorted(pkg.dependencies_of_type(deptype))
         if deps:
             colify(deps, indent=4)
         else:

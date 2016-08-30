@@ -155,7 +155,9 @@ packages:
       externalmodule@1.0%gcc@4.5.0: external-module
 """
 
+
 class MockPackagesTest(unittest.TestCase):
+
     def initmock(self):
         # Use the mock packages database for these tests.  This allows
         # us to set up contrived packages that don't interfere with
@@ -172,7 +174,8 @@ class MockPackagesTest(unittest.TestCase):
         self.mock_user_config = os.path.join(self.temp_config, 'user')
         mkdirp(self.mock_site_config)
         mkdirp(self.mock_user_config)
-        for confs in [('compilers.yaml', mock_compiler_config), ('packages.yaml', mock_packages_config)]:
+        for confs in [('compilers.yaml', mock_compiler_config),
+                      ('packages.yaml', mock_packages_config)]:
             conf_yaml = os.path.join(self.mock_site_config, confs[0])
             with open(conf_yaml, 'w') as f:
                 f.write(confs[1])
@@ -209,7 +212,6 @@ class MockPackagesTest(unittest.TestCase):
         pkg.dependencies[spec.name] = {Spec(pkg_name): spec}
         pkg._deptypes[spec.name] = set(deptypes)
 
-
     def cleanmock(self):
         """Restore the real packages path after any test."""
         spack.repo.swap(self.db)
@@ -226,10 +228,8 @@ class MockPackagesTest(unittest.TestCase):
         shutil.rmtree(spack.share_path, ignore_errors=True)
         spack.share_path = self.real_share_path
 
-
     def setUp(self):
         self.initmock()
-
 
     def tearDown(self):
         self.cleanmock()

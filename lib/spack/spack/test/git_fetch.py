@@ -87,33 +87,29 @@ class GitFetchTest(MockPackagesTest):
 
             self.assert_rev(rev)
 
-
     def test_fetch_master(self):
         """Test a default git checkout with no commit or tag specified."""
         self.try_fetch('master', self.repo.r0_file, {
-            'git' : self.repo.path
+            'git': self.repo.path
         })
-
 
     def test_fetch_branch(self):
         """Test fetching a branch."""
         self.try_fetch(self.repo.branch, self.repo.branch_file, {
-            'git'    : self.repo.path,
-            'branch' : self.repo.branch
+            'git': self.repo.path,
+            'branch': self.repo.branch
         })
-
 
     def test_fetch_tag(self):
         """Test fetching a tag."""
         self.try_fetch(self.repo.tag, self.repo.tag_file, {
-            'git' : self.repo.path,
-            'tag' : self.repo.tag
+            'git': self.repo.path,
+            'tag': self.repo.tag
         })
-
 
     def test_fetch_commit(self):
         """Test fetching a particular commit."""
         self.try_fetch(self.repo.r1, self.repo.r1_file, {
-            'git'    : self.repo.path,
-            'commit' : self.repo.r1
+            'git': self.repo.path,
+            'commit': self.repo.r1
         })

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Hwloc(Package):
     """The Portable Hardware Locality (hwloc) software package
        provides a portable abstraction (across OS, versions,

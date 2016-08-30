@@ -46,16 +46,17 @@ class EnvironmentModules(Package):
             "--without-tclx",
             "--with-tclx-ver=0.0",
             "--prefix=%s" % prefix,
-            "--with-tcl=%s" % join_path(tcl_spec.prefix, 'lib'),    # It looks for tclConfig.sh
-            "--with-tcl-ver=%d.%d" % (tcl_spec.version.version[0], tcl_spec.version.version[1]),
+            # It looks for tclConfig.sh
+            "--with-tcl=%s" % join_path(tcl_spec.prefix, 'lib'),
+            "--with-tcl-ver=%d.%d" % (tcl_spec.version.version[
+                                      0], tcl_spec.version.version[1]),
             '--disable-debug',
             '--disable-dependency-tracking',
             '--disable-silent-rules',
-            '--disable-versioning', 
+            '--disable-versioning',
             '--datarootdir=%s' % prefix.share,
             'CPPFLAGS=%s' % ' '.join(CPPFLAGS)
         ]
-
 
         configure(*config_args)
         make()

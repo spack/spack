@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Icu(Package):
     """The International Components for Unicode (ICU) package is a
        mature, widely used set of C/C++ libraries providing Unicode and
@@ -36,11 +37,9 @@ class Icu(Package):
 
     version('54.1', 'e844caed8f2ca24c088505b0d6271bc0')
 
-
     def url_for_version(self, version):
         return "http://download.icu-project.org/files/icu4c/%s/icu4c-%s-src.tgz" % (
             version, str(version).replace('.', '_'))
-
 
     def install(self, spec, prefix):
         with working_dir("source"):

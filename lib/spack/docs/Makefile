@@ -22,24 +22,6 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 all: html
 
 #
-# This autogenerates a package list.
-#
-package_list:
-	spack package-list > package_list.rst
-
-#
-# Generate a command index
-#
-command_index:
-	cp command_index.in command_index.rst
-	echo >> command_index.rst
-	grep -ho '.. _spack-.*:' *rst \
-	| perl -pe 's/.. _([^:]*):/   * :ref:`\1`/' \
-	| sort >> command_index.rst
-
-custom_targets: package_list command_index
-
-#
 # This creates a git repository and commits generated html docs.
 # It them pushes the new branch into THIS repository as gh-pages.
 #
@@ -92,7 +74,7 @@ clean:
 	-rm -f package_list.rst command_index.rst
 	-rm -rf $(BUILDDIR)/* $(APIDOC_FILES)
 
-html: apidoc custom_targets
+html: apidoc
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."

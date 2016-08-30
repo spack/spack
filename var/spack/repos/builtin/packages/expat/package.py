@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Expat(Package):
     """<eXpat/> is an XML parser library written in C"""
     homepage = "http://expat.sourceforge.net/"
@@ -39,4 +40,3 @@ class Expat(Package):
             cmake('..', *std_cmake_args)
             make()
             make('install')
-

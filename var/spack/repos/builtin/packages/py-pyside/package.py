@@ -25,25 +25,30 @@
 from spack import *
 import os
 
+
 class PyPyside(Package):
     """Python bindings for Qt."""
     homepage = "https://pypi.python.org/pypi/pyside"
     url      = "https://pypi.python.org/packages/source/P/PySide/PySide-1.2.2.tar.gz"
 
-    version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d')
+    version('1.2.4', '3cb7174c13bd45e3e8f77638926cb8c0')  # rpath problems
+    version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d', preferred=True)
 
     depends_on('cmake', type='build')
 
     extends('python')
     depends_on('py-setuptools', type='build')
-    depends_on('qt@:4')
+    depends_on('qt@4.5:4.9')
+    depends_on('libxml2@2.6.32:')
+    depends_on('libxslt@1.1.19:')
 
     def patch(self):
         """Undo PySide RPATH handling and add Spack RPATH."""
         # Figure out the special RPATH
         pypkg = self.spec['python'].package
         rpath = self.rpath
-        rpath.append(os.path.join(self.prefix, pypkg.site_packages_dir, 'PySide'))
+        rpath.append(os.path.join(
+            self.prefix, pypkg.site_packages_dir, 'PySide'))
 
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.
@@ -56,13 +61,23 @@ class PyPyside(Package):
 
         # PySide tries to patch ELF files to remove RPATHs
         # Disable this and go with the one we set.
-        filter_file(
-            r'^\s*rpath_cmd\(pyside_path, srcpath\)',
-            r'#rpath_cmd(pyside_path, srcpath)',
-            'pyside_postinstall.py')
+        if self.spec.satisfies('@1.2.4:'):
+            rpath_file = 'setup.py'
+        else:
+            rpath_file = 'pyside_postinstall.py'
 
+        filter_file(r'(^\s*)(rpath_cmd\(.*\))', r'\1#\2', rpath_file)
+
+        # TODO: rpath handling for PySide 1.2.4 still doesn't work.
+        # PySide can't find the Shiboken library, even though it comes
+        # bundled with it and is installed in the same directory.
+
+        # PySide does not provide official support for
+        # Python 3.5, but it should work fine
+        filter_file("'Programming Language :: Python :: 3.4'",
+                    "'Programming Language :: Python :: 3.4',\r\n        "
+                    "'Programming Language :: Python :: 3.5'",
+                    "setup.py")
 
     def install(self, spec, prefix):
-        python('setup.py', 'install',
-               '--prefix=%s' % prefix,
-               '--jobs=%s' % make_jobs)
+        setup_py('install', '--prefix=%s' % prefix, '--jobs=%s' % make_jobs)

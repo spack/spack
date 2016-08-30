@@ -27,9 +27,10 @@ from spack import *
 
 
 class Gdb(Package):
-    """
-    GDB, the GNU Project debugger, allows you to see what is going on `inside' another program while it executes
-    -- or what another program was doing at the moment it crashed.
+    """GDB, the GNU Project debugger, allows you to see what is going on
+       `inside' another program while it executes -- or what another
+       program was doing at the moment it crashed.
+
     """
     homepage = "https://www.gnu.org/software/gdb"
     url = "http://ftp.gnu.org/gnu/gdb/gdb-7.10.tar.gz"

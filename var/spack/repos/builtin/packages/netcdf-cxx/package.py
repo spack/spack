@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class NetcdfCxx(Package):
     """Deprecated C++ compatibility bindings for NetCDF.
     These do NOT read or write NetCDF-4 files, and are no longer

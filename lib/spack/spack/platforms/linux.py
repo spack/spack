@@ -3,6 +3,7 @@ import platform
 from spack.architecture import Platform, Target
 from spack.operating_systems.linux_distro import LinuxDistro
 
+
 class Linux(Platform):
     priority    = 90
 
@@ -26,6 +27,6 @@ class Linux(Platform):
 
     @classmethod
     def detect(self):
-        platform = subprocess.Popen(['uname', '-a'], stdout = subprocess.PIPE)
+        platform = subprocess.Popen(['uname', '-a'], stdout=subprocess.PIPE)
         platform, _ = platform.communicate()
         return 'linux' in platform.strip().lower()

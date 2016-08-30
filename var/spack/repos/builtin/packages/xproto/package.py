@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class Xproto(Package):
     """The Xorg protocol headers provide the header files required to
        build the system, and to allow other applications to build against

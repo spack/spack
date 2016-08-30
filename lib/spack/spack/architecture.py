@@ -91,6 +91,7 @@ import spack.error as serr
 
 
 class NoPlatformError(serr.SpackError):
+
     def __init__(self):
         super(NoPlatformError, self).__init__(
             "Could not determine a platform for this machine.")

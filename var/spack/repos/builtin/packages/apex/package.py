@@ -25,6 +25,7 @@
 from spack import *
 from spack.util.environment import *
 
+
 class Apex(Package):
     homepage = "http://github.com/khuck/xpress-apex"
     url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
@@ -39,17 +40,17 @@ class Apex(Package):
 
     def install(self, spec, prefix):
 
-        path=get_path("PATH")
+        path = get_path("PATH")
         path.remove(spec["binutils"].prefix.bin)
         path_set("PATH", path)
         with working_dir("build", create=True):
             cmake('-DBOOST_ROOT=%s' % spec['boost'].prefix,
-                '-DUSE_BFD=TRUE', 
-                '-DBFD_ROOT=%s' % spec['binutils'].prefix,
-                '-DUSE_ACTIVEHARMONY=TRUE', 
-                '-DACTIVEHARMONY_ROOT=%s' % spec['activeharmony'].prefix,
-                '-DUSE_OMPT=TRUE', 
-                '-DOMPT_ROOT=%s' % spec['ompt-openmp'].prefix,
-                '..', *std_cmake_args)
+                  '-DUSE_BFD=TRUE',
+                  '-DBFD_ROOT=%s' % spec['binutils'].prefix,
+                  '-DUSE_ACTIVEHARMONY=TRUE',
+                  '-DACTIVEHARMONY_ROOT=%s' % spec['activeharmony'].prefix,
+                  '-DUSE_OMPT=TRUE',
+                  '-DOMPT_ROOT=%s' % spec['ompt-openmp'].prefix,
+                  '..', *std_cmake_args)
             make()
             make("install")

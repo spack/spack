@@ -459,7 +459,8 @@ class EnvModule(object):
                 yield self.environment_modifications_formats[type(
                     command)].format(**command.args)
             except KeyError:
-                message = 'Cannot handle command of type {command} : skipping request'  # NOQA: ignore=E501
+                message = ('Cannot handle command of type {command}: '
+                           'skipping request')
                 details = '{context} at {filename}:{lineno}'
                 tty.warn(message.format(command=type(command)))
                 tty.warn(details.format(**command.args))
@@ -494,7 +495,8 @@ class Dotkit(EnvModule):
 
     autoload_format = 'dk_op {module_file}\n'
 
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
+    default_naming_format = \
+        '{name}-{version}-{compiler.name}-{compiler.version}'
 
     @property
     def file_name(self):
@@ -528,13 +530,6 @@ class Dotkit(EnvModule):
 class TclModule(EnvModule):
     name = 'tcl'
     path = join_path(spack.share_path, "modules")
-    environment_modifications_formats = {
-        PrependPath: 'prepend-path --delim "{separator}" {name} \"{value}\"\n',
-        AppendPath: 'append-path   --delim "{separator}" {name} \"{value}\"\n',
-        RemovePath: 'remove-path   --delim "{separator}" {name} \"{value}\"\n',
-        SetEnv: 'setenv {name} \"{value}\"\n',
-        UnsetEnv: 'unsetenv {name}\n'
-    }
 
     autoload_format = ('if ![ is-loaded {module_file} ] {{\n'
                        '    puts stderr "Autoloading {module_file}"\n'
@@ -543,7 +538,8 @@ class TclModule(EnvModule):
 
     prerequisite_format = 'prereq {module_file}\n'
 
-    default_naming_format = '{name}-{version}-{compiler.name}-{compiler.version}'  # NOQA: ignore=E501
+    default_naming_format = \
+        '{name}-{version}-{compiler.name}-{compiler.version}'
 
     @property
     def file_name(self):
@@ -553,11 +549,13 @@ class TclModule(EnvModule):
     def header(self):
         timestamp = datetime.datetime.now()
         # TCL Modulefile header
-        header = '#%Module1.0\n'
-        header += '## Module file created by spack (https://github.com/LLNL/spack) on %s\n' % timestamp  # NOQA: ignore=E501
-        header += '##\n'
-        header += '## %s\n' % self.spec.short_spec
-        header += '##\n'
+        header = """\
+#%%Module1.0
+## Module file created by spack (https://github.com/LLNL/spack) on %s
+##
+## %s
+##
+""" % (timestamp, self.spec.short_spec)
 
         # TODO : category ?
         # Short description
@@ -572,6 +570,44 @@ class TclModule(EnvModule):
             header += '}\n\n'
         return header
 
+    def process_environment_command(self, env):
+        environment_modifications_formats_colon = {
+            PrependPath: 'prepend-path {name} \"{value}\"\n',
+            AppendPath: 'append-path   {name} \"{value}\"\n',
+            RemovePath: 'remove-path   {name} \"{value}\"\n',
+            SetEnv: 'setenv {name} \"{value}\"\n',
+            UnsetEnv: 'unsetenv {name}\n'
+        }
+        environment_modifications_formats_general = {
+            PrependPath:
+            'prepend-path --delim "{separator}" {name} \"{value}\"\n',
+            AppendPath:
+            'append-path   --delim "{separator}" {name} \"{value}\"\n',
+            RemovePath:
+            'remove-path   --delim "{separator}" {name} \"{value}\"\n',
+            SetEnv: 'setenv {name} \"{value}\"\n',
+            UnsetEnv: 'unsetenv {name}\n'
+        }
+        for command in env:
+            # Token expansion from configuration file
+            name = command.args.get('name', '').format(**self.upper_tokens)
+            value = str(command.args.get('value', '')).format(**self.tokens)
+            command.update_args(name=name, value=value)
+            # Format the line int the module file
+            try:
+                if command.args.get('separator', ':') == ':':
+                    yield environment_modifications_formats_colon[type(
+                        command)].format(**command.args)
+                else:
+                    yield environment_modifications_formats_general[type(
+                        command)].format(**command.args)
+            except KeyError:
+                message = ('Cannot handle command of type {command}: '
+                           'skipping request')
+                details = '{context} at {filename}:{lineno}'
+                tty.warn(message.format(command=type(command)))
+                tty.warn(details.format(**command.args))
+
     def module_specific_content(self, configuration):
         naming_tokens = self.tokens
         # Conflict
@@ -584,10 +620,12 @@ class TclModule(EnvModule):
                 for naming_dir, conflict_dir in zip(
                         self.naming_scheme.split('/'), item.split('/')):
                     if naming_dir != conflict_dir:
-                        message = 'conflict scheme does not match naming scheme [{spec}]\n\n'  # NOQA: ignore=E501
+                        message = 'conflict scheme does not match naming '
+                        message += 'scheme [{spec}]\n\n'
                         message += 'naming scheme   : "{nformat}"\n'
                         message += 'conflict scheme : "{cformat}"\n\n'
-                        message += '** You may want to check your `modules.yaml` configuration file **\n'  # NOQA: ignore=E501
+                        message += '** You may want to check your '
+                        message += '`modules.yaml` configuration file **\n'
                         tty.error(message.format(spec=self.spec,
                                                  nformat=self.naming_scheme,
                                                  cformat=item))

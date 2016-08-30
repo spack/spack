@@ -39,9 +39,11 @@ class Hypre(Package):
     version('2.10.0b', '768be38793a35bb5d055905b271f5b8e')
 
     # hypre does not know how to build shared libraries on Darwin
-    variant('shared', default=(sys.platform != 'darwin'), description="Build shared library version (disables static library)")
+    variant('shared', default=(sys.platform != 'darwin'),
+            description="Build shared library (disables static library)")
     # SuperluDist have conflicting headers with those in Hypre
-    variant('internal-superlu', default=True, description="Use internal Superlu routines")
+    variant('internal-superlu', default=True,
+            description="Use internal Superlu routines")
 
     depends_on("mpi")
     depends_on("blas")

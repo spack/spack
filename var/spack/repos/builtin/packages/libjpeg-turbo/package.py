@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class LibjpegTurbo(Package):
     """libjpeg-turbo is a fork of the original IJG libjpeg which uses
        SIMD to accelerate baseline JPEG compression and

@@ -24,6 +24,7 @@
 ##############################################################################
 from spack import *
 
+
 class AprUtil(Package):
     """Apache Portable Runtime Utility"""
     homepage  = 'https://apr.apache.org/'

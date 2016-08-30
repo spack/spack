@@ -42,7 +42,7 @@ class Cp2k(Package):
     variant('mpi', default=True, description='Enable MPI support')
     variant('plumed', default=False, description='Enable PLUMED support')
 
-    depends_on('python')  # Build dependency
+    depends_on('python', type='build')
 
     depends_on('lapack')
     depends_on('blas')

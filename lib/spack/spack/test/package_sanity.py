@@ -38,11 +38,9 @@ class PackageSanityTest(unittest.TestCase):
         for name in spack.repo.all_package_names():
             spack.repo.get(name)
 
-
     def test_get_all_packages(self):
         """Get all packages once and make sure that works."""
         self.check_db()
-
 
     def test_get_all_mock_packages(self):
         """Get the mock packages once each too."""
@@ -50,7 +48,6 @@ class PackageSanityTest(unittest.TestCase):
         spack.repo.swap(db)
         self.check_db()
         spack.repo.swap(db)
-
 
     def test_url_versions(self):
         """Check URLs for regular packages, if they are explicitly defined."""

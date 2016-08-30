@@ -32,7 +32,7 @@ description = "Print a list of all packages in reStructuredText."
 
 def github_url(pkg):
     """Link to a package file on github."""
-    url = "https://github.com/llnl/spack/blob/master/var/spack/packages/%s/package.py"  # NOQA: ignore=E501
+    url = "https://github.com/llnl/spack/blob/master/var/spack/packages/%s/package.py"
     return (url % pkg.name)
 
 
