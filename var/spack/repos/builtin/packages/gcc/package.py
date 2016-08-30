@@ -136,7 +136,7 @@ class Gcc(Package):
                 out.write(line + "\n")
                 if line.startswith("*link:"):
                   if sys.platform == 'darwin':
-                    out.write("-rpath %s/lib -rpath %s/lib64 \\\n" %
+                    out.write("-rpath %s/lib -rpath %s/lib64 -headerpad_max_install_names \\\n" %
                               (self.prefix, self.prefix))
                   else:
                     out.write("-rpath %s/lib:%s/lib64 \\\n" %
