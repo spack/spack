@@ -43,6 +43,8 @@ import shutil
 import subprocess
 from glob import glob
 
+# -- Spack customizations -----------------------------------------------------
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -59,6 +61,10 @@ os.environ['PATH'] += '%s%s/bin' % (os.pathsep, spack_root)
 spack_version =  subprocess.Popen(
     [spack_root + '/bin/spack', '-V'],
     stderr=subprocess.PIPE).communicate()[1].strip().split('.')
+
+# Set an environment variable so that colify will print output like it would to
+# a terminal.
+os.environ['COLIFY_SIZE'] = '25x80'
 
 #
 # Generate package list using spack command
@@ -81,7 +87,7 @@ for filename in glob('*rst'):
 shutil.copy('command_index.in', 'command_index.rst')
 with open('command_index.rst', 'a') as index:
     index.write('\n')
-    for cmd in command_names:
+    for cmd in sorted(command_names):
         index.write('   * :ref:`%s`\n' % cmd)
 
 #
@@ -105,10 +111,6 @@ for line in fileinput.input('spack.rst', inplace=1):
         handling_spack = (line == '.. automodule:: spack\n')
 
     print line,
-
-# Set an environment variable so that colify will print output like it would to
-# a terminal.
-os.environ['COLIFY_SIZE'] = '25x80'
 
 # Enable todo items
 todo_include_todos = True
