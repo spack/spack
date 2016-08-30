@@ -25,19 +25,21 @@
 from spack import *
 
 
-class Expat(Package):
-    """<eXpat/> is an XML parser library written in C"""
-    homepage = "http://expat.sourceforge.net/"
+class Lz4(Package):
+    """LZ4 is lossless compression algorithm, providing compression speed
+    at 400 MB/s per core, scalable with multi-cores CPU. It also features
+    an extremely fast decoder, with speed in multiple GB/s per core,
+    typically reaching RAM speed limits on multi-core systems."""
 
-    version('2.2.0', '2f47841c829facb346eb6e3fab5212e2',
-            url="http://downloads.sourceforge.net/project/expat/expat/2.2.0/expat-2.2.0.tar.bz2")
-    version('2.1.0', 'dd7dab7a5fea97d2a6a43f511449b7cd',
-            url="http://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz")
+    homepage = "http://cyan4973.github.io/lz4/"
+    url      = "https://github.com/Cyan4973/lz4/archive/r131.tar.gz"
+
+    version('131', '42b09fab42331da9d3fb33bd5c560de9')
+
+    # depends_on('valgrind', type='test')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
-
         make()
         if self.run_tests:
-            make('check')
-        make('install')
+            make('test')  # requires valgrind to be installed
+        make('install', 'PREFIX={0}'.format(prefix))

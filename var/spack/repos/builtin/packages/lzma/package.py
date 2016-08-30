@@ -25,19 +25,25 @@
 from spack import *
 
 
-class Expat(Package):
-    """<eXpat/> is an XML parser library written in C"""
-    homepage = "http://expat.sourceforge.net/"
+class Lzma(Package):
+    """LZMA Utils are legacy data compression software with high compression
+    ratio. LZMA Utils are no longer developed, although critical bugs may be
+    fixed as long as fixing them doesn't require huge changes to the code.
 
-    version('2.2.0', '2f47841c829facb346eb6e3fab5212e2',
-            url="http://downloads.sourceforge.net/project/expat/expat/2.2.0/expat-2.2.0.tar.bz2")
-    version('2.1.0', 'dd7dab7a5fea97d2a6a43f511449b7cd',
-            url="http://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz")
+    Users of LZMA Utils should move to XZ Utils. XZ Utils support the legacy
+    .lzma format used by LZMA Utils, and can also emulate the command line
+    tools of LZMA Utils. This should make transition from LZMA Utils to XZ
+    Utils relatively easy."""
+
+    homepage = "http://tukaani.org/lzma/"
+    url      = "http://tukaani.org/lzma/lzma-4.32.7.tar.gz"
+
+    version('4.32.7', '2a748b77a2f8c3cbc322dbd0b4c9d06a')
 
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix))
 
         make()
         if self.run_tests:
-            make('check')
+            make('check')  # one of the tests fails for me
         make('install')

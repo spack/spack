@@ -37,6 +37,9 @@ class Xz(Package):
     version('5.2.2', 'f90c9a0c8b259aee2234c4e0d7fd70af')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+        configure('--prefix={0}'.format(prefix))
+
         make()
-        make("install")
+        if self.run_tests:
+            make('check')
+        make('install')

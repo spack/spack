@@ -25,19 +25,25 @@
 from spack import *
 
 
-class Expat(Package):
-    """<eXpat/> is an XML parser library written in C"""
-    homepage = "http://expat.sourceforge.net/"
+class Jsoncpp(Package):
+    """JsonCpp is a C++ library that allows manipulating JSON values,
+    including serialization and deserialization to and from strings.
+    It can also preserve existing comment in unserialization/serialization
+    steps, making it a convenient format to store user input files."""
 
-    version('2.2.0', '2f47841c829facb346eb6e3fab5212e2',
-            url="http://downloads.sourceforge.net/project/expat/expat/2.2.0/expat-2.2.0.tar.bz2")
-    version('2.1.0', 'dd7dab7a5fea97d2a6a43f511449b7cd',
-            url="http://downloads.sourceforge.net/project/expat/expat/2.1.0/expat-2.1.0.tar.gz")
+    homepage = "https://github.com/open-source-parsers/jsoncpp"
+    url      = "https://github.com/open-source-parsers/jsoncpp/archive/1.7.3.tar.gz"
+
+    version('1.7.3', 'aff6bfb5b81d9a28785429faa45839c5')
+
+    depends_on('cmake', type='build')
+    # depends_on('python', type='test')
 
     def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix))
+        with working_dir('spack-build', create=True):
+            cmake('..', '-DBUILD_SHARED_LIBS=ON', *std_cmake_args)
 
-        make()
-        if self.run_tests:
-            make('check')
-        make('install')
+            make()
+            if self.run_tests:
+                make('test')  # Python needed to run tests
+            make('install')
