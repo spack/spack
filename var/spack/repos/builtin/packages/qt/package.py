@@ -173,7 +173,16 @@ class Qt(Package):
         else:
             config_args.append('-no-dbus')
 
-        if sys.platform == 'darwin':
+        if '@5:' in self.spec and sys.platform == 'darwin':
+            config_args.extend([
+                    '-no-xinput2',
+                    '-no-xcb-xlib',
+                    '-no-pulseaudio',
+                    '-no-alsa',
+                    '-no-gtkstyle',
+                ])
+
+        if '@4' in self.spec and sys.platform == 'darwin':
             sdkpath = which('xcrun')('--show-sdk-path',
                                      # XXX(macos): the 10.11 SDK fails to configure.
                                      '--sdk', 'macosx10.9',
@@ -222,7 +231,6 @@ class Qt(Package):
     def configure(self):
         configure('-no-eglfs',
                   '-no-directfb',
-                  '-qt-xcb',
                   '{0}-gtkstyle'.format('' if '+gtk' in self.spec else '-no'),
                   '-skip', 'qtwebkit',
                   *self.common_config_args)
