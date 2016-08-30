@@ -74,6 +74,8 @@ class Python(Package):
     depends_on("tk",  when="+tk")
     depends_on("tcl", when="+tk")
 
+    patch('ncurses.patch')
+
     @when('@2.7,3.4:')
     def patch(self):
         # NOTE: Python's default installation procedure makes it possible for a
