@@ -127,7 +127,8 @@ subparsers = parser.add_subparsers(metavar='SUBCOMMAND', dest="command")
 import spack.cmd
 for cmd in spack.cmd.commands:
     module = spack.cmd.get_module(cmd)
-    subparser = subparsers.add_parser(cmd, help=module.description)
+    cmd_name = cmd.replace('_', '-')
+    subparser = subparsers.add_parser(cmd_name, help=module.description)
     module.setup_parser(subparser)
 
 # Just print help and exit if run with no arguments at all
@@ -163,7 +164,7 @@ def main():
         spack.curl.add_default_arg('-k')
 
     # Try to load the particular command asked for and run it
-    command = spack.cmd.get_command(args.command)
+    command = spack.cmd.get_command(args.command.replace('-', '_'))
     try:
         return_val = command(parser, args)
     except SpackError as e:
