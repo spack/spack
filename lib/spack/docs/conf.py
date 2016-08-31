@@ -52,7 +52,7 @@ sys.path.append(os.path.abspath('../spack'))
 # Add the Spack bin directory to the path so that we can use its output in docs.
 spack_root = '../../..'
 os.environ['SPACK_ROOT'] = spack_root
-os.environ['PATH'] += os.pathsep + '$SPACK_ROOT/bin'
+os.environ['PATH'] += '%s%s/bin' % (os.pathsep, spack_root)
 
 # Get the spack version for use in the docs
 spack_version =  subprocess.Popen(
