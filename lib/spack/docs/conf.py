@@ -79,7 +79,7 @@ command_names = []
 for filename in glob('*rst'):
     with open(filename) as f:
         for line in f:
-            match = re.match(r'.. _(spack-[^:]*)', line)
+            match = re.match(r'.. _(spack-[a-z]{2,}):', line)
             if match:
                 command_names.append(match.group(1).strip())
 

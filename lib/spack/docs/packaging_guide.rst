@@ -220,7 +220,7 @@ but this provides a much simpler shortcut and saves you the trouble
 of typing the full path.
 
 If you try to edit a package that doesn't exist, Spack will recommend
-using ``spack create`` or ``spack edit -f``:
+using ``spack create`` or ``spack edit --force``:
 
 .. code-block:: console
 
@@ -230,15 +230,15 @@ using ``spack create`` or ``spack edit -f``:
 .. _spack-edit-f:
 
 ^^^^^^^^^^^^^^^^^^^^^^
-``spack edit -f``
+``spack edit --force``
 ^^^^^^^^^^^^^^^^^^^^^^
 
-``spack edit -f`` can be used to create a new, minimal boilerplate
+``spack edit --force`` can be used to create a new, minimal boilerplate
 package:
 
 .. code-block:: console
 
-   $ spack edit -f foo
+   $ spack edit --force foo
 
 Unlike ``spack create``, which infers names and versions, and which
 actually downloads the tarball and checksums it for you, ``spack edit
