@@ -786,7 +786,7 @@ Integration with module systems
 Spack provides some integration with `Environment Modules
 <http://modules.sourceforge.net/>`_ to make it easier to use the
 packages it installs.  If your system does not already have
-Environment Modules, see InstallEnvironmentModules_.
+Environment Modules, see :ref:`InstallEnvironmentModules`.
 
 .. note::
 
@@ -1030,7 +1030,7 @@ commands inside a shell script.  The ``spack module loads`` may also
 be used to generate code that can be cut-and-pasted into a shell
 script.  For example:
 
-.. code-block:: sh
+.. code-block:: console
 
    $ spack module find tcl --dependencies --shell py-numpy git
    # bzip2@1.0.6%gcc@4.9.3=linux-x86_64
@@ -1115,7 +1115,7 @@ RPATH.
 
 Scripts to load modules recursively may be made with the command:
 
-.. code-block:: sh
+.. code-block:: console
 
     $ spack module loads --dependencies <spec>
 
@@ -1184,7 +1184,7 @@ issues ``module load`` commands.  Add the ``--prefix`` option to your
 
 For example, consider the following on one system:
 
-..code-block:: sh
+..code-block:: console
 
     $ module avail
     linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y

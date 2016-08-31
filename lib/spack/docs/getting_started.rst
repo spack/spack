@@ -64,27 +64,24 @@ Clean Environment
 ~~~~~~~~~~~~~~~~~
 
 Many packages' installs can be broken by changing environment
-variables.  For example, a packge might pick up the wrong build-time
+variables.  For example, a package might pick up the wrong build-time
 dependencies (most of them not specified) depending on the setting of
 ``PATH``.  ``GCC`` seems to be particularly vulnerable to these issues.
 
 Therefore, it is recommended that Spack users run with a *clean
 environment*, especially for ``PATH``.  Only software that comes with
 the system, or that you know you wish to use with Spack, should be
-included.  This procedure will avoid many strange build errors that no
-one knows how to fix.
+included.  This procedure will avoid many strange build errors.
 
-
-Although Spack will work as soon as you clone it, it won't necessarily
-be able to install any packages.  That is because Spack relies 
 
 ~~~~~~~~~~~~~~~~~~
 Check Installation
 ~~~~~~~~~~~~~~~~~~
 
-With Spack installed, you should be able to run some basic Spack commands.  For example:
+With Spack installed, you should be able to run some basic Spack
+commands.  For example:
 
-.. code-block:: sh
+.. code-block:: console
 
     $ spack spec netcdf
       ...
@@ -101,7 +98,7 @@ With Spack installed, you should be able to run some basic Spack commands.  For 
 Optional: Alternate Prefix
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You may want to run it out of a prefix other than the git repository
+You may want to run Spack out of a prefix other than the git repository
 you cloned.  The ``spack bootstrap`` command provides this
 functionality.  To install spack in a new directory, simply type:
 
@@ -115,6 +112,13 @@ copy of spack installs packages into its own ``$PREFIX/opt``
 directory.
 
 
+~~~~~~~~~~
+Next Steps
+~~~~~~~~~~
+
+In theory, Spack doesn't need any additional installation; just
+downlad and run!  But in real life, additional steps are usually
+required before Spack can work in a practical sense.  Read on...
 
 
 .. _compiler-config:
@@ -395,7 +399,7 @@ On supercomputers, sysadmins have already built MPI versions that take
 into account the specifics of that computer's hardware.  Unless you
 know how they were built and can choose the correct Spack variants,
 you are unlikely to get a working MPI from Spack.  Instead, use an
-appropraite pre-installed MPI.
+appropriate pre-installed MPI.
 
 If you choose a pre-installed MPI, you should consider using the
 pre-installed compiler used to build that MPI; see above on
@@ -430,7 +434,7 @@ As long as the system-provided SSL works, it is better to use it.  One can check
 As long as it works, the recommended way to tell Spack to use the
 system-supplied OpenSSL is to add the following to ``packages.yaml``.
 Note that the ``@system`` "version" means "I don't care what version
-it is, just use what is there."  This is appropraite for OpenSSL,
+it is, just use what is there."  This is appropriate for OpenSSL,
 which has a stable API.
 
 
@@ -446,9 +450,9 @@ which has a stable API.
             buildable: False
 
 
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 Utilities Configuration
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 Although Spack does not need installation *per se*, it does rely on
 other packages to be available on its host system.  If those packages
@@ -460,20 +464,20 @@ have Spack use them.
 For example, if `curl` doesn't work, one could use the following steps
 to provide Spack a working `curl`:
 
-.. code-block:: sh
+.. code-block:: console
 
     $ spack install curl
     $ spack load curl
 
 or alternately:
 
-.. code-block:: sh
+.. code-block:: console
 
     $ spack module loads curl >>~/.bashrc
 
 or if environment modules don't work:
 
-.. code-block:: sh
+.. code-block:: console
 
     $ export PATH=`spack location -i curl`/bin:$PATH
 
@@ -511,7 +515,7 @@ outdated / insecure versions of OpenSSL on those systems.  This will
 prevent Spack from installing any software requiring ``https://``
 until a new cURL has been installed, using the technique above.
 
-.. note::
+.. warning::
 
     ``curl`` depends on ``openssl`` and ``zlib``, both of which are
     downloadable from non-SSL sources.  Unfortunately, this
@@ -521,7 +525,7 @@ until a new cURL has been installed, using the technique above.
     installs, and does not rely on a secure SSL implementation.
 
     If your version of ``curl`` is not trustworthy, then you should
-    not use it outside of Spack.  Instead of putting it in your
+    *not* use it outside of Spack.  Instead of putting it in your
     ``.bashrc``, you might wish to create a short shell script that
     loads the appropariate module(s) and then launches Spack.
 
@@ -547,9 +551,9 @@ For example: ```yum install environment-modules``
 Environment Modules, you can get it with Spack:
 
 1. Consider using system tcl (as long as your system has Tcl version 8.0 or later):
-    1. Identify its location using ``which tclsh``
-    2. Identify its version using ``echo 'puts $tcl_version;exit 0' | tclsh``
-    3. Add to ``~/.spack/packages.yaml`` and modify as appropriate:
+    # Identify its location using ``which tclsh``
+    # Identify its version using ``echo 'puts $tcl_version;exit 0' | tclsh``
+    # Add to ``~/.spack/packages.yaml`` and modify as appropriate:
 
        .. code-block:: yaml
 
@@ -561,9 +565,9 @@ Environment Modules, you can get it with Spack:
                    buildable: False
 
 2. Install with::
-   .. code-block:: sh
+   .. code-block:: console
 
-       spack install environment-modules
+       $ spack install environment-modules
 
 3. Activate with the following script (or apply the updates to your
    ``.bashrc`` file manually)::
@@ -583,16 +587,16 @@ This adds to your ``.bashrc`` (or similar) files, enabling Environment
 Modules when you log in.  Re-load your .bashrc (or log out and in
 again), and then test that the ``module`` command is found with:
 
-.. code-block:: sh
+.. code-block:: console
 
-    module avail
+    $ module avail
 
 
 ^^^^^^^^^^^^^^^^^
 Package Utilities
 ^^^^^^^^^^^^^^^^^
 
-Spack can also encounter bootstrapping problems inside a package's
+Spack may also encounter bootstrapping problems inside a package's
 ``install()`` method.  In this case, Spack will normally be running
 inside a *sanitized build environment*.  This includes all of the
 package's dependencies, but none of the environment Spack inherited
@@ -604,7 +608,8 @@ running ``spack install``, causing Spack to **not** santize the build
 environment.  You are now responsible for making sure that environment
 does not do strange things to Spack or its installs.
 
-Another way to get Spack to use its own version of something is to add that something to a package that needs it.  For example:
+Another way to get Spack to use its own version of something is to add
+that something to a package that needs it.  For example:
 
 .. code-block:: python
 
@@ -615,16 +620,11 @@ such as ``autotools`` (if the ``autoreconf`` command is needed) and
 ``cmake`` --- ``cmake`` especially, because different packages require
 a different version of CMake.
 
-However, adding ``depends_on('binutils')`` to every package is not
-considered a best practice because every package written in
-C/C++/Fortran would need it.  Loading a recent ``binutils`` into your
-environment is preferable here.
-
-^^^^^^^^
+````````
 binutils
-^^^^^^^^
+````````
 
-# https://groups.google.com/forum/#!topic/spack/i_7l_kEEveI
+.. https://groups.google.com/forum/#!topic/spack/i_7l_kEEveI
 
 Sometimes, strange error messages can happen while building a package.
 For exmaple, ``ld`` might crash.  Or one receives a message like:
@@ -634,48 +634,14 @@ For exmaple, ``ld`` might crash.  Or one receives a message like:
     ld: final link failed: Nonrepresentable section on output
 
 These problems are often caused by an outdated ``binutils`` on your
-system: bootstrap as described above.
+system.  Unlike CMake or Autotools, adding ``depends_on('binutils')``
+to every package is not considered a best practice because every
+package written in C/C++/Fortran would need it.  Instead, load a
+recent ``binutils`` into your environment and use the ``--dirty``
+flag.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Install Environment Modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In order to use Spack's generated environment modules, you must have
-installed the *Environment Modules* package.  On many Linux
-distributions, this can be installed from the vendor's repository.
-For example: ```yum install environment-modules``
-(Fedora/RHEL/CentOS).  If your Linux distribution does not have
-Environment Modules, you can get it with Spack:
-
-1. Consider using system tcl.  If so, add to ``packages.yaml``::
-
-    packages:
-        tcl:
-            paths:
-                tcl@8.5: /usr
-            version: [8.5]
-            buildable: False
-2. Install with::
-
-    spack install environment-modules
-
-3. Activate with::
-
-    TMP=`tempfile`
-    echo >$TMP
-    MODULE_HOME=`spack location -i environment-modules`
-    MODULE_VERSION=`ls -1 $MODULE_HOME/Modules | head -1`
-    ${MODULE_HOME}/Modules/${MODULE_VERSION}/bin/add.modules <$TMP
-    cp .bashrc $TMP
-    echo "MODULE_VERSION=${MODULE_VERSION}" > .bashrc
-    cat $TMP >>.bashrc
-
-This adds to your ``.bashrc`` (or similar) files, enabling Environment
-Modules when you log in.  Re-load your .bashrc (or log out and in
-again), and then test that the ``module`` command is found with:
-
-    module avail
-
+.. _cray-support:
 
 -------------
 Spack on Cray

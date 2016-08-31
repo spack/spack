@@ -37,9 +37,9 @@ package:
 If you're new to spack and want to start using it, see :doc:`getting_started`,
 or refer to the full manual below.
 
------------------
-Table of Contents
------------------
+--------------------------
+Documentation and Tutorial
+--------------------------
 
 .. toctree::
    :maxdepth: 2
@@ -47,12 +47,20 @@ Table of Contents
    features
    getting_started
    basic_usage
-   packaging_guide
    spack_workflows
+
+
+----------------
+Reference Manual
+----------------
+
+.. toctree::
+   :maxdepth: 2
+
+   packaging_guide
    mirrors
    configuration
    developer_guide
-   case_studies
    command_index
    package_list
    API Docs <spack>
