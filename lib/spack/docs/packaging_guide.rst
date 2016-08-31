@@ -220,7 +220,7 @@ but this provides a much simpler shortcut and saves you the trouble
 of typing the full path.
 
 If you try to edit a package that doesn't exist, Spack will recommend
-using ``spack create`` or ``spack edit --force``:
+using ``spack create`` or ``spack edit -f``:
 
 .. code-block:: console
 
@@ -230,10 +230,10 @@ using ``spack create`` or ``spack edit --force``:
 .. _spack-edit-f:
 
 ^^^^^^^^^^^^^^^^^^^^^^
-``spack edit --force``
+``spack edit -f``
 ^^^^^^^^^^^^^^^^^^^^^^
 
-``spack edit --force`` can be used to create a new, minimal boilerplate
+``spack edit -f`` can be used to create a new, minimal boilerplate
 package:
 
 .. code-block:: console
@@ -1134,7 +1134,7 @@ dynamic loader where to find its dependencies at runtime. You may be
 familiar with `LD_LIBRARY_PATH
 <http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html>`_
 on Linux or `DYLD_LIBRARY_PATH
-<https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/dyld.1.html>`
+<https://developer.apple.com/library/mac/documentation/Darwin/Reference/ManPages/man1/dyld.1.html>`_
 on Mac OS X.  RPATH is similar to these paths, in that it tells
 the loader where to find libraries.  Unlike them, it is embedded in
 the binary and not set in each user's environment.

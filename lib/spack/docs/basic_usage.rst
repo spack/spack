@@ -14,7 +14,7 @@ Spack to maintain this colorization.  E.g.:
 
     $ spack find | less -R
 
-It is recommend that the following be put in your ``.bashrc`` file:
+It is recommended that the following be put in your ``.bashrc`` file:
 
 .. code-block:: sh
 
@@ -187,7 +187,7 @@ you can use them to customize an installation in :ref:`sec-specs`.
 ^^^^^^^^^^^^^^^^^^^
 
 To uninstall a package, type ``spack uninstall <package>``.  This will ask
-the user for confirmation, and in case will completely remove the directory
+the user for confirmation before completely removing the directory
 in which the package was installed.
 
 .. code-block:: console
