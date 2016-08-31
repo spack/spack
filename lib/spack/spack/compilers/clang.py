@@ -77,18 +77,17 @@ class Clang(Compiler):
     @classmethod
     def default_version(cls, comp):
         """The '--version' option works for clang compilers.
-           On most platforms, output looks like this::
+        On most platforms, output looks like this::
 
-               clang version 3.1 (trunk 149096)
-               Target: x86_64-unknown-linux-gnu
-               Thread model: posix
+            clang version 3.1 (trunk 149096)
+            Target: x86_64-unknown-linux-gnu
+            Thread model: posix
 
-          On Mac OS X, it looks like this:
+        On Mac OS X, it looks like this::
 
-               Apple LLVM version 7.0.2 (clang-700.1.81)
-               Target: x86_64-apple-darwin15.2.0
-               Thread model: posix
-
+            Apple LLVM version 7.0.2 (clang-700.1.81)
+            Target: x86_64-apple-darwin15.2.0
+            Thread model: posix
         """
         if comp not in cpr._version_cache:
             compiler = Executable(comp)

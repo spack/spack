@@ -23,17 +23,16 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ##############################################################################
 from spack import *
-
 import os
 
 
 class Espresso(Package):
-    """
-    QE is an integrated suite of Open-Source computer codes for
+    """QE is an integrated suite of Open-Source computer codes for
     electronic-structure calculations and materials modeling at
     the nanoscale. It is based on density-functional theory, plane
     waves, and pseudopotentials.
     """
+
     homepage = 'http://quantum-espresso.org'
     url = 'http://www.qe-forge.org/gf/download/frsrelease/204/912/espresso-5.3.0.tar.gz'
 

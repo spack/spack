@@ -26,14 +26,14 @@ from spack import *
 
 
 class Openjpeg(Package):
-    """
-    OpenJPEG is an open-source JPEG 2000 codec written in C language.
+    """OpenJPEG is an open-source JPEG 2000 codec written in C language.
     It has been developed in order to promote the use of JPEG 2000, a
     still-image compression standard from the Joint Photographic
     Experts Group (JPEG).
     Since April 2015, it is officially recognized by ISO/IEC and
     ITU-T as a JPEG 2000 Reference Software.
     """
+
     homepage = "https://github.com/uclouvain/openjpeg"
     url      = "https://github.com/uclouvain/openjpeg/archive/version.2.1.tar.gz"
 

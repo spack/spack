@@ -68,7 +68,7 @@ Before you send a PR, your code should pass the following checks:
 * Your contribution will need to pass the `spack test` command.
   Run this before submitting your PR.
 
-* Also run the `share/spack/qa/run-flake8` script to check for PEP8 compliance.
+* Also run the `share/spack/qa/run-flake8-tests` script to check for PEP8 compliance.
   To encourage contributions and readability by a broad audience,
   Spack uses the [PEP8](https://www.python.org/dev/peps/pep-0008/) coding
   standard with [a few exceptions](https://github.com/LLNL/spack/blob/develop/.flake8).

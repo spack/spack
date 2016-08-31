@@ -26,8 +26,7 @@ from spack import *
 
 
 class Opencoarrays(CMakePackage):
-    """
-    OpenCoarrays is an open-source software project that produces an
+    """OpenCoarrays is an open-source software project that produces an
     application binary interface (ABI) supporting coarray Fortran (CAF)
     compilers, an application programming interface (API) that supports users
     of non-CAF compilers, and an associated compiler wrapper and program

@@ -261,17 +261,14 @@ class EnvironmentModifications(object):
 
     @staticmethod
     def from_sourcing_files(*args, **kwargs):
-        """
-        Creates an instance of EnvironmentModifications that, if executed,
+        """Creates an instance of EnvironmentModifications that, if executed,
         has the same effect on the environment as sourcing the files passed as
         parameters
 
-        Args:
-            *args: list of files to be sourced
-
-        Returns:
-            instance of EnvironmentModifications
+        :param \*args: list of files to be sourced
+        :rtype: instance of EnvironmentModifications
         """
+
         env = EnvironmentModifications()
         # Check if the files are actually there
         if not all(os.path.isfile(file) for file in args):

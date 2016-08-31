@@ -288,8 +288,7 @@ def variant(pkg, name, default=False, description=""):
 
 @directive('resources')
 def resource(pkg, **kwargs):
-    """
-    Define an external resource to be fetched and staged when building the
+    """Define an external resource to be fetched and staged when building the
     package. Based on the keywords present in the dictionary the appropriate
     FetchStrategy will be used for the resource. Resources are fetched and
     staged in their own folder inside spack stage area, and then moved into
@@ -298,11 +297,11 @@ def resource(pkg, **kwargs):
     List of recognized keywords:
 
     * 'when' : (optional) represents the condition upon which the resource is
-    needed
+      needed
     * 'destination' : (optional) path where to move the resource. This path
-    must be relative to the main package stage area.
+      must be relative to the main package stage area.
     * 'placement' : (optional) gives the possibility to fine tune how the
-    resource is moved into the main package stage area.
+      resource is moved into the main package stage area.
     """
     when = kwargs.get('when', pkg.name)
     destination = kwargs.get('destination', "")

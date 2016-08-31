@@ -26,8 +26,7 @@ from spack import *
 
 
 class ArpackNg(Package):
-    """
-    ARPACK-NG is a collection of Fortran77 subroutines designed to solve large
+    """ARPACK-NG is a collection of Fortran77 subroutines designed to solve large
     scale eigenvalue problems.
 
     Important Features:
@@ -53,6 +52,7 @@ class ArpackNg(Package):
 
     arpack-ng is replacing arpack almost everywhere.
     """
+
     homepage = 'https://github.com/opencollab/arpack-ng'
     url = 'https://github.com/opencollab/arpack-ng/archive/3.3.0.tar.gz'
 
