@@ -74,7 +74,7 @@ clean:
 	-rm -f package_list.rst command_index.rst
 	-rm -rf $(BUILDDIR)/* $(APIDOC_FILES)
 
-html: apidoc
+html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
