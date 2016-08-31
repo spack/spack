@@ -42,9 +42,9 @@ class Sqlite(Package):
         return str(arch.platform.target('default_target'))
 
     def install(self, spec, prefix):
-        config = [ "--prefix=" + prefix ]
+        config = ["--prefix=" + prefix]
         if self.get_arch() == 'ppc64le':
-          config.append("--build=powerpc64le-redhat-linux-gnu")
+            config.append("--build=powerpc64le-redhat-linux-gnu")
         configure(*config)
         make()
         make("install")
