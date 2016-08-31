@@ -50,7 +50,7 @@ from glob import glob
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('exts'))
 sys.path.insert(0, os.path.abspath('../external'))
-sys.path.append(os.path.abspath('../spack'))
+sys.path.append(os.path.abspath('..'))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
 spack_root = '../../..'
