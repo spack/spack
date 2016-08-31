@@ -31,9 +31,9 @@ This will create a directory called ``spack``.  If you are using Spack
 for a specific purpose, you might have received different instructions
 on how to download Spack; if so, please follow those instructions.
 
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 Add Spack to Shell
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 We'll assume that the full path to your downloaded Spack directory is
 in the ``SPACK_ROOT`` environment variable.  Add ``$SPACK_ROOT/bin``
@@ -59,9 +59,9 @@ For a richer experience, use Spack's `shell support
 
 This automatically adds Spack to your ``PATH``.
 
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 Clean Environment
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 Many packages' installs can be broken by changing environment
 variables.  For example, a package might pick up the wrong build-time
@@ -74,9 +74,9 @@ the system, or that you know you wish to use with Spack, should be
 included.  This procedure will avoid many strange build errors.
 
 
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 Check Installation
-~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^
 
 With Spack installed, you should be able to run some basic Spack
 commands.  For example:
@@ -94,9 +94,9 @@ commands.  For example:
           ^m4@1.4.17%gcc@5.3.0+sigsegv arch=linux-SuSE11-x86_64
               ^libsigsegv@2.10%gcc@5.3.0 arch=linux-SuSE11-x86_64
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 Optional: Alternate Prefix
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You may want to run Spack out of a prefix other than the git repository
 you cloned.  The ``spack bootstrap`` command provides this
@@ -112,9 +112,9 @@ copy of spack installs packages into its own ``$PREFIX/opt``
 directory.
 
 
-~~~~~~~~~~
+^^^^^^^^^^
 Next Steps
-~~~~~~~~~~
+^^^^^^^^^^
 
 In theory, Spack doesn't need any additional installation; just
 downlad and run!  But in real life, additional steps are usually
@@ -503,9 +503,9 @@ environment module that may be loaded.  Either way works.
 
 A few notes on specific programs in this list:
 
-``````````````````````````
+""""""""""""""""""""""""""
 cURL, git, Mercurial, etc.
-``````````````````````````
+""""""""""""""""""""""""""
 
 Spack depends on cURL to download tarballs, the format that most
 Spack-installed packages come in.  Your system's cURL should always be
@@ -539,14 +539,14 @@ also be installable.
 
 .. _InstallEnvironmentModules:
 
-```````````````````
+"""""""""""""""""""
 Environment Modules
-```````````````````
+"""""""""""""""""""
 
 In order to use Spack's generated environment modules, you must have
 installed the *Environment Modules* package.  On many Linux
 distributions, this can be installed from the vendor's repository.
-For example: ```yum install environment-modules``
+For example: """yum install environment-modules``
 (Fedora/RHEL/CentOS).  If your Linux distribution does not have
 Environment Modules, you can get it with Spack:
 
@@ -620,9 +620,9 @@ such as ``autotools`` (if the ``autoreconf`` command is needed) and
 ``cmake`` --- ``cmake`` especially, because different packages require
 a different version of CMake.
 
-````````
+""""""""
 binutils
-````````
+""""""""
 
 .. https://groups.google.com/forum/#!topic/spack/i_7l_kEEveI
 
