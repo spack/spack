@@ -95,7 +95,8 @@ class Cp2k(Package):
             fcflags.extend([
                 '-I' + spec['fftw'].prefix.include
             ])
-            ldflags = ['-L' + spec['fftw'].prefix.lib]
+            fftw = find_libraries(['libfftw3'], root=spec['fftw'].prefix.lib)
+            ldflags = [fftw.search_flags]
             libs = []
             if '+plumed' in self.spec:
                 # Include Plumed.inc in the Makefile
@@ -157,9 +158,8 @@ class Cp2k(Package):
                     ),
                     '-I' + join_path(spec['pexsi'].prefix, 'fortran')
                 ])
-                ldflags.extend([
-                    '-L' + spec['scalapack'].prefix.lib
-                ])
+                scalapack = spec['scalapack'].scalapack_libs
+                ldflags.append(scalapack.search_flags)
                 libs.extend([
                     join_path(spec['elpa'].prefix.lib,
                               'libelpa.{0}'.format(dso_suffix)),
@@ -176,20 +176,15 @@ class Cp2k(Package):
                         'libmetis.{0}'.format(dso_suffix)
                     ),
                 ])
-                libs.extend(spec['scalapack'].scalapack_shared_libs)
+                libs.extend(scalapack)
                 libs.extend(self.spec['mpi'].mpicxx_shared_libs)
                 libs.extend(self.compiler.stdcxx_libs)
             # LAPACK / BLAS
-            ldflags.extend([
-                '-L' + spec['lapack'].prefix.lib,
-                '-L' + spec['blas'].prefix.lib
-            ])
-            libs.extend([
-                join_path(spec['fftw'].prefix.lib,
-                          'libfftw3.{0}'.format(dso_suffix)),
-                spec['lapack'].lapack_shared_lib,
-                spec['blas'].blas_shared_lib
-            ])
+            lapack = spec['lapack'].lapack_libs
+            blas = spec['blas'].blas_libs
+
+            ldflags.append(lapack.search_flags + blas.search_flags)
+            libs.extend([str(x) for x in (fftw, lapack, blas)])
 
             # Write compiler flags to file
             mkf.write('CPPFLAGS = {0}\n'.format(' '.join(cppflags)))

@@ -58,6 +58,7 @@ class Mkl(IntelInstaller):
         # different interface and threading layers.
 
         name = 'libmkl_rt.%s' % dso_suffix
+        # FIXME : change the logic here
         libdir = find_library_path(name, self.prefix.lib64, self.prefix.lib)
 
         # Now set blas/lapack libs:

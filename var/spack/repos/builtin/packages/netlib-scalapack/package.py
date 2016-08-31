@@ -28,10 +28,11 @@ import sys
 
 class NetlibScalapack(Package):
     """ScaLAPACK is a library of high-performance linear algebra routines for
-    parallel distributed memory machines"""
+    parallel distributed memory machines
+    """
 
     homepage = "http://www.netlib.org/scalapack/"
-    url      = "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz"
+    url = "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz"
 
     version('2.0.2', '2f75e600a2ba155ed9ce974a1c4b536f')
     version('2.0.1', '17b8cde589ea0423afe1ec43e7499161')
@@ -39,10 +40,16 @@ class NetlibScalapack(Package):
     # versions before 2.0.0 are not using cmake and requires blacs as
     # a separated package
 
-    variant('shared', default=True,
-            description='Build the shared library version')
-    variant('fpic', default=False,
-            description="Build with -fpic compiler option")
+    variant(
+        'shared',
+        default=True,
+        description='Build the shared library version'
+    )
+    variant(
+        'fpic',
+        default=False,
+        description='Build with -fpic compiler option'
+    )
 
     provides('scalapack')
 
@@ -50,6 +57,13 @@ class NetlibScalapack(Package):
     depends_on('lapack')
     depends_on('blas')
     depends_on('cmake', when='@2.0.0:', type='build')
+
+    @property
+    def scalapack_libs(self):
+        shared = True if '+shared' in self.spec else False
+        return find_libraries(
+            ['libscalapack'], root=self.prefix, shared=shared, recurse=True
+        )
 
     def install(self, spec, prefix):
         options = [
@@ -60,14 +74,12 @@ class NetlibScalapack(Package):
         ]
 
         # Make sure we use Spack's Lapack:
+        lapack = spec['lapack'].lapack_libs
         options.extend([
             '-DLAPACK_FOUND=true',
-            '-DLAPACK_LIBRARIES=%s' % (
-                spec['lapack'].lapack_shared_lib if '+shared' in spec else
-                spec['lapack'].lapack_static_lib),
-            '-DBLAS_LIBRARIES=%s' % (
-                spec['blas'].blas_shared_lib if '+shared' in spec else
-                spec['blas'].blas_static_lib)
+            '-DLAPACK_INCLUDE_DIRS=%s' % spec['lapack'].prefix.include,
+            '-DLAPACK_LIBRARIES=%s' % (lapack.joined()),
+            '-DBLAS_LIBRARIES=%s' % (blas.joined())
         ])
 
         if '+fpic' in spec:
@@ -86,12 +98,3 @@ class NetlibScalapack(Package):
         # The shared libraries are not installed correctly on Darwin:
         if (sys.platform == 'darwin') and ('+shared' in spec):
             fix_darwin_install_name(prefix.lib)
-
-    def setup_dependent_package(self, module, dependent_spec):
-        spec = self.spec
-        lib_suffix = dso_suffix if '+shared' in spec else 'a'
-
-        spec.fc_link = '-L%s -lscalapack' % spec.prefix.lib
-        spec.cc_link = spec.fc_link
-        spec.libraries = [join_path(spec.prefix.lib,
-                                    'libscalapack.%s' % lib_suffix)]
