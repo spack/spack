@@ -19,6 +19,12 @@ matrix:
 # Use new Travis infrastructure (Docker can't sudo yet)
 sudo: false
 
+# Docs need graphviz to build
+addons:
+  apt:
+    packages:
+      - graphviz
+
 # Install various dependencies
 install:
   - pip install coveralls
