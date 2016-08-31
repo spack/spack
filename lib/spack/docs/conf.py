@@ -42,6 +42,7 @@ import re
 import shutil
 import subprocess
 from glob import glob
+from sphinx.apidoc import main as sphinx_apidoc
 
 # -- Spack customizations -----------------------------------------------------
 
@@ -92,6 +93,10 @@ with open('command_index.rst', 'a') as index:
     index.write('\n')
     for cmd in sorted(command_names):
         index.write('   * :ref:`%s`\n' % cmd)
+
+
+# Run sphinx-apidoc
+sphinx_apidoc(['-T', '-o', '.', '../spack'])
 
 #
 # Exclude everything in spack.__all__ from indexing.  All of these
