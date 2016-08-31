@@ -647,7 +647,7 @@ In this section, we show how Spack can be used in the software
 development process to greatest effect, and how development packages
 can be seamlessly integrated into the Spack ecosystem.  We will show
 how this process works by example, assuming the software you are
-creating is called ``ibmisc``.
+creating is called ``mylib``.
 
 
 ---------------------
@@ -725,18 +725,18 @@ Write the Spack Package
 The Spack package also needs to be written, in tandem with setting up
 the build (for example, CMake).  The most important part of this task
 is declaring dependencies.  Here is an example of the Spack package
-for the ``ibmisc`` package (elipses for brevity):
+for the ``mylib`` package (elipses for brevity):
 
 .. code-block:: python
 
-    class Ibmisc(CMakePackage):
-        """Misc. reusable utilities used by IceBin."""
+    class Mylib(CMakePackage):
+        """Misc. reusable utilities used by Myapp."""
 
-        homepage = "https://github.com/citibeth/ibmisc"
-        url = "https://github.com/citibeth/ibmisc/tarball/123"
+        homepage = "https://github.com/citibeth/mylib"
+        url = "https://github.com/citibeth/mylib/tarball/123"
 
         version('0.1.2', '3a6acd70085e25f81b63a7e96c504ef9')
-        version('develop', git='https://github.com/citibeth/ibmisc.git',
+        version('develop', git='https://github.com/citibeth/mylib.git',
             branch='develop')
 
         variant('everytrace', default=False,
@@ -762,7 +762,7 @@ for the ``ibmisc`` package (elipses for brevity):
                 '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO')]
 
 This is a standard Spack package that can be used to install
-``ibmisc`` in a production environment.  The list of dependencies in
+``mylib`` in a production environment.  The list of dependencies in
 the Spack package will generally be a repeat of the list of CMake
 dependencies.  This package also has some features that allow it to be
 used for development:
@@ -776,7 +776,7 @@ used for development:
    areguments are typically used to turn features on/off in the build.
 
 2. It specifies a non-checksummed version ``develop``.  Running
-   ``spack install ibmisc@develop`` the ``@develop`` version will
+   ``spack install mylib@develop`` the ``@develop`` version will
    install the latest verison off the develop branch.  This method of
    downlaod should only be used by developers who control and trust
    the repository in question!
@@ -794,11 +794,11 @@ dependencies automatically.  For example:
 
 .. code-block:: console
 
-   $ cd ibmisc
-   $ spack setup ibmisc@local
+   $ cd mylib
+   $ spack setup mylib@local
 
 The result will be a file ``spconfig.py`` in the top-level
-``ibmisc/`` directory.  It is a short script that calls CMake with the
+``mylib/`` directory.  It is a short script that calls CMake with the
 dependencies and options determined by Spack --- similar to what
 happens in ``spack install``, but now written out in script form.
 From a developer's point of view, you can think of ``spconfig.py`` as
@@ -846,13 +846,13 @@ into Git or downloading tarballs.
 Build Other Software
 --------------------
 
-Now that you've built ``ibmisc`` with Spack, you might want to build
-another package that depends on it --- for example, ``icebin``.  This
+Now that you've built ``mylib`` with Spack, you might want to build
+another package that depends on it --- for example, ``myapp``.  This
 is accomplished easily enough:
 
 .. code-block:: console
 
-    $ spack install icebin ^ibmisc@local
+    $ spack install myapp ^mylib@local
 
 Note that auto-built software has now been installed *on top of*
 manually-built software, without breaking Spack's "web."  This
@@ -866,12 +866,12 @@ for example:
 
 .. code-block:: console
 
-    $ spack install ibmisc@develop
+    $ spack install mylib@develop
 
 
---------------------
-Releas Your Software
---------------------
+---------------------
+Release Your Software
+---------------------
 
 You are now ready to release your software as a tarball with a
 numbered version, and a Spack package that can build it.  If you're
@@ -886,29 +886,29 @@ hosted on GitHub, this process will be a bit easier.
 
    .. code-block:: python
 
-       url = 'https://github.com/citibeth/ibmisc/tarball/v0.1.2'
+       url = 'https://github.com/citibeth/mylib/tarball/v0.1.2'
 
 #. Use Spack to determine your version's hash, and cut'n'paste it into
    your ``package.py``:
 
    .. code-block:: console
 
-       $ spack checksum ibmisc 0.1.2
-       ==> Found 1 versions of ibmisc
-         0.1.2     https://github.com/citibeth/ibmisc/tarball/v0.1.2
+       $ spack checksum mylib 0.1.2
+       ==> Found 1 versions of mylib
+         0.1.2     https://github.com/citibeth/mylib/tarball/v0.1.2
 
        How many would you like to checksum? (default is 5, q to abort) 
        ==> Downloading...
-       ==> Trying to fetch from https://github.com/citibeth/ibmisc/tarball/v0.1.2
+       ==> Trying to fetch from https://github.com/citibeth/mylib/tarball/v0.1.2
        ######################################################################## 100.0%
-       ==> Checksummed new versions of ibmisc:
+       ==> Checksummed new versions of mylib:
              version('0.1.2', '3a6acd70085e25f81b63a7e96c504ef9')
 
 #. You should now be able to install released version 0.1.2 of your package with:
 
    .. code-block:: console
 
-      $ spack install ibmisc@0.1.2
+      $ spack install mylib@0.1.2
 
 #. There is no need to remove the `develop` version from your package.
    Spack concretization will always prefer numbered version to
@@ -947,7 +947,7 @@ Spack is the best way to install it:
       are needed to make your software work correctly (assuming those
       are not already in your ``packages.yaml``).
 
-   #. Run ``spack install ibmisc``.
+   #. Run ``spack install mylib``.
 
    #. Run this script to generate the ``module load`` commands or
       filesystem view that needed to use this software.
