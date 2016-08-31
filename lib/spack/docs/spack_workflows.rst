@@ -393,6 +393,26 @@ However, Spack extensions have two potential drawbacks:
    debugging use case.
 
 
+^^^^^^^^^^^^^^
+Dummy Packages
+^^^^^^^^^^^^^^
+
+As an alternative to a series of ``module load`` commands, one might
+consider dummy packages as a way to create a *consistent* set of
+packages that may be loaded as one unit.  The idea here is pretty
+simple:
+
+#. Create a package (say, ``mydummy``) with no URL and no
+   ``install()`` method, just dependencies.
+
+#. Run ``spack install mydummy`` to install.
+
+An advantage of this method is the set of packages produced will be
+consistent.  This means that you can reliably build software against
+it.  A disadvantage is the set of packages will be consistent; this
+means you cannot load up two applications this way if they are not
+consistent with each other.
+
 ^^^^^^^^^^^^^^^^
 Filesystem Views
 ^^^^^^^^^^^^^^^^
@@ -494,6 +514,45 @@ dependencies.  In this case, you might use:
     $ spack view symlink -d no cmake
 
 
+"""""""""""""""""""""""
+Hybrid Filesystem Views
+"""""""""""""""""""""""
+
+Although filesystem views are usually created by Spack, users are free
+to add to them by other means.  For example, imagine a filesystem
+view, created by Spack, that looks something like:
+
+.. code-block:: console
+
+  /path/to/MYVIEW/bin/programA -> /path/to/spack/.../bin/programA
+  /path/to/MYVIEW/lib/libA.so -> /path/to/spack/.../lib/libA.so
+
+Now, the user may add to this view by non-Spack means; for example, by
+running a classic install script.  For example:
+
+.. code-block:: console
+
+  tar -xf B.tar.gz
+  cd B/
+  ./configure --prefix=/path/to/MYVIEW \
+              --with-A=/path/to/MYVIEW
+  make && make install
+
+The result is a hybrid view:
+
+.. code-block:: console
+
+  /path/to/MYVIEW/bin/programA -> /path/to/spack/.../bin/programA
+  /path/to/MYVIEW/bin/programB
+  /path/to/MYVIEW/lib/libA.so -> /path/to/spack/.../lib/libA.so
+  /path/to/MYVIEW/lib/libB.so
+
+In this case, real files coexist, interleaved with the "view"
+symlinks.  At any time one can delete ``/path/to/MYVIEW`` or use
+``spack view`` to manage it surgically.  None of this will affect the
+real Spack install area.
+
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Discussion: Running Binaries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -544,7 +603,7 @@ environments:
 Developing Software with Spack
 ==============================
 
-Suppose that you are developing an application and need to assemble an
+For any project, one needs to assemble an
 environment of that application's dependencies.  You might consider
 loading a series of modules or creating a filesystem view.  This
 approach, while obvious, has some serious drawbacks:
@@ -587,7 +646,8 @@ approach, while obvious, has some serious drawbacks:
 In this section, we show how Spack can be used in the software
 development process to greatest effect, and how development packages
 can be seamlessly integrated into the Spack ecosystem.  We will show
-how this process works by example.
+how this process works by example, assuming the software you are
+creating is called ``ibmisc``.
 
 
 ---------------------
@@ -673,7 +733,7 @@ for the ``ibmisc`` package (elipses for brevity):
         """Misc. reusable utilities used by IceBin."""
 
         homepage = "https://github.com/citibeth/ibmisc"
-        url      = "https://github.com/citibeth/ibmisc/tarball/123"
+        url = "https://github.com/citibeth/ibmisc/tarball/123"
 
         version('0.1.2', '3a6acd70085e25f81b63a7e96c504ef9')
         version('develop', git='https://github.com/citibeth/ibmisc.git',
@@ -701,7 +761,7 @@ for the ``ibmisc`` package (elipses for brevity):
                 '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
                 '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO')]
 
-This package is a standard Spack package that can be used to install
+This is a standard Spack package that can be used to install
 ``ibmisc`` in a production environment.  The list of dependencies in
 the Spack package will generally be a repeat of the list of CMake
 dependencies.  This package also has some features that allow it to be
@@ -725,9 +785,9 @@ used for development:
    not used in development.  Don't worry if you don't have any, or if
    they are behind a firewall.
 
--------------------
-Building with Spack
--------------------
+----------------
+Build with Spack
+----------------
 
 Now that you have a Spack package, you can use Spack to find its
 dependencies automatically.  For example:
@@ -782,9 +842,9 @@ into Git or downloading tarballs.
 
     
 
------------------------
-Building Other Software
------------------------
+--------------------
+Build Other Software
+--------------------
 
 Now that you've built ``ibmisc`` with Spack, you might want to build
 another package that depends on it --- for example, ``icebin``.  This
@@ -800,216 +860,115 @@ property is useful if you need to debug a package deep in the
 dependency hierarchy of your application.  It is a *big* advantage of
 using ``spack setup`` to build your package's envrionment.
 
----------------------
-Sharing Your Software
-----------------------
+If you feel your software is stable, you might wish to install it with
+``spack install`` and skip the source directory.  You can just use,
+for example:
 
-Once you've suitably debugged your software, you are 
+.. code-block:: console
+
+    $ spack install ibmisc@develop
 
 
-If your project is publicly available (eg on GitHub), then you can
-ALSO use this setup to "just install" a release version without going
-through the manual configuration/build step.  Just do:
+--------------------
+Releas Your Software
+--------------------
 
-#. Put tag(s) on the version(s) in your GitHub repo you want to be release versions.
+You are now ready to release your software as a tarball with a
+numbered version, and a Spack package that can build it.  If you're
+hosted on GitHub, this process will be a bit easier.
+
+#. Put tag(s) on the version(s) in your GitHub repo you want to be
+   release versions.  For example, a tag ``v0.1.0`` for version 0.1.0.
 
 #. Set the ``url`` in your ``package.py`` to download a tarball for
-   the appropriate version.  (GitHub will give you a tarball for any
-   version in the repo, if you tickle it the right way).  For example:
+   the appropriate version.  GitHub will give you a tarball for any
+   commit in the repo, if you tickle it the right way.  For example:
 
-   https://github.com/citibeth/icebin/tarball/v0.1.0
+   .. code-block:: python
 
-   Set up versions as appropriate in your ``package.py``.  (Manually
-   download the tarball and run ``md5sum`` to determine the
-   appropriate checksum for it).
+       url = 'https://github.com/citibeth/ibmisc/tarball/v0.1.2'
 
-#. Now you should be able to say ``spack install myproject@version``
-   and things "just work."
+#. Use Spack to determine your version's hash, and cut'n'paste it into
+   your ``package.py``:
 
-NOTE... in order to use the features outlined in this post, you
-currently need to use the following branch of Spack:
+   .. code-block:: console
 
-https://github.com/citibeth/spack/tree/efischer/develop
+       $ spack checksum ibmisc 0.1.2
+       ==> Found 1 versions of ibmisc
+         0.1.2     https://github.com/citibeth/ibmisc/tarball/v0.1.2
 
-There is a pull request open on this branch (
-https://github.com/LLNL/spack/pull/543 ) and we are working to get it
-integrated into the main ``develop`` branch.
+       How many would you like to checksum? (default is 5, q to abort) 
+       ==> Downloading...
+       ==> Trying to fetch from https://github.com/citibeth/ibmisc/tarball/v0.1.2
+       ######################################################################## 100.0%
+       ==> Checksummed new versions of ibmisc:
+             version('0.1.2', '3a6acd70085e25f81b63a7e96c504ef9')
+
+#. You should now be able to install released version 0.1.2 of your package with:
+
+   .. code-block:: console
+
+      $ spack install ibmisc@0.1.2
+
+#. There is no need to remove the `develop` version from your package.
+   Spack concretization will always prefer numbered version to
+   non-numeric versions.  Users will only get it if they ask for it.
+
+
 
 ------------------------
-Activating your Software
+Distribute Your Software
 ------------------------
 
-Once you've built your software, you will want to load it up.  You can
-use ``spack load mypackage@local`` for that in your ``.bashrc``, but
-that is slow.  Try stuff like the following instead:
+Once you've released your software, other people will want to build
+it; and you will need to tell them how.  In the past, that has meant a
+few paragraphs of pros explaining which dependencies to install.  But
+now you use Spack, and those instructions are written in executable
+Python code.  But your software has many dependencies, and you know
+Spack is the best way to install it:
 
-The following command will load the Spack-installed packages needed
-for basic Python use of IceBin:
+#. First, you will want to fork Spack's ``develop`` branch.  Your aim
+   is to provide a stable version of Spack that you KNOW will install
+   your software.  If you make changes to Spack in the process, you
+   will want to submit pull requests to Spack core.
 
-.. code-block:: console
+#. Add your software's ``package.py`` to that fork.  You should submit
+   a pull request for this as well, unless you don't want the public
+   to know about your software.
 
-   $ module load `spack module find tcl icebin netcdf cmake@3.5.1`
-   $ module load `spack module find --dependencies tcl py-basemap py-giss`
+#. Prepare instructions that read approximately as follows:
 
+   #. Download Spack from your forked repo.
 
-You can speed up shell startup by turning these into ``module load`` commands.
+   #. Install Spack; see :ref:`getting_started`.
 
-#. Cut-n-paste the script ``make_spackenv``:
+   #. Set up an appropriate ``packages.yaml`` file.  You should tell
+      your users to include in this file whatever versions/variants
+      are needed to make your software work correctly (assuming those
+      are not already in your ``packages.yaml``).
 
-   .. code-block:: sh
+   #. Run ``spack install ibmisc``.
 
-      #!/bin/sh
-      #
-      # Generate commands to load the Spack environment
+   #. Run this script to generate the ``module load`` commands or
+      filesystem view that needed to use this software.
 
-      SPACKENV=$HOME/spackenv.sh
+#. Be aware that your users might encounter unexpected bootstrapping
+   issues on their machines, especially they are running on older
+   systems.  The :ref:`getting_started` section should cover this, but
+   there could alays be issues.
 
-      spack module find --shell tcl git icebin@local ibmisc netcdf cmake@3.5.1 > $SPACKENV
-      spack module find --dependencies --shell tcl py-basemap py-giss >> $SPACKENV
+-------------------
+Other Build Systems
+-------------------
 
-#. Add the following to your ``.bashrc`` file:
+``spack setup`` currently only supports CMake-based builds, in
+packages that subclass ``CMakePackage``.  The intent is that this
+mechanism should support a wider range of build systems; for example,
+GNU Autotools.  Someone well-versed in Autotools is needed to develop
+this patch and test it out.
 
-   .. code-block:: sh
-
-      source $HOME/spackenv.sh
-      # Preferentially use your checked-out Python source
-      export PYTHONPATH=$HOME/icebin/pylib:$PYTHONPATH
-
-#. Run ``sh make_spackenv`` whenever your Spack installation changes (including right now).
-
------------
-Giving Back
------------
-
-If your software is publicly available, you should submit the
-``package.py`` for it as a pull request to the main Spack GitHub
-project.  This will ensure that anyone can install your software
-(almost) painlessly with a simple ``spack install`` command.  See here
-for how that has turned into detailed instructions that have
-successfully enabled collaborators to install complex software:
-
-https://github.com/citibeth/icebin/blob/develop/README.rst
-
-
-
-
-
-
-
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Build System Configuration Support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Imagine a developer creating a CMake or Autotools-based project in a local
-directory, which depends on libraries A-Z.  Once Spack has installed
-those dependencies, one would like to run ``cmake`` with appropriate
-command line and environment so CMake can find them.  The ``spack
-setup`` command does this conveniently, producing a CMake
-configuration that is essentially the same as how Spack *would have*
-configured the project.  This can be demonstrated with a usage
-example:
-
-.. code-block:: console
-
-   $ cd myproject
-   $ spack setup myproject@local
-   $ mkdir build; cd build
-   $ ../spconfig.py ..
-   $ make
-   $ make install
-
-Notes:
-
-* Spack must have ``myproject/package.py`` in its repository for
-  this to work.
-* ``spack setup`` produces the executable script ``spconfig.py`` in
-  the local directory, and also creates the module file for the
-  package.  ``spconfig.py`` is normally run from the user's
-  out-of-source build directory.
-* The version number given to ``spack setup`` is arbitrary, just
-  like ``spack diy``.  ``myproject/package.py`` does not need to
-  have any valid downloadable versions listed (typical when a
-  project is new).
-* spconfig.py produces a CMake configuration that *does not* use the
-  Spack wrappers.  Any resulting binaries *will not* use RPATH,
-  unless the user has enabled it.  This is recommended for
-  development purposes, not production.
-* ``spconfig.py`` is human readable, and can serve as a developer
-  reference of what dependencies are being used.
-* ``make install`` installs the package into the Spack repository,
-  where it may be used by other Spack packages.
-* CMake-generated makefiles re-run CMake in some circumstances.  Use
-  of ``spconfig.py`` breaks this behavior, requiring the developer
-  to manually re-run ``spconfig.py`` when a ``CMakeLists.txt`` file
-  has changed.
-
-^^^^^^^^^^^^
-CMakePackage
-^^^^^^^^^^^^
-
-In order to enable ``spack setup`` functionality, the author of
-``myproject/package.py`` must subclass from ``CMakePackage`` instead
-of the standard ``Package`` superclass.  Because CMake is
-standardized, the packager does not need to tell Spack how to run
-``cmake; make; make install``.  Instead the packager only needs to
-create (optional) methods ``configure_args()`` and ``configure_env()``, which
-provide the arguments (as a list) and extra environment variables (as
-a dict) to provide to the ``cmake`` command.  Usually, these will
-translate variant flags into CMake definitions.  For example:
-
-.. code-block:: python
-
-   def configure_args(self):
-       spec = self.spec
-       return [
-           '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
-           '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
-           '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
-           '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
-           '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')
-       ]
-
-If needed, a packager may also override methods defined in
-``StagedPackage`` (see below).
-
-^^^^^^^^^^^^^
-StagedPackage
-^^^^^^^^^^^^^
-
-``CMakePackage`` is implemented by subclassing the ``StagedPackage``
-superclass, which breaks down the standard ``Package.install()``
-method into several sub-stages: ``setup``, ``configure``, ``build``
-and ``install``.  Details:
-
-* Instead of implementing the standard ``install()`` method, package
-  authors implement the methods for the sub-stages
-  ``install_setup()``, ``install_configure()``,
-  ``install_build()``, and ``install_install()``.
-
-* The ``spack install`` command runs the sub-stages ``configure``,
-  ``build`` and ``install`` in order.  (The ``setup`` stage is
-  not run by default; see below).
-* The ``spack setup`` command runs the sub-stages ``setup``
-  and a dummy install (to create the module file).
-* The sub-stage install methods take no arguments (other than
-  ``self``).  The arguments ``spec`` and ``prefix`` to the standard
-  ``install()`` method may be accessed via ``self.spec`` and
-  ``self.prefix``.
-
-^^^^^^^^^^^^^
-GNU Autotools
-^^^^^^^^^^^^^
-
-The ``setup`` functionality is currently only available for
-CMake-based packages.  Extending this functionality to GNU
-Autotools-based packages would be easy (and should be done by a
-developer who actively uses Autotools).  Packages that use
-non-standard build systems can gain ``setup`` functionality by
-subclassing ``StagedPackage`` directly.
-
-
-
-======= Releasing Software
-Dummy Packages for Env setup!
-Spack diy for Python
+Python Distutils is another popular build system that should get
+``spack setup`` support.  For non-compiled languages like Python,
+``spack diy`` may be used.  Even better is to put the source directory
+directly in the user's ``PYTHONPATH``.  Then, edits in source files
+are immediately available to run without any install process at all!
