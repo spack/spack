@@ -71,7 +71,7 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 
 clean:
-	-rm -f package_list.rst command_index.rst
+	-rm -f package_list.rst command_index.rst modules.rst
 	-rm -rf $(BUILDDIR)/* $(APIDOC_FILES)
 
 html:

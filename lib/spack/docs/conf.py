@@ -71,9 +71,6 @@ os.environ['COLIFY_SIZE'] = '25x80'
 # Generate package list using spack command
 #
 with open('package_list.rst', 'w') as plist_file:
-    subprocess.check_output(
-        [spack_root + '/bin/spack', 'package-list'])
-
     subprocess.Popen(
         [spack_root + '/bin/spack', 'package-list'], stdout=plist_file)
 
@@ -97,6 +94,7 @@ with open('command_index.rst', 'a') as index:
 
 # Run sphinx-apidoc
 sphinx_apidoc(['-T', '-o', '.', '../spack'])
+os.remove('modules.rst')
 
 #
 # Exclude everything in spack.__all__ from indexing.  All of these
