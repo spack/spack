@@ -180,21 +180,49 @@ likely, create 9 different ``spack install`` command lines with the
 correct options in the spec.
 
 
-----------------
-Loading Packages
-----------------
+------------------------------
+Running Binaries from Packages
+------------------------------
 
 Once Spack packages have been built, the next step is to use them.  As
 with buiding packages, there are many ways to use them, depending on
 the use case.
 
 ^^^^^^^^^^^^
-Simple Loads
+Find and Run
 ^^^^^^^^^^^^
+
+The simplest way to run a Spack binary is to find it and run it!
+In many cases, nothing more is needed because Spack builds binaries
+with RPATHs.  Spack installation directories may be found with ``spack
+location -i`` commands.  For example:
+
+.. code-block:: console
+
+    $ spack location -i cmake
+    /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7
+
+Standard UNIX tools can find binaries as well.  For example:
+
+.. code-block:: console
+
+    $ find ~/spack2/opt -name cmake | grep bin
+    /home/me/spack2/opt/spack/linux-SuSE11-x86_64/gcc-5.3.0/cmake-3.6.0-7cxrynb6esss6jognj23ak55fgxkwtx7/bin/cmake
+
+These methods are suiteable, for example, for setting up build
+processes or GUIs that need to know the location of particular tools.
+However, other more powerful methods are generally preferred for user
+environments.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Spack-Generated Modules
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Suppose that Spack has been used to install a set of command-line
 programs, which users now wish to use.  One can in principle put a
-number of ``spack load`` commands into ``.bashrc``, for example:
+number of ``spack load`` commands into ``.bashrc``, for example, to
+load a set of Spack-generated modules:
 
 .. code-block::
 
@@ -222,9 +250,9 @@ have some drawbacks:
    be more specific on any ``spack module loads`` lines that fail.
 
 
-^^^^^^^^^^^^^^^^^^^
-Cached Simple Loads
-^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""
+Generated Load Scripts
+""""""""""""""""""""""
 
 Another problem with using `spack load` is, it is slow; a typical user
 environment could take several seconds to load, and would not be
@@ -287,9 +315,9 @@ Users may now put ``source ~/env/spackenv`` into ``.bashrc``.
     ``--prefix`` flag from ``spack module loads``.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""
 Transitive Dependencies
-^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""
 
 In the script above, each ``spack module loads`` command generates a
 *single* ``module load`` line.  Transitive dependencies do not usually
@@ -337,6 +365,7 @@ added to the script above, would be used to load Numpy, along with
 core Python, Setup Tools and a number of other packages:
 
 .. code-block:: sh
+
     \$FIND --dependencies py-numpy
 
 ^^^^^^^^^^^^^^^^^^
@@ -344,10 +373,12 @@ Extension Packages
 ^^^^^^^^^^^^^^^^^^
 
 :ref:`packaging_extensions` may be used as an alternative to loading
-Python packages directly.  If extensions are activated, then ``spack
-load python`` will also load all the extensions activated for the
-given ``python``.  However, Spack extensions have two potential
-drawbacks:
+Python (and similar systems) packages directly.  If extensions are
+activated, then ``spack load python`` will also load all the
+extensions activated for the given ``python``.  This reduces the need
+for users to load a large number of modules.
+
+However, Spack extensions have two potential drawbacks:
 
 1. Activated packages that involve compiled C extensions may still
    need their dependencies to be loaded manually.  For example,
@@ -366,51 +397,37 @@ drawbacks:
 Filesystem Views
 ^^^^^^^^^^^^^^^^
 
-.. Maybe this is not the right location for this documentation.
+Filesystem views offer an alternative to environment modules, another
+way to assemble packages in a useful way and load them into a user's
+environment.
 
-The Spack installation area allows for many package installation trees
-to coexist and gives the user choices as to what versions and variants
-of packages to use.  To use them, the user must rely on a way to
-aggregate a subset of those packages.  The section on Environment
-Modules gives one good way to do that which relies on setting various
-environment variables.  An alternative way to aggregate is through
-**filesystem views**.
+A filesystem view is a single directory tree that is the union of the
+directory hierarchies of a number of installed packages; it is similar
+to the directory hiearchy that might exist under ``/usr/local``.  The
+files of the view's installed packages are brought into the view by
+symbolic or hard links, referencing the original Spack installation.
 
-A filesystem view is a single directory tree which is the union of the
-directory hierarchies of the individual package installation trees
-that have been included.  The files of the view's installed packages
-are brought into the view by symbolic or hard links back to their
-location in the original Spack installation area.  As the view is
-formed, any clashes due to a file having the exact same path in its
-package installation tree are handled in a first-come-first-served
-basis and a warning is printed.  Packages and their dependencies can
-be both added and removed.  During removal, empty directories will be
-purged.  These operations can be limited to pertain to just the
-packages listed by the user or to exclude specific dependencies and
-they allow for software installed outside of Spack to coexist inside
-the filesystem view tree.
+When software is built and installed, absolute paths are frequently
+"baked into" the software, making it non-relocatable.  This happens
+not just in RPATHs, but also in shebangs, configuration files, and
+assorted other locations.
 
-By its nature, a filesystem view represents a particular choice of one
-set of packages among all the versions and variants that are available
-in the Spack installation area.  It is thus equivalent to the
-directory hiearchy that might exist under ``/usr/local``.  While this
-limits a view to including only one version/variant of any package, it
-provides the benefits of having a simpler and traditional layout which
-may be used without any particular knowledge that its packages were
-built by Spack.
+Therefore, programs run out of a Spack view will typically still look
+in the original Spack-installed location for shared libraries and
+other resources.  This behavior is not easily changed; in general,
+there is no way to know where absolute paths might be written into an
+installed package, and how to relocate it.  Therefore, the original
+Spack tree must be kept in place for a filesystem view to work, even
+if the view is built with hardlinks.
 
-Views can be used for a variety of purposes including:
+.. FIXME: reference the relocation work of Hegner and Gartung (PR #1013)
 
-* A central installation in a traditional layout, eg ``/usr/local`` maintained over time by the sysadmin.
-* A self-contained installation area which may for the basis of a top-level atomic versioning scheme, eg ``/opt/pro`` vs ``/opt/dev``.
-* Providing an atomic and monolithic binary distribution, eg for delivery as a single tarball.
-* Producing ephemeral testing or developing environments.
 
-^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""
 Using Filesystem Views
-^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""
 
-A filesystem view is created and packages are linked in by the ``spack
+A filesystem view is created, and packages are linked in, by the ``spack
 view`` command's ``symlink`` and ``hardlink`` sub-commands.  The
 ``spack view remove`` command can be used to unlink some or all of the
 filesystem view.
@@ -441,139 +458,354 @@ files in the ``cmake`` package while retaining its dependencies.
    captoinfo  c_rehash  infotocap        openssl  tabs  toe   tset
    clear      infocmp   ncurses6-config  reset    tic   tput
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Limitations of Filesystem Views
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. note::
 
-This section describes some limitations that should be considered in
-using filesystems views.
+    If the set of packages being included in a view is inconsistent,
+    then it is possible that two packages will provide the same file.  Any
+    conflicts of this type are handled on a first-come-first-served basis,
+    and a warning is printed.
 
-Filesystem views are merely organizational.  The binary executable
-programs, shared libraries and other build products found in a view
-are mere links into the "real" Spack installation area.  If a view is
-built with symbolic links it requires the Spack-installed package to
-be kept in place.  Building a view with hardlinks removes this
-requirement but any internal paths (eg, rpath or ``#!`` interpreter
-specifications) will still require the Spack-installed package files
-to be in place.
+.. note::
 
-.. FIXME: reference the relocation work of Hegner and Gartung.
+    When packages are removed from a view, empty directories are
+    purged.
 
-As described above, when a view is built only a single instance of a
-file may exist in the unified filesystem tree.  If more than one
-package provides a file at the same path (relative to its own root)
-then it is the first package added to the view that "wins".  A warning
-is printed and it is up to the user to determine if the conflict
-matters.
+""""""""""""""""""
+Fine-Grain Control
+""""""""""""""""""
 
-It is up to the user to assure a consistent view is produced.  In
-particular if the user excludes packages, limits the following of
-dependencies or removes packages the view may become inconsistent.  In
-particular, if two packages require the same sub-tree of dependencies,
-removing one package (recursively) will remove its dependencies and
-leave the other package broken.
-
-
-
-
-=======================================
-Using Spack for CMake-based Development
-=======================================
-
-These are instructions on how to use Spack to aid in the development
-of a CMake-based project.  Spack is used to help find the dependencies
-for the project, configure it at development time, and then package it
-it in a way that others can install.  Using Spack for CMake-based
-development consists of three parts:
-
-#. Setting up the CMake build in your software
-#. Writing the Spack Package
-#. Using it from Spack.
-
---------------------------
-Setting Up the CMake Build
---------------------------
-
-You should follow standard CMake conventions in setting up your
-software, your CMake build should NOT depend on or require Spack to
-build.  See here for an example:
-
-https://github.com/citibeth/icebin
-
-Note that there's one exception here to the rule I mentioned above.
-In ``CMakeLists.txt``, I have the following line:
-
-.. code-block:: none
-
-   include_directories($ENV{CMAKE_TRANSITIVE_INCLUDE_PATH})
-
-This is a hook into Spack, and it ensures that all transitive
-dependencies are included in the include path.  It's not needed if
-everything is in one tree, but it is (sometimes) in the Spack world;
-when running without Spack, it has no effect.
-
-Note that this "feature" is controversial, could break with future
-versions of GNU ld, and probably not the best to use.  The best
-practice is that you make sure that anything you #include is listed as
-a dependency in your CMakeLists.txt.
-
-To be more specific: if you #inlcude something from package A and an
-installed HEADER FILE in A #includes something from package B, then
-you should also list B as a dependency in your CMake build.  If you
-depend on A but header files exported by A do NOT #include things from
-B, then you do NOT need to list B as a dependency --- even if linking
-to A links in libB.so as well.
-
-I also recommend that you set up your CMake build to use RPATHs
-correctly.  Not only is this a good idea and nice, but it also ensures
-that your package will build the same with or without ``spack
-install``.
-
--------------------------
-Writing the Spack Package
--------------------------
-
-Now that you have a CMake build, you want to tell Spack how to
-configure it.  This is done by writing a Spack package for your
-software.  See here for example:
-
-https://github.com/citibeth/spack/blob/efischer/develop/var/spack/repos/builtin/packages/icebin/package.py
-
-You need to subclass ``CMakePackage``, as is done in this example.
-This enables advanced features of Spack for helping you in configuring
-your software (keep reading...).  Instead of an ``install()`` method
-used when subclassing ``Package``, you write ``configure_args()``.
-See here for more info on how this works:
-
-https://github.com/LLNL/spack/pull/543/files
-
-NOTE: if your software is not publicly available, you do not need to
-set the URL or version.  Or you can set up bogus URLs and
-versions... whatever causes Spack to not crash.
-
--------------------
-Using it from Spack
--------------------
-
-Now that you have a Spack package, you can get Spack to setup your
-CMake project for you.  Use the following to setup, configure and
-build your project:
+The ``-e`` and ``-d`` option flags allow for fine-grained control over
+which packages and dependencies do or not get included in a view.  For
+example, suppose you are developing the ``appsy`` package.  You wish
+to build against a view of all ``appsy`` dependencies, but not
+``appsy`` itself:
 
 .. code-block:: console
 
-   $ cd myproject
-   $ spack spconfig myproject@local
+    $ spack view symlink -d yes -e appsy appsy
+
+Alternately, you wish to create a view whose purpose is to provide
+binary executables to end users.  You only need to include
+applications they might want, and not those applications'
+dependencies.  In this case, you might use:
+
+.. code-block:: console
+
+    $ spack view symlink -d no cmake
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Discussion: Running Binaries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Modules, extension packages and filesystem views are all ways to
+assemble sets of Spack packages into a useful environment.  They are
+all semantically similar, in that conflicting installed packages
+cannot simultaneously be loaded, activated or included in a view.
+
+With all of these approaches, there is no guarantee that the
+environment created will be consistent.  It is possible, for example,
+to simultaneously load application A that uses OpenMPI and application
+B that uses MPICH.  Both applications will run just fine in this
+inconsistent environment because they rely on RPATHs, not the
+environment, to find their dependencies.
+
+In general, environments set up using modules vs. views will work
+similarly.  Both can be used to set up ephemeral or long-lived
+testing/development environments.  Operational differences between the
+two approaches can make one or the other preferable in certain
+environments:
+
+* Filesystem views do not require environment module infrastructure.
+  Although Spack can install ``environment-modules``, users might be
+  hostile to its use.  Filesystem views offer a good solution for
+  sysadmins serving users who just "want all the stuff I need in one
+  place" and don't want to hear about Spack.
+
+* Although modern build systems will find dependencies wherever they
+  might be, some applications with hand-built make files expect their
+  dependencies to be in one place.  One common problem is makefiles
+  that assume that ``netcdf`` and ``netcdf-fortran`` are installed in
+  the same tree.  Or, one might use an IDE that requires tedious
+  configuration of dependency paths; and it's easier to automate that
+  administration in a view-building script than in the IDE itself.
+  For all these cases, a view will be preferable to other ways to
+  assemble an environment.
+
+* On systems with I-node quotas, modules might be preferable to views
+  and extension packages.
+
+* Views and activated extensions maintain state that is semantically
+  equivalent to the information in a ``spack module loads`` script.
+  Administrators might find things easier to maintain without the
+  added "heavyweight" state of a veiw.
+
+==============================
+Developing Software with Spack
+==============================
+
+Suppose that you are developing an application and need to assemble an
+environment of that application's dependencies.  You might consider
+loading a series of modules or creating a filesystem view.  This
+approach, while obvious, has some serious drawbacks:
+
+1. There is no guarantee that an environment created this way will be
+   consistent.  Your application could end up with dependency A
+   expecting one version of MPI, and dependency B expecting another.
+   The linker will not be happy...
+
+2. Suppose you need to debug a package deep within your software DAG.
+   If you build that package with a manual environment, then it
+   becomes difficult to have Spack auto-build things that depend on
+   it.  That could be a serious problem, depending on how deep the
+   package in question is in your dependency DAG.
+
+3. At its core, Spack is a sophisticated concretization algorithm that
+   matches up packages with appropriate dependencies and creates a
+   *consistent* environment for the pacakge it's building.  Writing a
+   list of ``spack load`` commands for your dependencies is at least
+   as hard as writing the same list of ``depends_on()`` declarations
+   in a Spack package.  But it makes no use of Spack concretization
+   and is more error-prone.
+
+4. Spack provides an automated, systematic way not just to find a
+   packages's dependencies --- but also to build other packages on
+   top.  Any Spack package can become a dependency for another Spack
+   package, offering a powerful vision of software re-use.  If you
+   build your package A outside of Spack, then your ability to use it
+   as a building block for other packages in an automated way is
+   diminished: other packages needing depending on package A will not
+   be able to use Spack to fulfill that dependency.
+
+5. If you are reading this manual, you probably love Spack.  You're
+   probably going to write a Spack package for your software so
+   prospective users can install it with the least amount of pain.
+   Why should you go to additional work to find dependencies in your
+   development environment?  Shouldn't Spack be able to help you build
+   your software based on the package you've already written?
+
+In this section, we show how Spack can be used in the software
+development process to greatest effect, and how development packages
+can be seamlessly integrated into the Spack ecosystem.  We will show
+how this process works by example.
+
+
+---------------------
+Write the CMake Build
+---------------------
+
+For now, the techniques in this section only work for CMake-based
+projects, although they could be easily extended to other build
+systems in the future.  We will therefore assume you are using CMake
+to build your project.
+
+The ``CMakeLists.txt`` file should be written as normal.  A few caveats:
+
+1. Your project should produce binaries with RPATHs.  This will ensure
+   that they work the same whether build manually or automatically by
+   Spack.  For example:
+
+.. code-block:: cmake
+
+    # enable @rpath in the install name for any shared library being built
+    # note: it is planned that a future version of CMake will enable this by default
+    set(CMAKE_MACOSX_RPATH 1)
+
+    # Always use full RPATH
+    # http://www.cmake.org/Wiki/CMake_RPATH_handling
+    # http://www.kitware.com/blog/home/post/510
+
+    # use, i.e. don't skip the full RPATH for the build tree
+    SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
+
+    # when building, don't use the install RPATH already
+    # (but later on when installing)
+    SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
+
+    # add the automatically determined parts of the RPATH
+    # which point to directories outside the build tree to the install RPATH
+    SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+    # the RPATH to be used when installing, but only if it's not a system directory
+    LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
+    IF("${isSystemDir}" STREQUAL "-1")
+       SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+    ENDIF("${isSystemDir}" STREQUAL "-1")
+
+
+2. Spack provides a CMake variable called
+   ``SPACK_TRANSITIVE_INCLUDE_PATH``, which contains the ``include/``
+   directory for all of your project's transitive dependencies.  It
+   can be useful if your project ``#include``s files from package B,
+   which ``#include`` files from package C, but your project only
+   lists project B as a dependency.  This works in traditional
+   single-tree build environments, in which B and C's include files
+   live in the same place.  In order to make it work with Spack as
+   well, you must add the following to ``CMakeLists.txt``.  It will
+   have no effect whne building without Spack:
+
+   .. code-block:: cmake
+
+       # Include all the transitive dependencies determined by EasyBuild.
+       # If we're not running with EasyBuild, this does nothing...
+       include_directories($ENV{CMAKE_TRANSITIVE_INCLUDE_PATH})
+
+   .. note::
+
+       Note that this feature is controversial and could break with
+       future versions of GNU ld.  The best practice is that you make
+       sure that anything you #include is listed as a dependency in
+       your CMakeLists.txt (and Spack package).
+
+
+-----------------------
+Write the Spack Package
+-----------------------
+
+The Spack package also needs to be written, in tandem with setting up
+the build (for example, CMake).  The most important part of this task
+is declaring dependencies.  Here is an example of the Spack package
+for the ``ibmisc`` package (elipses for brevity):
+
+.. code-block:: python
+
+    class Ibmisc(CMakePackage):
+        """Misc. reusable utilities used by IceBin."""
+
+        homepage = "https://github.com/citibeth/ibmisc"
+        url      = "https://github.com/citibeth/ibmisc/tarball/123"
+
+        version('0.1.2', '3a6acd70085e25f81b63a7e96c504ef9')
+        version('develop', git='https://github.com/citibeth/ibmisc.git',
+            branch='develop')
+
+        variant('everytrace', default=False,
+                description='Report errors through Everytrace')
+        ...
+
+        extends('python')
+
+        depends_on('eigen')
+        depends_on('everytrace', when='+everytrace')
+        depends_on('proj', when='+proj')
+        ...
+        depends_on('cmake', type='build')
+        depends_on('doxygen', type='build')
+
+        def configure_args(self):
+            spec = self.spec
+            return [
+                '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
+                '-DUSE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),
+                ...
+                '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
+                '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO')]
+
+This package is a standard Spack package that can be used to install
+``ibmisc`` in a production environment.  The list of dependencies in
+the Spack package will generally be a repeat of the list of CMake
+dependencies.  This package also has some features that allow it to be
+used for development:
+
+1. It subclasses ``CMakePackage`` instead of ``Package``.  This
+   eliminates the need to write an ``install()`` method, which is
+   defined in the superclass.  Instead, one just needs to write the
+   ``configure_args()`` method.  That method should return the
+   arguments needed for the ``cmake`` command (beyond the standard
+   CMake arguments, which Spack will include already).  These
+   areguments are typically used to turn features on/off in the build.
+
+2. It specifies a non-checksummed version ``develop``.  Running
+   ``spack install ibmisc@develop`` the ``@develop`` version will
+   install the latest verison off the develop branch.  This method of
+   downlaod should only be used by developers who control and trust
+   the repository in question!
+
+3. The ``url``, ``url_for_version()`` and ``homepage`` attributes are
+   not used in development.  Don't worry if you don't have any, or if
+   they are behind a firewall.
+
+-------------------
+Building with Spack
+-------------------
+
+Now that you have a Spack package, you can use Spack to find its
+dependencies automatically.  For example:
+
+.. code-block:: console
+
+   $ cd ibmisc
+   $ spack setup ibmisc@local
+
+The result will be a file ``spconfig.py`` in the top-level
+``ibmisc/`` directory.  It is a short script that calls CMake with the
+dependencies and options determined by Spack --- similar to what
+happens in ``spack install``, but now written out in script form.
+From a developer's point of view, you can think of ``spconfig.py`` as
+a stand-in for the ``cmake`` command.
+
+.. note::
+
+    You can invent any "version" you like for the ``spack setup``
+    command.
+
+.. note::
+
+    Although ``spack setup`` does not build your package, it does
+    create and install a module file, and mark in the database that
+    your package has been installed.  This can lead to errors, of
+    course, if you don't subsequently install your package.
+    Also... you will need to ``spack uninstall`` before you run
+    ``spack setup`` again.
+
+
+You can now build your project
+as usual with CMake:
+
    $ mkdir build; cd build
-   $ ../spconfig.py ..
+   $ ../spconfig.py ..   # Instead of cmake ..
    $ make
    $ make install
 
-Everything here should look pretty familiar here from a CMake
-perspective, except that ``spack spconfig`` creates the file
-``spconfig.py``, which calls CMake with arguments appropriate for your
-Spack configuration.  Think of it as the equivalent to running a bunch
-of ``spack location -i`` commands.  You will run ``spconfig.py``
-instead of running CMake directly.
+Once your ``make install`` command is complete, your package will be
+installed, just as if you'd run ``spack install``.  Except you can now
+edit, re-build and re-install as often as needed, without checking
+into Git or downloading tarballs.
+
+.. note::
+
+    The build you get this way will be *almost* the same as the build
+    from ``spack install``.  The only difference is, you will not be
+    using Spack's compiler wrappers.  This difference has not caused
+    problems in the our experience, as long as your project sets
+    RPATHs as shown above.  You DO use RPATHs, right?
+
+    
+
+-----------------------
+Building Other Software
+-----------------------
+
+Now that you've built ``ibmisc`` with Spack, you might want to build
+another package that depends on it --- for example, ``icebin``.  This
+is accomplished easily enough:
+
+.. code-block:: console
+
+    $ spack install icebin ^ibmisc@local
+
+Note that auto-built software has now been installed *on top of*
+manually-built software, without breaking Spack's "web."  This
+property is useful if you need to debug a package deep in the
+dependency hierarchy of your application.  It is a *big* advantage of
+using ``spack setup`` to build your package's envrionment.
+
+---------------------
+Sharing Your Software
+----------------------
+
+Once you've suitably debugged your software, you are 
+
 
 If your project is publicly available (eg on GitHub), then you can
 ALSO use this setup to "just install" a release version without going
@@ -775,3 +1007,9 @@ Autotools-based packages would be easy (and should be done by a
 developer who actively uses Autotools).  Packages that use
 non-standard build systems can gain ``setup`` functionality by
 subclassing ``StagedPackage`` directly.
+
+
+
+======= Releasing Software
+Dummy Packages for Env setup!
+Spack diy for Python

@@ -776,13 +776,6 @@ versions are now filtered out.
 Integration with module systems
 -------------------------------
 
-.. note::
-
-   Environment module support is currently experimental and should not
-   be considered a stable feature of Spack.  In particular, the
-   interface and/or generated module names may change in future
-   versions.
-
 Spack provides some integration with `Environment Modules
 <http://modules.sourceforge.net/>`_ to make it easier to use the
 packages it installs.  If your system does not already have
