@@ -1345,20 +1345,31 @@ Additionally, dependencies may be specified for specific use cases:
 
 The dependency types are:
 
-  * **"build"**: made available during the project's build. The package will
-    be added to ``PATH``, the compiler include paths, and ``PYTHONPATH``.
-    Other projects which depend on this one will not have these modified
-    (building project X doesn't need project Y's build dependencies).
-  * **"link"**: the project is linked to by the project. The package will be
-    added to the current package's ``rpath``.
-  * **"run"**: the project is used by the project at runtime. The package will
-    be added to ``PATH`` and ``PYTHONPATH``.
+  * **"build"**: The dependency package is made available during the
+    package's build. While the package is built, the dependency
+    package's install directory will be added to ``PATH``, the
+    compiler include and library paths, as well as ``PYTHONPATH``.
+    This only applies during this package's build; other packages
+    which depend on this one will not know about the dependency
+    package. In other words, building another project Y doesn't know
+    about this project X's build dependencies.
+  * **"link"**: The dependency package is linked against by this
+    package, presumably via shared libraries. The dependency package
+    will be added to this package's run-time library search path
+    ``rpath``.
+  * **"run"**: The dependency package is used by this package at run
+    time. The dependency package will be added to both ``PATH`` and
+    ``PYTHONPATH`` at run time, but not during build time. **"link"**
+    and **"run"** are similar in that they both describe a dependency
+    that exists when the package is used, but they differ in the
+    mechanism: **"link"** is via shared libraries, and **"run"** via
+    an explicit search.
 
-If not specified, ``type`` is assumed to be ``("build", "link")``. This is the
-common case for compiled language usage. Also available are the aliases
-``"alldeps"`` for all dependency types and ``"nolink"`` (``("build", "run")``)
-for use by dependencies which are not expressed via a linker (e.g., Python or
-Lua module loading).
+If not specified, ``type`` is assumed to be ``("build", "link")``.
+This is the common case for compiled language usage. Also available
+are the aliases ``"alldeps"`` for all dependency types combined, and
+``"nolink"`` (``("build", "run")``) for use by dependencies which are
+not expressed via a linker (e.g., Python or Lua module loading).
 
 .. _setup-dependent-environment:
 
