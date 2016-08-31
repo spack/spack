@@ -29,7 +29,7 @@ class Lzo(Package):
     """Real-time data compression library"""
 
     homepage = 'https://www.oberhumer.com/opensource/lzo/'
-    url = 'https://www.oberhumer.com/opensource/lzo/download/lzo-2.09.tar.gz'
+    url = 'http://www.oberhumer.com/opensource/lzo/download/lzo-2.09.tar.gz'
 
     version('2.09', 'c7ffc9a103afe2d1bba0b015e7aa887f')
     version('2.08', 'fcec64c26a0f4f4901468f360029678f')
