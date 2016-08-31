@@ -48,6 +48,7 @@ Table of Contents
    getting_started
    basic_usage
    packaging_guide
+   spack_workflows
    mirrors
    configuration
    developer_guide
