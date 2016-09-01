@@ -1360,6 +1360,17 @@ common case for compiled language usage. Also available are the aliases
 for use by dependencies which are not expressed via a linker (e.g., Python or
 Lua module loading).
 
+"""""""""""""""""""
+Dependency Formulas
+"""""""""""""""""""
+
+This section shows how to write appropriate ``depends_on()``
+declarations for some common cases.
+
+* Python 2 only: ``depends_on('python@:2.8')``
+* Python 2.7 only: ``depends_on('python@2.7:2.8')``
+* Python 3 only: ``depends_on('python@3:')``
+
 .. _setup-dependent-environment:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
